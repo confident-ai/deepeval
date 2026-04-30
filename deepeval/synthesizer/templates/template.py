@@ -542,7 +542,7 @@ class FilterTemplate:
             "relevance": 0.5
         }}
 
-        Example context: "Artificial intelligence is rapidly changing various sectors, from healthcare to finance, by enhancing efficiency and enabling better decision-making."
+        Example context: "The French Revolution, which began in 1789, was a period of radical political and societal change in France that fundamentally transformed the country's political landscape."
         Example JSON:
         {{
             "clarity": 1,
@@ -551,7 +551,7 @@ class FilterTemplate:
             "relevance": 1
         }}
 
-        Example context: "Artificial intelligence is rapidly changing various sectors, from healthcare to finance, by enhancing efficiency and enabling better decision-making."
+        Example context: "Things change over time and people adapt accordingly in various ways."
         Example JSON:
         {{
             "clarity": 0.4,

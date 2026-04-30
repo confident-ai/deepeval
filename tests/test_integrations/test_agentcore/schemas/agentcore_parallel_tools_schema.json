@@ -1,0 +1,50 @@
+{
+  "uuid": "2faf4b20da4abfa4a1d7969aac1d8cb9",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "f14f606881f49bb0",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T11:17:53.702Z",
+      "endTime": "2026-03-09T11:17:56.214Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
+      "output": "<thinking> The tools have returned the current weather and time for Paris. I can now provide the User with the requested information. </thinking>\n\nThe current weather in Paris is cloudy with a temperature of 62 degrees Fahrenheit. The current time in Paris is 8:00 AM CET.\n",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "f14f606881f49bb0",
+      "name": "",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T11:17:53.702Z",
+      "endTime": "2026-03-09T11:17:56.214Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
+      "output": "<thinking> The tools have returned the current weather and time for Paris. I can now provide the User with the requested information. </thinking>\n\nThe current weather in Paris is cloudy with a temperature of 62 degrees Fahrenheit. The current time in Paris is 8:00 AM CET.\n",
+      "toolsCalled": [],
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-03-09T11:17:53.702Z",
+  "endTime": "2026-03-09T11:17:56.214Z",
+  "name": "agentcore-parallel-tools",
+  "metadata": {
+    "test_type": "parallel_tools"
+  },
+  "tags": [
+    "agentcore",
+    "parallel-tools"
+  ],
+  "environment": "development",
+  "threadId": "parallel-tools-123",
+  "userId": "test-user",
+  "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
+  "output": "<thinking> The tools have returned the current weather and time for Paris. I can now provide the User with the requested information. </thinking>\n\nThe current weather in Paris is cloudy with a temperature of 62 degrees Fahrenheit. The current time in Paris is 8:00 AM CET.\n",
+  "status": "SUCCESS"
+}

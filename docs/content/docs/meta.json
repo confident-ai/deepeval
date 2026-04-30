@@ -1,0 +1,53 @@
+{
+  "title": "Docs",
+  "pages": [
+    "introduction",
+    "introduction-design-philosophy",
+    "introduction-comparisons",
+
+    "---[Rocket]Getting Started---",
+    "getting-started",
+    "(use-cases)",
+
+    "---[FlaskConical]LLM Evals---",
+    "evaluation-introduction",
+    "(concepts)",
+    "evaluation-end-to-end-llm-evals",
+    "evaluation-component-level-llm-evals",
+    "evaluation-unit-testing-in-ci-cd",
+    "evaluation-flags-and-configs",
+
+    "---[Gauge]Eval Metrics---",
+    "metrics-introduction",
+    "(custom)",
+    "(rag)",
+    "(agentic)",
+    "(multi-turn)",
+    "(mcp)",
+    "(safety)",
+    "(non-llm)",
+    "(images)",
+    "(metrics-others)",
+
+    "---[Sparkles]Prompt Optimization---",
+    "prompt-optimization-introduction",
+    "(algorithms)",
+
+    "---[Database]Synthetic Data Generation---",
+    "synthetic-data-generation-introduction",
+    "golden-synthesizer",
+    "conversation-simulator",
+
+    "---[Trophy]Benchmarks---",
+    "benchmarks-introduction",
+    "(benchmarks)",
+
+    "---[Boxes]Others---",
+    "command-line-interface",
+    "environment-variables",
+    "troubleshooting",
+    "faq",
+    "data-privacy",
+    "miscellaneous"
+  ]
+}

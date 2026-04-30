@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from deepeval.utils import make_model_config
 
-from deepeval.test_case import LLMTestCaseParams, LLMTestCase, ToolCallParams
+from deepeval.test_case import SingleTurnParams, LLMTestCase, ToolCallParams
 from deepeval.test_run.api import MetricData
 from deepeval.utils import (
     delete_file_if_exists,
@@ -17,7 +17,6 @@ from deepeval.utils import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.constants import HIDDEN_DIR
-
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +51,7 @@ class MetricConfiguration(BaseModel):
     assessment_questions: Optional[List[str]] = None
     embeddings: Optional[str] = None
     evaluation_params: Optional[
-        Union[List[LLMTestCaseParams], List[ToolCallParams]]
+        Union[List[SingleTurnParams], List[ToolCallParams]]
     ] = None
 
 
@@ -119,11 +118,11 @@ class TestRunCacheManager:
 
         cached_test_run = self.get_cached_test_run()
         cache_dict = {
-            LLMTestCaseParams.INPUT.value: test_case.input,
-            LLMTestCaseParams.ACTUAL_OUTPUT.value: test_case.actual_output,
-            LLMTestCaseParams.EXPECTED_OUTPUT.value: test_case.expected_output,
-            LLMTestCaseParams.CONTEXT.value: test_case.context,
-            LLMTestCaseParams.RETRIEVAL_CONTEXT.value: test_case.retrieval_context,
+            SingleTurnParams.INPUT.value: test_case.input,
+            SingleTurnParams.ACTUAL_OUTPUT.value: test_case.actual_output,
+            SingleTurnParams.EXPECTED_OUTPUT.value: test_case.expected_output,
+            SingleTurnParams.CONTEXT.value: test_case.context,
+            SingleTurnParams.RETRIEVAL_CONTEXT.value: test_case.retrieval_context,
             "hyperparameters": hyperparameters,
         }
         test_case_cache_key = serialize(cache_dict)
@@ -142,11 +141,11 @@ class TestRunCacheManager:
         if self.disable_write_cache or portalocker is None:
             return
         cache_dict = {
-            LLMTestCaseParams.INPUT.value: test_case.input,
-            LLMTestCaseParams.ACTUAL_OUTPUT.value: test_case.actual_output,
-            LLMTestCaseParams.EXPECTED_OUTPUT.value: test_case.expected_output,
-            LLMTestCaseParams.CONTEXT.value: test_case.context,
-            LLMTestCaseParams.RETRIEVAL_CONTEXT.value: test_case.retrieval_context,
+            SingleTurnParams.INPUT.value: test_case.input,
+            SingleTurnParams.ACTUAL_OUTPUT.value: test_case.actual_output,
+            SingleTurnParams.EXPECTED_OUTPUT.value: test_case.expected_output,
+            SingleTurnParams.CONTEXT.value: test_case.context,
+            SingleTurnParams.RETRIEVAL_CONTEXT.value: test_case.retrieval_context,
             "hyperparameters": hyperparameters,
         }
         test_case_cache_key = serialize(cache_dict)

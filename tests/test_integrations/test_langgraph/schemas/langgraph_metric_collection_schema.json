@@ -1,0 +1,959 @@
+{
+  "uuid": "5ae736bc-e635-476a-bd68-178aa7beccb4",
+  "baseSpans": [
+    {
+      "uuid": "019d0518-a055-7ef1-a6e4-0fc5c52570f8",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-03-19T07:56:33.237Z",
+      "endTime": "2026-03-19T07:56:36.910Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 88,
+                "prompt_tokens": 148,
+                "total_tokens": 236,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2X3vAoiy8VRS6AukIOYSdzoJVY7",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0518-a057-7cc2-9d6d-f1f9ac63fa6d-0",
+            "tool_calls": [
+              {
+                "name": "convert_temperature",
+                "args": {
+                  "celsius": 25
+                },
+                "id": "call_j290PQqAclRnz0faquqKrnZG",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 148,
+              "output_tokens": 88,
+              "total_tokens": 236,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
+          },
+          {
+            "content": "25.0\u00b0C = 77.0\u00b0F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "convert_temperature",
+            "id": "61137386-c018-4426-bcf3-324b367d3cfc",
+            "tool_call_id": "call_j290PQqAclRnz0faquqKrnZG",
+            "status": "success"
+          },
+          {
+            "content": "25\u00b0C = 77\u00b0F",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 79,
+                "prompt_tokens": 187,
+                "total_tokens": 266,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2X5hFYExQCBgWQ6T1eJdvKXO6fD",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0518-a86e-7d62-aea5-63f0c5bb2d3d-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 187,
+              "output_tokens": 79,
+              "total_tokens": 266,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
+          }
+        ]
+      },
+      "metricCollection": "trace_quality"
+    },
+    {
+      "uuid": "019d0518-a86d-7f53-b42c-9d4a25324e59",
+      "name": "agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019d0518-a055-7ef1-a6e4-0fc5c52570f8",
+      "startTime": "2026-03-19T07:56:35.309Z",
+      "endTime": "2026-03-19T07:56:36.910Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 88,
+                "prompt_tokens": 148,
+                "total_tokens": 236,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2X3vAoiy8VRS6AukIOYSdzoJVY7",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0518-a057-7cc2-9d6d-f1f9ac63fa6d-0",
+            "tool_calls": [
+              {
+                "name": "convert_temperature",
+                "args": {
+                  "celsius": 25
+                },
+                "id": "call_j290PQqAclRnz0faquqKrnZG",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 148,
+              "output_tokens": 88,
+              "total_tokens": 236,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
+          },
+          {
+            "content": "25.0\u00b0C = 77.0\u00b0F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "convert_temperature",
+            "id": "61137386-c018-4426-bcf3-324b367d3cfc",
+            "tool_call_id": "call_j290PQqAclRnz0faquqKrnZG",
+            "status": "success"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "25\u00b0C = 77\u00b0F",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 79,
+                "prompt_tokens": 187,
+                "total_tokens": 266,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2X5hFYExQCBgWQ6T1eJdvKXO6fD",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0518-a86e-7d62-aea5-63f0c5bb2d3d-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 187,
+              "output_tokens": 79,
+              "total_tokens": 266,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "019d0518-aead-7470-aecf-63330fc3f9d4",
+      "name": "should_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019d0518-a86d-7f53-b42c-9d4a25324e59",
+      "startTime": "2026-03-19T07:56:36.909Z",
+      "endTime": "2026-03-19T07:56:36.910Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 88,
+                "prompt_tokens": 148,
+                "total_tokens": 236,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2X3vAoiy8VRS6AukIOYSdzoJVY7",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0518-a057-7cc2-9d6d-f1f9ac63fa6d-0",
+            "tool_calls": [
+              {
+                "name": "convert_temperature",
+                "args": {
+                  "celsius": 25
+                },
+                "id": "call_j290PQqAclRnz0faquqKrnZG",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 148,
+              "output_tokens": 88,
+              "total_tokens": 236,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
+          },
+          {
+            "content": "25.0\u00b0C = 77.0\u00b0F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "convert_temperature",
+            "id": "61137386-c018-4426-bcf3-324b367d3cfc",
+            "tool_call_id": "call_j290PQqAclRnz0faquqKrnZG",
+            "status": "success"
+          },
+          {
+            "content": "25\u00b0C = 77\u00b0F",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 79,
+                "prompt_tokens": 187,
+                "total_tokens": 266,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2X5hFYExQCBgWQ6T1eJdvKXO6fD",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0518-a86e-7d62-aea5-63f0c5bb2d3d-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 187,
+              "output_tokens": 79,
+              "total_tokens": 266,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
+          }
+        ]
+      },
+      "output": "__end__"
+    },
+    {
+      "uuid": "019d0518-a86a-7012-bf8b-a3973494b18c",
+      "name": "tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019d0518-a055-7ef1-a6e4-0fc5c52570f8",
+      "startTime": "2026-03-19T07:56:35.306Z",
+      "endTime": "2026-03-19T07:56:35.309Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 88,
+                "prompt_tokens": 148,
+                "total_tokens": 236,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2X3vAoiy8VRS6AukIOYSdzoJVY7",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0518-a057-7cc2-9d6d-f1f9ac63fa6d-0",
+            "tool_calls": [
+              {
+                "name": "convert_temperature",
+                "args": {
+                  "celsius": 25
+                },
+                "id": "call_j290PQqAclRnz0faquqKrnZG",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 148,
+              "output_tokens": 88,
+              "total_tokens": 236,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "25.0\u00b0C = 77.0\u00b0F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "convert_temperature",
+            "id": "61137386-c018-4426-bcf3-324b367d3cfc",
+            "tool_call_id": "call_j290PQqAclRnz0faquqKrnZG",
+            "status": "success"
+          }
+        ]
+      },
+      "toolsCalled": [
+        {
+          "name": "convert_temperature",
+          "output": {
+            "content": "25.0\u00b0C = 77.0\u00b0F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "convert_temperature",
+            "id": "61137386-c018-4426-bcf3-324b367d3cfc",
+            "tool_call_id": "call_j290PQqAclRnz0faquqKrnZG",
+            "status": "success"
+          },
+          "inputParameters": {
+            "celsius": 25
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "019d0518-a056-74b3-9c92-f4f96302d658",
+      "name": "agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019d0518-a055-7ef1-a6e4-0fc5c52570f8",
+      "startTime": "2026-03-19T07:56:33.238Z",
+      "endTime": "2026-03-19T07:56:35.305Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 88,
+                "prompt_tokens": 148,
+                "total_tokens": 236,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2X3vAoiy8VRS6AukIOYSdzoJVY7",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0518-a057-7cc2-9d6d-f1f9ac63fa6d-0",
+            "tool_calls": [
+              {
+                "name": "convert_temperature",
+                "args": {
+                  "celsius": 25
+                },
+                "id": "call_j290PQqAclRnz0faquqKrnZG",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 148,
+              "output_tokens": 88,
+              "total_tokens": 236,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "019d0518-a869-77e1-9eb4-3e251d214667",
+      "name": "should_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019d0518-a056-74b3-9c92-f4f96302d658",
+      "startTime": "2026-03-19T07:56:35.305Z",
+      "endTime": "2026-03-19T07:56:35.305Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 88,
+                "prompt_tokens": 148,
+                "total_tokens": 236,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2X3vAoiy8VRS6AukIOYSdzoJVY7",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0518-a057-7cc2-9d6d-f1f9ac63fa6d-0",
+            "tool_calls": [
+              {
+                "name": "convert_temperature",
+                "args": {
+                  "celsius": 25
+                },
+                "id": "call_j290PQqAclRnz0faquqKrnZG",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 148,
+              "output_tokens": 88,
+              "total_tokens": 236,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
+          }
+        ]
+      },
+      "output": "tools",
+      "metricCollection": "tool_performance"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019d0518-a86e-7d62-aea5-63f0c5bb2d3d",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019d0518-a86d-7f53-b42c-9d4a25324e59",
+      "startTime": "2026-03-19T07:56:35.310Z",
+      "endTime": "2026-03-19T07:56:36.909Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
+        },
+        {
+          "role": "ai",
+          "content": ""
+        },
+        {
+          "role": "tool",
+          "content": "25.0\u00b0C = 77.0\u00b0F"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'convert_temperature', 'description': 'Converts a temperature from Celsius to Fahrenheit.', 'parameters': {'properties': {'celsius': {'type': 'number'}}, 'required': ['celsius'], 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "25\u00b0C = 77\u00b0F",
+        "tool_calls": []
+      },
+      "model": "gpt-5-mini-2025-08-07",
+      "inputTokenCount": 187.0,
+      "outputTokenCount": 79.0,
+      "metricCollection": "llm_accuracy",
+      "promptAlias": "langgraph-metric-collection-prompt",
+      "promptVersion": "02.00.00",
+      "promptLabel": "test-label",
+      "promptCommitHash": "bab04ec"
+    },
+    {
+      "uuid": "019d0518-a057-7cc2-9d6d-f1f9ac63fa6d",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019d0518-a056-74b3-9c92-f4f96302d658",
+      "startTime": "2026-03-19T07:56:33.239Z",
+      "endTime": "2026-03-19T07:56:35.304Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'convert_temperature', 'description': 'Converts a temperature from Celsius to Fahrenheit.', 'parameters': {'properties': {'celsius': {'type': 'number'}}, 'required': ['celsius'], 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "convert_temperature",
+            "args": {
+              "celsius": 25
+            },
+            "id": "call_j290PQqAclRnz0faquqKrnZG"
+          }
+        ]
+      },
+      "model": "gpt-5-mini-2025-08-07",
+      "inputTokenCount": 148.0,
+      "outputTokenCount": 88.0,
+      "metricCollection": "llm_accuracy",
+      "promptAlias": "langgraph-metric-collection-prompt",
+      "promptVersion": "02.00.00",
+      "promptLabel": "test-label",
+      "promptCommitHash": "bab04ec"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019d0518-a86c-78b2-b21c-b6464dd5f30b",
+      "name": "convert_temperature",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019d0518-a86a-7012-bf8b-a3973494b18c",
+      "startTime": "2026-03-19T07:56:35.308Z",
+      "endTime": "2026-03-19T07:56:35.309Z",
+      "input": {
+        "celsius": 25
+      },
+      "output": {
+        "content": "25.0\u00b0C = 77.0\u00b0F",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "convert_temperature",
+        "id": "61137386-c018-4426-bcf3-324b367d3cfc",
+        "tool_call_id": "call_j290PQqAclRnz0faquqKrnZG",
+        "status": "success"
+      }
+    }
+  ],
+  "startTime": "2026-03-19T07:56:33.237Z",
+  "endTime": "2026-03-19T07:56:36.910Z",
+  "name": "langgraph-metric-collection",
+  "metadata": {
+    "test_type": "metric_collection"
+  },
+  "tags": [
+    "langgraph",
+    "metric-collection"
+  ],
+  "environment": "development",
+  "input": {
+    "messages": [
+      {
+        "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 88,
+            "prompt_tokens": 148,
+            "total_tokens": 236,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 64,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-DL2X3vAoiy8VRS6AukIOYSdzoJVY7",
+          "service_tier": "default",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019d0518-a057-7cc2-9d6d-f1f9ac63fa6d-0",
+        "tool_calls": [
+          {
+            "name": "convert_temperature",
+            "args": {
+              "celsius": 25
+            },
+            "id": "call_j290PQqAclRnz0faquqKrnZG",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 148,
+          "output_tokens": 88,
+          "total_tokens": 236,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 64
+          }
+        }
+      },
+      {
+        "content": "25.0\u00b0C = 77.0\u00b0F",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "convert_temperature",
+        "id": "61137386-c018-4426-bcf3-324b367d3cfc",
+        "tool_call_id": "call_j290PQqAclRnz0faquqKrnZG",
+        "status": "success"
+      },
+      {
+        "content": "25\u00b0C = 77\u00b0F",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 79,
+            "prompt_tokens": 187,
+            "total_tokens": 266,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 64,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-DL2X5hFYExQCBgWQ6T1eJdvKXO6fD",
+          "service_tier": "default",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019d0518-a86e-7d62-aea5-63f0c5bb2d3d-0",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 187,
+          "output_tokens": 79,
+          "total_tokens": 266,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 64
+          }
+        }
+      }
+    ]
+  },
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "convert_temperature",
+      "output": {
+        "content": "25.0\u00b0C = 77.0\u00b0F",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "convert_temperature",
+        "id": "61137386-c018-4426-bcf3-324b367d3cfc",
+        "tool_call_id": "call_j290PQqAclRnz0faquqKrnZG",
+        "status": "success"
+      },
+      "inputParameters": {
+        "celsius": 25
+      }
+    }
+  ]
+}

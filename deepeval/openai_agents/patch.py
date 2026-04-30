@@ -16,7 +16,7 @@ try:
     from agents import function_tool as _agents_function_tool  # type: ignore
     from deepeval.openai_agents.extractors import parse_response_output
     from agents.run import AgentRunner
-    from agents.run import SingleStepResult
+    from agents.run_internal.run_steps import SingleStepResult
     from agents.models.interface import Model
     from agents import Agent
 except Exception:
@@ -130,6 +130,11 @@ class _ObservedModel(Model):
             )
             llm_span: LlmSpan = current_span_context.get()
             llm_span.prompt = self._confident_prompt
+            if self._confident_prompt:
+                llm_span.prompt_alias = self._confident_prompt.alias
+                llm_span.prompt_commit_hash = self._confident_prompt.hash
+                llm_span.prompt_version = self._confident_prompt.version
+                llm_span.prompt_label = self._confident_prompt.label
 
         return result
 
@@ -151,6 +156,11 @@ class _ObservedModel(Model):
 
             llm_span: LlmSpan = current_span_context.get()
             llm_span.prompt = self._confident_prompt
+            if self._confident_prompt:
+                llm_span.prompt_alias = self._confident_prompt.alias
+                llm_span.prompt_commit_hash = self._confident_prompt.hash
+                llm_span.prompt_version = self._confident_prompt.version
+                llm_span.prompt_label = self._confident_prompt.label
 
             try:
                 async for event in self._inner.stream_response(
@@ -172,36 +182,63 @@ def patch_default_agent_run_single_turn():
     if _PATCHED_DEFAULT_RUN_SINGLE_TURN:
         return
 
-    original_run_single_turn = AgentRunner._run_single_turn
+    import agents.run_internal.run_loop as run_loop
 
-    @classmethod
-    async def patched_run_single_turn(cls, *args, **kwargs):
-        res: SingleStepResult = await original_run_single_turn.__func__(
-            cls, *args, **kwargs
-        )
+    original_run_single_turn = run_loop.run_single_turn
+
+    async def patched_run_single_turn(*args, **kwargs):
+        res: SingleStepResult = await original_run_single_turn(*args, **kwargs)
         try:
             if isinstance(res, SingleStepResult):
                 agent_span = current_span_context.get()
                 if isinstance(agent_span, AgentSpan):
-                    _set_agent_metrics(kwargs.get("agent", None), agent_span)
-                    if agent_span.input is None:
-                        _pre_step_items_raw_list = [
-                            item.raw_item for item in res.pre_step_items
-                        ]
-                        agent_span.input = (
-                            make_json_serializable(_pre_step_items_raw_list)
-                            if _pre_step_items_raw_list
-                            else make_json_serializable(res.original_input)
-                        )
-                    agent_span.output = parse_response_output(
-                        res.model_response.output
+
+                    # 1. Safely extract agent from positional args if it isn't in kwargs
+                    agent = (
+                        kwargs.get("agent")
+                        if "agent" in kwargs
+                        else (args[0] if len(args) > 0 else None)
                     )
+                    _set_agent_metrics(agent, agent_span)
+
+                    # 2. Safely extract input
+                    if agent_span.input is None or agent_span.input == {}:
+                        pre_items = getattr(res, "pre_step_items", []) or []
+                        _pre_step_items_raw_list = [
+                            getattr(item, "raw_item", str(item))
+                            for item in pre_items
+                        ]
+
+                        if _pre_step_items_raw_list:
+                            agent_span.input = make_json_serializable(
+                                _pre_step_items_raw_list
+                            )
+                        else:
+                            agent_span.input = make_json_serializable(
+                                getattr(res, "original_input", None)
+                            )
+
+                    # 3. Safely extract output
+                    model_response = getattr(res, "model_response", None)
+                    if model_response is not None:
+                        out_val = getattr(model_response, "output", "")
+                        agent_span.output = parse_response_output(out_val)
         except Exception:
             pass
         return res
 
-    AgentRunner._run_single_turn = patched_run_single_turn
-    _PATCHED_DEFAULT_RUN_SINGLE_TURN = True  # type: ignore
+    # Patch the source module
+    run_loop.run_single_turn = patched_run_single_turn
+
+    try:
+        import agents.run as agents_run
+
+        if hasattr(agents_run, "run_single_turn"):
+            agents_run.run_single_turn = patched_run_single_turn
+    except ImportError:
+        pass
+
+    _PATCHED_DEFAULT_RUN_SINGLE_TURN = True
 
 
 def patch_default_agent_run_single_turn_streamed():
@@ -209,41 +246,66 @@ def patch_default_agent_run_single_turn_streamed():
     if _PATCHED_DEFAULT_RUN_SINGLE_TURN_STREAMED:
         return
 
-    original_run_single_turn_streamed = AgentRunner._run_single_turn_streamed
+    import agents.run_internal.run_loop as run_loop
 
-    @classmethod
-    async def patched_run_single_turn_streamed(cls, *args, **kwargs):
+    original_run_single_turn_streamed = run_loop.run_single_turn_streamed
 
-        res: SingleStepResult = (
-            await original_run_single_turn_streamed.__func__(
-                cls, *args, **kwargs
-            )
+    async def patched_run_single_turn_streamed(*args, **kwargs):
+        res: SingleStepResult = await original_run_single_turn_streamed(
+            *args, **kwargs
         )
         try:
             if isinstance(res, SingleStepResult):
                 agent_span = current_span_context.get()
                 if isinstance(agent_span, AgentSpan):
-                    _set_agent_metrics(
-                        kwargs.get("agent", None), agent_span
-                    )  # TODO: getting no agent
-                    if agent_span.input is None:
-                        _pre_step_items_raw_list = [
-                            item.raw_item for item in res.pre_step_items
-                        ]
-                        agent_span.input = (
-                            make_json_serializable(_pre_step_items_raw_list)
-                            if _pre_step_items_raw_list
-                            else make_json_serializable(res.original_input)
-                        )
-                    agent_span.output = parse_response_output(
-                        res.model_response.output
+
+                    # 1. Safely extract agent
+                    agent = (
+                        kwargs.get("agent")
+                        if "agent" in kwargs
+                        else (args[0] if len(args) > 0 else None)
                     )
+                    _set_agent_metrics(agent, agent_span)
+
+                    # 2. Safely extract input
+                    if agent_span.input is None or agent_span.input == {}:
+                        pre_items = getattr(res, "pre_step_items", []) or []
+                        _pre_step_items_raw_list = [
+                            getattr(item, "raw_item", str(item))
+                            for item in pre_items
+                        ]
+
+                        if _pre_step_items_raw_list:
+                            agent_span.input = make_json_serializable(
+                                _pre_step_items_raw_list
+                            )
+                        else:
+                            agent_span.input = make_json_serializable(
+                                getattr(res, "original_input", None)
+                            )
+
+                    # 3. Safely extract output
+                    model_response = getattr(res, "model_response", None)
+                    if model_response is not None:
+                        out_val = getattr(model_response, "output", "")
+                        agent_span.output = parse_response_output(out_val)
         except Exception:
             pass
         return res
 
-    AgentRunner._run_single_turn_streamed = patched_run_single_turn_streamed
-    _PATCHED_DEFAULT_RUN_SINGLE_TURN_STREAMED = True  # type: ignore
+    run_loop.run_single_turn_streamed = patched_run_single_turn_streamed
+
+    try:
+        import agents.run as agents_run
+
+        if hasattr(agents_run, "run_single_turn_streamed"):
+            agents_run.run_single_turn_streamed = (
+                patched_run_single_turn_streamed
+            )
+    except ImportError:
+        pass
+
+    _PATCHED_DEFAULT_RUN_SINGLE_TURN_STREAMED = True
 
 
 def patch_default_agent_runner_get_model():
@@ -251,16 +313,25 @@ def patch_default_agent_runner_get_model():
     if _PATCHED_DEFAULT_GET_MODEL:
         return
 
-    original_get_model_cm = AgentRunner._get_model
     try:
-        original_get_model = original_get_model_cm.__func__
-    except AttributeError:
-        original_get_model = (
-            original_get_model_cm  # fallback (non-classmethod edge case)
-        )
+        # Import the new run_loop module where get_model now lives
+        import agents.run_internal.run_loop as run_loop
+    except ImportError:
+        return  # Fallback in case the SDK structure changes again
 
-    def patched_get_model(cls, *args, **kwargs) -> Model:
-        model = original_get_model(cls, *args, **kwargs)
+    # Depending on the exact minor version, it might be public or private
+    if hasattr(run_loop, "get_model"):
+        target_func_name = "get_model"
+    elif hasattr(run_loop, "_get_model"):
+        target_func_name = "_get_model"
+    else:
+        return  # Skip patching if the internal API is missing
+
+    original_get_model = getattr(run_loop, target_func_name)
+
+    # Note: No 'cls' argument anymore, it's just a standard function
+    def patched_get_model(*args, **kwargs) -> Model:
+        model = original_get_model(*args, **kwargs)
 
         agent = (
             kwargs.get("agent")
@@ -276,6 +347,7 @@ def patch_default_agent_runner_get_model():
         llm_metrics = getattr(agent, "llm_metrics", None)
         llm_metric_collection = getattr(agent, "llm_metric_collection", None)
         confident_prompt = getattr(agent, "confident_prompt", None)
+
         return _ObservedModel(
             inner=model,
             llm_metric_collection=llm_metric_collection,
@@ -283,11 +355,12 @@ def patch_default_agent_runner_get_model():
             confident_prompt=confident_prompt,
         )
 
-    # Preserve basic metadata and mark as patched
+    # Preserve basic metadata
     patched_get_model.__name__ = original_get_model.__name__
     patched_get_model.__doc__ = original_get_model.__doc__
 
-    AgentRunner._get_model = classmethod(patched_get_model)
+    # Apply the patch to the module
+    setattr(run_loop, target_func_name, patched_get_model)
     _PATCHED_DEFAULT_GET_MODEL = True
 
 

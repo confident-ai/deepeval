@@ -1,4 +1,4 @@
-from typing import List, Optional, Type, TypeVar
+from typing import List, Optional, Type, TypeVar, Callable
 from pydantic import PrivateAttr
 
 from deepeval.metrics.base_metric import BaseMetric
@@ -28,14 +28,10 @@ def create_deepeval_class(base_class: Type[T], class_name: str) -> Type[T]:
         _metric_collection: Optional[str] = PrivateAttr(default=None)
         _metrics: Optional[List[BaseMetric]] = PrivateAttr(default=None)
 
-        def __init__(
-            self,
-            *args,
-            metrics: Optional[List[BaseMetric]] = None,
-            metric_collection: Optional[str] = None,
-            **kwargs
-        ):
+        def __init__(self, *args, **kwargs):
             is_crewai_installed()
+            metric_collection = kwargs.pop("metric_collection", None)
+            metrics = kwargs.pop("metrics", None)
             super().__init__(*args, **kwargs)
             self._metric_collection = metric_collection
             self._metrics = metrics
@@ -45,7 +41,24 @@ def create_deepeval_class(base_class: Type[T], class_name: str) -> Type[T]:
     return DeepEvalClass
 
 
-# Create the classes
+def create_deepeval_llm(base_factory: Callable) -> Callable:
+    """Wrapper for factory functions/classes (LLM)."""
+
+    def factory_wrapper(*args, **kwargs):
+        is_crewai_installed()
+        metric_collection = kwargs.pop("metric_collection", None)
+        metrics = kwargs.pop("metrics", None)
+        instance = base_factory(*args, **kwargs)
+        try:
+            instance._metric_collection = metric_collection
+            instance._metrics = metrics
+        except Exception:
+            pass
+        return instance
+
+    return factory_wrapper
+
+
 DeepEvalCrew = create_deepeval_class(Crew, "DeepEvalCrew")
 DeepEvalAgent = create_deepeval_class(Agent, "DeepEvalAgent")
-DeepEvalLLM = create_deepeval_class(LLM, "DeepEvalLLM")
+DeepEvalLLM = create_deepeval_llm(LLM)

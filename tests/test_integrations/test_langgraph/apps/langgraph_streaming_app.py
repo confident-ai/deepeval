@@ -9,7 +9,7 @@ from langgraph.graph import StateGraph, END, START, MessagesState
 from langgraph.prebuilt import ToolNode
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
-from langchain_core.messages import HumanMessage
+from langchain_core.runnables import RunnableConfig
 
 
 @tool
@@ -41,21 +41,21 @@ def get_company_info(symbol: str) -> str:
 tools = [get_stock_price, get_company_info]
 
 # Enable streaming
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, streaming=True)
+llm = ChatOpenAI(model="gpt-5-mini", temperature=0, seed=42, streaming=True)
 llm_with_tools = llm.bind_tools(tools)
 
 
-def agent_node(state: dict) -> dict:
+def agent_node(state: dict, config: RunnableConfig) -> dict:
     """Agent node - calls the LLM."""
     messages = state["messages"]
-    response = llm_with_tools.invoke(messages)
+    response = llm_with_tools.invoke(messages, config=config)
     return {"messages": [response]}
 
 
-async def async_agent_node(state: dict) -> dict:
+async def async_agent_node(state: dict, config: RunnableConfig) -> dict:
     """Async agent node - calls the LLM."""
     messages = state["messages"]
-    response = await llm_with_tools.ainvoke(messages)
+    response = await llm_with_tools.ainvoke(messages, config=config)
     return {"messages": [response]}
 
 

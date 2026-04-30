@@ -1,6 +1,6 @@
 from typing import Optional, Union, List
 
-from deepeval.test_case import ConversationalTestCase, Turn, TurnParams
+from deepeval.test_case import ConversationalTestCase, Turn, MultiTurnParams
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
@@ -21,11 +21,10 @@ from deepeval.metrics.knowledge_retention.schema import (
     KnowledgeRetentionScoreReason,
 )
 from deepeval.utils import get_or_create_event_loop, prettify_list
-from deepeval.metrics.api import metric_data_manager
 
 
 class KnowledgeRetentionMetric(BaseConversationalMetric):
-    _required_test_case_params = [TurnParams.CONTENT, TurnParams.ROLE]
+    _required_test_case_params = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE]
 
     def __init__(
         self,
@@ -93,10 +92,6 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
             return self.score
 
     async def a_measure(
@@ -139,10 +134,6 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
             return self.score
 
     async def _a_generate_reason(self) -> str:
@@ -271,7 +262,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 prompt=prompt,
                 schema_cls=Knowledge,
                 extract_schema=lambda s: s,
-                extract_json=lambda data: Knowledge(data=data),
+                extract_json=lambda data: Knowledge(**data),
             )
 
         return knowledges
@@ -300,7 +291,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 prompt=prompt,
                 schema_cls=Knowledge,
                 extract_schema=lambda s: s,
-                extract_json=lambda data: Knowledge(data=data),
+                extract_json=lambda data: Knowledge(**data),
             )
 
         return knowledges

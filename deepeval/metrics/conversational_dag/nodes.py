@@ -15,7 +15,7 @@ from deepeval.metrics.utils import (
 )
 from deepeval.test_case import (
     ConversationalTestCase,
-    TurnParams,
+    MultiTurnParams,
     ToolCall,
     Turn,
 )
@@ -297,7 +297,7 @@ class ConversationalTaskNode(ConversationalBaseNode):
     instructions: str
     output_label: str
     children: List[ConversationalBaseNode]
-    evaluation_params: List[TurnParams] = None
+    evaluation_params: List[MultiTurnParams] = None
     turn_window: Tuple[int, int] = None
     label: Optional[str] = None
     _verbose_logs: Optional[str] = None
@@ -448,7 +448,7 @@ class ConversationalTaskNode(ConversationalBaseNode):
 class ConversationalBinaryJudgementNode(ConversationalBaseNode):
     criteria: str
     children: List[ConversationalVerdictNode]
-    evaluation_params: Optional[List[TurnParams]] = None
+    evaluation_params: Optional[List[MultiTurnParams]] = None
     turn_window: Tuple[int, int] = None
     label: Optional[str] = None
     _verbose_logs: Optional[str] = None
@@ -616,7 +616,7 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
 class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
     criteria: str
     children: List[ConversationalVerdictNode]
-    evaluation_params: Optional[List[TurnParams]] = None
+    evaluation_params: Optional[List[MultiTurnParams]] = None
     turn_window: Tuple[int, int] = None
     label: Optional[str] = None
     _verbose_logs: Optional[str] = None

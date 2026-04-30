@@ -1,0 +1,36 @@
+{
+  "uuid": "abfa283f-57c8-4867-97f2-c051df3870ba",
+  "baseSpans": [
+    {
+      "uuid": "35b270c7-2c1c-4fed-b300-8bb076124c3a",
+      "name": "trace_with_env_tags",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:13.795Z",
+      "endTime": "2026-01-29T09:53:13.795Z",
+      "input": {
+        "data": "data",
+        "env": "staging"
+      },
+      "output": "[staging] data"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.795Z",
+  "endTime": "2026-01-29T09:53:13.795Z",
+  "tags": [
+    "staging",
+    "api",
+    "traced"
+  ],
+  "environment": "testing",
+  "input": {
+    "data": "data",
+    "env": "staging"
+  },
+  "output": "[staging] data",
+  "status": "SUCCESS"
+}

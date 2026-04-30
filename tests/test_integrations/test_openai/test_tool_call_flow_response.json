@@ -45,7 +45,6 @@
       ],
       "output": "The weather in San Francisco is 18\u00b0C and partly cloudy. \n\n**Travel Tip:** Dress in layers to stay comfortable, as the temperature can change throughout the day!",
       "model": "gpt-4o-mini",
-      "prompt": {},
       "inputTokenCount": 85.0,
       "outputTokenCount": 35.0
     },
@@ -88,7 +87,6 @@
         }
       ],
       "model": "gpt-4o-mini",
-      "prompt": {},
       "inputTokenCount": 106.0,
       "outputTokenCount": 20.0
     }

@@ -1,13 +1,13 @@
 {
-  "uuid": "1562a590-36f8-49b8-b9dc-78ed3d9374c8",
+  "uuid": "6b06a360-de52-4417-85f6-6c2e846863fe",
   "baseSpans": [
     {
-      "uuid": "4d28ee1d-c192-4b63-a87e-53df0d87163f",
+      "uuid": "195d482e-fbdb-464a-bbba-6aa8c4f3b0bd",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2025-10-16T03:04:17.272Z",
-      "endTime": "2025-10-16T03:04:20.003Z",
+      "startTime": "2026-02-15T10:19:56.720Z",
+      "endTime": "2026-02-15T10:19:58.902Z",
       "input": {
         "city": "London"
       },
@@ -17,13 +17,13 @@
   ],
   "agentSpans": [
     {
-      "uuid": "8b0f03a7-86d7-4bab-9cfe-637236d68ebb",
+      "uuid": "60c7503c-45f1-4910-b7a4-84b75dda9e96",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "4d28ee1d-c192-4b63-a87e-53df0d87163f",
-      "startTime": "2025-10-16T03:04:17.275Z",
-      "endTime": "2025-10-16T03:04:20.000Z",
+      "parentUuid": "195d482e-fbdb-464a-bbba-6aa8c4f3b0bd",
+      "startTime": "2026-02-15T10:19:56.723Z",
+      "endTime": "2026-02-15T10:19:58.895Z",
       "input": "Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "The current weather in London is 60\u00b0F with rainy conditions and a humidity level of 80%.",
       "toolsCalled": [
@@ -31,7 +31,7 @@
           "name": "get_weather",
           "output": "Weather in London: 60\u00b0F, Rainy, Humidity: 80%",
           "inputParameters": {
-            "output": "{\"city\": \"London\"}"
+            "city": "London"
           }
         }
       ],
@@ -42,73 +42,102 @@
   ],
   "llmSpans": [
     {
-      "uuid": "6e719174-ac31-4b10-9fba-4a765b6df1b6",
+      "uuid": "d9a45721-c5ec-454b-8dfa-29ec28bcc478",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "8b0f03a7-86d7-4bab-9cfe-637236d68ebb",
-      "startTime": "2025-10-16T03:04:18.822Z",
-      "endTime": "2025-10-16T03:04:19.997Z",
+      "parentUuid": "60c7503c-45f1-4910-b7a4-84b75dda9e96",
+      "startTime": "2026-02-15T10:19:57.936Z",
+      "endTime": "2026-02-15T10:19:58.892Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Weather Reporter. An experienced meteorologist who loves helping people plan their day with accurate weather reports.\nYour personal goal is: Provide accurate and helpful weather information to users.\nYou ONLY have access to the following tools, and should NEVER make up tools that are not listed here:\n\nTool Name: get_weather\nTool Arguments: {'city': {'description': None, 'type': 'str'}}\nTool Description: Fetch weather data for a given city. Returns temperature and conditions.\n\nIMPORTANT: Use the following format in your response:\n\n```\nThought: you should always think about what to do\nAction: the action to take, only one name of [get_weather], just the name, exactly as it's written.\nAction Input: the input to the action, just a simple JSON object, enclosed in curly braces, using \" to wrap keys and values.\nObservation: the result of the action\n```\n\nOnce all necessary information is gathered, return the following format:\n\n```\nThought: I now know the final answer\nFinal Answer: the final answer to the original input question\n```"
+          "content": "You are Weather Reporter. An experienced meteorologist who loves helping people plan their day with accurate weather reports.\nYour personal goal is: Provide accurate and helpful weather information to users."
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+          "content": "\nCurrent Task: Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary."
         },
         {
           "role": "assistant",
-          "content": "I need to fetch the current weather data for London to provide an accurate report.\n\nAction: get_weather  \nAction Input: {\"city\":\"London\"}  \nObservation: Weather in London: 60\u00b0F, Rainy, Humidity: 80%"
-        }
-      ],
-      "output": "Thought: I now know the final answer  \nFinal Answer: The current weather in London is 60\u00b0F with rainy conditions and a humidity level of 80%.",
-      "model": "gpt-4o-mini",
-      "prompt": {},
-      "metricCollection": "test_collection_1"
-    },
-    {
-      "uuid": "cfa08bef-0f1c-4891-9783-4e3e76711b62",
-      "name": "call",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "8b0f03a7-86d7-4bab-9cfe-637236d68ebb",
-      "startTime": "2025-10-16T03:04:17.276Z",
-      "endTime": "2025-10-16T03:04:18.813Z",
-      "input": [
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_XqIe9dke6jrc2RNzNE4mJtXs",
+              "type": "function",
+              "function": {
+                "name": "'get_weather'",
+                "arguments": "'{\"city\":\"London\"}'"
+              }
+            }
+          ]
+        },
         {
-          "role": "system",
-          "content": "You are Weather Reporter. An experienced meteorologist who loves helping people plan their day with accurate weather reports.\nYour personal goal is: Provide accurate and helpful weather information to users.\nYou ONLY have access to the following tools, and should NEVER make up tools that are not listed here:\n\nTool Name: get_weather\nTool Arguments: {'city': {'description': None, 'type': 'str'}}\nTool Description: Fetch weather data for a given city. Returns temperature and conditions.\n\nIMPORTANT: Use the following format in your response:\n\n```\nThought: you should always think about what to do\nAction: the action to take, only one name of [get_weather], just the name, exactly as it's written.\nAction Input: the input to the action, just a simple JSON object, enclosed in curly braces, using \" to wrap keys and values.\nObservation: the result of the action\n```\n\nOnce all necessary information is gathered, return the following format:\n\n```\nThought: I now know the final answer\nFinal Answer: the final answer to the original input question\n```"
+          "role": "tool",
+          "tool_call_id": "call_XqIe9dke6jrc2RNzNE4mJtXs",
+          "name": "get_weather",
+          "content": "Weather in London: 60\u00b0F, Rainy, Humidity: 80%"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
         }
       ],
-      "output": "I need to fetch the current weather data for London to provide an accurate report.\n\nAction: get_weather  \nAction Input: {\"city\":\"London\"}  ",
+      "output": "The current weather in London is 60\u00b0F with rainy conditions and a humidity level of 80%.",
       "model": "gpt-4o-mini",
-      "prompt": {},
+      "metricCollection": "test_collection_1"
+    },
+    {
+      "uuid": "f80dcdd0-139d-4f92-8b5c-b072d699fa07",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "60c7503c-45f1-4910-b7a4-84b75dda9e96",
+      "startTime": "2026-02-15T10:19:56.726Z",
+      "endTime": "2026-02-15T10:19:57.933Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Weather Reporter. An experienced meteorologist who loves helping people plan their day with accurate weather reports.\nYour personal goal is: Provide accurate and helpful weather information to users."
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary."
+        }
+      ],
+      "output": [
+        {
+          "id": "call_XqIe9dke6jrc2RNzNE4mJtXs",
+          "function": {
+            "arguments": "{\"city\":\"London\"}",
+            "name": "get_weather"
+          },
+          "type": "function"
+        }
+      ],
+      "model": "gpt-4o-mini",
       "metricCollection": "test_collection_1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "f52326ac-f2b4-4395-a453-2d6f8ca708d9",
+      "uuid": "8fa838bb-d7c8-4e4d-9d7e-ed95e87db21d",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "8b0f03a7-86d7-4bab-9cfe-637236d68ebb",
-      "startTime": "2025-10-16T03:04:18.814Z",
-      "endTime": "2025-10-16T03:04:18.817Z",
-      "input": "{\"city\": \"London\"}",
+      "parentUuid": "60c7503c-45f1-4910-b7a4-84b75dda9e96",
+      "startTime": "2026-02-15T10:19:57.933Z",
+      "endTime": "2026-02-15T10:19:57.933Z",
+      "input": {
+        "city": "London"
+      },
       "output": "Weather in London: 60\u00b0F, Rainy, Humidity: 80%",
       "metricCollection": "test_collection_1"
     }
   ],
-  "startTime": "2025-10-16T03:04:17.272Z",
-  "endTime": "2025-10-16T03:04:20.003Z",
+  "startTime": "2026-02-15T10:19:56.720Z",
+  "endTime": "2026-02-15T10:19:58.902Z",
   "name": "crewai",
   "metadata": {
     "crewai": "crewai"

@@ -1,0 +1,67 @@
+---
+id: conversation-simulator-lifecycle-hooks
+title: Lifecycle Hooks
+sidebar_label: Lifecycle Hooks
+---
+
+The `ConversationSimulator` provides an `on_simulation_complete` hook that allows you to execute custom logic whenever a simulation of an individual test case has completed. This allows you to process each `ConversationalTestCase` as soon as it's generated, rather than waiting for all simulations to finish.
+
+## Supported Arguments
+
+The hook function receives two parameters:
+
+- `test_case`: the completed `ConversationalTestCase` object containing all turns and metadata.
+- `index`: the index of the corresponding golden that was simulated (**ordering is preserved** during simulation).
+
+## Example
+
+```python
+from deepeval.simulator import ConversationSimulator
+from deepeval.test_case import ConversationalTestCase
+
+def handle_simulation_complete(test_case: ConversationalTestCase, index: int):
+    print(f"Conversation {index} completed with {len(test_case.turns)} turns")
+
+conversational_test_cases = simulator.simulate(
+    conversational_goldens=[golden1, golden2, golden3],
+    on_simulation_complete=handle_simulation_complete
+)
+```
+
+## Common Use Cases
+
+### Result Storage
+
+Large simulation batches are easier to work with when each conversation is persisted as soon as it completes.
+
+```python
+def save_completed_simulation(test_case, index):
+    database.save(
+        id=f"simulation-{index}",
+        turns=[turn.model_dump() for turn in test_case.turns],
+        scenario=test_case.scenario,
+    )
+
+simulator.simulate(
+    conversational_goldens=goldens,
+    on_simulation_complete=save_completed_simulation,
+)
+```
+
+### Progress Logging
+
+Progress logs give you lightweight observability while a batch of simulations is running.
+
+```python
+def print_summary(test_case, index):
+    print(f"Completed simulation {index}: {len(test_case.turns)} turns")
+
+simulator.simulate(
+    conversational_goldens=goldens,
+    on_simulation_complete=print_summary,
+)
+```
+
+::::tip
+When using `async_mode=True`, conversations may complete in any order due to concurrent execution. Use the `index` parameter to track which golden each test case corresponds to.
+::::

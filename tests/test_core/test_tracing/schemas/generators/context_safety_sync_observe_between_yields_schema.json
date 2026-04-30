@@ -1,0 +1,74 @@
+{
+  "uuid": "47137785-8eb2-47c6-8565-7ca28a6627c3",
+  "baseSpans": [
+    {
+      "uuid": "d9a25d0a-79f4-471e-8f44-6ee6eeb7f5df",
+      "name": "stream_simple",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-27T11:14:37.731Z",
+      "endTime": "2026-02-27T11:14:37.731Z",
+      "input": {
+        "data": "one two three"
+      },
+      "output": "three"
+    },
+    {
+      "uuid": "76ea6d15-71a4-4109-aa0e-05d8be6199fc",
+      "name": "process_item",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "d9a25d0a-79f4-471e-8f44-6ee6eeb7f5df",
+      "startTime": "2026-02-27T11:14:37.731Z",
+      "endTime": "2026-02-27T11:14:37.731Z",
+      "input": {
+        "item": "three"
+      },
+      "output": {
+        "processed": "three"
+      }
+    },
+    {
+      "uuid": "84370466-0a22-4dc6-b82b-d5c699de6740",
+      "name": "process_item",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "d9a25d0a-79f4-471e-8f44-6ee6eeb7f5df",
+      "startTime": "2026-02-27T11:14:37.731Z",
+      "endTime": "2026-02-27T11:14:37.731Z",
+      "input": {
+        "item": "two"
+      },
+      "output": {
+        "processed": "two"
+      }
+    },
+    {
+      "uuid": "ece413f1-5a32-4c44-a76f-527b401bc067",
+      "name": "process_item",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "d9a25d0a-79f4-471e-8f44-6ee6eeb7f5df",
+      "startTime": "2026-02-27T11:14:37.731Z",
+      "endTime": "2026-02-27T11:14:37.731Z",
+      "input": {
+        "item": "one"
+      },
+      "output": {
+        "processed": "one"
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-27T11:14:37.731Z",
+  "endTime": "2026-02-27T11:14:37.731Z",
+  "environment": "development",
+  "input": {
+    "data": "one two three"
+  },
+  "output": "three",
+  "status": "SUCCESS"
+}

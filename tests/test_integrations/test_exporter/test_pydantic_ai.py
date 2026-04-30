@@ -3,9 +3,9 @@ from deepeval.tracing.otel.exporter import ConfidentSpanExporter
 from tests.test_integrations.test_exporter.readable_spans import (
     list_of_readable_spans,
     llm_span_list,
+    multi_turn_span_list,
 )
 from deepeval.tracing.trace_test_manager import trace_testing_manager
-
 
 exporter = ConfidentSpanExporter()
 
@@ -25,6 +25,32 @@ async def test_pydantic_ai_trace():
         assert (
             actual_dict["output"]["content"] == "Final response text"
         ), f"Expected output content to be 'Final response text', got {actual_dict['output']['content']}"
+
+    finally:
+        trace_testing_manager.test_name = None
+        trace_testing_manager.test_dict = None
+
+
+async def test_multi_turn_trace():
+    try:
+        trace_testing_manager.test_name = "any_name"
+        exporter.export(multi_turn_span_list)
+        actual_dict = await trace_testing_manager.wait_for_test_dict()
+
+        # Assert that the trace input is the last user text message
+        assert (
+            actual_dict["input"][0]["role"] == "System Instruction"
+        ), f"Expected first input role to be 'System Instruction', got {actual_dict['input'][0]['role']}"
+
+        assert (
+            actual_dict["input"][1]["content"]
+            == "What are the columns in the report?"
+        ), f"Expected input to be the follow-up question, got {actual_dict['input'][1]['content']}"
+
+        # Assert that the output is the final result
+        assert (
+            actual_dict["output"] == "The report contains 68 columns."
+        ), f"Expected output to be final result, got {actual_dict['output']}"
 
     finally:
         trace_testing_manager.test_name = None

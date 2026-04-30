@@ -2,6 +2,8 @@ import warnings
 from typing import Optional
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.config.settings import get_settings
+from deepeval.cli.utils import WWW, with_utm
+import logging
 
 try:
     from opentelemetry import trace
@@ -24,6 +26,9 @@ def is_opentelemetry_available():
     return True
 
 
+logger = logging.getLogger(__name__)
+settings = get_settings()
+
 settings = get_settings()
 # OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
 
@@ -31,9 +36,14 @@ OTLP_ENDPOINT = str(settings.CONFIDENT_OTEL_URL) + "v1/traces"
 
 
 def instrument_pydantic_ai(api_key: Optional[str] = None):
+    docs_url = with_utm(
+        f"{WWW}/docs/integrations/third-party/pydantic-ai",
+        medium="python_sdk",
+        content="pydantic_ai_otel_deprecation",
+    )
     warnings.warn(
         "instrument_pydantic_ai is deprecated and will be removed in a future version. "
-        "Please use the new ConfidentInstrumentationSettings instead. Docs: https://www.confident-ai.com/docs/integrations/third-party/pydantic-ai",
+        f"Please use the new ConfidentInstrumentationSettings instead. Docs: {docs_url}",
         DeprecationWarning,
         stacklevel=2,
     )
@@ -51,6 +61,11 @@ def instrument_pydantic_ai(api_key: Optional[str] = None):
                 )
             )
         )
+        try:
+            trace.set_tracer_provider(tracer_provider)
+        except Exception as e:
+            # Handle case where provider is already set (optional warning)
+            logger.warning(f"Could not set global tracer provider: {e}")
 
         # create an instrumented exporter
         from pydantic_ai.models.instrumented import InstrumentationSettings

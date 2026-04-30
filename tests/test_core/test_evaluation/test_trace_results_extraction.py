@@ -8,8 +8,8 @@ from deepeval.tracing.api import TraceApi, TraceSpanApiStatus
 from tests.test_core.stubs import make_span_api_like
 from tests.test_core.helpers import ts_iso8601_utc
 
-
 exec_mod = import_module("deepeval.evaluate.execute")
+_agentic_mod = import_module("deepeval.evaluate.execute.agentic")
 
 
 @pytest.mark.asyncio
@@ -63,9 +63,13 @@ async def test_trace_metric_produces_additional_test_result(monkeypatch):
         endTime=ts_iso8601_utc(now),
     )
 
-    # Monkeypatch create_api_trace to return our injected object
+    # Monkeypatch create_api_trace in the agentic submodule where
+    # `_a_execute_agentic_test_case` looks it up.
     monkeypatch.setattr(
-        exec_mod, "create_api_trace", lambda *a, **k: trace_api, raising=True
+        _agentic_mod,
+        "create_api_trace",
+        lambda *a, **k: trace_api,
+        raising=True,
     )
 
     # execute just enough to append results
@@ -104,7 +108,6 @@ async def test_trace_metric_produces_additional_test_result(monkeypatch):
         _use_bar_indicator=False,
         _is_assert_test=False,
         trace=trace,
-        observed_callback=None,
         trace_metrics=[],
         progress=None,
         pbar_id=None,

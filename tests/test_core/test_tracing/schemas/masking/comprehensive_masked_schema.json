@@ -1,0 +1,51 @@
+{
+  "uuid": "997c3cc9-5425-4b70-9569-37c3ed86596b",
+  "baseSpans": [
+    {
+      "uuid": "083a5e6e-d61e-4a4c-a89b-cbd82f3a35cd",
+      "name": "process_sensitive_data",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T10:10:19.657Z",
+      "endTime": "2026-01-29T10:10:19.657Z",
+      "input": {
+        "data": {
+          "email": "***@***.***",
+          "card": "****-****-****-****",
+          "name": "John Doe"
+        }
+      },
+      "output": {
+        "result": "processed",
+        "original": {
+          "email": "***@***.***",
+          "card": "****-****-****-****",
+          "name": "John Doe"
+        }
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T10:10:19.657Z",
+  "endTime": "2026-01-29T10:10:19.657Z",
+  "environment": "development",
+  "input": {
+    "data": {
+      "email": "***@***.***",
+      "card": "****-****-****-****",
+      "name": "John Doe"
+    }
+  },
+  "output": {
+    "result": "processed",
+    "original": {
+      "email": "***@***.***",
+      "card": "****-****-****-****",
+      "name": "John Doe"
+    }
+  },
+  "status": "SUCCESS"
+}

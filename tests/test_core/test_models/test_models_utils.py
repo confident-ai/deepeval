@@ -3,8 +3,10 @@ import logging
 from pydantic import SecretStr
 
 from deepeval.errors import DeepEvalError
+from deepeval.models.base_model import DeepEvalModelData
 from deepeval.models.utils import (
     require_secret_api_key,
+    require_costs,
     normalize_kwargs_and_extract_aliases,
 )
 
@@ -97,3 +99,140 @@ def test_normalize_kwargs_and_extract_aliases_no_alias_usage_no_logs(caplog):
 
     # no warnings logged
     assert caplog.records == []
+
+
+##############################
+# require_costs unit tests   #
+##############################
+
+
+def test_require_costs_returns_registry_prices_when_both_present():
+    model_data = DeepEvalModelData(input_price=0.01, output_price=0.02)
+    inp, out = require_costs(
+        model_data,
+        model_name="test-model",
+        input_token_envvar="TEST_COST_PER_INPUT_TOKEN",
+        output_token_envvar="TEST_COST_PER_OUTPUT_TOKEN",
+    )
+    assert inp == 0.01
+    assert out == 0.02
+
+
+def test_require_costs_registry_prices_win_over_constructor_args():
+    model_data = DeepEvalModelData(input_price=0.01, output_price=0.02)
+    inp, out = require_costs(
+        model_data,
+        model_name="test-model",
+        input_token_envvar="TEST_COST_PER_INPUT_TOKEN",
+        output_token_envvar="TEST_COST_PER_OUTPUT_TOKEN",
+        cost_per_input_token=0.99,
+        cost_per_output_token=0.88,
+    )
+    assert inp == 0.01
+    assert out == 0.02
+
+
+def test_require_costs_uses_constructor_args_when_registry_missing():
+    model_data = DeepEvalModelData(input_price=None, output_price=None)
+    inp, out = require_costs(
+        model_data,
+        model_name="unknown-model",
+        input_token_envvar="TEST_COST_PER_INPUT_TOKEN",
+        output_token_envvar="TEST_COST_PER_OUTPUT_TOKEN",
+        cost_per_input_token=0.05,
+        cost_per_output_token=0.10,
+    )
+    assert inp == 0.05
+    assert out == 0.10
+
+
+def test_require_costs_returns_none_when_registry_and_constructor_missing():
+    model_data = DeepEvalModelData(input_price=None, output_price=None)
+    inp, out = require_costs(
+        model_data,
+        model_name="unknown-model",
+        input_token_envvar="TEST_COST_PER_INPUT_TOKEN",
+        output_token_envvar="TEST_COST_PER_OUTPUT_TOKEN",
+    )
+    assert inp is None
+    assert out is None
+
+
+def test_require_costs_returns_none_when_only_input_constructor_arg():
+    model_data = DeepEvalModelData(input_price=None, output_price=None)
+    inp, out = require_costs(
+        model_data,
+        model_name="unknown-model",
+        input_token_envvar="TEST_COST_PER_INPUT_TOKEN",
+        output_token_envvar="TEST_COST_PER_OUTPUT_TOKEN",
+        cost_per_input_token=0.05,
+    )
+    assert inp is None
+    assert out is None
+
+
+def test_require_costs_returns_none_when_only_output_constructor_arg():
+    model_data = DeepEvalModelData(input_price=None, output_price=None)
+    inp, out = require_costs(
+        model_data,
+        model_name="unknown-model",
+        input_token_envvar="TEST_COST_PER_INPUT_TOKEN",
+        output_token_envvar="TEST_COST_PER_OUTPUT_TOKEN",
+        cost_per_output_token=0.10,
+    )
+    assert inp is None
+    assert out is None
+
+
+def test_require_costs_raises_on_negative_input_cost():
+    model_data = DeepEvalModelData(input_price=None, output_price=None)
+    with pytest.raises(DeepEvalError, match="must be >= 0"):
+        require_costs(
+            model_data,
+            model_name="test-model",
+            input_token_envvar="TEST_COST_PER_INPUT_TOKEN",
+            output_token_envvar="TEST_COST_PER_OUTPUT_TOKEN",
+            cost_per_input_token=-0.01,
+            cost_per_output_token=0.02,
+        )
+
+
+def test_require_costs_raises_on_negative_output_cost():
+    model_data = DeepEvalModelData(input_price=None, output_price=None)
+    with pytest.raises(DeepEvalError, match="must be >= 0"):
+        require_costs(
+            model_data,
+            model_name="test-model",
+            input_token_envvar="TEST_COST_PER_INPUT_TOKEN",
+            output_token_envvar="TEST_COST_PER_OUTPUT_TOKEN",
+            cost_per_input_token=0.01,
+            cost_per_output_token=-0.02,
+        )
+
+
+def test_require_costs_accepts_zero_values():
+    model_data = DeepEvalModelData(input_price=None, output_price=None)
+    inp, out = require_costs(
+        model_data,
+        model_name="test-model",
+        input_token_envvar="TEST_COST_PER_INPUT_TOKEN",
+        output_token_envvar="TEST_COST_PER_OUTPUT_TOKEN",
+        cost_per_input_token=0.0,
+        cost_per_output_token=0.0,
+    )
+    assert inp == 0.0
+    assert out == 0.0
+
+
+def test_require_costs_partial_registry_falls_back_to_constructor():
+    model_data = DeepEvalModelData(input_price=0.01, output_price=None)
+    inp, out = require_costs(
+        model_data,
+        model_name="partial-model",
+        input_token_envvar="TEST_COST_PER_INPUT_TOKEN",
+        output_token_envvar="TEST_COST_PER_OUTPUT_TOKEN",
+        cost_per_input_token=0.05,
+        cost_per_output_token=0.10,
+    )
+    assert inp == 0.05
+    assert out == 0.10

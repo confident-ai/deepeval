@@ -1,0 +1,27 @@
+{
+  "uuid": "5987c830-c3db-423a-b107-b3a98274211a",
+  "baseSpans": [
+    {
+      "uuid": "29f4844e-aff7-4886-95af-e86c11fddf76",
+      "name": "async_streaming_concurrent",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-27T11:14:37.495Z",
+      "endTime": "2026-02-27T11:14:37.528Z",
+      "input": {
+        "data": "a b c"
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-27T11:14:37.495Z",
+  "endTime": "2026-02-27T11:14:37.528Z",
+  "environment": "development",
+  "input": {
+    "data": "a b c"
+  },
+  "status": "SUCCESS"
+}

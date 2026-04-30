@@ -1,0 +1,76 @@
+{
+  "uuid": "468047769a9d029a4b17ed6aaf4abfa6",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "df1624cea25fe83c",
+      "name": "tool_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T19:10:27.738Z",
+      "endTime": "2026-01-29T19:10:30.236Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
+        },
+        {
+          "role": "user",
+          "content": "What is 7 multiplied by 8?"
+        }
+      ],
+      "output": "7 multiplied by 8 is 56.",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "df1624cea25fe83c",
+      "name": "",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T19:10:27.738Z",
+      "endTime": "2026-01-29T19:10:30.236Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
+        },
+        {
+          "role": "user",
+          "content": "What is 7 multiplied by 8?"
+        }
+      ],
+      "output": "7 multiplied by 8 is 56.",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T19:10:27.738Z",
+  "endTime": "2026-01-29T19:10:30.236Z",
+  "name": "pydanticai-tool-test",
+  "metadata": {
+    "test_type": "tool"
+  },
+  "tags": [
+    "pydanticai",
+    "tool"
+  ],
+  "environment": "development",
+  "threadId": "tool-123",
+  "userId": "test-user",
+  "input": [
+    {
+      "role": "system",
+      "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
+    },
+    {
+      "role": "user",
+      "content": "What is 7 multiplied by 8?"
+    }
+  ],
+  "output": "7 multiplied by 8 is 56.",
+  "status": "SUCCESS"
+}

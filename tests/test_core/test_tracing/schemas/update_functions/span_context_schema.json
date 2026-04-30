@@ -1,0 +1,37 @@
+{
+  "uuid": "361290b2-8119-4f50-b580-ee522d43e143",
+  "baseSpans": [
+    {
+      "uuid": "229df6e8-6e2e-4a75-89cb-6a148f9c56d2",
+      "name": "span_update_context",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:13.862Z",
+      "endTime": "2026-01-29T09:53:13.862Z",
+      "input": {
+        "query": "query"
+      },
+      "output": "Contextualized: query",
+      "retrievalContext": [
+        "Document 1 content",
+        "Document 2 content"
+      ],
+      "context": [
+        "Additional context 1",
+        "Additional context 2"
+      ]
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.862Z",
+  "endTime": "2026-01-29T09:53:13.862Z",
+  "environment": "testing",
+  "input": {
+    "query": "query"
+  },
+  "output": "Contextualized: query",
+  "status": "SUCCESS"
+}

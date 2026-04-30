@@ -6,13 +6,51 @@ from deepeval.test_case.llm_test_case import ToolCall, LLMTestCase
 from deepeval.tracing.types import LlmSpan, RetrieverSpan
 from deepeval.prompt.prompt import Prompt
 
-current_span_context: ContextVar[Optional[BaseSpan]] = ContextVar(
-    "current_span", default=None
-)
 
-current_trace_context: ContextVar[Optional[Trace]] = ContextVar(
-    "current_trace", default=None
-)
+class SpanContext:
+    def __init__(self):
+        self.current_span: ContextVar[Optional[BaseSpan]] = ContextVar(
+            "current_span", default=None
+        )
+
+    def get(self):
+        return self.current_span.get()
+
+    def set(self, value):
+        return self.current_span.set(value)
+
+    def reset(self, value):
+        return self.current_span.reset(value)
+
+    def drop(self):
+        span = self.current_span.get()
+        if span:
+            span.drop = True
+
+
+class TraceContext:
+    def __init__(self):
+        self.current_trace: ContextVar[Optional[Trace]] = ContextVar(
+            "current_trace", default=None
+        )
+
+    def get(self):
+        return self.current_trace.get()
+
+    def set(self, value):
+        return self.current_trace.set(value)
+
+    def reset(self, value):
+        return self.current_trace.reset(value)
+
+    def drop(self):
+        trace = self.current_trace.get()
+        if trace:
+            trace.drop = True
+
+
+current_span_context = SpanContext()
+current_trace_context = TraceContext()
 
 
 def update_current_span(
@@ -26,6 +64,7 @@ def update_current_span(
     metadata: Optional[Dict[str, Any]] = None,
     name: Optional[str] = None,
     test_case: Optional[LLMTestCase] = None,
+    metric_collection: Optional[str] = None,
 ):
     current_span = current_span_context.get()
     if not current_span:
@@ -57,6 +96,8 @@ def update_current_span(
         current_span.expected_tools = expected_tools
     if name:
         current_span.name = name
+    if metric_collection:
+        current_span.metric_collection = metric_collection
 
 
 def update_current_trace(
@@ -74,6 +115,9 @@ def update_current_trace(
     expected_tools: Optional[List[ToolCall]] = None,
     test_case: Optional[LLMTestCase] = None,
     confident_api_key: Optional[str] = None,
+    test_case_id: Optional[str] = None,
+    turn_id: Optional[str] = None,
+    metric_collection: Optional[str] = None,
 ):
     current_trace = current_trace_context.get()
     if not current_trace:
@@ -112,6 +156,12 @@ def update_current_trace(
         current_trace.expected_tools = expected_tools
     if confident_api_key:
         current_trace.confident_api_key = confident_api_key
+    if test_case_id:
+        current_trace.test_case_id = test_case_id
+    if turn_id:
+        current_trace.turn_id = turn_id
+    if metric_collection:
+        current_trace.metric_collection = metric_collection
 
 
 def update_llm_span(
@@ -140,6 +190,11 @@ def update_llm_span(
         current_span.token_intervals = token_intervals
     if prompt:
         current_span.prompt = prompt
+        # Updating on span as well
+        current_span.prompt_alias = prompt.alias
+        current_span.prompt_commit_hash = prompt.hash
+        current_span.prompt_label = prompt.label
+        current_span.prompt_version = prompt.version
 
 
 def update_retriever_span(

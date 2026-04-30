@@ -7,6 +7,7 @@ from dataclasses import dataclass
 @dataclass
 class DeepEvalModelData:
     supports_log_probs: Optional[bool] = None
+    max_log_probs: Optional[int] = None
     supports_multimodal: Optional[bool] = None
     supports_structured_outputs: Optional[bool] = None
     supports_json: Optional[bool] = None
@@ -46,6 +47,23 @@ class DeepEvalBaseLLM(ABC):
     def __init__(self, model: Optional[str] = None, *args, **kwargs):
         self.name = parse_model_name(model)
         self.model = self.load_model()
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        from deepeval.tracing.internal import observe_methods
+
+        observe_methods(
+            cls,
+            span_type="llm",
+            allowed_methods=[
+                "generate",
+                "a_generate",
+                "generate_raw_response",
+                "a_generate_raw_response",
+                "batch_generate",
+                "generate_samples",
+            ],
+        )
 
     @abstractmethod
     def load_model(self, *args, **kwargs) -> "DeepEvalBaseLLM":

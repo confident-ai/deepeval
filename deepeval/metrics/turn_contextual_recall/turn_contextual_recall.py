@@ -1,7 +1,7 @@
 from typing import List, Optional, Union, Type, Tuple
 import asyncio
 import itertools
-from deepeval.test_case import ConversationalTestCase, TurnParams, Turn
+from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -28,15 +28,14 @@ from deepeval.metrics.turn_contextual_recall.schema import (
     ContextualRecallScoreReason,
     InteractionContextualRecallScore,
 )
-from deepeval.metrics.api import metric_data_manager
 
 
 class TurnContextualRecallMetric(BaseConversationalMetric):
-    _required_test_case_params: List[TurnParams] = [
-        TurnParams.ROLE,
-        TurnParams.CONTENT,
-        TurnParams.RETRIEVAL_CONTEXT,
-        TurnParams.EXPECTED_OUTCOME,
+    _required_test_case_params: List[MultiTurnParams] = [
+        MultiTurnParams.ROLE,
+        MultiTurnParams.CONTENT,
+        MultiTurnParams.RETRIEVAL_CONTEXT,
+        MultiTurnParams.EXPECTED_OUTCOME,
     ]
 
     def __init__(
@@ -121,10 +120,6 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
                         f"Final Reason: {self.reason}\n",
                     ],
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
 
             return self.score
 
@@ -185,10 +180,6 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
                     f"Final Reason: {self.reason}\n",
                 ],
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
 
             return self.score
 

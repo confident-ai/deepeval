@@ -1,0 +1,153 @@
+{
+  "uuid": "de7f322a-8e92-4a27-8886-76b0cf2898fc",
+  "baseSpans": [
+    {
+      "uuid": "bcc4d7da-ab57-4941-a70e-9c4ead90312d",
+      "name": "kickoff_async",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-15T10:22:48.328Z",
+      "endTime": "2026-02-15T10:22:50.203Z",
+      "input": {},
+      "output": "Weather in Tokyo: Clear, 70\u00b0F"
+    },
+    {
+      "uuid": "c6c8d798-9edd-4fe4-84f9-f88fe047eeb4",
+      "name": "kickoff",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "bcc4d7da-ab57-4941-a70e-9c4ead90312d",
+      "startTime": "2026-02-15T10:22:48.329Z",
+      "endTime": "2026-02-15T10:22:50.202Z",
+      "input": {
+        "city": "Tokyo"
+      },
+      "output": "Weather in Tokyo: Clear, 70\u00b0F"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "81611a70-9eae-4b10-a62e-162fd50cf3ab",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "c6c8d798-9edd-4fe4-84f9-f88fe047eeb4",
+      "startTime": "2026-02-15T10:22:48.332Z",
+      "endTime": "2026-02-15T10:22:50.195Z",
+      "input": "Check the weather in Tokyo. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "output": "Weather in Tokyo: Clear, 70\u00b0F",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "output": "Weather in Tokyo: Clear, 70\u00b0F",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ],
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "2aa7893a-4d8e-4d2f-b8f5-9481616a5818",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "81611a70-9eae-4b10-a62e-162fd50cf3ab",
+      "startTime": "2026-02-15T10:22:49.436Z",
+      "endTime": "2026-02-15T10:22:50.194Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Meteorologist. You are a meticulous meteorologist. You NEVER guess the weather. You ALWAYS call the tool without exception.\nYour personal goal is: Check weather"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Check the weather in Tokyo. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_sJrLqfttf0lLzk07gnX5aA5z",
+              "type": "function",
+              "function": {
+                "name": "'get_weather'",
+                "arguments": "'{\"city\":\"Tokyo\"}'"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_sJrLqfttf0lLzk07gnX5aA5z",
+          "name": "get_weather",
+          "content": "Weather in Tokyo: Clear, 70\u00b0F"
+        },
+        {
+          "role": "user",
+          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
+        }
+      ],
+      "output": "Weather in Tokyo: Clear, 70\u00b0F",
+      "model": "gpt-4o-mini"
+    },
+    {
+      "uuid": "a5fb999a-ba66-4e75-af35-4ecec0fdc43a",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "81611a70-9eae-4b10-a62e-162fd50cf3ab",
+      "startTime": "2026-02-15T10:22:48.335Z",
+      "endTime": "2026-02-15T10:22:49.433Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Meteorologist. You are a meticulous meteorologist. You NEVER guess the weather. You ALWAYS call the tool without exception.\nYour personal goal is: Check weather"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Check the weather in Tokyo. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary."
+        }
+      ],
+      "output": [
+        {
+          "id": "call_sJrLqfttf0lLzk07gnX5aA5z",
+          "function": {
+            "arguments": "{\"city\":\"Tokyo\"}",
+            "name": "get_weather"
+          },
+          "type": "function"
+        }
+      ],
+      "model": "gpt-4o-mini"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "4b4d72d2-5ede-4122-8d26-f427191788a1",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "81611a70-9eae-4b10-a62e-162fd50cf3ab",
+      "startTime": "2026-02-15T10:22:49.437Z",
+      "endTime": "2026-02-15T10:22:49.437Z",
+      "input": {
+        "city": "Tokyo"
+      },
+      "output": "Weather in Tokyo: Clear, 70\u00b0F"
+    }
+  ],
+  "startTime": "2026-02-15T10:22:48.328Z",
+  "endTime": "2026-02-15T10:22:50.203Z",
+  "environment": "development",
+  "input": {
+    "city": "Tokyo"
+  },
+  "output": "Weather in Tokyo: Clear, 70\u00b0F",
+  "status": "SUCCESS"
+}

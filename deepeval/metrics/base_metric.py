@@ -1,17 +1,21 @@
+from __future__ import annotations
+
 from abc import abstractmethod
-from typing import Optional, Dict, List
+from typing import TYPE_CHECKING, Optional, Dict, List
 
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
-    LLMTestCaseParams,
+    SingleTurnParams,
     ArenaTestCase,
 )
-from deepeval.models import DeepEvalBaseLLM
+
+if TYPE_CHECKING:
+    from deepeval.models import DeepEvalBaseLLM
 
 
 class BaseMetric:
-    _required_params = List[LLMTestCaseParams]
+    _required_params = List[SingleTurnParams]
     threshold: float
     score: Optional[float] = None
     score_breakdown: Dict = None
@@ -27,8 +31,14 @@ class BaseMetric:
     verbose_logs: Optional[str] = None
     skipped = False
     requires_trace: bool = False
-    model = Optional[DeepEvalBaseLLM]
-    using_native_model = Optional[bool]
+    model: Optional[DeepEvalBaseLLM] = None
+    using_native_model: Optional[bool] = None
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        from deepeval.tracing.internal import observe_methods
+
+        observe_methods(cls)
 
     @abstractmethod
     def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
@@ -73,6 +83,12 @@ class BaseConversationalMetric:
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        from deepeval.tracing.internal import observe_methods
+
+        observe_methods(cls)
+
     @abstractmethod
     def measure(
         self, test_case: ConversationalTestCase, *args, **kwargs
@@ -111,8 +127,14 @@ class BaseArenaMetric:
     error: Optional[str] = None
     evaluation_cost: Optional[float] = None
     verbose_logs: Optional[str] = None
-    model = Optional[DeepEvalBaseLLM]
-    using_native_model = Optional[bool]
+    model: Optional[DeepEvalBaseLLM] = None
+    using_native_model: Optional[bool] = None
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        from deepeval.tracing.internal import observe_methods
+
+        observe_methods(cls)
 
     @abstractmethod
     def measure(self, test_case: ArenaTestCase, *args, **kwargs) -> str:

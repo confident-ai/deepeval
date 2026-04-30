@@ -26,6 +26,8 @@ from deepeval.tracing.trace_test_manager import trace_testing_manager
 
 prompt = Prompt(alias="asd")
 prompt._version = "00.00.01"
+prompt.label = "test-label"
+prompt.hash = "bab04ec"
 
 
 @function_tool(metric_collection="test_collection_1")

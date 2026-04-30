@@ -18,6 +18,7 @@ from deepeval.errors import (
     MissingTestCaseParamsError,
 )
 from deepeval.utils import convert_to_multi_modal_array
+from deepeval.config.settings import get_settings
 from deepeval.models import (
     DeepEvalBaseLLM,
     GPTModel,
@@ -58,13 +59,13 @@ from deepeval.metrics import (
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.test_case import (
     LLMTestCase,
-    LLMTestCaseParams,
+    SingleTurnParams,
     ConversationalTestCase,
     MLLMImage,
     Turn,
     ArenaTestCase,
     ToolCall,
-    TurnParams,
+    MultiTurnParams,
 )
 
 MULTIMODAL_SUPPORTED_MODELS = {
@@ -76,6 +77,8 @@ MULTIMODAL_SUPPORTED_MODELS = {
     AnthropicModel: ANTHROPIC_MODELS_DATA,
     GrokModel: GROK_MODELS_DATA,
 }
+
+SETTINGS = get_settings()
 
 
 def copy_metrics(
@@ -102,7 +105,7 @@ def copy_metrics(
 
 
 def format_turns(
-    llm_test_cases: List[LLMTestCase], test_case_params: List[LLMTestCaseParams]
+    llm_test_cases: List[LLMTestCase], test_case_params: List[SingleTurnParams]
 ) -> List[Dict[str, Union[str, List[str]]]]:
     res = []
     for llm_test_case in llm_test_cases:
@@ -117,17 +120,28 @@ def format_turns(
 
 def convert_turn_to_dict(
     turn: Turn,
-    turn_params: List[TurnParams] = [TurnParams.CONTENT, TurnParams.ROLE],
+    turn_params: List[MultiTurnParams] = [
+        MultiTurnParams.CONTENT,
+        MultiTurnParams.ROLE,
+    ],
 ) -> Dict:
-    result = {
-        param.value: getattr(turn, param.value)
-        for param in turn_params
-        if (
-            param != TurnParams.SCENARIO
-            and param != TurnParams.EXPECTED_OUTCOME
-            and getattr(turn, param.value) is not None
-        )
-    }
+    result = {}
+    for param in turn_params:
+        if param in (
+            MultiTurnParams.SCENARIO,
+            MultiTurnParams.EXPECTED_OUTCOME,
+            MultiTurnParams.METADATA,
+            MultiTurnParams.TAGS,
+        ):
+            continue
+
+        if not hasattr(turn, param.value):
+            continue
+
+        value = getattr(turn, param.value)
+        if value is not None:
+            result[param.value] = value
+
     return result
 
 
@@ -172,6 +186,8 @@ def get_unit_interactions(turns: List[Turn]) -> List[List[Turn]]:
 
 
 def print_tools_called(tools_called_list: List[ToolCall]):
+    if not tools_called_list:
+        return ""
     string = "[\n"
     for index, tools_called in enumerate(tools_called_list):
         json_string = json.dumps(tools_called.model_dump(), indent=4)
@@ -215,7 +231,7 @@ def construct_verbose_logs(metric: BaseMetric, steps: List[str]) -> str:
 
 def check_conversational_test_case_params(
     test_case: ConversationalTestCase,
-    test_case_params: List[TurnParams],
+    test_case_params: List[MultiTurnParams],
     metric: BaseConversationalMetric,
     require_chatbot_role: bool = False,
     model: Optional[DeepEvalBaseLLM] = None,
@@ -246,15 +262,31 @@ def check_conversational_test_case_params(
         raise ValueError(error_str)
 
     if (
-        TurnParams.EXPECTED_OUTCOME in test_case_params
+        MultiTurnParams.EXPECTED_OUTCOME in test_case_params
         and test_case.expected_outcome is None
     ):
         error_str = f"'expected_outcome' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 
-    if TurnParams.SCENARIO in test_case_params and test_case.scenario is None:
+    if (
+        MultiTurnParams.SCENARIO in test_case_params
+        and test_case.scenario is None
+    ):
         error_str = f"'scenario' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
+
+    if (
+        MultiTurnParams.METADATA in test_case_params
+        and test_case.metadata is None
+    ):
+        error_str = f"'metadata' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
+
+    if MultiTurnParams.TAGS in test_case_params and test_case.tags is None:
+        error_str = f"'tags' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 
@@ -271,7 +303,7 @@ def check_conversational_test_case_params(
 
 def check_llm_test_case_params(
     test_case: LLMTestCase,
-    test_case_params: List[LLMTestCaseParams],
+    test_case_params: List[SingleTurnParams],
     input_image_count: Optional[int],
     actual_output_image_count: Optional[int],
     metric: Union[BaseMetric, BaseArenaMetric],
@@ -312,13 +344,22 @@ def check_llm_test_case_params(
                 if isinstance(ele, MLLMImage):
                     count += 1
             if count != actual_output_image_count:
-                error_str = f"Unable to evaluate test cases with '{actual_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
+                error_str = f"Can only evaluate test cases with '{actual_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
                 raise ValueError(error_str)
 
     if isinstance(test_case, LLMTestCase) is False:
         error_str = f"Unable to evaluate test cases that are not of type 'LLMTestCase' using the non-conversational '{metric.__name__}' metric."
         metric.error = error_str
         raise ValueError(error_str)
+
+    # Centralized: if a metric requires actual_output, reject empty/whitespace
+    # (including empty multimodal outputs) as "missing params".
+    if SingleTurnParams.ACTUAL_OUTPUT in test_case_params:
+        actual_output = getattr(test_case, SingleTurnParams.ACTUAL_OUTPUT.value)
+        if isinstance(actual_output, str) and actual_output == "":
+            error_str = f"'actual_output' cannot be empty for the '{metric.__name__}' metric"
+            metric.error = error_str
+            raise MissingTestCaseParamsError(error_str)
 
     missing_params = []
     for param in test_case_params:
@@ -342,7 +383,7 @@ def check_llm_test_case_params(
 
 def check_arena_test_case_params(
     arena_test_case: ArenaTestCase,
-    test_case_params: List[LLMTestCaseParams],
+    test_case_params: List[SingleTurnParams],
     metric: BaseArenaMetric,
     model: Optional[DeepEvalBaseLLM] = None,
     multimodal: Optional[bool] = False,
@@ -447,6 +488,13 @@ async def a_generate_with_schema_and_extract(
             prompt, schema=schema_cls
         )
 
+    # Handle models that return (result, cost) tuple even when not native
+    if isinstance(result, tuple) and len(result) == 2:
+        actual_result, cost = result
+        if hasattr(metric, "_accrue_cost"):
+            metric._accrue_cost(cost)
+        result = actual_result
+
     if isinstance(result, schema_cls):
         return extract_schema(result)
 
@@ -460,57 +508,86 @@ async def a_generate_with_schema_and_extract(
 
 
 def should_use_anthropic_model():
+    if SETTINGS.USE_ANTHROPIC_MODEL:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_ANTHROPIC_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_azure_openai():
+    if SETTINGS.USE_AZURE_OPENAI:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_AZURE_OPENAI)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_local_model():
+    if SETTINGS.USE_LOCAL_MODEL:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_LOCAL_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_ollama_model():
+    if SETTINGS.LOCAL_MODEL_API_KEY:
+        return SETTINGS.LOCAL_MODEL_API_KEY == "ollama"
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_API_KEY)
     return value == "ollama"
 
 
 def should_use_gemini_model():
+    if SETTINGS.USE_GEMINI_MODEL:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_GEMINI_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_openai_model():
+    if SETTINGS.USE_OPENAI_MODEL:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_OPENAI_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_litellm():
+    if SETTINGS.USE_LITELLM:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_LITELLM)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_portkey():
+    if SETTINGS.USE_PORTKEY_MODEL:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_PORTKEY_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_deepseek_model():
+    if SETTINGS.USE_DEEPSEEK_MODEL:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_DEEPSEEK_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_moonshot_model():
+    if SETTINGS.USE_MOONSHOT_MODEL:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_MOONSHOT_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_grok_model():
+    if SETTINGS.USE_GROK_MODEL:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_GROK_MODEL)
+    return value.lower() == "yes" if value is not None else False
+
+
+def should_use_amazon_bedrock_model():
+    if SETTINGS.USE_AWS_BEDROCK_MODEL:
+        return True
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_AWS_BEDROCK_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
@@ -532,27 +609,29 @@ def initialize_model(
     if isinstance(model, DeepEvalBaseLLM):
         return model, False
     if should_use_openai_model():
-        return GPTModel(), True
+        return GPTModel(model=model), True
     if should_use_gemini_model():
-        return GeminiModel(), True
+        return GeminiModel(model=model), True
     if should_use_litellm():
-        return LiteLLMModel(), True
+        return LiteLLMModel(model=model), True
     if should_use_portkey():
-        return PortkeyModel(), True
+        return PortkeyModel(model=model), True
     if should_use_ollama_model():
-        return OllamaModel(), True
+        return OllamaModel(model=model), True
     elif should_use_local_model():
-        return LocalModel(), True
+        return LocalModel(model=model), True
     elif should_use_azure_openai():
         return AzureOpenAIModel(model=model), True
     elif should_use_moonshot_model():
         return KimiModel(model=model), True
     elif should_use_grok_model():
-        return GrokModel(), True
+        return GrokModel(model=model), True
     elif should_use_deepseek_model():
         return DeepSeekModel(model=model), True
     elif should_use_anthropic_model():
-        return AnthropicModel(), True
+        return AnthropicModel(model=model), True
+    elif should_use_amazon_bedrock_model():
+        return AmazonBedrockModel(model=model), True
     elif isinstance(model, str) or model is None:
         return GPTModel(model=model), True
 

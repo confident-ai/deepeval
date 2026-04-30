@@ -1,0 +1,77 @@
+{
+  "uuid": "48d9acf47a9e4453971c6e4642172e49",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "30e5a3c5ae23cc38",
+      "name": "multiple_tools_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T19:10:37.094Z",
+      "endTime": "2026-01-29T19:10:39.233Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
+        },
+        {
+          "role": "user",
+          "content": "Use the get_time tool exactly once to get the current time in London."
+        }
+      ],
+      "output": "The current time in London is 7:00 AM GMT.",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "30e5a3c5ae23cc38",
+      "name": "",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T19:10:37.094Z",
+      "endTime": "2026-01-29T19:10:39.233Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
+        },
+        {
+          "role": "user",
+          "content": "Use the get_time tool exactly once to get the current time in London."
+        }
+      ],
+      "output": "The current time in London is 7:00 AM GMT.",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T19:10:37.094Z",
+  "endTime": "2026-01-29T19:10:39.233Z",
+  "name": "pydanticai-multiple-tools-time",
+  "metadata": {
+    "test_type": "multiple_tools_time"
+  },
+  "tags": [
+    "pydanticai",
+    "multiple-tools",
+    "time"
+  ],
+  "environment": "development",
+  "threadId": "multiple-tools-time-123",
+  "userId": "test-user",
+  "input": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
+    },
+    {
+      "role": "user",
+      "content": "Use the get_time tool exactly once to get the current time in London."
+    }
+  ],
+  "output": "The current time in London is 7:00 AM GMT.",
+  "status": "SUCCESS"
+}

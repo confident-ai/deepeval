@@ -1,0 +1,86 @@
+.root {
+  position: relative;
+  display: block;
+  font-size: 0;
+  line-height: 0;
+  border-radius: 0;
+  text-decoration: none;
+  background-image: none;
+
+  &[data-size="sm"] {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+  }
+
+  &[data-size="md"] {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+  }
+
+  &:hover .avatar {
+    border-color: var(--color-fd-primary);
+    transform: translateY(-1px);
+  }
+
+  &:hover .tooltip,
+  &:focus-visible .tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, calc(-100% - 8px));
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-fd-primary);
+    outline-offset: 2px;
+  }
+}
+
+.avatar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  object-fit: cover;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-muted);
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.tooltip {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 20;
+  padding: 4px 6px;
+  width: max-content;
+  max-width: min(22rem, calc(100vw - 2rem));
+  white-space: nowrap;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.1;
+  color: white;
+  background: rgb(63, 63, 70);
+  border-radius: 0;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.18);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 4px));
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease,
+    visibility 120ms ease;
+}
+
+@media (max-width: 1023px) {
+  .tooltip {
+    display: none;
+  }
+}

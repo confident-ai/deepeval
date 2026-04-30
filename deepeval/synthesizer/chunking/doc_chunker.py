@@ -5,7 +5,6 @@ from types import SimpleNamespace
 
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 
-
 if TYPE_CHECKING:
     from chromadb.api.models.Collection import Collection
     from langchain_core.documents import Document as LCDocument

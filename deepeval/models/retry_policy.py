@@ -62,7 +62,6 @@ from deepeval.constants import (
 )
 from deepeval.config.settings import get_settings
 
-
 logger = logging.getLogger(__name__)
 Provider = Union[str, PS]
 _MAX_TIMEOUT_THREADS = get_settings().DEEPEVAL_TIMEOUT_THREAD_LIMIT

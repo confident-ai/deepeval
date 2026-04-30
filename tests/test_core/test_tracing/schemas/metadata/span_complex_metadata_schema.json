@@ -1,0 +1,44 @@
+{
+  "uuid": "9deb9b26-b3b7-4fdb-b3cd-a97c9ffed0aa",
+  "baseSpans": [
+    {
+      "uuid": "a5838335-de90-42ea-ad28-97eaf79af8e5",
+      "name": "span_with_complex_metadata",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:12.932Z",
+      "endTime": "2026-01-29T09:53:12.932Z",
+      "metadata": {
+        "request": {
+          "method": "POST",
+          "path": "/api/process"
+        },
+        "config": {
+          "max_tokens": 1000,
+          "temperature": 0.7
+        },
+        "tags": [
+          "production",
+          "v2"
+        ],
+        "count": 42
+      },
+      "input": {
+        "data": "data"
+      },
+      "output": "data"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:12.932Z",
+  "endTime": "2026-01-29T09:53:12.932Z",
+  "environment": "testing",
+  "input": {
+    "data": "data"
+  },
+  "output": "data",
+  "status": "SUCCESS"
+}

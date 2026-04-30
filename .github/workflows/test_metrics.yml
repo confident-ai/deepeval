@@ -1,4 +1,4 @@
-name: Test Metrics
+name: Metrics Tests
 
 on:
   push:
@@ -54,7 +54,7 @@ jobs:
 
       - name: Install project
         run: poetry install --no-interaction --only main
-        
+
       #----------------------------------------------
       #    Install Pillow for PIL and mcp[cli]
       #----------------------------------------------

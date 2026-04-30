@@ -1,0 +1,50 @@
+{
+  "uuid": "7f153890805d0bc835ddf6113462f882",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "e920e8c25e753af6",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T11:17:43.539Z",
+      "endTime": "2026-03-09T11:17:45.829Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
+      "output": "The result of 7 multiplied by 8 is 56.\n",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "e920e8c25e753af6",
+      "name": "",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T11:17:43.539Z",
+      "endTime": "2026-03-09T11:17:45.829Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
+      "output": "The result of 7 multiplied by 8 is 56.\n",
+      "toolsCalled": [],
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-03-09T11:17:43.539Z",
+  "endTime": "2026-03-09T11:17:45.829Z",
+  "name": "agentcore-tool-test",
+  "metadata": {
+    "test_type": "tool"
+  },
+  "tags": [
+    "agentcore",
+    "tool"
+  ],
+  "environment": "development",
+  "threadId": "tool-123",
+  "userId": "test-user",
+  "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
+  "output": "The result of 7 multiplied by 8 is 56.\n",
+  "status": "SUCCESS"
+}

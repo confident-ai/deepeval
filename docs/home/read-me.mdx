@@ -1,0 +1,261 @@
+import { ASSETS } from "@site/src/assets";
+import HomePytestDemo from "@site/src/sections/home/HomePytestDemo";
+import JudgeCards from "@site/src/sections/home/JudgeCards";
+import SOTACards from "@site/src/sections/home/SOTACards";
+import AgentTraceTerminal from "@site/src/sections/home/AgentTraceTerminal";
+import ClaudeCodeTerminal from "@site/src/sections/home/ClaudeCodeTerminal";
+import TraceLoopConnector from "@site/src/sections/home/TraceLoopConnector";
+import IntegrationGrid from "@site/src/components/IntegrationGrid";
+import RepoContributors from "@site/src/sections/home/RepoContributors";
+import { PrimaryButton } from "@site/src/components/Buttons";
+import {
+  GoldenGenerationDemo,
+  MultiTurnSimulationDemo,
+} from "@site/src/sections/home/DatasetDemos";
+import {
+  Bot,
+  Compass,
+  FileSearch,
+  MessagesSquare,
+  Route,
+  GitMerge,
+  Gauge,
+  FileText,
+  Cloud,
+  ShieldCheck,
+  ArrowUpRight,
+} from "lucide-react";
+
+<br />
+
+<br />
+
+## Unit testing for LLMs.
+
+Pytest-native evals that run in CI/CD or as Python scripts. Iterate locally, on your own environment, on your own criteria.
+
+<HomePytestDemo />
+
+<br />
+
+<br />
+
+## LLM-as-a-Judge to count on.
+
+Research-backed metrics with transparent, explainable scores — every judgment comes with reasoning you can trust, debug, and defend.
+
+<JudgeCards />
+
+<br />
+
+<br />
+
+## Flexible, SOTA evaluation techniques.
+
+Compose state-of-the-art techniques into metrics that fit your product — plain-English criteria, decision graphs, weighted scoring, and more, all in the same runner.
+
+<SOTACards />
+
+<br />
+
+<br />
+
+## Trace, grade, and iterate — without leaving your editor.
+
+DeepEval traces every step of your agent into something you can grade, and improve — visible in your terminal, testable in your runner, shippable in your next commit. No dashboards to open. No context switch required.
+
+<AgentTraceTerminal />
+
+<TraceLoopConnector />
+
+<ClaudeCodeTerminal />
+
+<br />
+
+<br />
+
+## No dataset? No problem.
+
+Generate synthetic goldens from your knowledge base, or simulate full conversations across user personas — all before a single real user shows up.
+
+<Tabs items={["Generate goldens", "Simulate conversations"]}>
+<Tab value="Generate goldens">
+
+<GoldenGenerationDemo />
+
+</Tab>
+<Tab value="Simulate conversations">
+
+<MultiTurnSimulationDemo />
+
+</Tab>
+</Tabs>
+
+<br />
+
+<br />
+
+## Used by agents, loved by vibe-coders.
+
+Coming soon on May 15th...
+
+<br />
+
+<br />
+
+## Evaluate in code, scale with platform.
+
+DeepEval integrates natively with Confident AI, an AI observability and evaluation platform for AI quality. It is our Vercel for DeepEval. The same test file you run on your laptop now poweres engineering, product, QAs, and domain experts.
+
+<PrimaryButton
+  href="https://www.confident-ai.com"
+  target="_blank"
+  rel="noopener noreferrer"
+  endIcon={<Compass aria-hidden />}
+>
+  Explore enterprise
+</PrimaryButton>
+
+<Tabs items={["Regression Testing", "Experimentation", "Tracing & Observability", "Production Monitoring", "Dataset Management", "Prompt Versioning", "Human Annotation"]}>
+<Tab value="Regression Testing">
+
+<ImageDisplayer
+  src="/img/confident-regression-testing.png"
+  alt="Confident AI regression testing dashboard"
+/>
+
+</Tab>
+<Tab value="Experimentation">
+
+<ImageDisplayer
+  src="/img/confident-experimentation.png"
+  alt="Confident AI experimentation view"
+/>
+
+</Tab>
+<Tab value="Tracing & Observability">
+
+<ImageDisplayer
+  src="/img/confident-tracing-observability.png"
+  alt="Confident AI tracing and observability"
+/>
+
+</Tab>
+<Tab value="Production Monitoring">
+
+<ImageDisplayer
+  src="/img/confident-production-monitoring.png"
+  alt="Confident AI production monitoring"
+/>
+
+</Tab>
+<Tab value="Dataset Management">
+
+<ImageDisplayer
+  src="/img/confident-dataset-management.png"
+  alt="Confident AI dataset management"
+/>
+
+</Tab>
+<Tab value="Prompt Versioning">
+
+<ImageDisplayer
+  src="/img/confident-prompt-versioning.png"
+  alt="Confident AI prompt versioning"
+/>
+
+</Tab>
+<Tab value="Human Annotation">
+
+<ImageDisplayer
+  src="/img/confident-human-annotation.png"
+  alt="Confident AI human annotation"
+/>
+
+</Tab>
+</Tabs>
+
+<br />
+
+<br />
+
+## Any model. Any framework. Any pipeline.
+
+Plug DeepEval into the tools you already ship with — evaluate across any LLM, any agent framework, and any CI/CD runner without rewriting a line.
+
+<IntegrationGrid />
+
+<br />
+
+<br />
+
+## Built by amazing humans.
+
+Nothing would be possible without our community of 250+ contributors, thank you!
+
+<RepoContributors />
+
+<br />
+
+<br />
+
+## Ah yes, FAQs.
+
+<FAQs
+  qas={[
+    {
+      question: "What is DeepEval?",
+      answer:
+        "DeepEval is an open-source framework for evaluating LLM applications, AI agents, RAG systems, and prompts. It helps you test quality, reliability, and regressions in your AI stack.",
+    },
+    {
+      question: "Is DeepEval the same as Confident AI?",
+      answer:
+        "No. DeepEval is the open-source evaluation framework, while Confident AI is the enterprise platform built for teams that need managed evals, collaboration, observability, and production workflows.",
+    },
+    {
+      question: "What can I evaluate with DeepEval?",
+      answer:
+        "You can evaluate chatbots, RAG pipelines, AI agents, prompts, model outputs, and end-to-end LLM workflows. It supports both component-level and system-level evaluation.",
+    },
+    {
+      question: "Does DeepEval only work with OpenAI models?",
+      answer:
+        "No. DeepEval is model-agnostic and works with any LLM provider or framework, as long as you can plug your application outputs into the evaluation flow.",
+    },
+    {
+      question: "Can I use DeepEval in CI/CD?",
+      answer:
+        "Yes. DeepEval is designed to fit into your testing workflow, so you can run evals in CI/CD and catch regressions before they reach production.",
+    },
+    {
+      question: "Do I need synthetic data to use DeepEval?",
+      answer:
+        "No. You can use your own datasets, production traces, or synthetic test cases. DeepEval supports multiple ways to create and run evaluations depending on your workflow.",
+    },
+    {
+      question: "Who is DeepEval for?",
+      answer:
+        "DeepEval is for AI engineers, ML teams, and developers building LLM products who want a reliable way to measure quality, compare changes, and ship with confidence.",
+    },
+    {
+      question: "Does DeepEval collect data through OpenTelemetry?",
+      answer:
+        "DeepEval only collects the names of the metrics that were run through OpenTelemetry. It does not collect your prompts, inputs, outputs, or evaluation data through that instrumentation.",
+    },
+  ]}
+/>
+
+<br />
+
+<br />
+
+## This is the CTA :)
+
+<PrimaryButton href="/docs/introduction" endIcon={<ArrowUpRight aria-hidden />}>
+  Start Evaluating
+</PrimaryButton>
+
+<br />
+
+<br />

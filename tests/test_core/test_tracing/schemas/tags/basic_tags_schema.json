@@ -1,0 +1,34 @@
+{
+  "uuid": "b47c18a0-e34e-49db-9a70-f78a6290a87d",
+  "baseSpans": [
+    {
+      "uuid": "ddd633ee-492f-42e2-b76e-02d525870ccc",
+      "name": "trace_with_tags",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:13.778Z",
+      "endTime": "2026-01-29T09:53:13.778Z",
+      "input": {
+        "data": "test"
+      },
+      "output": "Tagged: test"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.778Z",
+  "endTime": "2026-01-29T09:53:13.778Z",
+  "tags": [
+    "production",
+    "v2",
+    "ai-assistant"
+  ],
+  "environment": "testing",
+  "input": {
+    "data": "test"
+  },
+  "output": "Tagged: test",
+  "status": "SUCCESS"
+}

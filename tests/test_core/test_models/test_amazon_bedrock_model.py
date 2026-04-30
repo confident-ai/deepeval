@@ -1,5 +1,6 @@
 import copy
 import pytest
+from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional
 
 from tests.test_core.stubs import _RecordingClient
@@ -13,6 +14,16 @@ class RecordingBedrockClient(_RecordingClient):
 
     async def converse(self, **kwargs):
         return self._response
+
+
+def _mock_get_client(response):
+    """Create an async context manager that yields a RecordingBedrockClient."""
+
+    @asynccontextmanager
+    async def _get_client():
+        yield RecordingBedrockClient(response)
+
+    return _get_client
 
 
 def _mk_model(gen_kwargs: Optional[Dict[str, Any]]):
@@ -116,10 +127,7 @@ async def test_bedrock_a_generate_skips_reasoning_content_and_reads_text_block(
         "stopReason": "end_turn",
     }
 
-    async def _ensure_client():
-        return RecordingBedrockClient(response)
-
-    monkeypatch.setattr(m, "_ensure_client", _ensure_client)
+    monkeypatch.setattr(m, "_get_client", _mock_get_client(response))
 
     out, cost = await m.a_generate("prompt", schema=None)
     assert out == '{"statements":["The capital of France is Paris."]}'
@@ -156,11 +164,48 @@ async def test_bedrock_a_generate_reads_text_block_when_first(monkeypatch):
         "stopReason": "end_turn",
     }
 
-    async def _ensure_client():
-        return RecordingBedrockClient(response)
-
-    monkeypatch.setattr(m, "_ensure_client", _ensure_client)
+    monkeypatch.setattr(m, "_get_client", _mock_get_client(response))
 
     out, cost = await m.a_generate("prompt", schema=None)
     assert out == '{"statements":["hello"]}'
     assert cost is None
+
+
+##############################
+# calculate_cost unit tests  #
+##############################
+
+
+def _mk_model_with_prices(input_price, output_price):
+    from deepeval.models.base_model import DeepEvalModelData
+
+    m = AmazonBedrockModel.__new__(AmazonBedrockModel)
+    m.model_data = DeepEvalModelData(
+        input_price=input_price, output_price=output_price
+    )
+    return m
+
+
+def test_bedrock_calculate_cost_returns_correct_value():
+    model = _mk_model_with_prices(0.003, 0.006)
+    cost = model.calculate_cost(input_tokens=1000, output_tokens=500)
+    expected = 1000 * 0.003 + 500 * 0.006
+    assert cost == expected
+
+
+def test_bedrock_calculate_cost_returns_none_when_prices_missing():
+    model = _mk_model_with_prices(None, None)
+    cost = model.calculate_cost(input_tokens=1000, output_tokens=500)
+    assert cost is None
+
+
+def test_bedrock_calculate_cost_returns_none_when_only_input_price_set():
+    model = _mk_model_with_prices(0.003, None)
+    cost = model.calculate_cost(input_tokens=1000, output_tokens=500)
+    assert cost is None
+
+
+def test_bedrock_calculate_cost_with_zero_tokens():
+    model = _mk_model_with_prices(0.003, 0.006)
+    cost = model.calculate_cost(input_tokens=0, output_tokens=0)
+    assert cost == 0.0

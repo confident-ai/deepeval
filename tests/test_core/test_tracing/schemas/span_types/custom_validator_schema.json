@@ -1,0 +1,29 @@
+{
+  "uuid": "347161d3-98a7-4bfb-97e5-4cf69e77ab13",
+  "baseSpans": [
+    {
+      "uuid": "2d0d3305-84fd-4577-ac93-c62219fb6ae4",
+      "name": "custom_validator",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:13.301Z",
+      "endTime": "2026-01-29T09:53:13.301Z",
+      "input": {
+        "value": "valid"
+      },
+      "output": true
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.301Z",
+  "endTime": "2026-01-29T09:53:13.301Z",
+  "environment": "testing",
+  "input": {
+    "value": "valid"
+  },
+  "output": true,
+  "status": "SUCCESS"
+}

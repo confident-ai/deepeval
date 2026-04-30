@@ -1,0 +1,38 @@
+{
+  "uuid": "351ec89a-7a42-4422-9b3c-324bd53ce082",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "9b1917c6-9164-452f-949a-eff95b8cdcfe",
+      "name": "agent_full_attributes",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T09:53:13.243Z",
+      "endTime": "2026-01-29T09:53:13.243Z",
+      "input": {
+        "query": "Complex task"
+      },
+      "output": "Full attributes agent: Complex task",
+      "availableTools": [
+        "search",
+        "calculate",
+        "fetch",
+        "store"
+      ],
+      "agentHandoffs": [
+        "supervisor"
+      ]
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.243Z",
+  "endTime": "2026-01-29T09:53:13.243Z",
+  "environment": "testing",
+  "input": {
+    "query": "Complex task"
+  },
+  "output": "Full attributes agent: Complex task",
+  "status": "SUCCESS"
+}

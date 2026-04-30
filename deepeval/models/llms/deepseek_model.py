@@ -18,7 +18,6 @@ from deepeval.constants import ProviderSlug as PS
 from deepeval.models.llms.constants import DEEPSEEK_MODELS_DATA
 from deepeval.utils import require_param
 
-
 # consistent retry rules
 retry_deepseek = create_retry_decorator(PS.DEEPSEEK)
 

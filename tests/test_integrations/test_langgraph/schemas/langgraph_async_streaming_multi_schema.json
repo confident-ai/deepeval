@@ -1,13 +1,13 @@
 {
-  "uuid": "cde78cf5-6a76-45b3-9f94-aef6b5a5cb79",
+  "uuid": "8e473237-d48b-4aaa-b3af-ad311f78306c",
   "baseSpans": [
     {
-      "uuid": "019bc08b-039b-7fc0-b3b6-4927960c7563",
+      "uuid": "019d0516-d04c-7503-808a-4c528aee95a9",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-15T07:24:54.556Z",
-      "endTime": "2026-01-15T07:24:57.602Z",
+      "startTime": "2026-03-19T07:54:34.444Z",
+      "endTime": "2026-03-19T07:54:38.503Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "97b51a3d-360b-4924-aace-01f7bf444eee"
+            "id": "167c5d3e-004d-479d-b4e4-dabf03cb7616"
           }
         ]
       },
@@ -26,46 +26,26 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "97b51a3d-360b-4924-aace-01f7bf444eee"
+            "id": "167c5d3e-004d-479d-b4e4-dabf03cb7616"
           },
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
-                  "function": {
-                    "arguments": "{\"symbol\": \"AMZN\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                },
-                {
-                  "index": 1,
-                  "id": "call_1FmKtehLlbriPjjEjBZXfWhr",
-                  "function": {
-                    "arguments": "{\"symbol\": \"AMZN\"}",
-                    "name": "get_company_info"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_3683ee3deb"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-039d-7993-9780-70c5d33447a9",
+            "id": "lc_run--019d0516-d04d-7d71-ad5e-329f808456f7",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
+                "id": "call_Mfwm1usa0oMYVLarcYvtsvog",
                 "type": "tool_call"
               },
               {
@@ -73,11 +53,24 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_1FmKtehLlbriPjjEjBZXfWhr",
+                "id": "call_s2wanmn2375BcYu4T8sTBNYf",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 162,
+              "output_tokens": 121,
+              "total_tokens": 283,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           },
           {
             "content": "$185.20 (-0.3%)",
@@ -85,8 +78,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "98363a40-834b-401a-93cb-786c000dd16b",
-            "tool_call_id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
+            "id": "55d38da2-3890-4a17-81d1-3ab14b2b944b",
+            "tool_call_id": "call_Mfwm1usa0oMYVLarcYvtsvog",
             "status": "success"
           },
           {
@@ -95,34 +88,48 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_company_info",
-            "id": "a8ae03c5-d6a9-4dfb-aaa1-77e225a16c23",
-            "tool_call_id": "call_1FmKtehLlbriPjjEjBZXfWhr",
+            "id": "04da5e4a-dc54-48e1-b4e6-7e25751d1ece",
+            "tool_call_id": "call_s2wanmn2375BcYu4T8sTBNYf",
             "status": "success"
           },
           {
-            "content": "- **Stock Price for AMZN**: $185.20 (-0.3%)\n- **Company Info**: Amazon.com Inc. - E-commerce/Cloud, Market Cap: $1.9T",
+            "content": "Here are the results for AMZN:\n\n- Stock price: $185.20 (-0.3%)\n- Company info: Amazon.com Inc. \u2014 E-commerce/Cloud, Market Cap: $1.9T\n\nWould you like historical prices, recent news, or alerts set for price changes?",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-0afe-7631-a782-061774d9fab4",
+            "id": "lc_run--019d0516-da80-7b20-ad3a-4012adaae1c6",
             "tool_calls": [],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 257,
+              "output_tokens": 63,
+              "total_tokens": 320,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
           }
         ]
       }
     },
     {
-      "uuid": "019bc08b-0afe-7631-a782-060ce16f0565",
+      "uuid": "019d0516-da7f-7023-bc45-8c5a3aae9b08",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-039b-7fc0-b3b6-4927960c7563",
-      "startTime": "2026-01-15T07:24:56.446Z",
-      "endTime": "2026-01-15T07:24:57.601Z",
+      "parentUuid": "019d0516-d04c-7503-808a-4c528aee95a9",
+      "startTime": "2026-03-19T07:54:37.056Z",
+      "endTime": "2026-03-19T07:54:38.503Z",
       "input": {
         "messages": [
           {
@@ -130,46 +137,26 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "97b51a3d-360b-4924-aace-01f7bf444eee"
+            "id": "167c5d3e-004d-479d-b4e4-dabf03cb7616"
           },
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
-                  "function": {
-                    "arguments": "{\"symbol\": \"AMZN\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                },
-                {
-                  "index": 1,
-                  "id": "call_1FmKtehLlbriPjjEjBZXfWhr",
-                  "function": {
-                    "arguments": "{\"symbol\": \"AMZN\"}",
-                    "name": "get_company_info"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_3683ee3deb"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-039d-7993-9780-70c5d33447a9",
+            "id": "lc_run--019d0516-d04d-7d71-ad5e-329f808456f7",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
+                "id": "call_Mfwm1usa0oMYVLarcYvtsvog",
                 "type": "tool_call"
               },
               {
@@ -177,11 +164,24 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_1FmKtehLlbriPjjEjBZXfWhr",
+                "id": "call_s2wanmn2375BcYu4T8sTBNYf",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 162,
+              "output_tokens": 121,
+              "total_tokens": 283,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           },
           {
             "content": "$185.20 (-0.3%)",
@@ -189,8 +189,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "98363a40-834b-401a-93cb-786c000dd16b",
-            "tool_call_id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
+            "id": "55d38da2-3890-4a17-81d1-3ab14b2b944b",
+            "tool_call_id": "call_Mfwm1usa0oMYVLarcYvtsvog",
             "status": "success"
           },
           {
@@ -199,8 +199,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_company_info",
-            "id": "a8ae03c5-d6a9-4dfb-aaa1-77e225a16c23",
-            "tool_call_id": "call_1FmKtehLlbriPjjEjBZXfWhr",
+            "id": "04da5e4a-dc54-48e1-b4e6-7e25751d1ece",
+            "tool_call_id": "call_s2wanmn2375BcYu4T8sTBNYf",
             "status": "success"
           }
         ]
@@ -208,29 +208,43 @@
       "output": {
         "messages": [
           {
-            "content": "- **Stock Price for AMZN**: $185.20 (-0.3%)\n- **Company Info**: Amazon.com Inc. - E-commerce/Cloud, Market Cap: $1.9T",
+            "content": "Here are the results for AMZN:\n\n- Stock price: $185.20 (-0.3%)\n- Company info: Amazon.com Inc. \u2014 E-commerce/Cloud, Market Cap: $1.9T\n\nWould you like historical prices, recent news, or alerts set for price changes?",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-0afe-7631-a782-061774d9fab4",
+            "id": "lc_run--019d0516-da80-7b20-ad3a-4012adaae1c6",
             "tool_calls": [],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 257,
+              "output_tokens": 63,
+              "total_tokens": 320,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
           }
         ]
       }
     },
     {
-      "uuid": "019bc08b-0f7f-7f63-b0e4-977b6ff891f2",
+      "uuid": "019d0516-e026-70f2-b150-8cabb4ea5047",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-0afe-7631-a782-060ce16f0565",
-      "startTime": "2026-01-15T07:24:57.599Z",
-      "endTime": "2026-01-15T07:24:57.600Z",
+      "parentUuid": "019d0516-da7f-7023-bc45-8c5a3aae9b08",
+      "startTime": "2026-03-19T07:54:38.502Z",
+      "endTime": "2026-03-19T07:54:38.503Z",
       "input": {
         "messages": [
           {
@@ -238,46 +252,26 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "97b51a3d-360b-4924-aace-01f7bf444eee"
+            "id": "167c5d3e-004d-479d-b4e4-dabf03cb7616"
           },
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
-                  "function": {
-                    "arguments": "{\"symbol\": \"AMZN\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                },
-                {
-                  "index": 1,
-                  "id": "call_1FmKtehLlbriPjjEjBZXfWhr",
-                  "function": {
-                    "arguments": "{\"symbol\": \"AMZN\"}",
-                    "name": "get_company_info"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_3683ee3deb"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-039d-7993-9780-70c5d33447a9",
+            "id": "lc_run--019d0516-d04d-7d71-ad5e-329f808456f7",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
+                "id": "call_Mfwm1usa0oMYVLarcYvtsvog",
                 "type": "tool_call"
               },
               {
@@ -285,11 +279,24 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_1FmKtehLlbriPjjEjBZXfWhr",
+                "id": "call_s2wanmn2375BcYu4T8sTBNYf",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 162,
+              "output_tokens": 121,
+              "total_tokens": 283,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           },
           {
             "content": "$185.20 (-0.3%)",
@@ -297,8 +304,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "98363a40-834b-401a-93cb-786c000dd16b",
-            "tool_call_id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
+            "id": "55d38da2-3890-4a17-81d1-3ab14b2b944b",
+            "tool_call_id": "call_Mfwm1usa0oMYVLarcYvtsvog",
             "status": "success"
           },
           {
@@ -307,35 +314,49 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_company_info",
-            "id": "a8ae03c5-d6a9-4dfb-aaa1-77e225a16c23",
-            "tool_call_id": "call_1FmKtehLlbriPjjEjBZXfWhr",
+            "id": "04da5e4a-dc54-48e1-b4e6-7e25751d1ece",
+            "tool_call_id": "call_s2wanmn2375BcYu4T8sTBNYf",
             "status": "success"
           },
           {
-            "content": "- **Stock Price for AMZN**: $185.20 (-0.3%)\n- **Company Info**: Amazon.com Inc. - E-commerce/Cloud, Market Cap: $1.9T",
+            "content": "Here are the results for AMZN:\n\n- Stock price: $185.20 (-0.3%)\n- Company info: Amazon.com Inc. \u2014 E-commerce/Cloud, Market Cap: $1.9T\n\nWould you like historical prices, recent news, or alerts set for price changes?",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-0afe-7631-a782-061774d9fab4",
+            "id": "lc_run--019d0516-da80-7b20-ad3a-4012adaae1c6",
             "tool_calls": [],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 257,
+              "output_tokens": 63,
+              "total_tokens": 320,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
           }
         ]
       },
       "output": "__end__"
     },
     {
-      "uuid": "019bc08b-0afb-7d83-a5b5-5679505c2178",
+      "uuid": "019d0516-da7d-7ad1-ba0f-b3730243311b",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-039b-7fc0-b3b6-4927960c7563",
-      "startTime": "2026-01-15T07:24:56.443Z",
-      "endTime": "2026-01-15T07:24:56.445Z",
+      "parentUuid": "019d0516-d04c-7503-808a-4c528aee95a9",
+      "startTime": "2026-03-19T07:54:37.054Z",
+      "endTime": "2026-03-19T07:54:37.055Z",
       "input": {
         "messages": [
           {
@@ -343,46 +364,26 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "97b51a3d-360b-4924-aace-01f7bf444eee"
+            "id": "167c5d3e-004d-479d-b4e4-dabf03cb7616"
           },
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
-                  "function": {
-                    "arguments": "{\"symbol\": \"AMZN\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                },
-                {
-                  "index": 1,
-                  "id": "call_1FmKtehLlbriPjjEjBZXfWhr",
-                  "function": {
-                    "arguments": "{\"symbol\": \"AMZN\"}",
-                    "name": "get_company_info"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_3683ee3deb"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-039d-7993-9780-70c5d33447a9",
+            "id": "lc_run--019d0516-d04d-7d71-ad5e-329f808456f7",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
+                "id": "call_Mfwm1usa0oMYVLarcYvtsvog",
                 "type": "tool_call"
               },
               {
@@ -390,11 +391,24 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_1FmKtehLlbriPjjEjBZXfWhr",
+                "id": "call_s2wanmn2375BcYu4T8sTBNYf",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 162,
+              "output_tokens": 121,
+              "total_tokens": 283,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           }
         ]
       },
@@ -406,8 +420,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "98363a40-834b-401a-93cb-786c000dd16b",
-            "tool_call_id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
+            "id": "55d38da2-3890-4a17-81d1-3ab14b2b944b",
+            "tool_call_id": "call_Mfwm1usa0oMYVLarcYvtsvog",
             "status": "success"
           },
           {
@@ -416,29 +430,13 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_company_info",
-            "id": "a8ae03c5-d6a9-4dfb-aaa1-77e225a16c23",
-            "tool_call_id": "call_1FmKtehLlbriPjjEjBZXfWhr",
+            "id": "04da5e4a-dc54-48e1-b4e6-7e25751d1ece",
+            "tool_call_id": "call_s2wanmn2375BcYu4T8sTBNYf",
             "status": "success"
           }
         ]
       },
       "toolsCalled": [
-        {
-          "name": "get_stock_price",
-          "output": {
-            "content": "$185.20 (-0.3%)",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_stock_price",
-            "id": "98363a40-834b-401a-93cb-786c000dd16b",
-            "tool_call_id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
-            "status": "success"
-          },
-          "inputParameters": {
-            "symbol": "AMZN"
-          }
-        },
         {
           "name": "get_company_info",
           "output": {
@@ -447,8 +445,24 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_company_info",
-            "id": "a8ae03c5-d6a9-4dfb-aaa1-77e225a16c23",
-            "tool_call_id": "call_1FmKtehLlbriPjjEjBZXfWhr",
+            "id": "04da5e4a-dc54-48e1-b4e6-7e25751d1ece",
+            "tool_call_id": "call_s2wanmn2375BcYu4T8sTBNYf",
+            "status": "success"
+          },
+          "inputParameters": {
+            "symbol": "AMZN"
+          }
+        },
+        {
+          "name": "get_stock_price",
+          "output": {
+            "content": "$185.20 (-0.3%)",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "id": "55d38da2-3890-4a17-81d1-3ab14b2b944b",
+            "tool_call_id": "call_Mfwm1usa0oMYVLarcYvtsvog",
             "status": "success"
           },
           "inputParameters": {
@@ -458,13 +472,13 @@
       ]
     },
     {
-      "uuid": "019bc08b-039c-77a2-aa64-ca5a2f498484",
+      "uuid": "019d0516-d04d-7d71-ad5e-328eef7a4f66",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-039b-7fc0-b3b6-4927960c7563",
-      "startTime": "2026-01-15T07:24:54.556Z",
-      "endTime": "2026-01-15T07:24:56.442Z",
+      "parentUuid": "019d0516-d04c-7503-808a-4c528aee95a9",
+      "startTime": "2026-03-19T07:54:34.445Z",
+      "endTime": "2026-03-19T07:54:37.053Z",
       "input": {
         "messages": [
           {
@@ -472,7 +486,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "97b51a3d-360b-4924-aace-01f7bf444eee"
+            "id": "167c5d3e-004d-479d-b4e4-dabf03cb7616"
           }
         ]
       },
@@ -480,42 +494,22 @@
         "messages": [
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
-                  "function": {
-                    "arguments": "{\"symbol\": \"AMZN\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                },
-                {
-                  "index": 1,
-                  "id": "call_1FmKtehLlbriPjjEjBZXfWhr",
-                  "function": {
-                    "arguments": "{\"symbol\": \"AMZN\"}",
-                    "name": "get_company_info"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_3683ee3deb"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-039d-7993-9780-70c5d33447a9",
+            "id": "lc_run--019d0516-d04d-7d71-ad5e-329f808456f7",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
+                "id": "call_Mfwm1usa0oMYVLarcYvtsvog",
                 "type": "tool_call"
               },
               {
@@ -523,23 +517,36 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_1FmKtehLlbriPjjEjBZXfWhr",
+                "id": "call_s2wanmn2375BcYu4T8sTBNYf",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 162,
+              "output_tokens": 121,
+              "total_tokens": 283,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           }
         ]
       }
     },
     {
-      "uuid": "019bc08b-0af9-73e3-94f6-3b5496238401",
+      "uuid": "019d0516-da7c-7722-8dc3-31fc25e2d66b",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-039c-77a2-aa64-ca5a2f498484",
-      "startTime": "2026-01-15T07:24:56.442Z",
-      "endTime": "2026-01-15T07:24:56.442Z",
+      "parentUuid": "019d0516-d04d-7d71-ad5e-328eef7a4f66",
+      "startTime": "2026-03-19T07:54:37.053Z",
+      "endTime": "2026-03-19T07:54:37.053Z",
       "input": {
         "messages": [
           {
@@ -547,46 +554,26 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "97b51a3d-360b-4924-aace-01f7bf444eee"
+            "id": "167c5d3e-004d-479d-b4e4-dabf03cb7616"
           },
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
-                  "function": {
-                    "arguments": "{\"symbol\": \"AMZN\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                },
-                {
-                  "index": 1,
-                  "id": "call_1FmKtehLlbriPjjEjBZXfWhr",
-                  "function": {
-                    "arguments": "{\"symbol\": \"AMZN\"}",
-                    "name": "get_company_info"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_3683ee3deb"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-039d-7993-9780-70c5d33447a9",
+            "id": "lc_run--019d0516-d04d-7d71-ad5e-329f808456f7",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
+                "id": "call_Mfwm1usa0oMYVLarcYvtsvog",
                 "type": "tool_call"
               },
               {
@@ -594,11 +581,24 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_1FmKtehLlbriPjjEjBZXfWhr",
+                "id": "call_s2wanmn2375BcYu4T8sTBNYf",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 162,
+              "output_tokens": 121,
+              "total_tokens": 283,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           }
         ]
       },
@@ -608,13 +608,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bc08b-0afe-7631-a782-061774d9fab4",
+      "uuid": "019d0516-da80-7b20-ad3a-4012adaae1c6",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc08b-0afe-7631-a782-060ce16f0565",
-      "startTime": "2026-01-15T07:24:56.447Z",
-      "endTime": "2026-01-15T07:24:57.598Z",
+      "parentUuid": "019d0516-da7f-7023-bc45-8c5a3aae9b08",
+      "startTime": "2026-03-19T07:54:37.056Z",
+      "endTime": "2026-03-19T07:54:38.502Z",
       "input": [
         {
           "role": "human",
@@ -622,7 +622,7 @@
         },
         {
           "role": "ai",
-          "content": "[{'name': 'get_stock_price', 'args': {'symbol': 'AMZN'}, 'id': 'call_4XE22DoKZOFNlR7Jis6aCB4I', 'type': 'tool_call'}, {'name': 'get_company_info', 'args': {'symbol': 'AMZN'}, 'id': 'call_1FmKtehLlbriPjjEjBZXfWhr', 'type': 'tool_call'}]"
+          "content": ""
         },
         {
           "role": "tool",
@@ -643,67 +643,87 @@
       ],
       "output": {
         "role": "AI",
-        "content": "- **Stock Price for AMZN**: $185.20 (-0.3%)\n- **Company Info**: Amazon.com Inc. - E-commerce/Cloud, Market Cap: $1.9T",
+        "content": "Here are the results for AMZN:\n\n- Stock price: $185.20 (-0.3%)\n- Company info: Amazon.com Inc. \u2014 E-commerce/Cloud, Market Cap: $1.9T\n\nWould you like historical prices, recent news, or alerts set for price changes?",
         "tool_calls": []
       },
-      "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {},
+      "model": "gpt-5-mini-2025-08-07",
+      "inputTokenCount": 257.0,
+      "outputTokenCount": 63.0,
       "tokenIntervals": {
-        "2026-01-15T07:24:57.032991Z": "",
-        "2026-01-15T07:24:57.051200Z": "-",
-        "2026-01-15T07:24:57.051753Z": " **",
-        "2026-01-15T07:24:57.079606Z": "Stock",
-        "2026-01-15T07:24:57.080823Z": " Price",
-        "2026-01-15T07:24:57.102835Z": " for",
-        "2026-01-15T07:24:57.103710Z": " AM",
-        "2026-01-15T07:24:57.127872Z": "ZN",
-        "2026-01-15T07:24:57.128372Z": "**",
-        "2026-01-15T07:24:57.161932Z": ":",
-        "2026-01-15T07:24:57.163040Z": " $",
-        "2026-01-15T07:24:57.195414Z": "185",
-        "2026-01-15T07:24:57.195908Z": ".",
-        "2026-01-15T07:24:57.210973Z": "20",
-        "2026-01-15T07:24:57.211540Z": " (-",
-        "2026-01-15T07:24:57.274723Z": "0",
-        "2026-01-15T07:24:57.275803Z": ".",
-        "2026-01-15T07:24:57.277160Z": "3",
-        "2026-01-15T07:24:57.278130Z": "%)\n",
-        "2026-01-15T07:24:57.304270Z": "-",
-        "2026-01-15T07:24:57.304798Z": " **",
-        "2026-01-15T07:24:57.319771Z": "Company",
-        "2026-01-15T07:24:57.320880Z": " Info",
-        "2026-01-15T07:24:57.341871Z": "**",
-        "2026-01-15T07:24:57.342920Z": ":",
-        "2026-01-15T07:24:57.363463Z": " Amazon",
-        "2026-01-15T07:24:57.363883Z": ".com",
-        "2026-01-15T07:24:57.388630Z": " Inc",
-        "2026-01-15T07:24:57.389110Z": ".",
-        "2026-01-15T07:24:57.417835Z": " -",
-        "2026-01-15T07:24:57.419131Z": " E",
-        "2026-01-15T07:24:57.428050Z": "-commerce",
-        "2026-01-15T07:24:57.428641Z": "/",
-        "2026-01-15T07:24:57.460872Z": "Cloud",
-        "2026-01-15T07:24:57.461525Z": ",",
-        "2026-01-15T07:24:57.487836Z": " Market",
-        "2026-01-15T07:24:57.489071Z": " Cap",
-        "2026-01-15T07:24:57.518216Z": ":",
-        "2026-01-15T07:24:57.518951Z": " $",
-        "2026-01-15T07:24:57.532102Z": "1",
-        "2026-01-15T07:24:57.532661Z": ".",
-        "2026-01-15T07:24:57.574759Z": "9",
-        "2026-01-15T07:24:57.575789Z": "T",
-        "2026-01-15T07:24:57.595053Z": "",
-        "2026-01-15T07:24:57.596718Z": ""
+        "2026-03-19T07:54:37.728567Z": "",
+        "2026-03-19T07:54:37.733027Z": "Here",
+        "2026-03-19T07:54:37.733378Z": " are",
+        "2026-03-19T07:54:37.774907Z": " the",
+        "2026-03-19T07:54:37.775318Z": " results",
+        "2026-03-19T07:54:37.788516Z": " for",
+        "2026-03-19T07:54:37.788899Z": " AM",
+        "2026-03-19T07:54:37.808378Z": "ZN",
+        "2026-03-19T07:54:37.808747Z": ":\n\n",
+        "2026-03-19T07:54:37.822626Z": "-",
+        "2026-03-19T07:54:37.823023Z": " Stock",
+        "2026-03-19T07:54:37.848151Z": " price",
+        "2026-03-19T07:54:37.848629Z": ":",
+        "2026-03-19T07:54:37.873120Z": " $",
+        "2026-03-19T07:54:37.873958Z": "185",
+        "2026-03-19T07:54:37.893126Z": ".",
+        "2026-03-19T07:54:37.893761Z": "20",
+        "2026-03-19T07:54:37.955945Z": " (-",
+        "2026-03-19T07:54:37.956522Z": "0",
+        "2026-03-19T07:54:37.956965Z": ".",
+        "2026-03-19T07:54:37.957337Z": "3",
+        "2026-03-19T07:54:37.967603Z": "%)\n",
+        "2026-03-19T07:54:37.968103Z": "-",
+        "2026-03-19T07:54:37.990262Z": " Company",
+        "2026-03-19T07:54:37.990567Z": " info",
+        "2026-03-19T07:54:38.029961Z": ":",
+        "2026-03-19T07:54:38.030160Z": " Amazon",
+        "2026-03-19T07:54:38.055231Z": ".com",
+        "2026-03-19T07:54:38.055481Z": " Inc",
+        "2026-03-19T07:54:38.093828Z": ".",
+        "2026-03-19T07:54:38.094023Z": " \u2014",
+        "2026-03-19T07:54:38.113317Z": " E",
+        "2026-03-19T07:54:38.113506Z": "-commerce",
+        "2026-03-19T07:54:38.124769Z": "/",
+        "2026-03-19T07:54:38.124941Z": "Cloud",
+        "2026-03-19T07:54:38.154325Z": ",",
+        "2026-03-19T07:54:38.154555Z": " Market",
+        "2026-03-19T07:54:38.170923Z": " Cap",
+        "2026-03-19T07:54:38.171196Z": ":",
+        "2026-03-19T07:54:38.195852Z": " $",
+        "2026-03-19T07:54:38.196135Z": "1",
+        "2026-03-19T07:54:38.219300Z": ".",
+        "2026-03-19T07:54:38.219566Z": "9",
+        "2026-03-19T07:54:38.239523Z": "T",
+        "2026-03-19T07:54:38.239867Z": "\n\n",
+        "2026-03-19T07:54:38.259800Z": "Would",
+        "2026-03-19T07:54:38.260119Z": " you",
+        "2026-03-19T07:54:38.289618Z": " like",
+        "2026-03-19T07:54:38.290026Z": " historical",
+        "2026-03-19T07:54:38.316087Z": " prices",
+        "2026-03-19T07:54:38.316578Z": ",",
+        "2026-03-19T07:54:38.327603Z": " recent",
+        "2026-03-19T07:54:38.328057Z": " news",
+        "2026-03-19T07:54:38.356234Z": ",",
+        "2026-03-19T07:54:38.356842Z": " or",
+        "2026-03-19T07:54:38.371031Z": " alerts",
+        "2026-03-19T07:54:38.371826Z": " set",
+        "2026-03-19T07:54:38.459170Z": " for",
+        "2026-03-19T07:54:38.459386Z": " price",
+        "2026-03-19T07:54:38.485177Z": " changes",
+        "2026-03-19T07:54:38.485362Z": "?",
+        "2026-03-19T07:54:38.494845Z": "",
+        "2026-03-19T07:54:38.495025Z": "",
+        "2026-03-19T07:54:38.502224Z": ""
       }
     },
     {
-      "uuid": "019bc08b-039d-7993-9780-70c5d33447a9",
+      "uuid": "019d0516-d04d-7d71-ad5e-329f808456f7",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc08b-039c-77a2-aa64-ca5a2f498484",
-      "startTime": "2026-01-15T07:24:54.557Z",
-      "endTime": "2026-01-15T07:24:56.441Z",
+      "parentUuid": "019d0516-d04d-7d71-ad5e-328eef7a4f66",
+      "startTime": "2026-03-19T07:54:34.445Z",
+      "endTime": "2026-03-19T07:54:37.052Z",
       "input": [
         {
           "role": "human",
@@ -727,68 +747,48 @@
             "args": {
               "symbol": "AMZN"
             },
-            "id": "call_4XE22DoKZOFNlR7Jis6aCB4I"
+            "id": "call_Mfwm1usa0oMYVLarcYvtsvog"
           },
           {
             "name": "get_company_info",
             "args": {
               "symbol": "AMZN"
             },
-            "id": "call_1FmKtehLlbriPjjEjBZXfWhr"
+            "id": "call_s2wanmn2375BcYu4T8sTBNYf"
           }
         ]
       },
-      "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {},
+      "model": "gpt-5-mini-2025-08-07",
+      "inputTokenCount": 162.0,
+      "outputTokenCount": 121.0,
       "tokenIntervals": {
-        "2026-01-15T07:24:56.424178Z": "",
-        "2026-01-15T07:24:56.431211Z": "",
-        "2026-01-15T07:24:56.432205Z": "",
-        "2026-01-15T07:24:56.433142Z": "",
-        "2026-01-15T07:24:56.434042Z": "",
-        "2026-01-15T07:24:56.435005Z": "",
-        "2026-01-15T07:24:56.435799Z": "",
-        "2026-01-15T07:24:56.436577Z": "",
-        "2026-01-15T07:24:56.437588Z": "",
-        "2026-01-15T07:24:56.438440Z": "",
-        "2026-01-15T07:24:56.439253Z": "",
-        "2026-01-15T07:24:56.439982Z": "",
-        "2026-01-15T07:24:56.440615Z": ""
+        "2026-03-19T07:54:36.793493Z": "",
+        "2026-03-19T07:54:36.793871Z": "",
+        "2026-03-19T07:54:36.794225Z": "",
+        "2026-03-19T07:54:36.794619Z": "",
+        "2026-03-19T07:54:36.794935Z": "",
+        "2026-03-19T07:54:36.795699Z": "",
+        "2026-03-19T07:54:36.796306Z": "",
+        "2026-03-19T07:54:37.049231Z": "",
+        "2026-03-19T07:54:37.049678Z": "",
+        "2026-03-19T07:54:37.050261Z": "",
+        "2026-03-19T07:54:37.050786Z": "",
+        "2026-03-19T07:54:37.051155Z": "",
+        "2026-03-19T07:54:37.051512Z": "",
+        "2026-03-19T07:54:37.051965Z": ""
       }
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bc08b-0afd-79e0-a3b0-012b90a47014",
-      "name": "get_company_info",
-      "status": "SUCCESS",
-      "type": "tool",
-      "parentUuid": "019bc08b-0afb-7d83-a5b5-5679505c2178",
-      "startTime": "2026-01-15T07:24:56.445Z",
-      "endTime": "2026-01-15T07:24:56.445Z",
-      "input": {
-        "symbol": "AMZN"
-      },
-      "output": {
-        "content": "Amazon.com Inc. - E-commerce/Cloud, Market Cap: $1.9T",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_company_info",
-        "id": "a8ae03c5-d6a9-4dfb-aaa1-77e225a16c23",
-        "tool_call_id": "call_1FmKtehLlbriPjjEjBZXfWhr",
-        "status": "success"
-      }
-    },
-    {
-      "uuid": "019bc08b-0afc-7d61-9e72-7826c68cea50",
+      "uuid": "019d0516-da7f-7023-bc45-8c43fa299e8c",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc08b-0afb-7d83-a5b5-5679505c2178",
-      "startTime": "2026-01-15T07:24:56.444Z",
-      "endTime": "2026-01-15T07:24:56.444Z",
+      "parentUuid": "019d0516-da7d-7ad1-ba0f-b3730243311b",
+      "startTime": "2026-03-19T07:54:37.055Z",
+      "endTime": "2026-03-19T07:54:37.055Z",
       "input": {
         "symbol": "AMZN"
       },
@@ -798,14 +798,36 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "98363a40-834b-401a-93cb-786c000dd16b",
-        "tool_call_id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
+        "id": "55d38da2-3890-4a17-81d1-3ab14b2b944b",
+        "tool_call_id": "call_Mfwm1usa0oMYVLarcYvtsvog",
+        "status": "success"
+      }
+    },
+    {
+      "uuid": "019d0516-da7e-7cd3-ae5e-5b7103d9ca8c",
+      "name": "get_company_info",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019d0516-da7d-7ad1-ba0f-b3730243311b",
+      "startTime": "2026-03-19T07:54:37.054Z",
+      "endTime": "2026-03-19T07:54:37.055Z",
+      "input": {
+        "symbol": "AMZN"
+      },
+      "output": {
+        "content": "Amazon.com Inc. - E-commerce/Cloud, Market Cap: $1.9T",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_company_info",
+        "id": "04da5e4a-dc54-48e1-b4e6-7e25751d1ece",
+        "tool_call_id": "call_s2wanmn2375BcYu4T8sTBNYf",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-15T07:24:54.555Z",
-  "endTime": "2026-01-15T07:24:57.602Z",
+  "startTime": "2026-03-19T07:54:34.444Z",
+  "endTime": "2026-03-19T07:54:38.503Z",
   "name": "langgraph-streaming-async-multi",
   "tags": [
     "langgraph",
@@ -821,7 +843,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "97b51a3d-360b-4924-aace-01f7bf444eee"
+        "id": "167c5d3e-004d-479d-b4e4-dabf03cb7616"
       }
     ]
   },
@@ -832,46 +854,26 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "97b51a3d-360b-4924-aace-01f7bf444eee"
+        "id": "167c5d3e-004d-479d-b4e4-dabf03cb7616"
       },
       {
         "content": "",
-        "additional_kwargs": {
-          "tool_calls": [
-            {
-              "index": 0,
-              "id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
-              "function": {
-                "arguments": "{\"symbol\": \"AMZN\"}",
-                "name": "get_stock_price"
-              },
-              "type": "function"
-            },
-            {
-              "index": 1,
-              "id": "call_1FmKtehLlbriPjjEjBZXfWhr",
-              "function": {
-                "arguments": "{\"symbol\": \"AMZN\"}",
-                "name": "get_company_info"
-              },
-              "type": "function"
-            }
-          ]
-        },
+        "additional_kwargs": {},
         "response_metadata": {
           "finish_reason": "tool_calls",
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_3683ee3deb"
+          "model_name": "gpt-5-mini-2025-08-07",
+          "service_tier": "default",
+          "model_provider": "openai"
         },
         "type": "ai",
-        "id": "lc_run--019bc08b-039d-7993-9780-70c5d33447a9",
+        "id": "lc_run--019d0516-d04d-7d71-ad5e-329f808456f7",
         "tool_calls": [
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "AMZN"
             },
-            "id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
+            "id": "call_Mfwm1usa0oMYVLarcYvtsvog",
             "type": "tool_call"
           },
           {
@@ -879,11 +881,24 @@
             "args": {
               "symbol": "AMZN"
             },
-            "id": "call_1FmKtehLlbriPjjEjBZXfWhr",
+            "id": "call_s2wanmn2375BcYu4T8sTBNYf",
             "type": "tool_call"
           }
         ],
-        "invalid_tool_calls": []
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 162,
+          "output_tokens": 121,
+          "total_tokens": 283,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 64
+          }
+        }
       },
       {
         "content": "$185.20 (-0.3%)",
@@ -891,8 +906,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "98363a40-834b-401a-93cb-786c000dd16b",
-        "tool_call_id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
+        "id": "55d38da2-3890-4a17-81d1-3ab14b2b944b",
+        "tool_call_id": "call_Mfwm1usa0oMYVLarcYvtsvog",
         "status": "success"
       },
       {
@@ -901,43 +916,41 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_company_info",
-        "id": "a8ae03c5-d6a9-4dfb-aaa1-77e225a16c23",
-        "tool_call_id": "call_1FmKtehLlbriPjjEjBZXfWhr",
+        "id": "04da5e4a-dc54-48e1-b4e6-7e25751d1ece",
+        "tool_call_id": "call_s2wanmn2375BcYu4T8sTBNYf",
         "status": "success"
       },
       {
-        "content": "- **Stock Price for AMZN**: $185.20 (-0.3%)\n- **Company Info**: Amazon.com Inc. - E-commerce/Cloud, Market Cap: $1.9T",
+        "content": "Here are the results for AMZN:\n\n- Stock price: $185.20 (-0.3%)\n- Company info: Amazon.com Inc. \u2014 E-commerce/Cloud, Market Cap: $1.9T\n\nWould you like historical prices, recent news, or alerts set for price changes?",
         "additional_kwargs": {},
         "response_metadata": {
           "finish_reason": "stop",
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_29330a9688"
+          "model_name": "gpt-5-mini-2025-08-07",
+          "service_tier": "default",
+          "model_provider": "openai"
         },
         "type": "ai",
-        "id": "lc_run--019bc08b-0afe-7631-a782-061774d9fab4",
+        "id": "lc_run--019d0516-da80-7b20-ad3a-4012adaae1c6",
         "tool_calls": [],
-        "invalid_tool_calls": []
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 257,
+          "output_tokens": 63,
+          "total_tokens": 320,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
       }
     ]
   },
   "status": "SUCCESS",
   "toolsCalled": [
-    {
-      "name": "get_stock_price",
-      "output": {
-        "content": "$185.20 (-0.3%)",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_stock_price",
-        "id": "98363a40-834b-401a-93cb-786c000dd16b",
-        "tool_call_id": "call_4XE22DoKZOFNlR7Jis6aCB4I",
-        "status": "success"
-      },
-      "inputParameters": {
-        "symbol": "AMZN"
-      }
-    },
     {
       "name": "get_company_info",
       "output": {
@@ -946,8 +959,24 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_company_info",
-        "id": "a8ae03c5-d6a9-4dfb-aaa1-77e225a16c23",
-        "tool_call_id": "call_1FmKtehLlbriPjjEjBZXfWhr",
+        "id": "04da5e4a-dc54-48e1-b4e6-7e25751d1ece",
+        "tool_call_id": "call_s2wanmn2375BcYu4T8sTBNYf",
+        "status": "success"
+      },
+      "inputParameters": {
+        "symbol": "AMZN"
+      }
+    },
+    {
+      "name": "get_stock_price",
+      "output": {
+        "content": "$185.20 (-0.3%)",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_stock_price",
+        "id": "55d38da2-3890-4a17-81d1-3ab14b2b944b",
+        "tool_call_id": "call_Mfwm1usa0oMYVLarcYvtsvog",
         "status": "success"
       },
       "inputParameters": {

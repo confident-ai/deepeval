@@ -1,0 +1,11 @@
+{
+  "title": "Custom",
+  "pages": [
+    "metrics-llm-evals",
+    "metrics-dag",
+    "metrics-conversational-g-eval",
+    "metrics-conversational-dag",
+    "metrics-arena-g-eval",
+    "metrics-custom"
+  ]
+}

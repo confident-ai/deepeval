@@ -1,0 +1,422 @@
+{
+  "uuid": "bb1fce36-917a-4143-b447-163e564c59c6",
+  "baseSpans": [
+    {
+      "uuid": "019d050f-00ae-72f2-ab39-efd650d53a6a",
+      "name": "simple_agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-03-19T07:46:02.543Z",
+      "endTime": "2026-03-19T07:46:06.492Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 90,
+                "prompt_tokens": 145,
+                "total_tokens": 235,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2MtiPSsIM04W0N9yxcLsrfjlJyY",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d050f-00af-74f3-b95e-8ad8722f3ddc-0",
+            "tool_calls": [
+              {
+                "name": "search_web",
+                "args": {
+                  "query": "weather san francisco"
+                },
+                "id": "call_VimlrvrM1Sh4T8C4BT4SVJem",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 145,
+              "output_tokens": 90,
+              "total_tokens": 235,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
+          },
+          {
+            "content": "San Francisco weather: Foggy, 58F, humidity 75%",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "search_web",
+            "tool_call_id": "call_VimlrvrM1Sh4T8C4BT4SVJem",
+            "status": "success"
+          },
+          {
+            "content": "I searched the web for \"weather san francisco\" and found: \"San Francisco weather: Foggy, 58F, humidity 75%\".",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 34,
+                "prompt_tokens": 191,
+                "total_tokens": 225,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2MvW4tAcyYrozFO6ACTIAh4fw5K",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d050f-0bee-71d0-b9d1-5f08c7b72bba-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 191,
+              "output_tokens": 34,
+              "total_tokens": 225,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      },
+      "toolsCalled": [
+        {
+          "name": "search_web",
+          "output": {
+            "content": "San Francisco weather: Foggy, 58F, humidity 75%",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "search_web",
+            "tool_call_id": "call_VimlrvrM1Sh4T8C4BT4SVJem",
+            "status": "success"
+          },
+          "inputParameters": {
+            "query": "weather san francisco"
+          }
+        }
+      ]
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019d050f-0bee-71d0-b9d1-5f08c7b72bba",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019d050f-00ae-72f2-ab39-efd650d53a6a",
+      "startTime": "2026-03-19T07:46:05.422Z",
+      "endTime": "2026-03-19T07:46:06.491Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions."
+        },
+        {
+          "role": "ai",
+          "content": ""
+        },
+        {
+          "role": "tool",
+          "content": "San Francisco weather: Foggy, 58F, humidity 75%"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'search_web', 'description': 'Search the web for information.', 'parameters': {'properties': {'query': {'type': 'string'}}, 'required': ['query'], 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "I searched the web for \"weather san francisco\" and found: \"San Francisco weather: Foggy, 58F, humidity 75%\".",
+        "tool_calls": []
+      },
+      "model": "gpt-5-mini-2025-08-07",
+      "inputTokenCount": 191.0,
+      "outputTokenCount": 34.0
+    },
+    {
+      "uuid": "019d050f-00af-74f3-b95e-8ad8722f3ddc",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019d050f-00ae-72f2-ab39-efd650d53a6a",
+      "startTime": "2026-03-19T07:46:02.544Z",
+      "endTime": "2026-03-19T07:46:05.421Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions."
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'search_web', 'description': 'Search the web for information.', 'parameters': {'properties': {'query': {'type': 'string'}}, 'required': ['query'], 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "search_web",
+            "args": {
+              "query": "weather san francisco"
+            },
+            "id": "call_VimlrvrM1Sh4T8C4BT4SVJem"
+          }
+        ]
+      },
+      "model": "gpt-5-mini-2025-08-07",
+      "inputTokenCount": 145.0,
+      "outputTokenCount": 90.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019d050f-0bed-7303-878b-4d948e6b0001",
+      "name": "search_web",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019d050f-00ae-72f2-ab39-efd650d53a6a",
+      "startTime": "2026-03-19T07:46:05.421Z",
+      "endTime": "2026-03-19T07:46:05.422Z",
+      "input": {
+        "query": "weather san francisco"
+      },
+      "output": {
+        "content": "San Francisco weather: Foggy, 58F, humidity 75%",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "search_web",
+        "tool_call_id": "call_VimlrvrM1Sh4T8C4BT4SVJem",
+        "status": "success"
+      }
+    }
+  ],
+  "startTime": "2026-03-19T07:46:02.542Z",
+  "endTime": "2026-03-19T07:46:06.492Z",
+  "name": "langchain-async-agent-simple",
+  "metadata": {
+    "test_type": "async_agent"
+  },
+  "tags": [
+    "langchain",
+    "async",
+    "agent",
+    "simple"
+  ],
+  "environment": "development",
+  "input": {
+    "messages": [
+      {
+        "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 90,
+            "prompt_tokens": 145,
+            "total_tokens": 235,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 64,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-DL2MtiPSsIM04W0N9yxcLsrfjlJyY",
+          "service_tier": "default",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019d050f-00af-74f3-b95e-8ad8722f3ddc-0",
+        "tool_calls": [
+          {
+            "name": "search_web",
+            "args": {
+              "query": "weather san francisco"
+            },
+            "id": "call_VimlrvrM1Sh4T8C4BT4SVJem",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 145,
+          "output_tokens": 90,
+          "total_tokens": 235,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 64
+          }
+        }
+      },
+      {
+        "content": "San Francisco weather: Foggy, 58F, humidity 75%",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "search_web",
+        "tool_call_id": "call_VimlrvrM1Sh4T8C4BT4SVJem",
+        "status": "success"
+      },
+      {
+        "content": "I searched the web for \"weather san francisco\" and found: \"San Francisco weather: Foggy, 58F, humidity 75%\".",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 34,
+            "prompt_tokens": 191,
+            "total_tokens": 225,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-DL2MvW4tAcyYrozFO6ACTIAh4fw5K",
+          "service_tier": "default",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019d050f-0bee-71d0-b9d1-5f08c7b72bba-0",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 191,
+          "output_tokens": 34,
+          "total_tokens": 225,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      }
+    ]
+  },
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "search_web",
+      "output": {
+        "content": "San Francisco weather: Foggy, 58F, humidity 75%",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "search_web",
+        "tool_call_id": "call_VimlrvrM1Sh4T8C4BT4SVJem",
+        "status": "success"
+      },
+      "inputParameters": {
+        "query": "weather san francisco"
+      }
+    }
+  ]
+}

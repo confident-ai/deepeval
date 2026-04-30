@@ -1,0 +1,41 @@
+{
+  "uuid": "e8466640-375a-4cfd-8a1a-f9e7944d4f0c",
+  "baseSpans": [
+    {
+      "uuid": "88a9cc54-ea68-4bff-8cc4-d1df397f5231",
+      "name": "my_transformer",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:13.279Z",
+      "endTime": "2026-01-29T09:53:13.279Z",
+      "input": {
+        "data": {
+          "key": "value"
+        }
+      },
+      "output": {
+        "transformed": {
+          "key": "value"
+        }
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.279Z",
+  "endTime": "2026-01-29T09:53:13.279Z",
+  "environment": "testing",
+  "input": {
+    "data": {
+      "key": "value"
+    }
+  },
+  "output": {
+    "transformed": {
+      "key": "value"
+    }
+  },
+  "status": "SUCCESS"
+}

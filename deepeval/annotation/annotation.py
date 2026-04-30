@@ -14,7 +14,7 @@ def send_annotation(
     explanation: Optional[str] = None,
     user_id: Optional[str] = None,
     type: Optional[AnnotationType] = AnnotationType.THUMBS_RATING,
-) -> str:
+) -> None:
     api_annotation = APIAnnotation(
         rating=rating,
         traceUuid=trace_uuid,
@@ -50,7 +50,7 @@ async def a_send_annotation(
     explanation: Optional[str] = None,
     type: Optional[AnnotationType] = AnnotationType.THUMBS_RATING,
     user_id: Optional[str] = None,
-) -> str:
+) -> None:
     api_annotation = APIAnnotation(
         rating=rating,
         traceUuid=trace_uuid,

@@ -206,8 +206,8 @@ def test_test_case_imports():
         MLLMImage,
         ToolCall,
         ToolCallParams,
-        TurnParams,
-        LLMTestCaseParams,
+        MultiTurnParams,
+        SingleTurnParams,
         MCPServer,
         MCPPromptCall,
         MCPResourceCall,
@@ -221,8 +221,8 @@ def test_test_case_imports():
     assert MLLMImage is not None
     assert ToolCall is not None
     assert ToolCallParams is not None
-    assert TurnParams is not None
-    assert LLMTestCaseParams is not None
+    assert MultiTurnParams is not None
+    assert SingleTurnParams is not None
     assert MCPServer is not None
     assert MCPPromptCall is not None
     assert MCPResourceCall is not None

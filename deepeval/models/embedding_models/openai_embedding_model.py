@@ -15,7 +15,6 @@ from deepeval.models.retry_policy import (
 )
 from deepeval.constants import ProviderSlug as PS
 
-
 retry_openai = create_retry_decorator(PS.OPENAI)
 
 valid_openai_embedding_models = [

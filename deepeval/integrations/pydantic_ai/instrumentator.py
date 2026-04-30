@@ -36,10 +36,14 @@ try:
         SpanProcessor as _SpanProcessor,
         TracerProvider,
     )
-    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry.sdk.trace.export import (
+        BatchSpanProcessor,
+        SimpleSpanProcessor,
+    )
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
         OTLPSpanExporter,
     )
+    from opentelemetry.trace import set_tracer_provider
     from pydantic_ai.models.instrumented import (
         InstrumentationSettings as _BaseInstrumentationSettings,
     )
@@ -126,12 +130,19 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         agent_metric_collection: Optional[str] = None,
         tool_metric_collection_map: Optional[dict] = None,
         trace_metric_collection: Optional[str] = None,
+        test_case_id: Optional[str] = None,
+        turn_id: Optional[str] = None,
         is_test_mode: Optional[bool] = False,
         agent_metrics: Optional[List[BaseMetric]] = None,
     ):
         is_dependency_installed()
 
-        _environment = os.getenv("CONFIDENT_TRACE_ENVIRONMENT", "development")
+        if trace_manager.environment is not None:
+            _environment = trace_manager.environment
+        elif settings.CONFIDENT_TRACE_ENVIRONMENT is not None:
+            _environment = settings.CONFIDENT_TRACE_ENVIRONMENT
+        else:
+            _environment = "development"
         if _environment and _environment in [
             "production",
             "staging",
@@ -151,6 +162,8 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         self.llm_metric_collection = llm_metric_collection
         self.agent_metric_collection = agent_metric_collection
         self.trace_metric_collection = trace_metric_collection
+        self.test_case_id = test_case_id
+        self.turn_id = turn_id
         self.is_test_mode = is_test_mode
         self.agent_metrics = agent_metrics
 
@@ -166,7 +179,9 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         trace_provider.add_span_processor(span_interceptor)
 
         if is_test_mode:
-            trace_provider.add_span_processor(BatchSpanProcessor(test_exporter))
+            trace_provider.add_span_processor(
+                SimpleSpanProcessor(ConfidentSpanExporter())
+            )
         else:
             trace_provider.add_span_processor(
                 BatchSpanProcessor(
@@ -176,10 +191,18 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
                     )
                 )
             )
+        try:
+            set_tracer_provider(trace_provider)
+        except Exception as e:
+            # Handle case where provider is already set (optional warning)
+            logger.warning(f"Could not set global tracer provider: {e}")
+
         super().__init__(tracer_provider=trace_provider)
 
 
 class SpanInterceptor(SpanProcessor):
+    LLM_OPERATION_NAMES = {"chat", "generate_content", "text_completion"}
+
     def __init__(self, settings_instance: ConfidentInstrumentationSettings):
         # Keep a reference to the settings instance instead of copying values
         self.settings = settings_instance
@@ -191,16 +214,33 @@ class SpanInterceptor(SpanProcessor):
             _otel_trace_id = span.get_span_context().trace_id
             _current_trace_context.uuid = to_hex_string(_otel_trace_id, 32)
 
+        # per-request values from current_trace_context override settings for
+        # scalars; metadata is merged (settings as base, context on top)
+        _thread_id = (
+            _current_trace_context.thread_id if _current_trace_context else None
+        ) or self.settings.thread_id
+
+        _name = (
+            _current_trace_context.name if _current_trace_context else None
+        ) or self.settings.name
+
+        _metadata = {
+            **(self.settings.metadata or {}),
+            **(
+                _current_trace_context.metadata or {}
+                if _current_trace_context
+                else {}
+            ),
+        }
+
         # set trace attributes
-        if self.settings.thread_id:
-            span.set_attribute(
-                "confident.trace.thread_id", self.settings.thread_id
-            )
+        if _thread_id:
+            span.set_attribute("confident.trace.thread_id", _thread_id)
         if self.settings.user_id:
             span.set_attribute("confident.trace.user_id", self.settings.user_id)
-        if self.settings.metadata:
+        if _metadata:
             span.set_attribute(
-                "confident.trace.metadata", json.dumps(self.settings.metadata)
+                "confident.trace.metadata", json.dumps(_metadata)
             )
         if self.settings.tags:
             span.set_attribute("confident.trace.tags", self.settings.tags)
@@ -213,18 +253,33 @@ class SpanInterceptor(SpanProcessor):
             span.set_attribute(
                 "confident.trace.environment", self.settings.environment
             )
-        if self.settings.name:
-            span.set_attribute("confident.trace.name", self.settings.name)
+        if _name:
+            span.set_attribute("confident.trace.name", _name)
+        if self.settings.test_case_id:
+            span.set_attribute(
+                "confident.trace.test_case_id", self.settings.test_case_id
+            )
+        if self.settings.turn_id:
+            span.set_attribute("confident.trace.turn_id", self.settings.turn_id)
         if self.settings.confident_prompt:
             span.set_attribute(
-                "confident.span.prompt",
-                json.dumps(
-                    {
-                        "alias": self.settings.confident_prompt.alias,
-                        "version": self.settings.confident_prompt.version,
-                    }
-                ),
+                "confident.span.prompt_alias",
+                self.settings.confident_prompt.alias,
             )
+            span.set_attribute(
+                "confident.span.prompt_commit_hash",
+                self.settings.confident_prompt.hash,
+            )
+            if self.settings.confident_prompt.version:
+                span.set_attribute(
+                    "confident.span.prompt_label",
+                    self.settings.confident_prompt.label,
+                )
+            if self.settings.confident_prompt.version:
+                span.set_attribute(
+                    "confident.span.prompt_version",
+                    self.settings.confident_prompt.version,
+                )
 
         # set trace metric collection
         if self.settings.trace_metric_collection:
@@ -233,24 +288,23 @@ class SpanInterceptor(SpanProcessor):
                 self.settings.trace_metric_collection,
             )
 
-        # set agent name and metric collection
-        if span.attributes.get("agent_name"):
-            span.set_attribute("confident.span.type", "agent")
-            span.set_attribute(
-                "confident.span.name", span.attributes.get("agent_name")
-            )
-            if self.settings.agent_metric_collection:
-                span.set_attribute(
-                    "confident.span.metric_collection",
-                    self.settings.agent_metric_collection,
-                )
+        operation_name = span.attributes.get("gen_ai.operation.name")
+
+        # set agent name and metric collection (only for agent-run spans)
+        agent_name = (
+            span.attributes.get("gen_ai.agent.name")
+            or span.attributes.get("pydantic_ai.agent.name")
+            or span.attributes.get("agent_name")
+        )
+
+        if agent_name and self._is_agent_span(operation_name):
+            self._add_agent_span(span, agent_name)
 
         # set llm metric collection
-        if span.attributes.get("gen_ai.operation.name") in [
-            "chat",
-            "generate_content",
-            "text_completion",
-        ]:
+        if operation_name in self.LLM_OPERATION_NAMES:
+            # Explicitly classify model request spans as LLM spans so they are
+            # not mislabeled as agent spans when gen_ai.agent.name is present.
+            span.set_attribute("confident.span.type", "llm")
             if self.settings.llm_metric_collection:
                 span.set_attribute(
                     "confident.span.metric_collection",
@@ -270,6 +324,22 @@ class SpanInterceptor(SpanProcessor):
                 )
 
     def on_end(self, span):
+
+        already_processed = span.attributes.get("confident.span.type") in {
+            "agent",
+            "llm",
+            "tool",
+        }
+        if not already_processed:
+            operation_name = span.attributes.get("gen_ai.operation.name")
+            agent_name = (
+                span.attributes.get("gen_ai.agent.name")
+                or span.attributes.get("pydantic_ai.agent.name")
+                or span.attributes.get("agent_name")
+            )
+            if agent_name and self._is_agent_span(operation_name):
+                self._add_agent_span(span, agent_name)
+
         if self.settings.is_test_mode:
             if span.attributes.get("confident.span.type") == "agent":
 
@@ -321,5 +391,16 @@ class SpanInterceptor(SpanProcessor):
                 trace.root_spans.append(agent_span)
                 trace.status = TraceSpanStatus.SUCCESS
                 trace.end_time = perf_counter()
-                trace_manager.traces_to_evaluate.append(trace)
-                test_exporter.clear_span_json_list()
+                trace_manager.eval_session.traces_to_evaluate.append(trace)
+
+    def _add_agent_span(self, span, name):
+        span.set_attribute("confident.span.type", "agent")
+        span.set_attribute("confident.span.name", name)
+        if self.settings.agent_metric_collection:
+            span.set_attribute(
+                "confident.span.metric_collection",
+                self.settings.agent_metric_collection,
+            )
+
+    def _is_agent_span(self, operation_name: Optional[str]) -> bool:
+        return operation_name == "invoke_agent"

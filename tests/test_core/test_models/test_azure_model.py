@@ -222,6 +222,180 @@ class TestAzureOpenAIModelGenerationKwargs:
 ##########################
 
 
+def test_azure_openai_model_defers_auth_when_no_key_token_or_provider(
+    monkeypatch, settings
+):
+    """
+    Keyless / Managed Identity scenarios may have key-based auth disabled.
+    DeepEval should NOT fail fast when api_key / azure_ad_token / provider are all unset.
+    It should defer auth validation to the OpenAI SDK.
+    """
+    # Ensure Settings has the non-auth Azure config required for client construction
+    with settings.edit(persist=False):
+        settings.AZURE_OPENAI_API_KEY = None  # critical: no key
+        settings.AZURE_OPENAI_AD_TOKEN = (
+            None  # critical: no token (if present in settings)
+        )
+        settings.AZURE_OPENAI_ENDPOINT = "https://azure.example.com"
+        settings.AZURE_DEPLOYMENT_NAME = "settings-deployment"
+        settings.AZURE_MODEL_NAME = "gpt-4.1"
+        settings.OPENAI_API_VERSION = "2024-02-15-preview"
+        settings.OPENAI_COST_PER_INPUT_TOKEN = 1e-6
+        settings.OPENAI_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    reset_settings(reload_dotenv=False)
+
+    # Stub SDK clients so no real network calls happen
+    monkeypatch.setattr(
+        azure_mod, "AzureOpenAI", _RecordingClient, raising=True
+    )
+    monkeypatch.setattr(
+        azure_mod, "AsyncAzureOpenAI", _RecordingClient, raising=True
+    )
+
+    # This should NOT raise DeepEvalError anymore (it should defer to SDK)
+    model = AzureOpenAIModel()
+
+    client = model.model
+    kw = client.kwargs
+
+    # We expect credentials to be None (SDK can attempt keyless auth internally)
+    assert kw.get("api_key") is None
+    assert kw.get("azure_ad_token") is None
+    assert kw.get("azure_ad_token_provider") is None
+
+
+@pytest.mark.parametrize("bad_key", ["", "   ", "\n\t"])
+def test_azure_openai_model_raises_on_explicit_empty_api_key(
+    monkeypatch, settings, bad_key
+):
+    """
+    If the user explicitly provides api_key but it's empty/whitespace,
+    DeepEval should fail fast with a helpful error message.
+    """
+    with settings.edit(persist=False):
+        settings.AZURE_OPENAI_API_KEY = None
+        settings.AZURE_OPENAI_ENDPOINT = "https://azure.example.com"
+        settings.AZURE_DEPLOYMENT_NAME = "settings-deployment"
+        settings.AZURE_MODEL_NAME = "gpt-4.1"
+        settings.OPENAI_API_VERSION = "2024-02-15-preview"
+        settings.OPENAI_COST_PER_INPUT_TOKEN = 1e-6
+        settings.OPENAI_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    reset_settings(reload_dotenv=False)
+
+    monkeypatch.setattr(
+        azure_mod, "AzureOpenAI", _RecordingClient, raising=True
+    )
+    monkeypatch.setattr(
+        azure_mod, "AsyncAzureOpenAI", _RecordingClient, raising=True
+    )
+
+    with pytest.raises(Exception) as e:
+        _ = AzureOpenAIModel(api_key=bad_key)
+
+    # match your new error text (keeps test stable & intentional)
+    assert "api_key was provided but is empty" in str(e.value)
+
+
+def test_azure_openai_model_raises_on_explicit_empty_api_key_secretstr(
+    monkeypatch, settings
+):
+    """
+    Same as above, but ensures SecretStr is unwrapped via get_secret_value().
+    This directly validates the new SecretStr handling logic.
+    """
+    with settings.edit(persist=False):
+        settings.AZURE_OPENAI_API_KEY = None
+        settings.AZURE_OPENAI_ENDPOINT = "https://azure.example.com"
+        settings.AZURE_DEPLOYMENT_NAME = "settings-deployment"
+        settings.AZURE_MODEL_NAME = "gpt-4.1"
+        settings.OPENAI_API_VERSION = "2024-02-15-preview"
+        settings.OPENAI_COST_PER_INPUT_TOKEN = 1e-6
+        settings.OPENAI_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    reset_settings(reload_dotenv=False)
+
+    monkeypatch.setattr(
+        azure_mod, "AzureOpenAI", _RecordingClient, raising=True
+    )
+    monkeypatch.setattr(
+        azure_mod, "AsyncAzureOpenAI", _RecordingClient, raising=True
+    )
+
+    with pytest.raises(Exception) as e:
+        _ = AzureOpenAIModel(api_key=" ")
+
+    assert "api_key was provided but is empty" in str(e.value)
+
+
+@pytest.mark.parametrize("bad_token", ["", "   ", "\n\t"])
+def test_azure_openai_model_raises_on_explicit_empty_ad_token(
+    monkeypatch, settings, bad_token
+):
+    """
+    If the user explicitly provides azure_ad_token but it's empty/whitespace,
+    DeepEval should fail fast with a helpful error message.
+    """
+    with settings.edit(persist=False):
+        settings.AZURE_OPENAI_API_KEY = None
+        settings.AZURE_OPENAI_ENDPOINT = "https://azure.example.com"
+        settings.AZURE_DEPLOYMENT_NAME = "settings-deployment"
+        settings.AZURE_MODEL_NAME = "gpt-4.1"
+        settings.OPENAI_API_VERSION = "2024-02-15-preview"
+        settings.OPENAI_COST_PER_INPUT_TOKEN = 1e-6
+        settings.OPENAI_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    reset_settings(reload_dotenv=False)
+
+    monkeypatch.setattr(
+        azure_mod, "AzureOpenAI", _RecordingClient, raising=True
+    )
+    monkeypatch.setattr(
+        azure_mod, "AsyncAzureOpenAI", _RecordingClient, raising=True
+    )
+
+    with pytest.raises(Exception) as e:
+        _ = AzureOpenAIModel(azure_ad_token=bad_token)
+
+    assert "azure_ad_token was provided but is empty" in str(e.value)
+
+
+def test_azure_openai_model_does_not_fail_fast_when_token_provider_present(
+    monkeypatch, settings
+):
+    """
+    If a token provider is supplied, we should not block early on missing key/token.
+    Provider controls auth.
+    """
+    with settings.edit(persist=False):
+        settings.AZURE_OPENAI_API_KEY = None
+        settings.AZURE_OPENAI_ENDPOINT = "https://azure.example.com"
+        settings.AZURE_DEPLOYMENT_NAME = "settings-deployment"
+        settings.AZURE_MODEL_NAME = "gpt-4.1"
+        settings.OPENAI_API_VERSION = "2024-02-15-preview"
+        settings.OPENAI_COST_PER_INPUT_TOKEN = 1e-6
+        settings.OPENAI_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    reset_settings(reload_dotenv=False)
+
+    monkeypatch.setattr(
+        azure_mod, "AzureOpenAI", _RecordingClient, raising=True
+    )
+    monkeypatch.setattr(
+        azure_mod, "AsyncAzureOpenAI", _RecordingClient, raising=True
+    )
+
+    def provider():
+        return "token"
+
+    model = AzureOpenAIModel(azure_ad_token_provider=provider)
+
+    client = model.model
+    kw = client.kwargs
+    assert kw.get("azure_ad_token_provider") is provider
+
+
 def test_azure_openai_model_uses_explicit_key_over_settings_and_strips_secret(
     monkeypatch, settings
 ):
@@ -423,6 +597,71 @@ def test_azure_openai_model_accepts_legacy_api_key_keyword_and_uses_it(
 
     # And the legacy key should not be present in the model's kwargs
     assert "azure_openai_api_key" not in model.kwargs
+
+
+_AZURE_KWARGS = dict(
+    api_key="fake-key",
+    base_url="https://fake.openai.azure.com",
+    deployment_name="fake-deployment",
+    api_version="2024-02-01",
+)
+
+
+class TestAzureModelTemperature:
+    def test_reasoning_model_temperature_is_none(self):
+        """o3-mini has supports_temperature=False; temperature must be None."""
+        model = AzureOpenAIModel(model="o3-mini", **_AZURE_KWARGS)
+        assert model.temperature is None
+
+    def test_standard_model_temperature_is_set(self):
+        """gpt-4o supports temperature; it should default to 0.0."""
+        model = AzureOpenAIModel(model="gpt-4o", **_AZURE_KWARGS)
+        assert model.temperature is not None
+        assert model.temperature == 0.0
+
+    def test_explicit_temperature_preserved_for_standard_model(self):
+        """User-supplied temperature is kept for models that support it."""
+        model = AzureOpenAIModel(
+            model="gpt-4o", temperature=0.7, **_AZURE_KWARGS
+        )
+        assert model.temperature == pytest.approx(0.7)
+
+    def test_explicit_temperature_overridden_for_reasoning_model(self):
+        """Even if user passes temperature, reasoning models get None."""
+        model = AzureOpenAIModel(
+            model="o3-mini", temperature=0.5, **_AZURE_KWARGS
+        )
+        assert model.temperature is None
+
+
+##############################
+# calculate_cost unit tests  #
+##############################
+
+
+def test_azure_calculate_cost_returns_correct_value():
+    model = AzureOpenAIModel(model="gpt-4o", **_AZURE_KWARGS)
+    model.model_data.input_price = 0.005
+    model.model_data.output_price = 0.015
+    cost = model.calculate_cost(input_tokens=200, output_tokens=100)
+    expected = 200 * 0.005 + 100 * 0.015
+    assert cost == expected
+
+
+def test_azure_calculate_cost_returns_none_when_prices_missing():
+    model = AzureOpenAIModel(model="gpt-4o", **_AZURE_KWARGS)
+    model.model_data.input_price = None
+    model.model_data.output_price = None
+    cost = model.calculate_cost(input_tokens=200, output_tokens=100)
+    assert cost is None
+
+
+def test_azure_calculate_cost_with_zero_tokens():
+    model = AzureOpenAIModel(model="gpt-4o", **_AZURE_KWARGS)
+    model.model_data.input_price = 0.005
+    model.model_data.output_price = 0.015
+    cost = model.calculate_cost(input_tokens=0, output_tokens=0)
+    assert cost == 0.0
 
 
 if __name__ == "__main__":

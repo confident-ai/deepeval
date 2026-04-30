@@ -1,0 +1,30 @@
+{
+  "uuid": "f5e91469-419a-4bae-abc2-2ae2099d25e9",
+  "baseSpans": [
+    {
+      "uuid": "cbd647a9-1161-496e-bbc9-8ce24a42f4a2",
+      "name": "trace_update_name",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:13.965Z",
+      "endTime": "2026-01-29T09:53:13.965Z",
+      "input": {
+        "data": "test"
+      },
+      "output": "Named trace: test"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.965Z",
+  "endTime": "2026-01-29T09:53:13.965Z",
+  "name": "custom_trace_name",
+  "environment": "testing",
+  "input": {
+    "data": "test"
+  },
+  "output": "Named trace: test",
+  "status": "SUCCESS"
+}

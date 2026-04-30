@@ -21,7 +21,6 @@ from tests.test_core.stubs import (
     DummyEvolutionConfig,
 )
 
-
 TABLES = {
     "students": [
         """CREATE TABLE Students (

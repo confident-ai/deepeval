@@ -1,7 +1,7 @@
 from deepeval.test_case import (
     ArenaTestCase,
     LLMTestCase,
-    LLMTestCaseParams,
+    SingleTurnParams,
     Contestant,
 )
 from deepeval.metrics import ArenaGEval
@@ -16,8 +16,8 @@ def test_compare():
         name="Friendly",
         criteria="Choose the winner of the more friendly contestant based on the input and actual output",
         evaluation_params=[
-            LLMTestCaseParams.INPUT,
-            LLMTestCaseParams.ACTUAL_OUTPUT,
+            SingleTurnParams.INPUT,
+            SingleTurnParams.ACTUAL_OUTPUT,
         ],
     )
     a_test_case = ArenaTestCase(
@@ -67,8 +67,8 @@ def test_compare_with_hyperparameters():
         name="Friendly",
         criteria="Choose the winner of the more friendly contestant based on the input and actual output",
         evaluation_params=[
-            LLMTestCaseParams.INPUT,
-            LLMTestCaseParams.ACTUAL_OUTPUT,
+            SingleTurnParams.INPUT,
+            SingleTurnParams.ACTUAL_OUTPUT,
         ],
     )
     a_test_case = ArenaTestCase(

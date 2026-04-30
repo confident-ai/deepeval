@@ -1,5 +1,5 @@
 from openai.types.chat.chat_completion import ChatCompletion
-from typing import Optional, Tuple, Union, Dict, List
+from typing import Any, Optional, Tuple, Union, Dict, List
 from deepeval.test_case import MLLMImage
 from pydantic import BaseModel, SecretStr
 from openai import (
@@ -9,6 +9,7 @@ from openai import (
 
 from deepeval.errors import DeepEvalError
 from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
+from deepeval.tracing.context import update_llm_span, update_current_span
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models import DeepEvalBaseLLM
@@ -28,7 +29,6 @@ from deepeval.models.llms.constants import (
     OPENAI_MODELS_DATA,
 )
 
-
 retry_openai = create_retry_decorator(PS.OPENAI)
 
 
@@ -43,7 +43,6 @@ _ALIAS_MAP = {
 
 
 class GPTModel(DeepEvalBaseLLM):
-
     def __init__(
         self,
         model: Optional[str] = None,
@@ -125,6 +124,13 @@ class GPTModel(DeepEvalBaseLLM):
             raise DeepEvalError("Temperature must be >= 0.")
 
         self.temperature = temperature
+        # Extract async_http_client for separate async HTTP client support (#2351).
+        # This allows users to provide different httpx clients for sync (httpx.Client)
+        # and async (httpx.AsyncClient) operations.
+        self.async_http_client = normalized_kwargs.pop(
+            "async_http_client", None
+        )
+
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
         self.kwargs.pop("temperature", None)
@@ -150,13 +156,13 @@ class GPTModel(DeepEvalBaseLLM):
         else:
             content = [{"type": "text", "text": prompt}]
 
+        messages = [{"role": "user", "content": content}]
+
         if schema:
             if self.supports_structured_outputs() is True:
                 completion = client.beta.chat.completions.parse(
                     model=self.name,
-                    messages=[
-                        {"role": "user", "content": content},
-                    ],
+                    messages=messages,
                     response_format=schema,
                     temperature=self.temperature,
                     **self.generation_kwargs,
@@ -168,13 +174,12 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
                 )
+                self._update_llm_span_from_completion(completion, messages)
                 return structured_output, cost
             if self.supports_json_mode() is True:
                 completion = client.beta.chat.completions.parse(
                     model=self.name,
-                    messages=[
-                        {"role": "user", "content": content},
-                    ],
+                    messages=messages,
                     response_format={"type": "json_object"},
                     temperature=self.temperature,
                     **self.generation_kwargs,
@@ -186,11 +191,12 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
                 )
+                self._update_llm_span_from_completion(completion, messages)
                 return schema.model_validate(json_output), cost
 
         completion = client.chat.completions.create(
             model=self.name,
-            messages=[{"role": "user", "content": content}],
+            messages=messages,
             temperature=self.temperature,
             **self.generation_kwargs,
         )
@@ -198,6 +204,7 @@ class GPTModel(DeepEvalBaseLLM):
         cost = self.calculate_cost(
             completion.usage.prompt_tokens, completion.usage.completion_tokens
         )
+        self._update_llm_span_from_completion(completion, messages)
         if schema:
             json_output = trim_and_load_json(output)
             return schema.model_validate(json_output), cost
@@ -216,13 +223,13 @@ class GPTModel(DeepEvalBaseLLM):
         else:
             content = [{"type": "text", "text": prompt}]
 
+        messages = [{"role": "user", "content": content}]
+
         if schema:
             if self.supports_structured_outputs() is True:
                 completion = await client.beta.chat.completions.parse(
                     model=self.name,
-                    messages=[
-                        {"role": "user", "content": content},
-                    ],
+                    messages=messages,
                     response_format=schema,
                     temperature=self.temperature,
                     **self.generation_kwargs,
@@ -234,13 +241,12 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
                 )
+                self._update_llm_span_from_completion(completion, messages)
                 return structured_output, cost
             if self.supports_json_mode() is True:
                 completion = await client.beta.chat.completions.parse(
                     model=self.name,
-                    messages=[
-                        {"role": "user", "content": content},
-                    ],
+                    messages=messages,
                     response_format={"type": "json_object"},
                     temperature=self.temperature,
                     **self.generation_kwargs,
@@ -252,11 +258,12 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
                 )
+                self._update_llm_span_from_completion(completion, messages)
                 return schema.model_validate(json_output), cost
 
         completion = await client.chat.completions.create(
             model=self.name,
-            messages=[{"role": "user", "content": content}],
+            messages=messages,
             temperature=self.temperature,
             **self.generation_kwargs,
         )
@@ -264,6 +271,7 @@ class GPTModel(DeepEvalBaseLLM):
         cost = self.calculate_cost(
             completion.usage.prompt_tokens, completion.usage.completion_tokens
         )
+        self._update_llm_span_from_completion(completion, messages)
         if schema:
             json_output = trim_and_load_json(output)
             return schema.model_validate(json_output), cost
@@ -274,17 +282,22 @@ class GPTModel(DeepEvalBaseLLM):
     # Other generate functions #
     ############################
 
+    def _cap_top_logprobs(self, top_logprobs: int) -> int:
+        max_log_probs = self.model_data.max_log_probs
+        if max_log_probs is None:
+            return top_logprobs
+
+        return min(top_logprobs, max_log_probs)
+
     @retry_openai
     def generate_raw_response(
         self,
         prompt: str,
         top_logprobs: int = 5,
     ) -> Tuple[ChatCompletion, float]:
-        # Generate completion
         model_name = self.name
         is_multimodal = check_if_multimodal(prompt)
 
-        # validate that this model supports logprobs
         if self.supports_log_probs() is False:
             raise DeepEvalError(
                 f"Model `{model_name}` does not support `logprobs` / `top_logprobs`. "
@@ -292,24 +305,26 @@ class GPTModel(DeepEvalBaseLLM):
                 "when calling `generate_raw_response`."
             )
 
+        top_logprobs = self._cap_top_logprobs(top_logprobs)
         client = self.load_model(async_mode=False)
         if is_multimodal:
             prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_content(prompt)
         else:
             content = [{"type": "text", "text": prompt}]
+        messages = [{"role": "user", "content": content}]
         completion = client.chat.completions.create(
             model=self.name,
-            messages=[{"role": "user", "content": content}],
+            messages=messages,
             temperature=self.temperature,
             logprobs=True,
             top_logprobs=top_logprobs,
             **self.generation_kwargs,
         )
-        # Cost calculation
         input_tokens = completion.usage.prompt_tokens
         output_tokens = completion.usage.completion_tokens
         cost = self.calculate_cost(input_tokens, output_tokens)
+        self._update_llm_span_from_completion(completion, messages)
 
         return completion, cost
 
@@ -319,11 +334,9 @@ class GPTModel(DeepEvalBaseLLM):
         prompt: str,
         top_logprobs: int = 5,
     ) -> Tuple[ChatCompletion, float]:
-        # Generate completion
         model_name = self.name
         is_multimodal = check_if_multimodal(prompt)
 
-        # validate that this model supports logprobs
         if self.supports_log_probs() is False:
             raise DeepEvalError(
                 f"Model `{model_name}` does not support `logprobs` / `top_logprobs`. "
@@ -331,24 +344,26 @@ class GPTModel(DeepEvalBaseLLM):
                 "when calling `a_generate_raw_response`."
             )
 
+        top_logprobs = self._cap_top_logprobs(top_logprobs)
         client = self.load_model(async_mode=True)
         if is_multimodal:
             prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_content(prompt)
         else:
             content = [{"type": "text", "text": prompt}]
+        messages = [{"role": "user", "content": content}]
         completion = await client.chat.completions.create(
             model=self.name,
-            messages=[{"role": "user", "content": content}],
+            messages=messages,
             temperature=self.temperature,
             logprobs=True,
             top_logprobs=top_logprobs,
             **self.generation_kwargs,
         )
-        # Cost calculation
         input_tokens = completion.usage.prompt_tokens
         output_tokens = completion.usage.completion_tokens
         cost = self.calculate_cost(input_tokens, output_tokens)
+        self._update_llm_span_from_completion(completion, messages)
 
         return completion, cost
 
@@ -362,13 +377,15 @@ class GPTModel(DeepEvalBaseLLM):
             content = self.generate_content(prompt)
         else:
             content = [{"type": "text", "text": prompt}]
+        messages = [{"role": "user", "content": content}]
         response = client.chat.completions.create(
             model=self.name,
-            messages=[{"role": "user", "content": content}],
+            messages=messages,
             n=n,
             temperature=temperature,
             **self.generation_kwargs,
         )
+        self._update_llm_span_from_completion(response, messages)
         completions = [choice.message.content for choice in response.choices]
         return completions
 
@@ -475,6 +492,18 @@ class GPTModel(DeepEvalBaseLLM):
             base_url=self.base_url,
             **self._client_kwargs(),
         )
+
+        # Support separate sync/async HTTP clients (#2351).
+        # OpenAI expects httpx.Client; AsyncOpenAI expects httpx.AsyncClient.
+        # Passing the wrong type raises TypeError, so we handle them separately.
+        if cls is AsyncOpenAI:
+            if self.async_http_client is not None:
+                kw["http_client"] = self.async_http_client
+            elif "http_client" in kw:
+                # A sync httpx.Client cannot be used with AsyncOpenAI.
+                # Remove it to fall back to the SDK's default async client.
+                del kw["http_client"]
+
         try:
             return cls(**kw)
         except TypeError as e:
@@ -486,3 +515,39 @@ class GPTModel(DeepEvalBaseLLM):
 
     def get_model_name(self):
         return f"{self.name}"
+
+    def _update_llm_span_from_completion(
+        self,
+        completion: ChatCompletion,
+        messages: Optional[List[Dict[str, Any]]] = None,
+    ) -> None:
+        try:
+            usage = completion.usage
+            output = None
+            if completion.choices:
+                output = completion.choices[0].message.content
+            # chat completions API uses prompt_tokens/completion_tokens;
+            # the newer Responses API (and some gpt-5.x models) uses
+            # input_tokens/output_tokens — fall back to the newer names.
+            input_token_count = None
+            output_token_count = None
+            if usage is not None:
+                input_token_count = getattr(usage, "prompt_tokens", None)
+                if input_token_count is None:
+                    input_token_count = getattr(usage, "input_tokens", None)
+                output_token_count = getattr(usage, "completion_tokens", None)
+                if output_token_count is None:
+                    output_token_count = getattr(usage, "output_tokens", None)
+            update_llm_span(
+                model=self.name,
+                input_token_count=input_token_count,
+                output_token_count=output_token_count,
+                cost_per_input_token=self.model_data.input_price,
+                cost_per_output_token=self.model_data.output_price,
+            )
+            update_current_span(
+                input=messages,
+                output=output,
+            )
+        except Exception:
+            pass

@@ -1,0 +1,89 @@
+{
+  "uuid": "de844d8cac5d510dc1643269c2503b69",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "87ce8fc0fdff3bb5",
+      "name": "evals_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-30T08:34:30.281Z",
+      "endTime": "2026-01-30T08:34:32.177Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant. Be concise."
+        },
+        {
+          "role": "user",
+          "content": "Use the special_tool to process 'Sync Data'"
+        }
+      ],
+      "output": "The query \"Sync Data\" has been processed.",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricCollection": "agent_metrics_v1"
+    },
+    {
+      "uuid": "87ce8fc0fdff3bb5",
+      "name": "",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-30T08:34:30.281Z",
+      "endTime": "2026-01-30T08:34:32.177Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant. Be concise."
+        },
+        {
+          "role": "user",
+          "content": "Use the special_tool to process 'Sync Data'"
+        }
+      ],
+      "output": "The query \"Sync Data\" has been processed.",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricsData": [
+        {
+          "name": "Answer Relevancy",
+          "threshold": 0.5,
+          "success": false,
+          "strictMode": false,
+          "evaluationModel": "gpt-4.1"
+        }
+      ]
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-30T08:34:30.281Z",
+  "endTime": "2026-01-30T08:34:32.177Z",
+  "name": "pydanticai-full-features-sync",
+  "metadata": {
+    "env": "testing",
+    "priority": "high"
+  },
+  "tags": [
+    "pydanticai",
+    "features",
+    "sync"
+  ],
+  "environment": "development",
+  "threadId": "thread-sync-features-001",
+  "userId": "user-sync-001",
+  "input": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant. Be concise."
+    },
+    {
+      "role": "user",
+      "content": "Use the special_tool to process 'Sync Data'"
+    }
+  ],
+  "output": "The query \"Sync Data\" has been processed.",
+  "status": "SUCCESS",
+  "metricCollection": "trace_metrics_override_v1"
+}

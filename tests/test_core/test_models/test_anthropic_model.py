@@ -9,7 +9,6 @@ from pydantic import SecretStr
 
 from tests.test_core.stubs import _RecordingClient
 
-
 ########################################################
 # Legacy keyword backwards compatibility behavior      #
 ########################################################
@@ -243,3 +242,72 @@ def test_anthropic_model_raises_when_settings_key_empty(
 
     with pytest.raises(DeepEvalError, match="empty"):
         AnthropicModel(model="claude-3-7-sonnet-latest")
+
+
+##############################
+# calculate_cost unit tests  #
+##############################
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_calculate_cost_returns_correct_value(
+    mock_require_dep, settings
+):
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "test-key"
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 0.003
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 0.012
+
+    fake_anthropic_module = SimpleNamespace(
+        Anthropic=_RecordingClient,
+        AsyncAnthropic=_RecordingClient,
+    )
+    mock_require_dep.return_value = fake_anthropic_module
+
+    model = AnthropicModel(model="claude-3-7-sonnet-latest")
+    model.model_data.input_price = 0.003
+    model.model_data.output_price = 0.012
+    cost = model.calculate_cost(input_tokens=500, output_tokens=200)
+    expected = 500 * 0.003 + 200 * 0.012
+    assert cost == expected
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_calculate_cost_returns_none_when_prices_missing(
+    mock_require_dep, settings
+):
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "test-key"
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    fake_anthropic_module = SimpleNamespace(
+        Anthropic=_RecordingClient,
+        AsyncAnthropic=_RecordingClient,
+    )
+    mock_require_dep.return_value = fake_anthropic_module
+
+    model = AnthropicModel(model="claude-3-7-sonnet-latest")
+    model.model_data.input_price = None
+    model.model_data.output_price = None
+
+    cost = model.calculate_cost(input_tokens=500, output_tokens=200)
+    assert cost is None
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_calculate_cost_with_zero_tokens(mock_require_dep, settings):
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "test-key"
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 0.003
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 0.012
+
+    fake_anthropic_module = SimpleNamespace(
+        Anthropic=_RecordingClient,
+        AsyncAnthropic=_RecordingClient,
+    )
+    mock_require_dep.return_value = fake_anthropic_module
+
+    model = AnthropicModel(model="claude-3-7-sonnet-latest")
+    cost = model.calculate_cost(input_tokens=0, output_tokens=0)
+    assert cost == 0.0

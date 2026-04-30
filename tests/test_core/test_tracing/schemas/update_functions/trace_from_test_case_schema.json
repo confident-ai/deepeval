@@ -1,0 +1,31 @@
+{
+  "uuid": "e5cefb9e-b37b-4417-8a5c-e5983f8f98f1",
+  "baseSpans": [
+    {
+      "uuid": "881233a8-36bf-4c8e-a4c2-4242d737973c",
+      "name": "trace_from_test_case",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:14.050Z",
+      "endTime": "2026-01-29T09:53:14.050Z",
+      "input": {
+        "data": "data"
+      },
+      "output": "data"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:14.050Z",
+  "endTime": "2026-01-29T09:53:14.050Z",
+  "environment": "testing",
+  "input": "Trace test input",
+  "output": "Trace test output",
+  "status": "SUCCESS",
+  "context": [
+    "Test context"
+  ],
+  "expectedOutput": "Trace expected output"
+}

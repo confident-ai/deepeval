@@ -1,7 +1,6 @@
 from typing import List
 from textwrap import dedent
 
-
 multimodal_rules = """
     --- MULTIMODAL INPUT RULES ---
     - Treat image content as factual evidence.

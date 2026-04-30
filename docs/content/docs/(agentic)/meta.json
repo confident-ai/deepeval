@@ -1,0 +1,11 @@
+{
+  "title": "Agentic",
+  "pages": [
+    "metrics-task-completion",
+    "metrics-tool-correctness",
+    "metrics-argument-correctness",
+    "metrics-step-efficiency",
+    "metrics-plan-adherence",
+    "metrics-plan-quality"
+  ]
+}

@@ -51,7 +51,6 @@ from deepeval.config.utils import (
 )
 from deepeval.constants import SUPPORTED_PROVIDER_SLUGS, slugify
 
-
 logger = logging.getLogger(__name__)
 _SAVE_RE = re.compile(r"^(?P<scheme>dotenv)(?::(?P<path>.+))?$")
 
@@ -316,6 +315,12 @@ class Settings(BaseSettings):
         description="If set, export a timestamped JSON of the latest test run into this folder (created if missing).",
     )
 
+    # When set, overrides the default DeepEval cache directory
+    DEEPEVAL_CACHE_FOLDER: Optional[Path] = Field(
+        ".deepeval",
+        description="Path to the directory used by DeepEval to store cache files. If set, this overrides the default cache location. The directory will be created if it does not exist.",
+    )
+
     # Display / Truncation
     DEEPEVAL_MAXLEN_TINY: Optional[int] = Field(
         40,
@@ -372,10 +377,6 @@ class Settings(BaseSettings):
     # Model Keys
     #
 
-    API_KEY: Optional[SecretStr] = Field(
-        None,
-        description="Alias for CONFIDENT_API_KEY (Confident AI API key).",
-    )
     CONFIDENT_API_KEY: Optional[SecretStr] = Field(
         None,
         description="Confident AI API key (used for uploading results/telemetry to Confident).",
@@ -424,6 +425,10 @@ class Settings(BaseSettings):
         None,
         description="AWS secret access key (for Bedrock or other AWS-backed integrations).",
     )
+    AWS_SESSION_TOKEN: Optional[SecretStr] = Field(
+        None,
+        description="AWS session token (for temporary credentials with Bedrock or other AWS-backed integrations).",
+    )
     # AWS Bedrock
     USE_AWS_BEDROCK_MODEL: Optional[bool] = Field(
         None, description="Select AWS Bedrock as the active LLM provider."
@@ -446,6 +451,9 @@ class Settings(BaseSettings):
     )
     AZURE_OPENAI_API_KEY: Optional[SecretStr] = Field(
         None, description="Azure OpenAI API key."
+    )
+    AZURE_OPENAI_AD_TOKEN: Optional[SecretStr] = Field(
+        None, description="Azure OpenAI Ad Token."
     )
     AZURE_OPENAI_ENDPOINT: Optional[AnyUrl] = Field(
         None, description="Azure OpenAI endpoint URL."
@@ -777,20 +785,9 @@ class Settings(BaseSettings):
     CONFIDENT_TRACE_SAMPLE_RATE: Optional[float] = Field(
         1.0, description="Trace sampling rate (0–1). Lower to reduce overhead."
     )
-
-    CONFIDENT_METRIC_LOGGING_FLUSH: Optional[bool] = Field(
+    CONFIDENT_TRACE_INTERNAL: Optional[bool] = Field(
         None,
-        description="Flush metric logs eagerly (useful for debugging; may add overhead).",
-    )
-    CONFIDENT_METRIC_LOGGING_VERBOSE: Optional[bool] = Field(
-        True, description="Enable verbose metric logging."
-    )
-    CONFIDENT_METRIC_LOGGING_SAMPLE_RATE: Optional[float] = Field(
-        1.0,
-        description="Metric logging sampling rate (0–1). Lower to reduce overhead.",
-    )
-    CONFIDENT_METRIC_LOGGING_ENABLED: Optional[bool] = Field(
-        True, description="Enable metric logging to Confident where supported."
+        description="Enable detailed internal tracing of metric and model methods inside @observe spans.",
     )
 
     CONFIDENT_OTEL_URL: Optional[AnyUrl] = Field(
@@ -972,11 +969,9 @@ class Settings(BaseSettings):
     ##############
 
     @field_validator(
-        "CONFIDENT_METRIC_LOGGING_ENABLED",
-        "CONFIDENT_METRIC_LOGGING_VERBOSE",
-        "CONFIDENT_METRIC_LOGGING_FLUSH",
         "CONFIDENT_OPEN_BROWSER",
         "CONFIDENT_TRACE_FLUSH",
+        "CONFIDENT_TRACE_INTERNAL",
         "CONFIDENT_TRACE_VERBOSE",
         "CUDA_LAUNCH_BLOCKING",
         "DEEPEVAL_DEBUG_ASYNC",
@@ -1012,7 +1007,12 @@ class Settings(BaseSettings):
     def _coerce_yes_no(cls, v):
         return None if v is None else parse_bool(v, default=False)
 
-    @field_validator("DEEPEVAL_RESULTS_FOLDER", "ENV_DIR_PATH", mode="before")
+    @field_validator(
+        "DEEPEVAL_RESULTS_FOLDER",
+        "ENV_DIR_PATH",
+        "DEEPEVAL_CACHE_FOLDER",
+        mode="before",
+    )
     @classmethod
     def _coerce_path(cls, v):
         if v is None:
@@ -1032,7 +1032,6 @@ class Settings(BaseSettings):
         "AWS_BEDROCK_COST_PER_OUTPUT_TOKEN",
         "TEMPERATURE",
         "CONFIDENT_TRACE_SAMPLE_RATE",
-        "CONFIDENT_METRIC_LOGGING_SAMPLE_RATE",
         mode="before",
     )
     @classmethod
@@ -1044,16 +1043,14 @@ class Settings(BaseSettings):
             return None
         return float(v)
 
-    @field_validator(
-        "CONFIDENT_TRACE_SAMPLE_RATE", "CONFIDENT_METRIC_LOGGING_SAMPLE_RATE"
-    )
+    @field_validator("CONFIDENT_TRACE_SAMPLE_RATE")
     @classmethod
     def _validate_sample_rate(cls, v):
         if v is None:
             return None
         if not (0.0 <= float(v) <= 1.0):
             raise ValueError(
-                "CONFIDENT_TRACE_SAMPLE_RATE or CONFIDENT_METRIC_LOGGING_SAMPLE_RATE must be between 0 and 1"
+                "CONFIDENT_TRACE_SAMPLE_RATE must be between 0 and 1"
             )
         return float(v)
 

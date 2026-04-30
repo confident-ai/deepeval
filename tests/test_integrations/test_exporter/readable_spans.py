@@ -2,7 +2,6 @@ from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.trace import SpanContext, TraceFlags
 from opentelemetry.trace.status import Status, StatusCode
 
-
 # Create a simple span context
 span_context = SpanContext(
     trace_id=1,  # Simple trace ID
@@ -181,3 +180,92 @@ llm_readable_span = ReadableSpan(
 )
 
 llm_span_list = [llm_readable_span]
+
+# Create a multi-turn span context
+multi_turn_span_context = SpanContext(
+    trace_id=3,
+    span_id=3,
+    is_remote=False,
+    trace_flags=TraceFlags(0x01),
+)
+
+# Create the multi-turn readable span
+multi_turn_readable_span = ReadableSpan(
+    name="multi_turn_span",
+    context=multi_turn_span_context,
+    attributes={
+        "agent_name": "test_agent",
+        "model_name": "gpt-4",
+        "confident.span.name": "test_agent",
+        "confident.span.type": "agent",
+        "confident.trace.name": "multi_turn_trace",
+        "pydantic_ai.all_messages": """[
+    {
+        "role": "user",
+        "parts": [
+            {
+                "type": "text",
+                "content": "What is the report name?"
+            }
+        ]
+    },
+    {
+        "role": "assistant",
+        "parts": [
+            {
+                "type": "tool_call",
+                "id": "call_abc",
+                "name": "get_report",
+                "arguments": "{\\"id\\": \\"123\\"}"
+            }
+        ]
+    },
+    {
+        "role": "user",
+        "parts": [
+            {
+                "type": "tool_call_response",
+                "id": "call_abc",
+                "name": "get_report",
+                "result": "Report: All Applications"
+            }
+        ]
+    },
+    {
+        "role": "assistant",
+        "parts": [
+            {
+                "type": "text",
+                "content": "The report name is All Applications."
+            }
+        ]
+    },
+    {
+        "role": "user",
+        "parts": [
+            {
+                "type": "text",
+                "content": "What are the columns in the report?"
+            }
+        ]
+    },
+    {
+        "role": "assistant",
+        "parts": [
+            {
+                "type": "text",
+                "content": "The report contains 68 columns."
+            }
+        ]
+    }
+]""",
+        "gen_ai.system_instructions": '[{"type": "text", "content": "You are a data analysis assistant."}]',
+        "gen_ai.operation.name": "chat",
+        "final_result": "The report contains 68 columns.",
+    },
+    status=Status(StatusCode.OK),
+    start_time=2000000000,
+    end_time=2000001000,
+)
+
+multi_turn_span_list = [multi_turn_readable_span]

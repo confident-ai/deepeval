@@ -7,7 +7,6 @@ from deepeval.models.retry_policy import (
     get_retry_policy_for,
 )
 
-
 assert AZURE_OPENAI_ERROR_POLICY is not None, "OpenAI is a required dependency"
 
 
