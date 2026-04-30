@@ -6,6 +6,7 @@ from typing import (
     Dict,
     List,
     Optional,
+    Tuple,
     Union,
 )
 
@@ -14,24 +15,25 @@ from deepeval.dataset.utils import (
     convert_goldens_to_test_cases,
     convert_convo_goldens_to_convo_test_cases,
 )
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.errors import DeepEvalError
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
 )
 from deepeval.metrics.utils import copy_metrics
+from deepeval.prompt.api import PromptType
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
     Turn,
 )
 from deepeval.prompt.prompt import Prompt
+from deepeval.metrics.utils import a_generate_with_schema_and_extract, generate_with_schema_and_extract, initialize_model
 
 from deepeval.optimizer.types import (
     ModelCallback,
     PromptConfiguration,
-    Objective,
-    MeanObjective,
     ModuleId,
 )
 from deepeval.optimizer.scorer.base import BaseScorer
@@ -45,6 +47,8 @@ from deepeval.optimizer.scorer.utils import (
     _measure_no_indicator,
     _a_measure_no_indicator,
 )
+from .template import ScorerTemplate
+from .schema import ScorerDiagnosisResult, ScorerDiagnosisSchema
 
 
 class Scorer(BaseScorer):
@@ -61,14 +65,14 @@ class Scorer(BaseScorer):
         metrics: Union[List[BaseMetric], List[BaseConversationalMetric]],
         max_concurrent: int,
         throttle_seconds: float,
-        objective_scalar: Objective = MeanObjective(),
+        optimizer_model: DeepEvalBaseLLM,
     ):
         self.model_callback = validate_callback(
             component="Scorer",
             model_callback=model_callback,
         )
         self.metrics = validate_metrics(component="Scorer", metrics=metrics)
-        self.objective_scalar = objective_scalar
+        self.model, self.using_native_model = initialize_model(optimizer_model)
         self._semaphore = asyncio.Semaphore(max_concurrent)
         self._throttle = float(throttle_seconds)
 
@@ -136,27 +140,52 @@ class Scorer(BaseScorer):
         prompt_configuration: PromptConfiguration,
         module: ModuleId,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
-    ) -> str:
-        # default metric feedback (μ_f): concat metric.reason across minibatch and cap length
-        reasons: List[str] = []
+    ) -> ScorerDiagnosisResult:
+        results: List[str] = []
         for golden in minibatch:
             actual = self.generate(prompt_configuration.prompts, golden)
             test_case = self._golden_to_test_case(golden, actual)
-            for metric in copy_metrics(self.metrics):
+            
+            metrics = copy_metrics(self.metrics)
+            for metric in metrics:
                 _measure_no_indicator(metric=metric, test_case=test_case)
-                if metric.reason:
-                    reasons.append(str(metric.reason))
-        if not reasons:
-            return ""
-        unique: List[str] = []
-        seen = set()
-        for reason in reasons:
-            if reason not in seen:
-                unique.append(reason)
-                seen.add(reason)
-        return "\n---\n".join(
-            unique[:8]
-        )  # TODO: Make how much feedback configurable
+            
+            evaluation_results_block = self._build_evaluation_results_block(golden, actual, metrics)
+            if evaluation_results_block:
+                results.append(evaluation_results_block)
+        
+        if not results:
+            return ScorerDiagnosisResult(
+                failures=[],
+                successes=[],
+                analysis="",
+                results=[],
+            )
+        
+        evaluation_results = "\n\n---\n\n".join(results)
+
+        prompt = prompt_configuration.prompts[module]
+        original_prompt = prompt.text_template if prompt.type == PromptType.TEXT else prompt.messages_template
+
+        diagnosis_prompt = ScorerTemplate.generate_diagnosis(
+            original_prompt=original_prompt,
+            evaluation_results=evaluation_results,
+        )
+
+        diagnosis = generate_with_schema_and_extract(
+            metric=self,
+            prompt=diagnosis_prompt,
+            schema_cls=ScorerDiagnosisSchema,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: data,
+        )
+        return ScorerDiagnosisResult(
+            failures=diagnosis.failures,
+            successes=diagnosis.successes,
+            analysis=diagnosis.analysis,
+            results=results,
+        )
+        
 
     async def a_score_pareto(
         self,
@@ -186,32 +215,53 @@ class Scorer(BaseScorer):
         prompt_configuration: PromptConfiguration,
         module: ModuleId,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
-    ) -> str:
-        async def reasons_one(golden) -> List[str]:
-            # Clone per task to avoid shared state
-            metrics = copy_metrics(self.metrics)
-            # metrics = self.metrics
+    ) -> ScorerDiagnosisResult:
+        async def process_one_trace(golden) -> Optional[str]:
             actual = await self.a_generate(prompt_configuration.prompts, golden)
             test_case = self._golden_to_test_case(golden, actual)
-            out: List[str] = []
+            
+            metrics = copy_metrics(self.metrics)
             for metric in metrics:
-                await _a_measure_no_indicator(metric, test_case)
-                if metric.reason:
-                    out.append(str(metric.reason))
-            return out
+                await _a_measure_no_indicator(metric=metric, test_case=test_case)
+            
+            return self._build_evaluation_results_block(golden, actual, metrics)
 
-        tasks = [self._bounded(reasons_one(golden)) for golden in minibatch]
-        nested = await asyncio.gather(*tasks)
-        reasons: List[str] = [reason for sub in nested for reason in sub]
-        if not reasons:
-            return ""
-        unique: List[str] = []
-        seen = set()
-        for reason in reasons:
-            if reason not in seen:
-                unique.append(reason)
-                seen.add(reason)
-        return "\n---\n".join(unique[:8])
+        tasks = [self._bounded(process_one_trace(golden)) for golden in minibatch]
+        raw_results = await asyncio.gather(*tasks)
+        
+        results = [r for r in raw_results if r]
+        
+        if not results:
+            return ScorerDiagnosisResult(
+                failures=[],
+                successes=[],
+                analysis="",
+                results=[],
+            )
+        
+        evaluation_results = "\n\n---\n\n".join(results)
+
+        prompt = prompt_configuration.prompts[module]
+        original_prompt = prompt.text_template if prompt.type == PromptType.TEXT else prompt.messages_template
+
+        diagnosis_prompt = ScorerTemplate.generate_diagnosis(
+            original_prompt=original_prompt,
+            evaluation_results=evaluation_results,
+        )
+
+        diagnosis = await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=diagnosis_prompt,
+            schema_cls=ScorerDiagnosisSchema,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: data,
+        )
+        return ScorerDiagnosisResult(
+            failures=diagnosis.failures,
+            successes=diagnosis.successes,
+            analysis=diagnosis.analysis,
+            results=results,
+        )
 
     ###################
     # scoring helpers #
@@ -265,7 +315,8 @@ class Scorer(BaseScorer):
         for metric in metrics:
             score = await _a_measure_no_indicator(metric, test_case)
             per_metric[metric.__class__.__name__] = float(score)
-        return self.objective_scalar.scalarize(per_metric)
+        score = sum(per_metric.values()) / len(per_metric) if per_metric else 0.0
+        return score
 
     def _score_one(
         self,
@@ -280,19 +331,12 @@ class Scorer(BaseScorer):
         for metric in metrics:
             score = _measure_no_indicator(metric, test_case)
             per_metric[metric.__class__.__name__] = float(score)
-        return self.objective_scalar.scalarize(per_metric)
+        score = sum(per_metric.values()) / len(per_metric) if per_metric else 0.0
+        return score
 
     def _select_module_id_from_prompts(
         self, prompts_by_module: Dict[ModuleId, Prompt]
     ) -> ModuleId:
-        """
-        Default module selection strategy:
-
-        - Prefer the synthetic '__module__' key when present
-        - Otherwise fall back to the first key in prompts_by_module.
-
-        Assumes `prompts_by_module` is non-empty; callers should validate that.
-        """
         if self.DEFAULT_MODULE_ID in prompts_by_module:
             return self.DEFAULT_MODULE_ID
 
@@ -305,12 +349,28 @@ class Scorer(BaseScorer):
                 "received an empty `prompts_by_module`. At least one Prompt is required."
             )
 
-    def select_module(
-        self, prompt_configuration: PromptConfiguration
-    ) -> ModuleId:
-        return self._select_module_id_from_prompts(prompt_configuration.prompts)
-
-    async def a_select_module(
-        self, prompt_configuration: PromptConfiguration
-    ) -> ModuleId:
-        return self.select_module(prompt_configuration)
+    def _build_evaluation_results_block(
+        self, 
+        golden: Union[Golden, ConversationalGolden], 
+        actual: str, 
+        metrics: List[BaseMetric]
+    ) -> str:
+        if isinstance(golden, Golden):
+            input_str = golden.input
+            expected_str = golden.expected_output or "None provided"
+        else:
+            input_str = "\n".join([t.content for t in golden.turns if t.role == "user"])
+            expected_str = golden.expected_outcome or "None provided"
+        
+        reasons = []
+        for metric in metrics:
+            score = metric.score
+            reason = metric.reason
+            reasons.append(f"- {metric.__class__.__name__} (Score: {score}): {reason}")
+            
+        return (
+            f"[Input]: {input_str}\n"
+            f"[Expected]: {expected_str}\n"
+            f"[Actual Model Output]: {actual}\n"
+            f"[Evaluation Reasons]:\n" + "\n".join(reasons)
+        )

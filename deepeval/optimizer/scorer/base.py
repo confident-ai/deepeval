@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Union, List
 
+from deepeval.optimizer.scorer.schema import ScorerDiagnosisResult
 from deepeval.optimizer.types import PromptConfiguration, ScoreVector
 from deepeval.dataset.golden import Golden, ConversationalGolden
 
@@ -42,15 +43,8 @@ class BaseScorer(ABC):
         prompt_configuration: PromptConfiguration,
         module: ModuleId,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
-    ) -> str:
+    ) -> ScorerDiagnosisResult:
         """Return μ_f text for the module (metric.reason + traces, etc.)."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def select_module(
-        self, prompt_configuration: PromptConfiguration
-    ) -> ModuleId:
-        """Pick a module to mutate."""
         raise NotImplementedError
 
     # Async
@@ -76,11 +70,8 @@ class BaseScorer(ABC):
         prompt_configuration: PromptConfiguration,
         module: ModuleId,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
-    ) -> str:
+    ) -> ScorerDiagnosisResult:
         raise NotImplementedError
 
-    @abstractmethod
-    async def a_select_module(
-        self, prompt_configuration: PromptConfiguration
-    ) -> ModuleId:
-        raise NotImplementedError
+    def _accrue_cost(self, cost: float) -> None:
+        pass
