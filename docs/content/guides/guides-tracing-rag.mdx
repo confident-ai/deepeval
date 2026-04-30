@@ -506,6 +506,87 @@ In this guide, you learned how to instrument your single-turn and RAG applicatio
 
 :::
 
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is LLM tracing?",
+      answer: (
+        <>
+          LLM tracing is the practice of mapping the complete execution graph
+          of your application—every retriever call, LLM call, and tool
+          call—to monitor inputs, outputs, latency, and token usage at every
+          step. In DeepEval, you trace by decorating your functions with{" "}
+          <code>@observe</code>.
+        </>
+      ),
+    },
+    {
+      question: "What's the difference between a trace and a span?",
+      answer:
+        "A trace is the full lifecycle of a single request—from user input to final output. A span is one function call within that trace, such as a retrieval step or an LLM generation. A trace is composed of multiple spans arranged in a parent-child hierarchy.",
+    },
+    {
+      question: "Which span types should I use for RAG?",
+      answer: (
+        <>
+          Use <code>type="retriever"</code> for vector search and context
+          fetching, <code>type="llm"</code> for the generator, and{" "}
+          <code>type="agent"</code> on the top-level orchestrating function.
+          DeepEval infers parent-child relationships from your call stack.
+        </>
+      ),
+    },
+    {
+      question: "How do I attach retrieval_context to a span?",
+      answer: (
+        <>
+          Call <code>update_current_span(retrieval_context=...)</code> inside
+          your retriever function. This injects the dynamic context into the
+          active span so RAG metrics like <code>FaithfulnessMetric</code> and{" "}
+          <code>ContextualRelevancyMetric</code> can score it.
+        </>
+      ),
+    },
+    {
+      question: "Can I run metrics on individual spans during development?",
+      answer: (
+        <>
+          Yes. Pass <code>metrics=[...]</code> directly to{" "}
+          <code>@observe</code>—for example, attach{" "}
+          <code>FaithfulnessMetric</code> to your generator span—and DeepEval
+          evaluates that span locally with no separate eval pipeline.
+        </>
+      ),
+    },
+    {
+      question: "Do I need Confident AI to use tracing?",
+      answer: (
+        <>
+          No. Tracing works fully offline. You can inspect captured traces
+          locally via <code>trace_manager.get_all_traces_dict()</code>.{" "}
+          <a href="https://confident-ai.com">Confident AI</a> is the platform
+          layer for production observability, async evaluations, and dataset
+          curation, but the tracing primitives don't require it.
+        </>
+      ),
+    },
+    {
+      question: "How does sampling_rate affect production tracing?",
+      answer: (
+        <>
+          The <code>sampling_rate</code> on{" "}
+          <code>trace_manager.configure()</code> controls what fraction of
+          traces is exported. Use <code>1.0</code> in development to capture
+          every trace, and lower it (e.g., <code>0.1</code>) in production to
+          balance observability cost with coverage.
+        </>
+      ),
+    },
+  ]}
+/>
+
 ## Next Steps And Additional Resources
 
 While `deepeval` handles the decorators and trace collection, [Confident AI](https://confident-ai.com) is the platform that brings everything together for production observability:

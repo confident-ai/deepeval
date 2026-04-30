@@ -428,6 +428,97 @@ Not every agent needs every metric. Here's a decision framework:
 All AI agent evaluation metrics in `deepeval` support custom LLM judges, configurable thresholds, strict mode for binary scoring, and detailed reasoning explanations. See each metric's documentation for full configuration options.
 :::
 
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What metrics does DeepEval provide for AI agents?",
+      answer: (
+        <>
+          DeepEval ships agent metrics across three layers: reasoning (
+          <code>PlanQualityMetric</code>, <code>PlanAdherenceMetric</code>),
+          action (<code>ToolCorrectnessMetric</code>,{" "}
+          <code>ArgumentCorrectnessMetric</code>), and execution (
+          <code>TaskCompletionMetric</code>, <code>StepEfficiencyMetric</code>).
+          You can also build custom metrics with <code>GEval</code> or{" "}
+          <code>DAGMetric</code>.
+        </>
+      ),
+    },
+    {
+      question: "Which metric should I use to evaluate tool selection?",
+      answer: (
+        <>
+          Use <code>ToolCorrectnessMetric</code> to check whether the agent
+          picked the right tools, and <code>ArgumentCorrectnessMetric</code> to
+          check whether it passed the correct arguments. Both are
+          component-level metrics attached to the LLM span that decides tool
+          calls.
+        </>
+      ),
+    },
+    {
+      question: "What is the difference between PlanQualityMetric and PlanAdherenceMetric?",
+      answer: (
+        <>
+          <code>PlanQualityMetric</code> evaluates whether the agent's plan is
+          logical and complete given the task.{" "}
+          <code>PlanAdherenceMetric</code> evaluates whether the agent then
+          actually followed that plan during execution.
+        </>
+      ),
+    },
+    {
+      question: "How does TaskCompletionMetric work?",
+      answer: (
+        <>
+          <code>TaskCompletionMetric</code> reads the full trace, extracts the
+          user's goal, and uses an LLM judge to score whether the agent
+          completed it. It's the best end-to-end metric for task-critical
+          agents.
+        </>
+      ),
+    },
+    {
+      question: "Do AI agent metrics require expected outputs?",
+      answer: (
+        <>
+          Most agent metrics are referenceless—they only need the trace.
+          Tool-related metrics like <code>ToolCorrectnessMetric</code> become
+          reference-based when you provide <code>expected_tools</code> on the
+          golden, which lets the metric compare actual versus expected tool
+          calls.
+        </>
+      ),
+    },
+    {
+      question: "Should I attach agent metrics end-to-end or component-level?",
+      answer: (
+        <>
+          Reasoning and execution metrics need the full trace, so attach them
+          end-to-end via <code>evals_iterator(metrics=[...])</code>. Action
+          layer metrics evaluate a specific decision, so attach them
+          component-level via <code>@observe(metrics=[...])</code> on the LLM
+          span.
+        </>
+      ),
+    },
+    {
+      question: "Can I run agent metrics in production?",
+      answer: (
+        <>
+          Yes. Define a metric collection on{" "}
+          <a href="https://confident-ai.com">Confident AI</a> and reference it
+          on your <code>@observe</code> decorators. The platform evaluates
+          exported traces asynchronously, so production agents are scored
+          continuously without added latency.
+        </>
+      ),
+    },
+  ]}
+/>
+
 ## Next Steps
 
 Now that you understand the available AI agent evaluation metrics, here's where to go next:

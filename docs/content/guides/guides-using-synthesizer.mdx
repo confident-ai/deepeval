@@ -238,3 +238,79 @@ goldens_dataframe.head()
 goldens[0].additional_metadata["synthetic_input_quality"]
 goldens[0].additional_metadata["context_quality"]
 ```
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is the DeepEval Synthesizer?",
+      answer: (
+        <>
+          The <code>Synthesizer</code> is DeepEval's tool for generating
+          high-quality synthetic <code>Golden</code>s from your knowledge base.
+          It chunks documents, builds contexts, generates input-output pairs,
+          and evolves them into harder edge cases—producing thousands of test
+          cases in minutes.
+        </>
+      ),
+    },
+    {
+      question: "What is the difference between a Golden and an LLMTestCase?",
+      answer: (
+        <>
+          A <code>Golden</code> is similar to an <code>LLMTestCase</code> but
+          doesn't require <code>actual_output</code> or{" "}
+          <code>retrieval_context</code> at initialization. You generate
+          goldens ahead of time, then run your application against them at
+          evaluation time to fill in the actual outputs.
+        </>
+      ),
+    },
+    {
+      question: "How does the Synthesizer generate goldens from documents?",
+      answer: (
+        <>
+          It loads your documents, chunks them, groups similar chunks into
+          contexts using cosine similarity, generates synthetic goldens from
+          each context, and finally evolves them to introduce complexity and
+          edge cases. The whole pipeline runs from a single call to{" "}
+          <code>generate_goldens_from_docs</code>.
+        </>
+      ),
+    },
+    {
+      question: "What are evolutions in DeepEval?",
+      answer:
+        "Evolutions are transformations applied to synthetic goldens to make them harder—rewriting them to be more reasoning-heavy, multi-step, comparative, or hypothetical. Evolutions surface edge cases that simple seed prompts won't trigger.",
+    },
+    {
+      question: "How does DeepEval qualify synthetic data quality?",
+      answer:
+        "The Synthesizer scores both contexts and synthetic inputs at generation time. Contexts are judged on clarity, depth, structure, and relevance. Inputs are judged on self-containment and clarity. Each must clear a 0.5 threshold (with up to 3 retries) before being kept.",
+    },
+    {
+      question: "Can I generate goldens without documents?",
+      answer: (
+        <>
+          Yes. Pass your own contexts directly to{" "}
+          <code>generate_goldens_from_contexts</code> to skip document loading,
+          chunking, and context generation. This is useful when you've already
+          curated the contexts you want to test against.
+        </>
+      ),
+    },
+    {
+      question: "How do I access quality scores for synthetic goldens?",
+      answer: (
+        <>
+          Either via <code>synthesizer.to_pandas()</code> for a DataFrame view,
+          or directly on each golden through{" "}
+          <code>golden.additional_metadata["context_quality"]</code> and{" "}
+          <code>["synthetic_input_quality"]</code>. Use these to filter
+          low-quality goldens out of your final dataset.
+        </>
+      ),
+    },
+  ]}
+/>

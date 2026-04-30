@@ -15,15 +15,18 @@
     "guides-rag-triad",
     "guides-using-synthesizer",
 
-    "---[SlidersHorizontal]Customizations---",
-    "guides-using-custom-llms",
-    "guides-using-custom-embedding-models",
-    "guides-building-custom-metrics",
+    "---[Scale]LLM-as-a-Judge---",
+    "guides-llm-as-a-judge",
 
     "---[Waypoints]Tracing + Evals---",
     "guides-tracing-ai-agents",
     "guides-tracing-multi-turn",
     "guides-tracing-rag",
+
+    "---[SlidersHorizontal]Customizations---",
+    "guides-using-custom-llms",
+    "guides-using-custom-embedding-models",
+    "guides-building-custom-metrics",
 
     "---[Boxes]Others---",
     "guides-optimizing-hyperparameters",

@@ -389,6 +389,71 @@ To catch multi-turn failures, `deepeval` provides a [rich set of conversational 
 
 With proper evaluation in place, you can catch quality regressions before users notice, ensure your application handles diverse conversational scenarios gracefully, make data-driven decisions about prompt and model changes, and continuously improve through production feedback loops.
 
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is multi-turn evaluation?",
+      answer:
+        "Multi-turn evaluation measures how well an LLM application maintains context, generates relevant responses, and satisfies user intentions across multiple turns of dialogue. It scores the conversation as a whole instead of evaluating each turn in isolation.",
+    },
+    {
+      question: "How is multi-turn evaluation different from single-turn evaluation?",
+      answer:
+        "Single-turn evaluation scores one input-output pair. Multi-turn evaluation has to handle non-deterministic conversations where each user message depends on the previous assistant response, which is why DeepEval uses scenarios and ConversationalGoldens instead of fixed input-output pairs.",
+    },
+    {
+      question: "What is a ConversationalTestCase in DeepEval?",
+      answer: (
+        <>
+          A <code>ConversationalTestCase</code> wraps a list of{" "}
+          <code>Turn</code>s (alternating user and assistant messages) and is
+          the unit that multi-turn metrics like{" "}
+          <code>ConversationCompletenessMetric</code> and{" "}
+          <code>TurnRelevancyMetric</code> evaluate against.
+        </>
+      ),
+    },
+    {
+      question: "Why do I need to simulate conversations?",
+      answer:
+        "Because each turn in a conversation depends on prior turns, you can't pre-define test inputs the way you do for single-turn evaluation. Simulation has an LLM role-play as the user against your real application, producing reproducible multi-turn conversations from a fixed scenario.",
+    },
+    {
+      question: "Which multi-turn metrics should I start with?",
+      answer: (
+        <>
+          Start with <code>ConversationCompletenessMetric</code>,{" "}
+          <code>TurnRelevancyMetric</code>, and{" "}
+          <code>KnowledgeRetentionMetric</code> for general chatbots. Add{" "}
+          <code>RoleAdherenceMetric</code> and{" "}
+          <code>TopicAdherenceMetric</code> for persona-bound assistants, and
+          the multi-turn RAG metrics if your system retrieves context.
+        </>
+      ),
+    },
+    {
+      question: "Can I run multi-turn evaluation in CI/CD?",
+      answer:
+        "Yes. Define a fixed set of ConversationalGoldens, run the simulator and metrics on every change, and fail the pipeline if scores regress below your thresholds. Same scenario plus same application version produces statistically reproducible conversations, so this catches conversational regressions early.",
+    },
+    {
+      question: "How do I monitor multi-turn quality in production?",
+      answer: (
+        <>
+          Group production traces by <code>thread_id</code> so each
+          conversation becomes a thread on{" "}
+          <a href="https://confident-ai.com">Confident AI</a>, then attach a
+          multi-turn <code>metric_collection</code>. Confident AI evaluates
+          threads asynchronously and lets you replay sessions turn-by-turn to
+          debug drift.
+        </>
+      ),
+    },
+  ]}
+/>
+
 ## Next Steps And Additional Resources
 
 While `deepeval` handles the metrics and simulation logic, [Confident AI](https://confident-ai.com) is the platform that brings everything together for production multi-turn evaluation:
