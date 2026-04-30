@@ -1,130 +1,53 @@
 # MIPROv2 - Multiprompt Instruction PRoposal Optimizer Version 2
 #
-# This implementation follows the original MIPROv2 paper and DSPy implementation:
+# This implementation follows the original MIPROv2 paper:
 # https://arxiv.org/pdf/2406.11695
-# https://dspy.ai/api/optimizers/MIPROv2/
 #
-# The algorithm works in two phases:
-#
-#   1. PROPOSAL PHASE:
-#      a) Generate N diverse instruction candidates upfront
-#      b) Bootstrap few-shot demonstration sets from training data
-#
-#   2. OPTIMIZATION PHASE: Use Bayesian Optimization (Optuna TPE) to search
-#      over the joint space of (instruction_candidate, demo_set). Each trial:
-#      - Samples an instruction candidate index
-#      - Samples a demo set index
-#      - Renders the prompt with demos
-#      - Evaluates on a minibatch of examples
-#      - Uses the score to guide the Bayesian surrogate model
-#
-# Periodic full evaluation is performed every `minibatch_full_eval_steps`
-# to get accurate scores on the complete validation set.
-
+# Phase 1: Propose N diverse instructions and bootstrap M demo sets.
+# Phase 2: Use Bayesian Optimization (Optuna TPE) to search the joint
+#          categorical space of (Instruction, Demonstration Set) using
+#          stochastic minibatch evaluation and periodic full evaluations.
 
 from __future__ import annotations
-import asyncio
-import uuid
 import random
 import time
-import logging
-from typing import (
-    Dict,
-    List,
-    Tuple,
-    TYPE_CHECKING,
-    Union,
-    Optional,
-    Callable,
-)
-
+from typing import Dict, List, Tuple, Union, Optional
+from rich.table import Table
+from rich import box
+import re
 try:
     import optuna
     from optuna.samplers import TPESampler
-
     OPTUNA_AVAILABLE = True
 except ImportError:
     OPTUNA_AVAILABLE = False
     optuna = None
     TPESampler = None
 
-from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.errors import DeepEvalError
-from deepeval.optimizer.utils import Aggregator, mean_of_all
+from deepeval.prompt.prompt import Prompt
 from deepeval.optimizer.types import (
+    AcceptedIterationDict,
     PromptConfiguration,
-    PromptConfigurationId,
     ModuleId,
     ScoreTable,
     OptimizationReport,
     RunnerStatusType,
-    RunnerStatusCallback,
 )
-from deepeval.optimizer.scorer.base import BaseScorer
 from deepeval.optimizer.algorithms.base import BaseAlgorithm
 from deepeval.optimizer.utils import build_prompt_config_snapshots
-from deepeval.prompt.prompt import Prompt
-from deepeval.optimizer.algorithms.miprov2.proposer import InstructionProposer
+from deepeval.optimizer.algorithms.miprov2.proposer.proposer import InstructionProposer
 from deepeval.optimizer.algorithms.miprov2.bootstrapper import (
-    DemoBootstrapper,
-    DemoSet,
-    render_prompt_with_demos,
+    DemonstrationBootstrapper, 
+    render_prompt_with_demonstrations
 )
-from deepeval.optimizer.algorithms.configs import (
-    MIPROV2_DEFAULT_NUM_CANDIDATES,
-    MIPROV2_DEFAULT_NUM_TRIALS,
-    MIPROV2_DEFAULT_MINIBATCH_SIZE,
-    MIPROV2_DEFAULT_MINIBATCH_FULL_EVAL_STEPS,
-    MIPROV2_DEFAULT_MAX_BOOTSTRAPPED_DEMOS,
-    MIPROV2_DEFAULT_MAX_LABELED_DEMOS,
-    MIPROV2_DEFAULT_NUM_DEMO_SETS,
-)
-
-if TYPE_CHECKING:
-    from deepeval.dataset.golden import Golden, ConversationalGolden
-
-
-# Suppress Optuna's verbose logging
-logging.getLogger("optuna").setLevel(logging.WARNING)
+from deepeval.dataset.golden import Golden, ConversationalGolden
 
 
 class MIPROV2(BaseAlgorithm):
     """
-    MIPROv2 (Multiprompt Instruction PRoposal Optimizer Version 2)
-
-    A prompt optimizer that uses Bayesian Optimization to find the best
-    combination of instruction and few-shot demonstrations. Follows the
-    original MIPROv2 paper approach.
-
-    The optimization process:
-    1. Generate N diverse instruction candidates upfront
-    2. Bootstrap M demo sets from training examples
-    3. Use Optuna's TPE sampler for Bayesian Optimization over (instruction, demos)
-    4. Each trial evaluates a combination on a minibatch
-    5. Periodically evaluate the best combination on the full dataset
-
-    Parameters
-    ----------
-    num_candidates : int
-        Number of instruction candidates to propose. Default is 10.
-    num_trials : int
-        Number of Bayesian Optimization trials. Default is 20.
-    minibatch_size : int
-        Number of examples per minibatch evaluation. Default is 25.
-    minibatch_full_eval_steps : int
-        Evaluate best on full dataset every N trials. Default is 10.
-    max_bootstrapped_demos : int
-        Maximum bootstrapped demos per demo set. Default is 4.
-    max_labeled_demos : int
-        Maximum labeled demos (from expected_output) per set. Default is 4.
-    num_demo_sets : int
-        Number of demo sets to create. Default is 5.
-    random_seed : int, optional
-        RNG seed for reproducibility. If None, derived from time.time_ns().
-    aggregate_instances : Aggregator
-        Function to aggregate per-instance scores. Default is mean_of_all.
-    scorer : BaseScorer, optional
-        Scorer for evaluating prompts. Set by PromptOptimizer.
+    MIPROv2 Optimizer (Lite Version - Single Module).
+    Uses Bayesian optimization over generated instructions and bootstrapped demos.
     """
 
     name = "MIPROv2"
@@ -132,621 +55,398 @@ class MIPROV2(BaseAlgorithm):
 
     def __init__(
         self,
-        num_candidates: int = MIPROV2_DEFAULT_NUM_CANDIDATES,
-        num_trials: int = MIPROV2_DEFAULT_NUM_TRIALS,
-        minibatch_size: int = MIPROV2_DEFAULT_MINIBATCH_SIZE,
-        minibatch_full_eval_steps: int = MIPROV2_DEFAULT_MINIBATCH_FULL_EVAL_STEPS,
-        max_bootstrapped_demos: int = MIPROV2_DEFAULT_MAX_BOOTSTRAPPED_DEMOS,
-        max_labeled_demos: int = MIPROV2_DEFAULT_MAX_LABELED_DEMOS,
-        num_demo_sets: int = MIPROV2_DEFAULT_NUM_DEMO_SETS,
-        random_seed: Optional[int] = None,
-        aggregate_instances: Aggregator = mean_of_all,
-        scorer: Optional[BaseScorer] = None,
-    ) -> None:
+        num_trials: int = 30,
+        num_candidates: int = 10,
+        max_bootstrapped_demonstrations: int = 4,
+        max_labeled_demonstrations: int = 4,
+        num_demonstration_sets: int = 5,
+        minibatch_size: int = 25,
+        minibatch_full_eval_steps: int = 10,
+        random_state: Optional[Union[int, random.Random]] = None,
+    ):
+        super().__init__()
         if not OPTUNA_AVAILABLE:
-            raise DeepEvalError(
-                "MIPROv2 requires the 'optuna' package for Bayesian Optimization. "
-                "Install it with: pip install optuna"
-            )
+            raise DeepEvalError("MIPROv2 requires optuna. Please run `pip install optuna`.")
 
-        # Validate parameters
-        if num_candidates < 1:
-            raise ValueError("num_candidates must be >= 1")
-        if num_trials < 1:
-            raise ValueError("num_trials must be >= 1")
-        if minibatch_size < 1:
-            raise ValueError("minibatch_size must be >= 1")
-        if minibatch_full_eval_steps < 1:
-            raise ValueError("minibatch_full_eval_steps must be >= 1")
-        if max_bootstrapped_demos < 0:
-            raise ValueError("max_bootstrapped_demos must be >= 0")
-        if max_labeled_demos < 0:
-            raise ValueError("max_labeled_demos must be >= 0")
-        if num_demo_sets < 1:
-            raise ValueError("num_demo_sets must be >= 1")
-
-        self.num_candidates = num_candidates
         self.num_trials = num_trials
+        self.num_candidates = num_candidates
+        self.max_bootstrapped_demonstrations = max_bootstrapped_demonstrations
+        self.max_labeled_demonstrations = max_labeled_demonstrations
+        self.num_demonstration_sets = num_demonstration_sets
         self.minibatch_size = minibatch_size
         self.minibatch_full_eval_steps = minibatch_full_eval_steps
-        self.max_bootstrapped_demos = max_bootstrapped_demos
-        self.max_labeled_demos = max_labeled_demos
-        self.num_demo_sets = num_demo_sets
-        self.aggregate_instances = aggregate_instances
-        self.scorer = scorer
 
-        # Random seed handling
-        if random_seed is None:
-            random_seed = time.time_ns() % (2**31)
-        self.random_seed = random_seed
-        self.random_state = random.Random(random_seed)
+        # Internal State Tracking
+        self.pareto_score_table: ScoreTable = {}
+        self.parents_by_id: Dict[str, str] = {}
+        self._config_cache: Dict[Tuple[int, int], PromptConfiguration] = {}
+        self.prompt_configurations_by_id: Dict[str, PromptConfiguration] = {}
+        
+        self.candidates: List[Prompt] = []
+        self.demo_sets = []
 
-        # Runtime state
-        self.reset_state()
+        if isinstance(random_state, int):
+            self.seed = random_state
+            self.random_state = random.Random(random_state)
+        else:
+            self.seed = random.randint(0, 999999)
+            self.random_state = random_state or random.Random(self.seed)
 
-        # Callbacks and models (set by PromptOptimizer)
-        self.status_callback: Optional[RunnerStatusCallback] = None
-        self.optimizer_model: Optional["DeepEvalBaseLLM"] = None
+    def _init_components(self) -> None:
+        """Initialize the Proposer and Bootstrapper using the injected models."""
+        self.proposer = InstructionProposer(
+            optimizer_model=self.optimizer_model,
+            random_state=self.random_state
+        )
+        self.bootstrapper = DemonstrationBootstrapper(
+            scorer=self.scorer,
+            max_bootstrapped_demonstrations=self.max_bootstrapped_demonstrations,
+            max_labeled_demonstrations=self.max_labeled_demonstrations,
+            num_demonstration_sets=self.num_demonstration_sets,
+            random_state=self.random_state
+        )
 
-        # Lazy-loaded components
-        self._proposer: Optional[InstructionProposer] = None
-        self._bootstrapper: Optional[DemoBootstrapper] = None
+    def _sample_minibatch(self, goldens: List) -> List:
+        """Sample a stochastic minibatch for Optuna evaluation."""
+        if len(goldens) <= self.minibatch_size:
+            return goldens
+        return self.random_state.sample(goldens, self.minibatch_size)
 
-    ##############
-    # Public API #
-    ##############
+    def _build_config(self, instr_idx: int, demo_idx: int) -> PromptConfiguration:
+        """Stitch an instruction and demo set into a unified prompt configuration, using a cache to prevent ID leaks."""
+        cache_key = (instr_idx, demo_idx)
+        if hasattr(self, "_config_cache") and cache_key in self._config_cache:
+            return self._config_cache[cache_key]
+
+        base_prompt = self.candidates[instr_idx]
+        demo_set = self.demo_sets[demo_idx]
+        
+        unified_prompt = render_prompt_with_demonstrations(base_prompt, demo_set)
+        
+        config = PromptConfiguration.new(prompts={self.SINGLE_MODULE_ID: unified_prompt})
+        self.prompt_configurations_by_id[config.id] = config
+        
+        if hasattr(self, "_config_cache"):
+            self._config_cache[cache_key] = config
+            
+        return config
+
+    def _update_step(self, message: str) -> None:
+        """Updates the bottom text row (e.g., '⤷ Bootstrapping...')"""
+        if getattr(self, "step_callback", None) is not None:
+            self.step_callback(message)
+
+    def _update_trial_progress(self, step: int, total: int) -> None:
+        """Advances the main top progress bar."""
+        if getattr(self, "status_callback", None) is not None:
+            self.status_callback(
+                RunnerStatusType.PROGRESS,
+                detail="",  
+                step_index=step,
+                total_steps=total,
+            )
+
+    ##################################################
+    # Synchronous Execution
+    ##################################################
 
     def execute(
         self,
         prompt: Prompt,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
+        goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Tuple[Prompt, OptimizationReport]:
-        """
-        Synchronous MIPROv2 optimization.
+        import uuid
+        self._init_components()
+        self._iteration_log = []
+        
+        # Phase 1: Propose & Bootstrap
+        self._update_step(f"Generating {self.num_candidates} diverse instructions...")
+        self.candidates = self.proposer.propose(prompt, goldens, self.num_candidates)
 
-        Phase 1: Propose instruction candidates + Bootstrap demo sets
-        Phase 2: Use Bayesian Optimization to find the best combination
-        """
-        self._validate_inputs(goldens)
-        self._ensure_scorer()
-        self._ensure_proposer()
-        self._ensure_bootstrapper()
-        self.reset_state()
+        self._update_step(f"Bootstrapping {self.num_demonstration_sets} verified demonstration sets...")
+        self.demo_sets = self.bootstrapper.bootstrap(prompt, goldens)
 
-        # Phase 1a: Propose instruction candidates
-        self._update_status("Phase 1: Proposing instruction candidates...", 0)
-        instruction_candidates = self._proposer.propose(
-            prompt=prompt,
-            goldens=goldens,
-            num_candidates=self.num_candidates,
+        # Phase 2: Bayesian Optimization
+        self._update_step("Initializing Tree-structured Parzen Estimator (TPE)...")
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        study = optuna.create_study(direction="maximize", sampler=TPESampler(seed=self.seed))
+
+        best_score = float('-inf')
+        best_config_id = None
+        accepted_iterations: List[AcceptedIterationDict] = []
+
+        for trial_idx in range(self.num_trials):
+            trial_start = time.time()
+            self._update_trial_progress(trial_idx + 1, self.num_trials)
+            self._update_step(f"Running Bayesian Trial {trial_idx + 1}/{self.num_trials}...")
+            
+            trial = study.ask()
+            instr_idx = trial.suggest_categorical("instr_idx", list(range(len(self.candidates))))
+            demo_idx = trial.suggest_categorical("demo_idx", list(range(len(self.demo_sets))))
+
+            config = self._build_config(instr_idx, demo_idx)
+            minibatch = self._sample_minibatch(goldens)
+
+            score = self.scorer.score_minibatch(config, minibatch)
+            study.tell(trial, score)
+            
+            self._iteration_log.append({
+                "iteration": trial_idx + 1,
+                "outcome": "accepted" if score > best_score else "rejected",
+                "before": best_score if best_score != float('-inf') else 0.0,
+                "after": score,
+                "reason": f"TPE Sample -> Instruction: {instr_idx}, DemoSet: {demo_idx}",
+                "elapsed": time.time() - trial_start
+            })
+
+            # Periodic Full Pareto Evaluation
+            if (trial_idx + 1) % self.minibatch_full_eval_steps == 0 or trial_idx == self.num_trials - 1:
+                self._update_step(f"Running full validation on current best configuration...")
+                best_trial = study.best_trial
+                best_eval_config = self._build_config(
+                    best_trial.params["instr_idx"], 
+                    best_trial.params["demo_idx"]
+                )
+                
+                full_scores = self.scorer.score_pareto(best_eval_config, goldens)
+                avg_full_score = sum(full_scores) / len(full_scores)
+
+                self.pareto_score_table[best_eval_config.id] = full_scores
+                
+                if avg_full_score > best_score:
+                    if best_config_id is not None:
+                        accepted_iterations.append(
+                            AcceptedIterationDict(
+                                parent=best_config_id, 
+                                child=best_eval_config.id,
+                                module=self.SINGLE_MODULE_ID,
+                                before=best_score,
+                                after=avg_full_score,
+                            )
+                        )
+                    best_score = avg_full_score
+                    best_config_id = best_eval_config.id
+
+        true_best_id = None
+        true_best_score = float('-inf')
+        for cid, scores in self.pareto_score_table.items():
+            avg_score = sum(scores) / len(scores) if scores else 0.0
+            if avg_score > true_best_score:
+                true_best_score = avg_score
+                true_best_id = cid
+
+        final_id = true_best_id if true_best_id else best_config_id
+        best_config = self.prompt_configurations_by_id[final_id]
+        
+        report = OptimizationReport(
+            optimization_id=getattr(self, "optimization_id", str(uuid.uuid4())),
+            best_id=best_config.id,
+            accepted_iterations=accepted_iterations,
+            pareto_scores=self.pareto_score_table,
+            parents=self.parents_by_id,
+            prompt_configurations=build_prompt_config_snapshots(self.prompt_configurations_by_id),
         )
-        self._register_instruction_candidates(instruction_candidates)
 
-        # Phase 1b: Bootstrap demo sets
-        self._update_status(
-            "Phase 1: Bootstrapping few-shot demonstrations...", 0
-        )
-        self._demo_sets = self._bootstrapper.bootstrap(
-            prompt=prompt,
-            goldens=goldens,
-            generate_fn=self._create_generate_fn(),
-        )
-        self._update_status(f"Bootstrapped {len(self._demo_sets)} demo sets", 0)
+        return best_config.prompts[self.SINGLE_MODULE_ID], report
 
-        # Phase 2: Bayesian Optimization over (instruction, demos)
-        self._update_status("Phase 2: Starting Bayesian Optimization...", 0)
-        best_instr_idx, best_demo_idx = self._run_bayesian_optimization(goldens)
-
-        # Final full evaluation if not already done
-        config_key = (best_instr_idx, best_demo_idx)
-        if config_key not in self._full_eval_cache:
-            best_config = self._get_config_by_index(best_instr_idx)
-            best_demo_set = self._demo_sets[best_demo_idx]
-            self._full_evaluate(best_config, best_demo_set, goldens)
-
-        # Build report
-        best = self._best_by_aggregate()
-        return self._build_result(best)
+    ##################################################
+    # Asynchronous Execution
+    ##################################################
 
     async def a_execute(
         self,
         prompt: Prompt,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
+        goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Tuple[Prompt, OptimizationReport]:
-        """
-        Asynchronous MIPROv2 optimization.
-        """
-        self._validate_inputs(goldens)
-        self._ensure_scorer()
-        self._ensure_proposer()
-        self._ensure_bootstrapper()
-        self.reset_state()
+        import uuid
+        self._init_components()
+        self._iteration_log = []
 
-        # Phase 1: Run proposal and bootstrapping concurrently
-        self._update_status(
-            "Phase 1: Proposing candidates & bootstrapping demos...", 0
-        )
+        self._update_step(f"Generating {self.num_candidates} diverse instructions...")
+        self.candidates = await self.proposer.a_propose(prompt, goldens, self.num_candidates)
 
-        instruction_candidates, demo_sets = await asyncio.gather(
-            self._proposer.a_propose(
-                prompt=prompt,
-                goldens=goldens,
-                num_candidates=self.num_candidates,
-            ),
-            self._bootstrapper.a_bootstrap(
-                prompt=prompt,
-                goldens=goldens,
-                a_generate_fn=self._create_async_generate_fn(),
-            ),
-        )
+        self._update_step(f"Bootstrapping {self.num_demonstration_sets} verified demonstration sets...")
+        self.demo_sets = await self.bootstrapper.a_bootstrap(prompt, goldens)
 
-        self._register_instruction_candidates(instruction_candidates)
-        self._demo_sets = demo_sets
-        self._update_status(
-            f"Generated {len(instruction_candidates)} candidates, {len(self._demo_sets)} demo sets",
-            0,
-        )
+        self._update_step("Initializing Tree-structured Parzen Estimator (TPE)...")
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        study = optuna.create_study(direction="maximize", sampler=TPESampler(seed=self.seed))
 
-        # Phase 2: Bayesian Optimization
-        self._update_status("Phase 2: Starting Bayesian Optimization...", 0)
-        best_instr_idx, best_demo_idx = await self._a_run_bayesian_optimization(
-            goldens
-        )
+        best_score = float('-inf')
+        best_config_id = None
+        accepted_iterations: List[AcceptedIterationDict] = []
 
-        # Final full evaluation if not already done
-        config_key = (best_instr_idx, best_demo_idx)
-        if config_key not in self._full_eval_cache:
-            best_config = self._get_config_by_index(best_instr_idx)
-            best_demo_set = self._demo_sets[best_demo_idx]
-            await self._a_full_evaluate(best_config, best_demo_set, goldens)
+        for trial_idx in range(self.num_trials):
+            trial_start = time.time()
+            self._update_trial_progress(trial_idx + 1, self.num_trials)
+            self._update_step(f"Running Bayesian Trial {trial_idx + 1}/{self.num_trials}...")
 
-        # Build report
-        best = self._best_by_aggregate()
-        return self._build_result(best)
-
-    ###################
-    # State & Helpers #
-    ###################
-
-    def reset_state(self) -> None:
-        """Reset optimization state for a new run."""
-        self.optimization_id = str(uuid.uuid4())
-        self.prompt_configurations_by_id: Dict[
-            PromptConfigurationId, PromptConfiguration
-        ] = {}
-        self.parents_by_id: Dict[
-            PromptConfigurationId, Optional[PromptConfigurationId]
-        ] = {}
-        self.pareto_score_table: ScoreTable = {}
-
-        # Candidate tracking
-        self._instruction_candidates: List[PromptConfiguration] = []
-        self._demo_sets: List[DemoSet] = []
-
-        # Score tracking: (instr_idx, demo_idx) -> list of minibatch scores
-        self._combination_scores: Dict[Tuple[int, int], List[float]] = {}
-
-        # Full eval cache: (instr_idx, demo_idx) -> config_id
-        self._full_eval_cache: Dict[Tuple[int, int], PromptConfigurationId] = {}
-
-        # Trial tracking
-        self._trial_history: List[Dict] = []
-        self._best_trial_key: Tuple[int, int] = (0, 0)
-        self._best_trial_score: float = float("-inf")
-
-    def _validate_inputs(
-        self,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> None:
-        """Validate input parameters."""
-        if len(goldens) < 1:
-            raise DeepEvalError(
-                "MIPROv2 prompt optimization requires at least 1 golden, but "
-                f"received {len(goldens)}. Provide at least one golden to run "
-                "the optimizer."
-            )
-
-    def _ensure_scorer(self) -> None:
-        """Ensure scorer is configured."""
-        if self.scorer is None:
-            raise DeepEvalError(
-                "MIPROv2 requires a `scorer`. "
-                "Construct one in PromptOptimizer and assign it to `runner.scorer`."
-            )
-
-    def _ensure_proposer(self) -> None:
-        """Lazily initialize the instruction proposer."""
-        if self._proposer is None:
-            if self.optimizer_model is None:
-                raise DeepEvalError(
-                    "MIPROv2 requires an `optimizer_model` for instruction proposal. "
-                    "Set it via PromptOptimizer."
-                )
-            self._proposer = InstructionProposer(
-                optimizer_model=self.optimizer_model,
-                random_state=self.random_state,
-            )
-
-    def _ensure_bootstrapper(self) -> None:
-        """Lazily initialize the demo bootstrapper."""
-        if self._bootstrapper is None:
-            self._bootstrapper = DemoBootstrapper(
-                max_bootstrapped_demos=self.max_bootstrapped_demos,
-                max_labeled_demos=self.max_labeled_demos,
-                num_demo_sets=self.num_demo_sets,
-                random_state=self.random_state,
-            )
-
-    def _create_generate_fn(
-        self,
-    ) -> Callable[[Prompt, Union["Golden", "ConversationalGolden"]], str]:
-        """Create a sync generate function for bootstrapping."""
-
-        def generate_fn(
-            prompt: Prompt,
-            golden: Union["Golden", "ConversationalGolden"],
-        ) -> str:
-            # Create a temporary config for generation
-            temp_config = PromptConfiguration.new(
-                prompts={self.SINGLE_MODULE_ID: prompt}
-            )
-            return self.scorer.generate(temp_config.prompts, golden)
-
-        return generate_fn
-
-    def _create_async_generate_fn(self) -> Callable:
-        """Create an async generate function for bootstrapping."""
-
-        async def a_generate_fn(
-            prompt: Prompt,
-            golden: Union["Golden", "ConversationalGolden"],
-        ) -> str:
-            temp_config = PromptConfiguration.new(
-                prompts={self.SINGLE_MODULE_ID: prompt}
-            )
-            return await self.scorer.a_generate(temp_config.prompts, golden)
-
-        return a_generate_fn
-
-    def _register_instruction_candidates(
-        self, candidates: List[Prompt]
-    ) -> None:
-        """Register all instruction candidates as configurations."""
-        for i, prompt in enumerate(candidates):
-            config = PromptConfiguration.new(
-                prompts={self.SINGLE_MODULE_ID: prompt},
-                parent=None if i == 0 else self._instruction_candidates[0].id,
-            )
-            self._instruction_candidates.append(config)
-            self.prompt_configurations_by_id[config.id] = config
-            self.parents_by_id[config.id] = config.parent
-
-    def _get_config_by_index(self, idx: int) -> PromptConfiguration:
-        """Get configuration by instruction candidate index."""
-        return self._instruction_candidates[idx]
-
-    def _draw_minibatch(
-        self,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> Union[List["Golden"], List["ConversationalGolden"]]:
-        """Sample a minibatch from goldens."""
-        n = len(goldens)
-        if n <= 0:
-            return []
-        size = min(self.minibatch_size, n)
-        return [goldens[self.random_state.randrange(0, n)] for _ in range(size)]
-
-    def _render_config_with_demos(
-        self,
-        config: PromptConfiguration,
-        demo_set: DemoSet,
-    ) -> PromptConfiguration:
-        """Create a new config with demos rendered into the prompt."""
-        base_prompt = config.prompts[self.SINGLE_MODULE_ID]
-        rendered_prompt = render_prompt_with_demos(
-            prompt=base_prompt,
-            demo_set=demo_set,
-            max_demos=self.max_bootstrapped_demos + self.max_labeled_demos,
-        )
-
-        # Create a new config with the rendered prompt
-        rendered_config = PromptConfiguration.new(
-            prompts={self.SINGLE_MODULE_ID: rendered_prompt},
-            parent=config.id,
-        )
-        return rendered_config
-
-    ############################
-    # Bayesian Optimization    #
-    ############################
-
-    def _run_bayesian_optimization(
-        self,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> Tuple[int, int]:
-        """
-        Run Bayesian Optimization using Optuna's TPE sampler.
-        Returns the (instruction_idx, demo_set_idx) of the best combination.
-        """
-        num_instructions = len(self._instruction_candidates)
-        num_demo_sets = len(self._demo_sets)
-
-        # Create Optuna study with TPE sampler
-        sampler = TPESampler(seed=self.random_seed)
-        study = optuna.create_study(
-            direction="maximize",
-            sampler=sampler,
-        )
-
-        def objective(trial: "optuna.Trial") -> float:
-            # Sample instruction and demo set indices
-            instr_idx = trial.suggest_int("instr_idx", 0, num_instructions - 1)
-            demo_idx = trial.suggest_int("demo_idx", 0, num_demo_sets - 1)
-
-            # Get the configuration and demo set
-            config = self._get_config_by_index(instr_idx)
-            demo_set = self._demo_sets[demo_idx]
-
-            # Render prompt with demos
-            rendered_config = self._render_config_with_demos(config, demo_set)
-
-            # Draw minibatch and score
-            minibatch = self._draw_minibatch(goldens)
-            score = self.scorer.score_minibatch(rendered_config, minibatch)
-
-            # Track scores for this combination
-            combo_key = (instr_idx, demo_idx)
-            if combo_key not in self._combination_scores:
-                self._combination_scores[combo_key] = []
-            self._combination_scores[combo_key].append(score)
-
-            # Update best tracking
-            if score > self._best_trial_score:
-                self._best_trial_score = score
-                self._best_trial_key = combo_key
-
-            # Record trial
-            trial_num = len(self._trial_history) + 1
-            self._trial_history.append(
-                {
-                    "trial": trial_num,
-                    "instr_idx": instr_idx,
-                    "demo_idx": demo_idx,
-                    "score": score,
-                }
-            )
-
-            # Progress update
-            demo_info = (
-                f"{len(demo_set.demos)} demos" if demo_set.demos else "0-shot"
-            )
-            self._update_status(
-                f"Trial {trial_num}/{self.num_trials} - "
-                f"Instr {instr_idx}, {demo_info} - Score: {score:.4f}",
-                trial_num,
-            )
-
-            # Periodic full evaluation
-            if trial_num % self.minibatch_full_eval_steps == 0:
-                best_instr, best_demo = self._best_trial_key
-                if (best_instr, best_demo) not in self._full_eval_cache:
-                    best_config = self._get_config_by_index(best_instr)
-                    best_demo_set = self._demo_sets[best_demo]
-                    self._full_evaluate(best_config, best_demo_set, goldens)
-
-            return score
-
-        # Run optimization
-        study.optimize(
-            objective,
-            n_trials=self.num_trials,
-            show_progress_bar=False,
-        )
-
-        # Return the best combination
-        return (
-            study.best_params["instr_idx"],
-            study.best_params["demo_idx"],
-        )
-
-    async def _a_run_bayesian_optimization(
-        self,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> Tuple[int, int]:
-        """
-        Async version of Bayesian Optimization.
-        """
-        num_instructions = len(self._instruction_candidates)
-        num_demo_sets = len(self._demo_sets)
-
-        sampler = TPESampler(seed=self.random_seed)
-        study = optuna.create_study(
-            direction="maximize",
-            sampler=sampler,
-        )
-
-        for trial_num in range(1, self.num_trials + 1):
             trial = study.ask()
+            instr_idx = trial.suggest_categorical("instr_idx", list(range(len(self.candidates))))
+            demo_idx = trial.suggest_categorical("demo_idx", list(range(len(self.demo_sets))))
 
-            # Sample indices
-            instr_idx = trial.suggest_int("instr_idx", 0, num_instructions - 1)
-            demo_idx = trial.suggest_int("demo_idx", 0, num_demo_sets - 1)
+            config = self._build_config(instr_idx, demo_idx)
+            minibatch = self._sample_minibatch(goldens)
 
-            # Get config and demos
-            config = self._get_config_by_index(instr_idx)
-            demo_set = self._demo_sets[demo_idx]
-            rendered_config = self._render_config_with_demos(config, demo_set)
-
-            # Score on minibatch
-            minibatch = self._draw_minibatch(goldens)
-            score = await self.scorer.a_score_minibatch(
-                rendered_config, minibatch
-            )
-
-            # Track scores
-            combo_key = (instr_idx, demo_idx)
-            if combo_key not in self._combination_scores:
-                self._combination_scores[combo_key] = []
-            self._combination_scores[combo_key].append(score)
-
-            # Update best
-            if score > self._best_trial_score:
-                self._best_trial_score = score
-                self._best_trial_key = combo_key
-
-            # Record trial
-            self._trial_history.append(
-                {
-                    "trial": trial_num,
-                    "instr_idx": instr_idx,
-                    "demo_idx": demo_idx,
-                    "score": score,
-                }
-            )
-
-            # Tell Optuna the result
+            score = await self.scorer.a_score_minibatch(config, minibatch)
             study.tell(trial, score)
 
-            # Progress update
-            demo_info = (
-                f"{len(demo_set.demos)} demos" if demo_set.demos else "0-shot"
-            )
-            self._update_status(
-                f"Trial {trial_num}/{self.num_trials} - "
-                f"Instr {instr_idx}, {demo_info} - Score: {score:.4f}",
-                trial_num,
-            )
+            self._iteration_log.append({
+                "iteration": trial_idx + 1,
+                "outcome": "accepted" if score > best_score else "rejected",
+                "before": best_score if best_score != float('-inf') else 0.0,
+                "after": score,
+                "reason": f"TPE Sample -> Instruction: {instr_idx}, DemoSet: {demo_idx}",
+                "elapsed": time.time() - trial_start
+            })
 
-            # Periodic full evaluation
-            if trial_num % self.minibatch_full_eval_steps == 0:
-                best_instr, best_demo = self._best_trial_key
-                if (best_instr, best_demo) not in self._full_eval_cache:
-                    best_config = self._get_config_by_index(best_instr)
-                    best_demo_set = self._demo_sets[best_demo]
-                    await self._a_full_evaluate(
-                        best_config, best_demo_set, goldens
-                    )
+            if (trial_idx + 1) % self.minibatch_full_eval_steps == 0 or trial_idx == self.num_trials - 1:
+                self._update_step(f"Running full validation on current best configuration...")
+                best_trial = study.best_trial
+                best_eval_config = self._build_config(
+                    best_trial.params["instr_idx"], 
+                    best_trial.params["demo_idx"]
+                )
+                
+                full_scores = await self.scorer.a_score_pareto(best_eval_config, goldens)
+                avg_full_score = sum(full_scores) / len(full_scores)
 
-        return (
-            study.best_params["instr_idx"],
-            study.best_params["demo_idx"],
-        )
+                self.pareto_score_table[best_eval_config.id] = full_scores
+                
+                if avg_full_score > best_score:
+                    if best_config_id is not None:
+                        accepted_iterations.append(
+                            AcceptedIterationDict(
+                                parent=best_config_id, 
+                                child=best_eval_config.id,
+                                module=self.SINGLE_MODULE_ID,
+                                before=best_score,
+                                after=avg_full_score,
+                            )
+                        )
+                    best_score = avg_full_score
+                    best_config_id = best_eval_config.id
 
-    ############################
-    # Full Evaluation          #
-    ############################
+        true_best_id = None
+        true_best_score = float('-inf')
+        for cid, scores in self.pareto_score_table.items():
+            avg_score = sum(scores) / len(scores) if scores else 0.0
+            if avg_score > true_best_score:
+                true_best_score = avg_score
+                true_best_id = cid
 
-    def _full_evaluate(
-        self,
-        config: PromptConfiguration,
-        demo_set: DemoSet,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> None:
-        """Perform full evaluation on all goldens."""
-        # Find the indices for this combination
-        instr_idx = self._instruction_candidates.index(config)
-        demo_idx = self._demo_sets.index(demo_set)
-        combo_key = (instr_idx, demo_idx)
-
-        if combo_key in self._full_eval_cache:
-            return
-
-        # Render with demos
-        rendered_config = self._render_config_with_demos(config, demo_set)
-
-        # Register the rendered config
-        self.prompt_configurations_by_id[rendered_config.id] = rendered_config
-        self.parents_by_id[rendered_config.id] = config.id
-
-        # Score on full set
-        scores = self.scorer.score_pareto(rendered_config, goldens)
-        self.pareto_score_table[rendered_config.id] = scores
-
-        # Cache the result
-        self._full_eval_cache[combo_key] = rendered_config.id
-
-    async def _a_full_evaluate(
-        self,
-        config: PromptConfiguration,
-        demo_set: DemoSet,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> None:
-        """Async full evaluation."""
-        instr_idx = self._instruction_candidates.index(config)
-        demo_idx = self._demo_sets.index(demo_set)
-        combo_key = (instr_idx, demo_idx)
-
-        if combo_key in self._full_eval_cache:
-            return
-
-        rendered_config = self._render_config_with_demos(config, demo_set)
-        self.prompt_configurations_by_id[rendered_config.id] = rendered_config
-        self.parents_by_id[rendered_config.id] = config.id
-
-        scores = await self.scorer.a_score_pareto(rendered_config, goldens)
-        self.pareto_score_table[rendered_config.id] = scores
-        self._full_eval_cache[combo_key] = rendered_config.id
-
-    ############################
-    # Result Building          #
-    ############################
-
-    def _best_by_aggregate(self) -> PromptConfiguration:
-        """Return the best candidate based on full evaluation scores."""
-        if not self.pareto_score_table:
-            # Fall back to best by trial scores
-            best_instr, best_demo = self._best_trial_key
-            config = self._get_config_by_index(best_instr)
-            demo_set = self._demo_sets[best_demo]
-            return self._render_config_with_demos(config, demo_set)
-
-        best_id: Optional[PromptConfigurationId] = None
-        best_score = float("-inf")
-
-        for config_id, scores in self.pareto_score_table.items():
-            agg_score = self.aggregate_instances(scores)
-            if agg_score > best_score:
-                best_score = agg_score
-                best_id = config_id
-
-        if best_id is None:
-            best_instr, best_demo = self._best_trial_key
-            config = self._get_config_by_index(best_instr)
-            demo_set = self._demo_sets[best_demo]
-            return self._render_config_with_demos(config, demo_set)
-
-        return self.prompt_configurations_by_id[best_id]
-
-    def _build_result(
-        self,
-        best: PromptConfiguration,
-    ) -> Tuple[Prompt, OptimizationReport]:
-        """Build the optimization result."""
-        prompt_config_snapshots = build_prompt_config_snapshots(
-            self.prompt_configurations_by_id
-        )
-
+        final_id = true_best_id if true_best_id else best_config_id
+        best_config = self.prompt_configurations_by_id[final_id]
+        
         report = OptimizationReport(
-            optimization_id=self.optimization_id,
-            best_id=best.id,
-            accepted_iterations=self._trial_history,
+            optimization_id=getattr(self, "optimization_id", str(uuid.uuid4())),
+            best_id=best_config.id,
+            accepted_iterations=accepted_iterations,
             pareto_scores=self.pareto_score_table,
             parents=self.parents_by_id,
-            prompt_configurations=prompt_config_snapshots,
+            prompt_configurations=build_prompt_config_snapshots(self.prompt_configurations_by_id),
         )
 
-        return best.prompts[self.SINGLE_MODULE_ID], report
+        return best_config.prompts[self.SINGLE_MODULE_ID], report
 
-    ############################
-    # Status Updates           #
-    ############################
+    def generate_summary_table(self, report: OptimizationReport) -> List[Table]:
+        """Generates MIPROv2-specific Bayesian Search logs and Validation tables."""
+        from rich.table import Table
+        from rich import box
+        
+        _PURPLE = "rgb(106,0,255)"
+        _GREEN  = "rgb(25,227,160)"
+        _DIM    = "rgb(55,65,81)"
 
-    def _update_status(self, message: str, step: int) -> None:
-        """Send status update via callback."""
-        if self.status_callback is not None:
-            self.status_callback(
-                RunnerStatusType.PROGRESS,
-                step_index=step,
-                total_steps=self.num_trials,
-                detail=message,
+        tables = []
+        iteration_log = getattr(self, "_iteration_log", [])
+
+        # 1. Bayesian TPE Trial Table
+        iter_table = Table(
+            title=f"🔬 [{_PURPLE}]{self.name}[/] Bayesian Search (Stochastic Minibatches)",
+            box=box.ROUNDED,
+            border_style=_PURPLE,
+            header_style=f"bold {_PURPLE}",
+            show_lines=True,
+            expand=True,
+        )
+        iter_table.add_column("#", style="bold white", justify="right", no_wrap=True)
+        iter_table.add_column("Status", justify="center", no_wrap=True)
+        iter_table.add_column("Best Prior", justify="right", no_wrap=True)
+        iter_table.add_column("Trial Score", justify="right", no_wrap=True)
+        iter_table.add_column("Δ to Best", justify="right", no_wrap=True)
+        iter_table.add_column("Note", style=f"{_DIM}", no_wrap=False)
+        iter_table.add_column("Time", justify="right", no_wrap=True)
+
+        running_max = float('-inf')
+
+        for entry in iteration_log:
+            i = str(entry["iteration"])
+            score = entry.get("after", 0.0)
+            reason = entry.get("reason", "")
+            elapsed = entry.get("elapsed", 0.0)
+
+            # Define the "Before" state as the highest score seen up to this point
+            best_prior = running_max if running_max != float('-inf') else 0.0
+            delta = score - best_prior
+
+            # If it's a new high score, update the running max and mark it
+            if score > running_max:
+                status_cell = f"[{_GREEN}]🏆 New Best[/]"
+                color = "white"
+                sign = "+" if delta >= 0 else ""
+                running_max = score
+            else:
+                status_cell = f"[{_DIM}]📊 Sampled[/]"
+                color = _DIM
+                sign = "+" if delta >= 0 else ""
+
+            best_prior_cell = f"{best_prior:.4f}"
+            score_cell = f"[bold {color}]{score:.4f}[/]" if score >= running_max else f"[{color}]{score:.4f}[/]"
+            delta_cell = f"[{color}]{sign}{delta:.4f}[/]"
+            time_cell = f"[{_DIM}]{elapsed:.2f}s[/]"
+
+            iter_table.add_row(i, status_cell, best_prior_cell, score_cell, delta_cell, reason, time_cell)
+
+        tables.append(iter_table)
+
+        # 2. Final Pareto archive table
+        if report and report.pareto_scores:
+            pareto_table = Table(
+                title=f"[{_PURPLE}]True Validation Archive (Full Dataset)[/]",
+                box=box.HORIZONTALS,
+                border_style=_PURPLE,
+                header_style=f"bold {_PURPLE}",
+                show_lines=True,
+                expand=True,
             )
+            pareto_table.add_column("Config ID", style="white", justify="center", no_wrap=True)
+            pareto_table.add_column("Role", justify="center", no_wrap=True)
+            pareto_table.add_column("Scores Array", justify="center", no_wrap=False)
+            pareto_table.add_column("True Avg Score", justify="right", no_wrap=True)
+
+            best_id = report.best_id
+
+            for cid, scores in report.pareto_scores.items():
+                is_best = cid == best_id
+                role = f"[{_DIM}]candidate[/]"
+
+                short_id = cid[:8] + "…"
+                if is_best:
+                    short_id = f"[bold white]{short_id} ★[/]"
+
+                if len(scores) > 6:
+                    score_strs = [f"{s:.3f}" for s in scores[:3]] + ["..."] + [f"{s:.3f}" for s in scores[-3:]]
+                else:
+                    score_strs = [f"{s:.3f}" for s in scores]
+                scores_cell = f"[{_DIM}][{', '.join(score_strs)}][/]"
+
+                agg = sum(scores) / len(scores) if scores else 0.0
+                agg_color = "white" if is_best else _DIM
+                agg_cell  = f"[bold {agg_color}]{agg:.4f}[/]" if is_best else f"[{agg_color}]{agg:.4f}[/]"
+
+                pareto_table.add_row(short_id, role, scores_cell, agg_cell)
+
+            tables.append(pareto_table)
+
+        return tables
