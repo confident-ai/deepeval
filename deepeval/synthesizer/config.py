@@ -64,6 +64,8 @@ class ContextConstructionConfig:
     context_quality_threshold: float = 0.5
     context_similarity_threshold: float = 0.0
     max_retries: int = 3
+    allow_cross_file_contexts: bool = False
+    target_files_per_context: Optional[int] = None
 
     def __post_init__(self):
         self.critic_model, _ = initialize_model(self.critic_model)

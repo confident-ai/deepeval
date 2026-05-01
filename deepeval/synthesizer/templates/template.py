@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 
 class SynthesizerTemplate:
@@ -112,6 +112,8 @@ class SynthesizerTemplate:
         scenario: Optional[str],
         task: Optional[str],
         input_format: Optional[str],
+        available_source_files: Optional[List[str]] = None,
+        target_files_per_context: Optional[int] = None,
     ):
         input_format_section = (
             f"`input` MUST strictly adhere to the following format: {input_format}."
@@ -130,6 +132,22 @@ class SynthesizerTemplate:
             if task
             else ""
         )
+        source_files_section = ""
+        if available_source_files:
+            cross_file_strength_section = (
+                f"Each generated `input` MUST meaningfully combine information from at least {target_files_per_context} different source files. Ensure ATLEAST {target_files_per_context} source files are used in the `input`."
+                if target_files_per_context is not None
+                else "Each generated `input` SHOULD combine information from multiple source files whenever possible."
+            )
+            source_files_section = f"""
+                This context is constructed from multiple files with these source labels: {available_source_files}.
+                Your goal is to generate powerful, cross-file goldens that test reasoning across different files, not single-file recall.
+
+                {cross_file_strength_section}
+                
+                For each generated item, include a `used_source_files` key listing only the source labels actually used to form that `input`.
+                `used_source_files` MUST be a JSON array of strings and each value MUST come from: {available_source_files}.
+            """
         return f"""I want you act as a copywriter. Based on the given context, which is list of strings, please generate a list of JSON objects with a `input` key.
         The `input` can either be a question or a statement that can be addressed by the given context.
 
@@ -157,6 +175,7 @@ class SynthesizerTemplate:
         {input_format_section}
         {scenario_section}
         {task_section}
+        {source_files_section}
         You MUST TRY to generate {max_goldens_per_context} data points, unless the generated `input` is getting repetitive.
         **
 
