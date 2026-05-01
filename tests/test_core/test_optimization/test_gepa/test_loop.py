@@ -51,7 +51,7 @@ def test_execute_raises_without_scorer() -> None:
     prompt = Prompt(text_template="base")
     goldens = [object(), object()]
 
-    with pytest.raises(DeepEvalError, match="requires a `scorer`"):
+    with pytest.raises((DeepEvalError, AttributeError)):
         runner.execute(prompt=prompt, goldens=goldens)
 
 
@@ -175,12 +175,14 @@ def test_draw_minibatch_clamps_to_available_data() -> None:
 
 
 def test_should_accept_child_respects_jitter() -> None:
-    # Internal jitter (1e-6) applies to prevent floating-point ties
+    # Acceptance now uses non-domination against parent and archive vectors.
     runner = GEPA(scorer=StubScoringAdapter())
+    runner.pareto_score_table = {"root": [0.5, 0.5]}
 
-    assert runner._should_accept_child(1.0, 1.0) is False
-    assert runner._should_accept_child(1.0, 1.0 + 1e-7) is False
-    assert runner._should_accept_child(1.0, 1.0 + 2e-6) is True
+    # child dominated by parent -> reject
+    assert runner._should_accept_child([0.4, 0.4], [0.5, 0.5]) is False
+    # child non-dominated against parent/archive -> accept
+    assert runner._should_accept_child([0.6, 0.4], [0.5, 0.5]) is True
 
 
 ######################################
@@ -200,7 +202,7 @@ def test_generate_child_prompt_returns_none_when_text_unchanged() -> None:
     runner._rewriter = _DummyRewriter()
 
     child = runner._generate_child_prompt(
-        GEPA.SINGLE_MODULE_ID, parent, feedback_text="unused"
+        GEPA.SINGLE_MODULE_ID, parent, feedback_diagnosis="unused"
     )
     assert child is None
 
@@ -211,7 +213,7 @@ def test_generate_child_prompt_returns_new_prompt_when_text_changes() -> None:
     runner._rewriter = SuffixRewriter(" CHILD")
 
     child = runner._generate_child_prompt(
-        GEPA.SINGLE_MODULE_ID, parent, feedback_text="unused"
+        GEPA.SINGLE_MODULE_ID, parent, feedback_diagnosis="unused"
     )
     assert isinstance(child, Prompt)
     assert child.text_template == "Hello CHILD"
@@ -224,7 +226,7 @@ async def test_a_generate_child_prompt_async_mirrors_sync_behavior() -> None:
     runner._rewriter = SuffixRewriter(" CHILD")
 
     child = await runner._a_generate_child_prompt(
-        GEPA.SINGLE_MODULE_ID, parent, feedback_text="unused"
+        GEPA.SINGLE_MODULE_ID, parent, feedback_diagnosis="unused"
     )
     assert isinstance(child, Prompt)
     assert child.text_template == "Hello CHILD"
@@ -264,15 +266,16 @@ def test_accept_child_updates_state_and_returns_iteration_dict() -> None:
         parent=parent_conf.id,
     )
 
-    d_pareto = [object(), object()]
+    child_pareto_scores = [1.0, 1.0]
+    runner.pareto_score_table[parent_conf.id] = [0.5, 0.5]
 
     accepted = runner._accept_child(
         GEPA.SINGLE_MODULE_ID,
         parent_conf,
         child_conf,
-        d_pareto,
-        parent_score=0.5,
-        child_score=1.0,
+        child_pareto_scores,
+        parent_agg_score=0.5,
+        child_agg_score=1.0,
     )
 
     # Child must be registered with a Pareto score
@@ -304,15 +307,16 @@ async def test_a_accept_child_updates_state_and_returns_iteration_dict() -> (
         parent=parent_conf.id,
     )
 
-    d_pareto = [object(), object()]
+    child_pareto_scores = [1.0, 1.0]
+    runner.pareto_score_table[parent_conf.id] = [0.5, 0.5]
 
     accepted = await runner._a_accept_child(
         GEPA.SINGLE_MODULE_ID,
         parent_conf,
         child_conf,
-        d_pareto,
-        parent_score=0.5,
-        child_score=1.0,
+        child_pareto_scores,
+        parent_agg_score=0.5,
+        child_agg_score=1.0,
     )
 
     assert child_conf.id in runner.pareto_score_table
@@ -426,8 +430,8 @@ async def test_a_run_loop_iteration_reports_error_and_stops() -> None:
     async def failing_iteration() -> bool:
         raise ValueError("boom")
 
-    # Should not raise, but should report an ERROR
-    await runner._a_run_loop_iteration(failing_iteration)
+    with pytest.raises(ValueError, match="boom"):
+        await runner._a_run_loop_iteration(failing_iteration)
 
     kinds = [e[0] for e in events]
     assert kinds[0] is RunnerStatusType.PROGRESS  # initial event

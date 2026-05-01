@@ -51,28 +51,108 @@ You can customize GEPA's behavior by passing arguments directly to the `GEPA` co
 ```python
 from deepeval.optimizer.algorithms import GEPA
 
-gepa = GEPA(iterations=10, pareto_size=5, minibatch_size=4)
+gepa = GEPA(
+    iterations=10,
+    pareto_size=5,
+    minibatch_size=4,
+    patience=4,
+    random_seed=42,
+)
 ```
 
-There are **FIVE** optional parameters when creating a `GEPA` instance:
+There are **NINE** optional parameters when creating a `GEPA` instance:
 
 - [Optional] `iterations`: total number of mutation attempts. Defaulted to `5`.
 - [Optional] `pareto_size`: number of goldens in the Pareto validation set (`D_pareto`). Defaulted to `3`.
 - [Optional] `minibatch_size`: number of goldens drawn for feedback per iteration. Automatically clamped to available data. Defaulted to `8`.
-- [Optional] `random_seed`: seed for reproducibility. Controls the randomness in golden splitting, minibatch sampling, Pareto selection, and tie-breaking. Set a fixed value (e.g., `42`) to get identical results across runs. Defaulted to `time.time_ns()`.
+- [Optional] `patience`: stop early after this many consecutive rejected children. Defaulted to `3`.
+- [Optional] `random_seed`: seed for reproducibility. Controls golden splitting, minibatch sampling, Pareto parent selection, and tie-breaking. Set a fixed value (e.g., `42`) to get reproducible runs. Defaulted to `time.time_ns()`.
 - [Optional] `tie_breaker`: policy for breaking ties (`PREFER_ROOT`, `PREFER_CHILD`, or `RANDOM`). Defaulted to `PREFER_CHILD`.
+- [Optional] `aggregate_instances`: function that aggregates a prompt's per-golden Pareto scores into a scalar for ranking/tie handling. Defaulted to `mean_of_all`.
+- [Optional] `reflection_model`: LLM used for diagnosis/feedback generation. Defaulted to `"gpt-4o-mini"`.
+- [Optional] `mutation_model`: LLM used for rewriting the prompt. Defaulted to `"gpt-4o"`.
+- [Optional] `scorer`: custom scorer instance. In most workflows this is injected by `PromptOptimizer`.
 
 ## How Does GEPA Work?
 
+```mermaid
+flowchart TD
+    subgraph GEPA [GEPA: Diagnostic Hill-Climbing]
+        A[Initialize Prompt] --> B[Evaluate on Pareto Archive]
+        B --> C[Diagnosis: Failures & Successes]
+        C --> D[Mutate Prompt via Rewriter]
+        D --> E[Score Minibatch Candidate]
+        E --> F{Accepted by Pareto?}
+        F -- Yes --> G[Add to Archive]
+        F -- No --> H[Discard Candidate]
+        G --> B
+        H --> B
+    end
+```
+
 Rather than forcing a single "best" prompt, GEPA maintains a **diverse population of candidate prompts** and uses [Pareto selection](#step-2-pareto-selection) to balance exploration of different strategies with exploitation of proven improvements. This prevents the optimization from getting stuck at a local maximum.
 
-The algorithm runs for a configurable number of `iterations`. Each iteration attempts to evolve a new prompt variant and decides whether to keep it based on performance. Here's an overview of the five steps:
+```mermaid
+sequenceDiagram
+    participant User as User / Prompt
+    participant GEPA as GEPA Engine
+    participant Scorer as Scorer
+    participant Rewriter as Rewriter
 
-1. **Golden Splitting** — Split your goldens into a validation set (`D_pareto`) and a feedback set (`D_feedback`)
-2. **Pareto Selection** — Choose a parent prompt from the Pareto frontier using frequency-weighted sampling
-3. **Feedback & Mutation** — Collect metric feedback on a minibatch and use an LLM to rewrite the prompt
-4. **Acceptance** — If the child prompt improves over the parent, add it to the candidate pool
-5. **Final Selection** — After all iterations, select the best prompt by aggregate score
+    activate GEPA
+    User->>GEPA: Start iteration
+    GEPA->>GEPA: Split goldens -> D_feedback + D_pareto
+    GEPA->>Scorer: score_pareto(root, D_pareto) (once)
+    activate Scorer
+    Scorer-->>GEPA: Root Pareto scores
+    deactivate Scorer
+
+    loop Iterations
+        GEPA->>GEPA: Pick parent from Pareto frontier
+        GEPA->>GEPA: Draw minibatch from D_feedback
+        GEPA->>Scorer: get_minibatch_feedback(parent, minibatch)
+        activate Scorer
+        Scorer-->>GEPA: Diagnosis feedback
+        deactivate Scorer
+
+        GEPA->>Scorer: score_minibatch(parent, minibatch)
+        Scorer-->>GEPA: Parent minibatch score
+
+        GEPA->>Rewriter: rewrite(parent, feedback)
+        activate Rewriter
+        Rewriter-->>GEPA: Child prompt
+        deactivate Rewriter
+
+        alt child unchanged or type changed
+            GEPA->>GEPA: Skip iteration
+        else child valid
+            GEPA->>Scorer: score_minibatch(child, minibatch)
+            Scorer-->>GEPA: Child minibatch score
+            alt child <= parent on minibatch
+                GEPA->>GEPA: Skip child
+            else child > parent
+                GEPA->>Scorer: score_pareto(child, D_pareto)
+                Scorer-->>GEPA: Child Pareto scores
+                alt child non-dominated
+                    GEPA->>GEPA: Accept child, update archive, prune dominated
+                else dominated
+                    GEPA->>GEPA: Reject child (update patience counter)
+                end
+            end
+        end
+    end
+
+    GEPA-->>User: Best Prompt & OptimizationReport
+    deactivate GEPA
+```
+
+The algorithm runs for a configurable number of `iterations`. Each iteration tries to evolve one new prompt variant, then decides whether to keep it. Here's the exact high-level flow:
+
+1. **Golden Splitting** — Split goldens into a fixed validation set (`D_pareto`) and feedback set (`D_feedback`)
+2. **Parent Selection** — Sample a parent from the Pareto frontier using frequency-weighted selection
+3. **Feedback & Rewrite** — Score a minibatch, collect diagnosis, and generate a child prompt
+4. **Filter + Acceptance** — Reject unchanged/weak candidates, then run Pareto acceptance
+5. **Final Pick** — Choose the top prompt by aggregate score (with tie-breaker policy)
 
 ### Step 1: Golden Splitting
 
@@ -149,27 +229,34 @@ In this example:
 
 The Pareto frontier contains **P₂, P₃, and P₄**. Each wins exactly 1 golden, giving them **equal selection probability** (33% each). Despite P₄ having the highest mean score, GEPA might still select P₂ or P₃ as parents to explore their specialized strategies—this is how GEPA avoids local optima and maintains prompt diversity.
 
-### Step 3: Feedback & Mutation
+### Step 3: Feedback & Rewrite
 
-Once a parent prompt is selected, GEPA generates a mutated child prompt through **feedback-driven rewriting**:
+Once a parent prompt is selected, GEPA creates a child prompt through **feedback-driven rewriting**:
 
-1. **Sample a minibatch**: Draw `minibatch_size` goldens from `D_feedback`
-2. **Execute the model**: Run your `model_callback` with the parent prompt on each minibatch golden
-3. **Evaluate with metrics**: Score each response using your evaluation metrics
-4. **Collect feedback**: Extract the `reason` field from metric evaluations—these contain specific explanations of what went wrong or right
-5. **Rewrite the prompt**: An LLM takes the parent prompt plus concatenated feedback and proposes a revised prompt that addresses the identified issues
+1. **Sample a minibatch**: Draw up to `minibatch_size` examples from `D_feedback`
+2. **Diagnose**: Gather scorer feedback (`get_minibatch_feedback`) on the parent
+3. **Baseline score**: Score the parent on that same minibatch
+4. **Rewrite**: Use the rewriter to generate a child prompt from the diagnosis
+5. **Sanity filter**: Skip the child if it is effectively unchanged or has a different prompt type
 
-The feedback mechanism is key to GEPA's efficiency. Rather than random mutations, the algorithm uses **targeted, metric-driven improvements** based on actual failure cases.
+This keeps mutations targeted: changes are driven by metric feedback rather than random prompt edits.
 
 ### Step 4: Acceptance
 
-The child prompt is evaluated on the **same minibatch** as the parent. If the child's score exceeds the parent's score by a minimum threshold (`GEPA_MIN_DELTA`), the child is **accepted**:
+GEPA applies acceptance in two gates:
 
-1. Added to the candidate pool
-2. Scored on all `D_pareto` goldens for future Pareto comparisons
-3. Becomes eligible for selection as a parent in subsequent iterations
+1. **Minibatch gate**: The child must strictly beat the parent on the same minibatch.
+2. **Pareto gate**: On `D_pareto`, the child must be non-dominated relative to both:
+   - the parent prompt configuration
+   - all existing configurations in the archive
 
-If the child doesn't improve sufficiently, it's **discarded**—the pool remains unchanged and the next iteration begins.
+When accepted, GEPA:
+
+1. Adds the child to the prompt-configuration graph
+2. Inserts the child's Pareto scores into the archive
+3. Removes archive entries that are dominated by the new child
+
+If rejected by the Pareto gate, GEPA increments a consecutive-rejection counter and can early-stop once it reaches `patience`.
 
 ### Step 5: Final Selection
 

@@ -1,57 +1,73 @@
-# tests/test_core/test_optimization/test_mutations/test_prompt_rewriter.py
 import pytest
-
-from deepeval.optimizer.rewriter.utils import (
-    _compose_prompt_messages,
-    _normalize_llm_output_to_text,
-)
-
-###############################
-# _compose_prompt_messages    #
-###############################
+from deepeval.errors import DeepEvalError
+from deepeval.optimizer.utils import _parse_prompt, _create_prompt
+from deepeval.prompt.prompt import Prompt
+from deepeval.prompt import PromptMessage
 
 
-@pytest.mark.parametrize(
-    "system,user,expected",
-    [
-        ("System", "User", "System\n\nUser"),
-        ("", "User only", "User only"),
-        ("   ", "  Trim me  ", "Trim me"),
-    ],
-)
-def test_compose_prompt_messages(system, user, expected):
-    assert _compose_prompt_messages(system, user) == expected
+def test_parse_prompt_text_returns_template():
+    prompt = Prompt(text_template="Hello {input}")
+    assert _parse_prompt(prompt) == "Hello {input}"
 
 
-########################################
-# _normalize_llm_output_to_text        #
-########################################
+def test_parse_prompt_list_returns_json_string():
+    prompt = Prompt(
+        messages_template=[
+            PromptMessage(role="system", content="You are helpful."),
+            PromptMessage(role="user", content="Q: {input}"),
+        ]
+    )
+    out = _parse_prompt(prompt)
+    assert '"role": "system"' in out
+    assert '"content": "Q: {input}"' in out
 
 
-def test_normalize_llm_output_to_text_str_and_tuple():
-    assert _normalize_llm_output_to_text("  hi  ") == "hi"
+def test_create_prompt_list_accepts_json_array():
+    old_prompt = Prompt(
+        messages_template=[
+            PromptMessage(role="system", content="old"),
+            PromptMessage(role="user", content="{input}"),
+        ]
+    )
+    new_content = (
+        '[{"role":"system","content":"new system"},'
+        '{"role":"user","content":"new user"}]'
+    )
 
-    text = _normalize_llm_output_to_text(("  hello ", 1.23))
-    assert text == "hello"
+    new_prompt = _create_prompt(old_prompt, new_content)
+    assert new_prompt.messages_template is not None
+    assert len(new_prompt.messages_template) == 2
+    assert new_prompt.messages_template[0].content == "new system"
 
 
-def test_normalize_llm_output_to_text_dict_json_and_unicode():
-    data = {"answer": "café", "score": 0.9}
-    out = _normalize_llm_output_to_text(data)
+def test_create_prompt_list_rejects_comma_separated_objects_without_array():
+    old_prompt = Prompt(
+        messages_template=[
+            PromptMessage(role="system", content="old"),
+            PromptMessage(role="user", content="{input}"),
+        ]
+    )
+    new_content = (
+        '{"role":"system","content":"new system"},'
+        '{"role":"user","content":"new user"}'
+    )
 
-    # Should be JSON and preserve unicode characters
-    assert '"answer"' in out
-    assert "café" in out
-    assert '"score"' in out
+    with pytest.raises(
+        DeepEvalError,
+        match="Failed to parse the LLM's rewritten messages into JSON",
+    ):
+        _create_prompt(old_prompt, new_content)
 
 
-def test_normalize_llm_output_to_text_unserializable_falls_back_to_str():
-    class Unserializable:
-        def __repr__(self):
-            return "<UnserializableObject>"
-
-    obj = Unserializable()
-    out = _normalize_llm_output_to_text(obj)
-
-    assert isinstance(out, str)
-    assert "UnserializableObject" in out
+def test_create_prompt_list_raises_for_invalid_json():
+    old_prompt = Prompt(
+        messages_template=[
+            PromptMessage(role="system", content="old"),
+            PromptMessage(role="user", content="{input}"),
+        ]
+    )
+    with pytest.raises(
+        DeepEvalError,
+        match="Failed to parse the LLM's rewritten messages into JSON",
+    ):
+        _create_prompt(old_prompt, "not-json-at-all")

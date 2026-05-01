@@ -2,12 +2,8 @@ import random
 
 import pytest
 
-from tests.test_core.stubs import StubProvider, StubModelSettings, StubPrompt
-from deepeval.prompt.prompt import Prompt
 from deepeval.errors import DeepEvalError
 from deepeval.optimizer.utils import (
-    generate_module_id,
-    normalize_seed_prompts,
     split_goldens,
     validate_callback,
     validate_instance,
@@ -105,86 +101,6 @@ def test_split_goldens_deterministic_and_disjoint_with_fixed_seed() -> None:
     assert set(d_feedback1).isdisjoint(d_pareto1)
     combined = d_feedback1 + d_pareto1
     assert sorted(combined, key=lambda g: goldens.index(g)) == goldens
-
-
-###############################################
-# generate_module_id / normalize_seed_prompts #
-###############################################
-
-
-def test_generate_module_id_includes_alias_label_and_model_info() -> None:
-    existing: set[str] = set()
-    prompt = StubPrompt(
-        alias="My Prompt",
-        label="For Chatbot",
-        model_settings=StubModelSettings(
-            provider=StubProvider("OPEN_AI"),
-            name="gpt-4o-mini",
-        ),
-    )
-
-    module_id = generate_module_id(prompt, index=0, existing=existing)
-
-    assert module_id == "my-prompt-for-chatbot-open-ai-gpt-4o-mini"
-    assert module_id in existing
-
-
-def test_generate_module_id_uses_fallback_and_dedupes() -> None:
-    existing: set[str] = set()
-
-    p1 = StubPrompt()
-    id1 = generate_module_id(p1, index=0, existing=existing)
-    assert id1 == "module-1"
-
-    # Same parameters and index but different prompt should get a suffixed id
-    p2 = StubPrompt()
-    id2 = generate_module_id(p2, index=0, existing=existing)
-    assert id2 == "module-1-2"
-
-    assert id1 in existing
-    assert id2 in existing
-    assert id1 != id2
-
-
-def test_generate_module_id_truncates_long_ids_to_64_chars() -> None:
-    long_alias = "A" * 100
-    existing: set[str] = set()
-    prompt = StubPrompt(alias=long_alias)
-
-    module_id = generate_module_id(prompt, index=0, existing=existing)
-
-    assert len(module_id) <= 64
-    # base should not be empty
-    assert module_id != ""
-
-
-def test_normalize_seed_prompts_returns_shallow_copy_for_dict() -> None:
-    prompt1 = StubPrompt(alias="A")
-    prompt2 = StubPrompt(alias="B")
-    seed = {"m1": prompt1, "m2": prompt2}
-
-    normalized = normalize_seed_prompts(seed)
-
-    assert normalized is not seed
-    assert normalized == seed
-    # Values are the same objects (shallow copy)
-    assert normalized["m1"] is prompt1
-    assert normalized["m2"] is prompt2
-
-
-def test_normalize_seed_prompts_generates_unique_ids_for_list() -> None:
-    p1 = StubPrompt(alias="First Prompt")
-    p2 = StubPrompt(alias="Second Prompt")
-    prompts = [p1, p2]
-
-    normalized = normalize_seed_prompts(prompts)
-
-    # Values preserved
-    assert set(normalized.values()) == {p1, p2}
-    # Unique, string keys generated
-    keys = list(normalized.keys())
-    assert all(isinstance(k, str) for k in keys)
-    assert len(keys) == len(set(keys)) == len(prompts)
 
 
 #####################
