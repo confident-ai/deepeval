@@ -205,11 +205,15 @@ class Synthesizer:
         )
 
         for idx, current in enumerate(contexts_with_sources):
-            target_count = (
-                max_available_files
-                if target_files_per_context is None
-                else min(target_files_per_context, max_available_files)
-            )
+            if target_files_per_context is None:
+                # Random cap avoids merging every distinct file (which blows up context).
+                target_count = (
+                    random.randint(2, max_available_files)
+                    if max_available_files >= 2
+                    else 1
+                )
+            else:
+                target_count = min(target_files_per_context, max_available_files)
             chosen_indices: List[int] = []
             candidate_scores: List[Tuple[int, float]] = []
             for candidate_idx, candidate in enumerate(contexts_with_sources):
