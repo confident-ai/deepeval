@@ -200,6 +200,8 @@ def no_log_prob_support(model: Union[str, DeepEvalBaseLLM]):
         and not model.model_data.supports_log_probs
     ):
         return True
+    elif isinstance(model, DeepEvalBaseLLM) and not model.supports_log_probs():
+        return True
 
     return False
 
