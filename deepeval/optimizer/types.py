@@ -3,6 +3,7 @@ import uuid
 
 from dataclasses import dataclass
 from typing import (
+    Any,
     Callable,
     Dict,
     List,
@@ -63,6 +64,33 @@ class AcceptedIteration(BaseModel):
     module: str
     before: float
     after: float
+
+
+class IterationLogEntry(BaseModel):
+    iteration: int
+    outcome: str
+    reason: str
+    elapsed: float
+    before: Optional[float] = None
+    after: Optional[float] = None
+
+
+class SimbaTraceRecord(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    output: Any
+    score: float
+    feedback: str
+
+
+class SimbaVarianceBucket(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    golden: Union[Golden, ConversationalGolden]
+    traces: List[SimbaTraceRecord]
+    max_to_avg_gap: float
+    max_score: float
+    min_score: float
 
 
 class PromptConfigSnapshot(BaseModel):
