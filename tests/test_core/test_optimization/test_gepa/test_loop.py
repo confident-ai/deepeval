@@ -8,9 +8,10 @@ from tests.test_core.stubs import (
 from deepeval.errors import DeepEvalError
 from deepeval.optimizer.algorithms import GEPA
 from deepeval.optimizer.types import (
+    AcceptedIteration,
+    OptimizationReport,
     PromptConfiguration,
     RunnerStatusType,
-    OptimizationReport,
 )
 from deepeval.prompt.prompt import Prompt
 
@@ -250,7 +251,7 @@ def test_make_child_clones_parent_and_sets_parent_id() -> None:
     assert parent_conf.prompts[GEPA.SINGLE_MODULE_ID] is parent_prompt
 
 
-def test_accept_child_updates_state_and_returns_iteration_dict() -> None:
+def test_accept_child_updates_state_and_returns_accepted_iteration() -> None:
     runner = GEPA(scorer=StubScoringAdapter())
 
     parent_prompt = Prompt(text_template="root")
@@ -280,16 +281,16 @@ def test_accept_child_updates_state_and_returns_iteration_dict() -> None:
 
     # Child must be registered with a Pareto score
     assert child_conf.id in runner.pareto_score_table
-    assert isinstance(accepted, dict)
-    assert accepted["parent"] == parent_conf.id
-    assert accepted["child"] == child_conf.id
-    assert accepted["module"] == GEPA.SINGLE_MODULE_ID
-    assert accepted["before"] == pytest.approx(0.5)
-    assert accepted["after"] == pytest.approx(1.0)
+    assert isinstance(accepted, AcceptedIteration)
+    assert accepted.parent == parent_conf.id
+    assert accepted.child == child_conf.id
+    assert accepted.module == GEPA.SINGLE_MODULE_ID
+    assert accepted.before == pytest.approx(0.5)
+    assert accepted.after == pytest.approx(1.0)
 
 
 @pytest.mark.asyncio
-async def test_a_accept_child_updates_state_and_returns_iteration_dict() -> (
+async def test_a_accept_child_updates_state_and_returns_accepted_iteration() -> (
     None
 ):
     runner = GEPA(scorer=StubScoringAdapter())
@@ -320,9 +321,9 @@ async def test_a_accept_child_updates_state_and_returns_iteration_dict() -> (
     )
 
     assert child_conf.id in runner.pareto_score_table
-    assert isinstance(accepted, dict)
-    assert accepted["parent"] == parent_conf.id
-    assert accepted["child"] == child_conf.id
+    assert isinstance(accepted, AcceptedIteration)
+    assert accepted.parent == parent_conf.id
+    assert accepted.child == child_conf.id
 
 
 #####################################
