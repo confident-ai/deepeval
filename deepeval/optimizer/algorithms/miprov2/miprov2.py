@@ -1,20 +1,11 @@
-# MIPROv2 - Multiprompt Instruction PRoposal Optimizer Version 2
-#
-# This implementation follows the original MIPROv2 paper:
-# https://arxiv.org/pdf/2406.11695
-#
-# Phase 1: Propose N diverse instructions and bootstrap M demo sets.
-# Phase 2: Use Bayesian Optimization (Optuna TPE) to search the joint
-#          categorical space of (Instruction, Demonstration Set) using
-#          stochastic minibatch evaluation and periodic full evaluations.
-
 from __future__ import annotations
+
 import random
 import time
-from typing import Dict, List, Tuple, Union, Optional
-from rich.table import Table
+import uuid
+from typing import Callable, Dict, List, Optional, Tuple, Union
 from rich import box
-import re
+from rich.table import Table
 
 try:
     import optuna
@@ -29,12 +20,14 @@ except ImportError:
 from deepeval.errors import DeepEvalError
 from deepeval.prompt.prompt import Prompt
 from deepeval.optimizer.types import (
-    AcceptedIterationDict,
-    PromptConfiguration,
+    AcceptedIteration,
+    IterationLogEntry,
     ModuleId,
-    ScoreTable,
     OptimizationReport,
+    PromptConfiguration,
+    RunnerStatusCallback,
     RunnerStatusType,
+    ScoreTable,
 )
 from deepeval.optimizer.algorithms.base import BaseAlgorithm
 from deepeval.optimizer.utils import build_prompt_config_snapshots
@@ -82,11 +75,14 @@ class MIPROV2(BaseAlgorithm):
         self.minibatch_size = minibatch_size
         self.minibatch_full_eval_steps = minibatch_full_eval_steps
 
-        # Internal State Tracking
         self.pareto_score_table: ScoreTable = {}
-        self.parents_by_id: Dict[str, str] = {}
+        self.parents_by_id: Dict[str, Optional[str]] = {}
         self._config_cache: Dict[Tuple[int, int], PromptConfiguration] = {}
         self.prompt_configurations_by_id: Dict[str, PromptConfiguration] = {}
+        self.step_callback: Optional[Callable[[str], None]] = None
+        self.status_callback: Optional[RunnerStatusCallback] = None
+        self.optimization_id: str = ""
+        self._iteration_log: List[IterationLogEntry] = []
 
         self.candidates: List[Prompt] = []
         self.demo_sets = []
@@ -122,34 +118,29 @@ class MIPROV2(BaseAlgorithm):
     ) -> PromptConfiguration:
         """Stitch an instruction and demo set into a unified prompt configuration, using a cache to prevent ID leaks."""
         cache_key = (instr_idx, demo_idx)
-        if hasattr(self, "_config_cache") and cache_key in self._config_cache:
+        if cache_key in self._config_cache:
             return self._config_cache[cache_key]
 
         base_prompt = self.candidates[instr_idx]
         demo_set = self.demo_sets[demo_idx]
 
-        unified_prompt = render_prompt_with_demonstrations(
-            base_prompt, demo_set
-        )
+        unified_prompt = render_prompt_with_demonstrations(base_prompt, demo_set)
 
-        config = PromptConfiguration.new(
-            prompts={self.SINGLE_MODULE_ID: unified_prompt}
-        )
+        config = PromptConfiguration.new(prompts={self.SINGLE_MODULE_ID: unified_prompt})
         self.prompt_configurations_by_id[config.id] = config
 
-        if hasattr(self, "_config_cache"):
-            self._config_cache[cache_key] = config
+        self._config_cache[cache_key] = config
 
         return config
 
     def _update_step(self, message: str) -> None:
         """Updates the bottom text row (e.g., '⤷ Bootstrapping...')"""
-        if getattr(self, "step_callback", None) is not None:
+        if self.step_callback is not None:
             self.step_callback(message)
 
     def _update_trial_progress(self, step: int, total: int) -> None:
         """Advances the main top progress bar."""
-        if getattr(self, "status_callback", None) is not None:
+        if self.status_callback is not None:
             self.status_callback(
                 RunnerStatusType.PROGRESS,
                 detail="",
@@ -157,19 +148,18 @@ class MIPROV2(BaseAlgorithm):
                 total_steps=total,
             )
 
-    ##################################################
-    # Synchronous Execution
-    ##################################################
-
     def execute(
         self,
         prompt: Prompt,
         goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Tuple[Prompt, OptimizationReport]:
-        import uuid
-
+        self.optimization_id = str(uuid.uuid4())
         self._init_components()
         self._iteration_log = []
+        self._config_cache.clear()
+
+        self._update_step(f"Generating {self.num_candidates} diverse instructions...")
+        self.candidates = self.proposer.propose(prompt, goldens, self.num_candidates)
 
         # Phase 1: Propose & Bootstrap
         self._update_step(
@@ -184,25 +174,20 @@ class MIPROV2(BaseAlgorithm):
         )
         self.demo_sets = self.bootstrapper.bootstrap(prompt, goldens)
 
-        # Phase 2: Bayesian Optimization
-        self._update_step(
-            "Initializing Tree-structured Parzen Estimator (TPE)..."
-        )
+        self._update_step("Initializing Tree-structured Parzen Estimator (TPE)...")
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         study = optuna.create_study(
             direction="maximize", sampler=TPESampler(seed=self.seed)
         )
 
         best_score = float("-inf")
-        best_config_id = None
-        accepted_iterations: List[AcceptedIterationDict] = []
+        best_config_id: Optional[str] = None
+        accepted_iterations: List[AcceptedIteration] = []
 
         for trial_idx in range(self.num_trials):
             trial_start = time.time()
             self._update_trial_progress(trial_idx + 1, self.num_trials)
-            self._update_step(
-                f"Running Bayesian Trial {trial_idx + 1}/{self.num_trials}..."
-            )
+            self._update_step(f"Running Bayesian Trial {trial_idx + 1}/{self.num_trials}...")
 
             trial = study.ask()
             instr_idx = trial.suggest_categorical(
@@ -217,28 +202,20 @@ class MIPROV2(BaseAlgorithm):
 
             score = self.scorer.score_minibatch(config, minibatch)
             study.tell(trial, score)
-
+            
             self._iteration_log.append(
-                {
-                    "iteration": trial_idx + 1,
-                    "outcome": "accepted" if score > best_score else "rejected",
-                    "before": (
-                        best_score if best_score != float("-inf") else 0.0
-                    ),
-                    "after": score,
-                    "reason": f"TPE Sample -> Instruction: {instr_idx}, DemoSet: {demo_idx}",
-                    "elapsed": time.time() - trial_start,
-                }
+                IterationLogEntry(
+                    iteration=trial_idx + 1,
+                    outcome="accepted" if score > best_score else "rejected",
+                    before=best_score if best_score != float("-inf") else 0.0,
+                    after=score,
+                    reason=f"TPE Sample -> Instruction: {instr_idx}, DemoSet: {demo_idx}",
+                    elapsed=time.time() - trial_start,
+                )
             )
 
-            # Periodic Full Pareto Evaluation
-            if (
-                (trial_idx + 1) % self.minibatch_full_eval_steps == 0
-                or trial_idx == self.num_trials - 1
-            ):
-                self._update_step(
-                    f"Running full validation on current best configuration..."
-                )
+            if (trial_idx + 1) % self.minibatch_full_eval_steps == 0 or trial_idx == self.num_trials - 1:
+                self._update_step(f"Running full validation on current best configuration...")
                 best_trial = study.best_trial
                 best_eval_config = self._build_config(
                     best_trial.params["instr_idx"],
@@ -255,7 +232,7 @@ class MIPROV2(BaseAlgorithm):
                 if avg_full_score > best_score:
                     if best_config_id is not None:
                         accepted_iterations.append(
-                            AcceptedIterationDict(
+                            AcceptedIteration(
                                 parent=best_config_id,
                                 child=best_eval_config.id,
                                 module=self.SINGLE_MODULE_ID,
@@ -278,7 +255,7 @@ class MIPROV2(BaseAlgorithm):
         best_config = self.prompt_configurations_by_id[final_id]
 
         report = OptimizationReport(
-            optimization_id=getattr(self, "optimization_id", str(uuid.uuid4())),
+            optimization_id=self.optimization_id,
             best_id=best_config.id,
             accepted_iterations=accepted_iterations,
             pareto_scores=self.pareto_score_table,
@@ -290,19 +267,15 @@ class MIPROV2(BaseAlgorithm):
 
         return best_config.prompts[self.SINGLE_MODULE_ID], report
 
-    ##################################################
-    # Asynchronous Execution
-    ##################################################
-
     async def a_execute(
         self,
         prompt: Prompt,
         goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Tuple[Prompt, OptimizationReport]:
-        import uuid
-
+        self.optimization_id = str(uuid.uuid4())
         self._init_components()
         self._iteration_log = []
+        self._config_cache.clear()
 
         self._update_step(
             f"Generating {self.num_candidates} diverse instructions..."
@@ -325,8 +298,8 @@ class MIPROV2(BaseAlgorithm):
         )
 
         best_score = float("-inf")
-        best_config_id = None
-        accepted_iterations: List[AcceptedIterationDict] = []
+        best_config_id: Optional[str] = None
+        accepted_iterations: List[AcceptedIteration] = []
 
         for trial_idx in range(self.num_trials):
             trial_start = time.time()
@@ -350,16 +323,14 @@ class MIPROV2(BaseAlgorithm):
             study.tell(trial, score)
 
             self._iteration_log.append(
-                {
-                    "iteration": trial_idx + 1,
-                    "outcome": "accepted" if score > best_score else "rejected",
-                    "before": (
-                        best_score if best_score != float("-inf") else 0.0
-                    ),
-                    "after": score,
-                    "reason": f"TPE Sample -> Instruction: {instr_idx}, DemoSet: {demo_idx}",
-                    "elapsed": time.time() - trial_start,
-                }
+                IterationLogEntry(
+                    iteration=trial_idx + 1,
+                    outcome="accepted" if score > best_score else "rejected",
+                    before=best_score if best_score != float("-inf") else 0.0,
+                    after=score,
+                    reason=f"TPE Sample -> Instruction: {instr_idx}, DemoSet: {demo_idx}",
+                    elapsed=time.time() - trial_start,
+                )
             )
 
             if (
@@ -385,7 +356,7 @@ class MIPROV2(BaseAlgorithm):
                 if avg_full_score > best_score:
                     if best_config_id is not None:
                         accepted_iterations.append(
-                            AcceptedIterationDict(
+                            AcceptedIteration(
                                 parent=best_config_id,
                                 child=best_eval_config.id,
                                 module=self.SINGLE_MODULE_ID,
@@ -408,7 +379,7 @@ class MIPROV2(BaseAlgorithm):
         best_config = self.prompt_configurations_by_id[final_id]
 
         report = OptimizationReport(
-            optimization_id=getattr(self, "optimization_id", str(uuid.uuid4())),
+            optimization_id=self.optimization_id,
             best_id=best_config.id,
             accepted_iterations=accepted_iterations,
             pareto_scores=self.pareto_score_table,
@@ -422,17 +393,13 @@ class MIPROV2(BaseAlgorithm):
 
     def generate_summary_table(self, report: OptimizationReport) -> List[Table]:
         """Generates MIPROv2-specific Bayesian Search logs and Validation tables."""
-        from rich.table import Table
-        from rich import box
-
         _PURPLE = "rgb(106,0,255)"
         _GREEN = "rgb(25,227,160)"
         _DIM = "rgb(55,65,81)"
 
         tables = []
-        iteration_log = getattr(self, "_iteration_log", [])
+        iteration_log = self._iteration_log
 
-        # 1. Bayesian TPE Trial Table
         iter_table = Table(
             title=f"🔬 [{_PURPLE}]{self.name}[/] Bayesian Search (Stochastic Minibatches)",
             box=box.ROUNDED,
@@ -454,16 +421,15 @@ class MIPROV2(BaseAlgorithm):
         running_max = float("-inf")
 
         for entry in iteration_log:
-            i = str(entry["iteration"])
-            score = entry.get("after", 0.0)
-            reason = entry.get("reason", "")
-            elapsed = entry.get("elapsed", 0.0)
+            after_val = entry.after if entry.after is not None else 0.0
+            i = str(entry.iteration)
+            score = after_val
+            reason = entry.reason
+            elapsed = entry.elapsed
 
-            # Define the "Before" state as the highest score seen up to this point
             best_prior = running_max if running_max != float("-inf") else 0.0
             delta = score - best_prior
 
-            # If it's a new high score, update the running max and mark it
             if score > running_max:
                 status_cell = f"[{_GREEN}]🏆 New Best[/]"
                 color = "white"
@@ -495,7 +461,6 @@ class MIPROV2(BaseAlgorithm):
 
         tables.append(iter_table)
 
-        # 2. Final Pareto archive table
         if report and report.pareto_scores:
             pareto_table = Table(
                 title=f"[{_PURPLE}]True Validation Archive (Full Dataset)[/]",
