@@ -27,6 +27,16 @@ Use this skill to add an end-to-end eval loop to AI applications:
 instrument the app, generate or reuse a dataset, create a committed pytest eval
 suite, run evals, and iterate on failures.
 
+## Workflow Summary
+
+1. Inspect the target app and existing DeepEval usage.
+2. Ask the required intake questions.
+3. Reuse existing metrics and datasets when available.
+4. Generate or import goldens.
+5. Add minimal tracing and a pytest eval suite.
+6. Run `deepeval test run`.
+7. Iterate for the requested number of rounds, defaulting to 5.
+
 ## Core Principles
 
 1. Prefer the smallest committed pytest eval suite that the user can rerun
