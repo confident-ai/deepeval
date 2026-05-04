@@ -21,7 +21,7 @@ applications using eval results.
 
 ### For Claude Code (Local CLI)
 
-Download or clone the `deepeval` folder inside the skills folder and place it directly into your local project's skills directory:
+Download or clone the `skills/deepeval` folder inside the skills folder and place it directly into your local project's skills directory:
 
 ```bash
 mkdir -p .claude/skills/
