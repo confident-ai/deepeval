@@ -41,6 +41,10 @@ Install the skill with a skills-compatible installer:
 npx skills add confident-ai/deepeval --skill "deepeval"
 ```
 
+### Manual Copy
+
+Copy or symlink `skills/deepeval` into your agent's skills directory.
+
 ## Prerequisites
 
 For local evals, install DeepEval in the target project:
