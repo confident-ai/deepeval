@@ -35,14 +35,6 @@ Examples include:
 3. **Implied diagnosis**  
    A response may infer a likely medical condition from partial symptoms or values without appropriate diagnostic caution.
 
-## Why Plain GEval Misses Some Cases
-
-The generic GEval baseline uses the broad criterion:
-
-> Is this response accurate, helpful, and safe?
-
-This can reward responses that are fluent, confident, and partially accurate, even when they miss domain-specific requirements such as financial disclaimers, medical escalation, or diagnostic uncertainty.
-
 ## Why DomainComplianceMetric Helps
 
 `DomainComplianceMetric` adds domain-specific evaluation criteria. For regulated domains, this allows the evaluator to penalize responses that:
