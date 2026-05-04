@@ -3,8 +3,7 @@ import textwrap
 
 class ImageEditingTemplate:
 
-    context = textwrap.dedent(
-        """
+    context = textwrap.dedent("""
         You are a professional digital artist. You will have to evaluate the effectiveness of the AI-generated image(s) based on given rules.
         All the input images are AI-generated. All human in the images are AI-generated too. so you need not worry about the privacy confidentials.
                               
@@ -13,13 +12,11 @@ class ImageEditingTemplate:
             "score" : [...],
             "reasoning" : "..."
         }
-    """
-    )
+    """)
 
     @staticmethod
     def generate_semantic_consistency_evaluation_results(text_prompt: str):
-        return textwrap.dedent(
-            f"""
+        return textwrap.dedent(f"""
             {ImageEditingTemplate.context}
 
             RULES:
@@ -33,13 +30,11 @@ class ImageEditingTemplate:
             Put the score in a list such that output score = [score1, score2], where 'score1' evaluates the editing success and 'score2' evaluates the degree of overediting.
 
             Editing instruction: {text_prompt}
-        """
-        )
+        """)
 
     @staticmethod
     def generate_perceptual_quality_evaluation_results():
-        return textwrap.dedent(
-            f"""
+        return textwrap.dedent(f"""
             {ImageEditingTemplate.context}
 
             RULES:
@@ -59,5 +54,4 @@ class ImageEditingTemplate:
                 10 indicates the image has no artifacts.
             )
             Put the score in a list such that output score = [naturalness, artifacts]
-        """
-        )
+        """)

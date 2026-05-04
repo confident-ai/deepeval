@@ -4,7 +4,6 @@ from deepeval import assert_test
 from deepeval.dataset import EvaluationDataset
 from deepeval.test_case import LLMTestCase, ToolCall
 
-
 DATASET_PATH = "tests/evals/.dataset.json"
 EVALUATION_MODEL = "EVALUATION_MODEL"
 

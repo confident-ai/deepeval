@@ -282,15 +282,13 @@ class TextToImageMetric(BaseMetric):
         return self.success
 
     def _generate_reason(self) -> str:
-        return textwrap.dedent(
-            f"""
+        return textwrap.dedent(f"""
             The overall score is {self.score:.2f} because the lowest score from semantic consistency was {min(self.SC_scores)} 
             and the lowest score from perceptual quality was {min(self.PQ_scores)}. These scores were combined to reflect the 
             overall effectiveness and quality of the AI-generated image(s).
             Reason for Semantic Consistency score: {self.SC_reasoning}
             Reason for Perceptual Quality score: {self.PQ_reasoning}
-        """
-        )
+        """)
 
     @property
     def __name__(self):
