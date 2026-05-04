@@ -62,7 +62,7 @@ You'll also need to supply any additional arguments such as `expected_output` an
 The `DAGMetric` can be used to evaluate single-turn LLM interactions based on LLM-as-a-judge decision-trees.
 
 ```python
-from deepeval.dag import DeepAcyclicGraph
+from deepeval.metrics.dag import DeepAcyclicGraph
 from deepeval.metrics import DAGMetric
 
 dag = DeepAcyclicGraph(root_nodes=[...])
