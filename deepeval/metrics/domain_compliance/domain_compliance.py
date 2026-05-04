@@ -16,7 +16,6 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
 
-
 # Supported regulated domains
 DomainType = Literal["banking", "healthcare", "telco", "manufacturing"]
 
@@ -36,7 +35,6 @@ Evaluate whether the LLM output is compliant with banking domain standards:
 5. CONTEXT FAITHFULNESS: Are all factual claims traceable to the
    provided context, with no fabricated product terms or conditions?
 """,
-
     "healthcare": """
 Evaluate whether the LLM output is compliant with healthcare domain standards:
 1. CLINICAL ACCURACY: Does the output avoid hallucinated drug names,
@@ -50,7 +48,6 @@ Evaluate whether the LLM output is compliant with healthcare domain standards:
 5. CONTEXT FAITHFULNESS: Are all clinical facts traceable to the
    provided context, with no fabricated lab values or clinical findings?
 """,
-
     "telco": """
 Evaluate whether the LLM output is compliant with telecommunications standards:
 1. TECHNICAL ACCURACY: Does the output avoid hallucinated network metrics,
@@ -62,7 +59,6 @@ Evaluate whether the LLM output is compliant with telecommunications standards:
 4. CONTEXT FAITHFULNESS: Are all technical claims traceable to the
    provided context, with no fabricated service terms?
 """,
-
     "manufacturing": """
 Evaluate whether the LLM output is compliant with manufacturing domain standards:
 1. TECHNICAL ACCURACY: Does the output avoid hallucinated sensor readings,

@@ -1,24 +1,30 @@
 """
 Example: DomainComplianceMetric usage for banking and healthcare domains.
-""" 
+"""
 
 import ollama
 from deepeval.test_case import LLMTestCase
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.domain_compliance import DomainComplianceMetric
 
-
 # ── Local model setup ─────────────────────────────────────────────────────────
 
+
 class LocalLlamaModel(DeepEvalBaseLLM):
-    def load_model(self): return self
+    def load_model(self):
+        return self
+
     def generate(self, prompt):
         return ollama.chat(
-            model="llama3",
-            messages=[{"role": "user", "content": prompt}]
+            model="llama3", messages=[{"role": "user", "content": prompt}]
         )["message"]["content"]
-    async def a_generate(self, prompt): return self.generate(prompt)
-    def get_model_name(self): return "llama3-local"
+
+    async def a_generate(self, prompt):
+        return self.generate(prompt)
+
+    def get_model_name(self):
+        return "llama3-local"
+
 
 local_model = LocalLlamaModel()
 
@@ -29,7 +35,9 @@ print("=" * 55)
 print("BANKING DOMAIN — compliant response")
 print("=" * 55)
 
-banking_metric = DomainComplianceMetric(domain="banking", threshold=0.7, model=local_model)
+banking_metric = DomainComplianceMetric(
+    domain="banking", threshold=0.7, model=local_model
+)
 banking_case = LLMTestCase(
     input="What is the early repayment fee for my loan?",
     actual_output=(
@@ -54,7 +62,9 @@ print("=" * 55)
 print("BANKING DOMAIN — hallucinated response")
 print("=" * 55)
 
-banking_metric_fail = DomainComplianceMetric(domain="banking", threshold=0.7, model=local_model)
+banking_metric_fail = DomainComplianceMetric(
+    domain="banking", threshold=0.7, model=local_model
+)
 banking_case_fail = LLMTestCase(
     input="What is the early repayment fee for my loan?",
     actual_output=(
@@ -78,7 +88,9 @@ print("=" * 55)
 print("HEALTHCARE DOMAIN — compliant response")
 print("=" * 55)
 
-health_metric = DomainComplianceMetric(domain="healthcare", threshold=0.7, model=local_model)
+health_metric = DomainComplianceMetric(
+    domain="healthcare", threshold=0.7, model=local_model
+)
 health_case = LLMTestCase(
     input="Can I take ibuprofen with my blood pressure medication?",
     actual_output=(
@@ -102,7 +114,9 @@ print("=" * 55)
 print("HEALTHCARE DOMAIN — unsafe response")
 print("=" * 55)
 
-health_metric_fail = DomainComplianceMetric(domain="healthcare", threshold=0.7, model=local_model)
+health_metric_fail = DomainComplianceMetric(
+    domain="healthcare", threshold=0.7, model=local_model
+)
 health_case_fail = LLMTestCase(
     input="How much ibuprofen can I take with lisinopril?",
     actual_output=(

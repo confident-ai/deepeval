@@ -1,11 +1,15 @@
 """
 Unit tests for DomainComplianceMetric.
 
+These tests are deterministic and CI-safe. They use a mock DeepEval model instead
+of requiring a local Ollama server or an external API key.
+
 Tests cover:
   - Banking domain: compliant and non-compliant outputs
   - Healthcare domain: compliant and non-compliant outputs
   - Missing context error handling
   - Invalid domain error handling
+  - Domain instantiation
   - Async measurement
 
 Run with:
@@ -14,39 +18,58 @@ Run with:
     pytest tests/test_domain_compliance.py -v
 """
 
+import json
+
 import pytest
-from deepeval import assert_test
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics.domain_compliance import DomainComplianceMetric
 
-#-----------------------------------------------
-#no API for GPT, so any off-the-shelf model
-from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics import GEval
 
-# Use Ollama (free, runs locally)
-# First: ollama pull llama3
-import ollama
+class MockDomainComplianceModel(DeepEvalBaseLLM):
+    """Deterministic mock model for testing DomainComplianceMetric."""
 
-class LocalLlamaModel(DeepEvalBaseLLM):
-    def load_model(self): return self
-    def generate(self, prompt):
-        return ollama.chat(
-            model="llama3",
-            messages=[{"role": "user", "content": prompt}]
-        )["message"]["content"]
-    async def a_generate(self, prompt): return self.generate(prompt)
-    def get_model_name(self): return "llama3-local"
+    def __init__(
+        self,
+        score: float = 1.0,
+        reason: str = "Mock domain-compliance evaluation reason.",
+    ):
+        self.mock_score = score
+        self.mock_reason = reason
 
-local_model = LocalLlamaModel()
-#-----------------------------------------------------------
+    def load_model(self):
+        return None
+
+    def get_model_name(self):
+        return "mock-domain-compliance-model"
+
+    def generate(self, prompt: str, schema=None):
+        response = {
+            "score": self.mock_score,
+            "reason": self.mock_reason,
+        }
+
+        if schema is not None:
+            return schema(**response)
+
+        return json.dumps(response)
+
+    async def a_generate(self, prompt: str, schema=None):
+        return self.generate(prompt, schema=schema)
+
+
 # ── Banking test cases ────────────────────────────────────────────────────────
+
 
 class TestBankingDomainCompliance:
 
     def test_compliant_banking_response(self):
         """Output that correctly hedges and stays faithful to context."""
-        metric = DomainComplianceMetric(domain="banking", threshold=0.7, model=local_model)
+        metric = DomainComplianceMetric(
+            domain="banking",
+            threshold=0.7,
+            model=MockDomainComplianceModel(score=9),
+        )
         test_case = LLMTestCase(
             input="What is the early repayment fee for my loan?",
             actual_output=(
@@ -59,11 +82,23 @@ class TestBankingDomainCompliance:
                 "on the outstanding principal balance at the time of repayment."
             ],
         )
-        assert_test(test_case, [metric])
+
+        score = metric.measure(test_case)
+
+        # assert score == 0.9
+        # assert metric.score == 0.9
+        assert score == pytest.approx(0.9)
+        assert metric.score == pytest.approx(0.9)
+        assert metric.reason == "Mock domain-compliance evaluation reason."
+        assert metric.is_successful() is True
 
     def test_hallucinated_banking_response(self):
-        """Output that fabricates a fee not present in context — should FAIL."""
-        metric = DomainComplianceMetric(domain="banking", threshold=0.7, model=local_model)
+        """Output that fabricates a fee not present in context should fail."""
+        metric = DomainComplianceMetric(
+            domain="banking",
+            threshold=0.7,
+            model=MockDomainComplianceModel(score=2),
+        )
         test_case = LLMTestCase(
             input="What is the early repayment fee for my loan?",
             actual_output=(
@@ -75,30 +110,42 @@ class TestBankingDomainCompliance:
                 "on the outstanding principal balance."
             ],
         )
-        metric.measure(test_case)
-        assert not metric.is_successful(), (
-            f"Expected failure for hallucinated output, got score: {metric.score}"
-        )
+
+        score = metric.measure(test_case)
+
+        assert score == pytest.approx(0.2)
+        assert metric.score == pytest.approx(0.2)
+        assert metric.is_successful() is False
 
     def test_banking_missing_context_raises(self):
         """DomainComplianceMetric must raise ValueError if context is missing."""
-        metric = DomainComplianceMetric(domain="banking", threshold=0.7, model=local_model)
+        metric = DomainComplianceMetric(
+            domain="banking",
+            threshold=0.7,
+            model=MockDomainComplianceModel(score=9),
+        )
         test_case = LLMTestCase(
             input="What is the interest rate?",
             actual_output="The interest rate is 3.5%.",
             # context intentionally omitted
         )
+
         with pytest.raises(ValueError, match="context"):
             metric.measure(test_case)
 
 
 # ── Healthcare test cases ─────────────────────────────────────────────────────
 
+
 class TestHealthcareDomainCompliance:
 
     def test_compliant_healthcare_response(self):
-        """Clinically cautious output grounded in context — should PASS."""
-        metric = DomainComplianceMetric(domain="healthcare", threshold=0.7, model=local_model)
+        """Clinically cautious output grounded in context should pass."""
+        metric = DomainComplianceMetric(
+            domain="healthcare",
+            threshold=0.7,
+            model=MockDomainComplianceModel(score=9.5),
+        )
         test_case = LLMTestCase(
             input="Can I take ibuprofen with my blood pressure medication?",
             actual_output=(
@@ -113,11 +160,20 @@ class TestHealthcareDomainCompliance:
                 "blood pressure in some patients."
             ],
         )
-        assert_test(test_case, [metric])
+
+        score = metric.measure(test_case)
+
+        assert score == pytest.approx(0.95)
+        assert metric.score == pytest.approx(0.95)
+        assert metric.is_successful() is True
 
     def test_hallucinated_healthcare_response(self):
-        """Output that prescribes a specific dosage not in context — should FAIL."""
-        metric = DomainComplianceMetric(domain="healthcare", threshold=0.7, model=local_model)
+        """Output that prescribes a specific dosage not in context should fail."""
+        metric = DomainComplianceMetric(
+            domain="healthcare",
+            threshold=0.7,
+            model=MockDomainComplianceModel(score=1),
+        )
         test_case = LLMTestCase(
             input="How much ibuprofen can I take with lisinopril?",
             actual_output=(
@@ -129,35 +185,54 @@ class TestHealthcareDomainCompliance:
                 "ACE inhibitors such as lisinopril."
             ],
         )
-        metric.measure(test_case)
-        assert not metric.is_successful(), (
-            f"Expected failure for unsafe clinical advice, got score: {metric.score}"
-        )
+
+        score = metric.measure(test_case)
+
+        assert score == pytest.approx(0.1)
+        assert metric.score == pytest.approx(0.1)
+        assert metric.is_successful() is False
 
 
 # ── Edge cases ────────────────────────────────────────────────────────────────
+
 
 class TestDomainComplianceEdgeCases:
 
     def test_invalid_domain_raises(self):
         """Unsupported domain should raise ValueError on instantiation."""
         with pytest.raises(ValueError, match="Unsupported domain"):
-            DomainComplianceMetric(domain="legal")  # not yet supported
+            DomainComplianceMetric(domain="legal")
 
     def test_telco_domain_instantiates(self):
         """Telco domain should instantiate without errors."""
-        metric = DomainComplianceMetric(domain="telco", threshold=0.6, model=local_model)
+        metric = DomainComplianceMetric(
+            domain="telco",
+            threshold=0.6,
+            model=MockDomainComplianceModel(score=8),
+        )
+
         assert metric.domain == "telco"
+        assert metric.threshold == 0.6
 
     def test_manufacturing_domain_instantiates(self):
         """Manufacturing domain should instantiate without errors."""
-        metric = DomainComplianceMetric(domain="manufacturing", threshold=0.6, model=local_model)
+        metric = DomainComplianceMetric(
+            domain="manufacturing",
+            threshold=0.6,
+            model=MockDomainComplianceModel(score=9),
+        )
+
         assert metric.domain == "manufacturing"
+        assert metric.threshold == 0.6
 
     @pytest.mark.asyncio
     async def test_async_measure_banking(self):
         """Async measurement should return a valid score."""
-        metric = DomainComplianceMetric(domain="banking", threshold=0.7, model=local_model)
+        metric = DomainComplianceMetric(
+            domain="banking",
+            threshold=0.7,
+            model=MockDomainComplianceModel(score=8.5),
+        )
         test_case = LLMTestCase(
             input="What is the penalty for overdraft?",
             actual_output=(
@@ -167,5 +242,9 @@ class TestDomainComplianceEdgeCases:
             ),
             context=["Overdraft transactions incur a €15 fee per occurrence."],
         )
+
         score = await metric.a_measure(test_case)
-        assert 0.0 <= score <= 1.0
+
+        assert score == pytest.approx(0.85)
+        assert metric.score == pytest.approx(0.85)
+        assert metric.is_successful() is True
