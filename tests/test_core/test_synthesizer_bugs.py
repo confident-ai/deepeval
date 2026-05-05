@@ -18,7 +18,6 @@ from deepeval.synthesizer.schema import (
     SyntheticData,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers – lightweight stand-ins so we never hit real LLMs
 # ---------------------------------------------------------------------------

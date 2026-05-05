@@ -23,7 +23,7 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams, ToolCall
+from deepeval.test_case import LLMTestCase, SingleTurnParams, ToolCall
 from deepeval.utils import prettify_list
 
 
@@ -254,7 +254,7 @@ class TaskNode(BaseNode):
     instructions: str
     output_label: str
     children: List[BaseNode]
-    evaluation_params: List[LLMTestCaseParams] = None
+    evaluation_params: List[SingleTurnParams] = None
     label: Optional[str] = None
     _verbose_logs: Optional[str] = None
     _output: Optional[str] = None
@@ -377,7 +377,7 @@ class TaskNode(BaseNode):
 class BinaryJudgementNode(BaseNode):
     criteria: str
     children: List[VerdictNode]
-    evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    evaluation_params: Optional[List[SingleTurnParams]] = None
     label: Optional[str] = None
     _verbose_logs: Optional[str] = None
     _verdict: Optional[BinaryJudgementVerdict] = None
@@ -507,7 +507,7 @@ class BinaryJudgementNode(BaseNode):
 class NonBinaryJudgementNode(BaseNode):
     criteria: str
     children: List[VerdictNode]
-    evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    evaluation_params: Optional[List[SingleTurnParams]] = None
     label: Optional[str] = None
     _verbose_logs: Optional[str] = None
     _verdict: Optional[NonBinaryJudgementVerdict] = None

@@ -62,7 +62,7 @@ print(your_llm_app("How are you?"))
 
 ##################################
 
-# from somewhere import your_llm_app # Replace with your LLM app
+# from somewhere import my_ai_agent # Replace with your AI agent
 # import pytest
 # from deepeval.dataset import Golden
 # from deepeval import assert_test
@@ -72,5 +72,6 @@ print(your_llm_app("How are you?"))
 
 # # Loop through goldens using pytest
 # @pytest.mark.parametrize("golden", goldens)
-# def test_llm_app(golden: Golden):
-#     assert_test(golden=golden, observed_callback=your_llm_app)
+# def test_my_ai_agent(golden: Golden):
+#     my_ai_agent(golden.input)  # captures trace
+#     assert_test(golden=golden)  # evaluates spans

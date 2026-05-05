@@ -10,7 +10,7 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
-from deepeval.test_case import ConversationalTestCase, TurnParams, Turn
+from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -22,14 +22,13 @@ from deepeval.metrics.goal_accuracy.schema import (
     GoalScore,
     PlanScore,
 )
-from deepeval.metrics.api import metric_data_manager
 
 
 class GoalAccuracyMetric(BaseConversationalMetric):
 
     _required_test_case_params = [
-        TurnParams.ROLE,
-        TurnParams.CONTENT,
+        MultiTurnParams.ROLE,
+        MultiTurnParams.CONTENT,
     ]
 
     def __init__(
@@ -114,11 +113,6 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                     ],
                 )
 
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
-
                 return self.score
 
     async def a_measure(
@@ -180,11 +174,6 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                     f"Final Reason: {self.reason}",
                 ],
             )
-
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
 
             return self.score
 

@@ -2,7 +2,7 @@ import pytest
 import deepeval
 from deepeval import assert_test
 from deepeval.dataset import EvaluationDataset
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import AnswerRelevancyMetric, GEval
 
 # To run this file: deepeval test run <file_name>.py
@@ -26,8 +26,8 @@ def test_everything(test_case: LLMTestCase):
         name="Correctness",
         criteria="Correctness - determine if the actual output is correct according to the expected output.",
         evaluation_params=[
-            LLMTestCaseParams.ACTUAL_OUTPUT,
-            LLMTestCaseParams.EXPECTED_OUTPUT,
+            SingleTurnParams.ACTUAL_OUTPUT,
+            SingleTurnParams.EXPECTED_OUTPUT,
         ],
         strict_mode=True,
     )

@@ -23,7 +23,7 @@ class TestResult:
     context: Optional[List[str]] = None
     retrieval_context: Optional[List[str]] = None
     turns: Optional[List[TurnApi]] = None
-    additional_metadata: Optional[Dict] = None
+    metadata: Optional[Dict] = None
 
 
 class EvaluationResult(BaseModel):

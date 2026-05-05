@@ -16,7 +16,7 @@ from deepeval.metrics.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import ConversationalTestCase
-from deepeval.test_case import TurnParams
+from deepeval.test_case import MultiTurnParams
 from deepeval.test_case.conversational_test_case import Turn
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.conversation_completeness.schema import (
@@ -24,11 +24,10 @@ from deepeval.metrics.conversation_completeness.schema import (
     ConversationCompletenessVerdict,
     ConversationCompletenessScoreReason,
 )
-from deepeval.metrics.api import metric_data_manager
 
 
 class ConversationCompletenessMetric(BaseConversationalMetric):
-    _required_test_case_params = [TurnParams.CONTENT, TurnParams.ROLE]
+    _required_test_case_params = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE]
 
     def __init__(
         self,
@@ -106,10 +105,6 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
             return self.score
 
     async def a_measure(
@@ -163,10 +158,6 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
             return self.score
 
     async def _a_generate_reason(self, multimodal: bool) -> str:

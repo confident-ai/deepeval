@@ -1,0 +1,10 @@
+{
+  "title": "RAG",
+  "pages": [
+    "metrics-answer-relevancy",
+    "metrics-faithfulness",
+    "metrics-contextual-precision",
+    "metrics-contextual-recall",
+    "metrics-contextual-relevancy"
+  ]
+}

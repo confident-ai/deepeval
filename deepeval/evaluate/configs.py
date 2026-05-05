@@ -23,6 +23,10 @@ class DisplayConfig:
     print_results: bool = True
     verbose_mode: Optional[bool] = None
     display_option: Optional[TestRunResultDisplay] = TestRunResultDisplay.ALL
+    results_folder: Optional[str] = None
+    results_subfolder: Optional[str] = None
+    # Deprecated: writes one .log per TestResult. Prefer `results_folder`, which
+    # saves the full TestRun as a structured JSON readable by AI tools.
     file_output_dir: Optional[str] = None
 
 

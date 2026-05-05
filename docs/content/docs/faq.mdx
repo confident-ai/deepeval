@@ -1,0 +1,390 @@
+---
+id: faq
+title: Frequently Asked Questions
+sidebar_label: FAQ
+---
+
+
+## General
+
+### Do I need an OpenAI API key to use `deepeval`?
+
+No, but OpenAI is the default. Most of `deepeval`'s metrics are LLM-as-a-Judge metrics and default to OpenAI when no model is specified. You can swap the judge model to **any provider** — Anthropic, Gemini, Ollama, Azure OpenAI, or any custom LLM. Use the CLI shortcuts:
+
+```bash
+deepeval set-ollama --model=deepseek-r1:1.5b
+deepeval set-gemini --model=gemini-2.0-flash-001
+```
+
+Or pass a custom model directly to any metric:
+
+```python
+metric = AnswerRelevancyMetric(model=your_custom_llm)
+```
+
+See the [custom LLM guide](/guides/guides-using-custom-llms) for full details.
+
+### Is `deepeval` the same as Confident AI?
+
+No. Think of it like Next.js and Vercel — related, but separate. `deepeval` is an open-source LLM evaluation framework that runs locally. Confident AI is an AI quality platform with observability, evals, and monitoring. `deepeval` and [DeepTeam](https://trydeepteam.com) are standalone open-source frameworks that integrate natively with Confident AI, but the platform is **not limited to them** — it also has its own TypeScript SDK, OpenTelemetry support, third-party integrations, and APIs.
+
+Confident AI is free to get started:
+
+```bash
+deepeval login
+```
+
+### What data does `deepeval` collect?
+
+By default, `deepeval` tracks only basic, non-identifying telemetry (number of evaluations and which metrics are used). No personally identifiable information is collected. You can opt out entirely:
+
+```bash
+export DEEPEVAL_TELEMETRY_OPT_OUT=1
+
+```
+
+If you use Confident AI, all data is securely stored in a private AWS cloud and only your organization can access it. See the full [data privacy](/docs/data-privacy) page.
+
+### What's the difference between `deepeval test run` and `evaluate()`?
+
+Both run evaluations and produce the same results. The difference is the interface:
+
+- **`deepeval test run`** is a CLI command built on Pytest. It's designed for CI/CD pipelines and gives you `assert_test()` semantics with pass/fail exit codes.
+- **`evaluate()`** is a Python function. It's better for notebooks, scripts, and programmatic workflows where you want to handle results in code.
+
+Both support all the same configs (async, caching, error handling, display) and integrate with Confident AI identically.
+
+---
+
+## Metrics
+
+### How many metrics should I use?
+
+We recommend **no more than 5 metrics** total:
+
+- **2–3 generic metrics** for your system type (e.g., `FaithfulnessMetric` and `ContextualRelevancyMetric` for RAG, `TaskCompletionMetric` for agents)
+- **1–2 custom metrics** for your specific use case (e.g., tone, format correctness, domain accuracy via `GEval`)
+
+The goal is to force yourself to prioritize what actually matters for your LLM application. You can always add more later.
+
+### What's the difference between G-Eval and DAG metrics?
+
+Both are custom LLM-as-a-Judge metrics, but they work differently:
+
+- **G-Eval** evaluates using natural language criteria and is best for **subjective** evaluations like correctness, tone, or helpfulness. It's the simplest to set up.
+- **DAG (Deep Acyclic Graph)** uses a decision-tree structure and is best for **objective or mixed** criteria where you need deterministic branching logic (e.g., "first check format, then check tone").
+
+Start with G-Eval. Use DAG when you need more control.
+
+### Can I use non-LLM metrics like BLEU, ROUGE, or BLEURT?
+
+Yes. You can create a [custom metric](/docs/metrics-custom) by subclassing `BaseMetric` and use `deepeval`'s built-in `scorer` module for traditional NLP scores. That said, our experience is that LLM-as-a-Judge metrics significantly outperform these traditional scorers for evaluating LLM outputs that require reasoning to assess.
+
+### My metric scores seem random or flaky. What should I do?
+
+A few things to try:
+
+1. **Turn on `verbose_mode`** on the metric to inspect the intermediate reasoning steps:
+   ```python
+   metric = AnswerRelevancyMetric(verbose_mode=True)
+   ```
+2. **Use `strict_mode=True`** to force binary (0 or 1) scores if you don't need granularity.
+3. **Try DAG metrics** instead of G-Eval for more deterministic scoring.
+4. **Customize the evaluation template** if the default prompts don't match your definition of the criteria. Every metric supports an `evaluation_template` parameter.
+5. **Use a stronger judge model.** Weaker models produce noisier scores.
+
+### How do I run metrics in production without ground truth labels?
+
+Choose **referenceless metrics** — these don't require `expected_output`, `context`, or `expected_tools`. Examples include:
+
+- `AnswerRelevancyMetric` (only needs `input` + `actual_output`)
+- `FaithfulnessMetric` (needs `actual_output` + `retrieval_context`, which your RAG pipeline already produces)
+- `BiasMetric`, `ToxicityMetric` (only need `actual_output`)
+
+Check each metric's documentation page to see exactly which `LLMTestCase` parameters it requires.
+
+---
+
+## Test Cases & Datasets
+
+### What's the difference between a Golden and a Test Case?
+
+A **Golden** is a template — it contains the `input` and optionally `expected_output` or `context`, but typically **not** `actual_output`. Think of it as "what you want to test."
+
+A **Test Case** (`LLMTestCase`) is a fully populated evaluation unit — it includes the `actual_output` from your LLM app and any runtime data like `retrieval_context` or `tools_called`.
+
+At evaluation time, you iterate over goldens, call your LLM app to generate `actual_output`, and construct test cases.
+
+### What's the difference between `context` and `retrieval_context`?
+
+- **`context`** is the **ground truth** — the ideal information that _should_ be relevant for a given input. It's static and typically comes from your evaluation dataset.
+- **`retrieval_context`** is **what your RAG pipeline actually retrieved** at runtime.
+
+Metrics like `ContextualRecallMetric` compare `retrieval_context` against `context` to measure how well your retriever is performing. Metrics like `FaithfulnessMetric` use `retrieval_context` alone to check if the output is grounded in what was actually retrieved.
+
+### Should my `input` contain the system prompt?
+
+No. The `input` should represent the **user's message** only, not your full prompt template. If you want to track which prompt template was used, log it as a hyperparameter instead:
+
+```python
+evaluate(
+    test_cases=[...],
+    metrics=[...],
+    hyperparameters={"prompt_template": "v2.1", "model": "gpt-4.1"}
+)
+```
+
+### I don't have an evaluation dataset yet. Where do I start?
+
+Two options:
+
+1. **Write down the prompts you already use** to manually eyeball your LLM outputs. Even 10–20 inputs is a great start.
+2. **Use `deepeval`'s `Synthesizer`** to generate goldens from your existing documents:
+   ```python
+   from deepeval.synthesizer import Synthesizer
+   goldens = Synthesizer().generate_goldens_from_docs(
+       document_paths=['knowledge_base.pdf']
+   )
+   ```
+
+The `Synthesizer` supports generating from docs, contexts, scratch, or existing goldens. See the [Golden Synthesizer docs](/docs/golden-synthesizer).
+
+---
+
+## Tracing & Observability
+
+### How do I continuously evaluate my LLM app in production?
+
+Set up [LLM tracing](/docs/evaluation-llm-tracing) with `deepeval`'s `@observe` decorator (or one-line integrations) and connect to [Confident AI](https://www.confident-ai.com/docs/llm-tracing/introduction). Once instrumented, every trace, span, and thread flowing through your app can be **automatically evaluated against your chosen metrics in real-time** — no manual test runs needed.
+
+This means you can catch regressions, hallucinations, and quality degradation as they happen in production, not after the fact. Confident AI supports evaluating at three levels:
+
+- **Traces** — end-to-end evaluation of a single request
+- **Spans** — component-level evaluation of individual steps (LLM calls, retriever results, tool executions)
+- **Threads** — conversation-level evaluation across multi-turn interactions
+
+You can also use production traces to **curate your next evaluation dataset**, creating a feedback loop where real-world usage continuously improves your offline evals.
+
+### I already use LangSmith / Langfuse / another tool for tracing. Do I still need `@observe`?
+
+You can use `deepeval`'s `@observe` decorator **alongside** your existing tracing tool — they operate independently.
+
+That said, you should seriously consider [Confident AI for tracing](https://www.confident-ai.com/docs/llm-tracing/introduction). Unlike standalone tracing tools, Confident AI gives you **observability and automated evaluation in the same platform** — every trace, span, and thread can be automatically evaluated against 50+ metrics in real-time. It's like Datadog for AI apps, but with built-in LLM evals to monitor AI quality over time.
+
+On top of that, traces collected in Confident AI can be used to **curate your next version of evaluation datasets** — so your production data directly feeds back into improving your evals over time.
+
+Getting started is easy. Confident AI offers **one-line integrations** for the frameworks you're already using — OpenAI, LangChain, LangGraph, Pydantic AI, Vercel AI SDK, and more — plus full **OpenTelemetry (OTEL) support** for any language (Python, TypeScript, Go, Ruby, C#). You don't have to rewrite anything:
+
+| Approach                  | Best For                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------ |
+| **`@observe` decorator**  | Full control over spans, attributes, and trace structure                       |
+| **One-line integrations** | Auto-instrument OpenAI, LangChain, LangGraph, Pydantic AI, Vercel AI SDK, etc. |
+| **OpenTelemetry (OTEL)**  | Language-agnostic, standards-based instrumentation                             |
+
+If you only need `deepeval` for offline evaluation (not production tracing), you don't need `@observe` at all — just use `evaluate()` with `LLMTestCase`s directly.
+
+### When should I use end-to-end vs. component-level evaluation?
+
+- **End-to-end** treats your LLM app as a black box. It's best for simpler architectures (basic RAG, summarization, writing assistants) or when component-level noise is distracting.
+- **Component-level** places different metrics on different internal components via `@observe`. It's best for complex agentic workflows, multi-step pipelines, or when you need to pinpoint _which_ component is failing.
+
+You can always start with end-to-end and add component-level tracing later as needed.
+
+### Does `@observe` affect my application's performance in production?
+
+No. `deepeval`'s tracing is **non-intrusive**. The `@observe` decorator only collects data and runs metrics when explicitly invoked during evaluation (inside `evaluate()` or `assert_test()`). In normal production execution, it has no effect on your application's behavior or latency.
+
+To suppress any console logs from tracing outside of evaluation, set:
+
+```bash
+CONFIDENT_TRACE_VERBOSE=0
+CONFIDENT_TRACE_FLUSH=0
+```
+
+---
+
+## Evaluation Workflow
+
+### My evaluation is getting "stuck" or running very slowly. What's happening?
+
+This is almost always caused by **rate limits or insufficient API quota** on your LLM judge. By default, `deepeval` retries transient errors once (2 attempts total) with exponential backoff. To fix this:
+
+1. **Reduce concurrency:**
+   ```python
+   from deepeval.evaluate import AsyncConfig
+   evaluate(async_config=AsyncConfig(max_concurrent=5), ...)
+   ```
+2. **Add throttling:**
+   ```python
+   evaluate(async_config=AsyncConfig(throttle_value=2), ...)
+   ```
+3. **Tune retry behavior** via [environment variables](/docs/environment-variables#retry--backoff-tuning) like `DEEPEVAL_RETRY_MAX_ATTEMPTS` and `DEEPEVAL_RETRY_CAP_SECONDS`.
+
+### Can I run evaluations in CI/CD?
+
+Yes — this is one of `deepeval`'s core design goals. Use `deepeval test run` with Pytest:
+
+```python title="test_llm_app.py"
+from deepeval import assert_test
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+
+def test_my_app():
+    test_case = LLMTestCase(input="...", actual_output="...")
+    assert_test(test_case, [AnswerRelevancyMetric()])
+```
+
+```bash
+deepeval test run test_llm_app.py
+```
+
+The command returns a non-zero exit code on failure, so it integrates directly into any CI/CD `.yaml` workflow. Pair it with [Confident AI](https://confident-ai.com) to automatically generate regression testing reports across runs.
+
+### How do I evaluate multi-turn conversations?
+
+Use `ConversationalTestCase` with conversational metrics:
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase
+from deepeval.metrics import ConversationCompletenessMetric
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="I need to return my shoes."),
+        Turn(role="assistant", content="Sure! What's your order number?"),
+        Turn(role="user", content="Order #12345"),
+        Turn(role="assistant", content="Got it. I've initiated the return for you."),
+    ]
+)
+```
+
+You can also use `deepeval`'s `ConversationSimulator` to automatically generate realistic multi-turn conversations from `ConversationalGolden`s. See the [conversation simulator docs](/docs/conversation-simulator).
+
+### How do I go from offline evals to production monitoring?
+
+The typical workflow is:
+
+1. **Start with offline evals** — use `evaluate()` or `deepeval test run` with a curated dataset to validate your LLM app during development.
+2. **Add tracing** — instrument your app with `@observe` or [one-line integrations](https://www.confident-ai.com/docs/llm-tracing/introduction) for OpenAI, LangChain, Pydantic AI, etc.
+3. **Enable online evals** — connect to [Confident AI](https://confident-ai.com) so every production trace is automatically evaluated against your metrics.
+4. **Close the loop** — use production traces to curate and improve your evaluation datasets, then re-run offline evals to validate changes before deploying.
+
+This creates a continuous cycle: offline evals catch issues before deployment, production monitoring catches issues after deployment, and production data improves your next round of offline evals.
+
+### My custom LLM judge keeps producing invalid JSON. What should I do?
+
+This is common with weaker models. A few strategies:
+
+1. **Enable JSON confinement** — see the [custom LLM guide](/guides/guides-using-custom-llms#json-confinement-for-custom-llms) for details on constraining outputs.
+2. **Use `ignore_errors=True`** to skip test cases that fail due to JSON errors:
+   ```python
+   from deepeval.evaluate import ErrorConfig
+   evaluate(error_config=ErrorConfig(ignore_errors=True), ...)
+   ```
+3. **Enable caching** so you don't re-run successful test cases:
+   ```bash
+   deepeval test run test_example.py -i -c
+   ```
+4. **Customize the evaluation template** to include clearer formatting instructions and examples for your model. Every metric supports this via the `evaluation_template` parameter.
+
+---
+
+## LLM Judge Configuration
+
+### Can I use different LLM judges for different metrics?
+
+Yes. Each metric accepts a `model` parameter, so you can mix and match:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
+
+relevancy = AnswerRelevancyMetric(model="gpt-4.1")
+faithfulness = FaithfulnessMetric(model=my_custom_claude_model)
+
+evaluate(test_cases=[...], metrics=[relevancy, faithfulness])
+```
+
+This is useful when you want a stronger (but more expensive) model for critical metrics and a cheaper model for simpler checks.
+
+### Can I customize the prompts that metrics use internally?
+
+Yes. Every metric in `deepeval` supports an `evaluation_template` parameter. You can subclass the metric's default template class and override specific prompt methods:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.metrics.answer_relevancy import AnswerRelevancyTemplate
+
+class MyTemplate(AnswerRelevancyTemplate):
+    @staticmethod
+    def generate_statements(actual_output: str):
+        return f"""..."""
+
+metric = AnswerRelevancyMetric(evaluation_template=MyTemplate)
+```
+
+This is especially valuable when using custom LLMs that need more explicit instructions or different examples for in-context learning. See the **Customize Your Template** section on each metric's documentation page.
+
+---
+
+## Ecosystem
+
+### What is Confident AI and how does it relate to `deepeval`?
+
+[Confident AI](https://confident-ai.com) is an AI quality platform with observability, evals, and monitoring. `deepeval` and [DeepTeam](https://trydeepteam.com) are standalone open-source frameworks that **integrate natively with Confident AI** via APIs, so that evaluation results, red teaming assessments, and traces can flow into the platform if you want them to.
+
+But Confident AI is **not limited to these open-source packages**. It also has its own TypeScript SDK, OpenTelemetry support, third-party integrations, and standalone APIs. You can use Confident AI entirely without `deepeval` or `deepteam` if you want, and you can use `deepeval` or `deepteam` entirely without Confident AI.
+
+Confident AI provides:
+
+- **LLM evaluation** with shareable test reports and regression testing across runs
+- **LLM red teaming** with vulnerability scanning and risk assessments
+- **LLM observability** with tracing, online evals, latency and cost tracking
+- **Dataset management** with annotation tools for non-technical team members
+- **Production monitoring** with real-time quality metrics on traces, spans, and threads
+
+It's free to get started:
+
+```bash
+deepeval login
+```
+
+Learn more at the [Confident AI docs](https://www.confident-ai.com/docs).
+
+### What is DeepTeam?
+
+[DeepTeam](https://www.trydeepteam.com/docs/getting-started) is an open-source framework for **red teaming LLM systems**. While `deepeval` focuses on evaluation (correctness, relevancy, faithfulness, etc.), DeepTeam is dedicated to **security and safety testing**. Like `deepeval`, it also serves as an SDK for Confident AI — red teaming results are automatically uploaded to the platform.
+
+DeepTeam lets you:
+
+- Detect **40+ vulnerabilities** including bias, PII leakage, prompt injection, misinformation, excessive agency, and more
+- Simulate **10+ adversarial attack methods** including jailbreaking, prompt injection, ROT13, and automated evasion
+- Align with security frameworks like **OWASP Top 10 for LLMs**, **NIST AI RMF**, and **MITRE ATLAS**
+- Run red teaming via Python or a **YAML config** in CI/CD
+
+```python
+from deepteam import red_team
+from deepteam.vulnerabilities import Bias, PIILeakage
+from deepteam.attacks.single_turn import PromptInjection
+
+red_team(
+    model_callback="openai/gpt-3.5-turbo",
+    vulnerabilities=[Bias(types=["race"]), PIILeakage(types=["api_and_database_access"])],
+    attacks=[PromptInjection()]
+)
+```
+
+It is **extremely common to use both `deepeval` and DeepTeam** together — `deepeval` for quality evaluation, DeepTeam for security testing.
+
+### How do these three products fit together?
+
+Think of it this way:
+
+- **[Confident AI](https://confident-ai.com)** is the AI quality platform — observability, evals, monitoring, red teaming, and collaboration all live here.
+- **[`deepeval`](https://github.com/confident-ai/deepeval)** is a standalone open-source LLM evaluation framework that integrates natively with Confident AI.
+- **[DeepTeam](https://trydeepteam.com)** is a standalone open-source LLM red teaming framework that also integrates natively with Confident AI.
+
+Each works independently — you can use `deepeval` or DeepTeam purely locally without ever touching Confident AI. But when you connect them, everything flows into one platform. You can also use Confident AI on its own via its TypeScript SDK, OpenTelemetry, or direct API integrations, without either open-source package.
+
+### I want to learn more about enterprise offerings. Where can I get started?
+
+Confident AI offers enterprise plans with dedicated support, SSO, custom deployment options, and compliance certifications (SOC 2 Type II, HIPAA, GDPR). If you're looking to roll out LLM evaluation and monitoring across your organization, [**book a demo**](http://confident-ai.com/book-a-demo) and the team will walk you through everything.

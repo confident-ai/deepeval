@@ -4,7 +4,7 @@ from deepeval.metrics import ConversationalGEval
 from deepeval.test_case import (
     ConversationalTestCase,
     MLLMImage,
-    TurnParams,
+    MultiTurnParams,
     Turn,
 )
 from deepeval import evaluate
@@ -39,7 +39,7 @@ class TestConversationalGEval:
         )
         metric = ConversationalGEval(
             name="Testing image",
-            evaluation_params=[TurnParams.CONTENT],
+            evaluation_params=[MultiTurnParams.CONTENT],
             criteria="Check if the assistant's turns are relevanct and helpful to users turns",
             async_mode=False,
         )
@@ -66,7 +66,7 @@ class TestConversationalGEval:
         )
         metric = ConversationalGEval(
             name="Testing image",
-            evaluation_params=[TurnParams.CONTENT],
+            evaluation_params=[MultiTurnParams.CONTENT],
             criteria="Check if the assistant's turns are relevanct and helpful to users turns",
         )
         metric.measure(convo_test_case)
@@ -94,7 +94,7 @@ class TestConversationalGEval:
         )
         metric = ConversationalGEval(
             name="Testing image",
-            evaluation_params=[TurnParams.CONTENT],
+            evaluation_params=[MultiTurnParams.CONTENT],
             criteria="Check if the assistant's turns are relevanct and helpful to users turns",
         )
         metric.measure(convo_test_case)
@@ -122,7 +122,7 @@ class TestConversationalGEval:
         )
         metric = ConversationalGEval(
             name="Testing image",
-            evaluation_params=[TurnParams.CONTENT],
+            evaluation_params=[MultiTurnParams.CONTENT],
             criteria="Check if the assistant's turns are relevanct and helpful to users turns",
             async_mode=False,
         )
@@ -152,7 +152,7 @@ class TestConversationalGEval:
         with pytest.raises(ValueError):
             metric = ConversationalGEval(
                 name="Testing image",
-                evaluation_params=[TurnParams.CONTENT],
+                evaluation_params=[MultiTurnParams.CONTENT],
                 criteria="Check if the assistant's turns are relevanct and helpful to users turns",
                 model="gpt-3.5-turbo",
             )
@@ -175,7 +175,7 @@ class TestConversationalGEval:
         )
         metric = ConversationalGEval(
             name="Testing image",
-            evaluation_params=[TurnParams.CONTENT],
+            evaluation_params=[MultiTurnParams.CONTENT],
             criteria="Check if the assistant's turns are relevanct and helpful to users turns",
         )
 
@@ -202,7 +202,7 @@ class TestConversationalGEval:
         )
         metric = ConversationalGEval(
             name="Testing image",
-            evaluation_params=[TurnParams.CONTENT],
+            evaluation_params=[MultiTurnParams.CONTENT],
             criteria="Check if the assistant's turns are relevanct and helpful to users turns",
         )
 

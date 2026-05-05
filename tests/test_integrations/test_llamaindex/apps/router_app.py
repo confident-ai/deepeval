@@ -11,7 +11,6 @@ from llama_index.llms.openai import OpenAI
 from llama_index.core.base.response.schema import Response
 from tests.test_integrations.test_llamaindex.apps.rag_app import get_rag_engine
 
-
 rag_engine = get_rag_engine()
 
 

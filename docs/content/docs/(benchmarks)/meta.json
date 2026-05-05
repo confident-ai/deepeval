@@ -1,0 +1,21 @@
+{
+  "title": "Available Benchmarks",
+  "pages": [
+    "benchmarks-mmlu",
+    "benchmarks-hellaswag",
+    "benchmarks-big-bench-hard",
+    "benchmarks-drop",
+    "benchmarks-truthful-qa",
+    "benchmarks-human-eval",
+    "benchmarks-ifeval",
+    "benchmarks-squad",
+    "benchmarks-gsm8k",
+    "benchmarks-math-qa",
+    "benchmarks-logi-qa",
+    "benchmarks-bool-q",
+    "benchmarks-arc",
+    "benchmarks-bbq",
+    "benchmarks-lambada",
+    "benchmarks-winogrande"
+  ]
+}

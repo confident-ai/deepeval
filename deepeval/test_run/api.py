@@ -45,9 +45,7 @@ class LLMApiTestCase(BaseModel):
 
     order: Union[int, None] = Field(None)
     # These should map 1 to 1 from golden
-    additional_metadata: Optional[Dict] = Field(
-        None, alias="additionalMetadata"
-    )
+    metadata: Optional[Dict] = Field(None)
     comments: Optional[str] = Field(None)
     trace: Optional[TraceApi] = Field(None)
 
@@ -104,9 +102,6 @@ class TurnApi(BaseModel):
     user_id: Optional[str] = Field(None, alias="userId")
     retrieval_context: Optional[list] = Field(None, alias="retrievalContext")
     tools_called: Optional[List[ToolCall]] = Field(None, alias="toolsCalled")
-    additional_metadata: Optional[Dict] = Field(
-        None, alias="additionalMetadata"
-    )
     comments: Optional[str] = Field(None)
 
 
@@ -123,9 +118,7 @@ class ConversationalApiTestCase(BaseModel):
     user_description: Optional[str] = Field(None, alias="userDescription")
     context: Optional[list] = Field(None)
     comments: Optional[str] = Field(None)
-    additional_metadata: Optional[Dict] = Field(
-        None, alias="additionalMetadata"
-    )
+    metadata: Optional[Dict] = Field(None)
     images_mapping: Optional[Dict[str, MLLMImage]] = Field(
         None, alias="imagesMapping"
     )

@@ -1,0 +1,13 @@
+.label {
+  margin: 3rem 0 0;
+  color: var(--color-fd-muted-foreground);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.label + :global(h2) {
+  margin-top: 0.75rem;
+}

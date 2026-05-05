@@ -1,0 +1,67 @@
+name: Generate Changelog
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Mode: year or range"
+        required: true
+        default: "year"
+      year:
+        description: "Year (e.g. 2025)"
+        required: false
+      from_tag:
+        description: "From tag (e.g. v3.7.0)"
+        required: false
+      to_tag:
+        description: "To tag (e.g. v3.9.0)"
+        required: false
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch tags
+        run: git fetch --tags --force
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install rich pydantic deepeval
+
+      - name: Run changelog generator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ "${{ github.event.inputs.mode }}" = "year" ]; then
+            python .scripts/changelog/generate.py \
+              --year ${{ github.event.inputs.year }} \
+              --github --ai
+          else
+            python .scripts/changelog/generate.py \
+              --range ${{ github.event.inputs.from_tag }} ${{ github.event.inputs.to_tag }} \
+              --github --ai
+          fi
+
+      - name: Create PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: chore/changelog-update
+          title: "chore: update changelog"
+          commit-message: "chore: update changelog"
+          body: "Auto-generated changelog updates"

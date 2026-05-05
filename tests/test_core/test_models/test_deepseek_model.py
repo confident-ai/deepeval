@@ -190,5 +190,44 @@ def test_deepseek_model_ctor_args_override_settings(monkeypatch):
     assert model.temperature == 0.5
 
 
+##############################
+# calculate_cost unit tests  #
+##############################
+
+
+def test_deepseek_calculate_cost_returns_correct_value():
+    model = DeepSeekModel(
+        api_key="test-key",
+        model="deepseek-chat",
+    )
+    model.model_data.input_price = 0.001
+    model.model_data.output_price = 0.002
+    cost = model.calculate_cost(input_tokens=300, output_tokens=150)
+    expected = 300 * 0.001 + 150 * 0.002
+    assert cost == expected
+
+
+def test_deepseek_calculate_cost_returns_none_when_prices_missing():
+    model = DeepSeekModel(
+        api_key="test-key",
+        model="deepseek-chat",
+    )
+    model.model_data.input_price = None
+    model.model_data.output_price = None
+    cost = model.calculate_cost(input_tokens=300, output_tokens=150)
+    assert cost is None
+
+
+def test_deepseek_calculate_cost_with_zero_tokens():
+    model = DeepSeekModel(
+        api_key="test-key",
+        model="deepseek-chat",
+    )
+    model.model_data.input_price = 0.001
+    model.model_data.output_price = 0.002
+    cost = model.calculate_cost(input_tokens=0, output_tokens=0)
+    assert cost == 0.0
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

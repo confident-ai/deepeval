@@ -5,7 +5,6 @@ from tests.test_integrations.utils import assert_trace_json, generate_trace_json
 import os
 import pytest
 
-
 client = OpenAI()
 
 prompt = Prompt(alias="asd")

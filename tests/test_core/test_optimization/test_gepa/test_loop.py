@@ -14,7 +14,6 @@ from deepeval.optimizer.types import (
 )
 from deepeval.prompt.prompt import Prompt
 
-
 ##########################
 # execute / a_execute    #
 ##########################

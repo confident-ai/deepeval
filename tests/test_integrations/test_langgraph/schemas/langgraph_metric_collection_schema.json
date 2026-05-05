@@ -1,13 +1,13 @@
 {
-  "uuid": "1456093b-bbf4-49e3-968d-426c33a23404",
+  "uuid": "5ae736bc-e635-476a-bd68-178aa7beccb4",
   "baseSpans": [
     {
-      "uuid": "019c6005-762a-7a90-a1d3-623b95abfaae",
+      "uuid": "019d0518-a055-7ef1-a6e4-0fc5c52570f8",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-15T06:38:16.618Z",
-      "endTime": "2026-02-15T06:38:19.915Z",
+      "startTime": "2026-03-19T07:56:33.237Z",
+      "endTime": "2026-03-19T07:56:36.910Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "ab3e6df2-60fa-479b-a502-49180165f957"
+            "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
           }
         ]
       },
@@ -26,7 +26,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "ab3e6df2-60fa-479b-a502-49180165f957"
+            "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
           },
           {
             "content": "",
@@ -35,75 +35,9 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 24,
+                "completion_tokens": 88,
                 "prompt_tokens": 148,
-                "total_tokens": 172,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-D9Q3lp8B9J3ADmGpQNFcMDoqzik1U",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019c6005-762b-7850-be30-fcfe2815876d-0",
-            "tool_calls": [
-              {
-                "name": "convert_temperature",
-                "args": {
-                  "celsius": 25
-                },
-                "id": "call_o47YwDseY2waWs1oflXVFm5A",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 148,
-              "output_tokens": 24,
-              "total_tokens": 172,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          },
-          {
-            "content": "25.0\u00b0C = 77.0\u00b0F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "convert_temperature",
-            "id": "448c44b5-6794-478f-b5a7-772f55d6fac2",
-            "tool_call_id": "call_o47YwDseY2waWs1oflXVFm5A",
-            "status": "success"
-          },
-          {
-            "content": "25 \u00b0C = 77 \u00b0F",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 81,
-                "prompt_tokens": 187,
-                "total_tokens": 268,
+                "total_tokens": 236,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -118,19 +52,85 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D9Q3mlbAxPCE3qdZ5QXYy1wYSUMke",
+              "id": "chatcmpl-DL2X3vAoiy8VRS6AukIOYSdzoJVY7",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0518-a057-7cc2-9d6d-f1f9ac63fa6d-0",
+            "tool_calls": [
+              {
+                "name": "convert_temperature",
+                "args": {
+                  "celsius": 25
+                },
+                "id": "call_j290PQqAclRnz0faquqKrnZG",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 148,
+              "output_tokens": 88,
+              "total_tokens": 236,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
+          },
+          {
+            "content": "25.0\u00b0C = 77.0\u00b0F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "convert_temperature",
+            "id": "61137386-c018-4426-bcf3-324b367d3cfc",
+            "tool_call_id": "call_j290PQqAclRnz0faquqKrnZG",
+            "status": "success"
+          },
+          {
+            "content": "25\u00b0C = 77\u00b0F",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 79,
+                "prompt_tokens": 187,
+                "total_tokens": 266,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2X5hFYExQCBgWQ6T1eJdvKXO6fD",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019c6005-7be6-7c22-9fe7-63c70cddae90-0",
+            "id": "lc_run--019d0518-a86e-7d62-aea5-63f0c5bb2d3d-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 187,
-              "output_tokens": 81,
-              "total_tokens": 268,
+              "output_tokens": 79,
+              "total_tokens": 266,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -146,13 +146,13 @@
       "metricCollection": "trace_quality"
     },
     {
-      "uuid": "019c6005-7be6-7c22-9fe7-63baee27a8e6",
+      "uuid": "019d0518-a86d-7f53-b42c-9d4a25324e59",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019c6005-762a-7a90-a1d3-623b95abfaae",
-      "startTime": "2026-02-15T06:38:18.086Z",
-      "endTime": "2026-02-15T06:38:19.914Z",
+      "parentUuid": "019d0518-a055-7ef1-a6e4-0fc5c52570f8",
+      "startTime": "2026-03-19T07:56:35.309Z",
+      "endTime": "2026-03-19T07:56:36.910Z",
       "input": {
         "messages": [
           {
@@ -160,7 +160,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "ab3e6df2-60fa-479b-a502-49180165f957"
+            "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
           },
           {
             "content": "",
@@ -169,79 +169,9 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 24,
+                "completion_tokens": 88,
                 "prompt_tokens": 148,
-                "total_tokens": 172,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-D9Q3lp8B9J3ADmGpQNFcMDoqzik1U",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019c6005-762b-7850-be30-fcfe2815876d-0",
-            "tool_calls": [
-              {
-                "name": "convert_temperature",
-                "args": {
-                  "celsius": 25
-                },
-                "id": "call_o47YwDseY2waWs1oflXVFm5A",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 148,
-              "output_tokens": 24,
-              "total_tokens": 172,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          },
-          {
-            "content": "25.0\u00b0C = 77.0\u00b0F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "convert_temperature",
-            "id": "448c44b5-6794-478f-b5a7-772f55d6fac2",
-            "tool_call_id": "call_o47YwDseY2waWs1oflXVFm5A",
-            "status": "success"
-          }
-        ]
-      },
-      "output": {
-        "messages": [
-          {
-            "content": "25 \u00b0C = 77 \u00b0F",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 81,
-                "prompt_tokens": 187,
-                "total_tokens": 268,
+                "total_tokens": 236,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -256,19 +186,89 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D9Q3mlbAxPCE3qdZ5QXYy1wYSUMke",
+              "id": "chatcmpl-DL2X3vAoiy8VRS6AukIOYSdzoJVY7",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0518-a057-7cc2-9d6d-f1f9ac63fa6d-0",
+            "tool_calls": [
+              {
+                "name": "convert_temperature",
+                "args": {
+                  "celsius": 25
+                },
+                "id": "call_j290PQqAclRnz0faquqKrnZG",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 148,
+              "output_tokens": 88,
+              "total_tokens": 236,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
+          },
+          {
+            "content": "25.0\u00b0C = 77.0\u00b0F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "convert_temperature",
+            "id": "61137386-c018-4426-bcf3-324b367d3cfc",
+            "tool_call_id": "call_j290PQqAclRnz0faquqKrnZG",
+            "status": "success"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "25\u00b0C = 77\u00b0F",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 79,
+                "prompt_tokens": 187,
+                "total_tokens": 266,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2X5hFYExQCBgWQ6T1eJdvKXO6fD",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019c6005-7be6-7c22-9fe7-63c70cddae90-0",
+            "id": "lc_run--019d0518-a86e-7d62-aea5-63f0c5bb2d3d-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 187,
-              "output_tokens": 81,
-              "total_tokens": 268,
+              "output_tokens": 79,
+              "total_tokens": 266,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -283,13 +283,13 @@
       }
     },
     {
-      "uuid": "019c6005-830a-78c2-bb4e-7fbc2556427c",
+      "uuid": "019d0518-aead-7470-aecf-63330fc3f9d4",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019c6005-7be6-7c22-9fe7-63baee27a8e6",
-      "startTime": "2026-02-15T06:38:19.914Z",
-      "endTime": "2026-02-15T06:38:19.914Z",
+      "parentUuid": "019d0518-a86d-7f53-b42c-9d4a25324e59",
+      "startTime": "2026-03-19T07:56:36.909Z",
+      "endTime": "2026-03-19T07:56:36.910Z",
       "input": {
         "messages": [
           {
@@ -297,7 +297,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "ab3e6df2-60fa-479b-a502-49180165f957"
+            "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
           },
           {
             "content": "",
@@ -306,75 +306,9 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 24,
+                "completion_tokens": 88,
                 "prompt_tokens": 148,
-                "total_tokens": 172,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-D9Q3lp8B9J3ADmGpQNFcMDoqzik1U",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019c6005-762b-7850-be30-fcfe2815876d-0",
-            "tool_calls": [
-              {
-                "name": "convert_temperature",
-                "args": {
-                  "celsius": 25
-                },
-                "id": "call_o47YwDseY2waWs1oflXVFm5A",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 148,
-              "output_tokens": 24,
-              "total_tokens": 172,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          },
-          {
-            "content": "25.0\u00b0C = 77.0\u00b0F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "convert_temperature",
-            "id": "448c44b5-6794-478f-b5a7-772f55d6fac2",
-            "tool_call_id": "call_o47YwDseY2waWs1oflXVFm5A",
-            "status": "success"
-          },
-          {
-            "content": "25 \u00b0C = 77 \u00b0F",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 81,
-                "prompt_tokens": 187,
-                "total_tokens": 268,
+                "total_tokens": 236,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -389,19 +323,85 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D9Q3mlbAxPCE3qdZ5QXYy1wYSUMke",
+              "id": "chatcmpl-DL2X3vAoiy8VRS6AukIOYSdzoJVY7",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0518-a057-7cc2-9d6d-f1f9ac63fa6d-0",
+            "tool_calls": [
+              {
+                "name": "convert_temperature",
+                "args": {
+                  "celsius": 25
+                },
+                "id": "call_j290PQqAclRnz0faquqKrnZG",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 148,
+              "output_tokens": 88,
+              "total_tokens": 236,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
+          },
+          {
+            "content": "25.0\u00b0C = 77.0\u00b0F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "convert_temperature",
+            "id": "61137386-c018-4426-bcf3-324b367d3cfc",
+            "tool_call_id": "call_j290PQqAclRnz0faquqKrnZG",
+            "status": "success"
+          },
+          {
+            "content": "25\u00b0C = 77\u00b0F",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 79,
+                "prompt_tokens": 187,
+                "total_tokens": 266,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2X5hFYExQCBgWQ6T1eJdvKXO6fD",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019c6005-7be6-7c22-9fe7-63c70cddae90-0",
+            "id": "lc_run--019d0518-a86e-7d62-aea5-63f0c5bb2d3d-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 187,
-              "output_tokens": 81,
-              "total_tokens": 268,
+              "output_tokens": 79,
+              "total_tokens": 266,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -417,13 +417,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "019c6005-7be3-76f3-a7d9-11fb1159d3a9",
+      "uuid": "019d0518-a86a-7012-bf8b-a3973494b18c",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019c6005-762a-7a90-a1d3-623b95abfaae",
-      "startTime": "2026-02-15T06:38:18.083Z",
-      "endTime": "2026-02-15T06:38:18.085Z",
+      "parentUuid": "019d0518-a055-7ef1-a6e4-0fc5c52570f8",
+      "startTime": "2026-03-19T07:56:35.306Z",
+      "endTime": "2026-03-19T07:56:35.309Z",
       "input": {
         "messages": [
           {
@@ -431,7 +431,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "ab3e6df2-60fa-479b-a502-49180165f957"
+            "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
           },
           {
             "content": "",
@@ -440,13 +440,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 24,
+                "completion_tokens": 88,
                 "prompt_tokens": 148,
-                "total_tokens": 172,
+                "total_tokens": 236,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -457,35 +457,35 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D9Q3lp8B9J3ADmGpQNFcMDoqzik1U",
+              "id": "chatcmpl-DL2X3vAoiy8VRS6AukIOYSdzoJVY7",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019c6005-762b-7850-be30-fcfe2815876d-0",
+            "id": "lc_run--019d0518-a057-7cc2-9d6d-f1f9ac63fa6d-0",
             "tool_calls": [
               {
                 "name": "convert_temperature",
                 "args": {
                   "celsius": 25
                 },
-                "id": "call_o47YwDseY2waWs1oflXVFm5A",
+                "id": "call_j290PQqAclRnz0faquqKrnZG",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 148,
-              "output_tokens": 24,
-              "total_tokens": 172,
+              "output_tokens": 88,
+              "total_tokens": 236,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 64
               }
             }
           }
@@ -499,8 +499,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "convert_temperature",
-            "id": "448c44b5-6794-478f-b5a7-772f55d6fac2",
-            "tool_call_id": "call_o47YwDseY2waWs1oflXVFm5A",
+            "id": "61137386-c018-4426-bcf3-324b367d3cfc",
+            "tool_call_id": "call_j290PQqAclRnz0faquqKrnZG",
             "status": "success"
           }
         ]
@@ -514,8 +514,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "convert_temperature",
-            "id": "448c44b5-6794-478f-b5a7-772f55d6fac2",
-            "tool_call_id": "call_o47YwDseY2waWs1oflXVFm5A",
+            "id": "61137386-c018-4426-bcf3-324b367d3cfc",
+            "tool_call_id": "call_j290PQqAclRnz0faquqKrnZG",
             "status": "success"
           },
           "inputParameters": {
@@ -525,13 +525,13 @@
       ]
     },
     {
-      "uuid": "019c6005-762a-7a90-a1d3-6244433e9e63",
+      "uuid": "019d0518-a056-74b3-9c92-f4f96302d658",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019c6005-762a-7a90-a1d3-623b95abfaae",
-      "startTime": "2026-02-15T06:38:16.618Z",
-      "endTime": "2026-02-15T06:38:18.082Z",
+      "parentUuid": "019d0518-a055-7ef1-a6e4-0fc5c52570f8",
+      "startTime": "2026-03-19T07:56:33.238Z",
+      "endTime": "2026-03-19T07:56:35.305Z",
       "input": {
         "messages": [
           {
@@ -539,7 +539,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "ab3e6df2-60fa-479b-a502-49180165f957"
+            "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
           }
         ]
       },
@@ -552,13 +552,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 24,
+                "completion_tokens": 88,
                 "prompt_tokens": 148,
-                "total_tokens": 172,
+                "total_tokens": 236,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -569,35 +569,35 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D9Q3lp8B9J3ADmGpQNFcMDoqzik1U",
+              "id": "chatcmpl-DL2X3vAoiy8VRS6AukIOYSdzoJVY7",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019c6005-762b-7850-be30-fcfe2815876d-0",
+            "id": "lc_run--019d0518-a057-7cc2-9d6d-f1f9ac63fa6d-0",
             "tool_calls": [
               {
                 "name": "convert_temperature",
                 "args": {
                   "celsius": 25
                 },
-                "id": "call_o47YwDseY2waWs1oflXVFm5A",
+                "id": "call_j290PQqAclRnz0faquqKrnZG",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 148,
-              "output_tokens": 24,
-              "total_tokens": 172,
+              "output_tokens": 88,
+              "total_tokens": 236,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 64
               }
             }
           }
@@ -605,13 +605,13 @@
       }
     },
     {
-      "uuid": "019c6005-7be2-7563-aae5-3d31fefb89c5",
+      "uuid": "019d0518-a869-77e1-9eb4-3e251d214667",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019c6005-762a-7a90-a1d3-6244433e9e63",
-      "startTime": "2026-02-15T06:38:18.082Z",
-      "endTime": "2026-02-15T06:38:18.082Z",
+      "parentUuid": "019d0518-a056-74b3-9c92-f4f96302d658",
+      "startTime": "2026-03-19T07:56:35.305Z",
+      "endTime": "2026-03-19T07:56:35.305Z",
       "input": {
         "messages": [
           {
@@ -619,7 +619,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "ab3e6df2-60fa-479b-a502-49180165f957"
+            "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
           },
           {
             "content": "",
@@ -628,13 +628,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 24,
+                "completion_tokens": 88,
                 "prompt_tokens": 148,
-                "total_tokens": 172,
+                "total_tokens": 236,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -645,35 +645,35 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D9Q3lp8B9J3ADmGpQNFcMDoqzik1U",
+              "id": "chatcmpl-DL2X3vAoiy8VRS6AukIOYSdzoJVY7",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019c6005-762b-7850-be30-fcfe2815876d-0",
+            "id": "lc_run--019d0518-a057-7cc2-9d6d-f1f9ac63fa6d-0",
             "tool_calls": [
               {
                 "name": "convert_temperature",
                 "args": {
                   "celsius": 25
                 },
-                "id": "call_o47YwDseY2waWs1oflXVFm5A",
+                "id": "call_j290PQqAclRnz0faquqKrnZG",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 148,
-              "output_tokens": 24,
-              "total_tokens": 172,
+              "output_tokens": 88,
+              "total_tokens": 236,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 64
               }
             }
           }
@@ -686,13 +686,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019c6005-7be6-7c22-9fe7-63c70cddae90",
+      "uuid": "019d0518-a86e-7d62-aea5-63f0c5bb2d3d",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019c6005-7be6-7c22-9fe7-63baee27a8e6",
-      "startTime": "2026-02-15T06:38:18.086Z",
-      "endTime": "2026-02-15T06:38:19.913Z",
+      "parentUuid": "019d0518-a86d-7f53-b42c-9d4a25324e59",
+      "startTime": "2026-03-19T07:56:35.310Z",
+      "endTime": "2026-03-19T07:56:36.909Z",
       "input": [
         {
           "role": "human",
@@ -713,12 +713,12 @@
       ],
       "output": {
         "role": "AI",
-        "content": "25 \u00b0C = 77 \u00b0F",
+        "content": "25\u00b0C = 77\u00b0F",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 187.0,
-      "outputTokenCount": 81.0,
+      "outputTokenCount": 79.0,
       "metricCollection": "llm_accuracy",
       "promptAlias": "langgraph-metric-collection-prompt",
       "promptVersion": "02.00.00",
@@ -726,13 +726,13 @@
       "promptCommitHash": "bab04ec"
     },
     {
-      "uuid": "019c6005-762b-7850-be30-fcfe2815876d",
+      "uuid": "019d0518-a057-7cc2-9d6d-f1f9ac63fa6d",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019c6005-762a-7a90-a1d3-6244433e9e63",
-      "startTime": "2026-02-15T06:38:16.619Z",
-      "endTime": "2026-02-15T06:38:18.082Z",
+      "parentUuid": "019d0518-a056-74b3-9c92-f4f96302d658",
+      "startTime": "2026-03-19T07:56:33.239Z",
+      "endTime": "2026-03-19T07:56:35.304Z",
       "input": [
         {
           "role": "human",
@@ -752,13 +752,13 @@
             "args": {
               "celsius": 25
             },
-            "id": "call_o47YwDseY2waWs1oflXVFm5A"
+            "id": "call_j290PQqAclRnz0faquqKrnZG"
           }
         ]
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 148.0,
-      "outputTokenCount": 24.0,
+      "outputTokenCount": 88.0,
       "metricCollection": "llm_accuracy",
       "promptAlias": "langgraph-metric-collection-prompt",
       "promptVersion": "02.00.00",
@@ -769,13 +769,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019c6005-7be4-7272-8a38-585e3c3da71c",
+      "uuid": "019d0518-a86c-78b2-b21c-b6464dd5f30b",
       "name": "convert_temperature",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019c6005-7be3-76f3-a7d9-11fb1159d3a9",
-      "startTime": "2026-02-15T06:38:18.084Z",
-      "endTime": "2026-02-15T06:38:18.085Z",
+      "parentUuid": "019d0518-a86a-7012-bf8b-a3973494b18c",
+      "startTime": "2026-03-19T07:56:35.308Z",
+      "endTime": "2026-03-19T07:56:35.309Z",
       "input": {
         "celsius": 25
       },
@@ -785,14 +785,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "convert_temperature",
-        "id": "448c44b5-6794-478f-b5a7-772f55d6fac2",
-        "tool_call_id": "call_o47YwDseY2waWs1oflXVFm5A",
+        "id": "61137386-c018-4426-bcf3-324b367d3cfc",
+        "tool_call_id": "call_j290PQqAclRnz0faquqKrnZG",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-02-15T06:38:16.618Z",
-  "endTime": "2026-02-15T06:38:19.915Z",
+  "startTime": "2026-03-19T07:56:33.237Z",
+  "endTime": "2026-03-19T07:56:36.910Z",
   "name": "langgraph-metric-collection",
   "metadata": {
     "test_type": "metric_collection"
@@ -809,7 +809,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "ab3e6df2-60fa-479b-a502-49180165f957"
+        "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
       }
     ]
   },
@@ -820,7 +820,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "ab3e6df2-60fa-479b-a502-49180165f957"
+        "id": "bc85cd67-2071-4a75-97c4-5bc698e8757a"
       },
       {
         "content": "",
@@ -829,75 +829,9 @@
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 24,
+            "completion_tokens": 88,
             "prompt_tokens": 148,
-            "total_tokens": 172,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
-            }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-D9Q3lp8B9J3ADmGpQNFcMDoqzik1U",
-          "service_tier": "default",
-          "finish_reason": "tool_calls",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019c6005-762b-7850-be30-fcfe2815876d-0",
-        "tool_calls": [
-          {
-            "name": "convert_temperature",
-            "args": {
-              "celsius": 25
-            },
-            "id": "call_o47YwDseY2waWs1oflXVFm5A",
-            "type": "tool_call"
-          }
-        ],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 148,
-          "output_tokens": 24,
-          "total_tokens": 172,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
-          }
-        }
-      },
-      {
-        "content": "25.0\u00b0C = 77.0\u00b0F",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "convert_temperature",
-        "id": "448c44b5-6794-478f-b5a7-772f55d6fac2",
-        "tool_call_id": "call_o47YwDseY2waWs1oflXVFm5A",
-        "status": "success"
-      },
-      {
-        "content": "25 \u00b0C = 77 \u00b0F",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 81,
-            "prompt_tokens": 187,
-            "total_tokens": 268,
+            "total_tokens": 236,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -912,19 +846,85 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D9Q3mlbAxPCE3qdZ5QXYy1wYSUMke",
+          "id": "chatcmpl-DL2X3vAoiy8VRS6AukIOYSdzoJVY7",
+          "service_tier": "default",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019d0518-a057-7cc2-9d6d-f1f9ac63fa6d-0",
+        "tool_calls": [
+          {
+            "name": "convert_temperature",
+            "args": {
+              "celsius": 25
+            },
+            "id": "call_j290PQqAclRnz0faquqKrnZG",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 148,
+          "output_tokens": 88,
+          "total_tokens": 236,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 64
+          }
+        }
+      },
+      {
+        "content": "25.0\u00b0C = 77.0\u00b0F",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "convert_temperature",
+        "id": "61137386-c018-4426-bcf3-324b367d3cfc",
+        "tool_call_id": "call_j290PQqAclRnz0faquqKrnZG",
+        "status": "success"
+      },
+      {
+        "content": "25\u00b0C = 77\u00b0F",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 79,
+            "prompt_tokens": 187,
+            "total_tokens": 266,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 64,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-DL2X5hFYExQCBgWQ6T1eJdvKXO6fD",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019c6005-7be6-7c22-9fe7-63c70cddae90-0",
+        "id": "lc_run--019d0518-a86e-7d62-aea5-63f0c5bb2d3d-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 187,
-          "output_tokens": 81,
-          "total_tokens": 268,
+          "output_tokens": 79,
+          "total_tokens": 266,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -947,8 +947,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "convert_temperature",
-        "id": "448c44b5-6794-478f-b5a7-772f55d6fac2",
-        "tool_call_id": "call_o47YwDseY2waWs1oflXVFm5A",
+        "id": "61137386-c018-4426-bcf3-324b367d3cfc",
+        "tool_call_id": "call_j290PQqAclRnz0faquqKrnZG",
         "status": "success"
       },
       "inputParameters": {

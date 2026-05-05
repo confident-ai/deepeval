@@ -50,7 +50,6 @@ from deepeval.optimizer.algorithms.configs import (
     GEPA_REWRITE_INSTRUCTION_MAX_CHARS,
 )
 
-
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden, ConversationalGolden
 

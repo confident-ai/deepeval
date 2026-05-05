@@ -1,0 +1,55 @@
+---
+id: conversation-simulator-custom-templates
+title: Custom Templates
+sidebar_label: Custom Templates
+---
+
+You can customize the prompts used to simulate user turns by passing a custom simulation template to `ConversationSimulator`.
+
+Your custom simulation template must inherit from `ConversationSimulatorTemplate`. Override `simulate_first_user_turn()` to change how the first user message is generated, and `simulate_user_turn()` to change how follow-up user messages are generated.
+
+```python
+from deepeval.simulator import ConversationSimulator, ConversationSimulatorTemplate
+
+class FormalUserTemplate(ConversationSimulatorTemplate):
+    @staticmethod
+    def simulate_first_user_turn(golden, language):
+        return f"""
+        Pretend you are a formal enterprise buyer.
+        Start a conversation in {language} for this scenario:
+        {golden.scenario}
+
+        Return JSON with one key: simulated_input.
+        """
+
+    @staticmethod
+    def simulate_user_turn(golden, turns, language):
+        return f"""
+        Continue the conversation as a formal enterprise buyer.
+        Keep the tone concise, professional, and procurement-oriented.
+
+        Scenario: {golden.scenario}
+        Conversation so far: {turns}
+
+        Return JSON with one key: simulated_input.
+        """
+
+simulator = ConversationSimulator(
+    model_callback=model_callback,
+    simulation_template=FormalUserTemplate,
+)
+```
+
+## Common Use Cases
+
+### User Style
+
+Use a custom simulation template when simulated users should speak in a specific voice, such as formal buyers, frustrated customers, clinicians, students, or non-technical users.
+
+### Domain Framing
+
+Use a custom simulation template when the generated user turns should reflect domain-specific behavior, vocabulary, or constraints that the default simulator prompt does not emphasize.
+
+### Conversation Pressure
+
+Use a custom simulation template when you want simulated users to be more adversarial, more confused, more concise, or more persistent than the default role-play behavior.

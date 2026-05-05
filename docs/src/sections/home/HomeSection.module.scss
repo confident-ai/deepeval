@@ -1,0 +1,168 @@
+/* --------------------------------------------------------------------
+ * Home hero section
+ *
+ * Compact, developer-modern sizing: small type, tight padding,
+ * 1px icon arrow on the primary CTA, no flourish.
+ * ------------------------------------------------------------------ */
+
+.hero {
+  --site-shell-pad-x: 1rem;
+
+  width: 100%;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  max-width: 30rem;
+  padding: 2rem 1rem;
+
+  .title {
+    margin: 0;
+    font-size: clamp(31px, 4.2vw, 46px);
+    font-weight: 500;
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    color: var(--color-fd-foreground);
+    text-wrap: balance;
+  }
+
+  .description {
+    margin: 0;
+    max-width: 28rem;
+    font-size: 14px;
+    line-height: 1.65;
+    font-weight: 300;
+    color: var(--color-fd-muted-foreground);
+    text-wrap: pretty;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding-top: 0.3rem;
+  }
+
+  @media (min-width: 768px) {
+    padding: 2rem var(--site-shell-pad-x);
+  }
+}
+
+.banner {
+  border-top: 1px solid var(--color-fd-border);
+  height: 2rem;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.bannerTrack {
+  display: flex;
+  flex-shrink: 0;
+  gap: 2.5rem;
+  white-space: nowrap;
+  animation: bannerScroll 30s linear infinite;
+  // Scroll content left → right (reverse of the keyframe).
+  animation-direction: reverse;
+}
+
+.bannerItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 2.5rem;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--color-fd-muted-foreground);
+  white-space: nowrap;
+
+  &::after {
+    content: "";
+    display: inline-block;
+    width: 0.25em;
+    height: 0.25em;
+    background: currentColor;
+  }
+}
+
+@keyframes bannerScroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    // Duplicated content length is 200%; shift by half for a seamless loop.
+    transform: translateX(-50%);
+  }
+}
+
+.logoGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(4, 2.25rem);
+  gap: 1px;
+
+  width: 100%;
+  min-width: 0;
+  background: var(--color-fd-border);
+
+  // Only top + bottom edges — left/right are intentionally omitted so the
+  // grid reads flush with the pane's own vertical borders.
+  border-top: 1px solid var(--color-fd-border);
+  border-bottom: 1px solid var(--color-fd-border);
+
+  .cell {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    height: 2.25rem;
+    padding: 0.55rem 1.25rem;
+    overflow: hidden;
+    background: var(--color-fd-background);
+  }
+
+  .logo {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    opacity: 0.9;
+    transition: opacity 160ms ease;
+  }
+
+  .cell:hover .logo {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 1023px) {
+  .banner,
+  .logoGrid {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+  }
+
+  .logoGrid {
+    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+    grid-template-rows: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .main {
+    .title {
+      font-size: clamp(29px, 7vw, 37px);
+    }
+
+    .description {
+      font-size: 14px;
+    }
+  }
+}

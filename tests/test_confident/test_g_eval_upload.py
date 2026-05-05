@@ -2,7 +2,7 @@ import os
 import uuid
 import pytest
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 from deepeval.metrics.g_eval import Rubric
 from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.confident.types import ConfidentApiError
@@ -25,12 +25,14 @@ class TestGEval:
         metric = GEval(
             name=metric_name,
             evaluation_params=[
-                LLMTestCaseParams.INPUT,
-                LLMTestCaseParams.ACTUAL_OUTPUT,
-                LLMTestCaseParams.EXPECTED_OUTPUT,
-                LLMTestCaseParams.CONTEXT,
-                # LLMTestCaseParams.TOOLS_CALLED,
-                LLMTestCaseParams.RETRIEVAL_CONTEXT,
+                SingleTurnParams.INPUT,
+                SingleTurnParams.ACTUAL_OUTPUT,
+                SingleTurnParams.EXPECTED_OUTPUT,
+                SingleTurnParams.CONTEXT,
+                # SingleTurnParams.TOOLS_CALLED,
+                SingleTurnParams.RETRIEVAL_CONTEXT,
+                SingleTurnParams.METADATA,
+                SingleTurnParams.TAGS,
             ],
             criteria="Test whether actual output is relevant to the input given",
             rubric=[
@@ -63,13 +65,15 @@ class TestGEval:
             "context",
             # "toolsCalled",
             "retrievalContext",
+            "metadata",
+            "tags",
         }
 
         duplicate_metric = GEval(
             name=metric_name,
             evaluation_params=[
-                LLMTestCaseParams.INPUT,
-                LLMTestCaseParams.ACTUAL_OUTPUT,
+                SingleTurnParams.INPUT,
+                SingleTurnParams.ACTUAL_OUTPUT,
             ],
             criteria="Test whether actual output is relevant to the input given",
         )

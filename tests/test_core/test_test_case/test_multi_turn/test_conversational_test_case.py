@@ -1,6 +1,7 @@
 import pytest
 from pydantic import ValidationError
-from deepeval.test_case import ConversationalTestCase, Turn, TurnParams
+from deepeval.test_case import ConversationalTestCase, Turn
+from deepeval.test_case.api import create_api_test_case
 
 
 class TestConversationalTestCaseInitialization:
@@ -18,6 +19,7 @@ class TestConversationalTestCaseInitialization:
         assert test_case.user_description is None
         assert test_case.expected_outcome is None
         assert test_case.chatbot_role is None
+        assert test_case.metadata is None
         assert test_case.additional_metadata is None
         assert test_case.comments is None
         assert test_case.tags is None
@@ -58,6 +60,10 @@ class TestConversationalTestCaseInitialization:
         )
         assert test_case.expected_outcome == "Issue resolved satisfactorily"
         assert test_case.chatbot_role == "Helpful customer service agent"
+        assert test_case.metadata == {
+            "priority": "high",
+            "department": "billing",
+        }
         assert test_case.additional_metadata == {
             "priority": "high",
             "department": "billing",
@@ -266,7 +272,28 @@ class TestConversationalTestCaseEdgeCases:
     def test_empty_additional_metadata(self):
         turns = [Turn(role="user", content="Hello")]
         test_case = ConversationalTestCase(turns=turns, additional_metadata={})
+        assert test_case.metadata == {}
         assert test_case.additional_metadata == {}
+
+    def test_metadata_input_compatibility(self):
+        turns = [Turn(role="user", content="Hello")]
+        metadata = {"key": "value"}
+        test_case = ConversationalTestCase(turns=turns, metadata=metadata)
+        assert test_case.metadata == metadata
+        assert test_case.additional_metadata == metadata
+
+    def test_api_test_case_uses_metadata(self):
+        metadata = {"key": "value"}
+        test_case = ConversationalTestCase(
+            turns=[Turn(role="user", content="Hello")],
+            metadata=metadata,
+        )
+
+        api_test_case = create_api_test_case(test_case)
+        model_dict = api_test_case.model_dump(by_alias=True)
+
+        assert model_dict["metadata"] == metadata
+        assert "additionalMetadata" not in model_dict
 
 
 class TestConversationalTestCaseEquality:
@@ -335,7 +362,8 @@ class TestConversationalTestCaseSerialization:
         assert "userDescription" in dumped
         assert "expectedOutcome" in dumped
         assert "chatbotRole" in dumped
-        assert "additionalMetadata" in dumped
+        assert "metadata" in dumped
+        assert "additionalMetadata" not in dumped
 
 
 class TestConversationalTestCaseCamelCaseInitialization:
@@ -381,6 +409,7 @@ class TestConversationalTestCaseCamelCaseInitialization:
         assert test_case.user_description == user_description_text
         assert test_case.expected_outcome == expected_outcome_text
         assert test_case.chatbot_role == chatbot_role_text
+        assert test_case.metadata == metadata_dict
         assert test_case.additional_metadata == metadata_dict
         assert test_case.comments == comments_text
         assert test_case.tags == tags_list
@@ -408,4 +437,5 @@ class TestConversationalTestCaseCamelCaseInitialization:
         assert test_case.user_description == user_description_text
         assert test_case.expected_outcome == expected_outcome_text
         assert test_case.chatbot_role == chatbot_role_text
+        assert test_case.metadata == metadata_dict
         assert test_case.additional_metadata == metadata_dict

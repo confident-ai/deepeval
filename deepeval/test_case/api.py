@@ -22,7 +22,6 @@ def create_api_turn(turn: Turn, index: int) -> TurnApi:
         user_id=turn.user_id,
         retrievalContext=turn.retrieval_context,
         toolsCalled=turn.tools_called,
-        additionalMetadata=turn.additional_metadata,
         order=index,
     )
 
@@ -60,7 +59,7 @@ def create_api_test_case(
             tags=test_case.tags,
             comments=test_case.comments,
             imagesMapping=test_case._get_images_mapping(),
-            additionalMetadata=test_case.additional_metadata,
+            metadata=test_case.metadata,
         )
 
         api_test_case.turns = [
@@ -103,7 +102,7 @@ def create_api_test_case(
             runDuration=None,
             evaluationCost=None,
             order=order,
-            additionalMetadata=test_case.additional_metadata,
+            metadata=test_case.metadata,
             comments=test_case.comments,
             tags=test_case.tags,
             trace=trace,

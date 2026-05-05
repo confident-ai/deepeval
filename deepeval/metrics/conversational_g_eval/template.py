@@ -4,7 +4,11 @@ from typing import List, Dict, Optional
 class ConversationalGEvalTemplate:
     @staticmethod
     def generate_evaluation_steps(parameters: str, criteria: str):
-        return f"""Given an evaluation criteria which outlines how you should judge a conversation between a user and an LLM chatbot using the {parameters} fields in each turn, generate 3-4 concise evaluation steps based on the criteria below. Based on the evaluation criteria, you MUST make it clear how to evaluate the {parameters} in relation to one another in each turn, as well as the overall quality of the conversation.
+        return f"""Given an evaluation criteria which outlines how you should judge a conversation between a user and an LLM chatbot using the {parameters} fields, generate 3-4 concise evaluation steps based on the criteria below.
+
+Note that {parameters} can include both turn-level fields (e.g. content, role, retrieval_context, tools_called) and conversation-level fields (e.g. scenario, expected_outcome, metadata, tags, context, chatbot_role, user_description). Evaluate each field at its correct scope: turn-level fields appear once per turn, while conversation-level fields apply to the conversation as a whole and should NOT be expected to repeat on every turn.
+
+Based on the evaluation criteria, you MUST make it clear how to evaluate the {parameters} together to assess both each turn and the overall quality of the conversation.
 
 Evaluation Criteria:
 {criteria}
@@ -56,13 +60,14 @@ JSON:
     Evaluation Steps:
     {evaluation_steps}
 
-    {rubric_text}Conversation:
+    {rubric_text}Per-turn fields:
     {turns}
 
     {test_case_content}
-
     Parameters to consider during evaluation:
     {parameters}
+
+    Note: the "Per-turn fields" block lists each turn separately, while the "Conversation-level fields" block applies to the whole conversation. Do not penalize individual turns for missing conversation-level fields.
 
     ---
     IMPORTANT: You MUST return only a valid JSON object with the exact keys `"score"` and `"reason"`. No additional text, commentary, or formatting.

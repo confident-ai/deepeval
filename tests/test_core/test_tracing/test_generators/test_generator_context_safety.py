@@ -6,7 +6,6 @@ from deepeval.tracing import observe
 from deepeval.tracing.context import current_span_context
 from tests.test_core.test_tracing.conftest import trace_test
 
-
 # ── Leaf helpers ──────────────────────────────────────────────────────────
 
 

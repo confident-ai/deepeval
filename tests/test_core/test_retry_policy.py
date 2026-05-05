@@ -16,7 +16,6 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 
-
 ##############################################
 # Dummy exception shapes for offline testing #
 ##############################################

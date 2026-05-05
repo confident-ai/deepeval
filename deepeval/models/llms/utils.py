@@ -5,7 +5,6 @@ import asyncio
 
 from deepeval.errors import DeepEvalError
 
-
 MULTIMODAL_MODELS = ["GPTModel", "AzureModel", "GeminiModel", "OllamaModel"]
 
 

@@ -6,7 +6,7 @@ from typing import Optional, List, Tuple, Union, Type
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
     LLMTestCase,
-    LLMTestCaseParams,
+    SingleTurnParams,
 )
 from deepeval.metrics.g_eval.template import GEvalTemplate
 from deepeval.utils import get_or_create_event_loop, prettify_list
@@ -35,7 +35,6 @@ from deepeval.metrics.g_eval.utils import (
     construct_geval_upload_payload,
     G_EVAL_API_PARAMS,
 )
-from deepeval.metrics.api import metric_data_manager
 from deepeval.config.settings import get_settings
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 
@@ -44,7 +43,7 @@ class GEval(BaseMetric):
     def __init__(
         self,
         name: str,
-        evaluation_params: List[LLMTestCaseParams],
+        evaluation_params: List[SingleTurnParams],
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
         rubric: Optional[List[Rubric]] = None,
@@ -152,10 +151,6 @@ class GEval(BaseMetric):
                         f"Reason: {self.reason}",
                     ],
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
 
             return self.score
 
@@ -213,10 +208,6 @@ class GEval(BaseMetric):
                     f"Reason: {self.reason}",
                 ],
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
             return self.score
 
     async def _a_generate_evaluation_steps(self, multimodal: bool) -> List[str]:

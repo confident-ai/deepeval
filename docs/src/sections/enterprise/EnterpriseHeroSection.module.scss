@@ -1,0 +1,36 @@
+.logoGridWrap {
+  width: 100%;
+  min-width: 0;
+}
+
+.logoGridLabel {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 2rem;
+  margin: 0;
+  padding: 0 1rem;
+  color: var(--color-fd-muted-foreground);
+  border-top: 1px solid var(--color-fd-border);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.logoGrid {
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 2.25rem);
+}
+
+@media (max-width: 1023px) {
+  .logoGridWrap {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+  }
+
+  .logoGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(4, 2.25rem);
+  }
+}

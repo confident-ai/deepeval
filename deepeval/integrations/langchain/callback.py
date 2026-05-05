@@ -85,6 +85,7 @@ class CallbackHandler(BaseCallbackHandler):
         metrics: Optional[List[BaseMetric]] = None,
         metric_collection: Optional[str] = None,
         test_case_id: Optional[str] = None,
+        turn_id: Optional[str] = None,
     ):
         is_langchain_installed()
         with capture_tracing_integration("langchain.callback.CallbackHandler"):
@@ -110,6 +111,7 @@ class CallbackHandler(BaseCallbackHandler):
                 "thread_id": thread_id,
                 "user_id": user_id,
                 "test_case_id": test_case_id,
+                "turn_id": turn_id,
             }
             self._trace_init_fields: Dict[str, Any] = dict(
                 self._original_init_fields
@@ -204,6 +206,8 @@ class CallbackHandler(BaseCallbackHandler):
                 trace.user_id = fields["user_id"]
             if fields.get("test_case_id") is not None:
                 trace.test_case_id = fields["test_case_id"]
+            if fields.get("turn_id") is not None:
+                trace.turn_id = fields["turn_id"]
             # prevent re-applying on every callback
             self._trace_init_fields = {}
 
@@ -482,9 +486,7 @@ class CallbackHandler(BaseCallbackHandler):
 
                             # extract input and output token
                             input_tokens, output_tokens = (
-                                safe_extract_token_usage(
-                                    gen.message.response_metadata
-                                )
+                                safe_extract_token_usage(gen.message)
                             )
                             total_input_tokens += input_tokens
                             total_output_tokens += output_tokens
@@ -563,9 +565,7 @@ class CallbackHandler(BaseCallbackHandler):
                                     "model_name"
                                 )
                                 input_tokens, output_tokens = (
-                                    safe_extract_token_usage(
-                                        gen.message.response_metadata
-                                    )
+                                    safe_extract_token_usage(gen.message)
                                 )
                                 total_input_tokens += input_tokens
                                 total_output_tokens += output_tokens

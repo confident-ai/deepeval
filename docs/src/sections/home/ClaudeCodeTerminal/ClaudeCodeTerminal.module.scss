@@ -1,0 +1,296 @@
+/* --------------------------------------------------------------------
+ * ClaudeCodeTerminal
+ *
+ * Compact visual homage to the Claude Code CLI. Always-dark panel
+ * with a coral accent, a label baked into the top border ("Claude
+ * Code v2.1.19"), a pixel-art mascot on the left of the body, and a
+ * `>` input box + "? for shortcuts" helper at the bottom. 5 body
+ * lines max — it tells the post-trace story in one glance:
+ *   user prompt → bash (fail) → edit → bash (pass) → done.
+ * ------------------------------------------------------------------ */
+
+.terminal {
+  /* Fixed dark palette — Claude Code is always dark. */
+  --cc-bg: #0b0b0c;
+  --cc-bg-soft: #111113;
+  --cc-foreground: #e9e4dc;
+  --cc-muted: #8a867f;
+  --cc-dim: #5a5750;
+  --cc-accent: #d97455;
+  --cc-pass: #8ac77b;
+  --cc-warn: #e8a55b;
+
+  width: 100%;
+  margin: 0.5rem 0 2rem;
+  background: var(--cc-bg);
+  color: var(--cc-foreground);
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo,
+    "JetBrains Mono", Consolas, monospace;
+  font-variant-ligatures: none;
+  border: 1px solid var(--cc-accent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+/* ---------- Top chrome: "── Claude Code v2.1.19 ────────" ---------- */
+
+.chromeTop {
+  display: flex;
+  align-items: center;
+  height: 1.7rem;
+  padding: 0 0.9rem;
+  color: var(--cc-accent);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.chromeRuleStart,
+.chromeRuleEnd {
+  height: 1px;
+  background: var(--cc-accent);
+  opacity: 0.45;
+}
+
+.chromeRuleStart {
+  flex: 0 0 auto;
+  width: 0.9rem;
+  margin-right: 0.55rem;
+}
+
+.chromeRuleEnd {
+  flex: 1 1 auto;
+  margin-left: 0.55rem;
+}
+
+.chromeLabel {
+  font-weight: 600;
+  color: var(--cc-accent);
+}
+
+/* ---------- Body: mascot + lines ---------- */
+
+.body {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.75rem 1rem 0.95rem;
+}
+
+.mascotWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.15rem;
+}
+
+.mascot {
+  width: 44px;
+  height: 44px;
+  display: block;
+  /* The SVG uses its own brand color (#D97757) which is already on-palette
+   * against the dark background. No filter needed. */
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transform: translateY(2px);
+  animation: ccLineAppear 0.38s ease-out forwards;
+}
+
+@keyframes ccLineAppear {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- User prompt ---------- */
+
+.userPrompt {
+  color: var(--cc-accent);
+  font-weight: 700;
+  user-select: none;
+  flex: 0 0 auto;
+}
+
+.userText {
+  color: var(--cc-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Assistant message ---------- */
+
+.assistantDot {
+  color: var(--cc-accent);
+  font-size: 10px;
+  line-height: 1;
+  transform: translateY(-1px);
+  flex: 0 0 auto;
+}
+
+.assistantText {
+  color: var(--cc-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Tool call (inlined with result) ---------- */
+
+.toolBullet {
+  color: var(--cc-accent);
+  font-size: 10px;
+  line-height: 1;
+  transform: translateY(-1px);
+  flex: 0 0 auto;
+}
+
+.toolName {
+  color: var(--cc-accent);
+  font-weight: 600;
+  flex: 0 0 auto;
+}
+
+.toolParen {
+  color: var(--cc-dim);
+  flex: 0 0 auto;
+}
+
+.toolArgs {
+  color: var(--cc-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.toolArrow {
+  color: var(--cc-dim);
+  margin-left: 0.35rem;
+  flex: 0 0 auto;
+}
+
+.toolResult {
+  font-variant-numeric: tabular-nums;
+  flex: 0 0 auto;
+}
+
+.resultNeutral {
+  color: var(--cc-muted);
+}
+
+.resultWarn {
+  color: var(--cc-warn);
+  font-weight: 500;
+}
+
+.resultPass {
+  color: var(--cc-pass);
+  font-weight: 500;
+}
+
+/* ---------- Bottom input box + shortcuts ---------- */
+
+.inputBox {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  height: 1.95rem;
+  padding: 0 0.85rem;
+  margin: 0.1rem 0.75rem 0;
+  border: 1px solid var(--cc-accent);
+  background: var(--cc-bg-soft);
+  color: var(--cc-foreground);
+  font-size: 12px;
+}
+
+.inputPrompt {
+  color: var(--cc-accent);
+  font-weight: 700;
+  user-select: none;
+}
+
+.inputGhost {
+  color: var(--cc-dim);
+}
+
+.caret {
+  display: inline-block;
+  width: 6px;
+  height: 0.95em;
+  background: var(--cc-foreground);
+  animation: ccCaretBlink 1s steps(1, end) infinite;
+  transform: translateY(2px);
+}
+
+@keyframes ccCaretBlink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.shortcuts {
+  padding: 0.3rem 0.95rem 0.65rem 1.65rem;
+  color: var(--cc-muted);
+  font-size: 11px;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 720px) {
+  .body {
+    padding: 0.6rem 0.75rem 0.8rem;
+    gap: 0.6rem;
+  }
+
+  .mascot {
+    width: 34px;
+  }
+
+  .lines {
+    font-size: 11px;
+  }
+
+  .inputBox {
+    margin: 0.1rem 0.55rem 0;
+    height: 1.85rem;
+  }
+
+  .shortcuts {
+    padding-left: 1.4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .caret {
+    animation: none;
+    opacity: 1;
+  }
+}

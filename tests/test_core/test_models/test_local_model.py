@@ -141,3 +141,31 @@ def test_local_model_build_client_unwraps_secret_from_settings(monkeypatch):
     base_url = kw.get("base_url")
     assert base_url is not None
     assert base_url.rstrip("/") == "http://settings-host:11434/v1"
+
+
+########################################
+# Cost behavior: Local always returns 0
+########################################
+
+
+def test_local_generate_returns_zero_cost(monkeypatch):
+    from unittest.mock import Mock
+
+    monkeypatch.setenv("LOCAL_MODEL_API_KEY", "test-key")
+    monkeypatch.setenv("LOCAL_MODEL_NAME", "test-model")
+    monkeypatch.setenv("LOCAL_MODEL_BASE_URL", "http://localhost:11434/v1")
+    reset_settings(reload_dotenv=False)
+
+    _stub_openai_clients(monkeypatch)
+
+    model = LocalModel()
+
+    fake_client = Mock()
+    fake_response = Mock()
+    fake_response.choices = [Mock(message=Mock(content="hello"))]
+    fake_client.chat.completions.create.return_value = fake_response
+    model.load_model = lambda **kwargs: fake_client
+
+    output, cost = model.generate("test prompt")
+    assert cost == 0.0
+    assert output == "hello"

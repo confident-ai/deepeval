@@ -6,7 +6,7 @@ from deepeval.metrics.dag import (
     VerdictNode,
     DeepAcyclicGraph,
 )
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 from deepeval.metrics.dag.utils import (
     is_valid_dag_from_roots,
     extract_required_params,
@@ -28,7 +28,7 @@ class TestDeepAcyclicGraph:
             instructions="Extract",
             output_label="X",
             children=[judgement_node],
-            evaluation_params=[LLMTestCaseParams.INPUT],
+            evaluation_params=[SingleTurnParams.INPUT],
         )
         assert is_valid_dag_from_roots([root], multiturn=False) is True
 
@@ -102,21 +102,21 @@ class TestDeepAcyclicGraph:
         judgement_node = BinaryJudgementNode(
             criteria="?",
             children=[leaf_false, leaf_true],
-            evaluation_params=[LLMTestCaseParams.EXPECTED_OUTPUT],
+            evaluation_params=[SingleTurnParams.EXPECTED_OUTPUT],
         )
         task = TaskNode(
             instructions="Extract something",
             output_label="abc",
             evaluation_params=[
-                LLMTestCaseParams.INPUT,
-                LLMTestCaseParams.ACTUAL_OUTPUT,
+                SingleTurnParams.INPUT,
+                SingleTurnParams.ACTUAL_OUTPUT,
             ],
             children=[judgement_node],
         )
         params = extract_required_params([task], multiturn=False)
-        assert LLMTestCaseParams.INPUT in params
-        assert LLMTestCaseParams.ACTUAL_OUTPUT in params
-        assert LLMTestCaseParams.EXPECTED_OUTPUT in params
+        assert SingleTurnParams.INPUT in params
+        assert SingleTurnParams.ACTUAL_OUTPUT in params
+        assert SingleTurnParams.EXPECTED_OUTPUT in params
         assert len(params) == 3
 
     def test_invalid_child_type(self):
@@ -135,17 +135,17 @@ class TestDeepAcyclicGraph:
         non_binary = NonBinaryJudgementNode(
             criteria="Evaluate this",
             children=[leaf1, leaf2],
-            evaluation_params=[LLMTestCaseParams.EXPECTED_OUTPUT],
+            evaluation_params=[SingleTurnParams.EXPECTED_OUTPUT],
         )
         task = TaskNode(
             instructions="Analyze",
             output_label="xyz",
-            evaluation_params=[LLMTestCaseParams.INPUT],
+            evaluation_params=[SingleTurnParams.INPUT],
             children=[non_binary],
         )
         params = extract_required_params([task], multiturn=False)
-        assert LLMTestCaseParams.INPUT in params
-        assert LLMTestCaseParams.EXPECTED_OUTPUT in params
+        assert SingleTurnParams.INPUT in params
+        assert SingleTurnParams.EXPECTED_OUTPUT in params
         assert len(params) == 2
 
     def test_disallow_multiple_judgement_roots(self):
@@ -253,7 +253,7 @@ class TestDeepAcyclicGraph:
         task = TaskNode(
             instructions="Standalone task",
             output_label="standalone",
-            evaluation_params=[LLMTestCaseParams.INPUT],
+            evaluation_params=[SingleTurnParams.INPUT],
             children=[],
         )
         dag = DeepAcyclicGraph(root_nodes=[task])

@@ -7,7 +7,7 @@ from openai import OpenAI
 from deepeval.tracing.context import update_current_span, update_llm_span
 from deepeval.tracing.context import current_span_context
 from deepeval.tracing.types import LlmSpan
-
+from deepeval.models.llms.constants import OPENAI_MODELS_DATA
 
 if TYPE_CHECKING:
     from anthropic import Anthropic
@@ -69,14 +69,43 @@ def patch_openai_client(client: OpenAI):
                     except Exception:
                         pass
 
-                    # extract input output token counts
+                    # extract input/output token counts
+                    # chat completions API uses prompt_tokens/completion_tokens;
+                    # the newer Responses API (and some gpt-5.x models) uses
+                    # input_tokens/output_tokens — fall back to the newer names.
                     input_token_count = None
                     output_token_count = None
                     try:
-                        input_token_count = response.usage.prompt_tokens
-                        output_token_count = response.usage.completion_tokens
+                        usage = response.usage
+                        if usage is not None:
+                            input_token_count = getattr(
+                                usage, "prompt_tokens", None
+                            )
+                            if input_token_count is None:
+                                input_token_count = getattr(
+                                    usage, "input_tokens", None
+                                )
+                            output_token_count = getattr(
+                                usage, "completion_tokens", None
+                            )
+                            if output_token_count is None:
+                                output_token_count = getattr(
+                                    usage, "output_tokens", None
+                                )
                     except Exception:
                         pass
+
+                    # look up per-token cost from the registry so that cost
+                    # data is populated for all known models (including gpt-5.x)
+                    # even when the caller uses patch_openai_client directly
+                    # rather than GPTModel.
+                    model_data = OPENAI_MODELS_DATA.get(model)
+                    cost_per_input_token = (
+                        model_data.input_price if model_data else None
+                    )
+                    cost_per_output_token = (
+                        model_data.output_price if model_data else None
+                    )
 
                     update_current_span(
                         input=kwargs.get("messages", "INPUT_MESSAGE_NOT_FOUND"),
@@ -85,6 +114,8 @@ def patch_openai_client(client: OpenAI):
                     update_llm_span(
                         input_token_count=input_token_count,
                         output_token_count=output_token_count,
+                        cost_per_input_token=cost_per_input_token,
+                        cost_per_output_token=cost_per_output_token,
                     )
                 return response
 

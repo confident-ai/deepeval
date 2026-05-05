@@ -2,7 +2,7 @@ import asyncio
 from typing import Optional, List, Tuple, Union
 
 from deepeval.metrics import BaseMetric
-from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
+from deepeval.test_case import SingleTurnParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.image_coherence.template import (
     ImageCoherenceTemplate,
 )
@@ -25,9 +25,9 @@ from deepeval.utils import (
 
 
 class ImageCoherenceMetric(BaseMetric):
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
+    _required_params: List[SingleTurnParams] = [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
     ]
 
     def __init__(

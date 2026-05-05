@@ -1,0 +1,27 @@
+.switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 31px;
+  min-height: 31px;
+  padding: 3px;
+  box-sizing: border-box;
+  vertical-align: top;
+
+  :global(button) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 25px;
+    height: 25px;
+    padding: 0;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .switch {
+    display: none;
+  }
+}

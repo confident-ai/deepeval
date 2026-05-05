@@ -1,7 +1,6 @@
 from typing import Optional, Union, List
 
 from deepeval.metrics import BaseConversationalMetric
-from deepeval.metrics.api import metric_data_manager
 from deepeval.metrics.role_adherence.schema import (
     OutOfCharacterResponseVerdicts,
     RoleAdherenceScoreReason,
@@ -17,12 +16,12 @@ from deepeval.metrics.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.test_case import Turn, ConversationalTestCase, TurnParams
+from deepeval.test_case import Turn, ConversationalTestCase, MultiTurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
 
 
 class RoleAdherenceMetric(BaseConversationalMetric):
-    _required_test_case_params = [TurnParams.CONTENT, TurnParams.ROLE]
+    _required_test_case_params = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE]
 
     def __init__(
         self,
@@ -88,10 +87,6 @@ class RoleAdherenceMetric(BaseConversationalMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
             return self.score
 
     async def a_measure(
@@ -137,10 +132,6 @@ class RoleAdherenceMetric(BaseConversationalMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
             return self.score
 
     async def _a_generate_reason(self, role: str) -> Optional[str]:

@@ -14,8 +14,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -172,4 +172,7 @@ secrets
 
 # Mac OS system files
 **/.DS_Store
+
+# Cursor IDE local config (rules, etc.)
+.cursor/
 

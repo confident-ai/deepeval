@@ -4,7 +4,7 @@ from deepeval.metrics import TurnContextualRelevancyMetric
 from deepeval.test_case import (
     ConversationalTestCase,
     MLLMImage,
-    TurnParams,
+    MultiTurnParams,
     Turn,
 )
 from deepeval import evaluate

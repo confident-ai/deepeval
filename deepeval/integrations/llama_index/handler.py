@@ -341,9 +341,10 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
             )
 
         if base_span.metrics:
-            trace_manager.integration_traces_to_evaluate.append(
-                trace_manager.get_trace_by_uuid(base_span.trace_uuid)
-            )
+            trace = trace_manager.get_trace_by_uuid(base_span.trace_uuid)
+            session = trace_manager.eval_session
+            if trace is not None and trace not in session.traces_to_evaluate:
+                session.traces_to_evaluate.append(trace)
 
         if base_span.parent_uuid is None:
             is_streaming = (

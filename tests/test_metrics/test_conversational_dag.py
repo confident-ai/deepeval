@@ -8,7 +8,7 @@ from deepeval.metrics.conversational_dag import (
     ConversationalNonBinaryJudgementNode,
     ConversationalVerdictNode,
 )
-from deepeval.test_case import TurnParams
+from deepeval.test_case import MultiTurnParams
 from deepeval.metrics.dag.utils import (
     is_valid_dag_from_roots,
     extract_required_params,
@@ -28,7 +28,7 @@ class TestConversationalDeepAcyclicGraph:
             instructions="Extract",
             output_label="X",
             children=[judgement_node],
-            evaluation_params=[TurnParams.ROLE],
+            evaluation_params=[MultiTurnParams.ROLE],
         )
         assert is_valid_dag_from_roots([root], multiturn=True) is True
 
@@ -105,17 +105,17 @@ class TestConversationalDeepAcyclicGraph:
         judgement_node = ConversationalBinaryJudgementNode(
             criteria="?",
             children=[leaf_false, leaf_true],
-            evaluation_params=[TurnParams.CONTENT],
+            evaluation_params=[MultiTurnParams.CONTENT],
         )
         task = ConversationalTaskNode(
             instructions="Extract something",
             output_label="abc",
-            evaluation_params=[TurnParams.ROLE],
+            evaluation_params=[MultiTurnParams.ROLE],
             children=[judgement_node],
         )
         params = extract_required_params([task], multiturn=True)
-        assert TurnParams.ROLE in params
-        assert TurnParams.CONTENT in params
+        assert MultiTurnParams.ROLE in params
+        assert MultiTurnParams.CONTENT in params
         assert len(params) == 2
 
     def test_invalid_child_type(self):
@@ -134,17 +134,17 @@ class TestConversationalDeepAcyclicGraph:
         non_binary = ConversationalNonBinaryJudgementNode(
             criteria="Evaluate this",
             children=[leaf1, leaf2],
-            evaluation_params=[TurnParams.CONTENT],
+            evaluation_params=[MultiTurnParams.CONTENT],
         )
         task = ConversationalTaskNode(
             instructions="Analyze",
             output_label="xyz",
-            evaluation_params=[TurnParams.ROLE],
+            evaluation_params=[MultiTurnParams.ROLE],
             children=[non_binary],
         )
         params = extract_required_params([task], multiturn=True)
-        assert TurnParams.ROLE in params
-        assert TurnParams.CONTENT in params
+        assert MultiTurnParams.ROLE in params
+        assert MultiTurnParams.CONTENT in params
         assert len(params) == 2
 
     def test_disallow_multiple_judgement_roots(self):
@@ -253,7 +253,7 @@ class TestConversationalDeepAcyclicGraph:
         task = ConversationalTaskNode(
             instructions="Standalone task",
             output_label="standalone",
-            evaluation_params=[TurnParams.ROLE],
+            evaluation_params=[MultiTurnParams.ROLE],
             children=[],
         )
         dag = DeepAcyclicGraph(root_nodes=[task])

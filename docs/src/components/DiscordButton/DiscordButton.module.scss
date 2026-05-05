@@ -1,0 +1,62 @@
+$blurple: #5865f2;
+
+.root {
+  --fd-callout-color: #ffffff;
+  --fd-callout-ink: color-mix(
+    in oklch,
+    #ffffff 14%,
+    transparent
+  );
+  --fd-callout-rule: color-mix(
+    in oklch,
+    var(--color-fd-foreground) 55%,
+    transparent
+  );
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  position: relative;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  appearance: none;
+  cursor: pointer;
+  background-color: $blurple;
+  color: #ffffff;
+  border: 1px solid $blurple;
+
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+
+  &:hover {
+    background-color: color-mix(
+      in oklch,
+      $blurple 88%,
+      black
+    );
+    border-color: color-mix(in oklch, $blurple 88%, black);
+    color: #ffffff;
+  }
+
+  svg {
+    width: 0.82rem;
+    height: 0.82rem;
+    flex-shrink: 0;
+    fill: currentColor;
+  }
+
+  &[data-layout="full"] {
+    width: 100%;
+  }
+
+  &[data-layout="inline"] {
+    width: auto;
+    flex-shrink: 0;
+  }
+}

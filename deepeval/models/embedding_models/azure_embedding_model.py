@@ -15,7 +15,6 @@ from deepeval.models.utils import (
 )
 from deepeval.utils import require_param
 
-
 retry_azure = create_retry_decorator(PS.AZURE)
 
 _ALIAS_MAP = {

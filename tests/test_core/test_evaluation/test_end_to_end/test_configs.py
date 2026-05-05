@@ -10,7 +10,6 @@ from deepeval.metrics import FaithfulnessMetric, AnswerRelevancyMetric
 from deepeval.evaluate import evaluate
 from deepeval.tracing import observe, update_current_trace
 
-
 pytestmark = pytest.mark.skipif(
     os.getenv("OPENAI_API_KEY") is None
     or not os.getenv("OPENAI_API_KEY").strip(),

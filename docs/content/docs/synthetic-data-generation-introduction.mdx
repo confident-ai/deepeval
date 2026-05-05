@@ -1,0 +1,103 @@
+---
+id: synthetic-data-generation-introduction
+title: Introduction to Synthetic Data Generation
+sidebar_label: Introduction
+---
+
+import { Database, MessageSquareText } from "lucide-react";
+
+Synthetic data generation helps you bootstrap evaluation datasets when you do not yet have enough representative examples, but it should complement—not replace—real data.
+
+:::caution
+It is easy to abuse synthetic data because it is so readily available. It is important to use it sparingly instead of generating goldens you will never take a second look at.
+:::
+
+## Recommended Priority
+
+The best evaluation datasets are grounded in real product behavior. We recommend choosing data sources in this order:
+
+1. **Use a reasonably curated dataset.** Start with human-reviewed examples when you have them, especially examples that reflect important user journeys, failures, and edge cases.
+2. **Use production traffic.** If you do not have a curated dataset, sample real conversations or requests from production, then review and clean them before using them for evals.
+3. **Use synthetic data.** If you do not have enough curated or production data, generate synthetic examples to create initial coverage and uncover obvious regressions.
+
+:::tip
+[Confident AI](https://www.confident-ai.com) automates the trace -> annotate -> dataset loop, so your team can turn real production behavior into curated evaluation data. All you need to do is ingest traces with `deepeval`, then review and promote the right examples into datasets.
+:::
+
+Synthetic data is most useful when it gives you a starting point faster. For high-stakes workflows, you should still review, edit, and enrich generated examples before treating them as ground truth.
+
+## Best Practices On Synthetic Data Quality
+
+Not all synthetic data is equally reliable. Prefer grounded and reviewed sources before fully open-ended generation:
+
+1. **Generate from documents.** This is the strongest default because generated goldens are grounded in your knowledge base.
+2. **Generate from existing goldens.** This works well when the seed goldens are already reasonably curated and human-reviewed.
+3. **Generate from scratch.** This is the least grounded option, and is not recommended unless the use case is simple or you only need rough initial coverage.
+
+## What You Can Synthesize
+
+`deepeval` supports two related synthetic-data workflows:
+
+- **Generate goldens:** Use the [Golden Synthesizer](/docs/golden-synthesizer) to create single-turn or conversational goldens for your evaluation dataset.
+- **Simulate turns:** Use the [Conversation Simulator](/docs/conversation-simulator) to generate realistic back-and-forth turns between a simulated user and your chatbot.
+
+### Generate Goldens
+
+Goldens define what you want to test. They can be single-turn examples for regular LLM interactions, or conversational goldens that define a multi-turn scenario and expected outcome.
+
+```python
+from deepeval.synthesizer import Synthesizer
+
+synthesizer = Synthesizer()
+goldens = synthesizer.generate_goldens_from_docs(
+    document_paths=["support_docs.md"],
+    include_expected_output=True,
+)
+```
+
+For multi-turn use cases, generate conversational goldens instead:
+
+```python
+from deepeval.synthesizer import Synthesizer
+
+synthesizer = Synthesizer()
+conversational_goldens = synthesizer.generate_conversational_goldens_from_docs(
+    document_paths=["support_docs.md"],
+    include_expected_outcome=True,
+)
+```
+
+Learn more in the [Golden Synthesizer](/docs/golden-synthesizer) docs.
+
+### Simulate Turns
+
+Turn simulation is only for multi-turn use cases. It follows golden generation: first create conversational goldens with a scenario and expected outcome, then use the Conversation Simulator to produce the actual back-and-forth turns.
+
+```python
+from deepeval.simulator import ConversationSimulator
+
+simulator = ConversationSimulator(model_callback=model_callback)
+test_cases = simulator.simulate(
+    conversational_goldens=conversational_goldens,
+    max_user_simulations=10,
+)
+```
+
+Learn more in the [Conversation Simulator](/docs/conversation-simulator) docs.
+
+For single-turn use cases, generated goldens may be enough. For multi-turn use cases, you typically need both: use the Golden Synthesizer to define the scenario and expected outcome, then use the Conversation Simulator to generate the actual turns for evaluation.
+
+## Next Steps
+
+Start with goldens to define what should be tested, then add turn simulation when you need realistic multi-turn conversations.
+
+<Cards>
+  <Card icon={<Database />} title="Golden Synthesizer" href="/docs/golden-synthesizer">
+    Generate single-turn or conversational goldens from documents, contexts,
+    existing goldens, or scratch.
+  </Card>
+  <Card icon={<MessageSquareText />} title="Conversation Simulator" href="/docs/conversation-simulator">
+    Simulate multi-turn conversations from conversational goldens and your
+    chatbot callback.
+  </Card>
+</Cards>

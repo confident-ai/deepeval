@@ -6,7 +6,6 @@ from deepeval.integrations.pydantic_ai.instrumentator import (
 )
 from deepeval.prompt import Prompt
 
-
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
 

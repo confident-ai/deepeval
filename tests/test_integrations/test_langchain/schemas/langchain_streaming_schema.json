@@ -1,13 +1,13 @@
 {
-  "uuid": "4ecbabb1-d5ef-4850-99cb-54fe17623168",
+  "uuid": "93b8a85f-847b-4b9c-b3b3-3362def78a30",
   "baseSpans": [
     {
-      "uuid": "019bf9a2-8919-7151-9099-a985fc729039",
+      "uuid": "019d050f-a3e5-73f3-8b18-0465ee4c369e",
       "name": "streaming_single_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T09:28:57.369Z",
-      "endTime": "2026-01-26T09:28:59.680Z",
+      "startTime": "2026-03-19T07:46:44.325Z",
+      "endTime": "2026-03-19T07:46:47.356Z",
       "input": {
         "messages": [
           {
@@ -36,14 +36,14 @@
               "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bf9a2-891a-71e2-8b40-1a55626d82f1",
+            "id": "lc_run--019d050f-a3e5-73f3-8b18-047a52574720",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_JEHyQukAr9TRuPwyFuVTnmvL",
+                "id": "call_RVRCT3HJ04KGZr434Utwl8sn",
                 "type": "tool_call"
               }
             ],
@@ -68,7 +68,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "tool_call_id": "call_JEHyQukAr9TRuPwyFuVTnmvL",
+            "tool_call_id": "call_RVRCT3HJ04KGZr434Utwl8sn",
             "status": "success"
           },
           {
@@ -81,7 +81,7 @@
               "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bf9a2-8f0e-7860-b1d3-b9bd105e9e41",
+            "id": "lc_run--019d050f-aa46-7a90-809b-fd9cba4e9e1d",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -109,7 +109,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "tool_call_id": "call_JEHyQukAr9TRuPwyFuVTnmvL",
+            "tool_call_id": "call_RVRCT3HJ04KGZr434Utwl8sn",
             "status": "success"
           },
           "inputParameters": {
@@ -122,13 +122,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf9a2-8f0e-7860-b1d3-b9bd105e9e41",
+      "uuid": "019d050f-aa46-7a90-809b-fd9cba4e9e1d",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf9a2-8919-7151-9099-a985fc729039",
-      "startTime": "2026-01-26T09:28:58.894Z",
-      "endTime": "2026-01-26T09:28:59.680Z",
+      "parentUuid": "019d050f-a3e5-73f3-8b18-0465ee4c369e",
+      "startTime": "2026-03-19T07:46:45.958Z",
+      "endTime": "2026-03-19T07:46:47.356Z",
       "input": [
         {
           "role": "human",
@@ -153,38 +153,40 @@
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
+      "inputTokenCount": 191.0,
+      "outputTokenCount": 20.0,
       "tokenIntervals": {
-        "2026-01-26T09:28:59.453408Z": "",
-        "2026-01-26T09:28:59.474469Z": "The",
-        "2026-01-26T09:28:59.476023Z": " current",
-        "2026-01-26T09:28:59.498728Z": " stock",
-        "2026-01-26T09:28:59.499999Z": " price",
-        "2026-01-26T09:28:59.524999Z": " for",
-        "2026-01-26T09:28:59.526472Z": " MS",
-        "2026-01-26T09:28:59.553262Z": "FT",
-        "2026-01-26T09:28:59.554852Z": " is",
-        "2026-01-26T09:28:59.566735Z": " $",
-        "2026-01-26T09:28:59.568214Z": "378",
-        "2026-01-26T09:28:59.596348Z": ".",
-        "2026-01-26T09:28:59.597829Z": "90",
-        "2026-01-26T09:28:59.613021Z": " (+",
-        "2026-01-26T09:28:59.614498Z": "0",
-        "2026-01-26T09:28:59.647461Z": ".",
-        "2026-01-26T09:28:59.649009Z": "8",
-        "2026-01-26T09:28:59.667386Z": "%).",
-        "2026-01-26T09:28:59.668885Z": "",
-        "2026-01-26T09:28:59.677976Z": "",
-        "2026-01-26T09:28:59.679258Z": ""
+        "2026-03-19T07:46:46.976135Z": "",
+        "2026-03-19T07:46:46.990631Z": "The",
+        "2026-03-19T07:46:46.991162Z": " current",
+        "2026-03-19T07:46:47.006723Z": " stock",
+        "2026-03-19T07:46:47.007129Z": " price",
+        "2026-03-19T07:46:47.024980Z": " for",
+        "2026-03-19T07:46:47.025175Z": " MS",
+        "2026-03-19T07:46:47.045007Z": "FT",
+        "2026-03-19T07:46:47.045123Z": " is",
+        "2026-03-19T07:46:47.059805Z": " $",
+        "2026-03-19T07:46:47.059905Z": "378",
+        "2026-03-19T07:46:47.076115Z": ".",
+        "2026-03-19T07:46:47.076201Z": "90",
+        "2026-03-19T07:46:47.354294Z": " (+",
+        "2026-03-19T07:46:47.354538Z": "0",
+        "2026-03-19T07:46:47.354857Z": ".",
+        "2026-03-19T07:46:47.355042Z": "8",
+        "2026-03-19T07:46:47.355308Z": "%).",
+        "2026-03-19T07:46:47.355504Z": "",
+        "2026-03-19T07:46:47.355706Z": "",
+        "2026-03-19T07:46:47.356130Z": ""
       }
     },
     {
-      "uuid": "019bf9a2-891a-71e2-8b40-1a55626d82f1",
+      "uuid": "019d050f-a3e5-73f3-8b18-047a52574720",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf9a2-8919-7151-9099-a985fc729039",
-      "startTime": "2026-01-26T09:28:57.370Z",
-      "endTime": "2026-01-26T09:28:58.890Z",
+      "parentUuid": "019d050f-a3e5-73f3-8b18-0465ee4c369e",
+      "startTime": "2026-03-19T07:46:44.325Z",
+      "endTime": "2026-03-19T07:46:45.957Z",
       "input": [
         {
           "role": "human",
@@ -204,35 +206,37 @@
             "args": {
               "symbol": "MSFT"
             },
-            "id": "call_JEHyQukAr9TRuPwyFuVTnmvL"
+            "id": "call_RVRCT3HJ04KGZr434Utwl8sn"
           }
         ]
       },
       "model": "gpt-5-mini-2025-08-07",
+      "inputTokenCount": 151.0,
+      "outputTokenCount": 89.0,
       "tokenIntervals": {
-        "2026-01-26T09:28:58.806691Z": "",
-        "2026-01-26T09:28:58.828744Z": "",
-        "2026-01-26T09:28:58.830887Z": "",
-        "2026-01-26T09:28:58.843667Z": "",
-        "2026-01-26T09:28:58.845592Z": "",
-        "2026-01-26T09:28:58.864604Z": "",
-        "2026-01-26T09:28:58.866393Z": "",
-        "2026-01-26T09:28:58.882379Z": "",
-        "2026-01-26T09:28:58.883633Z": "",
-        "2026-01-26T09:28:58.888551Z": ""
+        "2026-03-19T07:46:45.869073Z": "",
+        "2026-03-19T07:46:45.890237Z": "",
+        "2026-03-19T07:46:45.890435Z": "",
+        "2026-03-19T07:46:45.905542Z": "",
+        "2026-03-19T07:46:45.905729Z": "",
+        "2026-03-19T07:46:45.945404Z": "",
+        "2026-03-19T07:46:45.945573Z": "",
+        "2026-03-19T07:46:45.945895Z": "",
+        "2026-03-19T07:46:45.946088Z": "",
+        "2026-03-19T07:46:45.957510Z": ""
       }
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf9a2-8f0a-76d2-9ec8-fc11dc425bd4",
+      "uuid": "019d050f-aa46-7a90-809b-fd8f61b39fa6",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf9a2-8919-7151-9099-a985fc729039",
-      "startTime": "2026-01-26T09:28:58.891Z",
-      "endTime": "2026-01-26T09:28:58.893Z",
+      "parentUuid": "019d050f-a3e5-73f3-8b18-0465ee4c369e",
+      "startTime": "2026-03-19T07:46:45.958Z",
+      "endTime": "2026-03-19T07:46:45.958Z",
       "input": {
         "symbol": "MSFT"
       },
@@ -242,13 +246,13 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "tool_call_id": "call_JEHyQukAr9TRuPwyFuVTnmvL",
+        "tool_call_id": "call_RVRCT3HJ04KGZr434Utwl8sn",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-26T09:28:57.369Z",
-  "endTime": "2026-01-26T09:28:59.680Z",
+  "startTime": "2026-03-19T07:46:44.325Z",
+  "endTime": "2026-03-19T07:46:47.356Z",
   "name": "langchain-streaming-sync",
   "metadata": {
     "test_type": "streaming_sync"
@@ -287,14 +291,14 @@
           "model_provider": "openai"
         },
         "type": "ai",
-        "id": "lc_run--019bf9a2-891a-71e2-8b40-1a55626d82f1",
+        "id": "lc_run--019d050f-a3e5-73f3-8b18-047a52574720",
         "tool_calls": [
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "MSFT"
             },
-            "id": "call_JEHyQukAr9TRuPwyFuVTnmvL",
+            "id": "call_RVRCT3HJ04KGZr434Utwl8sn",
             "type": "tool_call"
           }
         ],
@@ -319,7 +323,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "tool_call_id": "call_JEHyQukAr9TRuPwyFuVTnmvL",
+        "tool_call_id": "call_RVRCT3HJ04KGZr434Utwl8sn",
         "status": "success"
       },
       {
@@ -332,7 +336,7 @@
           "model_provider": "openai"
         },
         "type": "ai",
-        "id": "lc_run--019bf9a2-8f0e-7860-b1d3-b9bd105e9e41",
+        "id": "lc_run--019d050f-aa46-7a90-809b-fd9cba4e9e1d",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
@@ -361,7 +365,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "tool_call_id": "call_JEHyQukAr9TRuPwyFuVTnmvL",
+        "tool_call_id": "call_RVRCT3HJ04KGZr434Utwl8sn",
         "status": "success"
       },
       "inputParameters": {

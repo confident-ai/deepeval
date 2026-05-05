@@ -130,6 +130,8 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         agent_metric_collection: Optional[str] = None,
         tool_metric_collection_map: Optional[dict] = None,
         trace_metric_collection: Optional[str] = None,
+        test_case_id: Optional[str] = None,
+        turn_id: Optional[str] = None,
         is_test_mode: Optional[bool] = False,
         agent_metrics: Optional[List[BaseMetric]] = None,
     ):
@@ -160,6 +162,8 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         self.llm_metric_collection = llm_metric_collection
         self.agent_metric_collection = agent_metric_collection
         self.trace_metric_collection = trace_metric_collection
+        self.test_case_id = test_case_id
+        self.turn_id = turn_id
         self.is_test_mode = is_test_mode
         self.agent_metrics = agent_metrics
 
@@ -197,6 +201,8 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
 
 
 class SpanInterceptor(SpanProcessor):
+    LLM_OPERATION_NAMES = {"chat", "generate_content", "text_completion"}
+
     def __init__(self, settings_instance: ConfidentInstrumentationSettings):
         # Keep a reference to the settings instance instead of copying values
         self.settings = settings_instance
@@ -208,16 +214,33 @@ class SpanInterceptor(SpanProcessor):
             _otel_trace_id = span.get_span_context().trace_id
             _current_trace_context.uuid = to_hex_string(_otel_trace_id, 32)
 
+        # per-request values from current_trace_context override settings for
+        # scalars; metadata is merged (settings as base, context on top)
+        _thread_id = (
+            _current_trace_context.thread_id if _current_trace_context else None
+        ) or self.settings.thread_id
+
+        _name = (
+            _current_trace_context.name if _current_trace_context else None
+        ) or self.settings.name
+
+        _metadata = {
+            **(self.settings.metadata or {}),
+            **(
+                _current_trace_context.metadata or {}
+                if _current_trace_context
+                else {}
+            ),
+        }
+
         # set trace attributes
-        if self.settings.thread_id:
-            span.set_attribute(
-                "confident.trace.thread_id", self.settings.thread_id
-            )
+        if _thread_id:
+            span.set_attribute("confident.trace.thread_id", _thread_id)
         if self.settings.user_id:
             span.set_attribute("confident.trace.user_id", self.settings.user_id)
-        if self.settings.metadata:
+        if _metadata:
             span.set_attribute(
-                "confident.trace.metadata", json.dumps(self.settings.metadata)
+                "confident.trace.metadata", json.dumps(_metadata)
             )
         if self.settings.tags:
             span.set_attribute("confident.trace.tags", self.settings.tags)
@@ -230,8 +253,14 @@ class SpanInterceptor(SpanProcessor):
             span.set_attribute(
                 "confident.trace.environment", self.settings.environment
             )
-        if self.settings.name:
-            span.set_attribute("confident.trace.name", self.settings.name)
+        if _name:
+            span.set_attribute("confident.trace.name", _name)
+        if self.settings.test_case_id:
+            span.set_attribute(
+                "confident.trace.test_case_id", self.settings.test_case_id
+            )
+        if self.settings.turn_id:
+            span.set_attribute("confident.trace.turn_id", self.settings.turn_id)
         if self.settings.confident_prompt:
             span.set_attribute(
                 "confident.span.prompt_alias",
@@ -259,22 +288,23 @@ class SpanInterceptor(SpanProcessor):
                 self.settings.trace_metric_collection,
             )
 
-        # set agent name and metric collection
+        operation_name = span.attributes.get("gen_ai.operation.name")
+
+        # set agent name and metric collection (only for agent-run spans)
         agent_name = (
             span.attributes.get("gen_ai.agent.name")
             or span.attributes.get("pydantic_ai.agent.name")
             or span.attributes.get("agent_name")
         )
 
-        if agent_name:
+        if agent_name and self._is_agent_span(operation_name):
             self._add_agent_span(span, agent_name)
 
         # set llm metric collection
-        if span.attributes.get("gen_ai.operation.name") in [
-            "chat",
-            "generate_content",
-            "text_completion",
-        ]:
+        if operation_name in self.LLM_OPERATION_NAMES:
+            # Explicitly classify model request spans as LLM spans so they are
+            # not mislabeled as agent spans when gen_ai.agent.name is present.
+            span.set_attribute("confident.span.type", "llm")
             if self.settings.llm_metric_collection:
                 span.set_attribute(
                     "confident.span.metric_collection",
@@ -295,16 +325,19 @@ class SpanInterceptor(SpanProcessor):
 
     def on_end(self, span):
 
-        already_processed = (
-            span.attributes.get("confident.span.type") == "agent"
-        )
+        already_processed = span.attributes.get("confident.span.type") in {
+            "agent",
+            "llm",
+            "tool",
+        }
         if not already_processed:
+            operation_name = span.attributes.get("gen_ai.operation.name")
             agent_name = (
                 span.attributes.get("gen_ai.agent.name")
                 or span.attributes.get("pydantic_ai.agent.name")
                 or span.attributes.get("agent_name")
             )
-            if agent_name:
+            if agent_name and self._is_agent_span(operation_name):
                 self._add_agent_span(span, agent_name)
 
         if self.settings.is_test_mode:
@@ -358,7 +391,7 @@ class SpanInterceptor(SpanProcessor):
                 trace.root_spans.append(agent_span)
                 trace.status = TraceSpanStatus.SUCCESS
                 trace.end_time = perf_counter()
-                trace_manager.traces_to_evaluate.append(trace)
+                trace_manager.eval_session.traces_to_evaluate.append(trace)
 
     def _add_agent_span(self, span, name):
         span.set_attribute("confident.span.type", "agent")
@@ -368,3 +401,6 @@ class SpanInterceptor(SpanProcessor):
                 "confident.span.metric_collection",
                 self.settings.agent_metric_collection,
             )
+
+    def _is_agent_span(self, operation_name: Optional[str]) -> bool:
+        return operation_name == "invoke_agent"

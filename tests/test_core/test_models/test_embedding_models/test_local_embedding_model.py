@@ -6,7 +6,6 @@ from deepeval.models.embedding_models.local_embedding_model import (
 )
 from tests.test_core.stubs import _RecordingClient
 
-
 ##########################
 # Test Secret Management #
 ##########################

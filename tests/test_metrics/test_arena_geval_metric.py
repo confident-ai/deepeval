@@ -5,7 +5,7 @@ from deepeval.test_case import (
     LLMTestCase,
     MLLMImage,
     ArenaTestCase,
-    LLMTestCaseParams,
+    SingleTurnParams,
     Contestant,
 )
 from deepeval import compare
@@ -57,8 +57,8 @@ class TestArenaGEval:
             name="Friendly",
             criteria="Choose the winner of the more accurate contestant based on the input and actual output",
             evaluation_params=[
-                LLMTestCaseParams.INPUT,
-                LLMTestCaseParams.ACTUAL_OUTPUT,
+                SingleTurnParams.INPUT,
+                SingleTurnParams.ACTUAL_OUTPUT,
             ],
             async_mode=False,
         )
@@ -102,8 +102,8 @@ class TestArenaGEval:
             name="Friendly",
             criteria="Choose the winner of the more accurate contestant based on the input and actual output",
             evaluation_params=[
-                LLMTestCaseParams.INPUT,
-                LLMTestCaseParams.ACTUAL_OUTPUT,
+                SingleTurnParams.INPUT,
+                SingleTurnParams.ACTUAL_OUTPUT,
             ],
         )
         metric.measure(test_case)
@@ -147,8 +147,8 @@ class TestArenaGEval:
             name="Friendly",
             criteria="Choose the winner of the more accurate contestant based on the input and actual output",
             evaluation_params=[
-                LLMTestCaseParams.INPUT,
-                LLMTestCaseParams.ACTUAL_OUTPUT,
+                SingleTurnParams.INPUT,
+                SingleTurnParams.ACTUAL_OUTPUT,
             ],
         )
         metric.measure(test_case)
@@ -192,8 +192,8 @@ class TestArenaGEval:
             name="Friendly",
             criteria="Choose the winner of the more accurate contestant based on the input and actual output",
             evaluation_params=[
-                LLMTestCaseParams.INPUT,
-                LLMTestCaseParams.ACTUAL_OUTPUT,
+                SingleTurnParams.INPUT,
+                SingleTurnParams.ACTUAL_OUTPUT,
             ],
             async_mode=False,
         )
@@ -239,8 +239,8 @@ class TestArenaGEval:
                 name="Friendly",
                 criteria="Choose the winner of the more accurate contestant based on the input and actual output",
                 evaluation_params=[
-                    LLMTestCaseParams.INPUT,
-                    LLMTestCaseParams.ACTUAL_OUTPUT,
+                    SingleTurnParams.INPUT,
+                    SingleTurnParams.ACTUAL_OUTPUT,
                 ],
                 model="gpt-3.5-turbo",
             )
@@ -280,8 +280,8 @@ class TestArenaGEval:
             name="Friendly",
             criteria="Choose the winner of the more accurate contestant based on the input and actual output",
             evaluation_params=[
-                LLMTestCaseParams.INPUT,
-                LLMTestCaseParams.ACTUAL_OUTPUT,
+                SingleTurnParams.INPUT,
+                SingleTurnParams.ACTUAL_OUTPUT,
             ],
             async_mode=False,
         )
@@ -325,8 +325,8 @@ class TestArenaGEval:
             name="Friendly",
             criteria="Choose the winner of the more accurate contestant based on the input and actual output",
             evaluation_params=[
-                LLMTestCaseParams.INPUT,
-                LLMTestCaseParams.ACTUAL_OUTPUT,
+                SingleTurnParams.INPUT,
+                SingleTurnParams.ACTUAL_OUTPUT,
             ],
             async_mode=False,
         )

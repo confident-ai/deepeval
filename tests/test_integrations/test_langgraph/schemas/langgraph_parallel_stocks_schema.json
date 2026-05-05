@@ -1,13 +1,13 @@
 {
-  "uuid": "bc009b12-0aa0-4079-80e3-7d3ab0f837e0",
+  "uuid": "462a045f-3c65-4632-81a8-f79210d40ae8",
   "baseSpans": [
     {
-      "uuid": "019bf2a6-f232-73f1-a047-ae751fe53cbf",
+      "uuid": "019d0517-fcb1-7f13-8728-3bff5f536d64",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-25T00:56:25.907Z",
-      "endTime": "2026-01-25T00:56:36.458Z",
+      "startTime": "2026-03-19T07:55:51.345Z",
+      "endTime": "2026-03-19T07:55:58.432Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "1739e199-9e78-4bae-9c9c-3c1e2e171fd3"
+            "id": "ea6c315a-4540-4aab-9042-9848cdd59789"
           }
         ]
       },
@@ -26,7 +26,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "1739e199-9e78-4bae-9c9c-3c1e2e171fd3"
+            "id": "ea6c315a-4540-4aab-9042-9848cdd59789"
           },
           {
             "content": "",
@@ -52,20 +52,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1iiQOFBG8N1rDphHZSWO7Jfgojjl",
+              "id": "chatcmpl-DL2WN3gy22RpVG8vYmcInTir8LuJW",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a6-f235-75a3-9880-7cfa34da742f-0",
+            "id": "lc_run--019d0517-fcb2-7a51-b9d9-128fdb7baa6c-0",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_tFB6oeVEW6Evf56oss9FljNa",
+                "id": "call_mLAtDsydmPJnv9qXs5M4nP2w",
                 "type": "tool_call"
               },
               {
@@ -73,7 +73,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_kxQYDT41YqVqK0MVQuU737V9",
+                "id": "call_DQCY4dHqg3E6orqfMFfLxZgw",
                 "type": "tool_call"
               },
               {
@@ -81,7 +81,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_cxP8l1N7TMtwVOtSGH05aNc3",
+                "id": "call_tqLtBO3kxFFYvQg4mJoEBFoX",
                 "type": "tool_call"
               },
               {
@@ -89,7 +89,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_g0pI4ZNLZ97yIRSmuR5NCaCp",
+                "id": "call_DxNjljg8Ei3EGgWY4ahD66ua",
                 "type": "tool_call"
               },
               {
@@ -97,7 +97,7 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_VrR6fb6dVO9qikDtZMyRVCxf",
+                "id": "call_PdTc2kz667vfuRHDdYT1zWVg",
                 "type": "tool_call"
               }
             ],
@@ -122,8 +122,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "44169da9-15db-4330-8dbb-9265fcc276dc",
-            "tool_call_id": "call_tFB6oeVEW6Evf56oss9FljNa",
+            "id": "81846c90-86eb-421b-8e9d-cdf9068c230b",
+            "tool_call_id": "call_mLAtDsydmPJnv9qXs5M4nP2w",
             "status": "success"
           },
           {
@@ -132,8 +132,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "ed13943d-9d74-4911-87d8-544bbc9f69c6",
-            "tool_call_id": "call_kxQYDT41YqVqK0MVQuU737V9",
+            "id": "ab5987b7-3e9f-408b-9144-4fcb7041e9b7",
+            "tool_call_id": "call_DQCY4dHqg3E6orqfMFfLxZgw",
             "status": "success"
           },
           {
@@ -142,8 +142,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "418f017c-ab54-4dc9-869b-e0adf2bf3a04",
-            "tool_call_id": "call_cxP8l1N7TMtwVOtSGH05aNc3",
+            "id": "ba5c45ed-dfdf-410e-a49d-3a6199c98aed",
+            "tool_call_id": "call_tqLtBO3kxFFYvQg4mJoEBFoX",
             "status": "success"
           },
           {
@@ -152,8 +152,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "4b52fbf7-ecfe-4a76-b0b9-492c3c886b82",
-            "tool_call_id": "call_g0pI4ZNLZ97yIRSmuR5NCaCp",
+            "id": "4431dca5-bd40-4024-affe-55b021cdc41f",
+            "tool_call_id": "call_DxNjljg8Ei3EGgWY4ahD66ua",
             "status": "success"
           },
           {
@@ -162,24 +162,24 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "e719d0a4-7aa1-49f0-9017-16f893f36fa3",
-            "tool_call_id": "call_VrR6fb6dVO9qikDtZMyRVCxf",
+            "id": "04add933-50cd-41bb-98c0-ad84a96d138e",
+            "tool_call_id": "call_PdTc2kz667vfuRHDdYT1zWVg",
             "status": "success"
           },
           {
-            "content": "Here are the latest prices I fetched:\n\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n- TSLA: $245.60\n- AMZN: $185.20\n\nNote: these are the values returned by the data source and may be delayed. Would you like real-time updates, percent change, or historical data for any of these?",
+            "content": "Here are the latest prices I fetched (USD):\n\n- AAPL: $178.50  \n- GOOGL: $142.30  \n- MSFT: $378.90  \n- TSLA: $245.60  \n- AMZN: $185.20\n\nPrices can change quickly \u2014 would you like intraday charts, historical data, or price alerts?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 289,
+                "completion_tokens": 212,
                 "prompt_tokens": 421,
-                "total_tokens": 710,
+                "total_tokens": 633,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 192,
+                  "reasoning_tokens": 128,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -190,26 +190,26 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1iiUCRdIDTR8OMD8fbqA3bqk5Hur",
+              "id": "chatcmpl-DL2WRVKS3vHNQYwdHvVTu9AHS28yQ",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a7-0433-77a1-8426-2692a04b2031-0",
+            "id": "lc_run--019d0518-0ab0-70e2-84c3-ce9ebe7f74c0-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 421,
-              "output_tokens": 289,
-              "total_tokens": 710,
+              "output_tokens": 212,
+              "total_tokens": 633,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 192
+                "reasoning": 128
               }
             }
           }
@@ -217,13 +217,13 @@
       }
     },
     {
-      "uuid": "019bf2a7-0432-70f1-a619-24934d86844c",
+      "uuid": "019d0518-0ab0-70e2-84c3-ce87f9bc9fca",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bf2a6-f232-73f1-a047-ae751fe53cbf",
-      "startTime": "2026-01-25T00:56:30.514Z",
-      "endTime": "2026-01-25T00:56:36.457Z",
+      "parentUuid": "019d0517-fcb1-7f13-8728-3bff5f536d64",
+      "startTime": "2026-03-19T07:55:54.928Z",
+      "endTime": "2026-03-19T07:55:58.432Z",
       "input": {
         "messages": [
           {
@@ -231,7 +231,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "1739e199-9e78-4bae-9c9c-3c1e2e171fd3"
+            "id": "ea6c315a-4540-4aab-9042-9848cdd59789"
           },
           {
             "content": "",
@@ -257,20 +257,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1iiQOFBG8N1rDphHZSWO7Jfgojjl",
+              "id": "chatcmpl-DL2WN3gy22RpVG8vYmcInTir8LuJW",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a6-f235-75a3-9880-7cfa34da742f-0",
+            "id": "lc_run--019d0517-fcb2-7a51-b9d9-128fdb7baa6c-0",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_tFB6oeVEW6Evf56oss9FljNa",
+                "id": "call_mLAtDsydmPJnv9qXs5M4nP2w",
                 "type": "tool_call"
               },
               {
@@ -278,7 +278,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_kxQYDT41YqVqK0MVQuU737V9",
+                "id": "call_DQCY4dHqg3E6orqfMFfLxZgw",
                 "type": "tool_call"
               },
               {
@@ -286,7 +286,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_cxP8l1N7TMtwVOtSGH05aNc3",
+                "id": "call_tqLtBO3kxFFYvQg4mJoEBFoX",
                 "type": "tool_call"
               },
               {
@@ -294,7 +294,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_g0pI4ZNLZ97yIRSmuR5NCaCp",
+                "id": "call_DxNjljg8Ei3EGgWY4ahD66ua",
                 "type": "tool_call"
               },
               {
@@ -302,7 +302,7 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_VrR6fb6dVO9qikDtZMyRVCxf",
+                "id": "call_PdTc2kz667vfuRHDdYT1zWVg",
                 "type": "tool_call"
               }
             ],
@@ -327,8 +327,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "44169da9-15db-4330-8dbb-9265fcc276dc",
-            "tool_call_id": "call_tFB6oeVEW6Evf56oss9FljNa",
+            "id": "81846c90-86eb-421b-8e9d-cdf9068c230b",
+            "tool_call_id": "call_mLAtDsydmPJnv9qXs5M4nP2w",
             "status": "success"
           },
           {
@@ -337,8 +337,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "ed13943d-9d74-4911-87d8-544bbc9f69c6",
-            "tool_call_id": "call_kxQYDT41YqVqK0MVQuU737V9",
+            "id": "ab5987b7-3e9f-408b-9144-4fcb7041e9b7",
+            "tool_call_id": "call_DQCY4dHqg3E6orqfMFfLxZgw",
             "status": "success"
           },
           {
@@ -347,8 +347,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "418f017c-ab54-4dc9-869b-e0adf2bf3a04",
-            "tool_call_id": "call_cxP8l1N7TMtwVOtSGH05aNc3",
+            "id": "ba5c45ed-dfdf-410e-a49d-3a6199c98aed",
+            "tool_call_id": "call_tqLtBO3kxFFYvQg4mJoEBFoX",
             "status": "success"
           },
           {
@@ -357,8 +357,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "4b52fbf7-ecfe-4a76-b0b9-492c3c886b82",
-            "tool_call_id": "call_g0pI4ZNLZ97yIRSmuR5NCaCp",
+            "id": "4431dca5-bd40-4024-affe-55b021cdc41f",
+            "tool_call_id": "call_DxNjljg8Ei3EGgWY4ahD66ua",
             "status": "success"
           },
           {
@@ -367,8 +367,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "e719d0a4-7aa1-49f0-9017-16f893f36fa3",
-            "tool_call_id": "call_VrR6fb6dVO9qikDtZMyRVCxf",
+            "id": "04add933-50cd-41bb-98c0-ad84a96d138e",
+            "tool_call_id": "call_PdTc2kz667vfuRHDdYT1zWVg",
             "status": "success"
           }
         ]
@@ -376,19 +376,19 @@
       "output": {
         "messages": [
           {
-            "content": "Here are the latest prices I fetched:\n\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n- TSLA: $245.60\n- AMZN: $185.20\n\nNote: these are the values returned by the data source and may be delayed. Would you like real-time updates, percent change, or historical data for any of these?",
+            "content": "Here are the latest prices I fetched (USD):\n\n- AAPL: $178.50  \n- GOOGL: $142.30  \n- MSFT: $378.90  \n- TSLA: $245.60  \n- AMZN: $185.20\n\nPrices can change quickly \u2014 would you like intraday charts, historical data, or price alerts?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 289,
+                "completion_tokens": 212,
                 "prompt_tokens": 421,
-                "total_tokens": 710,
+                "total_tokens": 633,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 192,
+                  "reasoning_tokens": 128,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -399,26 +399,26 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1iiUCRdIDTR8OMD8fbqA3bqk5Hur",
+              "id": "chatcmpl-DL2WRVKS3vHNQYwdHvVTu9AHS28yQ",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a7-0433-77a1-8426-2692a04b2031-0",
+            "id": "lc_run--019d0518-0ab0-70e2-84c3-ce9ebe7f74c0-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 421,
-              "output_tokens": 289,
-              "total_tokens": 710,
+              "output_tokens": 212,
+              "total_tokens": 633,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 192
+                "reasoning": 128
               }
             }
           }
@@ -426,13 +426,13 @@
       }
     },
     {
-      "uuid": "019bf2a7-1b68-79a3-91d6-ab15c0fcefb5",
+      "uuid": "019d0518-1860-70d1-901e-e72840fedde3",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bf2a7-0432-70f1-a619-24934d86844c",
-      "startTime": "2026-01-25T00:56:36.456Z",
-      "endTime": "2026-01-25T00:56:36.457Z",
+      "parentUuid": "019d0518-0ab0-70e2-84c3-ce87f9bc9fca",
+      "startTime": "2026-03-19T07:55:58.432Z",
+      "endTime": "2026-03-19T07:55:58.432Z",
       "input": {
         "messages": [
           {
@@ -440,7 +440,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "1739e199-9e78-4bae-9c9c-3c1e2e171fd3"
+            "id": "ea6c315a-4540-4aab-9042-9848cdd59789"
           },
           {
             "content": "",
@@ -466,20 +466,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1iiQOFBG8N1rDphHZSWO7Jfgojjl",
+              "id": "chatcmpl-DL2WN3gy22RpVG8vYmcInTir8LuJW",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a6-f235-75a3-9880-7cfa34da742f-0",
+            "id": "lc_run--019d0517-fcb2-7a51-b9d9-128fdb7baa6c-0",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_tFB6oeVEW6Evf56oss9FljNa",
+                "id": "call_mLAtDsydmPJnv9qXs5M4nP2w",
                 "type": "tool_call"
               },
               {
@@ -487,7 +487,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_kxQYDT41YqVqK0MVQuU737V9",
+                "id": "call_DQCY4dHqg3E6orqfMFfLxZgw",
                 "type": "tool_call"
               },
               {
@@ -495,7 +495,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_cxP8l1N7TMtwVOtSGH05aNc3",
+                "id": "call_tqLtBO3kxFFYvQg4mJoEBFoX",
                 "type": "tool_call"
               },
               {
@@ -503,7 +503,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_g0pI4ZNLZ97yIRSmuR5NCaCp",
+                "id": "call_DxNjljg8Ei3EGgWY4ahD66ua",
                 "type": "tool_call"
               },
               {
@@ -511,7 +511,7 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_VrR6fb6dVO9qikDtZMyRVCxf",
+                "id": "call_PdTc2kz667vfuRHDdYT1zWVg",
                 "type": "tool_call"
               }
             ],
@@ -536,8 +536,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "44169da9-15db-4330-8dbb-9265fcc276dc",
-            "tool_call_id": "call_tFB6oeVEW6Evf56oss9FljNa",
+            "id": "81846c90-86eb-421b-8e9d-cdf9068c230b",
+            "tool_call_id": "call_mLAtDsydmPJnv9qXs5M4nP2w",
             "status": "success"
           },
           {
@@ -546,8 +546,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "ed13943d-9d74-4911-87d8-544bbc9f69c6",
-            "tool_call_id": "call_kxQYDT41YqVqK0MVQuU737V9",
+            "id": "ab5987b7-3e9f-408b-9144-4fcb7041e9b7",
+            "tool_call_id": "call_DQCY4dHqg3E6orqfMFfLxZgw",
             "status": "success"
           },
           {
@@ -556,8 +556,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "418f017c-ab54-4dc9-869b-e0adf2bf3a04",
-            "tool_call_id": "call_cxP8l1N7TMtwVOtSGH05aNc3",
+            "id": "ba5c45ed-dfdf-410e-a49d-3a6199c98aed",
+            "tool_call_id": "call_tqLtBO3kxFFYvQg4mJoEBFoX",
             "status": "success"
           },
           {
@@ -566,8 +566,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "4b52fbf7-ecfe-4a76-b0b9-492c3c886b82",
-            "tool_call_id": "call_g0pI4ZNLZ97yIRSmuR5NCaCp",
+            "id": "4431dca5-bd40-4024-affe-55b021cdc41f",
+            "tool_call_id": "call_DxNjljg8Ei3EGgWY4ahD66ua",
             "status": "success"
           },
           {
@@ -576,24 +576,24 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "e719d0a4-7aa1-49f0-9017-16f893f36fa3",
-            "tool_call_id": "call_VrR6fb6dVO9qikDtZMyRVCxf",
+            "id": "04add933-50cd-41bb-98c0-ad84a96d138e",
+            "tool_call_id": "call_PdTc2kz667vfuRHDdYT1zWVg",
             "status": "success"
           },
           {
-            "content": "Here are the latest prices I fetched:\n\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n- TSLA: $245.60\n- AMZN: $185.20\n\nNote: these are the values returned by the data source and may be delayed. Would you like real-time updates, percent change, or historical data for any of these?",
+            "content": "Here are the latest prices I fetched (USD):\n\n- AAPL: $178.50  \n- GOOGL: $142.30  \n- MSFT: $378.90  \n- TSLA: $245.60  \n- AMZN: $185.20\n\nPrices can change quickly \u2014 would you like intraday charts, historical data, or price alerts?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 289,
+                "completion_tokens": 212,
                 "prompt_tokens": 421,
-                "total_tokens": 710,
+                "total_tokens": 633,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 192,
+                  "reasoning_tokens": 128,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -604,26 +604,26 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1iiUCRdIDTR8OMD8fbqA3bqk5Hur",
+              "id": "chatcmpl-DL2WRVKS3vHNQYwdHvVTu9AHS28yQ",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a7-0433-77a1-8426-2692a04b2031-0",
+            "id": "lc_run--019d0518-0ab0-70e2-84c3-ce9ebe7f74c0-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 421,
-              "output_tokens": 289,
-              "total_tokens": 710,
+              "output_tokens": 212,
+              "total_tokens": 633,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 192
+                "reasoning": 128
               }
             }
           }
@@ -632,13 +632,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "019bf2a7-042c-73a3-95c0-8f3b7b760065",
+      "uuid": "019d0518-0aae-7251-ad8c-113eda3d3c01",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bf2a6-f232-73f1-a047-ae751fe53cbf",
-      "startTime": "2026-01-25T00:56:30.508Z",
-      "endTime": "2026-01-25T00:56:30.514Z",
+      "parentUuid": "019d0517-fcb1-7f13-8728-3bff5f536d64",
+      "startTime": "2026-03-19T07:55:54.926Z",
+      "endTime": "2026-03-19T07:55:54.928Z",
       "input": {
         "messages": [
           {
@@ -646,7 +646,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "1739e199-9e78-4bae-9c9c-3c1e2e171fd3"
+            "id": "ea6c315a-4540-4aab-9042-9848cdd59789"
           },
           {
             "content": "",
@@ -672,20 +672,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1iiQOFBG8N1rDphHZSWO7Jfgojjl",
+              "id": "chatcmpl-DL2WN3gy22RpVG8vYmcInTir8LuJW",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a6-f235-75a3-9880-7cfa34da742f-0",
+            "id": "lc_run--019d0517-fcb2-7a51-b9d9-128fdb7baa6c-0",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_tFB6oeVEW6Evf56oss9FljNa",
+                "id": "call_mLAtDsydmPJnv9qXs5M4nP2w",
                 "type": "tool_call"
               },
               {
@@ -693,7 +693,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_kxQYDT41YqVqK0MVQuU737V9",
+                "id": "call_DQCY4dHqg3E6orqfMFfLxZgw",
                 "type": "tool_call"
               },
               {
@@ -701,7 +701,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_cxP8l1N7TMtwVOtSGH05aNc3",
+                "id": "call_tqLtBO3kxFFYvQg4mJoEBFoX",
                 "type": "tool_call"
               },
               {
@@ -709,7 +709,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_g0pI4ZNLZ97yIRSmuR5NCaCp",
+                "id": "call_DxNjljg8Ei3EGgWY4ahD66ua",
                 "type": "tool_call"
               },
               {
@@ -717,7 +717,7 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_VrR6fb6dVO9qikDtZMyRVCxf",
+                "id": "call_PdTc2kz667vfuRHDdYT1zWVg",
                 "type": "tool_call"
               }
             ],
@@ -746,8 +746,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "44169da9-15db-4330-8dbb-9265fcc276dc",
-            "tool_call_id": "call_tFB6oeVEW6Evf56oss9FljNa",
+            "id": "81846c90-86eb-421b-8e9d-cdf9068c230b",
+            "tool_call_id": "call_mLAtDsydmPJnv9qXs5M4nP2w",
             "status": "success"
           },
           {
@@ -756,8 +756,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "ed13943d-9d74-4911-87d8-544bbc9f69c6",
-            "tool_call_id": "call_kxQYDT41YqVqK0MVQuU737V9",
+            "id": "ab5987b7-3e9f-408b-9144-4fcb7041e9b7",
+            "tool_call_id": "call_DQCY4dHqg3E6orqfMFfLxZgw",
             "status": "success"
           },
           {
@@ -766,8 +766,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "418f017c-ab54-4dc9-869b-e0adf2bf3a04",
-            "tool_call_id": "call_cxP8l1N7TMtwVOtSGH05aNc3",
+            "id": "ba5c45ed-dfdf-410e-a49d-3a6199c98aed",
+            "tool_call_id": "call_tqLtBO3kxFFYvQg4mJoEBFoX",
             "status": "success"
           },
           {
@@ -776,8 +776,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "4b52fbf7-ecfe-4a76-b0b9-492c3c886b82",
-            "tool_call_id": "call_g0pI4ZNLZ97yIRSmuR5NCaCp",
+            "id": "4431dca5-bd40-4024-affe-55b021cdc41f",
+            "tool_call_id": "call_DxNjljg8Ei3EGgWY4ahD66ua",
             "status": "success"
           },
           {
@@ -786,8 +786,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "e719d0a4-7aa1-49f0-9017-16f893f36fa3",
-            "tool_call_id": "call_VrR6fb6dVO9qikDtZMyRVCxf",
+            "id": "04add933-50cd-41bb-98c0-ad84a96d138e",
+            "tool_call_id": "call_PdTc2kz667vfuRHDdYT1zWVg",
             "status": "success"
           }
         ]
@@ -801,28 +801,12 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "44169da9-15db-4330-8dbb-9265fcc276dc",
-            "tool_call_id": "call_tFB6oeVEW6Evf56oss9FljNa",
+            "id": "81846c90-86eb-421b-8e9d-cdf9068c230b",
+            "tool_call_id": "call_mLAtDsydmPJnv9qXs5M4nP2w",
             "status": "success"
           },
           "inputParameters": {
             "symbol": "AAPL"
-          }
-        },
-        {
-          "name": "get_stock_price",
-          "output": {
-            "content": "$142.30",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_stock_price",
-            "id": "ed13943d-9d74-4911-87d8-544bbc9f69c6",
-            "tool_call_id": "call_kxQYDT41YqVqK0MVQuU737V9",
-            "status": "success"
-          },
-          "inputParameters": {
-            "symbol": "GOOGL"
           }
         },
         {
@@ -833,12 +817,28 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "418f017c-ab54-4dc9-869b-e0adf2bf3a04",
-            "tool_call_id": "call_cxP8l1N7TMtwVOtSGH05aNc3",
+            "id": "ba5c45ed-dfdf-410e-a49d-3a6199c98aed",
+            "tool_call_id": "call_tqLtBO3kxFFYvQg4mJoEBFoX",
             "status": "success"
           },
           "inputParameters": {
             "symbol": "MSFT"
+          }
+        },
+        {
+          "name": "get_stock_price",
+          "output": {
+            "content": "$142.30",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "id": "ab5987b7-3e9f-408b-9144-4fcb7041e9b7",
+            "tool_call_id": "call_DQCY4dHqg3E6orqfMFfLxZgw",
+            "status": "success"
+          },
+          "inputParameters": {
+            "symbol": "GOOGL"
           }
         },
         {
@@ -849,8 +849,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "4b52fbf7-ecfe-4a76-b0b9-492c3c886b82",
-            "tool_call_id": "call_g0pI4ZNLZ97yIRSmuR5NCaCp",
+            "id": "4431dca5-bd40-4024-affe-55b021cdc41f",
+            "tool_call_id": "call_DxNjljg8Ei3EGgWY4ahD66ua",
             "status": "success"
           },
           "inputParameters": {
@@ -865,8 +865,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "e719d0a4-7aa1-49f0-9017-16f893f36fa3",
-            "tool_call_id": "call_VrR6fb6dVO9qikDtZMyRVCxf",
+            "id": "04add933-50cd-41bb-98c0-ad84a96d138e",
+            "tool_call_id": "call_PdTc2kz667vfuRHDdYT1zWVg",
             "status": "success"
           },
           "inputParameters": {
@@ -876,13 +876,13 @@
       ]
     },
     {
-      "uuid": "019bf2a6-f234-75c1-8eea-d4ed040cf935",
+      "uuid": "019d0517-fcb2-7a51-b9d9-127000e3965d",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bf2a6-f232-73f1-a047-ae751fe53cbf",
-      "startTime": "2026-01-25T00:56:25.909Z",
-      "endTime": "2026-01-25T00:56:30.507Z",
+      "parentUuid": "019d0517-fcb1-7f13-8728-3bff5f536d64",
+      "startTime": "2026-03-19T07:55:51.346Z",
+      "endTime": "2026-03-19T07:55:54.925Z",
       "input": {
         "messages": [
           {
@@ -890,7 +890,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "1739e199-9e78-4bae-9c9c-3c1e2e171fd3"
+            "id": "ea6c315a-4540-4aab-9042-9848cdd59789"
           }
         ]
       },
@@ -920,20 +920,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1iiQOFBG8N1rDphHZSWO7Jfgojjl",
+              "id": "chatcmpl-DL2WN3gy22RpVG8vYmcInTir8LuJW",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a6-f235-75a3-9880-7cfa34da742f-0",
+            "id": "lc_run--019d0517-fcb2-7a51-b9d9-128fdb7baa6c-0",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_tFB6oeVEW6Evf56oss9FljNa",
+                "id": "call_mLAtDsydmPJnv9qXs5M4nP2w",
                 "type": "tool_call"
               },
               {
@@ -941,7 +941,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_kxQYDT41YqVqK0MVQuU737V9",
+                "id": "call_DQCY4dHqg3E6orqfMFfLxZgw",
                 "type": "tool_call"
               },
               {
@@ -949,7 +949,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_cxP8l1N7TMtwVOtSGH05aNc3",
+                "id": "call_tqLtBO3kxFFYvQg4mJoEBFoX",
                 "type": "tool_call"
               },
               {
@@ -957,7 +957,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_g0pI4ZNLZ97yIRSmuR5NCaCp",
+                "id": "call_DxNjljg8Ei3EGgWY4ahD66ua",
                 "type": "tool_call"
               },
               {
@@ -965,7 +965,7 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_VrR6fb6dVO9qikDtZMyRVCxf",
+                "id": "call_PdTc2kz667vfuRHDdYT1zWVg",
                 "type": "tool_call"
               }
             ],
@@ -988,13 +988,13 @@
       }
     },
     {
-      "uuid": "019bf2a7-042b-7a12-a12b-47eaa8998f33",
+      "uuid": "019d0518-0aad-7d71-a289-74df80ba04df",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bf2a6-f234-75c1-8eea-d4ed040cf935",
-      "startTime": "2026-01-25T00:56:30.507Z",
-      "endTime": "2026-01-25T00:56:30.507Z",
+      "parentUuid": "019d0517-fcb2-7a51-b9d9-127000e3965d",
+      "startTime": "2026-03-19T07:55:54.925Z",
+      "endTime": "2026-03-19T07:55:54.925Z",
       "input": {
         "messages": [
           {
@@ -1002,7 +1002,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "1739e199-9e78-4bae-9c9c-3c1e2e171fd3"
+            "id": "ea6c315a-4540-4aab-9042-9848cdd59789"
           },
           {
             "content": "",
@@ -1028,20 +1028,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1iiQOFBG8N1rDphHZSWO7Jfgojjl",
+              "id": "chatcmpl-DL2WN3gy22RpVG8vYmcInTir8LuJW",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a6-f235-75a3-9880-7cfa34da742f-0",
+            "id": "lc_run--019d0517-fcb2-7a51-b9d9-128fdb7baa6c-0",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_tFB6oeVEW6Evf56oss9FljNa",
+                "id": "call_mLAtDsydmPJnv9qXs5M4nP2w",
                 "type": "tool_call"
               },
               {
@@ -1049,7 +1049,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_kxQYDT41YqVqK0MVQuU737V9",
+                "id": "call_DQCY4dHqg3E6orqfMFfLxZgw",
                 "type": "tool_call"
               },
               {
@@ -1057,7 +1057,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_cxP8l1N7TMtwVOtSGH05aNc3",
+                "id": "call_tqLtBO3kxFFYvQg4mJoEBFoX",
                 "type": "tool_call"
               },
               {
@@ -1065,7 +1065,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_g0pI4ZNLZ97yIRSmuR5NCaCp",
+                "id": "call_DxNjljg8Ei3EGgWY4ahD66ua",
                 "type": "tool_call"
               },
               {
@@ -1073,7 +1073,7 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_VrR6fb6dVO9qikDtZMyRVCxf",
+                "id": "call_PdTc2kz667vfuRHDdYT1zWVg",
                 "type": "tool_call"
               }
             ],
@@ -1100,13 +1100,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf2a7-0433-77a1-8426-2692a04b2031",
+      "uuid": "019d0518-0ab0-70e2-84c3-ce9ebe7f74c0",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf2a7-0432-70f1-a619-24934d86844c",
-      "startTime": "2026-01-25T00:56:30.515Z",
-      "endTime": "2026-01-25T00:56:36.456Z",
+      "parentUuid": "019d0518-0ab0-70e2-84c3-ce87f9bc9fca",
+      "startTime": "2026-03-19T07:55:54.928Z",
+      "endTime": "2026-03-19T07:55:58.432Z",
       "input": [
         {
           "role": "human",
@@ -1163,21 +1163,21 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Here are the latest prices I fetched:\n\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n- TSLA: $245.60\n- AMZN: $185.20\n\nNote: these are the values returned by the data source and may be delayed. Would you like real-time updates, percent change, or historical data for any of these?",
+        "content": "Here are the latest prices I fetched (USD):\n\n- AAPL: $178.50  \n- GOOGL: $142.30  \n- MSFT: $378.90  \n- TSLA: $245.60  \n- AMZN: $185.20\n\nPrices can change quickly \u2014 would you like intraday charts, historical data, or price alerts?",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 421.0,
-      "outputTokenCount": 289.0
+      "outputTokenCount": 212.0
     },
     {
-      "uuid": "019bf2a6-f235-75a3-9880-7cfa34da742f",
+      "uuid": "019d0517-fcb2-7a51-b9d9-128fdb7baa6c",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf2a6-f234-75c1-8eea-d4ed040cf935",
-      "startTime": "2026-01-25T00:56:25.909Z",
-      "endTime": "2026-01-25T00:56:30.506Z",
+      "parentUuid": "019d0517-fcb2-7a51-b9d9-127000e3965d",
+      "startTime": "2026-03-19T07:55:51.346Z",
+      "endTime": "2026-03-19T07:55:54.925Z",
       "input": [
         {
           "role": "human",
@@ -1217,35 +1217,35 @@
             "args": {
               "symbol": "AAPL"
             },
-            "id": "call_tFB6oeVEW6Evf56oss9FljNa"
+            "id": "call_mLAtDsydmPJnv9qXs5M4nP2w"
           },
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "GOOGL"
             },
-            "id": "call_kxQYDT41YqVqK0MVQuU737V9"
+            "id": "call_DQCY4dHqg3E6orqfMFfLxZgw"
           },
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "MSFT"
             },
-            "id": "call_cxP8l1N7TMtwVOtSGH05aNc3"
+            "id": "call_tqLtBO3kxFFYvQg4mJoEBFoX"
           },
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "TSLA"
             },
-            "id": "call_g0pI4ZNLZ97yIRSmuR5NCaCp"
+            "id": "call_DxNjljg8Ei3EGgWY4ahD66ua"
           },
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "AMZN"
             },
-            "id": "call_VrR6fb6dVO9qikDtZMyRVCxf"
+            "id": "call_PdTc2kz667vfuRHDdYT1zWVg"
           }
         ]
       },
@@ -1257,13 +1257,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf2a7-0431-79a2-b89f-83c6e4fbf084",
+      "uuid": "019d0518-0ab0-70e2-84c3-ce7ee24c9834",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf2a7-042c-73a3-95c0-8f3b7b760065",
-      "startTime": "2026-01-25T00:56:30.513Z",
-      "endTime": "2026-01-25T00:56:30.513Z",
+      "parentUuid": "019d0518-0aae-7251-ad8c-113eda3d3c01",
+      "startTime": "2026-03-19T07:55:54.928Z",
+      "endTime": "2026-03-19T07:55:54.928Z",
       "input": {
         "symbol": "AMZN"
       },
@@ -1273,19 +1273,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "e719d0a4-7aa1-49f0-9017-16f893f36fa3",
-        "tool_call_id": "call_VrR6fb6dVO9qikDtZMyRVCxf",
+        "id": "04add933-50cd-41bb-98c0-ad84a96d138e",
+        "tool_call_id": "call_PdTc2kz667vfuRHDdYT1zWVg",
         "status": "success"
       }
     },
     {
-      "uuid": "019bf2a7-0430-7881-8087-0fbe85736cea",
+      "uuid": "019d0518-0aaf-73a1-9c9a-290656979358",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf2a7-042c-73a3-95c0-8f3b7b760065",
-      "startTime": "2026-01-25T00:56:30.512Z",
-      "endTime": "2026-01-25T00:56:30.512Z",
+      "parentUuid": "019d0518-0aae-7251-ad8c-113eda3d3c01",
+      "startTime": "2026-03-19T07:55:54.927Z",
+      "endTime": "2026-03-19T07:55:54.927Z",
       "input": {
         "symbol": "TSLA"
       },
@@ -1295,41 +1295,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "4b52fbf7-ecfe-4a76-b0b9-492c3c886b82",
-        "tool_call_id": "call_g0pI4ZNLZ97yIRSmuR5NCaCp",
+        "id": "4431dca5-bd40-4024-affe-55b021cdc41f",
+        "tool_call_id": "call_DxNjljg8Ei3EGgWY4ahD66ua",
         "status": "success"
       }
     },
     {
-      "uuid": "019bf2a7-042f-7d31-a450-9e0f403c5fd9",
+      "uuid": "019d0518-0aaf-73a1-9c9a-28fbb3cf3493",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf2a7-042c-73a3-95c0-8f3b7b760065",
-      "startTime": "2026-01-25T00:56:30.511Z",
-      "endTime": "2026-01-25T00:56:30.511Z",
-      "input": {
-        "symbol": "MSFT"
-      },
-      "output": {
-        "content": "$378.90",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_stock_price",
-        "id": "418f017c-ab54-4dc9-869b-e0adf2bf3a04",
-        "tool_call_id": "call_cxP8l1N7TMtwVOtSGH05aNc3",
-        "status": "success"
-      }
-    },
-    {
-      "uuid": "019bf2a7-042e-7241-8643-2fc1e7dc4bca",
-      "name": "get_stock_price",
-      "status": "SUCCESS",
-      "type": "tool",
-      "parentUuid": "019bf2a7-042c-73a3-95c0-8f3b7b760065",
-      "startTime": "2026-01-25T00:56:30.510Z",
-      "endTime": "2026-01-25T00:56:30.510Z",
+      "parentUuid": "019d0518-0aae-7251-ad8c-113eda3d3c01",
+      "startTime": "2026-03-19T07:55:54.927Z",
+      "endTime": "2026-03-19T07:55:54.927Z",
       "input": {
         "symbol": "GOOGL"
       },
@@ -1339,19 +1317,41 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "ed13943d-9d74-4911-87d8-544bbc9f69c6",
-        "tool_call_id": "call_kxQYDT41YqVqK0MVQuU737V9",
+        "id": "ab5987b7-3e9f-408b-9144-4fcb7041e9b7",
+        "tool_call_id": "call_DQCY4dHqg3E6orqfMFfLxZgw",
         "status": "success"
       }
     },
     {
-      "uuid": "019bf2a7-042c-73a3-95c0-8f491ed2d2f9",
+      "uuid": "019d0518-0aaf-73a1-9c9a-28e397c8700a",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf2a7-042c-73a3-95c0-8f3b7b760065",
-      "startTime": "2026-01-25T00:56:30.508Z",
-      "endTime": "2026-01-25T00:56:30.509Z",
+      "parentUuid": "019d0518-0aae-7251-ad8c-113eda3d3c01",
+      "startTime": "2026-03-19T07:55:54.927Z",
+      "endTime": "2026-03-19T07:55:54.927Z",
+      "input": {
+        "symbol": "MSFT"
+      },
+      "output": {
+        "content": "$378.90",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_stock_price",
+        "id": "ba5c45ed-dfdf-410e-a49d-3a6199c98aed",
+        "tool_call_id": "call_tqLtBO3kxFFYvQg4mJoEBFoX",
+        "status": "success"
+      }
+    },
+    {
+      "uuid": "019d0518-0aae-7251-ad8c-1143986f12eb",
+      "name": "get_stock_price",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019d0518-0aae-7251-ad8c-113eda3d3c01",
+      "startTime": "2026-03-19T07:55:54.926Z",
+      "endTime": "2026-03-19T07:55:54.926Z",
       "input": {
         "symbol": "AAPL"
       },
@@ -1361,14 +1361,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "44169da9-15db-4330-8dbb-9265fcc276dc",
-        "tool_call_id": "call_tFB6oeVEW6Evf56oss9FljNa",
+        "id": "81846c90-86eb-421b-8e9d-cdf9068c230b",
+        "tool_call_id": "call_mLAtDsydmPJnv9qXs5M4nP2w",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-25T00:56:25.906Z",
-  "endTime": "2026-01-25T00:56:36.458Z",
+  "startTime": "2026-03-19T07:55:51.345Z",
+  "endTime": "2026-03-19T07:55:58.432Z",
   "name": "langgraph-parallel-stocks",
   "tags": [
     "langgraph",
@@ -1383,7 +1383,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "1739e199-9e78-4bae-9c9c-3c1e2e171fd3"
+        "id": "ea6c315a-4540-4aab-9042-9848cdd59789"
       }
     ]
   },
@@ -1394,7 +1394,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "1739e199-9e78-4bae-9c9c-3c1e2e171fd3"
+        "id": "ea6c315a-4540-4aab-9042-9848cdd59789"
       },
       {
         "content": "",
@@ -1420,20 +1420,20 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D1iiQOFBG8N1rDphHZSWO7Jfgojjl",
+          "id": "chatcmpl-DL2WN3gy22RpVG8vYmcInTir8LuJW",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf2a6-f235-75a3-9880-7cfa34da742f-0",
+        "id": "lc_run--019d0517-fcb2-7a51-b9d9-128fdb7baa6c-0",
         "tool_calls": [
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "AAPL"
             },
-            "id": "call_tFB6oeVEW6Evf56oss9FljNa",
+            "id": "call_mLAtDsydmPJnv9qXs5M4nP2w",
             "type": "tool_call"
           },
           {
@@ -1441,7 +1441,7 @@
             "args": {
               "symbol": "GOOGL"
             },
-            "id": "call_kxQYDT41YqVqK0MVQuU737V9",
+            "id": "call_DQCY4dHqg3E6orqfMFfLxZgw",
             "type": "tool_call"
           },
           {
@@ -1449,7 +1449,7 @@
             "args": {
               "symbol": "MSFT"
             },
-            "id": "call_cxP8l1N7TMtwVOtSGH05aNc3",
+            "id": "call_tqLtBO3kxFFYvQg4mJoEBFoX",
             "type": "tool_call"
           },
           {
@@ -1457,7 +1457,7 @@
             "args": {
               "symbol": "TSLA"
             },
-            "id": "call_g0pI4ZNLZ97yIRSmuR5NCaCp",
+            "id": "call_DxNjljg8Ei3EGgWY4ahD66ua",
             "type": "tool_call"
           },
           {
@@ -1465,7 +1465,7 @@
             "args": {
               "symbol": "AMZN"
             },
-            "id": "call_VrR6fb6dVO9qikDtZMyRVCxf",
+            "id": "call_PdTc2kz667vfuRHDdYT1zWVg",
             "type": "tool_call"
           }
         ],
@@ -1490,8 +1490,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "44169da9-15db-4330-8dbb-9265fcc276dc",
-        "tool_call_id": "call_tFB6oeVEW6Evf56oss9FljNa",
+        "id": "81846c90-86eb-421b-8e9d-cdf9068c230b",
+        "tool_call_id": "call_mLAtDsydmPJnv9qXs5M4nP2w",
         "status": "success"
       },
       {
@@ -1500,8 +1500,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "ed13943d-9d74-4911-87d8-544bbc9f69c6",
-        "tool_call_id": "call_kxQYDT41YqVqK0MVQuU737V9",
+        "id": "ab5987b7-3e9f-408b-9144-4fcb7041e9b7",
+        "tool_call_id": "call_DQCY4dHqg3E6orqfMFfLxZgw",
         "status": "success"
       },
       {
@@ -1510,8 +1510,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "418f017c-ab54-4dc9-869b-e0adf2bf3a04",
-        "tool_call_id": "call_cxP8l1N7TMtwVOtSGH05aNc3",
+        "id": "ba5c45ed-dfdf-410e-a49d-3a6199c98aed",
+        "tool_call_id": "call_tqLtBO3kxFFYvQg4mJoEBFoX",
         "status": "success"
       },
       {
@@ -1520,8 +1520,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "4b52fbf7-ecfe-4a76-b0b9-492c3c886b82",
-        "tool_call_id": "call_g0pI4ZNLZ97yIRSmuR5NCaCp",
+        "id": "4431dca5-bd40-4024-affe-55b021cdc41f",
+        "tool_call_id": "call_DxNjljg8Ei3EGgWY4ahD66ua",
         "status": "success"
       },
       {
@@ -1530,24 +1530,24 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "e719d0a4-7aa1-49f0-9017-16f893f36fa3",
-        "tool_call_id": "call_VrR6fb6dVO9qikDtZMyRVCxf",
+        "id": "04add933-50cd-41bb-98c0-ad84a96d138e",
+        "tool_call_id": "call_PdTc2kz667vfuRHDdYT1zWVg",
         "status": "success"
       },
       {
-        "content": "Here are the latest prices I fetched:\n\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n- TSLA: $245.60\n- AMZN: $185.20\n\nNote: these are the values returned by the data source and may be delayed. Would you like real-time updates, percent change, or historical data for any of these?",
+        "content": "Here are the latest prices I fetched (USD):\n\n- AAPL: $178.50  \n- GOOGL: $142.30  \n- MSFT: $378.90  \n- TSLA: $245.60  \n- AMZN: $185.20\n\nPrices can change quickly \u2014 would you like intraday charts, historical data, or price alerts?",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 289,
+            "completion_tokens": 212,
             "prompt_tokens": 421,
-            "total_tokens": 710,
+            "total_tokens": 633,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
-              "reasoning_tokens": 192,
+              "reasoning_tokens": 128,
               "rejected_prediction_tokens": 0
             },
             "prompt_tokens_details": {
@@ -1558,26 +1558,26 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D1iiUCRdIDTR8OMD8fbqA3bqk5Hur",
+          "id": "chatcmpl-DL2WRVKS3vHNQYwdHvVTu9AHS28yQ",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf2a7-0433-77a1-8426-2692a04b2031-0",
+        "id": "lc_run--019d0518-0ab0-70e2-84c3-ce9ebe7f74c0-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 421,
-          "output_tokens": 289,
-          "total_tokens": 710,
+          "output_tokens": 212,
+          "total_tokens": 633,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 192
+            "reasoning": 128
           }
         }
       }
@@ -1593,28 +1593,12 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "44169da9-15db-4330-8dbb-9265fcc276dc",
-        "tool_call_id": "call_tFB6oeVEW6Evf56oss9FljNa",
+        "id": "81846c90-86eb-421b-8e9d-cdf9068c230b",
+        "tool_call_id": "call_mLAtDsydmPJnv9qXs5M4nP2w",
         "status": "success"
       },
       "inputParameters": {
         "symbol": "AAPL"
-      }
-    },
-    {
-      "name": "get_stock_price",
-      "output": {
-        "content": "$142.30",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_stock_price",
-        "id": "ed13943d-9d74-4911-87d8-544bbc9f69c6",
-        "tool_call_id": "call_kxQYDT41YqVqK0MVQuU737V9",
-        "status": "success"
-      },
-      "inputParameters": {
-        "symbol": "GOOGL"
       }
     },
     {
@@ -1625,12 +1609,28 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "418f017c-ab54-4dc9-869b-e0adf2bf3a04",
-        "tool_call_id": "call_cxP8l1N7TMtwVOtSGH05aNc3",
+        "id": "ba5c45ed-dfdf-410e-a49d-3a6199c98aed",
+        "tool_call_id": "call_tqLtBO3kxFFYvQg4mJoEBFoX",
         "status": "success"
       },
       "inputParameters": {
         "symbol": "MSFT"
+      }
+    },
+    {
+      "name": "get_stock_price",
+      "output": {
+        "content": "$142.30",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_stock_price",
+        "id": "ab5987b7-3e9f-408b-9144-4fcb7041e9b7",
+        "tool_call_id": "call_DQCY4dHqg3E6orqfMFfLxZgw",
+        "status": "success"
+      },
+      "inputParameters": {
+        "symbol": "GOOGL"
       }
     },
     {
@@ -1641,8 +1641,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "4b52fbf7-ecfe-4a76-b0b9-492c3c886b82",
-        "tool_call_id": "call_g0pI4ZNLZ97yIRSmuR5NCaCp",
+        "id": "4431dca5-bd40-4024-affe-55b021cdc41f",
+        "tool_call_id": "call_DxNjljg8Ei3EGgWY4ahD66ua",
         "status": "success"
       },
       "inputParameters": {
@@ -1657,8 +1657,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "e719d0a4-7aa1-49f0-9017-16f893f36fa3",
-        "tool_call_id": "call_VrR6fb6dVO9qikDtZMyRVCxf",
+        "id": "04add933-50cd-41bb-98c0-ad84a96d138e",
+        "tool_call_id": "call_PdTc2kz667vfuRHDdYT1zWVg",
         "status": "success"
       },
       "inputParameters": {

@@ -9,7 +9,6 @@ from deepeval.models.embedding_models.openai_embedding_model import (
     OpenAIEmbeddingModel,
 )
 
-
 MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
 
 

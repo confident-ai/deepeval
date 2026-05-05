@@ -1,6 +1,8 @@
 from .context import (
     update_current_span,
     update_current_trace,
+    current_trace_context,
+    current_span_context,
     update_retriever_span,
     update_llm_span,
 )
@@ -12,6 +14,8 @@ from .offline_evals import evaluate_thread, evaluate_trace, evaluate_span
 __all__ = [
     "update_current_span",
     "update_current_trace",
+    "current_trace_context",
+    "current_span_context",
     "update_retriever_span",
     "update_llm_span",
     "LlmSpanContext",

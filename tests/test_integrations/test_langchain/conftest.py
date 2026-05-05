@@ -14,7 +14,6 @@ from dateutil import parser as dateutil_parser
 
 from deepeval.test_case import ToolCall
 
-
 _logger = logging.getLogger(__name__)
 
 # Module-level state for TestRun
@@ -369,7 +368,7 @@ def _add_test_case_to_run(
         tokenCost=token_cost,
         completionTime=completion_time,
         tags=tags,
-        additionalMetadata=additional_metadata,
+        metadata=additional_metadata,
         success=passed,
         metricsData=None,
         trace=None,

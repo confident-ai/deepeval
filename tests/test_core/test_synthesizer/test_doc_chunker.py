@@ -2,7 +2,6 @@ import pytest
 
 from deepeval.synthesizer.chunking.doc_chunker import DocumentChunker
 
-
 ##########################
 # Helpers / Test Doubles #
 ##########################

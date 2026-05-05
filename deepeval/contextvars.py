@@ -3,7 +3,6 @@ from __future__ import annotations
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Optional
 
-
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden
 

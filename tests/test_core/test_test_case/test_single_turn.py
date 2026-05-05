@@ -6,9 +6,10 @@ from pydantic import ValidationError
 from deepeval.test_case import (
     LLMTestCase,
     ToolCall,
-    LLMTestCaseParams,
+    SingleTurnParams,
     ToolCallParams,
 )
+from deepeval.test_case.api import create_api_test_case
 from deepeval.test_case.mcp import MCPServer
 
 
@@ -606,7 +607,7 @@ class TestSerialization:
         assert "tokenCost" in model_dict
         assert "completionTime" in model_dict
 
-    def test_additional_metadata_serialization(self):
+    def test_metadata_serialization(self):
         metadata = {
             "source": "test",
             "timestamp": "2024-01-01",
@@ -614,33 +615,56 @@ class TestSerialization:
             "list": [1, 2, 3],
         }
 
-        test_case = LLMTestCase(input="test", additional_metadata=metadata)
+        test_case = LLMTestCase(input="test", metadata=metadata)
 
+        assert test_case.metadata == metadata
         assert test_case.additional_metadata == metadata
 
         model_dict = test_case.model_dump(by_alias=True)
-        assert "additionalMetadata" in model_dict
-        assert model_dict["additionalMetadata"] == metadata
+        assert "metadata" in model_dict
+        assert "additionalMetadata" not in model_dict
+        assert model_dict["metadata"] == metadata
+
+    def test_additional_metadata_input_compatibility(self):
+        metadata = {"source": "test"}
+
+        snake_case = LLMTestCase(input="test", additional_metadata=metadata)
+        camel_case = LLMTestCase(input="test", additionalMetadata=metadata)
+
+        assert snake_case.metadata == metadata
+        assert camel_case.metadata == metadata
+        assert snake_case.additional_metadata == metadata
+        assert camel_case.additional_metadata == metadata
+
+    def test_api_test_case_uses_metadata(self):
+        metadata = {"source": "test"}
+        test_case = LLMTestCase(input="test", metadata=metadata)
+
+        api_test_case = create_api_test_case(test_case)
+        model_dict = api_test_case.model_dump(by_alias=True)
+
+        assert model_dict["metadata"] == metadata
+        assert "additionalMetadata" not in model_dict
 
 
 class TestLLMTestCaseParams:
     def test_enum_values(self):
-        assert LLMTestCaseParams.INPUT.value == "input"
-        assert LLMTestCaseParams.ACTUAL_OUTPUT.value == "actual_output"
-        assert LLMTestCaseParams.EXPECTED_OUTPUT.value == "expected_output"
-        assert LLMTestCaseParams.CONTEXT.value == "context"
-        assert LLMTestCaseParams.RETRIEVAL_CONTEXT.value == "retrieval_context"
-        assert LLMTestCaseParams.TOOLS_CALLED.value == "tools_called"
-        assert LLMTestCaseParams.EXPECTED_TOOLS.value == "expected_tools"
-        assert LLMTestCaseParams.MCP_SERVERS.value == "mcp_servers"
-        assert LLMTestCaseParams.MCP_TOOLS_CALLED.value == "mcp_tools_called"
+        assert SingleTurnParams.INPUT.value == "input"
+        assert SingleTurnParams.ACTUAL_OUTPUT.value == "actual_output"
+        assert SingleTurnParams.EXPECTED_OUTPUT.value == "expected_output"
+        assert SingleTurnParams.CONTEXT.value == "context"
+        assert SingleTurnParams.RETRIEVAL_CONTEXT.value == "retrieval_context"
+        assert SingleTurnParams.METADATA.value == "metadata"
+        assert SingleTurnParams.TAGS.value == "tags"
+        assert SingleTurnParams.TOOLS_CALLED.value == "tools_called"
+        assert SingleTurnParams.EXPECTED_TOOLS.value == "expected_tools"
+        assert SingleTurnParams.MCP_SERVERS.value == "mcp_servers"
+        assert SingleTurnParams.MCP_TOOLS_CALLED.value == "mcp_tools_called"
         assert (
-            LLMTestCaseParams.MCP_RESOURCES_CALLED.value
+            SingleTurnParams.MCP_RESOURCES_CALLED.value
             == "mcp_resources_called"
         )
-        assert (
-            LLMTestCaseParams.MCP_PROMPTS_CALLED.value == "mcp_prompts_called"
-        )
+        assert SingleTurnParams.MCP_PROMPTS_CALLED.value == "mcp_prompts_called"
 
 
 class TestToolCallParams:

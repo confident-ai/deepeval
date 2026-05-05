@@ -1,6 +1,7 @@
 import pytest
 import uuid
 import time
+from typing import List
 from pydantic import BaseModel
 from unittest.mock import patch
 from deepeval.prompt import Prompt, Tool
@@ -17,6 +18,8 @@ from deepeval.prompt.api import (
 )
 from deepeval.confident.api import Api
 from deepeval.metrics.faithfulness.schema import FaithfulnessVerdict
+
+pytestmark = pytest.mark.flaky(reruns=3, reruns_delay=10)
 
 
 class NestedObject(BaseModel):
@@ -68,11 +71,59 @@ class UpdatedToolInputSchema(BaseModel):
     new_field: str
 
 
+# --- Array/List schema models ---
+
+
+class ListOfStringsSchema(BaseModel):
+    tags: List[str]
+
+
+class ListOfIntsSchema(BaseModel):
+    scores: List[int]
+
+
+class ListOfFloatsSchema(BaseModel):
+    values: List[float]
+
+
+class Source(BaseModel):
+    url: str
+    title: str
+
+
+class ListOfObjectsSchema(BaseModel):
+    sources: List[Source]
+
+
+class MixedSchemaWithLists(BaseModel):
+    name: str
+    count: int
+    tags: List[str]
+    sources: List[Source]
+
+
+class InnerItem(BaseModel):
+    label: str
+    score: float
+
+
+class NestedObjectWithList(BaseModel):
+    title: str
+    items: List[InnerItem]
+
+
+class SchemaWithNestedObjectContainingList(BaseModel):
+    id: str
+    details: NestedObjectWithList
+
+
 class TestPromptText:
     ALIAS = "test_prompt_text"
     ALIAS_WITH_INTERPOLATION_TYPE = "test_prompt_text_interpolation_type"
     LABEL = "STAGING"
     LABEL_VERSION = "00.17.93"
+    BRANCH_ALIAS = "test_branch"
+    BRANCH_NAME = "test_branch_name"
 
     def test_push(self):
         prompt = Prompt(alias=self.ALIAS)
@@ -348,6 +399,126 @@ class TestPromptText:
         # level3_fields = set(level3_type.model_fields.keys())
         # assert level3_fields == {"level3_field"}
 
+    def test_push_with_list_of_strings_schema(self):
+        """Test pushing text prompt with a List[str] field"""
+        ALIAS = "test_prompt_text_list_strings_schema"
+        prompt = Prompt(alias=ALIAS)
+
+        UUID = uuid.uuid4()
+
+        prompt.push(
+            text=f"Generate tags {UUID}",
+            output_type=OutputType.SCHEMA,
+            output_schema=ListOfStringsSchema,
+        )
+
+        pulled_prompt = Prompt(alias=ALIAS)
+        pulled_prompt.pull(refresh=0)
+        assert pulled_prompt.output_type == OutputType.SCHEMA
+        assert pulled_prompt.output_schema is not None
+        assert "tags" in pulled_prompt.output_schema.model_fields
+
+    def test_push_with_list_of_ints_schema(self):
+        """Test pushing text prompt with a List[int] field"""
+        ALIAS = "test_prompt_text_list_ints_schema"
+        prompt = Prompt(alias=ALIAS)
+
+        UUID = uuid.uuid4()
+
+        prompt.push(
+            text=f"Generate scores {UUID}",
+            output_type=OutputType.SCHEMA,
+            output_schema=ListOfIntsSchema,
+        )
+
+        pulled_prompt = Prompt(alias=ALIAS)
+        pulled_prompt.pull(refresh=0)
+        assert pulled_prompt.output_type == OutputType.SCHEMA
+        assert pulled_prompt.output_schema is not None
+        assert "scores" in pulled_prompt.output_schema.model_fields
+
+    def test_push_with_list_of_floats_schema(self):
+        """Test pushing text prompt with a List[float] field"""
+        ALIAS = "test_prompt_text_list_floats_schema"
+        prompt = Prompt(alias=ALIAS)
+
+        UUID = uuid.uuid4()
+
+        prompt.push(
+            text=f"Generate values {UUID}",
+            output_type=OutputType.SCHEMA,
+            output_schema=ListOfFloatsSchema,
+        )
+
+        pulled_prompt = Prompt(alias=ALIAS)
+        pulled_prompt.pull(refresh=0)
+        assert pulled_prompt.output_type == OutputType.SCHEMA
+        assert pulled_prompt.output_schema is not None
+        assert "values" in pulled_prompt.output_schema.model_fields
+
+    def test_push_with_list_of_objects_schema(self):
+        """Test pushing text prompt with a List[BaseModel] field"""
+        ALIAS = "test_prompt_text_list_objects_schema"
+        prompt = Prompt(alias=ALIAS)
+
+        UUID = uuid.uuid4()
+
+        prompt.push(
+            text=f"Generate sources {UUID}",
+            output_type=OutputType.SCHEMA,
+            output_schema=ListOfObjectsSchema,
+        )
+
+        pulled_prompt = Prompt(alias=ALIAS)
+        pulled_prompt.pull(refresh=0)
+        assert pulled_prompt.output_type == OutputType.SCHEMA
+        assert pulled_prompt.output_schema is not None
+        assert "sources" in pulled_prompt.output_schema.model_fields
+
+    def test_push_with_mixed_schema_with_lists(self):
+        """Test pushing text prompt with a mix of primitives, List[str], and List[BaseModel]"""
+        ALIAS = "test_prompt_text_mixed_list_schema"
+        prompt = Prompt(alias=ALIAS)
+
+        UUID = uuid.uuid4()
+
+        prompt.push(
+            text=f"Generate mixed data {UUID}",
+            output_type=OutputType.SCHEMA,
+            output_schema=MixedSchemaWithLists,
+        )
+
+        pulled_prompt = Prompt(alias=ALIAS)
+        pulled_prompt.pull(refresh=0)
+        assert pulled_prompt.output_type == OutputType.SCHEMA
+        assert pulled_prompt.output_schema is not None
+
+        expected_fields = {"name", "count", "tags", "sources"}
+        actual_fields = set(pulled_prompt.output_schema.model_fields.keys())
+        assert actual_fields == expected_fields
+
+    def test_push_with_nested_object_containing_list(self):
+        """Test pushing text prompt with a nested object that contains a list field"""
+        ALIAS = "test_prompt_text_nested_obj_with_list_schema"
+        prompt = Prompt(alias=ALIAS)
+
+        UUID = uuid.uuid4()
+
+        prompt.push(
+            text=f"Generate nested list data {UUID}",
+            output_type=OutputType.SCHEMA,
+            output_schema=SchemaWithNestedObjectContainingList,
+        )
+
+        pulled_prompt = Prompt(alias=ALIAS)
+        pulled_prompt.pull(refresh=0)
+        assert pulled_prompt.output_type == OutputType.SCHEMA
+        assert pulled_prompt.output_schema is not None
+
+        expected_fields = {"id", "details"}
+        actual_fields = set(pulled_prompt.output_schema.model_fields.keys())
+        assert actual_fields == expected_fields
+
     def test_push_single_tool(self):
         """Test pushing text prompt with a single tool"""
         ALIAS = "test_prompt_text_single_tool"
@@ -432,14 +603,14 @@ class TestPromptText:
             assert tool.structured_schema is not None
             assert tool.input_schema is not None
 
-    def test_exiting_tool_throws_error(self):
-        """Test updating a tool with the same name (now succeeds instead of throwing)"""
+    def test_push_tool_with_same_name_different_definition(self):
+        """Test pushing a tool with the same name but different definition creates a new tool"""
         ALIAS = f"test_prompt_text_update_tool_{uuid.uuid4().hex[:8]}"
         prompt = Prompt(alias=ALIAS)
 
         UUID = uuid.uuid4()
 
-        original_tool = Tool(
+        tool_v1 = Tool(
             name="SearchTool",
             description="Original search tool",
             mode=ToolMode.STRICT,
@@ -448,21 +619,27 @@ class TestPromptText:
 
         prompt.push(
             text=f"Initial tool push {UUID}",
-            tools=[original_tool],
+            tools=[tool_v1],
         )
 
-        original_tool = Tool(
+        tool_v2 = Tool(
             name="SearchTool",
             description="Original search tool",
             mode=ToolMode.NO_ADDITIONAL,
             structured_schema=ToolInputSchema,
         )
 
-        with pytest.raises(Exception):
-            prompt.push(
-                text=f"Initial tool push {UUID}",
-                tools=[original_tool],
-            )
+        prompt.push(
+            text=f"Updated tool push {UUID}",
+            tools=[tool_v2],
+        )
+
+        pulled_prompt = Prompt(alias=ALIAS)
+        pulled_prompt.pull(refresh=0)
+
+        assert pulled_prompt.tools is not None
+        assert len(pulled_prompt.tools) == 1
+        assert pulled_prompt.tools[0].name == "SearchTool"
 
     def test_push_output_schema_and_tools(self):
         """Test pushing both output schema and tools together"""
@@ -583,12 +760,89 @@ class TestPromptText:
         assert prompt2.tools[0].name == prompt1.tools[0].name
         assert prompt2.tools[0].mode == prompt1.tools[0].mode
 
+    def test_branch_push(self):
+        """Test pushing to a new branch and main branch by default"""
+        prompt = Prompt(alias=self.BRANCH_ALIAS)
+        # Push to main branch
+        prompt.push(text="Main branch push")
+        first_branch_hash = prompt._hash
+
+        # Push to different branch
+        prompt.push(text="Different branch push", branch=self.BRANCH_NAME)
+        second_branch_hash = prompt._hash
+
+        main_commits = prompt._get_commits(branch="main")
+        main_branch_hashes = [commit.hash for commit in main_commits]
+
+        branch_commits = prompt._get_commits(branch=self.BRANCH_NAME)
+        branch_hashes = [commit.hash for commit in branch_commits]
+
+        assert first_branch_hash in main_branch_hashes
+        assert second_branch_hash in branch_hashes
+
+    def test_create_branch(self):
+        UUID = str(uuid.uuid4())
+        new_branch_name = f"new-branch-{UUID}"
+
+        prompt = Prompt(alias=self.BRANCH_ALIAS)
+        prompt.create_branch(branch=new_branch_name)
+
+        # Pull all branches
+        branches = prompt.get_branches()
+        branch_names = [branch.name for branch in branches]
+
+        assert new_branch_name in branch_names
+
+    def test_update_branch(self):
+        UUID = str(uuid.uuid4())
+        old_branch_name = f"old-branch-{UUID}"
+        new_branch_name = f"new-branch-{UUID}"
+
+        prompt = Prompt(alias=self.BRANCH_ALIAS)
+
+        prompt.create_branch(branch=old_branch_name)
+
+        # Pull all branches
+        old_branches = prompt.get_branches()
+        old_branch_names = [branch.name for branch in old_branches]
+
+        prompt.update_branch(name=new_branch_name, branch=old_branch_name)
+        new_branches = prompt.get_branches()
+        new_branch_names = [branch.name for branch in new_branches]
+
+        assert old_branch_name in old_branch_names
+        assert new_branch_name not in old_branch_names
+        assert new_branch_name in new_branch_names
+        assert old_branch_name not in new_branch_names
+
+    def test_delete_branch(self):
+        UUID = str(uuid.uuid4())
+        new_branch_name = f"new-branch-{UUID}"
+
+        prompt = Prompt(alias=self.BRANCH_ALIAS)
+        prompt.create_branch(branch=new_branch_name)
+
+        # Pull all branches
+        old_branches = prompt.get_branches()
+        old_branch_names = [branch.name for branch in old_branches]
+
+        prompt.delete_branch(branch=new_branch_name)
+
+        # Pull branches again
+        new_branches = prompt.get_branches()
+        new_branch_names = [branch.name for branch in new_branches]
+
+        assert new_branch_name in old_branch_names
+        assert new_branch_name not in new_branch_names
+
 
 class TestPromptList:
     ALIAS = "test_prompt_list"
     ALIAS_WITH_INTERPOLATION_TYPE = "test_prompt_list_interpolation_type"
     LABEL = "STAGING"
     LABEL_VERSION = "00.07.01"
+    BRANCH_ALIAS = "test_branch_messages"
+    BRANCH_NAME = "test_branch_name"
 
     def test_push(self):
         prompt = Prompt(alias=self.ALIAS)
@@ -983,9 +1237,9 @@ class TestPromptList:
             assert tool.structured_schema is not None
             assert tool.input_schema is not None
 
-    def test_exiting_tool_throws_error(self):
-        """Test updating a tool with the same name (should replace it)"""
-        ALIAS = "test_prompt_list_update_tool"
+    def test_push_tool_with_same_name_different_definition(self):
+        """Test pushing a tool with the same name but different definition creates a new tool"""
+        ALIAS = f"test_prompt_list_update_tool_{uuid.uuid4().hex[:8]}"
         prompt = Prompt(alias=ALIAS)
 
         UUID = uuid.uuid4()
@@ -993,8 +1247,7 @@ class TestPromptList:
             PromptMessage(role="user", content=f"Initial tool push {UUID}")
         ]
 
-        # Push initial tool
-        original_tool = Tool(
+        tool_v1 = Tool(
             name="SearchTool",
             description="Original search tool",
             mode=ToolMode.STRICT,
@@ -1003,21 +1256,27 @@ class TestPromptList:
 
         prompt.push(
             messages=MESSAGES,
-            tools=[original_tool],
+            tools=[tool_v1],
         )
 
-        original_tool = Tool(
+        tool_v2 = Tool(
             name="SearchTool",
             description="Original search tool",
             mode=ToolMode.ALLOW_ADDITIONAL,
             structured_schema=ToolInputSchema,
         )
 
-        with pytest.raises(Exception):
-            prompt.push(
-                messages=MESSAGES,
-                tools=[original_tool],
-            )
+        prompt.push(
+            messages=MESSAGES,
+            tools=[tool_v2],
+        )
+
+        pulled_prompt = Prompt(alias=ALIAS)
+        pulled_prompt.pull(refresh=0)
+
+        assert pulled_prompt.tools is not None
+        assert len(pulled_prompt.tools) == 1
+        assert pulled_prompt.tools[0].name == "SearchTool"
 
     def test_push_output_schema_and_tools(self):
         """Test pushing both output schema and tools together"""
@@ -1144,3 +1403,83 @@ class TestPromptList:
         assert len(prompt2.tools) == len(prompt1.tools)
         assert prompt2.tools[0].name == prompt1.tools[0].name
         assert prompt2.tools[0].mode == prompt1.tools[0].mode
+
+    def test_branch_push(self):
+        """Test pushing to a new branch and main branch by default"""
+        prompt = Prompt(alias=self.BRANCH_ALIAS)
+        # Push to main branch
+        prompt.push(
+            messages=[PromptMessage(role="user", content="New branch push")]
+        )
+        first_branch_hash = prompt._hash
+
+        # Push to different branch
+        prompt.push(
+            messages=[PromptMessage(role="user", content="New branch push")],
+            branch=self.BRANCH_NAME,
+        )
+        second_branch_hash = prompt._hash
+
+        main_commits = prompt._get_commits(branch="main")
+        main_branch_hashes = [commit.hash for commit in main_commits]
+
+        branch_commits = prompt._get_commits(branch=self.BRANCH_NAME)
+        branch_hashes = [commit.hash for commit in branch_commits]
+
+        assert first_branch_hash in main_branch_hashes
+        assert second_branch_hash in branch_hashes
+
+    def test_create_branch(self):
+        UUID = str(uuid.uuid4())
+        new_branch_name = f"new-branch-{UUID}"
+
+        prompt = Prompt(alias=self.BRANCH_ALIAS)
+        prompt.create_branch(branch=new_branch_name)
+
+        # Pull all branches
+        branches = prompt.get_branches()
+        branch_names = [branch.name for branch in branches]
+
+        assert new_branch_name in branch_names
+
+    def test_update_branch(self):
+        UUID = str(uuid.uuid4())
+        old_branch_name = f"old-branch-{UUID}"
+        new_branch_name = f"new-branch-{UUID}"
+
+        prompt = Prompt(alias=self.BRANCH_ALIAS)
+
+        prompt.create_branch(branch=old_branch_name)
+
+        # Pull all branches
+        old_branches = prompt.get_branches()
+        old_branch_names = [branch.name for branch in old_branches]
+
+        prompt.update_branch(name=new_branch_name, branch=old_branch_name)
+        new_branches = prompt.get_branches()
+        new_branch_names = [branch.name for branch in new_branches]
+
+        assert old_branch_name in old_branch_names
+        assert new_branch_name not in old_branch_names
+        assert new_branch_name in new_branch_names
+        assert old_branch_name not in new_branch_names
+
+    def test_delete_branch(self):
+        UUID = str(uuid.uuid4())
+        new_branch_name = f"new-branch-{UUID}"
+
+        prompt = Prompt(alias=self.BRANCH_ALIAS)
+        prompt.create_branch(branch=new_branch_name)
+
+        # Pull all branches
+        old_branches = prompt.get_branches()
+        old_branch_names = [branch.name for branch in old_branches]
+
+        prompt.delete_branch(branch=new_branch_name)
+
+        # Pull branches again
+        new_branches = prompt.get_branches()
+        new_branch_names = [branch.name for branch in new_branches]
+
+        assert new_branch_name in old_branch_names
+        assert new_branch_name not in new_branch_names

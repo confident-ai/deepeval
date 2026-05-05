@@ -18,7 +18,6 @@ from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.confident.types import ApiResponse, ConfidentApiError
 from deepeval.config.settings import get_settings
 
-
 CONFIDENT_API_KEY_ENV_VAR = "CONFIDENT_API_KEY"
 DEEPEVAL_BASE_URL = "https://deepeval.confident-ai.com"
 DEEPEVAL_BASE_URL_EU = "https://eu.deepeval.confident-ai.com"
@@ -80,7 +79,7 @@ def get_base_api_url():
 
 def get_confident_api_key() -> Optional[str]:
     s = get_settings()
-    key: Optional[SecretStr] = s.CONFIDENT_API_KEY or s.API_KEY
+    key: Optional[SecretStr] = s.CONFIDENT_API_KEY
     return key.get_secret_value() if key else None
 
 
@@ -99,17 +98,14 @@ def set_confident_api_key(api_key: Optional[str]) -> None:
     if save is None:
         with s.edit(persist=False):
             s.CONFIDENT_API_KEY = SecretStr(api_key) if api_key else None
-            s.API_KEY = SecretStr(api_key) if api_key else None
     else:
         # Respect default save: update runtime + write to dotenv, but not JSON
         with s.edit(save=save, persist=None):
             s.CONFIDENT_API_KEY = SecretStr(api_key) if api_key else None
-            s.API_KEY = SecretStr(api_key) if api_key else None
 
 
 def is_confident():
-    confident_api_key = get_confident_api_key()
-    return confident_api_key is not None
+    return get_confident_api_key() is not None
 
 
 def log_retry_error(retry_state: RetryCallState):
@@ -132,7 +128,6 @@ class Endpoints(Enum):
 
     TEST_RUN_ENDPOINT = "/v1/test-run"
     EXPERIMENT_ENDPOINT = "/v1/experiment"
-    METRIC_DATA_ENDPOINT = "/v1/metric-data"
     TRACES_ENDPOINT = "/v1/traces"
     ANNOTATIONS_ENDPOINT = "/v1/annotations"
     PROMPTS_VERSION_ID_ENDPOINT = "/v1/prompts/:alias/versions/:version"
@@ -141,7 +136,8 @@ class Endpoints(Enum):
     PROMPTS_VERSIONS_ENDPOINT = "/v1/prompts/:alias/versions"
     PROMPTS_COMMITS_ENDPOINT = "/v1/prompts/:alias/commits"
     PROMPTS_COMMIT_HASH_ENDPOINT = "/v1/prompts/:alias/commits/:hash"
-    SIMULATE_ENDPOINT = "/v1/simulate"
+    PROMPTS_BRANCHES_ENDPOINT = "/v1/prompts/:alias/branches"
+    PROMPTS_BRANCH_ENDPOINT = "/v1/prompts/:alias/branches/:name"
     EVALUATE_ENDPOINT = "/v1/evaluate"
 
     EVALUATE_THREAD_ENDPOINT = "/v1/evaluate/threads/:threadId"

@@ -19,7 +19,6 @@ from deepeval.telemetry import capture_metric_type
 from deepeval.utils import update_pbar
 from deepeval.config.settings import get_settings
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -203,7 +202,10 @@ async def measure_metrics_with_indicator(
                 cached_metric_data = Cache.get_metric_data(
                     metric, cached_test_case
                 )
-                if cached_metric_data:
+                if (
+                    cached_metric_data
+                    and cached_metric_data.metric_data.score is not None
+                ):
                     metric_data = cached_metric_data.metric_data
 
             if metric_data:
@@ -219,6 +221,7 @@ async def measure_metrics_with_indicator(
                 metric.evaluation_model = metric_data.evaluation_model
                 metric.evaluation_cost = metric_data.evaluation_cost
                 metric.verbose_logs = metric_data.verbose_logs
+                update_pbar(progress, pbar_eval_id)
             else:
                 tasks.append(
                     safe_a_measure(

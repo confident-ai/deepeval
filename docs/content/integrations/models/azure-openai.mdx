@@ -1,0 +1,120 @@
+---
+# id: azure-openai
+title: Azure OpenAI
+sidebar_label: Azure OpenAI
+---
+
+`deepeval` allows you to directly integrate Azure OpenAI models into all available LLM-based metrics. You can easily configure the model through the command line or directly within your python code.
+
+### Command Line
+
+Run the following command in your terminal to configure your deepeval environment to use Azure OpenAI for all metrics.
+
+```bash
+deepeval set-azure-openai \
+    --base-url=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
+    --model-name=<model_name> \ # e.g. gpt-4.1
+    --deployment-name=<deployment_name> \  # e.g. Test Deployment
+    --api-version=<api_version> \ # e.g. 2025-01-01-preview
+```
+
+:::info
+The CLI command above sets Azure OpenAI as the default provider for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset Azure OpenAI:
+
+```bash
+deepeval unset-azure-openai
+```
+
+:::
+
+:::tip[Persisting settings]
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
+### Python
+
+Alternatively, you can specify your model directly in code using `AzureOpenAIModel` from `deepeval`'s model collection.
+
+:::tip
+This approach is ideal when you need to use separate models for specific metrics.
+:::
+
+<Tabs items={["Python", "ENV"]}>
+<Tab value="Python">
+
+```python
+from deepeval.models import AzureOpenAIModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = AzureOpenAIModel(
+    model="gpt-4.1",
+    deployment_name="Test Deployment",
+    api_key="Your Azure OpenAI API Key",
+    api_version="2025-01-01-preview",
+    base_url="https://example-resource.azure.openai.com/",
+    temperature=0
+)
+
+answer_relevancy = AnswerRelevancyMetric(model=model)
+```
+
+</Tab>
+<Tab value="ENV">
+
+To use any Azure OpenAI model directly in `deepeval`, set the `USE_AZURE_OPENAI=1` in your `env` and simply pass the name of your desired model in your metric initialization:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="gpt-4.1",
+)
+```
+
+You should also set the other necessary vars like `AZURE_OPENAI_API_KEY` to be able to use the Azure OpenAI models as shown above.
+
+</Tab>
+</Tabs>
+
+There are **ZERO** mandatory and **NINE** optional parameters when creating an `AzureOpenAIModel`:
+
+- [Optional] `model`: A string specifying the name of the Azure OpenAI model to use. Defaults to `AZURE_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `api_key`: A string specifying your Azure OpenAI API key. Defaults to `AZURE_OPENAI_API_KEY` if not passed; raises an error at runtime if `azure_ad_token` and `azure_ad_token_provider` are also unset.
+- [Optional] `azure_ad_token`: A string specifying your Azure Ad Token. Defaults to `AZURE_OPENAI_AD_TOKEN` if not passed; raises an error at runtime if `api_key` and `azure_ad_token_provider` are also unset.
+- [Optional] `azure_ad_token_provider`: A callback of either `AsyncAzureADTokenProvider` or `AzureADTokenProvider` that can be used for credentials [(see example usage)](https://github.com/openai/openai-python/blob/main/examples/azure_ad.py#L20). Raises an error at runtime if `api_key` and `azure_ad_token` are also unset.
+- [Optional] `base_url`: A string specifying your Azure OpenAI endpoint URL. Defaults to `AZURE_OPENAI_ENDPOINT` if not passed; raises an error at runtime if unset.
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `OPENAI_COST_PER_INPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
+- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `OPENAI_COST_PER_OUTPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
+- [Optional] `deployment_name`: A string specifying the name of your Azure OpenAI deployment. Defaults to `AZURE_DEPLOYMENT_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `api_version`: A string specifying the OpenAI API version used in your deployment. Defaults to `OPENAI_API_VERSION` if not passed; raises an error at runtime if unset.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the Azure OpenAI `chat.completions.create(...)` and `beta.chat.completions.parse(...)` calls.
+
+Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via `deepeval` settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-azure-openai) for the Azure OpenAI-related environment variables.
+
+:::tip
+Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we recommend that you double check the params supported by the model and your model provider in their [official docs](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/reference#request-body).
+:::
+
+### Available Azure OpenAI Models
+
+:::note
+This list only displays some of the available models. For a comprehensive list, refer to the Azure OpenAI's official documentation.
+:::
+
+Below is a list of commonly used Azure OpenAI models:
+
+- `gpt-4.1`
+- `gpt-4.5-preview`
+- `gpt-4o`
+- `gpt-4o-mini`
+- `gpt-4`
+- `gpt-4-32k`
+- `gpt-35-turbo`
+- `gpt-35-turbo-16k`
+- `gpt-35-turbo-instruct`
+- `o1`
+- `o1-mini`
+- `o1-preview`
+- `o3-mini`

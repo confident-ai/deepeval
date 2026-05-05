@@ -7,7 +7,6 @@ from deepeval.tracing.trace_context import LlmSpanContext
 from tests.test_integrations.utils import assert_trace_json, generate_trace_json
 import os
 
-
 client = AsyncOpenAI()
 
 prompt = Prompt(alias="asd")

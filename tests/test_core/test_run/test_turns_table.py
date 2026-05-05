@@ -35,7 +35,7 @@ def test_turns_table_no_role_or_tools_duplication_with_format_turn():
             SimpleNamespace(name="fs.list"),
             SimpleNamespace(name="fs.read"),
         ],
-        additional_metadata={"session_id": "sess-9"},
+        metadata={"session_id": "sess-9"},
         comments="planner step",
     )
 

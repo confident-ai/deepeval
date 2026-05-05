@@ -1,13 +1,13 @@
 {
-  "uuid": "bdc8b2cb-e872-47f5-9704-c1f8cae7df08",
+  "uuid": "f6195628-996f-4274-9f5e-16ce4ae2510e",
   "baseSpans": [
     {
-      "uuid": "019bf2a4-71c7-71d2-b634-e5120f404c7f",
+      "uuid": "019d0516-b12c-78b1-8737-7c2981e232b9",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-25T00:53:41.959Z",
-      "endTime": "2026-01-25T00:53:43.784Z",
+      "startTime": "2026-03-19T07:54:26.476Z",
+      "endTime": "2026-03-19T07:54:29.419Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "f7a2d792-07f4-4d9f-b98b-b74b2dd2f73a"
+            "id": "86a322b5-af21-48e3-9898-c78b49e2541a"
           }
         ]
       },
@@ -26,18 +26,18 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "f7a2d792-07f4-4d9f-b98b-b74b2dd2f73a"
+            "id": "86a322b5-af21-48e3-9898-c78b49e2541a"
           },
           {
-            "content": "I'm doing well, thanks \u2014 ready to help. How can I assist you today?",
+            "content": "I'm doing well, thanks \u2014 how are you? What can I help you with today?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 26,
+                "completion_tokens": 27,
                 "prompt_tokens": 161,
-                "total_tokens": 187,
+                "total_tokens": 188,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -52,19 +52,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1ifmbev8kSV7XBlzMSRCrr2Ya3mE",
+              "id": "chatcmpl-DL2V1eX6UwCoPpftomQByvANMmZjc",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a4-71ca-7db0-989d-a3455d8e37a8-0",
+            "id": "lc_run--019d0516-b12d-7151-9e07-c80a67b2246a-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 161,
-              "output_tokens": 26,
-              "total_tokens": 187,
+              "output_tokens": 27,
+              "total_tokens": 188,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -79,13 +79,13 @@
       }
     },
     {
-      "uuid": "019bf2a4-71c9-7270-9fe7-2d679fe75fda",
+      "uuid": "019d0516-b12d-7151-9e07-c7f4ebfaf32d",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bf2a4-71c7-71d2-b634-e5120f404c7f",
-      "startTime": "2026-01-25T00:53:41.962Z",
-      "endTime": "2026-01-25T00:53:43.784Z",
+      "parentUuid": "019d0516-b12c-78b1-8737-7c2981e232b9",
+      "startTime": "2026-03-19T07:54:26.477Z",
+      "endTime": "2026-03-19T07:54:29.419Z",
       "input": {
         "messages": [
           {
@@ -93,22 +93,22 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "f7a2d792-07f4-4d9f-b98b-b74b2dd2f73a"
+            "id": "86a322b5-af21-48e3-9898-c78b49e2541a"
           }
         ]
       },
       "output": {
         "messages": [
           {
-            "content": "I'm doing well, thanks \u2014 ready to help. How can I assist you today?",
+            "content": "I'm doing well, thanks \u2014 how are you? What can I help you with today?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 26,
+                "completion_tokens": 27,
                 "prompt_tokens": 161,
-                "total_tokens": 187,
+                "total_tokens": 188,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -123,19 +123,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1ifmbev8kSV7XBlzMSRCrr2Ya3mE",
+              "id": "chatcmpl-DL2V1eX6UwCoPpftomQByvANMmZjc",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a4-71ca-7db0-989d-a3455d8e37a8-0",
+            "id": "lc_run--019d0516-b12d-7151-9e07-c80a67b2246a-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 161,
-              "output_tokens": 26,
-              "total_tokens": 187,
+              "output_tokens": 27,
+              "total_tokens": 188,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -150,13 +150,13 @@
       }
     },
     {
-      "uuid": "019bf2a4-78e6-7a01-a65b-3ffd19e0e407",
+      "uuid": "019d0516-bcaa-7583-8802-5a66103b8812",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bf2a4-71c9-7270-9fe7-2d679fe75fda",
-      "startTime": "2026-01-25T00:53:43.782Z",
-      "endTime": "2026-01-25T00:53:43.783Z",
+      "parentUuid": "019d0516-b12d-7151-9e07-c7f4ebfaf32d",
+      "startTime": "2026-03-19T07:54:29.418Z",
+      "endTime": "2026-03-19T07:54:29.419Z",
       "input": {
         "messages": [
           {
@@ -164,18 +164,18 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "f7a2d792-07f4-4d9f-b98b-b74b2dd2f73a"
+            "id": "86a322b5-af21-48e3-9898-c78b49e2541a"
           },
           {
-            "content": "I'm doing well, thanks \u2014 ready to help. How can I assist you today?",
+            "content": "I'm doing well, thanks \u2014 how are you? What can I help you with today?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 26,
+                "completion_tokens": 27,
                 "prompt_tokens": 161,
-                "total_tokens": 187,
+                "total_tokens": 188,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -190,19 +190,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1ifmbev8kSV7XBlzMSRCrr2Ya3mE",
+              "id": "chatcmpl-DL2V1eX6UwCoPpftomQByvANMmZjc",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a4-71ca-7db0-989d-a3455d8e37a8-0",
+            "id": "lc_run--019d0516-b12d-7151-9e07-c80a67b2246a-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 161,
-              "output_tokens": 26,
-              "total_tokens": 187,
+              "output_tokens": 27,
+              "total_tokens": 188,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -221,13 +221,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf2a4-71ca-7db0-989d-a3455d8e37a8",
+      "uuid": "019d0516-b12d-7151-9e07-c80a67b2246a",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf2a4-71c9-7270-9fe7-2d679fe75fda",
-      "startTime": "2026-01-25T00:53:41.963Z",
-      "endTime": "2026-01-25T00:53:43.782Z",
+      "parentUuid": "019d0516-b12d-7151-9e07-c7f4ebfaf32d",
+      "startTime": "2026-03-19T07:54:26.477Z",
+      "endTime": "2026-03-19T07:54:29.418Z",
       "input": [
         {
           "role": "human",
@@ -244,18 +244,18 @@
       ],
       "output": {
         "role": "AI",
-        "content": "I'm doing well, thanks \u2014 ready to help. How can I assist you today?",
+        "content": "I'm doing well, thanks \u2014 how are you? What can I help you with today?",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 161.0,
-      "outputTokenCount": 26.0
+      "outputTokenCount": 27.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-25T00:53:41.959Z",
-  "endTime": "2026-01-25T00:53:43.784Z",
+  "startTime": "2026-03-19T07:54:26.476Z",
+  "endTime": "2026-03-19T07:54:29.419Z",
   "name": "langgraph-async-no-tools",
   "tags": [
     "langgraph",
@@ -270,7 +270,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "f7a2d792-07f4-4d9f-b98b-b74b2dd2f73a"
+        "id": "86a322b5-af21-48e3-9898-c78b49e2541a"
       }
     ]
   },
@@ -281,18 +281,18 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "f7a2d792-07f4-4d9f-b98b-b74b2dd2f73a"
+        "id": "86a322b5-af21-48e3-9898-c78b49e2541a"
       },
       {
-        "content": "I'm doing well, thanks \u2014 ready to help. How can I assist you today?",
+        "content": "I'm doing well, thanks \u2014 how are you? What can I help you with today?",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 26,
+            "completion_tokens": 27,
             "prompt_tokens": 161,
-            "total_tokens": 187,
+            "total_tokens": 188,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -307,19 +307,19 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D1ifmbev8kSV7XBlzMSRCrr2Ya3mE",
+          "id": "chatcmpl-DL2V1eX6UwCoPpftomQByvANMmZjc",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf2a4-71ca-7db0-989d-a3455d8e37a8-0",
+        "id": "lc_run--019d0516-b12d-7151-9e07-c80a67b2246a-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 161,
-          "output_tokens": 26,
-          "total_tokens": 187,
+          "output_tokens": 27,
+          "total_tokens": 188,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0

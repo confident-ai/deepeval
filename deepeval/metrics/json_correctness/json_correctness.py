@@ -4,7 +4,7 @@ from pydantic import BaseModel, ValidationError
 
 from deepeval.test_case import (
     LLMTestCase,
-    LLMTestCaseParams,
+    SingleTurnParams,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.metrics.utils import (
@@ -19,15 +19,14 @@ from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.json_correctness.template import JsonCorrectnessTemplate
 from deepeval.metrics.json_correctness.schema import JsonCorrectnessScoreReason
 from deepeval.utils import get_or_create_event_loop
-from deepeval.metrics.api import metric_data_manager
 
 DEFAULT_CORRECT_REASON = "The generated Json matches and is syntactically correct to the expected schema."
 
 
 class JsonCorrectnessMetric(BaseMetric):
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
+    _required_params: List[SingleTurnParams] = [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
     ]
 
     def __init__(
@@ -102,10 +101,6 @@ class JsonCorrectnessMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
 
             return self.score
 
@@ -154,10 +149,6 @@ class JsonCorrectnessMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
             return self.score
 
     async def a_generate_reason(self, actual_output: str) -> str:

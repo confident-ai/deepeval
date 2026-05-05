@@ -1,0 +1,548 @@
+---
+id: guides-multi-turn-evaluation-metrics
+title: Multi-Turn Evaluation Metrics
+sidebar_label: Multi-Turn Evaluation Metrics
+---
+**Multi-turn evaluation metrics** are purpose-built measurements that assess how well LLM systems perform across extended conversations. Unlike single-turn metrics that evaluate one input-output pair in isolation, multi-turn metrics analyze the entire conversation—capturing context retention, response relevance, goal completion, and behavioral consistency across every turn.
+
+These metrics matter because multi-turn systems fail in ways single-turn systems cannot. An assistant might give a perfect individual response but forget what the user said three turns ago. It might stay on-topic for ten turns then suddenly drift. It might complete the user's request but violate its assigned role in the process. Multi-turn metrics give you the granularity to catch these failures.
+
+For a broader overview of multi-turn evaluation concepts and workflows, see the [Multi-Turn Evaluation guide](/guides/guides-multi-turn-evaluation).
+
+:::info
+Multi-turn evaluation metrics in `deepeval` operate on **`ConversationalTestCase`s**—the full record of a conversation's turns. See [multi-turn test cases](/docs/evaluation-multiturn-test-cases) for how to set these up.
+:::
+
+## Categories of Multi-Turn Metrics
+
+Multi-turn metrics fall into five categories, each targeting a distinct class of conversational failure:
+
+| Category                  | What It Evaluates                                  | Key Metrics                                                                                                              |
+| ------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Conversation Quality**  | Overall success, turn relevance, context retention | `ConversationCompletenessMetric`, `TurnRelevancyMetric`, `KnowledgeRetentionMetric`                                      |
+| **Behavioral Compliance** | Role adherence and topic boundaries                | `RoleAdherenceMetric`, `TopicAdherenceMetric`                                                                            |
+| **Agentic**               | Goal completion and tool usage in conversations    | `GoalAccuracyMetric`, `ToolUseMetric`                                                                                    |
+| **RAG (Multi-Turn)**      | Retrieval quality across conversation turns        | `TurnFaithfulnessMetric`, `TurnContextualRelevancyMetric`, `TurnContextualPrecisionMetric`, `TurnContextualRecallMetric` |
+| **Custom**                | Any criteria you define                            | `ConversationalGEval`, `ConversationalDAGMetric`                                                                         |
+
+Each metric targets a specific failure mode. Together, they provide comprehensive coverage of everything that can go wrong in a multi-turn LLM pipeline.
+
+## Conversation Quality Metrics
+
+These are the most fundamental multi-turn metrics. They evaluate whether the conversation achieves its purpose, whether individual responses make sense in context, and whether the assistant retains information across turns.
+
+### Conversation Completeness Metric
+
+The `ConversationCompletenessMetric` evaluates whether your LLM **satisfies all user intentions** throughout a conversation. A conversation is only "complete" if every user need is addressed.
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import Turn, ConversationalTestCase
+from deepeval.metrics import ConversationCompletenessMetric
+
+convo_test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="I need to cancel my subscription and get a refund."),
+        Turn(role="assistant", content="I've cancelled your subscription."),
+        Turn(role="user", content="What about the refund?"),
+        Turn(role="assistant", content="Your refund of $29.99 has been processed. It will appear in 3-5 business days."),
+    ]
+)
+metric = ConversationCompletenessMetric(threshold=0.7)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
+```
+
+**When to use it:** Always. This is the single most important multi-turn metric—it answers the fundamental question of whether the conversation succeeded.
+
+**How it's calculated:**
+
+<Equation formula="\text{Conversation Completeness} = \frac{\text{Number of Satisfied User Intentions}}{\text{Total Number of User Intentions}}" />
+
+The metric extracts high-level user intentions from `"user"` turns, then checks whether the `"assistant"` satisfied each one throughout the conversation.
+
+**→ [Full Conversation Completeness documentation](/docs/metrics-conversation-completeness)**
+
+### Turn Relevancy Metric
+
+The `TurnRelevancyMetric` evaluates whether each assistant response is **relevant to the conversational context** that preceded it. A single off-topic response can derail an entire conversation.
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import Turn, ConversationalTestCase
+from deepeval.metrics import TurnRelevancyMetric
+
+convo_test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="What's your return policy?"),
+        Turn(role="assistant", content="We offer a 30-day return policy with full refund."),
+        Turn(role="user", content="Great, and do you ship internationally?"),
+        Turn(role="assistant", content="Our return policy covers all items purchased in-store or online."),
+    ]
+)
+metric = TurnRelevancyMetric(threshold=0.7)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
+```
+
+**When to use it:** Always. This catches non-sequitur responses, context window overflow issues, and cases where the assistant ignores the user's latest message.
+
+**How it's calculated:**
+
+<Equation formula="\text{Turn Relevancy} = \frac{\text{Number of Turns with Relevant Assistant Content}}{\text{Total Number of Assistant Turns}}" />
+
+The metric uses a sliding window approach—for each assistant turn, it evaluates relevance against the preceding conversational context within the window.
+
+**→ [Full Turn Relevancy documentation](/docs/metrics-turn-relevancy)**
+
+### Knowledge Retention Metric
+
+The `KnowledgeRetentionMetric` evaluates whether your LLM **retains factual information** presented by the user throughout the conversation. Forgetting a user's name, preferences, or previously stated requirements is a critical failure.
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import Turn, ConversationalTestCase
+from deepeval.metrics import KnowledgeRetentionMetric
+
+convo_test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="My name is Sarah and I'm allergic to peanuts."),
+        Turn(role="assistant", content="Nice to meet you, Sarah! I'll keep your peanut allergy in mind."),
+        Turn(role="user", content="Can you suggest a dessert for me?"),
+        Turn(role="assistant", content="How about our peanut butter brownies? They're delicious!"),
+    ]
+)
+metric = KnowledgeRetentionMetric(threshold=0.7)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
+```
+
+**When to use it:** When your application handles information-heavy conversations—customer support, medical intake, onboarding flows, or any scenario where the user shares facts the assistant should remember.
+
+**How it's calculated:**
+
+<Equation formula="\text{Knowledge Retention} = \frac{\text{Number of Assistant Turns without Knowledge Attritions}}{\text{Total Number of Assistant Turns}}" />
+
+The metric extracts knowledge supplied by the user across turns, then checks whether the assistant's subsequent responses demonstrate an inability to recall that knowledge.
+
+**→ [Full Knowledge Retention documentation](/docs/metrics-knowledge-retention)**
+
+## Behavioral Compliance Metrics
+
+These metrics ensure the assistant stays within its designated boundaries—both in terms of persona and topic scope.
+
+### Role Adherence Metric
+
+The `RoleAdherenceMetric` evaluates whether your LLM **stays in character** and follows its assigned role throughout the conversation. A customer support bot that suddenly starts giving legal advice has violated its role.
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import Turn, ConversationalTestCase
+from deepeval.metrics import RoleAdherenceMetric
+
+convo_test_case = ConversationalTestCase(
+    chatbot_role="A friendly restaurant booking assistant that only helps with reservations.",
+    turns=[
+        Turn(role="user", content="I'd like to book a table for two tonight."),
+        Turn(role="assistant", content="I'd be happy to help! What time works for you?"),
+        Turn(role="user", content="8pm. Also, what's the meaning of life?"),
+        Turn(role="assistant", content="The meaning of life is a deep philosophical question that many have pondered..."),
+    ]
+)
+metric = RoleAdherenceMetric(threshold=0.7)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
+```
+
+**When to use it:** When your application has a defined persona, behavioral guidelines, or scope restrictions. Essential for customer-facing applications where off-brand behavior is unacceptable.
+
+**How it's calculated:**
+
+<Equation formula="\text{Role Adherence} = \frac{\text{Number of Assistant Turns Adhering to Role}}{\text{Total Number of Assistant Turns}}" />
+
+The metric evaluates each assistant turn against the specified `chatbot_role`, using the conversation history as context.
+
+:::note
+`RoleAdherenceMetric` requires the `chatbot_role` parameter on the `ConversationalTestCase`.
+:::
+
+**→ [Full Role Adherence documentation](/docs/metrics-role-adherence)**
+
+### Topic Adherence Metric
+
+The `TopicAdherenceMetric` evaluates whether your LLM **only answers questions that fall within relevant topics** and correctly refuses off-topic requests.
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import Turn, ConversationalTestCase
+from deepeval.metrics import TopicAdherenceMetric
+
+convo_test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="How do I reset my password?"),
+        Turn(role="assistant", content="Go to Settings > Account > Reset Password and follow the prompts."),
+        Turn(role="user", content="Can you write me a poem about cats?"),
+        Turn(role="assistant", content="Sure! Roses are red, cats are great..."),
+    ]
+)
+metric = TopicAdherenceMetric(
+    relevant_topics=["account management", "technical support", "billing"],
+    threshold=0.7
+)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
+```
+
+**When to use it:** When your application should only engage with specific topics—for example, a technical support bot that shouldn't answer general knowledge questions.
+
+**How it's calculated:**
+
+<Equation formula="\text{Topic Adherence} = \frac{\text{True Positives + True Negatives}}{\text{Total Number of QA Pairs}}" />
+
+The metric extracts question-answer pairs from the conversation, classifies each against the `relevant_topics`, and evaluates whether the assistant correctly answered relevant questions and correctly refused irrelevant ones.
+
+**→ [Full Topic Adherence documentation](/docs/metrics-topic-adherence)**
+
+## Agentic Multi-Turn Metrics
+
+These metrics evaluate tool-using and goal-oriented behavior within multi-turn conversations.
+
+### Goal Accuracy Metric
+
+The `GoalAccuracyMetric` evaluates your LLM's ability to **plan and execute tasks to reach a goal** across conversational turns. It assesses both the quality of the plan and how accurately it was followed.
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import Turn, ConversationalTestCase, ToolCall
+from deepeval.metrics import GoalAccuracyMetric
+
+convo_test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="Book me a flight from NYC to London for next Friday."),
+        Turn(role="assistant", content="I'll search for available flights.",
+             tools_called=[ToolCall(name="search_flights", description="Search available flights")]),
+        Turn(role="assistant", content="I found 3 flights. The cheapest is $450 on British Airways. Shall I book it?"),
+        Turn(role="user", content="Yes, book it."),
+        Turn(role="assistant", content="Done! Your flight is confirmed. Confirmation: BA-12345.",
+             tools_called=[ToolCall(name="book_flight", description="Book a specific flight")]),
+    ]
+)
+metric = GoalAccuracyMetric(threshold=0.7)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
+```
+
+**When to use it:** When your multi-turn application involves task completion—booking systems, workflow assistants, or any conversational agent that needs to accomplish specific goals through a series of steps.
+
+**How it's calculated:**
+
+<Equation formula="\text{Goal Accuracy} = \frac{\text{Goal Evaluation Score + Plan Evaluation Score}}{2}" />
+
+The metric extracts goals from user messages, identifies the steps taken by the assistant, and evaluates both whether the goal was achieved and whether the plan was sound.
+
+**→ [Full Goal Accuracy documentation](/docs/metrics-goal-accuracy)**
+
+### Tool Use Metric
+
+The `ToolUseMetric` evaluates your LLM's **tool selection and argument generation** across a multi-turn conversation. It combines tool selection quality with argument correctness.
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import Turn, ConversationalTestCase, ToolCall
+from deepeval.metrics import ToolUseMetric
+
+convo_test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="What's the weather in Paris?"),
+        Turn(role="assistant", content="Let me check that for you.",
+             tools_called=[ToolCall(name="get_weather", description="Get current weather", input_parameters={"city": "Paris"})]),
+        Turn(role="assistant", content="It's 22°C and sunny in Paris right now."),
+    ]
+)
+metric = ToolUseMetric(
+    available_tools=[
+        ToolCall(name="get_weather", description="Get current weather for a city"),
+        ToolCall(name="search_flights", description="Search for available flights"),
+        ToolCall(name="book_hotel", description="Book a hotel room"),
+    ],
+    threshold=0.7
+)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
+```
+
+**When to use it:** When your conversational application uses tools or function calls. This metric catches both wrong tool selection and incorrect arguments.
+
+**How it's calculated:**
+
+<Equation formula="\text{Tool Use} = \min(\text{Tool Selection Score}, \text{Argument Correctness Score})" />
+
+The final score is the minimum of the two sub-scores, ensuring both tool selection and argument quality must be high for a passing grade.
+
+**→ [Full Tool Use documentation](/docs/metrics-tool-use)**
+
+## RAG Multi-Turn Metrics
+
+These are multi-turn adaptations of the classic RAG metrics. They evaluate retrieval quality across conversational turns, using a sliding window approach to account for conversational context.
+
+:::info
+RAG multi-turn metrics require `retrieval_context` to be provided on assistant [`Turn`s](/docs/evaluation-multiturn-test-cases). They are designed for conversational RAG applications where the retrieval pipeline runs on each turn. To populate `retrieval_context` automatically during simulation, return it from your [model callback](/guides/guides-multi-turn-simulation#returning-rich-turns).
+:::
+
+| Metric                          | What It Evaluates                                                              | Single-Turn Equivalent      |
+| ------------------------------- | ------------------------------------------------------------------------------ | --------------------------- |
+| `TurnFaithfulnessMetric`        | Whether assistant responses are grounded in the retrieved context per turn     | `FaithfulnessMetric`        |
+| `TurnContextualRelevancyMetric` | Whether retrieved context is relevant to the user's input per turn             | `ContextualRelevancyMetric` |
+| `TurnContextualPrecisionMetric` | Whether relevant context is ranked higher in the retrieved results per turn    | `ContextualPrecisionMetric` |
+| `TurnContextualRecallMetric`    | Whether all relevant information is captured in the retrieved context per turn | `ContextualRecallMetric`    |
+
+Here's an example using `TurnFaithfulnessMetric`:
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import Turn, ConversationalTestCase
+from deepeval.metrics import TurnFaithfulnessMetric
+
+convo_test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="What's your return policy?"),
+        Turn(
+            role="assistant",
+            content="We offer a 30-day full refund at no extra cost.",
+            retrieval_context=["All customers are eligible for a 30 day full refund at no extra cost."]
+        ),
+        Turn(role="user", content="What about exchanges?"),
+        Turn(
+            role="assistant",
+            content="Exchanges are available within 60 days of purchase.",
+            retrieval_context=["Exchanges can be made within 60 days. Items must be in original condition."]
+        ),
+    ]
+)
+metric = TurnFaithfulnessMetric(threshold=0.7)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
+```
+
+All RAG multi-turn metrics use a **sliding window** approach—for each turn, they evaluate retrieval quality against the preceding conversational context within the window. This accounts for the fact that a retrieval query in turn 5 may depend on what was discussed in turns 1–4.
+
+**→ Full documentation:** [Turn Faithfulness](/docs/metrics-turn-faithfulness) · [Turn Contextual Relevancy](/docs/metrics-turn-contextual-relevancy) · [Turn Contextual Precision](/docs/metrics-turn-contextual-precision) · [Turn Contextual Recall](/docs/metrics-turn-contextual-recall)
+
+## Custom Multi-Turn Metrics
+
+The built-in metrics cover common failure modes, but your application likely has domain-specific requirements. `deepeval` offers two ways to build custom multi-turn metrics:
+
+- **`ConversationalGEval`** — Define evaluation criteria in plain English and let an LLM judge score the conversation.
+- **`ConversationalDAGMetric`** — Build a deterministic decision tree (DAG) for structured, multi-step evaluation logic.
+
+### Conversational G-Eval
+
+`ConversationalGEval` is the multi-turn equivalent of [`GEval`](/docs/metrics-llm-evals). It uses LLM-as-a-judge to evaluate entire conversations against any criteria you define.
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import Turn, ConversationalTestCase
+from deepeval.metrics import ConversationalGEval
+
+convo_test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="I'm really frustrated. My order has been delayed three times."),
+        Turn(role="assistant", content="Let me look into that. Your order was delayed due to weather."),
+        Turn(role="user", content="This is unacceptable! I want a refund."),
+        Turn(role="assistant", content="I completely understand your frustration. Let me process that refund immediately and add a 15% discount for your next order as an apology."),
+    ]
+)
+
+empathy = ConversationalGEval(
+    name="Empathy",
+    criteria="Evaluate whether the assistant shows genuine empathy when the user expresses frustration or dissatisfaction."
+)
+
+de_escalation = ConversationalGEval(
+    name="De-escalation",
+    criteria="Evaluate whether the assistant effectively de-escalates tense situations by acknowledging concerns and offering concrete solutions."
+)
+
+evaluate(test_cases=[convo_test_case], metrics=[empathy, de_escalation])
+```
+
+**When to use it:** When you need to evaluate subjective, domain-specific qualities like tone, empathy, brand voice, policy compliance, or any other criteria not covered by built-in metrics.
+
+**How it's calculated:** `ConversationalGEval` first generates evaluation steps from your criteria using chain-of-thought, then applies those steps across the full conversation to produce a score. It uses LLM output token probabilities to normalize scores and minimize bias.
+
+**→ [Full Conversational G-Eval documentation](/docs/metrics-conversational-g-eval)**
+
+### Conversational DAG Metric
+
+The `ConversationalDAGMetric` lets you build **deterministic decision trees** for multi-turn evaluation. Instead of a single criteria string, you construct a directed acyclic graph (DAG) of task nodes, judgement nodes, and verdict nodes that the metric traverses step by step.
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import Turn, ConversationalTestCase, MultiTurnParams
+from deepeval.metrics import ConversationalDAGMetric
+from deepeval.metrics.dag import DeepAcyclicGraph
+from deepeval.metrics.conversational_dag import (
+    ConversationalTaskNode,
+    ConversationalBinaryJudgementNode,
+    ConversationalNonBinaryJudgementNode,
+    ConversationalVerdictNode,
+)
+
+non_binary_node = ConversationalNonBinaryJudgementNode(
+    criteria="How was the assistant's behaviour towards the user?",
+    children=[
+        ConversationalVerdictNode(verdict="Rude", score=0),
+        ConversationalVerdictNode(verdict="Neutral", score=5),
+        ConversationalVerdictNode(verdict="Playful", score=10),
+    ],
+)
+
+binary_node = ConversationalBinaryJudgementNode(
+    criteria="Do the assistant's replies satisfy the user's questions?",
+    children=[
+        ConversationalVerdictNode(verdict=False, score=0),
+        ConversationalVerdictNode(verdict=True, child=non_binary_node),
+    ],
+)
+
+task_node = ConversationalTaskNode(
+    instructions="Summarize the conversation and explain assistant's behaviour overall.",
+    output_label="Summary",
+    evaluation_params=[MultiTurnParams.ROLE, MultiTurnParams.CONTENT],
+    children=[binary_node],
+)
+
+dag = DeepAcyclicGraph(root_nodes=[task_node])
+
+convo_test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="What's the weather like today?"),
+        Turn(role="assistant", content="Where do you live? T~T"),
+        Turn(role="user", content="Just tell me the weather in Paris."),
+        Turn(role="assistant", content="The weather in Paris today is sunny and 24°C."),
+    ]
+)
+metric = ConversationalDAGMetric(name="Playful Chatbot", dag=dag)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
+```
+
+**When to use it:** When you need structured, deterministic evaluation logic—for example, first checking if the user's goal was met, then branching into tone analysis only if it was. DAGs are more powerful (and more verbose) than `ConversationalGEval`, and you can even embed other `deepeval` metrics as leaf nodes.
+
+**How it's calculated:** The metric traverses the DAG in topological order, using LLM-as-a-judge at each judgement node to decide which branch to follow, ultimately arriving at a verdict node with a score.
+
+**→ [Full Conversational DAG documentation](/docs/metrics-conversational-dag)**
+
+## Choosing the Right Metrics
+
+Not every application needs every metric. Here's a decision framework:
+
+| If Your Application...                      | Prioritize These Metrics                                  |
+| ------------------------------------------- | --------------------------------------------------------- |
+| Is a general-purpose chatbot                | `ConversationCompletenessMetric`, `TurnRelevancyMetric`   |
+| Handles sensitive/personal user information | `KnowledgeRetentionMetric`                                |
+| Has a defined persona or behavioral scope   | `RoleAdherenceMetric`, `TopicAdherenceMetric`             |
+| Uses tools or function calling              | `GoalAccuracyMetric`, `ToolUseMetric`                     |
+| Includes a RAG pipeline                     | `TurnFaithfulnessMetric`, `TurnContextualRelevancyMetric` |
+| Has domain-specific quality requirements    | `ConversationalGEval`, `ConversationalDAGMetric`          |
+
+:::info
+All multi-turn metrics in `deepeval` support custom LLM judges, configurable thresholds, strict mode for binary scoring, and detailed reasoning explanations. See each metric's documentation for full configuration options.
+:::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What are multi-turn evaluation metrics?",
+      answer: (
+        <>
+          Multi-turn evaluation metrics score a full conversation rather than a
+          single response. In DeepEval, they operate on{" "}
+          <code>ConversationalTestCase</code>s and cover conversation quality,
+          behavioral compliance, agentic outcomes, multi-turn RAG, and custom
+          criteria.
+        </>
+      ),
+    },
+    {
+      question: "Which metric measures whether a conversation succeeded?",
+      answer: (
+        <>
+          <code>ConversationCompletenessMetric</code> is the headline metric.
+          It measures the fraction of user intentions across the conversation
+          that the assistant satisfied.
+        </>
+      ),
+    },
+    {
+      question: "What's the difference between TurnRelevancyMetric and ConversationCompletenessMetric?",
+      answer: (
+        <>
+          <code>TurnRelevancyMetric</code> evaluates each turn-level response in
+          context, catching off-topic or irrelevant replies.{" "}
+          <code>ConversationCompletenessMetric</code> evaluates whether the
+          conversation as a whole resolved the user's goals.
+        </>
+      ),
+    },
+    {
+      question: "When should I use RoleAdherenceMetric vs TopicAdherenceMetric?",
+      answer: (
+        <>
+          Use <code>RoleAdherenceMetric</code> when your assistant has a defined
+          persona it must maintain (e.g., bank teller, support agent). Use{" "}
+          <code>TopicAdherenceMetric</code> when the assistant must stay within
+          a specific subject area regardless of how the user steers the
+          conversation.
+        </>
+      ),
+    },
+    {
+      question: "Can I evaluate multi-turn RAG with DeepEval?",
+      answer: (
+        <>
+          Yes. Use <code>TurnFaithfulnessMetric</code>,{" "}
+          <code>TurnContextualRelevancyMetric</code>,{" "}
+          <code>TurnContextualPrecisionMetric</code>, and{" "}
+          <code>TurnContextualRecallMetric</code>. These run the standard RAG
+          metrics at each retrieval-bearing turn.
+        </>
+      ),
+    },
+    {
+      question: "How do I write custom multi-turn metrics?",
+      answer: (
+        <>
+          Use <code>ConversationalGEval</code> for natural-language criteria
+          across the whole conversation, or{" "}
+          <code>ConversationalDAGMetric</code> for deterministic decision-tree
+          logic with branching judgments.
+        </>
+      ),
+    },
+    {
+      question: "Do multi-turn metrics need expected outputs?",
+      answer: (
+        <>
+          Most are referenceless—they evaluate the conversation as-is. Some,
+          like <code>TurnContextualPrecisionMetric</code> and{" "}
+          <code>TurnContextualRecallMetric</code>, are reference-based and
+          require <code>expected_output</code> to score retrieval quality
+          across turns.
+        </>
+      ),
+    },
+  ]}
+/>
+
+## Next Steps
+
+Now that you understand the available multi-turn evaluation metrics, here's where to go next:
+
+- [Multi-Turn Evaluation Guide](/guides/guides-multi-turn-evaluation) — The full workflow for development and production evaluation
+- [Multi-Turn Simulation Guide](/guides/guides-multi-turn-simulation) — Automate conversation generation with callback patterns and scenario design
+- [Multi-Turn Test Cases](/docs/evaluation-multiturn-test-cases) — How `ConversationalTestCase` and `Turn` work under the hood
+- [Conversation Simulator Reference](/docs/conversation-simulator) — API reference for all simulator parameters
+- [Evaluation Datasets](/docs/evaluation-datasets) — Manage and version `ConversationalGolden` datasets

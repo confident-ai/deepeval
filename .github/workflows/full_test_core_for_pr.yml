@@ -102,5 +102,5 @@ jobs:
         if: ${{ env.OPENAI_API_KEY != '' }}
         run: |
           poetry run pytest \
-            tests/test_core/test_synthesizer/ tests/test_core/test_datasets/
+            tests/test_core/test_synthesizer/ tests/test_core/test_datasets/ tests/test_core/test_simulator/
 

@@ -17,7 +17,6 @@ from pathlib import Path
 from deepeval.tracing.tracing import trace_manager
 from deepeval.config.settings import get_settings, reset_settings, Settings
 
-
 if TYPE_CHECKING:
     from _pytest.fixtures import FixtureRequest
 
@@ -159,7 +158,6 @@ def _core_mode_no_confident(
     # Clear the in-memory Settings fields (no persistence)
     s = get_settings()
     with s.edit(persist=False) as ctx:
-        ctx.s.API_KEY = None
         ctx.s.CONFIDENT_API_KEY = None
 
     # Yield control to the test
@@ -183,15 +181,31 @@ def unpatch_openai_after():
 
 @pytest.fixture(autouse=True)
 def _reset_tracing_state():
+    from deepeval.tracing.types import EvalSession
+
     trace_manager.clear_traces()
-    trace_manager.traces_to_evaluate_order.clear()
-    trace_manager.traces_to_evaluate.clear()
-    trace_manager.integration_traces_to_evaluate.clear()
-    trace_manager.trace_uuid_to_golden.clear()
+    # Atomic reset: dropping the session clears mode + every per-run
+    # collection (pending_traces, traces_to_evaluate, trace_uuid_to_golden,
+    # test_case_metrics) in one go, so a test cannot leak eval state to its
+    # neighbors via a forgotten field.
+    trace_manager.eval_session = EvalSession()
     try:
         trace_manager.task_bindings.clear()
     except Exception:
         pass
-    trace_manager.evaluating = False
-    trace_manager.evaluation_loop = False
     yield
+
+
+@pytest.fixture
+def completed_traces(monkeypatch):
+    """Capture completed traces before they are evicted from trace_manager.traces."""
+    captured = []
+    _original = trace_manager.end_trace
+
+    def _capturing(trace_uuid):
+        if trace_uuid in trace_manager.active_traces:
+            captured.append(trace_manager.active_traces[trace_uuid])
+        _original(trace_uuid)
+
+    monkeypatch.setattr(trace_manager, "end_trace", _capturing)
+    return captured

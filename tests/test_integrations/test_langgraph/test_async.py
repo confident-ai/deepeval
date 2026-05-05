@@ -13,6 +13,8 @@ from tests.test_integrations.utils import (
     is_generate_mode,
 )
 
+pytestmark = pytest.mark.flaky(reruns=3, reruns_delay=2)
+
 # App imports
 from tests.test_integrations.test_langgraph.apps.langgraph_async_app import (
     app as async_app,

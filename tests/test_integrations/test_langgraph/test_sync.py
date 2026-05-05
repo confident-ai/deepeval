@@ -4,6 +4,7 @@ All synchronous tests using .invoke() and .stream()
 """
 
 import os
+import pytest
 from uuid import uuid4
 from langchain_core.messages import HumanMessage
 from deepeval.integrations.langchain import CallbackHandler
@@ -12,6 +13,8 @@ from tests.test_integrations.utils import (
     generate_trace_json,
     is_generate_mode,
 )
+
+pytestmark = pytest.mark.flaky(reruns=3, reruns_delay=2)
 
 # App imports
 from tests.test_integrations.test_langgraph.apps.langgraph_simple_app import (

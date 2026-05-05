@@ -1,0 +1,38 @@
+{
+  "title": "Guides",
+  "pages": [
+    "---[Bot]AI Agents---",
+    "guides-ai-agent-evaluation",
+    "guides-ai-agent-evaluation-metrics",
+
+    "---[MessagesSquare]Multi-Turn (chatbots)---",
+    "guides-multi-turn-evaluation",
+    "guides-multi-turn-evaluation-metrics",
+    "guides-multi-turn-simulation",
+
+    "---[Library]Retrieval Augmented Generation---",
+    "guides-rag-evaluation",
+    "guides-rag-triad",
+    "guides-using-synthesizer",
+
+    "---[Scale]LLM-as-a-Judge---",
+    "guides-llm-as-a-judge",
+
+    "---[Waypoints]Tracing + Evals---",
+    "guides-tracing-ai-agents",
+    "guides-tracing-multi-turn",
+    "guides-tracing-rag",
+
+    "---[SlidersHorizontal]Customizations---",
+    "guides-using-custom-llms",
+    "guides-using-custom-embedding-models",
+    "guides-building-custom-metrics",
+
+    "---[Boxes]Others---",
+    "guides-optimizing-hyperparameters",
+    "guides-regression-testing-in-cicd",
+    "guides-llm-observability",
+    "guides-red-teaming",
+    "guides-answer-correctness-metric"
+  ]
+}

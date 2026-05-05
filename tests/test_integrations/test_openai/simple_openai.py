@@ -2,7 +2,6 @@ from openai import OpenAI, AsyncOpenAI
 from deepeval.tracing import trace, observe, LlmSpanContext
 from deepeval.prompt import Prompt
 
-
 prompt = Prompt(alias="asd")
 prompt._version = "00.00.01"
 

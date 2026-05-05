@@ -1,0 +1,136 @@
+.root {
+  --callout-safe-inset: var(--fd-callout-offset, 4px);
+
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.visible {
+  min-width: 0;
+  overflow: hidden;
+  padding: var(--callout-safe-inset);
+  margin: calc(-1 * var(--callout-safe-inset));
+}
+
+.inlineList {
+  min-width: 0;
+  white-space: nowrap;
+
+  > li {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.moreTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  font-family: inherit;
+  font-weight: inherit;
+  line-height: 1;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.moreChevron {
+  width: 12px;
+  height: 12px;
+}
+
+.content {
+  z-index: 50;
+  min-width: 200px;
+  padding: 4px;
+  background-color: var(--color-fd-popover, var(--color-fd-background));
+  color: var(--color-fd-popover-foreground, var(--color-fd-foreground));
+  border: 1px solid var(--color-fd-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  animation: home-nav-overflow-in 120ms ease-out;
+}
+
+@keyframes home-nav-overflow-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menuList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--color-fd-muted-foreground);
+  text-decoration: none;
+  transition: color 120ms ease, background-color 120ms ease;
+
+  &:hover,
+  &[data-active="true"] {
+    color: var(--color-fd-accent-foreground);
+    background-color: var(--color-fd-accent);
+  }
+}
+
+.menuIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.measure {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.measureList {
+  width: max-content;
+}
+
+.measureLink {
+  border: 0;
+  background: transparent;
+  cursor: default;
+  appearance: none;
+  font-family: inherit;
+  font-weight: inherit;
+  white-space: nowrap;
+}
+
+.root[data-ready="false"] .visible {
+  visibility: hidden;
+}

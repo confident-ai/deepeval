@@ -15,7 +15,6 @@ from .hooks import on_test_run_end, invoke_test_run_end_hook
 from .api import MetricData, TurnApi
 from .hyperparameters import log_hyperparameters
 
-
 __all__ = [
     "TestRun",
     "global_test_run_manager",

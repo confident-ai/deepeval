@@ -2,7 +2,7 @@ import os
 import uuid
 import pytest
 from deepeval.metrics import ConversationalGEval
-from deepeval.test_case import TurnParams
+from deepeval.test_case import MultiTurnParams
 from deepeval.metrics.g_eval import Rubric
 from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.confident.types import ConfidentApiError
@@ -25,10 +25,10 @@ class TestConversationalGEval:
         metric = ConversationalGEval(
             name=metric_name,
             evaluation_params=[
-                TurnParams.EXPECTED_OUTCOME,
-                TurnParams.RETRIEVAL_CONTEXT,
-                TurnParams.SCENARIO,
-                # TurnParams.TOOLS_CALLED,
+                MultiTurnParams.EXPECTED_OUTCOME,
+                MultiTurnParams.RETRIEVAL_CONTEXT,
+                MultiTurnParams.SCENARIO,
+                # MultiTurnParams.TOOLS_CALLED,
             ],
             criteria=(
                 "Test whether the assistant responses are relevant, grounded, "
@@ -68,7 +68,7 @@ class TestConversationalGEval:
         duplicate_metric = ConversationalGEval(
             name=metric_name,
             evaluation_params=[
-                TurnParams.SCENARIO,
+                MultiTurnParams.SCENARIO,
             ],
             criteria="Test whether actual output is relevant to the input given",
         )

@@ -1,0 +1,95 @@
+---
+id: synthesizer-generate-from-scratch
+title: Generate Goldens From Scratch
+sidebar_label: Generate From Scratch
+---
+
+
+import { ASSETS } from "@site/src/assets";
+
+You can also generate **synthetic Goldens from scratch**, without needing any documents or contexts.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <ImageDisplayer src={ASSETS.synthesizeFromScratch} />
+</div>
+
+:::info
+This approach is particularly useful if your LLM application **doesn't rely on RAG** or if you want to **test your LLM on queries beyond the existing knowledge base**.
+:::
+
+## Generate Your Goldens
+
+Since there is no grounded context involved, you'll need to provide a `StylingConfig` when instantiating a `Synthesizer` for `deepeval`'s `Synthesizer` to know what types of goldens it should generate:
+
+<Tabs items={["Single-Turn", "Multi-Turn"]}>
+<Tab value="Single-Turn">
+
+```python
+from deepeval.synthesizer import Synthesizer
+from deepeval.synthesizer.config import StylingConfig
+
+styling_config = StylingConfig(
+  input_format="Questions in English that asks for data in database.",
+  expected_output_format="SQL query based on the given input",
+  task="Answering text-to-SQL-related queries by querying a database and returning the results to users",
+  scenario="Non-technical users trying to query a database using plain English.",
+)
+
+synthesizer = Synthesizer(styling_config=styling_config)
+```
+
+</Tab>
+<Tab value="Multi-Turn">
+
+```python
+from deepeval.synthesizer import Synthesizer
+from deepeval.synthesizer.config import ConversationalStylingConfig
+
+conversational_styling_config = ConversationalStylingConfig(
+  conversational_task="Answering text-to-SQL-related queries by querying a database and returning the results to users",
+  scenario_context="Non-technical users trying to query a database using plain English.",
+  participant_roles="Non-technical users trying to query a database using plain English."
+)
+
+synthesizer = Synthesizer(conversational_styling_config=conversational_styling_config,)
+```
+
+</Tab>
+</Tabs>
+
+Finally, to generate synthetic goldens without provided context, simply supply the number of goldens you want generated:
+
+<Tabs items={["Single-Turn", "Multi-Turn"]}>
+<Tab value="Single-Turn">
+
+```python
+from deepeval.synthesizer import Synthesizer
+...
+
+goldens = synthesizer.generate_goldens_from_scratch(num_goldens=25)
+print(goldens)
+```
+
+</Tab>
+<Tab value="Multi-Turn">
+
+```python
+from deepeval.synthesizer import Synthesizer
+...
+
+conversational_goldens = synthesizer.generate_conversational_goldens_from_scratch(num_goldens=25)
+print(conversational_goldens)
+```
+
+</Tab>
+</Tabs>
+
+There is **ONE** mandatory parameter when using the `generate_goldens_from_scratch` method:
+
+- `num_goldens`: the number of goldens to generate.

@@ -1,13 +1,13 @@
 {
-  "uuid": "73d55d5c-e72c-4eb3-ba7f-fe52d9e8eb83",
+  "uuid": "e3021008-2e42-451b-a657-26240e5d1d9c",
   "baseSpans": [
     {
-      "uuid": "019bf9a2-34db-7721-b84f-8cee0b448347",
+      "uuid": "019d050f-6c84-7592-af8b-3a0aeadcfdf2",
       "name": "single_tool_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T09:28:35.803Z",
-      "endTime": "2026-01-26T09:28:52.021Z",
+      "startTime": "2026-03-19T07:46:30.148Z",
+      "endTime": "2026-03-19T07:46:33.669Z",
       "input": {
         "messages": [
           {
@@ -50,20 +50,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2DBbsaiChSOnKQVvoKQDWoVEaGL4",
+              "id": "chatcmpl-DL2NKSbjELDJq83gzLMnX9mpXrPuN",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf9a2-34dc-7cd1-a882-2e235b0992d0-0",
+            "id": "lc_run--019d050f-6c85-7d62-9658-4107d17a0d64-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "San Francisco"
                 },
-                "id": "call_MXpKSeRqPjY55RPFbu9soLkv",
+                "id": "call_8Cdf9jDbiiB44ZGHRzEpTqdT",
                 "type": "tool_call"
               }
             ],
@@ -88,19 +88,19 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "tool_call_id": "call_MXpKSeRqPjY55RPFbu9soLkv",
+            "tool_call_id": "call_8Cdf9jDbiiB44ZGHRzEpTqdT",
             "status": "success"
           },
           {
-            "content": "The current weather in San Francisco is foggy and 58\u00b0F.",
+            "content": "San Francisco: Foggy, 58\u00b0F.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 17,
+                "completion_tokens": 13,
                 "prompt_tokens": 180,
-                "total_tokens": 197,
+                "total_tokens": 193,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -115,19 +115,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2DBrVnqg0CM1Wxr4Xg8gXvqKJp1k",
+              "id": "chatcmpl-DL2NMJNwKpQ1JJbxYmuZ3zqudCMZc",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf9a2-7035-7ab1-a585-629571399ad3-0",
+            "id": "lc_run--019d050f-7646-79a1-b24a-72344a4efccb-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 180,
-              "output_tokens": 17,
-              "total_tokens": 197,
+              "output_tokens": 13,
+              "total_tokens": 193,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -149,7 +149,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "tool_call_id": "call_MXpKSeRqPjY55RPFbu9soLkv",
+            "tool_call_id": "call_8Cdf9jDbiiB44ZGHRzEpTqdT",
             "status": "success"
           },
           "inputParameters": {
@@ -162,13 +162,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf9a2-7035-7ab1-a585-629571399ad3",
+      "uuid": "019d050f-7646-79a1-b24a-72344a4efccb",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf9a2-34db-7721-b84f-8cee0b448347",
-      "startTime": "2026-01-26T09:28:50.997Z",
-      "endTime": "2026-01-26T09:28:52.021Z",
+      "parentUuid": "019d050f-6c84-7592-af8b-3a0aeadcfdf2",
+      "startTime": "2026-03-19T07:46:32.646Z",
+      "endTime": "2026-03-19T07:46:33.669Z",
       "input": [
         {
           "role": "human",
@@ -189,21 +189,21 @@
       ],
       "output": {
         "role": "AI",
-        "content": "The current weather in San Francisco is foggy and 58\u00b0F.",
+        "content": "San Francisco: Foggy, 58\u00b0F.",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 180.0,
-      "outputTokenCount": 17.0
+      "outputTokenCount": 13.0
     },
     {
-      "uuid": "019bf9a2-34dc-7cd1-a882-2e235b0992d0",
+      "uuid": "019d050f-6c85-7d62-9658-4107d17a0d64",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf9a2-34db-7721-b84f-8cee0b448347",
-      "startTime": "2026-01-26T09:28:35.804Z",
-      "endTime": "2026-01-26T09:28:50.996Z",
+      "parentUuid": "019d050f-6c84-7592-af8b-3a0aeadcfdf2",
+      "startTime": "2026-03-19T07:46:30.149Z",
+      "endTime": "2026-03-19T07:46:32.645Z",
       "input": [
         {
           "role": "human",
@@ -223,7 +223,7 @@
             "args": {
               "city": "San Francisco"
             },
-            "id": "call_MXpKSeRqPjY55RPFbu9soLkv"
+            "id": "call_8Cdf9jDbiiB44ZGHRzEpTqdT"
           }
         ]
       },
@@ -235,13 +235,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf9a2-7034-7f62-8a31-4391f62c05f8",
+      "uuid": "019d050f-7645-7de3-9246-98b64af85729",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf9a2-34db-7721-b84f-8cee0b448347",
-      "startTime": "2026-01-26T09:28:50.996Z",
-      "endTime": "2026-01-26T09:28:50.997Z",
+      "parentUuid": "019d050f-6c84-7592-af8b-3a0aeadcfdf2",
+      "startTime": "2026-03-19T07:46:32.645Z",
+      "endTime": "2026-03-19T07:46:32.646Z",
       "input": {
         "city": "San Francisco"
       },
@@ -251,13 +251,13 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_MXpKSeRqPjY55RPFbu9soLkv",
+        "tool_call_id": "call_8Cdf9jDbiiB44ZGHRzEpTqdT",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-26T09:28:35.803Z",
-  "endTime": "2026-01-26T09:28:52.021Z",
+  "startTime": "2026-03-19T07:46:30.148Z",
+  "endTime": "2026-03-19T07:46:33.669Z",
   "name": "langchain-single-tool-test",
   "metadata": {
     "test_type": "single_tool"
@@ -311,20 +311,20 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2DBbsaiChSOnKQVvoKQDWoVEaGL4",
+          "id": "chatcmpl-DL2NKSbjELDJq83gzLMnX9mpXrPuN",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf9a2-34dc-7cd1-a882-2e235b0992d0-0",
+        "id": "lc_run--019d050f-6c85-7d62-9658-4107d17a0d64-0",
         "tool_calls": [
           {
             "name": "get_weather",
             "args": {
               "city": "San Francisco"
             },
-            "id": "call_MXpKSeRqPjY55RPFbu9soLkv",
+            "id": "call_8Cdf9jDbiiB44ZGHRzEpTqdT",
             "type": "tool_call"
           }
         ],
@@ -349,19 +349,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_MXpKSeRqPjY55RPFbu9soLkv",
+        "tool_call_id": "call_8Cdf9jDbiiB44ZGHRzEpTqdT",
         "status": "success"
       },
       {
-        "content": "The current weather in San Francisco is foggy and 58\u00b0F.",
+        "content": "San Francisco: Foggy, 58\u00b0F.",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 17,
+            "completion_tokens": 13,
             "prompt_tokens": 180,
-            "total_tokens": 197,
+            "total_tokens": 193,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -376,19 +376,19 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2DBrVnqg0CM1Wxr4Xg8gXvqKJp1k",
+          "id": "chatcmpl-DL2NMJNwKpQ1JJbxYmuZ3zqudCMZc",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf9a2-7035-7ab1-a585-629571399ad3-0",
+        "id": "lc_run--019d050f-7646-79a1-b24a-72344a4efccb-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 180,
-          "output_tokens": 17,
-          "total_tokens": 197,
+          "output_tokens": 13,
+          "total_tokens": 193,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -411,7 +411,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_MXpKSeRqPjY55RPFbu9soLkv",
+        "tool_call_id": "call_8Cdf9jDbiiB44ZGHRzEpTqdT",
         "status": "success"
       },
       "inputParameters": {

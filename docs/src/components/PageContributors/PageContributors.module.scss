@@ -1,0 +1,116 @@
+// Stacks heading → avatars vertically. Lives in the TOC footer column
+// so the inline "Contributors: [avatars]" layout gets cramped;
+// stacking reads cleaner. The heading itself is styled inline in the
+// component to match fumadocs' `<h3 id="toc-title">` 1:1.
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  margin: 0;
+}
+
+// `+N` overflow pill — now a real button (Radix PopoverTrigger) that
+// reveals the hidden contributors on click. Sized to match the
+// avatars so the row stays visually aligned; squared corners + muted
+// palette so it still reads as metadata, not a flashy CTA.
+.overflow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--color-fd-muted-foreground);
+  background: var(--color-fd-muted);
+  border: 1px solid var(--color-fd-border);
+  border-radius: 0;
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease;
+
+  &:hover,
+  &[data-state="open"] {
+    color: var(--color-fd-foreground);
+    border-color: var(--color-fd-foreground);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-fd-primary);
+    outline-offset: 2px;
+  }
+}
+
+// Popover reveal — full list of hidden contributors as a scrollable
+// table-like list. Fumadocs' PopoverContent already applies background
+// + border + shadow via its own className merge, so we just lay out the
+// inner list here.
+.popover {
+  padding: 4px;
+  min-width: 220px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.popoverList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.popoverItem {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: var(--color-fd-foreground);
+  text-decoration: none;
+  border-radius: 0;
+  transition: background-color 120ms ease;
+
+  &:hover,
+  &:focus-visible {
+    background-color: var(--color-fd-muted);
+    outline: none;
+  }
+}
+
+.popoverAvatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 0;
+  object-fit: cover;
+  border: 1px solid var(--color-fd-border);
+}
+
+.popoverName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Commit count — right-aligned, muted, narrow so long names don't
+// collide with it.
+.popoverCommits {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-fd-muted-foreground);
+}

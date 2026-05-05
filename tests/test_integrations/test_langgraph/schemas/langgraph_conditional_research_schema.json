@@ -1,13 +1,13 @@
 {
-  "uuid": "7f0c1f9d-fab2-457f-98cc-bab784bced81",
+  "uuid": "29db0c82-fd24-4754-9c31-7b81ff990c86",
   "baseSpans": [
     {
-      "uuid": "019bfb48-88f9-7253-81c3-511e5ebf6772",
+      "uuid": "019d0517-9bb9-74e3-b5e0-e813c473e1bf",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T17:09:53.529Z",
-      "endTime": "2026-01-26T17:09:57.803Z",
+      "startTime": "2026-03-19T07:55:26.521Z",
+      "endTime": "2026-03-19T07:55:29.592Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "285ce74f-dc7b-4584-a625-3e09f249cb36"
+            "id": "bbe82a12-8431-4c35-be4d-e19b82e4a3da"
           }
         ]
       },
@@ -26,7 +26,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "285ce74f-dc7b-4584-a625-3e09f249cb36"
+            "id": "bbe82a12-8431-4c35-be4d-e19b82e4a3da"
           },
           {
             "content": "",
@@ -52,20 +52,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2KO2x3tFCu2TMfyRivlz0LtCnrrF",
+              "id": "chatcmpl-DL2VyUPfbbSWEx56uyPmw0exJe0UQ",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfb48-88fb-77b0-bbb1-82c1826c17d8-0",
+            "id": "lc_run--019d0517-9bbb-7930-ac4c-53d814374f36-0",
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
                   "topic": "quantum computing"
                 },
-                "id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ",
+                "id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
                 "type": "tool_call"
               }
             ],
@@ -90,20 +90,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "e6272495-b7a5-4672-b538-02bb7f9c48c8",
-            "tool_call_id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ",
+            "id": "feee1da0-6961-4a25-b57e-47b4cd0243fd",
+            "tool_call_id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
             "status": "success"
           },
           {
-            "content": "- Quantum computing uses quantum bits (qubits) that exploit superposition and entanglement to perform computations not feasible for classical computers.  \n- Recent milestone: advances in quantum error correction have been achieved, improving the stability and reliability of quantum processors.  \n- Ongoing challenges include qubit scalability, error rates, and developing practical algorithms and architectures for useful, large-scale quantum computation.",
+            "content": "- Quantum computing uses quantum bits (qubits) that exploit superposition and entanglement to perform computations not feasible for classical computers.  \n- Recent milestone: improved quantum error correction techniques have been demonstrated, advancing the stability and scalability of quantum processors.  \n- Ongoing challenges include qubit coherence, error rates, scaling hardware, and developing useful quantum algorithms and software ecosystems.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 80,
+                "completion_tokens": 78,
                 "prompt_tokens": 259,
-                "total_tokens": 339,
+                "total_tokens": 337,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -118,19 +118,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2KO3JCXZpNqWrf8KidgcXWmqFa1f",
+              "id": "chatcmpl-DL2W0c5iSLg5sNWToM02CmTffxCfq",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfb48-916f-7d13-9cd8-34a53c398018-0",
+            "id": "lc_run--019d0517-a11c-7f72-9e69-0b0155908fe3-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 259,
-              "output_tokens": 80,
-              "total_tokens": 339,
+              "output_tokens": 78,
+              "total_tokens": 337,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -146,13 +146,13 @@
       }
     },
     {
-      "uuid": "019bfb48-916f-7d13-9cd8-3497eabdfd28",
+      "uuid": "019d0517-a11b-7593-b1b6-62821ba8765a",
       "name": "research",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfb48-88f9-7253-81c3-511e5ebf6772",
-      "startTime": "2026-01-26T17:09:55.695Z",
-      "endTime": "2026-01-26T17:09:57.803Z",
+      "parentUuid": "019d0517-9bb9-74e3-b5e0-e813c473e1bf",
+      "startTime": "2026-03-19T07:55:27.899Z",
+      "endTime": "2026-03-19T07:55:29.592Z",
       "input": {
         "messages": [
           {
@@ -160,7 +160,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "285ce74f-dc7b-4584-a625-3e09f249cb36"
+            "id": "bbe82a12-8431-4c35-be4d-e19b82e4a3da"
           },
           {
             "content": "",
@@ -186,20 +186,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2KO2x3tFCu2TMfyRivlz0LtCnrrF",
+              "id": "chatcmpl-DL2VyUPfbbSWEx56uyPmw0exJe0UQ",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfb48-88fb-77b0-bbb1-82c1826c17d8-0",
+            "id": "lc_run--019d0517-9bbb-7930-ac4c-53d814374f36-0",
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
                   "topic": "quantum computing"
                 },
-                "id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ",
+                "id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
                 "type": "tool_call"
               }
             ],
@@ -224,8 +224,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "e6272495-b7a5-4672-b538-02bb7f9c48c8",
-            "tool_call_id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ",
+            "id": "feee1da0-6961-4a25-b57e-47b4cd0243fd",
+            "tool_call_id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
             "status": "success"
           }
         ],
@@ -234,15 +234,15 @@
       "output": {
         "messages": [
           {
-            "content": "- Quantum computing uses quantum bits (qubits) that exploit superposition and entanglement to perform computations not feasible for classical computers.  \n- Recent milestone: advances in quantum error correction have been achieved, improving the stability and reliability of quantum processors.  \n- Ongoing challenges include qubit scalability, error rates, and developing practical algorithms and architectures for useful, large-scale quantum computation.",
+            "content": "- Quantum computing uses quantum bits (qubits) that exploit superposition and entanglement to perform computations not feasible for classical computers.  \n- Recent milestone: improved quantum error correction techniques have been demonstrated, advancing the stability and scalability of quantum processors.  \n- Ongoing challenges include qubit coherence, error rates, scaling hardware, and developing useful quantum algorithms and software ecosystems.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 80,
+                "completion_tokens": 78,
                 "prompt_tokens": 259,
-                "total_tokens": 339,
+                "total_tokens": 337,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -257,19 +257,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2KO3JCXZpNqWrf8KidgcXWmqFa1f",
+              "id": "chatcmpl-DL2W0c5iSLg5sNWToM02CmTffxCfq",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfb48-916f-7d13-9cd8-34a53c398018-0",
+            "id": "lc_run--019d0517-a11c-7f72-9e69-0b0155908fe3-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 259,
-              "output_tokens": 80,
-              "total_tokens": 339,
+              "output_tokens": 78,
+              "total_tokens": 337,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -284,13 +284,13 @@
       }
     },
     {
-      "uuid": "019bfb48-99ab-7683-9255-63cc921a3743",
+      "uuid": "019d0517-a7b8-7293-a8e3-b4b74b0897ca",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfb48-916f-7d13-9cd8-3497eabdfd28",
-      "startTime": "2026-01-26T17:09:57.803Z",
-      "endTime": "2026-01-26T17:09:57.803Z",
+      "parentUuid": "019d0517-a11b-7593-b1b6-62821ba8765a",
+      "startTime": "2026-03-19T07:55:29.592Z",
+      "endTime": "2026-03-19T07:55:29.592Z",
       "input": {
         "messages": [
           {
@@ -298,7 +298,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "285ce74f-dc7b-4584-a625-3e09f249cb36"
+            "id": "bbe82a12-8431-4c35-be4d-e19b82e4a3da"
           },
           {
             "content": "",
@@ -324,20 +324,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2KO2x3tFCu2TMfyRivlz0LtCnrrF",
+              "id": "chatcmpl-DL2VyUPfbbSWEx56uyPmw0exJe0UQ",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfb48-88fb-77b0-bbb1-82c1826c17d8-0",
+            "id": "lc_run--019d0517-9bbb-7930-ac4c-53d814374f36-0",
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
                   "topic": "quantum computing"
                 },
-                "id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ",
+                "id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
                 "type": "tool_call"
               }
             ],
@@ -362,20 +362,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "e6272495-b7a5-4672-b538-02bb7f9c48c8",
-            "tool_call_id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ",
+            "id": "feee1da0-6961-4a25-b57e-47b4cd0243fd",
+            "tool_call_id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
             "status": "success"
           },
           {
-            "content": "- Quantum computing uses quantum bits (qubits) that exploit superposition and entanglement to perform computations not feasible for classical computers.  \n- Recent milestone: advances in quantum error correction have been achieved, improving the stability and reliability of quantum processors.  \n- Ongoing challenges include qubit scalability, error rates, and developing practical algorithms and architectures for useful, large-scale quantum computation.",
+            "content": "- Quantum computing uses quantum bits (qubits) that exploit superposition and entanglement to perform computations not feasible for classical computers.  \n- Recent milestone: improved quantum error correction techniques have been demonstrated, advancing the stability and scalability of quantum processors.  \n- Ongoing challenges include qubit coherence, error rates, scaling hardware, and developing useful quantum algorithms and software ecosystems.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 80,
+                "completion_tokens": 78,
                 "prompt_tokens": 259,
-                "total_tokens": 339,
+                "total_tokens": 337,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -390,19 +390,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2KO3JCXZpNqWrf8KidgcXWmqFa1f",
+              "id": "chatcmpl-DL2W0c5iSLg5sNWToM02CmTffxCfq",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfb48-916f-7d13-9cd8-34a53c398018-0",
+            "id": "lc_run--019d0517-a11c-7f72-9e69-0b0155908fe3-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 259,
-              "output_tokens": 80,
-              "total_tokens": 339,
+              "output_tokens": 78,
+              "total_tokens": 337,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -419,13 +419,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "019bfb48-916c-7f42-a3c1-81fc0b001187",
+      "uuid": "019d0517-a118-7af1-9529-05e8b5cbe6a5",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfb48-88f9-7253-81c3-511e5ebf6772",
-      "startTime": "2026-01-26T17:09:55.692Z",
-      "endTime": "2026-01-26T17:09:55.694Z",
+      "parentUuid": "019d0517-9bb9-74e3-b5e0-e813c473e1bf",
+      "startTime": "2026-03-19T07:55:27.896Z",
+      "endTime": "2026-03-19T07:55:27.899Z",
       "input": {
         "messages": [
           {
@@ -433,7 +433,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "285ce74f-dc7b-4584-a625-3e09f249cb36"
+            "id": "bbe82a12-8431-4c35-be4d-e19b82e4a3da"
           },
           {
             "content": "",
@@ -459,20 +459,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2KO2x3tFCu2TMfyRivlz0LtCnrrF",
+              "id": "chatcmpl-DL2VyUPfbbSWEx56uyPmw0exJe0UQ",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfb48-88fb-77b0-bbb1-82c1826c17d8-0",
+            "id": "lc_run--019d0517-9bbb-7930-ac4c-53d814374f36-0",
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
                   "topic": "quantum computing"
                 },
-                "id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ",
+                "id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
                 "type": "tool_call"
               }
             ],
@@ -502,8 +502,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "e6272495-b7a5-4672-b538-02bb7f9c48c8",
-            "tool_call_id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ",
+            "id": "feee1da0-6961-4a25-b57e-47b4cd0243fd",
+            "tool_call_id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
             "status": "success"
           }
         ]
@@ -517,8 +517,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "e6272495-b7a5-4672-b538-02bb7f9c48c8",
-            "tool_call_id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ",
+            "id": "feee1da0-6961-4a25-b57e-47b4cd0243fd",
+            "tool_call_id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
             "status": "success"
           },
           "inputParameters": {
@@ -528,13 +528,13 @@
       ]
     },
     {
-      "uuid": "019bfb48-916e-7a73-b1a8-0db8210f503a",
+      "uuid": "019d0517-a11b-7593-b1b6-627bc682ca4d",
       "name": "route_after_tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfb48-916c-7f42-a3c1-81fc0b001187",
-      "startTime": "2026-01-26T17:09:55.694Z",
-      "endTime": "2026-01-26T17:09:55.694Z",
+      "parentUuid": "019d0517-a118-7af1-9529-05e8b5cbe6a5",
+      "startTime": "2026-03-19T07:55:27.899Z",
+      "endTime": "2026-03-19T07:55:27.899Z",
       "input": {
         "messages": [
           {
@@ -542,7 +542,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "285ce74f-dc7b-4584-a625-3e09f249cb36"
+            "id": "bbe82a12-8431-4c35-be4d-e19b82e4a3da"
           },
           {
             "content": "",
@@ -568,20 +568,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2KO2x3tFCu2TMfyRivlz0LtCnrrF",
+              "id": "chatcmpl-DL2VyUPfbbSWEx56uyPmw0exJe0UQ",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfb48-88fb-77b0-bbb1-82c1826c17d8-0",
+            "id": "lc_run--019d0517-9bbb-7930-ac4c-53d814374f36-0",
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
                   "topic": "quantum computing"
                 },
-                "id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ",
+                "id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
                 "type": "tool_call"
               }
             ],
@@ -606,8 +606,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "e6272495-b7a5-4672-b538-02bb7f9c48c8",
-            "tool_call_id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ",
+            "id": "feee1da0-6961-4a25-b57e-47b4cd0243fd",
+            "tool_call_id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
             "status": "success"
           }
         ],
@@ -616,13 +616,13 @@
       "output": "research"
     },
     {
-      "uuid": "019bfb48-88fa-70f1-ba73-43885b4c721b",
+      "uuid": "019d0517-9bbb-7930-ac4c-53c960990310",
       "name": "research",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfb48-88f9-7253-81c3-511e5ebf6772",
-      "startTime": "2026-01-26T17:09:53.530Z",
-      "endTime": "2026-01-26T17:09:55.692Z",
+      "parentUuid": "019d0517-9bb9-74e3-b5e0-e813c473e1bf",
+      "startTime": "2026-03-19T07:55:26.523Z",
+      "endTime": "2026-03-19T07:55:27.895Z",
       "input": {
         "messages": [
           {
@@ -630,7 +630,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "285ce74f-dc7b-4584-a625-3e09f249cb36"
+            "id": "bbe82a12-8431-4c35-be4d-e19b82e4a3da"
           }
         ],
         "intent": "research"
@@ -661,20 +661,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2KO2x3tFCu2TMfyRivlz0LtCnrrF",
+              "id": "chatcmpl-DL2VyUPfbbSWEx56uyPmw0exJe0UQ",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfb48-88fb-77b0-bbb1-82c1826c17d8-0",
+            "id": "lc_run--019d0517-9bbb-7930-ac4c-53d814374f36-0",
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
                   "topic": "quantum computing"
                 },
-                "id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ",
+                "id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
                 "type": "tool_call"
               }
             ],
@@ -697,13 +697,13 @@
       }
     },
     {
-      "uuid": "019bfb48-916b-7163-8fe7-0c9d52dae46c",
+      "uuid": "019d0517-a116-7b80-81dc-0d45c375e0f3",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfb48-88fa-70f1-ba73-43885b4c721b",
-      "startTime": "2026-01-26T17:09:55.691Z",
-      "endTime": "2026-01-26T17:09:55.692Z",
+      "parentUuid": "019d0517-9bbb-7930-ac4c-53c960990310",
+      "startTime": "2026-03-19T07:55:27.895Z",
+      "endTime": "2026-03-19T07:55:27.895Z",
       "input": {
         "messages": [
           {
@@ -711,7 +711,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "285ce74f-dc7b-4584-a625-3e09f249cb36"
+            "id": "bbe82a12-8431-4c35-be4d-e19b82e4a3da"
           },
           {
             "content": "",
@@ -737,20 +737,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2KO2x3tFCu2TMfyRivlz0LtCnrrF",
+              "id": "chatcmpl-DL2VyUPfbbSWEx56uyPmw0exJe0UQ",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfb48-88fb-77b0-bbb1-82c1826c17d8-0",
+            "id": "lc_run--019d0517-9bbb-7930-ac4c-53d814374f36-0",
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
                   "topic": "quantum computing"
                 },
-                "id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ",
+                "id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
                 "type": "tool_call"
               }
             ],
@@ -775,13 +775,13 @@
       "output": "tools"
     },
     {
-      "uuid": "019bfb48-88fa-70f1-ba73-4368867c6376",
+      "uuid": "019d0517-9bba-7683-b219-cd8055898b89",
       "name": "classifier",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfb48-88f9-7253-81c3-511e5ebf6772",
-      "startTime": "2026-01-26T17:09:53.530Z",
-      "endTime": "2026-01-26T17:09:53.530Z",
+      "parentUuid": "019d0517-9bb9-74e3-b5e0-e813c473e1bf",
+      "startTime": "2026-03-19T07:55:26.522Z",
+      "endTime": "2026-03-19T07:55:26.522Z",
       "input": {
         "messages": [
           {
@@ -789,7 +789,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "285ce74f-dc7b-4584-a625-3e09f249cb36"
+            "id": "bbe82a12-8431-4c35-be4d-e19b82e4a3da"
           }
         ]
       },
@@ -800,20 +800,20 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "285ce74f-dc7b-4584-a625-3e09f249cb36"
+            "id": "bbe82a12-8431-4c35-be4d-e19b82e4a3da"
           }
         ],
         "intent": "research"
       }
     },
     {
-      "uuid": "019bfb48-88fa-70f1-ba73-437794790d06",
+      "uuid": "019d0517-9bba-7683-b219-cd92f81637b4",
       "name": "route_by_intent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfb48-88fa-70f1-ba73-4368867c6376",
-      "startTime": "2026-01-26T17:09:53.530Z",
-      "endTime": "2026-01-26T17:09:53.530Z",
+      "parentUuid": "019d0517-9bba-7683-b219-cd8055898b89",
+      "startTime": "2026-03-19T07:55:26.522Z",
+      "endTime": "2026-03-19T07:55:26.522Z",
       "input": {
         "messages": [
           {
@@ -821,7 +821,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "285ce74f-dc7b-4584-a625-3e09f249cb36"
+            "id": "bbe82a12-8431-4c35-be4d-e19b82e4a3da"
           }
         ],
         "intent": "research"
@@ -832,13 +832,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bfb48-916f-7d13-9cd8-34a53c398018",
+      "uuid": "019d0517-a11c-7f72-9e69-0b0155908fe3",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bfb48-916f-7d13-9cd8-3497eabdfd28",
-      "startTime": "2026-01-26T17:09:55.695Z",
-      "endTime": "2026-01-26T17:09:57.803Z",
+      "parentUuid": "019d0517-a11b-7593-b1b6-62821ba8765a",
+      "startTime": "2026-03-19T07:55:27.900Z",
+      "endTime": "2026-03-19T07:55:29.592Z",
       "input": [
         {
           "role": "human",
@@ -871,21 +871,21 @@
       ],
       "output": {
         "role": "AI",
-        "content": "- Quantum computing uses quantum bits (qubits) that exploit superposition and entanglement to perform computations not feasible for classical computers.  \n- Recent milestone: advances in quantum error correction have been achieved, improving the stability and reliability of quantum processors.  \n- Ongoing challenges include qubit scalability, error rates, and developing practical algorithms and architectures for useful, large-scale quantum computation.",
+        "content": "- Quantum computing uses quantum bits (qubits) that exploit superposition and entanglement to perform computations not feasible for classical computers.  \n- Recent milestone: improved quantum error correction techniques have been demonstrated, advancing the stability and scalability of quantum processors.  \n- Ongoing challenges include qubit coherence, error rates, scaling hardware, and developing useful quantum algorithms and software ecosystems.",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 259.0,
-      "outputTokenCount": 80.0
+      "outputTokenCount": 78.0
     },
     {
-      "uuid": "019bfb48-88fb-77b0-bbb1-82c1826c17d8",
+      "uuid": "019d0517-9bbb-7930-ac4c-53d814374f36",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bfb48-88fa-70f1-ba73-43885b4c721b",
-      "startTime": "2026-01-26T17:09:53.531Z",
-      "endTime": "2026-01-26T17:09:55.691Z",
+      "parentUuid": "019d0517-9bbb-7930-ac4c-53c960990310",
+      "startTime": "2026-03-19T07:55:26.523Z",
+      "endTime": "2026-03-19T07:55:27.894Z",
       "input": [
         {
           "role": "human",
@@ -917,7 +917,7 @@
             "args": {
               "topic": "quantum computing"
             },
-            "id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ"
+            "id": "call_RoJnzfSfKeUqGcYAdV5ydht2"
           }
         ]
       },
@@ -929,13 +929,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bfb48-916d-7da1-9348-57473f763021",
+      "uuid": "019d0517-a119-7e23-a92a-7496af6eb550",
       "name": "research_topic",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bfb48-916c-7f42-a3c1-81fc0b001187",
-      "startTime": "2026-01-26T17:09:55.693Z",
-      "endTime": "2026-01-26T17:09:55.694Z",
+      "parentUuid": "019d0517-a118-7af1-9529-05e8b5cbe6a5",
+      "startTime": "2026-03-19T07:55:27.897Z",
+      "endTime": "2026-03-19T07:55:27.898Z",
       "input": {
         "topic": "quantum computing"
       },
@@ -945,14 +945,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "research_topic",
-        "id": "e6272495-b7a5-4672-b538-02bb7f9c48c8",
-        "tool_call_id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ",
+        "id": "feee1da0-6961-4a25-b57e-47b4cd0243fd",
+        "tool_call_id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-26T17:09:53.529Z",
-  "endTime": "2026-01-26T17:09:57.803Z",
+  "startTime": "2026-03-19T07:55:26.521Z",
+  "endTime": "2026-03-19T07:55:29.592Z",
   "name": "langgraph-conditional-research",
   "metadata": {
     "test_type": "conditional_research"
@@ -970,7 +970,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "285ce74f-dc7b-4584-a625-3e09f249cb36"
+        "id": "bbe82a12-8431-4c35-be4d-e19b82e4a3da"
       }
     ]
   },
@@ -981,7 +981,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "285ce74f-dc7b-4584-a625-3e09f249cb36"
+        "id": "bbe82a12-8431-4c35-be4d-e19b82e4a3da"
       },
       {
         "content": "",
@@ -1007,20 +1007,20 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2KO2x3tFCu2TMfyRivlz0LtCnrrF",
+          "id": "chatcmpl-DL2VyUPfbbSWEx56uyPmw0exJe0UQ",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bfb48-88fb-77b0-bbb1-82c1826c17d8-0",
+        "id": "lc_run--019d0517-9bbb-7930-ac4c-53d814374f36-0",
         "tool_calls": [
           {
             "name": "research_topic",
             "args": {
               "topic": "quantum computing"
             },
-            "id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ",
+            "id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
             "type": "tool_call"
           }
         ],
@@ -1045,20 +1045,20 @@
         "response_metadata": {},
         "type": "tool",
         "name": "research_topic",
-        "id": "e6272495-b7a5-4672-b538-02bb7f9c48c8",
-        "tool_call_id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ",
+        "id": "feee1da0-6961-4a25-b57e-47b4cd0243fd",
+        "tool_call_id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
         "status": "success"
       },
       {
-        "content": "- Quantum computing uses quantum bits (qubits) that exploit superposition and entanglement to perform computations not feasible for classical computers.  \n- Recent milestone: advances in quantum error correction have been achieved, improving the stability and reliability of quantum processors.  \n- Ongoing challenges include qubit scalability, error rates, and developing practical algorithms and architectures for useful, large-scale quantum computation.",
+        "content": "- Quantum computing uses quantum bits (qubits) that exploit superposition and entanglement to perform computations not feasible for classical computers.  \n- Recent milestone: improved quantum error correction techniques have been demonstrated, advancing the stability and scalability of quantum processors.  \n- Ongoing challenges include qubit coherence, error rates, scaling hardware, and developing useful quantum algorithms and software ecosystems.",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 80,
+            "completion_tokens": 78,
             "prompt_tokens": 259,
-            "total_tokens": 339,
+            "total_tokens": 337,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -1073,19 +1073,19 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2KO3JCXZpNqWrf8KidgcXWmqFa1f",
+          "id": "chatcmpl-DL2W0c5iSLg5sNWToM02CmTffxCfq",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bfb48-916f-7d13-9cd8-34a53c398018-0",
+        "id": "lc_run--019d0517-a11c-7f72-9e69-0b0155908fe3-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 259,
-          "output_tokens": 80,
-          "total_tokens": 339,
+          "output_tokens": 78,
+          "total_tokens": 337,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -1109,8 +1109,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "research_topic",
-        "id": "e6272495-b7a5-4672-b538-02bb7f9c48c8",
-        "tool_call_id": "call_in7ZzNigQ6Uu2QWj1bsWBdwZ",
+        "id": "feee1da0-6961-4a25-b57e-47b4cd0243fd",
+        "tool_call_id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
         "status": "success"
       },
       "inputParameters": {

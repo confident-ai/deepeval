@@ -45,6 +45,8 @@ from deepeval.tracing.patchers import (
 from deepeval.tracing.types import (
     AgentSpan,
     BaseSpan,
+    EvalMode,
+    EvalSession,
     LlmSpan,
     RetrieverSpan,
     SpanType,
@@ -69,7 +71,6 @@ from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.api import PromptApi
 from deepeval.tracing.trace_test_manager import trace_testing_manager
-
 
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden
@@ -162,10 +163,6 @@ class TraceManager:
         self.active_spans: Dict[str, BaseSpan] = (
             {}
         )  # Map of span_uuid to BaseSpan
-        # Map each trace created during evaluation_loop to the Golden that was active
-        # when it was started. This lets us evaluate traces against the correct golden
-        # since we cannot rely on positional indexing as the order is not guaranteed.
-        self.trace_uuid_to_golden: Dict[str, Golden] = {}
 
         settings = get_settings()
         # Initialize queue and worker thread for trace posting
@@ -196,13 +193,12 @@ class TraceManager:
         self.openai_client = None
         self.tracing_enabled = True
 
-        # Evals
-        self.evaluating = False
-        self.evaluation_loop = False
-        self.traces_to_evaluate_order: List[str] = []
-        self.traces_to_evaluate: List[Trace] = []
-        self.integration_traces_to_evaluate: List[Trace] = []
-        self.test_case_metrics: List[TestCaseMetricPair] = []
+        # All per-evaluation-run state is grouped on this single object.
+        # See deepeval.tracing.types.EvalSession for the field-by-field
+        # breakdown. Resetting an in-flight evaluation is a one-line
+        # ``self.eval_session = EvalSession()``, which makes exit cleanup
+        # atomic and impossible to half-do.
+        self.eval_session: EvalSession = EvalSession()
 
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
@@ -218,6 +214,20 @@ class TraceManager:
                 trace_worker_status=TraceWorkerStatus.WARNING,
                 description=f"Set {CONFIDENT_TRACE_FLUSH}=1 as an environment variable to flush remaining traces to Confident AI.",
             )
+
+    @property
+    def is_evaluating(self) -> bool:
+        """True when running under any evaluation pipeline (any non-OFF mode).
+
+        Delegates to ``eval_session`` so external callers don't need to know
+        about the session indirection.
+        """
+        return self.eval_session.is_evaluating
+
+    @property
+    def is_iterator(self) -> bool:
+        """True when running under either evals_iterator path (sync or async)."""
+        return self.eval_session.is_iterator
 
     def mask(self, data: Any):
         if self.custom_mask_fn is not None:
@@ -273,8 +283,8 @@ class TraceManager:
         )
         self.active_traces[trace_uuid] = new_trace
         self.traces.append(new_trace)
-        if self.evaluation_loop:
-            self.traces_to_evaluate_order.append(trace_uuid)
+        if self.eval_session.mode == EvalMode.ITERATOR_ASYNC:
+            self.eval_session.pending_traces[trace_uuid] = new_trace
             # Associate the current Golden with this trace so we can
             # later evaluate traces against the correct golden, even if more traces
             # are created than goldens or the order interleaves.
@@ -283,7 +293,9 @@ class TraceManager:
 
                 current_golden = get_current_golden()
                 if current_golden is not None:
-                    self.trace_uuid_to_golden[trace_uuid] = current_golden
+                    self.eval_session.trace_uuid_to_golden[trace_uuid] = (
+                        current_golden
+                    )
             except Exception:
                 # not much we can do, but if the golden is not there during evaluation
                 # we will write out a verbose debug log
@@ -313,20 +325,31 @@ class TraceManager:
                 )
                 trace_testing_manager.test_dict = make_json_serializable(body)
             #  Post the trace to the server before removing it
-            elif not self.evaluating:
-                self.post_trace(trace)
+            elif not self.is_evaluating:
+                if not trace.drop:
+                    self.post_trace(trace)
             else:
-                if self.evaluation_loop:
-                    if self.integration_traces_to_evaluate:
+                if self.eval_session.mode == EvalMode.ITERATOR_ASYNC:
+                    session = self.eval_session
+                    if session.test_case_metrics:
                         pass
-                    elif self.test_case_metrics:
-                        pass
-                    elif trace_uuid in self.traces_to_evaluate_order:
-                        self.traces_to_evaluate.append(trace)
-                        self.traces_to_evaluate.sort(
-                            key=lambda t: self.traces_to_evaluate_order.index(
-                                t.uuid
-                            )
+                    elif (
+                        trace_uuid in session.pending_traces
+                        and trace not in session.traces_to_evaluate
+                    ):
+                        # Per-trace dedup: an integration may have already
+                        # queued this exact trace before calling end_trace
+                        # (e.g. llama_index does this in prepare_to_exit_span).
+                        session.traces_to_evaluate.append(trace)
+                        # Sort by start order. `pending_traces` is insertion-
+                        # ordered, so build the position map once instead of
+                        # doing an O(n) `index()` lookup per comparison.
+                        order = {
+                            uuid: i
+                            for i, uuid in enumerate(session.pending_traces)
+                        }
+                        session.traces_to_evaluate.sort(
+                            key=lambda t: order.get(t.uuid, len(order))
                         )
                 else:
                     # print(f"Ending trace: {trace.root_spans}")
@@ -343,6 +366,14 @@ class TraceManager:
 
             # Remove from active traces
             del self.active_traces[trace_uuid]
+
+            # Evict finished traces to bound memory usage.
+            # Skipped during evaluation (pipeline reads them after completion).
+            if not self.is_evaluating:
+                try:
+                    self.traces.remove(trace)
+                except ValueError:
+                    pass
 
     def set_trace_status(self, trace_uuid: str, status: TraceSpanStatus):
         """Manually set the status of a trace."""
@@ -422,7 +453,7 @@ class TraceManager:
         description: Optional[str] = None,
         environment: Optional[str] = None,
     ):
-        if get_settings().CONFIDENT_TRACE_VERBOSE and self.evaluating is False:
+        if get_settings().CONFIDENT_TRACE_VERBOSE and not self.is_evaluating:
             console = Console()
             message_prefix = "[dim][Confident AI Trace Log][/dim]"
             if trace_worker_status == TraceWorkerStatus.SUCCESS:
@@ -714,6 +745,13 @@ class TraceManager:
         while span_stack:
             span = span_stack.pop()
 
+            if span.drop:
+                if span.children:
+                    for child in span.children:
+                        child.parent_uuid = span.parent_uuid
+                    span_stack.extend(span.children)
+                continue
+
             # Convert BaseSpan to BaseApiSpan
             api_span = self._convert_span_to_api_span(span)
 
@@ -770,6 +808,7 @@ class TraceManager:
             toolsCalled=trace.tools_called,
             expectedTools=trace.expected_tools,
             testCaseId=trace.test_case_id,
+            turnId=trace.turn_id,
             confident_api_key=trace.confident_api_key,
             environment=(
                 self.environment if not trace.environment else trace.environment
@@ -1160,27 +1199,37 @@ def observe(
     type: Optional[
         Union[Literal["agent", "llm", "retriever", "tool"], str]
     ] = None,
+    _drop_if_root: bool = False,
+    _internal: bool = False,
     **observe_kwargs,
 ):
     """
     Decorator to trace a function as a span.
 
     Args:
-        span_type: The type of span to create (AGENT, LLM, RETRIEVER, TOOL, or custom string)
-        **observe_kwargs: Additional arguments to pass to the Observer
-
-    Returns:
-        A decorator function that wraps the original function with a Observer
+        type: The type of span to create (agent, llm, retriever, tool, or custom string).
+        _drop_if_root: If True, skip observation when there is no active parent span.
+        _internal: If True, only observe when CONFIDENT_TRACE_INTERNAL is enabled.
+        **observe_kwargs: Additional arguments to pass to the Observer.
     """
 
     def decorator(func):
         func_name = func.__name__  # Get func_name outside wrappers
+
+        def _should_skip_observe():
+            if _drop_if_root and current_span_context.get() is None:
+                return True
+            if _internal and not get_settings().CONFIDENT_TRACE_INTERNAL:
+                return True
+            return False
 
         # Async generator function
         if inspect.isasyncgenfunction(func):
 
             @functools.wraps(func)
             def asyncgen_wrapper(*args, **func_kwargs):
+                if _should_skip_observe():
+                    return func(*args, **func_kwargs)
 
                 sig = inspect.signature(func)
                 bound = sig.bind(*args, **func_kwargs)
@@ -1215,6 +1264,8 @@ def observe(
 
             @functools.wraps(func)
             def gen_wrapper(*args, **func_kwargs):
+                if _should_skip_observe():
+                    return func(*args, **func_kwargs)
 
                 sig = inspect.signature(func)
                 bound = sig.bind(*args, **func_kwargs)
@@ -1291,7 +1342,8 @@ def observe(
 
             @functools.wraps(func)
             async def async_wrapper(*args, **func_kwargs):
-                # func_name = func.__name__ # Removed from here
+                if _should_skip_observe():
+                    return await func(*args, **func_kwargs)
                 sig = inspect.signature(func)
                 bound_args = sig.bind(*args, **func_kwargs)
                 bound_args.apply_defaults()
@@ -1322,7 +1374,8 @@ def observe(
 
             @functools.wraps(func)
             def wrapper(*args, **func_kwargs):
-                # func_name = func.__name__ # Removed from here
+                if _should_skip_observe():
+                    return func(*args, **func_kwargs)
                 sig = inspect.signature(func)
                 bound_args = sig.bind(*args, **func_kwargs)
                 bound_args.apply_defaults()

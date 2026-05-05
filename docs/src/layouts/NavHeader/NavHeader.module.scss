@@ -1,0 +1,143 @@
+/* Top navigation header.
+ *
+ * Grid at ≥$grid-min (aligns with sidebar/main/TOC columns
+ * below), plain flex row otherwise. */
+
+$gutter: 0.5rem;
+$grid-min: 768px;
+$inline-nav-min: 1100px;
+$toc-visible-min: 1280px;
+
+.body {
+  /* Below the TOC breakpoint, the right header cell should only be as
+   * wide as its own controls; reserving the full TOC width leaves an
+   * awkward empty gutter. Once the TOC appears again, snap the header's
+   * third track back to the shared TOC column width so the seams align. */
+  --nd-header-utils-width: max-content;
+
+  @media (min-width: $toc-visible-min) {
+    --nd-header-utils-width: var(--fd-toc-width);
+  }
+
+  display: flex;
+  align-items: stretch;
+  height: 56px;
+  border-bottom: 1px solid var(--color-fd-border);
+
+  @media (min-width: $grid-min) {
+    display: grid;
+    grid-template-columns:
+      var(--fd-sidebar-col)
+      minmax(0, 1fr)
+      var(--nd-header-utils-width);
+  }
+}
+
+.logoCell {
+  display: flex;
+  align-items: center;
+  padding-left: $gutter;
+  flex: 0 0 auto;
+  min-width: 0;
+
+  @media (min-width: $grid-min) {
+    border-left: 1px solid var(--color-fd-border);
+    border-right: 1px solid var(--color-fd-border);
+  }
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.mainNavLinks {
+  display: none;
+
+  @media (min-width: $inline-nav-min) {
+    display: block;
+  }
+}
+
+.mainMenuTrigger {
+  display: none;
+
+  @media (min-width: 768px) and (max-width: #{$inline-nav-min - 0.02px}) {
+    display: block;
+  }
+}
+
+.mainGithub {
+  display: none;
+
+  @media (min-width: $inline-nav-min) {
+    display: block;
+  }
+}
+
+.utilsGithub {
+  display: none;
+
+  @media (min-width: 768px) and (max-width: #{$inline-nav-min - 0.02px}) {
+    display: block;
+  }
+}
+
+.mainCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  flex: 1 1 0;
+  min-width: 0;
+
+  @media (min-width: 768px) {
+    justify-content: space-between;
+    padding-right: 1rem;
+  }
+}
+
+.utilsCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-left: 0.75rem;
+  padding-right: $gutter;
+  flex: 0 0 auto;
+
+  @media (min-width: $grid-min) {
+    border-right: 1px solid var(--color-fd-border);
+  }
+
+  @media (min-width: $toc-visible-min) {
+    padding-left: 0;
+  }
+
+  @media (min-width: $inline-nav-min) {
+    border-left: 1px solid var(--color-fd-border);
+  }
+}
+
+.utilsDesktop {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  @media (max-width: 767.98px) {
+    display: none;
+  }
+}
+
+.utilsMobile {
+  display: flex;
+  align-items: center;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}

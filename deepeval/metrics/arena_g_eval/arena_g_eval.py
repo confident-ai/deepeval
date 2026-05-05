@@ -6,7 +6,7 @@ from rich.progress import Progress
 from deepeval.metrics import BaseArenaMetric
 from deepeval.metrics.arena_g_eval.utils import format_arena_test_case
 from deepeval.test_case import (
-    LLMTestCaseParams,
+    SingleTurnParams,
     ArenaTestCase,
 )
 from deepeval.metrics.arena_g_eval.template import ArenaGEvalTemplate
@@ -37,7 +37,7 @@ class ArenaGEval(BaseArenaMetric):
     def __init__(
         self,
         name: str,
-        evaluation_params: List[LLMTestCaseParams],
+        evaluation_params: List[SingleTurnParams],
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,

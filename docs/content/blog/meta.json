@@ -1,0 +1,22 @@
+{
+  "title": "Blog",
+  "pages": [
+    "index",
+
+    "---[Megaphone]Announcements---",
+    "deepeval-got-a-new-look",
+
+    "---[Users]Community---",
+    "medical-chatbot-deepeval-guide",
+    "rag-contract-assistant-deepeval-guide",
+    "use-case-cognee-ai-memory",
+    "top-5-geval-use-cases",
+
+    "---[Scale]Comparisons---",
+    "deepeval-alternatives-compared",
+    "deepeval-vs-arize",
+    "deepeval-vs-langfuse",
+    "deepeval-vs-ragas",
+    "deepeval-vs-trulens"
+  ]
+}

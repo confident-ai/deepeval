@@ -1,0 +1,325 @@
+.mockup {
+  margin: 1.5rem 0 0;
+  overflow: hidden;
+  color: var(--color-fd-foreground);
+  background: var(--color-prose-bg);
+  border: 1px solid var(--color-fd-border);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 2rem;
+  padding: 0 0.75rem;
+  color: var(--color-fd-muted-foreground);
+  background: color-mix(in oklab, var(--color-fd-muted) 72%, transparent);
+  border-bottom: 1px solid var(--color-fd-border);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.collabGrid,
+.dashboardGrid,
+.deployGrid {
+  display: grid;
+  gap: 1px;
+  background: var(--color-fd-border);
+}
+
+.collabGrid {
+  grid-template-columns: 0.85fr 1.5fr 1fr;
+}
+
+.sidebar,
+.annotationCard,
+.reviewerStack,
+.chartPanel,
+.statusPanel,
+.tracePanel,
+.orgTree,
+.controlsPanel,
+.deployCard {
+  background: var(--color-prose-bg);
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.85rem;
+
+  span {
+    padding: 0.35rem 0.45rem;
+    color: var(--color-fd-muted-foreground);
+    border: 1px solid transparent;
+    font-size: 12px;
+  }
+}
+
+.activeNav {
+  color: var(--color-fd-foreground) !important;
+  background: var(--color-fd-muted);
+  border-color: var(--color-fd-border) !important;
+}
+
+.annotationCard {
+  padding: 0.9rem;
+}
+
+.kicker {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--color-fd-muted-foreground);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.prompt {
+  margin: 0 0 0.7rem;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.7rem;
+
+  span {
+    padding: 0.2rem 0.4rem;
+    color: var(--color-fd-muted-foreground);
+    background: var(--color-fd-muted);
+    border: 1px solid var(--color-fd-border);
+    font-size: 11px;
+  }
+}
+
+.comment {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.6rem;
+  background: var(--color-fd-background);
+  border: 1px solid var(--color-fd-border);
+
+  strong {
+    font-size: 12px;
+  }
+
+  span {
+    color: var(--color-fd-muted-foreground);
+    font-size: 12px;
+    line-height: 1.35;
+  }
+}
+
+.reviewerStack {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.85rem;
+}
+
+.reviewer {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 12px;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  background: var(--color-fd-muted);
+  border: 1px solid var(--color-fd-border);
+  font-size: 11px;
+}
+
+.check {
+  color: var(--color-fd-muted-foreground);
+  font-size: 11px;
+}
+
+.dashboardGrid {
+  grid-template-columns: 1.45fr 0.9fr;
+}
+
+.chartPanel {
+  grid-row: span 2;
+  padding: 0.9rem;
+}
+
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+  font-size: 12px;
+
+  span {
+    color: var(--color-fd-muted-foreground);
+  }
+}
+
+.chart {
+  display: flex;
+  align-items: end;
+  gap: 0.32rem;
+  height: 8.5rem;
+  padding: 0.65rem;
+  background: repeating-linear-gradient(
+    to top,
+    color-mix(in oklab, var(--color-fd-border) 35%, transparent),
+    color-mix(in oklab, var(--color-fd-border) 35%, transparent) 1px,
+    transparent 1px,
+    transparent 25%
+  );
+
+  span {
+    flex: 1;
+    min-width: 0;
+    background: var(--color-fd-foreground);
+  }
+}
+
+.statusPanel,
+.tracePanel {
+  padding: 0.8rem;
+}
+
+.statusRow,
+.traceRow,
+.orgRow,
+.controlRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.42rem 0;
+  border-bottom: 1px solid color-mix(in oklab, var(--color-fd-border) 65%, transparent);
+  font-size: 12px;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.statusRow {
+  span {
+    color: var(--color-fd-muted-foreground);
+  }
+
+  strong[data-tone="good"] {
+    color: #16a34a;
+  }
+
+  strong[data-tone="warn"] {
+    color: #d97706;
+  }
+}
+
+.traceRow {
+  justify-content: flex-start;
+
+  em {
+    margin-left: auto;
+    color: var(--color-fd-muted-foreground);
+    font-style: normal;
+  }
+}
+
+.traceDot {
+  width: 0.42rem;
+  height: 0.42rem;
+  background: var(--color-fd-foreground);
+}
+
+.deployGrid {
+  grid-template-columns: 1.2fr 1fr;
+}
+
+.orgTree {
+  grid-row: span 2;
+  padding: 0.85rem;
+}
+
+.orgRow {
+  justify-content: flex-start;
+
+  em {
+    margin-left: auto;
+    color: var(--color-fd-muted-foreground);
+    font-style: normal;
+  }
+}
+
+.orgIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: var(--color-fd-muted);
+  border: 1px solid var(--color-fd-border);
+  font-size: 10px;
+}
+
+.controlsPanel,
+.deployCard {
+  padding: 0.85rem;
+}
+
+.controlRow {
+  span {
+    color: var(--color-fd-muted-foreground);
+  }
+}
+
+.deployCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+
+  strong {
+    font-size: 13px;
+  }
+
+  > span {
+    color: var(--color-fd-muted-foreground);
+    font-size: 12px;
+  }
+}
+
+.progressTrack {
+  height: 0.45rem;
+  background: var(--color-fd-muted);
+  border: 1px solid var(--color-fd-border);
+
+  span {
+    display: block;
+    width: 78%;
+    height: 100%;
+    background: var(--color-fd-foreground);
+  }
+}
+
+@media (max-width: 720px) {
+  .collabGrid,
+  .dashboardGrid,
+  .deployGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .chartPanel,
+  .orgTree {
+    grid-row: auto;
+  }
+}

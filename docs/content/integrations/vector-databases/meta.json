@@ -1,0 +1,11 @@
+{
+  "title": "Vector Databases",
+  "pages": [
+    "cognee",
+    "elasticsearch",
+    "chroma",
+    "weaviate",
+    "qdrant",
+    "pgvector"
+  ]
+}

@@ -2,7 +2,7 @@ from typing import Optional, Type, Union, List
 
 from deepeval.test_case import (
     LLMTestCase,
-    LLMTestCaseParams,
+    SingleTurnParams,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.utils import get_or_create_event_loop, prettify_list
@@ -21,14 +21,13 @@ from deepeval.metrics.hallucination.schema import (
     Verdicts,
     HallucinationScoreReason,
 )
-from deepeval.metrics.api import metric_data_manager
 
 
 class HallucinationMetric(BaseMetric):
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
-        LLMTestCaseParams.CONTEXT,
+    _required_params: List[SingleTurnParams] = [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
+        SingleTurnParams.CONTEXT,
     ]
 
     def __init__(
@@ -101,10 +100,6 @@ class HallucinationMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
 
             return self.score
 
@@ -149,10 +144,6 @@ class HallucinationMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
             return self.score
 
     async def _a_generate_reason(self):

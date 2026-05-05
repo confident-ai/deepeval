@@ -13,6 +13,8 @@ import re
 import os
 import mimetypes
 import base64
+import weakref
+import warnings
 from dataclasses import dataclass, field
 from urllib.parse import urlparse, unquote
 from deepeval.utils import make_model_config
@@ -25,7 +27,9 @@ from deepeval.test_case.mcp import (
     validate_mcp_servers,
 )
 
-_MLLM_IMAGE_REGISTRY: Dict[str, "MLLMImage"] = {}
+_MLLM_IMAGE_REGISTRY: weakref.WeakValueDictionary[str, "MLLMImage"] = (
+    weakref.WeakValueDictionary()
+)
 
 
 @dataclass
@@ -145,10 +149,11 @@ class MLLMImage:
 
             img_id = m.group(1)
 
-            if img_id not in _MLLM_IMAGE_REGISTRY:
-                MLLMImage(url=img_id, _id=img_id)
+            img = _MLLM_IMAGE_REGISTRY.get(img_id)
+            if img is None:
+                img = MLLMImage(url=img_id, _id=img_id)
 
-            result.append(_MLLM_IMAGE_REGISTRY[img_id])
+            result.append(img)
             last_end = end
 
         if last_end < len(s):
@@ -163,18 +168,32 @@ class MLLMImage:
         return f"data:{self.mimeType};base64,{self.dataBase64}"
 
 
-class LLMTestCaseParams(Enum):
+class SingleTurnParams(Enum):
     INPUT = "input"
     ACTUAL_OUTPUT = "actual_output"
     EXPECTED_OUTPUT = "expected_output"
     CONTEXT = "context"
     RETRIEVAL_CONTEXT = "retrieval_context"
+    METADATA = "metadata"
+    TAGS = "tags"
     TOOLS_CALLED = "tools_called"
     EXPECTED_TOOLS = "expected_tools"
     MCP_SERVERS = "mcp_servers"
     MCP_TOOLS_CALLED = "mcp_tools_called"
     MCP_RESOURCES_CALLED = "mcp_resources_called"
     MCP_PROMPTS_CALLED = "mcp_prompts_called"
+
+
+def __getattr__(name: str):
+    if name == "LLMTestCaseParams":
+        warnings.warn(
+            "'LLMTestCaseParams' is deprecated and will be removed in a future "
+            "release. Use 'SingleTurnParams' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return SingleTurnParams
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 class ToolCallParams(Enum):
@@ -320,11 +339,10 @@ class LLMTestCase(BaseModel):
         serialization_alias="retrievalContext",
         validation_alias=AliasChoices("retrievalContext", "retrieval_context"),
     )
-    additional_metadata: Optional[Dict] = Field(
+    metadata: Optional[Dict] = Field(
         default=None,
-        serialization_alias="additionalMetadata",
         validation_alias=AliasChoices(
-            "additionalMetadata", "additional_metadata"
+            "metadata", "additionalMetadata", "additional_metadata"
         ),
     )
     tools_called: Optional[List[ToolCall]] = Field(
@@ -378,6 +396,24 @@ class LLMTestCase(BaseModel):
     _identifier: Optional[str] = PrivateAttr(
         default_factory=lambda: str(uuid.uuid4())
     )
+
+    @property
+    def additional_metadata(self) -> Optional[Dict]:
+        warnings.warn(
+            "'additional_metadata' is deprecated. Use 'metadata' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.metadata
+
+    @additional_metadata.setter
+    def additional_metadata(self, value: Optional[Dict]):
+        warnings.warn(
+            "'additional_metadata' is deprecated. Use 'metadata' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.metadata = value
 
     @model_validator(mode="after")
     def set_is_multimodal(self):

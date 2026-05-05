@@ -1,0 +1,146 @@
+---
+id: conversation-simulator
+title: Conversation Simulator
+sidebar_label: Conversation Simulator
+---
+
+`deepeval`'s `ConversationSimulator` allows you to simulate full conversations between a fake user and your chatbot, unlike the [synthesizer](/docs/golden-synthesizer) which generates regular goldens representing single, atomic LLM interactions.
+
+```python title="main.py" showLineNumbers
+from deepeval.test_case import Turn
+from deepeval.simulator import ConversationSimulator
+from deepeval.dataset import ConversationalGolden
+
+# Create ConversationalGolden
+conversation_golden = ConversationalGolden(
+    scenario="Andy Byron wants to purchase a VIP ticket to a cold play concert.",
+    expected_outcome="Successful purchase of a ticket.",
+    user_description="Andy Byron is the CEO of Astronomer.",
+)
+
+# Define chatbot callback
+async def chatbot_callback(input):
+    return Turn(role="assistant", content=f"Chatbot response to: {input}")
+
+# Run Simulation
+simulator = ConversationSimulator(model_callback=chatbot_callback)
+conversational_test_cases = simulator.simulate(conversational_goldens=[conversation_golden])
+print(conversational_test_cases)
+```
+
+The `ConversationSimulator` uses the scenario and user description from a `ConversationalGolden` to simulate back-and-forth exchanges with your chatbot. The resulting dialogue is used to create `ConversationalTestCase`s for evaluation using `deepeval`'s multi-turn metrics.
+
+## How It Works
+
+The `ConversationSimulator` repeatedly generates a simulated user turn, sends it to your chatbot, and records the assistant response until the simulation ends.
+
+- Each `ConversationalGolden` defines the scenario, user profile, and expected outcome for a conversation.
+- The simulator model role-plays the user and generates each next user message.
+- Your `model_callback` sends that message to your chatbot and returns an assistant `Turn`.
+- The simulator stops when `max_user_simulations` is reached or the controller decides the conversation should end.
+- The final conversation is packaged as a `ConversationalTestCase` for multi-turn evaluation.
+
+```mermaid
+sequenceDiagram
+    participant Golden as ConversationalGolden
+    participant Simulator as ConversationSimulator
+    participant UserModel as Simulator Model
+    participant App as Your Chatbot
+    participant Controller as Controller
+
+    Golden->>Simulator: scenario, user_description, expected_outcome
+    loop Until max_user_simulations or controller ends
+        Simulator->>Controller: check whether to continue
+        Controller-->>Simulator: proceed() or end()
+        Simulator->>UserModel: generate next user turn
+        UserModel-->>Simulator: user Turn
+        Simulator->>App: model_callback(input, turns, thread_id)
+        App-->>Simulator: assistant Turn
+    end
+    Simulator-->>Simulator: build ConversationalTestCase
+```
+
+## Create Your First Simulator
+
+To create a `ConversationSimulator`, you'll need to define a callback that wraps around your LLM chatbot. See [Model Callback](/docs/conversation-simulator-model-callback) for supported callback arguments.
+
+```python
+from deepeval.test_case import Turn
+from deepeval.simulator import ConversationSimulator
+
+async def model_callback(input: str) -> Turn:
+    return Turn(role="assistant", content=f"I don't know how to answer this: {input}")
+
+simulator = ConversationSimulator(model_callback=model_callback)
+```
+
+There are **ONE** mandatory and **FOUR** optional parameters when creating a `ConversationSimulator`:
+
+- `model_callback`: a callback that wraps around your conversational agent.
+- [Optional] `simulator_model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent simulation of conversations**. Defaulted to `True`.
+- [Optional] `max_concurrent`: an integer that determines the maximum number of conversations that can be generated in parallel at any point in time. You can decrease this value if you're running into rate limit errors. Defaulted to `100`.
+- [Optional] `controller`: a callback that controls whether the simulation should continue or end. By default, `deepeval` uses the `expected_outcome` in your `ConversationalGolden` to decide when the conversation is complete.
+- [Optional] `simulation_template`: a class that inherits from `ConversationSimulatorTemplate`, which allows you to customize the prompts used to generate simulated user turns.
+
+## Simulate A Conversation
+
+To simulate your first conversation, simply pass in a list of `ConversationalGolden`s to the `simulate` method:
+
+```python
+from deepeval.dataset import ConversationalGolden
+...
+
+conversation_golden = ConversationalGolden(
+    scenario="Andy Byron wants to purchase a VIP ticket to a cold play concert.",
+    expected_outcome="Successful purchase of a ticket.",
+    user_description="Andy Byron is the CEO of Astronomer.",
+)
+conversational_test_cases = simulator.simulate(conversational_goldens=[conversation_golden])
+```
+
+There are **ONE** mandatory and **ONE** optional parameter when calling the `simulate` method:
+
+- `conversational_goldens`: a list of `ConversationalGolden`s that specify the scenario and user description.
+- [Optional] `max_user_simulations`: an integer that specifies the maximum number of user-assistant message cycles to simulate per conversation. Defaulted to `10`.
+
+A simulation ends when `max_user_simulations` has been reached, or when the simulator's controller decides the conversation should end. By default, the controller checks whether the conversation has achieved the expected outcome outlined in a `ConversationalGolden`.
+
+See [Stopping Logic](/docs/conversation-simulator-stopping-logic) to define your own stopping logic.
+
+::::tip
+You can also generate conversations from existing turns. Simply populate your `ConversationalGolden` with a list of initial `Turn`s, and the simulator will continue the conversation.
+::::
+
+## Incorporate Existing Turns
+
+If your multi-turn chatbot has one or more predefined turns (for example, a hardcoded assistant message at the beginning of a conversation), you would simply include this as part of the simulation by providing a list of preexisting `turns` to a `ConversationalGolden`:
+
+```python
+from deepeval.test_case import ConversationalTestCase, Turn
+
+golden = ConversationalGolden(turns=[Turn(role="assistant", content="Hi! How can I help you today?")])
+```
+
+By including a list of non-empty `turns`, `deepeval` will run simulations based on the additional context you've provided.
+
+## Evaluate Simulated Turns
+
+The `simulate` function returns a list of `ConversationalTestCase`s, which can be used to evaluate your LLM chatbot using `deepeval`'s conversational metrics. Use simulated conversations to run [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluations:
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import TurnRelevancyMetric
+...
+
+evaluate(test_cases=conversational_test_cases, metrics=[TurnRelevancyMetric()])
+```
+
+## Advanced Usage
+
+Customize the simulator around your application's conversation state, stopping criteria, and post-processing needs.
+
+- [Model Callback](/docs/conversation-simulator-model-callback): pass conversation history or `thread_id` into your chatbot so simulations exercise the same stateful path as production.
+- [Stopping Logic](/docs/conversation-simulator-stopping-logic): replace expected-outcome stopping with business-specific logic such as tool calls, confirmation messages, or failure states.
+- [Custom Templates](/docs/conversation-simulator-custom-templates): change the simulated user's style, domain framing, or pressure level by overriding the user-turn prompts.
+- [Lifecycle Hooks](/docs/conversation-simulator-lifecycle-hooks): process each completed conversation immediately instead of waiting for the full simulation batch to finish.

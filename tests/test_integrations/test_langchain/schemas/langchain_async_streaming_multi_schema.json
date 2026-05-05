@@ -1,13 +1,13 @@
 {
-  "uuid": "623d24fa-9792-48db-99d9-9150f8fe193f",
+  "uuid": "dcd458c3-f28c-448a-a421-52623ab66167",
   "baseSpans": [
     {
-      "uuid": "019bf9a1-5cbb-7643-81a5-8e6ce556d30b",
+      "uuid": "019d050e-574b-7302-af12-f0b5f5992c7b",
       "name": "streaming_multi_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T09:27:40.476Z",
-      "endTime": "2026-01-26T09:27:43.693Z",
+      "startTime": "2026-03-19T07:45:19.179Z",
+      "endTime": "2026-03-19T07:45:22.093Z",
       "input": {
         "messages": [
           {
@@ -36,29 +36,29 @@
               "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bf9a1-5cbc-72f2-85bc-c8d19e9151e0",
+            "id": "lc_run--019d050e-574b-7302-af12-f0c660898ffb",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_PySxJwCFiHKHdGVl7UKxloz5",
+                "id": "call_1ZEWdrPMWemO6N3T61KcyVi2",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 174,
-              "output_tokens": 89,
-              "total_tokens": 263,
+              "output_tokens": 25,
+              "total_tokens": 199,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 64
+                "reasoning": 0
               }
             }
           },
@@ -68,11 +68,11 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "tool_call_id": "call_PySxJwCFiHKHdGVl7UKxloz5",
+            "tool_call_id": "call_1ZEWdrPMWemO6N3T61KcyVi2",
             "status": "success"
           },
           {
-            "content": "Current TSLA price: $245.60 (+2.1%).",
+            "content": "The current stock price for TSLA is $245.60 (+2.1%).",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
@@ -81,20 +81,20 @@
               "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bf9a1-63eb-7003-9bf3-8ebb7cf7e3e3",
+            "id": "lc_run--019d050e-5d81-72f2-ae4e-b7d8977d97af",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 214,
-              "output_tokens": 87,
-              "total_tokens": 301,
+              "output_tokens": 20,
+              "total_tokens": 234,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 64
+                "reasoning": 0
               }
             }
           }
@@ -109,7 +109,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "tool_call_id": "call_PySxJwCFiHKHdGVl7UKxloz5",
+            "tool_call_id": "call_1ZEWdrPMWemO6N3T61KcyVi2",
             "status": "success"
           },
           "inputParameters": {
@@ -122,13 +122,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf9a1-63eb-7003-9bf3-8ebb7cf7e3e3",
+      "uuid": "019d050e-5d81-72f2-ae4e-b7d8977d97af",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf9a1-5cbb-7643-81a5-8e6ce556d30b",
-      "startTime": "2026-01-26T09:27:42.315Z",
-      "endTime": "2026-01-26T09:27:43.692Z",
+      "parentUuid": "019d050e-574b-7302-af12-f0b5f5992c7b",
+      "startTime": "2026-03-19T07:45:20.769Z",
+      "endTime": "2026-03-19T07:45:22.092Z",
       "input": [
         {
           "role": "human",
@@ -153,39 +153,44 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Current TSLA price: $245.60 (+2.1%).",
+        "content": "The current stock price for TSLA is $245.60 (+2.1%).",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
+      "inputTokenCount": 214.0,
+      "outputTokenCount": 20.0,
       "tokenIntervals": {
-        "2026-01-26T09:27:43.526855Z": "",
-        "2026-01-26T09:27:43.553760Z": "Current",
-        "2026-01-26T09:27:43.554271Z": " TS",
-        "2026-01-26T09:27:43.570209Z": "LA",
-        "2026-01-26T09:27:43.571033Z": " price",
-        "2026-01-26T09:27:43.587092Z": ":",
-        "2026-01-26T09:27:43.587609Z": " $",
-        "2026-01-26T09:27:43.613601Z": "245",
-        "2026-01-26T09:27:43.614116Z": ".",
-        "2026-01-26T09:27:43.631621Z": "60",
-        "2026-01-26T09:27:43.632135Z": " (+",
-        "2026-01-26T09:27:43.646474Z": "2",
-        "2026-01-26T09:27:43.646965Z": ".",
-        "2026-01-26T09:27:43.665944Z": "1",
-        "2026-01-26T09:27:43.666433Z": "%).",
-        "2026-01-26T09:27:43.677953Z": "",
-        "2026-01-26T09:27:43.678407Z": "",
-        "2026-01-26T09:27:43.692080Z": ""
+        "2026-03-19T07:45:21.849180Z": "",
+        "2026-03-19T07:45:21.871958Z": "The",
+        "2026-03-19T07:45:21.872369Z": " current",
+        "2026-03-19T07:45:21.900806Z": " stock",
+        "2026-03-19T07:45:21.901170Z": " price",
+        "2026-03-19T07:45:21.910755Z": " for",
+        "2026-03-19T07:45:21.911084Z": " TS",
+        "2026-03-19T07:45:21.941582Z": "LA",
+        "2026-03-19T07:45:21.941961Z": " is",
+        "2026-03-19T07:45:21.956532Z": " $",
+        "2026-03-19T07:45:21.956840Z": "245",
+        "2026-03-19T07:45:21.994820Z": ".",
+        "2026-03-19T07:45:21.995178Z": "60",
+        "2026-03-19T07:45:21.995517Z": " (+",
+        "2026-03-19T07:45:21.995854Z": "2",
+        "2026-03-19T07:45:22.014925Z": ".",
+        "2026-03-19T07:45:22.015314Z": "1",
+        "2026-03-19T07:45:22.037625Z": "%).",
+        "2026-03-19T07:45:22.038117Z": "",
+        "2026-03-19T07:45:22.092173Z": "",
+        "2026-03-19T07:45:22.092517Z": ""
       }
     },
     {
-      "uuid": "019bf9a1-5cbc-72f2-85bc-c8d19e9151e0",
+      "uuid": "019d050e-574b-7302-af12-f0c660898ffb",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf9a1-5cbb-7643-81a5-8e6ce556d30b",
-      "startTime": "2026-01-26T09:27:40.477Z",
-      "endTime": "2026-01-26T09:27:42.313Z",
+      "parentUuid": "019d050e-574b-7302-af12-f0b5f5992c7b",
+      "startTime": "2026-03-19T07:45:19.180Z",
+      "endTime": "2026-03-19T07:45:20.768Z",
       "input": [
         {
           "role": "human",
@@ -209,35 +214,37 @@
             "args": {
               "symbol": "TSLA"
             },
-            "id": "call_PySxJwCFiHKHdGVl7UKxloz5"
+            "id": "call_1ZEWdrPMWemO6N3T61KcyVi2"
           }
         ]
       },
       "model": "gpt-5-mini-2025-08-07",
+      "inputTokenCount": 174.0,
+      "outputTokenCount": 25.0,
       "tokenIntervals": {
-        "2026-01-26T09:27:42.226742Z": "",
-        "2026-01-26T09:27:42.245909Z": "",
-        "2026-01-26T09:27:42.246692Z": "",
-        "2026-01-26T09:27:42.268013Z": "",
-        "2026-01-26T09:27:42.268727Z": "",
-        "2026-01-26T09:27:42.283217Z": "",
-        "2026-01-26T09:27:42.283865Z": "",
-        "2026-01-26T09:27:42.299331Z": "",
-        "2026-01-26T09:27:42.299906Z": "",
-        "2026-01-26T09:27:42.312979Z": ""
+        "2026-03-19T07:45:20.764690Z": "",
+        "2026-03-19T07:45:20.765302Z": "",
+        "2026-03-19T07:45:20.765725Z": "",
+        "2026-03-19T07:45:20.766141Z": "",
+        "2026-03-19T07:45:20.766466Z": "",
+        "2026-03-19T07:45:20.766848Z": "",
+        "2026-03-19T07:45:20.767140Z": "",
+        "2026-03-19T07:45:20.767437Z": "",
+        "2026-03-19T07:45:20.767753Z": "",
+        "2026-03-19T07:45:20.768241Z": ""
       }
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf9a1-63ea-7023-af34-1c5fdf96675a",
+      "uuid": "019d050e-5d81-72f2-ae4e-b7c2b7482a69",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf9a1-5cbb-7643-81a5-8e6ce556d30b",
-      "startTime": "2026-01-26T09:27:42.314Z",
-      "endTime": "2026-01-26T09:27:42.314Z",
+      "parentUuid": "019d050e-574b-7302-af12-f0b5f5992c7b",
+      "startTime": "2026-03-19T07:45:20.769Z",
+      "endTime": "2026-03-19T07:45:20.769Z",
       "input": {
         "symbol": "TSLA"
       },
@@ -247,13 +254,13 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "tool_call_id": "call_PySxJwCFiHKHdGVl7UKxloz5",
+        "tool_call_id": "call_1ZEWdrPMWemO6N3T61KcyVi2",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-26T09:27:40.476Z",
-  "endTime": "2026-01-26T09:27:43.693Z",
+  "startTime": "2026-03-19T07:45:19.179Z",
+  "endTime": "2026-03-19T07:45:22.093Z",
   "name": "langchain-async-streaming-multi",
   "tags": [
     "langchain",
@@ -290,29 +297,29 @@
           "model_provider": "openai"
         },
         "type": "ai",
-        "id": "lc_run--019bf9a1-5cbc-72f2-85bc-c8d19e9151e0",
+        "id": "lc_run--019d050e-574b-7302-af12-f0c660898ffb",
         "tool_calls": [
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "TSLA"
             },
-            "id": "call_PySxJwCFiHKHdGVl7UKxloz5",
+            "id": "call_1ZEWdrPMWemO6N3T61KcyVi2",
             "type": "tool_call"
           }
         ],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 174,
-          "output_tokens": 89,
-          "total_tokens": 263,
+          "output_tokens": 25,
+          "total_tokens": 199,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 64
+            "reasoning": 0
           }
         }
       },
@@ -322,11 +329,11 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "tool_call_id": "call_PySxJwCFiHKHdGVl7UKxloz5",
+        "tool_call_id": "call_1ZEWdrPMWemO6N3T61KcyVi2",
         "status": "success"
       },
       {
-        "content": "Current TSLA price: $245.60 (+2.1%).",
+        "content": "The current stock price for TSLA is $245.60 (+2.1%).",
         "additional_kwargs": {},
         "response_metadata": {
           "finish_reason": "stop",
@@ -335,20 +342,20 @@
           "model_provider": "openai"
         },
         "type": "ai",
-        "id": "lc_run--019bf9a1-63eb-7003-9bf3-8ebb7cf7e3e3",
+        "id": "lc_run--019d050e-5d81-72f2-ae4e-b7d8977d97af",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 214,
-          "output_tokens": 87,
-          "total_tokens": 301,
+          "output_tokens": 20,
+          "total_tokens": 234,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 64
+            "reasoning": 0
           }
         }
       }
@@ -364,7 +371,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "tool_call_id": "call_PySxJwCFiHKHdGVl7UKxloz5",
+        "tool_call_id": "call_1ZEWdrPMWemO6N3T61KcyVi2",
         "status": "success"
       },
       "inputParameters": {

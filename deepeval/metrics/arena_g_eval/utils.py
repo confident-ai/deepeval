@@ -4,7 +4,7 @@ import json
 import random
 
 from deepeval.test_case import (
-    LLMTestCaseParams,
+    SingleTurnParams,
     ToolCall,
     ArenaTestCase,
     LLMTestCase,
@@ -87,7 +87,7 @@ class FormattedArenaTestCase:
 
 
 def format_arena_test_case(
-    evaluation_params: List[LLMTestCaseParams], test_case: ArenaTestCase
+    evaluation_params: List[SingleTurnParams], test_case: ArenaTestCase
 ) -> Tuple[FormattedArenaTestCase, Dict[str, str]]:
     case = next(iter([case.test_case for case in test_case.contestants]))
 
@@ -111,11 +111,11 @@ def format_arena_test_case(
 
     formatted_test_case = FormattedArenaTestCase(
         input=(
-            case.input if LLMTestCaseParams.INPUT in evaluation_params else None
+            case.input if SingleTurnParams.INPUT in evaluation_params else None
         ),
         expected_output=(
             case.expected_output
-            if LLMTestCaseParams.EXPECTED_OUTPUT in evaluation_params
+            if SingleTurnParams.EXPECTED_OUTPUT in evaluation_params
             else None
         ),
         contestants={
@@ -130,32 +130,32 @@ def format_arena_test_case(
 
 
 def construct_formatted_llm_test_case(
-    evaluation_params: List[LLMTestCaseParams], test_case: LLMTestCase
+    evaluation_params: List[SingleTurnParams], test_case: LLMTestCase
 ) -> FormattedLLMTestCase:
     return FormattedLLMTestCase(
         actual_output=(
             test_case.actual_output
-            if LLMTestCaseParams.ACTUAL_OUTPUT in evaluation_params
+            if SingleTurnParams.ACTUAL_OUTPUT in evaluation_params
             else None
         ),
         context=(
             test_case.context
-            if LLMTestCaseParams.CONTEXT in evaluation_params
+            if SingleTurnParams.CONTEXT in evaluation_params
             else None
         ),
         retrieval_context=(
             test_case.retrieval_context
-            if LLMTestCaseParams.RETRIEVAL_CONTEXT in evaluation_params
+            if SingleTurnParams.RETRIEVAL_CONTEXT in evaluation_params
             else None
         ),
         tools_called=(
             test_case.tools_called
-            if LLMTestCaseParams.TOOLS_CALLED in evaluation_params
+            if SingleTurnParams.TOOLS_CALLED in evaluation_params
             else None
         ),
         expected_tools=(
             test_case.expected_tools
-            if LLMTestCaseParams.EXPECTED_TOOLS in evaluation_params
+            if SingleTurnParams.EXPECTED_TOOLS in evaluation_params
             else None
         ),
     )

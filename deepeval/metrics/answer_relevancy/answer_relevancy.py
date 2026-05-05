@@ -11,7 +11,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
     a_generate_with_schema_and_extract,
 )
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams, MLLMImage
+from deepeval.test_case import LLMTestCase, SingleTurnParams, MLLMImage
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.answer_relevancy.template import AnswerRelevancyTemplate
@@ -22,13 +22,12 @@ from deepeval.metrics.answer_relevancy.schema import (
     Verdicts,
     AnswerRelevancyScoreReason,
 )
-from deepeval.metrics.api import metric_data_manager
 
 
 class AnswerRelevancyMetric(BaseMetric):
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
+    _required_params: List[SingleTurnParams] = [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
     ]
 
     def __init__(
@@ -105,10 +104,6 @@ class AnswerRelevancyMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
 
             return self.score
 
@@ -159,10 +154,6 @@ class AnswerRelevancyMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
             return self.score
 
     async def _a_generate_reason(self, input: str, multimodal: bool) -> str:

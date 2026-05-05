@@ -14,7 +14,6 @@ from deepeval.tracing.utils import (
 )
 from deepeval.confident.api import _sanitize_body
 
-
 # ---------------------------------------------------------------------------
 # make_json_serializable
 # ---------------------------------------------------------------------------

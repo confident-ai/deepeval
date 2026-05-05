@@ -4,7 +4,7 @@ import math
 import textwrap
 
 from deepeval.metrics import BaseMetric
-from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
+from deepeval.test_case import SingleTurnParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.text_to_image.template import (
     TextToImageTemplate,
 )
@@ -23,9 +23,9 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.multimodal_metrics.text_to_image.schema import ReasonScore
 from deepeval.metrics.indicator import metric_progress_indicator
 
-required_params: List[LLMTestCaseParams] = [
-    LLMTestCaseParams.INPUT,
-    LLMTestCaseParams.ACTUAL_OUTPUT,
+required_params: List[SingleTurnParams] = [
+    SingleTurnParams.INPUT,
+    SingleTurnParams.ACTUAL_OUTPUT,
 ]
 
 

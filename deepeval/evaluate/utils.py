@@ -1,6 +1,4 @@
-import ast
-import inspect
-from typing import Optional, List, Callable, Union
+from typing import Optional, List, Union
 import os
 import time
 
@@ -123,7 +121,7 @@ def create_test_result(
             success=api_test_case.success,
             metrics_data=api_test_case.metrics_data,
             conversational=True,
-            additional_metadata=api_test_case.additional_metadata,
+            metadata=api_test_case.metadata,
             turns=api_test_case.turns,
         )
     else:
@@ -137,7 +135,7 @@ def create_test_result(
                 actual_output=api_test_case.actual_output,
                 conversational=False,
                 multimodal=True,
-                additional_metadata=api_test_case.additional_metadata,
+                metadata=api_test_case.metadata,
             )
         else:
             return TestResult(
@@ -151,11 +149,20 @@ def create_test_result(
                 retrieval_context=api_test_case.retrieval_context,
                 conversational=False,
                 multimodal=False,
-                additional_metadata=api_test_case.additional_metadata,
+                metadata=api_test_case.metadata,
             )
 
 
 def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
+    # Fall back to the golden's input when the trace didn't capture a
+    # meaningful one of its own. This concern lives here at the
+    # evaluation/rendering boundary, NOT in the tracer: `@observe`
+    # faithfully records whatever kwargs were passed (including `{}` for
+    # positional-only calls), and we shouldn't rewrite general tracing
+    # behavior to paper over an evaluation-specific rendering/dedupe
+    # problem. The truthiness check cleanly covers the "absent" cases
+    # (`None`, `{}`, `""`) that would otherwise show as garbage in the
+    # trace-level Metrics Summary and break `filter_duplicate_results`.
     return TraceApi(
         uuid=trace.uuid,
         baseSpans=[],
@@ -173,7 +180,7 @@ def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
             if trace.end_time
             else None
         ),
-        input=trace.input,
+        input=trace.input or golden.input,
         output=trace.output,
         expected_output=trace.expected_output,
         context=trace.context,
@@ -191,27 +198,21 @@ def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
 
 def validate_assert_test_inputs(
     golden: Optional[Golden] = None,
-    observed_callback: Optional[Callable] = None,
     test_case: Optional[LLMTestCase] = None,
     metrics: Optional[List] = None,
 ):
-    if golden and observed_callback:
-        if not getattr(observed_callback, "_is_deepeval_observed", False):
+    # Trace-scoped shape: `assert_test(golden[, metrics])` inside a plugin-wrapped test.
+    if golden and not test_case:
+        if metrics is not None and not all(
+            isinstance(m, BaseMetric) for m in metrics
+        ):
             raise ValueError(
-                "The provided 'observed_callback' must be decorated with '@observe' from deepeval.tracing."
+                "All 'metrics' must be instances of 'BaseMetric' when using "
+                "`assert_test(golden=..., metrics=...)`."
             )
-        if test_case or metrics:
-            raise ValueError(
-                "You cannot provide both ('golden' + 'observed_callback') and ('test_case' + 'metrics'). Choose one mode."
-            )
-    elif (golden and not observed_callback) or (
-        observed_callback and not golden
-    ):
-        raise ValueError(
-            "Both 'golden' and 'observed_callback' must be provided together."
-        )
+        return
 
-    if (test_case and not metrics) or (metrics and not test_case):
+    if test_case and not metrics:
         raise ValueError(
             "Both 'test_case' and 'metrics' must be provided together."
         )
@@ -229,16 +230,15 @@ def validate_assert_test_inputs(
             raise ValueError(
                 "All 'metrics' for an 'ConversationalTestCase' must be instances of 'BaseConversationalMetric' only."
             )
+        return
 
-    if not ((golden and observed_callback) or (test_case and metrics)):
-        raise ValueError(
-            "You must provide either ('golden' + 'observed_callback') or ('test_case' + 'metrics')."
-        )
+    raise ValueError(
+        "You must provide either ('golden' [+ 'metrics']) from inside a "
+        "`deepeval test run` test, or ('test_case' + 'metrics')."
+    )
 
 
 def validate_evaluate_inputs(
-    goldens: Optional[List] = None,
-    observed_callback: Optional[Callable] = None,
     test_cases: Optional[
         Union[List[LLMTestCase], List[ConversationalTestCase]]
     ] = None,
@@ -257,22 +257,6 @@ def validate_evaluate_inputs(
     if metric_collection is not None and metrics is not None:
         raise ValueError(
             "You cannot provide both 'metric_collection' and 'metrics'."
-        )
-
-    if goldens and observed_callback:
-        if not getattr(observed_callback, "_is_deepeval_observed", False):
-            raise ValueError(
-                "The provided 'observed_callback' must be decorated with '@observe' from deepeval.tracing."
-            )
-        if test_cases or metrics:
-            raise ValueError(
-                "You cannot provide both ('goldens' with 'observed_callback') and ('test_cases' with 'metrics'). Please choose one mode."
-            )
-    elif (goldens and not observed_callback) or (
-        observed_callback and not goldens
-    ):
-        raise ValueError(
-            "If using 'goldens', you must also provide a 'observed_callback'."
         )
 
     if test_cases and metrics:
@@ -554,21 +538,3 @@ def extract_span_test_results(span_api: BaseApiSpan) -> List[TestResult]:
             )
         )
     return test_results
-
-
-def count_observe_decorators_in_module(func: Callable) -> int:
-    mod = inspect.getmodule(func)
-    if mod is None or not hasattr(mod, "__file__"):
-        raise RuntimeError("Cannot locate @observe function.")
-    module_source = inspect.getsource(mod)
-    tree = ast.parse(module_source)
-    count = 0
-    for node in ast.walk(tree):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            for deco in node.decorator_list:
-                if (
-                    isinstance(deco, ast.Call)
-                    and getattr(deco.func, "id", "") == "observe"
-                ):
-                    count += 1
-    return count

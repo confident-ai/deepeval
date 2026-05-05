@@ -12,12 +12,14 @@ class APIDataset(BaseModel):
     )
 
     @model_validator(mode="after")
-    def set_image_mappings_for_goldens(self):
+    def prepare_goldens_for_api(self):
         if self.goldens:
             for golden in self.goldens:
+                golden.name = None
                 golden.images_mapping = golden._get_images_mapping()
         if self.conversational_goldens:
             for golden in self.conversational_goldens:
+                golden.name = None
                 golden.images_mapping = golden._get_images_mapping()
 
         return self
@@ -31,12 +33,14 @@ class APIQueueDataset(BaseModel):
     )
 
     @model_validator(mode="after")
-    def set_image_mappings_for_goldens(self):
+    def prepare_goldens_for_api(self):
         if self.goldens:
             for golden in self.goldens:
+                golden.name = None
                 golden.images_mapping = golden._get_images_mapping()
         if self.conversational_goldens:
             for golden in self.conversational_goldens:
+                golden.name = None
                 golden.images_mapping = golden._get_images_mapping()
 
         return self
