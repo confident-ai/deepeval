@@ -1046,14 +1046,18 @@ class TestRunManager:
             delete_file_if_exists(self.temp_file_path)
             return
 
+        # Don't block the post when all metrics errored — the spans still
+        # carry the underlying error info (populated by ``Observer.__exit__``)
+        # which the dashboard can render. Just warn so it's not mistaken
+        # for a successful run.
         valid_scores = test_run.construct_metrics_scores()
         if valid_scores == 0:
-            print("All metrics errored for all test cases, please try again.")
-            delete_file_if_exists(self.temp_file_path)
-            delete_file_if_exists(
-                global_test_run_cache_manager.temp_cache_file_name
+            console.print(
+                "\n[bold yellow]⚠ WARNING:[/bold yellow] All metrics errored "
+                "across every test case — no metric scores were recorded. "
+                "Posting the run anyway so you can inspect the trace + span "
+                "errors on the Confident AI dashboard.\n"
             )
-            return
         test_run.run_duration = runDuration
         test_run.calculate_test_passes_and_fails()
         test_run.sort_test_cases()

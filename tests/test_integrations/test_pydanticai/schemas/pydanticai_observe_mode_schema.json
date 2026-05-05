@@ -1,34 +1,49 @@
 {
-  "uuid": "4e4b582752fa88fb0dcc861bbb91b7be",
+  "uuid": "b7c389a5-3d8a-41d6-ab77-8ca32ff43816",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "f2b36982da08c459",
-      "name": "simple_agent",
+      "uuid": "7106bfa5-8a63-4174-895d-b5dc67739aca",
+      "name": "observe_outer",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T06:45:18.601Z",
-      "endTime": "2026-05-05T06:45:21.151Z",
+      "startTime": "2026-05-05T07:11:58.535Z",
+      "endTime": "2026-05-05T07:12:02.406Z",
+      "input": {
+        "p": "Say hello in exactly three words."
+      },
+      "output": "Hello, how are you?",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "7466a29fa69e91c2",
+      "name": "modes_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "7106bfa5-8a63-4174-895d-b5dc67739aca",
+      "startTime": "2026-05-05T07:11:58.536Z",
+      "endTime": "2026-05-05T07:12:02.406Z",
       "input": [
         {
           "role": "user",
           "content": "Say hello in exactly three words."
         }
       ],
-      "output": "Hello, nice to meet!",
+      "output": "Hello, how are you?",
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "71e283b22dcf6c1f",
+      "uuid": "ac3804761fac55ac",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "f2b36982da08c459",
-      "startTime": "2026-05-05T06:45:18.602Z",
-      "endTime": "2026-05-05T06:45:21.149Z",
+      "parentUuid": "7466a29fa69e91c2",
+      "startTime": "2026-05-05T07:11:58.537Z",
+      "endTime": "2026-05-05T07:12:02.404Z",
       "input": [
         {
           "role": "system",
@@ -57,7 +72,7 @@
       "output": [
         {
           "role": "assistant",
-          "content": "Hello, nice to meet!"
+          "content": "Hello, how are you?"
         }
       ],
       "model": "gpt-4o-mini",
@@ -67,25 +82,27 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-05-05T06:45:18.601Z",
-  "endTime": "2026-05-05T06:45:21.151Z",
-  "name": "pydanticai-simple-test",
+  "startTime": "2026-05-05T07:11:58.535Z",
+  "endTime": "2026-05-05T07:12:02.406Z",
+  "name": "pydanticai-observe-trace",
   "metadata": {
-    "test_type": "simple"
+    "test_type": "observe_mode",
+    "mode": "observe",
+    "source": "runtime"
   },
   "tags": [
-    "pydanticai",
-    "simple"
+    "observe-mode",
+    "runtime"
   ],
   "environment": "development",
-  "threadId": "simple-123",
-  "userId": "test-user",
+  "threadId": "observe-mode-123",
+  "userId": "observe-user",
   "input": [
     {
       "role": "user",
       "content": "Say hello in exactly three words."
     }
   ],
-  "output": "Hello, nice to meet!",
+  "output": "Hello, how are you?",
   "status": "SUCCESS"
 }

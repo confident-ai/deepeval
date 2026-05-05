@@ -185,18 +185,39 @@ async def _a_execute_agentic_test_case(
                     await asyncio.gather(*child_tasks, return_exceptions=True)
                     raise
 
-        if not _skip_metrics_for_error(trace=current_trace):
-            if current_trace and current_trace.root_spans:
-                await dfs(current_trace, current_trace.root_spans[0])
-            else:
-                if (
-                    logger.isEnabledFor(logging.DEBUG)
-                    and get_settings().DEEPEVAL_VERBOSE_MODE
-                ):
-                    logger.debug(
-                        "Skipping DFS: empty trace or no root spans (trace=%s)",
-                        current_trace.uuid if current_trace else None,
+        # Always walk spans, even on errored traces — the walker hydrates
+        # ``trace_api.*_spans`` and the user needs that data on the
+        # dashboard to diagnose. Per-span metric skip already lives
+        # inside ``_a_execute_span_test_case`` (appends api_span first,
+        # then short-circuits on error). Walk EVERY root, not just
+        # ``root_spans[0]``: OTel integrations can land multiple logical
+        # roots when a child ends before its parent.
+        if current_trace and current_trace.root_spans:
+            root_tasks = [
+                asyncio.create_task(dfs(current_trace, root))
+                for root in current_trace.root_spans
+            ]
+            if root_tasks:
+                try:
+                    await asyncio.wait_for(
+                        asyncio.gather(*root_tasks),
+                        timeout=get_gather_timeout(),
                     )
+                except (asyncio.TimeoutError, TimeoutError):
+                    for t in root_tasks:
+                        if not t.done():
+                            t.cancel()
+                    await asyncio.gather(*root_tasks, return_exceptions=True)
+                    raise
+        else:
+            if (
+                logger.isEnabledFor(logging.DEBUG)
+                and get_settings().DEEPEVAL_VERBOSE_MODE
+            ):
+                logger.debug(
+                    "Skipping DFS: empty trace or no root spans (trace=%s)",
+                    current_trace.uuid if current_trace else None,
+                )
     except asyncio.CancelledError:
         # mark any unfinished metrics as cancelled
         if get_settings().DEEPEVAL_DISABLE_TIMEOUTS:

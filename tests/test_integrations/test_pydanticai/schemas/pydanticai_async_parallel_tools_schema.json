@@ -1,40 +1,15 @@
 {
-  "uuid": "7dd1eb5631614d6fd26ba8a74c7b9419",
+  "uuid": "a5a02e712fe68da7bf6ac665b7cdd17c",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "f353c8ba0a616e5a",
+      "uuid": "0ac08d9e87bf9430",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:11.678Z",
-      "endTime": "2026-01-29T19:10:14.869Z",
+      "startTime": "2026-05-05T06:45:58.545Z",
+      "endTime": "2026-05-05T06:46:01.659Z",
       "input": [
-        {
-          "role": "system",
-          "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
-        },
-        {
-          "role": "user",
-          "content": "Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each."
-        }
-      ],
-      "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F. The time is 3:00 PM JST.",
-      "availableTools": [],
-      "agentHandoffs": []
-    },
-    {
-      "uuid": "f353c8ba0a616e5a",
-      "name": "",
-      "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-01-29T19:10:11.678Z",
-      "endTime": "2026-01-29T19:10:14.869Z",
-      "input": [
-        {
-          "role": "system",
-          "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
-        },
         {
           "role": "user",
           "content": "Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each."
@@ -45,11 +20,285 @@
       "agentHandoffs": []
     }
   ],
-  "llmSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "cd2bbefc5c0b68de",
+      "name": "chat gpt-4o-mini",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "0ac08d9e87bf9430",
+      "startTime": "2026-05-05T06:46:00.464Z",
+      "endTime": "2026-05-05T06:46:01.656Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
+        },
+        {
+          "role": "user",
+          "content": "Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each."
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_oESfgfYmC9YZP6JUlh50Zw3p",
+            "name": "get_weather",
+            "arguments": "{\"city\": \"Tokyo\"}"
+          }
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_FMQos1vX4bp3icF7ECbZN0Qa",
+            "name": "get_time",
+            "arguments": "{\"city\": \"Tokyo\"}"
+          }
+        },
+        {
+          "role": "user",
+          "content": {
+            "type": "tool_call_response",
+            "id": "call_oESfgfYmC9YZP6JUlh50Zw3p",
+            "name": "get_weather",
+            "result": "Sunny, 72F"
+          }
+        },
+        {
+          "role": "user",
+          "content": {
+            "type": "tool_call_response",
+            "id": "call_FMQos1vX4bp3icF7ECbZN0Qa",
+            "name": "get_time",
+            "result": "3:00 PM JST"
+          }
+        },
+        {
+          "role": "Model Request Parameters",
+          "content": {
+            "function_tools": [
+              {
+                "name": "get_weather",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "city": {
+                      "description": "The name of the city",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "city"
+                  ],
+                  "type": "object"
+                },
+                "description": "<summary>Get the current weather for a city.</summary>\n<returns>\n<description>The current weather conditions</description>\n</returns>",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              },
+              {
+                "name": "get_time",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "city": {
+                      "description": "The name of the city",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "city"
+                  ],
+                  "type": "object"
+                },
+                "description": "<summary>Get the current time for a city.</summary>\n<returns>\n<description>The current time in that city</description>\n</returns>",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              }
+            ],
+            "builtin_tools": [],
+            "output_mode": "text",
+            "output_object": null,
+            "output_tools": [],
+            "prompted_output_template": null,
+            "allow_text_output": true,
+            "allow_image_output": false,
+            "instruction_parts": null,
+            "thinking": null
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F. The time is 3:00 PM JST."
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 253.0,
+      "outputTokenCount": 26.0
+    },
+    {
+      "uuid": "dc71978cd5eda9a9",
+      "name": "chat gpt-4o-mini",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "0ac08d9e87bf9430",
+      "startTime": "2026-05-05T06:45:58.547Z",
+      "endTime": "2026-05-05T06:46:00.457Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
+        },
+        {
+          "role": "user",
+          "content": "Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each."
+        },
+        {
+          "role": "Model Request Parameters",
+          "content": {
+            "function_tools": [
+              {
+                "name": "get_weather",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "city": {
+                      "description": "The name of the city",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "city"
+                  ],
+                  "type": "object"
+                },
+                "description": "<summary>Get the current weather for a city.</summary>\n<returns>\n<description>The current weather conditions</description>\n</returns>",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              },
+              {
+                "name": "get_time",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "city": {
+                      "description": "The name of the city",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "city"
+                  ],
+                  "type": "object"
+                },
+                "description": "<summary>Get the current time for a city.</summary>\n<returns>\n<description>The current time in that city</description>\n</returns>",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              }
+            ],
+            "builtin_tools": [],
+            "output_mode": "text",
+            "output_object": null,
+            "output_tools": [],
+            "prompted_output_template": null,
+            "allow_text_output": true,
+            "allow_image_output": false,
+            "instruction_parts": null,
+            "thinking": null
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_oESfgfYmC9YZP6JUlh50Zw3p",
+            "name": "get_weather",
+            "arguments": "{\"city\": \"Tokyo\"}"
+          }
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_FMQos1vX4bp3icF7ECbZN0Qa",
+            "name": "get_time",
+            "arguments": "{\"city\": \"Tokyo\"}"
+          }
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 185.0,
+      "outputTokenCount": 44.0
+    }
+  ],
   "retrieverSpans": [],
-  "toolSpans": [],
-  "startTime": "2026-01-29T19:10:11.678Z",
-  "endTime": "2026-01-29T19:10:14.869Z",
+  "toolSpans": [
+    {
+      "uuid": "9f7e948eee709f5e",
+      "name": "get_time",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "0ac08d9e87bf9430",
+      "startTime": "2026-05-05T06:46:00.460Z",
+      "endTime": "2026-05-05T06:46:00.462Z",
+      "input": {
+        "city": "Tokyo"
+      },
+      "output": "3:00 PM JST"
+    },
+    {
+      "uuid": "33e82a718605b96b",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "0ac08d9e87bf9430",
+      "startTime": "2026-05-05T06:46:00.459Z",
+      "endTime": "2026-05-05T06:46:00.461Z",
+      "input": {
+        "city": "Tokyo"
+      },
+      "output": "Sunny, 72F"
+    }
+  ],
+  "startTime": "2026-05-05T06:45:58.545Z",
+  "endTime": "2026-05-05T06:46:01.659Z",
   "name": "pydanticai-async-parallel-tools",
   "metadata": {
     "test_type": "async_parallel_tools"
@@ -63,10 +312,6 @@
   "threadId": "async-parallel-tools-123",
   "userId": "test-user-async",
   "input": [
-    {
-      "role": "system",
-      "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
-    },
     {
       "role": "user",
       "content": "Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each."

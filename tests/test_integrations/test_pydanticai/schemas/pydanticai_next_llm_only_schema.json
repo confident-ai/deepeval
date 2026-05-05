@@ -1,34 +1,38 @@
 {
-  "uuid": "826291288f64a0f2475533f0d069297a",
+  "uuid": "45a8c66f91a7c69753f29f5db7da0c41",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "efc775c8cbfd1e17",
-      "name": "simple_agent",
+      "uuid": "6c78bf4750f7eaeb",
+      "name": "next_span_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T06:45:57.164Z",
-      "endTime": "2026-05-05T06:45:58.516Z",
+      "startTime": "2026-05-05T06:45:42.902Z",
+      "endTime": "2026-05-05T06:45:45.259Z",
       "input": [
         {
           "role": "user",
-          "content": "Say goodbye in exactly three words."
+          "content": "Say hello in exactly three words."
         }
       ],
-      "output": "Farewell, take care.",
+      "output": "Hello, how are you?",
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "8b5fcf31ad03a5f3",
+      "uuid": "f8db462edde9bfc6",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "efc775c8cbfd1e17",
-      "startTime": "2026-05-05T06:45:57.166Z",
-      "endTime": "2026-05-05T06:45:58.513Z",
+      "parentUuid": "6c78bf4750f7eaeb",
+      "startTime": "2026-05-05T06:45:42.903Z",
+      "endTime": "2026-05-05T06:45:45.258Z",
+      "metadata": {
+        "prompt_variant": "B",
+        "purpose": "next_llm_only"
+      },
       "input": [
         {
           "role": "system",
@@ -36,7 +40,7 @@
         },
         {
           "role": "user",
-          "content": "Say goodbye in exactly three words."
+          "content": "Say hello in exactly three words."
         },
         {
           "role": "Model Request Parameters",
@@ -57,36 +61,36 @@
       "output": [
         {
           "role": "assistant",
-          "content": "Farewell, take care."
+          "content": "Hello, how are you?"
         }
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 28.0,
-      "outputTokenCount": 6.0
+      "outputTokenCount": 6.0,
+      "metricCollection": "llm_metrics_only_v1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-05-05T06:45:57.164Z",
-  "endTime": "2026-05-05T06:45:58.516Z",
-  "name": "pydanticai-async-simple-test",
+  "startTime": "2026-05-05T06:45:42.902Z",
+  "endTime": "2026-05-05T06:45:45.259Z",
+  "name": "pydanticai-next-llm-only-test",
   "metadata": {
-    "test_type": "async_simple"
+    "test_type": "next_llm_only"
   },
   "tags": [
     "pydanticai",
-    "simple",
-    "async"
+    "next-llm"
   ],
   "environment": "development",
-  "threadId": "async-simple-123",
-  "userId": "test-user-async",
+  "threadId": "next-llm-only-123",
+  "userId": "test-user",
   "input": [
     {
       "role": "user",
-      "content": "Say goodbye in exactly three words."
+      "content": "Say hello in exactly three words."
     }
   ],
-  "output": "Farewell, take care.",
+  "output": "Hello, how are you?",
   "status": "SUCCESS"
 }

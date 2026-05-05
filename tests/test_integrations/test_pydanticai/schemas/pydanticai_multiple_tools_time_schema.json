@@ -1,40 +1,15 @@
 {
-  "uuid": "48d9acf47a9e4453971c6e4642172e49",
+  "uuid": "842c3aedd574dccd88c474b5c90b89c6",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "30e5a3c5ae23cc38",
+      "uuid": "93df93b69d77884c",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:37.094Z",
-      "endTime": "2026-01-29T19:10:39.233Z",
+      "startTime": "2026-05-05T06:45:28.878Z",
+      "endTime": "2026-05-05T06:45:31.438Z",
       "input": [
-        {
-          "role": "system",
-          "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
-        },
-        {
-          "role": "user",
-          "content": "Use the get_time tool exactly once to get the current time in London."
-        }
-      ],
-      "output": "The current time in London is 7:00 AM GMT.",
-      "availableTools": [],
-      "agentHandoffs": []
-    },
-    {
-      "uuid": "30e5a3c5ae23cc38",
-      "name": "",
-      "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-01-29T19:10:37.094Z",
-      "endTime": "2026-01-29T19:10:39.233Z",
-      "input": [
-        {
-          "role": "system",
-          "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
-        },
         {
           "role": "user",
           "content": "Use the get_time tool exactly once to get the current time in London."
@@ -45,11 +20,245 @@
       "agentHandoffs": []
     }
   ],
-  "llmSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "2be4991fe805d022",
+      "name": "chat gpt-4o-mini",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "93df93b69d77884c",
+      "startTime": "2026-05-05T06:45:30.465Z",
+      "endTime": "2026-05-05T06:45:31.436Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
+        },
+        {
+          "role": "user",
+          "content": "Use the get_time tool exactly once to get the current time in London."
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_iYh0FYhTG2LMuYm42ZkDzAoN",
+            "name": "get_time",
+            "arguments": "{\"city\":\"London\"}"
+          }
+        },
+        {
+          "role": "user",
+          "content": {
+            "type": "tool_call_response",
+            "id": "call_iYh0FYhTG2LMuYm42ZkDzAoN",
+            "name": "get_time",
+            "result": "7:00 AM GMT"
+          }
+        },
+        {
+          "role": "Model Request Parameters",
+          "content": {
+            "function_tools": [
+              {
+                "name": "get_weather",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "city": {
+                      "description": "The name of the city",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "city"
+                  ],
+                  "type": "object"
+                },
+                "description": "<summary>Get the current weather for a city.</summary>\n<returns>\n<description>The current weather conditions</description>\n</returns>",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              },
+              {
+                "name": "get_time",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "city": {
+                      "description": "The name of the city",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "city"
+                  ],
+                  "type": "object"
+                },
+                "description": "<summary>Get the current time for a city.</summary>\n<returns>\n<description>The current time in that city</description>\n</returns>",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              }
+            ],
+            "builtin_tools": [],
+            "output_mode": "text",
+            "output_object": null,
+            "output_tools": [],
+            "prompted_output_template": null,
+            "allow_text_output": true,
+            "allow_image_output": false,
+            "instruction_parts": null,
+            "thinking": null
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": "The current time in London is 7:00 AM GMT."
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 206.0,
+      "outputTokenCount": 14.0
+    },
+    {
+      "uuid": "b4362f63e80a5a2a",
+      "name": "chat gpt-4o-mini",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "93df93b69d77884c",
+      "startTime": "2026-05-05T06:45:28.880Z",
+      "endTime": "2026-05-05T06:45:30.460Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
+        },
+        {
+          "role": "user",
+          "content": "Use the get_time tool exactly once to get the current time in London."
+        },
+        {
+          "role": "Model Request Parameters",
+          "content": {
+            "function_tools": [
+              {
+                "name": "get_weather",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "city": {
+                      "description": "The name of the city",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "city"
+                  ],
+                  "type": "object"
+                },
+                "description": "<summary>Get the current weather for a city.</summary>\n<returns>\n<description>The current weather conditions</description>\n</returns>",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              },
+              {
+                "name": "get_time",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "city": {
+                      "description": "The name of the city",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "city"
+                  ],
+                  "type": "object"
+                },
+                "description": "<summary>Get the current time for a city.</summary>\n<returns>\n<description>The current time in that city</description>\n</returns>",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              }
+            ],
+            "builtin_tools": [],
+            "output_mode": "text",
+            "output_object": null,
+            "output_tools": [],
+            "prompted_output_template": null,
+            "allow_text_output": true,
+            "allow_image_output": false,
+            "instruction_parts": null,
+            "thinking": null
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_iYh0FYhTG2LMuYm42ZkDzAoN",
+            "name": "get_time",
+            "arguments": "{\"city\":\"London\"}"
+          }
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 179.0,
+      "outputTokenCount": 14.0
+    }
+  ],
   "retrieverSpans": [],
-  "toolSpans": [],
-  "startTime": "2026-01-29T19:10:37.094Z",
-  "endTime": "2026-01-29T19:10:39.233Z",
+  "toolSpans": [
+    {
+      "uuid": "e4b3bbe917239895",
+      "name": "get_time",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "93df93b69d77884c",
+      "startTime": "2026-05-05T06:45:30.462Z",
+      "endTime": "2026-05-05T06:45:30.463Z",
+      "input": {
+        "city": "London"
+      },
+      "output": "7:00 AM GMT"
+    }
+  ],
+  "startTime": "2026-05-05T06:45:28.878Z",
+  "endTime": "2026-05-05T06:45:31.438Z",
   "name": "pydanticai-multiple-tools-time",
   "metadata": {
     "test_type": "multiple_tools_time"
@@ -63,10 +272,6 @@
   "threadId": "multiple-tools-time-123",
   "userId": "test-user",
   "input": [
-    {
-      "role": "system",
-      "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
-    },
     {
       "role": "user",
       "content": "Use the get_time tool exactly once to get the current time in London."

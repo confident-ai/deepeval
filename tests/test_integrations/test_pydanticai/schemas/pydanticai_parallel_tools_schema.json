@@ -1,55 +1,304 @@
 {
-  "uuid": "6e9b53c69013e6f076445857bc231e38",
+  "uuid": "5f8d726f967d83b9b0b19e811fa7ebab",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "e9f1c52e3d1a8688",
+      "uuid": "641c9f83f062d21f",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:39.240Z",
-      "endTime": "2026-01-29T19:10:41.787Z",
+      "startTime": "2026-05-05T06:45:31.462Z",
+      "endTime": "2026-05-05T06:45:37.177Z",
       "input": [
-        {
-          "role": "system",
-          "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
-        },
         {
           "role": "user",
           "content": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each."
         }
       ],
-      "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time in Paris is 8:00 AM CET.",
-      "availableTools": [],
-      "agentHandoffs": []
-    },
-    {
-      "uuid": "e9f1c52e3d1a8688",
-      "name": "",
-      "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-01-29T19:10:39.240Z",
-      "endTime": "2026-01-29T19:10:41.787Z",
-      "input": [
-        {
-          "role": "system",
-          "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
-        },
-        {
-          "role": "user",
-          "content": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each."
-        }
-      ],
-      "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time in Paris is 8:00 AM CET.",
+      "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET.",
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
-  "llmSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "63f9e659b336b661",
+      "name": "chat gpt-4o-mini",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "641c9f83f062d21f",
+      "startTime": "2026-05-05T06:45:35.017Z",
+      "endTime": "2026-05-05T06:45:37.174Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
+        },
+        {
+          "role": "user",
+          "content": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each."
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_AhJLecdICVFlFVl78kZr3qG7",
+            "name": "get_weather",
+            "arguments": "{\"city\": \"Paris\"}"
+          }
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_oQjG9gw4vGkXnSATB8Smvjsg",
+            "name": "get_time",
+            "arguments": "{\"city\": \"Paris\"}"
+          }
+        },
+        {
+          "role": "user",
+          "content": {
+            "type": "tool_call_response",
+            "id": "call_AhJLecdICVFlFVl78kZr3qG7",
+            "name": "get_weather",
+            "result": "Cloudy, 62F"
+          }
+        },
+        {
+          "role": "user",
+          "content": {
+            "type": "tool_call_response",
+            "id": "call_oQjG9gw4vGkXnSATB8Smvjsg",
+            "name": "get_time",
+            "result": "8:00 AM CET"
+          }
+        },
+        {
+          "role": "Model Request Parameters",
+          "content": {
+            "function_tools": [
+              {
+                "name": "get_weather",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "city": {
+                      "description": "The name of the city",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "city"
+                  ],
+                  "type": "object"
+                },
+                "description": "<summary>Get the current weather for a city.</summary>\n<returns>\n<description>The current weather conditions</description>\n</returns>",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              },
+              {
+                "name": "get_time",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "city": {
+                      "description": "The name of the city",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "city"
+                  ],
+                  "type": "object"
+                },
+                "description": "<summary>Get the current time for a city.</summary>\n<returns>\n<description>The current time in that city</description>\n</returns>",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              }
+            ],
+            "builtin_tools": [],
+            "output_mode": "text",
+            "output_object": null,
+            "output_tools": [],
+            "prompted_output_template": null,
+            "allow_text_output": true,
+            "allow_image_output": false,
+            "instruction_parts": null,
+            "thinking": null
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET."
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 254.0,
+      "outputTokenCount": 26.0
+    },
+    {
+      "uuid": "9faf1e4dbb2bf5e9",
+      "name": "chat gpt-4o-mini",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "641c9f83f062d21f",
+      "startTime": "2026-05-05T06:45:31.463Z",
+      "endTime": "2026-05-05T06:45:35.011Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
+        },
+        {
+          "role": "user",
+          "content": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each."
+        },
+        {
+          "role": "Model Request Parameters",
+          "content": {
+            "function_tools": [
+              {
+                "name": "get_weather",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "city": {
+                      "description": "The name of the city",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "city"
+                  ],
+                  "type": "object"
+                },
+                "description": "<summary>Get the current weather for a city.</summary>\n<returns>\n<description>The current weather conditions</description>\n</returns>",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              },
+              {
+                "name": "get_time",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "city": {
+                      "description": "The name of the city",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "city"
+                  ],
+                  "type": "object"
+                },
+                "description": "<summary>Get the current time for a city.</summary>\n<returns>\n<description>The current time in that city</description>\n</returns>",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              }
+            ],
+            "builtin_tools": [],
+            "output_mode": "text",
+            "output_object": null,
+            "output_tools": [],
+            "prompted_output_template": null,
+            "allow_text_output": true,
+            "allow_image_output": false,
+            "instruction_parts": null,
+            "thinking": null
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_AhJLecdICVFlFVl78kZr3qG7",
+            "name": "get_weather",
+            "arguments": "{\"city\": \"Paris\"}"
+          }
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_oQjG9gw4vGkXnSATB8Smvjsg",
+            "name": "get_time",
+            "arguments": "{\"city\": \"Paris\"}"
+          }
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 185.0,
+      "outputTokenCount": 44.0
+    }
+  ],
   "retrieverSpans": [],
-  "toolSpans": [],
-  "startTime": "2026-01-29T19:10:39.240Z",
-  "endTime": "2026-01-29T19:10:41.787Z",
+  "toolSpans": [
+    {
+      "uuid": "72c304782f5553ce",
+      "name": "get_time",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "641c9f83f062d21f",
+      "startTime": "2026-05-05T06:45:35.013Z",
+      "endTime": "2026-05-05T06:45:35.015Z",
+      "input": {
+        "city": "Paris"
+      },
+      "output": "8:00 AM CET"
+    },
+    {
+      "uuid": "b4c4d3583b28a693",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "641c9f83f062d21f",
+      "startTime": "2026-05-05T06:45:35.013Z",
+      "endTime": "2026-05-05T06:45:35.015Z",
+      "input": {
+        "city": "Paris"
+      },
+      "output": "Cloudy, 62F"
+    }
+  ],
+  "startTime": "2026-05-05T06:45:31.462Z",
+  "endTime": "2026-05-05T06:45:37.177Z",
   "name": "pydanticai-parallel-tools",
   "metadata": {
     "test_type": "parallel_tools"
@@ -63,14 +312,10 @@
   "userId": "test-user",
   "input": [
     {
-      "role": "system",
-      "content": "You are a helpful assistant with access to weather and time tools. When asked about weather, use the get_weather tool. When asked about time, use the get_time tool. Be concise in your responses."
-    },
-    {
       "role": "user",
       "content": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each."
     }
   ],
-  "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time in Paris is 8:00 AM CET.",
+  "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET.",
   "status": "SUCCESS"
 }

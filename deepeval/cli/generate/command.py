@@ -1,11 +1,10 @@
+import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional
 
 import typer
 from rich import print
 
-from deepeval.synthesizer import Synthesizer
-from deepeval.synthesizer.config import ContextConstructionConfig
 from deepeval.cli.generate.utils import (
     FileType,
     GenerationMethod,
@@ -18,6 +17,25 @@ from deepeval.cli.generate.utils import (
     validate_golden_variation,
     validate_scratch_styling,
 )
+
+
+# Lazy module-level attrs: ``Synthesizer`` and ``ContextConstructionConfig``
+# materialize on first access (PEP 562) so unrelated CLI commands like
+# ``deepeval test run`` don't pay for the synthesizer chain at startup.
+# Tests still see them as module attributes so ``monkeypatch.setattr(
+# generate_cli, "Synthesizer", _Fake)`` works.
+def __getattr__(name: str) -> Any:
+    if name == "Synthesizer":
+        from deepeval.synthesizer import Synthesizer
+
+        globals()["Synthesizer"] = Synthesizer
+        return Synthesizer
+    if name == "ContextConstructionConfig":
+        from deepeval.synthesizer.config import ContextConstructionConfig
+
+        globals()["ContextConstructionConfig"] = ContextConstructionConfig
+        return ContextConstructionConfig
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def generate_command(
@@ -186,6 +204,13 @@ def generate_command(
     ),
 ):
     """Generate synthetic goldens with the golden synthesizer."""
+    # Go through the module so test monkeypatches stick. Direct
+    # ``from deepeval.synthesizer import Synthesizer`` would always
+    # fetch the real class and ignore patched module attrs.
+    _self = sys.modules[__name__]
+    Synthesizer = _self.Synthesizer
+    ContextConstructionConfig = _self.ContextConstructionConfig
+
     document_paths = None
     contexts = None
     goldens = None

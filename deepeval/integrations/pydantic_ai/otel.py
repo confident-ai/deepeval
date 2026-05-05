@@ -43,7 +43,7 @@ def instrument_pydantic_ai(api_key: Optional[str] = None):
     )
     warnings.warn(
         "instrument_pydantic_ai is deprecated and will be removed in a future version. "
-        f"Please use the new ConfidentInstrumentationSettings instead. Docs: {docs_url}",
+        f"Please use the new DeepEvalInstrumentationSettings instead. Docs: {docs_url}",
         DeprecationWarning,
         stacklevel=2,
     )

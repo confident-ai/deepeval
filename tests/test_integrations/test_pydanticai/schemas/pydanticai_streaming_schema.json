@@ -1,40 +1,15 @@
 {
-  "uuid": "4924159c416d4d14fb8866586e697954",
+  "uuid": "44dd8eaff51a9dc6e04cff147e78238c",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "baff3157d235ba56",
+      "uuid": "1f3c08da3f019424",
       "name": "streaming_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:17.448Z",
-      "endTime": "2026-01-29T19:10:18.762Z",
+      "startTime": "2026-05-05T06:46:04.494Z",
+      "endTime": "2026-05-05T06:46:05.881Z",
       "input": [
-        {
-          "role": "system",
-          "content": "Be concise, reply with one short sentence only."
-        },
-        {
-          "role": "user",
-          "content": "Say hello in exactly three words."
-        }
-      ],
-      "output": "Hello, how are you?",
-      "availableTools": [],
-      "agentHandoffs": []
-    },
-    {
-      "uuid": "baff3157d235ba56",
-      "name": "",
-      "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-01-29T19:10:17.448Z",
-      "endTime": "2026-01-29T19:10:18.762Z",
-      "input": [
-        {
-          "role": "system",
-          "content": "Be concise, reply with one short sentence only."
-        },
         {
           "role": "user",
           "content": "Say hello in exactly three words."
@@ -45,11 +20,55 @@
       "agentHandoffs": []
     }
   ],
-  "llmSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "f2f3e8cded44aebd",
+      "name": "chat gpt-4o-mini",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "1f3c08da3f019424",
+      "startTime": "2026-05-05T06:46:04.495Z",
+      "endTime": "2026-05-05T06:46:05.880Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "Be concise, reply with one short sentence only."
+        },
+        {
+          "role": "user",
+          "content": "Say hello in exactly three words."
+        },
+        {
+          "role": "Model Request Parameters",
+          "content": {
+            "function_tools": [],
+            "builtin_tools": [],
+            "output_mode": "text",
+            "output_object": null,
+            "output_tools": [],
+            "prompted_output_template": null,
+            "allow_text_output": true,
+            "allow_image_output": false,
+            "instruction_parts": null,
+            "thinking": null
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": "Hello, how are you?"
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 28.0,
+      "outputTokenCount": 6.0
+    }
+  ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T19:10:17.448Z",
-  "endTime": "2026-01-29T19:10:18.762Z",
+  "startTime": "2026-05-05T06:46:04.494Z",
+  "endTime": "2026-05-05T06:46:05.881Z",
   "name": "pydanticai-streaming-test",
   "metadata": {
     "test_type": "streaming"
@@ -62,10 +81,6 @@
   "threadId": "streaming-123",
   "userId": "test-user-streaming",
   "input": [
-    {
-      "role": "system",
-      "content": "Be concise, reply with one short sentence only."
-    },
     {
       "role": "user",
       "content": "Say hello in exactly three words."

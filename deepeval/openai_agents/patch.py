@@ -6,7 +6,7 @@ from deepeval.tracing.context import current_span_context
 from deepeval.tracing.types import AgentSpan, ToolSpan
 from deepeval.tracing.utils import make_json_serializable
 from deepeval.tracing import observe
-from deepeval.tracing.tracing import Observer
+from deepeval.tracing.tracing import Observer, trace_manager
 from deepeval.metrics import BaseMetric
 from deepeval.prompt import Prompt
 from deepeval.tracing.types import LlmSpan
@@ -21,6 +21,36 @@ try:
     from agents import Agent
 except Exception:
     pass
+
+
+def _agent_span_for_run_step_patch() -> Optional[AgentSpan]:
+    span = current_span_context.get()
+    seen: set[int] = set()
+    while span is not None and id(span) not in seen:
+        seen.add(id(span))
+        if isinstance(span, AgentSpan):
+            return span
+        parent_uuid = getattr(span, "parent_uuid", None)
+        if parent_uuid:
+            span = trace_manager.get_span_by_uuid(parent_uuid)
+        else:
+            break
+    return None
+
+
+def _resolve_agent_from_run_step_args(args: Any, kwargs: Any) -> Any:
+    agent = kwargs.get("agent")
+    if agent is not None:
+        return agent
+    bindings = kwargs.get("bindings")
+    if bindings is not None:
+        public = getattr(bindings, "public_agent", None)
+        if public is not None:
+            return public
+        return getattr(bindings, "execution_agent", None)
+    if len(args) > 0:
+        return args[0]
+    return None
 
 
 def _wrap_with_observe(
@@ -190,15 +220,10 @@ def patch_default_agent_run_single_turn():
         res: SingleStepResult = await original_run_single_turn(*args, **kwargs)
         try:
             if isinstance(res, SingleStepResult):
-                agent_span = current_span_context.get()
+                agent_span = _agent_span_for_run_step_patch()
                 if isinstance(agent_span, AgentSpan):
 
-                    # 1. Safely extract agent from positional args if it isn't in kwargs
-                    agent = (
-                        kwargs.get("agent")
-                        if "agent" in kwargs
-                        else (args[0] if len(args) > 0 else None)
-                    )
+                    agent = _resolve_agent_from_run_step_args(args, kwargs)
                     _set_agent_metrics(agent, agent_span)
 
                     # 2. Safely extract input
@@ -256,15 +281,10 @@ def patch_default_agent_run_single_turn_streamed():
         )
         try:
             if isinstance(res, SingleStepResult):
-                agent_span = current_span_context.get()
+                agent_span = _agent_span_for_run_step_patch()
                 if isinstance(agent_span, AgentSpan):
 
-                    # 1. Safely extract agent
-                    agent = (
-                        kwargs.get("agent")
-                        if "agent" in kwargs
-                        else (args[0] if len(args) > 0 else None)
-                    )
+                    agent = _resolve_agent_from_run_step_args(args, kwargs)
                     _set_agent_metrics(agent, agent_span)
 
                     # 2. Safely extract input

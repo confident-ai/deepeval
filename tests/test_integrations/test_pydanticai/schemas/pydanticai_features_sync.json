@@ -1,36 +1,35 @@
 {
-  "uuid": "de844d8cac5d510dc1643269c2503b69",
+  "uuid": "f1d658fc6833425f9c7fd0177fc1f876",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "87ce8fc0fdff3bb5",
+      "uuid": "59b32f364dc03906",
       "name": "evals_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-30T08:34:30.281Z",
-      "endTime": "2026-01-30T08:34:32.177Z",
+      "startTime": "2026-05-05T06:45:37.208Z",
+      "endTime": "2026-05-05T06:45:42.879Z",
       "input": [
-        {
-          "role": "system",
-          "content": "You are a helpful assistant. Be concise."
-        },
         {
           "role": "user",
           "content": "Use the special_tool to process 'Sync Data'"
         }
       ],
-      "output": "The query \"Sync Data\" has been processed.",
+      "output": "The query \"Sync Data\" has been processed successfully.",
       "availableTools": [],
       "agentHandoffs": [],
       "metricCollection": "agent_metrics_v1"
-    },
+    }
+  ],
+  "llmSpans": [
     {
-      "uuid": "87ce8fc0fdff3bb5",
-      "name": "",
+      "uuid": "6f79095aa1f88da9",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-01-30T08:34:30.281Z",
-      "endTime": "2026-01-30T08:34:32.177Z",
+      "type": "llm",
+      "parentUuid": "59b32f364dc03906",
+      "startTime": "2026-05-05T06:45:41.640Z",
+      "endTime": "2026-05-05T06:45:42.876Z",
       "input": [
         {
           "role": "system",
@@ -39,27 +38,172 @@
         {
           "role": "user",
           "content": "Use the special_tool to process 'Sync Data'"
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_j33exAhHxnhQThUe1rjtIUJS",
+            "name": "special_tool",
+            "arguments": "{\"query\":\"Sync Data\"}"
+          }
+        },
+        {
+          "role": "user",
+          "content": {
+            "type": "tool_call_response",
+            "id": "call_j33exAhHxnhQThUe1rjtIUJS",
+            "name": "special_tool",
+            "result": "Processed: Sync Data"
+          }
+        },
+        {
+          "role": "Model Request Parameters",
+          "content": {
+            "function_tools": [
+              {
+                "name": "special_tool",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "query": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "query"
+                  ],
+                  "type": "object"
+                },
+                "description": "A tool used by feature tests.",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              }
+            ],
+            "builtin_tools": [],
+            "output_mode": "text",
+            "output_object": null,
+            "output_tools": [],
+            "prompted_output_template": null,
+            "allow_text_output": true,
+            "allow_image_output": false,
+            "instruction_parts": null,
+            "thinking": null
+          }
         }
       ],
-      "output": "The query \"Sync Data\" has been processed.",
-      "availableTools": [],
-      "agentHandoffs": [],
-      "metricsData": [
+      "output": [
         {
-          "name": "Answer Relevancy",
-          "threshold": 0.5,
-          "success": false,
-          "strictMode": false,
-          "evaluationModel": "gpt-4.1"
+          "role": "assistant",
+          "content": "The query \"Sync Data\" has been processed successfully."
         }
-      ]
+      ],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 90.0,
+      "outputTokenCount": 12.0
+    },
+    {
+      "uuid": "287314d5aaf1820a",
+      "name": "chat gpt-4o-mini",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "59b32f364dc03906",
+      "startTime": "2026-05-05T06:45:37.209Z",
+      "endTime": "2026-05-05T06:45:41.635Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant. Be concise."
+        },
+        {
+          "role": "user",
+          "content": "Use the special_tool to process 'Sync Data'"
+        },
+        {
+          "role": "Model Request Parameters",
+          "content": {
+            "function_tools": [
+              {
+                "name": "special_tool",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "query": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "query"
+                  ],
+                  "type": "object"
+                },
+                "description": "A tool used by feature tests.",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              }
+            ],
+            "builtin_tools": [],
+            "output_mode": "text",
+            "output_object": null,
+            "output_tools": [],
+            "prompted_output_template": null,
+            "allow_text_output": true,
+            "allow_image_output": false,
+            "instruction_parts": null,
+            "thinking": null
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_j33exAhHxnhQThUe1rjtIUJS",
+            "name": "special_tool",
+            "arguments": "{\"query\":\"Sync Data\"}"
+          }
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 63.0,
+      "outputTokenCount": 15.0
     }
   ],
-  "llmSpans": [],
   "retrieverSpans": [],
-  "toolSpans": [],
-  "startTime": "2026-01-30T08:34:30.281Z",
-  "endTime": "2026-01-30T08:34:32.177Z",
+  "toolSpans": [
+    {
+      "uuid": "59edf01d82f4f4b2",
+      "name": "special_tool",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "59b32f364dc03906",
+      "startTime": "2026-05-05T06:45:41.637Z",
+      "endTime": "2026-05-05T06:45:41.638Z",
+      "input": {
+        "query": "Sync Data"
+      },
+      "output": "Processed: Sync Data"
+    }
+  ],
+  "startTime": "2026-05-05T06:45:37.208Z",
+  "endTime": "2026-05-05T06:45:42.879Z",
   "name": "pydanticai-full-features-sync",
   "metadata": {
     "env": "testing",
@@ -75,15 +219,11 @@
   "userId": "user-sync-001",
   "input": [
     {
-      "role": "system",
-      "content": "You are a helpful assistant. Be concise."
-    },
-    {
       "role": "user",
       "content": "Use the special_tool to process 'Sync Data'"
     }
   ],
-  "output": "The query \"Sync Data\" has been processed.",
+  "output": "The query \"Sync Data\" has been processed successfully.",
   "status": "SUCCESS",
   "metricCollection": "trace_metrics_override_v1"
 }

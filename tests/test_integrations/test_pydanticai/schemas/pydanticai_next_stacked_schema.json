@@ -1,14 +1,18 @@
 {
-  "uuid": "826291288f64a0f2475533f0d069297a",
+  "uuid": "1dceafc48fe7bab11b4840825596ac39",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "efc775c8cbfd1e17",
-      "name": "simple_agent",
+      "uuid": "f2ff699a59938f0e",
+      "name": "next_span_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T06:45:57.164Z",
-      "endTime": "2026-05-05T06:45:58.516Z",
+      "startTime": "2026-05-05T06:45:45.293Z",
+      "endTime": "2026-05-05T06:45:46.775Z",
+      "metadata": {
+        "layer": "agent",
+        "scenario": "stacked"
+      },
       "input": [
         {
           "role": "user",
@@ -17,18 +21,23 @@
       ],
       "output": "Farewell, take care.",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "metricCollection": "agent_stacked_v1"
     }
   ],
   "llmSpans": [
     {
-      "uuid": "8b5fcf31ad03a5f3",
+      "uuid": "d195971284eff675",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "efc775c8cbfd1e17",
-      "startTime": "2026-05-05T06:45:57.166Z",
-      "endTime": "2026-05-05T06:45:58.513Z",
+      "parentUuid": "f2ff699a59938f0e",
+      "startTime": "2026-05-05T06:45:45.295Z",
+      "endTime": "2026-05-05T06:45:46.773Z",
+      "metadata": {
+        "layer": "llm",
+        "scenario": "stacked"
+      },
       "input": [
         {
           "role": "system",
@@ -62,25 +71,25 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 28.0,
-      "outputTokenCount": 6.0
+      "outputTokenCount": 6.0,
+      "metricCollection": "llm_stacked_v1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-05-05T06:45:57.164Z",
-  "endTime": "2026-05-05T06:45:58.516Z",
-  "name": "pydanticai-async-simple-test",
+  "startTime": "2026-05-05T06:45:45.293Z",
+  "endTime": "2026-05-05T06:45:46.775Z",
+  "name": "pydanticai-next-stacked-test",
   "metadata": {
-    "test_type": "async_simple"
+    "test_type": "next_stacked"
   },
   "tags": [
     "pydanticai",
-    "simple",
-    "async"
+    "stacked"
   ],
   "environment": "development",
-  "threadId": "async-simple-123",
-  "userId": "test-user-async",
+  "threadId": "next-stacked-123",
+  "userId": "test-user",
   "input": [
     {
       "role": "user",

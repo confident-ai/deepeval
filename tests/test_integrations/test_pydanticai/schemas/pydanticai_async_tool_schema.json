@@ -1,40 +1,15 @@
 {
-  "uuid": "6e8ac095a734eb14b164c8fb217d778d",
+  "uuid": "01bf0d03478e790070b262f357529f69",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "f8f3eeb869eac1b2",
+      "uuid": "f1a95f94f77e4b52",
       "name": "tool_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:14.874Z",
-      "endTime": "2026-01-29T19:10:17.439Z",
+      "startTime": "2026-05-05T06:46:01.685Z",
+      "endTime": "2026-05-05T06:46:04.463Z",
       "input": [
-        {
-          "role": "system",
-          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
-        },
-        {
-          "role": "user",
-          "content": "What is 9 multiplied by 6?"
-        }
-      ],
-      "output": "9 multiplied by 6 is 54.",
-      "availableTools": [],
-      "agentHandoffs": []
-    },
-    {
-      "uuid": "f8f3eeb869eac1b2",
-      "name": "",
-      "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-01-29T19:10:14.874Z",
-      "endTime": "2026-01-29T19:10:17.439Z",
-      "input": [
-        {
-          "role": "system",
-          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
-        },
         {
           "role": "user",
           "content": "What is 9 multiplied by 6?"
@@ -45,11 +20,213 @@
       "agentHandoffs": []
     }
   ],
-  "llmSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "84d08d63e9309026",
+      "name": "chat gpt-4o-mini",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "f1a95f94f77e4b52",
+      "startTime": "2026-05-05T06:46:03.453Z",
+      "endTime": "2026-05-05T06:46:04.461Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
+        },
+        {
+          "role": "user",
+          "content": "What is 9 multiplied by 6?"
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_YqVIae6inG00lfJiSm7PuH1i",
+            "name": "calculate",
+            "arguments": "{\"operation\":\"multiply\",\"a\":9,\"b\":6}"
+          }
+        },
+        {
+          "role": "user",
+          "content": {
+            "type": "tool_call_response",
+            "id": "call_YqVIae6inG00lfJiSm7PuH1i",
+            "name": "calculate",
+            "result": 54.0
+          }
+        },
+        {
+          "role": "Model Request Parameters",
+          "content": {
+            "function_tools": [
+              {
+                "name": "calculate",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "operation": {
+                      "description": "The operation to perform (add, subtract, multiply, divide)",
+                      "type": "string"
+                    },
+                    "a": {
+                      "description": "First number",
+                      "type": "number"
+                    },
+                    "b": {
+                      "description": "Second number",
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "operation",
+                    "a",
+                    "b"
+                  ],
+                  "type": "object"
+                },
+                "description": "<summary>Perform basic arithmetic operations.</summary>\n<returns>\n<description>The result of the operation</description>\n</returns>",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              }
+            ],
+            "builtin_tools": [],
+            "output_mode": "text",
+            "output_object": null,
+            "output_tools": [],
+            "prompted_output_template": null,
+            "allow_text_output": true,
+            "allow_image_output": false,
+            "instruction_parts": null,
+            "thinking": null
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": "9 multiplied by 6 is 54."
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 147.0,
+      "outputTokenCount": 10.0
+    },
+    {
+      "uuid": "279f318bfd8d0d89",
+      "name": "chat gpt-4o-mini",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "f1a95f94f77e4b52",
+      "startTime": "2026-05-05T06:46:01.687Z",
+      "endTime": "2026-05-05T06:46:03.446Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
+        },
+        {
+          "role": "user",
+          "content": "What is 9 multiplied by 6?"
+        },
+        {
+          "role": "Model Request Parameters",
+          "content": {
+            "function_tools": [
+              {
+                "name": "calculate",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "operation": {
+                      "description": "The operation to perform (add, subtract, multiply, divide)",
+                      "type": "string"
+                    },
+                    "a": {
+                      "description": "First number",
+                      "type": "number"
+                    },
+                    "b": {
+                      "description": "Second number",
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "operation",
+                    "a",
+                    "b"
+                  ],
+                  "type": "object"
+                },
+                "description": "<summary>Perform basic arithmetic operations.</summary>\n<returns>\n<description>The result of the operation</description>\n</returns>",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              }
+            ],
+            "builtin_tools": [],
+            "output_mode": "text",
+            "output_object": null,
+            "output_tools": [],
+            "prompted_output_template": null,
+            "allow_text_output": true,
+            "allow_image_output": false,
+            "instruction_parts": null,
+            "thinking": null
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_YqVIae6inG00lfJiSm7PuH1i",
+            "name": "calculate",
+            "arguments": "{\"operation\":\"multiply\",\"a\":9,\"b\":6}"
+          }
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 116.0,
+      "outputTokenCount": 21.0
+    }
+  ],
   "retrieverSpans": [],
-  "toolSpans": [],
-  "startTime": "2026-01-29T19:10:14.874Z",
-  "endTime": "2026-01-29T19:10:17.439Z",
+  "toolSpans": [
+    {
+      "uuid": "41cd3c916d5f1505",
+      "name": "calculate",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "f1a95f94f77e4b52",
+      "startTime": "2026-05-05T06:46:03.449Z",
+      "endTime": "2026-05-05T06:46:03.451Z",
+      "input": {
+        "operation": "multiply",
+        "a": 9,
+        "b": 6
+      },
+      "output": "54.0"
+    }
+  ],
+  "startTime": "2026-05-05T06:46:01.685Z",
+  "endTime": "2026-05-05T06:46:04.463Z",
   "name": "pydanticai-async-tool-test",
   "metadata": {
     "test_type": "async_tool"
@@ -63,10 +240,6 @@
   "threadId": "async-tool-123",
   "userId": "test-user-async",
   "input": [
-    {
-      "role": "system",
-      "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
-    },
     {
       "role": "user",
       "content": "What is 9 multiplied by 6?"

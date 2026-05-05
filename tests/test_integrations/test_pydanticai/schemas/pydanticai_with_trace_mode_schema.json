@@ -1,14 +1,14 @@
 {
-  "uuid": "826291288f64a0f2475533f0d069297a",
+  "uuid": "c0579915-f8cb-428a-8d57-6f16189bf11b",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "efc775c8cbfd1e17",
-      "name": "simple_agent",
+      "uuid": "11a9d52db22441a0",
+      "name": "modes_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T06:45:57.164Z",
-      "endTime": "2026-05-05T06:45:58.516Z",
+      "startTime": "2026-05-05T06:45:48.149Z",
+      "endTime": "2026-05-05T06:45:49.721Z",
       "input": [
         {
           "role": "user",
@@ -22,13 +22,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "8b5fcf31ad03a5f3",
+      "uuid": "84e874880339a4ea",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "efc775c8cbfd1e17",
-      "startTime": "2026-05-05T06:45:57.166Z",
-      "endTime": "2026-05-05T06:45:58.513Z",
+      "parentUuid": "11a9d52db22441a0",
+      "startTime": "2026-05-05T06:45:48.150Z",
+      "endTime": "2026-05-05T06:45:49.718Z",
       "input": [
         {
           "role": "system",
@@ -67,20 +67,21 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-05-05T06:45:57.164Z",
-  "endTime": "2026-05-05T06:45:58.516Z",
-  "name": "pydanticai-async-simple-test",
+  "startTime": "2026-05-05T06:45:48.147Z",
+  "endTime": "2026-05-05T06:45:49.721Z",
+  "name": "pydanticai-with-trace",
   "metadata": {
-    "test_type": "async_simple"
+    "test_type": "with_trace_mode",
+    "mode": "with_trace",
+    "source": "runtime"
   },
   "tags": [
-    "pydanticai",
-    "simple",
-    "async"
+    "with-trace",
+    "runtime"
   ],
   "environment": "development",
-  "threadId": "async-simple-123",
-  "userId": "test-user-async",
+  "threadId": "with-trace-thread",
+  "userId": "with-trace-user",
   "input": [
     {
       "role": "user",

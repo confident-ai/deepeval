@@ -1,36 +1,35 @@
 {
-  "uuid": "96c82cc07d1b3f93f031ba2a6e3191ce",
+  "uuid": "e749ccab18ab87d06b909a167fecce78",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "ce5fc309f1759044",
+      "uuid": "94b87c183fa8adbe",
       "name": "evals_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-30T08:34:43.222Z",
-      "endTime": "2026-01-30T08:34:45.264Z",
+      "startTime": "2026-05-05T06:46:05.908Z",
+      "endTime": "2026-05-05T06:46:08.674Z",
       "input": [
-        {
-          "role": "system",
-          "content": "You are a helpful assistant. Be concise."
-        },
         {
           "role": "user",
           "content": "Use the special_tool to process 'Async Data'"
         }
       ],
-      "output": "The query 'Async Data' has been processed successfully.",
+      "output": "The special tool processed the input as: **Async Data**.",
       "availableTools": [],
       "agentHandoffs": [],
       "metricCollection": "agent_metrics_async_v1"
-    },
+    }
+  ],
+  "llmSpans": [
     {
-      "uuid": "ce5fc309f1759044",
-      "name": "",
+      "uuid": "d9dfc255911191d1",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-01-30T08:34:43.222Z",
-      "endTime": "2026-01-30T08:34:45.264Z",
+      "type": "llm",
+      "parentUuid": "94b87c183fa8adbe",
+      "startTime": "2026-05-05T06:46:07.610Z",
+      "endTime": "2026-05-05T06:46:08.672Z",
       "input": [
         {
           "role": "system",
@@ -39,27 +38,172 @@
         {
           "role": "user",
           "content": "Use the special_tool to process 'Async Data'"
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_5PTD8KZe1MBqmJ7XCuWraRE5",
+            "name": "special_tool",
+            "arguments": "{\"query\":\"Async Data\"}"
+          }
+        },
+        {
+          "role": "user",
+          "content": {
+            "type": "tool_call_response",
+            "id": "call_5PTD8KZe1MBqmJ7XCuWraRE5",
+            "name": "special_tool",
+            "result": "Processed: Async Data"
+          }
+        },
+        {
+          "role": "Model Request Parameters",
+          "content": {
+            "function_tools": [
+              {
+                "name": "special_tool",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "query": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "query"
+                  ],
+                  "type": "object"
+                },
+                "description": "A tool used by feature tests.",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              }
+            ],
+            "builtin_tools": [],
+            "output_mode": "text",
+            "output_object": null,
+            "output_tools": [],
+            "prompted_output_template": null,
+            "allow_text_output": true,
+            "allow_image_output": false,
+            "instruction_parts": null,
+            "thinking": null
+          }
         }
       ],
-      "output": "The query 'Async Data' has been processed successfully.",
-      "availableTools": [],
-      "agentHandoffs": [],
-      "metricsData": [
+      "output": [
         {
-          "name": "Answer Relevancy",
-          "threshold": 0.5,
-          "success": false,
-          "strictMode": false,
-          "evaluationModel": "gpt-4.1"
+          "role": "assistant",
+          "content": "The special tool processed the input as: **Async Data**."
         }
-      ]
+      ],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 90.0,
+      "outputTokenCount": 14.0
+    },
+    {
+      "uuid": "690bdab31ec1c3c0",
+      "name": "chat gpt-4o-mini",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "94b87c183fa8adbe",
+      "startTime": "2026-05-05T06:46:05.911Z",
+      "endTime": "2026-05-05T06:46:07.602Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant. Be concise."
+        },
+        {
+          "role": "user",
+          "content": "Use the special_tool to process 'Async Data'"
+        },
+        {
+          "role": "Model Request Parameters",
+          "content": {
+            "function_tools": [
+              {
+                "name": "special_tool",
+                "parameters_json_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "query": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "query"
+                  ],
+                  "type": "object"
+                },
+                "description": "A tool used by feature tests.",
+                "outer_typed_dict_key": null,
+                "strict": true,
+                "sequential": false,
+                "kind": "function",
+                "metadata": null,
+                "timeout": null,
+                "defer_loading": false,
+                "prefer_builtin": null,
+                "return_schema": null,
+                "include_return_schema": null
+              }
+            ],
+            "builtin_tools": [],
+            "output_mode": "text",
+            "output_object": null,
+            "output_tools": [],
+            "prompted_output_template": null,
+            "allow_text_output": true,
+            "allow_image_output": false,
+            "instruction_parts": null,
+            "thinking": null
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_5PTD8KZe1MBqmJ7XCuWraRE5",
+            "name": "special_tool",
+            "arguments": "{\"query\":\"Async Data\"}"
+          }
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 63.0,
+      "outputTokenCount": 15.0
     }
   ],
-  "llmSpans": [],
   "retrieverSpans": [],
-  "toolSpans": [],
-  "startTime": "2026-01-30T08:34:43.222Z",
-  "endTime": "2026-01-30T08:34:45.264Z",
+  "toolSpans": [
+    {
+      "uuid": "72e90196d374ed3f",
+      "name": "special_tool",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "94b87c183fa8adbe",
+      "startTime": "2026-05-05T06:46:07.604Z",
+      "endTime": "2026-05-05T06:46:07.606Z",
+      "input": {
+        "query": "Async Data"
+      },
+      "output": "Processed: Async Data"
+    }
+  ],
+  "startTime": "2026-05-05T06:46:05.908Z",
+  "endTime": "2026-05-05T06:46:08.674Z",
   "name": "pydanticai-full-features-async",
   "metadata": {
     "env": "testing_async",
@@ -75,15 +219,11 @@
   "userId": "user-async-002",
   "input": [
     {
-      "role": "system",
-      "content": "You are a helpful assistant. Be concise."
-    },
-    {
       "role": "user",
       "content": "Use the special_tool to process 'Async Data'"
     }
   ],
-  "output": "The query 'Async Data' has been processed successfully.",
+  "output": "The special tool processed the input as: **Async Data**.",
   "status": "SUCCESS",
   "metricCollection": "trace_metrics_override_async_v1"
 }

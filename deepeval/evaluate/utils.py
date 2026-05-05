@@ -163,6 +163,27 @@ def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
     # problem. The truthiness check cleanly covers the "absent" cases
     # (`None`, `{}`, `""`) that would otherwise show as garbage in the
     # trace-level Metrics Summary and break `filter_duplicate_results`.
+    #
+    # Span lists start empty and are populated by the eval-iterator's
+    # DFS walker (``_a_execute_span_test_case`` / its sync twin), which
+    # categorizes each visited span by isinstance and appends to the
+    # matching ``trace_api.*_spans`` list. We DON'T pre-populate from
+    # ``trace.root_spans`` here because the walker is also responsible
+    # for attaching per-span metric data, error flags, and trace dicts —
+    # doing it twice (here + walker) would either double-emit or require
+    # the walker to dedupe.
+    #
+    # Trace-level fields (``name``, ``tags``, ``thread_id``, ``user_id``,
+    # ``metadata``, ``environment``) ARE forwarded from the trace so that
+    # OTel-based integrations whose users configured them via instrumentation
+    # settings or ``update_current_trace(...)`` see them on the dashboard.
+    # The non-eval REST path (``trace_manager.create_trace_api``) already
+    # forwards these; mirror its shape here so the eval-iterator path
+    # doesn't silently drop them. ``metadata`` is intentionally sourced
+    # from the golden (not the trace) — that's an evaluation-specific
+    # convention the eval pipeline relies on for per-row context. Trace-
+    # configured metadata flows through the per-trace upload path, not
+    # through this golden-shaped TraceApi.
     return TraceApi(
         uuid=trace.uuid,
         baseSpans=[],
@@ -188,6 +209,11 @@ def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
         tools_called=trace.tools_called,
         expected_tools=trace.expected_tools,
         metadata=golden.additional_metadata,
+        name=trace.name,
+        tags=trace.tags,
+        threadId=trace.thread_id,
+        userId=trace.user_id,
+        environment=trace.environment,
         status=(
             TraceSpanApiStatus.SUCCESS
             if trace.status == TraceSpanStatus.SUCCESS

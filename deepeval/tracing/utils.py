@@ -103,6 +103,14 @@ def make_json_serializable_for_metadata(obj):
     """
     Recursively converts an object to a JSON‐serializable form,
     replacing circular references with "<circular>".
+
+    Primitive types (``bool``, ``int``, ``float``, ``None``) are preserved
+    as their native JSON types so downstream consumers can filter / type-
+    check metadata correctly. Earlier versions of this helper coerced
+    primitives to ``str`` (e.g. ``True`` → ``"True"``, ``3.14`` → ``"3.14"``),
+    which broke type fidelity for any user metadata containing booleans
+    or numbers. Non-finite floats (NaN / ±Infinity) are still replaced
+    with ``None`` because they are not valid JSON.
     """
     seen = set()  # Store `id` of objects we've visited
 
@@ -115,11 +123,11 @@ def make_json_serializable_for_metadata(obj):
 
         # Replace non-finite floats (NaN, Infinity, -Infinity) with None
         if isinstance(o, float):
-            return None if not math.isfinite(o) else str(o)
+            return None if not math.isfinite(o) else o
 
         # Primitive types are already serializable
         if isinstance(o, (int, bool)) or o is None:
-            return str(o)
+            return o
 
         # Detect circular reference
         if oid in seen:

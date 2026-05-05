@@ -1,59 +1,59 @@
 {
-  "uuid": "8f7f5bc0128508ade293d98c49bd745e",
+  "uuid": "3fca53b40379cfcbad2ad80c92aa9ada",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "46cbfb76471cc1d4",
-      "name": "tool_agent",
+      "uuid": "c123377e0ee78cc0",
+      "name": "enrichment_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T06:45:21.167Z",
-      "endTime": "2026-05-05T06:45:23.769Z",
+      "startTime": "2026-05-05T07:12:02.424Z",
+      "endTime": "2026-05-05T07:12:05.334Z",
       "input": [
         {
           "role": "user",
-          "content": "What is 7 multiplied by 8?"
+          "content": "Use the lookup tool with key 'foobar' and report the result."
         }
       ],
-      "output": "7 multiplied by 8 is 56.",
+      "output": "The result for the key 'foobar' is: **resolved-value-for-foobar**.",
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "25d7f67b4f83a795",
+      "uuid": "cb410be370ea9a70",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "46cbfb76471cc1d4",
-      "startTime": "2026-05-05T06:45:22.828Z",
-      "endTime": "2026-05-05T06:45:23.765Z",
+      "parentUuid": "c123377e0ee78cc0",
+      "startTime": "2026-05-05T07:12:03.997Z",
+      "endTime": "2026-05-05T07:12:05.332Z",
       "input": [
         {
           "role": "system",
-          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
+          "content": "You are an assistant. Use the lookup tool whenever the user mentions a key. Be concise."
         },
         {
           "role": "user",
-          "content": "What is 7 multiplied by 8?"
+          "content": "Use the lookup tool with key 'foobar' and report the result."
         },
         {
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_52qsRBNYk15hcDQeFbU9GiKu",
-            "name": "calculate",
-            "arguments": "{\"operation\":\"multiply\",\"a\":7,\"b\":8}"
+            "id": "call_tMeJcIvY4WL8Epq5aVwFhTJj",
+            "name": "lookup",
+            "arguments": "{\"key\":\"foobar\"}"
           }
         },
         {
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_52qsRBNYk15hcDQeFbU9GiKu",
-            "name": "calculate",
-            "result": 56.0
+            "id": "call_tMeJcIvY4WL8Epq5aVwFhTJj",
+            "name": "lookup",
+            "result": "resolved-value-for-foobar"
           }
         },
         {
@@ -61,31 +61,20 @@
           "content": {
             "function_tools": [
               {
-                "name": "calculate",
+                "name": "lookup",
                 "parameters_json_schema": {
                   "additionalProperties": false,
                   "properties": {
-                    "operation": {
-                      "description": "The operation to perform (add, subtract, multiply, divide)",
+                    "key": {
                       "type": "string"
-                    },
-                    "a": {
-                      "description": "First number",
-                      "type": "number"
-                    },
-                    "b": {
-                      "description": "Second number",
-                      "type": "number"
                     }
                   },
                   "required": [
-                    "operation",
-                    "a",
-                    "b"
+                    "key"
                   ],
                   "type": "object"
                 },
-                "description": "<summary>Perform basic arithmetic operations.</summary>\n<returns>\n<description>The result of the operation</description>\n</returns>",
+                "description": "Look up a value for a key. Enriches the active trace AND the\ntool span with derived metadata.",
                 "outer_typed_dict_key": null,
                 "strict": true,
                 "sequential": false,
@@ -113,60 +102,49 @@
       "output": [
         {
           "role": "assistant",
-          "content": "7 multiplied by 8 is 56."
+          "content": "The result for the key 'foobar' is: **resolved-value-for-foobar**."
         }
       ],
       "model": "gpt-4o-mini",
-      "inputTokenCount": 147.0,
-      "outputTokenCount": 10.0
+      "inputTokenCount": 118.0,
+      "outputTokenCount": 19.0
     },
     {
-      "uuid": "967e66029aae355c",
+      "uuid": "3102fbd78136b39d",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "46cbfb76471cc1d4",
-      "startTime": "2026-05-05T06:45:21.169Z",
-      "endTime": "2026-05-05T06:45:22.814Z",
+      "parentUuid": "c123377e0ee78cc0",
+      "startTime": "2026-05-05T07:12:02.425Z",
+      "endTime": "2026-05-05T07:12:03.992Z",
       "input": [
         {
           "role": "system",
-          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
+          "content": "You are an assistant. Use the lookup tool whenever the user mentions a key. Be concise."
         },
         {
           "role": "user",
-          "content": "What is 7 multiplied by 8?"
+          "content": "Use the lookup tool with key 'foobar' and report the result."
         },
         {
           "role": "Model Request Parameters",
           "content": {
             "function_tools": [
               {
-                "name": "calculate",
+                "name": "lookup",
                 "parameters_json_schema": {
                   "additionalProperties": false,
                   "properties": {
-                    "operation": {
-                      "description": "The operation to perform (add, subtract, multiply, divide)",
+                    "key": {
                       "type": "string"
-                    },
-                    "a": {
-                      "description": "First number",
-                      "type": "number"
-                    },
-                    "b": {
-                      "description": "Second number",
-                      "type": "number"
                     }
                   },
                   "required": [
-                    "operation",
-                    "a",
-                    "b"
+                    "key"
                   ],
                   "type": "object"
                 },
-                "description": "<summary>Perform basic arithmetic operations.</summary>\n<returns>\n<description>The result of the operation</description>\n</returns>",
+                "description": "Look up a value for a key. Enriches the active trace AND the\ntool span with derived metadata.",
                 "outer_typed_dict_key": null,
                 "strict": true,
                 "sequential": false,
@@ -196,54 +174,58 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_52qsRBNYk15hcDQeFbU9GiKu",
-            "name": "calculate",
-            "arguments": "{\"operation\":\"multiply\",\"a\":7,\"b\":8}"
+            "id": "call_tMeJcIvY4WL8Epq5aVwFhTJj",
+            "name": "lookup",
+            "arguments": "{\"key\":\"foobar\"}"
           }
         }
       ],
       "model": "gpt-4o-mini",
-      "inputTokenCount": 116.0,
-      "outputTokenCount": 21.0
+      "inputTokenCount": 93.0,
+      "outputTokenCount": 13.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "7ec404f9c3517e41",
-      "name": "calculate",
+      "uuid": "c8bec75570617882",
+      "name": "lookup",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "46cbfb76471cc1d4",
-      "startTime": "2026-05-05T06:45:22.822Z",
-      "endTime": "2026-05-05T06:45:22.824Z",
-      "input": {
-        "operation": "multiply",
-        "a": 7,
-        "b": 8
+      "parentUuid": "c123377e0ee78cc0",
+      "startTime": "2026-05-05T07:12:03.995Z",
+      "endTime": "2026-05-05T07:12:03.996Z",
+      "metadata": {
+        "tool_called": true,
+        "lookup_key": "foobar"
       },
-      "output": "56.0"
+      "input": {
+        "key": "foobar"
+      },
+      "output": "resolved-value-for-foobar"
     }
   ],
-  "startTime": "2026-05-05T06:45:21.167Z",
-  "endTime": "2026-05-05T06:45:23.769Z",
-  "name": "pydanticai-tool-test",
+  "startTime": "2026-05-05T07:12:02.424Z",
+  "endTime": "2026-05-05T07:12:05.334Z",
+  "name": "pydanticai-bare-enrichment-test",
   "metadata": {
-    "test_type": "tool"
+    "test_type": "bare_tool_enrichment",
+    "enriched_from_tool": true,
+    "resolved_key": "foobar"
   },
   "tags": [
     "pydanticai",
-    "tool"
+    "enrichment"
   ],
   "environment": "development",
-  "threadId": "tool-123",
+  "threadId": "bare-enrichment-123",
   "userId": "test-user",
   "input": [
     {
       "role": "user",
-      "content": "What is 7 multiplied by 8?"
+      "content": "Use the lookup tool with key 'foobar' and report the result."
     }
   ],
-  "output": "7 multiplied by 8 is 56.",
+  "output": "The result for the key 'foobar' is: **resolved-value-for-foobar**.",
   "status": "SUCCESS"
 }

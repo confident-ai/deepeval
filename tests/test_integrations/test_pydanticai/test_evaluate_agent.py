@@ -3,7 +3,7 @@ import os
 import pytest
 from pydantic_ai import Agent
 from deepeval.integrations.pydantic_ai.instrumentator import (
-    ConfidentInstrumentationSettings,
+    DeepEvalInstrumentationSettings,
 )
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset, Golden
@@ -16,10 +16,7 @@ answer_relavancy_metric = AnswerRelevancyMetric()
 agent = Agent(
     "openai:gpt-4o-mini",
     system_prompt="Be concise, reply with one sentence.",
-    instrument=ConfidentInstrumentationSettings(
-        agent_metrics=[answer_relavancy_metric],
-        is_test_mode=True,
-    ),
+    instrument=DeepEvalInstrumentationSettings(),
 )
 
 
@@ -32,19 +29,13 @@ def run_eval():
     # then finalizes and serializes traces.
     # don't try / except pass.. or we won't know what went wrong.
     for golden in dataset.evals_iterator(
-        async_config=AsyncConfig(run_async=True)
+        async_config=AsyncConfig(run_async=True),
+        metrics=[answer_relavancy_metric],
     ):
         task = asyncio.create_task(run_agent(golden.input))
         dataset.evaluate(task)
 
 
-@pytest.mark.skip(
-    reason=(
-        "BLOCKED: evals_iterator integration with PydanticAI OTEL instrumentation "
-        "does not properly populate trace output for metrics evaluation. "
-        "See module docstring for details."
-    )
-)
 @pytest.mark.skipif(
     os.getenv("OPENAI_API_KEY") is None
     or not os.getenv("OPENAI_API_KEY").strip(),
@@ -52,6 +43,14 @@ def run_eval():
 )
 def test_evaluate_agent():
     run_eval()
+
+    print(answer_relavancy_metric)
+    print(answer_relavancy_metric.score)
+    print(answer_relavancy_metric.reason)
+    print(answer_relavancy_metric.success)
+    print(answer_relavancy_metric.evaluation_cost)
+    print(answer_relavancy_metric.evaluation_model)
+    print(answer_relavancy_metric.evaluation_model)
 
     assert answer_relavancy_metric.score is not None
     assert answer_relavancy_metric.score > 0.0

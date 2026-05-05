@@ -6,7 +6,7 @@ Uses deterministic settings (temperature=0) for reproducible traces.
 """
 
 from pydantic_ai import Agent
-from deepeval.integrations.pydantic_ai import ConfidentInstrumentationSettings
+from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
 
 
 def create_multiple_tools_agent(
@@ -15,17 +15,14 @@ def create_multiple_tools_agent(
     metadata: dict = None,
     thread_id: str = None,
     user_id: str = None,
-    tool_metric_collection_map: dict = None,
 ) -> Agent:
     """Create a PydanticAI agent with multiple tools and instrumentation settings."""
-    settings = ConfidentInstrumentationSettings(
+    settings = DeepEvalInstrumentationSettings(
         name=name,
         tags=tags or ["pydanticai", "multiple-tools"],
         metadata=metadata or {"test_type": "multiple_tools"},
         thread_id=thread_id,
         user_id=user_id,
-        tool_metric_collection_map=tool_metric_collection_map or {},
-        is_test_mode=True,
     )
 
     agent = Agent(

@@ -87,7 +87,13 @@ class TestMakeJsonSerializable:
 
 
 class TestMakeJsonSerializableForMetadata:
-    """metadata variant converts finite floats to str, non-finite to None."""
+    """metadata variant preserves finite primitives, replaces non-finite with None.
+
+    Previously this helper stringified every primitive (``True`` → ``"True"``,
+    ``3.14`` → ``"3.14"``), which destroyed type fidelity for user metadata.
+    The contract is now: primitives pass through, non-finite floats become
+    None, everything else gets serialized recursively.
+    """
 
     def test_nan_replaced_with_none(self):
         assert make_json_serializable_for_metadata(float("nan")) is None
@@ -98,15 +104,45 @@ class TestMakeJsonSerializableForMetadata:
     def test_neg_inf_replaced_with_none(self):
         assert make_json_serializable_for_metadata(float("-inf")) is None
 
-    def test_normal_float_becomes_string(self):
-        assert make_json_serializable_for_metadata(3.14) == "3.14"
+    def test_finite_float_preserved(self):
+        assert make_json_serializable_for_metadata(3.14) == 3.14
+
+    def test_int_preserved(self):
+        assert make_json_serializable_for_metadata(42) == 42
+
+    def test_bool_preserved(self):
+        assert make_json_serializable_for_metadata(True) is True
+        assert make_json_serializable_for_metadata(False) is False
+
+    def test_none_preserved(self):
+        assert make_json_serializable_for_metadata(None) is None
 
     def test_nan_inside_dict(self):
         result = make_json_serializable_for_metadata(
             {"cost": float("nan"), "ok": 2.0}
         )
         assert result["cost"] is None
-        assert result["ok"] == "2.0"
+        assert result["ok"] == 2.0
+
+    def test_mixed_primitives_inside_dict(self):
+        """Regression guard: every primitive type must round-trip with its
+        native JSON type intact."""
+        result = make_json_serializable_for_metadata(
+            {
+                "flag": True,
+                "count": 7,
+                "ratio": 0.25,
+                "missing": None,
+                "label": "ok",
+            }
+        )
+        assert result == {
+            "flag": True,
+            "count": 7,
+            "ratio": 0.25,
+            "missing": None,
+            "label": "ok",
+        }
 
 
 # ---------------------------------------------------------------------------
