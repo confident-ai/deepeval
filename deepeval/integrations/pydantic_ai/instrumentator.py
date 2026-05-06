@@ -584,6 +584,11 @@ class SpanInterceptor(SpanProcessor):
         parent_uuid = getattr(parent_span, "uuid", None)
         if not parent_uuid:
             return
+        if not getattr(parent_span, "integration", None):
+            try:
+                parent_span.integration = Integration.PYDANTIC_AI.value
+            except Exception:
+                pass
         try:
             self._set_attr_post_end(
                 span, "confident.span.parent_uuid", parent_uuid

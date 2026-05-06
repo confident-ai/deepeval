@@ -1040,6 +1040,13 @@ class Observer:
         if pending:
             apply_pending_to_span(span_instance, pending)
 
+        if (
+            parent_span
+            and not getattr(span_instance, "integration", None)
+            and getattr(parent_span, "integration", None)
+        ):
+            span_instance.integration = parent_span.integration
+
         # stash call arguments so they are available during the span lifetime
         setattr(span_instance, "_function_kwargs", self.function_kwargs)
 
