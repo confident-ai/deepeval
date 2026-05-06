@@ -1,12 +1,13 @@
 import asyncio
 import math
 import os
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
 from collections import deque
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
+from deepeval.tracing.integrations import Provider
 
 
 class Environment(Enum):
@@ -15,6 +16,40 @@ class Environment(Enum):
     STAGING = "staging"
     TESTING = "testing"
 
+
+def infer_provider_from_model(model: str) -> Optional[str]:
+    if not model or not isinstance(model, str):
+        return None
+    clean_name = model.lower().strip().replace(":", "/")
+    model_id = clean_name.split("/")[-1]
+
+    mapping: Dict[str, str] = {
+        "gpt": Provider.OPEN_AI.value,
+        "o1": Provider.OPEN_AI.value,
+        "o3": Provider.OPEN_AI.value,
+        "gemini": Provider.GEMINI.value,
+        "palm": Provider.GEMINI.value,
+        "gecko": Provider.GEMINI.value,
+        "claude": Provider.ANTHROPIC.value,
+        "sonnet": Provider.ANTHROPIC.value,
+        "opus": Provider.ANTHROPIC.value,
+        "haiku": Provider.ANTHROPIC.value,
+        "mistral": Provider.MISTRAL.value,
+        "mixtral": Provider.MISTRAL.value,
+        "pixtral": Provider.MISTRAL.value,
+        "codestral": Provider.MISTRAL.value,
+        "grok": Provider.X_AI.value,
+        "deepseek": Provider.DEEP_SEEK.value,
+    }
+    for prefix, provider in mapping.items():
+        if model_id.startswith(prefix):
+            return provider
+
+    for provider in set(mapping.values()):
+        if provider.lower() in clean_name:
+            return provider
+
+    return None
 
 def _strip_nul(s: str) -> str:
     # Replace embedded NUL, which Postgres cannot store in text/jsonb

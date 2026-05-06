@@ -500,6 +500,9 @@ class ConfidentSpanExporter(SpanExporter):
             raw_span_expected_tools = list(raw_span_expected_tools)
 
         raw_span_metadata = span.attributes.get("confident.span.metadata")
+        raw_span_integration = span.attributes.get(
+            "confident.span.integration"
+        )
 
         # Validate Span Attributes
         span_retrieval_context = parse_list_of_strings(
@@ -511,6 +514,7 @@ class ConfidentSpanExporter(SpanExporter):
         span_metadata = self._parse_json_string(raw_span_metadata)
         if span_metadata:
             span_metadata = make_json_serializable_for_metadata(span_metadata)
+        span_integration = parse_string(raw_span_integration)
 
         span_metric_collection = parse_string(raw_span_metric_collection)
 
@@ -532,6 +536,8 @@ class ConfidentSpanExporter(SpanExporter):
             base_span.expected_tools = span_expected_tools
         if span_metadata:
             base_span.metadata = span_metadata
+        if span_integration:
+            base_span.integration = span_integration
         if span_input:
             base_span.input = span_input
         if span_output:
@@ -579,6 +585,9 @@ class ConfidentSpanExporter(SpanExporter):
             input_token_count = span.attributes.get(
                 "confident.llm.input_token_count"
             )
+            provider = span.attributes.get("confident.span.provider")
+            if not provider:
+                provider = infer_provider_from_model(model)
             output_token_count = span.attributes.get(
                 "confident.llm.output_token_count"
             )
@@ -641,6 +650,7 @@ class ConfidentSpanExporter(SpanExporter):
                 end_time=end_time,
                 # llm span attributes
                 model=model,
+                provider=provider,
                 cost_per_input_token=cost_per_input_token,
                 cost_per_output_token=cost_per_output_token,
                 # prompt=prompt,
