@@ -15,7 +15,9 @@
       "model": "claude-sonnet-4-5",
       "prompt": {},
       "inputTokenCount": 25.0,
-      "outputTokenCount": 43.0
+      "outputTokenCount": 43.0,
+      "integration": "Anthropic",
+      "provider": "Anthropic"
     }
   ],
   "retrieverSpans": [],

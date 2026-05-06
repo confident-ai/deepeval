@@ -15,9 +15,10 @@
           "content": "Use the get_weather tool exactly once to get the weather in Tokyo."
         }
       ],
-      "output": "The weather in Tokyo is sunny with a temperature of 72\u00b0F.",
+      "output": "The weather in Tokyo is sunny with a temperature of 72°F.",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "PydanticAI"
     }
   ],
   "llmSpans": [
@@ -130,12 +131,14 @@
       "output": [
         {
           "role": "assistant",
-          "content": "The weather in Tokyo is sunny with a temperature of 72\u00b0F."
+          "content": "The weather in Tokyo is sunny with a temperature of 72°F."
         }
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 205.0,
-      "outputTokenCount": 15.0
+      "outputTokenCount": 15.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "8e24aae8da70bfc0",
@@ -238,7 +241,9 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 178.0,
-      "outputTokenCount": 14.0
+      "outputTokenCount": 14.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -254,7 +259,8 @@
       "input": {
         "city": "Tokyo"
       },
-      "output": "Sunny, 72F"
+      "output": "Sunny, 72F",
+      "integration": "PydanticAI"
     }
   ],
   "startTime": "2026-05-05T06:45:25.920Z",
@@ -277,6 +283,6 @@
       "content": "Use the get_weather tool exactly once to get the weather in Tokyo."
     }
   ],
-  "output": "The weather in Tokyo is sunny with a temperature of 72\u00b0F.",
+  "output": "The weather in Tokyo is sunny with a temperature of 72°F.",
   "status": "SUCCESS"
 }

@@ -3,7 +3,7 @@
   "baseSpans": [
     {
       "uuid": "a25db2a3-68b1-4b60-a4d3-4d3311216a1c",
-      "name": "Handoff \u2192 EnglishAgent",
+      "name": "Handoff → EnglishAgent",
       "status": "SUCCESS",
       "type": "base",
       "parentUuid": "6bd3910a-2a97-440e-8d1e-402449f481d4",
@@ -13,7 +13,8 @@
         "from_agent": "TriageAgent",
         "to_agent": "EnglishAgent"
       },
-      "input": {}
+      "input": {},
+      "integration": "OpenAIAgents"
     }
   ],
   "agentSpans": [
@@ -45,7 +46,8 @@
       ],
       "output": "Hello",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "OpenAIAgents"
     },
     {
       "uuid": "6bd3910a-2a97-440e-8d1e-402449f481d4",
@@ -67,7 +69,8 @@
       "agentHandoffs": [
         "SpanishAgent",
         "EnglishAgent"
-      ]
+      ],
+      "integration": "OpenAIAgents"
     }
   ],
   "llmSpans": [
@@ -123,7 +126,9 @@
       "output": "Hello",
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 55.0,
-      "outputTokenCount": 2.0
+      "outputTokenCount": 2.0,
+      "integration": "OpenAIAgents",
+      "provider": "OpenAI"
     },
     {
       "uuid": "da08668f-fdc1-4205-b038-a4d402351702",
@@ -192,7 +197,9 @@
       "output": "{\"call_id\": \"call_TcGFTO45nB3IDzdHwTAVLZyb\", \"name\": \"transfer_to_englishagent\", \"arguments\": \"{}\"}",
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 83.0,
-      "outputTokenCount": 14.0
+      "outputTokenCount": 14.0,
+      "integration": "OpenAIAgents",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

@@ -13,10 +13,15 @@
       "input": "Hello, how are you?",
       "output": "Hello! I'm doing well, thank you for asking! I'm here and ready to help you with any questions or tasks you might have. How are you doing today? Is there anything I can assist you with?",
       "model": "claude-sonnet-4-5",
-      "prompt": { "alias": "asd", "version": "00.00.01" },
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
       "inputTokenCount": 25.0,
       "outputTokenCount": 47.0,
-      "metricCollection": "test_collection_1"
+      "metricCollection": "test_collection_1",
+      "integration": "Anthropic",
+      "provider": "Anthropic"
     }
   ],
   "retrieverSpans": [],
@@ -27,7 +32,9 @@
   "metadata": {
     "test_metadata_1": "test_value_1"
   },
-  "tags": ["test_tag_1"],
+  "tags": [
+    "test_tag_1"
+  ],
   "environment": "development",
   "userId": "test_user_id_1",
   "threadId": "test_thread_id_1",

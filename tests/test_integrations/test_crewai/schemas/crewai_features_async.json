@@ -10,7 +10,8 @@
       "endTime": "2026-02-15T10:59:48.755Z",
       "input": {},
       "output": "Calculated metrics for: deterministic_test_input",
-      "metricCollection": "crew_metrics_v1"
+      "metricCollection": "crew_metrics_v1",
+      "integration": "CrewAI"
     },
     {
       "uuid": "6d6b8176-7764-496c-a486-e1ba94883380",
@@ -24,7 +25,8 @@
         "input": "Async Data"
       },
       "output": "Calculated metrics for: deterministic_test_input",
-      "metricCollection": "crew_metrics_v1"
+      "metricCollection": "crew_metrics_v1",
+      "integration": "CrewAI"
     }
   ],
   "agentSpans": [
@@ -49,7 +51,8 @@
       ],
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "agent_metrics_v1"
+      "metricCollection": "agent_metrics_v1",
+      "integration": "CrewAI"
     }
   ],
   "llmSpans": [
@@ -104,7 +107,9 @@
       "promptAlias": "asd",
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      "promptCommitHash": "bab04ec",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "0ae93119-57ff-4485-8257-494e83989e59",
@@ -138,7 +143,9 @@
       "promptAlias": "asd",
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      "promptCommitHash": "bab04ec",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -155,7 +162,8 @@
         "query": "deterministic_test_input"
       },
       "output": "Calculated metrics for: deterministic_test_input",
-      "metricCollection": "agent_metrics_v1"
+      "metricCollection": "agent_metrics_v1",
+      "integration": "CrewAI"
     }
   ],
   "startTime": "2026-02-15T10:59:46.551Z",

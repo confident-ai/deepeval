@@ -17,7 +17,8 @@
       ],
       "output": "9 multiplied by 6 is 54.",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "PydanticAI"
     }
   ],
   "llmSpans": [
@@ -118,7 +119,9 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 147.0,
-      "outputTokenCount": 10.0
+      "outputTokenCount": 10.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "279f318bfd8d0d89",
@@ -204,7 +207,9 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 116.0,
-      "outputTokenCount": 21.0
+      "outputTokenCount": 21.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -222,7 +227,8 @@
         "a": 9,
         "b": 6
       },
-      "output": "54.0"
+      "output": "54.0",
+      "integration": "PydanticAI"
     }
   ],
   "startTime": "2026-05-05T06:46:01.685Z",

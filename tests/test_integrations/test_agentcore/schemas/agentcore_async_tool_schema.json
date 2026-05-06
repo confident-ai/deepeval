@@ -10,7 +10,8 @@
       "startTime": "2026-05-05T18:12:30.284Z",
       "endTime": "2026-05-05T18:12:31.566Z",
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 9 multiplied by 6?",
-      "output": "<thinking>I need to use the calculate tool to multiply 9 by 6.</thinking>\n"
+      "output": "<thinking>I need to use the calculate tool to multiply 9 by 6.</thinking>\n",
+      "integration": "AgentCore"
     },
     {
       "uuid": "d998ce7d29f9c49f",
@@ -21,7 +22,8 @@
       "startTime": "2026-05-05T18:12:27.998Z",
       "endTime": "2026-05-05T18:12:30.284Z",
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 9 multiplied by 6?",
-      "output": "<thinking>I need to use the calculate tool to multiply 9 by 6.</thinking>\n"
+      "output": "<thinking>I need to use the calculate tool to multiply 9 by 6.</thinking>\n",
+      "integration": "AgentCore"
     }
   ],
   "agentSpans": [
@@ -35,7 +37,8 @@
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 9 multiplied by 6?",
       "output": "<thinking>I have the result of the multiplication operation.</thinking>\n\nThe result of 9 multiplied by 6 is 54.\n",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "AgentCore"
     }
   ],
   "llmSpans": [
@@ -51,7 +54,9 @@
       "output": "<thinking>I have the result of the multiplication operation.</thinking>\n\nThe result of 9 multiplied by 6 is 54.",
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 530.0,
-      "outputTokenCount": 29.0
+      "outputTokenCount": 29.0,
+      "integration": "AgentCore",
+      "provider": null
     },
     {
       "uuid": "3001c87849ee334f",
@@ -65,7 +70,9 @@
       "output": "<thinking>I need to use the calculate tool to multiply 9 by 6.</thinking>\n",
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 458.0,
-      "outputTokenCount": 43.0
+      "outputTokenCount": 43.0,
+      "integration": "AgentCore",
+      "provider": null
     }
   ],
   "retrieverSpans": [],
@@ -84,7 +91,8 @@
           "name": "calculate",
           "inputParameters": {}
         }
-      ]
+      ],
+      "integration": "AgentCore"
     }
   ],
   "startTime": "2026-05-05T18:12:27.998Z",

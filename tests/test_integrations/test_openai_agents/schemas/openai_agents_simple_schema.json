@@ -15,7 +15,8 @@
       "input": "Hello",
       "output": "Hi there! How can I assist you today?",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "OpenAIAgents"
     }
   ],
   "llmSpans": [
@@ -61,7 +62,9 @@
       "output": "Hi there! How can I assist you today?",
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 32.0,
-      "outputTokenCount": 11.0
+      "outputTokenCount": 11.0,
+      "integration": "OpenAIAgents",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

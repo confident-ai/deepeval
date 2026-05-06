@@ -23,7 +23,8 @@
             "unit": "c"
           }
         }
-      ]
+      ],
+      "integration": "OpenAI"
     }
   ],
   "agentSpans": [],
@@ -61,10 +62,12 @@
           "output": "{\"location\": \"San Francisco\", \"temperature\": 18, \"unit\": \"C\", \"condition\": \"partly cloudy\"}"
         }
       ],
-      "output": "The current weather in San Francisco is 18\u00b0C and partly cloudy. A great travel tip for this weather is to dress in layers, as the temperature can change throughout the day, and be sure to bring a light jacket for the cooler evenings.",
+      "output": "The current weather in San Francisco is 18°C and partly cloudy. A great travel tip for this weather is to dress in layers, as the temperature can change throughout the day, and be sure to bring a light jacket for the cooler evenings.",
       "model": "gpt-4o-mini",
       "inputTokenCount": 105.0,
-      "outputTokenCount": 49.0
+      "outputTokenCount": 49.0,
+      "integration": "OpenAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "e5d8b2d4-08c8-4acb-b74a-d742523dc4f7",
@@ -106,7 +109,9 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 108.0,
-      "outputTokenCount": 19.0
+      "outputTokenCount": 19.0,
+      "integration": "OpenAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -128,7 +133,8 @@
         "temperature": 18,
         "unit": "C",
         "condition": "partly cloudy"
-      }
+      },
+      "integration": "OpenAI"
     }
   ],
   "startTime": "2025-10-17T12:26:35.736Z",

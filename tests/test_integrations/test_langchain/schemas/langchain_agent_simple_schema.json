@@ -156,7 +156,8 @@
             "query": "weather san francisco"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -194,7 +195,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 191.0,
-      "outputTokenCount": 34.0
+      "outputTokenCount": 34.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d0510-420f-7fa0-9b05-ddca70b56eaf",
@@ -229,7 +232,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 145.0,
-      "outputTokenCount": 90.0
+      "outputTokenCount": 90.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -253,7 +258,8 @@
         "name": "search_web",
         "tool_call_id": "call_765uvrSvWiO6ku3YwXabHVvM",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:47:24.814Z",

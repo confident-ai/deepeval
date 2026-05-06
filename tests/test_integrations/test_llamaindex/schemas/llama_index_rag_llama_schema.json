@@ -13,7 +13,8 @@
       },
       "output": {
         "response": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "RetrieverQueryEngine._query-9603cac9-f63a-4efd-a46d-7d4e828ad25b",
@@ -33,7 +34,8 @@
       },
       "output": {
         "response": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "CompactAndRefine.synthesize-27202316-de57-430f-870b-b04d6ef02f38",
@@ -72,7 +74,8 @@
       },
       "output": {
         "response": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "CompactAndRefine.get_response-cf4101f4-3845-49c9-9f90-fc3570c96453",
@@ -88,7 +91,8 @@
           "LlamaIndex is a data framework for your LLM applications."
         ]
       },
-      "output": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
+      "output": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications.",
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "CompactAndRefine.get_response-0b05a246-9426-4df3-8438-7678e835a4ca",
@@ -105,7 +109,8 @@
         ],
         "prev_response": null
       },
-      "output": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
+      "output": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications.",
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "DefaultRefineProgram.__call__-1cd3eedb-81bd-4671-806a-79f77e71ae1a",
@@ -123,7 +128,8 @@
       "output": {
         "answer": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications.",
         "query_satisfied": true
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAI.predict-6302e4e1-48a2-44ec-bce7-c5a5008b810a",
@@ -182,7 +188,8 @@
           "context_str": "LlamaIndex is a data framework for your LLM applications."
         }
       },
-      "output": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
+      "output": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications.",
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAI.chat-3ee963fb-fd53-466f-9547-f5fbf8225d2e",
@@ -266,7 +273,8 @@
           "completion_tokens": 18,
           "total_tokens": 147
         }
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "TokenTextSplitter.split_text-8ebafa59-cbf3-4e16-b03f-bfa9682680d2",
@@ -281,7 +289,8 @@
       },
       "output": [
         "LlamaIndex is a data framework for your LLM applications."
-      ]
+      ],
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "TokenTextSplitter.split_text-e3a119ba-5f47-4168-8aac-a4b146a702ae",
@@ -296,7 +305,8 @@
       },
       "output": [
         "LlamaIndex is a data framework for your LLM applications."
-      ]
+      ],
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "DeterministicRetriever.retrieve-1327e55b-e999-44e2-b719-f95888d13c1e",
@@ -335,7 +345,8 @@
       ],
       "retrievalContext": [
         "LlamaIndex is a data framework for your LLM applications."
-      ]
+      ],
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "DeterministicRetriever._retrieve-ef279b1d-9ff2-4685-a0d6-3ede58650cd2",
@@ -371,7 +382,8 @@
           "score": 0.98,
           "class_name": "NodeWithScore"
         }
-      ]
+      ],
+      "integration": "LlamaIndex"
     }
   ],
   "agentSpans": [],
@@ -400,7 +412,9 @@
           "content": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
         }
       ],
-      "model": "gpt-4o"
+      "model": "gpt-4o",
+      "integration": "LlamaIndex",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

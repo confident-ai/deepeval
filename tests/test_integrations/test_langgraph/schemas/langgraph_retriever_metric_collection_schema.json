@@ -91,7 +91,8 @@
             "type": "Document"
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-955e-7c53-b956-f27e2d66e410",
@@ -184,7 +185,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-955d-76f1-bb7e-b9809b35d237",
@@ -222,7 +224,8 @@
             "type": "Document"
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -256,7 +259,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 76.0,
-      "outputTokenCount": 167.0
+      "outputTokenCount": 167.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [
@@ -274,7 +279,8 @@
         "page_content='Python supports multiple programming paradigms including procedural and OOP.' metadata={'source': 'doc2'}"
       ],
       "embedder": "unknown",
-      "metricCollection": "retriever_quality"
+      "metricCollection": "retriever_quality",
+      "integration": "LangChain"
     }
   ],
   "toolSpans": [],

@@ -3,14 +3,18 @@
   "baseSpans": [
     {
       "uuid": "df358166-d274-45a1-8c9b-2989db747c6a",
-      "name": "Handoff \u2192 Spanish agent",
+      "name": "Handoff → Spanish agent",
       "status": "SUCCESS",
       "type": "base",
       "parentUuid": "cddd73f0-8b51-4a0d-b193-55a2d95eaccd",
       "startTime": "2025-10-03T13:23:10.579Z",
       "endTime": "2025-10-03T13:23:10.579Z",
-      "metadata": { "from_agent": "Triage agent", "to_agent": "Spanish agent" },
-      "input": {}
+      "metadata": {
+        "from_agent": "Triage agent",
+        "to_agent": "Spanish agent"
+      },
+      "input": {},
+      "integration": "OpenAIAgents"
     }
   ],
   "agentSpans": [
@@ -21,7 +25,9 @@
       "type": "agent",
       "startTime": "2025-10-03T13:23:10.579Z",
       "endTime": "2025-10-03T13:23:12.289Z",
-      "metadata": { "output_type": "str" },
+      "metadata": {
+        "output_type": "str"
+      },
       "input": [
         {
           "arguments": "{}",
@@ -38,9 +44,10 @@
           "type": "function_call_output"
         }
       ],
-      "output": "\u00a1Hola! Estoy bien, gracias. \u00bfY t\u00fa, c\u00f3mo est\u00e1s? \u00bfEn qu\u00e9 puedo ayudarte hoy?",
+      "output": "¡Hola! Estoy bien, gracias. ¿Y tú, cómo estás? ¿En qué puedo ayudarte hoy?",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "OpenAIAgents"
     },
     {
       "uuid": "cddd73f0-8b51-4a0d-b193-55a2d95eaccd",
@@ -49,15 +56,21 @@
       "type": "agent",
       "startTime": "2025-10-03T13:23:07.597Z",
       "endTime": "2025-10-03T13:23:10.579Z",
-      "metadata": { "output_type": "str" },
-      "input": "Hola, \u00bfc\u00f3mo est\u00e1s?",
+      "metadata": {
+        "output_type": "str"
+      },
+      "input": "Hola, ¿cómo estás?",
       "output": {
         "call_id": "call_zJl6tUdnwPMMhRxrzPqlXH0I",
         "name": "transfer_to_spanish_agent",
         "arguments": "{}"
       },
       "availableTools": [],
-      "agentHandoffs": ["Spanish agent", "English agent"]
+      "agentHandoffs": [
+        "Spanish agent",
+        "English agent"
+      ],
+      "integration": "OpenAIAgents"
     }
   ],
   "llmSpans": [
@@ -79,7 +92,12 @@
           "tools": [],
           "top_p": 1.0,
           "reasoning": {},
-          "text": { "format": { "type": "text" }, "verbosity": "medium" },
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
           "truncation": "disabled"
         }
       },
@@ -92,7 +110,7 @@
         {
           "type": "message",
           "role": "user",
-          "content": "Hola, \u00bfc\u00f3mo est\u00e1s?"
+          "content": "Hola, ¿cómo estás?"
         },
         {
           "call_id": "call_zJl6tUdnwPMMhRxrzPqlXH0I",
@@ -105,10 +123,12 @@
           "output": "{\"assistant\": \"Spanish agent\"}"
         }
       ],
-      "output": "\u00a1Hola! Estoy bien, gracias. \u00bfY t\u00fa, c\u00f3mo est\u00e1s? \u00bfEn qu\u00e9 puedo ayudarte hoy?",
+      "output": "¡Hola! Estoy bien, gracias. ¿Y tú, cómo estás? ¿En qué puedo ayudarte hoy?",
       "model": "gpt-4.1-2025-04-14",
       "inputTokenCount": 54.0,
-      "outputTokenCount": 23.0
+      "outputTokenCount": 23.0,
+      "integration": "OpenAIAgents",
+      "provider": "OpenAI"
     },
     {
       "uuid": "e17f9ede-9c63-4eca-8494-089e499640b8",
@@ -153,7 +173,12 @@
           ],
           "top_p": 1.0,
           "reasoning": {},
-          "text": { "format": { "type": "text" }, "verbosity": "medium" },
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
           "truncation": "disabled"
         }
       },
@@ -166,13 +191,15 @@
         {
           "type": "message",
           "role": "user",
-          "content": "Hola, \u00bfc\u00f3mo est\u00e1s?"
+          "content": "Hola, ¿cómo estás?"
         }
       ],
       "output": "{\"call_id\": \"call_zJl6tUdnwPMMhRxrzPqlXH0I\", \"name\": \"transfer_to_spanish_agent\", \"arguments\": \"{}\"}",
       "model": "gpt-4.1-2025-04-14",
       "inputTokenCount": 87.0,
-      "outputTokenCount": 14.0
+      "outputTokenCount": 14.0,
+      "integration": "OpenAIAgents",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -191,9 +218,9 @@
     {
       "type": "message",
       "role": "user",
-      "content": "Hola, \u00bfc\u00f3mo est\u00e1s?"
+      "content": "Hola, ¿cómo estás?"
     }
   ],
-  "output": "\u00a1Hola! Estoy bien, gracias. \u00bfY t\u00fa, c\u00f3mo est\u00e1s? \u00bfEn qu\u00e9 puedo ayudarte hoy?",
+  "output": "¡Hola! Estoy bien, gracias. ¿Y tú, cómo estás? ¿En qué puedo ayudarte hoy?",
   "status": "SUCCESS"
 }

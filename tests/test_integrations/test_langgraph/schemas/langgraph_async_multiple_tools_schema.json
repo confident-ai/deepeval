@@ -209,7 +209,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-a7e5-7541-a9a7-9ec49f5ced14",
@@ -413,7 +414,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-b113-7910-bdb6-ef87508eb00e",
@@ -614,7 +616,8 @@
           }
         ]
       },
-      "output": "__end__"
+      "output": "__end__",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-a7e3-71b0-aa2d-ef8241c2be9e",
@@ -790,7 +793,8 @@
             "target_language": "Spanish"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-9f16-7c71-aa51-5ed745ef1c5f",
@@ -937,7 +941,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-a7e1-7633-bc89-e5cb125f39d7",
@@ -1081,7 +1086,8 @@
           }
         ]
       },
-      "output": "tools"
+      "output": "tools",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-9f14-7210-9cd0-768ea11997cc",
@@ -1189,7 +1195,8 @@
             "query": "Python (programming language)"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-9222-7a80-8ccd-66713c810796",
@@ -1269,7 +1276,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-9f13-7422-9ba9-f7793b785b34",
@@ -1346,7 +1354,8 @@
           }
         ]
       },
-      "output": "tools"
+      "output": "tools",
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -1396,7 +1405,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 279.0,
-      "outputTokenCount": 16.0
+      "outputTokenCount": 16.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d0516-9f16-7c71-aa51-5ee6accd5d02",
@@ -1444,7 +1455,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 229.0,
-      "outputTokenCount": 161.0
+      "outputTokenCount": 161.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d0516-9223-7672-9df1-8e549ba2dee8",
@@ -1483,7 +1496,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 188.0,
-      "outputTokenCount": 220.0
+      "outputTokenCount": 220.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -1509,7 +1524,8 @@
         "id": "2246c241-ab74-4892-be04-c5312f07c84a",
         "tool_call_id": "call_IUrnZe0BTqdXLPOVjMlnPNfm",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-9f15-7ae1-ab2b-bc8b619dd53f",
@@ -1531,7 +1547,8 @@
         "id": "81688632-50db-4e64-ac55-d038ea13ecd5",
         "tool_call_id": "call_mLDK6N4Ce6goNS8kGNzKEavJ",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:54:18.529Z",

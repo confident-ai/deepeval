@@ -10,7 +10,8 @@
       "startTime": "2026-05-05T18:12:09.546Z",
       "endTime": "2026-05-05T18:12:10.883Z",
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
-      "output": "<thinking>I need to perform an addition operation using the 'calculate' tool.</thinking>\n"
+      "output": "<thinking>I need to perform an addition operation using the 'calculate' tool.</thinking>\n",
+      "integration": "AgentCore"
     },
     {
       "uuid": "db123810231ec937",
@@ -21,7 +22,8 @@
       "startTime": "2026-05-05T18:12:07.228Z",
       "endTime": "2026-05-05T18:12:09.546Z",
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
-      "output": "<thinking>I need to perform an addition operation using the 'calculate' tool.</thinking>\n"
+      "output": "<thinking>I need to perform an addition operation using the 'calculate' tool.</thinking>\n",
+      "integration": "AgentCore"
     }
   ],
   "agentSpans": [
@@ -35,7 +37,8 @@
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
       "output": "<thinking>The 'calculate' tool has returned the result of the addition operation.</thinking> The result of 15 plus 25 is 40.\n",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "AgentCore"
     }
   ],
   "llmSpans": [
@@ -51,7 +54,9 @@
       "output": "<thinking>The 'calculate' tool has returned the result of the addition operation.</thinking> The result of 15 plus 25 is 40.",
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 532.0,
-      "outputTokenCount": 35.0
+      "outputTokenCount": 35.0,
+      "integration": "AgentCore",
+      "provider": null
     },
     {
       "uuid": "550f37dc8c5803bf",
@@ -65,7 +70,9 @@
       "output": "<thinking>I need to perform an addition operation using the 'calculate' tool.</thinking>\n",
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 459.0,
-      "outputTokenCount": 44.0
+      "outputTokenCount": 44.0,
+      "integration": "AgentCore",
+      "provider": null
     }
   ],
   "retrieverSpans": [],
@@ -85,7 +92,8 @@
           "inputParameters": {}
         }
       ],
-      "metricCollection": "calculator-metrics"
+      "metricCollection": "calculator-metrics",
+      "integration": "AgentCore"
     }
   ],
   "startTime": "2026-05-05T18:12:07.228Z",

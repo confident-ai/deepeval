@@ -10,7 +10,8 @@
       "startTime": "2026-05-05T18:12:33.925Z",
       "endTime": "2026-05-05T18:12:35.407Z",
       "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
-      "output": "<thinking>The User has requested the current weather and time for Tokyo. To provide this information, I will need to call both the get_weather and get_time tools, each exactly once, with Tokyo as the city.</thinking>\n"
+      "output": "<thinking>The User has requested the current weather and time for Tokyo. To provide this information, I will need to call both the get_weather and get_time tools, each exactly once, with Tokyo as the city.</thinking>\n",
+      "integration": "AgentCore"
     },
     {
       "uuid": "8eefb230a739b2f9",
@@ -21,7 +22,8 @@
       "startTime": "2026-05-05T18:12:31.646Z",
       "endTime": "2026-05-05T18:12:33.925Z",
       "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
-      "output": "<thinking>The User has requested the current weather and time for Tokyo. To provide this information, I will need to call both the get_weather and get_time tools, each exactly once, with Tokyo as the city.</thinking>\n"
+      "output": "<thinking>The User has requested the current weather and time for Tokyo. To provide this information, I will need to call both the get_weather and get_time tools, each exactly once, with Tokyo as the city.</thinking>\n",
+      "integration": "AgentCore"
     }
   ],
   "agentSpans": [
@@ -35,7 +37,8 @@
       "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
       "output": "<thinking>Both tools have provided their results. I can now give the User the current weather and time for Tokyo.</thinking>\n\nThe current weather in Tokyo is Sunny, with a temperature of 72F, and the current time is 3:00 PM JST.\n",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "AgentCore"
     }
   ],
   "llmSpans": [
@@ -51,7 +54,9 @@
       "output": "<thinking>Both tools have provided their results. I can now give the User the current weather and time for Tokyo.</thinking>\n\nThe current weather in Tokyo is Sunny, with a temperature of 72F, and the current time is 3:00 PM JST.",
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 626.0,
-      "outputTokenCount": 57.0
+      "outputTokenCount": 57.0,
+      "integration": "AgentCore",
+      "provider": null
     },
     {
       "uuid": "823515d2cf8dcc45",
@@ -65,7 +70,9 @@
       "output": "<thinking>The User has requested the current weather and time for Tokyo. To provide this information, I will need to call both the get_weather and get_time tools, each exactly once, with Tokyo as the city.</thinking>\n",
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 500.0,
-      "outputTokenCount": 72.0
+      "outputTokenCount": 72.0,
+      "integration": "AgentCore",
+      "provider": null
     }
   ],
   "retrieverSpans": [],
@@ -84,7 +91,8 @@
           "name": "get_time",
           "inputParameters": {}
         }
-      ]
+      ],
+      "integration": "AgentCore"
     },
     {
       "uuid": "c48a422f21e8bbaf",
@@ -100,7 +108,8 @@
           "name": "get_weather",
           "inputParameters": {}
         }
-      ]
+      ],
+      "integration": "AgentCore"
     }
   ],
   "startTime": "2026-05-05T18:12:31.646Z",

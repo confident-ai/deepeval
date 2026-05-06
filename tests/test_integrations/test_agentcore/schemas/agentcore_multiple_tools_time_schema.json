@@ -10,7 +10,8 @@
       "startTime": "2026-05-05T18:12:16.878Z",
       "endTime": "2026-05-05T18:12:18.075Z",
       "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London.",
-      "output": "<thinking> I need to get the current time in London using the get_time tool. This is a straightforward request, so I will use the tool directly. </thinking>\n"
+      "output": "<thinking> I need to get the current time in London using the get_time tool. This is a straightforward request, so I will use the tool directly. </thinking>\n",
+      "integration": "AgentCore"
     },
     {
       "uuid": "6886956b85828432",
@@ -21,7 +22,8 @@
       "startTime": "2026-05-05T18:12:14.709Z",
       "endTime": "2026-05-05T18:12:16.877Z",
       "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London.",
-      "output": "<thinking> I need to get the current time in London using the get_time tool. This is a straightforward request, so I will use the tool directly. </thinking>\n"
+      "output": "<thinking> I need to get the current time in London using the get_time tool. This is a straightforward request, so I will use the tool directly. </thinking>\n",
+      "integration": "AgentCore"
     }
   ],
   "agentSpans": [
@@ -35,7 +37,8 @@
       "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London.",
       "output": "The current time in London is 7:00 AM GMT.\n",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "AgentCore"
     }
   ],
   "llmSpans": [
@@ -51,7 +54,9 @@
       "output": "The current time in London is 7:00 AM GMT.",
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 578.0,
-      "outputTokenCount": 15.0
+      "outputTokenCount": 15.0,
+      "integration": "AgentCore",
+      "provider": null
     },
     {
       "uuid": "3d613342030dfab7",
@@ -65,7 +70,9 @@
       "output": "<thinking> I need to get the current time in London using the get_time tool. This is a straightforward request, so I will use the tool directly. </thinking>\n",
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 493.0,
-      "outputTokenCount": 52.0
+      "outputTokenCount": 52.0,
+      "integration": "AgentCore",
+      "provider": null
     }
   ],
   "retrieverSpans": [],
@@ -84,7 +91,8 @@
           "name": "get_time",
           "inputParameters": {}
         }
-      ]
+      ],
+      "integration": "AgentCore"
     }
   ],
   "startTime": "2026-05-05T18:12:14.709Z",

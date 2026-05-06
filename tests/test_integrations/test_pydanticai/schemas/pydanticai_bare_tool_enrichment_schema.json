@@ -17,7 +17,8 @@
       ],
       "output": "The result for the key 'foobar' is: **resolved-value-for-foobar**.",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "PydanticAI"
     }
   ],
   "llmSpans": [
@@ -107,7 +108,9 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 118.0,
-      "outputTokenCount": 19.0
+      "outputTokenCount": 19.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "3102fbd78136b39d",
@@ -182,7 +185,9 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 93.0,
-      "outputTokenCount": 13.0
+      "outputTokenCount": 13.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -202,7 +207,8 @@
       "input": {
         "key": "foobar"
       },
-      "output": "resolved-value-for-foobar"
+      "output": "resolved-value-for-foobar",
+      "integration": "PydanticAI"
     }
   ],
   "startTime": "2026-05-05T07:12:02.424Z",

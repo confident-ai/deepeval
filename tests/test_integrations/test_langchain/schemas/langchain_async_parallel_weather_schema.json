@@ -220,7 +220,8 @@
             "city": "London"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -266,7 +267,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 250.0,
-      "outputTokenCount": 37.0
+      "outputTokenCount": 37.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d050e-afbc-7842-8e2d-d8bd12d15d9a",
@@ -315,7 +318,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 152.0,
-      "outputTokenCount": 260.0
+      "outputTokenCount": 260.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -339,7 +344,8 @@
         "name": "get_weather",
         "tool_call_id": "call_hte01RuC9DrzleZl9kPl3toW",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d050e-c117-7ff3-8268-888d345f855b",
@@ -360,7 +366,8 @@
         "name": "get_weather",
         "tool_call_id": "call_1u8e4JKBc8HlIdfUNmW8eK1O",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d050e-c111-7cb1-8dbc-6267657045f9",
@@ -381,7 +388,8 @@
         "name": "get_weather",
         "tool_call_id": "call_sX82jp0qvkXg94OxQGurDBHJ",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:45:41.819Z",

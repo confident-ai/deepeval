@@ -13,7 +13,8 @@
       },
       "output": {
         "response": "LlamaIndex is a data framework for LLM applications."
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "RetrieverQueryEngine._query-685c4ee4-19c1-419d-b7fe-46c8e5a9b679",
@@ -1570,7 +1571,8 @@
       },
       "output": {
         "response": "LlamaIndex is a data framework for LLM applications."
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "CompactAndRefine.synthesize-04e7b5bb-be90-4353-ba37-3923080040fc",
@@ -3146,7 +3148,8 @@
       },
       "output": {
         "response": "LlamaIndex is a data framework for LLM applications."
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "CompactAndRefine.get_response-7ae12aaf-8b31-43b3-9468-ae1034f83960",
@@ -3162,7 +3165,8 @@
           "LlamaIndex is a data framework for LLM applications."
         ]
       },
-      "output": "LlamaIndex is a data framework for LLM applications."
+      "output": "LlamaIndex is a data framework for LLM applications.",
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "CompactAndRefine.get_response-14823dd7-0f8e-45b7-a45a-747d4cd55531",
@@ -3179,7 +3183,8 @@
         ],
         "prev_response": null
       },
-      "output": "LlamaIndex is a data framework for LLM applications."
+      "output": "LlamaIndex is a data framework for LLM applications.",
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "DefaultRefineProgram.__call__-5d53a53c-6766-4187-9a0e-46fcf371f0db",
@@ -3197,7 +3202,8 @@
       "output": {
         "answer": "LlamaIndex is a data framework for LLM applications.",
         "query_satisfied": true
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAI.predict-693f06ae-847a-41a6-ad23-eb1b51fdc3ca",
@@ -3256,7 +3262,8 @@
           "context_str": "LlamaIndex is a data framework for LLM applications."
         }
       },
-      "output": "LlamaIndex is a data framework for LLM applications."
+      "output": "LlamaIndex is a data framework for LLM applications.",
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAI.chat-16002ddf-2c8a-48af-8909-698b5d887d8f",
@@ -3340,7 +3347,8 @@
           "completion_tokens": 12,
           "total_tokens": 140
         }
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "TokenTextSplitter.split_text-ce85bc10-c42f-4b8f-ab63-061a9e8ec7fd",
@@ -3355,7 +3363,8 @@
       },
       "output": [
         "LlamaIndex is a data framework for LLM applications."
-      ]
+      ],
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "TokenTextSplitter.split_text-9d5a59f5-a486-48ab-9e42-7836a78ac9f0",
@@ -3370,7 +3379,8 @@
       },
       "output": [
         "LlamaIndex is a data framework for LLM applications."
-      ]
+      ],
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "VectorIndexRetriever.retrieve-35a0b916-3d14-4348-91eb-0cf219b5c723",
@@ -4946,7 +4956,8 @@
       ],
       "retrievalContext": [
         "LlamaIndex is a data framework for LLM applications."
-      ]
+      ],
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "VectorIndexRetriever._retrieve-45025f4c-c452-4a2e-b746-6e7f5b19e559",
@@ -6519,7 +6530,8 @@
           "score": 0.9245890166588201,
           "class_name": "NodeWithScore"
         }
-      ]
+      ],
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAIEmbedding.get_query_embedding-1263f354-4da7-4f0f-b4da-f4b28f032619",
@@ -8069,7 +8081,8 @@
         0.001904715783894062,
         -0.005778351332992315,
         -0.045969996601343155
-      ]
+      ],
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAIEmbedding._get_query_embedding-61e9cc3f-22cd-491b-ad97-3828ba105841",
@@ -9619,7 +9632,8 @@
         0.001904715783894062,
         -0.005778351332992315,
         -0.045969996601343155
-      ]
+      ],
+      "integration": "LlamaIndex"
     }
   ],
   "agentSpans": [],
@@ -9648,7 +9662,9 @@
           "content": "LlamaIndex is a data framework for LLM applications."
         }
       ],
-      "model": "gpt-4o"
+      "model": "gpt-4o",
+      "integration": "LlamaIndex",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

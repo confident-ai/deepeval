@@ -91,7 +91,8 @@
             "type": "Document"
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -125,7 +126,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 76.0,
-      "outputTokenCount": 167.0
+      "outputTokenCount": 167.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [
@@ -142,7 +145,8 @@
         "page_content='Python is a high-level programming language known for its simplicity.' metadata={'source': 'doc1'}",
         "page_content='Python supports multiple programming paradigms including procedural and OOP.' metadata={'source': 'doc2'}"
       ],
-      "embedder": "unknown"
+      "embedder": "unknown",
+      "integration": "LangChain"
     }
   ],
   "toolSpans": [],

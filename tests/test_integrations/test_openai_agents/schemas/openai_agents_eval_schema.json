@@ -16,7 +16,8 @@
       "output": "Hello! How can I assist you today?",
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "test_agent_metrics"
+      "metricCollection": "test_agent_metrics",
+      "integration": "OpenAIAgents"
     }
   ],
   "llmSpans": [
@@ -63,7 +64,9 @@
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 19.0,
       "outputTokenCount": 10.0,
-      "metricCollection": "test_llm_metrics"
+      "metricCollection": "test_llm_metrics",
+      "integration": "OpenAIAgents",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

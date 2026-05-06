@@ -143,7 +143,8 @@
           }
         ],
         "intent": "research"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-a11b-7593-b1b6-62821ba8765a",
@@ -281,7 +282,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-a7b8-7293-a8e3-b4b74b0897ca",
@@ -416,7 +418,8 @@
         ],
         "intent": "research"
       },
-      "output": "__end__"
+      "output": "__end__",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-a118-7af1-9529-05e8b5cbe6a5",
@@ -525,7 +528,8 @@
             "topic": "quantum computing"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-a11b-7593-b1b6-627bc682ca4d",
@@ -613,7 +617,8 @@
         ],
         "intent": "research"
       },
-      "output": "research"
+      "output": "research",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-9bbb-7930-ac4c-53c960990310",
@@ -694,7 +699,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-a116-7b80-81dc-0d45c375e0f3",
@@ -772,7 +778,8 @@
         ],
         "intent": "research"
       },
-      "output": "tools"
+      "output": "tools",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-9bba-7683-b219-cd8055898b89",
@@ -804,7 +811,8 @@
           }
         ],
         "intent": "research"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-9bba-7683-b219-cd92f81637b4",
@@ -826,7 +834,8 @@
         ],
         "intent": "research"
       },
-      "output": "research"
+      "output": "research",
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -876,7 +885,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 259.0,
-      "outputTokenCount": 78.0
+      "outputTokenCount": 78.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d0517-9bbb-7930-ac4c-53d814374f36",
@@ -923,7 +934,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 219.0,
-      "outputTokenCount": 26.0
+      "outputTokenCount": 26.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -948,7 +961,8 @@
         "id": "feee1da0-6961-4a25-b57e-47b4cd0243fd",
         "tool_call_id": "call_RoJnzfSfKeUqGcYAdV5ydht2",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:55:26.521Z",

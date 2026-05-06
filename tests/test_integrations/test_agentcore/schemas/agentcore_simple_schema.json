@@ -9,7 +9,8 @@
       "parentUuid": "76606151d240386d",
       "startTime": "2026-05-05T18:12:00.714Z",
       "endTime": "2026-05-05T18:12:03.139Z",
-      "input": "Be concise, reply with one short sentence only. Say hello in exactly three words."
+      "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
+      "integration": "AgentCore"
     }
   ],
   "agentSpans": [
@@ -23,7 +24,8 @@
       "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
       "output": "Hello, wonderful, friend.\n",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "AgentCore"
     }
   ],
   "llmSpans": [
@@ -39,7 +41,9 @@
       "output": "Hello, wonderful, friend.",
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 17.0,
-      "outputTokenCount": 7.0
+      "outputTokenCount": 7.0,
+      "integration": "AgentCore",
+      "provider": null
     }
   ],
   "retrieverSpans": [],

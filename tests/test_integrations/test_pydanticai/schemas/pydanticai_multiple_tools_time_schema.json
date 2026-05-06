@@ -17,7 +17,8 @@
       ],
       "output": "The current time in London is 7:00 AM GMT.",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "PydanticAI"
     }
   ],
   "llmSpans": [
@@ -135,7 +136,9 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 206.0,
-      "outputTokenCount": 14.0
+      "outputTokenCount": 14.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "b4362f63e80a5a2a",
@@ -238,7 +241,9 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 179.0,
-      "outputTokenCount": 14.0
+      "outputTokenCount": 14.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -254,7 +259,8 @@
       "input": {
         "city": "London"
       },
-      "output": "7:00 AM GMT"
+      "output": "7:00 AM GMT",
+      "integration": "PydanticAI"
     }
   ],
   "startTime": "2026-05-05T06:45:28.878Z",

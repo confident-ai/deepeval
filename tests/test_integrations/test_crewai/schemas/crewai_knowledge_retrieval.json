@@ -9,7 +9,8 @@
       "startTime": "2026-02-15T10:22:12.794Z",
       "endTime": "2026-02-15T10:22:14.830Z",
       "input": {},
-      "output": "I'm sorry, but I cannot assist with that."
+      "output": "I'm sorry, but I cannot assist with that.",
+      "integration": "CrewAI"
     }
   ],
   "agentSpans": [
@@ -33,7 +34,8 @@
         }
       ],
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "CrewAI"
     }
   ],
   "llmSpans": [
@@ -56,7 +58,9 @@
         }
       ],
       "output": "I'm sorry, but I cannot assist with that.",
-      "model": "gpt-4o-mini"
+      "model": "gpt-4o-mini",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "18e86770-a636-4597-8d14-334e06b8e7b7",
@@ -77,7 +81,9 @@
         }
       ],
       "output": "Retrieve the exact launch code from the knowledge base for the term \"launch code.\"",
-      "model": "gpt-4o-mini"
+      "model": "gpt-4o-mini",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -91,7 +97,8 @@
       "startTime": "2026-02-15T10:22:12.802Z",
       "endTime": "2026-02-15T10:22:14.020Z",
       "input": "Retrieve the exact launch code from the knowledge base for the term \"launch code.\"",
-      "output": ""
+      "output": "",
+      "integration": "CrewAI"
     }
   ],
   "startTime": "2026-02-15T10:22:12.794Z",

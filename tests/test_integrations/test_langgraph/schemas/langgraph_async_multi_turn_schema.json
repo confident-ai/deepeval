@@ -96,7 +96,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 5 apples added to your cart. Anything else?",
+            "content": "Done — 5 apples added to your cart. Anything else?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -216,7 +216,7 @@
             "status": "success"
           },
           {
-            "content": "Coupon applied \u2014 FREESHIP has been added to your order. Would you like to checkout now?",
+            "content": "Coupon applied — FREESHIP has been added to your order. Would you like to checkout now?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -263,7 +263,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-41e1-7ba1-9613-3486dc86d62b",
@@ -350,7 +351,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 5 apples added to your cart. Anything else?",
+            "content": "Done — 5 apples added to your cart. Anything else?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -474,7 +475,7 @@
       "output": {
         "messages": [
           {
-            "content": "Coupon applied \u2014 FREESHIP has been added to your order. Would you like to checkout now?",
+            "content": "Coupon applied — FREESHIP has been added to your order. Would you like to checkout now?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -521,7 +522,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-457c-7093-a1ef-12acddffa0fe",
@@ -608,7 +610,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 5 apples added to your cart. Anything else?",
+            "content": "Done — 5 apples added to your cart. Anything else?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -728,7 +730,7 @@
             "status": "success"
           },
           {
-            "content": "Coupon applied \u2014 FREESHIP has been added to your order. Would you like to checkout now?",
+            "content": "Coupon applied — FREESHIP has been added to your order. Would you like to checkout now?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -776,7 +778,8 @@
           }
         ]
       },
-      "output": "__end__"
+      "output": "__end__",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-41e0-7801-8cc7-9d647709a66f",
@@ -863,7 +866,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 5 apples added to your cart. Anything else?",
+            "content": "Done — 5 apples added to your cart. Anything else?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -1005,7 +1008,8 @@
             "code": "FREESHIP"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-3c33-7dd0-83ce-0c69112271ee",
@@ -1092,7 +1096,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 5 apples added to your cart. Anything else?",
+            "content": "Done — 5 apples added to your cart. Anything else?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -1206,7 +1210,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-41df-79f1-bab9-03d80a47c727",
@@ -1293,7 +1298,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 5 apples added to your cart. Anything else?",
+            "content": "Done — 5 apples added to your cart. Anything else?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -1404,7 +1409,8 @@
           }
         ]
       },
-      "output": "tools"
+      "output": "tools",
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -1436,7 +1442,7 @@
         },
         {
           "role": "ai",
-          "content": "Done \u2014 5 apples added to your cart. Anything else?"
+          "content": "Done — 5 apples added to your cart. Anything else?"
         },
         {
           "role": "human",
@@ -1477,12 +1483,14 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Coupon applied \u2014 FREESHIP has been added to your order. Would you like to checkout now?",
+        "content": "Coupon applied — FREESHIP has been added to your order. Would you like to checkout now?",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 352.0,
-      "outputTokenCount": 23.0
+      "outputTokenCount": 23.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d0517-3c33-7dd0-83ce-0c7cb1cb0713",
@@ -1511,7 +1519,7 @@
         },
         {
           "role": "ai",
-          "content": "Done \u2014 5 apples added to your cart. Anything else?"
+          "content": "Done — 5 apples added to your cart. Anything else?"
         },
         {
           "role": "human",
@@ -1557,7 +1565,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 318.0,
-      "outputTokenCount": 26.0
+      "outputTokenCount": 26.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -1582,7 +1592,8 @@
         "id": "415cd306-fe90-4c79-830c-4fa2689151fa",
         "tool_call_id": "call_1wYqq5af9e79yhRngvD9L1MT",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:55:02.066Z",
@@ -1683,7 +1694,7 @@
         "status": "success"
       },
       {
-        "content": "Done \u2014 5 apples added to your cart. Anything else?",
+        "content": "Done — 5 apples added to your cart. Anything else?",
         "additional_kwargs": {
           "refusal": null
         },
@@ -1803,7 +1814,7 @@
         "status": "success"
       },
       {
-        "content": "Coupon applied \u2014 FREESHIP has been added to your order. Would you like to checkout now?",
+        "content": "Coupon applied — FREESHIP has been added to your order. Would you like to checkout now?",
         "additional_kwargs": {
           "refusal": null
         },

@@ -61,7 +61,8 @@
           ],
           "retry_messages": []
         }
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "FunctionAgent.run_agent_step-dcf18998-57c1-4e3d-b107-1aac7513e39d",
@@ -114,7 +115,8 @@
         "current_agent_name": "Agent",
         "tool_calls": [],
         "retry_messages": []
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAI.astream_chat-bab2411c-ab4a-4d17-8af9-0101e928c04f",
@@ -220,7 +222,8 @@
           "parallel_tool_calls": true
         }
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x11367f6e0>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x11367f6e0>",
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAI._prepare_chat_with_tools-673dbfd6-6f5f-419e-bfd1-f7849acc37d2",
@@ -398,7 +401,8 @@
         ],
         "tool_choice": "auto",
         "parallel_tool_calls": true
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "FunctionAgent.setup_agent-108bdfef-2199-4ca5-8ff3-45823ed794e2",
@@ -450,7 +454,8 @@
           }
         ],
         "current_agent_name": "Agent"
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "FunctionAgent.aggregate_tool_results-49541e32-9e1c-4653-9cd0-68ffe745795f",
@@ -504,7 +509,8 @@
           }
         ],
         "current_agent_name": "Agent"
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "FunctionAgent.parse_agent_output-e4a488fd-62d4-4f6b-9d82-ebb94c3e3cff",
@@ -558,7 +564,8 @@
           ],
           "retry_messages": []
         }
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "FunctionAgent.run_agent_step-790a4afb-480a-44d8-bd54-6ec1d7cc54f1",
@@ -638,7 +645,8 @@
           }
         ],
         "retry_messages": []
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAI.astream_chat-aa3e71c5-3aad-4db2-9827-f5afd6a8d779",
@@ -704,7 +712,8 @@
           "parallel_tool_calls": true
         }
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x1187949c0>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x1187949c0>",
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAI._prepare_chat_with_tools-8dfc2d38-e3eb-4e77-84f0-c379d6bcb172",
@@ -798,7 +807,8 @@
         ],
         "tool_choice": "auto",
         "parallel_tool_calls": true
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "FunctionAgent.setup_agent-8b596c8e-0336-47d3-9cb7-976215197dd2",
@@ -850,7 +860,8 @@
           }
         ],
         "current_agent_name": "Agent"
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "FunctionAgent.init_run-718334bb-9bd0-4311-b54b-85b0d670034b",
@@ -883,7 +894,8 @@
           }
         ],
         "current_agent_name": "Agent"
-      }
+      },
+      "integration": "LlamaIndex"
     }
   ],
   "agentSpans": [
@@ -914,7 +926,8 @@
           "strictMode": false,
           "evaluationModel": "gpt-4.1"
         }
-      ]
+      ],
+      "integration": "LlamaIndex"
     }
   ],
   "llmSpans": [
@@ -964,7 +977,9 @@
       "promptAlias": "asd",
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      "promptCommitHash": "bab04ec",
+      "integration": "LlamaIndex",
+      "provider": "OpenAI"
     },
     {
       "uuid": "56a5c5b2-0f1d-494f-bdd3-1e3fe6d20bb6",
@@ -1009,7 +1024,9 @@
       "promptAlias": "asd",
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      "promptCommitHash": "bab04ec",
+      "integration": "LlamaIndex",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -1086,7 +1103,8 @@
             "b": 6
           }
         }
-      ]
+      ],
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "FunctionTool.acall-88d2fad9-032a-41be-84d0-4bc5d6c59408",
@@ -1119,7 +1137,8 @@
         },
         "raw_output": 24,
         "is_error": false
-      }
+      },
+      "integration": "LlamaIndex"
     }
   ],
   "startTime": "2026-02-16T06:09:06.690Z",
