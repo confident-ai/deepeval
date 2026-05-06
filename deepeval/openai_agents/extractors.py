@@ -18,6 +18,7 @@ from openai.types.responses import (
     ResponseOutputText,
 )
 
+from deepeval.tracing.integrations import Integration
 from deepeval.tracing.types import (
     AgentSpan,
     ToolSpan,
@@ -26,7 +27,10 @@ from deepeval.tracing.types import (
 )
 import json
 
-from deepeval.tracing.utils import make_json_serializable
+from deepeval.tracing.utils import (
+    make_json_serializable,
+    infer_provider_from_model,
+)
 
 try:
     from agents import MCPListToolsSpanData
@@ -55,6 +59,7 @@ def _check_openai_agents_available():
 
 def update_span_properties(span: BaseSpan, span_data: "SpanData"):
     _check_openai_agents_available()
+    span.integration = Integration.OPENAI_AGENTS.value
     # LLM Span
     if isinstance(span_data, ResponseSpanData):
         update_span_properties_from_response_span_data(span, span_data)
@@ -116,6 +121,7 @@ def update_span_properties_from_response_span_data(
     span.output_token_count = output_tokens
     span.metadata = metadata
     span.model = "NA" if response.model is None else str(response.model)
+    span.provider = infer_provider_from_model(span.model)
     span.input = input
     span.output = output
     span.name = "LLM Generation"
@@ -157,6 +163,7 @@ def update_span_properties_from_generation_span_data(
     span.input_token_count = input_tokens
     span.output_token_count = output_tokens
     span.model = generation_span_data.model or "NA"
+    span.provider = infer_provider_from_model(span.model)
     span.input = input
     span.output = output
     span.name = "LLM Generation"
