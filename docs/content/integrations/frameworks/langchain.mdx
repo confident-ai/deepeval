@@ -4,7 +4,7 @@ title: LangChain
 sidebar_label: LangChain
 ---
 
-<IntegrationTagsDisplayer manual={true} cicdEvals={true} traceability={true} />
+<IntegrationTagsDisplayer native={true} cicdEvals={true} traceability={true} />
 
 [LangChain](https://www.langchain.com/) is an open-source framework for building LLM applications with models, prompts, tools, retrievers, chains, and agents.
 
@@ -62,7 +62,7 @@ The `deepeval` integration traces LangChain runs through a `CallbackHandler` tha
 
 `deepeval`'s LangChain integration enables you to:
 
-- **Trace any LangChain run manually** — pass `CallbackHandler(...)` through `config={"callbacks": [...]}`.
+- **Trace any LangChain run** — pass `CallbackHandler(...)` through `config={"callbacks": [...]}` per call.
 - **Evaluate traces or individual components** with `deepeval` metrics.
 - **Run evals from scripts or CI/CD** — same callback, different surfaces.
 - **Customize trace and span data** through callback kwargs, LangChain metadata, and `deepeval`'s tool decorator.
@@ -79,7 +79,7 @@ The `deepeval` integration traces LangChain runs through a `CallbackHandler` tha
 pip install -U deepeval langchain langchain-openai
 ```
 
-Unlike OTel integrations, LangChain is manually instrumented. You decide which runs are traced by passing `CallbackHandler(...)` into LangChain's runtime config.
+LangChain is instrumented per-call: you decide which runs are traced by passing `CallbackHandler(...)` into LangChain's runtime config.
 
 </Step>
 
@@ -224,7 +224,7 @@ retriever = vector_store.as_retriever().with_config(
 
 ## Customizing trace and span data
 
-LangChain is manually instrumented, so customization happens at the callback or component config boundary.
+LangChain is instrumented per-call through callbacks, so customization happens at the callback or component config boundary.
 
 - Use `CallbackHandler(...)` kwargs for trace-level defaults like `name`, `tags`, `metadata`, `thread_id`, and `user_id`.
 - Use LangChain metadata for component-level fields on LLM and retriever spans.

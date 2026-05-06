@@ -3,14 +3,14 @@ import styles from "./IntegrationTagsDisplayer.module.scss";
 
 interface IntegrationTagsDisplayerProps {
   otel?: boolean;
-  manual?: boolean;
+  native?: boolean;
   cicdEvals?: boolean;
   traceability?: boolean;
 }
 
 const IntegrationTagsDisplayer = ({
   otel = false,
-  manual = false,
+  native = false,
   cicdEvals = false,
   traceability = false,
 }: IntegrationTagsDisplayerProps) => {
@@ -21,9 +21,9 @@ const IntegrationTagsDisplayer = ({
           OTel Instrumentation
         </div>
       )}
-      {manual && (
-        <div className={`${styles.pill} ${styles.manual}`}>
-          Manual instrumentation
+      {native && (
+        <div className={`${styles.pill} ${styles.native}`}>
+          Native Instrumentation
         </div>
       )}
       {cicdEvals && (

@@ -4,7 +4,7 @@ title: LangGraph
 sidebar_label: LangGraph
 ---
 
-<IntegrationTagsDisplayer manual={true} cicdEvals={true} traceability={true} />
+<IntegrationTagsDisplayer native={true} cicdEvals={true} traceability={true} />
 
 [LangGraph](https://www.langchain.com/langgraph) is a framework for building stateful, graph-based agent workflows on top of LangChain.
 
@@ -62,7 +62,7 @@ The `deepeval` integration traces LangGraph runs through LangChain's `CallbackHa
 
 `deepeval`'s LangGraph integration enables you to:
 
-- **Trace any LangGraph run manually** — pass `CallbackHandler(...)` through `config={"callbacks": [...]}`.
+- **Trace any LangGraph run** — pass `CallbackHandler(...)` through `config={"callbacks": [...]}` per call.
 - **Evaluate traces or model / agent components** with `deepeval` metrics.
 - **Run evals from scripts or CI/CD** — same callback, different surfaces.
 - **Customize trace and span data** through callback kwargs and LangChain metadata.
@@ -79,7 +79,7 @@ The `deepeval` integration traces LangGraph runs through LangChain's `CallbackHa
 pip install -U deepeval langgraph langchain-openai
 ```
 
-LangGraph uses LangChain's callback system, so the `deepeval` integration is manual. You decide which graph runs are traced by passing `CallbackHandler(...)` into the graph config.
+LangGraph uses LangChain's callback system, so the `deepeval` integration is per-call. You decide which graph runs are traced by passing `CallbackHandler(...)` into the graph config.
 
 </Step>
 
@@ -219,7 +219,7 @@ For deterministic tool calls, use tool spans for traceability, inputs, outputs, 
 
 ## Customizing trace and span data
 
-LangGraph is manually instrumented through LangChain callbacks, so customization happens at the callback or component config boundary.
+LangGraph is instrumented per-call through LangChain callbacks, so customization happens at the callback or component config boundary.
 
 - Use `CallbackHandler(...)` kwargs for trace-level defaults like `name`, `tags`, `metadata`, `thread_id`, and `user_id`.
 - Use LangChain metadata for component-level fields on LLM and retriever spans.
