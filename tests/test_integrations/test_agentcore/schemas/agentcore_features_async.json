@@ -1,48 +1,97 @@
 {
-  "uuid": "4b4b6a890d51171eeadf3f0a3e06c4cf",
-  "baseSpans": [],
+  "uuid": "e9aa4f07a778b81d2336ab903c1f811c",
+  "baseSpans": [
+    {
+      "uuid": "76dc903e56883a62",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4c291477c9d15c0d",
+      "startTime": "2026-05-05T18:12:38.093Z",
+      "endTime": "2026-05-05T18:12:39.308Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
+      "output": "<thinking>I need to process the given 'Async Data' using the 'special_tool'. This tool requires a 'query' parameter, so I will use the provided data as the query.</thinking>\n"
+    },
+    {
+      "uuid": "9512a0881ddead1f",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4c291477c9d15c0d",
+      "startTime": "2026-05-05T18:12:35.685Z",
+      "endTime": "2026-05-05T18:12:38.093Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
+      "output": "<thinking>I need to process the given 'Async Data' using the 'special_tool'. This tool requires a 'query' parameter, so I will use the provided data as the query.</thinking>\n"
+    }
+  ],
   "agentSpans": [
     {
-      "uuid": "6ab30773b1e78612",
+      "uuid": "4c291477c9d15c0d",
       "name": "invoke_agent Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-03-09T11:17:33.266Z",
-      "endTime": "2026-03-09T11:17:35.192Z",
+      "startTime": "2026-05-05T18:12:35.685Z",
+      "endTime": "2026-05-05T18:12:39.309Z",
       "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
-      "output": "The 'Async Data' has been processed successfully.\n",
+      "output": "The 'Async Data' has been successfully processed using the 'special_tool'.\n",
       "availableTools": [],
       "agentHandoffs": [],
       "metricCollection": "agent_metrics_async_v1"
-    },
-    {
-      "uuid": "6ab30773b1e78612",
-      "name": "",
-      "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-03-09T11:17:33.266Z",
-      "endTime": "2026-03-09T11:17:35.192Z",
-      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
-      "output": "The 'Async Data' has been processed successfully.\n",
-      "toolsCalled": [],
-      "availableTools": [],
-      "agentHandoffs": [],
-      "metricsData": [
-        {
-          "name": "Answer Relevancy",
-          "threshold": 0.5,
-          "success": false,
-          "strictMode": false,
-          "evaluationModel": "gpt-4.1"
-        }
-      ]
     }
   ],
-  "llmSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "799ca3d992eec57b",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "76dc903e56883a62",
+      "startTime": "2026-05-05T18:12:38.093Z",
+      "endTime": "2026-05-05T18:12:39.308Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
+      "output": "The 'Async Data' has been successfully processed using the 'special_tool'.",
+      "model": "amazon.nova-lite-v1:0",
+      "inputTokenCount": 585.0,
+      "outputTokenCount": 18.0
+    },
+    {
+      "uuid": "f6b543b5b6e58e82",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "9512a0881ddead1f",
+      "startTime": "2026-05-05T18:12:35.685Z",
+      "endTime": "2026-05-05T18:12:38.090Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
+      "output": "<thinking>I need to process the given 'Async Data' using the 'special_tool'. This tool requires a 'query' parameter, so I will use the provided data as the query.</thinking>\n",
+      "model": "amazon.nova-lite-v1:0",
+      "inputTokenCount": 493.0,
+      "outputTokenCount": 60.0,
+      "metricCollection": "llm_metrics_async_v1"
+    }
+  ],
   "retrieverSpans": [],
-  "toolSpans": [],
-  "startTime": "2026-03-09T11:17:33.266Z",
-  "endTime": "2026-03-09T11:17:35.192Z",
+  "toolSpans": [
+    {
+      "uuid": "6f84ceede50cc0da",
+      "name": "execute_tool special_tool",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "9512a0881ddead1f",
+      "startTime": "2026-05-05T18:12:38.091Z",
+      "endTime": "2026-05-05T18:12:38.092Z",
+      "output": "Processed: Async Data",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "inputParameters": {}
+        }
+      ],
+      "metricCollection": "special_tool_v1"
+    }
+  ],
+  "startTime": "2026-05-05T18:12:35.685Z",
+  "endTime": "2026-05-05T18:12:39.309Z",
   "name": "agentcore-full-features-async",
   "metadata": {
     "env": "testing_async",
@@ -57,7 +106,7 @@
   "threadId": "thread-async-features-002",
   "userId": "user-async-002",
   "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
-  "output": "The 'Async Data' has been processed successfully.\n",
+  "output": "The 'Async Data' has been successfully processed using the 'special_tool'.\n",
   "status": "SUCCESS",
   "metricCollection": "trace_metrics_override_async_v1"
 }

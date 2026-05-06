@@ -102,6 +102,7 @@ class BaseSpan(BaseModel):
     llm_test_case: Optional[LLMTestCase] = None
     metrics: Optional[List[BaseMetric]] = None
     metric_collection: Optional[str] = None
+    integration: Optional[str] = None
 
     # Don't serialize these
     progress: Optional[Progress] = Field(None, exclude=True)
@@ -133,6 +134,7 @@ class AgentSpan(BaseSpan):
 class LlmSpan(BaseSpan):
 
     model: Optional[str] = None
+    provider: Optional[str] = None
     prompt: Optional[Prompt] = None
     input_token_count: Optional[float] = Field(
         None, serialization_alias="inputTokenCount"

@@ -1,48 +1,97 @@
 {
-  "uuid": "1f6b33f7461c3c25ca884700c187c5e2",
-  "baseSpans": [],
+  "uuid": "03a1c7fa0642dbb2795397e976836d3d",
+  "baseSpans": [
+    {
+      "uuid": "c6b0662fe24ac795",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4b88a6546b7bb2c0",
+      "startTime": "2026-05-05T18:12:24.689Z",
+      "endTime": "2026-05-05T18:12:25.804Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
+      "output": "<thinking>I need to process the 'Sync Data' query using the special_tool.</thinking>\n"
+    },
+    {
+      "uuid": "a7ce264bafbc9e22",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4b88a6546b7bb2c0",
+      "startTime": "2026-05-05T18:12:22.394Z",
+      "endTime": "2026-05-05T18:12:24.689Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
+      "output": "<thinking>I need to process the 'Sync Data' query using the special_tool.</thinking>\n"
+    }
+  ],
   "agentSpans": [
     {
-      "uuid": "56e5882bebb166f2",
+      "uuid": "4b88a6546b7bb2c0",
       "name": "invoke_agent Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-03-09T11:17:56.276Z",
-      "endTime": "2026-03-09T11:17:58.847Z",
+      "startTime": "2026-05-05T18:12:22.393Z",
+      "endTime": "2026-05-05T18:12:25.805Z",
       "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
-      "output": "The 'Sync Data' has been successfully processed using the special_tool.\n",
+      "output": "The 'Sync Data' query has been processed successfully.\n",
       "availableTools": [],
       "agentHandoffs": [],
       "metricCollection": "agent_metrics_v1"
-    },
-    {
-      "uuid": "56e5882bebb166f2",
-      "name": "",
-      "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-03-09T11:17:56.276Z",
-      "endTime": "2026-03-09T11:17:58.847Z",
-      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
-      "output": "The 'Sync Data' has been successfully processed using the special_tool.\n",
-      "toolsCalled": [],
-      "availableTools": [],
-      "agentHandoffs": [],
-      "metricsData": [
-        {
-          "name": "Answer Relevancy",
-          "threshold": 0.5,
-          "success": false,
-          "strictMode": false,
-          "evaluationModel": "gpt-4.1"
-        }
-      ]
     }
   ],
-  "llmSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "0d49337dab62ccf0",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "c6b0662fe24ac795",
+      "startTime": "2026-05-05T18:12:24.689Z",
+      "endTime": "2026-05-05T18:12:25.803Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
+      "output": "The 'Sync Data' query has been processed successfully.",
+      "model": "amazon.nova-lite-v1:0",
+      "inputTokenCount": 562.0,
+      "outputTokenCount": 12.0
+    },
+    {
+      "uuid": "6f0ec30d97b903b1",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "a7ce264bafbc9e22",
+      "startTime": "2026-05-05T18:12:22.394Z",
+      "endTime": "2026-05-05T18:12:24.686Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
+      "output": "<thinking>I need to process the 'Sync Data' query using the special_tool.</thinking>\n",
+      "model": "amazon.nova-lite-v1:0",
+      "inputTokenCount": 493.0,
+      "outputTokenCount": 38.0,
+      "metricCollection": "llm_metrics_v1"
+    }
+  ],
   "retrieverSpans": [],
-  "toolSpans": [],
-  "startTime": "2026-03-09T11:17:56.276Z",
-  "endTime": "2026-03-09T11:17:58.847Z",
+  "toolSpans": [
+    {
+      "uuid": "2302443b5f8b5660",
+      "name": "execute_tool special_tool",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "a7ce264bafbc9e22",
+      "startTime": "2026-05-05T18:12:24.687Z",
+      "endTime": "2026-05-05T18:12:24.688Z",
+      "output": "Processed: Sync Data",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "inputParameters": {}
+        }
+      ],
+      "metricCollection": "special_tool_v1"
+    }
+  ],
+  "startTime": "2026-05-05T18:12:22.393Z",
+  "endTime": "2026-05-05T18:12:25.805Z",
   "name": "agentcore-full-features-sync",
   "metadata": {
     "env": "testing",
@@ -57,7 +106,7 @@
   "threadId": "thread-sync-features-001",
   "userId": "user-sync-001",
   "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
-  "output": "The 'Sync Data' has been successfully processed using the special_tool.\n",
+  "output": "The 'Sync Data' query has been processed successfully.\n",
   "status": "SUCCESS",
   "metricCollection": "trace_metrics_override_v1"
 }

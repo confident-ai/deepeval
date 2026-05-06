@@ -1,36 +1,43 @@
+"""``instrument_agentcore(...)`` — wire AgentCore spans into deepeval.
+
+Pydantic AI POC pattern: ``AgentCoreSpanInterceptor`` then
+``ContextAwareSpanProcessor`` (REST when a deepeval trace context is
+active or evaluating, OTLP otherwise). Idempotent on the same
+``TracerProvider`` — subsequent calls mutate settings in place instead
+of stacking processors (Strands writes to the global provider, so
+stacking would corrupt contextvars and leak settings).
+
+Span-level config (per-call ``metric_collection``, ``metrics``,
+``prompt``) belongs on ``with next_*_span(...)`` / ``update_current_span(...)``
+— see ``deepeval/integrations/README.md``.
+"""
+
 from __future__ import annotations
 
 import logging
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from deepeval.config.settings import get_settings
 from deepeval.confident.api import get_confident_api_key
-from deepeval.metrics.base_metric import BaseMetric
-from deepeval.prompt import Prompt
 from deepeval.telemetry import capture_tracing_integration
-from deepeval.tracing.otel.exporter import ConfidentSpanExporter
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
-_base_url = str(settings.CONFIDENT_OTEL_URL).rstrip("/")
-OTLP_ENDPOINT = f"{_base_url}/v1/traces"
-
 try:
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import (
-        BatchSpanProcessor,
-        SimpleSpanProcessor,
-    )
-    from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
-        OTLPSpanExporter,
-    )
 
     _opentelemetry_installed = True
 except ImportError:
     _opentelemetry_installed = False
+
+
+# Tracks the (interceptor, casp) pair we attached per provider so repeat
+# ``instrument_agentcore(...)`` calls mutate settings in place rather than
+# stack — see module docstring.
+_attached_processors: Dict[int, Tuple[object, object]] = {}
 
 
 def _require_opentelemetry() -> None:
@@ -39,6 +46,18 @@ def _require_opentelemetry() -> None:
             "OpenTelemetry SDK is not available. "
             "Install it with: pip install opentelemetry-sdk opentelemetry-exporter-otlp-proto-http"
         )
+
+
+# Mirrors ``AgentCoreInstrumentationSettings._REMOVED_KWARGS`` for error reporting.
+_REMOVED_INSTRUMENT_KWARGS = (
+    "is_test_mode",
+    "agent_metric_collection",
+    "llm_metric_collection",
+    "tool_metric_collection_map",
+    "trace_metric_collection",
+    "agent_metrics",
+    "confident_prompt",
+)
 
 
 def instrument_agentcore(
@@ -50,26 +69,37 @@ def instrument_agentcore(
     tags: Optional[List[str]] = None,
     environment: Optional[str] = None,
     metric_collection: Optional[str] = None,
-    trace_metric_collection: Optional[str] = None,
-    llm_metric_collection: Optional[str] = None,
-    agent_metric_collection: Optional[str] = None,
-    tool_metric_collection_map: Optional[dict] = None,
-    confident_prompt: Optional[Prompt] = None,
     test_case_id: Optional[str] = None,
     turn_id: Optional[str] = None,
-    is_test_mode: bool = False,
-    agent_metrics: Optional[List[BaseMetric]] = None,
+    **removed_kwargs,
 ) -> None:
+    """Attach Confident AI / deepeval telemetry to AWS Bedrock AgentCore.
+
+    All kwargs are optional and trace-level; span-level fields go on
+    ``with next_*_span(...)`` / ``update_current_span(...)``. Routing is
+    REST when a deepeval trace context is active (``@observe`` /
+    ``with trace(...)``) or ``trace_manager.is_evaluating`` is True;
+    OTLP otherwise.
+    """
+    if removed_kwargs:
+        offending = ", ".join(sorted(removed_kwargs))
+        raise TypeError(
+            f"instrument_agentcore: unexpected keyword argument(s) {offending}. "
+            "Span-level kwargs were removed in the OTel POC migration; use "
+            "``with next_*_span(...)`` or ``update_current_span(...)``. "
+            "See deepeval/integrations/README.md."
+        )
+
     with capture_tracing_integration("agentcore"):
         _require_opentelemetry()
 
         if not api_key:
             api_key = get_confident_api_key()
-            if not api_key:
-                raise ValueError(
-                    "CONFIDENT_API_KEY is not set. "
-                    "Pass it directly or set the environment variable."
-                )
+
+        # Deferred so ``_require_opentelemetry`` fails cleanly when OTel is missing.
+        from deepeval.tracing.otel.context_aware_processor import (
+            ContextAwareSpanProcessor,
+        )
 
         from .instrumentator import (
             AgentCoreInstrumentationSettings,
@@ -85,19 +115,12 @@ def instrument_agentcore(
             tags=tags,
             environment=environment,
             metric_collection=metric_collection,
-            trace_metric_collection=trace_metric_collection,
-            llm_metric_collection=llm_metric_collection,
-            agent_metric_collection=agent_metric_collection,
-            tool_metric_collection_map=tool_metric_collection_map,
-            confident_prompt=confident_prompt,
             test_case_id=test_case_id,
             turn_id=turn_id,
-            is_test_mode=is_test_mode,
-            agent_metrics=agent_metrics,
         )
 
+        # Reuse the active TracerProvider; create + set globally if it's a no-op.
         current_provider = trace.get_tracer_provider()
-
         if type(current_provider).__name__ in (
             "ProxyTracerProvider",
             "NoOpTracerProvider",
@@ -118,25 +141,27 @@ def instrument_agentcore(
             )
             return
 
-        span_interceptor = AgentCoreSpanInterceptor(agentcore_settings)
-        current_provider.add_span_processor(span_interceptor)
+        existing = _attached_processors.get(id(current_provider))
+        if existing is not None:
+            # Mutate settings in place so repeat calls fully replace prior
+            # trace-level config without layering another processor.
+            interceptor, _casp = existing
+            interceptor.settings = agentcore_settings
+            logger.debug(
+                "AgentCore telemetry re-configured (env=%s).",
+                agentcore_settings.environment,
+            )
+            return
 
-        if is_test_mode:
-            current_provider.add_span_processor(
-                SimpleSpanProcessor(ConfidentSpanExporter())
-            )
-        else:
-            current_provider.add_span_processor(
-                BatchSpanProcessor(
-                    OTLPSpanExporter(
-                        endpoint=OTLP_ENDPOINT,
-                        headers={"x-confident-api-key": api_key},
-                    )
-                )
-            )
+        # Registration order matters: interceptor writes ``confident.*`` attrs
+        # before CASP routes the span (OTel runs processors in order on on_end).
+        interceptor = AgentCoreSpanInterceptor(agentcore_settings)
+        casp = ContextAwareSpanProcessor(api_key=api_key)
+        current_provider.add_span_processor(interceptor)
+        current_provider.add_span_processor(casp)
+        _attached_processors[id(current_provider)] = (interceptor, casp)
 
         logger.info(
-            "Confident AI AgentCore telemetry attached (env=%s, test_mode=%s).",
+            "Confident AI AgentCore telemetry attached (env=%s).",
             agentcore_settings.environment,
-            is_test_mode,
         )

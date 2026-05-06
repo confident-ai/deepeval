@@ -174,16 +174,23 @@ def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
     # the walker to dedupe.
     #
     # Trace-level fields (``name``, ``tags``, ``thread_id``, ``user_id``,
-    # ``metadata``, ``environment``) ARE forwarded from the trace so that
+    # ``metadata``, ``environment``) are forwarded from the trace so that
     # OTel-based integrations whose users configured them via instrumentation
     # settings or ``update_current_trace(...)`` see them on the dashboard.
     # The non-eval REST path (``trace_manager.create_trace_api``) already
     # forwards these; mirror its shape here so the eval-iterator path
-    # doesn't silently drop them. ``metadata`` is intentionally sourced
-    # from the golden (not the trace) — that's an evaluation-specific
-    # convention the eval pipeline relies on for per-row context. Trace-
-    # configured metadata flows through the per-trace upload path, not
-    # through this golden-shaped TraceApi.
+    # doesn't silently drop them.
+    #
+    # ``metadata`` sources from ``trace.metadata`` (user-configured
+    # at instrument time or via ``update_current_trace(...)``). It does
+    # NOT source from ``golden.additional_metadata`` here — that field
+    # already populates ``LLMTestCase.metadata`` at every callsite that
+    # builds a test case from a golden, which is the correct home for
+    # per-row evaluation context. Conflating the two layers (test-case
+    # metadata vs trace metadata) silently overwrote whatever the user
+    # configured on the trace, which is the opposite of what we want:
+    # the user owns trace metadata, the golden owns test-case metadata,
+    # both flow to their respective surfaces.
     return TraceApi(
         uuid=trace.uuid,
         baseSpans=[],
@@ -208,7 +215,7 @@ def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
         retrieval_context=trace.retrieval_context,
         tools_called=trace.tools_called,
         expected_tools=trace.expected_tools,
-        metadata=golden.additional_metadata,
+        metadata=trace.metadata,
         name=trace.name,
         tags=trace.tags,
         threadId=trace.thread_id,

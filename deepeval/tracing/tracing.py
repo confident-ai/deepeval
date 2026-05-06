@@ -900,6 +900,7 @@ class TraceManager:
             output=output_data,
             metadata=span.metadata,
             error=span.error,
+            integration=span.integration,
             metricCollection=span.metric_collection,
             metricsData=(
                 [create_metric_data(metric) for metric in span.metrics]
@@ -925,6 +926,7 @@ class TraceManager:
             api_span.chunk_size = span.chunk_size
         elif isinstance(span, LlmSpan):
             api_span.model = span.model
+            api_span.provider = span.provider
             # api_span.prompt = PromptApi(alias=alias, version=version, hash=hash) # Legacy won't be using anymore
             api_span.cost_per_input_token = span.cost_per_input_token
             api_span.cost_per_output_token = span.cost_per_output_token

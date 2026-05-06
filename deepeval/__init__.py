@@ -45,12 +45,18 @@ def _expose_public_api() -> None:
         """Set up Confident AI's OTel backend.
 
         Configures a TracerProvider, attaches deepeval's OpenInference span
-        interceptor, and ships spans to the Confident OTel endpoint. Pair with
-        any OpenInference instrumentor (e.g. ``GoogleADKInstrumentor``,
-        ``OpenAIInstrumentor``) to capture framework-specific telemetry.
+        interceptor, and routes spans through the context-aware processor
+        (REST when a deepeval trace context is active or an evaluation is
+        running, OTLP otherwise). Pair with any community OpenInference
+        instrumentor (e.g. ``GoogleADKInstrumentor``, ``OpenAIInstrumentor``)
+        to capture framework-specific telemetry.
 
-        Accepts the same arguments as
-        ``deepeval.integrations.openinference.instrument_openinference``.
+        Accepts the same trace-level kwargs as
+        ``deepeval.integrations.openinference.instrument_openinference``:
+        ``api_key``, ``name``, ``thread_id``, ``user_id``, ``metadata``,
+        ``tags``, ``environment``, ``metric_collection``, ``test_case_id``,
+        ``turn_id``. Span-level config goes on ``with next_*_span(...)``
+        / ``update_current_span(...)``.
         """
         from deepeval.integrations.openinference import (
             instrument_openinference,

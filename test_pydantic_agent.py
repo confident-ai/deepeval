@@ -48,8 +48,10 @@ async def run_agent(prompt: str) -> str:
         result = await agent.run(prompt)
         return result.output
 
+
 dataset = EvaluationDataset()
 dataset.pull(alias="Single Turn QA")
+
 
 @pytest.mark.parametrize("golden", dataset.goldens)
 async def test_pydantic_agent(golden: Golden):

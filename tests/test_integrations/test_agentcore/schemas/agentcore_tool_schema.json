@@ -1,38 +1,94 @@
 {
-  "uuid": "7f153890805d0bc835ddf6113462f882",
-  "baseSpans": [],
+  "uuid": "77c656018654ff5661a56b33b8504585",
+  "baseSpans": [
+    {
+      "uuid": "8e6c46cffa78acd2",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "36a7e23213afbc30",
+      "startTime": "2026-05-05T18:12:05.545Z",
+      "endTime": "2026-05-05T18:12:07.103Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
+      "output": "<thinking>The User has asked for a multiplication operation between 7 and 8. The 'calculate' tool can be used to perform this operation.</thinking>\n"
+    },
+    {
+      "uuid": "c9e6d40d563db46a",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "36a7e23213afbc30",
+      "startTime": "2026-05-05T18:12:03.231Z",
+      "endTime": "2026-05-05T18:12:05.544Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
+      "output": "<thinking>The User has asked for a multiplication operation between 7 and 8. The 'calculate' tool can be used to perform this operation.</thinking>\n"
+    }
+  ],
   "agentSpans": [
     {
-      "uuid": "e920e8c25e753af6",
+      "uuid": "36a7e23213afbc30",
       "name": "invoke_agent Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-03-09T11:17:43.539Z",
-      "endTime": "2026-03-09T11:17:45.829Z",
+      "startTime": "2026-05-05T18:12:03.230Z",
+      "endTime": "2026-05-05T18:12:07.104Z",
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
-      "output": "The result of 7 multiplied by 8 is 56.\n",
-      "availableTools": [],
-      "agentHandoffs": []
-    },
-    {
-      "uuid": "e920e8c25e753af6",
-      "name": "",
-      "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-03-09T11:17:43.539Z",
-      "endTime": "2026-03-09T11:17:45.829Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
-      "output": "The result of 7 multiplied by 8 is 56.\n",
-      "toolsCalled": [],
+      "output": "<thinking>The 'calculate' tool has returned the result of 7 multiplied by 8 as 56.0. This is the answer to the User's question.</thinking> \n\nThe answer to your question, 7 multiplied by 8, is 56.0.\n",
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
-  "llmSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "3a9d76f2d67c928a",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "8e6c46cffa78acd2",
+      "startTime": "2026-05-05T18:12:05.546Z",
+      "endTime": "2026-05-05T18:12:07.102Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
+      "output": "<thinking>The 'calculate' tool has returned the result of 7 multiplied by 8 as 56.0. This is the answer to the User's question.</thinking> \n\nThe answer to your question, 7 multiplied by 8, is 56.0.",
+      "model": "amazon.nova-lite-v1:0",
+      "inputTokenCount": 543.0,
+      "outputTokenCount": 61.0
+    },
+    {
+      "uuid": "bdd3ffec014a5541",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "c9e6d40d563db46a",
+      "startTime": "2026-05-05T18:12:03.231Z",
+      "endTime": "2026-05-05T18:12:05.528Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
+      "output": "<thinking>The User has asked for a multiplication operation between 7 and 8. The 'calculate' tool can be used to perform this operation.</thinking>\n",
+      "model": "amazon.nova-lite-v1:0",
+      "inputTokenCount": 458.0,
+      "outputTokenCount": 56.0
+    }
+  ],
   "retrieverSpans": [],
-  "toolSpans": [],
-  "startTime": "2026-03-09T11:17:43.539Z",
-  "endTime": "2026-03-09T11:17:45.829Z",
+  "toolSpans": [
+    {
+      "uuid": "1ba58e7deb11fe80",
+      "name": "execute_tool calculate",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "c9e6d40d563db46a",
+      "startTime": "2026-05-05T18:12:05.530Z",
+      "endTime": "2026-05-05T18:12:05.539Z",
+      "output": "56.0",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "inputParameters": {}
+        }
+      ]
+    }
+  ],
+  "startTime": "2026-05-05T18:12:03.230Z",
+  "endTime": "2026-05-05T18:12:07.104Z",
   "name": "agentcore-tool-test",
   "metadata": {
     "test_type": "tool"
@@ -45,6 +101,6 @@
   "threadId": "tool-123",
   "userId": "test-user",
   "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
-  "output": "The result of 7 multiplied by 8 is 56.\n",
+  "output": "<thinking>The 'calculate' tool has returned the result of 7 multiplied by 8 as 56.0. This is the answer to the User's question.</thinking> \n\nThe answer to your question, 7 multiplied by 8, is 56.0.\n",
   "status": "SUCCESS"
 }

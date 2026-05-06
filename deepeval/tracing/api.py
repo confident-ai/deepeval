@@ -59,6 +59,7 @@ class BaseApiSpan(BaseModel):
     input: Optional[Any] = Field(None)
     output: Optional[Any] = Field(None)
     error: Optional[str] = None
+    integration: Optional[str] = Field(None, alias="integration")
 
     # additional test case parameters
     retrieval_context: Optional[List[str]] = Field(
@@ -85,6 +86,7 @@ class BaseApiSpan(BaseModel):
 
     # llm
     model: Optional[str] = None
+    provider: Optional[str] = Field(None, alias="provider")
     prompt: Optional[PromptApi] = None
     input_token_count: Optional[float] = Field(None, alias="inputTokenCount")
     output_token_count: Optional[float] = Field(None, alias="outputTokenCount")

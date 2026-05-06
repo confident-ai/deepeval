@@ -1,38 +1,94 @@
 {
-  "uuid": "3fca5b805c88a9788cbd4281b305ca46",
-  "baseSpans": [],
+  "uuid": "1a9cf6591171cbe5d78241ed7d498e92",
+  "baseSpans": [
+    {
+      "uuid": "08a5be94a8833ab7",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "236b3eef3f9574c4",
+      "startTime": "2026-05-05T18:12:13.305Z",
+      "endTime": "2026-05-05T18:12:14.644Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
+      "output": "<thinking>The User has requested the current weather in Tokyo. I will use the get_weather tool to retrieve this information.</thinking>\n"
+    },
+    {
+      "uuid": "8b867db6bc3ccd2a",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "236b3eef3f9574c4",
+      "startTime": "2026-05-05T18:12:11.144Z",
+      "endTime": "2026-05-05T18:12:13.304Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
+      "output": "<thinking>The User has requested the current weather in Tokyo. I will use the get_weather tool to retrieve this information.</thinking>\n"
+    }
+  ],
   "agentSpans": [
     {
-      "uuid": "bb092b6a3a92bbad",
+      "uuid": "236b3eef3f9574c4",
       "name": "invoke_agent Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-03-09T11:17:48.273Z",
-      "endTime": "2026-03-09T11:17:50.762Z",
+      "startTime": "2026-05-05T18:12:11.144Z",
+      "endTime": "2026-05-05T18:12:14.644Z",
       "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
-      "output": "<thinking>The get_weather tool has returned the result for Tokyo. I can now report the weather to the User.</thinking>\n\nThe current weather in Tokyo is sunny with a temperature of 72F.\n",
-      "availableTools": [],
-      "agentHandoffs": []
-    },
-    {
-      "uuid": "bb092b6a3a92bbad",
-      "name": "",
-      "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-03-09T11:17:48.273Z",
-      "endTime": "2026-03-09T11:17:50.762Z",
-      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
-      "output": "<thinking>The get_weather tool has returned the result for Tokyo. I can now report the weather to the User.</thinking>\n\nThe current weather in Tokyo is sunny with a temperature of 72F.\n",
-      "toolsCalled": [],
+      "output": "<thinking>I have retrieved the weather for Tokyo. I will now provide this information to the User.</thinking>\n\nThe current weather in Tokyo is Sunny, 72F.\n",
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
-  "llmSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "68c9b845d58e0ccd",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "08a5be94a8833ab7",
+      "startTime": "2026-05-05T18:12:13.306Z",
+      "endTime": "2026-05-05T18:12:14.642Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
+      "output": "<thinking>I have retrieved the weather for Tokyo. I will now provide this information to the User.</thinking>\n\nThe current weather in Tokyo is Sunny, 72F.",
+      "model": "amazon.nova-lite-v1:0",
+      "inputTokenCount": 569.0,
+      "outputTokenCount": 37.0
+    },
+    {
+      "uuid": "0e05a972848c58ff",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "8b867db6bc3ccd2a",
+      "startTime": "2026-05-05T18:12:11.144Z",
+      "endTime": "2026-05-05T18:12:13.300Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
+      "output": "<thinking>The User has requested the current weather in Tokyo. I will use the get_weather tool to retrieve this information.</thinking>\n",
+      "model": "amazon.nova-lite-v1:0",
+      "inputTokenCount": 492.0,
+      "outputTokenCount": 44.0
+    }
+  ],
   "retrieverSpans": [],
-  "toolSpans": [],
-  "startTime": "2026-03-09T11:17:48.273Z",
-  "endTime": "2026-03-09T11:17:50.762Z",
+  "toolSpans": [
+    {
+      "uuid": "2a5d5333b5685c7b",
+      "name": "execute_tool get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "8b867db6bc3ccd2a",
+      "startTime": "2026-05-05T18:12:13.302Z",
+      "endTime": "2026-05-05T18:12:13.303Z",
+      "output": "Sunny, 72F",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {}
+        }
+      ]
+    }
+  ],
+  "startTime": "2026-05-05T18:12:11.144Z",
+  "endTime": "2026-05-05T18:12:14.644Z",
   "name": "agentcore-multiple-tools-weather",
   "metadata": {
     "test_type": "multiple_tools_weather"
@@ -46,6 +102,6 @@
   "threadId": "multiple-tools-weather-123",
   "userId": "test-user",
   "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
-  "output": "<thinking>The get_weather tool has returned the result for Tokyo. I can now report the weather to the User.</thinking>\n\nThe current weather in Tokyo is sunny with a temperature of 72F.\n",
+  "output": "<thinking>I have retrieved the weather for Tokyo. I will now provide this information to the User.</thinking>\n\nThe current weather in Tokyo is Sunny, 72F.\n",
   "status": "SUCCESS"
 }

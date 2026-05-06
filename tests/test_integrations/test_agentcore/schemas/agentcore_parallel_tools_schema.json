@@ -1,38 +1,110 @@
 {
-  "uuid": "2faf4b20da4abfa4a1d7969aac1d8cb9",
-  "baseSpans": [],
+  "uuid": "fadf57d3d04de4c5887ed80bfafb995d",
+  "baseSpans": [
+    {
+      "uuid": "f972748587eaa0ce",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "bca9b41ec9261597",
+      "startTime": "2026-05-05T18:12:20.602Z",
+      "endTime": "2026-05-05T18:12:22.065Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
+      "output": "<thinking> The User has requested information about both the current weather and the current time for Paris. I need to call both the get_weather and get_time tools once each to gather this information. </thinking>\n"
+    },
+    {
+      "uuid": "5dc0ec363e480157",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "bca9b41ec9261597",
+      "startTime": "2026-05-05T18:12:18.150Z",
+      "endTime": "2026-05-05T18:12:20.602Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
+      "output": "<thinking> The User has requested information about both the current weather and the current time for Paris. I need to call both the get_weather and get_time tools once each to gather this information. </thinking>\n"
+    }
+  ],
   "agentSpans": [
     {
-      "uuid": "f14f606881f49bb0",
+      "uuid": "bca9b41ec9261597",
       "name": "invoke_agent Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-03-09T11:17:53.702Z",
-      "endTime": "2026-03-09T11:17:56.214Z",
+      "startTime": "2026-05-05T18:12:18.150Z",
+      "endTime": "2026-05-05T18:12:22.065Z",
       "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
-      "output": "<thinking> The tools have returned the current weather and time for Paris. I can now provide the User with the requested information. </thinking>\n\nThe current weather in Paris is cloudy with a temperature of 62 degrees Fahrenheit. The current time in Paris is 8:00 AM CET.\n",
-      "availableTools": [],
-      "agentHandoffs": []
-    },
-    {
-      "uuid": "f14f606881f49bb0",
-      "name": "",
-      "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-03-09T11:17:53.702Z",
-      "endTime": "2026-03-09T11:17:56.214Z",
-      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
-      "output": "<thinking> The tools have returned the current weather and time for Paris. I can now provide the User with the requested information. </thinking>\n\nThe current weather in Paris is cloudy with a temperature of 62 degrees Fahrenheit. The current time in Paris is 8:00 AM CET.\n",
-      "toolsCalled": [],
+      "output": "<thinking> I have received the current weather and time for Paris from the tools. I can now provide the User with this information. </thinking>\n\nThe current weather in Paris is cloudy, with a temperature of 62 degrees Fahrenheit, and the current time is 8:00 AM Central European Time (CET).\n",
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
-  "llmSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "86dd3db5fa98545f",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "f972748587eaa0ce",
+      "startTime": "2026-05-05T18:12:20.603Z",
+      "endTime": "2026-05-05T18:12:22.064Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
+      "output": "<thinking> I have received the current weather and time for Paris from the tools. I can now provide the User with this information. </thinking>\n\nThe current weather in Paris is cloudy, with a temperature of 62 degrees Fahrenheit, and the current time is 8:00 AM Central European Time (CET).",
+      "model": "amazon.nova-lite-v1:0",
+      "inputTokenCount": 623.0,
+      "outputTokenCount": 66.0
+    },
+    {
+      "uuid": "db969396947dadd2",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "5dc0ec363e480157",
+      "startTime": "2026-05-05T18:12:18.150Z",
+      "endTime": "2026-05-05T18:12:20.588Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
+      "output": "<thinking> The User has requested information about both the current weather and the current time for Paris. I need to call both the get_weather and get_time tools once each to gather this information. </thinking>\n",
+      "model": "amazon.nova-lite-v1:0",
+      "inputTokenCount": 500.0,
+      "outputTokenCount": 68.0
+    }
+  ],
   "retrieverSpans": [],
-  "toolSpans": [],
-  "startTime": "2026-03-09T11:17:53.702Z",
-  "endTime": "2026-03-09T11:17:56.214Z",
+  "toolSpans": [
+    {
+      "uuid": "e19be60b80363882",
+      "name": "execute_tool get_time",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "5dc0ec363e480157",
+      "startTime": "2026-05-05T18:12:20.597Z",
+      "endTime": "2026-05-05T18:12:20.601Z",
+      "output": "8:00 AM CET",
+      "toolsCalled": [
+        {
+          "name": "get_time",
+          "inputParameters": {}
+        }
+      ]
+    },
+    {
+      "uuid": "3d07604390e76ef0",
+      "name": "execute_tool get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "5dc0ec363e480157",
+      "startTime": "2026-05-05T18:12:20.595Z",
+      "endTime": "2026-05-05T18:12:20.600Z",
+      "output": "Cloudy, 62F",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {}
+        }
+      ]
+    }
+  ],
+  "startTime": "2026-05-05T18:12:18.150Z",
+  "endTime": "2026-05-05T18:12:22.065Z",
   "name": "agentcore-parallel-tools",
   "metadata": {
     "test_type": "parallel_tools"
@@ -45,6 +117,6 @@
   "threadId": "parallel-tools-123",
   "userId": "test-user",
   "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
-  "output": "<thinking> The tools have returned the current weather and time for Paris. I can now provide the User with the requested information. </thinking>\n\nThe current weather in Paris is cloudy with a temperature of 62 degrees Fahrenheit. The current time in Paris is 8:00 AM CET.\n",
+  "output": "<thinking> I have received the current weather and time for Paris from the tools. I can now provide the User with this information. </thinking>\n\nThe current weather in Paris is cloudy, with a temperature of 62 degrees Fahrenheit, and the current time is 8:00 AM Central European Time (CET).\n",
   "status": "SUCCESS"
 }

@@ -1,5 +1,6 @@
 from bedrock_agentcore import BedrockAgentCoreApp
 from strands import Agent, tool
+
 from deepeval.integrations.agentcore import instrument_agentcore
 
 
@@ -24,16 +25,16 @@ def init_tool_agentcore(
     metadata: dict = None,
     thread_id: str = None,
     user_id: str = None,
-    tool_metric_collection_map: dict = None,
 ):
+    """Trace-only setup. Tool / agent / LLM span-level fields belong at
+    the call site (``with next_*_span(...)`` or ``update_current_span``
+    inside the tool body)."""
     instrument_agentcore(
         name=name,
         tags=tags or ["agentcore", "tool"],
         metadata=metadata or {"test_type": "tool"},
         thread_id=thread_id,
         user_id=user_id,
-        tool_metric_collection_map=tool_metric_collection_map or {},
-        is_test_mode=True,
     )
 
     app = BedrockAgentCoreApp()

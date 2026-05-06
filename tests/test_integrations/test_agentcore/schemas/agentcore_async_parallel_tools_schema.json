@@ -1,38 +1,110 @@
 {
-  "uuid": "87530d01b19a83dcc47d3f1f56b2ddd7",
-  "baseSpans": [],
+  "uuid": "b70d2a4b7299f25d38932cab69900dfd",
+  "baseSpans": [
+    {
+      "uuid": "5c520e031dc6fff6",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "2be8979739333320",
+      "startTime": "2026-05-05T18:12:33.925Z",
+      "endTime": "2026-05-05T18:12:35.407Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
+      "output": "<thinking>The User has requested the current weather and time for Tokyo. To provide this information, I will need to call both the get_weather and get_time tools, each exactly once, with Tokyo as the city.</thinking>\n"
+    },
+    {
+      "uuid": "8eefb230a739b2f9",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "2be8979739333320",
+      "startTime": "2026-05-05T18:12:31.646Z",
+      "endTime": "2026-05-05T18:12:33.925Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
+      "output": "<thinking>The User has requested the current weather and time for Tokyo. To provide this information, I will need to call both the get_weather and get_time tools, each exactly once, with Tokyo as the city.</thinking>\n"
+    }
+  ],
   "agentSpans": [
     {
-      "uuid": "aba501d135cd334c",
+      "uuid": "2be8979739333320",
       "name": "invoke_agent Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-03-09T11:17:30.707Z",
-      "endTime": "2026-03-09T11:17:33.089Z",
+      "startTime": "2026-05-05T18:12:31.646Z",
+      "endTime": "2026-05-05T18:12:35.408Z",
       "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
-      "output": "<thinking>I have received the results from both tools. I will now present the information to the User.</thinking>\n\nThe current weather in Tokyo is sunny with a temperature of 72 degrees Fahrenheit. The current time in Tokyo is 3:00 PM JST.\n",
-      "availableTools": [],
-      "agentHandoffs": []
-    },
-    {
-      "uuid": "aba501d135cd334c",
-      "name": "",
-      "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-03-09T11:17:30.707Z",
-      "endTime": "2026-03-09T11:17:33.089Z",
-      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
-      "output": "<thinking>I have received the results from both tools. I will now present the information to the User.</thinking>\n\nThe current weather in Tokyo is sunny with a temperature of 72 degrees Fahrenheit. The current time in Tokyo is 3:00 PM JST.\n",
-      "toolsCalled": [],
+      "output": "<thinking>Both tools have provided their results. I can now give the User the current weather and time for Tokyo.</thinking>\n\nThe current weather in Tokyo is Sunny, with a temperature of 72F, and the current time is 3:00 PM JST.\n",
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
-  "llmSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "81250f7cf1965c44",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "5c520e031dc6fff6",
+      "startTime": "2026-05-05T18:12:33.925Z",
+      "endTime": "2026-05-05T18:12:35.407Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
+      "output": "<thinking>Both tools have provided their results. I can now give the User the current weather and time for Tokyo.</thinking>\n\nThe current weather in Tokyo is Sunny, with a temperature of 72F, and the current time is 3:00 PM JST.",
+      "model": "amazon.nova-lite-v1:0",
+      "inputTokenCount": 626.0,
+      "outputTokenCount": 57.0
+    },
+    {
+      "uuid": "823515d2cf8dcc45",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "8eefb230a739b2f9",
+      "startTime": "2026-05-05T18:12:31.646Z",
+      "endTime": "2026-05-05T18:12:33.922Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
+      "output": "<thinking>The User has requested the current weather and time for Tokyo. To provide this information, I will need to call both the get_weather and get_time tools, each exactly once, with Tokyo as the city.</thinking>\n",
+      "model": "amazon.nova-lite-v1:0",
+      "inputTokenCount": 500.0,
+      "outputTokenCount": 72.0
+    }
+  ],
   "retrieverSpans": [],
-  "toolSpans": [],
-  "startTime": "2026-03-09T11:17:30.707Z",
-  "endTime": "2026-03-09T11:17:33.089Z",
+  "toolSpans": [
+    {
+      "uuid": "3e39f6f950813dad",
+      "name": "execute_tool get_time",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "8eefb230a739b2f9",
+      "startTime": "2026-05-05T18:12:33.923Z",
+      "endTime": "2026-05-05T18:12:33.925Z",
+      "output": "3:00 PM JST",
+      "toolsCalled": [
+        {
+          "name": "get_time",
+          "inputParameters": {}
+        }
+      ]
+    },
+    {
+      "uuid": "c48a422f21e8bbaf",
+      "name": "execute_tool get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "8eefb230a739b2f9",
+      "startTime": "2026-05-05T18:12:33.923Z",
+      "endTime": "2026-05-05T18:12:33.924Z",
+      "output": "Sunny, 72F",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {}
+        }
+      ]
+    }
+  ],
+  "startTime": "2026-05-05T18:12:31.646Z",
+  "endTime": "2026-05-05T18:12:35.408Z",
   "name": "agentcore-async-parallel-tools",
   "metadata": {
     "test_type": "async_parallel_tools"
@@ -46,6 +118,6 @@
   "threadId": "async-parallel-tools-123",
   "userId": "test-user-async",
   "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
-  "output": "<thinking>I have received the results from both tools. I will now present the information to the User.</thinking>\n\nThe current weather in Tokyo is sunny with a temperature of 72 degrees Fahrenheit. The current time in Tokyo is 3:00 PM JST.\n",
+  "output": "<thinking>Both tools have provided their results. I can now give the User the current weather and time for Tokyo.</thinking>\n\nThe current weather in Tokyo is Sunny, with a temperature of 72F, and the current time is 3:00 PM JST.\n",
   "status": "SUCCESS"
 }

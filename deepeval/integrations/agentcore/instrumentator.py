@@ -1,21 +1,43 @@
+"""AgentCore × deepeval OTel SpanInterceptor.
+
+Translates AWS Bedrock AgentCore / Strands / Traceloop spans into
+``confident.*`` OTel attrs that ``ConfidentSpanExporter`` rebuilds into
+deepeval ``BaseSpan``s. Mirrors the Pydantic AI POC pattern: pushes
+``BaseSpan`` placeholders for ``update_current_span(...)``, an implicit
+``Trace(is_otel_implicit=True)`` for bare callers, consumes
+``next_*_span(...)`` payloads at on_start, resolves trace attrs FRESH
+at on_end, and stashes ``BaseMetric`` instances when evaluating.
+
+Framework-specific extraction (Strands ``gen_ai.*`` events, Traceloop
+attrs, AWS Bedrock body parsing) is framework-written and bypasses the
+placeholder serializer.
+"""
+
 from __future__ import annotations
 
+import contextvars
 import json
 import logging
 from time import perf_counter
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from deepeval.config.settings import get_settings
-from deepeval.confident.api import get_confident_api_key
-from deepeval.metrics.base_metric import BaseMetric
-from deepeval.prompt import Prompt
-from deepeval.tracing.context import current_trace_context
-from deepeval.tracing.otel.exporter import ConfidentSpanExporter
-from deepeval.tracing.otel.utils import to_hex_string
+from deepeval.tracing import perf_epoch_bridge as peb
+from deepeval.tracing.context import (
+    apply_pending_to_span,
+    current_span_context,
+    current_trace_context,
+    pop_pending_for,
+)
+from deepeval.tracing.otel.utils import (
+    stash_pending_metrics,
+    to_hex_string,
+)
 from deepeval.tracing.perf_epoch_bridge import init_clock_bridge
 from deepeval.tracing.tracing import trace_manager
 from deepeval.tracing.types import (
     AgentSpan,
+    BaseSpan,
     Trace,
     TraceSpanStatus,
     ToolCall,
@@ -28,16 +50,7 @@ try:
     from opentelemetry.sdk.trace import (
         ReadableSpan as _ReadableSpan,
         SpanProcessor as _SpanProcessor,
-        TracerProvider,
     )
-    from opentelemetry.sdk.trace.export import (
-        BatchSpanProcessor,
-        SimpleSpanProcessor,
-    )
-    from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
-        OTLPSpanExporter,
-    )
-    from opentelemetry.trace import set_tracer_provider
 
     dependency_installed = True
 except ImportError as e:
@@ -79,12 +92,14 @@ else:
     SpanProcessor = _SpanProcessor
     ReadableSpan = _ReadableSpan
 
-OTLP_ENDPOINT = str(settings.CONFIDENT_OTEL_URL) + "v1/traces"
+
 init_clock_bridge()
 
-_AGENT_OP_NAMES = {"invoke_agent", "create_agent"}
 
-# gen_ai.operation.name values that indicate an LLM-call span
+# Span classification: ``gen_ai.*`` (OTel GenAI semconv), Traceloop attrs,
+# and span-name heuristics. Settings-independent; inspects raw OTel span only.
+
+_AGENT_OP_NAMES = {"invoke_agent", "create_agent"}
 _LLM_OP_NAMES = {
     "chat",
     "generate_content",
@@ -92,11 +107,8 @@ _LLM_OP_NAMES = {
     "text_completion",
     "embeddings",
 }
-
-# gen_ai.operation.name values that indicate a tool span
 _TOOL_OP_NAMES = {"execute_tool"}
 
-# traceloop.span.kind values → confident span type
 _TRACELOOP_KIND_MAP = {
     "workflow": "agent",
     "agent": "agent",
@@ -120,7 +132,6 @@ def _classify_span(span) -> Optional[str]:
     attrs = span.attributes or {}
     span_name_lower = (span.name or "").lower()
 
-    # --- 1. Explicit gen_ai.operation.name (Strands + generic OTel) ---
     op_name = attrs.get("gen_ai.operation.name", "")
     if op_name in _AGENT_OP_NAMES:
         return "agent"
@@ -129,18 +140,15 @@ def _classify_span(span) -> Optional[str]:
     if op_name in _TOOL_OP_NAMES:
         return "tool"
 
-    # --- 2. OpenLLMetry / traceloop conventions (LangChain, LangGraph, CrewAI) ---
     traceloop_kind = attrs.get("traceloop.span.kind", "")
     if traceloop_kind in _TRACELOOP_KIND_MAP:
         return _TRACELOOP_KIND_MAP[traceloop_kind]
 
-    # --- 3. Presence of canonical tool/agent attributes ---
     if attrs.get("gen_ai.tool.name") or attrs.get("gen_ai.tool.call.id"):
         return "tool"
     if attrs.get("gen_ai.agent.name") or attrs.get("gen_ai.agent.id"):
         return "agent"
 
-    # --- 4. Heuristic span-name matching (last resort) ---
     if any(kw in span_name_lower for kw in ("invoke_agent", "agent")):
         return "agent"
     if any(kw in span_name_lower for kw in ("execute_tool", ".tool")):
@@ -157,7 +165,6 @@ def _classify_span(span) -> Optional[str]:
 
 
 def _get_agent_name(span) -> Optional[str]:
-    """Extract the most descriptive agent name available."""
     return (
         _get_attr(
             span,
@@ -171,21 +178,15 @@ def _get_agent_name(span) -> Optional[str]:
 
 
 def _get_tool_name(span) -> Optional[str]:
-    """Extract the tool name from a tool span."""
     return (
-        _get_attr(
-            span,
-            "gen_ai.tool.name",
-            "traceloop.entity.name",
-        )
+        _get_attr(span, "gen_ai.tool.name", "traceloop.entity.name")
         or span.name
         or None
     )
 
 
-# ---------------------------------------------------------------------------
-# Content / I/O extraction helpers
-# ---------------------------------------------------------------------------
+# Content / I/O extraction. Walks ``gen_ai.*`` events and Traceloop attrs to
+# pull framework-written input/output text and tool calls.
 
 
 def _parse_genai_content(raw: Any) -> Optional[str]:
@@ -211,7 +212,7 @@ def _extract_messages(span) -> tuple[Optional[str], Optional[str]]:
     input_text: Optional[str] = None
     output_text: Optional[str] = None
 
-    # --- 1. Extract from Events (Strands / strict OTel GenAI) ---
+    # Events (Strands / strict OTel GenAI)
     for event in getattr(span, "events", []):
         event_name = event.name or ""
         event_attrs = event.attributes or {}
@@ -257,7 +258,7 @@ def _extract_messages(span) -> tuple[Optional[str], Optional[str]]:
                 except Exception:
                     pass
 
-    # --- 2. Fall back to attributes (LangChain, CrewAI, Traceloop) ---
+    # Fallback: attributes (LangChain / CrewAI / Traceloop)
     if not input_text:
         raw = _get_attr(
             span,
@@ -287,7 +288,7 @@ def _extract_messages(span) -> tuple[Optional[str], Optional[str]]:
 def _extract_tool_calls(span) -> List[ToolCall]:
     tools: List[ToolCall] = []
 
-    # --- 1. Extract from events (Strands / strict OTel) ---
+    # Events (Strands / strict OTel)
     for event in getattr(span, "events", []):
         event_attrs = event.attributes or {}
         event_name = event.name or ""
@@ -316,7 +317,7 @@ def _extract_tool_calls(span) -> List[ToolCall]:
             except Exception as exc:
                 logger.debug("Failed to parse tool call event: %s", exc)
 
-    # --- 2. Extract from attributes (LangChain / CrewAI / Traceloop) ---
+    # Fallback: attributes (LangChain / CrewAI / Traceloop)
     attrs = span.attributes or {}
 
     tool_calls_raw = (
@@ -334,7 +335,7 @@ def _extract_tool_calls(span) -> List[ToolCall]:
             )
             if isinstance(calls, list):
                 for call in calls:
-                    # Traceloop/OpenLLMetry often nests these under a "function" key
+                    # Traceloop / OpenLLMetry nest these under "function".
                     name = (
                         call.get("name")
                         or call.get("function", {}).get("name")
@@ -379,7 +380,29 @@ def _extract_tool_call_from_tool_span(span) -> Optional[ToolCall]:
     return ToolCall(name=tool_name, input_parameters=input_params)
 
 
+# Settings: trace-level kwargs only. Span-level config goes on
+# ``next_*_span(...)`` / ``update_current_span(...)`` — see README.
+
+
 class AgentCoreInstrumentationSettings:
+    """Trace-level defaults for AgentCore instrumentation.
+
+    All kwargs are optional. Trace fields are resolved at every span's
+    ``on_end`` so runtime ``update_current_trace(...)`` mutations win.
+    ``api_key`` is optional; when omitted, the OTel pipeline runs
+    locally but the Confident AI backend rejects uploads.
+    """
+
+    # Span-level kwargs removed in the OTel POC migration — raise on use.
+    _REMOVED_KWARGS = (
+        "is_test_mode",
+        "agent_metric_collection",
+        "llm_metric_collection",
+        "tool_metric_collection_map",
+        "trace_metric_collection",
+        "agent_metrics",
+        "confident_prompt",
+    )
 
     def __init__(
         self,
@@ -390,18 +413,23 @@ class AgentCoreInstrumentationSettings:
         metadata: Optional[dict] = None,
         tags: Optional[List[str]] = None,
         metric_collection: Optional[str] = None,
-        confident_prompt: Optional[Prompt] = None,
-        llm_metric_collection: Optional[str] = None,
-        agent_metric_collection: Optional[str] = None,
-        tool_metric_collection_map: Optional[dict] = None,
-        trace_metric_collection: Optional[str] = None,
         test_case_id: Optional[str] = None,
         turn_id: Optional[str] = None,
-        is_test_mode: Optional[bool] = False,
-        agent_metrics: Optional[List[BaseMetric]] = None,
         environment: Optional[str] = None,
+        **removed_kwargs: Any,
     ):
         is_dependency_installed()
+
+        # ``**removed_kwargs`` exists only to produce a crisp migration error.
+        if removed_kwargs:
+            offending = ", ".join(sorted(removed_kwargs))
+            raise TypeError(
+                f"AgentCoreInstrumentationSettings: unexpected keyword "
+                f"argument(s) {offending}. Span-level kwargs were removed "
+                "in the OTel POC migration; use ``with next_*_span(...)`` "
+                "or ``update_current_span(...)``. "
+                "See deepeval/integrations/README.md."
+            )
 
         if trace_manager.environment is not None:
             _env = trace_manager.environment
@@ -416,134 +444,430 @@ class AgentCoreInstrumentationSettings:
             _env = "development"
         self.environment = _env
 
-        if not api_key:
-            api_key = get_confident_api_key()
-            if not api_key:
-                raise ValueError(
-                    "CONFIDENT_API_KEY is not set. Pass pass api_key or set CONFIDENT_API_KEY in your env"
-                )
         self.api_key = api_key
-
         self.name = name
         self.thread_id = thread_id
         self.user_id = user_id
         self.metadata = metadata
         self.tags = tags
         self.metric_collection = metric_collection
-        self.confident_prompt = confident_prompt
-        self.llm_metric_collection = llm_metric_collection
-        self.agent_metric_collection = agent_metric_collection
-        self.tool_metric_collection_map = tool_metric_collection_map or {}
-        self.trace_metric_collection = trace_metric_collection
         self.test_case_id = test_case_id
         self.turn_id = turn_id
-        self.is_test_mode = is_test_mode
-        self.agent_metrics = agent_metrics
+
+
+# Span interceptor. Pushes BaseSpan placeholders for ``update_current_span``,
+# implicit Trace for bare callers, parent-uuid bridge for OTel roots inside
+# ``@observe``, ``next_*_span`` consumption, and framework-attr extraction.
 
 
 class AgentCoreSpanInterceptor(SpanProcessor):
 
     def __init__(self, settings_instance: AgentCoreInstrumentationSettings):
         self.settings = settings_instance
+        # Per-OTel-span state keyed by span_id (unique within a process).
+        self._tokens: Dict[int, contextvars.Token] = {}
+        self._placeholders: Dict[int, BaseSpan] = {}
+        # Implicit-trace state, keyed on the OTel root span_id that pushed it.
+        self._trace_tokens: Dict[int, contextvars.Token] = {}
+        self._trace_placeholders: Dict[int, Trace] = {}
 
     def on_start(self, span, parent_context):
-        settings = self.settings
-
-        _ctx = current_trace_context.get()
-        if _ctx and isinstance(_ctx, Trace):
-            _ctx.uuid = to_hex_string(span.get_span_context().trace_id, 32)
-
-        _safe_set = lambda k, v: span.set_attribute(k, v) if v else None
-
-        _safe_set("confident.trace.name", settings.name)
-        _safe_set("confident.trace.thread_id", settings.thread_id)
-        _safe_set("confident.trace.user_id", settings.user_id)
-        _safe_set("confident.trace.environment", settings.environment)
-        _safe_set("confident.trace.test_case_id", settings.test_case_id)
-        _safe_set("confident.trace.turn_id", settings.turn_id)
-
-        if settings.metadata:
-            span.set_attribute(
-                "confident.trace.metadata", json.dumps(settings.metadata)
-            )
-        if settings.tags:
-            span.set_attribute("confident.trace.tags", settings.tags)
-
-        metric_collection = (
-            settings.trace_metric_collection or settings.metric_collection
-        )
-        _safe_set("confident.trace.metric_collection", metric_collection)
-
-        if settings.confident_prompt:
-            prompt = settings.confident_prompt
-            span.set_attribute("confident.span.prompt_alias", prompt.alias)
-            span.set_attribute("confident.span.prompt_commit_hash", prompt.hash)
-            if getattr(prompt, "label", None):
-                span.set_attribute("confident.span.prompt_label", prompt.label)
-            if getattr(prompt, "version", None):
-                span.set_attribute(
-                    "confident.span.prompt_version", prompt.version
-                )
+        # Order matches Pydantic AI: implicit-trace push before classification
+        # so anything reading ``current_trace_context`` downstream sees it.
+        self._maybe_push_implicit_trace_context(span)
+        self._maybe_bridge_otel_root_to_deepeval_parent(span)
 
         span_type = _classify_span(span)
-        if span_type is None:
-            return
+        if span_type:
+            try:
+                span.set_attribute("confident.span.type", span_type)
+            except Exception:
+                pass
 
-        span.set_attribute("confident.span.type", span_type)
-
+        # Stamp name at on_start because the placeholder subclass depends on it.
         if span_type == "agent":
             agent_name = _get_agent_name(span)
             if agent_name:
-                span.set_attribute("confident.span.name", agent_name)
-            if settings.agent_metric_collection:
-                span.set_attribute(
-                    "confident.span.metric_collection",
-                    settings.agent_metric_collection,
-                )
-
-        elif span_type == "llm":
-            if settings.llm_metric_collection:
-                span.set_attribute(
-                    "confident.span.metric_collection",
-                    settings.llm_metric_collection,
-                )
-
+                try:
+                    span.set_attribute("confident.span.name", agent_name)
+                except Exception:
+                    pass
         elif span_type == "tool":
             tool_name = _get_tool_name(span)
             if tool_name:
-                tool_mc = settings.tool_metric_collection_map.get(tool_name)
-                if tool_mc:
-                    span.set_attribute(
-                        "confident.span.metric_collection", tool_mc
-                    )
+                try:
+                    span.set_attribute("confident.span.name", tool_name)
+                except Exception:
+                    pass
 
-        if not settings.thread_id:
+        self._push_span_context(span, span_type)
+
+    def on_end(self, span):
+        sid = span.get_span_context().span_id
+
+        # Resolve trace attrs FRESH so live ``update_current_trace(...)`` wins.
+        try:
+            self._serialize_trace_context_to_otel_attrs(span)
+        except Exception as exc:
+            logger.debug(
+                "Failed to serialize trace context for span_id=%s: %s",
+                sid,
+                exc,
+            )
+
+        placeholder = self._placeholders.pop(sid, None)
+        token = self._tokens.pop(sid, None)
+        if token is not None:
+            try:
+                current_span_context.reset(token)
+            except Exception as exc:
+                logger.debug(
+                    "Failed to reset current_span_context for span_id=%s: %s",
+                    sid,
+                    exc,
+                )
+        if placeholder is not None:
+            try:
+                self._serialize_placeholder_to_otel_attrs(placeholder, span)
+            except Exception as exc:
+                logger.debug(
+                    "Failed to serialize span placeholder for span_id=%s: %s",
+                    sid,
+                    exc,
+                )
+            try:
+                if placeholder.metrics and trace_manager.is_evaluating:
+                    stash_pending_metrics(
+                        to_hex_string(sid, 16), placeholder.metrics
+                    )
+            except Exception as exc:
+                logger.debug(
+                    "Failed to stash pending metrics for span_id=%s: %s",
+                    sid,
+                    exc,
+                )
+
+        # Framework attrs are non-user-mutable; written alongside (not inside)
+        # the placeholder serializer.
+        try:
+            self._serialize_framework_attrs(span)
+        except Exception as exc:
+            logger.debug(
+                "Failed to serialize framework attrs for span_id=%s: %s",
+                sid,
+                exc,
+            )
+
+        # Must run AFTER trace serialization so the implicit placeholder's
+        # mutations land on this root's attrs.
+        self._maybe_pop_implicit_trace_context(span)
+
+    def _push_span_context(self, span, span_type: Optional[str]) -> None:
+        """Push a ``BaseSpan`` / ``AgentSpan`` placeholder onto the contextvar.
+
+        Consumes ``next_*_span(...)`` defaults BEFORE the push so user code
+        sees the staged values.
+        """
+        try:
+            sid = span.get_span_context().span_id
+            tid = span.get_span_context().trace_id
+            start_time = (
+                peb.epoch_nanos_to_perf_seconds(span.start_time)
+                if span.start_time
+                else perf_counter()
+            )
+            kwargs: Dict[str, Any] = dict(
+                uuid=to_hex_string(sid, 16),
+                trace_uuid=to_hex_string(tid, 32),
+                status=TraceSpanStatus.IN_PROGRESS,
+                start_time=start_time,
+            )
+            if span_type == "agent":
+                # Reuse the on_start-stamped name to skip a duplicate lookup.
+                attrs = span.attributes or {}
+                placeholder = AgentSpan(
+                    name=(
+                        attrs.get("confident.span.name")
+                        or _get_agent_name(span)
+                        or "agent"
+                    ),
+                    **kwargs,
+                )
+            else:
+                placeholder = BaseSpan(**kwargs)
+
+            pending = pop_pending_for(span_type)
+            if pending:
+                apply_pending_to_span(placeholder, pending)
+
+            token = current_span_context.set(placeholder)
+            self._tokens[sid] = token
+            self._placeholders[sid] = placeholder
+        except Exception as exc:
+            logger.debug(
+                "Failed to push current_span_context placeholder: %s", exc
+            )
+
+    def _maybe_push_implicit_trace_context(self, span) -> None:
+        """Push an implicit ``Trace`` for OTel roots without enclosing context.
+
+        Tagged ``is_otel_implicit=True`` so ``ContextAwareSpanProcessor``
+        still routes to OTLP.
+        """
+        if current_trace_context.get() is not None:
+            return
+        if getattr(span, "parent", None) is not None:
+            return
+        try:
+            sid = span.get_span_context().span_id
+            tid = span.get_span_context().trace_id
+            start_time = (
+                peb.epoch_nanos_to_perf_seconds(span.start_time)
+                if span.start_time
+                else perf_counter()
+            )
+            implicit = Trace(
+                uuid=to_hex_string(tid, 32),
+                root_spans=[],
+                status=TraceSpanStatus.IN_PROGRESS,
+                start_time=start_time,
+                is_otel_implicit=True,
+            )
+            token = current_trace_context.set(implicit)
+            self._trace_tokens[sid] = token
+            self._trace_placeholders[sid] = implicit
+        except Exception as exc:
+            logger.debug(
+                "Failed to push implicit current_trace_context: %s", exc
+            )
+
+    def _maybe_bridge_otel_root_to_deepeval_parent(self, span) -> None:
+        """Re-parent OTel roots onto an enclosing ``@observe`` deepeval span.
+
+        Stamps ``confident.span.parent_uuid`` so the exporter stitches the
+        OTel root into the deepeval parent's trace instead of leaving them
+        as siblings.
+        """
+        if getattr(span, "parent", None) is not None:
+            return
+        parent_span = current_span_context.get()
+        if parent_span is None:
+            return
+        parent_uuid = getattr(parent_span, "uuid", None)
+        if not parent_uuid:
+            return
+        try:
+            self._set_attr_post_end(
+                span, "confident.span.parent_uuid", parent_uuid
+            )
+        except Exception as exc:
+            logger.debug(
+                "Failed to bridge OTel root span to deepeval parent "
+                "(parent_uuid=%s): %s",
+                parent_uuid,
+                exc,
+            )
+
+    def _maybe_pop_implicit_trace_context(self, span) -> None:
+        try:
+            sid = span.get_span_context().span_id
+        except Exception:
+            return
+        token = self._trace_tokens.pop(sid, None)
+        self._trace_placeholders.pop(sid, None)
+        if token is None:
+            return
+        try:
+            current_trace_context.reset(token)
+        except Exception as exc:
+            logger.debug(
+                "Failed to reset implicit current_trace_context for "
+                "span_id=%s: %s",
+                sid,
+                exc,
+            )
+
+    @staticmethod
+    def _set_attr_post_end(span, key: str, value: Any) -> None:
+        """Write to a span that may have ended.
+
+        ``Span.set_attribute`` is a no-op after ``Span.end()``, so we write
+        directly through ``_attributes`` (mutable while processors are
+        running) and fall back to ``set_attribute`` if that fails.
+        """
+        try:
+            attrs = getattr(span, "_attributes", None)
+            if attrs is not None:
+                attrs[key] = value
+                return
+        except Exception as exc:
+            logger.debug(
+                "Direct _attributes write failed for %s; "
+                "falling back to set_attribute (may be dropped): %s",
+                key,
+                exc,
+            )
+        try:
+            span.set_attribute(key, value)
+        except Exception as exc:
+            logger.debug("set_attribute fallback failed for %s: %s", key, exc)
+
+    @classmethod
+    def _serialize_placeholder_to_otel_attrs(
+        cls, placeholder: BaseSpan, span
+    ) -> None:
+        """Mirror ``update_current_span`` writes onto ``confident.span.*``.
+
+        Only writes user-set fields; doesn't overwrite on_start-stamped attrs.
+        """
+        existing = span.attributes or {}
+
+        if placeholder.metadata:
+            cls._set_attr_post_end(
+                span,
+                "confident.span.metadata",
+                json.dumps(placeholder.metadata, default=str),
+            )
+        if placeholder.input is not None:
+            cls._set_attr_post_end(
+                span,
+                "confident.span.input",
+                json.dumps(placeholder.input, default=str),
+            )
+        if placeholder.output is not None:
+            cls._set_attr_post_end(
+                span,
+                "confident.span.output",
+                json.dumps(placeholder.output, default=str),
+            )
+        if placeholder.metric_collection:
+            cls._set_attr_post_end(
+                span,
+                "confident.span.metric_collection",
+                placeholder.metric_collection,
+            )
+        if placeholder.retrieval_context:
+            cls._set_attr_post_end(
+                span,
+                "confident.span.retrieval_context",
+                json.dumps(placeholder.retrieval_context),
+            )
+        if placeholder.context:
+            cls._set_attr_post_end(
+                span,
+                "confident.span.context",
+                json.dumps(placeholder.context),
+            )
+        if placeholder.expected_output:
+            cls._set_attr_post_end(
+                span,
+                "confident.span.expected_output",
+                placeholder.expected_output,
+            )
+        if placeholder.name and not existing.get("confident.span.name"):
+            cls._set_attr_post_end(
+                span, "confident.span.name", placeholder.name
+            )
+
+    def _serialize_trace_context_to_otel_attrs(self, span) -> None:
+        """Resolve trace attrs FRESH and write to ``confident.trace.*``.
+
+        Reads ``current_trace_context.get()`` (so live
+        ``update_current_trace(...)`` mutations win) with
+        ``self.settings.*`` as fallback. Metadata is settings-base merged
+        with runtime context on top.
+        """
+        trace_ctx = current_trace_context.get()
+
+        _name = (trace_ctx.name if trace_ctx else None) or self.settings.name
+        _thread_id = (
+            trace_ctx.thread_id if trace_ctx else None
+        ) or self.settings.thread_id
+        _user_id = (
+            trace_ctx.user_id if trace_ctx else None
+        ) or self.settings.user_id
+        _tags = (trace_ctx.tags if trace_ctx else None) or self.settings.tags
+        _test_case_id = (
+            trace_ctx.test_case_id if trace_ctx else None
+        ) or self.settings.test_case_id
+        _turn_id = (
+            trace_ctx.turn_id if trace_ctx else None
+        ) or self.settings.turn_id
+        _trace_metric_collection = (
+            trace_ctx.metric_collection if trace_ctx else None
+        ) or self.settings.metric_collection
+        _metadata = {
+            **(self.settings.metadata or {}),
+            **((trace_ctx.metadata or {}) if trace_ctx else {}),
+        }
+
+        if _name:
+            self._set_attr_post_end(span, "confident.trace.name", _name)
+        if _thread_id:
+            self._set_attr_post_end(
+                span, "confident.trace.thread_id", _thread_id
+            )
+        if _user_id:
+            self._set_attr_post_end(span, "confident.trace.user_id", _user_id)
+        if _tags:
+            self._set_attr_post_end(span, "confident.trace.tags", _tags)
+        if _metadata:
+            self._set_attr_post_end(
+                span, "confident.trace.metadata", json.dumps(_metadata)
+            )
+        if _trace_metric_collection:
+            self._set_attr_post_end(
+                span,
+                "confident.trace.metric_collection",
+                _trace_metric_collection,
+            )
+        if _test_case_id:
+            self._set_attr_post_end(
+                span, "confident.trace.test_case_id", _test_case_id
+            )
+        if _turn_id:
+            self._set_attr_post_end(span, "confident.trace.turn_id", _turn_id)
+        if self.settings.environment:
+            self._set_attr_post_end(
+                span,
+                "confident.trace.environment",
+                self.settings.environment,
+            )
+
+        # Default thread_id from Strands' ``session.id`` if nothing else set it.
+        if not (span.attributes or {}).get("confident.trace.thread_id"):
             session_id = (span.attributes or {}).get("session.id")
             if session_id:
-                span.set_attribute("confident.trace.thread_id", session_id)
+                self._set_attr_post_end(
+                    span, "confident.trace.thread_id", session_id
+                )
 
-    def on_end(self, span: ReadableSpan):
-        attrs = dict(span.attributes or {})
+    def _serialize_framework_attrs(self, span) -> None:
+        """Translate Strands / Traceloop / GenAI attrs into ``confident.*``.
 
-        if "confident.span.type" not in attrs:
-            span_type = _classify_span(span)
-            if span_type:
-                span._attributes["confident.span.type"] = span_type
-                attrs["confident.span.type"] = span_type
-
-        span_type = attrs.get("confident.span.type")
+        Uses ``setdefault`` semantics — the placeholder serializer ran first,
+        so user mutations win.
+        """
+        attrs = span.attributes or {}
+        span_type = attrs.get("confident.span.type") or _classify_span(span)
+        if span_type and "confident.span.type" not in attrs:
+            self._set_attr_post_end(span, "confident.span.type", span_type)
 
         input_text, output_text = _extract_messages(span)
 
-        if input_text:
-            span._attributes["confident.span.input"] = input_text
+        if input_text and "confident.span.input" not in attrs:
+            self._set_attr_post_end(span, "confident.span.input", input_text)
             if span_type == "agent":
-                span._attributes["confident.trace.input"] = input_text
+                self._set_attr_post_end(
+                    span, "confident.trace.input", input_text
+                )
 
-        if output_text:
-            span._attributes["confident.span.output"] = output_text
+        if output_text and "confident.span.output" not in attrs:
+            self._set_attr_post_end(span, "confident.span.output", output_text)
             if span_type == "agent":
-                span._attributes["confident.trace.output"] = output_text
+                self._set_attr_post_end(
+                    span, "confident.trace.output", output_text
+                )
 
         input_tokens = attrs.get("gen_ai.usage.input_tokens") or attrs.get(
             "gen_ai.usage.prompt_tokens"
@@ -552,12 +876,12 @@ class AgentCoreSpanInterceptor(SpanProcessor):
             "gen_ai.usage.completion_tokens"
         )
         if input_tokens is not None:
-            span._attributes["confident.llm.input_token_count"] = int(
-                input_tokens
+            self._set_attr_post_end(
+                span, "confident.llm.input_token_count", int(input_tokens)
             )
         if output_tokens is not None:
-            span._attributes["confident.llm.output_token_count"] = int(
-                output_tokens
+            self._set_attr_post_end(
+                span, "confident.llm.output_token_count", int(output_tokens)
             )
 
         model = _get_attr(
@@ -566,7 +890,7 @@ class AgentCoreSpanInterceptor(SpanProcessor):
             "gen_ai.request.model",
         )
         if model:
-            span._attributes["confident.llm.model"] = model
+            self._set_attr_post_end(span, "confident.llm.model", model)
 
         tools_called: List[ToolCall] = []
 
@@ -577,8 +901,10 @@ class AgentCoreSpanInterceptor(SpanProcessor):
                 "gen_ai.agent.tools"
             )
             if tool_defs_raw:
-                span._attributes["confident.agent.tool_definitions"] = str(
-                    tool_defs_raw
+                self._set_attr_post_end(
+                    span,
+                    "confident.agent.tool_definitions",
+                    str(tool_defs_raw),
                 )
 
         elif span_type == "tool":
@@ -586,87 +912,30 @@ class AgentCoreSpanInterceptor(SpanProcessor):
             if tc:
                 tools_called = [tc]
 
-                if tc.input_parameters and not input_text:
-                    span._attributes["confident.span.input"] = json.dumps(
-                        tc.input_parameters
+                if tc.input_parameters and "confident.span.input" not in attrs:
+                    self._set_attr_post_end(
+                        span,
+                        "confident.span.input",
+                        json.dumps(tc.input_parameters),
                     )
 
-            if not output_text:
+            if "confident.span.output" not in attrs:
                 raw_output = _get_attr(
                     span, "traceloop.entity.output", "gen_ai.tool.output"
                 )
                 if raw_output:
-                    span._attributes["confident.span.output"] = raw_output
+                    self._set_attr_post_end(
+                        span, "confident.span.output", raw_output
+                    )
 
         if tools_called:
-            span._attributes["confident.span.tools_called"] = [
-                t.model_dump_json() for t in tools_called
-            ]
+            self._set_attr_post_end(
+                span,
+                "confident.span.tools_called",
+                [t.model_dump_json() for t in tools_called],
+            )
 
-        if (
-            span_type == "agent"
-            and "confident.span.name" not in span._attributes
-        ):
+        if span_type == "agent" and "confident.span.name" not in attrs:
             agent_name = _get_agent_name(span)
             if agent_name:
-                span._attributes["confident.span.name"] = agent_name
-
-        if self.settings.is_test_mode and span_type == "agent":
-            self._handle_test_mode(span, tools_called)
-
-    def _handle_test_mode(
-        self, span: ReadableSpan, tools_called: List[ToolCall] = None
-    ) -> None:
-        """Build an AgentSpan for evaluation and register it with trace_manager."""
-        try:
-            agent_span: Optional[AgentSpan] = (
-                ConfidentSpanExporter.prepare_boilerplate_base_span(span)
-            )
-        except Exception as exc:
-            logger.debug("prepare_boilerplate_base_span failed: %s", exc)
-            return
-
-        if not agent_span:
-            return
-
-        attrs = dict(span.attributes or {})
-        input = attrs.get("confident.span.input") or span._attributes.get(
-            "confident.span.input"
-        )
-        output = attrs.get("confident.span.output") or span._attributes.get(
-            "confident.span.output"
-        )
-
-        if input and not getattr(agent_span, "input", None):
-            agent_span.input = input
-        if output and not getattr(agent_span, "output", None):
-            agent_span.output = output
-
-        agent_span.tools_called = tools_called
-        agent_span.metrics = self.settings.agent_metrics
-
-        active_trace = current_trace_context.get()
-
-        if active_trace and isinstance(active_trace, Trace):
-            trace = active_trace
-            if not trace.uuid:
-                trace.uuid = agent_span.trace_uuid
-        else:
-            trace = trace_manager.get_trace_by_uuid(agent_span.trace_uuid)
-            if not trace:
-                trace = trace_manager.start_new_trace(
-                    trace_uuid=agent_span.trace_uuid
-                )
-
-        if agent_span.input and not getattr(trace, "input", None):
-            trace.input = agent_span.input
-        if agent_span.output and not getattr(trace, "output", None):
-            trace.output = agent_span.output
-
-        trace.root_spans.append(agent_span)
-        trace.status = TraceSpanStatus.SUCCESS
-        trace.end_time = perf_counter()
-
-        session = trace_manager.eval_session
-        if trace not in session.traces_to_evaluate:
-            session.traces_to_evaluate.append(trace)
+                self._set_attr_post_end(span, "confident.span.name", agent_name)
