@@ -8,6 +8,7 @@ from deepeval.integrations.pydantic_ai.instrumentator import (
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.evaluate.configs import AsyncConfig
+from deepeval.tracing import next_agent_span
 
 dataset = EvaluationDataset(goldens=[Golden(input="What's 7 * 8?")])
 
@@ -21,7 +22,8 @@ agent = Agent(
 
 
 async def run_agent(input: str):
-    return await agent.run(input)
+    with next_agent_span(metrics=[answer_relavancy_metric]):
+        return await agent.run(input)
 
 
 def run_eval():
