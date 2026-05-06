@@ -47,6 +47,8 @@ from deepeval.tracing.types import (
     TraceSpanStatus,
     ToolCall,
 )
+from deepeval.tracing.integrations import Integration
+from deepeval.tracing.utils import infer_provider_from_model
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -382,6 +384,7 @@ class OpenInferenceInstrumentationSettings:
         test_case_id: Optional[str] = None,
         turn_id: Optional[str] = None,
         environment: Optional[str] = None,
+        integration: Optional[str] = None,
         **removed_kwargs: Any,
     ):
         is_dependency_installed()
@@ -419,11 +422,7 @@ class OpenInferenceInstrumentationSettings:
         self.metric_collection = metric_collection
         self.test_case_id = test_case_id
         self.turn_id = turn_id
-
-
-# Span interceptor. Pushes BaseSpan placeholders for ``update_current_span``,
-# implicit Trace for bare callers, parent-uuid bridge for OTel roots inside
-# ``@observe``, ``next_*_span`` consumption, and framework-attr extraction.
+        self.integration = integration or Integration.OPEN_INFERENCE.value
 
 
 class OpenInferenceSpanInterceptor(SpanProcessor):
@@ -447,6 +446,9 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
         if span_type:
             try:
                 span.set_attribute("confident.span.type", span_type)
+                span.set_attribute(
+                    "confident.span.integration", self.settings.integration
+                )
             except Exception:
                 pass
 
@@ -854,6 +856,14 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
         model = attrs.get("llm.model_name")
         if model:
             self._set_attr_post_end(span, "confident.llm.model", str(model))
+        if span_type == "llm" and not attrs.get("confident.span.provider"):
+            provider = attrs.get("llm.provider")
+            if not provider and model:
+                provider = infer_provider_from_model(str(model))
+            if provider:
+                self._set_attr_post_end(
+                    span, "confident.span.provider", str(provider)
+                )
 
         tools_called: List[ToolCall] = []
 

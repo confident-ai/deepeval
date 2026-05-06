@@ -21,6 +21,7 @@ from typing import Dict, List, Optional, Tuple
 from deepeval.config.settings import get_settings
 from deepeval.confident.api import get_confident_api_key
 from deepeval.telemetry import capture_tracing_integration
+from deepeval.tracing.integrations import Integration
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -73,6 +74,7 @@ def instrument_openinference(
     metric_collection: Optional[str] = None,
     test_case_id: Optional[str] = None,
     turn_id: Optional[str] = None,
+    integration: Optional[str] = None,
     **removed_kwargs,
 ) -> None:
     """Attach Confident AI / deepeval telemetry to any OpenInference instrumentor.
@@ -120,6 +122,7 @@ def instrument_openinference(
             metric_collection=metric_collection,
             test_case_id=test_case_id,
             turn_id=turn_id,
+            integration=integration or Integration.OPEN_INFERENCE.value,
         )
 
         # Reuse the active TracerProvider; create + set globally if it's a no-op.

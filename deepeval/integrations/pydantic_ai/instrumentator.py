@@ -31,6 +31,8 @@ from deepeval.tracing.types import (
     Trace,
     TraceSpanStatus,
 )
+from deepeval.tracing.integrations import Integration
+from deepeval.tracing.utils import infer_provider_from_model
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -344,6 +346,9 @@ class SpanInterceptor(SpanProcessor):
             # they're not mislabeled as agent spans when
             # gen_ai.agent.name is present.
             span.set_attribute("confident.span.type", "llm")
+        span.set_attribute(
+            "confident.span.integration", Integration.PYDANTIC_AI.value
+        )
 
         # ----- push BaseSpan placeholder so update_current_span works -----
         self._push_span_context(span, agent_name, operation_name)
@@ -418,6 +423,27 @@ class SpanInterceptor(SpanProcessor):
             )
             if agent_name and self._is_agent_span(operation_name):
                 self._add_agent_span(span, agent_name)
+
+        attrs = span.attributes or {}
+        if not attrs.get("confident.span.integration"):
+            self._set_attr_post_end(
+                span,
+                "confident.span.integration",
+                Integration.PYDANTIC_AI.value,
+            )
+        if attrs.get("confident.span.type") == "llm" and not attrs.get(
+            "confident.span.provider"
+        ):
+            model = attrs.get("confident.llm.model") or attrs.get(
+                "gen_ai.response.model"
+            ) or attrs.get("gen_ai.request.model")
+            provider = (
+                infer_provider_from_model(str(model)) if model else None
+            )
+            if provider:
+                self._set_attr_post_end(
+                    span, "confident.span.provider", provider
+                )
 
         # ----- pop the implicit trace placeholder if we pushed one -----
         # Must run AFTER the trace-context serialization above so that the
