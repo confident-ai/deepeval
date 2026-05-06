@@ -4,243 +4,368 @@ title: Anthropic
 sidebar_label: Anthropic
 ---
 
-`deepeval` integrates with Anthropic models, allowing you to evaluate and trace Claude LLM requests, whether standalone or within complex applications with multiple components, in both development and production environments.
+<IntegrationTagsDisplayer manual={true} cicdEvals={true} traceability={true} />
 
-## Local Evaluations in Development
+[Anthropic](https://docs.anthropic.com/) provides the Messages API for Claude, including tool use and streaming.
 
-To evaluate your Claude application during development, opt for local evals. This allows you to run evaluations directly on your machine.
+The `deepeval` integration is a drop-in replacement for Anthropic's client. Every `client.messages.create(...)` call becomes an LLM span you can evaluate, without rewriting how you call the API.
 
-### Evaluating Claude as a Standalone
+<AgentTraceTerminal
+  title="anthropic_app · deepeval"
+  ariaLabel="Example Anthropic client trace with per-step metric scores"
+  lines={[
+    { kind: "cmd", name: "deepeval test run test_anthropic_app.py" },
+    { kind: "blank" },
+    { kind: "root", prefix: "●", name: "test_anthropic_app" },
+    { kind: "blank", prefix: "│" },
+    {
+      kind: "llm",
+      prefix: "└─",
+      name: "claude-sonnet-4-5 · respond",
+      metric: "Answer Relevancy",
+      score: "0.94",
+      duration: "320ms",
+      pass: true,
+    },
+    {
+      kind: "llm",
+      prefix: "  ",
+      name: "",
+      metric: "Faithfulness",
+      score: "0.42",
+      duration: "",
+      pass: false,
+    },
+    { kind: "blank" },
+    {
+      kind: "summary",
+      name: "Trace score  0.68   ·   1/2 metrics passed",
+      pass: false,
+    },
+  ]}
+/>
 
-Standalone evaluation treats the Claude API integration as a single component, assessing its input and actual output using chosen metrics (e.g: `AnswerRelevancyMetric`). To begin, simply replace your existing `Anthropic` client with the one provided by `deepeval`.
+`deepeval`'s Anthropic integration enables you to:
 
-<Tabs items={["Messages", "Async Messages"]}>
-<Tab value="Messages">
+- **Drop in `deepeval.anthropic.Anthropic`** — every Messages API call produces an LLM span with input, output, and `tools_called` captured automatically.
+- **Evaluate LLM calls** with any `deepeval` metric through `LlmSpanContext`.
+- **Run evals from scripts or CI/CD** — same client, different surfaces.
+- **Compose with `@observe` and `with trace(...)`** to evaluate larger flows that wrap one or more Claude calls.
 
-```python title="main.py" showLineNumbers {4,12,13,14,15}
+## Getting Started
+
+<Steps>
+
+<Step>
+
+### Installation
+
+```bash
+pip install -U deepeval anthropic
+```
+
+`deepeval.anthropic.Anthropic` and `deepeval.anthropic.AsyncAnthropic` import Anthropic's classes and patch them in place. Existing kwargs, async paths, streaming, and tool-use behavior all work unchanged.
+
+</Step>
+
+<Step>
+
+### Instrument and evaluate
+
+Replace `from anthropic import Anthropic` with `from deepeval.anthropic import Anthropic`. Wrap each call you want to evaluate in `with trace(llm_span_context=LlmSpanContext(metrics=[...]))`.
+
+```python title="anthropic_app.py" showLineNumbers
 from deepeval.anthropic import Anthropic
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.tracing import trace, LlmSpanContext
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import AnswerRelevancyMetric
 
 client = Anthropic()
 
-dataset = EvaluationDataset()
-datset.pull(alias="My Dataset")
+# Goldens are the inputs you want to evaluate.
+dataset = EvaluationDataset(goldens=[Golden(input="What's the capital of France?")])
 
 for golden in dataset.evals_iterator():
-    with trace(
-        llm_span_context=LlmSpanContext(
-            metrics=[AnswerRelevancyMetric()],
-            expected_output=golden.expected_output,
-        )
-    ):
-        response = client.messages.create(
+    with trace(llm_span_context=LlmSpanContext(metrics=[AnswerRelevancyMetric()])):
+        client.messages.create(
             model="claude-sonnet-4-5",
-            max_tokens=4096,
-            system="You are a helpful assistant.",
-            messages=[
-                {
-                    "role": "user",
-                    "content": golden.input
-                }
-            ],
+            max_tokens=1024,
+            system="Be concise.",
+            messages=[{"role": "user", "content": golden.input}],
         )
-        return response.content[0].text
 ```
 
-</Tab>
-<Tab value="Async Messages">
+Done ✅. You've run your first eval against a Claude call with full traceability via `deepeval`.
 
-```python title="main.py" showLineNumbers {6,11,12,13,14}
+</Step>
+
+</Steps>
+
+## What gets traced
+
+Each patched Anthropic call produces one **LLM span** under the active trace. When the call uses tool-use, the span's `tools_called` field captures every tool block the model returned — no extra wiring needed.
+
+- **LLM spans** — one per `messages.create(...)` call. Captures input messages, output text, token counts, and `tools_called`.
+- **Trace** — auto-created when the call has no parent. If the call runs inside `with trace(...)` or `@observe`, the LLM span nests under that trace instead.
+
+```text
+Trace                          ← auto-created or user-owned
+└── LLM: claude-sonnet-4-5     ← one client.messages.create(...) call
+```
+
+The trace and its LLM span are independently evaluable.
+
+## Running evals
+
+There are two surfaces for running evals against Anthropic calls. Pick by where you want results to surface — your terminal during development, or your CI pipeline as a pass/fail gate.
+
+### In CI/CD (pytest)
+
+Use the `deepeval` pytest integration. Each parametrized test invocation becomes one Anthropic call; failing metrics fail the test, which fails the build.
+
+```python title="test_anthropic_app.py" showLineNumbers
+import pytest
+from deepeval import assert_test
+from deepeval.anthropic import Anthropic
+from deepeval.tracing import trace, LlmSpanContext
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import AnswerRelevancyMetric
+
+client = Anthropic()
+dataset = EvaluationDataset(goldens=[
+    Golden(input="What's the capital of France?"),
+    Golden(input="Who wrote Hamlet?"),
+])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_anthropic_app(golden: Golden):
+    with trace(llm_span_context=LlmSpanContext(metrics=[AnswerRelevancyMetric()])):
+        client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=1024,
+            system="Be concise.",
+            messages=[{"role": "user", "content": golden.input}],
+        )
+    assert_test(golden=golden)
+```
+
+Run it with:
+
+```bash
+deepeval test run test_anthropic_app.py
+```
+
+### In a script
+
+Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one Anthropic call; metrics score the resulting LLM span.
+
+```python title="anthropic_app.py" showLineNumbers
 import asyncio
 
 from deepeval.anthropic import AsyncAnthropic
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.tracing import trace, LlmSpanContext
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.evaluate.configs import AsyncConfig
+from deepeval.metrics import AnswerRelevancyMetric
 
-async_client = AsyncAnthropic()
+client = AsyncAnthropic()
+dataset = EvaluationDataset(goldens=[
+    Golden(input="What's the capital of France?"),
+    Golden(input="Who wrote Hamlet?"),
+])
 
-async def llm_app(input):
-    with trace(
-        llm_span_context=LlmSpanContext(
-            llm_metrics=[AnswerRelevancyMetric()],
-            expected_output=golden.expected_output,
-        )
-    ):
-        response = await async_client.messages.create(
+async def call_claude(prompt: str):
+    with trace(llm_span_context=LlmSpanContext(metrics=[AnswerRelevancyMetric()])):
+        return await client.messages.create(
             model="claude-sonnet-4-5",
-            max_tokens=4096,
-            system="You are a helpful assistant.",
-            messages=[
-                {
-                    "role": "user",
-                    "content": golden.input
-                }
-            ],
+            max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}],
         )
-        return response.content[0].text
 
-dataset = EvaluationDataset()
-datset.pull(alias="My Dataset")
-
-for golden in dataset.evals_iterator():
-    task = asyncio.create_task(llm_app(input=golden.input))
+for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True)):
+    task = asyncio.create_task(call_claude(golden.input))
     dataset.evaluate(task)
 ```
 
-</Tab>
-</Tabs>
+Sync (`Anthropic`) and async (`AsyncAnthropic`) clients both work; pick whichever matches your code.
 
-The `trace` context supports **FIVE** optional parameters:
+## Applying metrics to LLM spans
 
-- `metrics`: List of `BaseMetric` metrics to use when evaluating the model's output.
-- `expected_output`: An ideal output the model should produce for the given input.
-- `retrieval_context`: The specific set of information or documents retrieved for ground truth comparison.
-- `context`: Ideal context snippets the model should use when generating its answer.
-- `expected_tools`: List of tool names/functions you expect the model to call during its response.
+Passing `metrics=[...]` to `LlmSpanContext` evaluates the next Claude call's LLM span specifically. The same context manager lets you attach extra evaluation parameters that some metrics need.
 
-:::info
-With `deepeval`’s `Anthropic` client, input and actual output are auto-extracted for every generation, so you can run evaluations like **Answer Relevancy** without extra setup. For metrics that require parameters beyond the input and actual output (e.g. **Faithfulness**), just pass `retrieval_context` or `context` in the `trace` context.
-:::
-
-### Evaluating Claude within Components
-
-For component-level evaluation, use `deepeval`'s `Anthropic` client and add the `@observe` decorator to your component functions. Pass your chosen metrics via the `trace` context manager.
-
-<Tabs items={["Messages", "Async Messages"]}>
-<Tab value="Messages">
-
-```python title="main.py" showLineNumbers {4,6,13}
-from deepeval.anthropic import Anthropic
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.tracing import trace, observe, LlmSpanContext
-
-@observe()
-def retrieve_documents(query):
-    return [
-        "React is a popular Javascript library for building user interfaces.",
-        "It allows developers to create large web applications that can update and render efficiently in response to data changes."
-    ]
-
-@observe()
-def llm_app(input):
-    client = Anthropic()
-    with trace(
-        llm_span_context=LlmSpanContext(
-            metrics=[AnswerRelevancyMetric()],
-            expected_output=golden.expected_output,
-        )
-    ):
-        response = client.messages.create(
-            model="claude-sonnet-4-5",
-            max_tokens=4096,
-            system="You are a helpful assistant.",
-            messages=[
-                {
-                    "role": "user",
-                    "content": golden.input
-                }
-            ]
-        )
-    return response.content[0].text
-
-dataset = EvaluationDataset()
-datset.pull(alias="My Dataset")
-
-for golden in dataset.evals_iterator():
-    llm_app(input=golden.input)
-```
-
-</Tab>
-<Tab value="Async Messages">
-
-```python title="main.py" showLineNumbers {6,8,15}
-import asyncio
-
-from deepeval.anthropic import AsyncAnthropic
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.tracing import trace, observe, LlmSpanContext
-
-@observe()
-def retrieve_documents(query):
-    return [
-        "React is a popular Javascript library for building user interfaces.",
-        "It allows developers to create large web applications that can update and render efficiently in response to data changes."
-    ]
-
-@observe()
-async def llm_app(input):
-    async_client = AsyncAnthropic()
-    with trace(
-        llm_span_context=LlmSpanContext(
-            metrics=[AnswerRelevancyMetric(), BiasMetric()]
-        ),
-    ):
-        response = await async_client.responses.create(
-            model="claude-sonnet-4-5",
-            max_tokens=4096,
-            system="You are a helpful assistant.",
-            messages=[
-                {
-                    "role": "user",
-                    "content": input
-                }
-            ],
-        )
-    return response.content[0].text
-
-dataset = EvaluationDataset()
-datset.pull(alias="My Dataset")
-
-for golden in dataset.evals_iterator():
-    task = asyncio.create_task(llm_app(input=golden.input))
-    dataset.evaluate(task)
-```
-
-</Tab>
-</Tabs>
-
-When used inside `@observe` components, `deepeval`'s `Anthropic` client automatically:
-
-- Generates an LLM span for every Messages API call, including nested Tool spans for any tool invocations.
-- Attaches an `LLMTestCase` to each generated LLM span, capturing inputs, outputs, and tools called.
-- Records span level llm attributes such as the input prompt, generated output and token usage.
-- Logs hyperparameters such as model name and system prompt for comprehensive experiment analysis.
-
-## Online Evaluations in Production
-
-To evaluate your Claude application's traces in production, ensure the client is used within an observed function. This enables online evals, which automatically assess incoming traces on Confident AI's server.
-
-Set the `llm_metric_collection` parameter in the `trace` context manager to evaluate the trace against a collection of metrics.
-
-```python main.py
+```python title="anthropic_app.py" showLineNumbers
 from deepeval.anthropic import Anthropic
 from deepeval.tracing import trace, LlmSpanContext
+from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
 
 client = Anthropic()
 
 with trace(
     llm_span_context=LlmSpanContext(
-        metric_collection="test_collection_1",
+        metrics=[AnswerRelevancyMetric(), FaithfulnessMetric()],
+        retrieval_context=["Paris is the capital of France."],
     ),
 ):
-    response = client.messages.create(
+    client.messages.create(
         model="claude-sonnet-4-5",
-        max_tokens=4096,
-        system="You are a helpful assistant.",
-        messages=[
-            {
-                "role": "user",
-                "content": "Hello, how are you?"
-            }
-        ],
+        max_tokens=1024,
+        messages=[{"role": "user", "content": "What's the capital of France?"}],
     )
 ```
 
-:::note
-For a complete guide on setting up online evaluations with **Confident AI** (an AI quality platform `deepeval` integrates with natively), please visit [Evaluating with Tracing](/docs/evaluation-component-level-llm-evals).
-:::
+`LlmSpanContext` accepts `metrics`, `expected_output`, `expected_tools`, `context`, `retrieval_context`, and `prompt`. Each one is read by the Anthropic patch when the next LLM span is created.
+
+## Customizing trace and span data
+
+The patch captures input messages, output text, and `tools_called` automatically. For anything else, the right API depends on where your code runs.
+
+- Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`, `user_id`).
+- Use `LlmSpanContext` for LLM-span-level fields the metric needs (`expected_output`, `retrieval_context`, etc.).
+- Use `@observe` to wrap retrieval, post-processing, or any other step you want to see as its own span in the trace.
+
+```python title="anthropic_app.py" showLineNumbers
+from deepeval.anthropic import Anthropic
+from deepeval.tracing import trace, LlmSpanContext, observe
+
+client = Anthropic()
+
+@observe(type="retriever")
+def retrieve_docs(query: str) -> list[str]:
+    return ["Paris is the capital of France."]
+
+@observe()
+def respond_to_user(prompt: str) -> str:
+    docs = retrieve_docs(prompt)
+    with trace(
+        llm_span_context=LlmSpanContext(retrieval_context=docs),
+        user_id="user-123",
+        tags=["anthropic", "rag"],
+    ):
+        response = client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=1024,
+            system="\n".join(docs),
+            messages=[{"role": "user", "content": prompt}],
+        )
+    return response.content[0].text
+```
+
+## Advanced patterns
+
+The primitives above — `deepeval.anthropic.Anthropic`, `LlmSpanContext`, `@observe`, `with trace(...)` — compose around one boundary: the patch owns each LLM call's span, and your code chooses what trace to put it inside.
+
+### Wrap a Claude call in `@observe`
+
+When the Claude call is part of a larger operation, decorate the outer function with `@observe`. The LLM span nests under your observed span automatically.
+
+```python title="anthropic_app.py" showLineNumbers
+from deepeval.tracing import observe, trace, LlmSpanContext
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+@observe(name="respond_to_user")
+def respond_to_user(prompt: str) -> str:
+    with trace(llm_span_context=LlmSpanContext(metrics=[AnswerRelevancyMetric()])):
+        response = client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}],
+        )
+    return response.content[0].text
+```
+
+#### No trace-level metrics required
+
+Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because `AnswerRelevancyMetric` is attached to the LLM span, so CI/CD and scripts only need to call the function.
+
+This is how you'd run it:
+
+<Tabs items={["CI/CD", "Scripts"]}>
+<Tab value="CI/CD">
+
+```python title="test_anthropic_app.py" showLineNumbers
+import pytest
+from deepeval import assert_test
+...
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_respond_to_user(golden: Golden):
+    respond_to_user(golden.input)
+    assert_test(golden=golden)
+```
+
+```bash
+deepeval test run test_anthropic_app.py
+```
+
+</Tab>
+<Tab value="Scripts">
+
+```python title="anthropic_app.py" showLineNumbers
+...
+
+for golden in dataset.evals_iterator():
+    respond_to_user(golden.input)
+```
+
+</Tab>
+</Tabs>
+
+### Multiple Claude calls under one trace
+
+When a single logical unit of work makes several Claude calls (e.g. a planner call followed by a respond call), bracket them with `with trace(...)` so the LLM spans share a `trace_id` and show up as siblings under one root.
+
+```python title="anthropic_app.py" showLineNumbers
+from deepeval.tracing import trace
+...
+
+def plan_then_respond(prompt: str):
+    with trace(name="plan_then_respond"):
+        plan = client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=512,
+            messages=[{"role": "user", "content": f"Plan: {prompt}"}],
+        )
+        return client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=1024,
+            messages=[{"role": "user", "content": plan.content[0].text}],
+        )
+```
+
+### Tool-use models
+
+When Claude returns `tool_use` content blocks, the LLM span's `tools_called` field captures them automatically. Use `expected_tools` on `LlmSpanContext` if you want to evaluate tool selection with a tool-aware metric.
+
+```python title="anthropic_app.py" showLineNumbers
+from deepeval.test_case import ToolCall
+from deepeval.tracing import trace, LlmSpanContext
+...
+
+with trace(
+    llm_span_context=LlmSpanContext(
+        expected_tools=[ToolCall(name="get_weather", input_parameters={"city": "Paris"})],
+    ),
+):
+    client.messages.create(
+        model="claude-sonnet-4-5",
+        max_tokens=1024,
+        tools=[...],
+        messages=[...],
+    )
+```
+
+## API reference
+
+`LlmSpanContext(...)` accepts the following kwargs. Each is read once when the next Claude call's LLM span is created.
+
+| Kwarg               | Type        | Description                                                                              |
+| ------------------- | ----------- | ---------------------------------------------------------------------------------------- |
+| `metrics`           | `list`      | Metrics applied to the next LLM span.                                                    |
+| `prompt`            | `Prompt`    | Confident AI prompt object; captured on the LLM span for prompt-version analytics.       |
+| `expected_output`   | `str`       | Reference output for metrics that compare against ground truth.                          |
+| `expected_tools`    | `list`      | Reference tool calls for tool-aware metrics.                                             |
+| `context`           | `list[str]` | Ideal context the model should use when answering.                                       |
+| `retrieval_context` | `list[str]` | Retrieved context the model actually used (Faithfulness, Contextual Relevancy, etc.).    |
+
+`with trace(...)` accepts trace-level kwargs (`name`, `tags`, `metadata`, `thread_id`, `user_id`, `metrics`, `input`, `output`) — see the [tracing reference](/docs/evaluation-llm-tracing).

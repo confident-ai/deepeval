@@ -3,32 +3,93 @@ id: llamaindex
 title: LlamaIndex
 sidebar_label: LlamaIndex
 ---
-import { ASSETS } from "@site/src/assets";
 
-[LlamaIndex](https://www.llamaindex.ai/) is an orchestration framework that simplifies data ingestion, indexing, and querying, allowing developers to integrate private and public data into LLM applications for retrieval-augmented generation and knowledge augmentation.
+<IntegrationTagsDisplayer manual={true} cicdEvals={true} traceability={true} />
 
-:::tip
-We recommend logging in to [Confident AI](https://app.confident-ai.com) to view your LlamaIndex evaluation traces.
+[LlamaIndex](https://www.llamaindex.ai/) is an orchestration framework for data ingestion, indexing, and retrieval-augmented generation, with first-class agent and workflow primitives.
 
-```bash
-deepeval login
-```
+The `deepeval` integration registers a LlamaIndex event handler that turns every dispatch — workflow runs, agent steps, LLM chats, retrieval, and tool calls — into a span you can inspect, without rewriting your LlamaIndex app.
 
-:::
+<AgentTraceTerminal
+  title="llamaindex_agent · deepeval"
+  ariaLabel="Example LlamaIndex agent trace with per-step metric scores"
+  lines={[
+    { kind: "cmd", name: "deepeval test run test_llamaindex_agent.py" },
+    { kind: "blank" },
+    { kind: "root", prefix: "●", name: "test_llamaindex_agent" },
+    { kind: "blank", prefix: "│" },
+    {
+      kind: "agent",
+      prefix: "└─",
+      name: "math_agent",
+      metric: "Task Completion",
+      score: "0.95",
+      duration: "210ms",
+      pass: true,
+    },
+    {
+      kind: "llm",
+      prefix: "   ├─",
+      name: "gpt-4o-mini · plan",
+      metric: "G-Eval",
+      score: "0.43",
+      duration: "70ms",
+      pass: false,
+    },
+    {
+      kind: "tool",
+      prefix: "   ├─",
+      name: "multiply(a=8, b=6)",
+      duration: "32ms",
+    },
+    {
+      kind: "llm",
+      prefix: "   └─",
+      name: "gpt-4o-mini · respond",
+      metric: "Faithfulness",
+      score: "0.94",
+      duration: "76ms",
+      pass: true,
+    },
+    { kind: "blank" },
+    {
+      kind: "summary",
+      name: "Trace score  0.77   ·   2/3 metrics passed",
+      pass: false,
+    },
+  ]}
+/>
 
-## End-to-End Evals
+`deepeval`'s LlamaIndex integration enables you to:
 
-`deepeval` allows you to evaluate LlamaIndex applications end-to-end in **under a minute**.
+- **Trace every workflow / agent run** — each `agent.run(...)` produces a trace, and each LLM, tool, and retriever call becomes a component span.
+- **Evaluate traces or model / agent components** with any `deepeval` metric through `LlmSpanContext` and `AgentSpanContext`.
+- **Run evals from scripts or CI/CD** — same dispatcher, different surfaces.
+- **Compose with `@observe` and `with trace(...)`** to evaluate larger flows that wrap one or more LlamaIndex runs.
+
+## Getting Started
 
 <Steps>
 
 <Step>
-### Configure LlamaIndex
 
+### Installation
 
-Setup tracing for LlamaIndex and create an Agent. Use `trace` context manager to set up the `AgentSpanContext` (or `LlmSpanContext` if you want to evaluate the LLM span).
+```bash
+pip install -U deepeval llama-index llama-index-llms-openai
+```
 
-```python title="main.py" showLineNumbers
+The integration registers a `BaseEventHandler` and `BaseSpanHandler` against LlamaIndex's instrumentation dispatcher. After that, every workflow / agent run dispatches events that `deepeval` turns into spans.
+
+</Step>
+
+<Step>
+
+### Instrument and evaluate
+
+Call `instrument_llama_index(get_dispatcher())` once at startup. Wrap each agent run in `with trace(agent_span_context=AgentSpanContext(metrics=[...]))` to evaluate the agent span.
+
+```python title="llamaindex_agent.py" showLineNumbers
 import asyncio
 
 from llama_index.llms.openai import OpenAI
@@ -36,90 +97,284 @@ from llama_index.core.agent import FunctionAgent
 import llama_index.core.instrumentation as instrument
 
 from deepeval.integrations.llama_index import instrument_llama_index
-from deepeval.tracing.trace_context import AgentSpanContext
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.tracing import trace
+from deepeval.tracing import trace, AgentSpanContext
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.evaluate.configs import AsyncConfig
+from deepeval.metrics import TaskCompletionMetric
 
 instrument_llama_index(instrument.get_dispatcher())
 
-
 def multiply(a: float, b: float) -> float:
-    """Useful for multiplying two numbers."""
+    """Multiply two numbers."""
     return a * b
 
 agent = FunctionAgent(
     tools=[multiply],
     llm=OpenAI(model="gpt-4o-mini"),
-    system_prompt="You are a helpful assistant that can perform calculations.",
+    system_prompt="You are a helpful calculator.",
 )
 
-answer_relevancy_metric = AnswerRelevancyMetric()
+async def run_agent(prompt: str):
+    with trace(agent_span_context=AgentSpanContext(metrics=[TaskCompletionMetric()])):
+        return await agent.run(prompt)
 
-async def llm_app(input: str):
-    agent_span_context = AgentSpanContext(
-        metrics=[answer_relevancy_metric],
-    )
-    with trace(agent_span_context=agent_span_context):
-        return await agent.run(input)
+# Goldens are the inputs you want to evaluate.
+dataset = EvaluationDataset(goldens=[Golden(input="What is 8 multiplied by 6?")])
+
+for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True)):
+    task = asyncio.create_task(run_agent(golden.input))
+    dataset.evaluate(task)
 ```
 
-:::info
-Only metrics with LLM parameters `input` and `output` are eligible for evaluation.
-:::
+Done ✅. You've run your first eval with full traceability into LlamaIndex via `deepeval`.
 
 </Step>
-<Step>
-### Run evaluations
 
+</Steps>
 
-Create an `EvaluationDataset` and invoke your LlamaIndex application for each golden within the `evals_iterator()` loop to run end-to-end evaluations.
+## What gets traced
 
-<Tabs items={["Asynchronous"]}>
-<Tab value="Asynchronous">
+Each LlamaIndex `Workflow` or `agent.run(...)` call produces a **trace** — the end-to-end unit your user observes. Inside that trace are **component spans** for every dispatch LlamaIndex emits:
 
-```python title="main.py" showLineNumbers
+- **Agent spans** — `FunctionAgent.run`, `Workflow.run`, and nested agent steps.
+- **LLM spans** — chat model calls (`LLMChatStartEvent` / `LLMChatEndEvent`).
+- **Tool spans** — `call_tool` / `acall_tool` invocations.
+- **Retriever spans** — retriever calls (`RetrievalEndEvent`) when your app uses retrieval.
+
+```text
+Trace                          ← what the user observes
+└── Agent: math_agent          ← one agent.run(...) call
+    ├── LLM: gpt-4o-mini       ← component span: model decides
+    ├── Tool: multiply         ← component span: tool input + output
+    └── LLM: gpt-4o-mini       ← component span: final answer
+```
+
+The trace and its component spans are independently evaluable.
+
+## Running evals
+
+There are two surfaces for running evals against a LlamaIndex app. Pick by where you want results to surface — your terminal during development, or your CI pipeline as a pass/fail gate.
+
+### In CI/CD (pytest)
+
+Use the `deepeval` pytest integration. Each parametrized test invocation becomes one `agent.run(...)`; failing metrics fail the test, which fails the build.
+
+```python title="test_llamaindex_agent.py" showLineNumbers
+import asyncio
+import pytest
+
+from llama_index.llms.openai import OpenAI
+from llama_index.core.agent import FunctionAgent
+import llama_index.core.instrumentation as instrument
+
+from deepeval import assert_test
+from deepeval.integrations.llama_index import instrument_llama_index
 from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
 
-dataset = EvaluationDataset(
-    goldens=[Golden(input="What is 3 * 12?"), Golden(input="What is 4 * 13?")]
+instrument_llama_index(instrument.get_dispatcher())
+
+def multiply(a: float, b: float) -> float:
+    """Multiply two numbers."""
+    return a * b
+
+agent = FunctionAgent(
+    tools=[multiply],
+    llm=OpenAI(model="gpt-4o-mini"),
+    system_prompt="You are a helpful calculator.",
 )
+dataset = EvaluationDataset(goldens=[
+    Golden(input="What is 8 multiplied by 6?"),
+    Golden(input="What is 7 multiplied by 9?"),
+])
 
-for golden in dataset.evals_iterator():
-    task = asyncio.create_task(llm_app(golden.input))
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_llamaindex_agent(golden: Golden):
+    asyncio.run(agent.run(golden.input))
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Run it with:
+
+```bash
+deepeval test run test_llamaindex_agent.py
+```
+
+### In a script
+
+Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one agent run; metrics score the resulting trace.
+
+```python title="llamaindex_agent.py" showLineNumbers
+import asyncio
+
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.evaluate.configs import AsyncConfig
+from deepeval.metrics import TaskCompletionMetric
+...
+
+dataset = EvaluationDataset(goldens=[
+    Golden(input="What is 8 multiplied by 6?"),
+    Golden(input="What is 7 multiplied by 9?"),
+])
+
+for golden in dataset.evals_iterator(
+    async_config=AsyncConfig(run_async=True),
+    metrics=[TaskCompletionMetric()],
+):
+    task = asyncio.create_task(agent.run(golden.input))
+    dataset.evaluate(task)
+```
+
+LlamaIndex's `agent.run(...)` is async-only, so `evals_iterator` here uses `AsyncConfig(run_async=True)` and `dataset.evaluate(task)` to run goldens concurrently.
+
+## Applying metrics to components
+
+The `metrics=[...]` you pass to `evals_iterator` evaluates the **trace**. To evaluate a **component** — a specific agent span or LLM call — stage the metric with `AgentSpanContext` or `LlmSpanContext` before the run.
+
+### Agent spans
+
+Use `AgentSpanContext(metrics=[...])` to score the agent span specifically. Useful when you want a metric on the agent step itself, distinct from the trace.
+
+```python title="llamaindex_agent.py" showLineNumbers
+from deepeval.tracing import trace, AgentSpanContext
+from deepeval.metrics import TaskCompletionMetric
+...
+
+async def run_agent(prompt: str):
+    with trace(agent_span_context=AgentSpanContext(metrics=[TaskCompletionMetric()])):
+        return await agent.run(prompt)
+```
+
+### LLM calls
+
+Use `LlmSpanContext(metrics=[...])` to score the next LLM span LlamaIndex opens. Useful when you want to evaluate the model's reasoning step in isolation.
+
+```python title="llamaindex_agent.py" showLineNumbers
+from deepeval.tracing import trace, LlmSpanContext
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+async def run_agent(prompt: str):
+    with trace(llm_span_context=LlmSpanContext(metrics=[AnswerRelevancyMetric()])):
+        return await agent.run(prompt)
+```
+
+For deterministic tool calls, prefer `update_current_span(...)` to add metadata, inputs, and outputs instead of attaching metrics to the tool span.
+
+## Customizing trace and span data
+
+The integration captures inputs, outputs, model names, and tool calls automatically. For anything dynamic, the right API depends on where your code runs.
+
+- Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`, `user_id`, `metrics`).
+- Use `LlmSpanContext` and `AgentSpanContext` for component-level metric defaults and evaluation parameters.
+- Use `update_current_trace(...)` and `update_current_span(...)` from inside a tool body to mutate fields the framework can't see.
+
+```python title="llamaindex_agent.py" showLineNumbers
+from deepeval.tracing import update_current_span
+
+def multiply(a: float, b: float) -> float:
+    """Multiply two numbers."""
+    update_current_span(metadata={"deterministic": True})
+    return a * b
+```
+
+## Advanced patterns
+
+The primitives above — `instrument_llama_index`, `LlmSpanContext`, `AgentSpanContext`, `@observe`, `with trace(...)` — compose around one boundary: LlamaIndex owns the dispatcher lifecycle, and your code stages metrics for the spans it produces.
+
+### Stage component metrics with span contexts
+
+`AgentSpanContext` and `LlmSpanContext` stage metrics for the next matching component span. Use them when you want to evaluate a sub-step instead of the full trace.
+
+```python title="llamaindex_agent.py" showLineNumbers
+from deepeval.tracing import trace, AgentSpanContext
+from deepeval.metrics import TaskCompletionMetric
+...
+
+async def run_agent(prompt: str):
+    with trace(agent_span_context=AgentSpanContext(metrics=[TaskCompletionMetric()])):
+        return await agent.run(prompt)
+```
+
+#### No trace-level metrics required
+
+Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because `TaskCompletionMetric` is attached to the agent span via `AgentSpanContext`, so CI/CD and scripts only need to run the agent.
+
+This is how you'd run it:
+
+<Tabs items={["CI/CD", "Scripts"]}>
+<Tab value="CI/CD">
+
+```python title="test_llamaindex_agent.py" showLineNumbers
+import asyncio
+import pytest
+from deepeval import assert_test
+...
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_agent_span(golden: Golden):
+    asyncio.run(run_agent(golden.input))
+    assert_test(golden=golden)
+```
+
+```bash
+deepeval test run test_llamaindex_agent.py
+```
+
+</Tab>
+<Tab value="Scripts">
+
+```python title="llamaindex_agent.py" showLineNumbers
+import asyncio
+...
+
+for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True)):
+    task = asyncio.create_task(run_agent(golden.input))
     dataset.evaluate(task)
 ```
 
 </Tab>
 </Tabs>
 
-✅ Done. The `evals_iterator` will automatically generate a test run with individual evaluation traces for each golden.
+### Wrap an agent run in `@observe`
 
-</Step>
-<Step>
-### View on Confident AI (optional)
+When the agent run is part of a larger operation, decorate the outer function with `@observe`. The LlamaIndex spans nest under your observed span automatically.
 
+```python title="llamaindex_agent.py" showLineNumbers
+from deepeval.tracing import observe
+...
 
-<VideoDisplayer
-  src={ASSETS.integrationLlamaIndex}
-/>
-
-</Step>
-
-</Steps>
-
-:::note
-If you need to evaluate individual components of your LlamaIndex application, [set up tracing](/docs/evaluation-llm-tracing) instead.
-:::
-
-## Evals in Production
-
-To run online evaluations in production, simply replace `metric_collection` in `AgentSpanContext` with a [metric collection](https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string from Confident AI, and push your LlamaIndex agent to production.
-
-```python filename="main.py" showLineNumbers
-async def llm_app(input: str):
-    agent_span_context = AgentSpanContext(
-        metric_collection="test_collection_1",
-    )
-    with trace(agent_span_context=agent_span_context):
-        return await agent.run(input)
+@observe(name="respond_to_user")
+async def respond_to_user(prompt: str) -> str:
+    result = await agent.run(prompt)
+    return str(result)
 ```
+
+### Evaluate retrieval
+
+When your LlamaIndex app uses a retriever, retrieval results are captured automatically on the retriever span. Stage `LlmSpanContext` with `retrieval_context` for any LLM that needs faithfulness-style metrics, or apply a metric directly to the retriever span via the dispatcher event.
+
+```python title="llamaindex_agent.py" showLineNumbers
+from deepeval.tracing import trace, LlmSpanContext
+from deepeval.metrics import FaithfulnessMetric
+...
+
+async def run_rag(prompt: str):
+    with trace(llm_span_context=LlmSpanContext(metrics=[FaithfulnessMetric()])):
+        return await query_engine.aquery(prompt)
+```
+
+## API reference
+
+`AgentSpanContext(...)` and `LlmSpanContext(...)` accept the following kwargs. Each is read once when the next matching span is created.
+
+| Kwarg               | Type        | Description                                                                              |
+| ------------------- | ----------- | ---------------------------------------------------------------------------------------- |
+| `metrics`           | `list`      | Metrics applied to the next matching span (agent or LLM).                                |
+| `expected_output`   | `str`       | Reference output for metrics that compare against ground truth.                          |
+| `expected_tools`    | `list`      | Reference tool calls for tool-aware metrics.                                             |
+| `context`           | `list[str]` | Ideal context the model should use when answering.                                       |
+| `retrieval_context` | `list[str]` | Retrieved context the model actually used (LLM-only; Faithfulness, Contextual Relevancy).|
+| `prompt`            | `Prompt`    | Confident AI prompt object; LLM-only.                                                    |
+
+`with trace(...)` accepts trace-level kwargs (`name`, `tags`, `metadata`, `thread_id`, `user_id`, `metrics`) — see the [tracing reference](/docs/evaluation-llm-tracing).

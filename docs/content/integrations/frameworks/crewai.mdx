@@ -3,168 +3,389 @@ id: crewai
 title: CrewAI
 sidebar_label: CrewAI
 ---
-import { ASSETS } from "@site/src/assets";
 
-[CrewAI](https://www.crewai.com/) is a lean, independent Python framework designed for creating and orchestrating autonomous multi-agent AI systems, offering high flexibility, speed, and precision control for complex automation tasks.
+<IntegrationTagsDisplayer manual={true} cicdEvals={true} traceability={true} />
 
-:::tip
-We recommend logging in to [Confident AI](https://app.confident-ai.com) to view your CrewAI evaluation traces.
+[CrewAI](https://www.crewai.com/) is a Python framework for orchestrating role-playing autonomous agents that collaborate on multi-step tasks.
 
-```bash
-deepeval login
-```
+The `deepeval` integration registers a CrewAI event listener and ships drop-in `Crew`, `Agent`, `LLM`, and `tool` shims that accept metrics. Every `crew.kickoff(...)`, agent execution, LLM call, and tool call becomes a span you can inspect — without rewriting your crew.
 
-:::
+<AgentTraceTerminal
+  title="crewai_agent · deepeval"
+  ariaLabel="Example CrewAI trace with per-step metric scores"
+  lines={[
+    { kind: "cmd", name: "deepeval test run test_crewai_agent.py" },
+    { kind: "blank" },
+    { kind: "root", prefix: "●", name: "test_crewai_agent" },
+    { kind: "blank", prefix: "│" },
+    {
+      kind: "agent",
+      prefix: "└─",
+      name: "weather_reporter",
+      metric: "Task Completion",
+      score: "0.95",
+      duration: "240ms",
+      pass: true,
+    },
+    {
+      kind: "llm",
+      prefix: "   ├─",
+      name: "gpt-4o · plan",
+      metric: "G-Eval",
+      score: "0.43",
+      duration: "82ms",
+      pass: false,
+    },
+    {
+      kind: "tool",
+      prefix: "   ├─",
+      name: 'get_weather(city="Paris")',
+      duration: "44ms",
+    },
+    {
+      kind: "llm",
+      prefix: "   └─",
+      name: "gpt-4o · summarize",
+      metric: "Faithfulness",
+      score: "0.94",
+      duration: "78ms",
+      pass: true,
+    },
+    { kind: "blank" },
+    {
+      kind: "summary",
+      name: "Trace score  0.77   ·   2/3 metrics passed",
+      pass: false,
+    },
+  ]}
+/>
 
-## End-to-End Evals
+`deepeval`'s CrewAI integration enables you to:
 
-`deepeval` allows you to evaluate CrewAI applications end-to-end in **under a minute**.
+- **Trace every `crew.kickoff(...)`** — each kickoff produces a trace, and each agent execution, LLM call, and tool call becomes a component span.
+- **Attach metrics directly to `Crew`, `Agent`, `LLM`, and `@tool`** through deepeval-aware shims.
+- **Run evals from scripts or CI/CD** — same crew, different surfaces.
+- **Compose with `@observe` and `with trace(...)`** to evaluate larger flows that wrap one or more crew kickoffs.
+
+## Getting Started
 
 <Steps>
 
 <Step>
-### Configure CrewAI
 
+### Installation
 
-Create a `Crew` and use `instrument_crewai` to instrument your CrewAI application.
+```bash
+pip install -U deepeval crewai
+```
 
-```python title="main.py" showLineNumbers
-import random
+The integration calls `instrument_crewai()` once to register the event listener. After that, the deepeval-aware `Crew`, `Agent`, `LLM`, and `tool` shims accept metrics directly.
 
-from crewai import Task, Crew, Agent
-from crewai.tools import tool
+</Step>
 
-from deepeval.integrations.crewai import instrument_crewai
+<Step>
+
+### Instrument and evaluate
+
+Call `instrument_crewai()` at startup, then build the crew with `deepeval.integrations.crewai.Crew`/`Agent` and the `@tool` decorator. Pass metrics on the `Agent` (or `Crew`) you want to evaluate.
+
+```python title="crewai_agent.py" showLineNumbers
+from crewai import Task
+from deepeval.integrations.crewai import instrument_crewai, Crew, Agent, tool
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
 
 instrument_crewai()
 
 @tool
 def get_weather(city: str) -> str:
-    """Fetch weather data for a given city. Returns temperature and conditions."""
-    weather_data = {
-        "New York": "Partly Cloudy",
-        "London": "Rainy",
-        "Tokyo": "Sunny",
-        "Paris": "Cloudy",
-        "Sydney": "Clear",
-    }
+    """Fetch weather data for a given city."""
+    return f"It's always sunny in {city}!"
 
-    condition = weather_data.get(city, "Clear")
-    temperature = f"{random.randint(45, 95)}°F"
-    humidity = f"{random.randint(30, 90)}%"
-
-    return f"Weather in {city}: {temperature}, {condition}, Humidity: {humidity}"
-
-
-agent = Agent(
+reporter = Agent(
     role="Weather Reporter",
-    goal="Provide accurate and helpful weather information to users.",
-    backstory="An experienced meteorologist who loves helping people plan their day with accurate weather reports.",
+    goal="Provide accurate weather information.",
+    backstory="An experienced meteorologist.",
     tools=[get_weather],
-    verbose=True,
+    metrics=[TaskCompletionMetric()],
 )
 
 task = Task(
-    description="Get the current weather for {city} and provide a helpful summary.",
-    expected_output="A clear weather report including temperature, conditions, and humidity.",
-    agent=agent,
+    description="Get the current weather for {city} and summarize it.",
+    expected_output="A clear weather report for the requested city.",
+    agent=reporter,
 )
 
-crew = Crew(
-    agents=[agent],
-    tasks=[task],
-)
-```
+crew = Crew(agents=[reporter], tasks=[task])
 
-:::info
-Evaluations are supported for CrewAI `Agent`. Only metrics with parameters `input`, `output`, `expected_output` and `tools_called` are eligible for evaluation.
-:::
-
-</Step>
-<Step>
-### Run evaluations
-
-
-Create an `EvaluationDataset` and invoke your CrewAI application for each golden within the `evals_iterator()` loop to run end-to-end evaluations. Pass the `metrics` to the `trace` context manager.
-
-<Tabs items={["Synchronous", "Asynchronous"]}>
-<Tab value="Synchronous">
-
-```python title="main.py" showLineNumbers
-from deepeval.tracing import trace
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.dataset import EvaluationDataset, Golden
-
-answer_relavancy_metric = AnswerRelevancyMetric()
-
-dataset = EvaluationDataset(
-    goldens=[
-        Golden(input="London"),
-        Golden(input="Paris"),
-    ]
-)
+# Goldens are the inputs you want to evaluate.
+dataset = EvaluationDataset(goldens=[Golden(input="Paris")])
 
 for golden in dataset.evals_iterator():
-    with trace(trace_metrics=[answer_relavancy_metric]):
-        crew.kickoff({"city": golden.input})
+    crew.kickoff({"city": golden.input})
 ```
 
-</Tab>
-<Tab value="Asynchronous">
-
-```python title="main.py" showLineNumbers
-from deepeval.tracing import trace
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.dataset import EvaluationDataset, Golden
-
-answer_relavancy_metric = AnswerRelevancyMetric()
-
-dataset = EvaluationDataset(
-    goldens=[
-        Golden(input="London"),
-        Golden(input="Paris"),
-    ]
-)
-
-async def run_crewai_e2e_async(input: str):
-    with trace(trace_metrics=[answer_relavancy_metric]):
-        await crew.kickoff_async({"city": input})
-
-for golden in dataset.evals_iterator():
-    task = asyncio.create_task(run_crewai_e2e_async(golden.input))
-    dataset.evaluate(task)
-```
-
-</Tab>
-</Tabs>
-
-✅ Done. The `evals_iterator` will automatically generate a test run with individual evaluation traces for each golden.
-
-</Step>
-<Step>
-### View on Confident AI (optional)
-
-
-<VideoDisplayer
-  src={ASSETS.integrationCrewai}
-/>
+Done ✅. You've run your first eval with full traceability into CrewAI via `deepeval`.
 
 </Step>
 
 </Steps>
 
-:::note
-If you need to evaluate individual components of your CrewAI application, [set up tracing](/docs/evaluation-llm-tracing) instead.
-:::
+## What gets traced
 
-## Evals in Production
+Each `crew.kickoff(...)` call produces a **trace** — the end-to-end unit your user observes. Inside that trace are **component spans** for every step the crew took:
 
-To run online evaluations in production, replace `metrics` with a [metric collection](https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string from Confident AI, and push your CrewAI agent to production.
+- **Agent spans** — one per `Agent` execution within the crew.
+- **LLM spans** — model calls dispatched by agents.
+- **Tool spans** — tool invocations including knowledge retrieval.
 
-```python filename="main.py" showLineNumbers
-...
-with trace(trace_metric_collection="test_collection_1"):
-    result = crew.kickoff(
-        "city": "London"
-    )
+```text
+Trace                          ← what the user observes
+└── Agent: weather_reporter    ← one crew.kickoff(...) execution
+    ├── LLM: gpt-4o            ← component span: model decides
+    ├── Tool: get_weather      ← component span: tool input + output
+    └── LLM: gpt-4o            ← component span: final summary
 ```
+
+The trace and its component spans are independently evaluable.
+
+## Running evals
+
+There are two surfaces for running evals against a CrewAI crew. Pick by where you want results to surface — your terminal during development, or your CI pipeline as a pass/fail gate.
+
+### In CI/CD (pytest)
+
+Use the `deepeval` pytest integration. Each parametrized test invocation becomes one `crew.kickoff(...)`; failing metrics fail the test, which fails the build.
+
+```python title="test_crewai_agent.py" showLineNumbers
+import pytest
+from crewai import Task
+from deepeval import assert_test
+from deepeval.integrations.crewai import instrument_crewai, Crew, Agent, tool
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+instrument_crewai()
+
+@tool
+def get_weather(city: str) -> str:
+    """Fetch weather data for a given city."""
+    return f"It's always sunny in {city}!"
+
+reporter = Agent(
+    role="Weather Reporter",
+    goal="Provide accurate weather information.",
+    backstory="An experienced meteorologist.",
+    tools=[get_weather],
+)
+task = Task(
+    description="Get the current weather for {city} and summarize it.",
+    expected_output="A clear weather report for the requested city.",
+    agent=reporter,
+)
+crew = Crew(agents=[reporter], tasks=[task])
+
+dataset = EvaluationDataset(goldens=[Golden(input="Paris"), Golden(input="London")])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_crewai_agent(golden: Golden):
+    crew.kickoff({"city": golden.input})
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Run it with:
+
+```bash
+deepeval test run test_crewai_agent.py
+```
+
+### In a script
+
+Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one kickoff; metrics score the resulting trace.
+
+```python title="crewai_agent.py" showLineNumbers
+import asyncio
+
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.evaluate.configs import AsyncConfig
+from deepeval.metrics import TaskCompletionMetric
+...
+
+dataset = EvaluationDataset(goldens=[Golden(input="Paris"), Golden(input="London")])
+
+async def run_crew(city: str):
+    return await crew.kickoff_async({"city": city})
+
+for golden in dataset.evals_iterator(
+    async_config=AsyncConfig(run_async=True),
+    metrics=[TaskCompletionMetric()],
+):
+    task = asyncio.create_task(run_crew(golden.input))
+    dataset.evaluate(task)
+```
+
+Sync (`crew.kickoff`) and async (`crew.kickoff_async`) execution both work; pick whichever matches your code.
+
+## Applying metrics to components
+
+The `metrics=[...]` you pass to `evals_iterator` evaluates the **trace**. To evaluate a **component** — a specific agent, LLM call, or tool — attach metrics directly where the component is defined.
+
+### Agent spans
+
+Pass `metrics=[...]` to `deepeval.integrations.crewai.Agent`. The metric is applied to that agent's span on every execution.
+
+```python title="crewai_agent.py" showLineNumbers
+from deepeval.integrations.crewai import Agent
+from deepeval.metrics import TaskCompletionMetric
+...
+
+reporter = Agent(
+    role="Weather Reporter",
+    goal="Provide accurate weather information.",
+    backstory="An experienced meteorologist.",
+    tools=[get_weather],
+    metrics=[TaskCompletionMetric()],
+)
+```
+
+### LLM calls
+
+Pass `metrics=[...]` to `deepeval.integrations.crewai.LLM`. The metric is applied to LLM spans produced by that model.
+
+```python title="crewai_agent.py" showLineNumbers
+from deepeval.integrations.crewai import LLM, Agent
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+llm = LLM(model="gpt-4o", metrics=[AnswerRelevancyMetric()])
+reporter = Agent(
+    role="Weather Reporter",
+    goal="Provide accurate weather information.",
+    backstory="An experienced meteorologist.",
+    tools=[get_weather],
+    llm=llm,
+)
+```
+
+### Tool calls
+
+Pass `metric=[...]` to the deepeval-aware `@tool` decorator. The metric is applied to that tool's span on every call.
+
+```python title="crewai_agent.py" showLineNumbers
+from deepeval.integrations.crewai import tool
+from deepeval.metrics import GEval
+from deepeval.test_case import LLMTestCaseParams
+
+@tool(metric=[GEval(
+    name="Helpful Weather Lookup",
+    criteria="The output must be a clear weather summary for the requested city.",
+    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+)])
+def get_weather(city: str) -> str:
+    """Fetch weather data for a given city."""
+    return f"It's always sunny in {city}!"
+```
+
+For deterministic tool calls, prefer `update_current_span(...)` to add metadata, inputs, and outputs instead of attaching metrics to the tool span.
+
+## Customizing trace and span data
+
+The integration captures inputs, outputs, model names, and tool calls automatically. For anything dynamic, the right API depends on where your code runs.
+
+- Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`, `user_id`, `metrics`).
+- Use shim kwargs (`Agent(metrics=...)`, `LLM(metrics=...)`, `@tool(metric=...)`) for component-level defaults.
+- Use `update_current_trace(...)` and `update_current_span(...)` from inside a tool body to mutate fields the framework can't see.
+
+```python title="crewai_agent.py" showLineNumbers
+from deepeval.integrations.crewai import tool
+from deepeval.tracing import update_current_trace, update_current_span
+
+@tool
+def get_weather(city: str) -> str:
+    """Fetch weather data for a given city."""
+    update_current_trace(metadata={"city": city})
+    update_current_span(metadata={"source": "static-table"})
+    return f"It's always sunny in {city}!"
+```
+
+## Advanced patterns
+
+The primitives above — `instrument_crewai`, `Crew`, `Agent`, `LLM`, `@tool`, `with trace(...)` — compose around one boundary: CrewAI owns the kickoff lifecycle, and your code attaches metrics where they make sense.
+
+### Trace-level metrics with `with trace(...)`
+
+When you want a metric on the whole crew run rather than a specific component, wrap the kickoff in `with trace(metrics=[...])`. The metric scores the trace's overall input/output.
+
+```python title="crewai_agent.py" showLineNumbers
+from deepeval.tracing import trace
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+for golden in dataset.evals_iterator():
+    with trace(metrics=[AnswerRelevancyMetric()]):
+        crew.kickoff({"city": golden.input})
+```
+
+#### No trace-level metrics required
+
+Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary when component metrics are already attached to the agent, LLM, or tool — CI/CD and scripts only need to run the crew.
+
+This is how you'd run it:
+
+<Tabs items={["CI/CD", "Scripts"]}>
+<Tab value="CI/CD">
+
+```python title="test_crewai_agent.py" showLineNumbers
+import pytest
+from deepeval import assert_test
+...
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_component_metrics(golden: Golden):
+    crew.kickoff({"city": golden.input})
+    assert_test(golden=golden)
+```
+
+```bash
+deepeval test run test_crewai_agent.py
+```
+
+</Tab>
+<Tab value="Scripts">
+
+```python title="crewai_agent.py" showLineNumbers
+...
+
+for golden in dataset.evals_iterator():
+    crew.kickoff({"city": golden.input})
+```
+
+</Tab>
+</Tabs>
+
+### Wrap a kickoff in `@observe`
+
+When the crew run is part of a larger operation, decorate the outer function with `@observe`. CrewAI spans nest under your observed span automatically.
+
+```python title="crewai_agent.py" showLineNumbers
+from deepeval.tracing import observe
+...
+
+@observe(name="respond_to_user")
+def respond_to_user(city: str) -> str:
+    result = crew.kickoff({"city": city})
+    return str(result)
+```
+
+## API reference
+
+The deepeval-aware shims accept the framework's standard kwargs plus the following:
+
+| Shim          | Kwarg     | Description                                                          |
+| ------------- | --------- | -------------------------------------------------------------------- |
+| `Crew(...)`   | `metrics` | Metrics applied to the crew's top-level span on every kickoff.       |
+| `Agent(...)`  | `metrics` | Metrics applied to this agent's span on every execution.             |
+| `LLM(...)`    | `metrics` | Metrics applied to LLM spans produced by this model.                 |
+| `@tool(...)`  | `metric`  | Metrics applied to this tool's span on every call.                   |
+
+For runtime helpers (`update_current_trace`, `update_current_span`) and the test-decorator surface (`@observe`, `@assert_test`, `with trace(...)`), see the [tracing reference](/docs/evaluation-llm-tracing).

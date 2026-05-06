@@ -3,392 +3,362 @@ id: openai
 title: OpenAI
 sidebar_label: OpenAI
 ---
-import { ASSETS } from "@site/src/assets";
 
-`deepeval` streamlines the process of evaluating and tracing your OpenAI applications through an **OpenAI client wrapper**, and supports both end-to-end and component-level evaluations, and online evaluations in production.
+<IntegrationTagsDisplayer manual={true} cicdEvals={true} traceability={true} />
 
-## End-to-End Evals
+[OpenAI](https://platform.openai.com/docs/) provides chat completions and responses APIs for building LLM applications.
 
-To begin evaluating your OpenAI application, simply replace your OpenAI client with `deepeval`'s OpenAI client, and pass in the `metrics` you wish to use.
+The `deepeval` integration is a drop-in replacement for OpenAI's client. Every `client.chat.completions.create(...)` and `client.responses.create(...)` call becomes an LLM span you can evaluate, without rewriting how you call the API.
 
-<Tabs items={["Chat Completions", "Responses", "Async Chat Completions", "Async Responses"]}>
-<Tab value="Chat Completions">
+<AgentTraceTerminal
+  title="openai_app · deepeval"
+  ariaLabel="Example OpenAI client trace with per-step metric scores"
+  lines={[
+    { kind: "cmd", name: "deepeval test run test_openai_app.py" },
+    { kind: "blank" },
+    { kind: "root", prefix: "●", name: "test_openai_app" },
+    { kind: "blank", prefix: "│" },
+    {
+      kind: "llm",
+      prefix: "└─",
+      name: "gpt-4o · respond",
+      metric: "Answer Relevancy",
+      score: "0.93",
+      duration: "260ms",
+      pass: true,
+    },
+    {
+      kind: "llm",
+      prefix: "  ",
+      name: "",
+      metric: "Faithfulness",
+      score: "0.41",
+      duration: "",
+      pass: false,
+    },
+    { kind: "blank" },
+    {
+      kind: "summary",
+      name: "Trace score  0.67   ·   1/2 metrics passed",
+      pass: false,
+    },
+  ]}
+/>
 
-```python title="main.py" showLineNumbers
+`deepeval`'s OpenAI integration enables you to:
+
+- **Drop in `deepeval.openai.OpenAI`** — every chat completion or response produces an LLM span with input, output, and `tools_called` captured automatically.
+- **Evaluate LLM calls** with any `deepeval` metric through `LlmSpanContext`.
+- **Run evals from scripts or CI/CD** — same client, different surfaces.
+- **Compose with `@observe` and `with trace(...)`** to evaluate larger flows that wrap one or more OpenAI calls.
+
+## Getting Started
+
+<Steps>
+
+<Step>
+
+### Installation
+
+```bash
+pip install -U deepeval openai
+```
+
+`deepeval.openai.OpenAI` and `deepeval.openai.AsyncOpenAI` import OpenAI's classes and patch them in place. Existing kwargs, async paths, streaming, and tool-calling behavior all work unchanged.
+
+</Step>
+
+<Step>
+
+### Instrument and evaluate
+
+Replace `from openai import OpenAI` with `from deepeval.openai import OpenAI`. Wrap each call you want to evaluate in `with trace(llm_span_context=LlmSpanContext(metrics=[...]))`.
+
+```python title="openai_app.py" showLineNumbers
 from deepeval.openai import OpenAI
-from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.tracing import trace, LlmSpanContext
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import AnswerRelevancyMetric
 
 client = OpenAI()
 
-goldens = [
-    Golden(input="What is the weather in Bogotá, Colombia?"),
-    Golden(input="What is the weather in Paris, France?"),
-]
-
-dataset = EvaluationDataset(goldens=goldens)
+# Goldens are the inputs you want to evaluate.
+dataset = EvaluationDataset(goldens=[Golden(input="What's the capital of France?")])
 
 for golden in dataset.evals_iterator():
-    # run OpenAI client
-    with trace(
-        llm_span_context=LlmSpanContext(
-            metrics=[AnswerRelevancyMetric(), BiasMetric()],
-            expected_output=golden.expected_output,
-        )
-    ):
+    with trace(llm_span_context=LlmSpanContext(metrics=[AnswerRelevancyMetric()])):
         client.chat.completions.create(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": golden.input}
+                {"role": "system", "content": "Be concise."},
+                {"role": "user", "content": golden.input},
             ],
         )
 ```
 
-</Tab>
-<Tab value="Responses">
+Done ✅. You've run your first eval against an OpenAI call with full traceability via `deepeval`.
 
-```python title="main.py" showLineNumbers
+</Step>
+
+</Steps>
+
+## What gets traced
+
+Each patched OpenAI call produces one **LLM span** under the active trace. When the call uses tool-calling, the span's `tools_called` field captures every tool invocation the model returned — no extra wiring needed.
+
+- **LLM spans** — one per `chat.completions.create(...)`, `chat.completions.parse(...)`, or `responses.create(...)` call. Captures input messages, output text, token counts, and `tools_called`.
+- **Trace** — auto-created when the call has no parent. If the call runs inside `with trace(...)` or `@observe`, the LLM span nests under that trace instead.
+
+```text
+Trace                          ← auto-created or user-owned
+└── LLM: gpt-4o                ← one client.chat.completions.create(...) call
+```
+
+The trace and its LLM span are independently evaluable.
+
+## Running evals
+
+There are two surfaces for running evals against OpenAI calls. Pick by where you want results to surface — your terminal during development, or your CI pipeline as a pass/fail gate.
+
+### In CI/CD (pytest)
+
+Use the `deepeval` pytest integration. Each parametrized test invocation becomes one OpenAI call; failing metrics fail the test, which fails the build.
+
+```python title="test_openai_app.py" showLineNumbers
+import pytest
+from deepeval import assert_test
 from deepeval.openai import OpenAI
-from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.tracing import trace, LlmSpanContext
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import AnswerRelevancyMetric
 
 client = OpenAI()
+dataset = EvaluationDataset(goldens=[
+    Golden(input="What's the capital of France?"),
+    Golden(input="Who wrote Hamlet?"),
+])
 
-goldens = [
-    Golden(input="What is the weather in Bogotá, Colombia?"),
-    Golden(input="What is the weather in Paris, France?"),
-]
-dataset = EvaluationDataset(goldens=goldens)
-
-for golden in dataset.evals_iterator():
-    # run OpenAI client
-    with trace(
-        llm_span_context=LlmSpanContext(
-            metrics=[AnswerRelevancyMetric(), BiasMetric()],
-            expected_output=golden.expected_output,
-        )
-    ):
-        client.responses.create(
-            model="gpt-4o",
-            instructions="You are a helpful assistant.",
-            input=golden.input,
-        )
-```
-
-</Tab>
-<Tab value="Async Chat Completions">
-
-```python title="main.py" showLineNumbers
-import asyncio
-
-from deepeval.openai import AsyncOpenAI
-from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.tracing import trace, LlmSpanContext
-
-async_client = AsyncOpenAI()
-
-async def openai_llm_call(input):
-    with trace(
-        llm_span_context=LlmSpanContext(
-            metrics=[AnswerRelevancyMetric(), BiasMetric()],
-            expected_output=golden.expected_output,
-        )
-    ):
-        return await async_client.chat.completions.create(
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_openai_app(golden: Golden):
+    with trace(llm_span_context=LlmSpanContext(metrics=[AnswerRelevancyMetric()])):
+        client.chat.completions.create(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": "You are a helpful chatbot. Always generate a string response."},
-                {"role": "user", "content": input},
+                {"role": "system", "content": "Be concise."},
+                {"role": "user", "content": golden.input},
             ],
         )
-
-goldens = [
-    Golden(input="What is the weather in Bogotá, Colombia?"),
-    Golden(input="What is the weather in Paris, France?"),
-]
-dataset = EvaluationDataset(goldens=goldens)
-
-for golden in dataset.evals_iterator():
-    task = asyncio.create_task(openai_llm_call(golden.input))
-    dataset.evaluate(task)
+    assert_test(golden=golden)
 ```
 
-</Tab>
-<Tab value="Async Responses">
+Run it with:
 
-```python title="main.py" showLineNumbers
+```bash
+deepeval test run test_openai_app.py
+```
+
+### In a script
+
+Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one OpenAI call; metrics score the resulting LLM span.
+
+```python title="openai_app.py" showLineNumbers
 import asyncio
 
 from deepeval.openai import AsyncOpenAI
-from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.tracing import trace, LlmSpanContext
 from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.tracing import trace
+from deepeval.evaluate.configs import AsyncConfig
+from deepeval.metrics import AnswerRelevancyMetric
 
-async_client = AsyncOpenAI()
+client = AsyncOpenAI()
+dataset = EvaluationDataset(goldens=[
+    Golden(input="What's the capital of France?"),
+    Golden(input="Who wrote Hamlet?"),
+])
 
-async def openai_llm_call(input):
-    with trace(
-        llm_span_context=LlmSpanContext(
-            metrics=[AnswerRelevancyMetric(), BiasMetric()],
-            expected_output=golden.expected_output,
-        )
-    ):
-        return await async_client.responses.create(
+async def call_openai(prompt: str):
+    with trace(llm_span_context=LlmSpanContext(metrics=[AnswerRelevancyMetric()])):
+        return await client.chat.completions.create(
             model="gpt-4o",
-            instructions="You are a helpful assistant.",
-            input=input,  
+            messages=[{"role": "user", "content": prompt}],
         )
 
-
-goldens = [
-    Golden(input="What is the weather in Bogotá, Colombia?"),
-    Golden(input="What is the weather in Paris, France?"),
-]
-dataset = EvaluationDataset(goldens=goldens)
-
-for golden in dataset.evals_iterator():
-    task = asyncio.create_task(openai_llm_call(golden.input))
+for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True)):
+    task = asyncio.create_task(call_openai(golden.input))
     dataset.evaluate(task)
 ```
 
-</Tab>
-</Tabs>
+Sync (`OpenAI`) and async (`AsyncOpenAI`) clients both work; pick whichever matches your code.
 
-There are **FIVE** optional parameters when using `deepeval`'s OpenAI client's chat completion and response methods:
+## Applying metrics to LLM spans
 
-- [Optional] `metrics`: a list of metrics of type `BaseMetric`
-- [Optional] `expected_output`: a string specifying the expected output of your OpenAI generation.
-- [Optional] `retrieval_context`: a list of strings, representing the retrieved contexts to be passed into your OpenAI generation.
-- [Optional] `context`: a list of strings, representing the ideal retrieved contexts to be passed into your OpenAI generation.
-- [Optional] `expected_tools`: a list of strings, representing the expected tools to be called during OpenAI generation.
+Passing `metrics=[...]` to `LlmSpanContext` evaluates the next OpenAI call's LLM span specifically. The same context manager lets you attach extra evaluation parameters that some metrics need.
 
-:::info
-`deepeval` OpenAI client automatically extracts the `input` and `actual_output` from each API response, enabling you to use metrics like **Answer Relevancy** out of the box. For metrics such as **Faithfulness**—which rely on additional parameters such as retrieval context—you’ll need to explicitly set these parameters when invoking the client.
-:::
-
-## Component-Level Evals
-
-You can also use `deepeval`'s OpenAI client **within component-level evaluations**. To set up component-level evaluations, add the `@observe` decorator to your llm_application's components, and simply replace existing OpenAI clients with `deepeval`'s OpenAI client, passing in the metrics you wish to use.
-
-<Tabs items={["Chat Completions", "Responses", "Async Chat Completions", "Async Responses"]}>
-<Tab value="Chat Completions">
-
-```python title="main.py" showLineNumbers
-from deepeval.tracing import observe
-from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.dataset import EvaluationDataset, Golden
+```python title="openai_app.py" showLineNumbers
 from deepeval.openai import OpenAI
 from deepeval.tracing import trace, LlmSpanContext
-
-client = OpenAI()
-
-@observe()
-def retrieve_docs(query):
-    return [
-        "Paris is the capital and most populous city of France.",
-        "It has been a major European center of finance, diplomacy, commerce, and science."
-    ]
-
-@observe()
-def llm_app(input):
-    with trace(
-        llm_span_context=LlmSpanContext(
-            metrics=[AnswerRelevancyMetric(), BiasMetric()],
-        ),
-    ):
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": '\n'.join(retrieve_docs(input)) + "\n\nQuestion: " + input}
-            ]
-        )
-    return response.choices[0].message.content
-
-# Create dataset
-dataset = EvaluationDataset(goldens=[Golden(input="...")])
-
-# Iterate through goldens
-for golden in dataset.evals_iterator():
-    # run your LLM application
-    llm_app(input=golden.input)
-```
-
-</Tab>
-<Tab value="Responses">
-
-```python title="main.py" showLineNumbers {4,20}
-from deepeval.tracing import observe
-from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.openai import OpenAI
-from deepeval.tracing import trace, LlmSpanContext
-
-@observe()
-def retrieve_docs(query):
-    return [
-        "Paris is the capital and most populous city of France.",
-        "It has been a major European center of finance, diplomacy, commerce, and science."
-    ]
-
-@observe()
-def llm_app(input):
-    client = OpenAI()
-    with trace(
-        llm_span_context=LlmSpanContext(
-            metrics=[AnswerRelevancyMetric(), BiasMetric()],
-        ),
-    ):
-        response = client.responses.create(
-            model="gpt-4o",
-            instructions="You are a helpful assistant.",
-            input=input
-        )
-    return response.output_text
-
-# Create dataset
-dataset = EvaluationDataset(goldens=[Golden(input="...")])
-
-# Iterate through goldens
-for golden in dataset.evals_iterator():
-    # run your LLM application
-    llm_app(input=golden.input)
-```
-
-</Tab>
-<Tab value="Async Chat Completions">
-
-```python title="main.py" showLineNumbers
-import asyncio
-
-from deepeval.tracing import observe
-from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.openai import AsyncOpenAI
-from deepeval.tracing import trace
-
-@observe()
-async def retrieve_docs(query):
-    return [
-        "Paris is the capital and most populous city of France.",
-        "It has been a major European center of finance, diplomacy, commerce, and science."
-    ]
-
-@observe()
-async def llm_app(input):
-    client = AsyncOpenAI()
-    with trace(
-        llm_span_context=LlmSpanContext(
-            metrics=[AnswerRelevancyMetric(), BiasMetric()],
-        ),
-    ):
-        response = await client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": '\n'.join(await retrieve_docs(input)) + "\n\nQuestion: " + input}
-            ],
-        )
-    return response.choices[0].message.content
-
-# Create dataset
-dataset = EvaluationDataset(goldens=[Golden(input="...")])
-
-# Iterate through goldens
-for golden in dataset.evals_iterator():
-    # add LLM App task to test_run
-    task = asyncio.create_task(llm_app(input=golden.input))
-    dataset.evaluate(task)
-```
-
-</Tab>
-<Tab value="Async Responses">
-
-```python title="main.py" showLineNumbers {4,21}
-import asyncio
-
-from deepeval.tracing import observe
-from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.openai import AsyncOpenAI
-from deepeval.tracing import trace, LlmSpanContext
-
-@observe()
-async def retrieve_docs(query):
-    return [
-        "Paris is the capital and most populous city of France.",
-        "It has been a major European center of finance, diplomacy, commerce, and science."
-    ]
-
-@observe()
-async def llm_app(input):
-    client = AsyncOpenAI()
-    with trace(
-        llm_span_context=LlmSpanContext(
-            metrics=[AnswerRelevancyMetric(), BiasMetric()],
-        ),
-    ):
-        response = await client.responses.create(
-            model="gpt-4o",
-            instructions="You are a helpful assistant.",
-            input=input,
-        )
-    return response.output_text
-
-# Create dataset
-dataset = EvaluationDataset(goldens=[Golden(input="...")])
-
-# Iterate through goldens
-for golden in dataset.evals_iterator():
-    # add LLM App task to test_run
-    task = asyncio.create_task(llm_app(input=golden.input))
-    dataset.evaluate(task)
-```
-
-</Tab>
-</Tabs>
-
-When used inside `@observe` components, `deepeval`'s OpenAI client automatically:
-
-- Generates an LLM span for every OpenAI API call, including nested Tool spans for any tool invocations.
-- Attaches an `LLMTestCase` to each generated LLM span, capturing inputs, outputs, and tools called.
-- Records span-level llm attributes such as the input prompt, generated output and token usage.
-- Logs hyperparameters such as model name and system prompt for comprehensive experiment analysis.
-
-<div style={{ margin: "2rem 0" }}>
-  <VideoDisplayer
-    src={ASSETS.integrationOpenai}
-    label="OpenAI Integration"
-    confidentUrl="/llm-tracing/integrations/openai"
-  />
-</div>
-
-## Online Evals in Production
-
-If your OpenAI application is in production, and you still want to run evaluations on your traces, use online evals. It lets you run evaluations on all incoming traces on Confident AI's server.
-
-Set the `llm_metric_collection` name in the `trace` context when invoking your OpenAI client to evaluate Llm Spans.
-
-```python main.py
-from deepeval.openai import OpenAI
-from deepeval.tracing import trace, LlmSpanContext
+from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
 
 client = OpenAI()
 
 with trace(
     llm_span_context=LlmSpanContext(
-        metric_collection="test_collection_1",
+        metrics=[AnswerRelevancyMetric(), FaithfulnessMetric()],
+        retrieval_context=["Paris is the capital of France."],
     ),
 ):
-    response = client.chat.completions.create(
+    client.chat.completions.create(
         model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": "Hello, how are you?"},
-        ],
+        messages=[{"role": "user", "content": "What's the capital of France?"}],
     )
 ```
+
+`LlmSpanContext` accepts `metrics`, `expected_output`, `expected_tools`, `context`, `retrieval_context`, and `prompt`. Each one is read by the OpenAI patch when the next LLM span is created.
+
+## Customizing trace and span data
+
+The patch captures input messages, output text, and `tools_called` automatically. For anything else, the right API depends on where your code runs.
+
+- Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`, `user_id`).
+- Use `LlmSpanContext` for LLM-span-level fields the metric needs (`expected_output`, `retrieval_context`, etc.).
+- Use `@observe` to wrap retrieval, post-processing, or any other step you want to see as its own span in the trace.
+
+```python title="openai_app.py" showLineNumbers
+from deepeval.openai import OpenAI
+from deepeval.tracing import trace, LlmSpanContext, observe
+
+client = OpenAI()
+
+@observe(type="retriever")
+def retrieve_docs(query: str) -> list[str]:
+    return ["Paris is the capital of France."]
+
+@observe()
+def respond_to_user(prompt: str) -> str:
+    docs = retrieve_docs(prompt)
+    with trace(
+        llm_span_context=LlmSpanContext(retrieval_context=docs),
+        user_id="user-123",
+        tags=["openai", "rag"],
+    ):
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "\n".join(docs)},
+                {"role": "user", "content": prompt},
+            ],
+        )
+    return response.choices[0].message.content
+```
+
+## Advanced patterns
+
+The primitives above — `deepeval.openai.OpenAI`, `LlmSpanContext`, `@observe`, `with trace(...)` — compose around one boundary: the patch owns each LLM call's span, and your code chooses what trace to put it inside.
+
+### Wrap an OpenAI call in `@observe`
+
+When the OpenAI call is part of a larger operation, decorate the outer function with `@observe`. The LLM span nests under your observed span automatically.
+
+```python title="openai_app.py" showLineNumbers
+from deepeval.tracing import observe, trace, LlmSpanContext
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+@observe(name="respond_to_user")
+def respond_to_user(prompt: str) -> str:
+    with trace(llm_span_context=LlmSpanContext(metrics=[AnswerRelevancyMetric()])):
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+        )
+    return response.choices[0].message.content
+```
+
+#### No trace-level metrics required
+
+Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because `AnswerRelevancyMetric` is attached to the LLM span, so CI/CD and scripts only need to call the function.
+
+This is how you'd run it:
+
+<Tabs items={["CI/CD", "Scripts"]}>
+<Tab value="CI/CD">
+
+```python title="test_openai_app.py" showLineNumbers
+import pytest
+from deepeval import assert_test
+...
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_respond_to_user(golden: Golden):
+    respond_to_user(golden.input)
+    assert_test(golden=golden)
+```
+
+```bash
+deepeval test run test_openai_app.py
+```
+
+</Tab>
+<Tab value="Scripts">
+
+```python title="openai_app.py" showLineNumbers
+...
+
+for golden in dataset.evals_iterator():
+    respond_to_user(golden.input)
+```
+
+</Tab>
+</Tabs>
+
+### Multiple OpenAI calls under one trace
+
+When a single logical unit of work makes several OpenAI calls (e.g. a planner call followed by a respond call), bracket them with `with trace(...)` so the LLM spans share a `trace_id` and show up as siblings under one root.
+
+```python title="openai_app.py" showLineNumbers
+from deepeval.tracing import trace
+...
+
+def plan_then_respond(prompt: str):
+    with trace(name="plan_then_respond"):
+        plan = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": f"Plan: {prompt}"}],
+        )
+        return client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": plan.choices[0].message.content}],
+        )
+```
+
+### Tool-calling models
+
+When the model returns tool calls, the LLM span's `tools_called` field captures them automatically. Use `expected_tools` on `LlmSpanContext` if you want to evaluate tool selection with a tool-aware metric.
+
+```python title="openai_app.py" showLineNumbers
+from deepeval.test_case import ToolCall
+from deepeval.tracing import trace, LlmSpanContext
+...
+
+with trace(
+    llm_span_context=LlmSpanContext(
+        expected_tools=[ToolCall(name="get_weather", input_parameters={"city": "Paris"})],
+    ),
+):
+    client.chat.completions.create(model="gpt-4o", messages=[...], tools=[...])
+```
+
+## API reference
+
+`LlmSpanContext(...)` accepts the following kwargs. Each is read once when the next OpenAI call's LLM span is created.
+
+| Kwarg               | Type        | Description                                                                                              |
+| ------------------- | ----------- | -------------------------------------------------------------------------------------------------------- |
+| `metrics`           | `list`      | Metrics applied to the next LLM span.                                                                    |
+| `prompt`            | `Prompt`    | Confident AI prompt object; captured on the LLM span for prompt-version analytics.                       |
+| `expected_output`   | `str`       | Reference output for metrics that compare against ground truth.                                          |
+| `expected_tools`    | `list`      | Reference tool calls for tool-aware metrics.                                                             |
+| `context`           | `list[str]` | Ideal context the model should use when answering.                                                       |
+| `retrieval_context` | `list[str]` | Retrieved context the model actually used (Faithfulness, Contextual Relevancy, etc.).                    |
+
+`with trace(...)` accepts trace-level kwargs (`name`, `tags`, `metadata`, `thread_id`, `user_id`, `metrics`, `input`, `output`) — see the [tracing reference](/docs/evaluation-llm-tracing).
