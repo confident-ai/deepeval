@@ -29,7 +29,7 @@
         "calculate"
       ],
       "agentHandoffs": [],
-      "integration": "OpenAIAgents"
+      "integration": "OpenAI Agents"
     }
   ],
   "llmSpans": [
@@ -127,7 +127,7 @@
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 127.0,
       "outputTokenCount": 17.0,
-      "integration": "OpenAIAgents",
+      "integration": "OpenAI Agents",
       "provider": "OpenAI"
     },
     {
@@ -214,7 +214,7 @@
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 98.0,
       "outputTokenCount": 15.0,
-      "integration": "OpenAIAgents",
+      "integration": "OpenAI Agents",
       "provider": "OpenAI"
     }
   ],
@@ -233,7 +233,7 @@
       },
       "output": "Cloudy, 68°F",
       "description": "Function tool",
-      "integration": "OpenAIAgents"
+      "integration": "OpenAI Agents"
     }
   ],
   "startTime": "2026-01-29T14:38:57.307Z",

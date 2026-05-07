@@ -39,7 +39,7 @@
       "output": "Your name is Bob.",
       "availableTools": [],
       "agentHandoffs": [],
-      "integration": "OpenAIAgents"
+      "integration": "OpenAI Agents"
     }
   ],
   "llmSpans": [
@@ -100,7 +100,7 @@
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 45.0,
       "outputTokenCount": 6.0,
-      "integration": "OpenAIAgents",
+      "integration": "OpenAI Agents",
       "provider": "OpenAI"
     }
   ],

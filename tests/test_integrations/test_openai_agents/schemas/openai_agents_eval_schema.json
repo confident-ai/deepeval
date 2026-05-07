@@ -17,7 +17,7 @@
       "availableTools": [],
       "agentHandoffs": [],
       "metricCollection": "test_agent_metrics",
-      "integration": "OpenAIAgents"
+      "integration": "OpenAI Agents"
     }
   ],
   "llmSpans": [
@@ -65,7 +65,7 @@
       "inputTokenCount": 19.0,
       "outputTokenCount": 10.0,
       "metricCollection": "test_llm_metrics",
-      "integration": "OpenAIAgents",
+      "integration": "OpenAI Agents",
       "provider": "OpenAI"
     }
   ],

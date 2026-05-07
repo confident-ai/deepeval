@@ -50,7 +50,7 @@
         "get_current_weather"
       ],
       "agentHandoffs": [],
-      "integration": "OpenAIAgents"
+      "integration": "OpenAI Agents"
     }
   ],
   "llmSpans": [
@@ -166,7 +166,7 @@
       "model": "gpt-4.1-2025-04-14",
       "inputTokenCount": 417.0,
       "outputTokenCount": 119.0,
-      "integration": "OpenAIAgents",
+      "integration": "OpenAI Agents",
       "provider": "OpenAI"
     },
     {
@@ -271,7 +271,7 @@
       "model": "gpt-4.1-2025-04-14",
       "inputTokenCount": 310.0,
       "outputTokenCount": 27.0,
-      "integration": "OpenAIAgents",
+      "integration": "OpenAI Agents",
       "provider": "OpenAI"
     },
     {
@@ -366,7 +366,7 @@
       "model": "gpt-4.1-2025-04-14",
       "inputTokenCount": 266.0,
       "outputTokenCount": 17.0,
-      "integration": "OpenAIAgents",
+      "integration": "OpenAI Agents",
       "provider": "OpenAI"
     }
   ],
@@ -395,7 +395,7 @@
         "dummy": true
       },
       "description": "Function tool",
-      "integration": "OpenAIAgents"
+      "integration": "OpenAI Agents"
     },
     {
       "uuid": "c4931015-3911-4d70-b133-838f2d670e3e",
@@ -413,7 +413,7 @@
         "lng": -0.1278
       },
       "description": "Function tool",
-      "integration": "OpenAIAgents"
+      "integration": "OpenAI Agents"
     }
   ],
   "startTime": "2025-10-14T13:59:18.267Z",

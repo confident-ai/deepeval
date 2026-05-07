@@ -51,7 +51,7 @@
       ],
       "agentHandoffs": [],
       "metricCollection": "test_collection_1",
-      "integration": "OpenAIAgents"
+      "integration": "OpenAI Agents"
     }
   ],
   "llmSpans": [
@@ -172,7 +172,7 @@
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
       "promptCommitHash": "bab04ec",
-      "integration": "OpenAIAgents",
+      "integration": "OpenAI Agents",
       "provider": "OpenAI"
     },
     {
@@ -282,7 +282,7 @@
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
       "promptCommitHash": "bab04ec",
-      "integration": "OpenAIAgents",
+      "integration": "OpenAI Agents",
       "provider": "OpenAI"
     },
     {
@@ -382,7 +382,7 @@
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
       "promptCommitHash": "bab04ec",
-      "integration": "OpenAIAgents",
+      "integration": "OpenAI Agents",
       "provider": "OpenAI"
     }
   ],
@@ -412,7 +412,7 @@
       },
       "description": "Function tool",
       "metricCollection": "test_collection_1",
-      "integration": "OpenAIAgents"
+      "integration": "OpenAI Agents"
     },
     {
       "uuid": "055123b4-ca9c-457f-ae06-484e9269dda6",
@@ -430,7 +430,7 @@
         "lng": -0.1278
       },
       "description": "Function tool",
-      "integration": "OpenAIAgents"
+      "integration": "OpenAI Agents"
     }
   ],
   "startTime": "2026-02-16T07:00:05.031Z",
