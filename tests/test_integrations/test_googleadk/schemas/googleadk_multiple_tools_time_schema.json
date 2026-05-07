@@ -1,0 +1,115 @@
+{
+  "uuid": "f9cb2bea868bab9cd5d89ae889c06818",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "507cfe31109d226a",
+      "name": "invocation [deepeval-googleadk-multiple-tools]",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T09:06:37.205Z",
+      "endTime": "2026-05-07T09:06:42.429Z",
+      "input": "{\"user_id\": \"test-user\", \"session_id\": \"c7ae4dca-99da-4a84-867c-a1ad79607ff4\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use the get_time tool exactly once to get the current time in London.\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The current time in London is 7:00 AM GMT.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":14,\"prompt_token_count\":269,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":269}],\"total_token_count\":283},\"invocation_id\":\"e-0e34c369-0634-4434-aed9-fc1071087f97\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"92a37c4d-b7d7-43a5-9b4a-7731930382a8\",\"timestamp\":1778144800.777936}",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Google ADK"
+    },
+    {
+      "uuid": "68db674d756a85db",
+      "name": "multi_tool_assistant",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "507cfe31109d226a",
+      "startTime": "2026-05-07T09:06:37.206Z",
+      "endTime": "2026-05-07T09:06:42.429Z",
+      "input": [],
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The current time in London is 7:00 AM GMT.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":14,\"prompt_token_count\":269,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":269}],\"total_token_count\":283},\"invocation_id\":\"e-0e34c369-0634-4434-aed9-fc1071087f97\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"92a37c4d-b7d7-43a5-9b4a-7731930382a8\",\"timestamp\":1778144800.777936}",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Google ADK"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "67511558ae06eece",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "68db674d756a85db",
+      "startTime": "2026-05-07T09:06:40.778Z",
+      "endTime": "2026-05-07T09:06:42.428Z",
+      "input": "{\"time\": \"7:00 AM GMT\"}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The current time in London is 7:00 AM GMT.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":14,\"prompt_token_count\":269,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":269}],\"total_token_count\":283}}",
+      "model": "gemini-2.5-flash-lite",
+      "inputTokenCount": 269.0,
+      "outputTokenCount": 14.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
+    },
+    {
+      "uuid": "25522bdc2e19bc87",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "68db674d756a85db",
+      "startTime": "2026-05-07T09:06:37.207Z",
+      "endTime": "2026-05-07T09:06:40.776Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise.\n\nYou are an agent. Your internal name is \"multi_tool_assistant\".",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"function_call\":{\"args\":{\"city\":\"London\"},\"name\":\"get_time\"}}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":15,\"prompt_token_count\":234,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":234}],\"total_token_count\":249}}",
+      "toolsCalled": [
+        {
+          "name": "get_time",
+          "inputParameters": {
+            "city": "London"
+          }
+        }
+      ],
+      "model": "gemini-2.5-flash-lite",
+      "inputTokenCount": 234.0,
+      "outputTokenCount": 15.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "cb9da0e33275db90",
+      "name": "get_time",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "25522bdc2e19bc87",
+      "startTime": "2026-05-07T09:06:40.775Z",
+      "endTime": "2026-05-07T09:06:40.776Z",
+      "input": "{\"city\": \"London\"}",
+      "output": "{\"id\":\"adk-50313871-c709-4304-85ea-ad1fbf2346d1\",\"name\":\"get_time\",\"response\":{\"time\":\"7:00 AM GMT\"}}",
+      "toolsCalled": [
+        {
+          "name": "get_time",
+          "inputParameters": {
+            "city": "London"
+          }
+        }
+      ],
+      "integration": "Google ADK"
+    }
+  ],
+  "startTime": "2026-05-07T09:06:37.205Z",
+  "endTime": "2026-05-07T09:06:42.429Z",
+  "name": "googleadk-multiple-tools-time",
+  "metadata": {
+    "test_type": "multiple_tools_time"
+  },
+  "tags": [
+    "googleadk",
+    "multiple-tools",
+    "time"
+  ],
+  "environment": "development",
+  "threadId": "multiple-tools-time-123",
+  "userId": "test-user",
+  "input": "{\"user_id\": \"test-user\", \"session_id\": \"c7ae4dca-99da-4a84-867c-a1ad79607ff4\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use the get_time tool exactly once to get the current time in London.\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+  "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The current time in London is 7:00 AM GMT.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":14,\"prompt_token_count\":269,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":269}],\"total_token_count\":283},\"invocation_id\":\"e-0e34c369-0634-4434-aed9-fc1071087f97\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"92a37c4d-b7d7-43a5-9b4a-7731930382a8\",\"timestamp\":1778144800.777936}",
+  "status": "SUCCESS"
+}

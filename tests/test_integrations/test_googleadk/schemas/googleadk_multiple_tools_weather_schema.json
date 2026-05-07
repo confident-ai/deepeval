@@ -1,0 +1,115 @@
+{
+  "uuid": "14e39bbcfbac020dd537cb149874c0c5",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "12101ddf66ddc12a",
+      "name": "invocation [deepeval-googleadk-multiple-tools]",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T09:06:31.511Z",
+      "endTime": "2026-05-07T09:06:37.189Z",
+      "input": "{\"user_id\": \"test-user\", \"session_id\": \"ac7081af-60aa-4c85-a5ed-7b760e6bd47f\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use the get_weather tool exactly once to get the weather in Tokyo.\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Tokyo is sunny and 72F.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":12,\"prompt_token_count\":268,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":268}],\"total_token_count\":280},\"invocation_id\":\"e-9dc6c107-9d0b-498f-bfa7-5e285247c96c\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"0555f2b3-519c-4f35-9b37-efad0791bafe\",\"timestamp\":1778144795.064307}",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Google ADK"
+    },
+    {
+      "uuid": "e0fa770f435775d4",
+      "name": "multi_tool_assistant",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "12101ddf66ddc12a",
+      "startTime": "2026-05-07T09:06:31.512Z",
+      "endTime": "2026-05-07T09:06:37.189Z",
+      "input": [],
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Tokyo is sunny and 72F.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":12,\"prompt_token_count\":268,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":268}],\"total_token_count\":280},\"invocation_id\":\"e-9dc6c107-9d0b-498f-bfa7-5e285247c96c\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"0555f2b3-519c-4f35-9b37-efad0791bafe\",\"timestamp\":1778144795.064307}",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Google ADK"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "9cb7741984a2da04",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "e0fa770f435775d4",
+      "startTime": "2026-05-07T09:06:35.064Z",
+      "endTime": "2026-05-07T09:06:37.188Z",
+      "input": "{\"report\": \"Sunny, 72F\"}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Tokyo is sunny and 72F.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":12,\"prompt_token_count\":268,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":268}],\"total_token_count\":280}}",
+      "model": "gemini-2.5-flash-lite",
+      "inputTokenCount": 268.0,
+      "outputTokenCount": 12.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
+    },
+    {
+      "uuid": "5ec97ae5bfe705da",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "e0fa770f435775d4",
+      "startTime": "2026-05-07T09:06:31.513Z",
+      "endTime": "2026-05-07T09:06:35.062Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise.\n\nYou are an agent. Your internal name is \"multi_tool_assistant\".",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"function_call\":{\"args\":{\"city\":\"Tokyo\"},\"name\":\"get_weather\"}}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":15,\"prompt_token_count\":233,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":233}],\"total_token_count\":248}}",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ],
+      "model": "gemini-2.5-flash-lite",
+      "inputTokenCount": 233.0,
+      "outputTokenCount": 15.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "c3749b6e55a22af3",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "5ec97ae5bfe705da",
+      "startTime": "2026-05-07T09:06:35.060Z",
+      "endTime": "2026-05-07T09:06:35.061Z",
+      "input": "{\"city\": \"Tokyo\"}",
+      "output": "{\"id\":\"adk-96e397ab-e0e1-48a5-bfb2-c50e3e7944a4\",\"name\":\"get_weather\",\"response\":{\"report\":\"Sunny, 72F\"}}",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ],
+      "integration": "Google ADK"
+    }
+  ],
+  "startTime": "2026-05-07T09:06:31.511Z",
+  "endTime": "2026-05-07T09:06:37.189Z",
+  "name": "googleadk-multiple-tools-weather",
+  "metadata": {
+    "test_type": "multiple_tools_weather"
+  },
+  "tags": [
+    "googleadk",
+    "multiple-tools",
+    "weather"
+  ],
+  "environment": "development",
+  "threadId": "multiple-tools-weather-123",
+  "userId": "test-user",
+  "input": "{\"user_id\": \"test-user\", \"session_id\": \"ac7081af-60aa-4c85-a5ed-7b760e6bd47f\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use the get_weather tool exactly once to get the weather in Tokyo.\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+  "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Tokyo is sunny and 72F.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":12,\"prompt_token_count\":268,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":268}],\"total_token_count\":280},\"invocation_id\":\"e-9dc6c107-9d0b-498f-bfa7-5e285247c96c\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"0555f2b3-519c-4f35-9b37-efad0791bafe\",\"timestamp\":1778144795.064307}",
+  "status": "SUCCESS"
+}
