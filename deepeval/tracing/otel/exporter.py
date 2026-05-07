@@ -44,7 +44,11 @@ from deepeval.tracing.types import TraceAttributes
 from deepeval.test_case import ToolCall
 from dataclasses import dataclass
 from deepeval.confident.api import set_confident_api_key
-from deepeval.tracing.utils import make_json_serializable_for_metadata
+from deepeval.tracing.utils import (
+    infer_provider_from_model,
+    make_json_serializable_for_metadata,
+    normalize_span_provider_for_platform,
+)
 
 
 def _resolve_parent_uuid(span: ReadableSpan) -> Optional[str]:
@@ -588,6 +592,8 @@ class ConfidentSpanExporter(SpanExporter):
             provider = span.attributes.get("confident.span.provider")
             if not provider:
                 provider = infer_provider_from_model(model)
+            if provider:
+                provider = normalize_span_provider_for_platform(provider)
             output_token_count = span.attributes.get(
                 "confident.llm.output_token_count"
             )

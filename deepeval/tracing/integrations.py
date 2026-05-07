@@ -7,14 +7,14 @@ class Integration(str, Enum):
     LANGCHAIN = "LangChain"
     CREW_AI = "CrewAI"
     LLAMA_INDEX = "LlamaIndex"
-    OPENAI_AGENTS = "OpenAIAgents"
+    OPENAI_AGENTS = "OpenAI Agents"
     OPEN_AI = "OpenAI"
     ANTHROPIC = "Anthropic"
     PYDANTIC_AI = "PydanticAI"
-    GOOGLE_ADK = "GoogleADK"
+    GOOGLE_ADK = "Google ADK"
     OPEN_INFERENCE = "OpenInference"
     AGENTCORE = "AgentCore"
-    AI_SDK = "AISDK"
+    AI_SDK = "AI SDK"
 
 
 class Provider(str, Enum):
