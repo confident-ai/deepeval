@@ -4,6 +4,8 @@
     "openai",
     "anthropic",
     "agentcore",
+    "strands",
+    "google-adk",
     "langchain",
     "langgraph",
     "llamaindex",

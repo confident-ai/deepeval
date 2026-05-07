@@ -2,7 +2,7 @@
 
 import styles from "./AgentTraceTerminal.module.scss";
 
-type LineKind =
+export type LineKind =
   | "cmd"
   | "root"
   | "agent"
@@ -12,7 +12,7 @@ type LineKind =
   | "blank"
   | "summary";
 
-type TraceLine = {
+export type TraceLine = {
   kind: LineKind;
   prefix?: string;
   name?: string;
@@ -22,7 +22,7 @@ type TraceLine = {
   pass?: boolean;
 };
 
-const TRACE: TraceLine[] = [
+export const DEFAULT_TRACE: TraceLine[] = [
   { kind: "cmd", name: "deepeval test run agents/checkout.py" },
   { kind: "blank" },
   { kind: "root", prefix: "●", name: "test_checkout_agent" },
@@ -69,9 +69,7 @@ const TRACE: TraceLine[] = [
     prefix: "├─",
     name: "process_refund(amount=29.99)",
     metric: "deterministic",
-    score: "✓",
     duration: "85ms",
-    pass: true,
   },
   { kind: "blank", prefix: "│" },
   {
@@ -91,6 +89,15 @@ const TRACE: TraceLine[] = [
   },
 ];
 
+const DEFAULT_TITLE = "agent_trace · deepeval";
+const DEFAULT_ARIA_LABEL = "Example agent trace with per-step metric scores";
+
+interface AgentTraceTerminalProps {
+  title?: string;
+  lines?: TraceLine[];
+  ariaLabel?: string;
+}
+
 function kindLabel(kind: LineKind): string | null {
   switch (kind) {
     case "agent":
@@ -106,20 +113,24 @@ function kindLabel(kind: LineKind): string | null {
   }
 }
 
-const AgentTraceTerminal: React.FC = () => {
+const AgentTraceTerminal: React.FC<AgentTraceTerminalProps> = ({
+  title = DEFAULT_TITLE,
+  lines = DEFAULT_TRACE,
+  ariaLabel = DEFAULT_ARIA_LABEL,
+}) => {
   return (
-    <div className={styles.terminal} role="img" aria-label="Example agent trace with per-step metric scores">
+    <div className={styles.terminal} role="img" aria-label={ariaLabel}>
       <div className={styles.bar}>
         <div className={styles.dots}>
           <span />
           <span />
           <span />
         </div>
-        <span className={styles.title}>agent_trace · deepeval</span>
+        <span className={styles.title}>{title}</span>
         <span className={styles.barSpacer} aria-hidden />
       </div>
       <div className={styles.body}>
-        {TRACE.map((line, i) => (
+        {lines.map((line, i) => (
           <div
             key={i}
             className={`${styles.line} ${styles[`line_${line.kind}`]}`}
@@ -132,10 +143,21 @@ const AgentTraceTerminal: React.FC = () => {
               </>
             ) : line.kind === "summary" ? (
               <>
-                <span className={styles.summaryDot} aria-hidden />
+                <span
+                  className={`${styles.summaryDot} ${
+                    line.pass === false ? styles.summaryDotFail : ""
+                  }`}
+                  aria-hidden
+                />
                 <span className={styles.summaryText}>{line.name}</span>
-                {line.pass && (
-                  <span className={styles.summaryBadge}>passed</span>
+                {line.pass !== undefined && (
+                  <span
+                    className={`${styles.summaryBadge} ${
+                      line.pass ? "" : styles.summaryBadgeFail
+                    }`}
+                  >
+                    {line.pass ? "passed" : "failed"}
+                  </span>
                 )}
               </>
             ) : line.kind === "blank" ? (
@@ -158,13 +180,25 @@ const AgentTraceTerminal: React.FC = () => {
                 <span className={styles.name}>{line.name}</span>
                 <span className={styles.meta}>
                   <span className={styles.metric}>{line.metric}</span>
-                  <span
-                    className={`${styles.score} ${
-                      line.pass ? styles.scorePass : styles.scoreFail
-                    }`}
-                  >
-                    {line.score}
-                  </span>
+                  {line.score !== undefined && (
+                    <span
+                      className={`${styles.score} ${
+                        line.pass ? styles.scorePass : styles.scoreFail
+                      }`}
+                    >
+                      {line.score}
+                    </span>
+                  )}
+                  {line.score !== undefined && line.pass !== undefined && (
+                    <span
+                      className={`${styles.status} ${
+                        line.pass ? styles.statusPass : styles.statusFail
+                      }`}
+                      aria-hidden
+                    >
+                      {line.pass ? "✓" : "✗"}
+                    </span>
+                  )}
                   <span className={styles.duration}>{line.duration}</span>
                 </span>
               </>
@@ -175,6 +209,5 @@ const AgentTraceTerminal: React.FC = () => {
     </div>
   );
 };
-
 
 export default AgentTraceTerminal;

@@ -12,6 +12,22 @@ applications using eval results.
 
 ## Installation
 
+### For Claude.ai (Web)
+
+1. Download the `skills/deepeval` folder from this repository.
+2. Zip the folder.
+3. In Claude.ai, navigate to **Settings > Capabilities > Skills**.
+4. Click **Upload skill** and select your zipped folder.
+
+### For Claude Code (Local CLI)
+
+Download or clone the `skills/deepeval` folder inside the skills folder and place it directly into your local project's skills directory:
+
+```bash
+mkdir -p .claude/skills/
+cp -r path/to/downloaded/deepeval .claude/skills/
+```
+
 ### Cursor Plugin
 
 This repository includes a Cursor plugin manifest that points to `./skills/`.

@@ -13,6 +13,8 @@ import Callout from "@site/src/components/Callout";
 import Equation from "@site/src/components/Equation";
 import Mermaid from "@site/src/components/Mermaid";
 import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+import IntegrationTagsDisplayer from "@site/src/components/IntegrationTagsDisplayer";
+import AgentTraceTerminal from "@site/src/components/AgentTraceTerminal";
 import FeatureComparisonTable from "@site/src/components/FeatureComparisonTable";
 import LinkCards from "@site/src/components/LinkCards";
 import TechStackCards from "@site/src/components/TechStackCards";
@@ -45,6 +47,8 @@ export function getMDXComponents(components?: MDXComponents) {
     Equation,
     Mermaid,
     MetricTagsDisplayer,
+    IntegrationTagsDisplayer,
+    AgentTraceTerminal,
     FeatureComparisonTable,
     LinkCards,
     TechStackCards,

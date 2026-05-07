@@ -3,87 +3,407 @@ id: openai-agents
 title: OpenAI Agents
 sidebar_label: OpenAI Agents
 ---
-[OpenAI Agents](https://openai.com/agents/) is a framework for building agents that can perform tasks.
 
-## End-to-End Evals
+<IntegrationTagsDisplayer native={true} cicdEvals={true} traceability={true} />
 
-`deepeval` allows you to evaluate OpenAI Agents **under a minute**.
+[OpenAI Agents](https://openai.github.io/openai-agents-python/) is OpenAI's Python SDK for building agents that reason, call tools, and hand off to other agents.
+
+The `deepeval` integration plugs into the agents SDK's tracing pipeline as a `TracingProcessor`. Every `Runner.run(...)`, agent step, LLM call, and tool call becomes a span you can inspect — without rewriting your agent code.
+
+<AgentTraceTerminal
+  title="openai_agents_app · deepeval"
+  ariaLabel="Example OpenAI Agents trace with per-step metric scores"
+  lines={[
+    { kind: "cmd", name: "deepeval test run test_openai_agents_app.py" },
+    { kind: "blank" },
+    { kind: "root", prefix: "●", name: "test_openai_agents_app" },
+    { kind: "blank", prefix: "│" },
+    {
+      kind: "agent",
+      prefix: "└─",
+      name: "weather_agent",
+      metric: "Task Completion",
+      score: "0.95",
+      duration: "230ms",
+      pass: true,
+    },
+    {
+      kind: "llm",
+      prefix: "   ├─",
+      name: "gpt-4o · plan",
+      metric: "G-Eval",
+      score: "0.43",
+      duration: "78ms",
+      pass: false,
+    },
+    {
+      kind: "tool",
+      prefix: "   ├─",
+      name: 'get_weather(city="Paris")',
+      duration: "36ms",
+    },
+    {
+      kind: "llm",
+      prefix: "   └─",
+      name: "gpt-4o · respond",
+      metric: "Faithfulness",
+      score: "0.94",
+      duration: "82ms",
+      pass: true,
+    },
+    { kind: "blank" },
+    {
+      kind: "summary",
+      name: "Trace score  0.77   ·   2/3 metrics passed",
+      pass: false,
+    },
+  ]}
+/>
+
+`deepeval`'s OpenAI Agents integration enables you to:
+
+- **Trace every `Runner.run(...)`** — each agent run produces a trace, and each LLM, tool, and sub-agent call becomes a component span.
+- **Attach metrics directly to `Agent` and `function_tool`** with `agent_metrics`, `llm_metrics`, and `metrics=` on tools.
+- **Run evals from scripts or CI/CD** — same agent, different surfaces.
+- **Compose with `@observe` and `with trace(...)`** to evaluate larger flows that wrap one or more agent runs.
+
+## Getting Started
 
 <Steps>
 
 <Step>
-### Configure OpenAI Agents
 
+### Installation
 
-```python title="main.py" showLineNumbers
-import os
+```bash
+pip install -U deepeval openai-agents
+```
 
+The integration registers `DeepEvalTracingProcessor` against the agents SDK's tracing pipeline, then provides `Agent` and `function_tool` shims that accept `deepeval` metrics directly.
+
+</Step>
+
+<Step>
+
+### Instrument and evaluate
+
+Register the processor once at startup, then use `deepeval.openai_agents.Agent` and `function_tool` in place of the SDK's classes. Attach metrics to the agent or to specific tools.
+
+```python title="openai_agents_app.py" showLineNumbers
 from agents import Runner, add_trace_processor
-from deepeval.openai_agents import Agent, DeepEvalTracingProcessor
-from deepeval.metrics import AnswerRelevancyMetric
-from tests.test_integrations.utils import assert_trace_json, generate_trace_json
+from deepeval.openai_agents import Agent, DeepEvalTracingProcessor, function_tool
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
 
 add_trace_processor(DeepEvalTracingProcessor())
 
-weather_agent = Agent(
-    name="Weather Agent",
-    instructions="You are a weather agent. You are given a question about the weather and you need to answer it.",
+@function_tool
+def get_weather(city: str) -> str:
+    """Return the weather in a city."""
+    return f"It's always sunny in {city}!"
+
+agent = Agent(
+    name="weather_agent",
+    instructions="Answer weather questions concisely.",
+    tools=[get_weather],
+    agent_metrics=[TaskCompletionMetric()],
+)
+
+# Goldens are the inputs you want to evaluate.
+dataset = EvaluationDataset(goldens=[Golden(input="What's the weather in Paris?")])
+
+for golden in dataset.evals_iterator():
+    Runner.run_sync(agent, golden.input)
+```
+
+Done ✅. You've run your first eval with full traceability into OpenAI Agents via `deepeval`.
+
+</Step>
+
+</Steps>
+
+## What gets traced
+
+Each `Runner.run(...)` call produces a **trace** — the end-to-end unit your user observes. Inside that trace are **component spans** for every step the agent took:
+
+- **Agent spans** — one per `Agent` invocation, including handoffs to other agents.
+- **LLM spans** — model calls (Responses API and Chat Completions).
+- **Tool spans** — `function_tool`, `MCPListTools`, and other agents-SDK tool calls.
+
+```text
+Trace                          ← what the user observes
+└── Agent: weather_agent       ← one Runner.run(...) call
+    ├── LLM: gpt-4o            ← component span: model plans
+    ├── Tool: get_weather      ← component span: tool input + output
+    └── LLM: gpt-4o            ← component span: final answer
+```
+
+The trace and its component spans are independently evaluable.
+
+## Running evals
+
+There are two surfaces for running evals against an OpenAI Agents app. Pick by where you want results to surface — your terminal during development, or your CI pipeline as a pass/fail gate.
+
+### In CI/CD (pytest)
+
+Use the `deepeval` pytest integration. Each parametrized test invocation becomes one agent run; failing metrics fail the test, which fails the build.
+
+```python title="test_openai_agents_app.py" showLineNumbers
+import pytest
+from agents import Runner, add_trace_processor
+from deepeval import assert_test
+from deepeval.openai_agents import Agent, DeepEvalTracingProcessor, function_tool
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+add_trace_processor(DeepEvalTracingProcessor())
+
+@function_tool
+def get_weather(city: str) -> str:
+    """Return the weather in a city."""
+    return f"It's always sunny in {city}!"
+
+agent = Agent(
+    name="weather_agent",
+    instructions="Answer weather questions concisely.",
+    tools=[get_weather],
+)
+
+dataset = EvaluationDataset(goldens=[
+    Golden(input="What's the weather in Paris?"),
+    Golden(input="What's the weather in London?"),
+])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_openai_agents_app(golden: Golden):
+    Runner.run_sync(agent, golden.input)
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Run it with:
+
+```bash
+deepeval test run test_openai_agents_app.py
+```
+
+### In a script
+
+Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one agent run; metrics score the resulting trace.
+
+```python title="openai_agents_app.py" showLineNumbers
+import asyncio
+
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.evaluate.configs import AsyncConfig
+from deepeval.metrics import TaskCompletionMetric
+...
+
+dataset = EvaluationDataset(goldens=[
+    Golden(input="What's the weather in Paris?"),
+    Golden(input="What's the weather in London?"),
+])
+
+for golden in dataset.evals_iterator(
+    async_config=AsyncConfig(run_async=True),
+    metrics=[TaskCompletionMetric()],
+):
+    task = asyncio.create_task(Runner.run(agent, golden.input))
+    dataset.evaluate(task)
+```
+
+Sync (`Runner.run_sync`) and async (`Runner.run`) execution both work; pick whichever matches your code.
+
+## Applying metrics to components
+
+The `metrics=[...]` you pass to `evals_iterator` evaluates the **trace**. To evaluate a **component** — a specific agent, LLM call, or tool — attach metrics directly to the agent or tool.
+
+### Agent spans
+
+Use `agent_metrics=[...]` on `deepeval.openai_agents.Agent`. The metric is applied to that agent's span on every run, including when it's invoked as a sub-agent through a handoff.
+
+```python title="openai_agents_app.py" showLineNumbers
+from deepeval.openai_agents import Agent
+from deepeval.metrics import TaskCompletionMetric
+...
+
+agent = Agent(
+    name="weather_agent",
+    instructions="Answer weather questions concisely.",
+    tools=[get_weather],
+    agent_metrics=[TaskCompletionMetric()],
+)
+```
+
+### LLM calls
+
+Use `llm_metrics=[...]` on `Agent`. The metric is applied to the LLM span produced for that agent's model calls. Useful when you want to score the model's reasoning step in isolation.
+
+```python title="openai_agents_app.py" showLineNumbers
+from deepeval.openai_agents import Agent
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+agent = Agent(
+    name="weather_agent",
+    instructions="Answer weather questions concisely.",
+    tools=[get_weather],
+    llm_metrics=[AnswerRelevancyMetric()],
+)
+```
+
+### Tool calls
+
+Pass `metrics=[...]` to `function_tool` to evaluate a specific tool's behavior. Useful for tools that return non-deterministic content (e.g. retrieval, summarization tools).
+
+```python title="openai_agents_app.py" showLineNumbers
+from deepeval.openai_agents import function_tool
+from deepeval.metrics import GEval
+from deepeval.test_case import LLMTestCaseParams
+
+@function_tool(metrics=[GEval(
+    name="Helpful Weather Lookup",
+    criteria="The output must be a clear weather summary for the requested city.",
+    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+)])
+def get_weather(city: str) -> str:
+    """Return the weather in a city."""
+    return f"It's always sunny in {city}!"
+```
+
+For deterministic tool calls, prefer `update_current_span(...)` to add metadata, inputs, and outputs instead of attaching metrics to the tool span.
+
+## Customizing trace and span data
+
+The integration captures inputs, outputs, model names, and tool calls automatically. For anything dynamic, the right API depends on where your code runs.
+
+- Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`, `user_id`).
+- Use `Agent`/`function_tool` kwargs (`agent_metrics`, `llm_metrics`, `metrics=`, `confident_prompt`) for component-level defaults.
+- Use `update_current_trace(...)` and `update_current_span(...)` from inside a tool body to mutate fields the framework can't see.
+
+```python title="openai_agents_app.py" showLineNumbers
+from deepeval.openai_agents import function_tool
+from deepeval.tracing import update_current_trace, update_current_span
+
+@function_tool
+def get_weather(city: str) -> str:
+    """Return the weather in a city."""
+    update_current_trace(metadata={"city": city})
+    update_current_span(metadata={"source": "static-table"})
+    return f"It's always sunny in {city}!"
+```
+
+## Advanced patterns
+
+The primitives above — `Agent`, `function_tool`, `add_trace_processor`, `@observe`, `with trace(...)` — compose around one boundary: the agents SDK owns the run lifecycle, and your code attaches metrics where they make sense.
+
+### Evaluate a sub-agent through handoff
+
+When a parent agent hands off to a sub-agent, the sub-agent's span runs as a child of the parent's. Attaching `agent_metrics` to the sub-agent scores that hand-off step in isolation.
+
+```python title="openai_agents_app.py" showLineNumbers
+from deepeval.openai_agents import Agent
+from deepeval.metrics import TaskCompletionMetric, AnswerRelevancyMetric
+...
+
+triage_agent = Agent(
+    name="triage",
+    instructions="Route the question to the right specialist.",
+    handoffs=[
+        Agent(
+            name="weather_specialist",
+            instructions="Answer weather questions.",
+            tools=[get_weather],
+            agent_metrics=[TaskCompletionMetric()],
+        ),
+    ],
     agent_metrics=[AnswerRelevancyMetric()],
 )
 ```
 
-:::info
-Evaluations are supported for OpenAI Agents. Only metrics with parameters `input` and `output` are eligible for evaluation.
-:::
+#### No trace-level metrics required
 
-</Step>
-<Step>
-### Run evaluations
+Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because the metrics are already attached to the triage and specialist agents, so CI/CD and scripts only need to run the agent.
 
+This is how you'd run it:
 
-Create an `EvaluationDataset` and invoke your OpenAI Agent for each golden within the `evals_iterator()` loop to run end-to-end evaluations.
+<Tabs items={["CI/CD", "Scripts"]}>
+<Tab value="CI/CD">
 
-<Tabs items={["Synchronous", "Asynchronous"]}>
-<Tab value="Synchronous">
+```python title="test_openai_agents_app.py" showLineNumbers
+import pytest
+from agents import Runner
+from deepeval import assert_test
+...
 
-```python title="main.py" showLineNumbers
-from deepeval.dataset import EvaluationDataset, Golden
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_triage_agent(golden: Golden):
+    Runner.run_sync(triage_agent, golden.input)
+    assert_test(golden=golden)
+```
 
-dataset = EvaluationDataset(
-    goldens=[
-        Golden(input="What's the weather in UK?"),
-        Golden(input="What's the weather in France?"),
-    ]
-)
-
-for golden in dataset.evals_iterator():
-    Runner.run_sync(weather_agent, golden.input)
+```bash
+deepeval test run test_openai_agents_app.py
 ```
 
 </Tab>
-<Tab value="Asynchronous">
+<Tab value="Scripts">
 
-```python title="main.py" showLineNumbers
+```python title="openai_agents_app.py" showLineNumbers
 import asyncio
+...
 
-from deepeval.dataset import EvaluationDataset, Golden
-
-dataset = EvaluationDataset(
-    goldens=[
-        Golden(input="What's the weather in UK?"),
-        Golden(input="What's the weather in France?"),
-    ]
-)
-
-for golden in dataset.evals_iterator():
-    task = asyncio.create_task(Runner.run(weather_agent, golden.input))
+for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True)):
+    task = asyncio.create_task(Runner.run(triage_agent, golden.input))
     dataset.evaluate(task)
 ```
 
 </Tab>
 </Tabs>
 
-✅ Done. The `evals_iterator` will automatically generate a test run with individual evaluation traces for each golden.
+### Wrap an agent run in `@observe`
 
-</Step>
-</Steps>
+When the agent run is part of a larger operation, decorate the outer function with `@observe`. The agents-SDK spans nest under your observed span automatically.
+
+```python title="openai_agents_app.py" showLineNumbers
+from agents import Runner
+from deepeval.tracing import observe
+...
+
+@observe(name="respond_to_user")
+async def respond_to_user(prompt: str) -> str:
+    result = await Runner.run(agent, prompt)
+    return result.final_output.strip()
+```
+
+### Bind a Confident AI prompt to an agent
+
+Pass `confident_prompt=` to attach a Confident AI [`Prompt`](/docs/prompt-management) to every LLM span produced by that agent. Prompt analytics (commit hash, version, label) flow with the trace.
+
+```python title="openai_agents_app.py" showLineNumbers
+from deepeval.openai_agents import Agent
+from deepeval.prompt import Prompt
+
+prompt = Prompt(alias="weather-system")
+prompt.pull(version="latest")
+
+agent = Agent(
+    name="weather_agent",
+    instructions=prompt.interpolate(),
+    tools=[get_weather],
+    confident_prompt=prompt,
+)
+```
+
+## API reference
+
+`deepeval.openai_agents.Agent(...)` accepts the SDK's standard `Agent` kwargs plus the following deepeval-specific ones:
+
+| Kwarg                     | Type        | Description                                                                          |
+| ------------------------- | ----------- | ------------------------------------------------------------------------------------ |
+| `agent_metrics`     | `list`   | Metrics applied to this agent's span on every run.                              |
+| `llm_metrics`       | `list`   | Metrics applied to LLM spans produced by this agent's model calls.              |
+| `confident_prompt`  | `Prompt` | Confident AI prompt object; captured on every LLM span produced by this agent.  |
+
+`function_tool(..., metrics=[...])` accepts the SDK's standard kwargs plus `metrics`, applied to that tool's span on every call.
+
+For runtime helpers (`update_current_trace`, `update_current_span`) and the test-decorator surface (`@observe`, `@assert_test`, `with trace(...)`), see the [tracing reference](/docs/evaluation-llm-tracing).
