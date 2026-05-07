@@ -244,6 +244,24 @@
   color: #e11d48;
 }
 
+.status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.9rem;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.statusPass {
+  color: var(--trace-green);
+}
+
+.statusFail {
+  color: #e11d48;
+}
+
 .duration {
   color: var(--trace-dim);
   font-size: 11px;
@@ -261,6 +279,11 @@
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--trace-green) 25%, transparent);
 }
 
+.summaryDotFail {
+  background: #e11d48;
+  box-shadow: 0 0 0 3px color-mix(in oklab, #e11d48 22%, transparent);
+}
+
 .summaryText {
   color: var(--trace-foreground);
   font-weight: 500;
@@ -275,6 +298,11 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.summaryBadgeFail {
+  border-color: #e11d48;
+  color: #e11d48;
 }
 
 /* ---------- Responsive: on narrow screens hide metric label to save space ---------- */
