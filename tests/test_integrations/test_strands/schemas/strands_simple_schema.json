@@ -9,7 +9,8 @@
       "parentUuid": "3ab17c81b2cb093b",
       "startTime": "2026-05-07T11:39:25.649Z",
       "endTime": "2026-05-07T11:39:26.618Z",
-      "input": "Be concise, reply with one short sentence only. Say hello in exactly three words."
+      "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
+      "integration": "Strands"
     }
   ],
   "agentSpans": [
@@ -23,7 +24,8 @@
       "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
       "output": "Hello, how are you?\n",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Strands"
     }
   ],
   "llmSpans": [
@@ -39,7 +41,9 @@
       "output": "Hello, how are you?",
       "model": "gpt-4o-mini",
       "inputTokenCount": 40.0,
-      "outputTokenCount": 7.0
+      "outputTokenCount": 7.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

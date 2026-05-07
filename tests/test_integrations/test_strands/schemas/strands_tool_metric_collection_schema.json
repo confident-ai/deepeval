@@ -10,7 +10,8 @@
       "startTime": "2026-05-07T11:39:29.382Z",
       "endTime": "2026-05-07T11:39:30.181Z",
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
-      "output": "{'toolUse': {'toolUseId': 'call_TIOLUPlcYgyfJIp3FFY9EVP4', 'name': 'calculate', 'input': {'operation': 'add', 'a': 15, 'b': 25}}}"
+      "output": "{'toolUse': {'toolUseId': 'call_TIOLUPlcYgyfJIp3FFY9EVP4', 'name': 'calculate', 'input': {'operation': 'add', 'a': 15, 'b': 25}}}",
+      "integration": "Strands"
     },
     {
       "uuid": "9e51624673f361ae",
@@ -21,7 +22,8 @@
       "startTime": "2026-05-07T11:39:28.358Z",
       "endTime": "2026-05-07T11:39:29.382Z",
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
-      "output": "{'toolUse': {'toolUseId': 'call_TIOLUPlcYgyfJIp3FFY9EVP4', 'name': 'calculate', 'input': {'operation': 'add', 'a': 15, 'b': 25}}}"
+      "output": "{'toolUse': {'toolUseId': 'call_TIOLUPlcYgyfJIp3FFY9EVP4', 'name': 'calculate', 'input': {'operation': 'add', 'a': 15, 'b': 25}}}",
+      "integration": "Strands"
     }
   ],
   "agentSpans": [
@@ -35,7 +37,8 @@
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
       "output": "15 plus 25 is 40.\n",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Strands"
     }
   ],
   "llmSpans": [
@@ -51,7 +54,9 @@
       "output": "15 plus 25 is 40.",
       "model": "gpt-4o-mini",
       "inputTokenCount": 115.0,
-      "outputTokenCount": 9.0
+      "outputTokenCount": 9.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
     },
     {
       "uuid": "8c3df76e91e1aea0",
@@ -65,7 +70,9 @@
       "output": "{'toolUse': {'toolUseId': 'call_TIOLUPlcYgyfJIp3FFY9EVP4', 'name': 'calculate', 'input': {'operation': 'add', 'a': 15, 'b': 25}}}",
       "model": "gpt-4o-mini",
       "inputTokenCount": 84.0,
-      "outputTokenCount": 21.0
+      "outputTokenCount": 21.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -85,7 +92,8 @@
           "inputParameters": {}
         }
       ],
-      "metricCollection": "calculator-metrics"
+      "metricCollection": "calculator-metrics",
+      "integration": "Strands"
     }
   ],
   "startTime": "2026-05-07T11:39:28.357Z",

@@ -12,8 +12,9 @@ class Integration(str, Enum):
     ANTHROPIC = "Anthropic"
     PYDANTIC_AI = "PydanticAI"
     GOOGLE_ADK = "Google ADK"
-    OPEN_INFERENCE = "OpenInference"
+    STRANDS = "Strands"
     OTEL = "OpenTelemetry"
+    OPEN_INFERENCE = "OpenInference"
     AGENTCORE = "AgentCore"
 
 

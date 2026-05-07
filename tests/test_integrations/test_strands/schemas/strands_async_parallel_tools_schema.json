@@ -10,7 +10,8 @@
       "startTime": "2026-05-07T11:39:11.260Z",
       "endTime": "2026-05-07T11:39:12.326Z",
       "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
-      "output": "{'toolUse': {'toolUseId': 'call_foKFwEbh0tsSiYYIghHEyJAB', 'name': 'get_weather', 'input': {'city': 'Tokyo'}}}"
+      "output": "{'toolUse': {'toolUseId': 'call_foKFwEbh0tsSiYYIghHEyJAB', 'name': 'get_weather', 'input': {'city': 'Tokyo'}}}",
+      "integration": "Strands"
     },
     {
       "uuid": "63b2f035ac66c2d3",
@@ -21,7 +22,8 @@
       "startTime": "2026-05-07T11:39:08.826Z",
       "endTime": "2026-05-07T11:39:11.260Z",
       "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
-      "output": "{'toolUse': {'toolUseId': 'call_foKFwEbh0tsSiYYIghHEyJAB', 'name': 'get_weather', 'input': {'city': 'Tokyo'}}}"
+      "output": "{'toolUse': {'toolUseId': 'call_foKFwEbh0tsSiYYIghHEyJAB', 'name': 'get_weather', 'input': {'city': 'Tokyo'}}}",
+      "integration": "Strands"
     }
   ],
   "agentSpans": [
@@ -33,9 +35,10 @@
       "startTime": "2026-05-07T11:39:08.825Z",
       "endTime": "2026-05-07T11:39:12.327Z",
       "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
-      "output": "The weather in Tokyo is sunny with a temperature of 72\u00b0F. The current time is 3:00 PM JST.\n",
+      "output": "The weather in Tokyo is sunny with a temperature of 72°F. The current time is 3:00 PM JST.\n",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Strands"
     }
   ],
   "llmSpans": [
@@ -48,10 +51,12 @@
       "startTime": "2026-05-07T11:39:11.260Z",
       "endTime": "2026-05-07T11:39:12.325Z",
       "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
-      "output": "The weather in Tokyo is sunny with a temperature of 72\u00b0F. The current time is 3:00 PM JST.",
+      "output": "The weather in Tokyo is sunny with a temperature of 72°F. The current time is 3:00 PM JST.",
       "model": "gpt-4o-mini",
       "inputTokenCount": 194.0,
-      "outputTokenCount": 26.0
+      "outputTokenCount": 26.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
     },
     {
       "uuid": "275cf787c3c135ac",
@@ -65,7 +70,9 @@
       "output": "{'toolUse': {'toolUseId': 'call_foKFwEbh0tsSiYYIghHEyJAB', 'name': 'get_weather', 'input': {'city': 'Tokyo'}}}",
       "model": "gpt-4o-mini",
       "inputTokenCount": 126.0,
-      "outputTokenCount": 44.0
+      "outputTokenCount": 44.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -84,7 +91,8 @@
           "name": "get_time",
           "inputParameters": {}
         }
-      ]
+      ],
+      "integration": "Strands"
     },
     {
       "uuid": "4cfc4b6241139d06",
@@ -100,7 +108,8 @@
           "name": "get_weather",
           "inputParameters": {}
         }
-      ]
+      ],
+      "integration": "Strands"
     }
   ],
   "startTime": "2026-05-07T11:39:08.825Z",
@@ -118,6 +127,6 @@
   "threadId": "async-parallel-tools-123",
   "userId": "test-user-async",
   "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
-  "output": "The weather in Tokyo is sunny with a temperature of 72\u00b0F. The current time is 3:00 PM JST.\n",
+  "output": "The weather in Tokyo is sunny with a temperature of 72°F. The current time is 3:00 PM JST.\n",
   "status": "SUCCESS"
 }

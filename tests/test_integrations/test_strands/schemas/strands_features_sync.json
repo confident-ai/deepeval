@@ -10,7 +10,8 @@
       "startTime": "2026-05-07T11:39:39.136Z",
       "endTime": "2026-05-07T11:39:40.037Z",
       "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
-      "output": "{'toolUse': {'toolUseId': 'call_UghGzjp1vnuwMyzKg2R6DPnK', 'name': 'special_tool', 'input': {'query': 'Sync Data'}}}"
+      "output": "{'toolUse': {'toolUseId': 'call_UghGzjp1vnuwMyzKg2R6DPnK', 'name': 'special_tool', 'input': {'query': 'Sync Data'}}}",
+      "integration": "Strands"
     },
     {
       "uuid": "814d6638b8be267e",
@@ -21,7 +22,8 @@
       "startTime": "2026-05-07T11:39:38.072Z",
       "endTime": "2026-05-07T11:39:39.135Z",
       "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
-      "output": "{'toolUse': {'toolUseId': 'call_UghGzjp1vnuwMyzKg2R6DPnK', 'name': 'special_tool', 'input': {'query': 'Sync Data'}}}"
+      "output": "{'toolUse': {'toolUseId': 'call_UghGzjp1vnuwMyzKg2R6DPnK', 'name': 'special_tool', 'input': {'query': 'Sync Data'}}}",
+      "integration": "Strands"
     }
   ],
   "agentSpans": [
@@ -36,7 +38,8 @@
       "output": "The query 'Sync Data' has been processed.\n",
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "agent_metrics_v1"
+      "metricCollection": "agent_metrics_v1",
+      "integration": "Strands"
     }
   ],
   "llmSpans": [
@@ -52,7 +55,9 @@
       "output": "The query 'Sync Data' has been processed.",
       "model": "gpt-4o-mini",
       "inputTokenCount": 163.0,
-      "outputTokenCount": 11.0
+      "outputTokenCount": 11.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
     },
     {
       "uuid": "a116118b526f797b",
@@ -67,7 +72,9 @@
       "model": "gpt-4o-mini",
       "inputTokenCount": 136.0,
       "outputTokenCount": 15.0,
-      "metricCollection": "llm_metrics_v1"
+      "metricCollection": "llm_metrics_v1",
+      "integration": "Strands",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -87,7 +94,8 @@
           "inputParameters": {}
         }
       ],
-      "metricCollection": "special_tool_v1"
+      "metricCollection": "special_tool_v1",
+      "integration": "Strands"
     }
   ],
   "startTime": "2026-05-07T11:39:38.072Z",

@@ -10,7 +10,8 @@
       "startTime": "2026-05-07T11:39:27.579Z",
       "endTime": "2026-05-07T11:39:28.344Z",
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
-      "output": "{'toolUse': {'toolUseId': 'call_IW6lQhHko4NqfL6M74s5819M', 'name': 'calculate', 'input': {'operation': 'multiply', 'a': 7, 'b': 8}}}"
+      "output": "{'toolUse': {'toolUseId': 'call_IW6lQhHko4NqfL6M74s5819M', 'name': 'calculate', 'input': {'operation': 'multiply', 'a': 7, 'b': 8}}}",
+      "integration": "Strands"
     },
     {
       "uuid": "cc2943e533ea4409",
@@ -21,7 +22,8 @@
       "startTime": "2026-05-07T11:39:26.624Z",
       "endTime": "2026-05-07T11:39:27.578Z",
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
-      "output": "{'toolUse': {'toolUseId': 'call_IW6lQhHko4NqfL6M74s5819M', 'name': 'calculate', 'input': {'operation': 'multiply', 'a': 7, 'b': 8}}}"
+      "output": "{'toolUse': {'toolUseId': 'call_IW6lQhHko4NqfL6M74s5819M', 'name': 'calculate', 'input': {'operation': 'multiply', 'a': 7, 'b': 8}}}",
+      "integration": "Strands"
     }
   ],
   "agentSpans": [
@@ -35,7 +37,8 @@
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
       "output": "7 multiplied by 8 is 56.\n",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Strands"
     }
   ],
   "llmSpans": [
@@ -51,7 +54,9 @@
       "output": "7 multiplied by 8 is 56.",
       "model": "gpt-4o-mini",
       "inputTokenCount": 116.0,
-      "outputTokenCount": 10.0
+      "outputTokenCount": 10.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
     },
     {
       "uuid": "18dc1ddf5f98c963",
@@ -65,7 +70,9 @@
       "output": "{'toolUse': {'toolUseId': 'call_IW6lQhHko4NqfL6M74s5819M', 'name': 'calculate', 'input': {'operation': 'multiply', 'a': 7, 'b': 8}}}",
       "model": "gpt-4o-mini",
       "inputTokenCount": 85.0,
-      "outputTokenCount": 21.0
+      "outputTokenCount": 21.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -84,7 +91,8 @@
           "name": "calculate",
           "inputParameters": {}
         }
-      ]
+      ],
+      "integration": "Strands"
     }
   ],
   "startTime": "2026-05-07T11:39:26.624Z",
