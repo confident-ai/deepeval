@@ -32,7 +32,10 @@ from deepeval.tracing.types import (
     TraceSpanStatus,
 )
 from deepeval.tracing.integrations import Integration
-from deepeval.tracing.utils import infer_provider_from_model
+from deepeval.tracing.utils import (
+    infer_provider_from_model,
+    normalize_span_provider_for_platform,
+)
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -441,6 +444,7 @@ class SpanInterceptor(SpanProcessor):
                 infer_provider_from_model(str(model)) if model else None
             )
             if provider:
+                provider = normalize_span_provider_for_platform(provider)
                 self._set_attr_post_end(
                     span, "confident.span.provider", provider
                 )

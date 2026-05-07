@@ -48,7 +48,10 @@ from deepeval.tracing.types import (
     ToolCall,
 )
 from deepeval.tracing.integrations import Integration
-from deepeval.tracing.utils import infer_provider_from_model
+from deepeval.tracing.utils import (
+    infer_provider_from_model,
+    normalize_span_provider_for_platform,
+)
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -828,6 +831,15 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
         span_type = attrs.get("confident.span.type") or _get_span_kind(span)
         if span_type and "confident.span.type" not in attrs:
             self._set_attr_post_end(span, "confident.span.type", span_type)
+        if (
+            self.settings.integration
+            and "confident.span.integration" not in attrs
+        ):
+            self._set_attr_post_end(
+                span,
+                "confident.span.integration",
+                self.settings.integration,
+            )
 
         input_text, output_text = _extract_messages(span)
 
@@ -865,6 +877,7 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
             if not provider and model:
                 provider = infer_provider_from_model(str(model))
             if provider:
+                provider = normalize_span_provider_for_platform(provider)
                 self._set_attr_post_end(
                     span, "confident.span.provider", str(provider)
                 )

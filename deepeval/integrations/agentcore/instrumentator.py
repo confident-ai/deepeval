@@ -36,7 +36,10 @@ from deepeval.tracing.otel.utils import (
 from deepeval.tracing.perf_epoch_bridge import init_clock_bridge
 from deepeval.tracing.tracing import trace_manager
 from deepeval.tracing.integrations import Integration
-from deepeval.tracing.utils import infer_provider_from_model
+from deepeval.tracing.utils import (
+    infer_provider_from_model,
+    normalize_span_provider_for_platform,
+)
 from deepeval.tracing.types import (
     AgentSpan,
     BaseSpan,
@@ -900,6 +903,7 @@ class AgentCoreSpanInterceptor(SpanProcessor):
             if span_type == "llm" and not attrs.get("confident.span.provider"):
                 provider = infer_provider_from_model(model)
                 if provider:
+                    provider = normalize_span_provider_for_platform(provider)
                     self._set_attr_post_end(
                         span, "confident.span.provider", provider
                     )
