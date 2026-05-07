@@ -121,7 +121,9 @@
             }
           ],
           "top_p": 1.0,
-          "reasoning": {},
+          "reasoning": {
+            "effort": "medium"
+          },
           "text": {
             "format": {
               "type": "text"
@@ -241,7 +243,9 @@
             }
           ],
           "top_p": 1.0,
-          "reasoning": {},
+          "reasoning": {
+            "effort": "medium"
+          },
           "text": {
             "format": {
               "type": "text"
@@ -351,7 +355,9 @@
             }
           ],
           "top_p": 1.0,
-          "reasoning": {},
+          "reasoning": {
+            "effort": "medium"
+          },
           "text": {
             "format": {
               "type": "text"

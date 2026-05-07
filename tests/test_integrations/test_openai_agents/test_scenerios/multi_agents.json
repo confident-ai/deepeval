@@ -89,9 +89,36 @@
           "parallel_tool_calls": true,
           "temperature": 1.0,
           "tool_choice": "auto",
-          "tools": [],
+          "tools": [
+            {
+              "name": "transfer_to_spanish_agent",
+              "parameters": {
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {},
+                "required": []
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Handoff to the Spanish agent agent to handle the request. "
+            },
+            {
+              "name": "transfer_to_english_agent",
+              "parameters": {
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {},
+                "required": []
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Handoff to the English agent agent to handle the request. "
+            }
+          ],
           "top_p": 1.0,
-          "reasoning": {},
+          "reasoning": {
+            "effort": "medium"
+          },
           "text": {
             "format": {
               "type": "text"
@@ -172,7 +199,9 @@
             }
           ],
           "top_p": 1.0,
-          "reasoning": {},
+          "reasoning": {
+            "effort": "medium"
+          },
           "text": {
             "format": {
               "type": "text"
