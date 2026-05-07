@@ -13,8 +13,8 @@ class Integration(str, Enum):
     PYDANTIC_AI = "PydanticAI"
     GOOGLE_ADK = "Google ADK"
     OPEN_INFERENCE = "OpenInference"
+    OTEL = "OpenTelemetry"
     AGENTCORE = "AgentCore"
-    AI_SDK = "AI SDK"
 
 
 class Provider(str, Enum):
