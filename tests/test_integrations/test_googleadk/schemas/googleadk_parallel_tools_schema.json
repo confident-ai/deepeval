@@ -1,0 +1,141 @@
+{
+  "uuid": "8ace04e00242dbe7f6698aa3fb781de0",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "e2888543d8741fb7",
+      "name": "invocation [deepeval-googleadk-multiple-tools]",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T11:21:15.598Z",
+      "endTime": "2026-05-07T11:21:18.321Z",
+      "input": "{\"user_id\": \"test-user\", \"session_id\": \"2a08af06-a634-4b81-bcd7-c45eda3b39a6\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Paris is currently Cloudy and 62F. The time in Paris is 8:00 AM CET.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":26,\"prompt_token_count\":310,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":310}],\"total_token_count\":336},\"invocation_id\":\"e-23b89809-66aa-417e-a338-4efaf7da2c0b\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"48347f35-f721-4c74-8538-30568e674d08\",\"timestamp\":1778152876.692866}",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "0d6f020179805315",
+      "name": "multi_tool_assistant",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "e2888543d8741fb7",
+      "startTime": "2026-05-07T11:21:15.599Z",
+      "endTime": "2026-05-07T11:21:18.321Z",
+      "input": [],
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Paris is currently Cloudy and 62F. The time in Paris is 8:00 AM CET.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":26,\"prompt_token_count\":310,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":310}],\"total_token_count\":336},\"invocation_id\":\"e-23b89809-66aa-417e-a338-4efaf7da2c0b\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"48347f35-f721-4c74-8538-30568e674d08\",\"timestamp\":1778152876.692866}",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "5ce11cd165dc7afe",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "0d6f020179805315",
+      "startTime": "2026-05-07T11:21:16.692Z",
+      "endTime": "2026-05-07T11:21:18.320Z",
+      "input": "{\"time\": \"8:00 AM CET\"}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Paris is currently Cloudy and 62F. The time in Paris is 8:00 AM CET.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":26,\"prompt_token_count\":310,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":310}],\"total_token_count\":336}}",
+      "model": "gemini-2.5-flash-lite",
+      "inputTokenCount": 310.0,
+      "outputTokenCount": 26.0
+    },
+    {
+      "uuid": "4d0ce3bbdf93c69d",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "0d6f020179805315",
+      "startTime": "2026-05-07T11:21:15.599Z",
+      "endTime": "2026-05-07T11:21:16.691Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise.\n\nYou are an agent. Your internal name is \"multi_tool_assistant\".",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"function_call\":{\"args\":{\"city\":\"Paris\"},\"name\":\"get_weather\"}},{\"function_call\":{\"args\":{\"city\":\"Paris\"},\"name\":\"get_time\"}}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":30,\"prompt_token_count\":241,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":241}],\"total_token_count\":271}}",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        },
+        {
+          "name": "get_time",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ],
+      "model": "gemini-2.5-flash-lite",
+      "inputTokenCount": 241.0,
+      "outputTokenCount": 30.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "d7bc4f28db47ad36",
+      "name": "(merged tools)",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "4d0ce3bbdf93c69d",
+      "startTime": "2026-05-07T11:21:16.690Z",
+      "endTime": "2026-05-07T11:21:16.690Z"
+    },
+    {
+      "uuid": "168d7815668f0a3f",
+      "name": "get_time",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "4d0ce3bbdf93c69d",
+      "startTime": "2026-05-07T11:21:16.689Z",
+      "endTime": "2026-05-07T11:21:16.690Z",
+      "input": "{\"city\": \"Paris\"}",
+      "output": "{\"id\":\"adk-a08ce4a8-cb0d-497c-b8c4-7df614db470a\",\"name\":\"get_time\",\"response\":{\"time\":\"8:00 AM CET\"}}",
+      "toolsCalled": [
+        {
+          "name": "get_time",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "89b2f13996691ead",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "4d0ce3bbdf93c69d",
+      "startTime": "2026-05-07T11:21:16.686Z",
+      "endTime": "2026-05-07T11:21:16.687Z",
+      "input": "{\"city\": \"Paris\"}",
+      "output": "{\"id\":\"adk-e569eb10-2a05-488c-99cd-bb0f751687d2\",\"name\":\"get_weather\",\"response\":{\"report\":\"Cloudy, 62F\"}}",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ]
+    }
+  ],
+  "startTime": "2026-05-07T11:21:15.598Z",
+  "endTime": "2026-05-07T11:21:18.321Z",
+  "name": "googleadk-parallel-tools",
+  "metadata": {
+    "test_type": "parallel_tools"
+  },
+  "tags": [
+    "googleadk",
+    "parallel-tools"
+  ],
+  "environment": "development",
+  "threadId": "parallel-tools-123",
+  "userId": "test-user",
+  "input": "{\"user_id\": \"test-user\", \"session_id\": \"2a08af06-a634-4b81-bcd7-c45eda3b39a6\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+  "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Paris is currently Cloudy and 62F. The time in Paris is 8:00 AM CET.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":26,\"prompt_token_count\":310,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":310}],\"total_token_count\":336},\"invocation_id\":\"e-23b89809-66aa-417e-a338-4efaf7da2c0b\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"48347f35-f721-4c74-8538-30568e674d08\",\"timestamp\":1778152876.692866}",
+  "status": "SUCCESS"
+}
