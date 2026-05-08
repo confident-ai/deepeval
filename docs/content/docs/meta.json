@@ -7,6 +7,8 @@
 
     "---[Rocket]Getting Started---",
     "getting-started",
+    "vibe-coder-quickstart",
+    "vibe-coding",
     "(use-cases)",
 
     "---[FlaskConical]LLM Evals---",
@@ -20,8 +22,8 @@
     "---[Gauge]Eval Metrics---",
     "metrics-introduction",
     "(custom)",
-    "(rag)",
     "(agentic)",
+    "(rag)",
     "(multi-turn)",
     "(mcp)",
     "(safety)",

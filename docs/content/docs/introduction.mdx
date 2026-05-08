@@ -16,6 +16,7 @@ import {
   Rocket,
   Route,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 
 **DeepEval** is an open-source LLM evaluation framework for LLM applications. DeepEval makes it extremely easy to build and iterate on LLM (applications) and was built with the following principles in mind:
@@ -33,6 +34,10 @@ import {
 DeepEval is local-first: your evaluations run in your own environment. When your
 team needs shared dashboards, regression tracking, observability, or production
 monitoring, DeepEval integrates natively with [Confident AI](https://www.confident-ai.com).
+
+:::tip[Vibe coding? Have your coding agent set DeepEval up for you.]
+Install the DeepEval Skill in **Cursor, Claude Code, Codex, Windsurf**, or any other AI coding tool, paste a starter prompt, and your coding agent will write the test suite, run `deepeval test run`, and iterate on failures — using the eval results as the source of truth for what to change next in your app. **[5-min Vibe Coder Quickstart →](/docs/vibe-coder-quickstart)**
+:::
 
 ## Who is DeepEval For?
 
@@ -55,13 +60,20 @@ quickstart:
 
 <Cards>
   <Card
-    className="md:col-span-2"
     icon={<Rocket />}
-    title="5 min Quickstart"
+    title="5-min Human Quickstart"
     href="/docs/getting-started"
   >
     Install DeepEval, create your first test case, run it with `deepeval test
-    run`, and inspect the results.
+    run`, and inspect the results — by hand.
+  </Card>
+  <Card
+    icon={<Sparkles />}
+    title="5-min Vibe Coder Quickstart"
+    href="/docs/vibe-coder-quickstart"
+  >
+    Install the Skill in Cursor / Claude Code / Codex and have your coding
+    agent build the test suite, run evals, and iterate for you.
   </Card>
   <Card icon={<Bot />} title="AI Agents" href="/docs/getting-started-agents">
     Set up tracing, evaluate end-to-end task completion, and score individual

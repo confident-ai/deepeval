@@ -15,7 +15,7 @@ from .context import (
     pop_pending_for,
     apply_pending_to_span,
 )
-from .trace_context import trace, LlmSpanContext
+from .trace_context import trace, LlmSpanContext, AgentSpanContext
 from .types import BaseSpan, Trace
 from .tracing import observe, trace_manager
 from .offline_evals import evaluate_thread, evaluate_trace, evaluate_span
@@ -37,6 +37,7 @@ __all__ = [
     "pop_pending_for",
     "apply_pending_to_span",
     "LlmSpanContext",
+    "AgentSpanContext",
     "BaseSpan",
     "Trace",
     "observe",
