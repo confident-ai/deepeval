@@ -182,7 +182,15 @@ DeepEval plugs into any LLM framework — OpenAI Agents, LangChain, CrewAI, and 
 
 <br />
 
-# 🚀 QuickStart
+# 🤖 Vibe-Coder QuickStart
+
+Want your coding agent to add evals and fix failures for you? Install the DeepEval skill, point it at your agent, RAG pipeline, or chatbot, and ask it to generate a dataset, write the eval suite, run `deepeval test run`, and iterate on the failing metrics.
+
+[Start with the 5-minute vibe-coder guide](https://deepeval.com/docs/vibe-coder-quickstart?utm_source=GitHub).
+
+<br />
+
+# 🚀 Human QuickStart
 
 Let's pretend your LLM application is a RAG based customer support chatbot; here's how DeepEval can help test what you've built.
 
@@ -262,7 +270,7 @@ deepeval test run test_chatbot.py
 
 <br />
 
-## Evaluate on Traces
+## Evals With Full Traceability
 
 Use `evals_iterator()` to run the same dataset through your app, whether you instrument it manually or through one of DeepEval's framework integrations. GitHub READMEs don't support real tabs, so the examples below use collapsible sections instead.
 
@@ -272,6 +280,7 @@ from deepeval.metrics import TaskCompletionMetric
 
 dataset = EvaluationDataset(goldens=[Golden(input="Hi!")])
 
+# This metric will be run on your trace end to end.
 for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     app(golden.input)
 ```
@@ -282,11 +291,9 @@ for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
 ```python
 from deepeval.tracing import observe, update_current_span
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.metrics import TaskCompletionMetric
 
-answer_relevancy = AnswerRelevancyMetric()
-
-@observe(metrics=[answer_relevancy])
+@observe()
 def inner_component(input: str):
     output = "result"
     update_current_span(test_case=LLMTestCase(input=input, actual_output=output))
@@ -296,7 +303,8 @@ def inner_component(input: str):
 def app(input: str):
     return inner_component(input)
 
-for golden in dataset.evals_iterator():
+# This metric will be run on your trace end to end.
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     app(golden.input)
 ```
 
@@ -307,13 +315,14 @@ for golden in dataset.evals_iterator():
 
 ```python
 from deepeval.openai import OpenAI
-from deepeval.tracing import trace, LlmSpanContext
-from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.tracing import trace
+from deepeval.metrics import TaskCompletionMetric
 
 client = OpenAI()
 
+# This metric will be run on your trace end to end.
 for golden in dataset.evals_iterator():
-    with trace(llm_span_context=LlmSpanContext(metrics=[AnswerRelevancyMetric()])):
+    with trace(metrics=[TaskCompletionMetric()]):
         client.chat.completions.create(
             model="gpt-4o",
             messages=[{"role": "user", "content": golden.input}],
@@ -329,6 +338,7 @@ for golden in dataset.evals_iterator():
 from agents import Runner
 from deepeval.metrics import TaskCompletionMetric
 
+# This metric will be run on your trace end to end.
 for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     Runner.run_sync(agent, golden.input)
 ```
@@ -340,13 +350,14 @@ for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
 
 ```python
 from deepeval.anthropic import Anthropic
-from deepeval.tracing import trace, LlmSpanContext
-from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.tracing import trace
+from deepeval.metrics import TaskCompletionMetric
 
 client = Anthropic()
 
+# This metric will be run on your trace end to end.
 for golden in dataset.evals_iterator():
-    with trace(llm_span_context=LlmSpanContext(metrics=[AnswerRelevancyMetric()])):
+    with trace(metrics=[TaskCompletionMetric()]):
         client.messages.create(
             model="claude-sonnet-4-5",
             max_tokens=1024,
@@ -363,6 +374,7 @@ for golden in dataset.evals_iterator():
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.metrics import TaskCompletionMetric
 
+# This metric will be run on your trace end to end.
 for golden in dataset.evals_iterator():
     llm.invoke(
         golden.input,
@@ -379,6 +391,7 @@ for golden in dataset.evals_iterator():
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.metrics import TaskCompletionMetric
 
+# This metric will be run on your trace end to end.
 for golden in dataset.evals_iterator():
     agent.invoke(
         {"messages": [{"role": "user", "content": golden.input}]},
@@ -394,6 +407,7 @@ for golden in dataset.evals_iterator():
 ```python
 from deepeval.metrics import TaskCompletionMetric
 
+# This metric will be run on your trace end to end.
 for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     agent.run_sync(golden.input)
 ```
@@ -409,6 +423,7 @@ from deepeval.metrics import TaskCompletionMetric
 
 instrument_crewai()
 
+# This metric will be run on your trace end to end.
 for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     crew.kickoff({"input": golden.input})
 ```
@@ -424,6 +439,7 @@ from deepeval.metrics import TaskCompletionMetric
 
 instrument_agentcore()
 
+# This metric will be run on your trace end to end.
 for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     invoke({"prompt": golden.input})
 ```
@@ -438,6 +454,7 @@ import asyncio
 from deepeval.evaluate.configs import AsyncConfig
 from deepeval.metrics import TaskCompletionMetric
 
+# This metric will be run on your trace end to end.
 for golden in dataset.evals_iterator(
     async_config=AsyncConfig(run_async=True),
     metrics=[TaskCompletionMetric()],
@@ -459,6 +476,7 @@ from deepeval.metrics import TaskCompletionMetric
 
 instrument_google_adk()
 
+# This metric will be run on your trace end to end.
 for golden in dataset.evals_iterator(
     async_config=AsyncConfig(run_async=True),
     metrics=[TaskCompletionMetric()],
@@ -478,27 +496,9 @@ from deepeval.metrics import TaskCompletionMetric
 
 instrument_strands()
 
+# This metric will be run on your trace end to end.
 for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     agent(golden.input)
-```
-
-</details>
-
-<details>
-<summary><b>Hugging Face</b></summary>
-
-Hugging Face fine-tuning uses a `Trainer` callback instead of `evals_iterator()`.
-
-```python
-from deepeval.integrations.hugging_face import DeepEvalHuggingFaceCallback
-
-trainer.add_callback(
-    DeepEvalHuggingFaceCallback(
-        evaluation_dataset=dataset,
-        metrics=[coherence_metric],
-        trainer=trainer,
-    )
-)
 ```
 
 </details>

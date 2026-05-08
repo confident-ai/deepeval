@@ -8,6 +8,7 @@ import TraceLoopConnector from "@site/src/sections/home/TraceLoopConnector";
 import IntegrationGrid from "@site/src/components/IntegrationGrid";
 import RepoContributors from "@site/src/sections/home/RepoContributors";
 import { PrimaryButton } from "@site/src/components/Buttons";
+import { CONFIDENT_HOSTS_BY_NAME } from "@site/src/utils/utm";
 import {
   GoldenGenerationDemo,
   MultiTurnSimulationDemo,
@@ -26,8 +27,6 @@ import {
   ShieldCheck,
   ArrowUpRight,
 } from "lucide-react";
-
-const CONFIDENT_MARKETING = "https://www.confident-ai.com";
 
 <br />
 
@@ -111,9 +110,10 @@ Coming soon on May 15th...
 DeepEval integrates natively with Confident AI, an AI observability and evaluation platform for AI quality. It is our Vercel for DeepEval. The same test file you run on your laptop now poweres engineering, product, QAs, and domain experts.
 
 <PrimaryButton
-  href={CONFIDENT_MARKETING}
+  href={CONFIDENT_HOSTS_BY_NAME.WWW}
   target="_blank"
-  rel={externalRelForOutboundHref(CONFIDENT_MARKETING)}
+  rel={externalRelForOutboundHref(CONFIDENT_HOSTS_BY_NAME.WWW)}
+  data-utm-content="home_enterprise"
   endIcon={<Compass aria-hidden />}
 >
   Explore enterprise
