@@ -25,6 +25,7 @@ export const MdxAnchor = ({
         replace={replace}
         {...props}
       />
+    );
   }
 
   const rel = externalRelForOutboundHref(href);
