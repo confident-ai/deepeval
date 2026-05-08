@@ -1,0 +1,197 @@
+---
+id: vibe-coder-quickstart
+title: Vibe Coder 5-min Quickstart
+sidebar_label: Vibe Coder 5-min Quickstart
+---
+
+import { GitMerge, Terminal } from "lucide-react";
+
+This page sets your coding agent (Cursor, Claude Code, Codex, Windsurf, OpenCode, …) up to drive a real DeepEval loop on your repo — install the skill, point it at our LLM-friendly docs, paste the starter prompt, and you're off.
+
+If you want to understand the loop _before_ wiring it up, read [Vibe Coding with DeepEval](/docs/vibe-coding) first.
+
+## Install the Agent Skill
+
+The [`deepeval` Agent Skill](https://github.com/confident-ai/deepeval/tree/main/skills/deepeval) teaches your coding assistant how to pick the right test shape (single-turn / multi-turn / component-level), reuse or generate goldens, write a committed `tests/evals/` pytest suite, run `deepeval test run`, read failures, and iterate.
+
+<Tabs items={["skills CLI", "Manual"]}>
+<Tab value="skills CLI">
+
+Install with any [Skills](https://github.com/anthropics/skills)-compatible installer:
+
+```bash
+npx skills add confident-ai/deepeval --skill "deepeval"
+```
+
+Works with Claude Code, Codex, Cursor, Windsurf, OpenCode, and any other assistant that supports the Skills standard.
+
+</Tab>
+<Tab value="Manual">
+
+Copy or symlink [`skills/deepeval`](https://github.com/confident-ai/deepeval/tree/main/skills/deepeval) into your agent's skills directory.
+
+</Tab>
+</Tabs>
+
+:::note
+A first-class **Cursor plugin** for DeepEval is coming soon — it'll let Cursor discover the `deepeval` skill (and future ones) automatically without going through the skills CLI. Until then, use the skills CLI install above.
+:::
+
+The skill triggers automatically on prompts like _"eval the refund agent and fix any regressions"_, _"add evals to this repo"_, or _"why is faithfulness dropping?"_ — you don't need to invoke it explicitly.
+
+## LLM-Friendly Docs
+
+Every page in these docs is reachable in a form your coding agent can ingest directly:
+
+- [llms.txt](https://www.deepeval.com/llms.txt) — index of every page (per the [llms.txt standard](https://llmstxt.org/))
+- [llms-full.txt](https://www.deepeval.com/llms-full.txt) — every page concatenated into one document
+- Append `.md` (or `/content.md`) to any docs URL for the raw markdown of that page only — useful when you want to feed your assistant one specific concept (e.g. [Faithfulness](https://www.deepeval.com/docs/metrics-faithfulness.md)) instead of the whole site
+
+## Universal Starter Prompt
+
+Paste this into Cursor, Claude Code, Codex, or any other AI tool to bootstrap the loop:
+
+```text
+I want to use DeepEval as my build-loop ground truth, not just a validation
+step at the end. You — the coding agent — will run evals, read the failures
+and traces, and use them as the source of truth for what to change next in
+my AI app. Then re-run to confirm.
+
+## DeepEval Resources
+
+**Documentation:**
+- Main docs: https://www.deepeval.com/docs
+- 5-min Quickstart: https://www.deepeval.com/docs/getting-started
+- Vibe Coding (the loop): https://www.deepeval.com/docs/vibe-coding
+- Agents Quickstart: https://www.deepeval.com/docs/getting-started-agents
+- RAG Quickstart: https://www.deepeval.com/docs/getting-started-rag
+- Chatbot Quickstart: https://www.deepeval.com/docs/getting-started-chatbots
+- Metrics catalog: https://www.deepeval.com/docs/metrics-introduction
+- CLI reference: https://www.deepeval.com/docs/command-line-interface
+- LLM-friendly docs: https://www.deepeval.com/llms.txt
+
+**Integrations (use these when applicable — see "Framework Integrations First" below):**
+- Integrations index: https://www.deepeval.com/integrations
+- OpenAI Agents SDK: https://www.deepeval.com/integrations/frameworks/openai-agents
+- OpenAI SDK: https://www.deepeval.com/integrations/frameworks/openai
+- Anthropic SDK: https://www.deepeval.com/integrations/frameworks/anthropic
+- LangChain: https://www.deepeval.com/integrations/frameworks/langchain
+- LangGraph: https://www.deepeval.com/integrations/frameworks/langgraph
+- LlamaIndex: https://www.deepeval.com/integrations/frameworks/llamaindex
+- CrewAI: https://www.deepeval.com/integrations/frameworks/crewai
+- PydanticAI: https://www.deepeval.com/integrations/frameworks/pydanticai
+- Google ADK: https://www.deepeval.com/integrations/frameworks/google-adk
+- AWS AgentCore: https://www.deepeval.com/integrations/frameworks/agentcore
+- HuggingFace: https://www.deepeval.com/integrations/frameworks/huggingface
+
+**Code & Skill:**
+- Core repo: https://github.com/confident-ai/deepeval
+- Python SDK: pip install -U deepeval
+- Agent Skill (carries the iteration loop): npx skills add confident-ai/deepeval --skill deepeval
+
+## Framework Integrations First (IMPORTANT)
+
+Before adding ANY tracing code, detect whether my app already uses one of the
+supported frameworks above. If it does, **use the DeepEval integration for that
+framework instead of manually instrumenting with `@observe`**. Integrations
+auto-instrument every agent/chain run, every LLM call, and every tool call —
+producing the same trace + span structure DeepEval evaluates against, with
+zero hand-written decorators.
+
+Detection cheat sheet (check `pyproject.toml`, `requirements.txt`, and imports):
+- `openai-agents` / `from agents import Agent` → OpenAI Agents SDK integration
+- `openai` (without `agents`) → OpenAI SDK integration
+- `anthropic` → Anthropic SDK integration
+- `langchain` / `langchain-*` → LangChain integration
+- `langgraph` → LangGraph integration
+- `llama-index` → LlamaIndex integration
+- `crewai` → CrewAI integration
+- `pydantic-ai` → PydanticAI integration
+- `google-adk` → Google ADK integration
+- AWS AgentCore agents → AgentCore integration
+- HuggingFace `transformers` / `smolagents` → HuggingFace integration
+
+If a matching integration exists, fetch its docs page (URL above) and follow
+its instrumentation pattern verbatim — typically a single `instrument=...`
+argument, a `Settings(...)` object, or one wrapper call at app construction
+time. Do not also add `@observe` over the same code paths; the integration
+already produces those spans.
+
+Only fall back to manual `@observe` instrumentation when:
+- The app uses a framework with no DeepEval integration, OR
+- The app is plain Python with no framework, OR
+- The user explicitly asks for hand-rolled tracing.
+
+## How DeepEval Plugs Into Your Loop
+
+- Test cases (LLMTestCase / ConversationalTestCase) describe one behavior.
+- Goldens are dataset entries the agent app is invoked on.
+- Metrics score test cases and return: score (0–1), pass/fail vs threshold,
+  and a natural-language `reason` you can read.
+- Framework integrations (preferred) auto-instrument the app so every
+  agent run, LLM call, and tool call becomes an evaluable span.
+- `@observe` (fallback) traces the app manually when no integration applies.
+- `deepeval test run` runs the suite and prints per-metric, per-span results
+  you can parse without an explicit "summarize this" step.
+- `deepeval generate` synthesizes goldens from docs, contexts, or scratch
+  when no dataset exists yet.
+
+## Your Job (the Build Loop)
+
+For each iteration round:
+  1. Run `deepeval test run tests/evals/test_<app>.py`.
+  2. Read the per-metric scores and `reason` strings. Identify the
+     lowest-scoring metric and the spans/test cases that caused it.
+  3. Pick the smallest likely app change — prompt, retrieval scoping,
+     tool wiring, parser, instructions. Do NOT edit the metric, lower
+     the threshold, or delete failing goldens.
+  4. Edit the app code. Keep the change scoped.
+  5. Re-run the eval suite. Confirm the failing metric improved
+     without regressing other metrics.
+  6. Summarize: what failed, what you changed, what moved.
+Repeat for the requested number of rounds (default 5).
+
+## Start Here
+
+1. Detect the framework (see "Framework Integrations First" above) and tell
+   me which integration you'll use, OR confirm there's no match and you'll
+   fall back to manual `@observe`.
+2. Ask me what I'm building (agent / RAG / chatbot / plain LLM), what
+   dataset I have (or whether to generate one with `deepeval generate`),
+   and whether I want results pushed to Confident AI.
+3. Set up a committed pytest eval suite under `tests/evals/`, do one round
+   of the loop end-to-end, and only then ask me what to focus on next.
+```
+
+:::tip
+With the [Agent Skill](#install-the-agent-skill) installed, you can shorten the prompt to _"Use DeepEval to fix the refund agent — run 5 rounds of the iteration loop"_. The skill carries the workflow, the templates, and the guardrails.
+:::
+
+## Connect to Confident AI (optional)
+
+DeepEval is local-first, so the loop above works fully offline. Connecting to [Confident AI](https://www.confident-ai.com) extends the loop across your team:
+
+```bash
+deepeval login
+```
+
+Every `deepeval test run` your agent kicks off pushes a testing report your reviewers can open with `deepeval view`. Production monitoring sends new failure cases straight back into the dataset, so the next iteration round picks up real regressions automatically.
+
+## Next Steps
+
+You've got the install — if you want to understand what's actually running when your coding agent calls `deepeval test run`, the loop walkthrough breaks it down stage by stage.
+
+<Cards>
+  <Card
+    icon={<GitMerge />}
+    title="Vibe Coding with DeepEval"
+    href="/docs/vibe-coding"
+    description="The loop diagram, what runs under the hood, and how to prompt your coding agent to drive it."
+  />
+  <Card
+    icon={<Terminal />}
+    title="CLI Reference"
+    href="/docs/command-line-interface"
+    description="Every flag your coding agent reaches for: `deepeval generate`, `deepeval test run`, `deepeval view`."
+  />
+</Cards>

@@ -3,6 +3,7 @@ id: metrics-introduction
 title: Introduction to LLM Metrics
 sidebar_label: Introduction
 ---
+
 import { ASSETS } from "@site/src/assets";
 
 `deepeval` offers 50+ SOTA, ready-to-use metrics for you to quickly get started with. Essentially, while a test case represents the thing you're trying to measur, the metric acts as the ruler based on a specific criteria of interest.
@@ -33,6 +34,7 @@ You should aim to have **at least one** custom metric in your LLM evals pipeline
 RAG (retrieval augmented generation) metrics focus on the **retriever and generator components** independently.
 
 - Retriever:
+
   - Contextual Relevancy
   - Contextual Precision
   - Contextual Recall
@@ -375,7 +377,6 @@ To use OpenAI for `deepeval`'s LLM metrics, supply your `OPENAI_API_KEY` in the 
 
 ```bash
 export OPENAI_API_KEY=<your-openai-api-key>
-
 ```
 
 Alternatively, if you're working in a notebook environment (Jupyter or Colab), set your `OPENAI_API_KEY` in a cell:
@@ -384,7 +385,7 @@ Alternatively, if you're working in a notebook environment (Jupyter or Colab), s
 %env OPENAI_API_KEY=<your-openai-api-key>
 ```
 
-:::note
+:::caution
 Please **do not include** quotation marks when setting your `API_KEYS` as environment variables if you're working in a notebook environment.
 :::
 
