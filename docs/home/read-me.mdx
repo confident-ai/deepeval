@@ -12,6 +12,7 @@ import {
   GoldenGenerationDemo,
   MultiTurnSimulationDemo,
 } from "@site/src/sections/home/DatasetDemos";
+import { externalRelForOutboundHref } from "@/src/utils/outbound-link-rel";
 import {
   Bot,
   Compass,
@@ -25,6 +26,8 @@ import {
   ShieldCheck,
   ArrowUpRight,
 } from "lucide-react";
+
+const CONFIDENT_MARKETING = "https://www.confident-ai.com";
 
 <br />
 
@@ -108,9 +111,9 @@ Coming soon on May 15th...
 DeepEval integrates natively with Confident AI, an AI observability and evaluation platform for AI quality. It is our Vercel for DeepEval. The same test file you run on your laptop now poweres engineering, product, QAs, and domain experts.
 
 <PrimaryButton
-  href="https://www.confident-ai.com"
+  href={CONFIDENT_MARKETING}
   target="_blank"
-  rel="noopener noreferrer"
+  rel={externalRelForOutboundHref(CONFIDENT_MARKETING)}
   endIcon={<Compass aria-hidden />}
 >
   Explore enterprise

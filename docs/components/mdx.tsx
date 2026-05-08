@@ -4,6 +4,7 @@ import { Card, Cards } from "fumadocs-ui/components/card";
 import { Steps, Step } from "fumadocs-ui/components/steps";
 import type { MDXComponents } from "mdx/types";
 import { DEFAULT_LLM_MODEL } from "@/lib/defaults";
+import { MdxAnchor } from "@/components/mdx-anchor";
 
 // Site-specific MDX components — globally registered so MDX authors
 // don't have to `import` them in every file.
@@ -33,6 +34,7 @@ function DefaultLLMModel() {
 export function getMDXComponents(components?: MDXComponents) {
   return {
     ...defaultMdxComponents,
+    a: MdxAnchor,
     // Fumadocs primitives
     Tabs,
     Tab,

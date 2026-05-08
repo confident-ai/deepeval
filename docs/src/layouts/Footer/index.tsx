@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { gitConfig } from "@/lib/shared";
+import { externalRelForOutboundHref } from "@/src/utils/outbound-link-rel";
 import styles from "./Footer.module.scss";
 
 type FooterLink = {
@@ -82,7 +83,11 @@ const FooterLinkItem = ({ link }: { link: FooterLink }) => {
   return (
     <li>
       {external ? (
-        <a href={link.href} target="_blank" rel="noopener noreferrer">
+        <a
+          href={link.href}
+          target="_blank"
+          rel={externalRelForOutboundHref(link.href)}
+        >
           {content}
         </a>
       ) : (

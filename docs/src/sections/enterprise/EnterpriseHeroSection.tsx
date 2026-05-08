@@ -1,4 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
+import { externalRelForOutboundHref } from "@/src/utils/outbound-link-rel";
 import { PrimaryButton } from "@site/src/components/Buttons";
 import styles from "@site/src/sections/home/HomeSection.module.scss";
 import enterpriseStyles from "./EnterpriseHeroSection.module.scss";
@@ -36,6 +37,8 @@ const DEFAULT_LOGO_ITEMS: EnterpriseLogoItem[] = [
 const DEFAULT_LOGO_GRID_LABEL =
   "Trusted by teams that took evals to production.";
 
+const BOOK_DEMO_HREF = "https://www.confident-ai.com/book-a-demo";
+
 const EnterpriseHeroSection: React.FC<EnterpriseHeroSectionProps> = ({
   logoItems = DEFAULT_LOGO_ITEMS,
   logoGridLabel = DEFAULT_LOGO_GRID_LABEL,
@@ -54,9 +57,9 @@ const EnterpriseHeroSection: React.FC<EnterpriseHeroSectionProps> = ({
 
         <div className={styles.actions}>
           <PrimaryButton
-            href="https://www.confident-ai.com/book-a-demo"
+            href={BOOK_DEMO_HREF}
             target="_blank"
-            rel="noopener noreferrer"
+            rel={externalRelForOutboundHref(BOOK_DEMO_HREF)}
             data-utm-content="enterprise_hero_demo"
             endIcon={<ArrowUpRight aria-hidden />}
           >
