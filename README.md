@@ -272,21 +272,9 @@ deepeval test run test_chatbot.py
 
 ## Evals With Full Traceability
 
-Use `evals_iterator()` to run the same dataset through your app, whether you instrument it manually or through one of DeepEval's framework integrations. GitHub READMEs don't support real tabs, so the examples below use collapsible sections instead.
+Use `evals_iterator()` to run the same dataset through your app, whether you instrument it manually or through one of DeepEval's framework integrations.
 
-```python
-from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.metrics import TaskCompletionMetric
-
-dataset = EvaluationDataset(goldens=[Golden(input="Hi!")])
-
-# This metric will be run on your trace end to end.
-for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
-    app(golden.input)
-```
-
-<details>
-<summary><b>Manual instrumentation</b></summary>
+Here's an example of manual instrumentation:
 
 ```python
 from deepeval.tracing import observe, update_current_span
@@ -307,8 +295,6 @@ def app(input: str):
 for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     app(golden.input)
 ```
-
-</details>
 
 <details>
 <summary><b>OpenAI</b></summary>
