@@ -59,9 +59,7 @@ def init_multiple_tools_strands(
         user_id=user_id,
     )
 
-    agent = Agent(
-        model=_build_openai_model(), tools=[get_weather, get_time]
-    )
+    agent = Agent(model=_build_openai_model(), tools=[get_weather, get_time])
 
     def invoke(payload: dict):
         user_message = payload.get("prompt", "")
