@@ -1,4 +1,5 @@
 import { PrimaryButton } from "@site/src/components/Buttons";
+import { externalRelForOutboundHref } from "@/src/utils/outbound-link-rel";
 import { ArrowUpRight } from "lucide-react";
 
 <br />
@@ -164,7 +165,7 @@ We can only show you so much on a website. Talk to someone on the Confident AI t
 <PrimaryButton
   href="https://www.confident-ai.com/book-a-demo"
   target="_blank"
-  rel="noopener noreferrer"
+  rel={externalRelForOutboundHref("https://www.confident-ai.com/book-a-demo")}
   data-utm-content="enterprise_bottom_demo"
   endIcon={<ArrowUpRight aria-hidden />}
 >
