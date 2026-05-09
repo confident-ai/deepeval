@@ -60,6 +60,7 @@ from deepeval.tracing.utils import (
     prepare_tool_call_input_parameters,
     replace_self_with_class_name,
     make_json_serializable,
+    normalize_trace_api_span_providers,
     perf_counter_to_datetime,
     to_zod_compatible_iso,
     tracing_enabled,
@@ -593,6 +594,7 @@ class TraceManager:
                 # Build API object & payload
                 if isinstance(trace_obj, TraceApi):
                     trace_api = trace_obj
+                    normalize_trace_api_span_providers(trace_api)
                 else:
                     trace_api = self.create_trace_api(trace_obj)
 
@@ -702,6 +704,7 @@ class TraceManager:
         for trace_api in remaining_traces:
             with capture_send_trace():
                 try:
+                    normalize_trace_api_span_providers(trace_api)
                     try:
                         body = trace_api.model_dump(
                             by_alias=True,
@@ -820,7 +823,7 @@ class TraceManager:
             perf_counter_to_datetime(effective_end_time)
         )
 
-        return TraceApi(
+        trace_api = TraceApi(
             uuid=trace.uuid,
             baseSpans=base_spans,
             agentSpans=agent_spans,
@@ -854,6 +857,8 @@ class TraceManager:
                 else TraceSpanApiStatus.ERRORED
             ),
         )
+        normalize_trace_api_span_providers(trace_api)
+        return trace_api
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
         # Determine span type
@@ -1039,6 +1044,13 @@ class Observer:
         pending = pop_pending_for(self.span_type)
         if pending:
             apply_pending_to_span(span_instance, pending)
+
+        if (
+            parent_span
+            and not getattr(span_instance, "integration", None)
+            and getattr(parent_span, "integration", None)
+        ):
+            span_instance.integration = parent_span.integration
 
         # stash call arguments so they are available during the span lifetime
         setattr(span_instance, "_function_kwargs", self.function_kwargs)

@@ -12,7 +12,8 @@
       "input": "{\"user_id\": \"test-user\", \"session_id\": \"ac7081af-60aa-4c85-a5ed-7b760e6bd47f\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use the get_weather tool exactly once to get the weather in Tokyo.\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Tokyo is sunny and 72F.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":12,\"prompt_token_count\":268,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":268}],\"total_token_count\":280},\"invocation_id\":\"e-9dc6c107-9d0b-498f-bfa7-5e285247c96c\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"0555f2b3-519c-4f35-9b37-efad0791bafe\",\"timestamp\":1778144795.064307}",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Google ADK"
     },
     {
       "uuid": "e0fa770f435775d4",
@@ -25,7 +26,8 @@
       "input": [],
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Tokyo is sunny and 72F.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":12,\"prompt_token_count\":268,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":268}],\"total_token_count\":280},\"invocation_id\":\"e-9dc6c107-9d0b-498f-bfa7-5e285247c96c\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"0555f2b3-519c-4f35-9b37-efad0791bafe\",\"timestamp\":1778144795.064307}",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Google ADK"
     }
   ],
   "llmSpans": [
@@ -41,7 +43,9 @@
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Tokyo is sunny and 72F.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":12,\"prompt_token_count\":268,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":268}],\"total_token_count\":280}}",
       "model": "gemini-2.5-flash-lite",
       "inputTokenCount": 268.0,
-      "outputTokenCount": 12.0
+      "outputTokenCount": 12.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
     },
     {
       "uuid": "5ec97ae5bfe705da",
@@ -63,7 +67,9 @@
       ],
       "model": "gemini-2.5-flash-lite",
       "inputTokenCount": 233.0,
-      "outputTokenCount": 15.0
+      "outputTokenCount": 15.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
     }
   ],
   "retrieverSpans": [],
@@ -85,7 +91,8 @@
             "city": "Tokyo"
           }
         }
-      ]
+      ],
+      "integration": "Google ADK"
     }
   ],
   "startTime": "2026-05-07T09:06:31.511Z",

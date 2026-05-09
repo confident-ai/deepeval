@@ -71,6 +71,8 @@ def update_current_span(
     expected_tools: Optional[List[ToolCall]] = None,
     metadata: Optional[Dict[str, Any]] = None,
     name: Optional[str] = None,
+    integration: Optional[str] = None,
+    provider: Optional[str] = None,
     test_case: Optional[LLMTestCase] = None,
     metric_collection: Optional[str] = None,
     metrics: Optional[List[BaseMetric]] = None,
@@ -105,6 +107,10 @@ def update_current_span(
         current_span.expected_tools = expected_tools
     if name:
         current_span.name = name
+    if integration is not None:
+        current_span.integration = integration
+    if provider is not None and hasattr(current_span, "provider"):
+        current_span.provider = provider
     if metric_collection:
         current_span.metric_collection = metric_collection
     if metrics:

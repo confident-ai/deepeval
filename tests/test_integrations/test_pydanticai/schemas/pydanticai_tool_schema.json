@@ -17,7 +17,8 @@
       ],
       "output": "7 multiplied by 8 is 56.",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "PydanticAI"
     }
   ],
   "llmSpans": [
@@ -118,7 +119,9 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 147.0,
-      "outputTokenCount": 10.0
+      "outputTokenCount": 10.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "967e66029aae355c",
@@ -204,7 +207,9 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 116.0,
-      "outputTokenCount": 21.0
+      "outputTokenCount": 21.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -222,7 +227,8 @@
         "a": 7,
         "b": 8
       },
-      "output": "56.0"
+      "output": "56.0",
+      "integration": "PydanticAI"
     }
   ],
   "startTime": "2026-05-05T06:45:21.167Z",

@@ -13,7 +13,8 @@
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The special_tool processed 'Async Data' and the result is: Processed: Async Data.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":20,\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":247},\"invocation_id\":\"e-3e2174df-8e11-40c6-8ab6-e93431585abc\",\"author\":\"evals_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"1b0f57ac-a23a-4830-bb5a-b10a211db8e4\",\"timestamp\":1778144954.154234}",
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "agent_metrics_async_v1"
+      "metricCollection": "agent_metrics_async_v1",
+      "integration": "Google ADK"
     },
     {
       "uuid": "05c00a10235da085",
@@ -26,7 +27,8 @@
       "input": [],
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The special_tool processed 'Async Data' and the result is: Processed: Async Data.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":20,\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":247},\"invocation_id\":\"e-3e2174df-8e11-40c6-8ab6-e93431585abc\",\"author\":\"evals_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"1b0f57ac-a23a-4830-bb5a-b10a211db8e4\",\"timestamp\":1778144954.154234}",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Google ADK"
     }
   ],
   "llmSpans": [
@@ -42,7 +44,9 @@
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The special_tool processed 'Async Data' and the result is: Processed: Async Data.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":20,\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":247}}",
       "model": "gemini-2.5-flash-lite",
       "inputTokenCount": 227.0,
-      "outputTokenCount": 20.0
+      "outputTokenCount": 20.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
     },
     {
       "uuid": "e62f7182110ecb20",
@@ -64,7 +68,9 @@
       ],
       "model": "gemini-2.5-flash-lite",
       "inputTokenCount": 193.0,
-      "outputTokenCount": 16.0
+      "outputTokenCount": 16.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
     }
   ],
   "retrieverSpans": [],
@@ -87,7 +93,8 @@
           }
         }
       ],
-      "metricCollection": "special_tool_v1"
+      "metricCollection": "special_tool_v1",
+      "integration": "Google ADK"
     }
   ],
   "startTime": "2026-05-07T09:09:12.975Z",

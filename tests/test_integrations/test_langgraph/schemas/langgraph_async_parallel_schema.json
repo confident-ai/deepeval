@@ -131,7 +131,7 @@
             "status": "success"
           },
           {
-            "content": "Sydney, Australia \u2014 no weather data available.\nTokyo, Japan \u2014 no weather data available.\nTech news \u2014 \"Tech stocks rally as AI boom continues.\"",
+            "content": "Sydney, Australia — no weather data available.\nTokyo, Japan — no weather data available.\nTech news — \"Tech stocks rally as AI boom continues.\"",
             "additional_kwargs": {
               "refusal": null
             },
@@ -178,7 +178,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-f47c-7662-81be-31a5d07932e4",
@@ -304,7 +305,7 @@
       "output": {
         "messages": [
           {
-            "content": "Sydney, Australia \u2014 no weather data available.\nTokyo, Japan \u2014 no weather data available.\nTech news \u2014 \"Tech stocks rally as AI boom continues.\"",
+            "content": "Sydney, Australia — no weather data available.\nTokyo, Japan — no weather data available.\nTech news — \"Tech stocks rally as AI boom continues.\"",
             "additional_kwargs": {
               "refusal": null
             },
@@ -351,7 +352,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-ff7c-7e80-ada9-c697f6806d8d",
@@ -473,7 +475,7 @@
             "status": "success"
           },
           {
-            "content": "Sydney, Australia \u2014 no weather data available.\nTokyo, Japan \u2014 no weather data available.\nTech news \u2014 \"Tech stocks rally as AI boom continues.\"",
+            "content": "Sydney, Australia — no weather data available.\nTokyo, Japan — no weather data available.\nTech news — \"Tech stocks rally as AI boom continues.\"",
             "additional_kwargs": {
               "refusal": null
             },
@@ -521,7 +523,8 @@
           }
         ]
       },
-      "output": "__end__"
+      "output": "__end__",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-f479-74a3-9adf-60527e1e8f32",
@@ -697,7 +700,8 @@
             "topic": "tech"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-eb5d-7b22-a3ba-758daf83dc95",
@@ -793,7 +797,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-f478-7a50-97ea-7fa983637f7d",
@@ -886,7 +891,8 @@
           }
         ]
       },
-      "output": "tools"
+      "output": "tools",
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -947,12 +953,14 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Sydney, Australia \u2014 no weather data available.\nTokyo, Japan \u2014 no weather data available.\nTech news \u2014 \"Tech stocks rally as AI boom continues.\"",
+        "content": "Sydney, Australia — no weather data available.\nTokyo, Japan — no weather data available.\nTech news — \"Tech stocks rally as AI boom continues.\"",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 403.0,
-      "outputTokenCount": 231.0
+      "outputTokenCount": 231.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d0516-eb5d-7b22-a3ba-75992ee1d663",
@@ -1021,7 +1029,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 298.0,
-      "outputTokenCount": 135.0
+      "outputTokenCount": 135.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -1046,7 +1056,8 @@
         "id": "d980152c-223a-4778-94bb-3f1e1acfdb0a",
         "tool_call_id": "call_K5i1oFiPVbSWdmSU8D0klcwP",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-f47a-7730-af17-9780f13634ee",
@@ -1068,7 +1079,8 @@
         "id": "a813431f-44a5-4eef-bf10-0711c9ee130f",
         "tool_call_id": "call_jr1Wm9C4H5rWVDmpdb8AHjBL",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-f47a-7730-af17-977347132a24",
@@ -1090,7 +1102,8 @@
         "id": "e8809450-ecf4-4ee8-811e-0a00769d4e28",
         "tool_call_id": "call_TgqwtSdFJR7ZztcmcQui9wFZ",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:54:41.372Z",
@@ -1225,7 +1238,7 @@
         "status": "success"
       },
       {
-        "content": "Sydney, Australia \u2014 no weather data available.\nTokyo, Japan \u2014 no weather data available.\nTech news \u2014 \"Tech stocks rally as AI boom continues.\"",
+        "content": "Sydney, Australia — no weather data available.\nTokyo, Japan — no weather data available.\nTech news — \"Tech stocks rally as AI boom continues.\"",
         "additional_kwargs": {
           "refusal": null
         },

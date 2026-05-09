@@ -10,12 +10,16 @@ from deepeval.openai.extractors import (
 )
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.tracing.context import (
+    current_span_context,
     current_trace_context,
     update_current_span,
     update_llm_span,
 )
 from deepeval.tracing import observe
 from deepeval.tracing.trace_context import current_llm_context
+from deepeval.tracing.types import LlmSpan
+from deepeval.tracing.integrations import Integration, Provider
+from deepeval.tracing.tracing import trace_manager
 
 # Store original methods for safety and potential unpatching
 _ORIGINAL_METHODS = {}
@@ -221,6 +225,14 @@ def _update_all_attributes(
         output_token_count=output_parameters.completion_tokens,
         prompt=llm_context.prompt,
     )
+    current_span = current_span_context.get()
+    if isinstance(current_span, LlmSpan):
+        current_span.integration = Integration.OPEN_AI.value
+        current_span.provider = Provider.OPEN_AI.value
+        if current_span.parent_uuid:
+            parent_span = trace_manager.get_span_by_uuid(current_span.parent_uuid)
+            if parent_span and not parent_span.integration:
+                parent_span.integration = Integration.OPEN_AI.value
 
     __update_input_and_output_of_current_trace(
         input_parameters, output_parameters

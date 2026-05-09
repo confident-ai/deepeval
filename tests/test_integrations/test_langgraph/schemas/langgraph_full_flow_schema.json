@@ -96,7 +96,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?",
+            "content": "Done — 2 apples added to your cart. Would you like to add anything else or view your cart?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -216,7 +216,7 @@
             "status": "success"
           },
           {
-            "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
+            "content": "Coupon SAVE20 applied — 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -499,7 +499,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-7e27-7653-a74a-8a4d1dc26c28",
@@ -586,7 +587,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?",
+            "content": "Done — 2 apples added to your cart. Would you like to add anything else or view your cart?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -706,7 +707,7 @@
             "status": "success"
           },
           {
-            "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
+            "content": "Coupon SAVE20 applied — 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -993,7 +994,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-8159-7cd3-b1c3-edc215f2737d",
@@ -1080,7 +1082,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?",
+            "content": "Done — 2 apples added to your cart. Would you like to add anything else or view your cart?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -1200,7 +1202,7 @@
             "status": "success"
           },
           {
-            "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
+            "content": "Coupon SAVE20 applied — 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -1484,7 +1486,8 @@
           }
         ]
       },
-      "output": "__end__"
+      "output": "__end__",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-7e24-7af2-b4d2-8a14a642e890",
@@ -1571,7 +1574,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?",
+            "content": "Done — 2 apples added to your cart. Would you like to add anything else or view your cart?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -1691,7 +1694,7 @@
             "status": "success"
           },
           {
-            "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
+            "content": "Coupon SAVE20 applied — 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -1947,7 +1950,8 @@
           },
           "inputParameters": {}
         }
-      ]
+      ],
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-76b6-7102-9097-2d1000e3d3c5",
@@ -2034,7 +2038,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?",
+            "content": "Done — 2 apples added to your cart. Would you like to add anything else or view your cart?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -2154,7 +2158,7 @@
             "status": "success"
           },
           {
-            "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
+            "content": "Coupon SAVE20 applied — 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -2384,7 +2388,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-7e23-7873-b9a4-b027e251cc71",
@@ -2471,7 +2476,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?",
+            "content": "Done — 2 apples added to your cart. Would you like to add anything else or view your cart?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -2591,7 +2596,7 @@
             "status": "success"
           },
           {
-            "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
+            "content": "Coupon SAVE20 applied — 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -2818,7 +2823,8 @@
           }
         ]
       },
-      "output": "tools"
+      "output": "tools",
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -2850,7 +2856,7 @@
         },
         {
           "role": "ai",
-          "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?"
+          "content": "Done — 2 apples added to your cart. Would you like to add anything else or view your cart?"
         },
         {
           "role": "human",
@@ -2866,7 +2872,7 @@
         },
         {
           "role": "ai",
-          "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?"
+          "content": "Coupon SAVE20 applied — 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?"
         },
         {
           "role": "human",
@@ -2928,7 +2934,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 619.0,
-      "outputTokenCount": 6.0
+      "outputTokenCount": 6.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d0518-76b7-7dc2-a8d8-ba9ec0a08bcb",
@@ -2957,7 +2965,7 @@
         },
         {
           "role": "ai",
-          "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?"
+          "content": "Done — 2 apples added to your cart. Would you like to add anything else or view your cart?"
         },
         {
           "role": "human",
@@ -2973,7 +2981,7 @@
         },
         {
           "role": "ai",
-          "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?"
+          "content": "Coupon SAVE20 applied — 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?"
         },
         {
           "role": "human",
@@ -3033,7 +3041,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 579.0,
-      "outputTokenCount": 83.0
+      "outputTokenCount": 83.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -3056,7 +3066,8 @@
         "id": "680841d3-2e87-4e9b-9ec1-b43e2d461f99",
         "tool_call_id": "call_aDNxiQh5JK4yJELox5YTLGfx",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:56:22.580Z",
@@ -3156,7 +3167,7 @@
         "status": "success"
       },
       {
-        "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?",
+        "content": "Done — 2 apples added to your cart. Would you like to add anything else or view your cart?",
         "additional_kwargs": {
           "refusal": null
         },
@@ -3276,7 +3287,7 @@
         "status": "success"
       },
       {
-        "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
+        "content": "Coupon SAVE20 applied — 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
         "additional_kwargs": {
           "refusal": null
         },

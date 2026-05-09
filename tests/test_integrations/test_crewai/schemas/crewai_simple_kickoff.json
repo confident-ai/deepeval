@@ -12,7 +12,8 @@
         "input": "Hello World"
       },
       "output": "Hello World! How are you today?",
-      "metricCollection": "metric_collection_1"
+      "metricCollection": "metric_collection_1",
+      "integration": "CrewAI"
     }
   ],
   "agentSpans": [
@@ -28,7 +29,8 @@
       "output": "Hello World! How are you today?",
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "metric_collection_1"
+      "metricCollection": "metric_collection_1",
+      "integration": "CrewAI"
     }
   ],
   "llmSpans": [
@@ -52,7 +54,9 @@
       ],
       "output": "Hello World! How are you today?",
       "model": "gpt-4o-mini",
-      "metricCollection": "metric_collection_1"
+      "metricCollection": "metric_collection_1",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

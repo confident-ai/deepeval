@@ -12,7 +12,8 @@
       "input": "{\"user_id\": \"test-user\", \"session_id\": \"9ffe220b-c5ff-4c3e-ad7b-c97a01a13fa6\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"What is 9 multiplied by 6?\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"9 multiplied by 6 is 54.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":10,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":209},\"invocation_id\":\"e-787bc1c2-e280-463b-8eef-32069ddc7f85\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"b624bb3d-7f85-4766-98c9-ddc996bdfee4\",\"timestamp\":1778144948.787828}",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Google ADK"
     },
     {
       "uuid": "218017954893cfc9",
@@ -25,7 +26,8 @@
       "input": [],
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"9 multiplied by 6 is 54.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":10,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":209},\"invocation_id\":\"e-787bc1c2-e280-463b-8eef-32069ddc7f85\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"b624bb3d-7f85-4766-98c9-ddc996bdfee4\",\"timestamp\":1778144948.787828}",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Google ADK"
     }
   ],
   "llmSpans": [
@@ -41,7 +43,9 @@
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"9 multiplied by 6 is 54.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":10,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":209}}",
       "model": "gemini-2.5-flash-lite",
       "inputTokenCount": 199.0,
-      "outputTokenCount": 10.0
+      "outputTokenCount": 10.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
     },
     {
       "uuid": "f794485ee6fca33b",
@@ -65,7 +69,9 @@
       ],
       "model": "gemini-2.5-flash-lite",
       "inputTokenCount": 162.0,
-      "outputTokenCount": 23.0
+      "outputTokenCount": 23.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
     }
   ],
   "retrieverSpans": [],
@@ -89,7 +95,8 @@
             "b": 6
           }
         }
-      ]
+      ],
+      "integration": "Google ADK"
     }
   ],
   "startTime": "2026-05-07T09:09:06.519Z",

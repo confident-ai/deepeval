@@ -13,7 +13,8 @@
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":227},\"invocation_id\":\"e-f512e729-a99a-4667-bf1d-be37a0520e3f\",\"author\":\"evals_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"bb164a82-9e6b-4173-ae84-e1033f54d575\",\"timestamp\":1778144943.043001}",
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "agent_metrics_v1"
+      "metricCollection": "agent_metrics_v1",
+      "integration": "Google ADK"
     },
     {
       "uuid": "cd7b9d3470685350",
@@ -26,7 +27,8 @@
       "input": [],
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":227},\"invocation_id\":\"e-f512e729-a99a-4667-bf1d-be37a0520e3f\",\"author\":\"evals_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"bb164a82-9e6b-4173-ae84-e1033f54d575\",\"timestamp\":1778144943.043001}",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Google ADK"
     }
   ],
   "llmSpans": [
@@ -41,7 +43,9 @@
       "input": "{\"processed\": \"Processed: Sync Data\"}",
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":227}}",
       "model": "gemini-2.5-flash-lite",
-      "inputTokenCount": 227.0
+      "inputTokenCount": 227.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
     },
     {
       "uuid": "47973e09bcbac9a3",
@@ -63,7 +67,9 @@
       ],
       "model": "gemini-2.5-flash-lite",
       "inputTokenCount": 193.0,
-      "outputTokenCount": 16.0
+      "outputTokenCount": 16.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
     }
   ],
   "retrieverSpans": [],
@@ -86,7 +92,8 @@
           }
         }
       ],
-      "metricCollection": "special_tool_v1"
+      "metricCollection": "special_tool_v1",
+      "integration": "Google ADK"
     }
   ],
   "startTime": "2026-05-07T09:09:01.394Z",

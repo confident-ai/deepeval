@@ -12,7 +12,8 @@
       "input": "{\"user_id\": \"test-user\", \"session_id\": \"c7ae4dca-99da-4a84-867c-a1ad79607ff4\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use the get_time tool exactly once to get the current time in London.\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The current time in London is 7:00 AM GMT.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":14,\"prompt_token_count\":269,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":269}],\"total_token_count\":283},\"invocation_id\":\"e-0e34c369-0634-4434-aed9-fc1071087f97\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"92a37c4d-b7d7-43a5-9b4a-7731930382a8\",\"timestamp\":1778144800.777936}",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Google ADK"
     },
     {
       "uuid": "68db674d756a85db",
@@ -25,7 +26,8 @@
       "input": [],
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The current time in London is 7:00 AM GMT.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":14,\"prompt_token_count\":269,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":269}],\"total_token_count\":283},\"invocation_id\":\"e-0e34c369-0634-4434-aed9-fc1071087f97\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"92a37c4d-b7d7-43a5-9b4a-7731930382a8\",\"timestamp\":1778144800.777936}",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Google ADK"
     }
   ],
   "llmSpans": [
@@ -41,7 +43,9 @@
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The current time in London is 7:00 AM GMT.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":14,\"prompt_token_count\":269,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":269}],\"total_token_count\":283}}",
       "model": "gemini-2.5-flash-lite",
       "inputTokenCount": 269.0,
-      "outputTokenCount": 14.0
+      "outputTokenCount": 14.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
     },
     {
       "uuid": "25522bdc2e19bc87",
@@ -63,7 +67,9 @@
       ],
       "model": "gemini-2.5-flash-lite",
       "inputTokenCount": 234.0,
-      "outputTokenCount": 15.0
+      "outputTokenCount": 15.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
     }
   ],
   "retrieverSpans": [],

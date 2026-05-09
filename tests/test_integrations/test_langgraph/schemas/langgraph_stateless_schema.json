@@ -96,7 +96,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 3 oranges added to your cart. What else would you like?",
+            "content": "Done — 3 oranges added to your cart. What else would you like?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -143,7 +143,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-5248-7f62-8b83-dff6d07291e8",
@@ -234,7 +235,7 @@
       "output": {
         "messages": [
           {
-            "content": "Done \u2014 3 oranges added to your cart. What else would you like?",
+            "content": "Done — 3 oranges added to your cart. What else would you like?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -281,7 +282,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-5594-7383-9d04-9f77d0ffaba9",
@@ -368,7 +370,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 3 oranges added to your cart. What else would you like?",
+            "content": "Done — 3 oranges added to your cart. What else would you like?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -416,7 +418,8 @@
           }
         ]
       },
-      "output": "__end__"
+      "output": "__end__",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-5245-73d0-afe9-317a1e32c7c2",
@@ -526,7 +529,8 @@
             "quantity": 3
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-4ccc-7832-b6a9-e6d88dffbf73",
@@ -607,7 +611,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-5244-7943-ae7f-e486b2bcc9f9",
@@ -685,7 +690,8 @@
           }
         ]
       },
-      "output": "tools"
+      "output": "tools",
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -742,12 +748,14 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Done \u2014 3 oranges added to your cart. What else would you like?",
+        "content": "Done — 3 oranges added to your cart. What else would you like?",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 317.0,
-      "outputTokenCount": 19.0
+      "outputTokenCount": 19.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d0518-4ccd-7ce3-9f91-58662fb187da",
@@ -807,7 +815,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 275.0,
-      "outputTokenCount": 29.0
+      "outputTokenCount": 29.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -833,7 +843,8 @@
         "id": "9fa5706c-4707-4f7a-8258-f8585c1dd4ac",
         "tool_call_id": "call_HrHcyincBhfUeI1kKCbJYOzP",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:56:11.852Z",
@@ -932,7 +943,7 @@
         "status": "success"
       },
       {
-        "content": "Done \u2014 3 oranges added to your cart. What else would you like?",
+        "content": "Done — 3 oranges added to your cart. What else would you like?",
         "additional_kwargs": {
           "refusal": null
         },

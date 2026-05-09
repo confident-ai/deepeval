@@ -18,7 +18,8 @@
       "output": "The special tool processed the input as: **Async Data**.",
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "agent_metrics_async_v1"
+      "metricCollection": "agent_metrics_async_v1",
+      "integration": "PydanticAI"
     }
   ],
   "llmSpans": [
@@ -108,7 +109,9 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 90.0,
-      "outputTokenCount": 14.0
+      "outputTokenCount": 14.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "690bdab31ec1c3c0",
@@ -183,7 +186,9 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 63.0,
-      "outputTokenCount": 15.0
+      "outputTokenCount": 15.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -199,7 +204,8 @@
       "input": {
         "query": "Async Data"
       },
-      "output": "Processed: Async Data"
+      "output": "Processed: Async Data",
+      "integration": "PydanticAI"
     }
   ],
   "startTime": "2026-05-05T06:46:05.908Z",

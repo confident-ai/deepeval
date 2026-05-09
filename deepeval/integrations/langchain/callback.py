@@ -23,6 +23,7 @@ from deepeval.tracing.types import (
     ToolSpan,
 )
 from deepeval.telemetry import capture_tracing_integration
+from deepeval.tracing.integrations import Integration
 
 # Debug logging for LangChain callbacks (enable with DEEPEVAL_DEBUG_LANGCHAIN_CALLBACKS=1)
 _DEBUG_CALLBACKS = os.environ.get(
@@ -49,6 +50,7 @@ try:
         convert_chat_messages_to_input,
         extract_name,
         safe_extract_model_name,
+        safe_extract_provider,
         safe_extract_token_usage,
         enter_current_context,
         exit_current_context,
@@ -295,6 +297,7 @@ class CallbackHandler(BaseCallbackHandler):
                 span_type="custom",
                 func_name=extract_name(serialized, **kwargs),
             )
+            base_span.integration = Integration.LANGCHAIN.value
             # Register this run_id -> span mapping for child callbacks
             self._run_id_to_span_uuid[str(run_id)] = uuid_str
 
@@ -380,6 +383,8 @@ class CallbackHandler(BaseCallbackHandler):
 
             llm_span.input = input_messages
             llm_span.model = model
+            llm_span.provider = safe_extract_provider(md, **kwargs)
+            llm_span.integration = Integration.LANGCHAIN.value
 
             # Extract metrics and prompt from metadata if provided, but don't mutate original
             llm_span.metrics = md.get("metrics")
@@ -432,6 +437,8 @@ class CallbackHandler(BaseCallbackHandler):
 
             llm_span.input = input_messages
             llm_span.model = model
+            llm_span.provider = safe_extract_provider(md, **kwargs)
+            llm_span.integration = Integration.LANGCHAIN.value
 
             # Extract metrics and prompt from metadata if provided, but don't mutate original
             llm_span.metrics = md.get("metrics")
@@ -472,6 +479,7 @@ class CallbackHandler(BaseCallbackHandler):
             total_input_tokens = 0
             total_output_tokens = 0
             model = None
+            provider = None
 
             for generation in response.generations:
                 for gen in generation:
@@ -482,6 +490,9 @@ class CallbackHandler(BaseCallbackHandler):
                             # extract model name from response_metadata
                             model = gen.message.response_metadata.get(
                                 "model_name"
+                            )
+                            provider = gen.message.response_metadata.get(
+                                "model_provider"
                             )
 
                             # extract input and output token
@@ -509,6 +520,7 @@ class CallbackHandler(BaseCallbackHandler):
                             )
 
             llm_span.model = model if model else llm_span.model
+            llm_span.provider = provider if provider else llm_span.provider
             llm_span.output = output
             llm_span.input_token_count = (
                 total_input_tokens if total_input_tokens > 0 else None
@@ -552,6 +564,7 @@ class CallbackHandler(BaseCallbackHandler):
             total_input_tokens = 0
             total_output_tokens = 0
             model = None
+            provider = None
 
             # Handle LLMResult (same as on_llm_end)
             if isinstance(response, LLMResult):
@@ -563,6 +576,9 @@ class CallbackHandler(BaseCallbackHandler):
                             ):
                                 model = gen.message.response_metadata.get(
                                     "model_name"
+                                )
+                                provider = gen.message.response_metadata.get(
+                                    "model_provider"
                                 )
                                 input_tokens, output_tokens = (
                                     safe_extract_token_usage(gen.message)
@@ -588,6 +604,7 @@ class CallbackHandler(BaseCallbackHandler):
                                 )
 
             llm_span.model = model if model else llm_span.model
+            llm_span.provider = provider if provider else llm_span.provider
             llm_span.output = output
             llm_span.input_token_count = (
                 total_input_tokens if total_input_tokens > 0 else None
@@ -706,6 +723,7 @@ class CallbackHandler(BaseCallbackHandler):
                     serialized, **kwargs
                 ),  # ignored when setting the input
             )
+            tool_span.integration = Integration.LANGCHAIN.value
             # Register this run_id -> span mapping for child callbacks
             self._run_id_to_span_uuid[str(run_id)] = uuid_str
             tool_span.input = inputs
@@ -798,6 +816,7 @@ class CallbackHandler(BaseCallbackHandler):
                     "embedder": md.get("ls_embedding_provider", "unknown"),
                 },
             )
+            retriever_span.integration = Integration.LANGCHAIN.value
             # Register this run_id -> span mapping for child callbacks
             self._run_id_to_span_uuid[str(run_id)] = uuid_str
             retriever_span.input = query

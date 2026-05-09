@@ -15,9 +15,10 @@
           "content": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each."
         }
       ],
-      "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET.",
+      "output": "The current weather in Paris is cloudy with a temperature of 62°F. The time is 8:00 AM CET.",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "PydanticAI"
     }
   ],
   "llmSpans": [
@@ -148,12 +149,14 @@
       "output": [
         {
           "role": "assistant",
-          "content": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET."
+          "content": "The current weather in Paris is cloudy with a temperature of 62°F. The time is 8:00 AM CET."
         }
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 254.0,
-      "outputTokenCount": 26.0
+      "outputTokenCount": 26.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "9faf1e4dbb2bf5e9",
@@ -265,7 +268,9 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 185.0,
-      "outputTokenCount": 44.0
+      "outputTokenCount": 44.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -281,7 +286,8 @@
       "input": {
         "city": "Paris"
       },
-      "output": "8:00 AM CET"
+      "output": "8:00 AM CET",
+      "integration": "PydanticAI"
     },
     {
       "uuid": "b4c4d3583b28a693",
@@ -294,7 +300,8 @@
       "input": {
         "city": "Paris"
       },
-      "output": "Cloudy, 62F"
+      "output": "Cloudy, 62F",
+      "integration": "PydanticAI"
     }
   ],
   "startTime": "2026-05-05T06:45:31.462Z",
@@ -316,6 +323,6 @@
       "content": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each."
     }
   ],
-  "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET.",
+  "output": "The current weather in Paris is cloudy with a temperature of 62°F. The time is 8:00 AM CET.",
   "status": "SUCCESS"
 }

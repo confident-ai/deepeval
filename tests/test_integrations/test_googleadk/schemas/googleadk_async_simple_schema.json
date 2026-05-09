@@ -12,7 +12,8 @@
       "input": "{\"user_id\": \"test-user\", \"session_id\": \"066980aa-d313-4411-b564-ffb330bc8fb1\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Say hello in exactly three words.\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"Hello, world, goodbye.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":6,\"prompt_token_count\":37,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":37}],\"total_token_count\":43},\"invocation_id\":\"e-f8a398c7-b1fe-4407-980f-40af99297a55\",\"author\":\"simple_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"78a0026f-1e19-4721-8a59-d66037721b2c\",\"timestamp\":1778144944.691002}",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Google ADK"
     },
     {
       "uuid": "17de9ab0c7846e4e",
@@ -25,7 +26,8 @@
       "input": [],
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"Hello, world, goodbye.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":6,\"prompt_token_count\":37,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":37}],\"total_token_count\":43},\"invocation_id\":\"e-f8a398c7-b1fe-4407-980f-40af99297a55\",\"author\":\"simple_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"78a0026f-1e19-4721-8a59-d66037721b2c\",\"timestamp\":1778144944.691002}",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Google ADK"
     }
   ],
   "llmSpans": [
@@ -41,7 +43,9 @@
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"Hello, world, goodbye.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":6,\"prompt_token_count\":37,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":37}],\"total_token_count\":43}}",
       "model": "gemini-2.5-flash-lite",
       "inputTokenCount": 37.0,
-      "outputTokenCount": 6.0
+      "outputTokenCount": 6.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
     }
   ],
   "retrieverSpans": [],

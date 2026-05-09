@@ -194,6 +194,24 @@ def safe_extract_model_name(
     return None
 
 
+def safe_extract_provider(
+    metadata: Optional[dict[str, Any]], **kwargs: Any
+) -> Optional[str]:
+    invocation_params = kwargs.get("invocation_params")
+    if isinstance(invocation_params, dict):
+        provider = invocation_params.get("model_provider")
+        if provider:
+            return str(provider)
+
+    if metadata and isinstance(metadata, dict):
+        for key in ("ls_provider", "model_provider"):
+            provider = metadata.get(key)
+            if provider:
+                return str(provider)
+
+    return None
+
+
 def enter_current_context(
     span_type: Optional[
         Union[Literal["agent", "llm", "retriever", "tool"], str]

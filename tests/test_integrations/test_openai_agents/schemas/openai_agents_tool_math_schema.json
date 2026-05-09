@@ -28,7 +28,8 @@
         "get_weather",
         "calculate"
       ],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "OpenAI Agents"
     }
   ],
   "llmSpans": [
@@ -125,7 +126,9 @@
       "output": "The result of \\(10 + 5\\) is 15.",
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 132.0,
-      "outputTokenCount": 16.0
+      "outputTokenCount": 16.0,
+      "integration": "OpenAI Agents",
+      "provider": "OpenAI"
     },
     {
       "uuid": "09171280-479f-40ad-9101-a085b3a9eae4",
@@ -210,7 +213,9 @@
       "output": "{\"call_id\": \"call_uMT0BRAxnLlBfhcFFnzLBffZ\", \"name\": \"calculate\", \"arguments\": \"{\\\"expression\\\":\\\"10 + 5\\\"}\"}",
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 101.0,
-      "outputTokenCount": 17.0
+      "outputTokenCount": 17.0,
+      "integration": "OpenAI Agents",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -227,7 +232,8 @@
         "expression": "10 + 5"
       },
       "output": "10 + 5 = 15",
-      "description": "Function tool"
+      "description": "Function tool",
+      "integration": "OpenAI Agents"
     }
   ],
   "startTime": "2026-01-29T14:38:35.137Z",

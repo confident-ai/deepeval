@@ -22,7 +22,8 @@
       "output": "Farewell, take care.",
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "agent_stacked_v1"
+      "metricCollection": "agent_stacked_v1",
+      "integration": "PydanticAI"
     }
   ],
   "llmSpans": [
@@ -72,7 +73,9 @@
       "model": "gpt-4o-mini",
       "inputTokenCount": 28.0,
       "outputTokenCount": 6.0,
-      "metricCollection": "llm_stacked_v1"
+      "metricCollection": "llm_stacked_v1",
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

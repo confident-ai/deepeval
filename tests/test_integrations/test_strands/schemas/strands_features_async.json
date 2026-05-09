@@ -10,7 +10,8 @@
       "startTime": "2026-05-07T11:39:13.623Z",
       "endTime": "2026-05-07T11:39:14.390Z",
       "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
-      "output": "{'toolUse': {'toolUseId': 'call_aC0Qt8qsx0BptbzKKTdUCkel', 'name': 'special_tool', 'input': {'query': 'Async Data'}}}"
+      "output": "{'toolUse': {'toolUseId': 'call_aC0Qt8qsx0BptbzKKTdUCkel', 'name': 'special_tool', 'input': {'query': 'Async Data'}}}",
+      "integration": "Strands"
     },
     {
       "uuid": "2f01095fa62a0c8a",
@@ -21,7 +22,8 @@
       "startTime": "2026-05-07T11:39:12.358Z",
       "endTime": "2026-05-07T11:39:13.622Z",
       "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
-      "output": "{'toolUse': {'toolUseId': 'call_aC0Qt8qsx0BptbzKKTdUCkel', 'name': 'special_tool', 'input': {'query': 'Async Data'}}}"
+      "output": "{'toolUse': {'toolUseId': 'call_aC0Qt8qsx0BptbzKKTdUCkel', 'name': 'special_tool', 'input': {'query': 'Async Data'}}}",
+      "integration": "Strands"
     }
   ],
   "agentSpans": [
@@ -36,7 +38,8 @@
       "output": "Processed: Async Data\n",
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "agent_metrics_async_v1"
+      "metricCollection": "agent_metrics_async_v1",
+      "integration": "Strands"
     }
   ],
   "llmSpans": [
@@ -52,7 +55,9 @@
       "output": "Processed: Async Data",
       "model": "gpt-4o-mini",
       "inputTokenCount": 163.0,
-      "outputTokenCount": 5.0
+      "outputTokenCount": 5.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
     },
     {
       "uuid": "6a5cc5df65ba1506",
@@ -67,7 +72,9 @@
       "model": "gpt-4o-mini",
       "inputTokenCount": 136.0,
       "outputTokenCount": 15.0,
-      "metricCollection": "llm_metrics_async_v1"
+      "metricCollection": "llm_metrics_async_v1",
+      "integration": "Strands",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -87,7 +94,8 @@
           "inputParameters": {}
         }
       ],
-      "metricCollection": "special_tool_v1"
+      "metricCollection": "special_tool_v1",
+      "integration": "Strands"
     }
   ],
   "startTime": "2026-05-07T11:39:12.357Z",

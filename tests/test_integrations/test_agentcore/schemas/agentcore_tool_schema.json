@@ -10,7 +10,8 @@
       "startTime": "2026-05-05T18:12:05.545Z",
       "endTime": "2026-05-05T18:12:07.103Z",
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
-      "output": "<thinking>The User has asked for a multiplication operation between 7 and 8. The 'calculate' tool can be used to perform this operation.</thinking>\n"
+      "output": "<thinking>The User has asked for a multiplication operation between 7 and 8. The 'calculate' tool can be used to perform this operation.</thinking>\n",
+      "integration": "AgentCore"
     },
     {
       "uuid": "c9e6d40d563db46a",
@@ -21,7 +22,8 @@
       "startTime": "2026-05-05T18:12:03.231Z",
       "endTime": "2026-05-05T18:12:05.544Z",
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
-      "output": "<thinking>The User has asked for a multiplication operation between 7 and 8. The 'calculate' tool can be used to perform this operation.</thinking>\n"
+      "output": "<thinking>The User has asked for a multiplication operation between 7 and 8. The 'calculate' tool can be used to perform this operation.</thinking>\n",
+      "integration": "AgentCore"
     }
   ],
   "agentSpans": [
@@ -35,7 +37,8 @@
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
       "output": "<thinking>The 'calculate' tool has returned the result of 7 multiplied by 8 as 56.0. This is the answer to the User's question.</thinking> \n\nThe answer to your question, 7 multiplied by 8, is 56.0.\n",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "AgentCore"
     }
   ],
   "llmSpans": [
@@ -51,7 +54,9 @@
       "output": "<thinking>The 'calculate' tool has returned the result of 7 multiplied by 8 as 56.0. This is the answer to the User's question.</thinking> \n\nThe answer to your question, 7 multiplied by 8, is 56.0.",
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 543.0,
-      "outputTokenCount": 61.0
+      "outputTokenCount": 61.0,
+      "integration": "AgentCore",
+      "provider": null
     },
     {
       "uuid": "bdd3ffec014a5541",
@@ -65,7 +70,9 @@
       "output": "<thinking>The User has asked for a multiplication operation between 7 and 8. The 'calculate' tool can be used to perform this operation.</thinking>\n",
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 458.0,
-      "outputTokenCount": 56.0
+      "outputTokenCount": 56.0,
+      "integration": "AgentCore",
+      "provider": null
     }
   ],
   "retrieverSpans": [],
@@ -84,7 +91,8 @@
           "name": "calculate",
           "inputParameters": {}
         }
-      ]
+      ],
+      "integration": "AgentCore"
     }
   ],
   "startTime": "2026-05-05T18:12:03.230Z",

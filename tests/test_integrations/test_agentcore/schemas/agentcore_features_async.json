@@ -10,7 +10,8 @@
       "startTime": "2026-05-05T18:12:38.093Z",
       "endTime": "2026-05-05T18:12:39.308Z",
       "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
-      "output": "<thinking>I need to process the given 'Async Data' using the 'special_tool'. This tool requires a 'query' parameter, so I will use the provided data as the query.</thinking>\n"
+      "output": "<thinking>I need to process the given 'Async Data' using the 'special_tool'. This tool requires a 'query' parameter, so I will use the provided data as the query.</thinking>\n",
+      "integration": "AgentCore"
     },
     {
       "uuid": "9512a0881ddead1f",
@@ -21,7 +22,8 @@
       "startTime": "2026-05-05T18:12:35.685Z",
       "endTime": "2026-05-05T18:12:38.093Z",
       "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
-      "output": "<thinking>I need to process the given 'Async Data' using the 'special_tool'. This tool requires a 'query' parameter, so I will use the provided data as the query.</thinking>\n"
+      "output": "<thinking>I need to process the given 'Async Data' using the 'special_tool'. This tool requires a 'query' parameter, so I will use the provided data as the query.</thinking>\n",
+      "integration": "AgentCore"
     }
   ],
   "agentSpans": [
@@ -36,7 +38,8 @@
       "output": "The 'Async Data' has been successfully processed using the 'special_tool'.\n",
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "agent_metrics_async_v1"
+      "metricCollection": "agent_metrics_async_v1",
+      "integration": "AgentCore"
     }
   ],
   "llmSpans": [
@@ -52,7 +55,9 @@
       "output": "The 'Async Data' has been successfully processed using the 'special_tool'.",
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 585.0,
-      "outputTokenCount": 18.0
+      "outputTokenCount": 18.0,
+      "integration": "AgentCore",
+      "provider": null
     },
     {
       "uuid": "f6b543b5b6e58e82",
@@ -67,7 +72,9 @@
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 493.0,
       "outputTokenCount": 60.0,
-      "metricCollection": "llm_metrics_async_v1"
+      "metricCollection": "llm_metrics_async_v1",
+      "integration": "AgentCore",
+      "provider": null
     }
   ],
   "retrieverSpans": [],
@@ -87,7 +94,8 @@
           "inputParameters": {}
         }
       ],
-      "metricCollection": "special_tool_v1"
+      "metricCollection": "special_tool_v1",
+      "integration": "AgentCore"
     }
   ],
   "startTime": "2026-05-05T18:12:35.685Z",

@@ -18,7 +18,8 @@
       "output": "The query \"Sync Data\" has been processed successfully.",
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "agent_metrics_v1"
+      "metricCollection": "agent_metrics_v1",
+      "integration": "PydanticAI"
     }
   ],
   "llmSpans": [
@@ -108,7 +109,9 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 90.0,
-      "outputTokenCount": 12.0
+      "outputTokenCount": 12.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "287314d5aaf1820a",
@@ -183,7 +186,9 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 63.0,
-      "outputTokenCount": 15.0
+      "outputTokenCount": 15.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -199,7 +204,8 @@
       "input": {
         "query": "Sync Data"
       },
-      "output": "Processed: Sync Data"
+      "output": "Processed: Sync Data",
+      "integration": "PydanticAI"
     }
   ],
   "startTime": "2026-05-05T06:45:37.208Z",

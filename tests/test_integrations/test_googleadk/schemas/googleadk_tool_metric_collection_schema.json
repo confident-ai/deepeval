@@ -12,7 +12,8 @@
       "input": "{\"user_id\": \"test-user\", \"session_id\": \"97a2b7d5-b361-41e2-ba97-1fbc972b76d8\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"What is 15 plus 25?\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The sum of 15 and 25 is 40.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":15,\"prompt_token_count\":202,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":202}],\"total_token_count\":217},\"invocation_id\":\"e-a40ea599-4cc6-4307-8972-7e028a6a293d\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"09f807bc-224e-4e40-aa26-b67c58b3aa46\",\"timestamp\":1778144789.630004}",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Google ADK"
     },
     {
       "uuid": "a97422315a6196e6",
@@ -25,7 +26,8 @@
       "input": [],
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The sum of 15 and 25 is 40.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":15,\"prompt_token_count\":202,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":202}],\"total_token_count\":217},\"invocation_id\":\"e-a40ea599-4cc6-4307-8972-7e028a6a293d\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"09f807bc-224e-4e40-aa26-b67c58b3aa46\",\"timestamp\":1778144789.630004}",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Google ADK"
     }
   ],
   "llmSpans": [
@@ -41,7 +43,9 @@
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The sum of 15 and 25 is 40.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":15,\"prompt_token_count\":202,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":202}],\"total_token_count\":217}}",
       "model": "gemini-2.5-flash-lite",
       "inputTokenCount": 202.0,
-      "outputTokenCount": 15.0
+      "outputTokenCount": 15.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
     },
     {
       "uuid": "db1de588f20897fd",
@@ -65,7 +69,9 @@
       ],
       "model": "gemini-2.5-flash-lite",
       "inputTokenCount": 163.0,
-      "outputTokenCount": 25.0
+      "outputTokenCount": 25.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
     }
   ],
   "retrieverSpans": [],
@@ -89,7 +95,8 @@
             "b": 25
           }
         }
-      ]
+      ],
+      "integration": "Google ADK"
     }
   ],
   "startTime": "2026-05-07T09:06:26.773Z",

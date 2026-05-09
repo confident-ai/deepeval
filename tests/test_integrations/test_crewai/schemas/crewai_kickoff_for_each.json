@@ -10,7 +10,8 @@
       "endTime": "2026-02-15T10:22:19.150Z",
       "input": {},
       "output": "[CrewOutput(raw='Hello, User A! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: User A', name='Reply to the user: User A', expected_output='A short greeting.', summary='Reply to the user: User A...', raw='Hello, User A! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _foreach', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _foreach. You are a friendly bot.\\nYour personal goal is: Reply to greetings'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: User A\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nProvide your complete response:'}, {'role': 'assistant', 'content': 'Hello, User A! How are you today?'}])], token_usage=UsageMetrics(total_tokens=90, prompt_tokens=80, cached_prompt_tokens=0, completion_tokens=10, successful_requests=1)), CrewOutput(raw='Hello, User B! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: User B', name='Reply to the user: User B', expected_output='A short greeting.', summary='Reply to the user: User B...', raw='Hello, User B! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _foreach', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _foreach. You are a friendly bot.\\nYour personal goal is: Reply to greetings'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: User B\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nProvide your complete response:'}, {'role': 'assistant', 'content': 'Hello, User B! How are you today?'}])], token_usage=UsageMetrics(total_tokens=180, prompt_tokens=160, cached_prompt_tokens=0, completion_tokens=20, successful_requests=2))]",
-      "metricCollection": "metric_collection_1"
+      "metricCollection": "metric_collection_1",
+      "integration": "CrewAI"
     },
     {
       "uuid": "83358ce8-7c8b-432b-9c88-7774235fcd8b",
@@ -23,7 +24,8 @@
       "input": {
         "input": "User B"
       },
-      "output": "Hello, User B! How are you today?"
+      "output": "Hello, User B! How are you today?",
+      "integration": "CrewAI"
     },
     {
       "uuid": "09111740-359e-4a57-9db1-311ba0fcd9f9",
@@ -36,7 +38,8 @@
       "input": {
         "input": "User A"
       },
-      "output": "Hello, User A! How are you today?"
+      "output": "Hello, User A! How are you today?",
+      "integration": "CrewAI"
     }
   ],
   "agentSpans": [
@@ -51,7 +54,8 @@
       "input": "Reply to the user: User B\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Hello, User B! How are you today?",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "CrewAI"
     },
     {
       "uuid": "cacd13f6-2b01-4b66-b2b9-729a44304590",
@@ -64,7 +68,8 @@
       "input": "Reply to the user: User A\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Hello, User A! How are you today?",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "CrewAI"
     }
   ],
   "llmSpans": [
@@ -88,7 +93,9 @@
       ],
       "output": "Hello, User B! How are you today?",
       "model": "gpt-4o-mini",
-      "metricCollection": "metric_collection_1"
+      "metricCollection": "metric_collection_1",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "1389bc17-e93e-434a-ac5f-498f775803b4",
@@ -110,7 +117,9 @@
       ],
       "output": "Hello, User A! How are you today?",
       "model": "gpt-4o-mini",
-      "metricCollection": "metric_collection_1"
+      "metricCollection": "metric_collection_1",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

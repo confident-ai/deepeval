@@ -110,7 +110,7 @@
             }
           },
           {
-            "content": "Partly cloudy, 65\u00b0F",
+            "content": "Partly cloudy, 65°F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -150,7 +150,7 @@
             "status": "success"
           },
           {
-            "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65\u00b0F.  \n- TSLA stock price: $245.60.  \n- Exchange rate USD \u2192 EUR: 1 USD = 0.92 EUR.  \n- Calculation 100 * 1.5 = 150.0.",
+            "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65°F.  \n- TSLA stock price: $245.60.  \n- Exchange rate USD → EUR: 1 USD = 0.92 EUR.  \n- Calculation 100 * 1.5 = 150.0.",
             "additional_kwargs": {
               "refusal": null
             },
@@ -197,7 +197,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-f0ad-7e92-b989-45bd858bae68",
@@ -298,7 +299,7 @@
             }
           },
           {
-            "content": "Partly cloudy, 65\u00b0F",
+            "content": "Partly cloudy, 65°F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -342,7 +343,7 @@
       "output": {
         "messages": [
           {
-            "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65\u00b0F.  \n- TSLA stock price: $245.60.  \n- Exchange rate USD \u2192 EUR: 1 USD = 0.92 EUR.  \n- Calculation 100 * 1.5 = 150.0.",
+            "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65°F.  \n- TSLA stock price: $245.60.  \n- Exchange rate USD → EUR: 1 USD = 0.92 EUR.  \n- Calculation 100 * 1.5 = 150.0.",
             "additional_kwargs": {
               "refusal": null
             },
@@ -389,7 +390,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-fca8-73b3-bd9d-a738b7c9027a",
@@ -490,7 +492,7 @@
             }
           },
           {
-            "content": "Partly cloudy, 65\u00b0F",
+            "content": "Partly cloudy, 65°F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -530,7 +532,7 @@
             "status": "success"
           },
           {
-            "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65\u00b0F.  \n- TSLA stock price: $245.60.  \n- Exchange rate USD \u2192 EUR: 1 USD = 0.92 EUR.  \n- Calculation 100 * 1.5 = 150.0.",
+            "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65°F.  \n- TSLA stock price: $245.60.  \n- Exchange rate USD → EUR: 1 USD = 0.92 EUR.  \n- Calculation 100 * 1.5 = 150.0.",
             "additional_kwargs": {
               "refusal": null
             },
@@ -578,7 +580,8 @@
           }
         ]
       },
-      "output": "__end__"
+      "output": "__end__",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-f0aa-7502-a377-29150794af21",
@@ -683,7 +686,7 @@
       "output": {
         "messages": [
           {
-            "content": "Partly cloudy, 65\u00b0F",
+            "content": "Partly cloudy, 65°F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -728,7 +731,7 @@
         {
           "name": "get_weather",
           "output": {
-            "content": "Partly cloudy, 65\u00b0F",
+            "content": "Partly cloudy, 65°F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -790,7 +793,8 @@
             "expression": "100 * 1.5"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-e032-7023-8955-91bc2579ac9d",
@@ -895,7 +899,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-f0a9-7e90-861f-d4b0e3bd6f0f",
@@ -997,7 +1002,8 @@
           }
         ]
       },
-      "output": "tools"
+      "output": "tools",
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -1025,7 +1031,7 @@
         },
         {
           "role": "tool",
-          "content": "Partly cloudy, 65\u00b0F"
+          "content": "Partly cloudy, 65°F"
         },
         {
           "role": "tool",
@@ -1062,12 +1068,14 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65\u00b0F.  \n- TSLA stock price: $245.60.  \n- Exchange rate USD \u2192 EUR: 1 USD = 0.92 EUR.  \n- Calculation 100 * 1.5 = 150.0.",
+        "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65°F.  \n- TSLA stock price: $245.60.  \n- Exchange rate USD → EUR: 1 USD = 0.92 EUR.  \n- Calculation 100 * 1.5 = 150.0.",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 487.0,
-      "outputTokenCount": 200.0
+      "outputTokenCount": 200.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d0517-e032-7023-8955-91c3fb9e2ec9",
@@ -1144,7 +1152,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 349.0,
-      "outputTokenCount": 350.0
+      "outputTokenCount": 350.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -1169,7 +1179,8 @@
         "id": "22cce891-caa8-4e50-8125-102939123e07",
         "tool_call_id": "call_7qaXY1jcHxIcItPAcVL7Z99W",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-f0ac-75d0-a93c-ac027921a314",
@@ -1192,7 +1203,8 @@
         "id": "cec70989-88c8-4a01-a8f3-89ac1b0337e3",
         "tool_call_id": "call_czYldoxNeUB1CIynwfO96sUT",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-f0ac-75d0-a93c-abfe7efb1690",
@@ -1214,7 +1226,8 @@
         "id": "6f60ef42-9f5e-40a9-bbdd-448317ba6832",
         "tool_call_id": "call_Q6Tru9EHiNjmjODyshaRlMbD",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-f0ab-7502-81d6-e2eb2e67f2e2",
@@ -1228,7 +1241,7 @@
         "city": "Paris"
       },
       "output": {
-        "content": "Partly cloudy, 65\u00b0F",
+        "content": "Partly cloudy, 65°F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -1236,7 +1249,8 @@
         "id": "4770c052-b64d-418a-bb3d-514ded1d9285",
         "tool_call_id": "call_nNmab8KqjkYKKnwHp8AVh7HS",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:55:44.050Z",
@@ -1350,7 +1364,7 @@
         }
       },
       {
-        "content": "Partly cloudy, 65\u00b0F",
+        "content": "Partly cloudy, 65°F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -1390,7 +1404,7 @@
         "status": "success"
       },
       {
-        "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65\u00b0F.  \n- TSLA stock price: $245.60.  \n- Exchange rate USD \u2192 EUR: 1 USD = 0.92 EUR.  \n- Calculation 100 * 1.5 = 150.0.",
+        "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65°F.  \n- TSLA stock price: $245.60.  \n- Exchange rate USD → EUR: 1 USD = 0.92 EUR.  \n- Calculation 100 * 1.5 = 150.0.",
         "additional_kwargs": {
           "refusal": null
         },
@@ -1443,7 +1457,7 @@
     {
       "name": "get_weather",
       "output": {
-        "content": "Partly cloudy, 65\u00b0F",
+        "content": "Partly cloudy, 65°F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",

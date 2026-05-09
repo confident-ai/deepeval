@@ -167,7 +167,7 @@
             "status": "success"
           },
           {
-            "content": "Here are the latest prices I fetched (USD):\n\n- AAPL: $178.50  \n- GOOGL: $142.30  \n- MSFT: $378.90  \n- TSLA: $245.60  \n- AMZN: $185.20\n\nPrices can change quickly \u2014 would you like intraday charts, historical data, or price alerts?",
+            "content": "Here are the latest prices I fetched (USD):\n\n- AAPL: $178.50  \n- GOOGL: $142.30  \n- MSFT: $378.90  \n- TSLA: $245.60  \n- AMZN: $185.20\n\nPrices can change quickly — would you like intraday charts, historical data, or price alerts?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -214,7 +214,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-0ab0-70e2-84c3-ce87f9bc9fca",
@@ -376,7 +377,7 @@
       "output": {
         "messages": [
           {
-            "content": "Here are the latest prices I fetched (USD):\n\n- AAPL: $178.50  \n- GOOGL: $142.30  \n- MSFT: $378.90  \n- TSLA: $245.60  \n- AMZN: $185.20\n\nPrices can change quickly \u2014 would you like intraday charts, historical data, or price alerts?",
+            "content": "Here are the latest prices I fetched (USD):\n\n- AAPL: $178.50  \n- GOOGL: $142.30  \n- MSFT: $378.90  \n- TSLA: $245.60  \n- AMZN: $185.20\n\nPrices can change quickly — would you like intraday charts, historical data, or price alerts?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -423,7 +424,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-1860-70d1-901e-e72840fedde3",
@@ -581,7 +583,7 @@
             "status": "success"
           },
           {
-            "content": "Here are the latest prices I fetched (USD):\n\n- AAPL: $178.50  \n- GOOGL: $142.30  \n- MSFT: $378.90  \n- TSLA: $245.60  \n- AMZN: $185.20\n\nPrices can change quickly \u2014 would you like intraday charts, historical data, or price alerts?",
+            "content": "Here are the latest prices I fetched (USD):\n\n- AAPL: $178.50  \n- GOOGL: $142.30  \n- MSFT: $378.90  \n- TSLA: $245.60  \n- AMZN: $185.20\n\nPrices can change quickly — would you like intraday charts, historical data, or price alerts?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -629,7 +631,8 @@
           }
         ]
       },
-      "output": "__end__"
+      "output": "__end__",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-0aae-7251-ad8c-113eda3d3c01",
@@ -873,7 +876,8 @@
             "symbol": "AMZN"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-fcb2-7a51-b9d9-127000e3965d",
@@ -985,7 +989,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-0aad-7d71-a289-74df80ba04df",
@@ -1094,7 +1099,8 @@
           }
         ]
       },
-      "output": "tools"
+      "output": "tools",
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -1163,12 +1169,14 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Here are the latest prices I fetched (USD):\n\n- AAPL: $178.50  \n- GOOGL: $142.30  \n- MSFT: $378.90  \n- TSLA: $245.60  \n- AMZN: $185.20\n\nPrices can change quickly \u2014 would you like intraday charts, historical data, or price alerts?",
+        "content": "Here are the latest prices I fetched (USD):\n\n- AAPL: $178.50  \n- GOOGL: $142.30  \n- MSFT: $378.90  \n- TSLA: $245.60  \n- AMZN: $185.20\n\nPrices can change quickly — would you like intraday charts, historical data, or price alerts?",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 421.0,
-      "outputTokenCount": 212.0
+      "outputTokenCount": 212.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d0517-fcb2-7a51-b9d9-128fdb7baa6c",
@@ -1251,7 +1259,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 282.0,
-      "outputTokenCount": 234.0
+      "outputTokenCount": 234.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -1276,7 +1286,8 @@
         "id": "04add933-50cd-41bb-98c0-ad84a96d138e",
         "tool_call_id": "call_PdTc2kz667vfuRHDdYT1zWVg",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-0aaf-73a1-9c9a-290656979358",
@@ -1298,7 +1309,8 @@
         "id": "4431dca5-bd40-4024-affe-55b021cdc41f",
         "tool_call_id": "call_DxNjljg8Ei3EGgWY4ahD66ua",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-0aaf-73a1-9c9a-28fbb3cf3493",
@@ -1320,7 +1332,8 @@
         "id": "ab5987b7-3e9f-408b-9144-4fcb7041e9b7",
         "tool_call_id": "call_DQCY4dHqg3E6orqfMFfLxZgw",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-0aaf-73a1-9c9a-28e397c8700a",
@@ -1342,7 +1355,8 @@
         "id": "ba5c45ed-dfdf-410e-a49d-3a6199c98aed",
         "tool_call_id": "call_tqLtBO3kxFFYvQg4mJoEBFoX",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-0aae-7251-ad8c-1143986f12eb",
@@ -1364,7 +1378,8 @@
         "id": "81846c90-86eb-421b-8e9d-cdf9068c230b",
         "tool_call_id": "call_mLAtDsydmPJnv9qXs5M4nP2w",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:55:51.345Z",
@@ -1535,7 +1550,7 @@
         "status": "success"
       },
       {
-        "content": "Here are the latest prices I fetched (USD):\n\n- AAPL: $178.50  \n- GOOGL: $142.30  \n- MSFT: $378.90  \n- TSLA: $245.60  \n- AMZN: $185.20\n\nPrices can change quickly \u2014 would you like intraday charts, historical data, or price alerts?",
+        "content": "Here are the latest prices I fetched (USD):\n\n- AAPL: $178.50  \n- GOOGL: $142.30  \n- MSFT: $378.90  \n- TSLA: $245.60  \n- AMZN: $185.20\n\nPrices can change quickly — would you like intraday charts, historical data, or price alerts?",
         "additional_kwargs": {
           "refusal": null
         },

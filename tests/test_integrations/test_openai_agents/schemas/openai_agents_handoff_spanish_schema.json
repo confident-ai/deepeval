@@ -3,7 +3,7 @@
   "baseSpans": [
     {
       "uuid": "a7cd61a3-09e0-4dca-8945-d0e2339e9abf",
-      "name": "Handoff \u2192 SpanishAgent",
+      "name": "Handoff → SpanishAgent",
       "status": "SUCCESS",
       "type": "base",
       "parentUuid": "369ae427-d645-413c-837e-cd38591f7337",
@@ -13,7 +13,8 @@
         "from_agent": "TriageAgent",
         "to_agent": "SpanishAgent"
       },
-      "input": {}
+      "input": {},
+      "integration": "OpenAI Agents"
     }
   ],
   "agentSpans": [
@@ -45,7 +46,8 @@
       ],
       "output": "Hola",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "OpenAI Agents"
     },
     {
       "uuid": "369ae427-d645-413c-837e-cd38591f7337",
@@ -67,7 +69,8 @@
       "agentHandoffs": [
         "SpanishAgent",
         "EnglishAgent"
-      ]
+      ],
+      "integration": "OpenAI Agents"
     }
   ],
   "llmSpans": [
@@ -123,7 +126,9 @@
       "output": "Hola",
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 55.0,
-      "outputTokenCount": 2.0
+      "outputTokenCount": 2.0,
+      "integration": "OpenAI Agents",
+      "provider": "OpenAI"
     },
     {
       "uuid": "15bb9c54-4a6b-4cb8-8bb3-d7ae80d96e49",
@@ -192,7 +197,9 @@
       "output": "{\"call_id\": \"call_mPmlPbHjEYwuzs4zc4Fq6PnJ\", \"name\": \"transfer_to_spanishagent\", \"arguments\": \"{}\"}",
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 83.0,
-      "outputTokenCount": 14.0
+      "outputTokenCount": 14.0,
+      "integration": "OpenAI Agents",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

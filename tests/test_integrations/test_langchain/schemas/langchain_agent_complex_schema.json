@@ -152,7 +152,8 @@
           },
           "inputParameters": {}
         }
-      ]
+      ],
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -198,7 +199,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 223.0,
-      "outputTokenCount": 155.0
+      "outputTokenCount": 155.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d0510-58b1-7d10-898f-345d4e24cfe2",
@@ -239,7 +242,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 180.0,
-      "outputTokenCount": 148.0
+      "outputTokenCount": 148.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -261,7 +266,8 @@
         "name": "get_current_time",
         "tool_call_id": "call_AQDA4hBboBZzMpqHp3lSIXCI",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:47:30.609Z",

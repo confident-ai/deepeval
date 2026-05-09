@@ -19,7 +19,9 @@
       "output": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
       "model": "gpt-4o",
       "inputTokenCount": 13.0,
-      "outputTokenCount": 29.0
+      "outputTokenCount": 29.0,
+      "integration": "OpenAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

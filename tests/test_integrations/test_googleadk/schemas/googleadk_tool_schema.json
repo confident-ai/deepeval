@@ -12,7 +12,8 @@
       "input": "{\"user_id\": \"test-user\", \"session_id\": \"9cacf812-2b0e-4ee6-b143-f44046b0fcee\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"What is 7 multiplied by 8?\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The answer is 56.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":7,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":206},\"invocation_id\":\"e-d5ec8c1c-b406-41e3-bd2d-5b9ed1bb75e4\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"90f756d0-27e5-4b29-b285-67bb28d0130a\",\"timestamp\":1778144783.790971}",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Google ADK"
     },
     {
       "uuid": "a578a122b226c4f7",
@@ -25,7 +26,8 @@
       "input": [],
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The answer is 56.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":7,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":206},\"invocation_id\":\"e-d5ec8c1c-b406-41e3-bd2d-5b9ed1bb75e4\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"90f756d0-27e5-4b29-b285-67bb28d0130a\",\"timestamp\":1778144783.790971}",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "Google ADK"
     }
   ],
   "llmSpans": [
@@ -41,7 +43,9 @@
       "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The answer is 56.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":7,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":206}}",
       "model": "gemini-2.5-flash-lite",
       "inputTokenCount": 199.0,
-      "outputTokenCount": 7.0
+      "outputTokenCount": 7.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
     },
     {
       "uuid": "dc3f7dfa4812e269",
@@ -65,7 +69,9 @@
       ],
       "model": "gemini-2.5-flash-lite",
       "inputTokenCount": 162.0,
-      "outputTokenCount": 23.0
+      "outputTokenCount": 23.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
     }
   ],
   "retrieverSpans": [],
@@ -89,7 +95,8 @@
             "a": 7
           }
         }
-      ]
+      ],
+      "integration": "Google ADK"
     }
   ],
   "startTime": "2026-05-07T09:06:22.586Z",

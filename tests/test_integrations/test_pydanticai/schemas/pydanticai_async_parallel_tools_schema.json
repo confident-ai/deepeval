@@ -15,9 +15,10 @@
           "content": "Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each."
         }
       ],
-      "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F. The time is 3:00 PM JST.",
+      "output": "The current weather in Tokyo is sunny with a temperature of 72°F. The time is 3:00 PM JST.",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "PydanticAI"
     }
   ],
   "llmSpans": [
@@ -148,12 +149,14 @@
       "output": [
         {
           "role": "assistant",
-          "content": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F. The time is 3:00 PM JST."
+          "content": "The current weather in Tokyo is sunny with a temperature of 72°F. The time is 3:00 PM JST."
         }
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 253.0,
-      "outputTokenCount": 26.0
+      "outputTokenCount": 26.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "dc71978cd5eda9a9",
@@ -265,7 +268,9 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 185.0,
-      "outputTokenCount": 44.0
+      "outputTokenCount": 44.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -281,7 +286,8 @@
       "input": {
         "city": "Tokyo"
       },
-      "output": "3:00 PM JST"
+      "output": "3:00 PM JST",
+      "integration": "PydanticAI"
     },
     {
       "uuid": "33e82a718605b96b",
@@ -294,7 +300,8 @@
       "input": {
         "city": "Tokyo"
       },
-      "output": "Sunny, 72F"
+      "output": "Sunny, 72F",
+      "integration": "PydanticAI"
     }
   ],
   "startTime": "2026-05-05T06:45:58.545Z",
@@ -317,6 +324,6 @@
       "content": "Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each."
     }
   ],
-  "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F. The time is 3:00 PM JST.",
+  "output": "The current weather in Tokyo is sunny with a temperature of 72°F. The time is 3:00 PM JST.",
   "status": "SUCCESS"
 }

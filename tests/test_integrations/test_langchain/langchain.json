@@ -144,7 +144,8 @@
           }
         ]
       },
-      "metricCollection": "task_completion"
+      "metricCollection": "task_completion",
+      "integration": "LangChain"
     },
     {
       "uuid": "019df247-1b9a-7351-9927-1cf4a11d5fab",
@@ -289,7 +290,8 @@
           "resume": null,
           "goto": []
         }
-      ]
+      ],
+      "integration": "LangChain"
     },
     {
       "uuid": "019df247-1b97-75f2-bcae-017ea610401e",
@@ -342,7 +344,8 @@
             "b": 6
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     },
     {
       "uuid": "019df247-17d5-7a80-bc98-13f459961266",
@@ -431,7 +434,8 @@
           "goto": "<circular>"
         }
       ],
-      "metricCollection": "test_collection_1"
+      "metricCollection": "test_collection_1",
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -478,7 +482,9 @@
       "promptAlias": "asd",
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      "promptCommitHash": "bab04ec",
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019df247-17d7-7c01-b171-1c6b4803641b",
@@ -523,7 +529,9 @@
       "promptAlias": "asd",
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      "promptCommitHash": "bab04ec",
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -549,7 +557,8 @@
         "id": "dd0f8c81-dc36-497f-8fc0-4cdee777d1f1",
         "tool_call_id": "call_t5eXouIjGY6DSSUJbtbVvybX",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-05-04T09:17:18.677Z",

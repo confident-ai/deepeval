@@ -41,6 +41,7 @@ from deepeval.tracing.otel.utils import (
     to_hex_string,
 )
 from deepeval.tracing.perf_epoch_bridge import init_clock_bridge
+from deepeval.tracing.integrations import Integration
 from deepeval.tracing.tracing import trace_manager
 from deepeval.tracing.types import (
     AgentSpan,
@@ -48,6 +49,10 @@ from deepeval.tracing.types import (
     Trace,
     TraceSpanStatus,
     ToolCall,
+)
+from deepeval.tracing.utils import (
+    infer_provider_from_model,
+    normalize_span_provider_for_platform,
 )
 
 logger = logging.getLogger(__name__)
@@ -863,6 +868,10 @@ class StrandsSpanInterceptor(SpanProcessor):
         span_type = attrs.get("confident.span.type") or _classify_span(span)
         if span_type and "confident.span.type" not in attrs:
             self._set_attr_post_end(span, "confident.span.type", span_type)
+        if not attrs.get("confident.span.integration"):
+            self._set_attr_post_end(
+                span, "confident.span.integration", Integration.STRANDS.value
+            )
 
         input_text, output_text = _extract_messages(span)
 
@@ -902,6 +911,15 @@ class StrandsSpanInterceptor(SpanProcessor):
         )
         if model:
             self._set_attr_post_end(span, "confident.llm.model", model)
+            if span_type == "llm" and not attrs.get("confident.span.provider"):
+                provider = _get_attr(span, "gen_ai.response.provider")
+                if not provider:
+                    provider = infer_provider_from_model(model)
+                if provider:
+                    provider = normalize_span_provider_for_platform(provider)
+                    self._set_attr_post_end(
+                        span, "confident.span.provider", provider
+                    )
 
         tools_called: List[ToolCall] = []
 

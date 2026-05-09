@@ -142,7 +142,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-8df0-77b1-9838-4041f83e2120",
@@ -279,7 +280,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-9215-7731-b700-7f254380ce85",
@@ -413,7 +415,8 @@
           }
         ]
       },
-      "output": "__end__"
+      "output": "__end__",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-8dee-7043-b6f4-5084b3a7ad42",
@@ -521,7 +524,8 @@
             "query": "Rust (programming language)"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-864b-7b71-941d-f6ad6c1228c1",
@@ -601,7 +605,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-8dec-7713-9f37-2dff014434e7",
@@ -678,7 +683,8 @@
           }
         ]
       },
-      "output": "tools"
+      "output": "tools",
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -720,7 +726,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 220.0,
-      "outputTokenCount": 29.0
+      "outputTokenCount": 29.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d0516-864b-7b71-941d-f6bdec261ef4",
@@ -759,7 +767,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 177.0,
-      "outputTokenCount": 28.0
+      "outputTokenCount": 28.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -784,7 +794,8 @@
         "id": "18930103-d5b1-4858-ad9a-2ab7b42aa7d3",
         "tool_call_id": "call_IsWW3J5u9lxwFlCuIxw6wUdQ",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:54:15.498Z",

@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from deepeval.confident.api import get_confident_api_key
 from deepeval.telemetry import capture_tracing_integration
+from deepeval.tracing.integrations import Integration
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +92,7 @@ def instrument_google_adk(
             metric_collection=metric_collection,
             test_case_id=test_case_id,
             turn_id=turn_id,
+            integration=Integration.GOOGLE_ADK.value,
         )
 
         logger.info("Confident AI Google ADK telemetry attached.")
