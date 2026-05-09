@@ -5,7 +5,6 @@ from deepeval.dataset import EvaluationDataset
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import observe, update_current_span
 
-
 DATASET_PATH = "tests/evals/.dataset.json"
 EVALUATION_MODEL = "EVALUATION_MODEL"
 

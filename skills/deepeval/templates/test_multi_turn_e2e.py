@@ -5,7 +5,6 @@ from deepeval.dataset import EvaluationDataset
 from deepeval.simulator import ConversationSimulator
 from deepeval.test_case import Turn
 
-
 DATASET_PATH = "tests/evals/.dataset.json"
 EVALUATION_MODEL = "EVALUATION_MODEL"
 

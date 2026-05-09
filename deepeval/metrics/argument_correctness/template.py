@@ -19,8 +19,7 @@ class ArgumentCorrectnessTemplate:
 
         stringified_tools_called = repr(tools_called)
 
-        return textwrap.dedent(
-            f"""
+        return textwrap.dedent(f"""
             For the provided list of tool calls, determine whether each tool call input parameter is relevantly and correctly addresses the input.
 
             Please generate a list of JSON with two keys: `verdict` and `reason`.
@@ -99,8 +98,7 @@ class ArgumentCorrectnessTemplate:
             {stringified_tools_called}
 
             JSON:
-            """
-        )
+            """)
 
     @staticmethod
     def generate_reason(
