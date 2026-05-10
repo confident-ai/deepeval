@@ -1,260 +1,149 @@
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 
-from deepeval.errors import DeepEvalError
-from deepeval.prompt.prompt import Prompt
-from deepeval.prompt.api import PromptMessage
-from deepeval.optimizer.types import PromptConfiguration, OptimizationReport
+from deepeval.dataset.golden import Golden
 from deepeval.optimizer.algorithms import COPRO
-
-from tests.test_core.stubs import (
-    StubScoringAdapter,
-    SuffixRewriter,
-    DummyProgress,
+from deepeval.optimizer.types import (
+    IterationLogEntry,
+    OptimizationReport,
+    PromptConfigSnapshot,
+    PromptConfiguration,
 )
+from deepeval.prompt.prompt import Prompt
 
 
-def _make_runner(
-    *,
-    iterations: int = 3,
-    population_size: int = 4,
-    proposals_per_step: int = 2,
-    full_eval_every: int | None = 2,
-):
-    """
-    Helper to construct a COPRO runner wired with the shared stubs:
+def _goldens(n: int = 3) -> list[Golden]:
+    return [
+        Golden(input=f"q{i}", expected_output=f"a{i}") for i in range(n)
+    ]
 
-    - StubScoringAdapter: scores prompts with 'CHILD' higher than root.
-    - SuffixRewriter: appends ' CHILD' to the prompt text.
-    """
-    scoring = StubScoringAdapter()
-    runner = COPRO(
-        iterations=iterations,
-        population_size=population_size,
-        proposals_per_step=proposals_per_step,
-        full_eval_every=full_eval_every,
-        random_seed=0,
-        minibatch_size=2,  # keep minibatch behaviour deterministic in tests
-        scorer=scoring,
+
+def test_copro_sample_minibatch_respects_size() -> None:
+    runner = COPRO(depth=1, breadth=1, minibatch_size=2, random_state=0)
+    g = _goldens(5)
+    mb = runner._sample_minibatch(g)
+    assert len(mb) == 2
+    assert all(x in g for x in mb)
+
+
+def test_copro_sample_minibatch_returns_all_when_small() -> None:
+    runner = COPRO(minibatch_size=10, random_state=0)
+    g = _goldens(2)
+    assert runner._sample_minibatch(g) == g
+
+
+def test_copro_extract_optimized_set_picks_highest_mean() -> None:
+    runner = COPRO(random_state=0)
+    low = PromptConfiguration.new(
+        prompts={COPRO.SINGLE_MODULE_ID: Prompt(text_template="low")}
     )
-    runner._rewriter = SuffixRewriter(suffix=" CHILD")
-    return runner, scoring
+    high = PromptConfiguration.new(
+        prompts={COPRO.SINGLE_MODULE_ID: Prompt(text_template="high")}
+    )
+    runner.pareto_score_table[low.id] = [0.2, 0.2]
+    runner.pareto_score_table[high.id] = [0.9, 0.7]
+    assert runner._extract_optimized_set() == high.id
 
 
-def test_execute_requires_at_least_one_golden():
-    """COPRO.execute must reject an empty golden list."""
-    runner, _ = _make_runner()
-    prompt = Prompt(text_template="ROOT")
+def test_copro_execute_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
+    goldens = _goldens(3)
+    runner = COPRO(depth=1, breadth=1, minibatch_size=2, random_state=0)
+    runner.optimizer_model = MagicMock()
 
-    with pytest.raises(DeepEvalError):
-        runner.execute(prompt=prompt, goldens=[])
+    proposer = MagicMock()
+    proposer.propose_bootstrap.return_value = [
+        Prompt(text_template="candidate CHILD"),
+    ]
+    proposer.propose_from_history.return_value = []
+
+    def _fake_init(self: COPRO) -> None:
+        self.proposer = proposer
+
+    monkeypatch.setattr(COPRO, "_init_components", _fake_init)
+
+    scorer = MagicMock()
+    scorer.score_pareto.return_value = [1.0, 1.0]
+    runner.scorer = scorer
+
+    def _fake_eval(
+        self: COPRO, config, minibatch
+    ) -> tuple[float, str]:
+        return (0.95, "feedback")
+
+    monkeypatch.setattr(COPRO, "_evaluate_candidate", _fake_eval)
+
+    best, report = runner.execute(Prompt(text_template="root"), goldens)
+
+    assert isinstance(best, Prompt)
+    assert isinstance(report, OptimizationReport)
+    assert report.optimization_id
+    assert report.best_id in runner.prompt_configurations_by_id
+    scorer.score_pareto.assert_called()
+    proposer.propose_bootstrap.assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_a_execute_requires_at_least_one_golden():
-    """COPRO.a_execute must reject an empty golden list."""
-    runner, _ = _make_runner()
-    prompt = Prompt(text_template="ROOT")
+async def test_copro_a_execute_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
+    goldens = _goldens(3)
+    runner = COPRO(depth=1, breadth=1, minibatch_size=2, random_state=0)
+    runner.optimizer_model = MagicMock()
 
-    with pytest.raises(DeepEvalError):
-        await runner.a_execute(prompt=prompt, goldens=[])
-
-
-def test_execute_requires_scorer():
-    """
-    If no scorer is attached, COPRO.execute must fail
-    via _ensure_scorer.
-    """
-    runner = COPRO(scorer=None)
-    prompt = Prompt(text_template="ROOT")
-    goldens = ["g1"]
-
-    with pytest.raises(DeepEvalError):
-        runner.execute(prompt=prompt, goldens=goldens)
-
-
-def test_add_prompt_configuration_prunes_worst_candidate():
-    """
-    _add_prompt_configuration must enforce population_size by pruning
-    the worst-scoring candidate while always keeping the best.
-    """
-    runner = COPRO(
-        population_size=2,
-        iterations=1,
-        random_seed=0,
-        scorer=None,
+    proposer = MagicMock()
+    proposer.a_propose_bootstrap = AsyncMock(
+        return_value=[Prompt(text_template="candidate CHILD")]
     )
+    proposer.a_propose_from_history = AsyncMock(return_value=[])
 
-    # Three candidates with different mean scores
-    c1 = PromptConfiguration.new(
-        prompts={COPRO.SINGLE_MODULE_ID: Prompt(text_template="C1")}
-    )
-    c2 = PromptConfiguration.new(
-        prompts={COPRO.SINGLE_MODULE_ID: Prompt(text_template="C2")}
-    )
-    c3 = PromptConfiguration.new(
-        prompts={COPRO.SINGLE_MODULE_ID: Prompt(text_template="C3")}
-    )
+    def _fake_init(self: COPRO) -> None:
+        self.proposer = proposer
 
-    # Seed surrogate stats BEFORE adding, so pruning logic sees real scores
-    runner._minibatch_score_sums[c1.id] = 0.1
-    runner._minibatch_score_counts[c1.id] = 1
+    monkeypatch.setattr(COPRO, "_init_components", _fake_init)
 
-    runner._minibatch_score_sums[c2.id] = 0.5
-    runner._minibatch_score_counts[c2.id] = 1
+    scorer = MagicMock()
+    scorer.a_score_pareto = AsyncMock(return_value=[1.0, 1.0])
+    runner.scorer = scorer
 
-    runner._minibatch_score_sums[c3.id] = 0.9
-    runner._minibatch_score_counts[c3.id] = 1
+    async def _fake_a_eval(self, config, minibatch):
+        return (0.95, "feedback")
 
-    runner._add_prompt_configuration(c1)
-    runner._add_prompt_configuration(c2)
-    # This call should trigger pruning (population_size=2)
-    runner._add_prompt_configuration(c3)
+    monkeypatch.setattr(COPRO, "_a_evaluate_candidate", _fake_a_eval)
 
-    # The best candidate (c3) must be kept, and the worst (c1) pruned.
-    ids = set(runner.prompt_configurations_by_id.keys())
-    assert len(ids) == 2
-    assert c3.id in ids
-    assert c2.id in ids
-    assert c1.id not in ids
+    best, report = await runner.a_execute(Prompt(text_template="root"), goldens)
 
-
-def test_execute_accepts_children_and_respects_population():
-    """
-    A full COPRO run should:
-    - Use minibatch scoring and feedback from StubScoringAdapter.
-    - Accept children whose text contains 'CHILD' (higher score).
-    - Respect the population_size bound via _add_prompt_configuration.
-    """
-    runner, scoring = _make_runner(
-        iterations=3,
-        population_size=2,
-        proposals_per_step=3,
-        full_eval_every=1,
-    )
-    prompt = Prompt(text_template="ROOT")
-    goldens = ["g1", "g2", "g3", "g4"]
-
-    best_prompt, report = runner.execute(prompt=prompt, goldens=goldens)
-
-    # Best prompt should be an improved child (SuffixRewriter appends ' CHILD')
-    assert isinstance(best_prompt, Prompt)
-    assert "CHILD" in (best_prompt.text_template or "")
-
-    # Optimization report basic shape
+    assert isinstance(best, Prompt)
     assert isinstance(report, OptimizationReport)
-    assert report.best_id is not None
-    assert report.optimization_id is not None
-    assert report.accepted_iterations is not None
-
-    # Population bound respected
-    assert len(runner.prompt_configurations_by_id) <= runner.population_size
-
-    # Surrogate stats should have been populated
-    assert runner._minibatch_score_counts
-    # StubScoringAdapter must have been used
-    assert scoring.score_calls  # minibatch_score used at least once
-    assert scoring.feedback_calls  # minibatch_feedback used at least once
-    assert scoring.pareto_calls  # full_eval_every=1 triggers score_on_pareto
+    assert report.optimization_id
+    assert report.best_id in runner.prompt_configurations_by_id
+    scorer.a_score_pareto.assert_awaited()
+    proposer.a_propose_bootstrap.assert_awaited_once()
 
 
-@pytest.mark.asyncio
-async def test_a_execute_uses_async_paths_and_accepts_children():
-    """
-    Async COPRO run should:
-    - Use a_minibatch_* and a_score_on_pareto paths on StubScoringAdapter.
-    - Accept children and produce an improved best prompt.
-    """
-    runner, scoring = _make_runner(
-        iterations=2,
-        population_size=3,
-        proposals_per_step=2,
-        full_eval_every=1,
-    )
-    prompt = Prompt(text_template="ROOT")
-    goldens = ["g1", "g2", "g3"]
-
-    best_prompt, report = await runner.a_execute(prompt=prompt, goldens=goldens)
-
-    assert isinstance(best_prompt, Prompt)
-    assert "CHILD" in (best_prompt.text_template or "")
-
-    assert isinstance(report, OptimizationReport)
-    assert report.best_id is not None
-
-    # Async scoring methods should have been exercised
-    assert scoring.a_score_calls  # a_minibatch_score
-    assert scoring.a_feedback_calls  # a_minibatch_feedback
-    assert scoring.a_pareto_calls  # a_score_on_pareto
-
-
-def test_prompts_equivalent_detects_text_and_list_prompts():
-    """
-    _prompts_equivalent should treat prompts with identical trimmed text
-    (or identical LIST messages) as equivalent, and different ones as not.
-    """
-    runner = COPRO(scorer=None)
-
-    # TEXT prompts
-    p1 = Prompt(text_template="  hello world  ")
-    p2 = Prompt(text_template="hello world")
-    p3 = Prompt(text_template="hello WORLD!!!")
-
-    assert runner._prompts_equivalent(p1, p2) is True
-    assert runner._prompts_equivalent(p1, p3) is False
-
-    # LIST prompts: same roles + trimmed content => equivalent
-
-    msgs1 = [
-        PromptMessage(role="user", content="  hi  "),
-        PromptMessage(role="assistant", content="there"),
-    ]
-    msgs2 = [
-        PromptMessage(role="user", content="hi"),
-        PromptMessage(role="assistant", content="there"),
-    ]
-    msgs3 = [
-        PromptMessage(role="user", content="hello"),
-        PromptMessage(role="assistant", content="there"),
-    ]
-
-    # NOTE: Prompt infers LIST type from messages_template; no `type=` kwarg.
-    lp1 = Prompt(messages_template=msgs1)
-    lp2 = Prompt(messages_template=msgs2)
-    lp3 = Prompt(messages_template=msgs3)
-
-    assert runner._prompts_equivalent(lp1, lp2) is True
-    assert runner._prompts_equivalent(lp1, lp3) is False
-
-
-def test_update_progress_and_error_use_status_callback():
-    """
-    _update_progress and _update_error should forward structured events to
-    the status_callback, allowing PromptOptimizer to drive a progress bar.
-    """
-    runner = COPRO(iterations=2, scorer=None)
-
-    progress = DummyProgress()
-
-    def status_callback(kind, step_index, total_steps, detail):
-        # Mimic PromptOptimizer._on_status behaviour by recording updates
-        progress.update(
-            "task",
-            kind=kind,
-            step_index=step_index,
-            total_steps=total_steps,
-            detail=detail,
+def test_copro_generate_summary_table_renders_iteration_log() -> None:
+    runner = COPRO(random_state=0)
+    runner._iteration_log = [
+        IterationLogEntry(
+            iteration=1,
+            outcome="evaluated",
+            before=0.0,
+            after=0.5,
+            reason="note",
+            elapsed=0.1,
         )
-
-    runner.status_callback = status_callback
-
-    runner._update_progress(
-        total_iterations=2, iteration=1, remaining_iterations=1, elapsed=0.123
+    ]
+    snap = PromptConfigSnapshot(
+        parent=None,
+        prompts={COPRO.SINGLE_MODULE_ID: Prompt(text_template="x")},
     )
-    runner._update_error(
-        total_iterations=2, iteration=1, exc=RuntimeError("boom")
+    report = OptimizationReport(
+        optimization_id="opt-1",
+        best_id="abc",
+        accepted_iterations=[],
+        pareto_scores={"abc": [0.5, 0.6]},
+        parents={"abc": None},
+        prompt_configurations={"abc": snap},
     )
-
-    # We don't assert exact payload, just that our DummyProgress saw both calls.
-    assert len(progress.records) == 2
+    tables = runner.generate_summary_table(report)
+    assert len(tables) >= 1

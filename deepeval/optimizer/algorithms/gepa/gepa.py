@@ -2,7 +2,8 @@ from __future__ import annotations
 import uuid
 import random
 import time
-
+from rich.table import Table
+from rich import box
 from typing import (
     Awaitable,
     Callable,
@@ -17,16 +18,18 @@ from typing import (
 from deepeval.models.base_model import DeepEvalBaseLLM
 
 from deepeval.errors import DeepEvalError
+from deepeval.optimizer.scorer.schema import ScorerDiagnosisResult
 from deepeval.optimizer.utils import Aggregator, mean_of_all
 from deepeval.optimizer.types import (
-    AcceptedIterationDict,
+    AcceptedIteration,
+    IterationLogEntry,
+    ModuleId,
+    OptimizationReport,
     PromptConfiguration,
     PromptConfigurationId,
-    ModuleId,
-    ScoreTable,
-    OptimizationReport,
-    RunnerStatusType,
     RunnerStatusCallback,
+    RunnerStatusType,
+    ScoreTable,
 )
 from deepeval.optimizer.scorer.base import BaseScorer
 from deepeval.optimizer.algorithms.base import BaseAlgorithm
@@ -37,8 +40,7 @@ from deepeval.optimizer.utils import (
 from deepeval.optimizer.policies import (
     pick_best_with_ties,
     select_prompt_configuration_pareto,
-    frequency_weights,
-    pareto_frontier,
+    _is_dominated,
 )
 from deepeval.prompt.api import PromptType
 from deepeval.prompt.prompt import Prompt
@@ -71,6 +73,8 @@ class GEPA(BaseAlgorithm):
         Number of examples drawn from D_feedback per iteration. Default is 8.
     pareto_size : int
         Size of the Pareto validation subset D_pareto. Default is 3.
+    patience : int
+        If there's no improvement in the Pareto score table for the last patience iterations, stop the optimization. Default is 3.
     random_seed : int, optional
         RNG seed for reproducibility. If None, derived from time.time_ns().
     tie_breaker : TieBreaker
@@ -87,11 +91,13 @@ class GEPA(BaseAlgorithm):
         minibatch_size: int = 8,
         pareto_size: int = 3,
         random_seed: Optional[int] = None,
+        patience: int = 3,
         tie_breaker: TieBreaker = TieBreaker.PREFER_CHILD,
         aggregate_instances: Aggregator = mean_of_all,
+        reflection_model: Optional[DeepEvalBaseLLM] = "gpt-4o-mini",
+        mutation_model: Optional[DeepEvalBaseLLM] = "gpt-4o",
         scorer: Optional[BaseScorer] = None,
     ) -> None:
-        # Validate parameters
         if iterations < 1:
             raise ValueError("iterations must be >= 1")
         if minibatch_size < 1:
@@ -102,33 +108,25 @@ class GEPA(BaseAlgorithm):
         self.iterations = iterations
         self.minibatch_size = minibatch_size
         self.pareto_size = pareto_size
+        self.patience = patience
         self.tie_breaker = tie_breaker
         self.aggregate_instances = aggregate_instances
         self.scorer = scorer
 
-        # If no seed provided, use time-based seed
         if random_seed is None:
             random_seed = time.time_ns()
         self.random_seed = random_seed
         self.random_state = random.Random(random_seed)
 
-        # runtime state to be reset between runs
         self.reset_state()
 
-        # Status callback set by PromptOptimizer:
-        #   (kind, step_index, total_steps, detail) -> None
         self.status_callback: Optional[RunnerStatusCallback] = None
+        self.step_callback: Optional[Callable[[str], None]] = None
 
-        # Optimizer model used by the rewriter for prompt mutation.
-        # Set by PromptOptimizer.
-        self.optimizer_model: Optional["DeepEvalBaseLLM"] = None
+        self.reflection_model: Optional["DeepEvalBaseLLM"] = reflection_model
+        self.mutation_model: Optional["DeepEvalBaseLLM"] = mutation_model
 
-        # lazy loaded
         self._rewriter: Optional[Rewriter] = None
-
-    ##############
-    # Public API #
-    ##############
 
     def execute(
         self,
@@ -144,6 +142,11 @@ class GEPA(BaseAlgorithm):
                 "run the optimizer."
             )
 
+        if self.reflection_model is not None:
+            self.scorer.optimizer_model = self.reflection_model
+        if self.mutation_model is not None:
+            self._rewriter.optimizer_model = self.mutation_model
+
         self._ensure_scorer()
         self.reset_state()
 
@@ -157,15 +160,18 @@ class GEPA(BaseAlgorithm):
         )
         self._add_prompt_configuration(root_prompt_configuration)
 
-        accepted_iterations: List[Dict] = []
+        accepted_iterations: List[AcceptedIteration] = []
+        consecutive_rejections = 0
 
         def _one_iteration() -> bool:
             nonlocal accepted_iterations
+            nonlocal consecutive_rejections
 
             if not d_feedback:
                 return False
 
-            # Seed Pareto scores lazily on first iteration
+            iter_start = time.perf_counter()
+
             if not self.pareto_score_table:
                 self.pareto_score_table[root_prompt_configuration.id] = (
                     self.scorer.score_pareto(
@@ -173,58 +179,113 @@ class GEPA(BaseAlgorithm):
                     )
                 )
 
-            # 1. Pick prompt_configuration via Pareto
             parent_prompt_configuration = self._pick_prompt_configuration()
 
-            # 2. Single module id
             selected_module_id: ModuleId = self.SINGLE_MODULE_ID
 
-            # 3. Draw minibatch
             minibatch = self._draw_minibatch(d_feedback)
 
-            # 4. Feedback
-            feedback_text = self.scorer.get_minibatch_feedback(
+            feedback_diagnosis = self.scorer.get_minibatch_feedback(
                 parent_prompt_configuration, selected_module_id, minibatch
             )
 
-            # 5. Rewrite
+            parent_minibatch_score = self.scorer.score_minibatch(
+                parent_prompt_configuration, minibatch
+            )
+
             child_prompt = self._generate_child_prompt(
-                selected_module_id, parent_prompt_configuration, feedback_text
+                selected_module_id,
+                parent_prompt_configuration,
+                feedback_diagnosis,
             )
             if child_prompt is None:
-                # Child prompt matched parent; skip this iteration.
                 return True
 
-            # 6. Child prompt_configuration
             child_prompt_configuration = self._make_child(
                 selected_module_id, parent_prompt_configuration, child_prompt
             )
 
-            # 7. Evaluate parent/child on minibatch
-            parent_score = self.scorer.score_minibatch(
-                parent_prompt_configuration, minibatch
-            )
-            child_score = self.scorer.score_minibatch(
+            child_minibatch_score = self.scorer.score_minibatch(
                 child_prompt_configuration, minibatch
             )
 
-            # 8. Acceptance test
-            accepted = self._should_accept_child(parent_score, child_score)
+            if child_minibatch_score <= parent_minibatch_score:
+                parent_agg = self.aggregate_instances(
+                    self.pareto_score_table[parent_prompt_configuration.id]
+                )
+                self._iteration_log.append(
+                    IterationLogEntry(
+                        iteration=self._current_iteration,
+                        outcome="skipped",
+                        reason="Skipped (minibatch score did not improve)",
+                        before=parent_agg,
+                        after=child_minibatch_score,
+                        elapsed=time.perf_counter() - iter_start,
+                    )
+                )
+                return True
+
+            child_pareto_scores = self.scorer.score_pareto(
+                child_prompt_configuration, d_pareto
+            )
+            parent_pareto_scores = self.pareto_score_table[
+                parent_prompt_configuration.id
+            ]
+
+            accepted = self._should_accept_child(child_pareto_scores, parent_pareto_scores)
+
             if accepted:
+                consecutive_rejections = 0
+                parent_agg = self.aggregate_instances(parent_pareto_scores)
+                child_agg = self.aggregate_instances(child_pareto_scores)
                 accepted_iterations.append(
                     self._accept_child(
                         selected_module_id,
                         parent_prompt_configuration,
                         child_prompt_configuration,
-                        d_pareto,
-                        parent_score,
-                        child_score,
+                        child_pareto_scores,
+                        parent_agg,
+                        child_agg,
                     )
                 )
+                self._iteration_log.append(
+                    IterationLogEntry(
+                        iteration=self._current_iteration,
+                        outcome="accepted",
+                        reason="Accepted by Pareto non-domination",
+                        before=parent_agg,
+                        after=child_agg,
+                        elapsed=time.perf_counter() - iter_start,
+                    )
+                )
+            else:
+                consecutive_rejections += 1
+                self._iteration_log.append(
+                    IterationLogEntry(
+                        iteration=self._current_iteration,
+                        outcome="rejected",
+                        reason=f"Rejected (consecutive rejections: {consecutive_rejections}/{self.patience})",
+                        before=self.aggregate_instances(parent_pareto_scores),
+                        after=self.aggregate_instances(child_pareto_scores),
+                        elapsed=time.perf_counter() - iter_start,
+                    )
+                )
+
+            if consecutive_rejections >= self.patience:
+                self._iteration_log[-1] = self._iteration_log[-1].model_copy(
+                    update={"reason": f"early stop (patience={self.patience})"}
+                )
+                return False
 
             return True
 
         self._run_loop_iteration(_one_iteration)
+        if not self.pareto_score_table:
+            raise DeepEvalError(
+                "GEPA finished without any Pareto scores (empty score table). "
+                "Common causes: empty feedback split, or the loop exited before "
+                "the first scoring step ran."
+            )
         best = self._best_by_aggregate()
         prompt_config_snapshots = build_prompt_config_snapshots(
             self.prompt_configurations_by_id
@@ -253,6 +314,11 @@ class GEPA(BaseAlgorithm):
                 "run the optimizer."
             )
 
+        if self.reflection_model is not None:
+            self.scorer.optimizer_model = self.reflection_model
+        if self.mutation_model is not None:
+            self._rewriter.optimizer_model = self.mutation_model
+
         self._ensure_scorer()
         self.reset_state()
 
@@ -266,104 +332,154 @@ class GEPA(BaseAlgorithm):
         )
         self._add_prompt_configuration(root_prompt_configuration)
 
-        accepted_iterations: List[Dict] = []
+        accepted_iterations: List[AcceptedIteration] = []
+        consecutive_rejections = 0
 
         async def _one_iteration() -> bool:
-            nonlocal accepted_iterations
+            nonlocal accepted_iterations, consecutive_rejections
 
             if not d_feedback:
                 return False
 
             iter_start = time.perf_counter()
+            cur = self._current_iteration
 
-            # Seed Pareto scores lazily on first iteration
             if not self.pareto_score_table:
-                t0 = time.perf_counter()
+                self._update_step(
+                    cur,
+                    f"Scoring seed prompt on {len(d_pareto)} pareto goldens...",
+                )
                 self.pareto_score_table[root_prompt_configuration.id] = (
                     await self.scorer.a_score_pareto(
                         root_prompt_configuration, d_pareto
                     )
                 )
-                print(
-                    f"[DEBUG] Initial pareto scoring ({len(d_pareto)} goldens): {time.perf_counter() - t0:.2f}s"
-                )
 
-            # 1. Pick prompt_configuration via Pareto
             parent_prompt_configuration = self._pick_prompt_configuration()
 
-            # 2. Single module id
             selected_module_id: ModuleId = self.SINGLE_MODULE_ID
 
-            # 3. Draw minibatch
             minibatch = self._draw_minibatch(d_feedback)
-            print(f"[DEBUG] Minibatch size: {len(minibatch)}")
 
-            # 4. Feedback
-            t0 = time.perf_counter()
-            feedback_text = await self.scorer.a_get_minibatch_feedback(
+            self._update_step(cur, f"Gathering feedback on {len(minibatch)} goldens...")
+            feedback_diagnosis = await self.scorer.a_get_minibatch_feedback(
                 parent_prompt_configuration, selected_module_id, minibatch
             )
-            print(f"[DEBUG] Get feedback: {time.perf_counter() - t0:.2f}s")
 
-            # 5. Rewrite
-            t0 = time.perf_counter()
-            child_prompt = await self._a_generate_child_prompt(
-                selected_module_id, parent_prompt_configuration, feedback_text
+            parent_minibatch_score = await self.scorer.a_score_minibatch(
+                parent_prompt_configuration, minibatch
             )
-            print(f"[DEBUG] Rewrite prompt: {time.perf_counter() - t0:.2f}s")
+
+            self._update_step(cur, "Rewriting prompt from feedback...")
+            child_prompt = await self._a_generate_child_prompt(
+                selected_module_id,
+                parent_prompt_configuration,
+                feedback_diagnosis,
+            )
+
             if child_prompt is None:
-                print(f"[DEBUG] Child prompt same as parent, skipping")
+                self._iteration_log.append(
+                    IterationLogEntry(
+                        iteration=cur,
+                        outcome="skipped",
+                        reason="child == parent",
+                        before=None,
+                        after=None,
+                        elapsed=time.perf_counter() - iter_start,
+                    )
+                )
                 return True
 
-            # 6. Child prompt_configuration
             child_prompt_configuration = self._make_child(
                 selected_module_id, parent_prompt_configuration, child_prompt
             )
 
-            # 7. Evaluate parent/child on minibatch
-            t0 = time.perf_counter()
-            parent_score = await self.scorer.a_score_minibatch(
-                parent_prompt_configuration, minibatch
-            )
-            print(
-                f"[DEBUG] Score parent on minibatch: {time.perf_counter() - t0:.2f}s (score={parent_score:.4f})"
-            )
-
-            t0 = time.perf_counter()
-            child_score = await self.scorer.a_score_minibatch(
+            child_minibatch_score = await self.scorer.a_score_minibatch(
                 child_prompt_configuration, minibatch
             )
-            print(
-                f"[DEBUG] Score child on minibatch: {time.perf_counter() - t0:.2f}s (score={child_score:.4f})"
-            )
 
-            # 8. Acceptance test
-            accepted = self._should_accept_child(parent_score, child_score)
-            print(
-                f"[DEBUG] Acceptance: {'ACCEPTED' if accepted else 'REJECTED'}"
+            if child_minibatch_score <= parent_minibatch_score:
+                parent_agg = self.aggregate_instances(
+                    self.pareto_score_table[parent_prompt_configuration.id]
+                )
+                self._iteration_log.append(
+                    IterationLogEntry(
+                        iteration=cur,
+                        outcome="skipped",
+                        reason="Skipped (minibatch score did not improve)",
+                        before=parent_agg,
+                        after=child_minibatch_score,
+                        elapsed=time.perf_counter() - iter_start,
+                    )
+                )
+                return True
+
+            # 7. Evaluate child on the GLOBAL validation set (d_pareto)
+            self._update_step(
+                cur,
+                f"Evaluating child on pareto set ({len(d_pareto)} goldens)...",
             )
+            child_pareto_scores = await self.scorer.a_score_pareto(
+                child_prompt_configuration, d_pareto
+            )
+            parent_pareto_scores = self.pareto_score_table[
+                parent_prompt_configuration.id
+            ]
+
+            accepted = self._should_accept_child(child_pareto_scores, parent_pareto_scores)
+
             if accepted:
-                t0 = time.perf_counter()
+                consecutive_rejections = 0
+                parent_agg = self.aggregate_instances(parent_pareto_scores)
+                child_agg = self.aggregate_instances(child_pareto_scores)
                 accepted_iterations.append(
                     await self._a_accept_child(
                         selected_module_id,
                         parent_prompt_configuration,
                         child_prompt_configuration,
-                        d_pareto,
-                        parent_score,
-                        child_score,
+                        child_pareto_scores,
+                        parent_agg,
+                        child_agg,
                     )
                 )
-                print(
-                    f"[DEBUG] Accept child (pareto scoring): {time.perf_counter() - t0:.2f}s"
+                self._iteration_log.append(
+                    IterationLogEntry(
+                        iteration=cur,
+                        outcome="accepted",
+                        reason="Accepted by Pareto non-domination",
+                        before=parent_agg,
+                        after=child_agg,
+                        elapsed=time.perf_counter() - iter_start,
+                    )
+                )
+            else:
+                consecutive_rejections += 1
+                self._iteration_log.append(
+                    IterationLogEntry(
+                        iteration=cur,
+                        outcome="rejected",
+                        reason=f"Rejected (consecutive rejections: {consecutive_rejections}/{self.patience})",
+                        before=self.aggregate_instances(parent_pareto_scores),
+                        after=self.aggregate_instances(child_pareto_scores),
+                        elapsed=time.perf_counter() - iter_start,
+                    )
                 )
 
-            print(
-                f"[DEBUG] Total iteration time: {time.perf_counter() - iter_start:.2f}s\n"
-            )
+            if consecutive_rejections >= self.patience:
+                self._iteration_log[-1] = self._iteration_log[-1].model_copy(
+                    update={"reason": f"early stop (patience={self.patience})"}
+                )
+                return False
+
             return True
 
         await self._a_run_loop_iteration(_one_iteration)
+        if not self.pareto_score_table:
+            raise DeepEvalError(
+                "GEPA finished without any Pareto scores (empty score table). "
+                "Common causes: empty feedback split, or the loop exited before "
+                "the first scoring step ran."
+            )
         best = self._best_by_aggregate()
         prompt_config_snapshots = build_prompt_config_snapshots(
             self.prompt_configurations_by_id
@@ -378,10 +494,6 @@ class GEPA(BaseAlgorithm):
         )
         return best.prompts[self.SINGLE_MODULE_ID], report
 
-    ###################
-    # State & helpers #
-    ###################
-
     def reset_state(self) -> None:
         self.optimization_id = str(uuid.uuid4())
         self.prompt_configurations_by_id: Dict[
@@ -391,6 +503,8 @@ class GEPA(BaseAlgorithm):
             PromptConfigurationId, Optional[PromptConfigurationId]
         ] = {}
         self.pareto_score_table: ScoreTable = {}
+        self._iteration_log: List[IterationLogEntry] = []
+        self._current_iteration: int = 0
 
     def _ensure_scorer(self) -> None:
         if self.scorer is None:
@@ -408,7 +522,6 @@ class GEPA(BaseAlgorithm):
 
         This is used as:
             if self._prompts_equivalent(old, new):
-                # reject child (treat as "no change")
                 return None
 
         So:
@@ -422,7 +535,6 @@ class GEPA(BaseAlgorithm):
           with content whitespace trimmed).
         """
 
-        # LIST prompts: compare messages
         if new_prompt.type == PromptType.LIST:
             old_msgs = old_prompt.messages_template
             new_msgs = new_prompt.messages_template
@@ -439,7 +551,6 @@ class GEPA(BaseAlgorithm):
 
             return True
 
-        # TEXT prompts: compare text_template
         old_txt = (old_prompt.text_template or "").strip()
         new_txt = (new_prompt.text_template or "").strip()
         return new_txt == old_txt
@@ -483,43 +594,9 @@ class GEPA(BaseAlgorithm):
         return self.prompt_configurations_by_id[chosen]
 
     def _pick_prompt_configuration(self) -> PromptConfiguration:
-        # Log Pareto selection details
-        all_candidates = list(self.pareto_score_table.keys())
-        print(f"[DEBUG] Pareto Selection:")
-        print(f"  - Total candidates in pool: {len(all_candidates)}")
-
-        # Show score table
-        print(f"  - Score table (per-instance scores):")
-        for cid, scores in self.pareto_score_table.items():
-            is_root = self.parents_by_id.get(cid) is None
-            label = (
-                "(root)"
-                if is_root
-                else f"(child of {self.parents_by_id.get(cid)[:8]}...)"
-            )
-            mean_score = sum(scores) / len(scores) if scores else 0
-            print(
-                f"      {cid[:8]}... {label}: {[round(s, 3) for s in scores]} (mean={mean_score:.3f})"
-            )
-
-        # Show Pareto frontier
-        frontier = pareto_frontier(all_candidates, self.pareto_score_table)
-        print(f"  - Pareto frontier ({len(frontier)} non-dominated):")
-        for cid in frontier:
-            print(f"      {cid[:8]}...")
-
-        # Show frequency weights
-        freq = frequency_weights(self.pareto_score_table)
-        print(f"  - Frequency weights (how often each wins an instance):")
-        for cid, weight in freq.items():
-            print(f"      {cid[:8]}...: {weight}")
-
-        # Do the selection
         selected_prompt_configuration_id = select_prompt_configuration_pareto(
             self.pareto_score_table, random_state=self.random_state
         )
-        print(f"  - Selected: {selected_prompt_configuration_id[:8]}...\n")
-
         return self.prompt_configurations_by_id[
             selected_prompt_configuration_id
         ]
@@ -527,8 +604,6 @@ class GEPA(BaseAlgorithm):
     def _draw_minibatch(
         self, d_feedback: Union[List["Golden"], List["ConversationalGolden"]]
     ) -> Union[List["Golden"], List["ConversationalGolden"]]:
-        # Determine effective minibatch size, bounded by the
-        # available feedback set.
         n_feedback = len(d_feedback)
         if n_feedback <= 0:
             return []
@@ -544,23 +619,20 @@ class GEPA(BaseAlgorithm):
         self,
         selected_module_id: ModuleId,
         parent_prompt_configuration: PromptConfiguration,
-        feedback_text: str,
+        feedback_diagnosis: ScorerDiagnosisResult,
     ) -> Optional[Prompt]:
         old_prompt = parent_prompt_configuration.prompts.get(
             selected_module_id, Prompt(text_template="")
         )
 
         new_prompt = await self._rewriter.a_rewrite(
-            module_id=selected_module_id,
             old_prompt=old_prompt,
-            feedback_text=feedback_text,
+            feedback_diagnosis=feedback_diagnosis,
         )
 
         if old_prompt.type != new_prompt.type or self._prompts_equivalent(
             old_prompt, new_prompt
         ):
-            # don't accept if new prompt is the same as parent
-            # or if the type somehow changed
             return None
         return new_prompt
 
@@ -568,23 +640,20 @@ class GEPA(BaseAlgorithm):
         self,
         selected_module_id: ModuleId,
         parent_prompt_configuration: PromptConfiguration,
-        feedback_text: str,
+        feedback_diagnosis: ScorerDiagnosisResult,
     ) -> Optional[Prompt]:
         old_prompt = parent_prompt_configuration.prompts.get(
             selected_module_id, Prompt(text_template="")
         )
 
         new_prompt = self._rewriter.rewrite(
-            module_id=selected_module_id,
             old_prompt=old_prompt,
-            feedback_text=feedback_text,
+            feedback_diagnosis=feedback_diagnosis,
         )
 
         if old_prompt.type != new_prompt.type or self._prompts_equivalent(
             old_prompt, new_prompt
         ):
-            # don't accept if new prompt is the same as parent
-            # or if the type somehow changed
             return None
         return new_prompt
 
@@ -602,31 +671,61 @@ class GEPA(BaseAlgorithm):
         return child_prompt_configuration
 
     def _should_accept_child(
-        self, parent_score: float, child_score: float
+        self, child_scores: List[float], parent_scores: List[float]
     ) -> bool:
-        jitter = 1e-6
-        return child_score >= parent_score + max(GEPA_MIN_DELTA, jitter)
+        if _is_dominated(
+            candidate_scores=child_scores,
+            other_scores=parent_scores,
+            min_delta=GEPA_MIN_DELTA,
+        ):
+            return False
+
+        current_archive_scores = list(self.pareto_score_table.values())
+
+        for existing_scores in current_archive_scores:
+            if _is_dominated(
+                candidate_scores=child_scores,
+                other_scores=existing_scores,
+                min_delta=GEPA_MIN_DELTA,
+            ):
+                return False
+
+        return True
 
     def _accept_child(
         self,
         selected_module_id: ModuleId,
         parent_prompt_configuration: PromptConfiguration,
         child_prompt_configuration: PromptConfiguration,
-        d_pareto: Union[List["Golden"], List["ConversationalGolden"]],
-        parent_score: float,
-        child_score: float,
-    ) -> AcceptedIterationDict:
+        child_pareto_scores: List[float],
+        parent_agg_score: float,
+        child_agg_score: float,
+    ) -> AcceptedIteration:
         self._add_prompt_configuration(child_prompt_configuration)
         self.pareto_score_table[child_prompt_configuration.id] = (
-            self.scorer.score_pareto(child_prompt_configuration, d_pareto)
+            child_pareto_scores
         )
 
-        return AcceptedIterationDict(
+        ids_to_remove = []
+        for config_id, scores in self.pareto_score_table.items():
+            if config_id == child_prompt_configuration.id:
+                continue
+            if _is_dominated(
+                candidate_scores=scores,
+                other_scores=child_pareto_scores,
+                min_delta=GEPA_MIN_DELTA,
+            ):
+                ids_to_remove.append(config_id)
+
+        for rid in ids_to_remove:
+            del self.pareto_score_table[rid]
+
+        return AcceptedIteration(
             parent=parent_prompt_configuration.id,
             child=child_prompt_configuration.id,
             module=selected_module_id,
-            before=parent_score,
-            after=child_score,
+            before=parent_agg_score,
+            after=child_agg_score,
         )
 
     async def _a_accept_child(
@@ -634,24 +733,41 @@ class GEPA(BaseAlgorithm):
         selected_module_id: ModuleId,
         parent_prompt_configuration: PromptConfiguration,
         child_prompt_configuration: PromptConfiguration,
-        d_pareto: Union[List["Golden"], List["ConversationalGolden"]],
-        parent_score: float,
-        child_score: float,
-    ) -> AcceptedIterationDict:
+        child_pareto_scores: List[float],
+        parent_agg_score: float,
+        child_agg_score: float,
+    ) -> AcceptedIteration:
         self._add_prompt_configuration(child_prompt_configuration)
         self.pareto_score_table[child_prompt_configuration.id] = (
-            await self.scorer.a_score_pareto(
-                child_prompt_configuration, d_pareto
-            )
+            child_pareto_scores
         )
 
-        return AcceptedIterationDict(
+        ids_to_remove = []
+        for config_id, scores in self.pareto_score_table.items():
+            if config_id == child_prompt_configuration.id:
+                continue
+            if _is_dominated(
+                candidate_scores=scores,
+                other_scores=child_pareto_scores,
+                min_delta=GEPA_MIN_DELTA,
+            ):
+                ids_to_remove.append(config_id)
+
+        for rid in ids_to_remove:
+            del self.pareto_score_table[rid]
+
+        return AcceptedIteration(
             parent=parent_prompt_configuration.id,
             child=child_prompt_configuration.id,
             module=selected_module_id,
-            before=parent_score,
-            after=child_score,
+            before=parent_agg_score,
+            after=child_agg_score,
         )
+
+    def _update_step(self, iteration: int, label: str) -> None:
+        """Update the sub-step row on the outer progress bar."""
+        if self.step_callback is not None:
+            self.step_callback(label)
 
     def _update_progress(
         self,
@@ -675,7 +791,6 @@ class GEPA(BaseAlgorithm):
     def _update_error(
         self, total_iterations: int, iteration: int, exc: Exception
     ):
-        # Report a user facing error event
         if self.status_callback is not None:
             detail = (
                 f"(iterations={total_iterations}) "
@@ -699,12 +814,12 @@ class GEPA(BaseAlgorithm):
         self._update_progress(total_iterations, iteration, remaining_iterations)
         while remaining_iterations > 0:
             iteration += 1
+            self._current_iteration = iteration
             try:
                 ok = gepa_iteration()
             except Exception as exc:
-                # Report a user facing error event and halt optimization.
                 self._update_error(total_iterations, iteration, exc)
-                break
+                raise
             if not ok:
                 break
             remaining_iterations -= 1
@@ -722,15 +837,126 @@ class GEPA(BaseAlgorithm):
         self._update_progress(total_iterations, iteration, remaining_iterations)
         while remaining_iterations > 0:
             iteration += 1
+            self._current_iteration = iteration
             try:
                 ok = await a_gepa_iteration()
             except Exception as exc:
-                # Report a user facing error event and halt optimization.
                 self._update_error(total_iterations, iteration, exc)
-                break
+                raise
             if not ok:
                 break
             remaining_iterations -= 1
             self._update_progress(
                 total_iterations, iteration, remaining_iterations
             )
+
+    def generate_summary_table(self, report: OptimizationReport) -> List[Table]:
+        """Generates GEPA-specific evolutionary iteration and Pareto tables."""
+        _PURPLE = "rgb(106,0,255)"
+        _GREEN = "rgb(25,227,160)"
+        _RED = "rgb(255,85,85)"
+        _DIM = "rgb(55,65,81)"
+
+        tables = []
+        iteration_log = self._iteration_log
+
+        iter_table = Table(
+            title=f"✨ [{_PURPLE}]{self.name}[/] Evolutionary Mutations",
+            box=box.ROUNDED,
+            border_style=_PURPLE,
+            header_style=f"bold {_PURPLE}",
+            show_lines=True,
+            expand=True,
+        )
+        iter_table.add_column(
+            "#", style="bold white", justify="right", no_wrap=True
+        )
+        iter_table.add_column("Outcome", justify="center", no_wrap=True)
+        iter_table.add_column("Before", justify="right", no_wrap=True)
+        iter_table.add_column("After", justify="right", no_wrap=True)
+        iter_table.add_column("Δ Score", justify="right", no_wrap=True)
+        iter_table.add_column("Note", style=f"{_DIM}", no_wrap=False)
+        iter_table.add_column("Time", justify="right", no_wrap=True)
+
+        for entry in iteration_log:
+            i = str(entry.iteration)
+            outcome = entry.outcome
+            before = entry.before
+            after = entry.after
+            reason = entry.reason
+            elapsed = entry.elapsed
+
+            if outcome == "accepted":
+                outcome_cell = f"[{_GREEN}]✔ accepted[/]"
+            elif outcome == "rejected":
+                outcome_cell = f"[{_RED}]✘ rejected[/]"
+            else:
+                outcome_cell = f"[{_DIM}]↷ skipped[/]"
+
+            before_cell = f"{before:.4f}" if before is not None else "—"
+            after_cell = f"{after:.4f}" if after is not None else "—"
+
+            if before is not None and after is not None:
+                delta = after - before
+                sign = "+" if delta >= 0 else ""
+                color = _GREEN if delta > 0 else (_RED if delta < 0 else _DIM)
+                delta_cell = f"[{color}]{sign}{delta:.4f}[/]"
+            else:
+                delta_cell = "—"
+
+            time_cell = f"[{_DIM}]{elapsed:.2f}s[/]"
+            iter_table.add_row(
+                i,
+                outcome_cell,
+                before_cell,
+                after_cell,
+                delta_cell,
+                reason,
+                time_cell,
+            )
+
+        tables.append(iter_table)
+
+        if report and report.pareto_scores:
+            pareto_table = Table(
+                title=f"[{_PURPLE}]Final Pareto Archive[/]",
+                box=box.HORIZONTALS,
+                border_style=_PURPLE,
+                header_style=f"bold {_PURPLE}",
+                show_lines=True,
+                expand=True,
+            )
+            pareto_table.add_column("Config ID", style="white", no_wrap=True)
+            pareto_table.add_column("Role", justify="center", no_wrap=True)
+            pareto_table.add_column("Scores", no_wrap=False)
+            pareto_table.add_column("Aggregate", justify="right", no_wrap=True)
+
+            best_id = report.best_id
+            for cid, scores in report.pareto_scores.items():
+                is_root = report.parents.get(cid) is None
+                role = f"[{_PURPLE}]root[/]" if is_root else f"[{_DIM}]child[/]"
+                is_best = cid == best_id
+
+                short_id = cid[:8] + "…"
+                if is_best:
+                    short_id = f"[bold {_GREEN}]{short_id} ★[/]"
+
+                if len(scores) > 6:
+                    score_strs = (
+                        [f"{s:.3f}" for s in scores[:3]]
+                        + ["..."]
+                        + [f"{s:.3f}" for s in scores[-3:]]
+                    )
+                else:
+                    score_strs = [f"{s:.3f}" for s in scores]
+                scores_cell = f"[{_DIM}][{', '.join(score_strs)}][/]"
+
+                agg = sum(scores) / len(scores) if scores else 0.0
+                agg_color = _GREEN if is_best else "white"
+                agg_cell = f"[{agg_color}]{agg:.4f}[/]"
+
+                pareto_table.add_row(short_id, role, scores_cell, agg_cell)
+
+            tables.append(pareto_table)
+
+        return tables

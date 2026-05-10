@@ -1,999 +1,713 @@
-# - SIMBA-style multi-strategy 0-shot variant:
-#   - Works on a single set of goldens (no D_pareto split).
-#   - Maintains a bounded population of candidate prompts
-#     (size controlled by `population_size`).
-#   - At each iteration:
-#       - Select a parent via epsilon-greedy on mean minibatch score.
-#       - Sample a minibatch of goldens for scoring.
-#       - Compute feedback once for the parent + minibatch.
-#       - Propose multiple child prompts cooperatively from the same parent
-#         (up to `proposals_per_step` children), each using a SIMBA edit
-#         strategy (e.g., APPEND_DEMO or APPEND_RULE).
-#       - For each child, accept it if its minibatch score improves on the
-#         parent by at least `min_delta`, add it to the pool, and prune
-#         low-scoring candidates if the population exceeds `population_size`.
-#   - Uses `full_eval_every` (if set) to periodically re-score the current
-#     best candidate on the full golden set.
-
 from __future__ import annotations
 
+import asyncio
 import random
 import time
 import uuid
-from typing import (
-    Awaitable,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
-from deepeval.models.base_model import DeepEvalBaseLLM
+from rich import box
+from rich.table import Table
 
-from deepeval.errors import DeepEvalError
 from deepeval.dataset.golden import ConversationalGolden, Golden
-from deepeval.optimizer.utils import Aggregator, mean_of_all
+from deepeval.metrics.utils import copy_metrics
+from deepeval.optimizer.algorithms.base import BaseAlgorithm
+from deepeval.optimizer.scorer.utils import _a_measure_no_indicator, _measure_no_indicator
 from deepeval.optimizer.types import (
-    AcceptedIterationDict,
+    AcceptedIteration,
+    IterationLogEntry,
     ModuleId,
+    SimbaTraceRecord,
+    SimbaVarianceBucket,
     OptimizationReport,
     PromptConfiguration,
-    PromptConfigurationId,
     RunnerStatusCallback,
     RunnerStatusType,
     ScoreTable,
 )
-from deepeval.optimizer.scorer.base import BaseScorer
-from deepeval.optimizer.algorithms.base import BaseAlgorithm
 from deepeval.optimizer.utils import build_prompt_config_snapshots
-from deepeval.prompt.api import PromptType
 from deepeval.prompt.prompt import Prompt
-from deepeval.optimizer.rewriter import Rewriter
 
-from deepeval.optimizer.algorithms.configs import (
-    MIPROV2_MIN_DELTA,
-    MIPROV2_REWRITE_INSTRUCTION_MAX_CHARS,
-    SIMBA_DEMO_INPUT_MAX_CHARS,
-)
-from deepeval.optimizer.algorithms.simba.types import SIMBAStrategy
+from .proposer import SIMBAProposer
 
 
 class SIMBA(BaseAlgorithm):
-    """
-    SIMBA-style cooperative prompt optimization loop with sync/async execution.
-
-    This runner is intentionally low level and does not know about metrics,
-    models, or async configs. It relies on a preconfigured Scorer and
-    Rewriter, which are typically constructed by PromptOptimizer.
-
-    Parameters
-    ----------
-    iterations : int
-        Total number of optimization trials. Default is 5.
-    minibatch_size : int
-        Number of examples drawn per iteration. Default is 8.
-    random_seed : int, optional
-        RNG seed for reproducibility. If None, derived from time.time_ns().
-    exploration_probability : float
-        Epsilon greedy exploration rate. Default is 0.2.
-    full_eval_every : int, optional
-        Fully evaluate best candidate every N trials. Default is 5.
-    population_size : int
-        Maximum number of candidates in the pool. Default is 4.
-    proposals_per_step : int
-        Number of child prompts proposed per iteration. Default is 4.
-    max_demos_per_proposal : int
-        Maximum demos from minibatch for APPEND_DEMO strategy. Default is 3.
-    """
 
     name = "SIMBA"
     SINGLE_MODULE_ID: ModuleId = "__module__"
 
     def __init__(
         self,
-        iterations: int = 5,
-        minibatch_size: int = 8,
-        random_seed: Optional[int] = None,
-        exploration_probability: float = 0.2,
-        full_eval_every: Optional[int] = 5,
-        population_size: int = 4,
-        proposals_per_step: int = 4,
-        max_demos_per_proposal: int = 3,
-        aggregate_instances: Aggregator = mean_of_all,
-        scorer: Optional[BaseScorer] = None,
-    ) -> None:
-        # Validate parameters
-        if iterations < 1:
-            raise ValueError("iterations must be >= 1")
-        if minibatch_size < 1:
-            raise ValueError("minibatch_size must be >= 1")
-        if exploration_probability < 0.0 or exploration_probability > 1.0:
-            raise ValueError(
-                "exploration_probability must be >= 0.0 and <= 1.0"
-            )
-        if full_eval_every is not None and full_eval_every < 1:
-            raise ValueError("full_eval_every must be >= 1")
-        if population_size < 1:
-            raise ValueError("population_size must be >= 1")
-        if proposals_per_step < 1:
-            raise ValueError("proposals_per_step must be >= 1")
-        if max_demos_per_proposal < 0:
-            raise ValueError("max_demos_per_proposal must be >= 0")
-
+        iterations: int = 8,
+        minibatch_size: int = 15,
+        num_candidates: int = 4,
+        num_samples: int = 3,
+        minibatch_full_eval_steps: int = 4,
+        random_state: Optional[Union[int, random.Random]] = None,
+    ):
+        super().__init__()
         self.iterations = iterations
         self.minibatch_size = minibatch_size
-        self.exploration_probability = exploration_probability
-        self.full_eval_every = full_eval_every
-        self.population_size = population_size
-        self.proposals_per_step = proposals_per_step
-        self.max_demos_per_proposal = max_demos_per_proposal
-        self.aggregate_instances = aggregate_instances
-        self.scorer = scorer
-
-        if max_demos_per_proposal > 0:
-            self._strategies = [
-                SIMBAStrategy.APPEND_DEMO,
-                SIMBAStrategy.APPEND_RULE,
-            ]
-        else:
-            self._strategies = [SIMBAStrategy.APPEND_RULE]
-
-        # If no seed provided, use time-based seed
-        if random_seed is None:
-            random_seed = time.time_ns()
-        self.random_seed = random_seed
-        self.random_state = random.Random(random_seed)
-
-        # Runtime state to be reset between runs
-        self.reset_state()
-
-        # Status callback set by PromptOptimizer:
-        #   (kind, step_index, total_steps, detail) -> None
+        self.num_candidates = num_candidates
+        self.num_samples = num_samples
+        self.minibatch_full_eval_steps = minibatch_full_eval_steps
+        self.pareto_score_table: ScoreTable = {}
+        self.parents_by_id: Dict[str, Optional[str]] = {}
+        self.prompt_configurations_by_id: Dict[str, PromptConfiguration] = {}
+        self.step_callback: Optional[Callable[[str], None]] = None
         self.status_callback: Optional[RunnerStatusCallback] = None
+        self.optimization_id: str = ""
+        self._iteration_log: List[IterationLogEntry] = []
 
-        # Optimizer model used by the rewriter for prompt mutation.
-        # Set by PromptOptimizer.
-        self.optimizer_model: Optional["DeepEvalBaseLLM"] = None
+        if isinstance(random_state, int):
+            self.seed = random_state
+            self.random_state = random.Random(random_state)
+        else:
+            self.seed = random.randint(0, 999999)
+            self.random_state = random_state or random.Random(self.seed)
 
-        # Lazy-loaded Rewriter set by PromptOptimizer
-        self._rewriter: Optional[Rewriter] = None
+    def _init_components(self) -> None:
+        self.proposer = SIMBAProposer(optimizer_model=self.optimizer_model)
 
-    ##############
-    # Public API #
-    ##############
+    def _sample_minibatch(self, goldens: List) -> List:
+        if len(goldens) <= self.minibatch_size:
+            return goldens
+        return self.random_state.sample(goldens, self.minibatch_size)
+
+    def _update_step(self, message: str) -> None:
+        if self.step_callback is not None:
+            self.step_callback(message)
+
+    def _update_trial_progress(self, step: int, total: int) -> None:
+        if self.status_callback is not None:
+            self.status_callback(
+                RunnerStatusType.PROGRESS,
+                detail="",
+                step_index=step,
+                total_steps=total,
+            )
+
+    @staticmethod
+    def _golden_expected_text(golden: Union[Golden, ConversationalGolden]) -> Optional[str]:
+        if isinstance(golden, Golden):
+            return golden.expected_output
+        return golden.expected_outcome
+
+    def _extract_inputs(self, golden: Union[Golden, ConversationalGolden]) -> str:
+        if isinstance(golden, Golden):
+            return golden.input
+        return "\n".join(
+            [t.content for t in (golden.turns or []) if t.role == "user"]
+        )
+
+    def _execute_trace(
+        self, config: PromptConfiguration, golden: Union[Golden, ConversationalGolden]
+    ) -> SimbaTraceRecord:
+        actual = self.scorer.generate(config.prompts, golden)
+        test_case = self.scorer._golden_to_test_case(golden, actual)
+
+        metrics = copy_metrics(self.scorer.metrics)
+        score_sum = 0
+        reasons = []
+        for metric in metrics:
+            _measure_no_indicator(metric, test_case)
+            score_sum += metric.score
+            reasons.append(
+                f"- {metric.__class__.__name__} ({metric.score}): {metric.reason}"
+            )
+
+        avg_score = score_sum / len(metrics) if metrics else 0.0
+        return SimbaTraceRecord(
+            output=actual,
+            score=avg_score,
+            feedback="\n".join(reasons),
+        )
+
+    async def _a_execute_trace(
+        self, config: PromptConfiguration, golden: Union[Golden, ConversationalGolden]
+    ) -> SimbaTraceRecord:
+        actual = await self.scorer.a_generate(config.prompts, golden)
+        test_case = self.scorer._golden_to_test_case(golden, actual)
+
+        metrics = copy_metrics(self.scorer.metrics)
+        score_sum = 0
+        reasons = []
+        for metric in metrics:
+            await _a_measure_no_indicator(metric, test_case)
+            score_sum += metric.score
+            reasons.append(
+                f"- {metric.__class__.__name__} ({metric.score}): {metric.reason}"
+            )
+
+        avg_score = score_sum / len(metrics) if metrics else 0.0
+        return SimbaTraceRecord(
+            output=actual,
+            score=avg_score,
+            feedback="\n".join(reasons),
+        )
 
     def execute(
         self,
         prompt: Prompt,
         goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Tuple[Prompt, OptimizationReport]:
-        """
-        Synchronous SIMBA run from a full list of goldens.
+        self.optimization_id = str(uuid.uuid4())
+        self._init_components()
+        self._iteration_log = []
 
-        The full goldens set is used both for mini-batched scoring during
-        optimization and for a final full evaluation of the best candidate.
-        """
-        total_goldens = len(goldens)
-        if total_goldens < 1:
-            raise DeepEvalError(
-                "SIMBA prompt optimization requires at least 1 golden, but "
-                f"received {total_goldens}. Provide at least one golden to run "
-                "the optimizer."
+        root_config = PromptConfiguration.new(prompts={self.SINGLE_MODULE_ID: prompt})
+        self.prompt_configurations_by_id[root_config.id] = root_config
+        self.parents_by_id[root_config.id] = None
+
+        current_best_config = root_config
+        global_best_score = float("-inf")
+        accepted_iterations: List[AcceptedIteration] = []
+
+        for trial_idx in range(self.iterations):
+            trial_start = time.time()
+            self._update_trial_progress(trial_idx + 1, self.iterations)
+
+            minibatch = self._sample_minibatch(goldens)
+
+            self._update_step(
+                f"Iter {trial_idx + 1}/{self.iterations}: Sampling trajectories for introspection..."
             )
+            buckets: List[SimbaVarianceBucket] = []
 
-        self._ensure_scorer()
-        self.reset_state()
+            for golden in minibatch:
+                traces_raw = [
+                    self._execute_trace(current_best_config, golden)
+                    for _ in range(self.num_samples)
+                ]
+                traces = sorted(traces_raw, key=lambda t: t.score, reverse=True)
 
-        # Seed candidate pool with the root prompt configuration.
-        seed_prompts_by_module = {self.SINGLE_MODULE_ID: prompt}
-        root_prompt_configuration = PromptConfiguration.new(
-            prompts=dict(seed_prompts_by_module)
-        )
-        # Add root candidate to the pool, but defer its first minibatch
-        # evaluation until the first iteration so that any long running
-        # model calls happen under the main loop (with progress updates).
-        self._add_prompt_configuration(root_prompt_configuration)
+                max_score = traces[0].score
+                min_score = traces[-1].score
+                avg_score = sum(t.score for t in traces) / len(traces)
 
-        accepted_iterations: List[Dict] = []
-        self.trial_index = 0
-
-        def _one_iteration() -> bool:
-            nonlocal accepted_iterations
-
-            if not goldens:
-                return False
-
-            # Lazily seed with a minibatch score for the root
-            # candidate on the first iteration.
-            if not self._minibatch_score_counts:
-                seed_minibatch = self._draw_minibatch(goldens)
-                root_score = self.scorer.score_minibatch(
-                    root_prompt_configuration, seed_minibatch
-                )
-                self._record_minibatch_score(
-                    root_prompt_configuration.id, root_score
+                buckets.append(
+                    SimbaVarianceBucket(
+                        golden=golden,
+                        traces=traces,
+                        max_to_avg_gap=max_score - avg_score,
+                        max_score=max_score,
+                        min_score=min_score,
+                    )
                 )
 
-            # 1. Choose which candidate prompt to mutate.
-            parent_prompt_configuration = self._select_candidate()
-            selected_module_id: ModuleId = self.SINGLE_MODULE_ID
-
-            minibatch = self._draw_minibatch(goldens)
-
-            # Compute shared feedback for this parent/minibatch that will be
-            # used by all SIMBA proposals in this iteration.
-            feedback_text = self.scorer.get_minibatch_feedback(
-                parent_prompt_configuration, selected_module_id, minibatch
+            buckets.sort(
+                key=lambda b: (b.max_to_avg_gap, -b.max_score), reverse=True
             )
 
-            before_mean = self._mean_minibatch_score(
-                parent_prompt_configuration.id
+            self._update_step(
+                f"Iter {trial_idx + 1}/{self.iterations}: Introspecting hard examples..."
             )
-            jitter = 1e-6
-            min_delta = max(MIPROV2_MIN_DELTA, jitter)
+            candidate_configs = []
 
-            # 2. Generate multiple SIMBA child prompts and evaluate them.
-            num_proposals = int(self.proposals_per_step)
-            for _ in range(num_proposals):
-                strategy = self._sample_strategy()
-                child_prompt = self._generate_child_prompt(
-                    strategy,
-                    selected_module_id,
-                    parent_prompt_configuration,
-                    feedback_text,
-                    minibatch,
-                )
-                if child_prompt is None:
-                    # No child, nothing to evaluate for this proposal.
+            for bucket in buckets[: self.num_candidates]:
+                golden = bucket.golden
+                inputs = self._extract_inputs(golden)
+
+                force_rule_strategy = False
+
+                if bucket.max_to_avg_gap > 0:
+                    good_trace = bucket.traces[0]
+                    bad_trace = bucket.traces[-1]
+
+                    if good_trace.score < 0.8:
+                        expected = self._golden_expected_text(golden)
+                        if expected:
+                            good_trace = SimbaTraceRecord(
+                                output=str(expected),
+                                score=1.0,
+                                feedback="This is the optimal, ground-truth expected output.",
+                            )
+                        else:
+                            force_rule_strategy = True
+                else:
+                    if bucket.max_score >= 0.99:
+                        continue
+
+                    expected = self._golden_expected_text(golden)
+                    if not expected:
+                        continue
+
+                    bad_trace = bucket.traces[0]
+                    good_trace = SimbaTraceRecord(
+                        output=str(expected),
+                        score=1.0,
+                        feedback="This is the optimal, ground-truth expected output.",
+                    )
+
+                if force_rule_strategy:
+                    strategy = "rule"
+                else:
+                    strategy = self.random_state.choice(["rule", "demo"])
+
+                try:
+                    if strategy == "rule":
+                        new_prompt = self.proposer.rewrite_from_introspection(
+                            original_prompt=current_best_config.prompts[
+                                self.SINGLE_MODULE_ID
+                            ],
+                            better_inputs=inputs,
+                            better_outputs=str(good_trace.output),
+                            better_score=good_trace.score,
+                            better_feedback=good_trace.feedback,
+                            worse_inputs=inputs,
+                            worse_outputs=str(bad_trace.output),
+                            worse_score=bad_trace.score,
+                            worse_feedback=bad_trace.feedback,
+                        )
+                    else:
+                        new_prompt = self.proposer.append_a_demo(
+                            original_prompt=current_best_config.prompts[
+                                self.SINGLE_MODULE_ID
+                            ],
+                            inputs=inputs,
+                            outputs=str(good_trace.output),
+                        )
+
+                    config = PromptConfiguration.new(
+                        prompts={self.SINGLE_MODULE_ID: new_prompt},
+                        parent=current_best_config.id,
+                    )
+                    self.prompt_configurations_by_id[config.id] = config
+                    candidate_configs.append(config)
+                except Exception:
                     continue
 
-                child_prompt_configuration = self._make_child(
-                    selected_module_id,
-                    parent_prompt_configuration,
-                    child_prompt,
-                )
-
-                child_score = self.scorer.score_minibatch(
-                    child_prompt_configuration, minibatch
-                )
-
-                # 3. Evaluate & decide whether to accept the child.
-                if child_score >= before_mean + min_delta:
-                    # Accept: add to pool, update surrogate stats, and record iteration.
-                    self._add_prompt_configuration(child_prompt_configuration)
-                    self._record_minibatch_score(
-                        child_prompt_configuration.id, child_score
+            if not candidate_configs:
+                self._iteration_log.append(
+                    IterationLogEntry(
+                        iteration=trial_idx + 1,
+                        outcome="skipped",
+                        before=global_best_score
+                        if global_best_score != float("-inf")
+                        else 0.0,
+                        after=global_best_score
+                        if global_best_score != float("-inf")
+                        else 0.0,
+                        reason="No introspectable variance or ground-truths found.",
+                        elapsed=time.time() - trial_start,
                     )
+                )
+                continue
 
+            self._update_step(
+                f"Iter {trial_idx + 1}/{self.iterations}: Evaluating {len(candidate_configs)} candidates..."
+            )
+            batch_results = []
+
+            for config in candidate_configs:
+                score = self.scorer.score_minibatch(config, minibatch)
+                batch_results.append((config, score))
+
+            batch_results.sort(key=lambda x: x[1], reverse=True)
+            best_batch_config, best_batch_score = batch_results[0]
+
+            if (
+                (trial_idx + 1) % self.minibatch_full_eval_steps == 0
+                or trial_idx == self.iterations - 1
+            ):
+                self._update_step(
+                    "Running full validation on current best configuration..."
+                )
+
+                full_scores = self.scorer.score_pareto(best_batch_config, goldens)
+                avg_full_score = sum(full_scores) / len(full_scores)
+                self.pareto_score_table[best_batch_config.id] = full_scores
+
+                if avg_full_score > global_best_score:
                     accepted_iterations.append(
-                        AcceptedIterationDict(
-                            parent=parent_prompt_configuration.id,
-                            child=child_prompt_configuration.id,
-                            module=selected_module_id,
-                            before=before_mean,
-                            after=child_score,
+                        AcceptedIteration(
+                            parent=current_best_config.id,
+                            child=best_batch_config.id,
+                            module=self.SINGLE_MODULE_ID,
+                            before=global_best_score
+                            if global_best_score != float("-inf")
+                            else 0.0,
+                            after=avg_full_score,
                         )
                     )
-                # else: reject; do not add child to the candidate pool.
+                    self.parents_by_id[best_batch_config.id] = current_best_config.id
+                    global_best_score = avg_full_score
+                    current_best_config = best_batch_config
+                    outcome = "accepted"
+                else:
+                    outcome = "rejected"
 
-            self.trial_index += 1
-            if (
-                self.full_eval_every is not None
-                and self.trial_index % self.full_eval_every == 0
-            ):
-                self._full_evaluate_best(goldens)
+                self._iteration_log.append(
+                    IterationLogEntry(
+                        iteration=trial_idx + 1,
+                        outcome=outcome,
+                        before=global_best_score
+                        if global_best_score != float("-inf")
+                        else 0.0,
+                        after=avg_full_score,
+                        reason="Evaluated on full dataset.",
+                        elapsed=time.time() - trial_start,
+                    )
+                )
 
-            return True
+        true_best_id: Optional[str] = None
+        true_best_score = float("-inf")
+        for cid, scores in self.pareto_score_table.items():
+            avg_score = sum(scores) / len(scores) if scores else 0.0
+            if avg_score > true_best_score:
+                true_best_score = avg_score
+                true_best_id = cid
 
-        self._run_loop_iteration(_one_iteration)
+        final_id = true_best_id if true_best_id else current_best_config.id
+        best_config = self.prompt_configurations_by_id[final_id]
 
-        # Ensure at least one candidate has been fully evaluated.
-        if not self.pareto_score_table:
-            self._full_evaluate_best(goldens)
-
-        best = self._best_by_aggregate()
-        prompt_config_snapshots = build_prompt_config_snapshots(
-            self.prompt_configurations_by_id
-        )
         report = OptimizationReport(
             optimization_id=self.optimization_id,
-            best_id=best.id,
+            best_id=best_config.id,
             accepted_iterations=accepted_iterations,
             pareto_scores=self.pareto_score_table,
             parents=self.parents_by_id,
-            prompt_configurations=prompt_config_snapshots,
+            prompt_configurations=build_prompt_config_snapshots(
+                self.prompt_configurations_by_id
+            ),
         )
-        return best.prompts[self.SINGLE_MODULE_ID], report
+
+        return best_config.prompts[self.SINGLE_MODULE_ID], report
 
     async def a_execute(
         self,
         prompt: Prompt,
         goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Tuple[Prompt, OptimizationReport]:
-        """
-        Asynchronous twin of execute().
-        """
-        total_goldens = len(goldens)
-        if total_goldens < 1:
-            raise DeepEvalError(
-                "SIMBA prompt optimization requires at least 1 golden, but "
-                f"received {total_goldens}. Provide at least one golden to run "
-                "the optimizer."
+        self.optimization_id = str(uuid.uuid4())
+        self._init_components()
+        self._iteration_log = []
+
+        root_config = PromptConfiguration.new(prompts={self.SINGLE_MODULE_ID: prompt})
+        self.prompt_configurations_by_id[root_config.id] = root_config
+        self.parents_by_id[root_config.id] = None
+
+        current_best_config = root_config
+        global_best_score = float("-inf")
+        accepted_iterations: List[AcceptedIteration] = []
+
+        for trial_idx in range(self.iterations):
+            trial_start = time.time()
+            self._update_trial_progress(trial_idx + 1, self.iterations)
+
+            minibatch = self._sample_minibatch(goldens)
+
+            self._update_step(
+                f"Iter {trial_idx + 1}/{self.iterations}: Sampling trajectories for introspection..."
+            )
+            buckets: List[SimbaVarianceBucket] = []
+
+            for golden in minibatch:
+                tasks = [
+                    self._a_execute_trace(current_best_config, golden)
+                    for _ in range(self.num_samples)
+                ]
+                traces = await asyncio.gather(*tasks)
+                traces = sorted(traces, key=lambda t: t.score, reverse=True)
+
+                max_score = traces[0].score
+                min_score = traces[-1].score
+                avg_score = sum(t.score for t in traces) / len(traces)
+
+                buckets.append(
+                    SimbaVarianceBucket(
+                        golden=golden,
+                        traces=list(traces),
+                        max_to_avg_gap=max_score - avg_score,
+                        max_score=max_score,
+                        min_score=min_score,
+                    )
+                )
+
+            buckets.sort(
+                key=lambda b: (b.max_to_avg_gap, -b.max_score), reverse=True
             )
 
-        self._ensure_scorer()
-        self.reset_state()
-
-        seed_prompts_by_module = {self.SINGLE_MODULE_ID: prompt}
-        root_prompt_configuration = PromptConfiguration.new(
-            prompts=dict(seed_prompts_by_module)
-        )
-        self._add_prompt_configuration(root_prompt_configuration)
-
-        accepted_iterations: List[Dict] = []
-        self.trial_index = 0
-
-        async def _one_iteration() -> bool:
-            nonlocal accepted_iterations
-
-            if not goldens:
-                return False
-
-            if not self._minibatch_score_counts:
-                seed_minibatch = self._draw_minibatch(goldens)
-                root_score = await self.scorer.a_score_minibatch(
-                    root_prompt_configuration, seed_minibatch
-                )
-                self._record_minibatch_score(
-                    root_prompt_configuration.id, root_score
-                )
-
-            parent_prompt_configuration = self._select_candidate()
-            selected_module_id: ModuleId = self.SINGLE_MODULE_ID
-
-            minibatch = self._draw_minibatch(goldens)
-
-            feedback_text = await self.scorer.a_get_minibatch_feedback(
-                parent_prompt_configuration, selected_module_id, minibatch
+            self._update_step(
+                f"Iter {trial_idx + 1}/{self.iterations}: Introspecting hard examples..."
             )
+            candidate_configs = []
 
-            before_mean = self._mean_minibatch_score(
-                parent_prompt_configuration.id
-            )
-            jitter = 1e-6
-            min_delta = max(MIPROV2_MIN_DELTA, jitter)
+            async def process_bucket(
+                bucket: SimbaVarianceBucket,
+            ) -> Optional[PromptConfiguration]:
+                golden = bucket.golden
+                inputs = self._extract_inputs(golden)
 
-            num_proposals = int(self.proposals_per_step)
-            for _ in range(num_proposals):
-                strategy = self._sample_strategy()
-                child_prompt = await self._a_generate_child_prompt(
-                    strategy,
-                    selected_module_id,
-                    parent_prompt_configuration,
-                    feedback_text,
-                    minibatch,
-                )
-                if child_prompt is None:
-                    continue
+                force_rule_strategy = False
 
-                child_prompt_configuration = self._make_child(
-                    selected_module_id,
-                    parent_prompt_configuration,
-                    child_prompt,
-                )
+                if bucket.max_to_avg_gap > 0:
+                    good_trace = bucket.traces[0]
+                    bad_trace = bucket.traces[-1]
 
-                child_score = await self.scorer.a_score_minibatch(
-                    child_prompt_configuration, minibatch
-                )
+                    if good_trace.score < 0.8:
+                        expected = self._golden_expected_text(golden)
+                        if expected:
+                            good_trace = SimbaTraceRecord(
+                                output=str(expected),
+                                score=1.0,
+                                feedback="This is the optimal, ground-truth expected output.",
+                            )
+                        else:
+                            force_rule_strategy = True
+                else:
+                    if bucket.max_score >= 0.99:
+                        return None
 
-                if child_score >= before_mean + min_delta:
-                    self._add_prompt_configuration(child_prompt_configuration)
-                    self._record_minibatch_score(
-                        child_prompt_configuration.id, child_score
+                    expected = self._golden_expected_text(golden)
+                    if not expected:
+                        return None
+
+                    bad_trace = bucket.traces[0]
+                    good_trace = SimbaTraceRecord(
+                        output=str(expected),
+                        score=1.0,
+                        feedback="This is the optimal, ground-truth expected output.",
                     )
 
+                if force_rule_strategy:
+                    strategy = "rule"
+                else:
+                    strategy = self.random_state.choice(["rule", "demo"])
+
+                try:
+                    if strategy == "rule":
+                        new_prompt = await self.proposer.a_rewrite_from_introspection(
+                            original_prompt=current_best_config.prompts[
+                                self.SINGLE_MODULE_ID
+                            ],
+                            better_inputs=inputs,
+                            better_outputs=str(good_trace.output),
+                            better_score=good_trace.score,
+                            better_feedback=good_trace.feedback,
+                            worse_inputs=inputs,
+                            worse_outputs=str(bad_trace.output),
+                            worse_score=bad_trace.score,
+                            worse_feedback=bad_trace.feedback,
+                        )
+                    else:
+                        new_prompt = self.proposer.append_a_demo(
+                            original_prompt=current_best_config.prompts[
+                                self.SINGLE_MODULE_ID
+                            ],
+                            inputs=inputs,
+                            outputs=str(good_trace.output),
+                        )
+
+                    return PromptConfiguration.new(
+                        prompts={self.SINGLE_MODULE_ID: new_prompt},
+                        parent=current_best_config.id,
+                    )
+                except Exception:
+                    return None
+
+            pb_tasks = [process_bucket(b) for b in buckets[: self.num_candidates]]
+            results = await asyncio.gather(*pb_tasks)
+
+            for res in results:
+                if res:
+                    self.prompt_configurations_by_id[res.id] = res
+                    candidate_configs.append(res)
+
+            if not candidate_configs:
+                self._iteration_log.append(
+                    IterationLogEntry(
+                        iteration=trial_idx + 1,
+                        outcome="skipped",
+                        before=global_best_score
+                        if global_best_score != float("-inf")
+                        else 0.0,
+                        after=global_best_score
+                        if global_best_score != float("-inf")
+                        else 0.0,
+                        reason="No introspectable variance or ground-truths found.",
+                        elapsed=time.time() - trial_start,
+                    )
+                )
+                continue
+
+            self._update_step(
+                f"Iter {trial_idx + 1}/{self.iterations}: Evaluating {len(candidate_configs)} candidates..."
+            )
+
+            eval_tasks = [
+                self.scorer.a_score_minibatch(config, minibatch)
+                for config in candidate_configs
+            ]
+            scores = await asyncio.gather(*eval_tasks)
+
+            batch_results = list(zip(candidate_configs, scores))
+            batch_results.sort(key=lambda x: x[1], reverse=True)
+            best_batch_config, best_batch_score = batch_results[0]
+
+            if (
+                (trial_idx + 1) % self.minibatch_full_eval_steps == 0
+                or trial_idx == self.iterations - 1
+            ):
+                self._update_step(
+                    "Running full validation on current best configuration..."
+                )
+
+                full_scores = await self.scorer.a_score_pareto(
+                    best_batch_config, goldens
+                )
+                avg_full_score = sum(full_scores) / len(full_scores)
+                self.pareto_score_table[best_batch_config.id] = full_scores
+
+                if avg_full_score > global_best_score:
                     accepted_iterations.append(
-                        AcceptedIterationDict(
-                            parent=parent_prompt_configuration.id,
-                            child=child_prompt_configuration.id,
-                            module=selected_module_id,
-                            before=before_mean,
-                            after=child_score,
+                        AcceptedIteration(
+                            parent=current_best_config.id,
+                            child=best_batch_config.id,
+                            module=self.SINGLE_MODULE_ID,
+                            before=global_best_score
+                            if global_best_score != float("-inf")
+                            else 0.0,
+                            after=avg_full_score,
                         )
                     )
+                    self.parents_by_id[best_batch_config.id] = current_best_config.id
+                    global_best_score = avg_full_score
+                    current_best_config = best_batch_config
+                    outcome = "accepted"
+                else:
+                    outcome = "rejected"
 
-            self.trial_index += 1
-            if (
-                self.full_eval_every is not None
-                and self.trial_index % self.full_eval_every == 0
-            ):
-                await self._a_full_evaluate_best(goldens)
+                self._iteration_log.append(
+                    IterationLogEntry(
+                        iteration=trial_idx + 1,
+                        outcome=outcome,
+                        before=global_best_score
+                        if global_best_score != float("-inf")
+                        else 0.0,
+                        after=avg_full_score,
+                        reason="Evaluated on full dataset.",
+                        elapsed=time.time() - trial_start,
+                    )
+                )
 
-            return True
+        true_best_id: Optional[str] = None
+        true_best_score = float("-inf")
+        for cid, scores in self.pareto_score_table.items():
+            avg_score = sum(scores) / len(scores) if scores else 0.0
+            if avg_score > true_best_score:
+                true_best_score = avg_score
+                true_best_id = cid
 
-        await self._a_run_loop_iteration(_one_iteration)
+        final_id = true_best_id if true_best_id else current_best_config.id
+        best_config = self.prompt_configurations_by_id[final_id]
 
-        if not self.pareto_score_table:
-            await self._a_full_evaluate_best(goldens)
-
-        best = self._best_by_aggregate()
-        prompt_config_snapshots = build_prompt_config_snapshots(
-            self.prompt_configurations_by_id
-        )
         report = OptimizationReport(
             optimization_id=self.optimization_id,
-            best_id=best.id,
+            best_id=best_config.id,
             accepted_iterations=accepted_iterations,
             pareto_scores=self.pareto_score_table,
             parents=self.parents_by_id,
-            prompt_configurations=prompt_config_snapshots,
-        )
-        return best.prompts[self.SINGLE_MODULE_ID], report
-
-    ###################
-    # State & helpers #
-    ###################
-
-    def reset_state(self) -> None:
-        self.optimization_id = str(uuid.uuid4())
-        self.prompt_configurations_by_id: Dict[
-            PromptConfigurationId, PromptConfiguration
-        ] = {}
-        self.parents_by_id: Dict[
-            PromptConfigurationId, Optional[PromptConfigurationId]
-        ] = {}
-        # For SIMBA we reuse the same field name as GEPA for full-eval scores.
-        self.pareto_score_table: ScoreTable = {}
-
-        # Surrogate stats: running mean minibatch scores per candidate.
-        self._minibatch_score_sums: Dict[PromptConfigurationId, float] = {}
-        self._minibatch_score_counts: Dict[PromptConfigurationId, int] = {}
-
-        # Trial counter (used for full_eval_every).
-        self.trial_index: int = 0
-
-    def _ensure_scorer(self) -> None:
-        if self.scorer is None:
-            raise DeepEvalError(
-                "SIMBARunner requires a `scorer`. "
-                "Construct one (for example, Scorer) in "
-                "PromptOptimizer and assign it to `runner.scorer`."
-            )
-
-    def _prompts_equivalent(
-        self,
-        old_prompt: Prompt,
-        new_prompt: Prompt,
-    ) -> bool:
-        """
-        Compare two Prompts for optimization purposes.
-
-        We treat a child as "no change" if:
-        - The types differ, or
-        - For TEXT: trimmed text_template matches.
-        - For LIST: messages_template length, roles, and trimmed content match.
-        """
-
-        if new_prompt.type == PromptType.LIST:
-            old_msgs = old_prompt.messages_template
-            new_msgs = new_prompt.messages_template
-            if len(old_msgs) != len(new_msgs):
-                return False
-
-            for old_msg, new_msg in zip(old_msgs, new_msgs):
-                if old_msg.role != new_msg.role:
-                    return False
-                if (old_msg.content or "").strip() != (
-                    new_msg.content or ""
-                ).strip():
-                    return False
-
-            return True
-
-        old_txt = (old_prompt.text_template or "").strip()
-        new_txt = (new_prompt.text_template or "").strip()
-        return new_txt == old_txt
-
-    def _add_prompt_configuration(
-        self,
-        prompt_configuration: PromptConfiguration,
-    ) -> None:
-        """
-        Add a candidate to the active pool and, if a population limit is set,
-        prune the worst-scoring candidates to enforce it.
-        """
-        self.prompt_configurations_by_id[prompt_configuration.id] = (
-            prompt_configuration
-        )
-        self.parents_by_id[prompt_configuration.id] = (
-            prompt_configuration.parent
+            prompt_configurations=build_prompt_config_snapshots(
+                self.prompt_configurations_by_id
+            ),
         )
 
-        # If we exceed the population size, iteratively prune the worst
-        # (by mean minibatch score), never removing the current best.
-        while len(self.prompt_configurations_by_id) > self.population_size:
-            best_id: Optional[PromptConfigurationId] = None
-            best_score = float("-inf")
-            for cand_id in self.prompt_configurations_by_id.keys():
-                mean_score = self._mean_minibatch_score(cand_id)
-                if mean_score > best_score:
-                    best_score = mean_score
-                    best_id = cand_id
+        return best_config.prompts[self.SINGLE_MODULE_ID], report
 
-            worst_id: Optional[PromptConfigurationId] = None
-            worst_score = float("inf")
-            for cand_id in self.prompt_configurations_by_id.keys():
-                if cand_id == best_id:
-                    continue
-                mean_score = self._mean_minibatch_score(cand_id)
-                if mean_score < worst_score:
-                    worst_score = mean_score
-                    worst_id = cand_id
+    def generate_summary_table(self, report: OptimizationReport) -> List[Table]:
+        _PURPLE = "rgb(106,0,255)"
+        _GREEN = "rgb(25,227,160)"
+        _DIM = "rgb(55,65,81)"
 
-            if worst_id is None or worst_id == best_id:
-                break
+        tables = []
+        iteration_log = self._iteration_log
 
-            # Prune the chosen worst candidate from all bookkeeping tables.
-            self.prompt_configurations_by_id.pop(worst_id, None)
-            self.parents_by_id.pop(worst_id, None)
-            self._minibatch_score_sums.pop(worst_id, None)
-            self._minibatch_score_counts.pop(worst_id, None)
-            self.pareto_score_table.pop(worst_id, None)
-
-    def _record_minibatch_score(
-        self,
-        prompt_configuration_id: PromptConfigurationId,
-        score: float,
-    ) -> None:
-        self._minibatch_score_sums[prompt_configuration_id] = (
-            self._minibatch_score_sums.get(prompt_configuration_id, 0.0)
-            + float(score)
+        iter_table = Table(
+            title=f"🧠 [{_PURPLE}]{self.name}[/] Introspective Ascent",
+            box=box.ROUNDED,
+            border_style=_PURPLE,
+            header_style=f"bold {_PURPLE}",
+            show_lines=True,
+            expand=True,
         )
-        self._minibatch_score_counts[prompt_configuration_id] = (
-            self._minibatch_score_counts.get(prompt_configuration_id, 0) + 1
-        )
+        iter_table.add_column("Iter", style="bold white", justify="right", no_wrap=True)
+        iter_table.add_column("Status", justify="center", no_wrap=True)
+        iter_table.add_column("Score Before", justify="right", no_wrap=True)
+        iter_table.add_column("Score After", justify="right", no_wrap=True)
+        iter_table.add_column("Note", style=f"{_DIM}", no_wrap=False)
+        iter_table.add_column("Time", justify="right", no_wrap=True)
 
-    def _mean_minibatch_score(
-        self,
-        prompt_configuration_id: PromptConfigurationId,
-    ) -> float:
-        total = self._minibatch_score_sums.get(prompt_configuration_id, 0.0)
-        count = self._minibatch_score_counts.get(prompt_configuration_id, 0)
-        if count <= 0:
-            # Use a sentinel that will not dominate selection if a scored
-            # candidate exists. Root is seeded explicitly in the first iteration.
-            return float("-inf")
-        return total / count
+        for entry in iteration_log:
+            i = str(entry.iteration)
+            outcome = entry.outcome
+            before = entry.before
+            after = entry.after
+            reason = entry.reason
+            elapsed = entry.elapsed
 
-    def _best_by_minibatch(self) -> PromptConfiguration:
-        """
-        Return the candidate with the highest mean minibatch score.
-        """
-        if not self.prompt_configurations_by_id:
-            raise DeepEvalError(
-                "SIMBARunner has no prompt configurations; this should not happen."
-            )
-
-        best_id: Optional[PromptConfigurationId] = None
-        best_score = float("-inf")
-
-        for cand_id in self.prompt_configurations_by_id.keys():
-            mean_score = self._mean_minibatch_score(cand_id)
-            if mean_score > best_score:
-                best_score = mean_score
-                best_id = cand_id
-
-        if best_id is None:
-            # Fallback to the first candidate if all means are -inf.
-            best_id = next(iter(self.prompt_configurations_by_id.keys()))
-
-        return self.prompt_configurations_by_id[best_id]
-
-    def _best_by_aggregate(self) -> PromptConfiguration:
-        """
-        Return the best candidate based on full-eval scores.
-
-        If no full evaluation scores are available (should be rare, but possible if
-        full_eval_every is very large and the loop exits early), fall back to
-        best-by-minibatch.
-        """
-        if not self.pareto_score_table:
-            return self._best_by_minibatch()
-
-        totals = {
-            prompt_configuration_id: self.aggregate_instances(vector)
-            for prompt_configuration_id, vector in self.pareto_score_table.items()
-        }
-
-        best_ids: List[PromptConfigurationId] = []
-        best_val = float("-inf")
-
-        for cand_id, aggregate in totals.items():
-            if aggregate > best_val + 1e-12:
-                best_val = aggregate
-                best_ids = [cand_id]
-            elif abs(aggregate - best_val) <= 1e-12:
-                best_ids.append(cand_id)
-
-        chosen_id = self.random_state.choice(best_ids)
-        return self.prompt_configurations_by_id[chosen_id]
-
-    def _select_candidate(self) -> PromptConfiguration:
-        """
-        Epsilon-greedy candidate selection:
-
-        - With probability ``exploration_probability``, pick a random candidate.
-        - Otherwise, pick the candidate with the highest mean minibatch score.
-        """
-        if not self.prompt_configurations_by_id:
-            raise DeepEvalError(
-                "SIMBARunner has no prompt configurations to select from."
-            )
-
-        candidate_ids = list(self.prompt_configurations_by_id.keys())
-        if not candidate_ids:
-            raise DeepEvalError(
-                "SIMBARunner has an empty candidate pool; this should not happen."
-            )
-
-        eps = float(self.exploration_probability)
-        if eps > 0.0 and self.random_state.random() < eps:
-            chosen_id = self.random_state.choice(candidate_ids)
-        else:
-            chosen_id = self._best_by_minibatch().id
-
-        return self.prompt_configurations_by_id[chosen_id]
-
-    def _draw_minibatch(
-        self,
-        goldens: Union[List[Golden], List[ConversationalGolden]],
-    ) -> Union[List[Golden], List[ConversationalGolden]]:
-        """
-        Determine effective minibatch size, bounded by the available goldens,
-        and sample with replacement.
-        """
-        n = len(goldens)
-        if n <= 0:
-            return []
-
-        size = min(self.minibatch_size, n)
-
-        return [goldens[self.random_state.randrange(0, n)] for _ in range(size)]
-
-    async def _a_full_evaluate_best(
-        self,
-        goldens: Union[List[Golden], List[ConversationalGolden]],
-    ) -> None:
-        if not self.prompt_configurations_by_id:
-            return
-
-        best = self._best_by_minibatch()
-        if best.id in self.pareto_score_table:
-            return
-
-        scores = await self.scorer.a_score_pareto(best, goldens)
-        self.pareto_score_table[best.id] = scores
-
-    def _full_evaluate_best(
-        self,
-        goldens: Union[List[Golden], List[ConversationalGolden]],
-    ) -> None:
-        if not self.prompt_configurations_by_id:
-            return
-
-        best = self._best_by_minibatch()
-        if best.id in self.pareto_score_table:
-            return
-
-        scores = self.scorer.score_pareto(best, goldens)
-        self.pareto_score_table[best.id] = scores
-
-    async def _a_generate_child_prompt(
-        self,
-        strategy: SIMBAStrategy,
-        selected_module_id: ModuleId,
-        parent_prompt_configuration: PromptConfiguration,
-        feedback_text: str,
-        minibatch: Union[List[Golden], List[ConversationalGolden]],
-    ) -> Optional[Prompt]:
-        try:
-            old_prompt = parent_prompt_configuration.prompts[selected_module_id]
-        except KeyError as exc:
-            raise DeepEvalError(
-                "SIMBARunner expected a prompt for module_id "
-                f"{selected_module_id!r} but none was found in the "
-                "current prompt configuration."
-            ) from exc
-
-        strategy_feedback = self._build_feedback_for_strategy(
-            strategy, feedback_text, minibatch
-        )
-
-        new_prompt = await self._rewriter.a_rewrite(
-            module_id=selected_module_id,
-            old_prompt=old_prompt,
-            feedback_text=strategy_feedback,
-        )
-
-        if old_prompt.type != new_prompt.type or self._prompts_equivalent(
-            old_prompt, new_prompt
-        ):
-            # Don't accept if new prompt is the same as parent, or if type changed.
-            return None
-        return new_prompt
-
-    def _generate_child_prompt(
-        self,
-        strategy: SIMBAStrategy,
-        selected_module_id: ModuleId,
-        parent_prompt_configuration: PromptConfiguration,
-        feedback_text: str,
-        minibatch: Union[List[Golden], List[ConversationalGolden]],
-    ) -> Optional[Prompt]:
-        try:
-            old_prompt = parent_prompt_configuration.prompts[selected_module_id]
-        except KeyError as exc:
-            # This should never happen in normal operation.
-            raise DeepEvalError(
-                "SIMBARunner expected a prompt for module_id "
-                f"{selected_module_id!r} but none was found in the "
-                "current prompt configuration."
-            ) from exc
-
-        strategy_feedback = self._build_feedback_for_strategy(
-            strategy, feedback_text, minibatch
-        )
-
-        new_prompt = self._rewriter.rewrite(
-            module_id=selected_module_id,
-            old_prompt=old_prompt,
-            feedback_text=strategy_feedback,
-        )
-
-        if old_prompt.type != new_prompt.type or self._prompts_equivalent(
-            old_prompt, new_prompt
-        ):
-            # Don't accept if new prompt is the same as parent, or if type changed.
-            return None
-        return new_prompt
-
-    def _make_child(
-        self,
-        selected_module_id: ModuleId,
-        parent_prompt_configuration: PromptConfiguration,
-        child_prompt: Prompt,
-    ) -> PromptConfiguration:
-        child_prompt_configuration = PromptConfiguration.new(
-            prompts=dict(parent_prompt_configuration.prompts),
-            parent=parent_prompt_configuration.id,
-        )
-        child_prompt_configuration.prompts[selected_module_id] = child_prompt
-        return child_prompt_configuration
-
-    def _truncate_instruction(self, text: str) -> str:
-        """
-        Truncate strategy instructions + feedback to the configured character
-        budget so the rewriter prompt does not explode.
-        """
-        max_chars = MIPROV2_REWRITE_INSTRUCTION_MAX_CHARS
-        if max_chars <= 0:
-            return text
-        if len(text) <= max_chars:
-            return text
-        return text[:max_chars]
-
-    def _build_demo_block(
-        self,
-        minibatch: Union[List[Golden], List[ConversationalGolden]],
-    ) -> str:
-        """
-        Build a small block of input/context/output demos from the current
-        minibatch, inspired by SIMBA's `append_a_demo` strategy.
-
-        For each Golden:
-
-            Golden:
-                Input   <- golden.input
-                Context <- " ".join(golden.context) if present
-                Output  <- golden.expected_output
-
-            ConversationalGolden:
-                Input   <- golden.scenario
-                Context <- " ".join(golden.context) if present
-                Output  <- golden.expected_outcome
-
-        All text segments are independently truncated to `SIMBA_DEMO_INPUT_MAX_CHARS`.
-        """
-        max_demos = self.max_demos_per_proposal
-        if max_demos <= 0:
-            return ""
-
-        lines: List[str] = []
-        demo_limit = min(max_demos, len(minibatch))
-        max_chars = SIMBA_DEMO_INPUT_MAX_CHARS
-
-        for golden in minibatch[:demo_limit]:
-            if isinstance(golden, Golden):
-                input_text = golden.input or ""
-                expected_output_text = golden.expected_output or ""
-                ctx_list = golden.context or []
-            elif isinstance(golden, ConversationalGolden):
-                input_text = golden.scenario or ""
-                expected_output_text = golden.expected_outcome or ""
-                ctx_list = golden.context or []
+            if outcome == "accepted":
+                status_cell = f"[{_GREEN}]▲ Ascended[/]"
+            elif outcome == "rejected":
+                status_cell = f"[{_DIM}]◆ Explored[/]"
             else:
-                # Unknown type; skip defensively
-                continue
+                status_cell = f"[{_DIM}]↷ Skipped[/]"
 
-            context_text = " ".join(ctx_list) if ctx_list else ""
-
-            # Skip completely empty triples
-            if not input_text and not expected_output_text and not context_text:
-                continue
-
-            # Truncate each segment independently
-            if max_chars > 0:
-                if len(input_text) > max_chars:
-                    input_text = input_text[:max_chars]
-                if len(context_text) > max_chars:
-                    context_text = context_text[:max_chars]
-                if len(expected_output_text) > max_chars:
-                    expected_output_text = expected_output_text[:max_chars]
-
-            demo_lines: List[str] = [f"Input: {input_text}"]
-            if context_text:
-                demo_lines.append(f"Context: {context_text}")
-            demo_lines.append(f"Output: {expected_output_text}")
-
-            lines.append("\n".join(demo_lines))
-
-        return "\n\n".join(lines)
-
-    def _build_feedback_for_strategy(
-        self,
-        strategy: SIMBAStrategy,
-        feedback_text: str,
-        minibatch: Union[List[Golden], List[ConversationalGolden]],
-    ) -> str:
-        """
-        Construct a strategy-specific feedback string that is passed into
-        Rewriter.rewrite / a_rewrite.
-
-        - APPEND_RULE: emphasize extracting a concise rule from metric feedback.
-        - APPEND_DEMO: emphasize appending concrete demos built from goldens.
-        """
-        base = (feedback_text or "").strip()
-
-        if strategy is SIMBAStrategy.APPEND_RULE:
-            prefix = (
-                "Strategy: Append a concise natural-language rule to the existing "
-                "prompt that addresses the issues described below. Preserve all "
-                "original instructions and add the new rule(s) in a clearly marked "
-                '"Rules" or "Guidelines" section.\n\n'
+            before_cell = f"{before:.4f}"
+            after_cell = (
+                f"[bold white]{after:.4f}[/]"
+                if outcome == "accepted"
+                else f"[{_DIM}]{after:.4f}[/]"
             )
-            text = prefix
-            if base:
-                text += "Evaluation feedback:\n" + base
-            return self._truncate_instruction(text)
+            time_cell = f"[{_DIM}]{elapsed:.2f}s[/]"
 
-        if strategy is SIMBAStrategy.APPEND_DEMO:
-            demos = self._build_demo_block(minibatch)
-            prefix = (
-                "Strategy: Append one or more concrete input/output demonstrations "
-                "to the prompt. Each demo should illustrate how to respond "
-                "correctly on similar inputs.\n\n"
+            iter_table.add_row(
+                i, status_cell, before_cell, after_cell, reason, time_cell
             )
-            text = prefix
-            if base:
-                text += "Evaluation feedback:\n" + base + "\n\n"
-            if demos:
-                text += (
-                    "Candidate demos built from the current minibatch:\n"
-                    + demos
+
+        tables.append(iter_table)
+
+        if report and report.pareto_scores:
+            pareto_table = Table(
+                title=f"[{_PURPLE}]True Validation Archive (Full Dataset)[/]",
+                box=box.HORIZONTALS,
+                border_style=_PURPLE,
+                header_style=f"bold {_PURPLE}",
+                show_lines=True,
+                expand=True,
+            )
+            pareto_table.add_column(
+                "Config ID", style="white", justify="center", no_wrap=True
+            )
+            pareto_table.add_column(
+                "Scores Array", justify="center", no_wrap=False
+            )
+            pareto_table.add_column(
+                "True Avg Score", justify="right", no_wrap=True
+            )
+
+            best_id = report.best_id
+
+            for cid, scores in report.pareto_scores.items():
+                is_best = cid == best_id
+                short_id = (
+                    f"[bold white]{cid[:8]}… ★[/]" if is_best else f"{cid[:8]}…"
                 )
-            return self._truncate_instruction(text)
 
-        # just pass through feedback.
-        return self._truncate_instruction(base)
+                score_strs = [f"{s:.3f}" for s in scores]
+                if len(score_strs) > 6:
+                    score_strs = score_strs[:3] + ["..."] + score_strs[-3:]
+                scores_cell = f"[{_DIM}][{', '.join(score_strs)}][/]"
 
-    def _sample_strategy(self) -> SIMBAStrategy:
-        """
-        Sample one of the configured SIMBA edit strategies.
+                agg = sum(scores) / len(scores) if scores else 0.0
+                agg_cell = (
+                    f"[bold white]{agg:.4f}[/]"
+                    if is_best
+                    else f"[{_DIM}]{agg:.4f}[/]"
+                )
 
-        Defaults to APPEND_RULE if the strategy list is empty for any reason.
-        """
-        return self.random_state.choice(self._strategies)
+                pareto_table.add_row(short_id, scores_cell, agg_cell)
 
-    def _update_progress(
-        self,
-        total_iterations: int,
-        iteration: int,
-        remaining_iterations: int,
-        elapsed: float,
-    ) -> None:
-        if self.status_callback is not None:
-            detail = (
-                f"(iterations={total_iterations}) "
-                f"• iteration {iteration}/{total_iterations} "
-                f"• {elapsed:.2f}s • remaining={remaining_iterations}"
-            )
-            self.status_callback(
-                RunnerStatusType.PROGRESS,
-                step_index=iteration,
-                total_steps=total_iterations,
-                detail=detail,
-            )
+            tables.append(pareto_table)
 
-    def _update_error(
-        self,
-        total_iterations: int,
-        iteration: int,
-        exc: Exception,
-    ) -> None:
-        # Report a user-facing error event.
-        if self.status_callback is not None:
-            detail = (
-                f"(iterations={total_iterations}) "
-                f"• error {exc.__class__.__name__}: {exc} "
-                f"• halted at iteration {iteration}"
-            )
-            self.status_callback(
-                RunnerStatusType.ERROR,
-                step_index=iteration,
-                total_steps=total_iterations,
-                detail=detail,
-            )
-
-    def _run_loop_iteration(
-        self,
-        simba_iteration: Callable[[], bool],
-    ) -> None:
-        total_iterations = self.iterations
-        remaining_iterations = total_iterations
-        iteration = 0
-        self._update_progress(
-            total_iterations, iteration, remaining_iterations, 0.0
-        )
-        while remaining_iterations > 0:
-            iteration += 1
-            start_time = time.perf_counter()
-            try:
-                ok = simba_iteration()
-            except Exception as exc:
-                self._update_error(total_iterations, iteration, exc)
-                break
-            elapsed = time.perf_counter() - start_time
-            if not ok:
-                break
-            remaining_iterations -= 1
-            self._update_progress(
-                total_iterations, iteration, remaining_iterations, elapsed
-            )
-
-    async def _a_run_loop_iteration(
-        self,
-        a_simba_iteration: Callable[[], Awaitable[bool]],
-    ) -> None:
-        total_iterations = self.iterations
-        remaining_iterations = total_iterations
-        iteration = 0
-        self._update_progress(
-            total_iterations, iteration, remaining_iterations, 0.0
-        )
-        while remaining_iterations > 0:
-            iteration += 1
-            start_time = time.perf_counter()
-            try:
-                ok = await a_simba_iteration()
-            except Exception as exc:
-                self._update_error(total_iterations, iteration, exc)
-                break
-            elapsed = time.perf_counter() - start_time
-            if not ok:
-                break
-            remaining_iterations -= 1
-            self._update_progress(
-                total_iterations, iteration, remaining_iterations, elapsed
-            )
+        return tables
