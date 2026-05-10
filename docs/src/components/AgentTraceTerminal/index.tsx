@@ -1,5 +1,3 @@
-"use client";
-
 import styles from "./AgentTraceTerminal.module.scss";
 
 export type LineKind =

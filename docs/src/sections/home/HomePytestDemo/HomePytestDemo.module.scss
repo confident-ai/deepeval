@@ -23,12 +23,29 @@
     var(--color-fd-foreground) 10%,
     transparent
   );
-  --demo-accent-blue: color-mix(in oklab, #0ea5e9 78%, var(--demo-foreground));
-  --demo-accent-cyan: color-mix(in oklab, #06b6d4 72%, var(--demo-foreground));
-  --demo-accent-teal: color-mix(in oklab, #14b8a6 76%, var(--demo-foreground));
-  --demo-accent-green: color-mix(in oklab, #16a34a 82%, var(--demo-foreground));
-  --demo-accent-red: color-mix(in oklab, #e11d48 82%, var(--demo-foreground));
-  --demo-accent-amber: color-mix(in oklab, #d97706 82%, var(--demo-foreground));
+
+  // Light-mode accent palette. Flat hex (rather than the previous
+  // color-mix(... var(--demo-foreground))) so iOS Safari < 16.2 — which
+  // doesn't support color-mix() — still renders the syntax-highlight
+  // colors instead of falling back to inherited foreground. Modern
+  // browsers lose the small "tinted toward foreground" effect, which
+  // is sub-perceptual against the source hex.
+  --demo-accent-blue: #0284c7;
+  --demo-accent-cyan: #0891b2;
+  --demo-accent-teal: #0d9488;
+  --demo-accent-green: #15803d;
+  --demo-accent-red: #be123c;
+  --demo-accent-amber: #b45309;
+}
+
+:global(.dark) .demo,
+:global(html.dark) .demo {
+  --demo-accent-blue: #7dd3fc;
+  --demo-accent-cyan: #67e8f9;
+  --demo-accent-teal: #5eead4;
+  --demo-accent-green: #86efac;
+  --demo-accent-red: #fda4af;
+  --demo-accent-amber: #fcd34d;
 }
 
 .codePanel {
@@ -105,6 +122,8 @@
 .headerLogo {
   display: inline-flex;
   align-items: center;
+  // Fallback for Safari < 16.2 (no color-mix support).
+  color: var(--demo-muted);
   color: color-mix(in oklab, var(--demo-foreground) 78%, transparent);
 }
 
@@ -143,15 +162,43 @@
   white-space: pre;
 }
 
+// Syntax-highlight tokens. Each rule pairs a flat-hex fallback with the
+// progressive color-mix value so iOS Safari < 16.2 still renders the
+// colors (without the fallback the `color` declaration becomes invalid
+// and the text falls back to inherited foreground — the original bug
+// the user reported on iPhone 12). The :global(.dark) overrides give a
+// readable dark-mode hex; modern browsers' second `color: color-mix(...)`
+// declaration wins because `--demo-foreground` flips with the theme.
 .codeKeyword {
+  color: #6d28d9;
+  color: color-mix(in oklab, #7c3aed 80%, var(--demo-foreground));
+}
+
+:global(.dark) .codeKeyword,
+:global(html.dark) .codeKeyword {
+  color: #a78bfa;
   color: color-mix(in oklab, #7c3aed 80%, var(--demo-foreground));
 }
 
 .codeModule {
+  color: #0f766e;
+  color: color-mix(in oklab, #0f766e 82%, var(--demo-foreground));
+}
+
+:global(.dark) .codeModule,
+:global(html.dark) .codeModule {
+  color: #5eead4;
   color: color-mix(in oklab, #0f766e 82%, var(--demo-foreground));
 }
 
 .codeFunction {
+  color: #1d4ed8;
+  color: color-mix(in oklab, #1d4ed8 80%, var(--demo-foreground));
+}
+
+:global(.dark) .codeFunction,
+:global(html.dark) .codeFunction {
+  color: #93c5fd;
   color: color-mix(in oklab, #1d4ed8 80%, var(--demo-foreground));
 }
 
@@ -165,6 +212,7 @@
 
 .codeOperator,
 .codePunctuation {
+  color: var(--demo-muted);
   color: color-mix(in oklab, var(--demo-foreground) 72%, transparent);
 }
 
@@ -296,6 +344,13 @@
 }
 
 .metric {
+  color: #7c3aed;
+  color: color-mix(in oklab, #8b5cf6 70%, var(--demo-foreground));
+}
+
+:global(.dark) .metric,
+:global(html.dark) .metric {
+  color: #c4b5fd;
   color: color-mix(in oklab, #8b5cf6 70%, var(--demo-foreground));
 }
 

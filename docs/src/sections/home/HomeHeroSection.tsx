@@ -2,6 +2,7 @@ import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { PrimaryButton, SecondaryButton } from "@site/src/components/Buttons";
 import HeroAnnouncement from "@site/src/components/HeroAnnouncement";
+import { PauseOffscreen } from "@site/src/components/PauseOffscreen";
 import { DYNAMIC_LOGOS } from "./CompanyLogos";
 import styles from "./HomeSection.module.scss";
 
@@ -74,7 +75,10 @@ const HomeHeroSection: React.FC = () => {
           </SecondaryButton>
         </div>
       </div>
-      <div className={styles.banner} aria-label="DeepEval by the numbers">
+      <PauseOffscreen
+        className={styles.banner}
+        aria-label="DeepEval by the numbers"
+      >
         <div className={styles.bannerTrack}>
           {[...BANNER_ITEMS, ...BANNER_ITEMS].map((item, i) => (
             <span
@@ -86,7 +90,7 @@ const HomeHeroSection: React.FC = () => {
             </span>
           ))}
         </div>
-      </div>
+      </PauseOffscreen>
       <div className={styles.logoGrid} aria-label="Companies using DeepEval">
         {BRANDS.map((brand) => {
           const DynamicLogo = DYNAMIC_LOGOS[brand.slug];

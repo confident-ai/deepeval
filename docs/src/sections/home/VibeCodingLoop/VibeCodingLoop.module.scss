@@ -146,6 +146,8 @@
 
 /* Background path — always visible, low opacity. */
 .arcBg {
+  // Fallback for Safari < 16.2 (no color-mix support).
+  stroke: var(--color-fd-muted-foreground);
   stroke: color-mix(
     in oklab,
     var(--color-fd-muted-foreground) 55%,
@@ -160,6 +162,8 @@
  * around the loop. pathLength="100" normalizes math regardless of
  * the actual arc length so the dasharray keyframes work for all 4. */
 .arcFg {
+  // Fallback for Safari < 16.2 (no color-mix support).
+  stroke: var(--color-fd-foreground);
   stroke: color-mix(
     in oklab,
     var(--color-fd-foreground) 80%,
@@ -197,6 +201,8 @@
 }
 
 .arrowhead {
+  // Fallback for Safari < 16.2 (no color-mix support).
+  fill: var(--color-fd-foreground);
   fill: color-mix(in oklab, var(--color-fd-foreground) 90%, transparent);
   opacity: 0.7;
   animation: arrowPulse 4s linear infinite;

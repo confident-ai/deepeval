@@ -136,6 +136,18 @@
     transition: opacity 160ms ease;
   }
 
+  // Inline <svg> fallback — older mobile Safari (iPhone 12 on iOS <= 15,
+  // and intermittently 16) can't derive intrinsic dimensions from a
+  // viewBox-only SVG inside a flex parent, collapsing the element to
+  // 0×0 so the logo never appears. Force a definite size; the SVG's
+  // default preserveAspectRatio="xMidYMid meet" keeps the artwork
+  // centered and undistorted. <img> elements (next/image fallback)
+  // are unaffected because they have intrinsic width/height attrs.
+  svg.logo {
+    width: 100%;
+    height: 100%;
+  }
+
   .cell:hover .logo {
     opacity: 1;
   }

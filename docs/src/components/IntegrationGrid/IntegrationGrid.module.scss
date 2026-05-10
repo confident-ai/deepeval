@@ -23,6 +23,16 @@
   min-width: 0;
   margin: 1rem 0 2rem;
 
+  // Skip layout/paint when offscreen — the grid sits well below the
+  // fold and never animates, so the browser can defer all of its work
+  // until the user scrolls near it. `contain-intrinsic-size: auto …`
+  // lets the browser remember the real measured height after the
+  // first paint so the scrollbar doesn't jump on subsequent flips
+  // between rendered/derendered. The 720px is the initial guess used
+  // before the first measurement.
+  content-visibility: auto;
+  contain-intrinsic-size: auto 0 720px;
+
   @media (max-width: 720px) {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;

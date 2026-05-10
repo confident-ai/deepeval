@@ -1,7 +1,6 @@
-"use client";
-
 import type { ReactNode } from "react";
 import { Bot, Crosshair, Gauge, Sparkles } from "lucide-react";
+import { PauseOffscreen } from "@site/src/components/PauseOffscreen";
 import styles from "./VibeCodingLoop.module.scss";
 
 /* --------------------------------------------------------------------
@@ -112,11 +111,12 @@ const ARROWS: Arrow[] = [
 
 const VibeCodingLoop: React.FC = () => {
   return (
-    <div
-      className={styles.wrap}
-      role="img"
-      aria-label="The DeepEval vibe coding loop: coding agent patches code, your AI app runs deepeval test run, scored traces feed back to the coding agent."
-    >
+    <PauseOffscreen>
+      <div
+        className={styles.wrap}
+        role="img"
+        aria-label="The DeepEval vibe coding loop: coding agent patches code, your AI app runs deepeval test run, scored traces feed back to the coding agent."
+      >
       {/* --- SVG layer: arcs, arrowheads, and arc labels --- */}
       <svg
         className={styles.svg}
@@ -205,7 +205,8 @@ const VibeCodingLoop: React.FC = () => {
           ↑ back to coding agent · loop closes
         </li>
       </ol>
-    </div>
+      </div>
+    </PauseOffscreen>
   );
 };
 
