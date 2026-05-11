@@ -2,6 +2,16 @@
 # model_callback.py. AnswerRelevancyMetric needs an OpenAI key; set the
 # OPENAI_API_KEY repository secret. Evaluation may still exit non-zero if
 # model_callback scores below your YAML thresholds — that means the CLI ran.
+#
+# Confident AI dashboard link in PR comments requires CONFIDENT_API_KEY in the
+# job environment — add a repo secret and map it below (secrets are not injected
+# automatically).
+#
+# PR comments: default GITHUB_TOKEN posts as github-actions[bot] (name cannot
+# be changed). To post as a dedicated user (e.g. @deepeval-bot), add a repo
+# secret DEEPEVAL_GITHUB_TOKEN (fine-grained or classic PAT with issues: write)
+# and pass it below. Optional: DEEPEVAL_PR_COMMENT_BYLINE for text inside the
+# comment (default DeepEval Bot).
 
 name: CICD CLI example
 
@@ -31,6 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
       DEEPEVAL_TELEMETRY_OPT_OUT: "1"
     steps:
       - name: Check out repository
@@ -66,8 +77,10 @@ jobs:
       - name: Run DeepEval CICD (example_yaml.yml)
         if: env.OPENAI_API_KEY != ''
         env:
-          # Explicit so `poetry run` subprocess always sees a token for PR comments.
+          # Prefer bot PAT so PR comments show as that GitHub user; else Actions bot.
+          DEEPEVAL_GITHUB_TOKEN: ${{ secrets.DEEPEVAL_GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ github.token }}
+          DEEPEVAL_PR_COMMENT_BYLINE: DeepEval Bot
         run: poetry run deepeval cicd example_yaml.yml
 
       - name: Skip without OpenAI API key
