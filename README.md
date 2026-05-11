@@ -1,5 +1,8 @@
 <p align="center">
-    <img src="https://github.com/confident-ai/deepeval/blob/main/docs/static/img/deepeval.png" alt="DeepEval Logo" width="100%">
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/hero/wordmark-dark.svg">
+        <img alt="DeepEval." src="assets/hero/wordmark-light.svg" width="520">
+    </picture>
 </p>
 
 <p align="center">

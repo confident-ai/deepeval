@@ -37,6 +37,7 @@
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "opentype.js": "^2.0.0",
     "postcss": "^8.5.10",
     "sass": "^1.99.0",
     "tailwindcss": "^4.2.2",
