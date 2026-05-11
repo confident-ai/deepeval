@@ -22,6 +22,10 @@ on:
       - ".github/workflows/cicd_example.yml"
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   cicd-example:
     runs-on: ubuntu-latest
@@ -61,6 +65,9 @@ jobs:
 
       - name: Run DeepEval CICD (example_yaml.yml)
         if: env.OPENAI_API_KEY != ''
+        env:
+          # Explicit so `poetry run` subprocess always sees a token for PR comments.
+          GITHUB_TOKEN: ${{ github.token }}
         run: poetry run deepeval cicd example_yaml.yml
 
       - name: Skip without OpenAI API key

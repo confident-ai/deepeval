@@ -288,7 +288,20 @@ def _post_github_pr_comment(markdown_content: str):
     event_path = os.environ.get("GITHUB_EVENT_PATH")
 
     if not token or not repo or not event_path:
-        print("Not running in a GitHub PR environment or missing GITHUB_TOKEN. Skipping PR comment.")
+        missing = [
+            name
+            for name, val in (
+                ("GITHUB_TOKEN", token),
+                ("GITHUB_REPOSITORY", repo),
+                ("GITHUB_EVENT_PATH", event_path),
+            )
+            if not val
+        ]
+        print(
+            "Skipping PR comment: missing environment variable(s): "
+            + ", ".join(missing)
+            + ". (GitHub Actions sets these automatically; local runs skip posting.)"
+        )
         return
 
     # Extract the PR number from the event payload
