@@ -63,7 +63,7 @@ This same setup also clicks into [component-level evaluation](/docs/evaluation-c
 
 Tracing captures your LLM app's inputs, outputs, and internal spans so `deepeval` can build test cases from the trace automatically.
 
-<Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
+<Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Strands", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
 <Tab value="Manual Instrumentation">
 
 Wrap the top-level function of your LLM app with `@observe`, and call `update_current_trace(...)` to set the trace-level test case fields:
@@ -189,6 +189,29 @@ def invoke(payload, context):
 ```
 
 See the [AgentCore integration](/integrations/frameworks/agentcore) for the full surface (including Strands-specific spans).
+
+</Tab>
+<Tab value="Strands">
+
+Call `instrument_strands()` before creating or invoking your Strands agent. Use this when you run Strands directly (scripts, services, notebooks); if your outer boundary is the AgentCore app entrypoint, use the AgentCore tab instead.
+
+```python title="strands_agent.py" showLineNumbers {4,6}
+from strands import Agent
+from strands.models.openai import OpenAIModel
+
+from deepeval.integrations.strands import instrument_strands
+
+instrument_strands()
+
+agent = Agent(
+    model=OpenAIModel(model_id="gpt-4o-mini"),
+    system_prompt="You are a helpful assistant.",
+)
+
+agent("Help me return my order.")
+```
+
+See the [Strands integration](/integrations/frameworks/strands) for the full surface.
 
 </Tab>
 <Tab value="Anthropic">

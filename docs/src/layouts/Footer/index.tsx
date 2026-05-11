@@ -49,7 +49,7 @@ const COLUMNS: FooterColumn[] = [
   {
     heading: "Ecosystem",
     links: [
-      { label: "Integrations", href: "/integrations/models/openai" },
+      { label: "Integrations", href: "/integrations" },
       { label: "Confident AI", href: "https://www.confident-ai.com" },
       { label: "DeepTeam", href: "https://trydeepteam.com" },
     ],
@@ -108,11 +108,7 @@ const Footer = () => {
              *  the fill — keeps the mark legible in both light and dark
              *  modes without forking the SVG asset. `role="img"` + aria
              *  label preserves the <img>'s accessibility semantics. */}
-            <span
-              className={styles.logo}
-              role="img"
-              aria-label="DeepEval"
-            />
+            <span className={styles.logo} role="img" aria-label="DeepEval" />
             <p className={styles.tagline}>
               Open-source LLM evaluation framework. Apache 2.0 licensed.
             </p>

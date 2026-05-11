@@ -4,12 +4,13 @@
  * Outer layout:
  *
  *   +---------------+---------------+
- *   |               |   Frameworks  |
- *   | Model         +---------------+
- *   | Providers     |   CI / CD     |
+ *   |               |    Model      |
+ *   |               |   Providers   |
+ *   | Frameworks    +---------------+
+ *   |               |    CI / CD    |
  *   +---------------+---------------+
  *
- * Model Providers takes the tall left panel (two rows); Frameworks
+ * Frameworks takes the tall left panel (two rows); Model Providers
  * and CI/CD stack in the right column. On narrow screens the grid
  * collapses to a single column.
  * ------------------------------------------------------------------ */

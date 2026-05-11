@@ -59,7 +59,7 @@ You can mix component-level and end-to-end in the same loop: pass `metrics=[...]
 
 Tracing captures your LLM app's inputs, outputs, and internal spans so `deepeval` can build per-span test cases automatically.
 
-<Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
+<Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Strands", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
 <Tab value="Manual Instrumentation">
 
 Wrap the top-level function of your LLM app with `@observe`, and call `update_current_trace(...)` to set the trace-level test case fields. Wrap inner functions you want to grade individually with `@observe` too:
@@ -188,6 +188,29 @@ def invoke(payload, context):
 ```
 
 See the [AgentCore integration](/integrations/frameworks/agentcore) for the full surface (including Strands-specific spans).
+
+</Tab>
+<Tab value="Strands">
+
+Call `instrument_strands()` before creating or invoking your Strands agent. Use this when you run Strands directly (scripts, services, notebooks); if your outer boundary is the AgentCore app entrypoint, use the AgentCore tab instead.
+
+```python title="strands_agent.py" showLineNumbers {4,6}
+from strands import Agent
+from strands.models.openai import OpenAIModel
+
+from deepeval.integrations.strands import instrument_strands
+
+instrument_strands()
+
+agent = Agent(
+    model=OpenAIModel(model_id="gpt-4o-mini"),
+    system_prompt="You are a helpful assistant.",
+)
+
+agent("Help me return my order.")
+```
+
+See the [Strands integration](/integrations/frameworks/strands) for the full surface.
 
 </Tab>
 <Tab value="Anthropic">
@@ -464,7 +487,7 @@ Passing `metrics=[...]` to `evals_iterator()` attaches them at the **trace** lev
 
 Each integration exposes its own API for attaching a metric to a span. Pick the tab matching your stack — the rest of the loop (`evals_iterator()`, dataset, etc.) stays exactly the same.
 
-<Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
+<Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Strands", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
 <Tab value="Manual Instrumentation">
 
 Pass `metrics=[...]` directly to the `@observe` decorator and build the test case at runtime with `update_current_span(test_case=...)`:
@@ -572,6 +595,22 @@ def run_agentcore(prompt: str):
 ```
 
 Use `next_llm_span(...)` for an inner LLM call. See the [AgentCore integration](/integrations/frameworks/agentcore#applying-metrics-to-components) for Strands-specific spans and more.
+
+</Tab>
+<Tab value="Strands">
+
+Same `next_*_span(...)` pattern — stage the metric for the next Strands-emitted span before invoking the agent:
+
+```python title="strands_agent.py" showLineNumbers {1,5}
+from deepeval.tracing import next_agent_span
+from deepeval.metrics import TaskCompletionMetric
+
+def run_strands(prompt: str):
+    with next_agent_span(metrics=[TaskCompletionMetric()]):
+        return agent(prompt)
+```
+
+Use `next_llm_span(...)` for an inner LLM call instead. See the [Strands integration](/integrations/frameworks/strands#applying-metrics-to-components) for the full surface.
 
 </Tab>
 <Tab value="Anthropic">

@@ -3,15 +3,11 @@
   width: 100%;
   max-width: 100%;
 
-  // Skip layout/paint when offscreen — 250+ contributor avatars below
-  // the fold. The browser can defer rendering them until the user
-  // scrolls near. `contain-intrinsic-size: auto …` lets the browser
-  // remember the real measured height after first paint, so the
-  // scrollbar doesn't jump when the section flips between
-  // rendered/derendered. The 480px is just the initial guess used
-  // before the first measurement.
-  content-visibility: auto;
-  contain-intrinsic-size: auto 0 480px;
+  // Note: `content-visibility: auto` would be a nice perf optimization
+  // here (250+ avatars below the fold), but it implies `contain: paint`,
+  // which clips per-avatar tooltips and the hover lift on the top row.
+  // The avatar <img>s are `loading="lazy"` already, so we accept the
+  // cost in exchange for un-clipped hover affordances.
 
   *,
   *::before,

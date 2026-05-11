@@ -112,7 +112,7 @@ The same setup also unlocks [component-level evaluation](/docs/evaluation-compon
 
 Each example below is a complete `deepeval test run` file with instrumentation:
 
-<Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
+<Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Strands", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
 <Tab value="Manual Instrumentation">
 
 ```python title="test_llm_app.py" showLineNumbers
@@ -279,6 +279,35 @@ def test_agentcore_app(golden: Golden):
 ```
 
 Call `instrument_agentcore()` before creating your AgentCore app. The same call also instruments [Strands](https://strandsagents.com/) agents running inside AgentCore. See the [AgentCore integration](/integrations/frameworks/agentcore) for the full surface.
+
+</Tab>
+<Tab value="Strands">
+
+```python title="test_strands_agent.py" showLineNumbers
+import pytest
+from strands import Agent
+from strands.models.openai import OpenAIModel
+from deepeval import assert_test
+from deepeval.integrations.strands import instrument_strands
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+instrument_strands()
+
+agent = Agent(
+    model=OpenAIModel(model_id="gpt-4o-mini"),
+    system_prompt="You are a helpful assistant.",
+)
+
+dataset = EvaluationDataset(goldens=[Golden(input="Help me return my order.")])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_strands_agent(golden: Golden):
+    agent(golden.input)
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Call `instrument_strands()` before creating or invoking your agent. Use this when you run Strands directly; for AgentCore-hosted Strands, use the AgentCore tab. See the [Strands integration](/integrations/frameworks/strands) for the full surface.
 
 </Tab>
 <Tab value="Anthropic">

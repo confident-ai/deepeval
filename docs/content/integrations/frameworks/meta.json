@@ -11,7 +11,6 @@
     "llamaindex",
     "crewai",
     "pydanticai",
-    "openai-agents",
-    "huggingface"
+    "openai-agents"
   ]
 }

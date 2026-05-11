@@ -36,18 +36,16 @@
 }
 
 .logo {
-  // DeepEval.svg ships with a hardcoded `fill="white"` (inherited from
-  // the old purple Docusaurus footer). Rather than invert it with a
-  // filter — which freezes the color in one mode — we load it as a
-  // CSS mask and paint it with `--color-fd-foreground`, so the glyph
-  // naturally flips between dark (light mode) and light (dark mode).
+  // Loaded as a CSS mask (not an <img>) so we can paint the glyph
+  // with `--color-fd-foreground` and have it flip with the theme
+  // instead of being locked to whatever `fill` the SVG ships with.
   display: block;
   height: 20px;
-  width: 100px; // Locked to the SVG's 117:25 aspect ratio.
+  width: 85px; // Locked to the SVG's 298:70 aspect ratio (20 * 4.257).
   margin: 0;
   background-color: var(--color-fd-foreground);
-  mask: url("/icons/DeepEval.svg") no-repeat center / contain;
-  -webkit-mask: url("/icons/DeepEval.svg") no-repeat center / contain;
+  mask: url("/icons/DeepEval.svg") no-repeat left / contain;
+  -webkit-mask: url("/icons/DeepEval.svg") no-repeat left / contain;
 }
 
 .tagline {
