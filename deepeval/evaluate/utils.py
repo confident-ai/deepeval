@@ -114,6 +114,7 @@ def create_test_result(
     api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
 ) -> TestResult:
     name = api_test_case.name
+    index = api_test_case.order
 
     if isinstance(api_test_case, ConversationalApiTestCase):
         return TestResult(
@@ -121,6 +122,7 @@ def create_test_result(
             success=api_test_case.success,
             metrics_data=api_test_case.metrics_data,
             conversational=True,
+            index=index,
             metadata=api_test_case.metadata,
             turns=api_test_case.turns,
         )
@@ -134,6 +136,7 @@ def create_test_result(
                 input=api_test_case.input,
                 actual_output=api_test_case.actual_output,
                 conversational=False,
+                index=index,
                 multimodal=True,
                 metadata=api_test_case.metadata,
             )
@@ -148,6 +151,7 @@ def create_test_result(
                 context=api_test_case.context,
                 retrieval_context=api_test_case.retrieval_context,
                 conversational=False,
+                index=index,
                 multimodal=False,
                 metadata=api_test_case.metadata,
             )
@@ -520,21 +524,10 @@ def count_metrics_in_span_subtree(span: BaseSpan) -> int:
 
 def extract_trace_test_results(trace_api: TraceApi) -> List[TestResult]:
     test_results: List[TestResult] = []
-    # extract trace result
-    if trace_api.metrics_data:
-        test_results.append(
-            TestResult(
-                name=trace_api.name,
-                success=True,
-                metrics_data=trace_api.metrics_data,
-                conversational=False,
-                input=trace_api.input,
-                actual_output=trace_api.output,
-                expected_output=trace_api.expected_output,
-                context=trace_api.context,
-                retrieval_context=trace_api.retrieval_context,
-            )
-        )
+    # Do not emit trace-level ``trace_api.metrics_data`` as its own ``TestResult``.
+    # The golden ``api_test_case`` path already records those rows via
+    # ``update_metric_data``; emitting them again here was the root cause of an
+    # extra dashboard panel (wrong ``name`` / ``success`` vs the main case).
     # extract base span results
     for span in trace_api.base_spans:
         test_results.extend(extract_span_test_results(span))

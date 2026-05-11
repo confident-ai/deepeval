@@ -1,3 +1,4 @@
+import os
 from typing import (
     List,
     Optional,
@@ -17,11 +18,9 @@ from deepeval.evaluate.configs import (
 )
 from deepeval.evaluate.utils import (
     validate_assert_test_inputs,
-    validate_evaluate_inputs,
-    print_test_result,
-    aggregate_metric_pass_rates,
-    write_test_result_to_file,
+    validate_evaluate_inputs
 )
+from deepeval.evaluate.console_report import EvaluationConsoleReport
 from deepeval.dataset import Golden
 from deepeval.prompt import Prompt
 from deepeval.test_case.utils import check_valid_test_cases_type
@@ -224,16 +223,24 @@ def evaluate(
         end_time = time.perf_counter()
         run_duration = end_time - start_time
         if display_config.print_results:
-            for test_result in test_results:
-                print_test_result(test_result, display_config.display_option)
-            aggregate_metric_pass_rates(test_results)
-        if display_config.file_output_dir is not None:
-            for test_result in test_results:
-                write_test_result_to_file(
-                    test_result,
-                    display_config.display_option,
-                    display_config.file_output_dir,
-                )
+            console_report = EvaluationConsoleReport(test_results)
+            console_report.render_to_terminal(truncate_passing_cases=display_config.truncate_passing_cases)
+
+            # Handle full, un-truncated file exports
+            if display_config.file_output_dir is not None:
+                if display_config.file_type == "html":  
+                    console_report.export_to_html(
+                        output_dir=display_config.file_output_dir, 
+                        evaluation_name=identifier, 
+                        theme_mode="dark"
+                    )
+                elif display_config.file_type == "md":
+                    console_report.export_to_markdown(
+                        output_dir=display_config.file_output_dir, 
+                        evaluation_name=identifier
+                    )
+                else:
+                    raise ValueError(f"Invalid file type: {display_config.file_type}")
 
         test_run = global_test_run_manager.get_test_run()
         if hyperparameters is not None or test_run.hyperparameters is None:

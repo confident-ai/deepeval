@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 from dataclasses import dataclass
 
 from deepeval.test_run.test_run import TestRunResultDisplay
@@ -25,8 +25,10 @@ class DisplayConfig:
     display_option: Optional[TestRunResultDisplay] = TestRunResultDisplay.ALL
     results_folder: Optional[str] = None
     results_subfolder: Optional[str] = None
+    truncate_passing_cases: bool = True
     # Deprecated: writes one .log per TestResult. Prefer `results_folder`, which
     # saves the full TestRun as a structured JSON readable by AI tools.
+    file_type: Literal["html", "md"] = None
     file_output_dir: Optional[str] = None
 
 
