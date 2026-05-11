@@ -1,9 +1,9 @@
 from pathlib import Path
-from deepeval.evaluate.console_result import EvaluationConsoleResult
+from deepeval.evaluate.console_report import EvaluationConsoleReport
 from deepeval.evaluate.types import TestResult as EvalTestResult
 from deepeval.test_run.api import MetricData
 
-def test_evaluation_console_result_exports(tmp_path: Path):
+def test_evaluation_console_report_exports(tmp_path: Path):
     metrics_data = [
         MetricData(
             name="Answer Relevancy",
@@ -29,29 +29,29 @@ def test_evaluation_console_result_exports(tmp_path: Path):
         turns=None,
     )
     
-    console_result = EvaluationConsoleResult([tr])
+    console_report = EvaluationConsoleReport([tr])
     
     # Test HTML export
-    console_result.export_to_html(output_dir=str(tmp_path), evaluation_name="test_eval")
+    console_report.export_to_html(output_dir=str(tmp_path), evaluation_name="test_eval")
     html_files = list(tmp_path.glob("test_eval_*.html"))
     assert len(html_files) == 1
     html_content = html_files[0].read_text()
-    assert "DeepEval Evaluation Dashboard" in html_content
+    assert "DeepEval Evaluation Results" in html_content
     assert "demo" in html_content
     assert "Answer Relevancy" in html_content
     assert "Aggregate Metrics" in html_content
     
     # Test Markdown export
-    console_result.export_to_markdown(output_dir=str(tmp_path), evaluation_name="test_eval")
+    console_report.export_to_markdown(output_dir=str(tmp_path), evaluation_name="test_eval")
     md_files = list(tmp_path.glob("test_eval_*.md"))
     assert len(md_files) == 1
     md_content = md_files[0].read_text()
-    assert "DeepEval Evaluation Dashboard" in md_content
+    assert "DeepEval Evaluation Results" in md_content
     assert "demo" in md_content
     assert "Answer Relevancy" in md_content
     assert "Aggregate Metrics" in md_content
 
-def test_evaluation_console_result_aggregate_metrics():
+def test_evaluation_console_report_aggregate_metrics():
     metrics_data_1 = [
         MetricData(
             name="Answer Relevancy",
@@ -102,10 +102,10 @@ def test_evaluation_console_result_aggregate_metrics():
         turns=None,
     )
     
-    console_result = EvaluationConsoleResult([tr1, tr2])
+    console_report = EvaluationConsoleReport([tr1, tr2])
     
     # Check if the aggregate table is built correctly
-    group = console_result._build_display_elements(truncate=False)
+    group = console_report._build_display_elements(truncate=False)
     
     # The last element should be the aggregate metrics panel
     aggregate_panel = group.renderables[-1]

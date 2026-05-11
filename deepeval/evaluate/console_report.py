@@ -22,7 +22,7 @@ DEEPEVAL_PURPLE = "rgb(106,0,255)"
 DEEPEVAL_GREEN = "rgb(25,227,160)"
 FAIL_RED = "red"
 
-class EvaluationConsoleResult:
+class EvaluationConsoleReport:
     def __init__(self, test_results: List[TestResult]): 
         self.test_results = test_results
         self.console = Console()

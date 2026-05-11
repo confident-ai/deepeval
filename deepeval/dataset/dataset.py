@@ -32,7 +32,7 @@ from deepeval.dataset.api import (
     APIQueueDataset,
 )
 from deepeval.dataset.golden import Golden, ConversationalGolden
-from deepeval.evaluate.console_result import EvaluationConsoleResult
+from deepeval.evaluate.console_report import EvaluationConsoleReport
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.telemetry import capture_evaluation_run, capture_pull_dataset
 from deepeval.test_case import (
@@ -1540,19 +1540,19 @@ class EvaluationDataset:
             end_time = time.perf_counter()
             run_duration = end_time - start_time
             if display_config.print_results:
-                console_result = EvaluationConsoleResult(test_results)
-                console_result.render_to_terminal(truncate_passing_cases=display_config.truncate_passing_cases)
+                console_report = EvaluationConsoleReport(test_results)
+                console_report.render_to_terminal(truncate_passing_cases=display_config.truncate_passing_cases)
 
                 # Handle full, un-truncated file exports
                 if display_config.file_output_dir is not None:
                     if display_config.file_type == "html":  
-                        console_result.export_to_html(
+                        console_report.export_to_html(
                             output_dir=display_config.file_output_dir, 
                             evaluation_name=identifier, 
                             theme_mode="dark"
                         )
                     elif display_config.file_type == "md":
-                        console_result.export_to_markdown(
+                        console_report.export_to_markdown(
                             output_dir=display_config.file_output_dir, 
                             evaluation_name=identifier
                         )
