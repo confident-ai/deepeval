@@ -520,21 +520,10 @@ def count_metrics_in_span_subtree(span: BaseSpan) -> int:
 
 def extract_trace_test_results(trace_api: TraceApi) -> List[TestResult]:
     test_results: List[TestResult] = []
-    # extract trace result
-    if trace_api.metrics_data:
-        test_results.append(
-            TestResult(
-                name=trace_api.name,
-                success=True,
-                metrics_data=trace_api.metrics_data,
-                conversational=False,
-                input=trace_api.input,
-                actual_output=trace_api.output,
-                expected_output=trace_api.expected_output,
-                context=trace_api.context,
-                retrieval_context=trace_api.retrieval_context,
-            )
-        )
+    # Do not emit trace-level ``trace_api.metrics_data`` as its own ``TestResult``.
+    # The golden ``api_test_case`` path already records those rows via
+    # ``update_metric_data``; emitting them again here was the root cause of an
+    # extra dashboard panel (wrong ``name`` / ``success`` vs the main case).
     # extract base span results
     for span in trace_api.base_spans:
         test_results.extend(extract_span_test_results(span))

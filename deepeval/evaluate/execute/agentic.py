@@ -281,12 +281,17 @@ async def _a_execute_agentic_test_case(
                     index=(count if not _is_assert_test else None),
                 )
 
-            # attach MetricData for any trace metrics we marked above
+            # Attach trace-level ``MetricData`` only when the try-path did not
+            # already roll results into ``api_test_case`` (``_a_execute_trace_test_case``
+            # does). Re-appending here duplicated every iterator metric row for
+            # async evals.
             if trace_metrics:
-                for m in trace_metrics:
-                    if getattr(m, "skipped", False):
-                        continue
-                    api_test_case.update_metric_data(create_metric_data(m))
+                existing = api_test_case.metrics_data
+                if existing is None or len(existing) == 0:
+                    for metric in trace_metrics:
+                        if metric.skipped:
+                            continue
+                        api_test_case.update_metric_data(create_metric_data(metric))
 
             # If nothing set success yet, mark the case failed
             if api_test_case.success is None:
