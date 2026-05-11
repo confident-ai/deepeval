@@ -42,7 +42,7 @@ from deepeval import evaluate
 evaluate(display_config=DisplayConfig(), ...)
 ```
 
-There are **SIX** optional parameters when creating a `DisplayConfig`:
+There are **NINE** optional parameters when creating a `DisplayConfig`:
 
 - [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](/docs/metrics-introduction#debugging-a-metric). Defaulted to `None`.
 - [Optional] `display`: a str of either `"all"`, `"failing"` or `"passing"`, which allows you to selectively decide which type of test cases to display as the final result. Defaulted to `"all"`.
@@ -50,7 +50,9 @@ There are **SIX** optional parameters when creating a `DisplayConfig`:
 - [Optional] `print_results`: a boolean which when set to `True`, prints the result of each evaluation. Defaulted to `True`.
 - [Optional] `results_folder`: a string path to a directory where each call to `evaluate()` (or `evals_iterator()`) will be persisted as a `test_run_<YYYYMMDD_HHMMSS>.json` file. Defaulted to `None` (no local save). See [Saving test runs locally](#saving-test-runs-locally) below.
 - [Optional] `results_subfolder`: an optional string that, when set together with `results_folder`, nests the `test_run_*.json` files under `results_folder/results_subfolder/`. Defaulted to `None` (flat layout).
-- [Optional, deprecated] `file_output_dir`: a string which when set, writes a legacy `.log` per test result to the specified directory. Prefer `results_folder`, which saves the full `TestRun` as a single structured JSON file that AI tools can read directly.
+- [Optional] `truncate_passing_cases`: a boolean which when set to `True`, truncates the terminal output of passing test cases. Defaulted to `True`.
+- [Optional] `file_type`: a string of either `"html"` or `"md"`, which allows you to export the evaluation dashboard to a file. Defaulted to `None`.
+- [Optional] `file_output_dir`: a string which when set, writes the evaluation dashboard to the specified directory using the format specified in `file_type`. Defaulted to `None`.
 
 #### Saving test runs locally
 
