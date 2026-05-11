@@ -114,6 +114,7 @@ def create_test_result(
     api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
 ) -> TestResult:
     name = api_test_case.name
+    index = api_test_case.order
 
     if isinstance(api_test_case, ConversationalApiTestCase):
         return TestResult(
@@ -121,6 +122,7 @@ def create_test_result(
             success=api_test_case.success,
             metrics_data=api_test_case.metrics_data,
             conversational=True,
+            index=index,
             metadata=api_test_case.metadata,
             turns=api_test_case.turns,
         )
@@ -134,6 +136,7 @@ def create_test_result(
                 input=api_test_case.input,
                 actual_output=api_test_case.actual_output,
                 conversational=False,
+                index=index,
                 multimodal=True,
                 metadata=api_test_case.metadata,
             )
@@ -148,6 +151,7 @@ def create_test_result(
                 context=api_test_case.context,
                 retrieval_context=api_test_case.retrieval_context,
                 conversational=False,
+                index=index,
                 multimodal=False,
                 metadata=api_test_case.metadata,
             )

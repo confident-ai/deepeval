@@ -22,9 +22,17 @@ DEEPEVAL_PURPLE = "rgb(106,0,255)"
 DEEPEVAL_GREEN = "rgb(25,227,160)"
 FAIL_RED = "red"
 
+import re
+
+def _natural_sort_key(s: str):
+    return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', s)]
+
 class EvaluationConsoleReport:
     def __init__(self, test_results: List[TestResult]): 
-        self.test_results = test_results
+        self.test_results = sorted(
+            test_results,
+            key=lambda x: (x.index if x.index is not None else float("inf"), _natural_sort_key(x.name))
+        )
         self.console = Console()
 
     def _build_display_elements(self, truncate: bool = True) -> Group:
