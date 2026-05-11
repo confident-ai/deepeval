@@ -1,0 +1,69 @@
+# Runs `deepeval cicd example_yaml.yml` against repo-root example_yaml.yml and
+# model_callback.py. AnswerRelevancyMetric needs an OpenAI key; set the
+# OPENAI_API_KEY repository secret. Evaluation may still exit non-zero if
+# model_callback scores below your YAML thresholds — that means the CLI ran.
+
+name: CICD CLI example
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "example_yaml.yml"
+      - "model_callback.py"
+      - "deepeval/cli/cicd/**"
+      - ".github/workflows/cicd_example.yml"
+  pull_request:
+    paths:
+      - "example_yaml.yml"
+      - "model_callback.py"
+      - "deepeval/cli/cicd/**"
+      - ".github/workflows/cicd_example.yml"
+  workflow_dispatch:
+
+jobs:
+  cicd-example:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      DEEPEVAL_TELEMETRY_OPT_OUT: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-cicd-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root --only main
+
+      - name: Install project
+        run: poetry install --no-interaction --only main
+
+      - name: Run DeepEval CICD (example_yaml.yml)
+        if: env.OPENAI_API_KEY != ''
+        run: poetry run deepeval cicd example_yaml.yml
+
+      - name: Skip without OpenAI API key
+        if: env.OPENAI_API_KEY == ''
+        run: |
+          echo "::notice title=CICD example skipped::Set the OPENAI_API_KEY repository secret to run this job (required for AnswerRelevancyMetric)."
