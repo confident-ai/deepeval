@@ -50,6 +50,7 @@ python-dotenv = "^1.1.1"
 pydantic = "^2.11.7"
 pydantic-settings = "^2.10.1"
 jinja2 = "*"
+pyyaml = "^6.0.1"
 
 textual = { version = ">=0.80,<2.0", optional = true }
 pyperclip = { version = "^1.8", optional = true }
