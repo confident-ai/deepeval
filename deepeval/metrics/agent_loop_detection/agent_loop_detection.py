@@ -13,11 +13,52 @@ from deepeval.metrics.indicator import metric_progress_indicator
 # Common stop words and agent boilerplate phrases that inflate Jaccard similarity
 # without signalling true reasoning stagnation.
 _STOP_WORDS = {
-    "the", "a", "an", "is", "are", "was", "were", "i", "will", "now",
-    "based", "on", "information", "provided", "to", "of", "in", "and",
-    "that", "this", "with", "for", "it", "my", "next", "step", "going",
-    "going", "so", "do", "be", "have", "has", "not", "but", "as", "or",
-    "from", "at", "by", "about", "above", "below", "up", "its", "let",
+    "the",
+    "a",
+    "an",
+    "is",
+    "are",
+    "was",
+    "were",
+    "i",
+    "will",
+    "now",
+    "based",
+    "on",
+    "information",
+    "provided",
+    "to",
+    "of",
+    "in",
+    "and",
+    "that",
+    "this",
+    "with",
+    "for",
+    "it",
+    "my",
+    "next",
+    "step",
+    "going",
+    "going",
+    "so",
+    "do",
+    "be",
+    "have",
+    "has",
+    "not",
+    "but",
+    "as",
+    "or",
+    "from",
+    "at",
+    "by",
+    "about",
+    "above",
+    "below",
+    "up",
+    "its",
+    "let",
 }
 
 
@@ -276,7 +317,9 @@ class AgentLoopDetectionMetric(BaseMetric):
         cycle_path: List[str] = []
 
         def _label(span: Dict) -> str:
-            return f"{span.get('type', 'unknown')}:{span.get('name', 'unnamed')}"
+            return (
+                f"{span.get('type', 'unknown')}:{span.get('name', 'unnamed')}"
+            )
 
         def dfs(span: Dict, ancestor_labels: List[str]) -> bool:
             """Return True as soon as a cycle is found, populating
