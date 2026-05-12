@@ -344,7 +344,7 @@ class EvaluationConsoleReport:
 
         with open(filepath, "w", encoding="utf-8") as f:
             f.write("\n".join(md))
-            
+
         print(f"✅ Markdown Dashboard saved to: {filepath}")
 
     def export_to_cicd_markdown(self, output_dir: str, evaluation_name: str = "evaluation"):
