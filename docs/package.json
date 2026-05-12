@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "next build",
-    "dev": "next dev",
+    "build": "NODE_OPTIONS=--max-old-space-size=16384 next build",
+    "dev": "NODE_OPTIONS=--max-old-space-size=16384 next dev",
     "start": "next start",
     "types:check": "fumadocs-mdx && next typegen && tsc --noEmit",
     "contributors": "node scripts/generate-contributors.mjs",

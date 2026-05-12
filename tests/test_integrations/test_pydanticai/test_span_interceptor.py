@@ -427,7 +427,7 @@ class TestSpanInterceptorImplicitTraceContext:
     trace level. The interceptor pushes an implicit ``Trace`` placeholder
     onto ``current_trace_context`` for the OTel root span's lifetime so
     ``update_current_trace(...)`` from inside tools / nested helpers can
-    mutate something. The placeholder is tagged ``is_otel_implicit=True``
+    mutate something. The placeholder is tagged ``_is_otel_implicit=True``
     so ``ContextAwareSpanProcessor`` keeps routing to OTLP.
     """
 
@@ -442,7 +442,7 @@ class TestSpanInterceptorImplicitTraceContext:
             during = current_trace_context.get()
 
             assert during is not None
-            assert getattr(during, "is_otel_implicit", False) is True
+            assert during._is_otel_implicit is True
 
             interceptor.on_end(root)
             assert current_trace_context.get() is None
@@ -457,14 +457,14 @@ class TestSpanInterceptorImplicitTraceContext:
         root = _make_mock_span()
 
         with trace() as user_trace:
-            assert getattr(user_trace, "is_otel_implicit", False) is False
+            assert user_trace._is_otel_implicit is False
 
             interceptor.on_start(root, None)
             during = current_trace_context.get()
 
             # Same object as the user's trace — no implicit push happened.
             assert during is user_trace
-            assert getattr(during, "is_otel_implicit", False) is False
+            assert during._is_otel_implicit is False
 
             interceptor.on_end(root)
 
@@ -614,8 +614,8 @@ class TestContextAwareSpanProcessorRouting:
             root_spans=[],
             status=TraceSpanStatus.IN_PROGRESS,
             start_time=0.0,
-            is_otel_implicit=True,
         )
+        implicit_trace._is_otel_implicit = True
         token = current_trace_context.set(implicit_trace)
         try:
             with patch(
@@ -643,8 +643,8 @@ class TestContextAwareSpanProcessorRouting:
             root_spans=[],
             status=TraceSpanStatus.IN_PROGRESS,
             start_time=0.0,
-            is_otel_implicit=True,
         )
+        implicit_trace._is_otel_implicit = True
         token = current_trace_context.set(implicit_trace)
         try:
             with patch(
@@ -714,8 +714,8 @@ class TestContextAwareSpanProcessorRouting:
             root_spans=[],
             status=TraceSpanStatus.IN_PROGRESS,
             start_time=0.0,
-            is_otel_implicit=True,
         )
+        implicit_trace._is_otel_implicit = True
         token = current_trace_context.set(implicit_trace)
         prev_test_name = trace_testing_manager.test_name
         try:

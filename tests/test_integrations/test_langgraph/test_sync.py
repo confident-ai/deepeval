@@ -43,6 +43,9 @@ from tests.test_integrations.test_langgraph.apps.langgraph_retriever_app import 
     app as retriever_app,
     app_with_metric_collection as retriever_app_with_metric_collection,
 )
+from tests.test_integrations.test_langgraph.apps.langgraph_next_span_app import (
+    invoke_with_next_llm_span,
+)
 
 # =============================================================================
 # CONFIGURATION
@@ -646,6 +649,45 @@ class TestMetricCollectionApp:
                     )
                 ]
             },
+            config={"callbacks": [callback]},
+        )
+
+        assert len(result["messages"]) > 0
+
+
+# =============================================================================
+# NEXT-SPAN STAGING TESTS (next_llm_span)
+# =============================================================================
+
+
+class TestNextSpanApp:
+    """Schema-asserted coverage for ``with next_llm_span(...)`` staging
+    against a real ``ChatOpenAI`` driving a ``StateGraph`` agent loop.
+    The first chat-model span (agent node, pre-tool) carries the
+    staged values; the second chat-model span (agent node, post-tool)
+    must NOT — that's the one-shot semantic the docs caution-block
+    warns about for ``StateGraph`` / ``create_agent`` loops."""
+
+    @trace_test("langgraph_next_llm_span_schema.json")
+    def test_next_llm_span_only(self):
+        callback = CallbackHandler(
+            name="langgraph-next-llm-span",
+            tags=["langgraph", "next-llm"],
+            metadata={"test_type": "next_llm_span"},
+            thread_id="next-llm-span-123",
+            user_id="test-user",
+        )
+
+        result = invoke_with_next_llm_span(
+            {
+                "messages": [
+                    HumanMessage(
+                        content="What is 7 squared? Call the tool and reply with just the number."
+                    )
+                ]
+            },
+            metric_collection="llm_quality_v1",
+            metadata={"prompt_variant": "B", "purpose": "next_llm_only"},
             config={"callbacks": [callback]},
         )
 

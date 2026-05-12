@@ -143,45 +143,22 @@ Wrap the top-level function of your LLM app with `@observe` and call `update_cur
 
 ```python title="test_langchain_app.py" showLineNumbers
 import pytest
-from langchain.chat_models import init_chat_model
+from langchain.agents import create_agent
 from deepeval import assert_test
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.metrics import TaskCompletionMetric
 
-llm = init_chat_model("openai:gpt-4o-mini")
-
-dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
-
-@pytest.mark.parametrize("golden", dataset.goldens)
-def test_langchain_app(golden: Golden):
-    llm.invoke(golden.input, config={"callbacks": [CallbackHandler()]})
-    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
-```
-
-Pass `deepeval`'s `CallbackHandler` to your chain's invoke method. See the [LangChain integration](/integrations/frameworks/langchain) for the full surface.
-
-</Tab>
-<Tab value="LangGraph">
-
-```python title="test_langgraph_app.py" showLineNumbers
-import pytest
-from langgraph.prebuilt import create_react_agent
-from deepeval import assert_test
-from deepeval.integrations.langchain import CallbackHandler
-from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.metrics import TaskCompletionMetric
-
-agent = create_react_agent(
+agent = create_agent(
     model="openai:gpt-4o-mini",
     tools=[],
-    prompt="Answer math questions concisely.",
+    system_prompt="Answer math questions concisely.",
 )
 
 dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
 
 @pytest.mark.parametrize("golden", dataset.goldens)
-def test_langgraph_app(golden: Golden):
+def test_langchain_app(golden: Golden):
     agent.invoke(
         {"messages": [{"role": "user", "content": golden.input}]},
         config={"callbacks": [CallbackHandler()]},
@@ -189,7 +166,45 @@ def test_langgraph_app(golden: Golden):
     assert_test(golden=golden, metrics=[TaskCompletionMetric()])
 ```
 
-Pass `deepeval`'s `CallbackHandler` to your agent's invoke method. See the [LangGraph integration](/integrations/frameworks/langgraph) for the full surface.
+Build your agent with `create_agent` and pass `deepeval`'s `CallbackHandler` to its `invoke` method. See the [LangChain integration](/integrations/frameworks/langchain) for the full surface.
+
+</Tab>
+<Tab value="LangGraph">
+
+```python title="test_langgraph_app.py" showLineNumbers
+import pytest
+from langchain.chat_models import init_chat_model
+from langgraph.graph import StateGraph, MessagesState, START, END
+from deepeval import assert_test
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+llm = init_chat_model("openai:gpt-4o-mini")
+
+def chatbot(state: MessagesState):
+    return {"messages": [llm.invoke(state["messages"])]}
+
+graph = (
+    StateGraph(MessagesState)
+    .add_node(chatbot)
+    .add_edge(START, "chatbot")
+    .add_edge("chatbot", END)
+    .compile()
+)
+
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_langgraph_app(golden: Golden):
+    graph.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Wire your `StateGraph` and pass `deepeval`'s `CallbackHandler` to its `invoke` method. See the [LangGraph integration](/integrations/frameworks/langgraph) for the full surface.
 
 </Tab>
 <Tab value="OpenAI">
@@ -562,24 +577,23 @@ async def model_callback(input: str, turns: List[Turn]) -> Turn:
 </Tab>
 <Tab value="LangChain">
 
-```python title="main.py" showLineNumbers {11}
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain_community.chat_message_histories import ChatMessageHistory
+```python title="main.py" showLineNumbers {10,13}
+from langchain.agents import create_agent
+from langgraph.checkpoint.memory import InMemorySaver
 from deepeval.test_case import Turn
 
-store = {}
-llm = ChatOpenAI(model="gpt-4")
-prompt = ChatPromptTemplate.from_messages([("system", "You are a ticket purchasing assistant."), MessagesPlaceholder(variable_name="history"), ("human", "{input}")])
-chain_with_history = RunnableWithMessageHistory(prompt | llm, lambda session_id: store.setdefault(session_id, ChatMessageHistory()), input_messages_key="input", history_messages_key="history")
+agent = create_agent(
+    model="openai:gpt-4o-mini",
+    system_prompt="You are a ticket purchasing assistant.",
+    checkpointer=InMemorySaver(),
+)
 
 async def model_callback(input: str, thread_id: str) -> Turn:
-    response = chain_with_history.invoke(
-        {"input": input},
-        config={"configurable": {"session_id": thread_id}},
+    result = agent.invoke(
+        {"messages": [{"role": "user", "content": input}]},
+        config={"configurable": {"thread_id": thread_id}},
     )
-    return Turn(role="assistant", content=response.content)
+    return Turn(role="assistant", content=result["messages"][-1].content)
 ```
 
 </Tab>

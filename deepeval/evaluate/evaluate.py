@@ -18,7 +18,7 @@ from deepeval.evaluate.configs import (
 )
 from deepeval.evaluate.utils import (
     validate_assert_test_inputs,
-    validate_evaluate_inputs
+    validate_evaluate_inputs,
 )
 from deepeval.evaluate.console_report import EvaluationConsoleReport
 from deepeval.dataset import Golden
@@ -224,23 +224,27 @@ def evaluate(
         run_duration = end_time - start_time
         if display_config.print_results:
             console_report = EvaluationConsoleReport(test_results)
-            console_report.render_to_terminal(truncate_passing_cases=display_config.truncate_passing_cases)
+            console_report.render_to_terminal(
+                truncate_passing_cases=display_config.truncate_passing_cases
+            )
 
             # Handle full, un-truncated file exports
             if display_config.file_output_dir is not None:
-                if display_config.file_type == "html":  
+                if display_config.file_type == "html":
                     console_report.export_to_html(
-                        output_dir=display_config.file_output_dir, 
-                        evaluation_name=identifier, 
-                        theme_mode="dark"
+                        output_dir=display_config.file_output_dir,
+                        evaluation_name=identifier,
+                        theme_mode="dark",
                     )
                 elif display_config.file_type == "md":
                     console_report.export_to_markdown(
-                        output_dir=display_config.file_output_dir, 
-                        evaluation_name=identifier
+                        output_dir=display_config.file_output_dir,
+                        evaluation_name=identifier,
                     )
                 else:
-                    raise ValueError(f"Invalid file type: {display_config.file_type}")
+                    raise ValueError(
+                        f"Invalid file type: {display_config.file_type}"
+                    )
 
         test_run = global_test_run_manager.get_test_run()
         if hyperparameters is not None or test_run.hyperparameters is None:

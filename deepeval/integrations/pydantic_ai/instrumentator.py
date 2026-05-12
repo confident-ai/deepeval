@@ -308,7 +308,7 @@ class SpanInterceptor(SpanProcessor):
         # this is the OTel root span, push an implicit ``Trace`` placeholder
         # onto ``current_trace_context`` so ``update_current_trace(...)``
         # from inside tools / nested helpers actually mutates something.
-        # The placeholder is tagged ``is_otel_implicit=True`` so that
+        # The placeholder is tagged ``_is_otel_implicit=True`` so that
         # ``ContextAwareSpanProcessor`` keeps routing to OTLP (caller didn't
         # opt into REST). Mutations are picked up automatically by the
         # existing per-span ``_serialize_trace_context_to_otel_attrs`` since
@@ -437,12 +437,12 @@ class SpanInterceptor(SpanProcessor):
         if attrs.get("confident.span.type") == "llm" and not attrs.get(
             "confident.span.provider"
         ):
-            model = attrs.get("confident.llm.model") or attrs.get(
-                "gen_ai.response.model"
-            ) or attrs.get("gen_ai.request.model")
-            provider = (
-                infer_provider_from_model(str(model)) if model else None
+            model = (
+                attrs.get("confident.llm.model")
+                or attrs.get("gen_ai.response.model")
+                or attrs.get("gen_ai.request.model")
             )
+            provider = infer_provider_from_model(str(model)) if model else None
             if provider:
                 provider = normalize_span_provider_for_platform(provider)
                 self._set_attr_post_end(
@@ -529,8 +529,10 @@ class SpanInterceptor(SpanProcessor):
         has a target to mutate; mutations are picked up automatically by
         the existing per-span ``_serialize_trace_context_to_otel_attrs``.
 
-        Tagged ``is_otel_implicit=True`` so ``ContextAwareSpanProcessor``
+        Tagged ``_is_otel_implicit=True`` so ``ContextAwareSpanProcessor``
         knows NOT to switch routing to REST — bare callers expect OTLP.
+        ``_is_otel_implicit`` is a Pydantic ``PrivateAttr``, so it must be
+        set after construction (it's not a constructor kwarg).
         """
         if current_trace_context.get() is not None:
             return  # user already owns the trace context; don't touch it
@@ -551,8 +553,8 @@ class SpanInterceptor(SpanProcessor):
                 root_spans=[],
                 status=TraceSpanStatus.IN_PROGRESS,
                 start_time=start_time,
-                is_otel_implicit=True,
             )
+            implicit._is_otel_implicit = True
             token = current_trace_context.set(implicit)
             self._trace_tokens[sid] = token
             self._trace_placeholders[sid] = implicit

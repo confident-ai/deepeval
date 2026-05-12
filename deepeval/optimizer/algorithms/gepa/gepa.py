@@ -232,7 +232,9 @@ class GEPA(BaseAlgorithm):
                 parent_prompt_configuration.id
             ]
 
-            accepted = self._should_accept_child(child_pareto_scores, parent_pareto_scores)
+            accepted = self._should_accept_child(
+                child_pareto_scores, parent_pareto_scores
+            )
 
             if accepted:
                 consecutive_rejections = 0
@@ -361,7 +363,9 @@ class GEPA(BaseAlgorithm):
 
             minibatch = self._draw_minibatch(d_feedback)
 
-            self._update_step(cur, f"Gathering feedback on {len(minibatch)} goldens...")
+            self._update_step(
+                cur, f"Gathering feedback on {len(minibatch)} goldens..."
+            )
             feedback_diagnosis = await self.scorer.a_get_minibatch_feedback(
                 parent_prompt_configuration, selected_module_id, minibatch
             )
@@ -426,7 +430,9 @@ class GEPA(BaseAlgorithm):
                 parent_prompt_configuration.id
             ]
 
-            accepted = self._should_accept_child(child_pareto_scores, parent_pareto_scores)
+            accepted = self._should_accept_child(
+                child_pareto_scores, parent_pareto_scores
+            )
 
             if accepted:
                 consecutive_rejections = 0

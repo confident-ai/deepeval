@@ -13,7 +13,10 @@ from deepeval.dataset.golden import Golden, ConversationalGolden
 from deepeval.metrics.utils import copy_metrics
 from deepeval.optimizer.algorithms.copro.proposer import COPROProposer
 from deepeval.optimizer.algorithms.base import BaseAlgorithm
-from deepeval.optimizer.scorer.utils import _a_measure_no_indicator, _measure_no_indicator
+from deepeval.optimizer.scorer.utils import (
+    _a_measure_no_indicator,
+    _measure_no_indicator,
+)
 from deepeval.optimizer.types import (
     AcceptedIteration,
     IterationLogEntry,
@@ -111,12 +114,16 @@ class COPRO(BaseAlgorithm):
             for metric in metrics:
                 _measure_no_indicator(metric, test_case)
 
-            avg_score = sum(m.score for m in metrics) / len(metrics) if metrics else 0.0
+            avg_score = (
+                sum(m.score for m in metrics) / len(metrics) if metrics else 0.0
+            )
             scores.append(avg_score)
 
             if avg_score < 1.0 and len(failure_feedbacks) < 3:
                 failure_feedbacks.append(
-                    self.scorer._build_evaluation_results_block(golden, actual, metrics)
+                    self.scorer._build_evaluation_results_block(
+                        golden, actual, metrics
+                    )
                 )
 
         final_score = sum(scores) / len(scores) if scores else 0.0
@@ -137,9 +144,13 @@ class COPRO(BaseAlgorithm):
             for metric in metrics:
                 await _a_measure_no_indicator(metric, test_case)
 
-            avg_score = sum(m.score for m in metrics) / len(metrics) if metrics else 0.0
+            avg_score = (
+                sum(m.score for m in metrics) / len(metrics) if metrics else 0.0
+            )
             feedback = (
-                self.scorer._build_evaluation_results_block(golden, actual, metrics)
+                self.scorer._build_evaluation_results_block(
+                    golden, actual, metrics
+                )
                 if avg_score < 1.0
                 else None
             )
@@ -153,7 +164,9 @@ class COPRO(BaseAlgorithm):
 
         final_score = sum(scores) / len(scores) if scores else 0.0
         feedback_str = (
-            "\n---\n".join(feedbacks[:3]) if feedbacks else "All metrics passed perfectly."
+            "\n---\n".join(feedbacks[:3])
+            if feedbacks
+            else "All metrics passed perfectly."
         )
         return final_score, feedback_str
 
@@ -166,7 +179,9 @@ class COPRO(BaseAlgorithm):
         self._init_components()
         self._iteration_log = []
 
-        self._update_step(f"Bootstrapping {self.breadth} zero-shot variations...")
+        self._update_step(
+            f"Bootstrapping {self.breadth} zero-shot variations..."
+        )
         candidates = self.proposer.propose_bootstrap(prompt, self.breadth)
         candidates.insert(0, prompt)
 
@@ -186,14 +201,18 @@ class COPRO(BaseAlgorithm):
             batch_results = []
 
             for c in candidates:
-                config = PromptConfiguration.new(prompts={self.SINGLE_MODULE_ID: c})
+                config = PromptConfiguration.new(
+                    prompts={self.SINGLE_MODULE_ID: c}
+                )
                 self.prompt_configurations_by_id[config.id] = config
 
                 score, feedback = self._evaluate_candidate(config, minibatch)
                 batch_results.append((c, config, score, feedback))
 
             batch_results.sort(key=lambda x: x[2], reverse=True)
-            best_batch_c, best_batch_config, best_batch_score, _ = batch_results[0]
+            best_batch_c, best_batch_config, best_batch_score, _ = (
+                batch_results[0]
+            )
 
             for c, _, score, feedback in batch_results[: self.breadth]:
                 history_log.append((c, score, feedback))
@@ -204,7 +223,11 @@ class COPRO(BaseAlgorithm):
                 IterationLogEntry(
                     iteration=d + 1,
                     outcome="evaluated",
-                    before=global_best_score if global_best_score != float("-inf") else 0.0,
+                    before=(
+                        global_best_score
+                        if global_best_score != float("-inf")
+                        else 0.0
+                    ),
                     after=best_batch_score,
                     reason=f"Best Minibatch Candidate ID: {best_batch_config.id[:8]}",
                     elapsed=time.time() - depth_start,
@@ -273,7 +296,9 @@ class COPRO(BaseAlgorithm):
         self._iteration_log = []
 
         self._update_step(f"Generating {self.breadth} variations...")
-        candidates = await self.proposer.a_propose_bootstrap(prompt, self.breadth)
+        candidates = await self.proposer.a_propose_bootstrap(
+            prompt, self.breadth
+        )
         candidates.insert(0, prompt)
 
         global_best_score = float("-inf")
@@ -293,11 +318,15 @@ class COPRO(BaseAlgorithm):
             configs = []
 
             for c in candidates:
-                config = PromptConfiguration.new(prompts={self.SINGLE_MODULE_ID: c})
+                config = PromptConfiguration.new(
+                    prompts={self.SINGLE_MODULE_ID: c}
+                )
                 self.prompt_configurations_by_id[config.id] = config
                 configs.append(config)
 
-            tasks = [self._a_evaluate_candidate(conf, minibatch) for conf in configs]
+            tasks = [
+                self._a_evaluate_candidate(conf, minibatch) for conf in configs
+            ]
             results = await asyncio.gather(*tasks)
 
             for c, conf, res in zip(candidates, configs, results):
@@ -305,7 +334,9 @@ class COPRO(BaseAlgorithm):
                 batch_results.append((c, conf, score, feedback))
 
             batch_results.sort(key=lambda x: x[2], reverse=True)
-            best_batch_c, best_batch_config, best_batch_score, _ = batch_results[0]
+            best_batch_c, best_batch_config, best_batch_score, _ = (
+                batch_results[0]
+            )
 
             for c, _, score, feedback in batch_results[: self.breadth]:
                 history_log.append((c, score, feedback))
@@ -316,7 +347,11 @@ class COPRO(BaseAlgorithm):
                 IterationLogEntry(
                     iteration=d + 1,
                     outcome="evaluated",
-                    before=global_best_score if global_best_score != float("-inf") else 0.0,
+                    before=(
+                        global_best_score
+                        if global_best_score != float("-inf")
+                        else 0.0
+                    ),
                     after=best_batch_score,
                     reason=f"Best Minibatch Candidate ID: {best_batch_config.id[:8]}",
                     elapsed=time.time() - depth_start,
@@ -326,7 +361,9 @@ class COPRO(BaseAlgorithm):
             self._update_step(
                 f"Depth {d + 1}/{self.depth}: Running full dataset validation on best candidate..."
             )
-            full_scores = await self.scorer.a_score_pareto(best_batch_config, goldens)
+            full_scores = await self.scorer.a_score_pareto(
+                best_batch_config, goldens
+            )
             avg_full_score = sum(full_scores) / len(full_scores)
             self.pareto_score_table[best_batch_config.id] = full_scores
 
@@ -391,7 +428,9 @@ class COPRO(BaseAlgorithm):
             show_lines=True,
             expand=True,
         )
-        iter_table.add_column("Depth", style="bold white", justify="right", no_wrap=True)
+        iter_table.add_column(
+            "Depth", style="bold white", justify="right", no_wrap=True
+        )
         iter_table.add_column("Status", justify="center", no_wrap=True)
         iter_table.add_column("Best Prior", justify="right", no_wrap=True)
         iter_table.add_column("Batch Top Score", justify="right", no_wrap=True)
@@ -430,7 +469,13 @@ class COPRO(BaseAlgorithm):
             time_cell = f"[{_DIM}]{elapsed:.2f}s[/]"
 
             iter_table.add_row(
-                i, status_cell, best_prior_cell, score_cell, delta_cell, reason, time_cell
+                i,
+                status_cell,
+                best_prior_cell,
+                score_cell,
+                delta_cell,
+                reason,
+                time_cell,
             )
 
         tables.append(iter_table)
@@ -444,10 +489,16 @@ class COPRO(BaseAlgorithm):
                 show_lines=True,
                 expand=True,
             )
-            pareto_table.add_column("Config ID", style="white", justify="center", no_wrap=True)
+            pareto_table.add_column(
+                "Config ID", style="white", justify="center", no_wrap=True
+            )
             pareto_table.add_column("Role", justify="center", no_wrap=True)
-            pareto_table.add_column("Scores Array", justify="center", no_wrap=False)
-            pareto_table.add_column("True Avg Score", justify="right", no_wrap=True)
+            pareto_table.add_column(
+                "Scores Array", justify="center", no_wrap=False
+            )
+            pareto_table.add_column(
+                "True Avg Score", justify="right", no_wrap=True
+            )
 
             best_id = report.best_id
 
@@ -460,9 +511,11 @@ class COPRO(BaseAlgorithm):
                     short_id = f"[bold white]{short_id} ★[/]"
 
                 if len(scores) > 6:
-                    score_strs = [f"{s:.3f}" for s in scores[:3]] + ["..."] + [
-                        f"{s:.3f}" for s in scores[-3:]
-                    ]
+                    score_strs = (
+                        [f"{s:.3f}" for s in scores[:3]]
+                        + ["..."]
+                        + [f"{s:.3f}" for s in scores[-3:]]
+                    )
                 else:
                     score_strs = [f"{s:.3f}" for s in scores]
                 scores_cell = f"[{_DIM}][{', '.join(score_strs)}][/]"

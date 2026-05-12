@@ -129,9 +129,7 @@ class ContextAwareSpanProcessor(_SpanProcessor):
         # ``update_current_trace(...)`` works without an enclosing context)
         # do NOT count — those callers expect OTLP behavior.
         trace_ctx = current_trace_context.get()
-        if trace_ctx is not None and not getattr(
-            trace_ctx, "is_otel_implicit", False
-        ):
+        if trace_ctx is not None and not trace_ctx._is_otel_implicit:
             return True
         try:
             if trace_manager.is_evaluating:

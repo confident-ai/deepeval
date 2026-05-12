@@ -7,7 +7,7 @@ into deepeval ``BaseSpan``s.
 
 Mirrors the Pydantic AI POC pattern (and AgentCore's port of it): pushes
 ``BaseSpan`` placeholders for ``update_current_span(...)``, an implicit
-``Trace(is_otel_implicit=True)`` for bare callers, consumes
+``Trace`` placeholder (``_is_otel_implicit=True``) for bare callers, consumes
 ``next_*_span(...)`` payloads at on_start, resolves trace attrs FRESH at
 on_end so live ``update_current_trace(...)`` mutations win, and stashes
 ``BaseMetric`` instances when an evaluation is running.
@@ -426,9 +426,9 @@ class OpenInferenceInstrumentationSettings:
         self.test_case_id = test_case_id
         self.turn_id = turn_id
 
-# Span interceptor. Pushes BaseSpan placeholders for ``update_current_span``,
-# implicit Trace for bare callers, parent-uuid bridge for OTel roots inside
-# ``@observe``, ``next_*_span`` consumption, and framework-attr extraction.
+        # Span interceptor. Pushes BaseSpan placeholders for ``update_current_span``,
+        # implicit Trace for bare callers, parent-uuid bridge for OTel roots inside
+        # ``@observe``, ``next_*_span`` consumption, and framework-attr extraction.
         self.integration = integration or Integration.OPEN_INFERENCE.value
 
 
@@ -590,8 +590,10 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
     def _maybe_push_implicit_trace_context(self, span) -> None:
         """Push an implicit ``Trace`` for OTel roots without enclosing context.
 
-        Tagged ``is_otel_implicit=True`` so ``ContextAwareSpanProcessor``
-        still routes to OTLP.
+        Tagged ``_is_otel_implicit=True`` so ``ContextAwareSpanProcessor``
+        still routes to OTLP. ``_is_otel_implicit`` is a Pydantic
+        ``PrivateAttr``, so it must be set after construction (it's not a
+        constructor kwarg).
         """
         if current_trace_context.get() is not None:
             return
@@ -610,8 +612,8 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
                 root_spans=[],
                 status=TraceSpanStatus.IN_PROGRESS,
                 start_time=start_time,
-                is_otel_implicit=True,
             )
+            implicit._is_otel_implicit = True
             token = current_trace_context.set(implicit)
             self._trace_tokens[sid] = token
             self._trace_placeholders[sid] = implicit

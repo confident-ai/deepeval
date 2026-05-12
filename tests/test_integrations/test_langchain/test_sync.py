@@ -53,6 +53,9 @@ from tests.test_integrations.test_langchain.apps.langchain_agent_app import (
 from tests.test_integrations.test_langchain.apps.langchain_metric_collection_app import (
     invoke_metric_collection_app,
 )
+from tests.test_integrations.test_langchain.apps.langchain_next_span_app import (
+    invoke_with_next_llm_span,
+)
 
 # =============================================================================
 # CONFIGURATION
@@ -598,6 +601,51 @@ class TestMetricCollectionApp:
                     )
                 ]
             },
+            config={"callbacks": [callback]},
+        )
+
+        assert "messages" in result
+        assert len(result["messages"]) > 0
+
+
+# =============================================================================
+# NEXT-SPAN STAGING TESTS (next_llm_span)
+# =============================================================================
+
+
+class TestNextSpanApp:
+    """Schema-asserted coverage for ``with next_llm_span(...)`` —
+    the only mechanism for stamping LLM-span fields in LangChain
+    without baking them into ``with_config(metadata=...)``. Verifies
+    end-to-end through a real ``ChatOpenAI`` + ``create_agent`` loop
+    that the ``CallbackHandler``'s ``pop_pending_for("llm")`` +
+    ``apply_pending_to_span(...)`` plumbing lands the staged value on
+    the FIRST llm span (and only the first — the schema must show
+    ``metric_collection: null`` on the post-tool LLM span)."""
+
+    @trace_test("langchain_next_llm_span_schema.json")
+    def test_next_llm_span_only(self):
+        """``with next_llm_span(metric_collection=..., metadata=...)``:
+        first chat-model span carries the staged values; the second
+        chat-model span (after the ``square`` tool returns) does not."""
+        callback = CallbackHandler(
+            name="langchain-next-llm-span",
+            tags=["langchain", "next-llm"],
+            metadata={"test_type": "next_llm_span"},
+            thread_id="next-llm-span-123",
+            user_id="test-user",
+        )
+
+        result = invoke_with_next_llm_span(
+            {
+                "messages": [
+                    HumanMessage(
+                        content="What is 7 squared? Call the tool and reply with just the number."
+                    )
+                ]
+            },
+            metric_collection="llm_quality_v1",
+            metadata={"prompt_variant": "B", "purpose": "next_llm_only"},
             config={"callbacks": [callback]},
         )
 

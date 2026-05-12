@@ -6,9 +6,9 @@ sidebar_label: LangChain
 
 <IntegrationTagsDisplayer native={true} cicdEvals={true} traceability={true} />
 
-[LangChain](https://www.langchain.com/) is an open-source framework for building LLM applications with models, prompts, tools, retrievers, chains, and agents.
+[LangChain](https://www.langchain.com/) is an open-source framework for building LLM applications with models, prompts, tools, retrievers, and agents (via `create_agent`).
 
-The `deepeval` integration traces LangChain runs through a `CallbackHandler` that you pass into LangChain's `config`. Every chain run, model call, tool call, and retriever call becomes a span you can inspect, without rewriting your LangChain app.
+The `deepeval` integration traces LangChain runs through a `CallbackHandler` that you pass into LangChain's `config`. Every agent run, model call, tool call, and retriever call becomes a span you can inspect, without rewriting your LangChain app.
 
 <AgentTraceTerminal
   title="langchain_agent · deepeval"
@@ -87,28 +87,33 @@ LangChain is instrumented per-call: you decide which runs are traced by passing 
 
 ### Instrument and evaluate
 
-Create a `CallbackHandler` and pass it to the LangChain call you want to evaluate.
+Create a `CallbackHandler` and pass it to the agent's `invoke` method.
 
 ```python title="langchain_agent.py" showLineNumbers
-from langchain.chat_models import init_chat_model
-from langchain_core.tools import tool
+from langchain.agents import create_agent
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.metrics import TaskCompletionMetric
 
-@tool
 def multiply(a: int, b: int) -> int:
     """Multiply two numbers."""
     return a * b
 
-llm = init_chat_model("openai:gpt-4o-mini").bind_tools([multiply])
+agent = create_agent(
+    model="openai:gpt-4o-mini",
+    tools=[multiply],
+    system_prompt="Be concise.",
+)
 
 # Goldens are the inputs you want to evaluate.
 dataset = EvaluationDataset(goldens=[Golden(input="What is 8 multiplied by 6?")])
 
 # The `TaskCompletionMetric` is passed into the LangChain callback.
 for golden in dataset.evals_iterator():
-    llm.invoke(golden.input, config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]})
+    agent.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]},
+    )
 ```
 
 Done ✅. You've run your first eval with full traceability into LangChain via `deepeval`.
@@ -121,14 +126,14 @@ Done ✅. You've run your first eval with full traceability into LangChain via `
 
 Each LangChain call that receives a `CallbackHandler` produces a **trace** — the end-to-end unit your user observes. Inside that trace are **component spans** for each callback LangChain emits:
 
+- **Agent spans** — `create_agent(...)` runs and any nested runnable steps.
 - **LLM spans** — chat model and completion calls.
 - **Tool spans** — tool calls and function executions.
 - **Retriever spans** — retriever calls, when your app uses retrieval.
-- **Chain / agent spans** — chains, agents, and nested runnable steps.
 
 ```text
 Trace                           ← what the user observes
-└── Chain: math_agent            ← one LangChain invoke(...) call
+└── Agent: math_agent            ← one create_agent invoke(...) call
     ├── LLM: gpt-4o-mini        ← component span: model chooses a tool
     ├── Tool: multiply          ← component span: tool input + output
     └── LLM: gpt-4o-mini        ← component span: final answer
@@ -146,19 +151,17 @@ Use the `deepeval` pytest integration. Each parametrized test invocation becomes
 
 ```python title="test_langchain_agent.py" showLineNumbers
 import pytest
-from langchain.chat_models import init_chat_model
-from langchain_core.tools import tool
+from langchain.agents import create_agent
 from deepeval import assert_test
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.metrics import TaskCompletionMetric
 
-@tool
 def multiply(a: int, b: int) -> int:
     """Multiply two numbers."""
     return a * b
 
-llm = init_chat_model("openai:gpt-4o-mini").bind_tools([multiply])
+agent = create_agent(model="openai:gpt-4o-mini", tools=[multiply], system_prompt="Be concise.")
 dataset = EvaluationDataset(goldens=[
     Golden(input="What is 8 multiplied by 6?"),
     Golden(input="What is 7 multiplied by 9?"),
@@ -166,7 +169,10 @@ dataset = EvaluationDataset(goldens=[
 
 @pytest.mark.parametrize("golden", dataset.goldens)
 def test_langchain_agent(golden: Golden):
-    llm.invoke(golden.input, config={"callbacks": [CallbackHandler()]})
+    agent.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
     assert_test(golden=golden, metrics=[TaskCompletionMetric()])
 ```
 
@@ -187,7 +193,10 @@ dataset = EvaluationDataset(goldens=[
 ])
 
 for golden in dataset.evals_iterator():
-    llm.invoke(golden.input, config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]})
+    agent.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]},
+    )
 ```
 
 ## Applying metrics to components
@@ -196,38 +205,56 @@ Passing `metrics=[...]` to `CallbackHandler` evaluates the overall LangChain run
 
 ### LLM calls
 
-Set `metrics` in the model metadata. The callback reads the metadata when LangChain starts the LLM span.
+Wrap the invocation in `with next_llm_span(metrics=[...]):`. The `CallbackHandler` drains the staged metric onto the **first LLM span** it opens inside the `with` block; later LLM calls in the same run get nothing. This is the same one-shot semantic used by `next_*_span` in the Pydantic AI / Strands / AgentCore / Google ADK integrations.
 
 ```python title="langchain_agent.py" showLineNumbers
-from langchain.chat_models import init_chat_model
+from langchain.agents import create_agent
+from deepeval.integrations.langchain import CallbackHandler
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.tracing import next_llm_span
 ...
 
-llm = init_chat_model("openai:gpt-4o-mini").with_config(
-    metadata={"metrics": [AnswerRelevancyMetric()]}
-)
+agent = create_agent(model="openai:gpt-4o-mini", tools=[multiply], system_prompt="Be concise.")
+
+for golden in dataset.evals_iterator():
+    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
+        agent.invoke(
+            {"messages": [{"role": "user", "content": golden.input}]},
+            config={"callbacks": [CallbackHandler()]},
+        )
 ```
+
+:::caution[One-shot per run]
+`next_llm_span` stages a metric for the **first** LLM span LangChain opens inside the `with` block. Later LLM calls in the same `agent.invoke(...)` — e.g. the tool-choice turn followed by the final-answer turn — won't receive the staged metric. To score every LLM call, drive the loop yourself (`next_llm_span` per call) or score the run end-to-end with trace-level metrics on `CallbackHandler(metrics=[...])`.
+:::
 
 For deterministic tool calls, use tool spans for traceability, inputs, outputs, and metadata. Avoid attaching metrics directly to tool spans.
 
 ### Retriever calls
 
-Set a `metric_collection` in retriever metadata when you want production metric collections attached to retriever spans.
+Wrap the invocation in `with next_retriever_span(...)` to stage a metric (or a Confident AI `metric_collection`) on the **first retriever span** LangChain opens inside the `with` block.
 
 ```python title="langchain_agent.py" showLineNumbers
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.tracing import next_retriever_span
 ...
 
-retriever = vector_store.as_retriever().with_config(
-    metadata={"metric_collection": "retriever_v1"}
-)
+for golden in dataset.evals_iterator():
+    with next_retriever_span(metric_collection="retriever_v1"):
+        chain.invoke(
+            {"messages": [{"role": "user", "content": golden.input}]},
+            config={"callbacks": [CallbackHandler()]},
+        )
 ```
+
+`next_retriever_span` accepts the same `metrics=[...]` / `metric_collection=...` kwargs as `next_llm_span`. The same one-shot semantic applies: only the first retriever span in the run picks up the staged config.
 
 ## Customizing trace and span data
 
-LangChain is instrumented per-call through callbacks, so customization happens at the callback or component config boundary.
+LangChain is instrumented per-call through callbacks, so customization happens at the callback or span-staging boundary.
 
 - Use `CallbackHandler(...)` kwargs for trace-level defaults like `name`, `tags`, `metadata`, `thread_id`, and `user_id`.
-- Use LangChain metadata for component-level fields on LLM and retriever spans.
+- Use `next_llm_span(...)` / `next_retriever_span(...)` / `next_tool_span(...)` to stage component-level fields (metrics, metric collections, test cases, custom span metadata) onto the next span the callback opens.
 - Use tool spans for deterministic traceability, inputs, outputs, and metadata.
 
 ```python title="langchain_agent.py" showLineNumbers
@@ -238,30 +265,33 @@ callback = CallbackHandler(
     user_id="user-123",
 )
 
-llm.invoke("What is 8 multiplied by 6?", config={"callbacks": [callback]})
+agent.invoke(
+    {"messages": [{"role": "user", "content": "What is 8 multiplied by 6?"}]},
+    config={"callbacks": [callback]},
+)
 ```
 
 ## Advanced patterns
 
-The primitives above — `CallbackHandler(...)`, LangChain metadata, and `deepeval`'s tool decorator — compose around one boundary: LangChain owns the callback lifecycle, and your code chooses where to pass callback config or component metadata.
+The primitives above — `CallbackHandler(...)`, `next_*_span(...)`, and `deepeval`'s tool decorator — compose around one boundary: LangChain owns the callback lifecycle, and your code chooses where to stage component config for the next span the callback opens.
 
 ### Evaluate subagents/components
 
-Use component-level metadata when a subagent or internal step is represented by a LangChain model component. In this example, the metric lives on the LLM span.
+Stage a component metric with `next_llm_span(...)` immediately before the `agent.invoke(...)` call. The `CallbackHandler` drains the staged metric onto the first LLM span LangChain opens inside the `with` block, so the metric lives on the LLM span inside the agent loop without modifying the agent or model.
 
 ```python title="langchain_agent.py" showLineNumbers
+from langchain.agents import create_agent
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.tracing import next_llm_span
 ...
 
-llm_with_component_metric = init_chat_model("openai:gpt-4o-mini").with_config(
-    metadata={"metrics": [AnswerRelevancyMetric()]}
-)
+agent = create_agent(model="openai:gpt-4o-mini", tools=[multiply], system_prompt="Be concise.")
 ```
 
 #### No trace-level metrics required
 
-Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because the `AnswerRelevancyMetric` is attached to the LLM span, so CI/CD and scripts only need to run the component.
+Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because the `AnswerRelevancyMetric` is staged for the LLM span, so CI/CD and scripts only need to run the agent inside the staging block.
 
 This is how you'd run it:
 
@@ -275,7 +305,11 @@ from deepeval import assert_test
 
 @pytest.mark.parametrize("golden", dataset.goldens)
 def test_component_metrics(golden: Golden):
-    llm_with_component_metric.invoke(golden.input, config={"callbacks": [CallbackHandler()]})
+    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
+        agent.invoke(
+            {"messages": [{"role": "user", "content": golden.input}]},
+            config={"callbacks": [CallbackHandler()]},
+        )
     assert_test(golden=golden)
 ```
 
@@ -290,7 +324,11 @@ deepeval test run test_langchain_agent.py
 ...
 
 for golden in dataset.evals_iterator():
-    llm_with_component_metric.invoke(golden.input, config={"callbacks": [CallbackHandler()]})
+    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
+        agent.invoke(
+            {"messages": [{"role": "user", "content": golden.input}]},
+            config={"callbacks": [CallbackHandler()]},
+        )
 ```
 
 </Tab>
@@ -306,8 +344,11 @@ from deepeval.tracing import observe
 
 @observe(name="respond_to_user")
 def respond_to_user(prompt: str) -> str:
-    result = llm.invoke(prompt, config={"callbacks": [CallbackHandler()]})
-    return result.content
+    result = agent.invoke(
+        {"messages": [{"role": "user", "content": prompt}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
+    return result["messages"][-1].content
 ```
 
 ## API reference

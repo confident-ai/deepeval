@@ -24,7 +24,9 @@ class SIMBAProposer:
     def _accrue_cost(self, cost: float) -> None:
         pass
 
-    def _format_trajectory(self, inputs: str, outputs: str, score: float, feedback: str) -> str:
+    def _format_trajectory(
+        self, inputs: str, outputs: str, score: float, feedback: str
+    ) -> str:
         """Helper to cleanly format the trajectory block for the template."""
         return (
             f"Inputs: {inputs}\n"
@@ -49,14 +51,18 @@ class SIMBAProposer:
         prompt_text = _parse_prompt(original_prompt)
         is_list = original_prompt.type == PromptType.LIST
 
-        worse_trajectory = self._format_trajectory(worse_inputs, worse_outputs, worse_score, worse_feedback)
-        better_trajectory = self._format_trajectory(better_inputs, better_outputs, better_score, better_feedback)
+        worse_trajectory = self._format_trajectory(
+            worse_inputs, worse_outputs, worse_score, worse_feedback
+        )
+        better_trajectory = self._format_trajectory(
+            better_inputs, better_outputs, better_score, better_feedback
+        )
 
         template = SIMBATemplate.generate_introspection_rewrite(
             original_prompt=prompt_text,
             worse_trajectory=worse_trajectory,
             better_trajectory=better_trajectory,
-            is_list_format=is_list
+            is_list_format=is_list,
         )
 
         try:
@@ -93,14 +99,18 @@ class SIMBAProposer:
         prompt_text = _parse_prompt(original_prompt)
         is_list = original_prompt.type == PromptType.LIST
 
-        worse_trajectory = self._format_trajectory(worse_inputs, worse_outputs, worse_score, worse_feedback)
-        better_trajectory = self._format_trajectory(better_inputs, better_outputs, better_score, better_feedback)
+        worse_trajectory = self._format_trajectory(
+            worse_inputs, worse_outputs, worse_score, worse_feedback
+        )
+        better_trajectory = self._format_trajectory(
+            better_inputs, better_outputs, better_score, better_feedback
+        )
 
         template = SIMBATemplate.generate_introspection_rewrite(
             original_prompt=prompt_text,
             worse_trajectory=worse_trajectory,
             better_trajectory=better_trajectory,
-            is_list_format=is_list
+            is_list_format=is_list,
         )
 
         try:
@@ -133,22 +143,26 @@ class SIMBAProposer:
 
     def _inject_text(self, prompt: Prompt, injection: str) -> Prompt:
         is_list = prompt.type == PromptType.LIST
-        
+
         if is_list:
             new_messages = []
             injected = False
             for msg in prompt.messages_template:
                 if not injected and msg.role == "system":
                     new_content = f"{msg.content}{injection}"
-                    new_messages.append(PromptMessage(role=msg.role, content=new_content))
+                    new_messages.append(
+                        PromptMessage(role=msg.role, content=new_content)
+                    )
                     injected = True
                 else:
                     new_messages.append(msg)
-            
+
             if not injected and new_messages:
                 first = new_messages[0]
-                new_messages[0] = PromptMessage(role=first.role, content=f"{first.content}{injection}")
-                
+                new_messages[0] = PromptMessage(
+                    role=first.role, content=f"{first.content}{injection}"
+                )
+
             return Prompt(messages_template=new_messages)
         else:
             return Prompt(text_template=f"{prompt.text_template}{injection}")

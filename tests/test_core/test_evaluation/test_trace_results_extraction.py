@@ -13,7 +13,9 @@ _agentic_mod = import_module("deepeval.evaluate.execute.agentic")
 
 
 @pytest.mark.asyncio
-async def test_trace_metric_does_not_produce_additional_test_result(monkeypatch):
+async def test_trace_metric_does_not_produce_additional_test_result(
+    monkeypatch,
+):
     monkeypatch.setattr(
         exec_mod.trace_manager,
         "_convert_span_to_api_span",
@@ -114,4 +116,6 @@ async def test_trace_metric_does_not_produce_additional_test_result(monkeypatch)
     )
     # We should have one top level case result and no extracted trace result
     assert len(results) == 1
-    assert not any(md.name == "trace-metric" for md in results[0].metrics_data or [])
+    assert not any(
+        md.name == "trace-metric" for md in results[0].metrics_data or []
+    )

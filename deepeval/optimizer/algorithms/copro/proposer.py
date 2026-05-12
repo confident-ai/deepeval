@@ -74,12 +74,16 @@ class COPROProposer:
                     return True
         return False
 
-    def propose_bootstrap(self, original_prompt: Prompt, breadth: int) -> List[Prompt]:
+    def propose_bootstrap(
+        self, original_prompt: Prompt, breadth: int
+    ) -> List[Prompt]:
         """Pass 1 (Bootstrap): Generate 0-shot variations of the base prompt."""
         is_list = original_prompt.type == PromptType.LIST
         prompt_text = _parse_prompt(original_prompt)
 
-        template = COPROTemplate.generate_bootstrap_guidelines(prompt_text, breadth)
+        template = COPROTemplate.generate_bootstrap_guidelines(
+            prompt_text, breadth
+        )
         try:
             guidelines = generate_with_schema_and_extract(
                 metric=self,
@@ -150,7 +154,9 @@ class COPROProposer:
                     revised_content = json.dumps(revised_content)
 
                 if revised_content and revised_content.strip():
-                    new_prompt = _create_prompt(original_prompt, revised_content)
+                    new_prompt = _create_prompt(
+                        original_prompt, revised_content
+                    )
                     if not self._is_duplicate(new_prompt, candidates):
                         candidates.append(new_prompt)
             except Exception:
@@ -165,7 +171,9 @@ class COPROProposer:
         is_list = original_prompt.type == PromptType.LIST
         prompt_text = _parse_prompt(original_prompt)
 
-        template = COPROTemplate.generate_bootstrap_guidelines(prompt_text, breadth)
+        template = COPROTemplate.generate_bootstrap_guidelines(
+            prompt_text, breadth
+        )
         try:
             guidelines = await a_generate_with_schema_and_extract(
                 metric=self,
@@ -181,7 +189,12 @@ class COPROProposer:
             original_prompt, prompt_text, guidelines[:breadth], is_list
         )
 
-    async def a_propose_from_history(self, original_prompt: Prompt, history: List[Tuple[Prompt, float, str]], breadth: int) -> List[Prompt]:
+    async def a_propose_from_history(
+        self,
+        original_prompt: Prompt,
+        history: List[Tuple[Prompt, float, str]],
+        breadth: int,
+    ) -> List[Prompt]:
         """Pass 1 (History Async): Generate ascent variations based on past performance and feedback."""
         is_list = (
             original_prompt.type.value == "list"

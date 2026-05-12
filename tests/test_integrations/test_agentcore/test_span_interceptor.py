@@ -332,7 +332,7 @@ class TestImplicitTraceContext:
     ``current_trace_context`` for the OTel root span's lifetime so
     ``update_current_trace(...)`` from inside Strands tools / nested
     helpers can mutate something. The placeholder is tagged
-    ``is_otel_implicit=True`` so ``ContextAwareSpanProcessor`` keeps
+    ``_is_otel_implicit=True`` so ``ContextAwareSpanProcessor`` keeps
     routing to OTLP for those callers.
     """
 
@@ -347,7 +347,7 @@ class TestImplicitTraceContext:
             during = current_trace_context.get()
 
             assert during is not None
-            assert getattr(during, "is_otel_implicit", False) is True
+            assert during._is_otel_implicit is True
 
             interceptor.on_end(root)
             assert current_trace_context.get() is None
@@ -360,13 +360,13 @@ class TestImplicitTraceContext:
         root = _make_mock_span()
 
         with trace() as user_trace:
-            assert getattr(user_trace, "is_otel_implicit", False) is False
+            assert user_trace._is_otel_implicit is False
 
             interceptor.on_start(root, None)
             during = current_trace_context.get()
 
             assert during is user_trace
-            assert getattr(during, "is_otel_implicit", False) is False
+            assert during._is_otel_implicit is False
 
             interceptor.on_end(root)
 

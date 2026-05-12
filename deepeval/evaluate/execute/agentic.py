@@ -291,7 +291,9 @@ async def _a_execute_agentic_test_case(
                     for metric in trace_metrics:
                         if metric.skipped:
                             continue
-                        api_test_case.update_metric_data(create_metric_data(metric))
+                        api_test_case.update_metric_data(
+                            create_metric_data(metric)
+                        )
 
             # If nothing set success yet, mark the case failed
             if api_test_case.success is None:

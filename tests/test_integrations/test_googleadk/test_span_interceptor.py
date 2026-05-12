@@ -15,7 +15,7 @@ What this file verifies on the OpenInference span interceptor:
   - Span placeholder push/pop on ``current_span_context`` so
     ``update_current_span(...)`` from anywhere in the call stack
     serializes back to ``confident.span.*`` at on_end.
-  - Implicit ``Trace(is_otel_implicit=True)`` push for bare ADK callers
+  - Implicit ``Trace`` placeholder (``_is_otel_implicit=True``) push for bare ADK callers
     (no enclosing ``@observe`` / ``with trace(...)``) so
     ``update_current_trace(...)`` works without a user-pushed context.
   - Parent bridge: ``confident.span.parent_uuid`` stamped on OTel roots
@@ -370,7 +370,7 @@ class TestImplicitTraceContext:
     ``current_trace_context`` for the OTel root span's lifetime so
     ``update_current_trace(...)`` from inside ADK tools / nested
     helpers can mutate something. The placeholder is tagged
-    ``is_otel_implicit=True`` so ``ContextAwareSpanProcessor`` keeps
+    ``_is_otel_implicit=True`` so ``ContextAwareSpanProcessor`` keeps
     routing to OTLP for those callers.
     """
 
@@ -385,7 +385,7 @@ class TestImplicitTraceContext:
             during = current_trace_context.get()
 
             assert during is not None
-            assert getattr(during, "is_otel_implicit", False) is True
+            assert during._is_otel_implicit is True
 
             interceptor.on_end(root)
             assert current_trace_context.get() is None
@@ -398,13 +398,13 @@ class TestImplicitTraceContext:
         root = _make_mock_span()
 
         with trace() as user_trace:
-            assert getattr(user_trace, "is_otel_implicit", False) is False
+            assert user_trace._is_otel_implicit is False
 
             interceptor.on_start(root, None)
             during = current_trace_context.get()
 
             assert during is user_trace
-            assert getattr(during, "is_otel_implicit", False) is False
+            assert during._is_otel_implicit is False
 
             interceptor.on_end(root)
 

@@ -52,6 +52,12 @@ pydantic-settings = "^2.10.1"
 jinja2 = "*"
 pyyaml = "^6.0.1"
 
+textual = { version = ">=0.80,<2.0", optional = true }
+pyperclip = { version = "^1.8", optional = true }
+
+[tool.poetry.extras]
+inspect = ["textual", "pyperclip"]
+
 [tool.poetry.group.dev.dependencies]
 twine = "5.1.1"
 black = { extras = ["jupyter"], version = "^25.1.0" }

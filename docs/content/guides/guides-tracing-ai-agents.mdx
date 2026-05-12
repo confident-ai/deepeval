@@ -364,10 +364,12 @@ asyncio.run(run())
 </Tab>
 <Tab value="LangGraph">
 
-Pass a `CallbackHandler` instance in the `config` when invoking your graph. deepeval intercepts chain, LLM, and tool events, building the full agent span tree automatically.
+Wire a `StateGraph` with `ToolNode` for tool execution, then pass a `CallbackHandler` in the `config` when invoking it. deepeval intercepts chain, LLM, and tool events, building the full agent span tree automatically.
 
 ```python title="main.py" showLineNumbers
-from langgraph.prebuilt import create_react_agent
+from langchain.chat_models import init_chat_model
+from langgraph.graph import StateGraph, MessagesState, START, END
+from langgraph.prebuilt import ToolNode, tools_condition
 
 from deepeval.integrations.langchain import CallbackHandler
 
@@ -377,15 +379,26 @@ def get_weather(city: str) -> str:
     return f"It's always sunny in {city}!"
 
 
-agent = create_react_agent(
-    model="openai:gpt-4o-mini",
-    tools=[get_weather],
-    prompt="You are a helpful assistant",
+llm = init_chat_model("openai:gpt-4o-mini").bind_tools([get_weather])
+
+
+def chatbot(state: MessagesState):
+    return {"messages": [llm.invoke(state["messages"])]}
+
+
+graph = (
+    StateGraph(MessagesState)
+    .add_node(chatbot)
+    .add_node("tools", ToolNode([get_weather]))
+    .add_edge(START, "chatbot")
+    .add_conditional_edges("chatbot", tools_condition)
+    .add_edge("tools", "chatbot")
+    .compile()
 )
 
-# Pass CallbackHandler as config — all agent, LLM, and tool spans are captured automatically
-result = agent.invoke(
-    input={"messages": [{"role": "user", "content": "What's the weather in Paris?"}]},
+# Pass CallbackHandler as config — all node, LLM, and tool spans are captured automatically
+result = graph.invoke(
+    {"messages": [{"role": "user", "content": "What's the weather in Paris?"}]},
     config={"callbacks": [CallbackHandler()]},
 )
 print(result)
