@@ -146,11 +146,11 @@ result = agent.run_sync("hello")
 - The user has not pushed any deepeval trace context.
 - `SpanInterceptor.on_start` for the OTel root span pushes an
   _implicit_ `Trace` placeholder onto `current_trace_context`, tagged
-  `is_otel_implicit=True`. This placeholder exists only so that
+  `_is_otel_implicit=True`. This placeholder exists only so that
   `update_current_trace(...)` from inside a tool body has something to
   mutate; the value flows back to the OTel attributes via the standard
   on_end serialization.
-- Routing: **OTLP**. The `is_otel_implicit=True` tag tells
+- Routing: **OTLP**. The `_is_otel_implicit=True` tag tells
   `ContextAwareSpanProcessor` to ignore this trace context for routing
   purposes — bare callers are opted in to OTLP.
 - The implicit placeholder is popped at the root span's on_end. Outside
@@ -165,7 +165,7 @@ with trace(name="my-trace", user_id="u1"):
 
 - The user pushes their own real `Trace` (via the
   `with trace(...)` context manager).
-- `is_otel_implicit=False` on this Trace.
+- `_is_otel_implicit=False` on this Trace.
 - `SpanInterceptor` sees a non-None `current_trace_context` at on_start
   and skips the implicit-placeholder push (it doesn't clobber the
   user's trace).
@@ -967,7 +967,7 @@ framework-specific is just the SpanInterceptor.
   onto `current_span_context`.
 - **Implicit-trace push** (optional, recommended). If the framework
   supports a "bare call with no enclosing context" mode, push an
-  `is_otel_implicit=True` `Trace` placeholder at the OTel root's
+  `_is_otel_implicit=True` `Trace` placeholder at the OTel root's
   `on_start` so `update_current_trace(...)` from inside framework
   internals (e.g. tool bodies) has somewhere to write. Pop it at the
   same span's `on_end`.
@@ -992,7 +992,8 @@ framework-specific is just the SpanInterceptor.
    - If OTel root + enclosing real deepeval span → stamp
      `confident.span.parent_uuid`.
    - If OTel root + no enclosing trace → push implicit
-     `Trace(is_otel_implicit=True)` onto `current_trace_context`.
+     implicit `Trace` placeholder (with `_is_otel_implicit=True` set
+     post-construction) onto `current_trace_context`.
    - Push placeholder onto `current_span_context`, store the token.
 2. Implement `on_end(span)`:
    - Refresh `confident.trace.*` from `current_trace_context` +

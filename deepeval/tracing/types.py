@@ -1,6 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass, field
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, PrivateAttr
 from typing import Any, Dict, List, Optional, Union, Literal, TYPE_CHECKING
 from rich.progress import Progress
 
@@ -210,7 +210,13 @@ class Trace(BaseModel):
     # decide REST vs OTLP routing — implicit placeholders DON'T count as
     # "user opted into REST". See ``deepeval/integrations/pydantic_ai/
     # instrumentator.py`` for the push/pop logic.
-    is_otel_implicit: bool = Field(False, exclude=True)
+    #
+    # Modeled as a ``PrivateAttr`` (not a ``Field``) because Pydantic v2
+    # disallows leading-underscore field names — and ``PrivateAttr`` is
+    # the right shape anyway: never serialized, never settable via the
+    # constructor, only mutated post-init by the SpanInterceptor that
+    # owns the placeholder.
+    _is_otel_implicit: bool = PrivateAttr(default=False)
 
     # additional test case parameters
     retrieval_context: Optional[List[str]] = Field(
