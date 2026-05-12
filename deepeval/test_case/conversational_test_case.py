@@ -249,9 +249,10 @@ class ConversationalTestCase(BaseModel):
                     self.multimodal = True
                     return self
                 if turn.retrieval_context is not None:
-                    self.multimodal = any(
-                        re.search(pattern, context) is not None
-                        for context in turn.retrieval_context
+                    self.multimodal = self.multimodal or any(
+                        re.search(pattern, c.context if isinstance(c, RetrievedContextData) else c)
+                        for c in turn.retrieval_context
+                        if isinstance(c, (RetrievedContextData, str))
                     )
 
         return self

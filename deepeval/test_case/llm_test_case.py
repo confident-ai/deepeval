@@ -438,11 +438,12 @@ class LLMTestCase(BaseModel):
             if isinstance(self.input, str)
             else self.multimodal
         )
-        # if self.retrieval_context is not None:
-        #     auto_detect = auto_detect or any(
-        #         re.search(pattern, context) is not None
-        #         for context in self.retrieval_context
-        #     )
+        if self.retrieval_context is not None:
+            auto_detect = auto_detect or any(
+                re.search(pattern, c.context if isinstance(c, RetrievedContextData) else c)
+                for c in self.retrieval_context
+                if isinstance(c, (RetrievedContextData, str))
+            )
         if self.context is not None:
             auto_detect = auto_detect or any(
                 re.search(pattern, context) is not None
