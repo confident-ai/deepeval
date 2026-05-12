@@ -52,3 +52,8 @@ def test_test_run_tracer_uses_local_provider_without_replacing_global(
         assert trace.get_tracer_provider() is original_provider
     finally:
         provider.shutdown()
+        # `init_global_test_run_tracer` mutates module globals via `global`,
+        # which monkeypatch can't undo. Reset them so later tests don't see
+        # this test's fake-backed provider.
+        test_run_tracer.GLOBAL_TEST_RUN_TRACER_PROVIDER = None
+        test_run_tracer.GLOBAL_TEST_RUN_TRACER = None
