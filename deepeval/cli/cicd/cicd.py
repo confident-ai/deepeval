@@ -276,7 +276,7 @@ def _build_goldens_from_dataset(
                 f"Dataset at path '{raw_dataset.get('path')}' is empty. Please add goldens to the dataset."
             )
 
-    elif raw_dataset.get("goldens"):
+    elif "goldens" in raw_dataset:
         raw_goldens = raw_dataset.get("goldens", [])
         if not isinstance(raw_goldens, list):
             raise ValueError("'goldens' must be a list of golden objects.")
