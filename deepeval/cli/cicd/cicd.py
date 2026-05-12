@@ -24,16 +24,7 @@ from deepeval.simulator import ConversationSimulator
 from deepeval.utils import get_or_create_event_loop
 
 
-app = typer.Typer(name="cicd", invoke_without_command=True)
-
-
-@app.callback()
-def cicd(
-    config_file: str = typer.Argument(
-        ...,
-        help="Path to the CICD YAML config file.",
-    ),
-):
+def execute_cicd(config_file: str, ci_provider: str = "github"):
     """
     Run CI/CD evaluation from a YAML config (dataset, model_callback, metrics).
     """
@@ -88,7 +79,7 @@ def cicd(
         ))
     except Exception as e:
         error_md = f"### ⚠️ DeepEval Run Failed\nAn internal error occurred during evaluation:\n```\n{str(e)}\n```"
-        _post_github_pr_comment(error_md)
+        _post_ci_comment(error_md, ci_provider)
         sys.exit(1)
 
     try:
@@ -164,8 +155,8 @@ def cicd(
             f"\nSet CONFIDENT_API_KEY to view these results on the Confident AI platform"
         )
 
-    # 3. Try to post it to GitHub (Snippet provided below)
-    _post_github_pr_comment(markdown_summary)
+    # 3. Try to post it to the CI provider
+    _post_ci_comment(markdown_summary, ci_provider)
 
 
     if not passed:
@@ -388,6 +379,12 @@ async def _process_single_golden(golden: Golden, model_callback: Any) -> LLMTest
         raise RuntimeError(f"Error processing golden with input '{golden.input}': {e}")
 
 
+
+def _post_ci_comment(markdown_content: str, ci_provider: str):
+    if ci_provider.lower() == "github":
+        _post_github_pr_comment(markdown_content)
+    else:
+        print(f"⚠️ CI provider '{ci_provider}' is not yet supported for automated PR comments.")
 
 def _post_github_pr_comment(markdown_content: str):
     token = os.environ.get("GITHUB_TOKEN")

@@ -41,7 +41,7 @@ jobs:
       - name: Run DeepEval CICD
         if: ${{ env.OPENAI_API_KEY != '' }}
         run: |
-          poetry run deepeval cicd example_yaml.yml
+          poetry run deepeval test run example_yaml.yml --cicd
 
       #----------------------------------------------
       #              fallback logic
