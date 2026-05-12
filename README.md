@@ -1,5 +1,3 @@
-[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/confident-ai-deepeval-badge.png)](https://mseep.ai/app/confident-ai-deepeval)
-
 <p align="center">
     <picture>
         <source media="(prefers-color-scheme: dark)" srcset="assets/hero/wordmark-dark.svg">
