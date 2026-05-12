@@ -49,6 +49,9 @@ from tests.test_integrations.test_langchain.apps.langchain_agent_app import (
     ainvoke_multi_step_agent,
     ainvoke_complex_agent,
 )
+from tests.test_integrations.test_langchain.apps.langchain_next_span_app import (
+    ainvoke_with_next_llm_span,
+)
 
 # =============================================================================
 # CONFIGURATION
@@ -555,6 +558,45 @@ class TestAsyncAgentApp:
                     )
                 ]
             },
+            config={"callbacks": [callback]},
+        )
+
+        assert "messages" in result
+        assert len(result["messages"]) > 0
+
+
+# =============================================================================
+# ASYNC NEXT-SPAN STAGING TESTS (next_llm_span)
+# =============================================================================
+
+
+class TestAsyncNextSpanApp:
+    """Async counterpart of ``test_sync.py::TestNextSpanApp``. The
+    pending-slot ContextVar must survive ``await`` boundaries inside
+    the agent's chat-model call so ``on_chat_model_start`` can pop it
+    from the same task that scheduled the LLM invocation."""
+
+    @pytest.mark.asyncio
+    @trace_test("langchain_async_next_llm_span_schema.json")
+    async def test_async_next_llm_span_only(self):
+        callback = CallbackHandler(
+            name="langchain-async-next-llm-span",
+            tags=["langchain", "async", "next-llm"],
+            metadata={"test_type": "async_next_llm_span"},
+            thread_id="async-next-llm-span-123",
+            user_id="async-test-user",
+        )
+
+        result = await ainvoke_with_next_llm_span(
+            {
+                "messages": [
+                    HumanMessage(
+                        content="What is 9 squared? Call the tool and reply with just the number."
+                    )
+                ]
+            },
+            metric_collection="llm_quality_async_v1",
+            metadata={"prompt_variant": "B", "purpose": "async_next_llm_only"},
             config={"callbacks": [callback]},
         )
 

@@ -504,9 +504,7 @@ class ConfidentSpanExporter(SpanExporter):
             raw_span_expected_tools = list(raw_span_expected_tools)
 
         raw_span_metadata = span.attributes.get("confident.span.metadata")
-        raw_span_integration = span.attributes.get(
-            "confident.span.integration"
-        )
+        raw_span_integration = span.attributes.get("confident.span.integration")
 
         # Validate Span Attributes
         span_retrieval_context = parse_list_of_strings(

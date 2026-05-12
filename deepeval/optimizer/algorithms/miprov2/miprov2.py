@@ -124,9 +124,13 @@ class MIPROV2(BaseAlgorithm):
         base_prompt = self.candidates[instr_idx]
         demo_set = self.demo_sets[demo_idx]
 
-        unified_prompt = render_prompt_with_demonstrations(base_prompt, demo_set)
+        unified_prompt = render_prompt_with_demonstrations(
+            base_prompt, demo_set
+        )
 
-        config = PromptConfiguration.new(prompts={self.SINGLE_MODULE_ID: unified_prompt})
+        config = PromptConfiguration.new(
+            prompts={self.SINGLE_MODULE_ID: unified_prompt}
+        )
         self.prompt_configurations_by_id[config.id] = config
 
         self._config_cache[cache_key] = config
@@ -158,8 +162,12 @@ class MIPROV2(BaseAlgorithm):
         self._iteration_log = []
         self._config_cache.clear()
 
-        self._update_step(f"Generating {self.num_candidates} diverse instructions...")
-        self.candidates = self.proposer.propose(prompt, goldens, self.num_candidates)
+        self._update_step(
+            f"Generating {self.num_candidates} diverse instructions..."
+        )
+        self.candidates = self.proposer.propose(
+            prompt, goldens, self.num_candidates
+        )
 
         # Phase 1: Propose & Bootstrap
         self._update_step(
@@ -174,7 +182,9 @@ class MIPROV2(BaseAlgorithm):
         )
         self.demo_sets = self.bootstrapper.bootstrap(prompt, goldens)
 
-        self._update_step("Initializing Tree-structured Parzen Estimator (TPE)...")
+        self._update_step(
+            "Initializing Tree-structured Parzen Estimator (TPE)..."
+        )
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         study = optuna.create_study(
             direction="maximize", sampler=TPESampler(seed=self.seed)
@@ -187,7 +197,9 @@ class MIPROV2(BaseAlgorithm):
         for trial_idx in range(self.num_trials):
             trial_start = time.time()
             self._update_trial_progress(trial_idx + 1, self.num_trials)
-            self._update_step(f"Running Bayesian Trial {trial_idx + 1}/{self.num_trials}...")
+            self._update_step(
+                f"Running Bayesian Trial {trial_idx + 1}/{self.num_trials}..."
+            )
 
             trial = study.ask()
             instr_idx = trial.suggest_categorical(
@@ -202,7 +214,7 @@ class MIPROV2(BaseAlgorithm):
 
             score = self.scorer.score_minibatch(config, minibatch)
             study.tell(trial, score)
-            
+
             self._iteration_log.append(
                 IterationLogEntry(
                     iteration=trial_idx + 1,
@@ -214,8 +226,13 @@ class MIPROV2(BaseAlgorithm):
                 )
             )
 
-            if (trial_idx + 1) % self.minibatch_full_eval_steps == 0 or trial_idx == self.num_trials - 1:
-                self._update_step(f"Running full validation on current best configuration...")
+            if (
+                (trial_idx + 1) % self.minibatch_full_eval_steps == 0
+                or trial_idx == self.num_trials - 1
+            ):
+                self._update_step(
+                    f"Running full validation on current best configuration..."
+                )
                 best_trial = study.best_trial
                 best_eval_config = self._build_config(
                     best_trial.params["instr_idx"],

@@ -9,8 +9,10 @@ from time import perf_counter
 from collections import deque
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
 from deepeval.tracing.integrations import Provider
+
 if TYPE_CHECKING:
     from deepeval.tracing.api import TraceApi
+
 
 class Environment(Enum):
     PRODUCTION = "production"
@@ -81,6 +83,7 @@ def normalize_span_provider_for_platform(raw: Optional[Any]) -> Optional[str]:
             return canonical
 
     return s
+
 
 def normalize_trace_api_span_providers(trace_api: "TraceApi") -> None:
     """Normalize ``provider`` on all API spans before POST to Confident."""

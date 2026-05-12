@@ -7,7 +7,12 @@ from uuid import UUID
 from time import perf_counter
 from contextlib import contextmanager
 
-from deepeval.tracing.context import current_trace_context, current_span_context
+from deepeval.tracing.context import (
+    apply_pending_to_span,
+    current_span_context,
+    current_trace_context,
+    pop_pending_for,
+)
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.tracing.types import (
     LlmOutput,
@@ -396,6 +401,16 @@ class CallbackHandler(BaseCallbackHandler):
             llm_span.prompt_label = prompt.label if prompt else None
             llm_span.prompt_version = prompt.version if prompt else None
 
+            # Drain any next_llm_span(...) / next_span(...) defaults the
+            # user staged in surrounding scope. Applied AFTER the metadata
+            # path above so that staged fields override the static
+            # `with_config(metadata={...})` baseline ("more specific
+            # wins"); fields absent from the pending payload are left
+            # alone.
+            pending = pop_pending_for("llm")
+            if pending:
+                apply_pending_to_span(llm_span, pending)
+
     def on_llm_start(
         self,
         serialized: dict[str, Any],
@@ -449,6 +464,12 @@ class CallbackHandler(BaseCallbackHandler):
             llm_span.prompt_commit_hash = prompt.hash if prompt else None
             llm_span.prompt_label = prompt.label if prompt else None
             llm_span.prompt_version = prompt.version if prompt else None
+
+            # See on_chat_model_start: drain pending next_llm_span(...)
+            # defaults so users can stage metrics dynamically per call.
+            pending = pop_pending_for("llm")
+            if pending:
+                apply_pending_to_span(llm_span, pending)
 
     def on_llm_end(
         self,
@@ -728,6 +749,12 @@ class CallbackHandler(BaseCallbackHandler):
             self._run_id_to_span_uuid[str(run_id)] = uuid_str
             tool_span.input = inputs
 
+            # Drain any next_tool_span(...) / next_span(...) defaults so
+            # users can stage tool-span metrics or test cases per call.
+            pending = pop_pending_for("tool")
+            if pending:
+                apply_pending_to_span(tool_span, pending)
+
     def on_tool_end(
         self,
         output: Any,
@@ -823,6 +850,12 @@ class CallbackHandler(BaseCallbackHandler):
 
             # Extract metric_collection from metadata if provided
             retriever_span.metric_collection = md.get("metric_collection")
+
+            # Drain any next_retriever_span(...) / next_span(...) defaults
+            # so users can stage retriever metrics or test cases per call.
+            pending = pop_pending_for("retriever")
+            if pending:
+                apply_pending_to_span(retriever_span, pending)
 
     def on_retriever_end(
         self,

@@ -426,9 +426,9 @@ class OpenInferenceInstrumentationSettings:
         self.test_case_id = test_case_id
         self.turn_id = turn_id
 
-# Span interceptor. Pushes BaseSpan placeholders for ``update_current_span``,
-# implicit Trace for bare callers, parent-uuid bridge for OTel roots inside
-# ``@observe``, ``next_*_span`` consumption, and framework-attr extraction.
+        # Span interceptor. Pushes BaseSpan placeholders for ``update_current_span``,
+        # implicit Trace for bare callers, parent-uuid bridge for OTel roots inside
+        # ``@observe``, ``next_*_span`` consumption, and framework-attr extraction.
         self.integration = integration or Integration.OPEN_INFERENCE.value
 
 

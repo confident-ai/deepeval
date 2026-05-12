@@ -168,34 +168,48 @@ If you're using LangGraph, Pydantic AI, CrewAI, or LlamaIndex to build your conv
 <Tabs items={["LangGraph", "Pydantic AI", "CrewAI", "LlamaIndex"]}>
 <Tab value="LangGraph">
 
-Pass `thread_id` directly to `CallbackHandler`. Every invocation using the same `thread_id` is automatically linked into a single conversational thread in Confident AI.
+Compile your `StateGraph` with a `checkpointer` so LangGraph persists conversation state per `thread_id`, then pass the same `thread_id` to `CallbackHandler` so deepeval groups the resulting traces into one thread on Confident AI.
 
 ```python title="chatbot.py" showLineNumbers
-from langgraph.prebuilt import create_react_agent
+from langchain.chat_models import init_chat_model
+from langgraph.graph import StateGraph, MessagesState, START, END
+from langgraph.checkpoint.memory import InMemorySaver
 
 from deepeval.integrations.langchain import CallbackHandler
 
-agent = create_react_agent(
-    model="openai:gpt-4o-mini",
-    prompt="You are a helpful customer support assistant.",
+llm = init_chat_model("openai:gpt-4o-mini")
+
+
+def chatbot(state: MessagesState):
+    return {"messages": [llm.invoke(state["messages"])]}
+
+
+graph = (
+    StateGraph(MessagesState)
+    .add_node(chatbot)
+    .add_edge(START, "chatbot")
+    .add_edge("chatbot", END)
+    .compile(checkpointer=InMemorySaver())
 )
 
 thread_id = "session-123"
 
 # Turn 1 — start a new thread
-agent.invoke(
+graph.invoke(
     {"messages": [{"role": "user", "content": "Hi, my name is Alice."}]},
-    config={"callbacks": [CallbackHandler(thread_id=thread_id)]},
+    config={
+        "configurable": {"thread_id": thread_id},
+        "callbacks": [CallbackHandler(thread_id=thread_id)],
+    },
 )
 
-# Turn 2 — same thread_id stitches this trace to Turn 1
-agent.invoke(
-    {"messages": [
-        {"role": "user", "content": "Hi, my name is Alice."},
-        {"role": "assistant", "content": "Hi Alice! How can I help you today?"},
-        {"role": "user", "content": "What's my name?"},
-    ]},
-    config={"callbacks": [CallbackHandler(thread_id=thread_id)]},
+# Turn 2 — checkpointer auto-loads Turn 1's history; same thread_id stitches the traces
+graph.invoke(
+    {"messages": [{"role": "user", "content": "What's my name?"}]},
+    config={
+        "configurable": {"thread_id": thread_id},
+        "callbacks": [CallbackHandler(thread_id=thread_id)],
+    },
 )
 ```
 

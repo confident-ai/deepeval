@@ -12,7 +12,10 @@ from rich.table import Table
 from deepeval.dataset.golden import ConversationalGolden, Golden
 from deepeval.metrics.utils import copy_metrics
 from deepeval.optimizer.algorithms.base import BaseAlgorithm
-from deepeval.optimizer.scorer.utils import _a_measure_no_indicator, _measure_no_indicator
+from deepeval.optimizer.scorer.utils import (
+    _a_measure_no_indicator,
+    _measure_no_indicator,
+)
 from deepeval.optimizer.types import (
     AcceptedIteration,
     IterationLogEntry,
@@ -88,12 +91,16 @@ class SIMBA(BaseAlgorithm):
             )
 
     @staticmethod
-    def _golden_expected_text(golden: Union[Golden, ConversationalGolden]) -> Optional[str]:
+    def _golden_expected_text(
+        golden: Union[Golden, ConversationalGolden],
+    ) -> Optional[str]:
         if isinstance(golden, Golden):
             return golden.expected_output
         return golden.expected_outcome
 
-    def _extract_inputs(self, golden: Union[Golden, ConversationalGolden]) -> str:
+    def _extract_inputs(
+        self, golden: Union[Golden, ConversationalGolden]
+    ) -> str:
         if isinstance(golden, Golden):
             return golden.input
         return "\n".join(
@@ -101,7 +108,9 @@ class SIMBA(BaseAlgorithm):
         )
 
     def _execute_trace(
-        self, config: PromptConfiguration, golden: Union[Golden, ConversationalGolden]
+        self,
+        config: PromptConfiguration,
+        golden: Union[Golden, ConversationalGolden],
     ) -> SimbaTraceRecord:
         actual = self.scorer.generate(config.prompts, golden)
         test_case = self.scorer._golden_to_test_case(golden, actual)
@@ -124,7 +133,9 @@ class SIMBA(BaseAlgorithm):
         )
 
     async def _a_execute_trace(
-        self, config: PromptConfiguration, golden: Union[Golden, ConversationalGolden]
+        self,
+        config: PromptConfiguration,
+        golden: Union[Golden, ConversationalGolden],
     ) -> SimbaTraceRecord:
         actual = await self.scorer.a_generate(config.prompts, golden)
         test_case = self.scorer._golden_to_test_case(golden, actual)
@@ -155,7 +166,9 @@ class SIMBA(BaseAlgorithm):
         self._init_components()
         self._iteration_log = []
 
-        root_config = PromptConfiguration.new(prompts={self.SINGLE_MODULE_ID: prompt})
+        root_config = PromptConfiguration.new(
+            prompts={self.SINGLE_MODULE_ID: prompt}
+        )
         self.prompt_configurations_by_id[root_config.id] = root_config
         self.parents_by_id[root_config.id] = None
 
@@ -282,12 +295,16 @@ class SIMBA(BaseAlgorithm):
                     IterationLogEntry(
                         iteration=trial_idx + 1,
                         outcome="skipped",
-                        before=global_best_score
-                        if global_best_score != float("-inf")
-                        else 0.0,
-                        after=global_best_score
-                        if global_best_score != float("-inf")
-                        else 0.0,
+                        before=(
+                            global_best_score
+                            if global_best_score != float("-inf")
+                            else 0.0
+                        ),
+                        after=(
+                            global_best_score
+                            if global_best_score != float("-inf")
+                            else 0.0
+                        ),
                         reason="No introspectable variance or ground-truths found.",
                         elapsed=time.time() - trial_start,
                     )
@@ -314,7 +331,9 @@ class SIMBA(BaseAlgorithm):
                     "Running full validation on current best configuration..."
                 )
 
-                full_scores = self.scorer.score_pareto(best_batch_config, goldens)
+                full_scores = self.scorer.score_pareto(
+                    best_batch_config, goldens
+                )
                 avg_full_score = sum(full_scores) / len(full_scores)
                 self.pareto_score_table[best_batch_config.id] = full_scores
 
@@ -324,13 +343,17 @@ class SIMBA(BaseAlgorithm):
                             parent=current_best_config.id,
                             child=best_batch_config.id,
                             module=self.SINGLE_MODULE_ID,
-                            before=global_best_score
-                            if global_best_score != float("-inf")
-                            else 0.0,
+                            before=(
+                                global_best_score
+                                if global_best_score != float("-inf")
+                                else 0.0
+                            ),
                             after=avg_full_score,
                         )
                     )
-                    self.parents_by_id[best_batch_config.id] = current_best_config.id
+                    self.parents_by_id[best_batch_config.id] = (
+                        current_best_config.id
+                    )
                     global_best_score = avg_full_score
                     current_best_config = best_batch_config
                     outcome = "accepted"
@@ -341,9 +364,11 @@ class SIMBA(BaseAlgorithm):
                     IterationLogEntry(
                         iteration=trial_idx + 1,
                         outcome=outcome,
-                        before=global_best_score
-                        if global_best_score != float("-inf")
-                        else 0.0,
+                        before=(
+                            global_best_score
+                            if global_best_score != float("-inf")
+                            else 0.0
+                        ),
                         after=avg_full_score,
                         reason="Evaluated on full dataset.",
                         elapsed=time.time() - trial_start,
@@ -383,7 +408,9 @@ class SIMBA(BaseAlgorithm):
         self._init_components()
         self._iteration_log = []
 
-        root_config = PromptConfiguration.new(prompts={self.SINGLE_MODULE_ID: prompt})
+        root_config = PromptConfiguration.new(
+            prompts={self.SINGLE_MODULE_ID: prompt}
+        )
         self.prompt_configurations_by_id[root_config.id] = root_config
         self.parents_by_id[root_config.id] = None
 
@@ -477,18 +504,20 @@ class SIMBA(BaseAlgorithm):
 
                 try:
                     if strategy == "rule":
-                        new_prompt = await self.proposer.a_rewrite_from_introspection(
-                            original_prompt=current_best_config.prompts[
-                                self.SINGLE_MODULE_ID
-                            ],
-                            better_inputs=inputs,
-                            better_outputs=str(good_trace.output),
-                            better_score=good_trace.score,
-                            better_feedback=good_trace.feedback,
-                            worse_inputs=inputs,
-                            worse_outputs=str(bad_trace.output),
-                            worse_score=bad_trace.score,
-                            worse_feedback=bad_trace.feedback,
+                        new_prompt = (
+                            await self.proposer.a_rewrite_from_introspection(
+                                original_prompt=current_best_config.prompts[
+                                    self.SINGLE_MODULE_ID
+                                ],
+                                better_inputs=inputs,
+                                better_outputs=str(good_trace.output),
+                                better_score=good_trace.score,
+                                better_feedback=good_trace.feedback,
+                                worse_inputs=inputs,
+                                worse_outputs=str(bad_trace.output),
+                                worse_score=bad_trace.score,
+                                worse_feedback=bad_trace.feedback,
+                            )
                         )
                     else:
                         new_prompt = self.proposer.append_a_demo(
@@ -506,7 +535,9 @@ class SIMBA(BaseAlgorithm):
                 except Exception:
                     return None
 
-            pb_tasks = [process_bucket(b) for b in buckets[: self.num_candidates]]
+            pb_tasks = [
+                process_bucket(b) for b in buckets[: self.num_candidates]
+            ]
             results = await asyncio.gather(*pb_tasks)
 
             for res in results:
@@ -519,12 +550,16 @@ class SIMBA(BaseAlgorithm):
                     IterationLogEntry(
                         iteration=trial_idx + 1,
                         outcome="skipped",
-                        before=global_best_score
-                        if global_best_score != float("-inf")
-                        else 0.0,
-                        after=global_best_score
-                        if global_best_score != float("-inf")
-                        else 0.0,
+                        before=(
+                            global_best_score
+                            if global_best_score != float("-inf")
+                            else 0.0
+                        ),
+                        after=(
+                            global_best_score
+                            if global_best_score != float("-inf")
+                            else 0.0
+                        ),
                         reason="No introspectable variance or ground-truths found.",
                         elapsed=time.time() - trial_start,
                     )
@@ -565,13 +600,17 @@ class SIMBA(BaseAlgorithm):
                             parent=current_best_config.id,
                             child=best_batch_config.id,
                             module=self.SINGLE_MODULE_ID,
-                            before=global_best_score
-                            if global_best_score != float("-inf")
-                            else 0.0,
+                            before=(
+                                global_best_score
+                                if global_best_score != float("-inf")
+                                else 0.0
+                            ),
                             after=avg_full_score,
                         )
                     )
-                    self.parents_by_id[best_batch_config.id] = current_best_config.id
+                    self.parents_by_id[best_batch_config.id] = (
+                        current_best_config.id
+                    )
                     global_best_score = avg_full_score
                     current_best_config = best_batch_config
                     outcome = "accepted"
@@ -582,9 +621,11 @@ class SIMBA(BaseAlgorithm):
                     IterationLogEntry(
                         iteration=trial_idx + 1,
                         outcome=outcome,
-                        before=global_best_score
-                        if global_best_score != float("-inf")
-                        else 0.0,
+                        before=(
+                            global_best_score
+                            if global_best_score != float("-inf")
+                            else 0.0
+                        ),
                         after=avg_full_score,
                         reason="Evaluated on full dataset.",
                         elapsed=time.time() - trial_start,
@@ -631,7 +672,9 @@ class SIMBA(BaseAlgorithm):
             show_lines=True,
             expand=True,
         )
-        iter_table.add_column("Iter", style="bold white", justify="right", no_wrap=True)
+        iter_table.add_column(
+            "Iter", style="bold white", justify="right", no_wrap=True
+        )
         iter_table.add_column("Status", justify="center", no_wrap=True)
         iter_table.add_column("Score Before", justify="right", no_wrap=True)
         iter_table.add_column("Score After", justify="right", no_wrap=True)

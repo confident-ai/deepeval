@@ -1,0 +1,356 @@
+{
+  "testCases": [
+    {
+      "name": "sample_test_case",
+      "input": "What is CECL forecasting and how does Abrigo handle allowance variance?",
+      "actualOutput": "{...}",
+      "success": false,
+      "order": 0,
+      "metricsData": [
+        {
+          "name": "Answer Relevancy",
+          "threshold": 0.5,
+          "success": true,
+          "score": 0.92,
+          "reason": "The output addresses the user's question directly and stays on topic.",
+          "strictMode": false,
+          "evaluationModel": "gpt-5.4",
+          "evaluationCost": 0.0042
+        },
+        {
+          "name": "Faithfulness",
+          "threshold": 0.7,
+          "success": false,
+          "score": 0.45,
+          "reason": "## Reasoning\n\nThe response introduces **two claims** unsupported by the retrieved context:\n\n1. \"Abrigo automatically reconciles CECL variance against quarterly earnings.\" — not in any retrieved chunk.\n2. \"CECL forecasting uses GAAP-compliant Monte Carlo simulation.\" — partially supported; the chunk mentions GAAP compliance but not Monte Carlo specifically.\n\nThe rest of the response is grounded. Score reflects the weighted fraction of supported claims.",
+          "strictMode": false,
+          "evaluationModel": "gpt-5.4",
+          "evaluationCost": 0.0061
+        }
+      ],
+      "trace": {
+        "uuid": "abf91011-1111-4111-8111-111111111111",
+        "startTime": "2026-05-12T03:01:00.000Z",
+        "endTime": "2026-05-12T03:01:11.420Z",
+        "status": "ERRORED",
+        "name": "orchestrate_research_response",
+        "tags": ["rag", "experimental", "v2"],
+        "metadata": {
+          "deployment": "staging",
+          "feature_flag": "agentic_rerank_enabled"
+        },
+        "input": {
+          "query": "What is CECL forecasting and how does Abrigo handle allowance variance?"
+        },
+        "output": {
+          "answer": "CECL (Current Expected Credit Losses) forecasting models lifetime credit losses...",
+          "citations": ["chunk_a", "chunk_b"]
+        },
+        "metricsData": [
+          {
+            "name": "Answer Relevancy",
+            "threshold": 0.5,
+            "success": true,
+            "score": 0.92,
+            "reason": "The output addresses the user's question directly and stays on topic.",
+            "strictMode": false,
+            "evaluationModel": "gpt-5.4",
+            "evaluationCost": 0.0042
+          },
+          {
+            "name": "Faithfulness",
+            "threshold": 0.7,
+            "success": false,
+            "score": 0.45,
+            "reason": "## Reasoning\n\nThe response introduces **two claims** unsupported by the retrieved context:\n\n1. \"Abrigo automatically reconciles CECL variance against quarterly earnings.\" — not in any retrieved chunk.\n2. \"CECL forecasting uses GAAP-compliant Monte Carlo simulation.\" — partially supported; the chunk mentions GAAP compliance but not Monte Carlo specifically.\n\nThe rest of the response is grounded. Score reflects the weighted fraction of supported claims.",
+            "strictMode": false,
+            "evaluationModel": "gpt-5.4",
+            "evaluationCost": 0.0061
+          }
+        ],
+        "baseSpans": [
+          {
+            "uuid": "020e0001-0000-0000-0000-000000000001",
+            "name": "parse_user_query",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "020e0001-0000-0000-0000-00000000a001",
+            "startTime": "2026-05-12T03:01:00.010Z",
+            "endTime": "2026-05-12T03:01:00.082Z",
+            "input": "What is CECL forecasting and how does Abrigo handle allowance variance?",
+            "output": {
+              "normalized": "cecl forecasting abrigo allowance variance",
+              "intent": "RESEARCH"
+            }
+          }
+        ],
+        "agentSpans": [
+          {
+            "uuid": "020e0001-0000-0000-0000-00000000a001",
+            "name": "orchestrate_research_response",
+            "status": "ERRORED",
+            "type": "agent",
+            "startTime": "2026-05-12T03:01:00.000Z",
+            "endTime": "2026-05-12T03:01:11.420Z",
+            "input": {
+              "query": "What is CECL forecasting and how does Abrigo handle allowance variance?"
+            },
+            "output": {
+              "answer": "CECL (Current Expected Credit Losses) forecasting models lifetime credit losses..."
+            },
+            "availableTools": ["web_search", "knowledge_base_lookup", "calculator"],
+            "agentHandoffs": ["validator_agent"],
+            "integration": "LangGraph"
+          },
+          {
+            "uuid": "020e0001-0000-0000-0000-00000000a002",
+            "name": "validator_agent",
+            "status": "SUCCESS",
+            "type": "agent",
+            "parentUuid": "020e0001-0000-0000-0000-00000000a001",
+            "startTime": "2026-05-12T03:01:09.600Z",
+            "endTime": "2026-05-12T03:01:11.380Z",
+            "input": {
+              "draft_answer": "CECL forecasting models lifetime credit losses..."
+            },
+            "output": {
+              "valid": true,
+              "flagged_claims": [
+                "CECL forecasting uses GAAP-compliant Monte Carlo simulation."
+              ]
+            },
+            "availableTools": ["fact_check_llm"],
+            "agentHandoffs": [],
+            "metricsData": [
+              {
+                "name": "GEval-Hallucination",
+                "threshold": 0.5,
+                "success": false,
+                "score": 0.15,
+                "reason": "Validator missed an unsupported claim about Monte Carlo simulation.",
+                "strictMode": false,
+                "evaluationModel": "gpt-5.4",
+                "evaluationCost": 0.0021
+              }
+            ]
+          }
+        ],
+        "llmSpans": [
+          {
+            "uuid": "020e0001-0000-0000-0000-0000000000l1",
+            "name": "rerank_chunks",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "020e0001-0000-0000-0000-0000000000r1",
+            "startTime": "2026-05-12T03:01:01.020Z",
+            "endTime": "2026-05-12T03:01:02.110Z",
+            "input": [
+              {"role": "system", "content": "Rank these chunks by relevance."},
+              {"role": "user", "content": "Query: cecl forecasting abrigo allowance variance"}
+            ],
+            "output": {
+              "role": "AI",
+              "content": "Top chunks: chunk_a, chunk_b, chunk_c"
+            },
+            "model": "gpt-4o-mini",
+            "provider": "openai",
+            "inputTokenCount": 1200,
+            "outputTokenCount": 48,
+            "costPerInputToken": 0.00000015,
+            "costPerOutputToken": 0.0000006,
+            "integration": "LangChain",
+            "metricsData": [
+              {
+                "name": "Faithfulness",
+                "threshold": 0.7,
+                "success": true,
+                "score": 0.91,
+                "reason": "Reranker chose chunks that genuinely support the answer.",
+                "strictMode": false,
+                "evaluationModel": "gpt-5.4",
+                "evaluationCost": 0.0018
+              }
+            ]
+          },
+          {
+            "uuid": "020e0001-0000-0000-0000-0000000000l2",
+            "name": "synthesize_answer",
+            "status": "ERRORED",
+            "type": "llm",
+            "parentUuid": "020e0001-0000-0000-0000-00000000a001",
+            "startTime": "2026-05-12T03:01:05.800Z",
+            "endTime": "2026-05-12T03:01:08.220Z",
+            "input": [
+              {"role": "system", "content": "Synthesize an answer from the retrieved chunks."},
+              {"role": "user", "content": "Query: cecl forecasting"}
+            ],
+            "output": null,
+            "error": "openai.RateLimitError: Rate limit exceeded for gpt-4o (tier 1).",
+            "model": "gpt-4o",
+            "provider": "openai",
+            "inputTokenCount": 2200,
+            "outputTokenCount": 0,
+            "integration": "LangChain"
+          },
+          {
+            "uuid": "020e0001-0000-0000-0000-0000000000l3",
+            "name": "format_final_response",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "020e0001-0000-0000-0000-00000000a001",
+            "startTime": "2026-05-12T03:01:08.600Z",
+            "endTime": "2026-05-12T03:01:09.520Z",
+            "input": [
+              {"role": "system", "content": "Format the answer with citations."},
+              {"role": "user", "content": "Draft answer + cited chunks"}
+            ],
+            "output": {
+              "role": "AI",
+              "content": "CECL (Current Expected Credit Losses) forecasting models lifetime credit losses..."
+            },
+            "model": "gpt-4o-mini",
+            "provider": "openai",
+            "inputTokenCount": 540,
+            "outputTokenCount": 180,
+            "costPerInputToken": 0.00000015,
+            "costPerOutputToken": 0.0000006,
+            "metricsData": [
+              {
+                "name": "GEval-Verbosity",
+                "threshold": 0.5,
+                "success": true,
+                "score": 0.62,
+                "reason": "Output is concise relative to question complexity.",
+                "strictMode": false,
+                "evaluationModel": "gpt-5.4",
+                "evaluationCost": 0.0013
+              }
+            ]
+          },
+          {
+            "uuid": "020e0001-0000-0000-0000-0000000000l4",
+            "name": "validate_facts",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "020e0001-0000-0000-0000-00000000a002",
+            "startTime": "2026-05-12T03:01:09.700Z",
+            "endTime": "2026-05-12T03:01:11.320Z",
+            "input": [
+              {"role": "system", "content": "Identify any unsupported claims."}
+            ],
+            "output": {
+              "role": "AI",
+              "content": "Flagged: \"GAAP-compliant Monte Carlo simulation\""
+            },
+            "model": "gpt-4o",
+            "provider": "openai",
+            "inputTokenCount": 880,
+            "outputTokenCount": 64,
+            "metricsData": [
+              {
+                "name": "Faithfulness",
+                "threshold": 0.7,
+                "success": true,
+                "score": 0.88,
+                "reason": "Validator's reasoning aligns with the retrieved context.",
+                "strictMode": false,
+                "evaluationModel": "gpt-5.4",
+                "evaluationCost": 0.0016
+              }
+            ]
+          }
+        ],
+        "retrieverSpans": [
+          {
+            "uuid": "020e0001-0000-0000-0000-0000000000r1",
+            "name": "knowledge_base_lookup",
+            "status": "SUCCESS",
+            "type": "retriever",
+            "parentUuid": "020e0001-0000-0000-0000-00000000a001",
+            "startTime": "2026-05-12T03:01:00.100Z",
+            "endTime": "2026-05-12T03:01:02.150Z",
+            "input": "cecl forecasting abrigo allowance variance",
+            "output": [
+              {"score": 0.93, "text": "CECL (Current Expected Credit Losses) requires institutions to model lifetime expected credit losses..."},
+              {"score": 0.87, "text": "Abrigo's allowance for credit loss workflow performs quarterly reconciliation against..."},
+              {"score": 0.71, "text": "Allowance variance reports compare expected versus actual losses across the reporting period..."}
+            ],
+            "embedder": "text-embedding-3-large",
+            "topK": 5,
+            "chunkSize": 512,
+            "retrievalContext": [
+              "CECL (Current Expected Credit Losses) requires institutions to model lifetime expected credit losses...",
+              "Abrigo's allowance for credit loss workflow performs quarterly reconciliation against...",
+              "Allowance variance reports compare expected versus actual losses across the reporting period..."
+            ],
+            "metricsData": [
+              {
+                "name": "Contextual Relevancy",
+                "threshold": 0.5,
+                "success": true,
+                "score": 0.78,
+                "reason": "Retrieved chunks cover both halves of the user's question (CECL forecasting + allowance variance).",
+                "strictMode": false,
+                "evaluationModel": "gpt-5.4",
+                "evaluationCost": 0.0035
+              }
+            ]
+          }
+        ],
+        "toolSpans": [
+          {
+            "uuid": "020e0001-0000-0000-0000-0000000000t1",
+            "name": "web_search",
+            "status": "SUCCESS",
+            "type": "tool",
+            "parentUuid": "020e0001-0000-0000-0000-00000000a001",
+            "startTime": "2026-05-12T03:01:02.300Z",
+            "endTime": "2026-05-12T03:01:05.700Z",
+            "input": {
+              "query": "abrigo cecl forecasting 2026 changelog",
+              "max_results": 3
+            },
+            "output": [
+              {"url": "https://abrigo.com/changelog/2026-q1", "title": "Q1 2026 CECL updates"},
+              {"url": "https://abrigo.com/docs/cecl-forecasting", "title": "CECL Forecasting Guide"}
+            ],
+            "description": "Search the public web with a tunable result count.",
+            "metricsData": [
+              {
+                "name": "Tool Correctness",
+                "threshold": 0.5,
+                "success": true,
+                "score": 1.0,
+                "reason": "Query matches user intent; result count respected.",
+                "strictMode": false,
+                "evaluationModel": "gpt-5.4",
+                "evaluationCost": 0.0008
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "conversationalTestCases": [],
+  "metricsScores": [
+    {
+      "metric": "Answer Relevancy",
+      "scores": [0.92],
+      "passes": 1,
+      "fails": 0,
+      "errors": 0
+    },
+    {
+      "metric": "Faithfulness",
+      "scores": [0.45, 0.91, 0.88],
+      "passes": 2,
+      "fails": 1,
+      "errors": 0
+    }
+  ],
+  "testPassed": 0,
+  "testFailed": 1,
+  "runDuration": 11.42,
+  "evaluationCost": 0.0214
+}

@@ -1,7 +1,9 @@
 class COPROTemplate:
 
     @staticmethod
-    def generate_bootstrap_guidelines(original_prompt: str, breadth: int) -> str:
+    def generate_bootstrap_guidelines(
+        original_prompt: str, breadth: int
+    ) -> str:
         return f"""You are an expert prompt engineer. I need to generate {breadth} distinct, high-quality variations of the following prompt.
 
 [ORIGINAL PROMPT]
@@ -27,7 +29,9 @@ JSON:
 """
 
     @staticmethod
-    def generate_history_guidelines(original_prompt: str, history_text: str, breadth: int) -> str:
+    def generate_history_guidelines(
+        original_prompt: str, history_text: str, breadth: int
+    ) -> str:
         return f"""You are an expert prompt engineer and diagnostic system. We are using Coordinate Ascent to optimize a prompt. 
 
 [ORIGINAL PROMPT]
@@ -59,21 +63,23 @@ JSON:
 
     @staticmethod
     def generate_candidate(
-        original_prompt: str, 
-        guideline: str, 
-        is_list_format: bool = False
+        original_prompt: str, guideline: str, is_list_format: bool = False
     ) -> str:
-        
+
         # Dynamically instruct the LLM on how to format the revised_prompt field
         if is_list_format:
             format_instruction = (
                 "A JSON array of message objects representing the revised conversational prompt "
-                "(e.g., [{\"role\": \"system\", \"content\": \"...\"}, {\"role\": \"user\", \"content\": \"...\"}])."
+                '(e.g., [{"role": "system", "content": "..."}, {"role": "user", "content": "..."}]).'
             )
             example_instruction = '[\n        {"role": "system", "content": "You are a helpful assistant."},\n        {"role": "user", "content": "{{input}}"}\n    ]'
         else:
-            format_instruction = "The final string representing the optimized revised prompt."
-            example_instruction = '"You are a helpful assistant. Please answer: {{input}}"'
+            format_instruction = (
+                "The final string representing the optimized revised prompt."
+            )
+            example_instruction = (
+                '"You are a helpful assistant. Please answer: {{input}}"'
+            )
 
         return f"""You are an expert prompt engineer. Your task is to rewrite a prompt based strictly on a specific optimization guideline.
 

@@ -93,24 +93,23 @@ async def model_callback(input: str, turns: List[Turn]) -> Turn:
 </Tab>
 <Tab value="LangChain">
 
-```python title="main.py" showLineNumbers={true} {11}
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain_community.chat_message_histories import ChatMessageHistory
+```python title="main.py" showLineNumbers={true} {10,13}
+from langchain.agents import create_agent
+from langgraph.checkpoint.memory import InMemorySaver
 from deepeval.test_case import Turn
 
-store = {}
-llm = ChatOpenAI(model="gpt-4")
-prompt = ChatPromptTemplate.from_messages([("system", "You are a ticket purchasing assistant."), MessagesPlaceholder(variable_name="history"), ("human", "{input}")])
-chain_with_history = RunnableWithMessageHistory(prompt | llm, lambda session_id: store.setdefault(session_id, ChatMessageHistory()), input_messages_key="input", history_messages_key="history")
+agent = create_agent(
+    model="openai:gpt-4o-mini",
+    system_prompt="You are a ticket purchasing assistant.",
+    checkpointer=InMemorySaver(),
+)
 
 async def model_callback(input: str, thread_id: str) -> Turn:
-    response = chain_with_history.invoke(
-        {"input": input},
-        config={"configurable": {"session_id": thread_id}},
+    result = agent.invoke(
+        {"messages": [{"role": "user", "content": input}]},
+        config={"configurable": {"thread_id": thread_id}},
     )
-    return Turn(role="assistant", content=response.content)
+    return Turn(role="assistant", content=result["messages"][-1].content)
 ```
 
 </Tab>
