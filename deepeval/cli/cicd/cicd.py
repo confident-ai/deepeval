@@ -286,17 +286,17 @@ def _build_metrics(
     for i, item in enumerate(raw_metrics):
         if not isinstance(item, dict):
             raise TypeError(f"metrics[{i}] must be a dict, got {type(item).__name__}")
-        class_name = item.get("name")
+        class_name = item.get("metric")
         if not class_name or not isinstance(class_name, str):
             raise ValueError(
-                f"metrics[{i}] requires a non-empty string 'name' (metric class name)"
+                f"metrics[{i}] requires a non-empty string 'metric' (metric class name)"
             )
         cls = getattr(metrics_module, class_name, None)
         if cls is None:
             raise ValueError(
                 f"Unknown metric '{class_name}'. Please use a valid metric from deepeval.metrics."
             )
-        kwargs = {k: v for k, v in item.items() if k != "name"}
+        kwargs = {k: v for k, v in item.items() if k != "metric"}
         try:
             metrics.append(cls(**kwargs))
         except TypeError as e:
