@@ -3,23 +3,31 @@
 Use documented `EvaluationDataset` APIs directly. Do not invent wrapper helpers
 for dataset loading in templates.
 
-If the user does not have a dataset yet, read `synthetic-data.md` and generate
-one with `deepeval generate` before creating the pytest eval file.
+Dataset source order is strict:
+
+1. Ask whether the user already has a dataset.
+2. If they do, load it with the documented `EvaluationDataset` API.
+3. If they do not, read `synthetic-data.md` and generate one with
+   `deepeval generate`.
+
+Do not hand-create or make up goldens. For a useful first generated eval
+dataset, target about 30-50 goldens. If the user insists on manual goldens,
+warn that generated goldens are usually less biased and more reproducible, then
+recommend augmenting any manual seed set with `deepeval generate --method
+goldens`.
 
 If the user has a dataset, check its size before accepting it as sufficient.
-Fewer than 10 goldens is very likely too small. A useful first eval dataset is
-usually 50-100 goldens. If the dataset is small or the user is unhappy with it,
-read `synthetic-data.md` and consider augmenting from existing goldens.
+Fewer than 10 goldens is very likely too small. If the dataset is small or the
+user is unhappy with it, read `synthetic-data.md` and consider augmenting from
+existing goldens with `deepeval generate`.
 
 ## Local JSON
 
 ```python
 from deepeval.dataset import EvaluationDataset
 
-DATASET_PATH = "tests/evals/.dataset.json"
-
 dataset = EvaluationDataset()
-dataset.add_goldens_from_json_file(file_path=DATASET_PATH)
+dataset.add_goldens_from_json_file(file_path="tests/evals/.dataset.json")
 ```
 
 ## Local JSONL
@@ -51,13 +59,12 @@ MCP/API access are available.
 
 ## Pytest Convention
 
-Load the dataset in top-level setup lines, then parametrize with
-`dataset.goldens` or `dataset.test_cases`:
+Load the dataset directly in the test file immediately before parametrization.
+Do not hide dataset loading in `conftest.py` or custom fixture wrappers:
 
 ```python
 dataset = EvaluationDataset()
-dataset.add_goldens_from_json_file(file_path=DATASET_PATH)
-
+dataset.add_goldens_from_json_file(file_path="tests/evals/.dataset.json")
 
 @pytest.mark.parametrize("golden", dataset.goldens)
 def test_llm_app(golden):
