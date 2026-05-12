@@ -83,7 +83,12 @@ Tool calls with *different* arguments are treated as distinct calls and are not 
 
 ### Reasoning Stagnation
 
-This sub-signal compares consecutive LLM span outputs using **bigram Jaccard similarity**. Common stop words and boilerplate phrases are stripped before computing bigrams so that shared preambles ("Based on the information provided...") do not inflate scores. Outputs shorter than 20 meaningful words are skipped.
+This sub-signal compares consecutive LLM span outputs using **two complementary similarity measures**:
+
+1. **Bigram Jaccard similarity** — fast bag-of-bigrams overlap. Common stop words and boilerplate phrases are stripped before computing bigrams so that shared preambles ("Based on the information provided...") do not inflate scores. Outputs shorter than 20 meaningful words are skipped.
+2. **`SequenceMatcher` ratio** (Python `difflib`) — sequence-aware comparison that catches reordered but semantically identical text ("I will now search" ≈ "Let me search now").
+
+The **maximum** of both signals is used as the final similarity score. This ensures stagnation is caught whether the agent repeats itself verbatim (Jaccard) or merely shuffles its phrasing (SequenceMatcher).
 
 - **Score 1.0**: no consecutive pair exceeds `similarity_threshold`.
 - **Score 0.5**: a pair has similarity ≥ `similarity_threshold` (high overlap).
@@ -139,3 +144,37 @@ print(metric.reason)  # e.g. "Tool 'search_web' called 6 times with identical ar
 ```
 
 Each key maps to one of the three sub-signals described above. A value of `1.0` means no issue was detected for that signal; lower values indicate degradation.
+
+## Limitations & Design Decisions
+
+### Why no `model` parameter?
+
+This metric is **fully deterministic by design**. Every sub-signal is computed with hashing, set operations, or sequence comparison — no LLM is needed. This is intentional:
+
+- **Zero cost** — runs in production without API keys or network calls.
+- **Deterministic** — identical traces always produce identical scores (important for CI/CD gates).
+- **Fast** — no LLM round-trip latency.
+
+A future `model` parameter could enable an LLM-as-judge mode for the reasoning stagnation sub-signal, which would catch semantically identical outputs that differ in wording. This is tracked as a potential enhancement.
+
+### Cycle detection: `type:name:input_hash` labels
+
+The call graph cycle detector identifies spans using a `type:name:input_hash` label. This is a **heuristic** — the trace dict (`_trace_dict`) does not expose span UUIDs (they are stripped by `create_nested_spans_dict`), so exact span identity is unavailable.
+
+**Trade-offs:**
+
+- Including the truncated input hash reduces false positives when two genuinely different agents share a name (e.g. an outer `"planner"` agent delegating to an inner `"planner"` agent with different input).
+- A true recursive loop will pass the same or similar input back to itself, so the input hash will match and the cycle will be correctly detected.
+- In the rare case where two unrelated same-name spans receive identical truncated inputs, a false positive could occur. In practice, this is extremely unlikely.
+
+### Stagnation detection: dual-signal approach
+
+Reasoning stagnation uses **two** complementary similarity measures and takes the maximum:
+
+| Signal | Catches | Misses |
+|---|---|---|
+| Bigram Jaccard | Literal repetition, shared phrase patterns | Word reordering |
+| `SequenceMatcher` ratio | Reordered-but-similar text, insertions/deletions | Semantically identical text with different vocabulary |
+
+This dual approach is strictly better than either signal alone. However, it will still miss outputs that are **semantically identical but lexically different** (e.g. "Search for Paris weather" vs "Look up the forecast in Paris"). Catching those would require an LLM-as-judge, which would sacrifice the deterministic / zero-cost properties of this metric.
+

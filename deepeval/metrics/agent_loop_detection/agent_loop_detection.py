@@ -1,4 +1,5 @@
 import json
+from difflib import SequenceMatcher
 from typing import Optional, List, Tuple, Dict
 
 from deepeval.test_case import LLMTestCase, SingleTurnParams
@@ -40,7 +41,6 @@ _STOP_WORDS = {
     "next",
     "step",
     "going",
-    "going",
     "so",
     "do",
     "be",
@@ -65,11 +65,50 @@ _STOP_WORDS = {
 class AgentLoopDetectionMetric(BaseMetric):
     """Detects infinite loops and cyclical patterns in agent execution traces.
 
-    Analyzes three sub-signals: tool call repetition, reasoning stagnation,
-    and call graph cycles. Returns a score from 0.0 (severe looping) to
-    1.0 (clean execution).
+    Analyzes three independent sub-signals and returns a weighted score from
+    0.0 (severe looping) to 1.0 (clean execution):
 
-    This is a fully deterministic metric — no LLM is required.
+    1. **Tool Call Repetition** — Counts identical ``(name, args)`` tool
+       invocations.  Score degrades at ``repetition_threshold`` (0.5) and
+       at ``2 × repetition_threshold`` (0.0).
+
+    2. **Reasoning Stagnation** — Compares consecutive LLM-span outputs
+       using *both* bigram Jaccard similarity *and* ``SequenceMatcher``
+       ratio (stdlib ``difflib``).  Taking the maximum of the two catches
+       stagnation whether the wording is literally repeated or merely
+       reordered ("I will now search" vs "Let me search now").  Common
+       stop words are stripped before comparison to prevent boilerplate
+       from inflating scores.
+
+    3. **Call Graph Cycles** — DFS on the nested ``children`` tree.  A
+       cycle is flagged when a span with the same ``type:name:input_hash``
+       label appears twice on the same root-to-leaf ancestry path.
+       Including a truncated input hash in the label reduces false
+       positives when two structurally different spans happen to share a
+       name (see *Limitations* in the metric documentation).
+
+    Design decisions
+    ~~~~~~~~~~~~~~~~
+    * **Fully deterministic** — no LLM / API key required.  This is
+      intentional: the metric is designed to run in production pipelines
+      at zero cost and zero latency.
+    * **No ``model`` parameter** — because every sub-signal is computed
+      with deterministic algorithms, accepting a ``model`` argument would
+      be misleading.  A future LLM-as-judge stagnation mode could be added
+      behind a feature flag if semantic comparison proves necessary.
+
+    Limitations
+    ~~~~~~~~~~~
+    * **Cycle detection** relies on ``type:name:input_hash`` identity.
+      Two genuinely different spans that share the same type, name, *and*
+      a truncated input hash could still be false-positived.  The trace
+      dict (``_trace_dict``) does not expose span UUIDs, so this is the
+      best available heuristic.
+    * **Stagnation detection** uses structural text similarity (bigram
+      Jaccard + ``SequenceMatcher``).  It will miss semantically identical
+      outputs that are worded very differently.  An LLM-as-judge mode
+      would solve this but would sacrifice the deterministic / zero-cost
+      properties.
     """
 
     _required_params: List[SingleTurnParams] = [
@@ -299,17 +338,54 @@ class AgentLoopDetectionMetric(BaseMetric):
 
         return 1.0, "Tool calls are within acceptable repetition limits."
 
+    # ------------------------------------------------------------------
+    # Call graph cycle detection
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _input_hash(span: Dict) -> str:
+        """Return a short, stable hash of a span's input for label
+        disambiguation.
+
+        Including the input in the DFS label drastically reduces false
+        positives when two structurally different spans share a
+        ``type:name`` pair (e.g. two different agents both named
+        ``"planner"``).  We truncate to 64 chars to keep labels readable
+        in cycle-path messages.
+        """
+        raw = span.get("input", "")
+        if isinstance(raw, dict):
+            try:
+                raw = json.dumps(raw, sort_keys=True)
+            except (TypeError, ValueError):
+                raw = str(raw)
+        return str(raw)[:64]
+
     def _score_call_graph_cycles(
         self, trace_dict: Optional[Dict]
     ) -> Tuple[float, str]:
-        """Detect cycles using the real parent→child call graph encoded in the
-        nested ``children`` list.  A cycle means a span's *name+type* appears
-        twice on the same root-to-leaf ancestry path — i.e., the agent
-        genuinely called itself recursively.
+        """Detect cycles in the real parent→child call graph.
 
-        Sequential repetition (tool A called twice at the same depth) is
-        intentionally NOT flagged here; that is the job of
-        ``_score_tool_repetition``.
+        Traverses the nested ``children`` tree using DFS.  A cycle is
+        flagged when a span's ``type:name:input_hash`` label appears
+        twice on the same root-to-leaf ancestry path — meaning the agent
+        genuinely called itself (or a transitive ancestor) recursively.
+
+        **Why input_hash is included:** Without it, two genuinely
+        different spans that happen to share the same ``type:name`` (e.g.
+        ``agent:planner`` at the root and a delegated ``agent:planner``
+        with different input deeper in the tree) would be false-positived.
+        Incorporating a truncated input hash makes the label specific
+        enough to avoid this while still detecting true recursive loops
+        (which, by definition, pass the same or similar input back).
+
+        **Limitation:** If the trace dict exposed span UUIDs we could
+        use exact identity.  ``create_nested_spans_dict`` strips them,
+        so ``type:name:input_hash`` is the best available heuristic.
+
+        Sequential repetition (the same tool appearing multiple times at
+        sibling positions) is intentionally NOT flagged here; that is the
+        job of ``_score_tool_repetition``.
         """
         if not trace_dict:
             return 1.0, "No call graph cycles detected."
@@ -318,7 +394,9 @@ class AgentLoopDetectionMetric(BaseMetric):
 
         def _label(span: Dict) -> str:
             return (
-                f"{span.get('type', 'unknown')}:{span.get('name', 'unnamed')}"
+                f"{span.get('type', 'unknown')}"
+                f":{span.get('name', 'unnamed')}"
+                f":{self._input_hash(span)}"
             )
 
         def dfs(span: Dict, ancestor_labels: List[str]) -> bool:
@@ -343,29 +421,64 @@ class AgentLoopDetectionMetric(BaseMetric):
         has_cycle = dfs(trace_dict, [])
 
         if has_cycle:
-            cycle_str = " -> ".join(cycle_path)
+            # Strip the input_hash from the display for readability
+            display_path = []
+            for label in cycle_path:
+                parts = label.split(":", 2)
+                display_path.append(f"{parts[0]}:{parts[1]}")
+            cycle_str = " -> ".join(display_path)
             return 0.0, f"Cycle detected in execution path: {cycle_str}."
 
         return 1.0, "No execution cycles detected."
 
+    # ------------------------------------------------------------------
+    # Reasoning stagnation detection
+    # ------------------------------------------------------------------
+
     def _score_reasoning_stagnation(self, llm_spans: list) -> Tuple[float, str]:
+        """Compare consecutive LLM outputs using two complementary
+        similarity signals and take the **maximum**:
+
+        1. **Bigram Jaccard** — fast bag-of-bigrams overlap after
+           stop-word removal.  Good at catching literal repetition.
+        2. **SequenceMatcher ratio** (``difflib``) — sequence-aware
+           comparison that catches reordered but semantically identical
+           text ("I will now search" ≈ "Let me search now").
+
+        Taking the max ensures we flag stagnation regardless of whether
+        the agent repeats itself verbatim or merely shuffles its phrasing.
+
+        Outputs shorter than 20 meaningful words (after stop-word
+        removal) are skipped — Jaccard is meaningless at that scale.
+        """
         if len(llm_spans) < 2:
             return (
                 1.0,
                 "Not enough LLM spans to check for reasoning stagnation.",
             )
 
-        def get_bigrams(text: str) -> set:
-            words = [
+        def _clean_words(text: str) -> List[str]:
+            """Lowercase, strip stop words, drop short tokens."""
+            return [
                 w
                 for w in str(text).lower().split()
                 if w not in _STOP_WORDS and len(w) > 2
             ]
-            # Skip stagnation check for very short outputs — Jaccard is
-            # meaningless with fewer than 20 meaningful words.
-            if len(words) < 20:
-                return set()
-            return set(zip(words, words[1:]))
+
+        def _bigram_jaccard(words_a: List[str], words_b: List[str]) -> float:
+            if len(words_a) < 2 or len(words_b) < 2:
+                return 0.0
+            bg_a = set(zip(words_a, words_a[1:]))
+            bg_b = set(zip(words_b, words_b[1:]))
+            union = bg_a | bg_b
+            if not union:
+                return 0.0
+            return len(bg_a & bg_b) / len(union)
+
+        def _sequence_ratio(text_a: str, text_b: str) -> float:
+            """SequenceMatcher ratio — order-sensitive but resilient to
+            small insertions/deletions."""
+            return SequenceMatcher(None, text_a, text_b).ratio()
 
         max_overlap = 0.0
         stagnating_pair = (-1, -1)
@@ -377,32 +490,40 @@ class AgentLoopDetectionMetric(BaseMetric):
             if not isinstance(out1, str) or not isinstance(out2, str):
                 continue
 
-            bg1 = get_bigrams(out1)
-            bg2 = get_bigrams(out2)
+            words1 = _clean_words(out1)
+            words2 = _clean_words(out2)
 
-            # One or both outputs were too short — skip pair
-            if not bg1 or not bg2:
+            # Skip pairs where either output is too short for meaningful
+            # comparison — Jaccard on < 20 words is noisy.
+            if len(words1) < 20 or len(words2) < 20:
                 continue
 
-            intersection = bg1.intersection(bg2)
-            union = bg1.union(bg2)
+            jaccard = _bigram_jaccard(words1, words2)
 
-            if union:
-                jaccard = len(intersection) / len(union)
-                if jaccard > max_overlap:
-                    max_overlap = jaccard
-                    stagnating_pair = (i, i + 1)
+            # SequenceMatcher runs on the cleaned word list (joined) so
+            # it's also stop-word-free.
+            seq_ratio = _sequence_ratio(" ".join(words1), " ".join(words2))
+
+            # Take the maximum of both signals — catches both literal
+            # repetition (Jaccard) and reordered repetition (SequenceMatcher).
+            similarity = max(jaccard, seq_ratio)
+
+            if similarity > max_overlap:
+                max_overlap = similarity
+                stagnating_pair = (i, i + 1)
 
         if max_overlap >= self.similarity_threshold:
             if max_overlap > 0.95:
                 return (
                     0.0,
-                    f"Identical reasoning outputs at steps {stagnating_pair[0]} and {stagnating_pair[1]}.",
+                    f"Identical reasoning outputs at steps "
+                    f"{stagnating_pair[0]} and {stagnating_pair[1]}.",
                 )
             else:
                 return (
                     0.5,
-                    f"High reasoning overlap ({max_overlap:.2f}) at steps {stagnating_pair[0]} and {stagnating_pair[1]}.",
+                    f"High reasoning overlap ({max_overlap:.2f}) at steps "
+                    f"{stagnating_pair[0]} and {stagnating_pair[1]}.",
                 )
 
         return 1.0, "No reasoning stagnation."

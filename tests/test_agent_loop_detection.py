@@ -214,19 +214,24 @@ def test_score_combines_with_correct_weights():
 
 
 def test_call_graph_cycle_detected():
-    """A span whose name+type appears on its own ancestry path is a cycle."""
-    # agent → tool_A → agent  (agent appears as both ancestor and descendant)
+    """A true recursive loop passes the same input back to itself.
+
+    The inner agent has the same type, name, AND input as the outer —
+    this is the signature of a genuine call graph cycle where the agent
+    re-invoked itself with the same request.
+    """
+    # agent("user query") → tool_A → agent("user query")  ← true cycle
     inner_agent = {
         "type": "agent",
         "name": "planner",
-        "input": "recurse",
+        "input": "user query",  # same input as outer → recursive loop
         "output": "stuck",
         "children": [],
     }
     outer_agent = {
         "type": "agent",
-        "name": "planner",  # same label → cycle
-        "input": "user query",
+        "name": "planner",
+        "input": "user query",  # same input as inner
         "output": "answer",
         "children": [
             _make_tool_span("tool_a", {"x": "1"}, children=[inner_agent]),
@@ -275,3 +280,93 @@ def test_sequential_same_name_not_a_cycle():
 
     # No cycle — these are siblings, not ancestors of each other
     assert metric.score_breakdown["call_graph_cycles"] == 1.0
+
+
+# ---------------------------------------------------------------------------
+# Test 9: Same-name agents with DIFFERENT inputs are NOT false-positived
+# ---------------------------------------------------------------------------
+
+
+def test_same_name_different_input_not_a_cycle():
+    """Two agents with the same type:name but different inputs should not
+    be flagged as a cycle — input_hash disambiguates them.
+
+    This is the edge case where the old label-only approach would have
+    false-positived.  Including a truncated input hash in the DFS label
+    makes the detection resilient to legitimate same-name delegation.
+    """
+    # outer planner delegates to an inner planner with different input
+    inner_planner = {
+        "type": "agent",
+        "name": "planner",
+        "input": "subtask: book hotel in Paris",
+        "output": "hotel booked",
+        "children": [],
+    }
+    outer_planner = {
+        "type": "agent",
+        "name": "planner",  # same name!
+        "input": "plan trip to Paris",  # but different input
+        "output": "trip planned",
+        "children": [
+            _make_tool_span(
+                "delegate", {"to": "planner"}, children=[inner_planner]
+            ),
+        ],
+    }
+    metric = AgentLoopDetectionMetric(
+        check_tool_repetition=False,
+        check_reasoning_stagnation=False,
+        check_call_graph_cycles=True,
+    )
+    tc = _make_test_case(outer_planner)
+    metric._calculate_metric(tc)
+
+    # Different inputs → different labels → no cycle
+    assert metric.score_breakdown["call_graph_cycles"] == 1.0
+    assert metric.success is True
+
+
+# ---------------------------------------------------------------------------
+# Test 10: Reordered-but-identical reasoning is caught by SequenceMatcher
+# ---------------------------------------------------------------------------
+
+
+def test_reordered_stagnation_detected():
+    """SequenceMatcher should catch stagnation even when the agent shuffles
+    its phrasing but conveys the same content.
+
+    Bigram Jaccard alone would miss this because the bigram sets differ
+    when words are reordered.  SequenceMatcher, being sequence-aware,
+    produces a high ratio and triggers the stagnation flag.
+    """
+    output_a = (
+        "I need to search for the current weather conditions in Paris France "
+        "using the search tool. After retrieving the results I will summarize "
+        "them clearly for the user. The Paris weather search results will help "
+        "me answer the question completely and accurately for the user today."
+    )
+    # Same semantic content, moderate word reordering
+    output_b = (
+        "Let me search for the current weather conditions in Paris France "
+        "using the search tool. After I retrieve the results I will clearly "
+        "summarize them for the user. The search results for Paris weather "
+        "will help me completely and accurately answer the question for today."
+    )
+    trace = _make_agent_span(
+        "agent",
+        [
+            _make_llm_span(output_a),
+            _make_llm_span(output_b),
+        ],
+    )
+    metric = AgentLoopDetectionMetric(
+        similarity_threshold=0.75,
+        check_tool_repetition=False,
+        check_call_graph_cycles=False,
+    )
+    tc = _make_test_case(trace)
+    metric._calculate_metric(tc)
+
+    # SequenceMatcher should push the similarity above 0.75
+    assert metric.score_breakdown["reasoning_stagnation"] < 1.0
