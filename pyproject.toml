@@ -101,7 +101,17 @@ optional = true
 
 [tool.poetry.group.integrations.dependencies]
 crewai = { version = "*", python = ">=3.10,<3.14" }
-pydantic-ai = { version = "*", python = ">=3.10,<3.14" }
+# Use pydantic-ai-slim with explicit extras instead of the meta-package
+# `pydantic-ai`, which transitively requires `pydantic-ai-slim[mistral]` →
+# `mistralai`. The `mistralai` project is currently quarantined on PyPI
+# (https://pypi.org/simple/mistralai/ shows
+# `<meta name="pypi:project-status" content="quarantined">` and serves no
+# files), which makes Poetry's resolution fail across every integrations
+# job. All test apps under tests/test_integrations/test_pydanticai use
+# `Agent("openai:gpt-4o-mini", ...)`, so the `openai` extra is the only
+# one we actually exercise; widen this list if a future test needs a
+# different provider.
+pydantic-ai-slim = { version = "*", extras = ["openai"], python = ">=3.10,<3.14" }
 llama-index = "^0.14.4"
 openai-agents = "^0.3.3"
 google-adk = { version = "*", python = ">=3.10,<3.15" }
