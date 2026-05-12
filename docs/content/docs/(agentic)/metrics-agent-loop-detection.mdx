@@ -1,0 +1,141 @@
+---
+id: metrics-agent-loop-detection
+title: Agent Loop Detection
+sidebar_label: Agent Loop Detection
+---
+<MetricTagsDisplayer singleTurn={true} agent={true} referenceless={true} />
+
+The Agent Loop Detection metric is a **fully deterministic** (no LLM required) agentic metric that detects whether an LLM agent is stuck in an infinite loop or cyclical execution pattern. It analyzes the agent's full trace across three independent sub-signals and returns a score from 0.0 (severe looping) to 1.0 (clean execution).
+
+:::info
+Agent Loop Detection analyzes your **agent's full trace**, which requires [setting up tracing](/docs/evaluation-llm-tracing). Because it is deterministic, it works in production without any API key.
+:::
+
+## Usage
+
+To begin, [set up tracing](/docs/evaluation-llm-tracing) and supply the `AgentLoopDetectionMetric()` to your agent's `@observe` tag.
+
+```python
+from deepeval.tracing import observe, update_current_trace
+from deepeval.dataset import Golden, EvaluationDataset
+from deepeval.metrics import AgentLoopDetectionMetric
+
+
+@observe()
+def search_web(query: str):
+    return f"Results for: {query}"
+
+
+@observe()
+def planner_agent(input: str):
+    result = search_web(input)
+    update_current_trace(input=input, output=result)
+    return result
+
+
+# Create dataset
+dataset = EvaluationDataset(goldens=[Golden(input="What is the weather in Paris?")])
+
+# Initialize metric — no model needed
+loop_metric = AgentLoopDetectionMetric(threshold=0.5)
+
+# Loop through dataset
+for golden in dataset.evals_iterator(metrics=[loop_metric]):
+    planner_agent(golden.input)
+```
+
+There are **EIGHT** optional parameters when creating an `AgentLoopDetectionMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to `0.5`.
+- [Optional] `repetition_threshold`: an integer representing how many identical tool calls (same name + same arguments) are needed before flagging repetition. Defaulted to `3`.
+- [Optional] `similarity_threshold`: a float representing the minimum bigram Jaccard similarity between consecutive LLM outputs to flag as stagnating. Defaulted to `0.85`.
+- [Optional] `check_tool_repetition`: a boolean — when `True`, enables the tool repetition sub-signal. Defaulted to `True`.
+- [Optional] `check_reasoning_stagnation`: a boolean — when `True`, enables the reasoning stagnation sub-signal. Defaulted to `True`.
+- [Optional] `check_call_graph_cycles`: a boolean — when `True`, enables the call graph cycle sub-signal. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+To learn more about how the `evals_iterator` works, [click here.](/docs/evaluation-end-to-end-llm-evals#e2e-evals-for-tracing)
+
+## How Is It Calculated?
+
+The `AgentLoopDetectionMetric` score is a weighted combination of three independent sub-signals:
+
+<Equation formula="\text{Loop Score} = \frac{0.40 \cdot S_{\text{rep}} + 0.35 \cdot S_{\text{stag}} + 0.25 \cdot S_{\text{cycle}}}{W_{\text{enabled}}}" />
+
+Where each sub-score is 1.0 (no issue), 0.5 (mild issue), or 0.0 (severe issue), and $W_{\text{enabled}}$ is the sum of weights for enabled checks (so disabling a check does not penalize the score).
+
+| Sub-signal | Weight | Flag condition |
+|---|---|---|
+| Tool Call Repetition | 40% | Same tool called with identical arguments ≥ `repetition_threshold` times |
+| Reasoning Stagnation | 35% | Consecutive LLM outputs share ≥ `similarity_threshold` bigram Jaccard similarity |
+| Call Graph Cycles | 25% | A span's `type:name` label appears twice on the same root-to-leaf ancestry path |
+
+### Tool Call Repetition
+
+This sub-signal hashes each tool call by `(name, sorted_args)` and counts how many times each unique call appears in the trace.
+
+- **Score 1.0**: all tool calls occur fewer than `repetition_threshold` times.
+- **Score 0.5**: a tool call occurs ≥ `repetition_threshold` times (mild repetition).
+- **Score 0.0**: a tool call occurs ≥ `repetition_threshold × 2` times (severe repetition loop).
+
+Tool calls with *different* arguments are treated as distinct calls and are not penalized. This ensures legitimate retry patterns (e.g. retrying with a refined query) are not flagged.
+
+### Reasoning Stagnation
+
+This sub-signal compares consecutive LLM span outputs using **bigram Jaccard similarity**. Common stop words and boilerplate phrases are stripped before computing bigrams so that shared preambles ("Based on the information provided...") do not inflate scores. Outputs shorter than 20 meaningful words are skipped.
+
+- **Score 1.0**: no consecutive pair exceeds `similarity_threshold`.
+- **Score 0.5**: a pair has similarity ≥ `similarity_threshold` (high overlap).
+- **Score 0.0**: a pair has similarity > 0.95 (outputs are essentially identical).
+
+### Call Graph Cycles
+
+This sub-signal traverses the real parent→child span tree encoded in the trace and runs a depth-first search (DFS). A **cycle** is detected when a span's `type:name` label appears a second time on the same root-to-leaf ancestry path — meaning the agent genuinely called a function that is an ancestor of itself.
+
+Sequential repetition (the same tool appearing multiple times at sibling positions) is intentionally **not** flagged here — that is handled by Tool Call Repetition above.
+
+- **Score 1.0**: no back-edges detected in the call tree.
+- **Score 0.0**: at least one back-edge found (cycle detected). The reason message includes the full cycle path.
+
+## Score Interpretation
+
+| Score | Interpretation |
+|---|---|
+| `1.0` | Clean execution — no loop patterns detected |
+| `0.5–1.0` | Mild issues — some repetition or overlap, but agent likely recovers |
+| `0.0–0.5` | Severe looping — agent is stuck; human review recommended |
+| `0.0` | Critical loop — identical repeated calls or true call graph cycle |
+
+**Example: clean agent**
+```
+Loop Score: 1.0
+Reason: No loop patterns detected.
+```
+
+**Example: looping agent**
+```
+Loop Score: 0.25
+Reason: Tool 'search_web' called 6 times with identical arguments.
+        Identical reasoning outputs at steps 2 and 3.
+```
+
+## Breakdown
+
+The `score_breakdown` attribute on the metric instance exposes each sub-signal independently:
+
+```python
+metric = AgentLoopDetectionMetric()
+
+# After measure() or _calculate_metric():
+print(metric.score_breakdown)
+# {
+#     "tool_repetition": 0.0,
+#     "reasoning_stagnation": 1.0,
+#     "call_graph_cycles": 1.0,
+# }
+print(metric.score)   # e.g. 0.4
+print(metric.reason)  # e.g. "Tool 'search_web' called 6 times with identical arguments."
+```
+
+Each key maps to one of the three sub-signals described above. A value of `1.0` means no issue was detected for that signal; lower values indicate degradation.

@@ -6,6 +6,7 @@
     "metrics-argument-correctness",
     "metrics-step-efficiency",
     "metrics-plan-adherence",
-    "metrics-plan-quality"
+    "metrics-plan-quality",
+    "metrics-agent-loop-detection"
   ]
 }

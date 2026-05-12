@@ -1,16 +1,24 @@
 import json
-from typing import Optional, List, Union, Tuple, Dict
+from typing import Optional, List, Tuple, Dict
 
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import BaseMetric
-from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import (
-    initialize_model,
     construct_verbose_logs,
     check_llm_test_case_params,
 )
 from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.indicator import metric_progress_indicator
+
+# Common stop words and agent boilerplate phrases that inflate Jaccard similarity
+# without signalling true reasoning stagnation.
+_STOP_WORDS = {
+    "the", "a", "an", "is", "are", "was", "were", "i", "will", "now",
+    "based", "on", "information", "provided", "to", "of", "in", "and",
+    "that", "this", "with", "for", "it", "my", "next", "step", "going",
+    "going", "so", "do", "be", "have", "has", "not", "but", "as", "or",
+    "from", "at", "by", "about", "above", "below", "up", "its", "let",
+}
 
 
 class AgentLoopDetectionMetric(BaseMetric):
@@ -19,6 +27,8 @@ class AgentLoopDetectionMetric(BaseMetric):
     Analyzes three sub-signals: tool call repetition, reasoning stagnation,
     and call graph cycles. Returns a score from 0.0 (severe looping) to
     1.0 (clean execution).
+
+    This is a fully deterministic metric — no LLM is required.
     """
 
     _required_params: List[SingleTurnParams] = [
@@ -34,7 +44,6 @@ class AgentLoopDetectionMetric(BaseMetric):
         check_tool_repetition: bool = True,
         check_reasoning_stagnation: bool = True,
         check_call_graph_cycles: bool = True,
-        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -46,13 +55,9 @@ class AgentLoopDetectionMetric(BaseMetric):
         self.check_tool_repetition = check_tool_repetition
         self.check_reasoning_stagnation = check_reasoning_stagnation
         self.check_call_graph_cycles = check_call_graph_cycles
-        if model is not None:
-            self.model, self.using_native_model = initialize_model(model)
-            self.evaluation_model = self.model.get_model_name()
-        else:
-            self.model = None
-            self.using_native_model = True
-            self.evaluation_model = None
+        self.model = None
+        self.using_native_model = True
+        self.evaluation_model = None
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -151,7 +156,9 @@ class AgentLoopDetectionMetric(BaseMetric):
 
         cycle_score, cycle_reason = 1.0, "Call graph cycles check skipped."
         if self.check_call_graph_cycles:
-            cycle_score, cycle_reason = self._score_call_graph_cycles(all_spans)
+            cycle_score, cycle_reason = self._score_call_graph_cycles(
+                test_case._trace_dict
+            )
 
         self.score_breakdown = {
             "tool_repetition": rep_score,
@@ -251,59 +258,49 @@ class AgentLoopDetectionMetric(BaseMetric):
 
         return 1.0, "Tool calls are within acceptable repetition limits."
 
-    def _score_call_graph_cycles(self, all_spans: list) -> Tuple[float, str]:
-        if not all_spans or len(all_spans) < 2:
+    def _score_call_graph_cycles(
+        self, trace_dict: Optional[Dict]
+    ) -> Tuple[float, str]:
+        """Detect cycles using the real parent→child call graph encoded in the
+        nested ``children`` list.  A cycle means a span's *name+type* appears
+        twice on the same root-to-leaf ancestry path — i.e., the agent
+        genuinely called itself recursively.
+
+        Sequential repetition (tool A called twice at the same depth) is
+        intentionally NOT flagged here; that is the job of
+        ``_score_tool_repetition``.
+        """
+        if not trace_dict:
             return 1.0, "No call graph cycles detected."
 
-        nodes = []
-        for span in all_spans:
-            typ = span.get("type", "unknown")
-            name = span.get("name", "unnamed")
-            nodes.append((typ, name))
+        cycle_path: List[str] = []
 
-        adj = {}
-        for i in range(len(nodes) - 1):
-            u, v = nodes[i], nodes[i + 1]
-            if u == v:
-                continue
-            if u not in adj:
-                adj[u] = set()
-            adj[u].add(v)
+        def _label(span: Dict) -> str:
+            return f"{span.get('type', 'unknown')}:{span.get('name', 'unnamed')}"
 
-        visited = set()
-        rec_stack = set()
-        cycle_path = []
+        def dfs(span: Dict, ancestor_labels: List[str]) -> bool:
+            """Return True as soon as a cycle is found, populating
+            ``cycle_path`` with the offending ancestry chain."""
+            label = _label(span)
 
-        def dfs(node, path):
-            visited.add(node)
-            rec_stack.add(node)
-            path.append(node)
+            if label in ancestor_labels:
+                # Found a back-edge: report the cycle path
+                cycle_start = ancestor_labels.index(label)
+                cycle_path.extend(ancestor_labels[cycle_start:])
+                cycle_path.append(label)
+                return True
 
-            for neighbor in adj.get(node, []):
-                if neighbor not in visited:
-                    if dfs(neighbor, path):
-                        return True
-                elif neighbor in rec_stack:
-                    path.append(neighbor)
+            ancestor_labels.append(label)
+            for child in span.get("children", []):
+                if dfs(child, ancestor_labels):
                     return True
-
-            rec_stack.remove(node)
-            path.pop()
+            ancestor_labels.pop()
             return False
 
-        has_cycle = False
-        for node in adj.keys():
-            if node not in visited:
-                if dfs(node, cycle_path):
-                    has_cycle = True
-                    break
+        has_cycle = dfs(trace_dict, [])
 
         if has_cycle:
-            cycle_start_idx = cycle_path.index(cycle_path[-1])
-            cycle_nodes = cycle_path[cycle_start_idx:]
-            cycle_str = " -> ".join(
-                [f"{typ}:{name}" for typ, name in cycle_nodes]
-            )
+            cycle_str = " -> ".join(cycle_path)
             return 0.0, f"Cycle detected in execution path: {cycle_str}."
 
         return 1.0, "No execution cycles detected."
@@ -316,7 +313,15 @@ class AgentLoopDetectionMetric(BaseMetric):
             )
 
         def get_bigrams(text: str) -> set:
-            words = str(text).lower().split()
+            words = [
+                w
+                for w in str(text).lower().split()
+                if w not in _STOP_WORDS and len(w) > 2
+            ]
+            # Skip stagnation check for very short outputs — Jaccard is
+            # meaningless with fewer than 20 meaningful words.
+            if len(words) < 20:
+                return set()
             return set(zip(words, words[1:]))
 
         max_overlap = 0.0
@@ -332,7 +337,8 @@ class AgentLoopDetectionMetric(BaseMetric):
             bg1 = get_bigrams(out1)
             bg2 = get_bigrams(out2)
 
-            if not bg1 and not bg2:
+            # One or both outputs were too short — skip pair
+            if not bg1 or not bg2:
                 continue
 
             intersection = bg1.intersection(bg2)
