@@ -1,5 +1,4 @@
 from typing import Optional, List, Type, Union
-from collections import defaultdict
 from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
@@ -259,19 +258,18 @@ class ContextualPrecisionMetric(BaseMetric):
     def _group_retrieval_contexts(
         self, retrieval_contexts: List[Union[str, RetrievedContextData]]
     ) -> List[str]:
-        grouped_contexts_dict = defaultdict(list)
+        grouped_contexts_dict = {}
         ordered_identifiers = [] 
 
         for context in retrieval_contexts:
             if isinstance(context, RetrievedContextData):
                 if context.source not in grouped_contexts_dict:
                     ordered_identifiers.append({"type": "grouped", "key": context.source})
-                
+                    grouped_contexts_dict[context.source] = []
                 grouped_contexts_dict[context.source].append(context.context)
             else:
                 ordered_identifiers.append({"type": "standalone", "value": context})
 
-        # Reconstruct the final list in the exact order they were first retrieved
         processed_contexts = []
         for item in ordered_identifiers:
             if item["type"] == "grouped":
