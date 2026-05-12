@@ -299,7 +299,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)
         if number_of_verdicts == 0:
-            return 0
+            return 1
 
         retention_count = 0
         for verdict in self.verdicts:
