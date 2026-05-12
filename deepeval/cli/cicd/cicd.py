@@ -92,10 +92,24 @@ def cicd(
         sys.exit(1)
 
     try:
-        required_metrics = cfg.get("required_metrics", [])
-        if not isinstance(required_metrics, list):
+        raw_required_metrics = cfg.get("required_metrics", [])
+        if not isinstance(raw_required_metrics, list):
             raise ValueError("'required_metrics' must be a list.")
-        required_metrics = [metric.get("name") for metric in required_metrics if isinstance(metric, dict)]
+            
+        required_metric_identifiers = [
+            metric.get("name") for metric in raw_required_metrics if isinstance(metric, dict) and metric.get("name")
+        ]
+        
+        required_metrics = []
+        for identifier in required_metric_identifiers:
+            matched = False
+            for m in metrics:
+                if identifier in [m.__class__.__name__, getattr(m, "__name__", None), getattr(m, "name", None)]:
+                    required_metrics.append(m.__name__)
+                    matched = True
+            if not matched:
+                required_metrics.append(identifier)
+                
     except Exception as e:
         print(f"Failed to parse required metrics: {e}")
         sys.exit(1)
@@ -142,9 +156,12 @@ def cicd(
     # Inject the Confident AI Link if it exists
     if results.confident_link:
         markdown_summary += (
-            f"\n\n---\n"
-            f"### 🔍 Deep Dive\n"
+            f"\n### 🔍 Deep Dive\n"
             f"[**View full trace and logs on Confident AI**]({results.confident_link})"
+        )
+    else:
+        markdown_summary += (
+            f"\nSet CONFIDENT_API_KEY to view these results on the Confident AI platform"
         )
 
     # 3. Try to post it to GitHub (Snippet provided below)
