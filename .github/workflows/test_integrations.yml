@@ -87,7 +87,10 @@ jobs:
           poetry install --no-interaction --no-root --only main
           poetry install --with integrations
           poetry run pip install -U crewai
-          poetry run pip install -U pydantic-ai sdk
+          # Pin to pydantic-ai-slim[openai] to avoid the meta-package's
+          # mistral extra (mistralai is currently quarantined on PyPI;
+          # see comment in pyproject.toml integrations group).
+          poetry run pip install -U "pydantic-ai-slim[openai]"
 
       - name: Install Project
         run: poetry install --no-interaction --only main
@@ -128,7 +131,10 @@ jobs:
         run: |
           poetry install --no-interaction --no-root --only main
           poetry install --with integrations
-          poetry run pip install -U pydantic-ai sdk
+          # Pin to pydantic-ai-slim[openai] to avoid the meta-package's
+          # mistral extra (mistralai is currently quarantined on PyPI;
+          # see comment in pyproject.toml integrations group).
+          poetry run pip install -U "pydantic-ai-slim[openai]"
 
       - name: Run Pydantic AI Tests
         if: ${{ env.OPENAI_API_KEY != '' }}
