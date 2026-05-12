@@ -1,3 +1,4 @@
+import asyncio
 import importlib.util
 import inspect
 import yaml
@@ -15,10 +16,11 @@ from typing import Any, List, Union
 from . import config
 from deepeval import evaluate
 from deepeval.evaluate.configs import DisplayConfig
-from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.dataset import ConversationalGolden, EvaluationDataset, Golden
 from deepeval.evaluate.console_report import EvaluationConsoleReport
 from deepeval.metrics import BaseArenaMetric, BaseConversationalMetric, BaseMetric
-from deepeval.test_case import LLMTestCase, Turn
+from deepeval.test_case import ConversationalTestCase, LLMTestCase, Turn
+from deepeval.simulator import ConversationSimulator
 from deepeval.utils import get_or_create_event_loop
 
 
@@ -36,55 +38,49 @@ def cicd(
     Run CI/CD evaluation from a YAML config (dataset, model_callback, metrics).
     """
     
-    cfg = _load_config(config_file)
+    try:
+        cfg = _load_config(config_file)
+    except Exception as e:
+        print(f"Failed to load config file '{config_file}': {e}")
+        sys.exit(1)
+        
     config.apply_env()
     
     raw_model_callback = cfg.get("model_callback", {})
-    model_callback = _load_model_callback_from_file(
-        raw_model_callback.get("file_path"), 
-        raw_model_callback.get("function_name")
-    )
+    try:
+        model_callback = _load_model_callback_from_file(
+            raw_model_callback.get("file_path"), 
+            raw_model_callback.get("function_name")
+        )
+    except Exception as e:
+        print(f"Failed to load model callback: {e}")
+        sys.exit(1)
 
     dataset = cfg.get("dataset", {})
+    try:
+        goldens = _build_goldens_from_dataset(dataset)
+    except Exception as e:
+        print(f"Failed to load dataset: {e}")
+        sys.exit(1)
+    if len(goldens) == 0:
+        print("Dataset is empty, please add goldens to the dataset")
+        sys.exit(1)
 
-    if dataset.get("alias"):
-        dataset = EvaluationDataset()
-        dataset.pull(alias=dataset.get("alias"))
-        goldens = dataset.goldens
-        if len(goldens) == 0:
-            print("Dataset is empty, please add goldens to the dataset")
-            sys.exit(1) # Prolly need to log this as warning and not raise error here for sys exit
-    elif dataset.get("path"):
-        dataset = EvaluationDataset()
-        dataset.add_goldens_from_json_file(file_path=dataset.get("path"))
-        goldens = dataset.goldens
-        if len(goldens) == 0:
-            print("Dataset is empty, please add goldens to the dataset")
-            sys.exit(1)
-    elif dataset.get("goldens"):
-        raw_goldens = dataset.get("goldens", [])
-        goldens = []
-        for golden in raw_goldens:
-            new_golden = Golden(
-                input=golden.get("input"),
-                expected_output=golden.get("expected_output"),
-                actual_output=golden.get("actual_output"),
-                context=golden.get("context"),
-                retrieval_context=golden.get("retrieval_context"),
-                tools_called=golden.get("tools_called"),
-                expected_tools=golden.get("expected_tools"),
-            )
-            goldens.append(new_golden)
-        if len(goldens) == 0:
-            print("Dataset is empty, please add goldens to the dataset")
-            sys.exit(1)
-    else: # TODO: Need to add suoport for conversational datasets
-        raise ValueError("Dataset is not configured correctly")
-
-    metrics = _build_metrics_from_config(cfg.get("metrics"))
-
-    test_cases = _create_test_cases_from_goldens(goldens, model_callback)
-
+    try:
+        metrics = _build_metrics(cfg.get("metrics", []))
+    except Exception as e:
+        print(f"Failed to build metrics: {e}")
+        sys.exit(1)
+        
+    if len(metrics) == 0:
+        print("No metrics provided, please add metrics to the config")
+        sys.exit(1)
+        
+    try:
+        test_cases = _create_test_cases_from_goldens(goldens, model_callback)
+    except Exception as e:
+        print(f"Failed to create test cases from goldens: {e}")
+        sys.exit(1)
 
     try:
         results = evaluate(test_cases, metrics, display_config=DisplayConfig(
@@ -95,10 +91,22 @@ def cicd(
         _post_github_pr_comment(error_md)
         sys.exit(1)
 
-    required_metrics = cfg.get("required_metrics", {})
-    required_metrics = [metric.get("name") for metric in required_metrics]
+    try:
+        required_metrics = cfg.get("required_metrics", [])
+        if not isinstance(required_metrics, list):
+            raise ValueError("'required_metrics' must be a list.")
+        required_metrics = [metric.get("name") for metric in required_metrics if isinstance(metric, dict)]
+    except Exception as e:
+        print(f"Failed to parse required metrics: {e}")
+        sys.exit(1)
 
-    pass_rate = cfg.get("pass_rate", None)
+    try:
+        pass_rate = cfg.get("pass_rate", None)
+        if pass_rate is not None and not isinstance(pass_rate, (int, float)):
+            raise ValueError("'pass_rate' must be a number.")
+    except Exception as e:
+        print(f"Failed to parse pass rate: {e}")
+        sys.exit(1)
 
     test_results = results.test_results
     passed = True
@@ -115,14 +123,21 @@ def cicd(
 
     report = EvaluationConsoleReport(results.test_results)
     output_dir = ".deepeval_ci_reports"
-    report.export_to_markdown(output_dir=output_dir, evaluation_name="pr_evaluation")
-
-    # 2. Find the generated markdown file
-    list_of_files = glob.glob(f'{output_dir}/*.md')
-    latest_report_path = max(list_of_files, key=os.path.getctime)
     
-    with open(latest_report_path, "r", encoding="utf-8") as f:
-        markdown_summary = f.read()
+    try:
+        report.export_to_markdown(output_dir=output_dir, evaluation_name="pr_evaluation")
+
+        # 2. Find the generated markdown file
+        list_of_files = glob.glob(f'{output_dir}/*.md')
+        if not list_of_files:
+            raise FileNotFoundError(f"No markdown reports found in {output_dir}")
+        latest_report_path = max(list_of_files, key=os.path.getctime)
+        
+        with open(latest_report_path, "r", encoding="utf-8") as f:
+            markdown_summary = f.read()
+    except Exception as e:
+        print(f"Failed to generate or read evaluation report: {e}")
+        sys.exit(1)
 
     # Inject the Confident AI Link if it exists
     if results.confident_link:
@@ -144,126 +159,41 @@ def cicd(
         sys.exit(0)
 
 
-## Here goes all the helper methods for the cicd command
-def _invoke_model_callback(model_callback: Any, user_input: str) -> Any:
-    if inspect.iscoroutinefunction(model_callback):
-        loop = get_or_create_event_loop()
-        return loop.run_until_complete(model_callback(user_input))
-    return model_callback(user_input)
+########################################################
+###### Utils ###########################################
+########################################################
 
-
-def _turn_from_model_callback_result(raw: Any) -> Turn:
-    if isinstance(raw, Turn):
-        return raw
-    if isinstance(raw, dict):
-        data = dict(raw)
-        # Assistant response only; role is required on Turn but ignored here.
-        data["role"] = "assistant"
-        return Turn.model_validate(data)
-    raise TypeError(
-        "model_callback must return a Turn instance or a dict compatible with "
-        f"Turn; got {type(raw).__name__}"
-    )
-
-
-def _llm_test_case_from_golden_and_turn(golden: Golden, turn: Turn) -> LLMTestCase:
-    return LLMTestCase(
-        input=golden.input,
-        actual_output=turn.content,
-        expected_output=golden.expected_output,
-        context=golden.context,
-        retrieval_context=(
-            turn.retrieval_context
-            if turn.retrieval_context is not None
-            else golden.retrieval_context
-        ),
-        metadata=(
-            turn.metadata
-            if turn.metadata is not None
-            else golden.additional_metadata
-        ),
-        tools_called=(
-            turn.tools_called
-            if turn.tools_called is not None
-            else golden.tools_called
-        ),
-        expected_tools=golden.expected_tools,
-        comments=golden.comments,
-        name=golden.name,
-        custom_column_key_values=golden.custom_column_key_values,
-        mcp_tools_called=turn.mcp_tools_called,
-        mcp_resources_called=turn.mcp_resources_called,
-        mcp_prompts_called=turn.mcp_prompts_called,
-        multimodal=golden.multimodal,
-    )
-
-
-def _create_test_cases_from_goldens(
-    goldens: List[Golden], model_callback: Any
-) -> List[LLMTestCase]:
-    """Run ``model_callback`` on each golden's input; expect a ``Turn``-shaped response."""
-    test_cases: List[LLMTestCase] = []
-    for golden in goldens:
-        raw = _invoke_model_callback(model_callback, golden.input)
-        turn = _turn_from_model_callback_result(raw)
-        test_cases.append(_llm_test_case_from_golden_and_turn(golden, turn))
-    return test_cases
-
-
-def _build_metrics_from_config(
-    metrics_cfg: Any,
-) -> List[Union[BaseMetric, BaseConversationalMetric, BaseArenaMetric]]:
-    """
-    Build metric instances from YAML-style config: a list of dicts with
-    ``name`` (class name under ``deepeval.metrics``) plus constructor kwargs.
-    """
-    if metrics_cfg is None:
-        return []
-    if not isinstance(metrics_cfg, list):
-        raise TypeError(
-            "metrics must be a list of dicts with a 'name' field and optional kwargs"
-        )
-    built: List[Union[BaseMetric, BaseConversationalMetric, BaseArenaMetric]] = []
-    for i, item in enumerate(metrics_cfg):
-        if not isinstance(item, dict):
-            raise TypeError(f"metrics[{i}] must be a dict, got {type(item).__name__}")
-        class_name = item.get("name")
-        if not class_name or not isinstance(class_name, str):
-            raise ValueError(
-                f"metrics[{i}] requires a non-empty string 'name' (metric class name)"
-            )
-        cls = getattr(metrics_module, class_name, None)
-        if cls is None:
-            raise ValueError(
-                f"Unknown metric '{class_name}'. "
-                "It must be importable from deepeval.metrics."
-            )
-        kwargs = {k: v for k, v in item.items() if k != "name"}
-        try:
-            built.append(cls(**kwargs))
-        except TypeError as e:
-            raise TypeError(
-                f"Failed to construct {class_name} with kwargs {kwargs!r}: {e}"
-            ) from e
-    return built
-
+def _load_config(path: str):
+    try:
+        with open(path, "r") as f:
+            return yaml.safe_load(f)
+    except Exception as e:
+        raise RuntimeError(f"Could not read or parse YAML file at '{path}': {e}")
 
 def _load_model_callback_from_file(
     file_path: str, function_name: str = "model_callback"
 ) -> Any:
     """Load a model callback function from a Python file."""
+    if not file_path:
+        raise ValueError("file_path for model_callback is not provided.")
+    if not function_name:
+        function_name = "model_callback"
+        
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Model callback file not found: {file_path}")
 
-    spec = importlib.util.spec_from_file_location(
-        "deepeval_cicd_model_callback_module", file_path
-    )
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Could not load module from {file_path}")
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "deepeval_cicd_model_callback_module", file_path
+        )
+        if spec is None or spec.loader is None:
+            raise ImportError(f"Could not load module from {file_path}")
 
-    module = importlib.util.module_from_spec(spec)
-    sys.modules["deepeval_cicd_model_callback_module"] = module
-    spec.loader.exec_module(module)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["deepeval_cicd_model_callback_module"] = module
+        spec.loader.exec_module(module)
+    except Exception as e:
+        raise RuntimeError(f"Failed to execute module from {file_path}: {e}")
 
     if not hasattr(module, function_name):
         raise AttributeError(
@@ -276,10 +206,170 @@ def _load_model_callback_from_file(
 
     return callback
 
+def _build_goldens_from_dataset(raw_dataset) -> List[Union[Golden, ConversationalGolden]]:
+    goldens: List[Union[Golden, ConversationalGolden]] = []
+    
+    if not isinstance(raw_dataset, dict):
+        raise ValueError("Dataset configuration must be a dictionary.")
 
-def _load_config(path: str):
-    with open(path, "r") as f:
-        return yaml.safe_load(f)
+    if raw_dataset.get("alias"):
+        try:
+            dataset = EvaluationDataset()
+            dataset.pull(alias=raw_dataset.get("alias"))
+            goldens = dataset.goldens
+        except Exception as e:
+            raise RuntimeError(f"Failed to pull dataset with alias '{raw_dataset.get('alias')}': {e}")
+            
+        if len(goldens) == 0:
+            raise ValueError(f"Dataset with alias '{raw_dataset.get('alias')}' is empty. Please add goldens to the dataset.")
+            
+    elif raw_dataset.get("path"):
+        try:
+            dataset = EvaluationDataset()
+            dataset.add_goldens_from_json_file(file_path=raw_dataset.get("path"))
+            goldens = dataset.goldens
+        except Exception as e:
+            raise RuntimeError(f"Failed to load dataset from path '{raw_dataset.get('path')}': {e}")
+            
+        if len(goldens) == 0:
+            raise ValueError(f"Dataset at path '{raw_dataset.get('path')}' is empty. Please add goldens to the dataset.")
+            
+    elif raw_dataset.get("goldens"):
+        raw_goldens = raw_dataset.get("goldens", [])
+        if not isinstance(raw_goldens, list):
+            raise ValueError("'goldens' must be a list of golden objects.")
+            
+        if len(raw_goldens) == 0:
+            raise ValueError("The 'goldens' list is empty. Please add goldens to the dataset.")
+            
+        try:
+            if "input" in raw_goldens[0]:
+                new_goldens = []
+                for i, golden in enumerate(raw_goldens):
+                    if not isinstance(golden, dict):
+                        raise ValueError(f"Golden at index {i} is not a dictionary.")
+                    if "input" not in golden:
+                        raise ValueError(f"Golden at index {i} is missing the required 'input' field for single-turn goldens. Mixed golden types are not allowed.")
+                    new_goldens.append(Golden(
+                        input=golden.get("input"),
+                        expected_output=golden.get("expected_output"),
+                        actual_output=golden.get("actual_output"),
+                        context=golden.get("context"),
+                        retrieval_context=golden.get("retrieval_context"),
+                    ))
+                goldens.extend(new_goldens)
+            else:
+                new_goldens = []
+                for i, golden in enumerate(raw_goldens):
+                    if not isinstance(golden, dict):
+                        raise ValueError(f"Golden at index {i} is not a dictionary.")
+                    if "input" in golden:
+                        raise ValueError(f"Golden at index {i} contains 'input', which is not allowed for conversational goldens. Mixed golden types are not allowed.")
+                    new_goldens.append(ConversationalGolden(
+                        scenario=golden.get("scenario"),
+                        expected_outcome=golden.get("expected_outcome"),
+                        name=golden.get("name"),
+                    ))
+                goldens.extend(new_goldens)
+        except Exception as e:
+            raise RuntimeError(f"Failed to parse 'goldens' from dataset: {e}")
+    else:
+        raise ValueError("Dataset configuration must contain 'alias', 'path', or 'goldens'.")
+    
+    return goldens
+
+
+def _build_metrics(
+    raw_metrics: List[dict],
+) -> List[Union[BaseMetric, BaseConversationalMetric, BaseArenaMetric]]:
+    metrics: List[Union[BaseMetric, BaseConversationalMetric, BaseArenaMetric]] = []
+    for i, item in enumerate(raw_metrics):
+        if not isinstance(item, dict):
+            raise TypeError(f"metrics[{i}] must be a dict, got {type(item).__name__}")
+        class_name = item.get("name")
+        if not class_name or not isinstance(class_name, str):
+            raise ValueError(
+                f"metrics[{i}] requires a non-empty string 'name' (metric class name)"
+            )
+        cls = getattr(metrics_module, class_name, None)
+        if cls is None:
+            raise ValueError(
+                f"Unknown metric '{class_name}'. Please use a valid metric from deepeval.metrics."
+            )
+        kwargs = {k: v for k, v in item.items() if k != "name"}
+        try:
+            metrics.append(cls(**kwargs))
+        except TypeError as e:
+            raise TypeError(
+                f"Failed to construct {class_name} with kwargs {kwargs!r}: {e}"
+            ) from e
+    return metrics
+
+
+def _create_test_cases_from_goldens(
+    goldens: List[Union[Golden, ConversationalGolden]], model_callback: Any
+) -> List[Union[LLMTestCase, ConversationalTestCase]]:
+    if not goldens:
+        raise ValueError("Goldens list is empty.")
+        
+    if isinstance(goldens[0], ConversationalGolden):
+        return _get_conversational_test_cases_from_goldens(goldens, model_callback)
+    else:
+        return _get_llm_test_cases_from_goldens(goldens, model_callback)
+
+def _get_conversational_test_cases_from_goldens(
+    goldens: List[ConversationalGolden],
+    model_callback: Any,
+) -> List[ConversationalTestCase]:
+    try:
+        simulator = ConversationSimulator(model_callback=model_callback)
+        test_cases = simulator.simulate(conversational_goldens=goldens)
+        return test_cases
+    except Exception as e:
+        raise RuntimeError(f"Failed to simulate conversational test cases: {e}")
+
+def _get_llm_test_cases_from_goldens(
+    goldens: List[Golden],
+    model_callback: Any,
+) -> List[LLMTestCase]:
+    async def _run_all() -> List[LLMTestCase]:
+        tasks = [_process_single_golden(golden, model_callback) for golden in goldens]
+        return await asyncio.gather(*tasks)
+
+    try:
+        loop = get_or_create_event_loop()
+        return loop.run_until_complete(_run_all())
+    except Exception as e:
+        raise RuntimeError(f"Failed to create LLM test cases: {e}")
+
+async def _process_single_golden(golden: Golden, model_callback: Any) -> LLMTestCase:
+    try:
+        if inspect.iscoroutinefunction(model_callback):
+            raw_result = await model_callback(golden.input)
+        else:
+            loop = asyncio.get_running_loop()
+            raw_result = await loop.run_in_executor(None, model_callback, golden.input)
+            
+        if isinstance(raw_result, Turn):
+            turn = raw_result
+        elif isinstance(raw_result, dict):
+            data = dict(raw_result)
+            data.setdefault("role", "assistant")
+            turn = Turn.model_validate(data)
+        else:
+            raise TypeError(
+                f"model_callback must return a Turn instance or a dict; got {type(raw_result).__name__}"
+            )
+        return LLMTestCase(
+            input=golden.input,
+            actual_output=turn.content,
+            expected_output=golden.expected_output,
+            context=golden.context,
+            retrieval_context=turn.retrieval_context
+        )
+    except Exception as e:
+        raise RuntimeError(f"Error processing golden with input '{golden.input}': {e}")
+
 
 
 def _post_github_pr_comment(markdown_content: str):
@@ -324,11 +414,22 @@ def _post_github_pr_comment(markdown_content: str):
     
     try:
         # 1. Fetch existing comments
-        existing_comments = requests.get(base_url, headers=headers).json()
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"⚠️ Failed to fetch existing comments from GitHub. Status: {response.status_code}, Response: {response.text}")
+            return
+            
+        existing_comments = response.json()
+        
+        if not isinstance(existing_comments, list):
+            print(f"⚠️ Unexpected response format from GitHub API when fetching comments. Expected a list, got: {type(existing_comments).__name__}. Response: {existing_comments}")
+            return
         
         # 2. Look for our specific bot comment
         comment_id_to_update = None
         for comment in existing_comments:
+            if not isinstance(comment, dict):
+                continue
             if "🚀 DeepEval Evaluation Results" in comment.get("body", ""):
                 comment_id_to_update = comment["id"]
                 break
@@ -345,7 +446,7 @@ def _post_github_pr_comment(markdown_content: str):
         if response.status_code in [200, 201]:
             print(f"✅ Successfully {action} DeepEval results on GitHub PR.")
         else:
-            print(f"⚠️ Failed to {action} PR comment. Status: {response.status_code}")
+            print(f"⚠️ Failed to {action} PR comment. Status: {response.status_code}, Response: {response.text}")
             
     except requests.exceptions.RequestException as e:
         print(f"⚠️ Network error while posting to GitHub: {e}")
