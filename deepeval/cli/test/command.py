@@ -33,7 +33,10 @@ def check_if_valid_file(test_file_or_directory: str, is_cicd: bool = False):
         test_file_or_directory, test_case = test_file_or_directory.split("::")
     if os.path.isfile(test_file_or_directory):
         if is_cicd:
-            if not (test_file_or_directory.endswith(".yml") or test_file_or_directory.endswith(".yaml")):
+            if not (
+                test_file_or_directory.endswith(".yml")
+                or test_file_or_directory.endswith(".yaml")
+            ):
                 raise ValueError(
                     "CI/CD evaluation requires a YAML configuration file."
                 )
@@ -144,6 +147,7 @@ def run(
 
     if cicd:
         from deepeval.cli.cicd.cicd import execute_cicd
+
         execute_cicd(test_file_or_directory, ci)
         return
 

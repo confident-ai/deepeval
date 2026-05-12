@@ -278,7 +278,7 @@ def evaluate(
         is_cicd_mode = False
         if "--cicd" in sys.argv:
             is_cicd_mode = True
-            
+
         if get_is_running_deepeval() and not is_cicd_mode:
             return EvaluationResult(
                 test_results=test_results,
