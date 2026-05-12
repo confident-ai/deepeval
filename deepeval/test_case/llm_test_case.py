@@ -5,7 +5,7 @@ from pydantic import (
     PrivateAttr,
     AliasChoices,
 )
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from enum import Enum
 import json
 import uuid
@@ -316,6 +316,9 @@ class ToolCall(BaseModel):
             f"    {line}" for line in lines[1:]
         )
 
+class RetrievedContextData(BaseModel):
+    context: str
+    source: str
 
 class LLMTestCase(BaseModel):
     model_config = make_model_config(extra="ignore")
@@ -334,7 +337,7 @@ class LLMTestCase(BaseModel):
     context: Optional[List[str]] = Field(
         default=None, serialization_alias="context"
     )
-    retrieval_context: Optional[List[str]] = Field(
+    retrieval_context: Optional[List[Union[str, RetrievedContextData]]] = Field(
         default=None,
         serialization_alias="retrievalContext",
         validation_alias=AliasChoices("retrievalContext", "retrieval_context"),
@@ -435,11 +438,11 @@ class LLMTestCase(BaseModel):
             if isinstance(self.input, str)
             else self.multimodal
         )
-        if self.retrieval_context is not None:
-            auto_detect = auto_detect or any(
-                re.search(pattern, context) is not None
-                for context in self.retrieval_context
-            )
+        # if self.retrieval_context is not None:
+        #     auto_detect = auto_detect or any(
+        #         re.search(pattern, context) is not None
+        #         for context in self.retrieval_context
+        #     )
         if self.context is not None:
             auto_detect = auto_detect or any(
                 re.search(pattern, context) is not None
@@ -480,10 +483,10 @@ class LLMTestCase(BaseModel):
         # Ensure `retrieval_context` is None or a list of strings
         if retrieval_context is not None:
             if not isinstance(retrieval_context, list) or not all(
-                isinstance(item, str) for item in retrieval_context
+                isinstance(item, (str, RetrievedContextData)) for item in retrieval_context
             ):
                 raise TypeError(
-                    "'retrieval_context' must be None or a list of strings"
+                    "'retrieval_context' must be None or a list of strings or RetrievedContextData"
                 )
 
         # Ensure `tools_called` is None or a list of strings
