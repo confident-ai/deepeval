@@ -1,4 +1,4 @@
-import os
+import sys
 from typing import (
     List,
     Optional,
@@ -272,7 +272,6 @@ def evaluate(
         # and directly call `evaluate()`. In that case, we need `evaluate()` to wrap up
         # the test run so we get the confident_link.
         is_cicd_mode = False
-        import sys
         if "--cicd" in sys.argv:
             is_cicd_mode = True
             
