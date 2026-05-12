@@ -139,7 +139,7 @@ def cicd(
     output_dir = ".deepeval_ci_reports"
     
     try:
-        report.export_to_markdown(output_dir=output_dir, evaluation_name="pr_evaluation")
+        report.export_to_cicd_markdown(output_dir=output_dir, evaluation_name="pr_evaluation")
 
         # 2. Find the generated markdown file
         list_of_files = glob.glob(f'{output_dir}/*.md')
@@ -157,7 +157,7 @@ def cicd(
     if results.confident_link:
         markdown_summary += (
             f"\n### 🔍 Deep Dive\n"
-            f"[**View full trace and logs on Confident AI**]({results.confident_link})"
+            f"[**View the full results on Confident AI**]({results.confident_link})"
         )
     else:
         markdown_summary += (
