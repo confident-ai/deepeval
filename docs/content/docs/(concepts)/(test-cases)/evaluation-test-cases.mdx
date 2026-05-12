@@ -299,6 +299,16 @@ Often times people confuse `expected_output` with `context` since due to their s
 
 The `retrieval_context` is an **optional** parameter that represents your RAG pipeline's retrieval results at runtime. By providing `retrieval_context`, you can determine how well your retriever is performing using `context` as a benchmark.
 
+:::note
+The `retrieval_context` parameter accepts a list of strings or `RetrievedContextData` objects.
+:::
+
+```python
+class RetrievedContextData(BaseModel):
+    context: str
+    source: str
+```
+
 ```python
 # A hypothetical LLM application example
 import chatbot
