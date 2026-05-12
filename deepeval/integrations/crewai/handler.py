@@ -255,7 +255,9 @@ class CrewAIEventsListener(BaseEventListener):
                         )
                         span_to_close.output = output
                         if isinstance(span_to_close, LlmSpan):
-                            span_to_close.integration = Integration.CREW_AI.value
+                            span_to_close.integration = (
+                                Integration.CREW_AI.value
+                            )
                             if not span_to_close.provider:
                                 span_to_close.provider = (
                                     infer_provider_from_model(

@@ -230,7 +230,9 @@ def _update_all_attributes(
         current_span.integration = Integration.OPEN_AI.value
         current_span.provider = Provider.OPEN_AI.value
         if current_span.parent_uuid:
-            parent_span = trace_manager.get_span_by_uuid(current_span.parent_uuid)
+            parent_span = trace_manager.get_span_by_uuid(
+                current_span.parent_uuid
+            )
             if parent_span and not parent_span.integration:
                 parent_span.integration = Integration.OPEN_AI.value
 

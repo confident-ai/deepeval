@@ -16,9 +16,7 @@ from deepeval.prompt.prompt import Prompt
 
 
 def _goldens(n: int = 3) -> list[Golden]:
-    return [
-        Golden(input=f"q{i}", expected_output=f"a{i}") for i in range(n)
-    ]
+    return [Golden(input=f"q{i}", expected_output=f"a{i}") for i in range(n)]
 
 
 def test_copro_sample_minibatch_respects_size() -> None:
@@ -68,9 +66,7 @@ def test_copro_execute_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
     scorer.score_pareto.return_value = [1.0, 1.0]
     runner.scorer = scorer
 
-    def _fake_eval(
-        self: COPRO, config, minibatch
-    ) -> tuple[float, str]:
+    def _fake_eval(self: COPRO, config, minibatch) -> tuple[float, str]:
         return (0.95, "feedback")
 
     monkeypatch.setattr(COPRO, "_evaluate_candidate", _fake_eval)

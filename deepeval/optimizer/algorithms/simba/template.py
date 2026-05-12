@@ -5,9 +5,9 @@ class SIMBATemplate:
         original_prompt: str,
         worse_trajectory: str,
         better_trajectory: str,
-        is_list_format: bool = False
+        is_list_format: bool = False,
     ) -> str:
-        
+
         if is_list_format:
             format_instruction = (
                 "A STRICT JSON array of message objects representing the fully rewritten conversational prompt "
@@ -15,7 +15,9 @@ class SIMBATemplate:
             )
             example_instruction = '[{"role": "system", "content": "You are a highly precise analytical engine. Always map out variables step-by-step before calculating..."},{"role": "user", "content": "{{input}}"}]'
         else:
-            format_instruction = "The final string representing the fully rewritten prompt."
+            format_instruction = (
+                "The final string representing the fully rewritten prompt."
+            )
             example_instruction = '"You are a highly precise analytical engine. Always map out variables step-by-step before calculating. Input: {{input}}"'
 
         return f"""You are the core Introspective Rewriter Engine for SIMBA (Stochastic Introspective Mini-Batch Ascent), operating within a world-class prompt optimization framework. 

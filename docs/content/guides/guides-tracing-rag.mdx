@@ -394,7 +394,8 @@ print(response)
 Pass a `CallbackHandler` instance in the `config` when invoking your chain. deepeval intercepts the retriever's start and end events, creating a `RetrieverSpan` with the query and the retrieved documents automatically.
 
 ```python title="main.py" showLineNumbers
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain.chat_models import init_chat_model
+from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -415,7 +416,7 @@ prompt = ChatPromptTemplate.from_template(
 chain = (
     {"context": retriever, "question": RunnablePassthrough()}
     | prompt
-    | ChatOpenAI(model="gpt-4o-mini")
+    | init_chat_model("openai:gpt-4o-mini")
     | StrOutputParser()
 )
 

@@ -18,9 +18,7 @@ from deepeval.test_case import Turn
 
 
 def _goldens(n: int = 3) -> list[Golden]:
-    return [
-        Golden(input=f"q{i}", expected_output=f"a{i}") for i in range(n)
-    ]
+    return [Golden(input=f"q{i}", expected_output=f"a{i}") for i in range(n)]
 
 
 def test_simba_golden_expected_text() -> None:
@@ -120,7 +118,9 @@ def test_simba_execute_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
     def _fake_trace(self: SIMBA, cfg, golden) -> SimbaTraceRecord:
         trace_calls.append(1)
         score = 1.0 if len(trace_calls) % 2 == 1 else 0.1
-        return SimbaTraceRecord(output=f"o{len(trace_calls)}", score=score, feedback="f")
+        return SimbaTraceRecord(
+            output=f"o{len(trace_calls)}", score=score, feedback="f"
+        )
 
     monkeypatch.setattr(SIMBA, "_execute_trace", _fake_trace)
 
@@ -173,7 +173,9 @@ async def test_simba_a_execute_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
     async def _fake_a_trace(self: SIMBA, cfg, golden) -> SimbaTraceRecord:
         trace_calls.append(1)
         score = 1.0 if len(trace_calls) % 2 == 1 else 0.1
-        return SimbaTraceRecord(output=f"a{len(trace_calls)}", score=score, feedback="f")
+        return SimbaTraceRecord(
+            output=f"a{len(trace_calls)}", score=score, feedback="f"
+        )
 
     monkeypatch.setattr(SIMBA, "_a_execute_trace", _fake_a_trace)
 

@@ -437,12 +437,12 @@ class SpanInterceptor(SpanProcessor):
         if attrs.get("confident.span.type") == "llm" and not attrs.get(
             "confident.span.provider"
         ):
-            model = attrs.get("confident.llm.model") or attrs.get(
-                "gen_ai.response.model"
-            ) or attrs.get("gen_ai.request.model")
-            provider = (
-                infer_provider_from_model(str(model)) if model else None
+            model = (
+                attrs.get("confident.llm.model")
+                or attrs.get("gen_ai.response.model")
+                or attrs.get("gen_ai.request.model")
             )
+            provider = infer_provider_from_model(str(model)) if model else None
             if provider:
                 provider = normalize_span_provider_for_platform(provider)
                 self._set_attr_post_end(

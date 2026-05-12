@@ -6,9 +6,9 @@ sidebar_label: LangGraph
 
 <IntegrationTagsDisplayer native={true} cicdEvals={true} traceability={true} />
 
-[LangGraph](https://www.langchain.com/langgraph) is a framework for building stateful, graph-based agent workflows on top of LangChain.
+[LangGraph](https://www.langchain.com/langgraph) is a low-level orchestration framework for building stateful, graph-based agent workflows. You compose agents from `StateGraph` nodes and edges, with full control over routing, state, and tool execution.
 
-The `deepeval` integration traces LangGraph runs through LangChain's `CallbackHandler`, which you pass into your graph's runtime config. Every graph run, model call, tool call, and nested step becomes a span you can inspect, without rewriting your LangGraph app.
+The `deepeval` integration traces LangGraph runs through LangChain's `CallbackHandler`, which you pass into your graph's runtime config. Every graph run, node, model call, tool call, and nested step becomes a span you can inspect, without rewriting your LangGraph app.
 
 <AgentTraceTerminal
   title="langgraph_agent · deepeval"
@@ -21,7 +21,7 @@ The `deepeval` integration traces LangGraph runs through LangChain's `CallbackHa
     {
       kind: "agent",
       prefix: "└─",
-      name: "react_agent",
+      name: "weather_graph",
       metric: "Task Completion",
       score: "0.94",
       duration: "190ms",
@@ -30,7 +30,7 @@ The `deepeval` integration traces LangGraph runs through LangChain's `CallbackHa
     {
       kind: "llm",
       prefix: "   ├─",
-      name: "gpt-4o-mini · route",
+      name: "chatbot · gpt-4o-mini",
       metric: "G-Eval",
       score: "0.42",
       duration: "72ms",
@@ -45,7 +45,7 @@ The `deepeval` integration traces LangGraph runs through LangChain's `CallbackHa
     {
       kind: "llm",
       prefix: "   └─",
-      name: "gpt-4o-mini · final_answer",
+      name: "chatbot · gpt-4o-mini",
       metric: "Faithfulness",
       score: "0.95",
       duration: "78ms",
@@ -87,10 +87,12 @@ LangGraph uses LangChain's callback system, so the `deepeval` integration is per
 
 ### Instrument and evaluate
 
-Create a LangGraph agent, then pass `CallbackHandler(...)` to the invocation you want to evaluate.
+Wire your `StateGraph` (LangGraph's core abstraction), then pass `CallbackHandler(...)` to the invocation you want to evaluate.
 
 ```python title="langgraph_agent.py" showLineNumbers
-from langgraph.prebuilt import create_react_agent
+from langchain.chat_models import init_chat_model
+from langgraph.graph import StateGraph, MessagesState, START, END
+from langgraph.prebuilt import ToolNode, tools_condition
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.metrics import TaskCompletionMetric
@@ -99,14 +101,27 @@ def get_weather(city: str) -> str:
     """Return the weather in a city."""
     return f"It's always sunny in {city}!"
 
-agent = create_react_agent(model="openai:gpt-4o-mini", tools=[get_weather], prompt="Be concise.")
+llm = init_chat_model("openai:gpt-4o-mini").bind_tools([get_weather])
+
+def chatbot(state: MessagesState):
+    return {"messages": [llm.invoke(state["messages"])]}
+
+graph = (
+    StateGraph(MessagesState)
+    .add_node(chatbot)
+    .add_node("tools", ToolNode([get_weather]))
+    .add_edge(START, "chatbot")
+    .add_conditional_edges("chatbot", tools_condition)
+    .add_edge("tools", "chatbot")
+    .compile()
+)
 
 # Goldens are the inputs you want to evaluate.
 dataset = EvaluationDataset(goldens=[Golden(input="What is the weather in Paris?")])
 
 # The `TaskCompletionMetric` is passed into the LangGraph callback.
 for golden in dataset.evals_iterator():
-    agent.invoke(
+    graph.invoke(
         {"messages": [{"role": "user", "content": golden.input}]},
         config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]},
     )
@@ -122,17 +137,20 @@ Done ✅. You've run your first eval with full traceability into LangGraph via `
 
 Each LangGraph run that receives a `CallbackHandler` produces a **trace** — the end-to-end unit your user observes. Inside that trace are **component spans** for each callback LangGraph emits through LangChain:
 
-- **Graph / chain spans** — graph nodes, runnable steps, and nested chain calls.
-- **LLM spans** — chat model and completion calls.
-- **Tool spans** — tool calls and function executions.
+- **Graph / node spans** — the compiled `StateGraph` invocation and each node it dispatches to.
+- **LLM spans** — chat model and completion calls inside a node.
+- **Tool spans** — tool calls executed by `ToolNode` (or your own).
 - **Retriever spans** — retriever calls, when your graph uses retrieval.
 
 ```text
 Trace                           ← what the user observes
-└── Graph: react_agent           ← one graph invoke(...) call
-    ├── LLM: gpt-4o-mini        ← component span: model chooses a tool
-    ├── Tool: get_weather       ← component span: tool input + output
-    └── LLM: gpt-4o-mini        ← component span: final answer
+└── Graph: weather_graph         ← one graph invoke(...) call
+    ├── Node: chatbot           ← model picks a tool
+    │   └── LLM: gpt-4o-mini
+    ├── Node: tools             ← ToolNode runs the tool
+    │   └── Tool: get_weather
+    └── Node: chatbot           ← model writes the final answer
+        └── LLM: gpt-4o-mini
 ```
 
 The trace and its component spans are independently evaluable.
@@ -147,7 +165,9 @@ Use the `deepeval` pytest integration. Each parametrized test invocation becomes
 
 ```python title="test_langgraph_agent.py" showLineNumbers
 import pytest
-from langgraph.prebuilt import create_react_agent
+from langchain.chat_models import init_chat_model
+from langgraph.graph import StateGraph, MessagesState, START, END
+from langgraph.prebuilt import ToolNode, tools_condition
 from deepeval import assert_test
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.dataset import EvaluationDataset, Golden
@@ -157,7 +177,21 @@ def get_weather(city: str) -> str:
     """Return the weather in a city."""
     return f"It's always sunny in {city}!"
 
-agent = create_react_agent(model="openai:gpt-4o-mini", tools=[get_weather], prompt="Be concise.")
+llm = init_chat_model("openai:gpt-4o-mini").bind_tools([get_weather])
+
+def chatbot(state: MessagesState):
+    return {"messages": [llm.invoke(state["messages"])]}
+
+graph = (
+    StateGraph(MessagesState)
+    .add_node(chatbot)
+    .add_node("tools", ToolNode([get_weather]))
+    .add_edge(START, "chatbot")
+    .add_conditional_edges("chatbot", tools_condition)
+    .add_edge("tools", "chatbot")
+    .compile()
+)
+
 dataset = EvaluationDataset(goldens=[
     Golden(input="What is the weather in Paris?"),
     Golden(input="What is the weather in London?"),
@@ -165,7 +199,7 @@ dataset = EvaluationDataset(goldens=[
 
 @pytest.mark.parametrize("golden", dataset.goldens)
 def test_langgraph_agent(golden: Golden):
-    agent.invoke(
+    graph.invoke(
         {"messages": [{"role": "user", "content": golden.input}]},
         config={"callbacks": [CallbackHandler()]},
     )
@@ -189,7 +223,7 @@ dataset = EvaluationDataset(goldens=[
 ])
 
 for golden in dataset.evals_iterator():
-    agent.invoke(
+    graph.invoke(
         {"messages": [{"role": "user", "content": golden.input}]},
         config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]},
     )
@@ -197,32 +231,38 @@ for golden in dataset.evals_iterator():
 
 ## Applying metrics to components
 
-Passing `metrics=[...]` to `CallbackHandler` evaluates the overall LangGraph run. To evaluate a model component instead, attach metrics where LangGraph creates the model.
+Passing `metrics=[...]` to `CallbackHandler` evaluates the overall LangGraph run. To evaluate a model component instead, attach metrics where the node calls the model.
 
 ### LLM calls
 
-Pass a configured LangChain chat model into `create_react_agent(...)`. The callback reads `metrics` from the model metadata when LangGraph emits the LLM span.
+Wrap the `graph.invoke(...)` in `with next_llm_span(metrics=[...]):`. The `CallbackHandler` drains the staged metric onto the **first LLM span** the graph emits; later LLM calls on subsequent loop turns get nothing. This is the same one-shot semantic used by `next_*_span` in the Pydantic AI / Strands / AgentCore / Google ADK integrations.
 
 ```python title="langgraph_agent.py" showLineNumbers
-from langchain.chat_models import init_chat_model
-from langgraph.prebuilt import create_react_agent
+from deepeval.integrations.langchain import CallbackHandler
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.tracing import next_llm_span
 ...
 
-model = init_chat_model("openai:gpt-4o-mini").with_config(
-    metadata={"metrics": [AnswerRelevancyMetric()]}
-)
-agent = create_react_agent(model=model, tools=[get_weather], prompt="Be concise.")
+for golden in dataset.evals_iterator():
+    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
+        graph.invoke(
+            {"messages": [{"role": "user", "content": golden.input}]},
+            config={"callbacks": [CallbackHandler()]},
+        )
 ```
+
+:::caution[One-shot per run]
+`next_llm_span` stages a metric for the **first** LLM span the graph emits inside the `with` block. Later loop iterations through the `chatbot` node won't pick it up. To score every LLM call, drive the loop yourself (`next_llm_span` per `graph.invoke(...)`) or score the run end-to-end with trace-level metrics on `CallbackHandler(metrics=[...])`.
+:::
 
 For deterministic tool calls, use tool spans for traceability, inputs, outputs, and metadata. Avoid attaching metrics directly to tool spans.
 
 ## Customizing trace and span data
 
-LangGraph is instrumented per-call through LangChain callbacks, so customization happens at the callback or component config boundary.
+LangGraph is instrumented per-call through LangChain callbacks, so customization happens at the callback or span-staging boundary.
 
 - Use `CallbackHandler(...)` kwargs for trace-level defaults like `name`, `tags`, `metadata`, `thread_id`, and `user_id`.
-- Use LangChain metadata for component-level fields on LLM and retriever spans.
+- Use `next_llm_span(...)` / `next_retriever_span(...)` / `next_tool_span(...)` to stage component-level fields (metrics, metric collections, test cases, custom span metadata) onto the next span the callback opens.
 - Use tool spans for deterministic traceability, inputs, outputs, and metadata.
 
 ```python title="langgraph_agent.py" showLineNumbers
@@ -233,7 +273,7 @@ callback = CallbackHandler(
     user_id="user-123",
 )
 
-agent.invoke(
+graph.invoke(
     {"messages": [{"role": "user", "content": "What is the weather in Paris?"}]},
     config={"callbacks": [callback]},
 )
@@ -241,27 +281,37 @@ agent.invoke(
 
 ## Advanced patterns
 
-The primitives above — `CallbackHandler(...)` and LangChain metadata — compose around one boundary: LangGraph owns the graph execution lifecycle, and your code chooses where to pass callback config or component metadata.
+The primitives above — `CallbackHandler(...)` and `next_*_span(...)` — compose around one boundary: LangGraph owns the graph execution lifecycle, and your code chooses where to stage component config for the next span the callback opens.
 
 ### Evaluate subagents/components
 
-Use model metadata when a subagent or internal graph step is represented by a LangGraph model call. In this example, the metric lives on the LLM span.
+Stage a component metric with `next_llm_span(...)` immediately before the `graph.invoke(...)` call. The `CallbackHandler` drains the staged metric onto the first LLM span emitted by the `chatbot` node, so the metric lives on the component span without modifying the graph or model.
 
 ```python title="langgraph_agent.py" showLineNumbers
 from langchain.chat_models import init_chat_model
+from langgraph.graph import StateGraph, MessagesState, START, END
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.tracing import next_llm_span
 ...
 
-model = init_chat_model("openai:gpt-4o-mini").with_config(
-    metadata={"metrics": [AnswerRelevancyMetric()]}
+llm = init_chat_model("openai:gpt-4o-mini")
+
+def chatbot(state: MessagesState):
+    return {"messages": [llm.invoke(state["messages"])]}
+
+graph = (
+    StateGraph(MessagesState)
+    .add_node(chatbot)
+    .add_edge(START, "chatbot")
+    .add_edge("chatbot", END)
+    .compile()
 )
-agent = create_react_agent(model=model, tools=[get_weather], prompt="Be concise.")
 ```
 
 #### No trace-level metrics required
 
-Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because the `AnswerRelevancyMetric` is attached to the LLM span, so CI/CD and scripts only need to run the component.
+Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because the `AnswerRelevancyMetric` is staged for the LLM span, so CI/CD and scripts only need to run the graph inside the staging block.
 
 This is how you'd run it:
 
@@ -275,10 +325,11 @@ from deepeval import assert_test
 
 @pytest.mark.parametrize("golden", dataset.goldens)
 def test_component_metrics(golden: Golden):
-    agent.invoke(
-        {"messages": [{"role": "user", "content": golden.input}]},
-        config={"callbacks": [CallbackHandler()]},
-    )
+    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
+        graph.invoke(
+            {"messages": [{"role": "user", "content": golden.input}]},
+            config={"callbacks": [CallbackHandler()]},
+        )
     assert_test(golden=golden)
 ```
 
@@ -293,10 +344,11 @@ deepeval test run test_langgraph_agent.py
 ...
 
 for golden in dataset.evals_iterator():
-    agent.invoke(
-        {"messages": [{"role": "user", "content": golden.input}]},
-        config={"callbacks": [CallbackHandler()]},
-    )
+    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
+        graph.invoke(
+            {"messages": [{"role": "user", "content": golden.input}]},
+            config={"callbacks": [CallbackHandler()]},
+        )
 ```
 
 </Tab>
@@ -312,7 +364,7 @@ from deepeval.tracing import observe
 
 @observe(name="respond_to_user")
 def respond_to_user(prompt: str):
-    return agent.invoke(
+    return graph.invoke(
         {"messages": [{"role": "user", "content": prompt}]},
         config={"callbacks": [CallbackHandler()]},
     )
