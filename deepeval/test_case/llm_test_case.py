@@ -4,6 +4,7 @@ from pydantic import (
     model_validator,
     PrivateAttr,
     AliasChoices,
+    model_serializer,
 )
 from typing import List, Optional, Dict, Any, Union
 from enum import Enum
@@ -319,6 +320,11 @@ class ToolCall(BaseModel):
 class RetrievedContextData(BaseModel):
     context: str
     source: str
+
+    @model_serializer
+    def serialize_model(self) -> str:
+        return f"{self.source}: {self.context}"
+
 
 class LLMTestCase(BaseModel):
     model_config = make_model_config(extra="ignore")
