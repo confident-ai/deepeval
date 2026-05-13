@@ -11,8 +11,8 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: "Tag to release (e.g. v3.7.0)"
-        required: true
+        description: "Tag to release (e.g. v3.7.0). Leave empty to use version from deepeval/_version.py"
+        required: false
 
 jobs:
   release:
@@ -29,29 +29,35 @@ jobs:
       - name: Set Tag Name and Auto-Tag (if needed)
         id: vars
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "TAG_NAME=${{ github.event.inputs.tag_name }}" >> $GITHUB_ENV
+          # 1. Determine intended tag name
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.tag_name }}" ]; then
+            TAG_NAME="${{ github.event.inputs.tag_name }}"
           elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
           else
-            # Triggered by version bump in main branch
+            # Triggered by version bump in main branch OR manual dispatch with empty tag
             VERSION=$(grep '__version__' deepeval/_version.py | cut -d '"' -f 2)
             TAG_NAME="v$VERSION"
-            
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            
-            if git ls-remote --tags origin | grep -q "refs/tags/$TAG_NAME"; then
-              echo "Tag $TAG_NAME already exists! Skipping release."
+          fi
+          
+          # 2. Check if tag exists and handle creation
+          if git ls-remote --tags origin | grep -q "refs/tags/$TAG_NAME"; then
+            echo "Tag $TAG_NAME already exists."
+            # If this was an automatic push to _version.py, we don't want to re-release an existing tag
+            if [ "${{ github.event_name }}" = "push" ] && [[ "${GITHUB_REF}" != refs/tags/* ]]; then
+              echo "Tag $TAG_NAME already exists! Skipping auto-release."
               echo "SKIP_RELEASE=true" >> $GITHUB_ENV
               exit 0
-            else
-              echo "Creating and pushing new tag: $TAG_NAME"
-              git tag "$TAG_NAME"
-              git push origin "$TAG_NAME"
-              echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
             fi
+          else
+            echo "Tag $TAG_NAME does not exist. Creating and pushing it..."
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag "$TAG_NAME"
+            git push origin "$TAG_NAME"
           fi
+          
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
 
       - name: Set up Python
         if: env.SKIP_RELEASE != 'true'
