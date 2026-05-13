@@ -49,7 +49,7 @@ class Golden(BaseModel):
         if self.multimodal is True:
             return self
 
-        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+        pattern = r"\[DEEPEVAL:(?:IMAGE|PDF):(.*?)\]"
         auto_detect = (
             any(
                 [
@@ -76,7 +76,7 @@ class Golden(BaseModel):
         return self
 
     def _get_images_mapping(self) -> Dict[str, MLLMImage]:
-        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+        pattern = r"\[DEEPEVAL:(?:IMAGE|PDF):(.*?)\]"
         image_ids = set()
 
         def extract_ids_from_string(s: Optional[str]) -> None:
@@ -138,7 +138,7 @@ class ConversationalGolden(BaseModel):
         if self.multimodal is True:
             return self
 
-        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+        pattern = r"\[DEEPEVAL:(?:IMAGE|PDF):(.*?)\]"
         if self.scenario:
             if re.search(pattern, self.scenario) is not None:
                 self.multimodal = True
@@ -165,7 +165,7 @@ class ConversationalGolden(BaseModel):
         return self
 
     def _get_images_mapping(self) -> Dict[str, MLLMImage]:
-        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+        pattern = r"\[DEEPEVAL:(?:IMAGE|PDF):(.*?)\]"
         image_ids = set()
 
         def extract_ids_from_string(s: Optional[str]) -> None:
