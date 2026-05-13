@@ -1,6 +1,8 @@
 import uuid
+import re
 from typing import Any, List, Dict, Optional, Union, Literal, Callable
 from time import perf_counter
+from deepeval.test_case.llm_test_case import MLLMImage, _MLLM_IMAGE_REGISTRY
 from langchain_core.outputs import ChatGeneration
 from rich.progress import Progress
 
@@ -16,6 +18,27 @@ from deepeval.tracing.types import (
     ToolSpan,
     TraceSpanStatus,
 )
+
+def _persist_mllm_image(img: MLLMImage) -> MLLMImage:
+    _MLLM_IMAGE_REGISTRY[img._id] = img
+    return img
+
+
+def _mllm_image_from_url_or_data_uri(url: str) -> MLLMImage:
+    url = url.strip()
+    if url.startswith("data:"):
+        try:
+            header, base64_data = url.split(",", 1)
+            mime_type = header.split(";")[0].replace("data:", "")
+            return _persist_mllm_image(
+                MLLMImage(
+                    dataBase64=base64_data.replace("\n", "").replace("\r", ""),
+                    mimeType=mime_type,
+                )
+            )
+        except Exception:
+            pass
+    return _persist_mllm_image(MLLMImage(url=url))
 
 
 def convert_chat_messages_to_input(
@@ -46,20 +69,35 @@ def convert_chat_messages_to_input(
     result: List[Dict[str, str]] = []
     for batch in messages:
         for msg in batch:
-            # BaseMessage has .type (role) and .content
             raw_role = getattr(msg, "type", "unknown")
             content = getattr(msg, "content", "")
-
-            # Normalize role using same conventions as prompt parsing
             role = ROLE_MAPPING.get(raw_role.lower(), raw_role)
 
-            # Convert content to string (handles empty content, lists, etc.)
             if isinstance(content, list):
-                # Some messages have content as a list of content blocks
-                content_str = " ".join(
-                    str(c.get("text", c) if isinstance(c, dict) else c)
-                    for c in content
-                )
+                content_parts = []
+                for c in content:
+                    if isinstance(c, dict):
+                        block_type = c.get("type", "")
+                        
+                        if block_type == "text" or "text" in c:
+                            content_parts.append(str(c.get("text", "")))
+                        elif block_type in ["image", "video", "audio", "file", "text-plain", "image_url"]:
+                            url = c.get("url") or (c.get("image_url", {}).get("url") if isinstance(c.get("image_url"), dict) else None)
+                            base64_data = c.get("base64") or c.get("data")
+                            mime_type = c.get("mime_type")
+
+                            if base64_data and mime_type:
+                                img = _persist_mllm_image(MLLMImage(dataBase64=base64_data, mimeType=mime_type))
+                                content_parts.append(str(img))
+                            elif url:
+                                content_parts.append(str(_mllm_image_from_url_or_data_uri(url)))
+                            else:
+                                content_parts.append(str(c))
+                        else:
+                            content_parts.append(str(c))
+                    else:
+                        content_parts.append(str(c))
+                content_str = " ".join(content_parts).strip()
             else:
                 content_str = str(content) if content else ""
 
