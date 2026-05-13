@@ -1,0 +1,63 @@
+name: Generate AI Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Tag to release (e.g. v3.7.0)"
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set Tag Name
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "TAG_NAME=${{ github.event.inputs.tag_name }}" >> $GITHUB_ENV
+          else
+            echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install rich pydantic deepeval
+
+      - name: Run AI changelog generator for the tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python .scripts/changelog/generate.py --tag ${{ env.TAG_NAME }} --github --ai
+
+      - name: Extract Release Notes for this Tag
+        run: |
+          python .scripts/changelog/extract_release_notes.py --tag ${{ env.TAG_NAME }} --output release_notes.md
+
+      - name: Create Draft GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # If the notes file is empty, fallback to a basic release
+          if [ ! -s release_notes.md ]; then
+            echo "No AI notes found, creating basic release..."
+            gh release create "${{ env.TAG_NAME }}" --title "${{ env.TAG_NAME }}" --draft
+          else
+            gh release create "${{ env.TAG_NAME }}" --title "${{ env.TAG_NAME }}" --notes-file release_notes.md --draft
+          fi
