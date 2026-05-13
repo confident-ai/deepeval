@@ -230,7 +230,7 @@ class ConversationalTestCase(BaseModel):
         if self.multimodal is True:
             return self
 
-        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+        pattern = r"\[DEEPEVAL:(?:IMAGE|PDF):(.*?)\]"
         if self.scenario:
             if re.search(pattern, self.scenario) is not None:
                 self.multimodal = True
@@ -294,7 +294,7 @@ class ConversationalTestCase(BaseModel):
         return data
 
     def _get_images_mapping(self) -> Dict[str, MLLMImage]:
-        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+        pattern = r"\[DEEPEVAL:(?:IMAGE|PDF):(.*?)\]"
         image_ids = set()
 
         def extract_ids_from_string(s: Optional[str]) -> None:
