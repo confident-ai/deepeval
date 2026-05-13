@@ -2,6 +2,10 @@ name: Generate AI Release
 
 on:
   push:
+    branches:
+      - main
+    paths:
+      - "deepeval/_version.py"
     tags:
       - "v*"
   workflow_dispatch:
@@ -22,24 +26,45 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set Tag Name
+      - name: Set Tag Name and Auto-Tag (if needed)
         id: vars
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "TAG_NAME=${{ github.event.inputs.tag_name }}" >> $GITHUB_ENV
-          else
+          elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          else
+            # Triggered by version bump in main branch
+            VERSION=$(grep '__version__' deepeval/_version.py | cut -d '"' -f 2)
+            TAG_NAME="v$VERSION"
+            
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            
+            if git ls-remote --tags origin | grep -q "refs/tags/$TAG_NAME"; then
+              echo "Tag $TAG_NAME already exists! Skipping release."
+              echo "SKIP_RELEASE=true" >> $GITHUB_ENV
+              exit 0
+            else
+              echo "Creating and pushing new tag: $TAG_NAME"
+              git tag "$TAG_NAME"
+              git push origin "$TAG_NAME"
+              echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+            fi
           fi
 
       - name: Set up Python
+        if: env.SKIP_RELEASE != 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Install dependencies
+        if: env.SKIP_RELEASE != 'true'
         run: pip install rich pydantic deepeval
 
       - name: Run AI changelog generator for the tag
+        if: env.SKIP_RELEASE != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -47,10 +72,12 @@ jobs:
           python .scripts/changelog/generate.py --tag ${{ env.TAG_NAME }} --github --ai
 
       - name: Extract Release Notes for this Tag
+        if: env.SKIP_RELEASE != 'true'
         run: |
           python .scripts/changelog/extract_release_notes.py --tag ${{ env.TAG_NAME }} --output release_notes.md
 
       - name: Create Draft GitHub Release
+        if: env.SKIP_RELEASE != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
