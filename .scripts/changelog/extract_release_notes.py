@@ -49,7 +49,6 @@ def main():
                     prs = versions[args.tag]
                     for pr in sorted(prs.keys()):
                         line = prs[pr]
-                        extracted_notes[category].append(line)
                         
                         # Extract author (appended after the pr marker)
                         parts = line.split("*/}")
@@ -58,6 +57,11 @@ def main():
                             if author_part and author_part.startswith("(") and author_part.endswith(")"):
                                 author = author_part[1:-1]
                                 contributors.add(author)
+                                
+                        # Remove the PR marker for a cleaner release note
+                        line = re.sub(r"\s*\{/\*\s*pr:\d+\s*\*/\}", "", line)
+                        
+                        extracted_notes[category].append(line)
 
     if not extracted_notes:
         print(f"No release notes found for tag {args.tag}")
@@ -68,6 +72,11 @@ def main():
 
     # Format the extracted notes into markdown
     out_lines = []
+    
+    out_lines.append("## Getting started with deepeval? Run:")
+    out_lines.append("```bash")
+    out_lines.append("pip install deepeval")
+    out_lines.append("```")
     
     # Sort categories based on the order defined in generate.py
     for category in CATEGORY_ORDER:
