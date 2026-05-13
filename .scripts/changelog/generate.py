@@ -1429,7 +1429,7 @@ def main() -> int:
     )
 
     ap.add_argument(
-        "--output-dir", default="docs/changelog", help="Docs changelog dir"
+        "--output-dir", default="docs/content/changelog", help="Docs changelog dir"
     )
     ap.add_argument(
         "--github",
