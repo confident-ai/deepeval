@@ -1,3 +1,4 @@
+import re
 import weakref
 from typing import (
     TYPE_CHECKING,
@@ -19,6 +20,7 @@ import random
 import atexit
 import queue
 import uuid
+from deepeval.test_case import MLLMImage
 from openai import OpenAI
 from rich.console import Console
 from rich.progress import Progress
@@ -36,6 +38,7 @@ from deepeval.tracing.api import (
     SpanApiType,
     TraceApi,
     TraceSpanApiStatus,
+    AttachmentApi
 )
 from deepeval.telemetry import capture_send_trace
 from deepeval.tracing.patchers import (
@@ -77,7 +80,7 @@ from deepeval.tracing.context import (
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.api import PromptApi
 from deepeval.tracing.trace_test_manager import trace_testing_manager
-
+from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden
     from anthropic import Anthropic
@@ -615,6 +618,9 @@ class TraceManager:
                     else:
                         api = Api(api_key=self.confident_api_key)
 
+                    # print(body)
+                    # return
+
                     api_response, link = await api.a_send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.TRACES_ENDPOINT,
@@ -720,6 +726,9 @@ class TraceManager:
                     else:
                         api = Api(api_key=self.confident_api_key)
 
+                    # print(body)
+                    # return
+
                     _, link = api.send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.TRACES_ENDPOINT,
@@ -823,7 +832,19 @@ class TraceManager:
             perf_counter_to_datetime(effective_end_time)
         )
 
-        trace_api = TraceApi(
+        extracted_docs = self._extract_attachments(trace)
+
+        api_attachments = None
+        if extracted_docs:
+            api_attachments = {}
+            for doc_id, doc in extracted_docs.items():
+                api_attachments[doc_id] = AttachmentApi(
+                    url=doc.url,
+                    mimeType=doc.mimeType,
+                    dataBase64=doc.dataBase64
+                )
+
+        return TraceApi(
             uuid=trace.uuid,
             baseSpans=base_spans,
             agentSpans=agent_spans,
@@ -856,6 +877,7 @@ class TraceManager:
                 if trace.status == TraceSpanStatus.SUCCESS
                 else TraceSpanApiStatus.ERRORED
             ),
+            attachments=api_attachments,
         )
         normalize_trace_api_span_providers(trace_api)
         return trace_api
@@ -892,6 +914,18 @@ class TraceManager:
 
         from deepeval.evaluate.utils import create_metric_data
 
+        extracted_docs = self._extract_attachments(span)
+        
+        api_attachments = None
+        if extracted_docs:
+            api_attachments = {}
+            for doc_id, doc in extracted_docs.items():
+                api_attachments[doc_id] = AttachmentApi(
+                    url=doc.url,
+                    mimeType=doc.mimeType,
+                    dataBase64=doc.dataBase64
+                )
+
         # Create the base API span
         api_span = BaseApiSpan(
             uuid=span.uuid,
@@ -917,6 +951,7 @@ class TraceManager:
             expectedOutput=span.expected_output,
             toolsCalled=span.tools_called,
             expectedTools=span.expected_tools,
+            attachments=api_attachments,
         )
 
         # Add type-specific attributes
@@ -962,6 +997,27 @@ class TraceManager:
                 api_span.token_intervals = processed_token_intervals
 
         return api_span
+
+    def _extract_attachments(self, obj: Union[Trace, BaseSpan]) -> Optional[Dict[str, MLLMImage]]:
+        """Scans an object's attributes for multimodal slugs and pulls them from the global registry."""
+        pattern = r"\[DEEPEVAL:(?:IMAGE|PDF):(.*?)]" 
+        found_docs: Dict[str, MLLMImage] = {}
+        
+        # Supported fields that may contain multimodal content
+        fields_to_scan = [
+            obj.input,
+            obj.output,
+            obj.context,
+            obj.retrieval_context,
+            obj.expected_output,
+        ]
+            
+        matches = re.findall(pattern, str(fields_to_scan))
+        for doc_id in matches:
+            if doc_id in _MLLM_IMAGE_REGISTRY:
+                found_docs[doc_id] = _MLLM_IMAGE_REGISTRY[doc_id]
+                    
+        return found_docs if found_docs else None
 
 
 trace_manager = TraceManager()
