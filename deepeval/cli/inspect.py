@@ -28,8 +28,9 @@ def inspect_command(
         None,
         help=(
             "Path to a specific test_run_*.json file, OR a folder "
-            "containing them. If omitted, opens the most recent file "
-            "under DEEPEVAL_RESULTS_FOLDER (or ./experiments)."
+            "containing them. If omitted, opens the latest run — either "
+            "from --folder / DEEPEVAL_RESULTS_FOLDER if set, or the "
+            "rolling snapshot deepeval writes after every eval."
         ),
         exists=False,
     ),
@@ -47,16 +48,15 @@ def inspect_command(
     """Open a TUI to inspect a saved test run's traces.
 
     Resolution order: PATH (file) → PATH (dir, latest inside) → --folder
-    → DEEPEVAL_RESULTS_FOLDER → `./experiments`.
+    → DEEPEVAL_RESULTS_FOLDER → `.deepeval/.latest_run_full.json` (rolling
+    snapshot deepeval writes on every eval) → `./experiments`.
     """
 
     target = _resolve_target(path, folder)
     if target is None:
         raise typer.BadParameter(
-            "No test_run_*.json file found. Pass a path / folder "
-            "argument, or set DEEPEVAL_RESULTS_FOLDER, or pass "
-            "`results_folder=...` to your `DisplayConfig(...)` so the "
-            "next eval writes one."
+            "No test_run_*.json file found. Run an eval first, or pass a "
+            "path / folder argument, or set DEEPEVAL_RESULTS_FOLDER."
         )
 
     # Lazy import so the install hint surfaces before Textual's heavy
@@ -98,10 +98,22 @@ def _resolve_target(
             param_hint="PATH",
         )
 
-    folder = folder_opt or os.getenv("DEEPEVAL_RESULTS_FOLDER") or "experiments"
-    folder_path = Path(folder)
-    if folder_path.is_dir():
-        return _find_latest(folder_path)
+    folder = folder_opt or os.getenv("DEEPEVAL_RESULTS_FOLDER")
+    if folder:
+        folder_path = Path(folder)
+        if folder_path.is_dir():
+            return _find_latest(folder_path)
+        return None
+
+    from deepeval.test_run.test_run import LATEST_FULL_TEST_RUN_FILE_PATH
+
+    rolling = Path(LATEST_FULL_TEST_RUN_FILE_PATH)
+    if rolling.is_file():
+        return rolling
+
+    legacy = Path("experiments")
+    if legacy.is_dir():
+        return _find_latest(legacy)
     return None
 
 

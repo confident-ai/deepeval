@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from typing import Callable, List, Optional
 
+from rich.style import Style
 from rich.text import Text
 from textual.widgets import Tree
 from textual.widgets.tree import TreeNode
@@ -25,6 +26,30 @@ from deepeval.inspect.widgets._styling import (
 )
 
 
+# Minimum gap (in cells) between the left content (name + metric badge +
+# optional ERRORED pill) and the right-aligned duration. Below this the
+# right column gives up trying to right-align and just leaves the
+# duration adjacent to the badge — better than overlapping in narrow
+# panes.
+_MIN_DURATION_GAP = 2
+
+
+def _node_depth(node: TreeNode) -> int:
+    """Number of ancestors above ``node`` (root = 0).
+
+    Some Textual releases expose ``TreeNode.depth`` directly, others
+    don't. Walking ``parent`` is O(depth) and stable across versions —
+    trace trees are typically <10 deep so the cost is negligible.
+    """
+
+    depth = 0
+    current = getattr(node, "parent", None)
+    while current is not None:
+        depth += 1
+        current = getattr(current, "parent", None)
+    return depth
+
+
 def _metric_badge(node: TraceOrSpan) -> Optional[Text]:
     counts = metric_counts(node.metrics_data)
     if counts is None:
@@ -41,7 +66,12 @@ def _metric_badge(node: TraceOrSpan) -> Optional[Text]:
 
 
 def _label_for(node: TraceOrSpan) -> Text:
-    """`<glyph> <TAG>  <name>  <duration>  <metric-badge>  <ERRORED>?`"""
+    """`<glyph> <TAG>  <name>  <metric-badge>  <ERRORED>?`
+
+    Duration is intentionally not baked in here — `SpanTree.render_label`
+    appends it right-aligned to the pane width using the per-render
+    viewport size, so we can't know the gap until paint time.
+    """
 
     label = Text()
     fail = has_failure(node)
@@ -51,7 +81,6 @@ def _label_for(node: TraceOrSpan) -> Text:
 
     name = node.name or ("trace" if isinstance(node, Trace) else "<unnamed>")
     label.append(name, style=name_style)
-    label.append(f"  {format_duration(duration_ms(node))}", style="dim")
 
     badge = _metric_badge(node)
     if badge is not None:
@@ -87,6 +116,51 @@ class SpanTree(Tree[TraceOrSpan]):
         super().__init__("trace", *args, **kwargs)
         self.show_root = True
         self.guide_depth = 3
+
+    def render_label(
+        self,
+        node: TreeNode[TraceOrSpan],
+        base_style: Style,
+        style: Style,
+    ) -> Text:
+        """Compose `<label>  …  <duration>` with the duration right-aligned
+        to the pane's content edge.
+
+        We can't bake the gap into ``_label_for`` because it depends on
+        the live viewport width (the pane resizes when the user toggles
+        sidebars) and the per-node indent (deeper rows have less room).
+        Textual calls this hook once per paint per row, so the cost is
+        proportional to visible rows — cheap.
+        """
+
+        # Default Textual behavior: copy the stored label, stylize, return.
+        # We then layer the right-aligned duration on top.
+        base = node.label.copy()
+        base.stylize(style)
+
+        data = node.data
+        if not isinstance(data, (Trace, BaseSpan)):
+            return base
+
+        # Intrinsic ``dim`` style + the row's runtime ``style`` (selection,
+        # hover) layered on top via ``stylize`` — matches how Textual's
+        # default ``render_label`` composes selection highlight onto a
+        # label that carries its own per-segment styles.
+        duration = Text(format_duration(duration_ms(data)), style="dim")
+        duration.stylize(style)
+
+        # Indent estimate: each guide level eats ``guide_depth`` cells,
+        # and the row always carries a 2-cell expand caret (▼/▶ + space).
+        # An over-estimate is safe — it just lets the duration float a
+        # cell or two left of the true right edge, which still reads as
+        # "right-aligned" but never wraps.
+        indent = _node_depth(node) * self.guide_depth + 2
+        avail = max(0, self.content_region.width - indent)
+        gap = avail - base.cell_len - duration.cell_len
+        if gap < _MIN_DURATION_GAP:
+            gap = _MIN_DURATION_GAP
+
+        return base + Text(" " * gap) + duration
 
     def populate(
         self,

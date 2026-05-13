@@ -1,38 +1,40 @@
 # Pytest End-to-End Evals
 
-Use this for the default CI/CD path. End-to-end pytest evals call the app, build
-test cases, and run `assert_test(test_case=..., metrics=...)`.
+Use this for the default CI/CD path. End-to-end pytest evals run one golden
+through the real app per test. If tracing or a supported integration is
+available, pass the golden directly to DeepEval with
+`assert_test(golden=golden, metrics=...)`.
 
-Do not use tracing primitives in the E2E template just to create an
-`LLMTestCase`. Do not use `evals_iterator` inside pytest templates.
+Use `templates/test_single_turn_tracing.py` for the default single-turn path.
+Use `templates/test_single_turn_no_tracing.py` only when the user explicitly
+declines tracing or no tracing path is viable.
 
 ## Default Shape
 
-Use `templates/test_single_turn_e2e.py` for single-turn E2E evals. This covers
-plain LLM, RAG, and agent use cases by adapting `APP_RESPONSE_ADAPTER`.
+Use an integration callback/instrumentation hook when one exists. If no native
+integration exists, wrap the app entry point with `@observe` and update the
+trace output.
 
 ```python
+from importlib import import_module
+
 import pytest
 
 from deepeval import assert_test
-from deepeval.dataset import EvaluationDataset
-from deepeval.test_case import LLMTestCase
+from deepeval.dataset import EvaluationDataset, Golden
 
-DATASET_PATH = "tests/evals/.dataset.json"
+from metrics import SINGLE_TURN_TRACE_METRICS
+
+ai_app = import_module("ai_app")
+
 
 dataset = EvaluationDataset()
-dataset.add_goldens_from_json_file(file_path=DATASET_PATH)
-
+dataset.add_goldens_from_json_file(file_path="tests/evals/.dataset.json")
 
 @pytest.mark.parametrize("golden", dataset.goldens)
-def test_llm_app(golden):
-    actual_output = your_llm_app(golden.input)
-    test_case = LLMTestCase(
-        input=golden.input,
-        actual_output=actual_output,
-        expected_output=getattr(golden, "expected_output", None),
-    )
-    assert_test(test_case=test_case, metrics=END_TO_END_METRICS)
+def test_llm_app(golden: Golden):
+    ai_app.run_traced_ai_app(golden.input)
+    assert_test(golden=golden, metrics=SINGLE_TURN_TRACE_METRICS)
 ```
 
 Run with:
@@ -42,6 +44,55 @@ deepeval test run tests/evals/test_<app>.py
 ```
 
 Do not default to the raw `pytest` command.
+
+## Integration-First Rule
+
+Before using manual `@observe`, read `references/integrations.md` and the exact
+integration doc for the app framework. For LangGraph, LangChain, OpenAI Agents,
+Pydantic AI, CrewAI, Google ADK, Strands, AgentCore, and OpenTelemetry-backed
+apps, the native integration should be the first implementation path.
+
+For integration-backed pytest evals, the shape is still:
+
+```python
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_agent(golden: Golden):
+    run_ai_app_with_integration_tracing(golden.input)
+    assert_test(golden=golden, metrics=SINGLE_TURN_TRACE_METRICS)
+```
+
+Do not translate these traced runs into `LLMTestCase`.
+
+## Span Metrics In The Same Eval
+
+Component-level metrics are part of the single-turn tracing eval. Do not create
+a separate component test file. Attach span metrics at the component boundary
+and keep `assert_test(golden=golden, ...)` at the trace level.
+
+Use `next_*_span(metrics=[...])` when an integration creates the component span:
+
+```python
+from deepeval.tracing import next_retriever_span
+
+from metrics import RETRIEVER_SPAN_METRICS
+
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_agent(golden: Golden):
+    with next_retriever_span(metrics=RETRIEVER_SPAN_METRICS):
+        run_ai_app_with_integration_tracing(golden.input)
+    assert_test(golden=golden, metrics=SINGLE_TURN_TRACE_METRICS)
+```
+
+Use `@observe(metrics=[...])` when manually instrumenting the component or when
+the integration supports observed component spans.
+
+## No-Tracing Fallback
+
+Only use the no-tracing template when tracing is intentionally out of scope. In
+that case, a small wrapper around the AI app call is acceptable because this
+path constructs the minimal `LLMTestCase` from AI app output and golden
+reference fields before calling `assert_test(test_case=..., metrics=...)`.
 
 ## Useful `deepeval test run` Flags
 
@@ -91,36 +142,44 @@ multi-turn evals.
 The minimal shape is:
 
 ```python
+from importlib import import_module
+
+import pytest
+
+from deepeval import assert_test
+from deepeval.dataset import EvaluationDataset
 from deepeval.simulator import ConversationSimulator
-from deepeval.test_case import Turn
 
+from metrics import MULTI_TURN_METRICS
+
+MAX_TURNS = 10
+ai_app = import_module("ai_app")
+
+simulator = ConversationSimulator(model_callback=ai_app.chatbot_callback)
 dataset = EvaluationDataset()
-dataset.add_goldens_from_json_file(file_path=DATASET_PATH)
+dataset.add_goldens_from_json_file(file_path="tests/evals/.dataset.json")
 
-
-async def chatbot_callback(input: str, turns=None, thread_id=None):
-    response = await TARGET_APP_ENTRYPOINT(input, turns, thread_id)
-    return Turn(role="assistant", content=APP_RESPONSE_ADAPTER(response))
-
-
-simulator = ConversationSimulator(model_callback=chatbot_callback)
-test_cases = simulator.simulate(
-    conversational_goldens=dataset.goldens,
-    max_user_simulations=MAX_TURNS,
+@pytest.mark.parametrize(
+    "test_case",
+    simulator.simulate(
+        conversational_goldens=dataset.goldens,
+        max_user_simulations=MAX_TURNS,
+    ),
 )
-```
-
-Then parametrize over the simulated cases:
-
-```python
-@pytest.mark.parametrize("test_case", test_cases)
 def test_conversation(test_case):
-    assert_test(test_case=test_case, metrics=END_TO_END_METRICS)
+    assert_test(test_case=test_case, metrics=MULTI_TURN_METRICS)
 ```
 
 ## Python Script Fallback
 
 Only create a Python script if the user pushes back on pytest. Explain that
 pytest is preferred because it leaves a durable eval suite the user can rerun in
-CI. If writing the fallback script, `evaluate()` or `evals_iterator` are
-acceptable depending on the eval type.
+CI. For traced single-turn scripts, use `evals_iterator` with goldens:
+
+```python
+for golden in dataset.evals_iterator(metrics=SINGLE_TURN_TRACE_METRICS):
+    run_ai_app_with_integration_tracing(golden.input)
+```
+
+Use `evaluate()` only when it is a better fit for an already-built list of test
+cases.

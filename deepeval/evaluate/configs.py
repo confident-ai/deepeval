@@ -23,9 +23,12 @@ class DisplayConfig:
     print_results: bool = True
     verbose_mode: Optional[bool] = None
     display_option: Optional[TestRunResultDisplay] = TestRunResultDisplay.ALL
+    # Optional folder for timestamped `test_run_<ts>.json` exports.
     results_folder: Optional[str] = None
     results_subfolder: Optional[str] = None
     truncate_passing_cases: bool = True
+    # Offer `deepeval inspect` after the run. Honors `DEEPEVAL_NO_INSPECT_PROMPT=1`.
+    inspect_after_run: bool = True
     # Deprecated: writes one .log per TestResult. Prefer `results_folder`, which
     # saves the full TestRun as a structured JSON readable by AI tools.
     file_type: Literal["html", "md"] = None

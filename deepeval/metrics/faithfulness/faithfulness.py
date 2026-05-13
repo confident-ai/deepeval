@@ -172,6 +172,11 @@ class FaithfulnessMetric(BaseMetric):
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "no":
                 contradictions.append(verdict.reason)
+            if (
+                verdict.verdict.strip().lower() == "idk"
+                and self.penalize_ambiguous_claims
+            ):
+                contradictions.append(f"(Ambiguous) {verdict.reason}")
 
         prompt = self.evaluation_template.generate_reason(
             contradictions=contradictions,
@@ -195,6 +200,11 @@ class FaithfulnessMetric(BaseMetric):
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "no":
                 contradictions.append(verdict.reason)
+            if (
+                verdict.verdict.strip().lower() == "idk"
+                and self.penalize_ambiguous_claims
+            ):
+                contradictions.append(f"(Ambiguous) {verdict.reason}")
 
         prompt = self.evaluation_template.generate_reason(
             contradictions=contradictions,

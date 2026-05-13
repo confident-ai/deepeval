@@ -105,7 +105,7 @@ function kindLabel(kind: LineKind): string | null {
     case "llm":
       return "LLM";
     case "retriever":
-      return "RET";
+      return "RETRIEVER";
     default:
       return null;
   }

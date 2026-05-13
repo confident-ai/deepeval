@@ -103,4 +103,7 @@ export const ASSETS = {
 
   // ---- Integration: Vector Database Images ----
   pgvector: `${BUCKETS.deepevalDocsRegion}/pgvector.png`,
+
+  // ---- CLI / Tooling ----
+  deepevalTuiInspect: `${BUCKETS.deepevalDocsRegion}/docs:tui-trace-inspect.png`,
 };

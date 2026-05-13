@@ -35,8 +35,9 @@ agent.
 | RAG | retriever, vector store, documents, chunks, context, citations, no higher-precedence chatbot or agent behavior | Single-turn E2E by default |
 | Plain LLM | one prompt in, one answer out, no tools or retrieval | Single-turn E2E |
 
-Use cases guide metrics and adapter fields. Templates are separated by test
-shape: single-turn E2E, multi-turn E2E, and optional component/span-level evals.
+Use cases guide metrics and required trace fields. Templates are separated by
+test shape: single-turn tracing, single-turn no-tracing, and multi-turn E2E.
+Optional component/span metrics stay inside the single-turn tracing shape.
 
 ## Dataset Default
 
