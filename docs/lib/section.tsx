@@ -104,8 +104,8 @@ export function createSection(config: SectionConfig) {
     return (
       <>
         <Banner id="docs-announcement" height="30px">
-          🔥 Vibe coding for DeepEval is here.{" "}
-          <Link href="/docs/vibe-coder-quickstart">Get started now</Link>.
+          🔥 DeepEval 4.0 just got released.{" "}
+          <Link href="/blog/introducing-deepeval-4">Read the announcement</Link>.
         </Banner>
         <DocsLayout
           {...rest}
