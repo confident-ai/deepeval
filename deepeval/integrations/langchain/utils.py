@@ -42,6 +42,63 @@ def _mllm_image_from_url_or_data_uri(url: str) -> MLLMImage:
     return _persist_mllm_image(MLLMImage(url=url))
 
 
+def _media_url_from_langchain_block(block: dict) -> Optional[str]:
+    """URL or data URI from an image / image_url style block."""
+    url = block.get("url")
+    if url:
+        return str(url)
+    image_url = block.get("image_url")
+    if isinstance(image_url, dict):
+        u = image_url.get("url")
+        return str(u) if u else None
+    if isinstance(image_url, str):
+        return image_url
+    return None
+
+
+def _mllm_placeholder_from_media_fields(block: dict) -> str:
+    """
+    Build an MLLMImage string placeholder ([DEEPEVAL:IMAGE:…] or [DEEPEVAL:PDF:…]).
+    Expects url / data URI, or base64 + mimeType (images and application/pdf only).
+    """
+    base64_data = block.get("base64") or block.get("data")
+    mime_type = block.get("mime_type") or block.get("mimeType")
+    if base64_data and mime_type:
+        return str(
+            _persist_mllm_image(
+                MLLMImage(dataBase64=str(base64_data), mimeType=str(mime_type))
+            )
+        )
+    url = _media_url_from_langchain_block(block)
+    if url:
+        return str(_mllm_image_from_url_or_data_uri(url))
+    return str(block)
+
+
+def _langchain_content_block_to_str(block: dict) -> str:
+    """
+    Turn one LangChain multimodal content dict into a string segment.
+
+    Only image and PDF are turned into Deepeval placeholders; everything else is
+    stringified so nothing is silently dropped.
+    """
+    block_type = (block.get("type") or "").lower()
+
+    if block_type == "text" or "text" in block:
+        return str(block.get("text", ""))
+
+    if block_type in ("image", "image_url"):
+        return _mllm_placeholder_from_media_fields(block)
+
+    if block_type == "file":
+        mime = str(block.get("mime_type") or block.get("mimeType") or "").lower()
+        if mime == "application/pdf" or mime.startswith("image/"):
+            return _mllm_placeholder_from_media_fields(block)
+        return str(block)
+
+    return str(block)
+
+
 def convert_chat_messages_to_input(
     messages: list[list[Any]], **kwargs
 ) -> List[Dict[str, str]]:
@@ -76,46 +133,11 @@ def convert_chat_messages_to_input(
 
             if isinstance(content, list):
                 content_parts = []
-                for c in content:
-                    if isinstance(c, dict):
-                        block_type = c.get("type", "")
-
-                        if block_type == "text" or "text" in c:
-                            content_parts.append(str(c.get("text", "")))
-                        elif block_type in [
-                            "image",
-                            "video",
-                            "audio",
-                            "file",
-                            "text-plain",
-                            "image_url",
-                        ]:
-                            url = c.get("url") or (
-                                c.get("image_url", {}).get("url")
-                                if isinstance(c.get("image_url"), dict)
-                                else None
-                            )
-                            base64_data = c.get("base64") or c.get("data")
-                            mime_type = c.get("mime_type")
-
-                            if base64_data and mime_type:
-                                img = _persist_mllm_image(
-                                    MLLMImage(
-                                        dataBase64=base64_data,
-                                        mimeType=mime_type,
-                                    )
-                                )
-                                content_parts.append(str(img))
-                            elif url:
-                                content_parts.append(
-                                    str(_mllm_image_from_url_or_data_uri(url))
-                                )
-                            else:
-                                content_parts.append(str(c))
-                        else:
-                            content_parts.append(str(c))
+                for part in content:
+                    if isinstance(part, dict):
+                        content_parts.append(_langchain_content_block_to_str(part))
                     else:
-                        content_parts.append(str(c))
+                        content_parts.append(str(part))
                 content_str = " ".join(content_parts).strip()
             else:
                 content_str = str(content) if content else ""
