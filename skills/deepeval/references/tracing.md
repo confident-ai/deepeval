@@ -1,13 +1,17 @@
 # Tracing
 
-Tracing is for visibility and component-level diagnostics. It is not the default
-end-to-end pytest pattern.
+Tracing is the default single-turn eval path when the app can produce traces
+through a DeepEval integration or manual instrumentation.
 
 In tracing, the trace is the end-to-end execution and spans are the components.
-Component-level testing evaluates spans inside the trace; it is therefore a
-superset/add-on to an E2E trace, not a replacement for E2E. Multi-turn evals do
-not have component-level tests in this template set because they evaluate whole
-conversations.
+Component-level metrics are still part of the same single-turn tracing eval;
+they are attached to specific spans inside the trace, not split into a separate
+test shape. Multi-turn evals evaluate whole conversations.
+
+Prefer supported integrations before manual `@observe`. Read
+`references/integrations.md` and the individual integration doc for the detected
+framework/provider before writing tracing code. Use manual `@observe` only for
+unsupported frameworks or app-owned wrapper boundaries.
 
 Strongly recommend tracing when the user mentions:
 
@@ -30,25 +34,27 @@ and final output."
 
 ## Minimal App Trace
 
-Use this when the user wants traces but not component-level metrics yet. Let the
-trace name default to the function name:
+Use this only when no native integration is available, or when wrapping an
+outer app-owned function around an integration-traced run. Let the trace name
+default to the function name:
 
 ```python
 from deepeval.tracing import observe, update_current_trace
 
 
 @observe()
-def chat_response(user_input: str) -> str:
-    response = TARGET_APP_ENTRYPOINT(user_input)
-    update_current_trace(input=user_input, output=response)
-    return response
+def run_my_ai_app(user_input: str):
+    output = my_ai_app(user_input)
+    update_current_trace(input=user_input, output=output)
+    return output
 ```
 
 ## Manual Instrumentation Types
 
-When the app is not using a supported integration, add manual `@observe`
-decorators with meaningful `type=` values. The type helps future metric
-selection and makes the trace easier for an agent to reason about.
+When the app is not using a supported integration, or when adding spans around
+app-owned components, use manual `@observe` decorators with meaningful `type=`
+values. The type helps future metric selection and makes the trace easier for an
+agent to reason about.
 
 Use common types deliberately:
 
@@ -128,9 +134,9 @@ spans:
 
 ```python
 @observe(type="agent")
-def answer_question(query: str):
+def run_my_ai_app(user_input: str):
     update_current_trace(tags=["rag", "support-chat"])
-    return TARGET_APP_ENTRYPOINT(query)
+    return my_ai_app(user_input)
 ```
 
 Use trace-level metadata for request/session/app context:
@@ -184,9 +190,48 @@ future metrics.
 
 ## Component Metrics
 
-When metrics belong to a specific component, use
-`references/pytest-component-evals.md` and
-`templates/test_single_turn_component.py`.
+When metrics belong to a specific component, keep them in the single-turn
+tracing eval and attach them to the exact span they evaluate.
+
+If a supported integration creates the span, stage metrics for the next span of
+that type:
+
+```python
+from deepeval.tracing import next_retriever_span
+
+from metrics import RETRIEVER_SPAN_METRICS
+
+
+with next_retriever_span(metrics=RETRIEVER_SPAN_METRICS):
+    run_ai_app_with_integration_tracing(golden.input)
+```
+
+If manual instrumentation or the integration supports observed component spans,
+attach metrics directly to `@observe`:
+
+```python
+from deepeval.tracing import observe
+
+from metrics import GENERATOR_LLM_SPAN_METRICS
+
+
+@observe(type="llm", metrics=GENERATOR_LLM_SPAN_METRICS)
+def call_model(messages):
+    ...
+```
+
+Name span metric lists after the component, such as
+`RETRIEVER_SPAN_METRICS`, `GENERATOR_LLM_SPAN_METRICS`, or
+`ORDER_LOOKUP_TOOL_SPAN_METRICS`. Do not create one global component metric
+list for the app.
+
+For script-based traced evals, use goldens through the eval iterator instead of
+building `LLMTestCase`s by hand:
+
+```python
+for golden in dataset.evals_iterator(metrics=SINGLE_TURN_TRACE_METRICS):
+    run_traced_ai_app(golden.input)
+```
 
 ## Data Hygiene
 

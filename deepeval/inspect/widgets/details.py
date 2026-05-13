@@ -31,7 +31,7 @@ from deepeval.inspect.widgets._styling import (
 )
 
 
-# Matches the TRC trace tag so the eye learns "cyan = structure markers".
+# Matches the TRACE tag so the eye learns "cyan = structure markers".
 _HEADER_ACCENT = "#8be9fd"
 _CTA_ACCENT = "#bd93f9"
 
@@ -188,17 +188,28 @@ def _metric_badges_section(node: TraceOrSpan) -> List[Any]:
 
 
 def _meta_strip_section(node: TraceOrSpan) -> List[Any]:
-    """Tags · UUID chips, plus a Metadata block when present."""
+    """Tags · UUID chips, plus a Metadata block.
+
+    Labels (``Tags:``, ``Metadata:``) are rendered unconditionally with an
+    explicit ``None`` placeholder when the field is empty — eyes scan
+    detail panes faster when the schema is stable across nodes, rather
+    than having sections appear and disappear based on whether a value
+    happens to be set. ``Tags`` is trace-only because only ``Trace``
+    carries the field; ``Metadata`` applies to every node.
+    """
 
     out: List[Any] = []
     line = Text()
     parts: List[Text] = []
 
-    tags = getattr(node, "tags", None) if isinstance(node, Trace) else None
-    if tags:
+    if isinstance(node, Trace):
         chip = Text()
         chip.append("Tags: ", style="dim")
-        chip.append(", ".join(tags), style="cyan")
+        tags = getattr(node, "tags", None)
+        if tags:
+            chip.append(", ".join(tags), style="cyan")
+        else:
+            chip.append("None", style="dim italic")
         parts.append(chip)
 
     if getattr(node, "uuid", None):
@@ -214,17 +225,20 @@ def _meta_strip_section(node: TraceOrSpan) -> List[Any]:
             line.append_text(chip)
         out.append(Static(line))
 
-    metadata = getattr(node, "metadata", None)
-    if metadata:
-        out.append(_kv_block("Metadata", metadata))
+    out.append(_kv_block("Metadata", getattr(node, "metadata", None)))
 
     return out
 
 
-def _kv_block(label: str, data: dict) -> Static:
+def _kv_block(label: str, data: Any) -> Static:
     text = Text()
     text.append(f"{label}: ", style="dim")
-    text.append(json.dumps(data, indent=2, default=str), style="dim")
+    if data:
+        text.append(json.dumps(data, indent=2, default=str), style="dim")
+    else:
+        # Explicit None placeholder so the row reads as "no value" rather
+        # than the label hanging with no value at all.
+        text.append("None", style="dim italic")
     return Static(text)
 
 
@@ -232,31 +246,18 @@ def _confident_cta_section(node: TraceOrSpan) -> List[Any]:
     """Banner promoting Confident AI. Rendered on every node — repetition
     is fine for a one-line evergreen CTA.
 
-    `cli.utils` is lazy-imported because it pulls in typer / pyfiglet
-    transitively; the module is cached after first import so subsequent
-    renders are free.
+    The CTA points users at ``deepeval login`` rather than a URL because
+    (a) the login flow already opens the right page in the user's browser
+    and (b) a typed command works in any terminal, while OSC-8 hyperlinks
+    rely on terminal support.
     """
 
-    from deepeval.cli.utils import WWW, with_utm
-
-    url = with_utm(
-        f"{WWW}/docs/llm-tracing/introduction",
-        medium="python_sdk",
-        content="inspect_details_cta",
-    )
-
     body = Text()
-    body.append("☁ ", style=f"bold {_CTA_ACCENT}")
-    body.append(
-        "Store, view, and share traces (with your team) on Confident AI.\n",
-    )
-    body.append("   → ", style=f"bold {_CTA_ACCENT}")
-    # OSC-8 hyperlink via Rich's `link` style — clickable in modern
-    # terminals, underlined plain text everywhere else.
-    body.append(url, style=f"underline {_CTA_ACCENT} link {url}")
+    body.append("Upload traces to Confident AI for free. Run ")
+    body.append("deepeval login", style=f"bold {_CTA_ACCENT}")
 
     return [
-        _cta_divider("Confident AI"),
+        _cta_divider("❤️ Save traces to the cloud"),
         Static(body, classes="details-cta"),
     ]
 
@@ -415,12 +416,14 @@ def _output_section(node: TraceOrSpan) -> List[Any]:
 
 def _payload_widget(value: Any) -> Static:
     if isinstance(value, str):
-        content: Any = value
+        content = value
     elif isinstance(value, (dict, list)):
         content = json.dumps(value, indent=2, default=str)
     else:
         content = repr(value)
-    return Static(content, classes="details-payload")
+    # Wrap in Text so Textual's Static doesn't parse `[...]` in the
+    # content as Rich markup (e.g. `repr([ToolCall(...)])` would crash).
+    return Static(Text(content), classes="details-payload")
 
 
 def _optional_sections(node: TraceOrSpan) -> List[Any]:
@@ -450,9 +453,11 @@ def _raw_json_section(node: TraceOrSpan) -> List[Any]:
         body = node.model_dump_json(by_alias=True, indent=2)
     except Exception as e:
         body = f"<failed to dump JSON: {e}>"
+    # Same Static-markup-parse hazard as _payload_widget — JSON arrays
+    # start with `[`, which Textual would otherwise treat as a markup tag.
     return [
         Collapsible(
-            Static(body),
+            Static(Text(body)),
             title="Raw JSON",
             collapsed=True,
         )

@@ -4,12 +4,15 @@ title: CLI Settings
 sidebar_label: CLI Settings
 ---
 
+import { ASSETS } from "@site/src/assets";
+
 ## Quick Summary
 
 `deepeval` provides a CLI for managing common tasks directly from the terminal. You can use it for:
 
 - Logging in/out and viewing test runs
 - Running evaluations from test files
+- Inspecting saved test runs in a terminal TUI (`deepeval inspect`)
 - Generating synthetic goldens from docs, contexts, scratch, or existing goldens
 - Enabling/disabling debug
 - Selecting an LLM/embeddings provider (OpenAI, Azure OpenAI, Gemini, Grok, DeepSeek, LiteLLM, local/Ollama)
@@ -152,6 +155,43 @@ deepeval test run tests/evals \
   --exit-on-first-failure \
   -- --tb=short
 ```
+
+### `inspect`
+
+Use `deepeval inspect` to open a saved test run inside a terminal TUI — a trace-tree viewer for metric scores, reasons, inputs/outputs, tool calls, and retriever context, all without leaving the terminal.
+
+The TUI is a **trace** viewer, so it's only useful for runs produced by `evals_iterator()` with an instrumented agent (see [single-turn end-to-end evals](/docs/evaluation-end-to-end-single-turn#approach-1-evals_iterator-with-tracing-recommended)). Each such call writes a rolling snapshot to `.deepeval/.latest_run_full.json` (gitignored alongside the rest of the hidden cache dir), so the zero-arg form picks up the most recent run automatically:
+
+```bash
+deepeval inspect
+```
+
+You can also point it at a specific file or folder:
+
+```bash
+deepeval inspect ./experiments/test_run_20260512_174200.json
+deepeval inspect ./experiments          # latest test_run_*.json inside
+deepeval inspect --folder ./experiments # same, via explicit flag
+```
+
+This allows you to inspect traces and spans locally on your machine:
+
+<ImageDisplayer
+  src={ASSETS.deepevalTuiInspect}
+  alt="deepeval inspect TUI showing a trace tree with per-span scores and metric reasons"
+/>
+
+Resolution order when no path is passed: `--folder` → `DEEPEVAL_RESULTS_FOLDER` → `.deepeval/.latest_run_full.json` → `./experiments` (legacy fallback).
+
+The TUI needs an optional extras bundle (Textual + clipboard support):
+
+```bash
+pip install 'deepeval[inspect]'
+```
+
+:::tip
+When an `evals_iterator()` run finishes in an interactive terminal and at least one test case captured a trace, deepeval offers to open it in the TUI for you. Disable per-call with `DisplayConfig(inspect_after_run=False)` or globally with `DEEPEVAL_NO_INSPECT_PROMPT=1` (e.g. in CI). See [display configs](/docs/evaluation-flags-and-configs#display-configs).
+:::
 
 ## Confident AI Commands
 

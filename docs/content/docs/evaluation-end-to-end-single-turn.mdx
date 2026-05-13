@@ -904,12 +904,14 @@ There are **SIX** optional parameters on `evals_iterator()`:
 - [Optional] `error_config`: an `ErrorConfig` controlling error handling. See [error configs](/docs/evaluation-flags-and-configs#error-configs).
 - [Optional] `cache_config`: a `CacheConfig` controlling caching. See [cache configs](/docs/evaluation-flags-and-configs#cache-configs).
 
-</Step>
-</Steps>
+Every `evals_iterator()` run is snapshotted to disk, so you can open it in a trace-tree TUI with bare `deepeval inspect`. See the [`deepeval inspect` reference](/docs/command-line-interface#inspect) for full details.
 
 To grade **individual components** (the retriever, a tool call, an inner LLM call) instead of (or in addition to) the trace, see [component-level evaluation](/docs/evaluation-component-level-llm-evals).
 
-If you're logged in to Confident AI via `deepeval login`, you'll also get to see full traces in testing reports on the platform:
+</Step>
+</Steps>
+
+If you're logged in to Confident AI via `deepeval login`, you'll also get to storage, share, view, and annotate full traces in testing reports on the platform:
 
 <VideoDisplayer
   src={ASSETS.evaluationSingleTurnE2eReportTracing}

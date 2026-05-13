@@ -964,10 +964,12 @@ There are **SIX** optional parameters on `evals_iterator()`:
 - [Optional] `error_config`: an `ErrorConfig` controlling error handling. See [error configs](/docs/evaluation-flags-and-configs#error-configs).
 - [Optional] `cache_config`: a `CacheConfig` controlling caching. See [cache configs](/docs/evaluation-flags-and-configs#cache-configs).
 
+Every `evals_iterator()` run is snapshotted to disk, so you can open it in a trace-tree TUI — with per-span scores and metric reasons — by running bare `deepeval inspect`. See the [`deepeval inspect` reference](/docs/command-line-interface#inspect) for full details.
+
 </Step>
 </Steps>
 
-Logging into Confident AI via the CLI also gives you testing reports with traces on the platform:
+Logging into Confident AI via the CLI also gives you testing reports with traces on the platform to annotate, share, and persist:
 
 ```python
 deepeval login
