@@ -73,7 +73,7 @@ class MLLMImage:
                     raise ValueError(
                         f"Invalid remote URL format: {self.url}. URL must start with http:// or https://"
                     )
-                
+
                 parsed_url = urlparse(self.url)
                 self.filename = os.path.basename(parsed_url.path)
                 self.mimeType = mimetypes.guess_type(self.filename)[0]

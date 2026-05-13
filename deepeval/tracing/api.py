@@ -24,7 +24,7 @@ class TraceSpanApiStatus(Enum):
 
 class AttachmentApi(BaseModel):
     model_config = make_model_config(extra="ignore")
-    
+
     url: Optional[str] = None
     mime_type: Optional[str] = Field(None, alias="mimeType")
     data_base_64: Optional[str] = Field(None, alias="dataBase64")
@@ -121,7 +121,9 @@ class BaseApiSpan(BaseModel):
     )
 
     # MLLM attachments
-    attachments: Optional[Dict[str, AttachmentApi]] = Field(None, alias="attachments")
+    attachments: Optional[Dict[str, AttachmentApi]] = Field(
+        None, alias="attachments"
+    )
 
 
 class TraceApi(BaseModel):
@@ -167,7 +169,9 @@ class TraceApi(BaseModel):
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
 
     # MLLM attachments
-    attachments: Optional[Dict[str, AttachmentApi]] = Field(None, alias="attachments")
+    attachments: Optional[Dict[str, AttachmentApi]] = Field(
+        None, alias="attachments"
+    )
 
     # Don't serialize these
     confident_api_key: Optional[str] = Field(None, exclude=True)

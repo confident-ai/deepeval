@@ -19,6 +19,7 @@ from deepeval.tracing.types import (
     TraceSpanStatus,
 )
 
+
 def _persist_mllm_image(img: MLLMImage) -> MLLMImage:
     _MLLM_IMAGE_REGISTRY[img._id] = img
     return img
@@ -78,19 +79,37 @@ def convert_chat_messages_to_input(
                 for c in content:
                     if isinstance(c, dict):
                         block_type = c.get("type", "")
-                        
+
                         if block_type == "text" or "text" in c:
                             content_parts.append(str(c.get("text", "")))
-                        elif block_type in ["image", "video", "audio", "file", "text-plain", "image_url"]:
-                            url = c.get("url") or (c.get("image_url", {}).get("url") if isinstance(c.get("image_url"), dict) else None)
+                        elif block_type in [
+                            "image",
+                            "video",
+                            "audio",
+                            "file",
+                            "text-plain",
+                            "image_url",
+                        ]:
+                            url = c.get("url") or (
+                                c.get("image_url", {}).get("url")
+                                if isinstance(c.get("image_url"), dict)
+                                else None
+                            )
                             base64_data = c.get("base64") or c.get("data")
                             mime_type = c.get("mime_type")
 
                             if base64_data and mime_type:
-                                img = _persist_mllm_image(MLLMImage(dataBase64=base64_data, mimeType=mime_type))
+                                img = _persist_mllm_image(
+                                    MLLMImage(
+                                        dataBase64=base64_data,
+                                        mimeType=mime_type,
+                                    )
+                                )
                                 content_parts.append(str(img))
                             elif url:
-                                content_parts.append(str(_mllm_image_from_url_or_data_uri(url)))
+                                content_parts.append(
+                                    str(_mllm_image_from_url_or_data_uri(url))
+                                )
                             else:
                                 content_parts.append(str(c))
                         else:
