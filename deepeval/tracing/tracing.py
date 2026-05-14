@@ -1,3 +1,4 @@
+import json
 import re
 import weakref
 from typing import (
@@ -784,6 +785,11 @@ class TraceManager:
         # Process all spans in the trace iteratively
         span_stack = list(trace.root_spans)  # Start with root spans
 
+        merged_attachment_docs: Dict[str, MLLMImage] = {}
+        trace_docs = self._extract_attachments(trace)
+        if trace_docs:
+            merged_attachment_docs.update(trace_docs)
+
         while span_stack:
             span = span_stack.pop()
 
@@ -793,6 +799,10 @@ class TraceManager:
                         child.parent_uuid = span.parent_uuid
                     span_stack.extend(span.children)
                 continue
+
+            span_docs = self._extract_attachments(span)
+            if span_docs:
+                merged_attachment_docs.update(span_docs)
 
             # Convert BaseSpan to BaseApiSpan
             api_span = self._convert_span_to_api_span(span)
@@ -827,19 +837,17 @@ class TraceManager:
             perf_counter_to_datetime(effective_end_time)
         )
 
-        extracted_docs = self._extract_attachments(trace)
-
         api_attachments = None
-        if extracted_docs:
+        if merged_attachment_docs:
             api_attachments = {}
-            for doc_id, doc in extracted_docs.items():
+            for doc_id, doc in merged_attachment_docs.items():
                 api_attachments[doc_id] = AttachmentApi(
                     url=doc.url,
                     mimeType=doc.mimeType,
                     dataBase64=doc.dataBase64,
                 )
 
-        return TraceApi(
+        trace_api = TraceApi(
             uuid=trace.uuid,
             baseSpans=base_spans,
             agentSpans=agent_spans,
@@ -909,18 +917,6 @@ class TraceManager:
 
         from deepeval.evaluate.utils import create_metric_data
 
-        extracted_docs = self._extract_attachments(span)
-
-        api_attachments = None
-        if extracted_docs:
-            api_attachments = {}
-            for doc_id, doc in extracted_docs.items():
-                api_attachments[doc_id] = AttachmentApi(
-                    url=doc.url,
-                    mimeType=doc.mimeType,
-                    dataBase64=doc.dataBase64,
-                )
-
         # Create the base API span
         api_span = BaseApiSpan(
             uuid=span.uuid,
@@ -946,7 +942,6 @@ class TraceManager:
             expectedOutput=span.expected_output,
             toolsCalled=span.tools_called,
             expectedTools=span.expected_tools,
-            attachments=api_attachments,
         )
 
         # Add type-specific attributes

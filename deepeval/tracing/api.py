@@ -120,11 +120,6 @@ class BaseApiSpan(BaseModel):
         None, serialization_alias="promptCommitHash"
     )
 
-    # MLLM attachments
-    attachments: Optional[Dict[str, AttachmentApi]] = Field(
-        None, alias="attachments"
-    )
-
 
 class TraceApi(BaseModel):
     model_config = make_model_config(
