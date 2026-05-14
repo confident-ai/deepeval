@@ -122,7 +122,7 @@ class TestRunCacheManager:
             SingleTurnParams.ACTUAL_OUTPUT.value: test_case.actual_output,
             SingleTurnParams.EXPECTED_OUTPUT.value: test_case.expected_output,
             SingleTurnParams.CONTEXT.value: test_case.context,
-            SingleTurnParams.RETRIEVAL_CONTEXT.value: test_case.retrieval_context,
+            SingleTurnParams.RETRIEVAL_CONTEXT.value: [rc.context if hasattr(rc, 'context') else rc for rc in test_case.retrieval_context] if test_case.retrieval_context else None,
             "hyperparameters": hyperparameters,
         }
         test_case_cache_key = serialize(cache_dict)
@@ -145,7 +145,7 @@ class TestRunCacheManager:
             SingleTurnParams.ACTUAL_OUTPUT.value: test_case.actual_output,
             SingleTurnParams.EXPECTED_OUTPUT.value: test_case.expected_output,
             SingleTurnParams.CONTEXT.value: test_case.context,
-            SingleTurnParams.RETRIEVAL_CONTEXT.value: test_case.retrieval_context,
+            SingleTurnParams.RETRIEVAL_CONTEXT.value: [rc.context if hasattr(rc, 'context') else rc for rc in test_case.retrieval_context] if test_case.retrieval_context else None,
             "hyperparameters": hyperparameters,
         }
         test_case_cache_key = serialize(cache_dict)
