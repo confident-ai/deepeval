@@ -223,6 +223,20 @@ Repeat each test case by providing a number to the `-r` flag to specify how many
 deepeval test run test_example.py -r 2
 ```
 
+### CI/CD Mode
+
+The `--cicd` flag allows you to run evaluations directly from a YAML configuration file without writing any `pytest` code. It automatically evaluates your LLM application, generates a markdown report, and posts the results as a PR comment on your CI provider (e.g., GitHub Actions).
+
+```
+deepeval test run deepeval.yml --cicd
+```
+
+You can also specify the CI provider using the `--ci` flag (defaults to `github`).
+
+```
+deepeval test run deepeval.yml --cicd --ci github
+```
+
 ### Hooks
 
 `deepeval`'s Pytest integration allows you to run custom code at the end of each evaluation via the `@deepeval.on_test_run_end` decorator:

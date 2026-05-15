@@ -719,9 +719,117 @@ The plain `pytest` command works but is highly not recommended. `deepeval test r
 </Step>
 </Steps>
 
-## YAML File For CI/CD Evals
+## Automated CI/CD with YAML Configuration
 
-Drop `deepeval test run` into a `.yml` to run your unit tests on every push or PR. This example uses `poetry` for installation and `OPENAI_API_KEY` as your LLM judge to run evals locally. Add `CONFIDENT_API_KEY` to send results to Confident AI.
+If you want to run evaluations in your CI/CD pipeline without writing any `pytest` code, you can use the `--cicd` flag. This approach uses a YAML configuration file to define your dataset, metrics, and model callback. It automatically evaluates your LLM application, generates a markdown report, and posts the results directly as a PR comment on your CI provider (e.g., GitHub Actions).
+
+### 1. Create a Model Callback
+
+First, create a simple Python file (e.g., `model_callback.py`) that defines how your LLM application responds to inputs. It must contain a function that accepts an `input` string and returns a `Turn` object.
+
+```python title="model_callback.py"
+from deepeval.test_case import Turn
+from your_app import your_llm_app
+
+def model_callback(input: str, turns: list = None) -> Turn:
+    # Replace this with your actual LLM application logic
+    response = your_llm_app(input)
+        
+    return Turn(role="assistant", content=response)
+```
+
+### 2. Create a Configuration File
+
+Next, create a YAML configuration file (e.g., `deepeval.yml`) to define your dataset, the model callback you just created, and the metrics you want to evaluate.
+
+```yaml title="test_run_config.yml"
+dataset:
+  goldens:
+    - input: "What is the capital of France?"
+      expected_output: "Paris"
+
+model_callback:
+  file_path: "model_callback.py"
+  function_name: "model_callback"
+
+metrics:
+  - metric: "AnswerRelevancyMetric"
+    threshold: 0.5
+  - metric: "GEval"
+    name: "Correctness"
+    criteria: "The chatbot must answer the question correctly."
+    threshold: 0.5
+
+required_metrics:
+  - name: "AnswerRelevancyMetric"
+```
+
+### 3. Setup GitHub Actions Workflow
+
+Finally, add a GitHub Actions workflow file to trigger the evaluation on pull requests. The `--cicd` flag will automatically detect the GitHub environment and post the evaluation results as a comment on the PR.
+
+```yaml title=".github/workflows/deepeval.yml"
+name: DeepEval CI/CD
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write 
+      contents: read
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+    steps:
+        # Add the necessary steps here to run your application in the 
+        # CI/CD environment with all dependencies and configurations installed
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          
+      - name: Install Dependencies
+        run: |
+          pip install poetry
+          poetry install
+          
+      # Run the following command to run the DeepEval CICD
+      - name: Run DeepEval CICD
+        run: poetry run deepeval test run test_run_config.yml --cicd
+```
+
+When a pull request is opened, this workflow will run your LLM evaluation and automatically comment on the PR with a detailed breakdown of passing and failing test cases, along with aggregate metrics.
+
+### YAML Configuration Reference
+
+The YAML configuration file supports the following top-level keys:
+
+- `dataset`: [Required] Specifies the dataset to evaluate. You must provide **exactly one** of the following sub-keys:
+  - `alias`: [String] The alias of a dataset hosted on Confident AI.
+  - `path`: [String] The file path to a local JSON dataset.
+  - `goldens`: [List] An inline list of golden objects. For single-turn, include keys like `input`, `expected_output`, `actual_output`, `context`, etc. For multi-turn, include keys like `scenario`, `expected_outcome`, etc. Do not mix single-turn and multi-turn goldens.
+- `model_callback`: [Required] Specifies the Python file and function used to simulate your LLM application.
+  - `file_path`: [String] The path to the Python file containing your callback.
+  - `function_name`: [String] The name of the function to call (defaults to `"model_callback"` if omitted).
+- `metrics`: [Required] A list of metrics to evaluate. Each item must contain:
+  - `metric`: [String] The class name of the metric (e.g., `"AnswerRelevancyMetric"`, `"ContextualRelevancyMetric"`).
+  - `[kwargs]`: Any additional parameters required by the metric constructor (e.g., `threshold`, `name`, `criteria`, `strict_mode`).
+- `required_metrics`: [Optional] A list specifying which metrics must pass for the entire CI/CD run to be considered successful. Each item must contain:
+  - `name`: [String] The name or class name of the metric.
+- `pass_rate`: [Optional] A number (e.g., `0.5`) indicating the minimum overall pass rate required for the CI/CD run to succeed.
+
+## Pytest Integration For CI/CD Evals
+
+If you prefer to use `pytest` for your evaluations, you can drop `deepeval test run` into a `.yml` to run your unit tests on every push or PR. This example uses `poetry` for installation and `OPENAI_API_KEY` as your LLM judge to run evals locally. Add `CONFIDENT_API_KEY` to send results to Confident AI.
 
 ```yaml {32-33}
 name: LLM App `deepeval` Tests
