@@ -11,10 +11,9 @@ from deepeval.metric_templates.resolver import (
     MetricTemplateNotFoundError,
     clear_metric_template_cache,
     get_bundle_only_template,
-    get_fragment,
     get_raw_template,
+    iter_bundle_template_methods,
     list_methods,
-    merge_hidden_template_file,
     resolve_template,
 )
 
@@ -51,9 +50,11 @@ def test_list_methods():
     assert "generate_task_output" in names
 
 
-def test_get_fragment():
-    text = get_fragment("multimodal_input_rules")
-    assert "MULTIMODAL" in text
+def test_iter_bundle_template_methods():
+    pairs = iter_bundle_template_methods("TaskNode")
+    methods = [m for m, _ in pairs]
+    assert "generate_task_output" in methods
+    assert all(isinstance(t, str) and t for _, t in pairs)
 
 
 def test_resolve_template_fragment_and_kwargs(tmp_path, monkeypatch):
@@ -146,16 +147,3 @@ def test_get_bundle_only_template_ignores_hidden(tmp_path, monkeypatch):
     assert overridden == "HIDDEN_ONLY"
     assert bundle_text != "HIDDEN_ONLY"
     assert len(bundle_text) > 50
-
-
-def test_merge_hidden_template_file_roundtrip(tmp_path, monkeypatch):
-    import deepeval.metric_templates.resolver as res
-
-    monkeypatch.setattr(res, "HIDDEN_DIR", str(tmp_path))
-    clear_metric_template_cache()
-    merge_hidden_template_file({"FooMetric": {"m1": "a"}})
-    merge_hidden_template_file({"FooMetric": {"m2": "b"}, "BarMetric": {"x": "y"}})
-    out = json.loads((tmp_path / "templates.json").read_text(encoding="utf-8"))
-    assert out["FooMetric"]["m1"] == "a"
-    assert out["FooMetric"]["m2"] == "b"
-    assert out["BarMetric"]["x"] == "y"
