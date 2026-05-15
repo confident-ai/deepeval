@@ -1,7 +1,8 @@
 import os
 import sys
+import glob
 import time
-from typing import Optional
+from typing import List, Optional
 
 import pytest
 import typer
@@ -14,7 +15,10 @@ from deepeval.test_run import (
     invoke_test_run_end_hook,
 )
 from deepeval.test_run.cache import TEMP_CACHE_FILE_NAME
+from deepeval.cli.utils import _post_github_pr_comment
 from deepeval.test_run.test_run import TestRunResultDisplay
+from deepeval.evaluate.console_report import EvaluationConsoleReport
+from deepeval.evaluate.utils import test_results_from_test_run
 from deepeval.utils import (
     delete_file_if_exists,
     set_identifier,
@@ -28,28 +32,16 @@ from deepeval.utils import (
 app = typer.Typer(name="test")
 
 
-def check_if_valid_file(test_file_or_directory: str, is_cicd: bool = False):
+def check_if_valid_file(test_file_or_directory: str):
     if "::" in test_file_or_directory:
         test_file_or_directory, test_case = test_file_or_directory.split("::")
     if os.path.isfile(test_file_or_directory):
-        if is_cicd:
-            if not (
-                test_file_or_directory.endswith(".yml")
-                or test_file_or_directory.endswith(".yaml")
-            ):
-                raise ValueError(
-                    "CI/CD evaluation requires a YAML configuration file."
-                )
-        elif test_file_or_directory.endswith(".py"):
+        if test_file_or_directory.endswith(".py"):
             if not os.path.basename(test_file_or_directory).startswith("test_"):
                 raise ValueError(
                     "Test will not run. Please ensure the file starts with `test_` prefix."
                 )
     elif os.path.isdir(test_file_or_directory):
-        if is_cicd:
-            raise ValueError(
-                "CI/CD evaluation requires a YAML configuration file, not a directory."
-            )
         return
     else:
         raise ValueError(
@@ -128,28 +120,18 @@ def run(
         "-m",
         help="List of marks to run the tests with.",
     ),
-    cicd: bool = typer.Option(
-        False,
-        "--cicd",
-        help="Run CI/CD evaluation from a YAML config.",
+    pass_rate: Optional[float] = typer.Option(
+        None, "--pass-rate", help="Minimum pass rate required (e.g., 0.8 for 80%)."
     ),
-    ci: str = typer.Option(
-        "github",
-        "--ci",
-        help="CI/CD provider to use (e.g., github).",
+    required_metrics: Optional[str] = typer.Option(
+        None, "--required-metrics", help="List of metric names that MUST pass. Can be used multiple times."
     ),
 ):
     """Run a test"""
     delete_file_if_exists(TEMP_FILE_PATH)
     delete_file_if_exists(TEMP_CACHE_FILE_NAME)
-    check_if_valid_file(test_file_or_directory, is_cicd=cicd)
+    check_if_valid_file(test_file_or_directory)
     set_is_running_deepeval(True)
-
-    if cicd:
-        from deepeval.cli.cicd.cicd import execute_cicd
-
-        execute_cicd(test_file_or_directory, ci)
-        return
 
     should_use_cache = use_cache and repeat is None
     set_should_use_cache(should_use_cache)
@@ -206,6 +188,50 @@ def run(
     global_test_run_manager.wrap_up_test_run(run_duration, True, display)
 
     invoke_test_run_end_hook()
+
+    test_results = test_results_from_test_run(
+        global_test_run_manager.get_test_run()
+    )
+    is_ci = os.environ.get("GITHUB_ACTIONS") == "true"
+    
+    if is_ci and test_results:
+        print("CI environment detected. Generating PR comment...")
+        
+        passed = True
+        actual_pass_rate = len([r for r in test_results if r.success]) / len(test_results)
+        
+        if pass_rate is not None and actual_pass_rate < pass_rate:
+            passed = False
+            
+        if required_metrics:
+            parsed_metrics = [m.strip() for m in required_metrics.split(",")]
+            for test_result in test_results:
+                for metric_data in test_result.metrics_data:
+                    if metric_data.name in parsed_metrics and not metric_data.success:
+                        passed = False
+                        break
+
+        report = EvaluationConsoleReport(test_results)
+        output_dir = ".deepeval_ci_reports"
+        report.export_to_cicd_markdown(output_dir=output_dir, evaluation_name="pr_evaluation")
+        
+        list_of_files = glob.glob(f"{output_dir}/*.md")
+        latest_report_path = max(list_of_files, key=os.path.getctime)
+        with open(latest_report_path, "r", encoding="utf-8") as f:
+            markdown_summary = f.read()
+
+        confident_link = global_test_run_manager.get_latest_test_run_link()
+        if confident_link:
+            markdown_summary += f"\n### 🔍 Deep Dive\n[**View the full results on Confident AI**]({confident_link})"
+        else:
+            markdown_summary += f"\nSet CONFIDENT_API_KEY to view these results on the Confident AI platform"
+
+        if not passed:
+            markdown_summary = markdown_summary.replace("**Status:** ✅ Passed", "**Status:** ❌ Failed (Thresholds not met)")
+            pytest_retcode = 1
+
+        # 4. Post Comment
+        _post_github_pr_comment(markdown_summary)
 
     if pytest_retcode == 1:
         sys.exit(1)
