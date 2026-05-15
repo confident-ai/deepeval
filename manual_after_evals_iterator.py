@@ -1,45 +1,8 @@
-"""manual_after_evals_iterator.py — manual-instrumentation analog of
-``pydantic_after_evals_iterator.py``.
+"""Multi-agent debug script for the OTel-vs-native evals_iterator comparison.
 
-Same shape (agent span → child LLM span, trace-level metadata, evals_iterator
-+ ``next_agent_span(metrics=[...])``) but using deepeval's NATIVE
-``@observe`` decorators instead of OTel-based pydantic-ai instrumentation.
-
-The point: isolate whether the duplicate-test-cases / dropped-children
-behavior we observed in the pydantic-ai run is OTel-specific, or whether
-it's a fundamental issue in the evaluator framework.
-
-Why we suspect OTel: ``ConfidentSpanExporter.export`` ends in a cleanup
-loop that calls ``end_trace`` for **every** uuid in
-``trace_manager.active_traces`` — not just the trace owning the span being
-exported — and then ``clear_traces()``. That's safe when there's one
-in-flight trace at a time, but with three concurrent ``agent.run`` tasks
-the first task's cleanup will:
-
-  - end_trace OTHER tasks' partially-built traces (pushing them into
-    ``traces_to_evaluate`` empty or with only one child),
-  - wipe ``active_traces``/``active_spans`` so subsequent OTel span ends
-    in those tasks ``start_new_trace`` a SECOND, fresh trace under the
-    same uuid,
-  - that second trace also gets ``end_trace``'d and queued, producing
-    a duplicate evaluation entry per affected golden.
-
-If THIS file (with no OTel in the loop) produces a clean 3 test cases for
-3 goldens — each with both agent + llm spans, each with a single set of
-metric scores — then the bug is firmly in the OTel exporter's cleanup
-loop and not in ``evals_iterator`` / ``_a_execute_agentic_test_case``.
-
-If THIS file ALSO shows duplicates / dropped children, then the bug
-lives somewhere shared (e.g. in the trace-test-case → main-test-case
-double-add or in ``_a_evaluate_traces`` itself) and we need to widen
-the fix.
-
-Requirements:
-  - ``CONFIDENT_API_KEY`` in env (or ``deepeval login``)
-  - ``OPENAI_API_KEY`` in env (the *metric* still calls OpenAI to
-    judge AnswerRelevancy; the agent's "LLM" call below is a
-    deterministic hard-coded responder so the run is fast + isolates
-    the variable to plumbing).
+Orchestrator → planner / retriever / calculator / knowledge / synthesizer
+sub-agents, all wired with native @observe. Deterministic fake LLM + tools
+so only TaskCompletionMetric calls real OpenAI.
 """
 
 import asyncio
@@ -48,7 +11,7 @@ from pathlib import Path
 
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.evaluate.configs import AsyncConfig
-from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.metrics import TaskCompletionMetric
 from deepeval.tracing import (
     observe,
     update_current_span,
@@ -60,103 +23,200 @@ from deepeval.tracing.context import next_agent_span
 RUN_ID = f"{Path(__file__).stem}-{uuid.uuid4().hex[:8]}"
 
 
-# Hard-coded responses keep this deterministic and free of provider
-# variance — the goal is to test plumbing, not LLM quality. The metric
-# still calls OpenAI when scoring AnswerRelevancy.
-_FAKE_RESPONSES = {
-    "What's 7 * 8?": "7 * 8 is 56.",
-    "What's the capital of France?": "The capital of France is Paris.",
-    "Name two primary colors.": "Red and blue.",
+_KNOWLEDGE_BASE = {
+    "france": "France's capital is Paris, established under Hugh Capet in 987 CE.",
+    "japan": "Japan's capital is Tokyo, renamed from Edo in 1868.",
+    "primary colors": "The traditional artistic primary colors are red, yellow, and blue.",
+    "rgb": "The additive primaries used in screens are red, green, and blue.",
+}
+
+_PLANS = {
+    "What's 7 * 8?": ["calculator:7*8"],
+    "What's the capital of France?": ["knowledge:france"],
+    "Name two primary colors.": ["knowledge:primary colors"],
+    "What's (12+3)*2, and the year France's capital became official?": [
+        "calculator:(12+3)*2",
+        "knowledge:france",
+    ],
+}
+
+_CALC_RESULTS = {"7*8": "56", "(12+3)*2": "30"}
+
+_REWRITES = {
+    "What's 7 * 8?": "seven times eight",
+    "What's the capital of France?": "capital of france",
+    "Name two primary colors.": "primary colors list",
+    "What's (12+3)*2, and the year France's capital became official?": (
+        "(12+3)*2 result and year capital of france established"
+    ),
+}
+
+_SYNTHESIS = {
+    "What's 7 * 8?": "7 multiplied by 8 is 56.",
+    "What's the capital of France?": "The capital of France is Paris (since 987 CE).",
+    "Name two primary colors.": "Two primary colors are red and blue.",
+    "What's (12+3)*2, and the year France's capital became official?": (
+        "(12+3)*2 equals 30, and Paris has been France's capital since 987 CE."
+    ),
 }
 
 
 @observe(type="llm", model="fake-gpt")
-async def fake_llm_call(prompt: str) -> str:
-    """Stand-in for pydantic-ai's ``chat <model>`` LLM span.
+async def plan_llm(prompt: str) -> list[str]:
+    await asyncio.sleep(0.03)
+    plan = _PLANS.get(prompt, [])
+    update_current_span(input=prompt, output=str(plan))
+    return plan
 
-    Decorated with ``@observe(type="llm", model=...)`` so it materializes
-    as an LLM span parented under the agent span — mirroring the agent →
-    llm hierarchy pydantic-ai produces natively. ``model`` is read from
-    ``observe_kwargs`` at span creation time; passing it via
-    ``update_current_span(...)`` raises ``TypeError`` because that helper
-    is the GENERIC mutator (not LLM-typed).
-    """
-    # Tiny sleep just to give the trace some realistic span duration —
-    # not strictly necessary for correctness.
+
+@observe(type="agent")
+async def planner_agent(prompt: str) -> list[str]:
+    plan = await plan_llm(prompt)
+    update_current_span(input=prompt, output=str(plan))
+    return plan
+
+
+@observe(type="llm", model="fake-gpt")
+async def rewrite_query_llm(prompt: str) -> str:
+    await asyncio.sleep(0.02)
+    rewritten = _REWRITES.get(prompt, prompt)
+    update_current_span(input=prompt, output=rewritten)
+    return rewritten
+
+
+@observe(type="retriever", embedder="fake-embedder")
+async def context_retriever(query: str) -> list[str]:
+    await asyncio.sleep(0.02)
+    lowered = query.lower()
+    chunks = [v for k, v in _KNOWLEDGE_BASE.items() if k in lowered]
+    update_current_span(input=query, output=chunks or ["<no context>"])
+    return chunks
+
+
+@observe(type="agent")
+async def retriever_agent(prompt: str) -> list[str]:
+    rewritten = await rewrite_query_llm(prompt)
+    chunks = await context_retriever(rewritten)
+    update_current_span(input=prompt, output=chunks)
+    return chunks
+
+
+@observe(type="tool")
+async def calculator_tool(expression: str) -> str:
+    await asyncio.sleep(0.02)
+    result = _CALC_RESULTS.get(
+        expression.replace(" ", ""),
+        f"error: unknown expression {expression!r}",
+    )
+    update_current_span(input=expression, output=result)
+    return result
+
+
+@observe(type="llm", model="fake-gpt")
+async def calc_interpret_llm(expression: str, raw: str) -> str:
+    await asyncio.sleep(0.02)
+    interpreted = f"{expression} = {raw}"
+    update_current_span(input=f"{expression} -> {raw}", output=interpreted)
+    return interpreted
+
+
+@observe(type="agent")
+async def calculator_agent(expression: str) -> str:
+    raw = await calculator_tool(expression)
+    interpreted = await calc_interpret_llm(expression, raw)
+    update_current_span(input=expression, output=interpreted)
+    return interpreted
+
+
+@observe(type="tool")
+async def knowledge_lookup_tool(key: str) -> str:
+    await asyncio.sleep(0.02)
+    result = _KNOWLEDGE_BASE.get(key, "<not found>")
+    update_current_span(input=key, output=result)
+    return result
+
+
+@observe(type="llm", model="fake-gpt")
+async def kb_summarize_llm(key: str, raw: str) -> str:
+    await asyncio.sleep(0.02)
+    summary = raw if "<not found>" not in raw else f"no info on {key!r}"
+    update_current_span(input=raw, output=summary)
+    return summary
+
+
+@observe(type="agent")
+async def knowledge_agent(key: str) -> str:
+    raw = await knowledge_lookup_tool(key)
+    summary = await kb_summarize_llm(key, raw)
+    update_current_span(input=key, output=summary)
+    return summary
+
+
+@observe(type="llm", model="fake-gpt")
+async def synthesize_llm(prompt: str, sub_results: list[str]) -> str:
     await asyncio.sleep(0.05)
-
-    response = _FAKE_RESPONSES.get(prompt, "I don't know.")
-
-    # Mirror what the OTel exporter writes onto the LLM span from
-    # gen_ai attributes, so the trace shape on the dashboard matches
-    # the pydantic-ai version visually.
+    response = _SYNTHESIS.get(prompt, "I don't know.")
     update_current_span(
-        input=[
-            {
-                "role": "system",
-                "content": "Be concise. Reply with one short sentence.",
-            },
-            {"role": "user", "content": prompt},
-        ],
+        input=f"results: {sub_results}\n\nquestion: {prompt}",
         output=response,
     )
     return response
 
 
-@observe(type="agent", metrics=[AnswerRelevancyMetric(threshold=0.4)])
-async def run_agent_observed(prompt: str) -> str:
-    """Agent driver — equivalent of ``agent.run`` in the pydantic-ai
-    version. Sets the same trace-level fields that
-    ``DeepEvalInstrumentationSettings`` configures over there
-    (``name``, ``tags``, ``metadata``) plus trace input/output, then
-    delegates to ``fake_llm_call`` as a child span.
-    """
+@observe(type="agent")
+async def synthesizer_agent(prompt: str, sub_results: list[str]) -> str:
+    response = await synthesize_llm(prompt, sub_results)
+    update_current_span(input=prompt, output=response)
+    return response
+
+
+@observe(type="agent")
+async def orchestrator(prompt: str) -> str:
     update_current_trace(
         name="manual-evals-iterator",
-        tags=["manual", "evals_iterator"],
+        tags=["manual", "evals_iterator", "multi-agent"],
         metadata={"run_id": RUN_ID, "script": Path(__file__).stem},
         input=[{"role": "user", "content": prompt}],
     )
 
-    response = await fake_llm_call(prompt)
+    plan = await planner_agent(prompt)
+    context = await retriever_agent(prompt)
+
+    sub_results: list[str] = list(context)
+    for step in plan:
+        kind, _, arg = step.partition(":")
+        if kind == "calculator":
+            sub_results.append(await calculator_agent(arg))
+        elif kind == "knowledge":
+            sub_results.append(await knowledge_agent(arg))
+
+    response = await synthesizer_agent(prompt, sub_results)
 
     update_current_trace(output=response)
-    update_current_span(
-        input=[{"role": "user", "content": prompt}],
-        output=response,
-        # model="fake-gpt",
-    )
+    update_current_span(input=prompt, output=response)
     return response
 
 
 async def run_agent(prompt: str) -> str:
-    """Mirror of ``run_agent`` in ``pydantic_after_evals_iterator.py``.
-
-    Uses ``next_agent_span(metrics=[...])`` to stage a per-call
-    AnswerRelevancyMetric on the next agent-typed span. With native
-    ``@observe`` the agent span IS a real ``AgentSpan`` (not an OTel
-    placeholder that gets serialized + re-hydrated by the exporter), so
-    the metric attaches directly and the eval pipeline runs it as a
-    span-level metric.
-    """
-    return await run_agent_observed(prompt)
-    with next_agent_span(metrics=[AnswerRelevancyMetric(threshold=0.2)]):
-        return await run_agent_observed(prompt)
+    with next_agent_span(metrics=[TaskCompletionMetric(threshold=0.2)]):
+        return await orchestrator(prompt)
 
 
 dataset = EvaluationDataset(
     goldens=[
         Golden(input="What's 7 * 8?"),
-        # Golden(input="What's the capital of France?"),
-        # Golden(input="Name two primary colors."),
+        Golden(input="What's the capital of France?"),
+        Golden(input="Name two primary colors."),
+        Golden(
+            input="What's (12+3)*2, and the year France's capital became official?"
+        ),
     ]
 )
-metric = AnswerRelevancyMetric(threshold=0.8)
 
 
 for golden in dataset.evals_iterator(
     async_config=AsyncConfig(run_async=True),
-    metrics=[metric],
+    metrics=[TaskCompletionMetric(threshold=0.5)],
 ):
     task = asyncio.create_task(run_agent(golden.input))
     dataset.evaluate(task)

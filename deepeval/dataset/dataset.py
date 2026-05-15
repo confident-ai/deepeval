@@ -1583,6 +1583,16 @@ class EvaluationDataset:
                     confident_link, test_run_id = res
                 else:
                     confident_link = test_run_id = None
+
+                # Offer the inspect TUI after all other run output has
+                # flushed — mirrors the placement in
+                # ``deepeval/evaluate/evaluate.py``.
+                from deepeval.evaluate.inspect_prompt import (
+                    maybe_offer_inspect_tui,
+                )
+
+                maybe_offer_inspect_tui(global_test_run_manager, display_config)
+
                 return EvaluationResult(
                     test_results=test_results,
                     confident_link=confident_link,

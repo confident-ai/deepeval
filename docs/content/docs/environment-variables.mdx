@@ -37,6 +37,7 @@ These are the core settings for controlling `deepeval`'s behavior, file paths, a
 | `DEEPEVAL_DEFAULT_SAVE`           | `dotenv[:path]` / unset | Default persistence target for `deepeval set-* --save` when `--save` is omitted.                                                   |
 | `DEEPEVAL_FILE_SYSTEM`            | `READ_ONLY` / unset     | Restrict file writes in constrained environments.                                                                                  |
 | `DEEPEVAL_RESULTS_FOLDER`         | `path` / unset          | Export a timestamped JSON of the latest test run into this directory (created if needed).                                          |
+| `DEEPEVAL_NO_INSPECT_PROMPT`      | `1` / `0` / `unset`     | Disable the post-run prompt that offers to open the latest `evals_iterator()` run in [`deepeval inspect`](/docs/command-line-interface#inspect). Useful in CI or non-interactive scripts. |
 | `DEEPEVAL_IDENTIFIER`             | `string` / unset        | Default identifier for runs (same idea as `deepeval test run -id ...`).                                                            |
 
 ## Display / Truncation

@@ -3,6 +3,8 @@ id: introduction-comparisons
 title: Comparisons
 ---
 
+import { ASSETS } from "@site/src/assets";
+
 This guide is useful both for those thinking of adopting or switching to DeepEval.
 
 > If you judge a fish by its ability to climb a tree, it will live its whole life believing that it is stupid.
@@ -49,6 +51,15 @@ iteration of AI agents and LLM apps.
   code.
 - **Cloud when needed** - Keep local development simple, then use Confident AI
   for shared reports, regression tracking, observability, and monitoring.
+
+Net effect: edit → rerun → [`deepeval inspect`](/docs/command-line-interface#inspect) in under a second, no dashboard round-trip.
+
+PS. DeepEval also allows you to view traces locally on your machine.
+
+<ImageDisplayer
+  src={ASSETS.deepevalTuiInspect}
+  alt="deepeval inspect TUI showing a trace tree with per-span scores and metric reasons"
+/>
 
 ### vs RAG-Only Evaluation Libraries
 

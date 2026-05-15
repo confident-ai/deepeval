@@ -181,8 +181,12 @@ def sh(cmd: List[str]) -> str:
 
 def git_tag_date_ymd(tag: str) -> str:
     if tag not in tag_to_date:
-        date_value = sh(["git", "log", "-1", "--format=%cs", tag])
-        tag_to_date[tag] = date_value
+        try:
+            date_value = sh(["git", "log", "-1", "--format=%cs", tag])
+            tag_to_date[tag] = date_value
+        except subprocess.CalledProcessError:
+            import datetime
+            tag_to_date[tag] = datetime.datetime.now().strftime("%Y-%m-%d")
     return tag_to_date[tag]
 
 
@@ -1429,7 +1433,7 @@ def main() -> int:
     )
 
     ap.add_argument(
-        "--output-dir", default="docs/changelog", help="Docs changelog dir"
+        "--output-dir", default="docs/content/changelog", help="Docs changelog dir"
     )
     ap.add_argument(
         "--github",

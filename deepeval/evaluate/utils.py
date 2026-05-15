@@ -216,7 +216,11 @@ def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
         output=trace.output,
         expected_output=trace.expected_output,
         context=trace.context,
-        retrieval_context=trace.retrieval_context,
+        retrieval_context=(
+            [rc.context if hasattr(rc, "context") else rc for rc in trace.retrieval_context]
+            if trace.retrieval_context
+            else None
+        ),
         tools_called=trace.tools_called,
         expected_tools=trace.expected_tools,
         metadata=trace.metadata,

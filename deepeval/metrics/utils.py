@@ -37,6 +37,7 @@ from deepeval.models import (
     KimiModel,
     GrokModel,
     DeepSeekModel,
+    OpenRouterModel,
 )
 from deepeval.models.llms.constants import (
     OPENAI_MODELS_DATA,
@@ -413,9 +414,15 @@ def check_arena_test_case_params(
 
 
 def trimAndLoadJson(
-    input_string: str,
+    input_string: Optional[str],
     metric: Optional[BaseMetric] = None,
 ) -> Any:
+    if input_string is None:
+        error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
+        if metric is not None:
+            metric.error = error_str
+        raise ValueError(error_str)
+
     start = input_string.find("{")
     end = input_string.rfind("}") + 1
 
@@ -570,6 +577,13 @@ def should_use_deepseek_model():
     return value.lower() == "yes" if value is not None else False
 
 
+def should_use_openrouter_model():
+    if SETTINGS.USE_OPENROUTER_MODEL:
+        return True
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_OPENROUTER_MODEL)
+    return value.lower() == "yes" if value is not None else False
+
+
 def should_use_moonshot_model():
     if SETTINGS.USE_MOONSHOT_MODEL:
         return True
@@ -628,6 +642,8 @@ def initialize_model(
         return GrokModel(model=model), True
     elif should_use_deepseek_model():
         return DeepSeekModel(model=model), True
+    elif should_use_openrouter_model():
+        return OpenRouterModel(model=model), True
     elif should_use_anthropic_model():
         return AnthropicModel(model=model), True
     elif should_use_amazon_bedrock_model():
@@ -656,6 +672,7 @@ def is_native_model(
         or isinstance(model, KimiModel)
         or isinstance(model, GrokModel)
         or isinstance(model, DeepSeekModel)
+        or isinstance(model, OpenRouterModel)
     ):
         return True
     else:

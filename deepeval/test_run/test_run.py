@@ -1,6 +1,7 @@
 from enum import Enum
 import os
 import json
+from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import Any, Optional, List, Dict, Union, Tuple
 import sys
@@ -57,6 +58,8 @@ else:
 
 TEMP_FILE_PATH = f"{HIDDEN_DIR}/.temp_test_run_data.json"
 LATEST_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_test_run.json"
+# Full TestRun payload (same as timestamped exports); overwritten each run.
+LATEST_FULL_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_run_full.json"
 LATEST_TEST_RUN_DATA_KEY = "testRunData"
 LATEST_TEST_RUN_LINK_KEY = "testRunLink"
 console = Console()
@@ -461,6 +464,9 @@ class TestRunManager:
         self.disable_request = False
         self.results_folder: Optional[str] = None
         self.results_subfolder: Optional[str] = None
+        # Timestamped export if one was written, else rolling snapshot.
+        # Consumed by the post-run inspect prompt.
+        self.last_saved_path: Optional[Path] = None
 
     def reset(self):
         self.test_run = None
@@ -469,6 +475,7 @@ class TestRunManager:
         self.disable_request = False
         self.results_folder = None
         self.results_subfolder = None
+        self.last_saved_path = None
 
     def configure_local_store(
         self,
@@ -483,6 +490,10 @@ class TestRunManager:
         """
         self.results_folder = results_folder
         self.results_subfolder = results_subfolder
+        # The manager is a long-lived singleton, so a previous run's path
+        # could linger and mislead the inspect prompt into offering a stale
+        # file. Clear it whenever a new run configures its local store.
+        self.last_saved_path = None
 
     def set_test_run(self, test_run: TestRun):
         self.test_run = test_run
@@ -982,27 +993,24 @@ class TestRunManager:
         return link, res.id
 
     def save_test_run_locally(self):
-        """Persist the current TestRun as `test_run_<YYYYMMDD_HHMMSS>.json`.
+        """Persist the current TestRun to disk.
 
-        Resolution order for the target directory:
-          1. `TestRunManager.results_folder` (set via `configure_local_store`,
-             typically from `DisplayConfig.results_folder`), optionally nested
-             under `results_subfolder`.
-          2. `DEEPEVAL_RESULTS_FOLDER` env var (legacy behavior).
-          3. No-op.
-
-        Hyperparameters, prompts, per-test-case scores and reasons all live
-        inside the resulting JSON via the existing TestRun pydantic schema —
-        the same payload Confident AI uploads — so AI tools like Cursor /
-        Claude Code can read the folder directly.
+        Always writes a rolling snapshot to `.deepeval/.latest_run_full.json`.
+        Additionally writes a timestamped `test_run_<YYYYMMDD_HHMMSS>.json` to
+        `results_folder` (or `DEEPEVAL_RESULTS_FOLDER`) when set.
         """
         if self.test_run is None:
             return
 
         from deepeval.evaluate.local_store import (
             resolve_target_dir,
+            write_rolling_test_run,
             write_test_run,
         )
+
+        rolling_path = write_rolling_test_run(self.test_run)
+        if rolling_path is not None:
+            self.last_saved_path = rolling_path
 
         target_dir = resolve_target_dir(
             results_folder=self.results_folder,
@@ -1020,6 +1028,7 @@ class TestRunManager:
 
         try:
             path = write_test_run(target_dir, self.test_run)
+            self.last_saved_path = path
             print(f"Test run saved at {path}")
         except Exception as e:
             print(

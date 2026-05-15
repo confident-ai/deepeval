@@ -840,7 +840,11 @@ class TraceManager:
             input=trace.input,
             output=trace.output,
             metricCollection=trace.metric_collection,
-            retrievalContext=trace.retrieval_context,
+            retrievalContext=(
+                [rc.context if hasattr(rc, "context") else rc for rc in trace.retrieval_context]
+                if trace.retrieval_context
+                else None
+            ),
             context=trace.context,
             expectedOutput=trace.expected_output,
             toolsCalled=trace.tools_called,
@@ -912,7 +916,11 @@ class TraceManager:
                 if span.metrics
                 else None
             ),
-            retrievalContext=span.retrieval_context,
+            retrievalContext=(
+                [rc.context if hasattr(rc, "context") else rc for rc in span.retrieval_context]
+                if span.retrieval_context
+                else None
+            ),
             context=span.context,
             expectedOutput=span.expected_output,
             toolsCalled=span.tools_called,
