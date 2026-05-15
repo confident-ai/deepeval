@@ -1,4 +1,3 @@
-import sys
 from typing import (
     List,
     Optional,
@@ -272,14 +271,7 @@ def evaluate(
         # as well would double finalize the run and consequently result in
         # duplicate uploads / local saves and temp file races, so only
         # do it when we're NOT in CLI mode.
-        # EXCEPT when we are running `deepeval test run --cicd`, where we bypass pytest
-        # and directly call `evaluate()`. In that case, we need `evaluate()` to wrap up
-        # the test run so we get the confident_link.
-        is_cicd_mode = False
-        if "--cicd" in sys.argv:
-            is_cicd_mode = True
-
-        if get_is_running_deepeval() and not is_cicd_mode:
+        if get_is_running_deepeval():
             return EvaluationResult(
                 test_results=test_results,
                 confident_link=None,
