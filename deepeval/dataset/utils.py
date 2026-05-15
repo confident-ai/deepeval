@@ -21,7 +21,7 @@ def convert_test_cases_to_goldens(
             "actual_output": test_case.actual_output,
             "expected_output": test_case.expected_output,
             "context": test_case.context,
-            "retrieval_context": test_case.retrieval_context,
+            "retrieval_context": [rc.context if hasattr(rc, "context") else rc for rc in test_case.retrieval_context] if test_case.retrieval_context else None,
             "tools_called": test_case.tools_called,
             "expected_tools": test_case.expected_tools,
             "additional_metadata": test_case.metadata,
@@ -135,7 +135,7 @@ def format_turns(turns: List[Turn]) -> str:
             "content": turn.content,
             "user_id": turn.user_id if turn.user_id is not None else None,
             "retrieval_context": (
-                turn.retrieval_context if turn.retrieval_context else None
+                [rc.context if hasattr(rc, "context") else rc for rc in turn.retrieval_context] if turn.retrieval_context else None
             ),
             "tools_called": _dump_list(turn.tools_called),
             "mcp_tools_called": _dump_list(turn.mcp_tools_called),

@@ -293,6 +293,15 @@ def evaluate(
             confident_link, test_run_id = res
         else:
             confident_link = test_run_id = None
+
+        # All other side-effects (saving locally, posting to Confident AI,
+        # rendering the table) have already happened inside wrap_up_test_run.
+        # Offer to open the inspect TUI as the very last thing the user sees,
+        # so it never competes with the run output for attention.
+        from deepeval.evaluate.inspect_prompt import maybe_offer_inspect_tui
+
+        maybe_offer_inspect_tui(global_test_run_manager, display_config)
+
         return EvaluationResult(
             test_results=test_results,
             confident_link=confident_link,

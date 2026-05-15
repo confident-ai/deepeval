@@ -1,7 +1,8 @@
 import re
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from typing import Optional, Dict, List
-from deepeval.test_case import ToolCall, Turn, MLLMImage
+from typing import Union
+from deepeval.test_case import ToolCall, Turn, MLLMImage, RetrievedContextData
 from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 
 
@@ -14,7 +15,7 @@ class Golden(BaseModel):
         default=None, serialization_alias="expectedOutput"
     )
     context: Optional[List[str]] = Field(default=None)
-    retrieval_context: Optional[List[str]] = Field(
+    retrieval_context: Optional[List[Union[str, RetrievedContextData]]] = Field(
         default=None, serialization_alias="retrievalContext"
     )
     additional_metadata: Optional[Dict] = Field(
@@ -62,8 +63,9 @@ class Golden(BaseModel):
         )
         if self.retrieval_context is not None:
             auto_detect = auto_detect or any(
-                re.search(pattern, context) is not None
-                for context in self.retrieval_context
+                re.search(pattern, c.context if isinstance(c, RetrievedContextData) else c) is not None
+                for c in self.retrieval_context
+                if isinstance(c, (RetrievedContextData, str))
             )
         if self.context is not None:
             auto_detect = auto_detect or any(
@@ -95,7 +97,8 @@ class Golden(BaseModel):
         extract_ids_from_string(self.actual_output)
         extract_ids_from_string(self.expected_output)
         extract_ids_from_list(self.context)
-        extract_ids_from_list(self.retrieval_context)
+        if self.retrieval_context:
+            extract_ids_from_list([c.context if isinstance(c, RetrievedContextData) else c for c in self.retrieval_context])
 
         images_mapping = {}
         for img_id in image_ids:
@@ -157,9 +160,10 @@ class ConversationalGolden(BaseModel):
                     self.multimodal = True
                     return self
                 if turn.retrieval_context is not None:
-                    self.multimodal = any(
-                        re.search(pattern, context) is not None
-                        for context in turn.retrieval_context
+                    self.multimodal = self.multimodal or any(
+                        re.search(pattern, c.context if isinstance(c, RetrievedContextData) else c) is not None
+                        for c in turn.retrieval_context
+                        if isinstance(c, (RetrievedContextData, str))
                     )
 
         return self
@@ -187,7 +191,8 @@ class ConversationalGolden(BaseModel):
         if self.turns:
             for turn in self.turns:
                 extract_ids_from_string(turn.content)
-                extract_ids_from_list(turn.retrieval_context)
+                if turn.retrieval_context:
+                    extract_ids_from_list([c.context if isinstance(c, RetrievedContextData) else c for c in turn.retrieval_context])
 
         images_mapping = {}
         for img_id in image_ids:

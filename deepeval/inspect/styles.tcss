@@ -32,7 +32,7 @@ SpanTree {
 }
 
 /* Cursor highlight is background-only — setting `color` would overwrite
- * the per-type Rich Text colors (TRC cyan, AGT pink, LLM yellow, ...)
+ * the per-type Rich Text colors (TRACE cyan, AGENT pink, LLM yellow, ...)
  * the moment a row is selected. */
 SpanTree > .tree--cursor {
     background: $boost-lighten-1;

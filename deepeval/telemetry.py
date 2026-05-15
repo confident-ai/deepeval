@@ -2,11 +2,13 @@ from contextlib import contextmanager
 import os
 import socket
 import sys
+import threading
 import uuid
 import sentry_sdk
 from enum import Enum
-from typing import List, Dict
+from typing import List, Dict, Set
 import requests
+from deepeval._version import __version__ as DEEPEVAL_VERSION
 from deepeval.config.settings import get_settings
 from deepeval.constants import LOGIN_PROMPT, HIDDEN_DIR, KEY_FILE
 from posthog import Posthog
@@ -54,6 +56,31 @@ def get_anonymous_public_ip():
     return None
 
 
+_ip_resolution_started = False
+_ip_resolution_lock = threading.Lock()
+
+
+def _resolve_public_ip_async():
+    """One-shot background fetch of the public IP. Idempotent, non-blocking."""
+    global _ip_resolution_started
+    if _ip_resolution_started:
+        return
+    with _ip_resolution_lock:
+        if _ip_resolution_started:
+            return
+        _ip_resolution_started = True
+
+    def _worker():
+        global anonymous_public_ip
+        ip = get_anonymous_public_ip()
+        if ip:
+            anonymous_public_ip = ip
+
+    threading.Thread(
+        target=_worker, name="deepeval-ip-resolver", daemon=True
+    ).start()
+
+
 #########################################################
 ### Move Folders ########################################
 #########################################################
@@ -84,17 +111,15 @@ if not telemetry_opt_out():
 anonymous_public_ip = None
 
 if not telemetry_opt_out():
-    anonymous_public_ip = get_anonymous_public_ip()
     sentry_sdk.init(
         dsn="https://5ef587d58109ee45d6544f3657efdd1f@o4506098477236224.ingest.sentry.io/4506098479136768",
-        profiles_sample_rate=1.0,
-        traces_sample_rate=1.0,  # For performance monitoring
-        send_default_pii=False,  # Don't send personally identifiable information
-        attach_stacktrace=False,  # Don't attach stack traces to messages
-        default_integrations=False,  # Disable Sentry's default integrations
+        profiles_sample_rate=0.0,
+        traces_sample_rate=0.0,
+        send_default_pii=False,
+        attach_stacktrace=False,
+        default_integrations=False,
     )
 
-    # Initialize PostHog
     posthog = Posthog(
         project_api_key="phc_IXvGRcscJJoIb049PtjIZ65JnXQguOUZ5B5MncunFdB",
         host="https://us.i.posthog.com",
@@ -106,11 +131,15 @@ if (
     and not blocked_by_firewall()
     and not telemetry_opt_out()
 ):
+    # Chain to the host's previous excepthook instead of clobbering it.
+    _previous_excepthook = sys.excepthook or sys.__excepthook__
 
     def handle_exception(exc_type, exc_value, exc_traceback):
-        print({"exc_type": exc_type, "exc_value": exc_value})
-        sentry_sdk.capture_exception(exc_value)
-        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        try:
+            sentry_sdk.capture_exception(exc_value)
+        except Exception:
+            pass
+        _previous_excepthook(exc_type, exc_value, exc_traceback)
 
     sys.excepthook = handle_exception
 
@@ -130,6 +159,32 @@ IS_RUNNING_IN_JUPYTER = (
     "jupyter" if is_running_in_jupyter_notebook() else "other"
 )
 
+
+# Populated by `capture_tracing_integration`, read by `_base_properties`.
+_installed_integrations: Set[str] = set()
+
+
+def _base_properties() -> Dict[str, object]:
+    """Common properties stamped on every PostHog event."""
+    _resolve_public_ip_async()
+    active_integrations = sorted(_installed_integrations)
+    return {
+        "deepeval.version": DEEPEVAL_VERSION,
+        "logged_in_with": get_logged_in_with(),
+        "environment": IS_RUNNING_IN_JUPYTER,
+        "user.status": get_status(),
+        "user.unique_id": get_unique_id(),
+        "user.public_ip": (
+            anonymous_public_ip if anonymous_public_ip else "Unknown"
+        ),
+        "integrations": active_integrations,
+        "integrations.count": len(active_integrations),
+        "integrations.primary": (
+            active_integrations[0] if active_integrations else "none"
+        ),
+    }
+
+
 #########################################################
 ### Context Managers ####################################
 #########################################################
@@ -140,7 +195,6 @@ def capture_evaluation_run(type: str):
     if telemetry_opt_out():
         yield
     else:
-        # data
         event = f"Ran {type}"
         distinct_id = get_unique_id()
         feature = (
@@ -148,15 +202,7 @@ def capture_evaluation_run(type: str):
             if event == "Ran traceable evaluate()"
             else Feature.EVALUATION
         )
-        properties = {
-            "logged_in_with": get_logged_in_with(),
-            "environment": IS_RUNNING_IN_JUPYTER,
-            "user.status": get_status(),
-            "user.unique_id": get_unique_id(),
-            "user.public_ip": (
-                anonymous_public_ip if anonymous_public_ip else "Unknown"
-            ),
-        }
+        properties = _base_properties()
         if feature == Feature.EVALUATION:
             properties["feature_status.evaluation"] = get_feature_status(
                 feature
@@ -166,7 +212,6 @@ def capture_evaluation_run(type: str):
                 get_feature_status(feature)
             )
         set_last_feature(feature)
-        # capture posthog
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
@@ -178,19 +223,9 @@ def capture_recommend_metrics():
     if telemetry_opt_out():
         yield
     else:
-        # data
         event = "Recommend"
         distinct_id = get_unique_id()
-        properties = {
-            "logged_in_with": get_logged_in_with(),
-            "environment": IS_RUNNING_IN_JUPYTER,
-            "user.status": get_status(),
-            "user.unique_id": get_unique_id(),
-            "user.public_ip": (
-                anonymous_public_ip if anonymous_public_ip else "Unknown"
-            ),
-        }
-        # capture posthog
+        properties = _base_properties()
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
@@ -204,21 +239,13 @@ def capture_metric_type(
     if telemetry_opt_out():
         yield
     else:
-        # data
         event = metric_name
         distinct_id = get_unique_id()
         properties = {
-            "logged_in_with": get_logged_in_with(),
-            "environment": IS_RUNNING_IN_JUPYTER,
-            "user.status": get_status(),
-            "user.unique_id": get_unique_id(),
-            "user.public_ip": (
-                anonymous_public_ip if anonymous_public_ip else "Unknown"
-            ),
+            **_base_properties(),
             "async_mode": async_mode,
             "in_component": int(in_component),
         }
-        # capture posthog
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
@@ -232,17 +259,10 @@ def capture_synthesizer_run(
     if telemetry_opt_out():
         yield
     else:
-        # data
         event = "Invoked synthesizer"
         distinct_id = get_unique_id()
         properties = {
-            "logged_in_with": get_logged_in_with(),
-            "environment": IS_RUNNING_IN_JUPYTER,
-            "user.status": get_status(),
-            "user.unique_id": get_unique_id(),
-            "user.public_ip": (
-                anonymous_public_ip if anonymous_public_ip else "Unknown"
-            ),
+            **_base_properties(),
             "feature_status.synthesizer": get_feature_status(
                 Feature.SYNTHESIZER
             ),
@@ -252,7 +272,6 @@ def capture_synthesizer_run(
             **{f"evolution.{evol.value}": 1 for evol in evolutions},
         }
         set_last_feature(Feature.SYNTHESIZER)
-        # capture posthog
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
@@ -264,24 +283,16 @@ def capture_conversation_simulator_run(num_conversations: int):
     if telemetry_opt_out():
         yield
     else:
-        # data
         event = "Invoked conversation simulator"
         distinct_id = get_unique_id()
         properties = {
-            "logged_in_with": get_logged_in_with(),
-            "environment": IS_RUNNING_IN_JUPYTER,
-            "user.status": get_status(),
-            "user.unique_id": get_unique_id(),
-            "user.public_ip": (
-                anonymous_public_ip if anonymous_public_ip else "Unknown"
-            ),
+            **_base_properties(),
             "feature_status.conversation_simulator": get_feature_status(
                 Feature.CONVERSATION_SIMULATOR
             ),
             "num_conversations": num_conversations,
         }
         set_last_feature(Feature.CONVERSATION_SIMULATOR)
-        # capture posthog
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
@@ -296,18 +307,11 @@ def capture_guardrails(guards: List[str]):
         event = "Ran guardrails"
         distinct_id = get_unique_id()
         properties = {
-            "logged_in_with": get_logged_in_with(),
-            "environment": IS_RUNNING_IN_JUPYTER,
-            "user.status": get_status(),
-            "user.unique_id": get_unique_id(),
-            "user.public_ip": (
-                anonymous_public_ip if anonymous_public_ip else "Unknown"
-            ),
+            **_base_properties(),
             "feature_status.guardrail": get_feature_status(Feature.GUARDRAIL),
             **{f"vulnerability.{guard}": 1 for guard in guards},
         }
         set_last_feature(Feature.GUARDRAIL)
-        # capture posthog
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
@@ -322,19 +326,12 @@ def capture_benchmark_run(benchmark: str, num_tasks: int):
         event = "Ran benchmark"
         distinct_id = get_unique_id()
         properties = {
-            "logged_in_with": get_logged_in_with(),
-            "environment": IS_RUNNING_IN_JUPYTER,
-            "user.status": get_status(),
-            "user.unique_id": get_unique_id(),
-            "user.public_ip": (
-                anonymous_public_ip if anonymous_public_ip else "Unknown"
-            ),
+            **_base_properties(),
             "feature_status.benchmark": get_feature_status(Feature.BENCHMARK),
             "benchmark": benchmark,
             "num_tasks": num_tasks,
         }
         set_last_feature(Feature.BENCHMARK)
-        # capture posthog
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
@@ -349,18 +346,11 @@ def capture_login_event():
         event = "Login"
         distinct_id = get_unique_id()
         properties = {
-            "logged_in_with": get_logged_in_with(),
-            "environment": IS_RUNNING_IN_JUPYTER,
-            "user.status": get_status(),
-            "user.unique_id": get_unique_id(),
-            "user.public_ip": (
-                anonymous_public_ip if anonymous_public_ip else "Unknown"
-            ),
+            **_base_properties(),
             "last_feature": get_last_feature().value,
             "completed": True,
             "login_prompt": LOGIN_PROMPT,
         }
-        # capture posthog
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
@@ -375,18 +365,11 @@ def capture_view_event():
         event = "View"
         distinct_id = get_unique_id()
         properties = {
-            "logged_in_with": get_logged_in_with(),
-            "environment": IS_RUNNING_IN_JUPYTER,
-            "user.status": get_status(),
-            "user.unique_id": get_unique_id(),
-            "user.public_ip": (
-                anonymous_public_ip if anonymous_public_ip else "Unknown"
-            ),
+            **_base_properties(),
             "last_feature": get_last_feature().value,
             "completed": True,
             "login_prompt": LOGIN_PROMPT,
         }
-        # capture posthog
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
@@ -400,26 +383,13 @@ def capture_pull_dataset():
     else:
         event = "Pull"
         distinct_id = get_unique_id()
-        properties = {
-            "logged_in_with": get_logged_in_with(),
-            "environment": IS_RUNNING_IN_JUPYTER,
-            "user.status": get_status(),
-            "user.unique_id": get_unique_id(),
-            "user.public_ip": (
-                anonymous_public_ip if anonymous_public_ip else "Unknown"
-            ),
-        }
-        # capture posthog
+        properties = _base_properties()
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
         yield
 
 
-# track metrics that are components and metrics that aren't components
-
-
-# number of traces
 @contextmanager
 def capture_send_trace():
     if telemetry_opt_out():
@@ -427,45 +397,32 @@ def capture_send_trace():
     else:
         event = "Send Trace"
         distinct_id = get_unique_id()
-        properties = {
-            "logged_in_with": get_logged_in_with(),
-            "environment": IS_RUNNING_IN_JUPYTER,
-            "user.status": get_status(),
-            "user.unique_id": get_unique_id(),
-            "user.public_ip": (
-                anonymous_public_ip if anonymous_public_ip else "Unknown"
-            ),
-        }
-        # capture posthog
+        properties = _base_properties()
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
         yield
 
 
-# tracing integration
 @contextmanager
 def capture_tracing_integration(integration_name: str):
+    # Registered outside the opt-out gate so the registry is always populated;
+    # it's only ever *read* inside opt-out-gated blocks.
+    _installed_integrations.add(integration_name)
+
     if telemetry_opt_out():
         yield
     else:
         event = f"Tracing Integration: deepeval.integrations.{integration_name}"
         distinct_id = get_unique_id()
         properties = {
-            "logged_in_with": get_logged_in_with(),
-            "environment": IS_RUNNING_IN_JUPYTER,
-            "user.status": get_status(),
-            "user.unique_id": get_unique_id(),
-            "user.public_ip": (
-                anonymous_public_ip if anonymous_public_ip else "Unknown"
-            ),
+            **_base_properties(),
+            "integration": integration_name,
             "feature_status.tracing_integration": get_feature_status(
                 Feature.TRACING_INTEGRATION
             ),
         }
         set_last_feature(Feature.TRACING_INTEGRATION)
-
-        # capture posthog
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
@@ -473,7 +430,7 @@ def capture_tracing_integration(integration_name: str):
 
 
 #########################################################
-### Helper Functions s####################################
+### Helper Functions ####################################
 #########################################################
 
 
@@ -492,11 +449,9 @@ def read_telemetry_file() -> dict:
 
 def write_telemetry_file(data: dict):
     """Writes the given key-value pairs to the telemetry data file."""
-    # respect opt out
     if telemetry_opt_out():
         return
 
-    # ensure directory exists before write
     os.makedirs(HIDDEN_DIR, exist_ok=True)
     with open(TELEMETRY_PATH, "w") as file:
         for key, value in data.items():
@@ -511,7 +466,6 @@ def get_status() -> str:
 
 def get_unique_id() -> str:
     """Gets or generates a unique ID and updates the telemetry file."""
-    # respect opt out
     if telemetry_opt_out():
         return "telemetry-opted-out"
     data = read_telemetry_file()
