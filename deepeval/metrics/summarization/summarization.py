@@ -8,6 +8,11 @@ from deepeval.test_case import (
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metric_templates import resolve_template
+from deepeval.metrics.faithfulness.faithfulness import (
+    _faithfulness_claims_multimodal_instruction,
+    _faithfulness_truths_limit_phrase,
+    _faithfulness_truths_multimodal_instruction,
+)
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -480,8 +485,12 @@ class SummarizationMetric(BaseMetric):
         prompt = resolve_template(
             "FaithfulnessMetric",
             "generate_truths",
+            multimodal=False,
             retrieval_context=text,
-            extraction_limit=self.truths_extraction_limit,
+            limit=_faithfulness_truths_limit_phrase(self.truths_extraction_limit),
+            multimodal_instruction=_faithfulness_truths_multimodal_instruction(
+                False
+            ),
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -495,7 +504,13 @@ class SummarizationMetric(BaseMetric):
         # Borrow faithfulness template
         prompt = resolve_template(
             "FaithfulnessMetric",
-            "generate_claims",actual_output=text)
+            "generate_claims",
+            multimodal=False,
+            actual_output=text,
+            multimodal_instruction=_faithfulness_claims_multimodal_instruction(
+                False
+            ),
+        )
         return await a_generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
@@ -509,8 +524,12 @@ class SummarizationMetric(BaseMetric):
         prompt = resolve_template(
             "FaithfulnessMetric",
             "generate_truths",
+            multimodal=False,
             retrieval_context=text,
-            extraction_limit=self.truths_extraction_limit,
+            limit=_faithfulness_truths_limit_phrase(self.truths_extraction_limit),
+            multimodal_instruction=_faithfulness_truths_multimodal_instruction(
+                False
+            ),
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -524,7 +543,13 @@ class SummarizationMetric(BaseMetric):
         # Borrow faithfulness template
         prompt = resolve_template(
             "FaithfulnessMetric",
-            "generate_claims",actual_output=text)
+            "generate_claims",
+            multimodal=False,
+            actual_output=text,
+            multimodal_instruction=_faithfulness_claims_multimodal_instruction(
+                False
+            ),
+        )
         return generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,

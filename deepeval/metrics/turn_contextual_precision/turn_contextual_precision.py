@@ -18,13 +18,30 @@ from deepeval.metrics.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metric_templates import resolve_template
+from deepeval.metrics.retrieval_context_display import id_retrieval_context
 from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.test_case import MLLMImage
 from deepeval.metrics.turn_contextual_precision.schema import (
     ContextualPrecisionVerdict,
     Verdicts,
     ContextualPrecisionScoreReason,
     InteractionContextualPrecisionScore,
 )
+
+
+def _contextual_precision_verdict_fields(
+    retrieval_context: List[str],
+    multimodal: bool,
+) -> Tuple[str, Union[List[str], List[Union[str, MLLMImage]]], str]:
+    document_count_str = (
+        f" ({len(retrieval_context)} document"
+        f"{'s' if len(retrieval_context) > 1 else ''})"
+    )
+    context_to_display = (
+        id_retrieval_context(retrieval_context) if multimodal else retrieval_context
+    )
+    multimodal_note = " (which can be text or an image)" if multimodal else ""
+    return document_count_str, context_to_display, multimodal_note
 
 
 class TurnContextualPrecisionMetric(BaseConversationalMetric):
@@ -257,15 +274,18 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
 
         verdicts: List[ContextualPrecisionVerdict] = []
 
+        doc_str, ctx_disp, mm_note = _contextual_precision_verdict_fields(
+            retrieval_context, multimodal
+        )
         prompt = resolve_template(
-
             self.__class__.__name__,
-
             "generate_verdicts",
             input=input,
             expected_outcome=expected_outcome,
-            retrieval_context=retrieval_context,
             multimodal=multimodal,
+            document_count_str=doc_str,
+            context_to_display=ctx_disp,
+            multimodal_note=mm_note,
         )
 
         return await a_generate_with_schema_and_extract(
@@ -288,15 +308,18 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
 
         verdicts: List[ContextualPrecisionVerdict] = []
 
+        doc_str, ctx_disp, mm_note = _contextual_precision_verdict_fields(
+            retrieval_context, multimodal
+        )
         prompt = resolve_template(
-
             self.__class__.__name__,
-
             "generate_verdicts",
             input=input,
             expected_outcome=expected_outcome,
-            retrieval_context=retrieval_context,
             multimodal=multimodal,
+            document_count_str=doc_str,
+            context_to_display=ctx_disp,
+            multimodal_note=mm_note,
         )
 
         return generate_with_schema_and_extract(

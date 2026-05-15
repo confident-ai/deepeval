@@ -29,6 +29,14 @@ from deepeval.metrics.turn_faithfulness.schema import (
 )
 
 
+def _turn_faithfulness_limit_description(extraction_limit: Optional[int]) -> str:
+    if extraction_limit is None:
+        return "factual, explicit truths"
+    if extraction_limit == 1:
+        return "one factual, explicit truth"
+    return f"{extraction_limit} factual, explicit truths"
+
+
 class TurnFaithfulnessMetric(BaseConversationalMetric):
     _required_test_case_params: List[MultiTurnParams] = [
         MultiTurnParams.ROLE,
@@ -258,7 +266,9 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
             self.__class__.__name__,
             "generate_truths",
             reference_context="\n\n".join(retrieval_context),
-            extraction_limit=self.truths_extraction_limit,
+            limit_description=_turn_faithfulness_limit_description(
+                self.truths_extraction_limit
+            ),
             multimodal=multimodal,
         )
 
@@ -277,7 +287,9 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
             self.__class__.__name__,
             "generate_truths",
             reference_context="\n\n".join(retrieval_context),
-            extraction_limit=self.truths_extraction_limit,
+            limit_description=_turn_faithfulness_limit_description(
+                self.truths_extraction_limit
+            ),
             multimodal=multimodal,
         )
 

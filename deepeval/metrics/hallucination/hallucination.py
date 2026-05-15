@@ -207,7 +207,9 @@ class HallucinationMetric(BaseMetric):
         prompt = resolve_template(
             self.__class__.__name__,
             "generate_verdicts",
-            actual_output=actual_output, contexts=contexts
+            actual_output=actual_output,
+            contexts=contexts,
+            contexts_count=len(contexts),
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -225,7 +227,9 @@ class HallucinationMetric(BaseMetric):
         prompt = resolve_template(
             self.__class__.__name__,
             "generate_verdicts",
-            actual_output=actual_output, contexts=contexts
+            actual_output=actual_output,
+            contexts=contexts,
+            contexts_count=len(contexts),
         )
         return generate_with_schema_and_extract(
             metric=self,

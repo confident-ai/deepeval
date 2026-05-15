@@ -1,5 +1,6 @@
-from typing import Optional, List, Union
+from typing import Dict, Optional, List, Union
 import asyncio
+import textwrap
 
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -24,6 +25,36 @@ from deepeval.metrics.contextual_relevancy.schema import (
     ContextualRelevancyVerdicts,
     ContextualRelevancyScoreReason,
 )
+
+
+def _contextual_relevancy_verdict_kwargs(multimodal: bool) -> Dict[str, str]:
+    context_type = "context (image or string)" if multimodal else "context"
+    statement_or_image = "statement or image" if multimodal else "statement"
+    if multimodal:
+        extraction_instructions = textwrap.dedent(
+            """
+            If the context is textual, you should first extract the statements found in the context if the context, which are high level information found in the context, before deciding on a verdict and optionally a reason for each statement.
+            If the context is an image, `statement` should be a description of the image. Do not assume any information not visibly available.
+            """
+        ).strip()
+        empty_context_instruction = ""
+    else:
+        extraction_instructions = (
+            "You should first extract statements found in the context, which are "
+            "high level information found in the context, before deciding on a "
+            "verdict and optionally a reason for each statement."
+        )
+        empty_context_instruction = (
+            '\nIf provided context contains no actual content or statements then: '
+            'give "no" as a "verdict",\nput context into "statement", and '
+            '"No statements found in provided context." into "reason".'
+        )
+    return {
+        "context_type": context_type,
+        "statement_or_image": statement_or_image,
+        "extraction_instructions": extraction_instructions,
+        "empty_context_instruction": empty_context_instruction,
+    }
 
 
 class ContextualRelevancyMetric(BaseMetric):
@@ -241,7 +272,10 @@ class ContextualRelevancyMetric(BaseMetric):
         prompt = resolve_template(
             self.__class__.__name__,
             "generate_verdicts",
-            input=input, context=context, multimodal=multimodal
+            input=input,
+            context=context,
+            multimodal=multimodal,
+            **_contextual_relevancy_verdict_kwargs(multimodal),
         )
 
         return await a_generate_with_schema_and_extract(
@@ -258,7 +292,10 @@ class ContextualRelevancyMetric(BaseMetric):
         prompt = resolve_template(
             self.__class__.__name__,
             "generate_verdicts",
-            input=input, context=context, multimodal=multimodal
+            input=input,
+            context=context,
+            multimodal=multimodal,
+            **_contextual_relevancy_verdict_kwargs(multimodal),
         )
 
         return generate_with_schema_and_extract(

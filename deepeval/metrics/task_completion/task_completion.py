@@ -1,3 +1,4 @@
+import json
 from typing import Optional, List, Tuple, Union, Dict
 
 from deepeval.utils import get_or_create_event_loop
@@ -185,7 +186,7 @@ class TaskCompletionMetric(BaseMetric):
             prompt = resolve_template(
                 self.__class__.__name__,
                 "extract_task_and_outcome_from_trace",
-                trace=test_case._trace_dict
+                trace_json=json.dumps(test_case._trace_dict, default=str),
             )
         else:
             # TODO: Deprecate this soon
@@ -213,7 +214,7 @@ class TaskCompletionMetric(BaseMetric):
             prompt = resolve_template(
                 self.__class__.__name__,
                 "extract_task_and_outcome_from_trace",
-                trace=test_case._trace_dict
+                trace_json=json.dumps(test_case._trace_dict, default=str),
             )
         else:
             # TODO: Deprecate this soon

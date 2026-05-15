@@ -21,13 +21,14 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metric_templates import resolve_template
 from deepeval.metrics.retrieval_context_display import id_retrieval_context
 from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.test_case import MLLMImage
 import deepeval.metrics.contextual_precision.schema as cpschema
 
 
 def _contextual_precision_verdict_fields(
     retrieval_context: List[str],
     multimodal: bool,
-) -> Tuple[str, object, str]:
+) -> Tuple[str, Union[List[str], List[Union[str, MLLMImage]]], str]:
     document_count_str = (
         f" ({len(retrieval_context)} document"
         f"{'s' if len(retrieval_context) > 1 else ''})"
