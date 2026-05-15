@@ -100,8 +100,6 @@ def llm_test_case(metric_name: str, *, car_path: str) -> LLMTestCase:
         custom_column_key_values={"survey_col": "Testing"},
         mcp_servers=[mcp["server"]],
         mcp_tools_called=mcp["tools"],
-        mcp_resources_called=mcp["resources"],
-        mcp_prompts_called=mcp["prompts"],
         tools_called=_TOOLS,
         expected_tools=[ToolCall(name="ImageAnalysis")],
     )

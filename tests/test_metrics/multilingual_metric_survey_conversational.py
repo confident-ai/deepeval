@@ -82,8 +82,6 @@ def conversational_test_case() -> ConversationalTestCase:
                 metadata={"turn": "Testing"},
                 tools_called=_TURN_TOOLS,
                 mcp_tools_called=mcp["tools"],
-                mcp_resources_called=mcp["resources"],
-                mcp_prompts_called=mcp["prompts"],
             ),
             Turn(
                 role="assistant",
@@ -94,8 +92,6 @@ def conversational_test_case() -> ConversationalTestCase:
                 ],
                 tools_called=_TURN_TOOLS,
                 mcp_tools_called=mcp["tools"],
-                mcp_resources_called=mcp["resources"],
-                mcp_prompts_called=mcp["prompts"],
                 metadata={"turn": "Testing"},
             ),
         ],
