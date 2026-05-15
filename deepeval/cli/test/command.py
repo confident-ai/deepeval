@@ -189,7 +189,7 @@ def run(
     invoke_test_run_end_hook()
 
     test_results = global_test_run_manager.get_test_run().test_results
-    is_ci = os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true"
+    is_ci = os.environ.get("GITHUB_ACTIONS") == "true"
     
     if is_ci and test_results:
         print("CI environment detected. Generating PR comment...")
