@@ -105,13 +105,30 @@ def llm_test_case(metric_name: str, *, car_path: str) -> LLMTestCase:
     )
     if metric_name in _IMAGE_METRICS:
         image = MLLMImage(url=car_path)
-        return LLMTestCase(
-            input=f"What is in this image? {image}",
-            expected_output="It shows a vehicle.",
-            actual_output="It shows a car.",
-            retrieval_context=[f"Reference image content {image}"],
-            context=[f"Reference image content {image}"],
+        image_common = dict(
+            retrieval_context=[f"Cars are great to look at {image}"],
+            context=[f"Cars are great to look at {image}"],
             **common,
+        )
+        if metric_name == "TextToImageMetric":
+            return LLMTestCase(
+                input="Generate an image of a car.",
+                expected_output=f"That's an image of a car {image}",
+                actual_output=f"That's an image of a car {image}",
+                **image_common,
+            )
+        if metric_name == "ImageEditingMetric":
+            return LLMTestCase(
+                input=f"Edit this image to make it blue. {image}",
+                expected_output=f"That's an image of a car {image}",
+                actual_output=f"That is a car {image}.",
+                **image_common,
+            )
+        return LLMTestCase(
+            input=f"What's shown in this image? {image}",
+            expected_output="That's an image of a car",
+            actual_output=f"That is a car {image}.",
+            **image_common,
         )
     policy = "We offer a 30-day full refund at no extra cost."
     context = ["All customers are eligible for a 30 day full refund at no extra cost."]
