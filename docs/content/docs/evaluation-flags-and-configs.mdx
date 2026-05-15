@@ -223,18 +223,39 @@ Repeat each test case by providing a number to the `-r` flag to specify how many
 deepeval test run test_example.py -r 2
 ```
 
-### CI/CD Mode
+### Pass Rate (GitHub Actions)
 
-The `--cicd` flag allows you to run evaluations directly from a YAML configuration file without writing any `pytest` code. It automatically evaluates your LLM application, generates a markdown report, and posts the results as a PR comment on your CI provider (e.g., GitHub Actions).
-
-```
-deepeval test run deepeval.yml --cicd
-```
-
-You can also specify the CI provider using the `--ci` flag (defaults to `github`).
+The `--pass-rate` flag sets the minimum fraction of test cases that must pass (e.g., `0.8` for 80%). On GitHub Actions, the job fails if the overall pass rate falls below this value.
 
 ```
-deepeval test run deepeval.yml --cicd --ci github
+deepeval test run test_example.py --pass-rate 0.8
+```
+
+### Required Metrics (GitHub Actions)
+
+The `--required-metrics` flag accepts a comma-separated list of metric names that must pass on every test case. Enforced on GitHub Actions alongside `--pass-rate`.
+
+```
+deepeval test run test_example.py --required-metrics Correctness,Answer Relevancy
+```
+
+### GitHub Actions PR Comments
+
+On GitHub Actions pull request workflows, `deepeval test run` posts a markdown evaluation report as a PR comment when the run completes.
+
+**Requirements:**
+
+- `pull_request` trigger
+- `permissions.pull-requests: write` on the job
+- `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}`
+- `CONFIDENT_API_KEY` (optional) to link to the full run on Confident AI
+
+```yaml
+permissions:
+  pull-requests: write
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+run: poetry run deepeval test run test_example.py --pass-rate 0.8 --required-metrics Correctness
 ```
 
 ### Hooks
