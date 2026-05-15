@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Type, Tuple
+from typing import List, Optional, Union, Tuple
 import asyncio
 import itertools
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
@@ -9,7 +9,6 @@ from deepeval.utils import (
 )
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_conversational_test_case_params,
     get_unit_interactions,
     get_turns_in_sliding_window,
@@ -18,9 +17,7 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.turn_contextual_relevancy.template import (
-    TurnContextualRelevancyTemplate,
-)
+from deepeval.metric_templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.turn_contextual_relevancy.schema import (
     ContextualRelevancyVerdict,
@@ -46,9 +43,6 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         window_size: int = 10,
-        evaluation_template: Type[
-            TurnContextualRelevancyTemplate
-        ] = TurnContextualRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -58,8 +52,6 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.window_size = window_size
-        self.evaluation_template = evaluation_template
-
     def measure(
         self,
         test_case: ConversationalTestCase,
@@ -251,7 +243,9 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
 
         # Generate verdicts for each context node
         for context in retrieval_context:
-            prompt = self.evaluation_template.generate_verdicts(
+            prompt = resolve_template(
+                self.__class__.__name__,
+                "generate_verdicts",
                 input=input,
                 context=context,
                 multimodal=multimodal,
@@ -279,7 +273,9 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
 
         # Generate verdicts for each context node
         for context in retrieval_context:
-            prompt = self.evaluation_template.generate_verdicts(
+            prompt = resolve_template(
+                self.__class__.__name__,
+                "generate_verdicts",
                 input=input,
                 context=context,
                 multimodal=multimodal,
@@ -378,7 +374,11 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                     f"{verdict.statement}: {verdict.reason}"
                 )
 
-        prompt = self.evaluation_template.generate_reason(
+        prompt = resolve_template(
+
+            self.__class__.__name__,
+
+            "generate_reason",
             input=input,
             irrelevant_statements=irrelevant_statements,
             relevant_statements=relevant_statements,
@@ -417,7 +417,11 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                     f"{verdict.statement}: {verdict.reason}"
                 )
 
-        prompt = self.evaluation_template.generate_reason(
+        prompt = resolve_template(
+
+            self.__class__.__name__,
+
+            "generate_reason",
             input=input,
             irrelevant_statements=irrelevant_statements,
             relevant_statements=relevant_statements,
@@ -460,8 +464,12 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         for score in scores:
             reasons.append(score.reason)
 
-        prompt = self.evaluation_template.generate_final_reason(
-            self.score, self.success, reasons
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_final_reason",
+            final_score=self.score,
+            success=self.success,
+            reasons=reasons,
         )
 
         return generate_with_schema_and_extract(
@@ -485,8 +493,12 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         for score in scores:
             reasons.append(score.reason)
 
-        prompt = self.evaluation_template.generate_final_reason(
-            self.score, self.success, reasons
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_final_reason",
+            final_score=self.score,
+            success=self.success,
+            reasons=reasons,
         )
 
         return await a_generate_with_schema_and_extract(

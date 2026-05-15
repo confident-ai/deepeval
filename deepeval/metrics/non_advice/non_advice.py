@@ -1,4 +1,4 @@
-from typing import List, Optional, Type, Union
+from typing import List, Optional, Union
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
@@ -7,6 +7,7 @@ from deepeval.test_case import (
 )
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.metric_templates import resolve_template
 from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
@@ -18,7 +19,6 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
-from deepeval.metrics.non_advice.template import NonAdviceTemplate
 from deepeval.metrics.non_advice.schema import (
     NonAdviceVerdict,
     Verdicts,
@@ -42,7 +42,6 @@ class NonAdviceMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        evaluation_template: Type[NonAdviceTemplate] = NonAdviceTemplate,
     ):
         if not advice_types or len(advice_types) == 0:
             raise ValueError(
@@ -59,8 +58,6 @@ class NonAdviceMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.evaluation_template = evaluation_template
-
     def measure(
         self,
         test_case: LLMTestCase,
@@ -95,10 +92,11 @@ class NonAdviceMetric(BaseMetric):
                 )
             else:
                 self.advices: List[str] = self._generate_advices(
-                    test_case.actual_output
+                    test_case.actual_output,
+                    multimodal=test_case.multimodal,
                 )
-                self.verdicts: List[NonAdviceVerdict] = (
-                    self._generate_verdicts()
+                self.verdicts: List[NonAdviceVerdict] = self._generate_verdicts(
+                    multimodal=test_case.multimodal,
                 )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
@@ -140,10 +138,11 @@ class NonAdviceMetric(BaseMetric):
             _in_component=_in_component,
         ):
             self.advices: List[str] = await self._a_generate_advices(
-                test_case.actual_output
+                test_case.actual_output,
+                multimodal=test_case.multimodal,
             )
-            self.verdicts: List[NonAdviceVerdict] = (
-                await self._a_generate_verdicts()
+            self.verdicts: List[NonAdviceVerdict] = await self._a_generate_verdicts(
+                multimodal=test_case.multimodal,
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
@@ -168,7 +167,11 @@ class NonAdviceMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 non_advice_violations.append(verdict.reason)
 
-        prompt: dict = self.evaluation_template.generate_reason(
+        prompt: dict = resolve_template(
+
+            self.__class__.__name__,
+
+            "generate_reason",
             non_advice_violations=non_advice_violations,
             score=format(self.score, ".2f"),
         )
@@ -189,7 +192,11 @@ class NonAdviceMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 non_advice_violations.append(verdict.reason)
 
-        prompt: dict = self.evaluation_template.generate_reason(
+        prompt: dict = resolve_template(
+
+            self.__class__.__name__,
+
+            "generate_reason",
             non_advice_violations=non_advice_violations,
             score=format(self.score, ".2f"),
         )
@@ -201,12 +208,15 @@ class NonAdviceMetric(BaseMetric):
             extract_json=lambda data: data["reason"],
         )
 
-    async def _a_generate_verdicts(self) -> List[NonAdviceVerdict]:
+    async def _a_generate_verdicts(self, *, multimodal: bool) -> List[NonAdviceVerdict]:
         if len(self.advices) == 0:
             return []
 
-        prompt = self.evaluation_template.generate_verdicts(
-            advices=self.advices
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_verdicts",
+            multimodal=multimodal,
+            advices=self.advices,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -218,12 +228,15 @@ class NonAdviceMetric(BaseMetric):
             ],
         )
 
-    def _generate_verdicts(self) -> List[NonAdviceVerdict]:
+    def _generate_verdicts(self, *, multimodal: bool) -> List[NonAdviceVerdict]:
         if len(self.advices) == 0:
             return []
 
-        prompt = self.evaluation_template.generate_verdicts(
-            advices=self.advices
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_verdicts",
+            multimodal=multimodal,
+            advices=self.advices,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -235,9 +248,17 @@ class NonAdviceMetric(BaseMetric):
             ],
         )
 
-    async def _a_generate_advices(self, actual_output: str) -> List[str]:
-        prompt = self.evaluation_template.generate_advices(
-            actual_output=actual_output, advice_types=self.advice_types
+    async def _a_generate_advices(
+        self, actual_output: str, *, multimodal: bool
+    ) -> List[str]:
+        advice_types_str = ", ".join(self.advice_types)
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_advices",
+            multimodal=multimodal,
+            actual_output=actual_output,
+            advice_types=self.advice_types,
+            advice_types_str=advice_types_str,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -247,9 +268,15 @@ class NonAdviceMetric(BaseMetric):
             extract_json=lambda data: data["advices"],
         )
 
-    def _generate_advices(self, actual_output: str) -> List[str]:
-        prompt = self.evaluation_template.generate_advices(
-            actual_output=actual_output, advice_types=self.advice_types
+    def _generate_advices(self, actual_output: str, *, multimodal: bool) -> List[str]:
+        advice_types_str = ", ".join(self.advice_types)
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_advices",
+            multimodal=multimodal,
+            actual_output=actual_output,
+            advice_types=self.advice_types,
+            advice_types_str=advice_types_str,
         )
         return generate_with_schema_and_extract(
             metric=self,

@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Type, Tuple
+from typing import List, Optional, Union, Tuple
 import asyncio
 import itertools
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
@@ -9,7 +9,6 @@ from deepeval.utils import (
 )
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_conversational_test_case_params,
     get_unit_interactions,
     get_turns_in_sliding_window,
@@ -18,9 +17,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.turn_contextual_precision.template import (
-    TurnContextualPrecisionTemplate,
-)
+from deepeval.metric_templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.turn_contextual_precision.schema import (
     ContextualPrecisionVerdict,
@@ -47,9 +44,6 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         window_size: int = 10,
-        evaluation_template: Type[
-            TurnContextualPrecisionTemplate
-        ] = TurnContextualPrecisionTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -59,8 +53,6 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.window_size = window_size
-        self.evaluation_template = evaluation_template
-
     def measure(
         self,
         test_case: ConversationalTestCase,
@@ -265,7 +257,11 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
 
         verdicts: List[ContextualPrecisionVerdict] = []
 
-        prompt = self.evaluation_template.generate_verdicts(
+        prompt = resolve_template(
+
+            self.__class__.__name__,
+
+            "generate_verdicts",
             input=input,
             expected_outcome=expected_outcome,
             retrieval_context=retrieval_context,
@@ -292,7 +288,11 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
 
         verdicts: List[ContextualPrecisionVerdict] = []
 
-        prompt = self.evaluation_template.generate_verdicts(
+        prompt = resolve_template(
+
+            self.__class__.__name__,
+
+            "generate_verdicts",
             input=input,
             expected_outcome=expected_outcome,
             retrieval_context=retrieval_context,
@@ -400,7 +400,11 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
                 }
             )
 
-        prompt = self.evaluation_template.generate_reason(
+        prompt = resolve_template(
+
+            self.__class__.__name__,
+
+            "generate_reason",
             input=input,
             score=format(score, ".2f"),
             verdicts=verdicts_with_nodes,
@@ -436,7 +440,11 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
                 }
             )
 
-        prompt = self.evaluation_template.generate_reason(
+        prompt = resolve_template(
+
+            self.__class__.__name__,
+
+            "generate_reason",
             input=input,
             score=format(score, ".2f"),
             verdicts=verdicts_with_nodes,
@@ -478,8 +486,12 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         for score in scores:
             reasons.append(score.reason)
 
-        prompt = self.evaluation_template.generate_final_reason(
-            self.score, self.success, reasons
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_final_reason",
+            final_score=self.score,
+            success=self.success,
+            reasons=reasons,
         )
 
         return generate_with_schema_and_extract(
@@ -503,8 +515,12 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         for score in scores:
             reasons.append(score.reason)
 
-        prompt = self.evaluation_template.generate_final_reason(
-            self.score, self.success, reasons
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_final_reason",
+            final_score=self.score,
+            success=self.success,
+            reasons=reasons,
         )
 
         return await a_generate_with_schema_and_extract(

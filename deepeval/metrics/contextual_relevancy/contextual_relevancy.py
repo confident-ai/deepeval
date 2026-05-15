@@ -1,4 +1,4 @@
-from typing import Optional, List, Type, Union
+from typing import Optional, List, Union
 import asyncio
 
 from deepeval.utils import (
@@ -18,9 +18,7 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.contextual_relevancy.template import (
-    ContextualRelevancyTemplate,
-)
+from deepeval.metric_templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.contextual_relevancy.schema import (
     ContextualRelevancyVerdicts,
@@ -42,9 +40,6 @@ class ContextualRelevancyMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        evaluation_template: Type[
-            ContextualRelevancyTemplate
-        ] = ContextualRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -53,8 +48,6 @@ class ContextualRelevancyMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.evaluation_template = evaluation_template
-
     def measure(
         self,
         test_case: LLMTestCase,
@@ -174,7 +167,11 @@ class ContextualRelevancyMetric(BaseMetric):
                 else:
                     relevant_statements.append(verdict.statement)
 
-        prompt: dict = self.evaluation_template.generate_reason(
+        prompt: dict = resolve_template(
+
+            self.__class__.__name__,
+
+            "generate_reason",
             input=input,
             irrelevant_statements=irrelevant_statements,
             relevant_statements=relevant_statements,
@@ -203,7 +200,11 @@ class ContextualRelevancyMetric(BaseMetric):
                 else:
                     relevant_statements.append(verdict.statement)
 
-        prompt: dict = self.evaluation_template.generate_reason(
+        prompt: dict = resolve_template(
+
+            self.__class__.__name__,
+
+            "generate_reason",
             input=input,
             irrelevant_statements=irrelevant_statements,
             relevant_statements=relevant_statements,
@@ -237,7 +238,9 @@ class ContextualRelevancyMetric(BaseMetric):
     async def _a_generate_verdicts(
         self, input: str, context: List[str], multimodal: bool
     ) -> ContextualRelevancyVerdicts:
-        prompt = self.evaluation_template.generate_verdicts(
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_verdicts",
             input=input, context=context, multimodal=multimodal
         )
 
@@ -252,7 +255,9 @@ class ContextualRelevancyMetric(BaseMetric):
     def _generate_verdicts(
         self, input: str, context: str, multimodal: bool
     ) -> ContextualRelevancyVerdicts:
-        prompt = self.evaluation_template.generate_verdicts(
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_verdicts",
             input=input, context=context, multimodal=multimodal
         )
 

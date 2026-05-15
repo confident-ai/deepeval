@@ -1,4 +1,4 @@
-from typing import Optional, List, Type, Union
+from typing import Optional, List, Union
 
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -17,7 +17,7 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.contextual_recall.template import ContextualRecallTemplate
+from deepeval.metric_templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.contextual_recall.schema import (
     ContextualRecallVerdict,
@@ -43,9 +43,6 @@ class ContextualRecallMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        evaluation_template: Type[
-            ContextualRecallTemplate
-        ] = ContextualRecallTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -54,8 +51,6 @@ class ContextualRecallMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.evaluation_template = evaluation_template
-
     def measure(
         self,
         test_case: LLMTestCase,
@@ -171,7 +166,11 @@ class ContextualRecallMetric(BaseMetric):
             else:
                 unsupportive_reasons.append(verdict.reason)
 
-        prompt = self.evaluation_template.generate_reason(
+        prompt = resolve_template(
+
+            self.__class__.__name__,
+
+            "generate_reason",
             expected_output=expected_output,
             supportive_reasons=supportive_reasons,
             unsupportive_reasons=unsupportive_reasons,
@@ -199,7 +198,11 @@ class ContextualRecallMetric(BaseMetric):
             else:
                 unsupportive_reasons.append(verdict.reason)
 
-        prompt = self.evaluation_template.generate_reason(
+        prompt = resolve_template(
+
+            self.__class__.__name__,
+
+            "generate_reason",
             expected_output=expected_output,
             supportive_reasons=supportive_reasons,
             unsupportive_reasons=unsupportive_reasons,
@@ -234,7 +237,9 @@ class ContextualRecallMetric(BaseMetric):
         retrieval_context: List[str],
         multimodal: bool,
     ) -> List[VerdictWithExpectedOutput]:
-        prompt = self.evaluation_template.generate_verdicts(
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_verdicts",
             expected_output=expected_output,
             retrieval_context=retrieval_context,
             multimodal=multimodal,
@@ -264,7 +269,9 @@ class ContextualRecallMetric(BaseMetric):
         retrieval_context: List[str],
         multimodal: bool,
     ) -> List[VerdictWithExpectedOutput]:
-        prompt = self.evaluation_template.generate_verdicts(
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_verdicts",
             expected_output=expected_output,
             retrieval_context=retrieval_context,
             multimodal=multimodal,

@@ -1,6 +1,7 @@
 import asyncio
 from typing import Optional, Union, List
 
+from deepeval.metric_templates import resolve_template
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import (
@@ -14,8 +15,8 @@ from deepeval.metrics.utils import (
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.metrics.mcp.utils import task_steps_taken_text
 from deepeval.metrics.mcp.schema import Task, TaskScore, Reason
-from deepeval.metrics.mcp.template import MCPTaskCompletionTemplate
 from deepeval.errors import MissingTestCaseParamsError
 
 
@@ -81,7 +82,8 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                 self.unit_interactions = get_unit_interactions(test_case.turns)
                 self.tasks = self._get_tasks(self.unit_interactions)
                 self.task_scores = [
-                    self._get_task_score(task) for task in self.tasks
+                    self._get_task_score(task, multimodal=test_case.multimodal)
+                    for task in self.tasks
                 ]
                 self.score = self._calculate_score(self.task_scores)
                 self.reason = self._generate_reason(self.task_scores)
@@ -131,7 +133,10 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
             self.unit_interactions = get_unit_interactions(test_case.turns)
             self.tasks = self._get_tasks(self.unit_interactions)
             self.task_scores = await asyncio.gather(
-                *[self._a_get_task_score(task) for task in self.tasks]
+                *[
+                    self._a_get_task_score(task, multimodal=test_case.multimodal)
+                    for task in self.tasks
+                ]
             )
             self.scores_reasons_list = [
                 (task_score.score, task_score.reason)
@@ -159,8 +164,12 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         for task_score in task_scores:
             reasons.append(task_score.reason)
 
-        prompt = MCPTaskCompletionTemplate.generate_final_reason(
-            self.score, self.success, reasons
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_final_reason",
+            final_score=self.score,
+            success=self.success,
+            reasons=reasons,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -180,8 +189,12 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         for task_score in task_scores:
             reasons.append(task_score.reason)
 
-        prompt = MCPTaskCompletionTemplate.generate_final_reason(
-            self.score, self.success, reasons
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_final_reason",
+            final_score=self.score,
+            success=self.success,
+            reasons=reasons,
         )
 
         return await a_generate_with_schema_and_extract(
@@ -192,8 +205,14 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
             extract_json=lambda data: data["reason"],
         )
 
-    def _get_task_score(self, task: Task) -> TaskScore:
-        prompt = MCPTaskCompletionTemplate.get_task_completion_score(task)
+    def _get_task_score(self, task: Task, *, multimodal: bool) -> TaskScore:
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "get_task_completion_score",
+            task=task,
+            steps_taken=task_steps_taken_text(task),
+            multimodal=multimodal,
+        )
         return generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
@@ -202,8 +221,14 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
             extract_json=lambda data: TaskScore(**data),
         )
 
-    async def _a_get_task_score(self, task: Task) -> TaskScore:
-        prompt = MCPTaskCompletionTemplate.get_task_completion_score(task)
+    async def _a_get_task_score(self, task: Task, *, multimodal: bool) -> TaskScore:
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "get_task_completion_score",
+            task=task,
+            steps_taken=task_steps_taken_text(task),
+            multimodal=multimodal,
+        )
         return await a_generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,

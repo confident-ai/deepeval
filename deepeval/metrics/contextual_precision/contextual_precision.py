@@ -1,4 +1,4 @@
-from typing import Optional, List, Type, Union
+from typing import Optional, List, Union, Tuple
 
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -18,11 +18,25 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.contextual_precision.template import (
-    ContextualPrecisionTemplate,
-)
+from deepeval.metric_templates import resolve_template
+from deepeval.metrics.retrieval_context_display import id_retrieval_context
 from deepeval.metrics.indicator import metric_progress_indicator
 import deepeval.metrics.contextual_precision.schema as cpschema
+
+
+def _contextual_precision_verdict_fields(
+    retrieval_context: List[str],
+    multimodal: bool,
+) -> Tuple[str, object, str]:
+    document_count_str = (
+        f" ({len(retrieval_context)} document"
+        f"{'s' if len(retrieval_context) > 1 else ''})"
+    )
+    context_to_display = (
+        id_retrieval_context(retrieval_context) if multimodal else retrieval_context
+    )
+    multimodal_note = " (which can be text or an image)" if multimodal else ""
+    return document_count_str, context_to_display, multimodal_note
 
 
 class ContextualPrecisionMetric(BaseMetric):
@@ -40,9 +54,6 @@ class ContextualPrecisionMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        evaluation_template: Type[
-            ContextualPrecisionTemplate
-        ] = ContextualPrecisionTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.include_reason = include_reason
@@ -51,7 +62,6 @@ class ContextualPrecisionMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -168,11 +178,13 @@ class ContextualPrecisionMetric(BaseMetric):
             {"verdict": verdict.verdict, "reason": verdict.reason}
             for verdict in self.verdicts
         ]
-        prompt = self.evaluation_template.generate_reason(
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_reason",
+            multimodal=multimodal,
             input=input,
             verdicts=retrieval_contexts_verdicts,
             score=format(self.score, ".2f"),
-            multimodal=multimodal,
         )
 
         return await a_generate_with_schema_and_extract(
@@ -191,11 +203,13 @@ class ContextualPrecisionMetric(BaseMetric):
             {"verdict": verdict.verdict, "reason": verdict.reason}
             for verdict in self.verdicts
         ]
-        prompt = self.evaluation_template.generate_reason(
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_reason",
+            multimodal=multimodal,
             input=input,
             verdicts=retrieval_contexts_verdicts,
             score=format(self.score, ".2f"),
-            multimodal=multimodal,
         )
 
         return generate_with_schema_and_extract(
@@ -213,11 +227,18 @@ class ContextualPrecisionMetric(BaseMetric):
         retrieval_context: List[str],
         multimodal: bool,
     ) -> List[cpschema.ContextualPrecisionVerdict]:
-        prompt = self.evaluation_template.generate_verdicts(
+        doc_str, ctx_disp, mm_note = _contextual_precision_verdict_fields(
+            retrieval_context, multimodal
+        )
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_verdicts",
+            multimodal=multimodal,
             input=input,
             expected_output=expected_output,
-            retrieval_context=retrieval_context,
-            multimodal=multimodal,
+            document_count_str=doc_str,
+            context_to_display=ctx_disp,
+            multimodal_note=mm_note,
         )
 
         return await a_generate_with_schema_and_extract(
@@ -238,11 +259,18 @@ class ContextualPrecisionMetric(BaseMetric):
         retrieval_context: List[str],
         multimodal: bool,
     ) -> List[cpschema.ContextualPrecisionVerdict]:
-        prompt = self.evaluation_template.generate_verdicts(
+        doc_str, ctx_disp, mm_note = _contextual_precision_verdict_fields(
+            retrieval_context, multimodal
+        )
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_verdicts",
+            multimodal=multimodal,
             input=input,
             expected_output=expected_output,
-            retrieval_context=retrieval_context,
-            multimodal=multimodal,
+            document_count_str=doc_str,
+            context_to_display=ctx_disp,
+            multimodal_note=mm_note,
         )
 
         return generate_with_schema_and_extract(
