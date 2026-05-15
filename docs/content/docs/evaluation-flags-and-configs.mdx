@@ -42,7 +42,7 @@ from deepeval import evaluate
 evaluate(display_config=DisplayConfig(), ...)
 ```
 
-There are **NINE** optional parameters when creating a `DisplayConfig`:
+There are **TEN** optional parameters when creating a `DisplayConfig`:
 
 - [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](/docs/metrics-introduction#debugging-a-metric). Defaulted to `None`.
 - [Optional] `display`: a str of either `"all"`, `"failing"` or `"passing"`, which allows you to selectively decide which type of test cases to display as the final result. Defaulted to `"all"`.
@@ -51,6 +51,7 @@ There are **NINE** optional parameters when creating a `DisplayConfig`:
 - [Optional] `results_folder`: a string path to a directory where each call to `evaluate()` (or `evals_iterator()`) will be persisted as a `test_run_<YYYYMMDD_HHMMSS>.json` file. Defaulted to `None` (no local save). See [Saving test runs locally](#saving-test-runs-locally) below.
 - [Optional] `results_subfolder`: an optional string that, when set together with `results_folder`, nests the `test_run_*.json` files under `results_folder/results_subfolder/`. Defaulted to `None` (flat layout).
 - [Optional] `truncate_passing_cases`: a boolean which when set to `True`, truncates the terminal output of passing test cases. Defaulted to `True`.
+- [Optional] `inspect_after_run`: a boolean which when set to `True`, prompts you at the end of an `evals_iterator()` run to open the captured traces in the [`deepeval inspect`](/docs/command-line-interface#inspect) TUI. Only fires in interactive terminals when at least one test case has a trace. Set to `False` to disable per call, or export `DEEPEVAL_NO_INSPECT_PROMPT=1` to disable globally (e.g. in CI). Defaulted to `True`.
 - [Optional] `file_type`: a string of either `"html"` or `"md"`, which allows you to export the evaluation dashboard to a file. Defaulted to `None`.
 - [Optional] `file_output_dir`: a string which when set, writes the evaluation dashboard to the specified directory using the format specified in `file_type`. Defaulted to `None`.
 

@@ -383,3 +383,19 @@ class TestOpenRouterModel:
 
         with pytest.raises(DeepEvalError):
             OpenRouterModel(model="openai/gpt-4o-mini", temperature=-0.1)
+
+    def test_is_recognized_as_native_model(self, settings):
+        """OpenRouterModel must be flagged as a native deepeval model so that
+        `initialize_model()` returns the same instance with using_native=True
+        and metrics don't silently wrap it in a non-native adapter."""
+        from deepeval.metrics.utils import initialize_model, is_native_model
+
+        with settings.edit(persist=False):
+            settings.OPENROUTER_API_KEY = "test-key"
+
+        model = OpenRouterModel(model="openai/gpt-4o-mini")
+        assert is_native_model(model)
+
+        returned_model, using_native = initialize_model(model)
+        assert using_native is True
+        assert returned_model is model

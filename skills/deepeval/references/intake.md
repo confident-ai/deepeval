@@ -90,16 +90,21 @@ If the dataset is on Confident AI, use available Confident AI MCP/API/project
 context to retrieve or export it to a local goldens file. If no such access is
 available, ask the user to export it or provide the dataset path after download.
 
-If the user wants generation, use `deepeval generate` and write the output under
-`tests/evals/` unless the project already has a clearer eval data directory.
-Before choosing the generation method, ask whether they have documents or
-knowledge sources to generate from. Prefer docs/context generation over scratch
-generation when source material exists.
+If the user does not already have a dataset, use `deepeval generate` and write
+the output under `tests/evals/` unless the project already has a clearer eval
+data directory. Do not hand-create or make up goldens. Before choosing the
+generation method, ask whether they have documents, a knowledge base, support
+articles, product pages, READMEs, exported retrieval contexts, or a small seed
+dataset. Prefer `--method docs` when documents or a knowledge base exist, then
+`--method contexts`, then `--method goldens` for seed augmentation, and only
+then `--method scratch`. Infer the AI app's use case and pass styling flags by
+default for every generation method. If the use case is unclear, ask what the AI
+app does, who uses it, and what kinds of inputs the eval dataset should cover.
 
 If the user has a dataset already, check its size. Fewer than 10 goldens is very
-likely too small; recommend augmenting it. The ideal first useful dataset is
-usually 50-100 goldens. Use existing-goldens augmentation when the user says
-their dataset is small, weak, or unsatisfactory.
+likely too small; recommend augmenting it. A useful first generated dataset is
+usually about 30-50 goldens. Use existing-goldens augmentation when the user
+says their dataset is small, weak, or unsatisfactory.
 
 For chatbot or multi-turn agent use cases, generated datasets should be
 multi-turn by default. Ask a follow-up only if the user seems to want a quick

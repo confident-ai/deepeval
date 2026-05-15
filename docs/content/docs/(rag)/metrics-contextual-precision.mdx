@@ -158,8 +158,8 @@ The `ContextualPrecisionMetric` score is calculated according to the following e
 
 :::info
 
-- **_k_** is the (i+1)<sup>th</sup> node in the `retrieval_context`
-- **_n_** is the length of the `retrieval_context`
+- **_k_** is the (i+1)<sup>th</sup> node in the `retrieval_context` (nodes with the same `source` are grouped together as a single node if `RetrievedContextData` is used)
+- **_n_** is the length of the `retrieval_context` (after grouping by `source`)
 - **_r<sub>k</sub>_** is the binary relevance for the k<sup>th</sup> node in the `retrieval_context`. _r<sub>k</sub>_ = 1 for nodes that are relevant, 0 if not.
 
 :::

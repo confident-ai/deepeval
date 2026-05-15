@@ -4,6 +4,7 @@ title: Design Philosophy
 ---
 
 import { FlaskConical, GitMerge, PackageCheck, Workflow } from "lucide-react";
+import { ASSETS } from "@site/src/assets";
 import AgentTraceTerminal from "@site/src/components/AgentTraceTerminal";
 import ClaudeCodeTerminal from "@site/src/sections/home/ClaudeCodeTerminal";
 import TraceLoopConnector from "@site/src/sections/home/TraceLoopConnector";
@@ -106,6 +107,8 @@ where the final answer is not enough to explain the failure.
 The goal is not to choose one forever. Start with test cases when you need a
 simple quality gate. Add traces when you need to understand how your application
 arrived at the result.
+
+<ImageDisplayer src={ASSETS.deepevalTuiInspect} alt="deepeval inspect TUI showing a trace tree with per-span scores and metric reasons" />
 
 :::info
 Already using another observability tool? Visit [Comparisons](/docs/introduction-comparisons)

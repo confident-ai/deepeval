@@ -7,11 +7,11 @@ from pydantic import (
     model_validator,
     AliasChoices,
 )
-from typing import List, Optional, Dict, Literal
+from typing import List, Optional, Dict, Literal, Union
 from copy import deepcopy
 from enum import Enum
 
-from deepeval.test_case import ToolCall, MLLMImage
+from deepeval.test_case import ToolCall, MLLMImage, RetrievedContextData
 from deepeval.test_case.mcp import (
     MCPServer,
     MCPPromptCall,
@@ -57,7 +57,7 @@ class Turn(BaseModel):
     user_id: Optional[str] = Field(
         default=None, validation_alias=AliasChoices("userId", "user_id")
     )
-    retrieval_context: Optional[List[str]] = Field(
+    retrieval_context: Optional[List[Union[str, RetrievedContextData]]] = Field(
         default=None,
         validation_alias=AliasChoices("retrievalContext", "retrieval_context"),
     )
@@ -249,9 +249,10 @@ class ConversationalTestCase(BaseModel):
                     self.multimodal = True
                     return self
                 if turn.retrieval_context is not None:
-                    self.multimodal = any(
-                        re.search(pattern, context) is not None
-                        for context in turn.retrieval_context
+                    self.multimodal = self.multimodal or any(
+                        re.search(pattern, c.context if isinstance(c, RetrievedContextData) else c)
+                        for c in turn.retrieval_context
+                        if isinstance(c, (RetrievedContextData, str))
                     )
 
         return self
@@ -268,9 +269,9 @@ class ConversationalTestCase(BaseModel):
         # Ensure `context` is None or a list of strings
         if context is not None:
             if not isinstance(context, list) or not all(
-                isinstance(item, str) for item in context
+                isinstance(item, (str, RetrievedContextData)) for item in context
             ):
-                raise TypeError("'context' must be None or a list of strings")
+                raise TypeError("'context' must be None or a list of strings or RetrievedContextData")
 
         if mcp_servers is not None:
             validate_mcp_servers(mcp_servers)

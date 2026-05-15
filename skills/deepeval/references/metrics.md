@@ -4,6 +4,14 @@ Use 3-5 metrics for the first eval suite when the user is unsure. More metrics
 make iteration slower and harder to interpret. Reuse existing project metrics
 and thresholds before adding new ones.
 
+Keep metric instances in a separate `metrics.py` module (or the project's
+existing metrics module). Eval test files should import metric lists rather than
+constructing several ad hoc metrics inline.
+
+Name component/span metric lists after the exact component they evaluate. Avoid
+generic names like `COMPONENT_METRICS` because one suite can evaluate several
+components with different metric requirements.
+
 ## Required Rule
 
 Single-turn `LLMTestCase` evals must use single-turn metrics.
@@ -41,11 +49,14 @@ If the user says "I don't know" or gives no metric preference:
 - Do not add safety metrics by default unless the app is safety/compliance
   sensitive or the user asks for them.
 - Use about half custom metrics and half system-specific metrics.
-- Add component-level metrics only after E2E/traces show component failures, or
-  if the user explicitly wants component evals.
+- Add component/span metrics only after E2E/traces show component failures, or
+  if the user explicitly wants component-level scoring.
 
 Good system-specific defaults:
 
+- Single-turn tracing E2E: strongly prefer `TaskCompletionMetric` and
+  `StepEfficiencyMetric` as the baseline pair, especially for agents and
+  multi-step AI apps.
 - Agent: `TaskCompletionMetric` plus tool/argument correctness only when
   `tools_called` data exists.
 - RAG: `FaithfulnessMetric`, `AnswerRelevancyMetric`, and
@@ -115,6 +126,7 @@ available fields or update the dataset generation/loading plan first.
 | `ContextualPrecisionMetric` | Relevant context is ranked highly | `input`, `retrieval_context`, `expected_output` |
 | `ContextualRecallMetric` | Retrieved context covers expected answer | `input`, `retrieval_context`, `expected_output` |
 | `TaskCompletionMetric` | Agent/app completed the task | `input`, `actual_output` |
+| `StepEfficiencyMetric` | Agent/app completed the task efficiently without unnecessary steps | trace steps/tool activity |
 | `ToolCorrectnessMetric` | Called tools match expected tools | `input`, `tools_called`, `expected_tools` |
 | `ArgumentCorrectnessMetric` | Tool arguments are correct | `input`, `tools_called` |
 | `JsonCorrectnessMetric` | Output matches expected schema | `input`, `actual_output`; constructor needs `expected_schema` |
@@ -152,9 +164,12 @@ Mappings:
 - "Does it answer correctly?" -> `AnswerRelevancyMetric` or task-specific `GEval`
 - "Is it grounded in docs?" -> `FaithfulnessMetric` plus contextual metrics
 - "Did the agent finish the task?" -> `TaskCompletionMetric`
+- "Did the agent take efficient steps?" -> `StepEfficiencyMetric`
 - "Did it use the right tool?" -> `ToolCorrectnessMetric`
 - "Did the chatbot complete the conversation?" -> `ConversationCompletenessMetric`
 - "Did it stay in character?" -> `RoleAdherenceMetric`
 
-If unsure, start with 3-5 E2E metrics and add component-level metrics only after
-the first run reveals where the app is failing.
+If unsure for single-turn tracing, start with `TaskCompletionMetric` and
+`StepEfficiencyMetric`, then add 1-3 more E2E metrics only when the app's
+success criteria need them. Add component/span metrics only after the first run
+reveals where the app is failing.

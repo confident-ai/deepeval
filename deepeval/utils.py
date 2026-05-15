@@ -631,7 +631,8 @@ def format_turn(
     if rctx:
         show = rctx[:max_context_items]
         for i, item in enumerate(show):
-            lines.append(f"{indent}↳ ctx[{i}]: {shorten(item, context_length)}")
+            item_str = item.context if hasattr(item, "context") else item
+            lines.append(f"{indent}↳ ctx[{i}]: {shorten(item_str, context_length)}")
         hidden = max(0, len(rctx) - len(show))
         if hidden:
             lines.append(f"{indent}↳ ctx: (+{hidden} more)")

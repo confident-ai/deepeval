@@ -539,51 +539,6 @@ print(answer_relevancy_metric.reason)
 
 Note that some metrics are for RAG pipelines, while others are for fine-tuning. Make sure to use our docs to pick the right one for your use case.
 
-## Evaluating a Dataset / Test Cases in Bulk
-
-In DeepEval, a dataset is simply a collection of test cases. Here is how you can evaluate these in bulk:
-
-```python
-import pytest
-from deepeval import assert_test
-from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.test_case import LLMTestCase
-
-dataset = EvaluationDataset(goldens=[Golden(input="What's the weather like today?")])
-
-for golden in dataset.goldens:
-    test_case = LLMTestCase(
-        input=golden.input,
-        actual_output=your_llm_app(golden.input)
-    )
-    dataset.add_test_case(test_case)
-
-@pytest.mark.parametrize(
-    "test_case",
-    dataset.test_cases,
-)
-def test_customer_chatbot(test_case: LLMTestCase):
-    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
-    assert_test(test_case, [answer_relevancy_metric])
-```
-
-```bash
-# Run this in the CLI, you can also add an optional -n flag to run tests in parallel
-deepeval test run test_<filename>.py -n 4
-```
-
-<br/>
-
-Alternatively, although we recommend using `deepeval test run`, you can evaluate a dataset/test cases without using our Pytest integration:
-
-```python
-from deepeval import evaluate
-...
-
-evaluate(dataset, [answer_relevancy_metric])
-```
-
 ## A Note on Env Variables (.env / .env.local)
 
 DeepEval auto-loads `.env.local` then `.env` from the current working directory **at import time**.
