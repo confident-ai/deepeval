@@ -236,7 +236,7 @@ deepeval test run test_example.py --pass-rate 0.8
 The `--required-metrics` flag accepts a comma-separated list of metric names that must pass on every test case. Enforced on GitHub Actions alongside `--pass-rate`.
 
 ```
-deepeval test run test_example.py --required-metrics Correctness,Answer Relevancy
+deepeval test run test_example.py --required-metrics "AnswerRelevancyMetric, ContextualPrecisionMetric"
 ```
 
 ### GitHub Actions PR Comments
@@ -255,7 +255,7 @@ permissions:
   pull-requests: write
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-run: poetry run deepeval test run test_example.py --pass-rate 0.8 --required-metrics Correctness
+run: poetry run deepeval test run test_example.py --pass-rate 0.8 --required-metrics AnswerRelevancyMetric
 ```
 
 ### Hooks
