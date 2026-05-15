@@ -18,6 +18,7 @@ from deepeval.test_run import (
     LLMApiTestCase,
     ConversationalApiTestCase,
     MetricData,
+    TestRun,
 )
 from deepeval.evaluate.types import TestResult
 from deepeval.tracing.api import TraceApi, BaseApiSpan, TraceSpanApiStatus
@@ -155,6 +156,27 @@ def create_test_result(
                 multimodal=False,
                 metadata=api_test_case.metadata,
             )
+
+
+def test_results_from_test_run(test_run: TestRun) -> List[TestResult]:
+    """Build ``TestResult`` rows from a persisted ``TestRun`` (e.g. after pytest)."""
+    from deepeval.evaluate.execute._common import filter_duplicate_results
+
+    test_results: List[TestResult] = []
+
+    for api_test_case in test_run.test_cases:
+        main_result = create_test_result(api_test_case)
+        test_results.append(main_result)
+        if api_test_case.trace is not None:
+            trace_results = extract_trace_test_results(api_test_case.trace)
+            test_results.extend(
+                filter_duplicate_results(main_result, trace_results)
+            )
+
+    for api_test_case in test_run.conversational_test_cases:
+        test_results.append(create_test_result(api_test_case))
+
+    return test_results
 
 
 def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
