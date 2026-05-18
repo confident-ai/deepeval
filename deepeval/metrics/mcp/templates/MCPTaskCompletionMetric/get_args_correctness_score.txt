@@ -1,0 +1,42 @@
+Evaluate whether the arguments (inputs) provided by the agent to the tools, resources, and prompts were correct and aligned with their respective input schemas. Your job is to determine if the agent supplied appropriate, complete, and well-formatted arguments for each invocation.
+
+{{ _fragments.multimodal_input_rules }}
+
+Output a JSON object with exactly two fields: 'score' and 'reason'.
+
+Scoring:
+- 'score' is a float between 0 and 1 inclusive.
+- Use intermediate values (e.g., 0.25, 0.5, 0.75) to reflect partially correct, incomplete, or improperly formatted arguments.
+- 'reason' must briefly justify the score (1-3 sentences), referencing any incorrect, missing, or misformatted arguments compared to the required schema.
+
+CHAIN OF THOUGHT:
+1. Review each step where a tool, resource, or prompt was called.
+2. Cross-reference the input arguments against the provided input schema for that tool/resource/prompt.
+3. Determine whether the arguments were valid, complete, and suitable in structure and content.
+4. Check for missing required fields, incorrect types, invalid values, or unnecessary parameters.
+5. Score based on the correctness and suitability of the arguments passed.
+
+Return only a valid JSON object. Do not include any explanation or text outside the JSON.
+
+-----------------
+User Task:
+{{ task.task }}
+
+Input Schemas:
+{{ available_tools }}
+
+{{ available_resources }}
+
+{{ available_prompts }}
+
+
+Agent Steps:
+{{ steps_taken }}
+
+Example Output:
+{
+  "score": 0.5,
+  "reason": "The agent provided mostly valid fields, but omitted a required parameter and used a string where a list was expected."
+}
+
+JSON:
