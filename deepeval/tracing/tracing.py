@@ -1,3 +1,5 @@
+import json
+import re
 import weakref
 from typing import (
     TYPE_CHECKING,
@@ -19,6 +21,7 @@ import random
 import atexit
 import queue
 import uuid
+from deepeval.test_case import MLLMImage
 from openai import OpenAI
 from rich.console import Console
 from rich.progress import Progress
@@ -36,6 +39,7 @@ from deepeval.tracing.api import (
     SpanApiType,
     TraceApi,
     TraceSpanApiStatus,
+    AttachmentApi,
 )
 from deepeval.telemetry import capture_send_trace
 from deepeval.tracing.patchers import (
@@ -77,6 +81,7 @@ from deepeval.tracing.context import (
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.api import PromptApi
 from deepeval.tracing.trace_test_manager import trace_testing_manager
+from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden
@@ -780,6 +785,11 @@ class TraceManager:
         # Process all spans in the trace iteratively
         span_stack = list(trace.root_spans)  # Start with root spans
 
+        merged_attachment_docs: Dict[str, MLLMImage] = {}
+        trace_docs = self._extract_attachments(trace)
+        if trace_docs:
+            merged_attachment_docs.update(trace_docs)
+
         while span_stack:
             span = span_stack.pop()
 
@@ -789,6 +799,10 @@ class TraceManager:
                         child.parent_uuid = span.parent_uuid
                     span_stack.extend(span.children)
                 continue
+
+            span_docs = self._extract_attachments(span)
+            if span_docs:
+                merged_attachment_docs.update(span_docs)
 
             # Convert BaseSpan to BaseApiSpan
             api_span = self._convert_span_to_api_span(span)
@@ -822,6 +836,16 @@ class TraceManager:
         end_time = to_zod_compatible_iso(
             perf_counter_to_datetime(effective_end_time)
         )
+
+        api_attachments = None
+        if merged_attachment_docs:
+            api_attachments = {}
+            for doc_id, doc in merged_attachment_docs.items():
+                api_attachments[doc_id] = AttachmentApi(
+                    url=doc.url,
+                    mimeType=doc.mimeType,
+                    dataBase64=doc.dataBase64,
+                )
 
         trace_api = TraceApi(
             uuid=trace.uuid,
@@ -860,6 +884,7 @@ class TraceManager:
                 if trace.status == TraceSpanStatus.SUCCESS
                 else TraceSpanApiStatus.ERRORED
             ),
+            attachments=api_attachments,
         )
         normalize_trace_api_span_providers(trace_api)
         return trace_api
@@ -970,6 +995,29 @@ class TraceManager:
                 api_span.token_intervals = processed_token_intervals
 
         return api_span
+
+    def _extract_attachments(
+        self, obj: Union[Trace, BaseSpan]
+    ) -> Optional[Dict[str, MLLMImage]]:
+        """Scans an object's attributes for multimodal slugs and pulls them from the global registry."""
+        pattern = r"\[DEEPEVAL:(?:IMAGE|PDF):(.*?)]"
+        found_docs: Dict[str, MLLMImage] = {}
+
+        # Supported fields that may contain multimodal content
+        fields_to_scan = [
+            obj.input,
+            obj.output,
+            obj.context,
+            obj.retrieval_context,
+            obj.expected_output,
+        ]
+
+        matches = re.findall(pattern, str(fields_to_scan))
+        for doc_id in matches:
+            if doc_id in _MLLM_IMAGE_REGISTRY:
+                found_docs[doc_id] = _MLLM_IMAGE_REGISTRY[doc_id]
+
+        return found_docs if found_docs else None
 
 
 trace_manager = TraceManager()
