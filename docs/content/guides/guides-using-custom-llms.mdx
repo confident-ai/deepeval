@@ -69,7 +69,7 @@ class CustomLlama3_8B(DeepEvalBaseLLM):
             pad_token_id=self.tokenizer.eos_token_id,
         )
 
-        return pipeline(prompt)
+        return pipeline(prompt)[0]["generated_text"]
 
     async def a_generate(self, prompt: str) -> str:
         return self.generate(prompt)
@@ -548,6 +548,7 @@ Here's a full example of a JSON confined custom Mistral 7B model implemented thr
 
 ```python
 import json
+import transformers
 
 from pydantic import BaseModel
 import torch
@@ -588,7 +589,7 @@ class CustomMistral7B(DeepEvalBaseLLM):
 
     def generate(self, prompt: str, schema: BaseModel) -> BaseModel:
         model = self.load_model()
-        pipeline = pipeline(
+        pipeline = transformers.pipeline(
             "text-generation",
             model=model,
             tokenizer=self.tokenizer,
