@@ -6,8 +6,6 @@ sidebar_label: Simulation Graph
 
 By default, `ConversationSimulator` generates every simulated user turn with a single LLM call against a fixed prompt template. That works for fuzzy exploration but breaks down when you need the simulated user to follow a specific trajectory — e.g., "first ask about pricing, push back if the assistant cites policy, escalate after three pushbacks, accept any compromise".
 
-Pass a `simulation_graph` (a `SimulationNode`) to encode that trajectory as a state machine. Each node is one state of the simulated user; its `action(...)` returns the user's next message, and its outgoing edges describe — in natural language — when to advance to a different state. An LLM router classifies the assistant's reply against the edge descriptions to decide which child node runs next.
-
 ```python title="main.py"
 from deepeval.simulator import ConversationSimulator, SimulationNode
 
@@ -40,6 +38,8 @@ simulator = ConversationSimulator(
     simulation_graph=root,
 )
 ```
+
+Pass a `simulation_graph` (a `SimulationNode`) to encode that trajectory as a state machine. Each node is one state of the simulated user; its `action(...)` returns the user's next message, and its outgoing edges describe — in natural language — when to advance to a different state. An LLM router classifies the assistant's reply against the edge descriptions to decide which child node runs next.
 
 ## How Routing Works
 
@@ -118,9 +118,9 @@ push.add_node(push, when="The assistant still refused")  # self-loop
 
 `terminal=True` and [`stopping_controller`](/docs/conversation-simulator-stopping-logic) are both terminators but they answer different questions and fire at different points in the loop:
 
-|                         | `stopping_controller`                                                                                     | `SimulationNode(terminal=True)`                                                            |
+|                         | `stopping_controller`                                                                                     | `SimulationNode(terminal=True)`                                                               |
 | ----------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| **Scope**               | one global callback on `ConversationSimulator`                                                            | per-node flag inside the `simulation_graph`                                          |
+| **Scope**               | one global callback on `ConversationSimulator`                                                            | per-node flag inside the `simulation_graph`                                                   |
 | **Decides on**          | full conversation state (`turns`, `last_assistant_turn`, `golden`, ...)                                   | reaching a specific graph state                                                               |
 | **Fires**               | _before_ the next user turn is generated                                                                  | _after_ the user turn from this node + the matching assistant reply have both been recorded   |
 | **Last turns recorded** | end _without_ a new user turn                                                                             | end _with_ a final user/assistant pair                                                        |
@@ -152,12 +152,12 @@ default_simulation_node(
 
 All arguments are optional and keyword-only:
 
-| Argument     | Description                                                                                                                                                                                                                                                                                                            |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Argument     | Description                                                                                                                                                                                                                                                                                                 |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `template`   | Subclass of `SimulationTemplate` used to render the user-turn prompt. When omitted, the built-in template is used. See [Custom Templates](/docs/conversation-simulator-custom-templates) for the override surface. Validated eagerly — bad subclasses or signatures raise `TypeError` at construction time. |
-| `terminal`   | If `True`, the simulation ends immediately after this node emits a user turn and the assistant replies. Same semantics as `SimulationNode(terminal=True)`.                                                                                                                                                          |
-| `max_visits` | Optional emission cap. The node will be emitted at most `max_visits` times; on the next entry attempt the runner skips emission and ends the simulation. Same semantics as `SimulationNode(max_visits=N)`.                                                                                                          |
-| `name`       | Debug name shown in graph traces.                                                                                                                                                                                                                                                                                      |
+| `terminal`   | If `True`, the simulation ends immediately after this node emits a user turn and the assistant replies. Same semantics as `SimulationNode(terminal=True)`.                                                                                                                                                  |
+| `max_visits` | Optional emission cap. The node will be emitted at most `max_visits` times; on the next entry attempt the runner skips emission and ends the simulation. Same semantics as `SimulationNode(max_visits=N)`.                                                                                                  |
+| `name`       | Debug name shown in graph traces.                                                                                                                                                                                                                                                                           |
 
 ```python
 from deepeval.simulator import SimulationNode, default_simulation_node
