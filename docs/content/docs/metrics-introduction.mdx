@@ -366,6 +366,24 @@ Here are some additional ideas if you're not sure:
 
 In some cases, where your LLM model is doing most of the heavy lifting, it is not uncommon to have more use case specific metrics.
 
+## Configure Your Metric Language
+
+By default, built-in metric prompts are written in English. If you evaluate applications in another language, you can translate those prompts **once** with the CLI instead of rewriting them yourself.
+
+Run `deepeval translate` with your target language and the metric class names you use (the same names as in Python, e.g. `FaithfulnessMetric`):
+
+```bash
+deepeval translate Spanish --metrics "FaithfulnessMetric, AnswerRelevancyMetric"
+```
+
+You can pass a comma-separated list in one value or repeat `--metrics` for each class. Optionally pass `--model` to choose which LLM performs the translation; otherwise `deepeval` uses the same default as your metric evaluations.
+
+`deepeval` sends each metric’s English template to your configured **evaluation model**, translates the wording into your target language, and saves the result under `.deepeval/templates.json` in your project. On every later `measure`, `evaluate`, or `assert_test`, those saved templates are loaded automatically.
+
+:::tip
+Translate only the metrics you actually run. You can run the command again later to add more metrics or refresh translations.
+:::
+
 ## Configure LLM Judges
 
 You can use **ANY** LLM judge in `deepeval`, including OpenAI, Azure OpenAI, Ollama, Anthropic, Gemini, LiteLLM, etc. You can also wrap your own LLM API in `deepeval`'s `DeepEvalBaseLLM` class to use ANY model of your choice. [Click here](/guides/guides-using-custom-llms) for full guide.
