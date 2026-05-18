@@ -381,7 +381,7 @@ You can pass a comma-separated list in one value or repeat `--metrics` for each 
 `deepeval` sends each metric’s English template to your configured **evaluation model**, translates the wording into your target language, and saves the result under `.deepeval/templates.json` in your project. On every later `measure`, `evaluate`, or `assert_test`, those saved templates are loaded automatically.
 
 :::tip
-Translate only the metrics you actually run. You can run the command again later to add more metrics or refresh translations.
+Translate only the metrics you actually run. You can run the command again later to add more metrics or refresh translations. To switch back to the built-in English prompts, run `deepeval translate English --metrics "YourMetric"` this removes your saved overrides and defaults to original template for these metrics.
 :::
 
 ## Configure LLM Judges

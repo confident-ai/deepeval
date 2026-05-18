@@ -9,11 +9,14 @@ from typing_extensions import Annotated
 
 from deepeval.cli.translate.translate import (
     find_missing_placeholders,
+    is_english_language,
+    remove_translated_templates,
     run_translation_llm,
     save_translated_templates,
 )
 from deepeval.metric_templates.resolver import (
     MetricTemplateNotFoundError,
+    clear_metric_template_cache,
     iter_bundle_template_methods,
     resolve_template,
 )
@@ -83,6 +86,24 @@ def translate_command(
     total_steps = sum(len(pairs) for _, pairs in metric_jobs)
     if total_steps == 0:
         print("[yellow]Nothing to translate[/yellow] (no template methods found).")
+        raise typer.Exit(code=0)
+
+    if is_english_language(lang):
+        class_names = [class_name for class_name, _ in metric_jobs]
+        removed = remove_translated_templates(class_names)
+        clear_metric_template_cache()
+        n_metrics = len(class_names)
+        metric_word = "metric" if n_metrics == 1 else "metrics"
+        if removed:
+            print(
+                f"[green]✅ Reset {len(removed)} {metric_word} to default English templates[/green] "
+                f"(removed overrides from .deepeval/templates.json)"
+            )
+        else:
+            print(
+                f"[green]✅ {n_metrics} {metric_word} already use default English templates[/green] "
+                "(no overrides in .deepeval/templates.json)"
+            )
         raise typer.Exit(code=0)
 
     updates: dict[str, dict[str, str]] = {}

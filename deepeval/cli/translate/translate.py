@@ -46,19 +46,62 @@ def find_missing_placeholders(source: str, translated: str) -> List[str]:
     return sorted(t for t in source_tokens if t not in translated)
 
 
+_ENGLISH_LANG_ALIASES = frozenset({"english", "en", "eng"})
+
+
+def is_english_language(lang: str) -> bool:
+    return lang.strip().lower() in _ENGLISH_LANG_ALIASES
+
+
+def _hidden_templates_path() -> Path:
+    return Path(HIDDEN_DIR) / "templates.json"
+
+
+def _load_hidden_templates_file() -> Dict[str, Any]:
+    path = _hidden_templates_path()
+    if not path.is_file():
+        return {}
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        return raw if isinstance(raw, dict) else {}
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return {}
+
+
+def remove_translated_templates(class_names: List[str]) -> List[str]:
+    """Drop hidden overrides for metric classes so the shipped English bundle is used."""
+    path = _hidden_templates_path()
+    existing = _load_hidden_templates_file()
+    if not existing:
+        return []
+
+    removed: List[str] = []
+    for cls_name in class_names:
+        if cls_name in existing:
+            del existing[cls_name]
+            removed.append(cls_name)
+
+    if not removed:
+        return []
+
+    if existing:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(existing, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+    elif path.is_file():
+        path.unlink()
+
+    return removed
+
+
 def save_translated_templates(updates: Mapping[str, Mapping[str, str]]) -> None:
     """Merges newly translated templates into the hidden overrides JSON file."""
-    path = Path(HIDDEN_DIR) / "templates.json"
+    path = _hidden_templates_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    
-    existing: Dict[str, Any] = {}
-    if path.is_file():
-        try:
-            raw = json.loads(path.read_text(encoding="utf-8"))
-            if isinstance(raw, dict):
-                existing = raw
-        except (OSError, UnicodeError, json.JSONDecodeError):
-            existing = {}
+
+    existing = _load_hidden_templates_file()
             
     for cls_name, methods in updates.items():
         if not methods:
