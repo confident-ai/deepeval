@@ -18,7 +18,7 @@ from deepeval.test_run.cache import TEMP_CACHE_FILE_NAME
 from deepeval.cli.utils import _post_github_pr_comment
 from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.evaluate.console_report import EvaluationConsoleReport
-from deepeval.evaluate.utils import test_results_from_test_run
+from deepeval.evaluate.utils import get_test_results_from_test_run
 from deepeval.utils import (
     delete_file_if_exists,
     set_identifier,
@@ -121,10 +121,14 @@ def run(
         help="List of marks to run the tests with.",
     ),
     pass_rate: Optional[float] = typer.Option(
-        None, "--pass-rate", help="Minimum pass rate required (e.g., 0.8 for 80%)."
+        None,
+        "--pass-rate",
+        help="On GitHub Actions: minimum pass rate over assert_test() cases (e.g. 0.8).",
     ),
     required_metrics: Optional[str] = typer.Option(
-        None, "--required-metrics", help="List of metric names that MUST pass. Can be used multiple times."
+        None,
+        "--required-metrics",
+        help="On GitHub Actions: comma-separated metric display names that must pass on every assert_test() case.",
     ),
 ):
     """Run a test"""
@@ -189,7 +193,7 @@ def run(
 
     invoke_test_run_end_hook()
 
-    test_results = test_results_from_test_run(
+    test_results = get_test_results_from_test_run(
         global_test_run_manager.get_test_run()
     )
     is_ci = os.environ.get("GITHUB_ACTIONS") == "true"
@@ -206,7 +210,7 @@ def run(
         if required_metrics:
             parsed_metrics = [m.strip() for m in required_metrics.split(",")]
             for test_result in test_results:
-                for metric_data in test_result.metrics_data:
+                for metric_data in test_result.metrics_data or []:
                     if metric_data.name in parsed_metrics and not metric_data.success:
                         passed = False
                         break

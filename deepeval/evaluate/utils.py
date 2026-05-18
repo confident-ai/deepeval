@@ -158,22 +158,29 @@ def create_test_result(
             )
 
 
-def test_results_from_test_run(test_run: TestRun) -> List[TestResult]:
-    """Build ``TestResult`` rows from a persisted ``TestRun`` (e.g. after pytest)."""
-    from deepeval.evaluate.execute._common import filter_duplicate_results
+def _is_assert_test_api_case(
+    api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
+) -> bool:
+    """``deepeval test run`` CI reporting only includes ``assert_test()`` rows.
 
+    ``evaluate()`` / ``evals_iterator()`` set ``order`` to a dataset index;
+    ``assert_test()`` leaves it ``None`` (unless ``_dataset_rank`` is set).
+    """
+    return api_test_case.order is None
+
+
+def get_test_results_from_test_run(test_run: TestRun) -> List[TestResult]:
+    """Build ``TestResult`` rows from ``assert_test()`` cases after pytest."""
     test_results: List[TestResult] = []
 
     for api_test_case in test_run.test_cases:
-        main_result = create_test_result(api_test_case)
-        test_results.append(main_result)
-        if api_test_case.trace is not None:
-            trace_results = extract_trace_test_results(api_test_case.trace)
-            test_results.extend(
-                filter_duplicate_results(main_result, trace_results)
-            )
+        if not _is_assert_test_api_case(api_test_case):
+            continue
+        test_results.append(create_test_result(api_test_case))
 
     for api_test_case in test_run.conversational_test_cases:
+        if not _is_assert_test_api_case(api_test_case):
+            continue
         test_results.append(create_test_result(api_test_case))
 
     return test_results
