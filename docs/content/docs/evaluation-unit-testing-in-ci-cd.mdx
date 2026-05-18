@@ -721,42 +721,25 @@ The plain `pytest` command works but is highly not recommended. `deepeval test r
 
 ## Pytest Integration For CI/CD Evals
 
-Drop `deepeval test run` into a GitHub Actions workflow to run your `test_*.py` evals on every push or pull request. Write tests with `assert_test()` or `evaluate()`, then wire the command into your pipeline with the secrets and flags below.
+Drop `deepeval test run` into a GitHub Actions workflow to run your `test_*.py` evals on every push or pull request. Use `assert_test()` in your tests, then wire the command into your pipeline with the secrets and flags below.
 
 ### Example test file
 
 ```python title="tests/evals/test_cicd.py"
-from deepeval import evaluate
-from deepeval.test_case import LLMTestCase, SingleTurnParams
-from deepeval.metrics import GEval
+from deepeval import assert_test
+from deepeval.dataset import Golden
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
 
-def test_correctness():
-    metrics = [
-        GEval(
-            name="Correctness",
-            criteria="Determine if the 'actual output' is correct based on the 'expected output'.",
-            evaluation_params=[
-                SingleTurnParams.ACTUAL_OUTPUT,
-                SingleTurnParams.EXPECTED_OUTPUT,
-            ],
-            threshold=0.5,
-        ),
-        ...
-    ]
-    test_cases = [
-        LLMTestCase(
-            input="I have a persistent cough and fever. Should I be worried?",
-            actual_output="...",  # Replace with your LLM application's output
-            expected_output="...",
-        ),
-        ...
-    ]
-    result = evaluate(test_cases, metrics)
+def test_answer_relevancy():
+    test_case = LLMTestCase(
+        input="I have a persistent cough and fever. Should I be worried?",
+        actual_output="...",  # Replace with your LLM application's output
+    )
+    assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric()])
 ```
 
-:::note
-`evaluate()` does not raise when metrics fail, so a single `test_*` function can still pass in pytest even when scores are low. `--pass-rate` and `--required-metrics` on `deepeval test run` fail the workflow after all tests finish if those thresholds are not met. To fail pytest immediately on a bad case, use `assert_test()`.
-:::
+For traced apps, use `assert_test(golden=..., metrics=...)` after calling your `@observe`-decorated code inside the same `test_*` function (see the traced examples above).
 
 ### GitHub Actions workflow
 
@@ -798,13 +781,13 @@ jobs:
         run: |
           poetry run deepeval test run tests/evals/test_cicd.py \
             --pass-rate 0.80 \
-            --required-metrics Correctness
+            --required-metrics "Answer Relevancy"
 ```
 
 :::tip 
 On **pull request** workflows, `deepeval test run` posts a markdown summary on the PR after pytest finishes — passing and failing cases, per-metric scores, and aggregates.
 
-The `--pass-rate` and `--required-metrics` flags (shown in the command above) fail the workflow when overall pass rate or named metrics do not meet your bar, even if individual pytest tests passed. See [`--pass-rate`](/docs/evaluation-flags-and-configs#pass-rate-github-actions) and [`--required-metrics`](/docs/evaluation-flags-and-configs#required-metrics-github-actions) for details.
+The `--pass-rate` and `--required-metrics` flags (shown in the command above) apply only to `assert_test()` results. They fail the workflow when overall pass rate or named metrics do not meet your bar. See [`--pass-rate`](/docs/evaluation-flags-and-configs#pass-rate-github-actions) and [`--required-metrics`](/docs/evaluation-flags-and-configs#required-metrics-github-actions) for details.
 :::
 
 [Click here](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about the other optional flags available to `deepeval test run`.
