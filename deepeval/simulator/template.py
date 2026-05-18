@@ -6,7 +6,7 @@ from deepeval.dataset import ConversationalGolden
 from deepeval.test_case import Turn
 
 
-class ConversationSimulatorTemplate:
+class SimulationTemplate:
     multimodal_rules = """
         --- MULTIMODAL INPUT RULES ---
         - Treat image content as factual evidence.
@@ -30,7 +30,7 @@ class ConversationSimulatorTemplate:
             3. Avoid providing excessive details upfront; the goal is to initiate the conversation and build rapport, not to solve it in the first message.
             4. The message should be concise, ideally no more than 1-3 sentences.
 
-            {ConversationSimulatorTemplate.multimodal_rules}
+            {SimulationTemplate.multimodal_rules}
 
             IMPORTANT: The output must be formatted as a JSON object with a single key `simulated_input`, where the value is the generated opening message in {language}.
 
@@ -72,7 +72,7 @@ class ConversationSimulatorTemplate:
             3. Keep the tone consistent with the previous user inputs.
             4. The generated user input should be concise, ideally no more than 1-2 sentences.
 
-            {ConversationSimulatorTemplate.multimodal_rules}
+            {SimulationTemplate.multimodal_rules}
 
             IMPORTANT: The output must be formatted as a JSON object with a single key `simulated_input`, 
             where the value is the generated user input in {language}.

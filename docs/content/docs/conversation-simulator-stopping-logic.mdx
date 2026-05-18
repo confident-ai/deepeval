@@ -4,13 +4,13 @@ title: Stopping Logic
 sidebar_label: Stopping Logic
 ---
 
-By default, `ConversationSimulator` ends a simulation when the `expected_outcome` in your `ConversationalGolden` has been met. You can replace this behavior with a custom `controller` callback that returns `proceed()` or `end()`.
+By default, `ConversationSimulator` ends a simulation when the `expected_outcome` in your `ConversationalGolden` has been met. You can replace this behavior with a custom `stopping_controller` that returns `proceed()` or `end()`.
 
 ```python title="main.py"
 from deepeval.simulator import ConversationSimulator
 from deepeval.simulator.controller import end, proceed
 
-async def controller(last_assistant_turn, simulated_user_turns):
+async def stopping_controller(last_assistant_turn, simulated_user_turns):
     if last_assistant_turn and "confirmation number" in last_assistant_turn.content.lower():
         return end(reason="User received a confirmation number")
 
@@ -18,38 +18,60 @@ async def controller(last_assistant_turn, simulated_user_turns):
 
 simulator = ConversationSimulator(
     model_callback=model_callback,
-    controller=controller,
+    stopping_controller=stopping_controller,
 )
 ```
 
+:::note
+The kwarg was previously called `controller`. It is still accepted as a deprecated alias and emits a `DeprecationWarning`. Update existing call sites to `stopping_controller` at your earliest convenience.
+:::
+
+Function name in your code can be anything — the example uses `stopping_controller` for parity but `def my_stop(...)` works equally well.
+
 ## Stopping Order
 
-The simulator always checks the max-turn cap before running any controller logic.
+A `ConversationSimulator` run can end for **four** different reasons. They are checked in a fixed order on every iteration of the simulation loop:
 
-- If `simulated_user_turns` has reached `max_user_simulations`, the simulation ends immediately.
-- If you provide a custom `controller`, `deepeval` runs it after the max-turn check.
-- If your custom `controller` returns `end()`, the simulation ends.
-- If your custom `controller` returns `proceed()` or anything other than `end()`, the simulation continues.
-- If you do not provide a custom `controller`, `deepeval` checks whether the `expected_outcome` has been met.
+1. **`max_user_simulations`** — hard outer cap. Checked first.
+2. **`stopping_controller`** — your custom (or the default `expected_outcome`) gate. Runs *before* the next user turn is generated.
+3. **`SimulationNode.max_visits` exhausted** — fires from inside the [simulation graph](/docs/conversation-simulator-simulation-graph) runner when a node would emit its `(N+1)`-th turn; the runner skips emission and ends.
+4. **`SimulationNode(terminal=True)`** — fires *after* the user turn from a terminal node and the matching assistant reply have both been recorded.
+
+The sequence diagram below traces one iteration and highlights where each terminator can fire:
+
+The sequence diagram below traces one happy-path iteration and marks where each terminator can fire:
 
 ```mermaid
-flowchart TD
-    startNode["Start next simulation cycle"] --> maxGate{"simulated_user_turns >= max_user_simulations?"}
-    maxGate -->|"Yes"| endMax["End simulation"]
-    maxGate -->|"No"| controllerGate{"Custom controller provided?"}
-    controllerGate -->|"Yes"| customController["Run custom controller"]
-    controllerGate -->|"No"| defaultController["Check expected_outcome"]
-    customController --> customDecision{"Returned end()?"}
-    customDecision -->|"Yes"| endCustom["End simulation"]
-    customDecision -->|"No"| proceedNode["Proceed to next user turn"]
-    defaultController --> defaultDecision{"Expected outcome met?"}
-    defaultDecision -->|"Yes"| endDefault["End simulation"]
-    defaultDecision -->|"No"| proceedNode
+sequenceDiagram
+    autonumber
+    participant Sim as Simulation Loop
+    participant Stop as stopping_controller
+    participant Graph as Simulation Graph
+    participant Model as model_callback
+
+    Note over Sim: 1. max_user_simulations cap (hard stop)
+    Sim->>Stop: should we stop?
+    Note over Stop: 2. stopping_controller (end() = stop)
+    Stop-->>Sim: proceed()
+    Sim->>Graph: get next user turn
+    Note over Graph: 3. max_visits exhausted = stop
+    Graph-->>Sim: user turn
+    Sim->>Model: send user turn
+    Model-->>Sim: assistant reply
+    Sim->>Graph: advance(reply)
+    Note over Graph: 4. terminal=True node = stop
+    Graph-->>Sim: next node
 ```
+
+The four terminators are complementary, not redundant — see the comparison in the [Simulation Graph](/docs/conversation-simulator-simulation-graph#stopping-controller-vs-terminal) docs for when to reach for which.
+
+:::info
+**`terminal` and `max_visits` live on `SimulationNode`, not here.** This page only covers `stopping_controller`. For node-level termination — `terminal=True` leaves and `max_visits` caps — see the [Simulation Graph](/docs/conversation-simulator-simulation-graph#terminal-nodes-and-max_visits) docs.
+:::
 
 ## Supported Arguments
 
-Only define the arguments your controller needs. `deepeval` will pass supported arguments by name:
+Only define the arguments your callback needs. `deepeval` will pass supported arguments by name:
 
 - [Optional] `turns`: the current list of `Turn`s in the simulation.
 - [Optional] `golden`: the `ConversationalGolden` being simulated.
@@ -62,20 +84,20 @@ Only define the arguments your controller needs. `deepeval` will pass supported 
 
 ## Return Values
 
-If your controller returns anything other than `proceed()` or `end()`, `deepeval` treats it the same as `proceed()`. This is useful when you only want to explicitly handle terminal states:
+If your callback returns anything other than `proceed()` or `end()`, `deepeval` treats it the same as `proceed()`. This is useful when you only want to explicitly handle terminal states:
 
 ```python
 import random
 from deepeval.simulator.controller import end, proceed
 
-def controller():
+def stopping_controller():
     if random.random() > 0.5:
         return end(reason="Random early stop")
 
     return proceed()
 ```
 
-Your controller can return:
+Your callback can return:
 
 - `proceed()`: continue the simulation.
 - `end(reason=...)`: end the simulation and optionally record why.
@@ -90,7 +112,7 @@ Many task flows should stop as soon as your chatbot confirms the user completed 
 ```python
 from deepeval.simulator.controller import end, proceed
 
-def controller(last_assistant_turn):
+def stopping_controller(last_assistant_turn):
     if last_assistant_turn and "confirmation number" in last_assistant_turn.content.lower():
         return end(reason="User received confirmation")
 
@@ -104,7 +126,7 @@ When your chatbot returns tool call metadata, a specific successful tool call ca
 ```python
 from deepeval.simulator.controller import end, proceed
 
-def controller(last_assistant_turn):
+def stopping_controller(last_assistant_turn):
     if last_assistant_turn and any(
         tool.name == "issue_refund"
         for tool in last_assistant_turn.tools_called or []
@@ -121,7 +143,7 @@ For unhelpful simulations where the assistant repeatedly fails, end early instea
 ```python
 from deepeval.simulator.controller import end, proceed
 
-def controller(turns):
+def stopping_controller(turns):
     assistant_turns = [turn for turn in turns if turn.role == "assistant"]
     recent = assistant_turns[-2:]
 
@@ -132,5 +154,5 @@ def controller(turns):
 ```
 
 ::::note
-`max_user_simulations` is always checked before your controller runs. This means the max-turn limit remains the hard safety cap, even if your controller keeps returning `proceed()`.
+`max_user_simulations` is always checked before your callback runs. This means the max-turn limit remains the hard safety cap, even if your callback keeps returning `proceed()`.
 ::::
