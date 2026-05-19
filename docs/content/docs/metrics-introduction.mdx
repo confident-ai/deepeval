@@ -368,20 +368,26 @@ In some cases, where your LLM model is doing most of the heavy lifting, it is no
 
 ## Configure Your Metric Language
 
-By default, built-in metric prompts are written in English. If you evaluate applications in another language, you can translate those prompts **once** with the CLI instead of rewriting them yourself.
-
-Run `deepeval translate` with your target language and the metric class names you use (the same names as in Python, e.g. `FaithfulnessMetric`):
+By default, built-in metric prompts use the English bundle shipped with `deepeval`. For supported languages, community translations are included in the package—set one environment variable to use them for all evaluations:
 
 ```bash
-deepeval translate Spanish --metrics "FaithfulnessMetric, AnswerRelevancyMetric"
+export DEEPEVAL_METRIC_TEMPLATE_LANGUAGE=spanish
 ```
 
-You can pass a comma-separated list in one value or repeat `--metrics` for each class. Optionally pass `--model` to choose which LLM performs the translation; otherwise `deepeval` uses the same default as your metric evaluations.
+Use any language slug (for example `hindi`, `spanish`, `vietnamese`). Leave this unset, or set it to `english` or `en`, to keep the default English prompts. Templates are loaded from shipped community files and from `.deepeval/templates.<lang>.json` if present (local files override shipped keys). If no templates exist for that language, or a metric class is missing, `deepeval` falls back to English and prints a one-time warning to the console (no logging configuration required).
 
-`deepeval` sends each metric’s English template to your configured **evaluation model**, translates the wording into your target language, and saves the result under `.deepeval/templates.json` in your project. On every later `measure`, `evaluate`, or `assert_test`, those saved templates are loaded automatically.
+### Generating translations
 
-:::tip
-Translate only the metrics you actually run. You can run the command again later to add more metrics or refresh translations. To switch back to the built-in English prompts, run `deepeval translate English --metrics "YourMetric"` this removes your saved overrides and defaults to original template for these metrics.
+Run `deepeval translate` with a language slug and one or more metric class names. By default, results are written to **`.deepeval/templates.<lang>.json`** — no enum or package edits required:
+
+```bash
+deepeval translate vietnamese --metrics "FaithfulnessMetric, AnswerRelevancyMetric"
+```
+
+Then set `DEEPEVAL_METRIC_TEMPLATE_LANGUAGE=vietnamese`. The command only translates keys that are not already present in that file. Optionally pass `--model` to choose which LLM performs the translation.
+
+:::info
+Contributors can add any language to `deepeval` by forking the repo and adding a new language to the `MetricTemplateLanguage` enum in `languages.py`, then run `deepeval translate` with **`--contribute`** to update `deepeval/metric_templates/community/templates.<lang>.json` and open a pull request so other users receive the bundle in the package.
 :::
 
 ## Configure LLM Judges
