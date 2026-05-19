@@ -8,11 +8,11 @@ Contributor reference for LLM evaluation prompts used by built-in metrics.
 
 Historically, prompts lived in per-metric `template.py` modules — static methods on a template class that built and returned prompt strings, with prompts embedded as multiline Python strings (often via `textwrap.dedent` and f-strings).
 
-That pattern does not scale when you need to:
+That pattern does not scale when you need to have multi-language templates or need support for typescript templates in a mono-repo architecture. The new architecture now allows us to:
 
-- Run **`deepeval translate`** over the full prompt catalog and persist results in `.deepeval/templates.json`
-- Apply **project-level overrides** without forking Python code
-- Keep **one standardized shape** for all metrics (`class_name` → `method_name` → template string) for tooling and future multi-language / monorepo layouts
+- Ship **community translations** per language under `metric_templates/community/`
+- Let contributors run **`deepeval translate`** to add keys to those JSON files without forking Python code
+- Keep **one standardized shape** for all metrics (`class_name` → `method_name` → template string) for tooling and multi-language layouts
 
 So shipped prompts now live in a single bundled [`templates.json`](../metric_templates/templates.json). Metrics load them through [`resolve_template`](../metric_templates/resolver.py) instead of building prompts in Python.
 
@@ -26,11 +26,11 @@ That gives you:
 - Normal editor UX for long prompts
 - Co-location with the metric package you are changing
 
-| Layer                          | Role                                                                 | Example paths                                           |
-| ------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------- |
-| **`.txt` on disk**             | Editable prompt sources in this repo                                 | `metrics/.../templates/`, `metric_templates/fragments/` |
-| **`templates.json`**           | Compiled bundle shipped with the package; translation target         | `metric_templates/templates.json`                       |
-| **`.deepeval/templates.json`** | Optional per-project overrides (e.g. after `deepeval translate`)     | `.deepeval/templates.json`                              |
+| Layer                            | Role                                                                 | Example paths                                           |
+| -------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------- |
+| **`.txt` on disk**               | Editable prompt sources in this repo                                 | `metrics/.../templates/`, `metric_templates/fragments/` |
+| **`templates.json`**             | Compiled English bundle shipped with the package                     | `metric_templates/templates.json`                       |
+| **`community/templates.*.json`** | Shipped translations per language (enum value in filename)           | `metric_templates/community/templates.hindi.json`       |
 
 Do not hand-edit `templates.json` for routine prompt changes — edit `.txt`, run the compile script, and commit both.
 
@@ -166,7 +166,7 @@ flowchart LR
   Txt --> Compile --> JSON --> Resolver --> Metric
 ```
 
-1. **`get_raw_template(class_name, method)`** — Loads the template string from the bundled `templates.json` (via `importlib.resources`). If the project has `.deepeval/templates.json`, those entries override the shipped bundle for the same `class_name` / `method` (used by `deepeval translate` and local overrides).
+1. **`get_raw_template(class_name, method)`** — If `DEEPEVAL_METRIC_TEMPLATE_LANGUAGE` is set to a community language, loads from `metric_templates/community/templates.<lang>.json` when present; otherwise falls back to the English `templates.json` bundle (via `importlib.resources`) and logs a one-time warning per missing class/method.
 
 2. **`resolve_template(class_name, method, multimodal=..., **kwargs)`** — Parses the string as a Jinja2 template, injects:
    - `multimodal` — toggles `{% if multimodal %}` blocks
@@ -208,11 +208,12 @@ prompt = resolve_template(
 
 Edit files in `deepeval/metric_templates/fragments/`, then run the compile script. Fragments are stored under `"_fragments"` in `templates.json` and passed into every `resolve_template` call.
 
-## Translations and overrides
+## Translations and community languages
 
 Centralizing prompts in JSON is what makes translation practical: the CLI can walk the whole catalog by `class_name` / `method_name` without importing every metric’s `template.py`.
 
-- **`deepeval translate`** — Reads the shipped English bundle, translates each template, and writes `.deepeval/templates.json` in the user’s project. At runtime, those entries override the bundled English strings for the same keys. See [`deepeval/cli/translate/`](../cli/translate/).
+- **End users** — Set `DEEPEVAL_METRIC_TEMPLATE_LANGUAGE` to any slug (e.g. `hindi`). Shipped community JSON and `.deepeval/templates.<lang>.json` are merged; missing keys fall back to English with a console warning. Unset or `english` / `en` uses the English bundle only.
+- **`deepeval translate`** — Writes **`.deepeval/templates.<lang>.json`** by default (any slug). **`--contribute`** updates `metric_templates/community/` and requires the slug in [`MetricTemplateLanguage`](../metric_templates/community/languages.py). See [`community/README.md`](../metric_templates/community/README.md).
 - **Shipped English bundle** — Maintained in this repo via `.txt` sources + [`compile_metric_templates.py`](../../scripts/compile_metric_templates.py).
 
 ## Checklist for template changes
@@ -230,5 +231,6 @@ Centralizing prompts in JSON is what makes translation practical: the CLI can wa
 | ------------------------------------------------------------------------------------ | ------------------------------------------ |
 | [`scripts/compile_metric_templates.py`](../../scripts/compile_metric_templates.py)   | Build `templates.json` from `.txt` sources |
 | [`deepeval/metric_templates/templates.json`](../metric_templates/templates.json)     | Bundled prompts (runtime)                  |
-| [`deepeval/metric_templates/resolver.py`](../metric_templates/resolver.py)           | Load, override, and render templates       |
+| [`deepeval/metric_templates/resolver.py`](../metric_templates/resolver.py)           | Load community/English bundles and render  |
+| [`deepeval/metric_templates/community/`](../metric_templates/community/)             | Per-language translation JSON + enum       |
 | [`deepeval/metric_templates/fragments/`](../metric_templates/fragments/)             | Shared snippet sources                     |

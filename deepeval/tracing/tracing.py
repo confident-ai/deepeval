@@ -1,4 +1,3 @@
-import json
 import weakref
 from typing import (
     TYPE_CHECKING,
@@ -616,11 +615,6 @@ class TraceManager:
                     else:
                         api = Api(api_key=self.confident_api_key)
 
-                    print(body)
-                    with open("body.json", "w") as f:
-                        json.dump(body, f)
-                    return
-
                     api_response, link = await api.a_send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.TRACES_ENDPOINT,
@@ -725,11 +719,6 @@ class TraceManager:
                         api = Api(api_key=trace_api.confident_api_key)
                     else:
                         api = Api(api_key=self.confident_api_key)
-
-                    print(body)
-                    with open("body.json", "w") as f:
-                        json.dump(body, f)
-                    return
 
                     _, link = api.send_request(
                         method=HttpMethods.POST,
