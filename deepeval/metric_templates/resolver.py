@@ -3,11 +3,16 @@ from __future__ import annotations
 import json
 from importlib import resources
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional, Set, Tuple
+from typing import Any, Dict, Optional, Set, Tuple
 
 import jinja2
+from rich import print
 
-from deepeval.constants import HIDDEN_DIR
+from deepeval.metric_templates.community.languages import (
+    parse_language_setting,
+    get_community_path,
+    get_custom_path,
+)
 
 class MetricTemplateNotFoundError(KeyError):
     def __init__(self, message: str) -> None:
@@ -19,149 +24,166 @@ class MetricTemplateInterpolationError(ValueError):
         super().__init__(message)
         self.unresolved = unresolved
 
-def _list_template_classes(bundle: Mapping[str, Any]) -> str:
-    names = sorted(
-        k for k, v in bundle.items() if not k.startswith("_") and isinstance(v, dict)
-    )
-    return ", ".join(names) if names else "(none)"
-
-def _method_names_from_class_entry(entry: Any) -> Set[str]:
-    if not isinstance(entry, dict):
-        return set()
-    return {k for k, v in entry.items() if not k.startswith("_") and isinstance(v, str)}
+def _read_json(path: Path) -> Dict[str, Any]:
+    """Helper to cleanly load a JSON file, returning an empty dict if missing/invalid."""
+    if not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return {}
 
 class TemplateRegistry:
-    """Encapsulates template loading, caching, and Jinja environment setup."""
     def __init__(self) -> None:
-        self._bundle: Optional[Dict[str, Any]] = None
-        self._hidden_bundle: Optional[Dict[str, Any]] = None
-        self._hidden_bundle_tried: bool = False
+        self._base_templates: Optional[Dict[str, Any]] = None
+        self._community_templates: Dict[str, Dict[str, Any]] = {}
+        self._custom_templates: Dict[str, Dict[str, Any]] = {}
         
-        # Cache Jinja environments
+        self._warned_keys: Set[str] = set()
         self._jinja_strict: Optional[jinja2.Environment] = None
         self._jinja_lenient: Optional[jinja2.Environment] = None
 
     def clear(self) -> None:
-        self._bundle = None
-        self._hidden_bundle = None
-        self._hidden_bundle_tried = False
+        self._base_templates = None
+        self._community_templates.clear()
+        self._custom_templates.clear()
+        self._warned_keys.clear()
         self._jinja_strict = None
         self._jinja_lenient = None
 
-    def get_bundle(self) -> Dict[str, Any]:
-        if self._bundle is None:
-            self._bundle = json.loads(self._read_bundle_text())
-        return self._bundle
+    def get_base_templates(self) -> Dict[str, Any]:
+        if self._base_templates is None:
+            try:
+                ref = resources.files("deepeval.metric_templates").joinpath("templates.json")
+                raw = ref.read_text(encoding="utf-8")
+            except (ModuleNotFoundError, OSError, TypeError, FileNotFoundError):
+                raw = (Path(__file__).resolve().parent / "templates.json").read_text(encoding="utf-8")
+            self._base_templates = json.loads(raw)
+        return self._base_templates
 
-    def get_hidden_bundle(self) -> Optional[Dict[str, Any]]:
-        if not self._hidden_bundle_tried:
-            self._hidden_bundle_tried = True
-            self._hidden_bundle = self._try_load_hidden_bundle()
-        return self._hidden_bundle
+    def get_community_templates(self, slug: str) -> Dict[str, Any]:
+        if slug not in self._community_templates:
+            self._community_templates[slug] = _read_json(get_community_path(slug))
+        return self._community_templates[slug]
+
+    def get_custom_templates(self, slug: str) -> Dict[str, Any]:
+        if slug not in self._custom_templates:
+            self._custom_templates[slug] = _read_json(get_custom_path(slug))
+        return self._custom_templates[slug]
 
     def get_jinja_env(self, strict: bool) -> jinja2.Environment:
         if strict:
             if self._jinja_strict is None:
                 self._jinja_strict = jinja2.Environment(undefined=jinja2.StrictUndefined)
             return self._jinja_strict
-        else:
-            if self._jinja_lenient is None:
-                self._jinja_lenient = jinja2.Environment()
-            return self._jinja_lenient
+        if self._jinja_lenient is None:
+            self._jinja_lenient = jinja2.Environment()
+        return self._jinja_lenient
 
-    @staticmethod
-    def _read_bundle_text() -> str:
-        try:
-            ref = resources.files("deepeval.metric_templates").joinpath("templates.json")
-            return ref.read_text(encoding="utf-8")
-        except (ModuleNotFoundError, OSError, TypeError, FileNotFoundError):
-            here = Path(__file__).resolve().parent / "templates.json"
-            return here.read_text(encoding="utf-8")
+    def warn_once(self, key: str, message: str) -> None:
+        if key not in self._warned_keys:
+            print(f"[yellow]Warning:[/yellow] {message}")
+            self._warned_keys.add(key)
 
-    @staticmethod
-    def _try_load_hidden_bundle() -> Optional[Dict[str, Any]]:
-        path = Path(HIDDEN_DIR) / "templates.json"
-        if not path.is_file():
-            return None
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-            return data if isinstance(data, dict) else None
-        except (OSError, UnicodeError, json.JSONDecodeError):
-            return None
 
-# Module-level singleton
 _registry = TemplateRegistry()
-
-# --- Public API ---
 
 def clear_metric_template_cache() -> None:
     _registry.clear()
 
-def list_methods(class_name: str) -> list[str]:
-    names: Set[str] = set()
-    hidden = _registry.get_hidden_bundle()
-    if hidden is not None:
-        names |= _method_names_from_class_entry(hidden.get(class_name))
-    
-    bundle = _registry.get_bundle()
-    names |= _method_names_from_class_entry(bundle.get(class_name))
-    
-    if not names:
-        raise MetricTemplateNotFoundError(
-            f"No metric templates for class {class_name!r}. "
-            f"Known classes: {_list_template_classes(bundle)}"
-        )
-    return sorted(names)
+def get_active_metric_template_language() -> Optional[str]:
+    try:
+        from deepeval.config.settings import get_settings
+        return parse_language_setting(get_settings().DEEPEVAL_METRIC_TEMPLATE_LANGUAGE)
+    except Exception:
+        return None
 
 def get_raw_template(class_name: str, method: str) -> str:
-    hidden = _registry.get_hidden_bundle()
-    if hidden is not None and class_name in hidden:
-        h_entry = hidden.get(class_name)
-        h_body = h_entry.get(method) if isinstance(h_entry, dict) else None
-        if isinstance(h_body, str):
-            return h_body
-
-    bundle = _registry.get_bundle()
-    entry = bundle.get(class_name)
-    body = entry.get(method) if isinstance(entry, dict) else None
+    """Resolves a template by checking Custom -> Community -> Base (English)."""
+    slug = get_active_metric_template_language()
     
-    if not isinstance(body, str):
-        hint = (
-            f" Available methods for {class_name!r}: {list_methods(class_name)!r}"
-            if isinstance(entry, dict) or (hidden is not None and class_name in hidden)
-            else f" Known classes: {_list_template_classes(bundle)}"
+    if slug is not None:
+        # 1. Check user's custom localized templates (~/.deepeval/...)
+        custom = _registry.get_custom_templates(slug)
+        if class_name in custom and method in custom.get(class_name, {}):
+            return custom[class_name][method]
+
+        # 2. Check shipped community templates
+        community = _registry.get_community_templates(slug)
+        if class_name in community and method in community.get(class_name, {}):
+            return community[class_name][method]
+
+        # 3. Throw a helpful, actionable warning before falling back to English
+        _registry.warn_once(
+            f"lang_missing_{slug}_{class_name}",
+            f"No '{slug}' translation found for [bold]{class_name}[/bold]. Defaulting to English.\n"
+            f"-> Run [cyan]deepeval translate {slug} --metrics {class_name}[/cyan] to generate it."
         )
-        raise MetricTemplateNotFoundError(f"No template for {class_name!r}.{method!r}.{hint}")
-    return body
 
-def get_bundle_only_template(class_name: str, method: str) -> str:
-    """Return the template string from the shipped English bundle only."""
-    bundle = _registry.get_bundle()
-    entry = bundle.get(class_name)
-    body = entry.get(method) if isinstance(entry, dict) else None
-    if not isinstance(body, str):
-        hint = ""
-        if isinstance(entry, dict):
-            keys = sorted(k for k, v in entry.items() if not k.startswith("_") and isinstance(v, str))
-            hint = f" Available methods for {class_name!r}: {keys!r}"
-        else:
-            hint = f" Known classes: {_list_template_classes(bundle)}"
-        raise MetricTemplateNotFoundError(f"No bundle template for {class_name!r}.{method!r}.{hint}")
-    return body
+    # Fallback to base English templates
+    base = _registry.get_base_templates()
+    entry = base.get(class_name, {})
+    body = entry.get(method)
 
-def iter_bundle_template_methods(class_name: str) -> list[tuple[str, str]]:
-    """Return ``(method, template)`` pairs from the shipped bundle only."""
-    bundle = _registry.get_bundle()
-    entry = bundle.get(class_name)
-    if not isinstance(entry, dict):
+    if not body or not isinstance(body, str):
         raise MetricTemplateNotFoundError(
-            f"No metric templates for class {class_name!r}. "
-            f"Known classes: {_list_template_classes(bundle)}"
+            f"No template found for {class_name!r}.{method!r}. "
+            f"Available classes: {', '.join(base.keys())}"
         )
+    return body
+
+def get_base_template(class_name: str, method: str) -> str:
+    """Return the English template from the shipped base bundle only."""
+    base = _registry.get_base_templates()
+    body = base.get(class_name, {}).get(method)
+    
+    if not body or not isinstance(body, str):
+        raise MetricTemplateNotFoundError(f"No base template found for {class_name!r}.{method!r}.")
+    return body
+
+def iter_base_template_methods(class_name: str) -> list[tuple[str, str]]:
+    """Iterates over all (method, template) pairs for a given class in the base file."""
+    base = _registry.get_base_templates()
+    entry = base.get(class_name)
+    
+    if not entry or not isinstance(entry, dict):
+        raise MetricTemplateNotFoundError(f"No metric templates for class {class_name!r}.")
+        
     pairs = [(k, v) for k, v in sorted(entry.items()) if not k.startswith("_") and isinstance(v, str)]
     if not pairs:
         raise MetricTemplateNotFoundError(f"No string template methods for class {class_name!r}.")
     return pairs
+
+def resolve_base_template(
+    class_name: str,
+    method: str,
+    *,
+    multimodal: bool = False,
+    strict: bool = True,
+    **kwargs: Any,
+) -> str:
+    raw_template = get_base_template(class_name, method)
+    fragments = _registry.get_base_templates().get("_fragments", {})
+    env = _registry.get_jinja_env(strict=strict)
+
+    try:
+        return env.from_string(raw_template).render(
+            multimodal=multimodal,
+            _fragments=fragments,
+            **kwargs,
+        )
+    except jinja2.UndefinedError as e:
+        raise MetricTemplateInterpolationError(
+            f"Missing variable during template render: {e.message}",
+            unresolved=set(),
+        ) from e
+    except jinja2.TemplateSyntaxError as e:
+        raise MetricTemplateInterpolationError(
+            f"Jinja syntax error in template: {e.message}",
+            unresolved=set(),
+        ) from e
+
 
 def resolve_template(
     class_name: str,
@@ -171,27 +193,24 @@ def resolve_template(
     strict: bool = True,
     **kwargs: Any,
 ) -> str:
+    """Fetches the best localized template and renders it via Jinja2."""
     raw_template = get_raw_template(class_name, method)
-    bundle = _registry.get_bundle()
-    fragments = bundle.get("_fragments", {})
-
+    fragments = _registry.get_base_templates().get("_fragments", {})
     env = _registry.get_jinja_env(strict=strict)
-    
+
     try:
-        template = env.from_string(raw_template)
-        return template.render(
+        return env.from_string(raw_template).render(
             multimodal=multimodal,
             _fragments=fragments,
-            **kwargs
+            **kwargs,
         )
     except jinja2.UndefinedError as e:
-        # StrictUndefined catches missing variables gracefully
         raise MetricTemplateInterpolationError(
-            f"Missing variable during template render: {e.message}", 
-            unresolved=set()
+            f"Missing variable during template render: {e.message}",
+            unresolved=set(),
         ) from e
     except jinja2.TemplateSyntaxError as e:
         raise MetricTemplateInterpolationError(
-            f"Jinja syntax error in template: {e.message}", 
-            unresolved=set()
+            f"Jinja syntax error in template: {e.message}",
+            unresolved=set(),
         ) from e
