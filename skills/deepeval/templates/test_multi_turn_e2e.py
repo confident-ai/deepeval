@@ -16,6 +16,7 @@ simulator = ConversationSimulator(model_callback=ai_app.chatbot_callback)
 dataset = EvaluationDataset()
 dataset.add_goldens_from_json_file(file_path="tests/evals/.dataset.json")
 
+
 @pytest.mark.parametrize(
     "test_case",
     simulator.simulate(

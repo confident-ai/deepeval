@@ -49,9 +49,7 @@ class SimulationNode:
         self.name = name or getattr(action, "__name__", "simulation_node")
         self.edges: List[Tuple["SimulationNode", str]] = []
 
-    def add_node(
-        self, child: "SimulationNode", when: str
-    ) -> "SimulationNode":
+    def add_node(self, child: "SimulationNode", when: str) -> "SimulationNode":
         """Append an outgoing edge to `child`, taken when the LLM router
         classifies the assistant's reply as matching `when` (a natural-language
         description).
@@ -59,9 +57,7 @@ class SimulationNode:
         Returns the child so calls can be chained.
         """
         if not isinstance(child, SimulationNode):
-            raise TypeError(
-                "`child` must be a SimulationNode instance."
-            )
+            raise TypeError("`child` must be a SimulationNode instance.")
         if not isinstance(when, str) or not when.strip():
             raise ValueError("`when=` must be a non-empty string description.")
         self.edges.append((child, when))

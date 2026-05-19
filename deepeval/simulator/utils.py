@@ -9,8 +9,7 @@ def validate_simulation_template(
 ):
     if not issubclass(simulation_template, SimulationTemplate):
         raise TypeError(
-            "simulation_template must inherit from "
-            "SimulationTemplate."
+            "simulation_template must inherit from " "SimulationTemplate."
         )
 
     expected_signatures = {

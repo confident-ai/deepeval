@@ -865,7 +865,10 @@ class TraceManager:
             output=trace.output,
             metricCollection=trace.metric_collection,
             retrievalContext=(
-                [rc.context if hasattr(rc, "context") else rc for rc in trace.retrieval_context]
+                [
+                    rc.context if hasattr(rc, "context") else rc
+                    for rc in trace.retrieval_context
+                ]
                 if trace.retrieval_context
                 else None
             ),
@@ -942,7 +945,10 @@ class TraceManager:
                 else None
             ),
             retrievalContext=(
-                [rc.context if hasattr(rc, "context") else rc for rc in span.retrieval_context]
+                [
+                    rc.context if hasattr(rc, "context") else rc
+                    for rc in span.retrieval_context
+                ]
                 if span.retrieval_context
                 else None
             ),

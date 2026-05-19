@@ -250,7 +250,14 @@ class ConversationalTestCase(BaseModel):
                     return self
                 if turn.retrieval_context is not None:
                     self.multimodal = self.multimodal or any(
-                        re.search(pattern, c.context if isinstance(c, RetrievedContextData) else c)
+                        re.search(
+                            pattern,
+                            (
+                                c.context
+                                if isinstance(c, RetrievedContextData)
+                                else c
+                            ),
+                        )
                         for c in turn.retrieval_context
                         if isinstance(c, (RetrievedContextData, str))
                     )
@@ -269,9 +276,12 @@ class ConversationalTestCase(BaseModel):
         # Ensure `context` is None or a list of strings
         if context is not None:
             if not isinstance(context, list) or not all(
-                isinstance(item, (str, RetrievedContextData)) for item in context
+                isinstance(item, (str, RetrievedContextData))
+                for item in context
             ):
-                raise TypeError("'context' must be None or a list of strings or RetrievedContextData")
+                raise TypeError(
+                    "'context' must be None or a list of strings or RetrievedContextData"
+                )
 
         if mcp_servers is not None:
             validate_mcp_servers(mcp_servers)

@@ -4,9 +4,7 @@ from typing import List
 
 class SimulationGraphTemplate:
     @staticmethod
-    def classify_edge(
-        assistant_reply: str, choices: List[str]
-    ) -> str:
+    def classify_edge(assistant_reply: str, choices: List[str]) -> str:
         """Prompt the simulator model to pick the index of the outgoing edge
         that best describes the assistant's reply. A "None of the above"
         option is appended automatically.

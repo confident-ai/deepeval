@@ -319,6 +319,7 @@ class ToolCall(BaseModel):
             f"    {line}" for line in lines[1:]
         )
 
+
 class RetrievedContextData(BaseModel):
     context: str
     source: str
@@ -448,7 +449,10 @@ class LLMTestCase(BaseModel):
         )
         if self.retrieval_context is not None:
             auto_detect = auto_detect or any(
-                re.search(pattern, c.context if isinstance(c, RetrievedContextData) else c)
+                re.search(
+                    pattern,
+                    c.context if isinstance(c, RetrievedContextData) else c,
+                )
                 for c in self.retrieval_context
                 if isinstance(c, (RetrievedContextData, str))
             )
@@ -492,7 +496,8 @@ class LLMTestCase(BaseModel):
         # Ensure `retrieval_context` is None or a list of strings
         if retrieval_context is not None:
             if not isinstance(retrieval_context, list) or not all(
-                isinstance(item, (str, RetrievedContextData)) for item in retrieval_context
+                isinstance(item, (str, RetrievedContextData))
+                for item in retrieval_context
             ):
                 raise TypeError(
                     "'retrieval_context' must be None or a list of strings or RetrievedContextData"

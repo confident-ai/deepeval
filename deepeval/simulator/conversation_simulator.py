@@ -88,9 +88,7 @@ class ConversationSimulator:
             if simulation_graph is not None
             else default_simulation_node()
         )
-        self._graph_runner = _SimulationGraphRunner(
-            root=self.simulation_graph
-        )
+        self._graph_runner = _SimulationGraphRunner(root=self.simulation_graph)
         self.stopping_controller = SimulationController(
             controller=stopping_controller,
             generate_schema=self.generate_schema,

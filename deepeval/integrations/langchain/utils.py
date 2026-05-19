@@ -91,7 +91,9 @@ def _langchain_content_block_to_str(block: dict) -> str:
         return _mllm_placeholder_from_media_fields(block)
 
     if block_type == "file":
-        mime = str(block.get("mime_type") or block.get("mimeType") or "").lower()
+        mime = str(
+            block.get("mime_type") or block.get("mimeType") or ""
+        ).lower()
         if mime == "application/pdf" or mime.startswith("image/"):
             return _mllm_placeholder_from_media_fields(block)
         return str(block)
@@ -135,7 +137,9 @@ def convert_chat_messages_to_input(
                 content_parts = []
                 for part in content:
                     if isinstance(part, dict):
-                        content_parts.append(_langchain_content_block_to_str(part))
+                        content_parts.append(
+                            _langchain_content_block_to_str(part)
+                        )
                     else:
                         content_parts.append(str(part))
                 content_str = " ".join(content_parts).strip()

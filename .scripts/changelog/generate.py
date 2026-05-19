@@ -186,6 +186,7 @@ def git_tag_date_ymd(tag: str) -> str:
             tag_to_date[tag] = date_value
         except subprocess.CalledProcessError:
             import datetime
+
             tag_to_date[tag] = datetime.datetime.now().strftime("%Y-%m-%d")
     return tag_to_date[tag]
 
@@ -1433,7 +1434,9 @@ def main() -> int:
     )
 
     ap.add_argument(
-        "--output-dir", default="docs/content/changelog", help="Docs changelog dir"
+        "--output-dir",
+        default="docs/content/changelog",
+        help="Docs changelog dir",
     )
     ap.add_argument(
         "--github",

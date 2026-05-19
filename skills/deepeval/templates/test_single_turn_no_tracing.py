@@ -15,6 +15,7 @@ ai_app = import_module("ai_app")
 dataset = EvaluationDataset()
 dataset.add_goldens_from_json_file(file_path="tests/evals/.dataset.json")
 
+
 @pytest.mark.parametrize("golden", dataset.goldens)
 def test_single_turn_no_tracing(golden: Golden):
     actual_output = ai_app.run_ai_app(golden.input)

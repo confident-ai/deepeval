@@ -97,9 +97,7 @@ def test_terminal_node_ends_after_assistant_reply():
         user_description="Terminal User",
     )
 
-    root = SimulationNode(
-        action=lambda: "hello", terminal=True, name="root"
-    )
+    root = SimulationNode(action=lambda: "hello", terminal=True, name="root")
 
     simulator = ConversationSimulator(
         model_callback=static_callback,
@@ -201,9 +199,7 @@ def test_self_loop_with_max_visits_caps_emissions():
         user_description="Loop User",
     )
 
-    push = SimulationNode(
-        action=lambda: "push", max_visits=3, name="push"
-    )
+    push = SimulationNode(action=lambda: "push", max_visits=3, name="push")
     push.add_node(push, when="The assistant still refused")
 
     # Classifier always routes to push (self-loop). max_visits=3 means 3
@@ -237,9 +233,7 @@ def test_action_returning_str_is_wrapped_as_user_turn():
         user_description="User",
     )
 
-    root = SimulationNode(
-        action=lambda: "raw text", terminal=True, name="root"
-    )
+    root = SimulationNode(action=lambda: "raw text", terminal=True, name="root")
 
     simulator = ConversationSimulator(
         model_callback=static_callback,
@@ -320,9 +314,7 @@ def test_default_simulation_node_usable_as_child():
         user_description="Compose User",
     )
 
-    root = SimulationNode(
-        action=lambda: "scripted opener", name="root"
-    )
+    root = SimulationNode(action=lambda: "scripted opener", name="root")
     root.add_node(
         default_simulation_node(terminal=True),
         when="The assistant responded",

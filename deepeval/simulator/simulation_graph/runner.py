@@ -107,9 +107,7 @@ class _SimulationGraphRunner:
         if not node.edges:
             return  # No edges -> stay on current node (no LLM call).
         choices = [when for _, when in node.edges]
-        prompt = SimulationGraphTemplate.classify_edge(
-            assistant_reply, choices
-        )
+        prompt = SimulationGraphTemplate.classify_edge(assistant_reply, choices)
         choice: EdgeChoice = simulator.generate_schema(prompt, EdgeChoice)
         next_node = _resolve_choice(node, choice)
         if next_node is not None:
@@ -160,9 +158,7 @@ class _SimulationGraphRunner:
         if not node.edges:
             return
         choices = [when for _, when in node.edges]
-        prompt = SimulationGraphTemplate.classify_edge(
-            assistant_reply, choices
-        )
+        prompt = SimulationGraphTemplate.classify_edge(assistant_reply, choices)
         choice: EdgeChoice = await simulator.a_generate_schema(
             prompt, EdgeChoice
         )
@@ -212,9 +208,7 @@ class _SimulationGraphRunner:
         if accepts_var_keyword:
             return node.action(**candidate_kwargs)
         supported = set(sig.parameters.keys())
-        kwargs = {
-            k: v for k, v in candidate_kwargs.items() if k in supported
-        }
+        kwargs = {k: v for k, v in candidate_kwargs.items() if k in supported}
         return node.action(**kwargs)
 
 

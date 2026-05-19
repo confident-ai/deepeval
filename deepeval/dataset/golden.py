@@ -63,7 +63,11 @@ class Golden(BaseModel):
         )
         if self.retrieval_context is not None:
             auto_detect = auto_detect or any(
-                re.search(pattern, c.context if isinstance(c, RetrievedContextData) else c) is not None
+                re.search(
+                    pattern,
+                    c.context if isinstance(c, RetrievedContextData) else c,
+                )
+                is not None
                 for c in self.retrieval_context
                 if isinstance(c, (RetrievedContextData, str))
             )
@@ -98,7 +102,12 @@ class Golden(BaseModel):
         extract_ids_from_string(self.expected_output)
         extract_ids_from_list(self.context)
         if self.retrieval_context:
-            extract_ids_from_list([c.context if isinstance(c, RetrievedContextData) else c for c in self.retrieval_context])
+            extract_ids_from_list(
+                [
+                    c.context if isinstance(c, RetrievedContextData) else c
+                    for c in self.retrieval_context
+                ]
+            )
 
         images_mapping = {}
         for img_id in image_ids:
@@ -161,7 +170,15 @@ class ConversationalGolden(BaseModel):
                     return self
                 if turn.retrieval_context is not None:
                     self.multimodal = self.multimodal or any(
-                        re.search(pattern, c.context if isinstance(c, RetrievedContextData) else c) is not None
+                        re.search(
+                            pattern,
+                            (
+                                c.context
+                                if isinstance(c, RetrievedContextData)
+                                else c
+                            ),
+                        )
+                        is not None
                         for c in turn.retrieval_context
                         if isinstance(c, (RetrievedContextData, str))
                     )
@@ -192,7 +209,16 @@ class ConversationalGolden(BaseModel):
             for turn in self.turns:
                 extract_ids_from_string(turn.content)
                 if turn.retrieval_context:
-                    extract_ids_from_list([c.context if isinstance(c, RetrievedContextData) else c for c in turn.retrieval_context])
+                    extract_ids_from_list(
+                        [
+                            (
+                                c.context
+                                if isinstance(c, RetrievedContextData)
+                                else c
+                            )
+                            for c in turn.retrieval_context
+                        ]
+                    )
 
         images_mapping = {}
         for img_id in image_ids:
