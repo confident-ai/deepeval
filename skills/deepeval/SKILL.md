@@ -18,7 +18,7 @@ metadata:
   version: "1.0.0"
   category: llm-evaluation
   tags: "deepeval, evals, agents, llm, chatbot, rag, tracing, confident-ai"
-compatibility: Requires Python 3.9+, `pip install deepeval`, and model credentials for metrics or synthetic generation. Confident AI reporting requires `deepeval login`.
+  compatibility: "Requires Python 3.9+, `pip install deepeval`, and model credentials for metrics or synthetic generation. Confident AI reporting requires `deepeval login`."
 ---
 
 # DeepEval
@@ -26,6 +26,12 @@ compatibility: Requires Python 3.9+, `pip install deepeval`, and model credentia
 Use this skill to add an end-to-end eval loop to AI applications:
 instrument the app, curate or reuse a dataset, create a committed pytest eval
 suite, run evals, and iterate on failures.
+
+## Prerequisites
+
+Requires Python 3.9+ and `pip install deepeval` in the target project. Metrics
+and synthetic generation need model credentials. Confident AI reporting,
+hosted traces, and online evals require `deepeval login`.
 
 ## Workflow Summary
 
