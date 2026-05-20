@@ -80,6 +80,35 @@ CONVERSATIONAL_G_EVAL_API_PARAMS = {
 }
 
 
+def construct_geval_pull_evaluation_params(
+    required_parameters: List[str], multi_turn: bool
+) -> List[Union[SingleTurnParams, MultiTurnParams]]:
+    if not required_parameters:
+        raise ValueError(
+            "This metric has no evaluation parameters and cannot be pulled."
+        )
+
+    if multi_turn:
+        reverse_params = {
+            value: key
+            for key, value in CONVERSATIONAL_G_EVAL_API_PARAMS.items()
+        }
+    else:
+        reverse_params = {
+            value: key for key, value in G_EVAL_API_PARAMS.items()
+        }
+
+    unsupported_params = [
+        param for param in required_parameters if param not in reverse_params
+    ]
+    if unsupported_params:
+        raise ValueError(
+            f"Unsupported evaluation params for {'GEval' if multi_turn else 'Conversational GEval'} pull: {', '.join(unsupported_params)}"
+        )
+
+    return [reverse_params[param] for param in required_parameters]
+
+
 def construct_geval_upload_payload(
     name: str,
     evaluation_params: List[SingleTurnParams],
@@ -124,6 +153,20 @@ def construct_geval_upload_payload(
         ]
 
     return payload
+
+
+def ensure_required_params(
+    evaluation_params: Optional[List],
+    criteria: Optional[str],
+    evaluation_steps: Optional[List[str]],
+    *,
+    operation: str = "evaluate",
+) -> None:
+    if not evaluation_params:
+        raise ValueError(
+            f"GEval requires evaluation_params. Provide them at initialization or call pull() before {operation}."
+        )
+    validate_criteria_and_evaluation_steps(criteria, evaluation_steps)
 
 
 def validate_criteria_and_evaluation_steps(
