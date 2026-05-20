@@ -33,6 +33,8 @@ from deepeval.metrics.g_eval.utils import (
     number_evaluation_steps,
     get_score_range,
     construct_geval_upload_payload,
+    construct_geval_pull_evaluation_params,
+    ensure_required_params,
     G_EVAL_API_PARAMS,
 )
 from deepeval.config.settings import get_settings
@@ -43,7 +45,7 @@ class GEval(BaseMetric):
     def __init__(
         self,
         name: str,
-        evaluation_params: List[SingleTurnParams],
+        evaluation_params: Optional[List[SingleTurnParams]] = None,
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
         rubric: Optional[List[Rubric]] = None,
@@ -56,7 +58,12 @@ class GEval(BaseMetric):
         evaluation_template: Type[GEvalTemplate] = GEvalTemplate,
         _include_g_eval_suffix: bool = True,
     ):
-        validate_criteria_and_evaluation_steps(criteria, evaluation_steps)
+        if evaluation_params is not None and len(evaluation_params) == 0:
+            raise ValueError("evaluation_params cannot be an empty list.")
+
+        if criteria is not None or evaluation_steps is not None:
+            validate_criteria_and_evaluation_steps(criteria, evaluation_steps)
+
         self.name = name
         self.evaluation_params = evaluation_params
         self.criteria = criteria
@@ -87,6 +94,9 @@ class GEval(BaseMetric):
         _additional_context: Optional[str] = None,
     ) -> float:
 
+        ensure_required_params(
+            self.evaluation_params, self.criteria, self.evaluation_steps
+        )
         multimodal = test_case.multimodal
 
         check_llm_test_case_params(
@@ -163,6 +173,9 @@ class GEval(BaseMetric):
         _additional_context: Optional[str] = None,
     ) -> float:
 
+        ensure_required_params(
+            self.evaluation_params, self.criteria, self.evaluation_steps
+        )
         multimodal = test_case.multimodal
 
         check_llm_test_case_params(
@@ -403,6 +416,12 @@ class GEval(BaseMetric):
         return self.success
 
     def upload(self):
+        ensure_required_params(
+            self.evaluation_params,
+            self.criteria,
+            self.evaluation_steps,
+            operation="upload",
+        )
         api = Api()
 
         payload = construct_geval_upload_payload(
@@ -429,6 +448,51 @@ class GEval(BaseMetric):
             console.print(
                 "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric uploaded successfully "
                 f"(id: [bold]{metric_id}[/bold])"
+            )
+
+        return data
+
+    def pull(self):
+        api = Api()
+        data, _ = api.send_request(
+            method=HttpMethods.GET,
+            endpoint=Endpoints.METRIC_ENDPOINT,
+            url_params={"name": self.name},
+        )
+
+        self.criteria = data.get("criteria")
+        self.evaluation_steps = data.get("evaluationSteps")
+        
+        required_parameters = data.get("requiredParameters") or []
+        self.evaluation_params = construct_geval_pull_evaluation_params(
+            required_parameters, multi_turn=False
+        )
+
+        rubric = data.get("rubric")
+        self.rubric = validate_and_sort_rubrics(
+            [
+                Rubric(
+                    score_range=tuple(r["scoreRange"]),
+                    expected_outcome=r["expectedOutcome"],
+                )
+                for r in rubric
+            ]
+            if rubric
+            else None
+        )
+        self.score_range = get_score_range(self.rubric)
+        self.score_range_span = self.score_range[1] - self.score_range[0]
+
+        ensure_required_params(
+            self.evaluation_params, self.criteria, self.evaluation_steps
+        )
+
+        metric_id = data.get("id")
+        self.metric_id = metric_id
+        console = Console()
+        if metric_id:
+            console.print(
+                f"[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric '{self.name}' [GEval] pulled successfully"
             )
 
         return data
