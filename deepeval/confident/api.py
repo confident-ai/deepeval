@@ -145,6 +145,7 @@ class Endpoints(Enum):
     EVALUATE_SPAN_ENDPOINT = "/v1/evaluate/spans/:spanUuid"
 
     METRICS_ENDPOINT = "/v1/metrics"
+    METRIC_ENDPOINT = "/v1/metric/:name"
 
 
 def _sanitize_body(obj):
