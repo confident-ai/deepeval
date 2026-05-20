@@ -15,6 +15,8 @@ from deepeval.metrics.g_eval.utils import (
     validate_criteria_and_evaluation_steps,
     CONVERSATIONAL_G_EVAL_API_PARAMS,
     construct_geval_upload_payload,
+    construct_geval_pull_evaluation_params,
+    ensure_required_params,
 )
 from deepeval.test_case import (
     MultiTurnParams,
@@ -70,17 +72,16 @@ class ConversationalGEval(BaseConversationalMetric):
             raise ValueError("evaluation_params cannot be an empty list.")
 
         self.name = name
-        if evaluation_params is None:
-            evaluation_params = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE]
-
-        if MultiTurnParams.CONTENT not in evaluation_params:
-            evaluation_params.append(MultiTurnParams.CONTENT)
-        if MultiTurnParams.ROLE not in evaluation_params:
-            evaluation_params.append(MultiTurnParams.ROLE)
+        if evaluation_params is not None:
+            if MultiTurnParams.CONTENT not in evaluation_params:
+                evaluation_params.append(MultiTurnParams.CONTENT)
+            if MultiTurnParams.ROLE not in evaluation_params:
+                evaluation_params.append(MultiTurnParams.ROLE)
 
         self.evaluation_params = evaluation_params
 
-        validate_criteria_and_evaluation_steps(criteria, evaluation_steps)
+        if criteria is not None or evaluation_steps is not None:
+            validate_criteria_and_evaluation_steps(criteria, evaluation_steps)
         self.criteria = criteria
         self.rubric = validate_and_sort_rubrics(rubric)
         self.model, self.using_native_model = initialize_model(model)
@@ -105,6 +106,9 @@ class ConversationalGEval(BaseConversationalMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
+        ensure_required_params(
+            self.evaluation_params, self.criteria, self.evaluation_steps
+        )
         multimodal = test_case.multimodal
         check_conversational_test_case_params(
             test_case,
@@ -161,6 +165,9 @@ class ConversationalGEval(BaseConversationalMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
+        ensure_required_params(
+            self.evaluation_params, self.criteria, self.evaluation_steps
+        )
         multimodal = test_case.multimodal
         check_conversational_test_case_params(
             test_case,
@@ -437,6 +444,12 @@ class ConversationalGEval(BaseConversationalMetric):
         return self.success
 
     def upload(self):
+        ensure_required_params(
+            self.evaluation_params,
+            self.criteria,
+            self.evaluation_steps,
+            operation="upload",
+        )
         api = Api()
 
         payload = construct_geval_upload_payload(
@@ -463,6 +476,49 @@ class ConversationalGEval(BaseConversationalMetric):
             console.print(
                 "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric uploaded successfully "
                 f"(id: [bold]{metric_id}[/bold])"
+            )
+
+        return data
+
+    def pull(self):
+        api = Api()
+        data, _ = api.send_request(
+            method=HttpMethods.GET,
+            endpoint=Endpoints.METRIC_ENDPOINT,
+            url_params={"name": self.name},
+        )
+
+        self.criteria = data.get("criteria")
+        self.evaluation_steps = data.get("evaluationSteps")
+
+        required_parameters = data.get("requiredParameters") or []
+        self.evaluation_params = construct_geval_pull_evaluation_params(
+            required_parameters, multi_turn=True
+        )
+        
+        rubric = data.get("rubric")
+        self.rubric = validate_and_sort_rubrics(
+            [
+                Rubric(
+                    score_range=tuple(r["scoreRange"]),
+                    expected_outcome=r["expectedOutcome"],
+                )
+                for r in rubric
+            ]
+            if rubric
+            else None
+        )
+
+        ensure_required_params(
+            self.evaluation_params, self.criteria, self.evaluation_steps
+        )
+
+        metric_id = data.get("id")
+        self.metric_id = metric_id
+        console = Console()
+        if metric_id:
+            console.print(
+                f"[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric '{self.name}' [Conversational GEval] pulled successfully"
             )
 
         return data
