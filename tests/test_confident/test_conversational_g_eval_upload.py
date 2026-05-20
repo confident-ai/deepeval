@@ -81,7 +81,7 @@ class TestConversationalGEval:
         pulled_metric = ConversationalGEval(name=metric_name)
         pulled_response = pulled_metric.pull()
 
-        assert pulled_response["id"] == metric_id
+        assert pulled_response.id == metric_id
         assert pulled_metric.metric_id == metric_id
         assert pulled_metric.criteria == metric.criteria
         assert pulled_metric.evaluation_steps == metric.evaluation_steps

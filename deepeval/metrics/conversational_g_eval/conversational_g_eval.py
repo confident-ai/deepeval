@@ -513,7 +513,7 @@ class ConversationalGEval(BaseConversationalMetric):
             self.evaluation_params, self.criteria, self.evaluation_steps
         )
 
-        metric_id = data.get("id")
+        metric_id = data.id
         self.metric_id = metric_id
         console = Console()
         if metric_id:
