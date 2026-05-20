@@ -103,7 +103,7 @@ def construct_geval_pull_evaluation_params(
     ]
     if unsupported_params:
         raise ValueError(
-            f"Unsupported evaluation params for {'GEval' if multi_turn else 'Conversational GEval'} pull: {', '.join(unsupported_params)}"
+            f"Unsupported evaluation params encountered while pulling metric: {', '.join(unsupported_params)}."
         )
 
     return [reverse_params[param] for param in required_parameters]
