@@ -6,6 +6,7 @@ from rich.console import Console
 import math
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.g_eval.utils import (
+    MetricPullResponse,
     Rubric,
     construct_conversational_g_eval_turn_params_string,
     construct_non_turns_test_case_string,
@@ -488,25 +489,24 @@ class ConversationalGEval(BaseConversationalMetric):
             url_params={"name": self.name},
         )
 
-        self.criteria = data.get("criteria")
-        self.evaluation_steps = data.get("evaluationSteps")
+        data = MetricPullResponse.model_validate(data)
 
-        required_parameters = data.get("requiredParameters") or []
+        self.criteria = data.criteria
+        self.evaluation_steps = data.evaluationSteps
+        
         self.evaluation_params = construct_geval_pull_evaluation_params(
-            required_parameters, multi_turn=True
+            data.requiredParameters, multi_turn=True
         )
         
-        rubric = data.get("rubric")
         self.rubric = validate_and_sort_rubrics(
             [
                 Rubric(
-                    score_range=tuple(r["scoreRange"]),
-                    expected_outcome=r["expectedOutcome"],
+                    score_range=r.scoreRange, 
+                    expected_outcome=r.expectedOutcome,
                 )
-                for r in rubric
+                for r in data.rubric
             ]
-            if rubric
-            else None
+            if data.rubric else None
         )
 
         ensure_required_params(

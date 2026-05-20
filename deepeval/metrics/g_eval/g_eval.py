@@ -22,6 +22,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.g_eval import schema as gschema
 from deepeval.metrics.g_eval.utils import (
+    MetricPullResponse,
     Rubric,
     construct_g_eval_params_string,
     construct_test_case_string,
@@ -460,26 +461,26 @@ class GEval(BaseMetric):
             url_params={"name": self.name},
         )
 
-        self.criteria = data.get("criteria")
-        self.evaluation_steps = data.get("evaluationSteps")
+        data = MetricPullResponse.model_validate(data)
+
+        self.criteria = data.criteria
+        self.evaluation_steps = data.evaluationSteps
         
-        required_parameters = data.get("requiredParameters") or []
         self.evaluation_params = construct_geval_pull_evaluation_params(
-            required_parameters, multi_turn=False
+            data.requiredParameters, multi_turn=False
         )
 
-        rubric = data.get("rubric")
         self.rubric = validate_and_sort_rubrics(
             [
                 Rubric(
-                    score_range=tuple(r["scoreRange"]),
-                    expected_outcome=r["expectedOutcome"],
+                    score_range=r.scoreRange,
+                    expected_outcome=r.expectedOutcome,
                 )
-                for r in rubric
+                for r in data.rubric
             ]
-            if rubric
-            else None
+            if data.rubric else None
         )
+        
         self.score_range = get_score_range(self.rubric)
         self.score_range_span = self.score_range[1] - self.score_range[0]
 

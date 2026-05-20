@@ -15,6 +15,20 @@ from deepeval.models.llms.constants import OPENAI_MODELS_DATA
 from deepeval.test_case.conversational_test_case import ConversationalTestCase
 
 
+from pydantic import BaseModel, Field
+from typing import Optional, List, Tuple
+
+class APIRubric(BaseModel):
+    scoreRange: Tuple[float, float]
+    expectedOutcome: str
+
+class MetricPullResponse(BaseModel):
+    id: Optional[str] = None
+    criteria: Optional[str] = None
+    evaluationSteps: Optional[List[str]] = None
+    requiredParameters: List[str] = Field(default_factory=list)
+    rubric: Optional[List[APIRubric]] = None
+
 class Rubric(BaseModel):
     score_range: Tuple[int, int]
     expected_outcome: str
