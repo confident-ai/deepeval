@@ -11,14 +11,16 @@ description: >
   pytest eval suites, CLI generation, tracing, Confident AI reporting, and
   agent-driven improvement loops. DO NOT TRIGGER for unrelated generic pytest,
   non-AI test setup, or non-DeepEval observability work unless the user asks to
-  compare or migrate to DeepEval.
+  compare or migrate to DeepEval. DO NOT TRIGGER for raw OpenTelemetry or OTLP
+  trace export to Confident AI without the deepeval package — use the
+  `deepeval-otel` skill for that.
 license: Apache-2.0
 metadata:
   author: Confident AI
   version: "1.0.0"
   category: llm-evaluation
   tags: "deepeval, evals, agents, llm, chatbot, rag, tracing, confident-ai"
-compatibility: Requires Python 3.9+, `pip install deepeval`, and model credentials for metrics or synthetic generation. Confident AI reporting requires `deepeval login`.
+  compatibility: "Requires Python 3.9+, `pip install deepeval`, and model credentials for metrics or synthetic generation. Confident AI reporting requires `deepeval login`."
 ---
 
 # DeepEval
@@ -26,6 +28,12 @@ compatibility: Requires Python 3.9+, `pip install deepeval`, and model credentia
 Use this skill to add an end-to-end eval loop to AI applications:
 instrument the app, curate or reuse a dataset, create a committed pytest eval
 suite, run evals, and iterate on failures.
+
+## Prerequisites
+
+Requires Python 3.9+ and `pip install deepeval` in the target project. Metrics
+and synthetic generation need model credentials. Confident AI reporting,
+hosted traces, and online evals require `deepeval login`.
 
 ## Workflow Summary
 
@@ -47,7 +55,8 @@ suite, run evals, and iterate on failures.
 3. Prefer supported integrations over manual `@observe`. Read the individual
    integration docs before wiring LangGraph, LangChain, OpenAI Agents, Pydantic
    AI, CrewAI, Google ADK, Strands, AgentCore, model providers, vector
-   databases, or OpenTelemetry.
+   databases, or OpenTelemetry. For raw OpenTelemetry export to Confident AI
+   without the `deepeval` package, use the `deepeval-otel` skill instead.
 4. Use `deepeval generate` for dataset generation. Use `deepeval test run` for
    pytest eval execution. Do not default to the raw `pytest` command.
 5. Keep metrics in a separate `metrics.py` module for committed eval suites.
