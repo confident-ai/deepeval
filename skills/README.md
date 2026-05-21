@@ -10,6 +10,7 @@ applications using eval results.
 | --- | --- |
 | [deepeval](./deepeval) | Main DeepEval skill for adding evals to AI apps, generating or reusing datasets, creating pytest eval suites, enabling tracing, sending results to Confident AI, and iterating on failures. |
 | [deepeval-otel](./deepeval-otel) | Instrument any app with raw OpenTelemetry so traces export to Confident AI's Observatory — no deepeval package required. Covers the confident.* span/trace attributes and the OTLP endpoint. |
+| [deepeval-tracing](./deepeval-tracing) | Instrument an AI app with DeepEval's native tracing — @observe, span types, tags/metadata, and the framework / model / vector-DB integration index — so traces reach Confident AI. |
 
 ## Installation
 

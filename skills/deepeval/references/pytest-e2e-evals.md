@@ -47,10 +47,10 @@ Do not default to the raw `pytest` command.
 
 ## Integration-First Rule
 
-Before using manual `@observe`, read `references/integrations.md` and the exact
-integration doc for the app framework. For LangGraph, LangChain, OpenAI Agents,
-Pydantic AI, CrewAI, Google ADK, Strands, AgentCore, and OpenTelemetry-backed
-apps, the native integration should be the first implementation path.
+Instrument the app for tracing using the `deepeval-tracing` skill — it covers
+the integration selection rule and manual `@observe`. A native framework
+integration should be the first implementation path; manual `@observe` is the
+fallback. This eval suite runs against the app once it is traced.
 
 For integration-backed pytest evals, the shape is still:
 
@@ -64,6 +64,8 @@ def test_agent(golden: Golden):
 Do not translate these traced runs into `LLMTestCase`.
 
 ## Span Metrics In The Same Eval
+
+See `references/traced-evals.md` for the full span-metric reference.
 
 Component-level metrics are part of the single-turn tracing eval. Do not create
 a separate component test file. Attach span metrics at the component boundary
