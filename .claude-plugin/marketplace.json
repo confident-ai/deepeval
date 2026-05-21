@@ -2,7 +2,7 @@
   "name": "confident-ai-plugins",
   "owner": {
     "name": "Confident AI",
-    "email": "founders@confident-ai.com"
+    "email": "open-source@confident-ai.com"
   },
   "description": "DeepEval plugins for LLM evaluation, tracing, and testing in Claude Code.",
   "plugins": [
