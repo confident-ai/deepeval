@@ -11,7 +11,9 @@ description: >
   pytest eval suites, CLI generation, tracing, Confident AI reporting, and
   agent-driven improvement loops. DO NOT TRIGGER for unrelated generic pytest,
   non-AI test setup, or non-DeepEval observability work unless the user asks to
-  compare or migrate to DeepEval.
+  compare or migrate to DeepEval. DO NOT TRIGGER for raw OpenTelemetry or OTLP
+  trace export to Confident AI without the deepeval package — use the
+  `deepeval-otel` skill for that.
 license: Apache-2.0
 metadata:
   author: Confident AI
@@ -53,7 +55,8 @@ hosted traces, and online evals require `deepeval login`.
 3. Prefer supported integrations over manual `@observe`. Read the individual
    integration docs before wiring LangGraph, LangChain, OpenAI Agents, Pydantic
    AI, CrewAI, Google ADK, Strands, AgentCore, model providers, vector
-   databases, or OpenTelemetry.
+   databases, or OpenTelemetry. For raw OpenTelemetry export to Confident AI
+   without the `deepeval` package, use the `deepeval-otel` skill instead.
 4. Use `deepeval generate` for dataset generation. Use `deepeval test run` for
    pytest eval execution. Do not default to the raw `pytest` command.
 5. Keep metrics in a separate `metrics.py` module for committed eval suites.
