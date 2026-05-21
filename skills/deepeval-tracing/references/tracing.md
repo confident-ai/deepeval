@@ -1,12 +1,11 @@
 # Tracing
 
-Tracing is the default single-turn eval path when the app can produce traces
-through a DeepEval integration or manual instrumentation.
+This reference covers how to instrument an AI application with DeepEval
+tracing — adding spans, capturing inputs and outputs, and attaching tags and
+metadata so the app's behavior is visible in Confident AI.
 
-In tracing, the trace is the end-to-end execution and spans are the components.
-Component-level metrics are still part of the same single-turn tracing eval;
-they are attached to specific spans inside the trace, not split into a separate
-test shape. Multi-turn evals evaluate whole conversations.
+In tracing, the trace is the end-to-end execution and spans are the components
+(LLM calls, retrieval, tools, agent loops).
 
 Prefer supported integrations before manual `@observe`. Read
 `references/integrations.md` and the individual integration doc for the detected
@@ -188,51 +187,6 @@ Ask before adding these if they are not obvious from the code. These fields do
 not directly score evals, but they help diagnose production patterns and tailor
 future metrics.
 
-## Component Metrics
-
-When metrics belong to a specific component, keep them in the single-turn
-tracing eval and attach them to the exact span they evaluate.
-
-If a supported integration creates the span, stage metrics for the next span of
-that type:
-
-```python
-from deepeval.tracing import next_retriever_span
-
-from metrics import RETRIEVER_SPAN_METRICS
-
-
-with next_retriever_span(metrics=RETRIEVER_SPAN_METRICS):
-    run_ai_app_with_integration_tracing(golden.input)
-```
-
-If manual instrumentation or the integration supports observed component spans,
-attach metrics directly to `@observe`:
-
-```python
-from deepeval.tracing import observe
-
-from metrics import GENERATOR_LLM_SPAN_METRICS
-
-
-@observe(type="llm", metrics=GENERATOR_LLM_SPAN_METRICS)
-def call_model(messages):
-    ...
-```
-
-Name span metric lists after the component, such as
-`RETRIEVER_SPAN_METRICS`, `GENERATOR_LLM_SPAN_METRICS`, or
-`ORDER_LOOKUP_TOOL_SPAN_METRICS`. Do not create one global component metric
-list for the app.
-
-For script-based traced evals, use goldens through the eval iterator instead of
-building `LLMTestCase`s by hand:
-
-```python
-for golden in dataset.evals_iterator(metrics=SINGLE_TURN_TRACE_METRICS):
-    run_traced_ai_app(golden.input)
-```
-
 ## Data Hygiene
 
 Do not trace secrets, API keys, credentials, or raw sensitive user data unless
@@ -243,7 +197,13 @@ span or trace with only useful input/output fields.
 
 ## Confident AI
 
-If the user chooses Confident AI results, confirm either `deepeval login` has
-been run or `CONFIDENT_API_KEY` is exported. Prefer `CONFIDENT_API_KEY` for CI
-and other non-interactive runs. After evals, use `deepeval view` to open the
-latest hosted report when appropriate.
+To send traces to Confident AI, confirm either `deepeval login` has been run or
+`CONFIDENT_API_KEY` is exported. Prefer `CONFIDENT_API_KEY` for CI and other
+non-interactive runs. Once traces are flowing, they appear in the Confident AI
+Observatory, where failures can be inspected span by span.
+
+## Attaching Metrics to Spans
+
+Attaching evaluation metrics to specific spans (component / span metrics) is an
+eval activity, not instrumentation. It is covered by the `deepeval` skill. This
+skill stops at producing well-formed traces.

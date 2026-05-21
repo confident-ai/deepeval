@@ -8,24 +8,22 @@ not have a native integration.
 
 1. Identify the framework, model provider, agent SDK, vector database, and any
    OpenTelemetry setup already in the app.
-2. If a relevant integration doc exists, read that exact doc before writing eval
-   code.
-3. Use the integration's native tracing surface first. For component metrics,
-   prefer `next_agent_span`, `next_llm_span`, `next_tool_span`, or
-   `next_retriever_span` when the integration creates that span. Use
-   `@observe(metrics=[...])` when the integration supports observed component
-   tags or when manually instrumenting app-owned components.
-4. Keep dataset iteration and pytest shape aligned with that integration's
-   examples.
+2. If a relevant integration doc exists, read that exact doc before writing
+   tracing code.
+3. Use the integration's native tracing surface first. Use manual `@observe`
+   only around an outer app function or an unsupported component.
+4. Follow the integration doc's tracing setup exactly.
 
 For example, LangGraph apps should use the LangGraph/LangChain callback
 integration (`CallbackHandler`) before adding manual `@observe`. Manual
 `@observe` is useful around an outer app function or unsupported component, not
 as the first choice for the graph itself.
 
-Component-level metrics are not a single global metric list. Name metric arrays
-after the component/span they evaluate, such as `RETRIEVER_SPAN_METRICS`,
-`GENERATOR_LLM_SPAN_METRICS`, or `ORDER_LOOKUP_TOOL_SPAN_METRICS`.
+When a later eval attaches metrics to component spans, those metric lists are
+named after the component/span they evaluate (such as `RETRIEVER_SPAN_METRICS`
+or `GENERATOR_LLM_SPAN_METRICS`), never as one global list. Attaching metrics
+to spans is an eval activity — see the `deepeval` skill. This skill stops at
+producing well-formed traces.
 
 ## Framework Docs
 
@@ -69,28 +67,9 @@ after the component/span they evaluate, such as `RETRIEVER_SPAN_METRICS`,
 - Weaviate: `docs/content/integrations/vector-databases/weaviate.mdx`
 - Cognee: `docs/content/integrations/vector-databases/cognee.mdx`
 
-## Other Docs
+## OpenTelemetry
 
-- OpenTelemetry: `docs/content/integrations/others/opentelemetry.mdx`
-
-## Pytest vs Script Shapes
-
-For CI/CD, prefer the pytest shape shown in each integration doc:
-
-```python
-@pytest.mark.parametrize("golden", dataset.goldens)
-def test_agent(golden: Golden):
-    run_ai_app_with_integration_tracing(golden.input)
-    assert_test(golden=golden, metrics=TRACE_METRICS)
-```
-
-For scripts or iteration loops, use `evals_iterator` and pass the `Golden`
-through the traced app:
-
-```python
-for golden in dataset.evals_iterator(metrics=TRACE_METRICS):
-    run_ai_app_with_integration_tracing(golden.input)
-```
-
-Do not convert a traced single-turn eval into a hand-built `LLMTestCase` unless
-the user explicitly chooses no tracing.
+For raw OpenTelemetry / OTLP export — instrumenting with the vendor-neutral
+OpenTelemetry SDK instead of the DeepEval SDK, including non-Python apps — use
+the `deepeval-otel` skill. This skill (`deepeval-tracing`) covers DeepEval's
+native `@observe` tracing and the integrations listed above.

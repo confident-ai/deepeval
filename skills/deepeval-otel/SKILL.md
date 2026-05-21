@@ -10,11 +10,13 @@ description: >
   Collector, or vendor-neutral OTel SDK to Confident AI; or pick the US vs EU
   Confident AI OTLP endpoint. Language-agnostic — the mechanism is OTLP
   attribute keys plus an exporter endpoint. DO NOT TRIGGER for building
-  DeepEval pytest eval suites, datasets, goldens, metrics, deepeval test run,
-  or the deepeval SDK @observe decorator (use the `deepeval` skill for those),
-  or for instrumenting non-AI software such as web servers, CRUD backends, or
-  infrastructure — the confident.* attributes describe AI components (agents,
-  LLM calls, retrievers, tools) and apply to AI applications only.
+  DeepEval pytest eval suites, datasets, goldens, metrics, or deepeval test run
+  (use the `deepeval` skill); for instrumenting with the DeepEval SDK's
+  @observe decorator or framework integrations (use the `deepeval-tracing`
+  skill); or for instrumenting non-AI software such as web servers, CRUD
+  backends, or infrastructure — the confident.* attributes describe AI
+  components (agents, LLM calls, retrievers, tools) and apply to AI
+  applications only.
 license: Apache-2.0
 metadata:
   author: Confident AI

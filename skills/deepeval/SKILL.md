@@ -4,16 +4,17 @@ description: >
   DeepEval evaluation workflow for AI agents and LLM applications. TRIGGER when
   the user wants to evaluate or improve an AI agent, tool-using workflow,
   multi-turn chatbot, RAG pipeline, or LLM app; add evals; generate datasets or
-  goldens; use deepeval generate; use deepeval test run; add tracing or
-  @observe; send results to Confident AI; monitor production; run online evals;
-  inspect traces; or iterate on prompts, tools, retrieval, or agent behavior
-  from eval failures. AI agents are the primary use case. Covers Python SDK,
-  pytest eval suites, CLI generation, tracing, Confident AI reporting, and
-  agent-driven improvement loops. DO NOT TRIGGER for unrelated generic pytest,
-  non-AI test setup, or non-DeepEval observability work unless the user asks to
-  compare or migrate to DeepEval. DO NOT TRIGGER for raw OpenTelemetry or OTLP
-  trace export to Confident AI without the deepeval package — use the
-  `deepeval-otel` skill for that.
+  goldens; use deepeval generate; use deepeval test run; send results to
+  Confident AI; monitor production; run online evals; inspect traces; or
+  iterate on prompts, tools, retrieval, or agent behavior from eval failures.
+  AI agents are the primary use case. Covers Python SDK, pytest eval suites,
+  CLI generation, traced evals, Confident AI reporting, and agent-driven
+  improvement loops. DO NOT TRIGGER for unrelated generic pytest, non-AI test
+  setup, or non-DeepEval observability work unless the user asks to compare or
+  migrate to DeepEval; for instrumenting an app with DeepEval tracing,
+  @observe, or framework integrations (use the `deepeval-tracing` skill); or
+  for raw OpenTelemetry / OTLP export without the deepeval package (use the
+  `deepeval-otel` skill).
 license: Apache-2.0
 metadata:
   author: Confident AI
@@ -42,7 +43,8 @@ hosted traces, and online evals require `deepeval login`.
 3. Reuse existing metrics and datasets when available.
 4. Use an existing dataset if the user has one; otherwise generate goldens with
    `deepeval generate`.
-5. Prefer native DeepEval integrations, then add minimal tracing add-ons.
+5. Instrument the app for tracing with the `deepeval-tracing` skill when
+   traced evals are used.
 6. Run `deepeval test run`.
 7. Iterate for the requested number of rounds, defaulting to 5.
 
@@ -52,11 +54,10 @@ hosted traces, and online evals require `deepeval login`.
    without an agent. Do not hide goldens or tests in throwaway scripts.
 2. Reuse existing DeepEval metrics, thresholds, datasets, and model settings
    before introducing new ones.
-3. Prefer supported integrations over manual `@observe`. Read the individual
-   integration docs before wiring LangGraph, LangChain, OpenAI Agents, Pydantic
-   AI, CrewAI, Google ADK, Strands, AgentCore, model providers, vector
-   databases, or OpenTelemetry. For raw OpenTelemetry export to Confident AI
-   without the `deepeval` package, use the `deepeval-otel` skill instead.
+3. Prefer traced single-turn evals when the app can be instrumented.
+   Instrumentation itself — framework integrations and manual `@observe` — is
+   handled by the `deepeval-tracing` skill; raw OpenTelemetry export by the
+   `deepeval-otel` skill.
 4. Use `deepeval generate` for dataset generation. Use `deepeval test run` for
    pytest eval execution. Do not default to the raw `pytest` command.
 5. Keep metrics in a separate `metrics.py` module for committed eval suites.
@@ -81,7 +82,6 @@ hosted traces, and online evals require `deepeval login`.
      tracing, Confident AI results, and iteration rounds.
 3. Choose test shape, metrics, and artifacts.
    - Read `references/pytest-e2e-evals.md`.
-   - Read `references/integrations.md`.
    - Read `references/metrics.md`.
    - Read `references/artifact-contracts.md` for expected file locations.
    - Use `templates/test_multi_turn_e2e.py` for chatbot / multi-turn agent.
@@ -107,10 +107,11 @@ hosted traces, and online evals require `deepeval login`.
    - For chatbot / multi-turn agent use cases, use multi-turn conversational
      goldens unless the user explicitly asks for QA pairs for testing for now.
    - For local or Confident AI datasets, follow `references/datasets.md`.
-5. Add integrations and tracing.
-   - Read `references/integrations.md` and the exact docs file for the detected
-     framework/provider before writing instrumentation.
-   - Read `references/tracing.md` before adding tracing.
+5. Instrument the app and choose the traced eval shape.
+   - Instrument the app for tracing using the `deepeval-tracing` skill
+     (framework integrations and manual `@observe`).
+   - Read `references/traced-evals.md` for the traced eval shapes and span
+     metrics.
    - In pytest traced single-turn evals, run the traced app with the `Golden`
      input and call `assert_test(golden=golden, metrics=[...])`.
    - In script-based traced single-turn evals, use
@@ -161,9 +162,8 @@ deepeval view
 | Dataset loading | `references/datasets.md` |
 | Synthetic data generation | `references/synthetic-data.md` |
 | Metrics | `references/metrics.md` |
-| Integrations | `references/integrations.md` |
 | Pytest E2E evals | `references/pytest-e2e-evals.md` |
-| Tracing | `references/tracing.md` |
+| Traced evals and span metrics | `references/traced-evals.md` |
 | Confident AI | `references/confident-ai.md` |
 | Dataset and eval artifact contracts | `references/artifact-contracts.md` |
 | Iteration loop | `references/iteration-loop.md` |
