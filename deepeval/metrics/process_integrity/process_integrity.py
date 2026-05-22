@@ -5,7 +5,10 @@ from typing import List, Optional, Union, Dict
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.process_integrity.schema import StepVerdict, ProcessIntegrityResult
+from deepeval.metrics.process_integrity.schema import (
+    StepVerdict,
+    ProcessIntegrityResult,
+)
 from deepeval.metrics.process_integrity.template import ProcessIntegrityTemplate
 
 
@@ -50,7 +53,9 @@ class ProcessIntegrityMetric(BaseMetric):
         self.success = self.score >= self.threshold
         return self.score
 
-    async def a_measure(self, test_case: LLMTestCase, _show_indicator: bool = True) -> float:
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ) -> float:
         steps = self._get_steps(test_case)
         conclusions = await self._a_extract_conclusions(steps)
         verdicts = await self._a_check_integrity(steps, conclusions)
@@ -75,11 +80,13 @@ class ProcessIntegrityMetric(BaseMetric):
             prompt = ProcessIntegrityTemplate.extract_conclusion(step)
             raw = self._call_model(prompt)
             parsed = self._parse_json(raw)
-            results.append({
-                "step_index": i,
-                "conclusion": parsed.get("conclusion", ""),
-                "is_substantive": parsed.get("is_substantive", True),
-            })
+            results.append(
+                {
+                    "step_index": i,
+                    "conclusion": parsed.get("conclusion", ""),
+                    "is_substantive": parsed.get("is_substantive", True),
+                }
+            )
         return results
 
     async def _a_extract_conclusions(self, steps: List[str]) -> List[dict]:
@@ -91,11 +98,13 @@ class ProcessIntegrityMetric(BaseMetric):
         results = []
         for i, raw in enumerate(raw_results):
             parsed = self._parse_json(raw)
-            results.append({
-                "step_index": i,
-                "conclusion": parsed.get("conclusion", ""),
-                "is_substantive": parsed.get("is_substantive", True),
-            })
+            results.append(
+                {
+                    "step_index": i,
+                    "conclusion": parsed.get("conclusion", ""),
+                    "is_substantive": parsed.get("is_substantive", True),
+                }
+            )
         return results
 
     # ── Pass 2: check integrity ──────────────────────────────────────────────
@@ -108,25 +117,31 @@ class ProcessIntegrityMetric(BaseMetric):
 
         for i, (step, conclusion_data) in enumerate(zip(steps, conclusions)):
             if not conclusion_data["is_substantive"]:
-                verdicts.append(StepVerdict(
-                    step_index=i,
-                    verdict="SKIP",
-                    reason="Non-substantive step (tool call or mechanical action).",
-                    conclusion="",
-                ))
+                verdicts.append(
+                    StepVerdict(
+                        step_index=i,
+                        verdict="SKIP",
+                        reason="Non-substantive step (tool call or mechanical action).",
+                        conclusion="",
+                    )
+                )
                 continue
 
             if i == 0 or not prior_substantive:
-                verdicts.append(StepVerdict(
-                    step_index=i,
-                    verdict="PASS",
-                    reason="First substantive step — no prior conclusions to check against.",
-                    conclusion=conclusion_data["conclusion"],
-                ))
-                prior_substantive.append({
-                    "step_index": i,
-                    "conclusion": conclusion_data["conclusion"],
-                })
+                verdicts.append(
+                    StepVerdict(
+                        step_index=i,
+                        verdict="PASS",
+                        reason="First substantive step — no prior conclusions to check against.",
+                        conclusion=conclusion_data["conclusion"],
+                    )
+                )
+                prior_substantive.append(
+                    {
+                        "step_index": i,
+                        "conclusion": conclusion_data["conclusion"],
+                    }
+                )
                 continue
 
             prompt = ProcessIntegrityTemplate.check_integrity(
@@ -137,16 +152,20 @@ class ProcessIntegrityMetric(BaseMetric):
             raw = self._call_model(prompt)
             parsed = self._parse_json(raw)
             verdict_str = parsed.get("verdict", "PASS")
-            verdicts.append(StepVerdict(
-                step_index=i,
-                verdict=verdict_str,
-                reason=parsed.get("reason", ""),
-                conclusion=conclusion_data["conclusion"],
-            ))
-            prior_substantive.append({
-                "step_index": i,
-                "conclusion": conclusion_data["conclusion"],
-            })
+            verdicts.append(
+                StepVerdict(
+                    step_index=i,
+                    verdict=verdict_str,
+                    reason=parsed.get("reason", ""),
+                    conclusion=conclusion_data["conclusion"],
+                )
+            )
+            prior_substantive.append(
+                {
+                    "step_index": i,
+                    "conclusion": conclusion_data["conclusion"],
+                }
+            )
 
         return verdicts
 
@@ -190,9 +209,13 @@ class ProcessIntegrityMetric(BaseMetric):
 
     def _call_model(self, prompt: str) -> str:
         if self.model is None:
-            raise ValueError("No model provided. Pass a model= argument to ProcessIntegrityMetric.")
+            raise ValueError(
+                "No model provided. Pass a model= argument to ProcessIntegrityMetric."
+            )
         if isinstance(self.model, str):
-            raise ValueError("String model names are not supported directly. Pass a DeepEvalBaseLLM instance.")
+            raise ValueError(
+                "String model names are not supported directly. Pass a DeepEvalBaseLLM instance."
+            )
         response, _ = self.model.generate(prompt)
         return response
 
@@ -200,14 +223,22 @@ class ProcessIntegrityMetric(BaseMetric):
         if self.model is None:
             raise ValueError("No model provided.")
         if isinstance(self.model, str):
-            raise ValueError("String model names are not supported directly. Pass a DeepEvalBaseLLM instance.")
+            raise ValueError(
+                "String model names are not supported directly. Pass a DeepEvalBaseLLM instance."
+            )
         response, _ = await self.model.a_generate(prompt)
         return response
 
     @staticmethod
     def _parse_json(raw: str) -> dict:
         try:
-            clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+            clean = (
+                raw.strip()
+                .removeprefix("```json")
+                .removeprefix("```")
+                .removesuffix("```")
+                .strip()
+            )
             return json.loads(clean)
         except json.JSONDecodeError:
             return {}

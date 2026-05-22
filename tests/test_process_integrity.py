@@ -24,6 +24,7 @@ def make_metric_with_mock_model(responses: list):
 
 # ── Test 1: clean trajectory — expect score > 0.5 ───────────────────────────
 
+
 def test_clean_trajectory():
     steps = [
         "Searched for flights. Conclusion: cheapest option is United at $320.",
@@ -57,6 +58,7 @@ def test_clean_trajectory():
 
 # ── Test 2: contradicting trajectory — expect score < 0.5 ───────────────────
 
+
 def test_contradicting_trajectory():
     steps = [
         "Analyzed data. Conclusion: Model A outperforms Model B.",
@@ -83,6 +85,7 @@ def test_contradicting_trajectory():
 
 
 # ── Test 3: all tool calls — expect all SKIP, score = 0.0 ───────────────────
+
 
 def test_all_tool_calls():
     steps = [
