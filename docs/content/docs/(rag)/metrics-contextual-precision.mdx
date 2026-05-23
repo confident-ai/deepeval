@@ -18,9 +18,10 @@ The `ContextualPrecisionMetric` focuses on evaluating the re-ranker of your RAG 
 To use the `ContextualPrecisionMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
 - `expected_output`
 - `retrieval_context`
+
+Note that `actual_output` is not consumed by this metric: as the [How Is It Calculated](#how-is-it-calculated) section shows, the score is computed from the `input`, `expected_output`, and the ordering of `retrieval_context` chunks alone. You may still pass `actual_output` on the `LLMTestCase` (for example, to share the same test case with other metrics), but it has no effect on the contextual precision score.
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
 

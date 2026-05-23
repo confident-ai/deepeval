@@ -21,8 +21,9 @@ deepeval recommend metrics
 To use the `ContextualRelevancyMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
 - `retrieval_context`
+
+Note that `actual_output` is not consumed by this metric: the score is computed from the `input` and the `retrieval_context` alone (see [How Is It Calculated](#how-is-it-calculated)). You may still pass `actual_output` on the `LLMTestCase` to share it with other metrics, but it has no effect on the contextual relevancy score.
 
 :::note
 Similar to `ContextualPrecisionMetric`, the `ContextualRelevancyMetric` uses `retrieval_context` from your RAG pipeline for evaluation.
