@@ -841,7 +841,7 @@ def prune_ignored(idx: ChangelogIndex, ignore_prs: set[int]) -> int:
     """
     Remove any PR entries whose number is in `ignore_prs`.
 
-    This is what makes deletions persist accross updates: add the PR number to the ignore block, re-run
+    This is what makes deletions persist across updates: add the PR number to the ignore block, re-run
     the generator, and the entry will be removed and it won't be re-added by future generator updates.
     """
     removed = 0
