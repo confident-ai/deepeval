@@ -29,20 +29,20 @@ from deepeval.test_case import LLMTestCase, MCPServer
 test_case = LLMTestCase(
     input="...", # Your input here
     actual_output="...", # Your LLM app's final output here
-    mcp_servers=[MCPServer(...)] # Your MCP server's data
+    mcp_servers=[MCPServer(...)], # Your MCP server's data
     # MCP primitives used (if any)
 )
 
 metric = MCPUseMetric()
 
 # To run metric as a standalone
-# metric.measure(convo_test_case)
+# metric.measure(test_case)
 # print(metric.score, metric.reason)
 
 evaluate([test_case], [metric])
 ```
 
-There are **SIX** optional parameters when creating a `MCPTaskCompletionMetric`:
+There are **SIX** optional parameters when creating a `MCPUseMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
@@ -58,7 +58,7 @@ You can also run the `MCPUseMetric` on a single test case as a standalone, one-o
 ```python
 ...
 
-metric.measure(convo_test_case)
+metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
 
