@@ -104,7 +104,7 @@ init_clock_bridge()
 # Span classification: ``gen_ai.*`` (OTel GenAI semconv), Traceloop attrs,
 # and span-name heuristics. Settings-independent; inspects raw OTel span only.
 
-_AGENT_OP_NAMES = {"invoke_agent", "create_agent"}
+_AGENT_OP_NAMES = {"invoke_agent", "create_agent", "plan"}
 _LLM_OP_NAMES = {
     "chat",
     "generate_content",
