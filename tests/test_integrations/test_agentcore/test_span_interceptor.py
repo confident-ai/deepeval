@@ -41,13 +41,11 @@ from deepeval.tracing.context import (
     current_span_context,
     current_trace_context,
     next_agent_span,
-    next_llm_span,
     next_tool_span,
     update_current_span,
     update_current_trace,
 )
 from deepeval.tracing.trace_context import trace
-
 
 _span_id_counter = count(start=1)
 _trace_id_counter = count(start=1)
@@ -493,6 +491,17 @@ class TestParentBridge:
 
 
 class TestNextSpanInterceptorIntegration:
+    def test_plan_operation_is_classified_as_agent_span(self):
+        settings = _make_settings()
+        interceptor = AgentCoreSpanInterceptor(settings)
+        span = _make_mock_span(operation_name="plan", agent_name="planner")
+
+        interceptor.on_start(span, None)
+        interceptor.on_end(span)
+
+        assert span.attributes.get("confident.span.type") == "agent"
+        assert span.attributes.get("confident.span.name") == "planner"
+
     def test_next_agent_span_metric_collection_lands_on_otel_attrs(self):
         settings = _make_settings()
         interceptor = AgentCoreSpanInterceptor(settings)

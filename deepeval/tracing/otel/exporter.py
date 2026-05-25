@@ -29,6 +29,7 @@ from deepeval.tracing.otel.utils import (
     check_pydantic_ai_trace_input_output,
     check_tool_input_parameters_from_gen_ai_attributes,
     check_span_type_from_gen_ai_attributes,
+    check_agent_name_from_gen_ai_attributes,
     check_model_from_gen_ai_attributes,
     check_llm_input_from_gen_ai_attributes,
     check_tool_name_from_gen_ai_attributes,
@@ -684,6 +685,13 @@ class ConfidentSpanExporter(SpanExporter):
 
         elif span_type == "agent":
             name = span.attributes.get("confident.agent.name")
+            if not name:
+                name = check_agent_name_from_gen_ai_attributes(span)
+            if not name:
+                name = span.attributes.get("confident.span.name")
+            if not name:
+                span_name = getattr(span, "name", None)
+                name = span_name if isinstance(span_name, str) else None
             available_tools_attr = span.attributes.get(
                 "confident.agent.available_tools"
             )
