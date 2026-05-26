@@ -303,6 +303,13 @@ class Settings(BaseSettings):
         None,
         description="Identifier/tag to help identify your test run on Confident AI.",
     )
+    DEEPEVAL_METRIC_TEMPLATE_LANGUAGE: Optional[str] = Field(
+        None,
+        description=(
+            "Community metric template language (enum value, e.g. hindi). "
+            "Unset, english, or en uses the default English bundle."
+        ),
+    )
 
     #
     # Storage & Output
@@ -1181,6 +1188,23 @@ class Settings(BaseSettings):
             "Retry log level must be one of DEBUG, INFO, WARNING, ERROR, "
             "CRITICAL, NOTSET, or a numeric logging level."
         )
+
+    @field_validator("DEEPEVAL_METRIC_TEMPLATE_LANGUAGE", mode="before")
+    @classmethod
+    def _normalize_metric_template_language(cls, v):
+        from deepeval.metric_templates.community.languages import (
+            is_english,
+            parse_language_slug,
+        )
+
+        if v is None:
+            return None
+        if not isinstance(v, str):
+            return v
+        stripped = v.strip()
+        if not stripped or is_english(stripped):
+            return None
+        return parse_language_slug(stripped)
 
     @field_validator("DEEPEVAL_TELEMETRY_OPT_OUT", mode="before")
     @classmethod

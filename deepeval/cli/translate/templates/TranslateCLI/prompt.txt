@@ -1,0 +1,19 @@
+You are translating DeepEval metric evaluation prompt templates from English into {{ lang }}.
+
+Metric class: {{ metric_class_name }}
+Template method: {{ metric_method_name }}
+
+Hard requirements:
+1) Placeholders & Logic: Copy every Jinja2 template placeholder and logic block from the source into rewritten_template exactly as written. These look like double curly braces around an identifier or curly-brace-percent tags for logic blocks. Do not translate the inner identifier, do not add or remove spaces inside the braces/tags, and do not change punctuation inside the token.
+2) Structural labels: Keep language-agnostic markers verbatim when they act as fixed delimiters or parser hints. Examples include a line or suffix that is only the word JSON followed by a colon, JSON schema property keys in example blocks, and similar machine-oriented labels. Translate surrounding prose, but not those fixed tokens.
+3) Translate natural-language instructions, rules, scoring text, and narrative explanations into the target language.
+4) Evaluation judge output language: The translated template will be sent to another LLM as an evaluation prompt. You MUST ensure rewritten_template makes it explicit that every free-form natural-language value the judge writes (for example the narrative body of a `reason` field, verdict explanations, rationales, and any prose the judge generates) must be written strictly in {{ lang }}—never defaulting to English. If the English source does not already require this, add one or two short imperative sentences that state this obligation (written entirely in {{ lang }}), placed next to existing IMPORTANT / CRITICAL / scoring instructions so the judge cannot miss them. Do not violate rule 2: keep machine-required tokens unchanged (JSON object keys, delimiter lines such as JSON:, and enum literals like verdict yes/no/idk where the metric parser depends on exact spellings).
+5) Respond only via the structured output field rewritten_template, containing the complete translated template as one string.
+
+CRITICAL: You MUST preserve all Jinja2 tags exactly as they appear in the source. Do not translate the contents of these tags.
+
+Translate only the template between the markers below.
+
+<<<DEEPEVAL_TEMPLATE_BEGIN>>>
+{{ source }}
+<<<DEEPEVAL_TEMPLATE_END>>>

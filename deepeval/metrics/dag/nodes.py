@@ -9,12 +9,6 @@ from deepeval.metrics.dag.schema import (
     NonBinaryJudgementVerdict,
     TaskNodeOutput,
 )
-from deepeval.metrics.dag.templates import (
-    VerdictNodeTemplate,
-    TaskNodeTemplate,
-    BinaryJudgementTemplate,
-    NonBinaryJudgementTemplate,
-)
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.metrics.g_eval.g_eval import GEval
 from deepeval.metrics.g_eval.utils import G_EVAL_PARAMS
@@ -24,6 +18,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.test_case import LLMTestCase, SingleTurnParams, ToolCall
+from deepeval.metric_templates import resolve_template
 from deepeval.utils import prettify_list
 
 
@@ -221,7 +216,9 @@ class VerdictNode(BaseNode):
                 metric.reason = await self._a_generate_reason(metric=metric)
 
     def _generate_reason(self, metric: BaseMetric):
-        prompt = VerdictNodeTemplate.generate_reason(
+        prompt = resolve_template(
+            "VerdictNode",
+            "generate_reason",
             verbose_steps=metric._verbose_steps,
             score=metric.score,
             name=metric.__name__,
@@ -235,7 +232,9 @@ class VerdictNode(BaseNode):
         )
 
     async def _a_generate_reason(self, metric: BaseMetric):
-        prompt = VerdictNodeTemplate.generate_reason(
+        prompt = resolve_template(
+            "VerdictNode",
+            "generate_reason",
             verbose_steps=metric._verbose_steps,
             score=metric.score,
             name=metric.__name__,
@@ -301,7 +300,11 @@ class TaskNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = TaskNodeTemplate.generate_task_output(
+        prompt = resolve_template(
+
+            "TaskNode",
+
+            "generate_task_output",
             instructions=self.instructions,
             text=text,
         )
@@ -347,7 +350,11 @@ class TaskNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = TaskNodeTemplate.generate_task_output(
+        prompt = resolve_template(
+
+            "TaskNode",
+
+            "generate_task_output",
             instructions=self.instructions,
             text=text,
         )
@@ -438,7 +445,11 @@ class BinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = BinaryJudgementTemplate.generate_binary_verdict(
+        prompt = resolve_template(
+
+            "BinaryJudgement",
+
+            "generate_binary_verdict",
             criteria=self.criteria,
             text=text,
         )
@@ -478,7 +489,11 @@ class BinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = BinaryJudgementTemplate.generate_binary_verdict(
+        prompt = resolve_template(
+
+            "BinaryJudgement",
+
+            "generate_binary_verdict",
             criteria=self.criteria,
             text=text,
         )
@@ -579,7 +594,11 @@ class NonBinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = NonBinaryJudgementTemplate.generate_non_binary_verdict(
+        prompt = resolve_template(
+
+            "BinaryJudgement",
+
+            "generate_non_binary_verdict",
             criteria=self.criteria, text=text, options=self._verdict_options
         )
 
@@ -620,7 +639,11 @@ class NonBinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = NonBinaryJudgementTemplate.generate_non_binary_verdict(
+        prompt = resolve_template(
+
+            "BinaryJudgement",
+
+            "generate_non_binary_verdict",
             criteria=self.criteria, text=text, options=self._verdict_options
         )
 

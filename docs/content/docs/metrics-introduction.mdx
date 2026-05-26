@@ -366,6 +366,30 @@ Here are some additional ideas if you're not sure:
 
 In some cases, where your LLM model is doing most of the heavy lifting, it is not uncommon to have more use case specific metrics.
 
+## Configure Your Metric Language
+
+By default, built-in metric prompts use the English bundle shipped with `deepeval`. For supported languages, community translations are included in the package—set one environment variable to use them for all evaluations:
+
+```bash
+export DEEPEVAL_METRIC_TEMPLATE_LANGUAGE=spanish
+```
+
+Use any language slug (for example `hindi`, `spanish`, `vietnamese`). Leave this unset, or set it to `english` or `en`, to keep the default English prompts. Templates are loaded from shipped community files and from `.deepeval/templates.<lang>.json` if present (local files override shipped keys). If no templates exist for that language, or a metric class is missing, `deepeval` falls back to English and prints a one-time warning to the console (no logging configuration required).
+
+### Generating translations
+
+Run `deepeval translate` with a language slug and one or more metric class names. By default, results are written to **`.deepeval/templates.<lang>.json`** — no enum or package edits required:
+
+```bash
+deepeval translate vietnamese --metrics "FaithfulnessMetric, AnswerRelevancyMetric"
+```
+
+Then set `DEEPEVAL_METRIC_TEMPLATE_LANGUAGE=vietnamese`. The command only translates keys that are not already present in that file. Optionally pass `--model` to choose which LLM performs the translation.
+
+:::info
+Contributors can add any language to `deepeval` by forking the repo and adding a new language to the `MetricTemplateLanguage` enum in `languages.py`, then run `deepeval translate` with **`--contribute`** to update `deepeval/metric_templates/community/templates.<lang>.json` and open a pull request so other users receive the bundle in the package.
+:::
+
 ## Configure LLM Judges
 
 You can use **ANY** LLM judge in `deepeval`, including OpenAI, Azure OpenAI, Ollama, Anthropic, Gemini, LiteLLM, etc. You can also wrap your own LLM API in `deepeval`'s `DeepEvalBaseLLM` class to use ANY model of your choice. [Click here](/guides/guides-using-custom-llms) for full guide.

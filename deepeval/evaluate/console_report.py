@@ -346,3 +346,134 @@ class EvaluationConsoleReport:
             f.write("\n".join(md))
 
         print(f"✅ Markdown Dashboard saved to: {filepath}")
+
+    def export_to_cicd_markdown(
+        self, output_dir: str, evaluation_name: str = "evaluation"
+    ):
+        os.makedirs(output_dir, exist_ok=True)
+
+        safe_name = (
+            str(evaluation_name).replace(" ", "_").lower()
+            if evaluation_name
+            else "evaluation"
+        )
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        filepath = os.path.join(output_dir, f"{safe_name}_{timestamp}.md")
+
+        md = ["# 🚀 DeepEval Evaluation Results\n"]
+
+        passing_cases = [case for case in self.test_results if case.success]
+        failing_cases = [case for case in self.test_results if not case.success]
+
+        def render_cases(cases, is_passing):
+            if not cases:
+                return
+
+            status_title = (
+                "✅ Passing Test Cases"
+                if is_passing
+                else "❌ Failing Test Cases"
+            )
+            md.append(
+                f"<details><summary><b>{status_title} ({len(cases)})</b></summary>\n"
+            )
+
+            for case in cases:
+                status_icon = "✅ PASS" if case.success else "❌ FAIL"
+                md.append(f"## {status_icon} - {case.name}\n")
+                md.append(
+                    "<details><summary><b>View Test Case Data</b></summary>\n"
+                )
+
+                if case.conversational:
+                    for turn in case.turns:
+                        md.append(
+                            f"- **{turn.role.capitalize()}**: {turn.content}"
+                        )
+                else:
+                    md.append(f"- **Input:** {case.input}")
+                    md.append(f"- **Actual Output:** {case.actual_output}")
+
+                    if case.expected_output and case.expected_output != "N/A":
+                        md.append(
+                            f"- **Expected Output:** {case.expected_output}"
+                        )
+
+                md.append("\n</details>\n\n### Metrics\n")
+                md.append("| Status | Metric | Score | Threshold | Reason |")
+                md.append("|:---:|:---|:---:|:---:|:---|")
+
+                for m in case.metrics_data:
+                    m_icon = (
+                        "✅"
+                        if m.success
+                        else ("❌" if not m.error else "⚠️ ERROR")
+                    )
+                    score_str = (
+                        f"{m.score:.2f}" if m.score is not None else "N/A"
+                    )
+                    thresh_str = (
+                        f"{m.threshold:.2f}"
+                        if m.threshold is not None
+                        else "N/A"
+                    )
+                    reason_str = str(m.reason or m.error or "N/A").replace(
+                        "\n", " <br> "
+                    )
+                    md.append(
+                        f"| {m_icon} | **{m.name}** | {score_str} | {thresh_str} | {reason_str} |"
+                    )
+
+                md.append("\n---\n")
+
+            md.append("</details>\n\n")
+
+        render_cases(failing_cases, False)
+        render_cases(passing_cases, True)
+
+        # Calculate aggregate metrics
+        metric_aggregates = {}
+        for case in self.test_results:
+            for m in case.metrics_data:
+                if m.name not in metric_aggregates:
+                    metric_aggregates[m.name] = {
+                        "total": 0,
+                        "passes": 0,
+                        "score_sum": 0,
+                        "score_count": 0,
+                    }
+
+                agg = metric_aggregates[m.name]
+                agg["total"] += 1
+                if m.success:
+                    agg["passes"] += 1
+                if m.score is not None:
+                    agg["score_sum"] += m.score
+                    agg["score_count"] += 1
+
+        if metric_aggregates:
+            md.append("## Aggregate Metrics\n")
+            md.append("| Metric | Average Score | Pass Rate | Total |")
+            md.append("|:---|:---:|:---:|:---:|")
+
+            for metric_name, agg in metric_aggregates.items():
+                avg_score = (
+                    f"{agg['score_sum'] / agg['score_count']:.2f}"
+                    if agg["score_count"] > 0
+                    else "N/A"
+                )
+                pass_rate = (
+                    f"{(agg['passes'] / agg['total']) * 100:.2f}%"
+                    if agg["total"] > 0
+                    else "N/A"
+                )
+                md.append(
+                    f"| **{metric_name}** | {avg_score} | {pass_rate} | {agg['total']} |"
+                )
+
+            md.append("\n---\n")
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write("\n".join(md))
+
+        print(f"✅ CICD Markdown Dashboard saved to: {filepath}")

@@ -5,9 +5,6 @@ import textwrap
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import SingleTurnParams, LLMTestCase, MLLMImage
-from deepeval.metrics.multimodal_metrics.text_to_image.template import (
-    TextToImageTemplate,
-)
 from deepeval.utils import (
     get_or_create_event_loop,
     convert_to_multi_modal_array,
@@ -20,6 +17,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.metric_templates import resolve_template
 from deepeval.metrics.multimodal_metrics.text_to_image.schema import ReasonScore
 from deepeval.metrics.indicator import metric_progress_indicator
 
@@ -190,7 +188,9 @@ class TextToImageMetric(BaseMetric):
         images: List[MLLMImage] = [actual_image_output]
         prompt = f"""
             {
-                TextToImageTemplate.generate_semantic_consistency_evaluation_results(
+                resolve_template(
+                    self.__class__.__name__,
+                    "generate_semantic_consistency_evaluation_results",
                     text_prompt=text_prompt
                 )
             }
@@ -213,7 +213,9 @@ class TextToImageMetric(BaseMetric):
         images: List[MLLMImage] = [actual_image_output]
         prompt = f"""
             {
-                TextToImageTemplate.generate_semantic_consistency_evaluation_results(
+                resolve_template(
+                    self.__class__.__name__,
+                    "generate_semantic_consistency_evaluation_results",
                     text_prompt=text_prompt
                 )
             }
@@ -234,7 +236,9 @@ class TextToImageMetric(BaseMetric):
         images: List[MLLMImage] = [actual_image_output]
         prompt = f"""
             {
-                TextToImageTemplate.generate_perceptual_quality_evaluation_results()
+                resolve_template(
+                    self.__class__.__name__,
+                    "generate_perceptual_quality_evaluation_results",)
             }
             Images:
             {images}
@@ -253,7 +257,9 @@ class TextToImageMetric(BaseMetric):
         images: List[MLLMImage] = [actual_image_output]
         prompt = f"""
             {
-                TextToImageTemplate.generate_perceptual_quality_evaluation_results()
+                resolve_template(
+                    self.__class__.__name__,
+                    "generate_perceptual_quality_evaluation_results",)
             }
             Images:
             {images}
