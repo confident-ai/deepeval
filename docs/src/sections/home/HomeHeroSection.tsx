@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { PrimaryButton, SecondaryButton } from "@site/src/components/Buttons";
-import HeroAnnouncement from "@site/src/components/HeroAnnouncement";
 import { PauseOffscreen } from "@site/src/components/PauseOffscreen";
 import { DYNAMIC_LOGOS } from "./CompanyLogos";
 import styles from "./HomeSection.module.scss";
@@ -48,12 +47,6 @@ const HomeHeroSection: React.FC = () => {
   return (
     <section className={styles.hero}>
       <div className={styles.main}>
-        {/* <HeroAnnouncement
-          href="/blog/deepeval-got-a-new-look"
-          label="Read the DeepEval Got a New Look announcement"
-        >
-          DeepEval just got a new look
-        </HeroAnnouncement> */}
         <h1 className={styles.title}>The LLM Evaluation Framework</h1>
 
         <p className={styles.description}>
