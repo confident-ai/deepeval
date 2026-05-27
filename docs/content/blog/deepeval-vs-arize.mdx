@@ -59,7 +59,7 @@ Because we ship more and fix faster (most bugs are resolved in under 3 days), yo
 [DeepEval](https://github.com/confident-ai/deepeval) and [Confident AI](https://confident-ai.com) are **two separate products** built by the same team — not the same thing.
 
 - **DeepEval** is the **open-source LLM evaluation framework**: metrics, test cases, datasets, synthetic data generation, benchmarks, and CI/CD evals. It runs locally, requires no account, and works fully standalone.
-- **Confident AI** is the **enterprise AI quality platform**: LLM observability, online evaluation, monitoring, cloud-hosted datasets, prompt and model experimentation, shared regression reports, and team collaboration.
+- **Confident AI** is an **all-in-one enterprise platform for LLM evaluation, observability, and red teaming**. It adds shared regression reports, online evals on production traces, monitoring, cloud-hosted datasets, prompt and model experimentation, red teaming campaigns, and team collaboration.
 
 Confident AI open-sourced many of its metrics through DeepEval. That does not make them the same product, and Confident AI is not a UI layer on top of DeepEval.
 
@@ -70,10 +70,11 @@ Confident AI open-sourced many of its metrics through DeepEval. That does not ma
 - Centralized cloud datasets and golden management
 - Regression gates and side-by-side prompt and model experiments
 - Production trace observability and online evaluation of live traffic
+- Red teaming campaigns and safety testing at organization scale
 
 The integration is built into DeepEval — connect once and every DeepEval run syncs to Confident AI without extra code.
 
-DeepEval also pairs with **DeepTeam**, our open-source red teaming package, when you scale to LLM safety and security testing.
+DeepEval also pairs with **DeepTeam**, our open-source red teaming framework, which Confident AI's red teaming features build on the same way they build on DeepEval.
 
 ## Comparing DeepEval and Arize
 
@@ -138,9 +139,9 @@ DeepEval also integrates directly with LLM providers to power its metrics—sinc
 
 ### Platform
 
-DeepEval integrates natively with Confident AI, a separate AI quality platform with observability, evals, and monitoring built by the same team. Arize's platform is called Phoenix.
+DeepEval integrates natively with Confident AI, a separate all-in-one enterprise platform for LLM evaluation, observability, and red teaming, built by the same team. Arize's platform is called Phoenix.
 
-Confident AI is built for powerful, customizable evaluation and benchmarking. Phoenix, on the other hand, is more focused on observability.
+Confident AI is built for powerful, customizable evaluation and benchmarking, with observability and red teaming in the same platform. Phoenix, on the other hand, is more focused on observability.
 
 <FeatureComparisonTable type="arize::platform" competitor="Arize" />
 
@@ -152,4 +153,4 @@ If there’s one thing to remember: Arize is great for observability and debuggi
 
 Both have some feature overlap — but it really comes down to what you care about more: evaluation or observability.
 
-If you want evaluation plus an enterprise platform with observability, monitoring, and team collaboration, pair DeepEval with [Confident AI](https://confident-ai.com) — the separate enterprise platform from the same team. DeepEval and Confident AI are not the same product: DeepEval is the open-source framework, Confident AI is the enterprise platform you graduate into when team scale demands it. That should be more than enough to get started with DeepEval.
+If you want evaluation plus an enterprise platform that also covers observability and red teaming, pair DeepEval with [Confident AI](https://confident-ai.com), a separate all-in-one enterprise platform for LLM evaluation, observability, and red teaming, built by the same team. DeepEval and Confident AI are not the same product: DeepEval is an open-source framework, Confident AI is an enterprise platform you can graduate into when team scale demands it. That should be more than enough to get started with DeepEval.
