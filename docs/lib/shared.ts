@@ -14,7 +14,7 @@ export const siteUrl = 'https://deepeval.com';
  * `config.title` for SERP continuity.
  */
 export const siteTitle =
-  'DeepEval by Confident AI - The LLM Evaluation Framework';
+  'DeepEval - The LLM Evaluation Framework';
 
 /**
  * Short meta-description used on the homepage and as the fallback for

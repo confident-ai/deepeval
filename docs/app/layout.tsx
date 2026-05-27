@@ -90,8 +90,8 @@ export const metadata: Metadata = {
 const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'DeepEval by Confident AI',
-  alternateName: 'DeepEval - The LLM Evaluation Framework',
+  name: 'Confident AI Inc.',
+  alternateName: 'Confident AI',
   url: siteUrl,
   logo: `${siteUrl}/icons/DeepEval.svg`,
   sameAs: [

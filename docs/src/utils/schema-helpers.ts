@@ -42,7 +42,7 @@ export function buildWebSiteSchema(): object {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "DeepEval by Confident AI - The LLM Evaluation Framework", 
+    name: "DeepEval - The LLM Evaluation Framework",
     url: BASE_URL,
   };
 }
