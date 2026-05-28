@@ -493,20 +493,21 @@ class ConversationalGEval(BaseConversationalMetric):
 
         self.criteria = data.criteria
         self.evaluation_steps = data.evaluationSteps
-        
+
         self.evaluation_params = construct_geval_pull_evaluation_params(
             data.requiredParameters, multi_turn=True
         )
-        
+
         self.rubric = validate_and_sort_rubrics(
             [
                 Rubric(
-                    score_range=r.scoreRange, 
+                    score_range=r.scoreRange,
                     expected_outcome=r.expectedOutcome,
                 )
                 for r in data.rubric
             ]
-            if data.rubric else None
+            if data.rubric
+            else None
         )
 
         ensure_required_params(

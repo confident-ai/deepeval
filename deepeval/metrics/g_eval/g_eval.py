@@ -465,7 +465,7 @@ class GEval(BaseMetric):
 
         self.criteria = data.criteria
         self.evaluation_steps = data.evaluationSteps
-        
+
         self.evaluation_params = construct_geval_pull_evaluation_params(
             data.requiredParameters, multi_turn=False
         )
@@ -478,9 +478,10 @@ class GEval(BaseMetric):
                 )
                 for r in data.rubric
             ]
-            if data.rubric else None
+            if data.rubric
+            else None
         )
-        
+
         self.score_range = get_score_range(self.rubric)
         self.score_range_span = self.score_range[1] - self.score_range[0]
 
