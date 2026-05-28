@@ -650,6 +650,15 @@ ANTHROPIC_MODELS_DATA = ModelDataRegistry(
             input_price=5.00 / 1e6,
             output_price=25.00 / 1e6,
         ),
+        "claude-opus-4-8": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=5.00 / 1e6,
+            output_price=25.00 / 1e6,
+        ),
         "claude-opus-4-6": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
