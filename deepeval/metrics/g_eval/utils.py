@@ -18,9 +18,11 @@ from deepeval.test_case.conversational_test_case import ConversationalTestCase
 from pydantic import BaseModel, Field
 from typing import Optional, List, Tuple
 
+
 class APIRubric(BaseModel):
     scoreRange: Tuple[float, float]
     expectedOutcome: str
+
 
 class MetricPullResponse(BaseModel):
     id: Optional[str] = None
@@ -28,6 +30,7 @@ class MetricPullResponse(BaseModel):
     evaluationSteps: Optional[List[str]] = None
     requiredParameters: List[str] = Field(default_factory=list)
     rubric: Optional[List[APIRubric]] = None
+
 
 class Rubric(BaseModel):
     score_range: Tuple[int, int]
