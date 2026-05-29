@@ -38,6 +38,7 @@ class HallucinationMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        penalize_ambiguous_claims: bool = False,
         evaluation_template: Type[
             HallucinationTemplate
         ] = HallucinationTemplate,
@@ -49,6 +50,7 @@ class HallucinationMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.penalize_ambiguous_claims = penalize_ambiguous_claims
         self.evaluation_template = evaluation_template
 
     def measure(
@@ -153,10 +155,13 @@ class HallucinationMetric(BaseMetric):
         factual_alignments = []
         contradictions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            v = verdict.verdict.strip().lower()
+            if v == "yes":
                 factual_alignments.append(verdict.reason)
-            else:
+            elif v == "no":
                 contradictions.append(verdict.reason)
+            elif v == "idk" and self.penalize_ambiguous_claims:
+                contradictions.append(f"(Ambiguous) {verdict.reason}")
 
         prompt: dict = self.evaluation_template.generate_reason(
             factual_alignments=factual_alignments,
@@ -179,10 +184,13 @@ class HallucinationMetric(BaseMetric):
         factual_alignments = []
         contradictions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            v = verdict.verdict.strip().lower()
+            if v == "yes":
                 factual_alignments.append(verdict.reason)
-            else:
+            elif v == "no":
                 contradictions.append(verdict.reason)
+            elif v == "idk" and self.penalize_ambiguous_claims:
+                contradictions.append(f"(Ambiguous) {verdict.reason}")
 
         prompt: dict = self.evaluation_template.generate_reason(
             factual_alignments=factual_alignments,
@@ -237,7 +245,10 @@ class HallucinationMetric(BaseMetric):
 
         hallucination_count = 0
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            v = verdict.verdict.strip().lower()
+            if v == "no":
+                hallucination_count += 1
+            elif v == "idk" and self.penalize_ambiguous_claims:
                 hallucination_count += 1
 
         score = hallucination_count / number_of_verdicts

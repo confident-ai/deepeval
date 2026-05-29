@@ -1,6 +1,8 @@
 import os
+from unittest.mock import MagicMock, patch
 import pytest
 from deepeval.metrics import HallucinationMetric
+from deepeval.metrics.hallucination.schema import HallucinationVerdict
 from deepeval.test_case import LLMTestCase, MLLMImage, ToolCall
 from deepeval import evaluate
 
@@ -171,3 +173,43 @@ class TestHallucinationMetric:
         results = evaluate([test_case], [metric])
 
         assert results is not None
+
+
+class TestHallucinationPenalizeAmbiguousClaims:
+    """No-API-key unit tests for penalize_ambiguous_claims flag."""
+
+    def _make_metric(self, penalize: bool) -> HallucinationMetric:
+        mock_model = MagicMock()
+        mock_model.get_model_name.return_value = "mock"
+        with patch(
+            "deepeval.metrics.hallucination.hallucination.initialize_model",
+            return_value=(mock_model, True),
+        ):
+            return HallucinationMetric(penalize_ambiguous_claims=penalize)
+
+    def test_idk_not_penalized_by_default(self):
+        metric = self._make_metric(penalize=False)
+        metric.verdicts = [
+            HallucinationVerdict(verdict="yes", reason="aligned"),
+            HallucinationVerdict(verdict="idk", reason="uncertain"),
+        ]
+        score = metric._calculate_score()
+        assert score == 0.0
+
+    def test_idk_penalized_when_flag_set(self):
+        metric = self._make_metric(penalize=True)
+        metric.verdicts = [
+            HallucinationVerdict(verdict="yes", reason="aligned"),
+            HallucinationVerdict(verdict="idk", reason="uncertain"),
+        ]
+        score = metric._calculate_score()
+        assert score == 0.5
+
+    def test_no_verdict_still_penalized(self):
+        metric = self._make_metric(penalize=True)
+        metric.verdicts = [
+            HallucinationVerdict(verdict="no", reason="contradicts"),
+            HallucinationVerdict(verdict="idk", reason="uncertain"),
+        ]
+        score = metric._calculate_score()
+        assert score == 1.0
