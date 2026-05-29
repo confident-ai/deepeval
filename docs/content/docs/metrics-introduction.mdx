@@ -291,7 +291,7 @@ from deepeval.metrics import ImageCoherenceMetric
 test_case = LLMTestCase(input=f"What does thsi image say? {MLLMImage(...)}", actual_output="No idea!")
 image_coherence = ImageCoherenceMetric(threshold=0.5)
 
-image_coherence.measure(m_test_case)
+image_coherence.measure(test_case)
 print(image_coherence.score, image_coherence.reason)
 ```
 
