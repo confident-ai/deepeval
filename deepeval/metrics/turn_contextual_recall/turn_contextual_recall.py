@@ -161,7 +161,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
             async def get_individual_scores(window):
                 scores.extend(
                     await self._a_get_contextual_recall_scores(
-                        window, test_case.multimodal, multimodal
+                        window, test_case.expected_outcome, multimodal
                     )
                 )
 
