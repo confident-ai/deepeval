@@ -218,8 +218,15 @@ class StepEfficiencyTemplate:
                 Return a single JSON object in this exact format:
 
                 {{
-                    "score": 0.0,
-                    "reason": "1-3 concise factual sentences describing where inefficiencies occurred."
+                    “score”: 0.0,
+                    “reason”: “1-3 concise factual sentences describing where inefficiencies occurred.”,
+                    “steps”: [
+                        {{
+                            “step_name”: “<name or description of the step>”,
+                            “is_necessary”: true,
+                            “reason”: “<one sentence explaining why this step was or was not necessary>”
+                        }}
+                    ]
                 }}
 
                 The `reason` must:
@@ -227,26 +234,36 @@ class StepEfficiencyTemplate:
                 - Avoid subjective phrasing (“reasonable”, “seems okay”, “somewhat efficient”).
                 - Be direct and concrete: “Extra retrieval used for enrichment”, “Multiple summarizations of same data”, etc.
 
+                The `steps` list must contain one entry per top-level step in the trace.
+
                 EXAMPLES
 
                 **Example 1:**
-                Task: "Summarize the given text."
+                Task: “Summarize the given text.”
                 Trace: Agent calls an LLM twice, then performs an extra web search.
 
                 → Output:
                 {{
-                    "score": 0.25,
-                    "reason": "The agent used redundant LLM calls and performed an unnecessary web search. Only one LLM call was required for the summary."
+                    “score”: 0.25,
+                    “reason”: “The agent used redundant LLM calls and performed an unnecessary web search. Only one LLM call was required for the summary.”,
+                    “steps”: [
+                        {{“step_name”: “LLM call 1”, “is_necessary”: true, “reason”: “Required to produce the initial summary.”}},
+                        {{“step_name”: “LLM call 2”, “is_necessary”: false, “reason”: “Redundant; the first call already produced a complete summary.”}},
+                        {{“step_name”: “web_search”, “is_necessary”: false, “reason”: “No external information was needed to summarize an already-provided text.”}}
+                    ]
                 }}
 
                 **Example 2:**
-                Task: "Convert a date to ISO format."
+                Task: “Convert a date to ISO format.”
                 Trace: Agent performs one computation directly.
 
                 → Output:
                 {{
-                    "score": 1.0,
-                    "reason": "The agent completed the task with one minimal action and no unnecessary steps."
+                    “score”: 1.0,
+                    “reason”: “The agent completed the task with one minimal action and no unnecessary steps.”,
+                    “steps”: [
+                        {{“step_name”: “date_conversion”, “is_necessary”: true, “reason”: “The single required step to convert the date to ISO format.”}}
+                    ]
                 }}
 
                 FINAL REMINDERS
