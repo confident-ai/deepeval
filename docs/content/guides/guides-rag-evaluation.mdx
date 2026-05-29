@@ -46,7 +46,7 @@ A "vector store" can either be a dedicated vector database (eg. Pinecone) or a v
 
 As you've noticed, there are quite a few hyperparameters such as the choice of embedding model, top-K, etc. that needs tuning. Here are some questions RAG evaluation aims to solve in the retrieval step:
 
-- **Does the embedding model you're using capture domain-specific nuances?** (If you're working on a medical use case, a generic embedding model offered by OpenAI might not provide expected the vector search results.)
+- **Does the embedding model you're using capture domain-specific nuances?** (If you're working on a medical use case, a generic embedding model offered by OpenAI might not provide the expected vector search results.)
 - **Does your reranker model ranks the retrieved nodes in the "correct" order?**
 - **Are you retrieving the right amount of information?** This is influenced by hyperparameters text chunk size, top-K number.
 
