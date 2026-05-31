@@ -15,7 +15,10 @@
 
 <p align="center">
     <a href="https://discord.gg/3SEyvpgu2f">
-        <img alt="discord-invite" src="https://dcbadge.vercel.app/api/server/3SEyvpgu2f?style=flat">
+        <img alt="discord-invite" src="https://dcbadge.limes.pink/api/server/3SEyvpgu2f?style=flat">
+    </a>
+    <a href="https://www.reddit.com/r/deepeval/">
+        <img alt="reddit-community" src="https://img.shields.io/badge/Reddit-r%2Fdeepeval-FF4500?logo=reddit&logoColor=white">
     </a>
 </p>
 
