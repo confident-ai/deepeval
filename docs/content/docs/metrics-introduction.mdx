@@ -263,7 +263,7 @@ evaluate(observed_callback=trip_planner_agent, goldens=[Golden(input="Paris, 2")
 
 Chatbots require "conversational" (or multi-turn) metrics and they include:
 
-- **Conversation Completeness:** Evaluates if conversation satisify user needs.
+- **Conversation Completeness:** Evaluates if conversation satisfy user needs.
 - **Conversation Relevancy:** Measures if the generated outputs are relevant to user inputs.
 - **Role Adherence:** Assesses if the chatbot stays in character throughout a conversation.
 - **Knowledge Retention:** Evaluates if the chatbot is able to retain knowledge learnt throughout a conversation.
@@ -288,7 +288,7 @@ print(role_adherence.score, role_adherence.reason)
 from deepeval.test_case import LLMTestCase, MLLMImage
 from deepeval.metrics import ImageCoherenceMetric
 
-test_case = LLMTestCase(input=f"What does thsi image say? {MLLMImage(...)}", actual_output="No idea!")
+test_case = LLMTestCase(input=f"What does this image say? {MLLMImage(...)}", actual_output="No idea!")
 image_coherence = ImageCoherenceMetric(threshold=0.5)
 
 image_coherence.measure(test_case)
