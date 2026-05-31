@@ -3,6 +3,7 @@ id: metrics-llm-evals
 title: G-Eval
 sidebar_label: G-Eval
 ---
+
 import { ASSETS } from "@site/src/assets";
 
 <MetricTagsDisplayer singleTurn={true} custom={true} />
@@ -96,6 +97,7 @@ You can upload your `GEval` metrics to [Confident AI](https://app.confident-ai.c
 metric = GEval(...)
 metric.upload()
 ```
+
 :::
 
 ### Evaluation Steps
@@ -234,6 +236,10 @@ In the original G-Eval paper, the authors used the probabilities of the LLM outp
 
 This step was introduced in the paper because it minimizes bias in LLM scoring. **This normalization step is automatically handled by `deepeval` by default** (unless you're using a custom model).
 
+<details>
+
+<summary> See how to implement your cusotm `logprobs`</summary>
+
 To enable weighted summation for a custom model, implement `a_generate_raw_response` (and optionally `generate_raw_response`) on your `DeepEvalBaseLLM` subclass. The method must return a tuple of `(ChatCompletion, cost)` where the `ChatCompletion` object contains `logprobs` in its response:
 
 ```python
@@ -253,11 +259,14 @@ class MyCustomModel(DeepEvalBaseLLM):
 ```
 
 `deepeval` will automatically use the `logprobs` in the returned `ChatCompletion` to compute the weighted summation score. If `a_generate_raw_response` is not implemented, `deepeval` falls back to the raw integer score from `a_generate`.
+
+</details>
+
 :::
 
 ## Examples
 
-`deepeval` runs more than **10 million G-Eval metrics a month** (we wrote a blog about it [here](/blog/top-5-geval-use-cases)), and in this section we will list out the top use cases we see users using G-Eval for, with a link to the fuller explanation for each at the end.
+`deepeval` runs more than **10 million G-Eval metrics a day** (we wrote a blog about it [here](/blog/top-5-geval-use-cases)), and in this section we will list out the top use cases we see users using G-Eval for, with a link to the fuller explanation for each at the end.
 
 :::caution
 Please do not directly copy and paste examples below without first assessing their fit for your use case.
