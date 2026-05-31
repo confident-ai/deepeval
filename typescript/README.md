@@ -4,7 +4,7 @@
 
 DeepEval for TypeScript brings the DeepEval workflow into the JavaScript and TypeScript ecosystem, starting with the Confident AI platform features teams already use to manage datasets, prompts, and evaluation reporting.
 
-This package is designed for TypeScript teams that want first-class access to DeepEval's cloud-backed evaluation workflows from the same language they use to build their applications.
+This package is designed for TypeScript teams that want first-class access to DeepEval workflows that integrate with Confident AI from the same language they use to build their applications.
 
 ## What TypeScript Supports
 
@@ -19,7 +19,7 @@ Local execution features, such as LLM-as-a-judge metrics, NLP models, and fully 
 
 ## Roadmap
 
-Our next milestone is to reach **80% feature parity** across the cloud-backed DeepEval surface area by the **end of July**. This includes:
+Our next milestone is to reach **80% feature parity** across the Confident AI integration surface by the **end of July**. This includes:
 
 - **Shared prompt templates** — one source of truth for prompt templates, consumed by both Python and TypeScript so the implementations stay aligned.
 - **TypeScript-native APIs** — equivalents for the relevant Python functions and classes, shaped to feel natural in TypeScript while staying familiar to DeepEval users.
@@ -27,4 +27,4 @@ Our next milestone is to reach **80% feature parity** across the cloud-backed De
 
 ## Python vs TypeScript
 
-Python remains DeepEval's most complete implementation and the first place new local evaluation capabilities will land. TypeScript complements that foundation by making DeepEval's Confident AI workflows available to JavaScript and TypeScript teams, with a clear path toward broader feature coverage.
+Python remains DeepEval's most complete implementation and the first place new local evaluation capabilities will land. TypeScript complements that foundation by making DeepEval workflows that integrate with Confident AI available to JavaScript and TypeScript teams, with a clear path toward broader feature coverage.
