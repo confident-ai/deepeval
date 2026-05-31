@@ -53,9 +53,11 @@ jinja2 = "*"
 
 textual = { version = ">=0.80,<2.0", optional = true }
 pyperclip = { version = "^1.8", optional = true }
+juryeval = { version = ">=0.4.0", optional = true }
 
 [tool.poetry.extras]
 inspect = ["textual", "pyperclip"]
+juryeval = ["juryeval"]
 
 [tool.poetry.group.dev.dependencies]
 twine = "5.1.1"
