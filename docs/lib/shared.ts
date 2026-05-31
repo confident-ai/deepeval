@@ -54,6 +54,9 @@ export const gitConfig = {
  *  rotating the invite is a one-line change. */
 export const discordUrl = 'https://discord.gg/a3K9c8GRGt';
 
+/** Community subreddit — used by the `<RedditButton>` CTA. */
+export const redditUrl = 'https://www.reddit.com/r/deepeval/';
+
 /**
  * Kapa.ai Ask-AI config. Values mirror what the old Docusaurus site
  * shipped (`old_deepeval_docs/docusaurus.config.ts`) but re-mapped to

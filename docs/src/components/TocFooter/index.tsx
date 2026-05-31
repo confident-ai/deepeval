@@ -2,7 +2,7 @@ import type { ComponentProps } from "react";
 import { PageLastUpdate } from "fumadocs-ui/layouts/notebook/page";
 import type { Contributor } from "@/lib/contributors";
 import CloudPlatformCallout from "@/src/components/CloudPlatformCallout";
-import DiscordButton from "@/src/components/DiscordButton";
+import CommunityCta from "@/src/components/CommunityCta";
 import GithubCtaButton from "@/src/components/GithubCtaButton";
 import PageContributors from "@/src/components/PageContributors";
 import styles from "./TocFooter.module.scss";
@@ -41,7 +41,7 @@ const TocFooter: React.FC<Props> = ({ contributors, lastModified }) => {
 
       <div className={styles.community}>
         <GithubCtaButton tone="secondary" alwaysCallout />
-        <DiscordButton />
+        <CommunityCta />
       </div>
     </aside>
   );
