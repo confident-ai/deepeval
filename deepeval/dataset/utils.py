@@ -109,11 +109,17 @@ def convert_convo_goldens_to_convo_test_cases(
 
 
 def trimAndLoadJson(input_string: str) -> Any:
+    stripped = input_string.strip()
     try:
-        cleaned_string = re.sub(r",\s*([\]}])", r"\1", input_string.strip())
-        return json.loads(cleaned_string)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON: {input_string}. Error: {str(e)}")
+        return json.loads(stripped)
+    except json.JSONDecodeError:
+        # Strip a trailing comma before a closing ] or } and retry, but only
+        # after a direct parse fails, so valid JSON string values containing
+        # ", ]" or ", }" are never corrupted.
+        try:
+            return json.loads(re.sub(r",\s*([\]}])", r"\1", stripped))
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON: {input_string}. Error: {str(e)}")
     except Exception as e:
         raise Exception(f"An unexpected error occurred: {str(e)}")
 
