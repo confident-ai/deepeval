@@ -131,6 +131,58 @@ class TestSingleTurnDataset:
         assert deep_equal_unordered(dataset.goldens, initial_goldens)
 
 
+class TestDatasetVersioning:
+
+    PUSH_ALIAS = "test_dataset_versioning"
+
+    def create_golden_from_data(self, data):
+        return Golden(
+            input=data.get("input", None),
+            actual_output=data.get("actual_output", None),
+            expected_output=data.get("expected_output", None),
+            context=data.get("context", None),
+            retrieval_context=data.get("retrieval_context", None),
+            additional_metadata=data.get("additional_metadata", None),
+            comments=data.get("comments", None),
+            tools_called=create_tool_calls_from_data(
+                data.get("tools_called", None)
+            ),
+            expected_tools=create_tool_calls_from_data(
+                data.get("expected_tools", None)
+            ),
+            custom_column_key_values=data.get("custom_column_key_values", None),
+        )
+
+    def test_create_get_pull_push_version(self):
+        goldens_data = load_goldens_data("goldens.json")
+
+        initial_goldens = [
+            self.create_golden_from_data(d) for d in goldens_data
+        ]
+
+        dataset = EvaluationDataset(goldens=initial_goldens)
+        dataset.delete(alias=self.PUSH_ALIAS)
+        dataset.push(alias=self.PUSH_ALIAS)
+
+        version = dataset.create_version(alias=self.PUSH_ALIAS)
+        assert isinstance(version, str) and version
+        assert dataset._version == version
+
+        versions = dataset.get_versions(alias=self.PUSH_ALIAS)
+        assert any(v.version == version for v in versions)
+
+        dataset.goldens = []
+        dataset.pull(alias=self.PUSH_ALIAS, version=version)
+        assert dataset._version == version
+        assert len(dataset.goldens) == len(initial_goldens)
+
+        dataset.pull(alias=self.PUSH_ALIAS)
+        assert dataset._version == version
+
+        new_dataset = EvaluationDataset(goldens=initial_goldens[:1])
+        new_dataset.push(alias=self.PUSH_ALIAS, version=version)
+
+
 class TestMultiTurnDataset:
 
     PUSH_ALIAS = "test_multi_turn_realistic_push"
