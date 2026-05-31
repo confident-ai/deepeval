@@ -30,19 +30,12 @@ app = typer.Typer(name="test")
 
 def check_if_valid_file(test_file_or_directory: str):
     if "::" in test_file_or_directory:
-        test_file_or_directory, test_case = test_file_or_directory.split("::")
-    if os.path.isfile(test_file_or_directory):
-        if test_file_or_directory.endswith(".py"):
-            if not os.path.basename(test_file_or_directory).startswith("test_"):
-                raise ValueError(
-                    "Test will not run. Please ensure the file starts with `test_` prefix."
-                )
-    elif os.path.isdir(test_file_or_directory):
+        test_file_or_directory = test_file_or_directory.split("::", 1)[0]
+    if os.path.isfile(test_file_or_directory) or os.path.isdir(
+        test_file_or_directory
+    ):
         return
-    else:
-        raise ValueError(
-            "Provided path is neither a valid file nor a directory."
-        )
+    raise ValueError("Provided path is neither a valid file nor a directory.")
 
 
 # Allow extra args and ignore unknown options allow extra args to be passed to pytest
