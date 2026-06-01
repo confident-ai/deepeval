@@ -149,6 +149,7 @@ class UpdateOrganizationRequest(BaseModel):
 class CreateProjectRequest(BaseModel):
     name: str
     description: Optional[str] = None
+    email: Optional[str] = None
 
 
 class UpdateProjectRequest(BaseModel):

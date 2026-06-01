@@ -75,10 +75,13 @@ class ConfidentClient:
         return ProjectsHttpResponse(**data).projects
 
     def create_project(
-        self, name: str, description: Optional[str] = None
+        self,
+        name: str,
+        description: Optional[str] = None,
+        email: Optional[str] = None,
     ) -> Project:
         body = CreateProjectRequest(
-            name=name, description=description
+            name=name, description=description, email=email
         ).model_dump(by_alias=True, exclude_none=True)
         data, _ = self._api.send_request(
             method=HttpMethods.POST,
