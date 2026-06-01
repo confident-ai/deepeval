@@ -241,7 +241,7 @@ describe("Prompt Module", () => {
       expect(data.outputSchema.fields).toBeDefined();
 
       const arrayField = data.outputSchema.fields.find(
-        (f: any) => f.name === "tags" && !f.parentId
+        (f: any) => f.name === "tags" && !f.parentId,
       );
       expect(arrayField).toBeDefined();
       expect(arrayField.type).toBe("ARRAY");
@@ -271,7 +271,7 @@ describe("Prompt Module", () => {
       expect(data.outputSchema).toBeDefined();
 
       const arrayField = data.outputSchema.fields.find(
-        (f: any) => f.name === "scores" && !f.parentId
+        (f: any) => f.name === "scores" && !f.parentId,
       );
       expect(arrayField).toBeDefined();
       expect(arrayField.type).toBe("ARRAY");
@@ -301,7 +301,7 @@ describe("Prompt Module", () => {
       expect(data.outputSchema).toBeDefined();
 
       const arrayField = data.outputSchema.fields.find(
-        (f: any) => f.name === "values" && !f.parentId
+        (f: any) => f.name === "values" && !f.parentId,
       );
       expect(arrayField).toBeDefined();
       expect(arrayField.type).toBe("ARRAY");
@@ -331,18 +331,18 @@ describe("Prompt Module", () => {
       expect(data.outputSchema).toBeDefined();
 
       const arrayField = data.outputSchema.fields.find(
-        (f: any) => f.name === "sources" && !f.parentId
+        (f: any) => f.name === "sources" && !f.parentId,
       );
       expect(arrayField).toBeDefined();
       expect(arrayField.type).toBe("ARRAY");
 
       const objectItem = data.outputSchema.fields.find(
-        (f: any) => f.parentId === arrayField.id && f.type === "OBJECT"
+        (f: any) => f.parentId === arrayField.id && f.type === "OBJECT",
       );
       expect(objectItem).toBeDefined();
 
       const nestedFields = data.outputSchema.fields.filter(
-        (f: any) => f.parentId === objectItem.id
+        (f: any) => f.parentId === objectItem.id,
       );
       const nestedNames = nestedFields.map((f: any) => f.name);
       expect(nestedNames).toContain("url");
@@ -375,7 +375,9 @@ describe("Prompt Module", () => {
       expect(data.outputType).toBe("SCHEMA");
       expect(data.outputSchema).toBeDefined();
 
-      const rootFields = data.outputSchema.fields.filter((f: any) => !f.parentId);
+      const rootFields = data.outputSchema.fields.filter(
+        (f: any) => !f.parentId,
+      );
       const rootNames = rootFields.map((f: any) => f.name);
       expect(rootNames).toContain("name");
       expect(rootNames).toContain("count");
@@ -416,7 +418,9 @@ describe("Prompt Module", () => {
       expect(data.outputType).toBe("SCHEMA");
       expect(data.outputSchema).toBeDefined();
 
-      const rootFields = data.outputSchema.fields.filter((f: any) => !f.parentId);
+      const rootFields = data.outputSchema.fields.filter(
+        (f: any) => !f.parentId,
+      );
       const rootNames = rootFields.map((f: any) => f.name);
       expect(rootNames).toContain("id");
       expect(rootNames).toContain("details");

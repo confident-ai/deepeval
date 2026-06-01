@@ -182,9 +182,7 @@ describe("OpenAI Tool Calling Flow Tests", () => {
     } else {
       await assertTraceJson(jsonPath, executeTest);
     }
-    },
-    60_000,
-  );
+  }, 60_000);
 
   test("Should capture tool call flow using Responses API", async () => {
     const jsonPath = path.join(
@@ -252,7 +250,5 @@ describe("OpenAI Tool Calling Flow Tests", () => {
     } else {
       await assertTraceJson(jsonPath, executeTest);
     }
-    },
-    60_000,
-  );
+  }, 60_000);
 });
