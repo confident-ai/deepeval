@@ -66,6 +66,7 @@ class ContextConstructionConfig:
     max_retries: int = 3
     allow_cross_file_contexts: bool = False
     target_files_per_context: Optional[int] = None
+    max_files_per_context: int = 3
 
     def __post_init__(self):
         self.critic_model, _ = initialize_model(self.critic_model)

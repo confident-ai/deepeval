@@ -252,3 +252,297 @@ class TestCrossFileSourceLabeling:
             "[SOURCE: file_a.txt] chunk A text",
             "[SOURCE: file_b.txt] chunk B text",
         ]
+
+    def test_format_context_single_file_is_not_labeled(self):
+        """Single-file contexts (the default path) must be left untouched."""
+        synth = _make_synthesizer()
+
+        context = ["chunk A text", "chunk B text"]
+        chunk_source_files = ["file_a.txt", "file_a.txt"]
+
+        formatted = synth._format_context_with_sources(
+            context=context,
+            chunk_source_files=chunk_source_files,
+        )
+
+        assert formatted == context
+
+    def test_format_context_no_sources_returns_context(self):
+        synth = _make_synthesizer()
+        context = ["only chunk"]
+
+        assert (
+            synth._format_context_with_sources(context, None) == context
+        )
+        # Mismatched lengths fall back to the raw context.
+        assert (
+            synth._format_context_with_sources(context, ["a", "b"]) == context
+        )
+
+
+class TestBuildContextsWithSources:
+    def test_build_contexts_attaches_source_per_chunk(self):
+        synth = _make_synthesizer()
+
+        contexts = [["c1", "c2"], ["c3"]]
+        source_files = ["doc1.txt", "doc2.txt"]
+        scores = [0.9, 0.7]
+
+        built = synth._build_contexts_with_sources(
+            contexts=contexts,
+            source_files=source_files,
+            context_scores=scores,
+        )
+
+        assert len(built) == 2
+        assert built[0].source_files == ["doc1.txt"]
+        assert built[0].chunk_source_files == ["doc1.txt", "doc1.txt"]
+        assert built[0].score == 0.9
+        assert built[1].chunk_source_files == ["doc2.txt"]
+
+    def test_build_contexts_handles_missing_sources_and_scores(self):
+        synth = _make_synthesizer()
+
+        built = synth._build_contexts_with_sources(
+            contexts=[["c1"]],
+            source_files=[],
+            context_scores=None,
+        )
+
+        assert built[0].source_files == []
+        assert built[0].chunk_source_files == []
+        assert built[0].score is None
+
+
+class TestMergeCrossFileContexts:
+    @staticmethod
+    def _fake_embedder():
+        # Deterministic, orthogonal embeddings so similarity never drives the
+        # outcome — selection then depends only on the disjoint-source rule.
+        embedder = MagicMock()
+        embedder.embed_texts.side_effect = lambda texts: [
+            [1.0] * len(texts) for _ in texts
+        ]
+        return embedder
+
+    def _build(self, synth, source_files):
+        return synth._build_contexts_with_sources(
+            contexts=[[f"chunk from {s}"] for s in source_files],
+            source_files=source_files,
+            context_scores=[0.5] * len(source_files),
+        )
+
+    def test_merge_partitions_without_duplicating_contexts(self):
+        synth = _make_synthesizer()
+        built = self._build(synth, ["a.txt", "b.txt", "c.txt", "d.txt"])
+
+        merged = synth._merge_cross_file_contexts(
+            built,
+            self._fake_embedder(),
+            target_files_per_context=2,
+        )
+
+        # Each original file appears in exactly one merged context.
+        seen = [s for m in merged for s in m.source_files]
+        assert sorted(seen) == ["a.txt", "b.txt", "c.txt", "d.txt"]
+        assert len(seen) == len(set(seen))  # no duplication
+        # target=2 -> groups of 2 distinct files.
+        assert all(len(m.source_files) == 2 for m in merged)
+
+    def test_merge_keeps_chunk_labels_aligned(self):
+        synth = _make_synthesizer()
+        built = self._build(synth, ["a.txt", "b.txt"])
+
+        merged = synth._merge_cross_file_contexts(
+            built, self._fake_embedder(), target_files_per_context=2
+        )
+
+        assert len(merged) == 1
+        group = merged[0]
+        assert len(group.chunk_source_files) == len(group.context)
+        assert set(group.chunk_source_files) == {"a.txt", "b.txt"}
+
+    def test_merge_respects_max_files_per_context(self):
+        synth = _make_synthesizer()
+        built = self._build(
+            synth, ["a.txt", "b.txt", "c.txt", "d.txt", "e.txt"]
+        )
+
+        merged = synth._merge_cross_file_contexts(
+            built,
+            self._fake_embedder(),
+            target_files_per_context=10,  # asks for more than the cap
+            max_files_per_context=2,
+        )
+
+        assert all(len(m.source_files) <= 2 for m in merged)
+
+    def test_merge_rejects_target_below_two(self):
+        synth = _make_synthesizer()
+        built = self._build(synth, ["a.txt", "b.txt"])
+
+        with pytest.raises(ValueError):
+            synth._merge_cross_file_contexts(
+                built, self._fake_embedder(), target_files_per_context=1
+            )
+
+    def test_merge_noop_for_single_context(self):
+        synth = _make_synthesizer()
+        built = self._build(synth, ["a.txt"])
+
+        merged = synth._merge_cross_file_contexts(
+            built, self._fake_embedder()
+        )
+
+        assert merged == built
+
+    @pytest.mark.asyncio
+    async def test_async_merge_uses_async_embedder(self):
+        synth = _make_synthesizer()
+        built = self._build(synth, ["a.txt", "b.txt"])
+
+        embedder = MagicMock()
+        embedder.a_embed_texts = AsyncMock(
+            side_effect=lambda texts: [[1.0] for _ in texts]
+        )
+
+        merged = await synth._a_merge_cross_file_contexts(
+            built, embedder, target_files_per_context=2
+        )
+
+        embedder.a_embed_texts.assert_awaited_once()
+        assert len(merged) == 1
+        assert set(merged[0].source_files) == {"a.txt", "b.txt"}
+
+
+class TestCosineSimilarity:
+    def test_identical_vectors(self):
+        synth = _make_synthesizer()
+        assert synth._cosine_similarity([1.0, 0.0], [1.0, 0.0]) == 1.0
+
+    def test_orthogonal_vectors(self):
+        synth = _make_synthesizer()
+        assert synth._cosine_similarity([1.0, 0.0], [0.0, 1.0]) == 0.0
+
+    def test_zero_vector_is_safe(self):
+        synth = _make_synthesizer()
+        assert synth._cosine_similarity([0.0, 0.0], [1.0, 1.0]) == 0.0
+
+
+class TestSyntheticInputsTemplateGating:
+    def test_single_source_file_omits_cross_file_section(self):
+        from deepeval.synthesizer.templates.template import SynthesizerTemplate
+
+        prompt = SynthesizerTemplate.generate_synthetic_inputs(
+            context=["[SOURCE: a.txt] chunk"],
+            max_goldens_per_context=2,
+            scenario=None,
+            task=None,
+            input_format=None,
+            available_source_files=["a.txt"],
+        )
+
+        assert "used_source_files" not in prompt
+        assert "cross-file" not in prompt
+
+    def test_multi_source_files_inject_section_and_example(self):
+        from deepeval.synthesizer.templates.template import SynthesizerTemplate
+
+        prompt = SynthesizerTemplate.generate_synthetic_inputs(
+            context=["[SOURCE: a.txt] c1", "[SOURCE: b.txt] c2"],
+            max_goldens_per_context=2,
+            scenario=None,
+            task=None,
+            input_format=None,
+            available_source_files=["a.txt", "b.txt"],
+            target_files_per_context=2,
+        )
+
+        assert "used_source_files" in prompt
+        # The few-shot example must demonstrate the new key.
+        assert '"used_source_files": ["a.txt", "b.txt"]' in prompt
+        assert "at least 2 different source files" in prompt
+
+
+class TestSyntheticScenariosTemplateGating:
+    def test_single_source_file_omits_cross_file_section(self):
+        from deepeval.synthesizer.templates.template import SynthesizerTemplate
+
+        prompt = SynthesizerTemplate.generate_synthetic_scenarios(
+            context=["[SOURCE: a.txt] chunk"],
+            max_goldens_per_context=2,
+            scenario_context=None,
+            conversational_task=None,
+            participant_roles=None,
+            available_source_files=["a.txt"],
+        )
+
+        assert "used_source_files" not in prompt
+        assert "cross-file" not in prompt
+
+    def test_multi_source_files_inject_section_and_example(self):
+        from deepeval.synthesizer.templates.template import SynthesizerTemplate
+
+        prompt = SynthesizerTemplate.generate_synthetic_scenarios(
+            context=["[SOURCE: a.txt] c1", "[SOURCE: b.txt] c2"],
+            max_goldens_per_context=2,
+            scenario_context=None,
+            conversational_task=None,
+            participant_roles=None,
+            available_source_files=["a.txt", "b.txt"],
+            target_files_per_context=2,
+        )
+
+        assert "used_source_files" in prompt
+        # The few-shot example must demonstrate the new key.
+        assert '"used_source_files": ["a.txt", "b.txt"]' in prompt
+        assert "at least 2 different source files" in prompt
+
+
+class TestRewriteScenariosPreservesSources:
+    def _passing_feedback(self):
+        feedback = MagicMock()
+        feedback.feedback = "great"
+        feedback.score = 1.0  # above default 0.5 threshold -> no rewrite
+        return feedback
+
+    def test_sync_rewrite_keeps_used_source_files(self):
+        from deepeval.synthesizer.schema import ConversationalScenario
+
+        synth = _make_synthesizer()
+        synth._generate_schema = MagicMock(
+            return_value=self._passing_feedback()
+        )
+
+        scenarios = [
+            ConversationalScenario(
+                scenario="a scenario",
+                used_source_files=["a.txt", "b.txt"],
+            )
+        ]
+        filtered, scores = synth._rewrite_scenarios(["ctx"], scenarios)
+
+        assert filtered[0].used_source_files == ["a.txt", "b.txt"]
+        assert scores == [1.0]
+
+    @pytest.mark.asyncio
+    async def test_async_rewrite_keeps_used_source_files(self):
+        from deepeval.synthesizer.schema import ConversationalScenario
+
+        synth = _make_synthesizer()
+        synth._a_generate_schema = AsyncMock(
+            return_value=self._passing_feedback()
+        )
+
+        scenarios = [
+            ConversationalScenario(
+                scenario="a scenario",
+                used_source_files=["a.txt", "b.txt"],
+            )
+        ]
+        filtered, scores = await synth._a_rewrite_scenarios(
+            ["ctx"], scenarios
+        )
+
+        assert filtered[0].used_source_files == ["a.txt", "b.txt"]
+        assert scores == [1.0]

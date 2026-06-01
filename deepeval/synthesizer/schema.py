@@ -63,6 +63,7 @@ class PromptStyling(BaseModel):
 
 class ConversationalScenario(BaseModel):
     scenario: str
+    used_source_files: Optional[List[str]] = None
 
 
 class ConversationalScenarioList(BaseModel):
