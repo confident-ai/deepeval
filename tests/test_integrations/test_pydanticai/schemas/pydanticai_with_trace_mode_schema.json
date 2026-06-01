@@ -1,14 +1,14 @@
 {
-  "uuid": "c0579915-f8cb-428a-8d57-6f16189bf11b",
+  "uuid": "e5f7653c-7926-4314-9dd0-ccacaeb537bc",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "11a9d52db22441a0",
+      "uuid": "56214726a4d6b996",
       "name": "modes_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T06:45:48.149Z",
-      "endTime": "2026-05-05T06:45:49.721Z",
+      "startTime": "2026-06-01T16:36:41.614Z",
+      "endTime": "2026-06-01T16:36:42.507Z",
       "input": [
         {
           "role": "user",
@@ -16,20 +16,20 @@
         }
       ],
       "output": "Farewell, take care.",
+      "integration": "PydanticAI",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "PydanticAI"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "84e874880339a4ea",
+      "uuid": "caceaabb080eea89",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "11a9d52db22441a0",
-      "startTime": "2026-05-05T06:45:48.150Z",
-      "endTime": "2026-05-05T06:45:49.718Z",
+      "parentUuid": "56214726a4d6b996",
+      "startTime": "2026-06-01T16:36:41.616Z",
+      "endTime": "2026-06-01T16:36:42.507Z",
       "input": [
         {
           "role": "system",
@@ -43,7 +43,7 @@
           "role": "Model Request Parameters",
           "content": {
             "function_tools": [],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -61,17 +61,17 @@
           "content": "Farewell, take care."
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 28.0,
-      "outputTokenCount": 6.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 28.0,
+      "outputTokenCount": 6.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-05-05T06:45:48.147Z",
-  "endTime": "2026-05-05T06:45:49.721Z",
+  "startTime": "2026-06-01T16:36:41.612Z",
+  "endTime": "2026-06-01T16:36:42.508Z",
   "name": "pydanticai-with-trace",
   "metadata": {
     "test_type": "with_trace_mode",
