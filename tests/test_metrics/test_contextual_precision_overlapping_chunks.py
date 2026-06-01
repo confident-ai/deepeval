@@ -16,6 +16,7 @@ All tests are marked skip_if no OPENAI_API_KEY to stay CI-friendly.
 """
 
 import os
+
 import pytest
 
 from deepeval.metrics import ContextualPrecisionMetric
@@ -26,7 +27,6 @@ pytestmark = pytest.mark.skipif(
     or not os.getenv("OPENAI_API_KEY").strip(),
     reason="OPENAI_API_KEY is not set",
 )
-
 
 # ---------------------------------------------------------------------------
 # Shared fixtures
@@ -46,6 +46,7 @@ CHUNK_B = (
     "Accounts receivable $200,000. Total current assets are $500,000. "
     "The following section covers non-current assets."
 )
+
 # A clearly irrelevant chunk from a different section.
 CHUNK_IRRELEVANT = (
     "Property, plant and equipment (net): $1,200,000. "
@@ -60,6 +61,7 @@ class TestContextualPrecisionOverlappingChunks:
         """Both CHUNK_A and CHUNK_B support the answer.
 
         Expected: score >= 0.7 because both chunks are relevant.
+
         Prior to a group_by fix, the metric could score these lower by
         treating duplicate content as separate low-value retrievals.
         """
@@ -154,7 +156,7 @@ class TestContextualPrecisionOverlappingChunks:
         )
 
     def test_all_irrelevant_chunks_score_near_zero(self):
-        """All retrieved chunks are irrelevant — control case.
+        """All retrieved chunks are irrelevant -- control case.
 
         Expected: score <= 0.3.
         """
