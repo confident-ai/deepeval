@@ -1,0 +1,71 @@
+{
+  "name": "Vercel Text Gen Trace",
+  "uuid": "93d5de9a-51af-4ff3-939f-941abeca0ec5",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "d09561ba1b01700a",
+      "name": "ai.generateText",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "93d5de9a-51af-4ff3-939f-941abeca0ec5",
+      "startTime": "2026-02-23T14:52:36.956Z",
+      "endTime": "2026-02-23T14:52:39.130Z",
+      "input": {
+        "prompt": "Why is the sky blue? Answer in one short sentence."
+      },
+      "output": "The sky appears blue because molecules in the atmosphere scatter shorter wavelengths of light, such as blue, more than longer wavelengths like red.",
+      "model": "gpt-4o-mini",
+      "metadata": {
+        "provider": "openai.responses",
+        "finish_reason": "stop",
+        "max_retries": 2
+      }
+    },
+    {
+      "uuid": "444068a6195f6311",
+      "name": "ai.generateText.doGenerate",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "93d5de9a-51af-4ff3-939f-941abeca0ec5",
+      "parentUuid": "d09561ba1b01700a",
+      "startTime": "2026-02-23T14:52:36.958Z",
+      "endTime": "2026-02-23T14:52:38.933Z",
+      "input": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Why is the sky blue? Answer in one short sentence."
+            }
+          ]
+        }
+      ],
+      "output": "The sky appears blue because molecules in the atmosphere scatter shorter wavelengths of light, such as blue, more than longer wavelengths like red.",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 19,
+      "outputTokenCount": 27,
+      "metadata": {
+        "response_id": "resp_0147adb8cbd1d27400699c69b55d5481969517e43adafb08ca",
+        "response_model": "gpt-4o-mini-2024-07-18",
+        "provider": "openai.responses",
+        "finish_reason": "stop",
+        "max_retries": 2
+      }
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-23T14:52:36.954Z",
+  "endTime": "2026-02-23T14:52:39.144Z",
+  "environment": "testing",
+  "tags": [
+    "vercel",
+    "generateText"
+  ],
+  "threadId": "vercel-thread-1",
+  "input": "{\"prompt\":\"Why is the sky blue? Answer in one short sentence.\"}",
+  "output": "The sky appears blue because molecules in the atmosphere scatter shorter wavelengths of light, such as blue, more than longer wavelengths like red."
+}

@@ -1,0 +1,112 @@
+{
+  "name": "OpenAI Agents Evaluation Trace",
+  "uuid": "ce630ba7-1ed8-4ea2-b6f3-5b49ee3af2b5",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "span_d3bcbed270fc45958a972ea0",
+      "name": "EvalAgent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "traceUuid": "ce630ba7-1ed8-4ea2-b6f3-5b49ee3af2b5",
+      "startTime": "2026-02-24T13:02:47.414Z",
+      "endTime": "2026-02-24T13:02:56.840Z",
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Verify metric collection propagation."
+        }
+      ],
+      "output": "To verify metric collection propagation, you should follow these steps:\n\n1. **Define Metrics**:\n   - Ensure that all necessary metrics are clearly defined, including their types (e.g., counters, gauges, histograms) and what they intend to measure.\n\n2. **Setup Monitoring Tools**:\n   - Make sure that your monitoring tools (e.g., Prometheus, Grafana, Datadog) are properly configured to collect data from your services or applications.\n\n3. **Instrument Applications**:\n   - Verify that your applications or services have the appropriate instrumentation code to capture metrics. This may involve using libraries or agents designed for metrics collection.\n\n4. **Check Data Sources**:\n   - Confirm that all services are correctly sending metrics data to the monitoring infrastructure. This can involve checking the endpoints or middleware that handle metric emissions.\n\n5. **Connectivity**:\n   - Ensure there is proper network connectivity between the metric sources and the collection endpoints. Firewalls or network policies should not block traffic.\n\n6. **Data Validation**:\n   - Compare the metric data against expected values or known baselines to ensure accuracy. This can help identify discrepancies or anomalies.\n\n7. **Propagation Testing**:\n   - Simulate metric generation from various parts of the system to verify that data propagates correctly through the collection and aggregation pipeline.\n\n8. **Dashboard Validation**:\n   - Check if the metrics are accurately reflected in dashboards and visualizations. Verify real-time updates and historical data consistency.\n\n9. **Alert Systems**:\n   - Test alerting based on specific thresholds or conditions to ensure that the end-to-end propagation triggers notifications as desired.\n\n10. **End-to-End Tracing**:\n    - If applicable, use distributed tracing tools to follow the flow of a single transaction or metric through the system to identify any bottlenecks or failures.\n\n11. **Logging and Debugging**:\n    - Enable logging to capture any errors or warnings related to metric collection and propagation. Analyze logs for troubleshooting.\n\n12. **Review SLA Requirements**:\n    - Consider the service level agreements and ensure that the metric collection meets the required performance and availability standards.\n\nBy following these steps, you can ensure the proper propagation and collection of metrics within your monitoring infrastructure.",
+      "metricCollection": "agent-level-collection",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metadata": {
+        "output_type": "text"
+      }
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "span_2f65deb6d6ba4082bc7390ee",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "ce630ba7-1ed8-4ea2-b6f3-5b49ee3af2b5",
+      "parentUuid": "span_d3bcbed270fc45958a972ea0",
+      "startTime": "2026-02-24T13:02:47.415Z",
+      "endTime": "2026-02-24T13:02:56.840Z",
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Verify metric collection propagation."
+        }
+      ],
+      "output": "To verify metric collection propagation, you should follow these steps:\n\n1. **Define Metrics**:\n   - Ensure that all necessary metrics are clearly defined, including their types (e.g., counters, gauges, histograms) and what they intend to measure.\n\n2. **Setup Monitoring Tools**:\n   - Make sure that your monitoring tools (e.g., Prometheus, Grafana, Datadog) are properly configured to collect data from your services or applications.\n\n3. **Instrument Applications**:\n   - Verify that your applications or services have the appropriate instrumentation code to capture metrics. This may involve using libraries or agents designed for metrics collection.\n\n4. **Check Data Sources**:\n   - Confirm that all services are correctly sending metrics data to the monitoring infrastructure. This can involve checking the endpoints or middleware that handle metric emissions.\n\n5. **Connectivity**:\n   - Ensure there is proper network connectivity between the metric sources and the collection endpoints. Firewalls or network policies should not block traffic.\n\n6. **Data Validation**:\n   - Compare the metric data against expected values or known baselines to ensure accuracy. This can help identify discrepancies or anomalies.\n\n7. **Propagation Testing**:\n   - Simulate metric generation from various parts of the system to verify that data propagates correctly through the collection and aggregation pipeline.\n\n8. **Dashboard Validation**:\n   - Check if the metrics are accurately reflected in dashboards and visualizations. Verify real-time updates and historical data consistency.\n\n9. **Alert Systems**:\n   - Test alerting based on specific thresholds or conditions to ensure that the end-to-end propagation triggers notifications as desired.\n\n10. **End-to-End Tracing**:\n    - If applicable, use distributed tracing tools to follow the flow of a single transaction or metric through the system to identify any bottlenecks or failures.\n\n11. **Logging and Debugging**:\n    - Enable logging to capture any errors or warnings related to metric collection and propagation. Analyze logs for troubleshooting.\n\n12. **Review SLA Requirements**:\n    - Consider the service level agreements and ensure that the metric collection meets the required performance and availability standards.\n\nBy following these steps, you can ensure the proper propagation and collection of metrics within your monitoring infrastructure.",
+      "metricCollection": "llm-level-metrics",
+      "model": "gpt-4o-2024-08-06",
+      "inputTokenCount": 22,
+      "outputTokenCount": 448,
+      "promptAlias": "eval-test-prompt",
+      "promptCommitHash": "test-hash-123",
+      "promptLabel": "prompt-label-1",
+      "promptVersion": "00.00.01",
+      "metadata": {
+        "cached_input_tokens": 0,
+        "output_reasoning_tokens": 0,
+        "invocation_params": {
+          "max_output_tokens": null,
+          "parallel_tool_calls": true,
+          "reasoning": {
+            "effort": null,
+            "summary": null
+          },
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "temperature": 1,
+          "tool_choice": "auto",
+          "tools": [],
+          "top_p": 1,
+          "truncation": "disabled"
+        }
+      }
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-24T13:02:47.414Z",
+  "endTime": "2026-02-24T13:02:56.840Z",
+  "environment": "testing",
+  "threadId": "thread-abc-123",
+  "userId": "user-999",
+  "input": [
+    {
+      "type": "message",
+      "role": "system",
+      "content": "You are a helpful assistant."
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": "Verify metric collection propagation."
+    }
+  ],
+  "output": "To verify metric collection propagation, you should follow these steps:\n\n1. **Define Metrics**:\n   - Ensure that all necessary metrics are clearly defined, including their types (e.g., counters, gauges, histograms) and what they intend to measure.\n\n2. **Setup Monitoring Tools**:\n   - Make sure that your monitoring tools (e.g., Prometheus, Grafana, Datadog) are properly configured to collect data from your services or applications.\n\n3. **Instrument Applications**:\n   - Verify that your applications or services have the appropriate instrumentation code to capture metrics. This may involve using libraries or agents designed for metrics collection.\n\n4. **Check Data Sources**:\n   - Confirm that all services are correctly sending metrics data to the monitoring infrastructure. This can involve checking the endpoints or middleware that handle metric emissions.\n\n5. **Connectivity**:\n   - Ensure there is proper network connectivity between the metric sources and the collection endpoints. Firewalls or network policies should not block traffic.\n\n6. **Data Validation**:\n   - Compare the metric data against expected values or known baselines to ensure accuracy. This can help identify discrepancies or anomalies.\n\n7. **Propagation Testing**:\n   - Simulate metric generation from various parts of the system to verify that data propagates correctly through the collection and aggregation pipeline.\n\n8. **Dashboard Validation**:\n   - Check if the metrics are accurately reflected in dashboards and visualizations. Verify real-time updates and historical data consistency.\n\n9. **Alert Systems**:\n   - Test alerting based on specific thresholds or conditions to ensure that the end-to-end propagation triggers notifications as desired.\n\n10. **End-to-End Tracing**:\n    - If applicable, use distributed tracing tools to follow the flow of a single transaction or metric through the system to identify any bottlenecks or failures.\n\n11. **Logging and Debugging**:\n    - Enable logging to capture any errors or warnings related to metric collection and propagation. Analyze logs for troubleshooting.\n\n12. **Review SLA Requirements**:\n    - Consider the service level agreements and ensure that the metric collection meets the required performance and availability standards.\n\nBy following these steps, you can ensure the proper propagation and collection of metrics within your monitoring infrastructure.",
+  "metricCollection": "trace-level-metrics"
+}

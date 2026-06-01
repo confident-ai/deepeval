@@ -1,0 +1,202 @@
+{
+  "name": "langchain-simple-test",
+  "uuid": "9c709e9b-2a30-4b58-879c-f6e2cb4ae91b",
+  "baseSpans": [
+    {
+      "uuid": "019c8b75-6cb8-7ccb-aba1-bc1b115819e5",
+      "name": "simple_chain",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "9c709e9b-2a30-4b58-879c-f6e2cb4ae91b",
+      "startTime": "2026-02-23T17:04:14.520Z",
+      "endTime": "2026-02-23T17:04:15.460Z",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Say hello in one short sentence."
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Say hello in one short sentence."
+          },
+          {
+            "lc": 1,
+            "type": "constructor",
+            "id": [
+              "langchain_core",
+              "messages",
+              "AIMessage"
+            ],
+            "kwargs": {
+              "id": "chatcmpl-DCTduL6x5rEWFJUFBa3xWr57aH8s3",
+              "content": "Hello!",
+              "additional_kwargs": {},
+              "response_metadata": {
+                "tokenUsage": {
+                  "promptTokens": 14,
+                  "completionTokens": 2,
+                  "totalTokens": 16
+                },
+                "finish_reason": "stop",
+                "model_provider": "openai",
+                "model_name": "gpt-4o-mini-2024-07-18",
+                "usage": {
+                  "prompt_tokens": 14,
+                  "completion_tokens": 2,
+                  "total_tokens": 16,
+                  "prompt_tokens_details": {
+                    "cached_tokens": 0,
+                    "audio_tokens": 0
+                  },
+                  "completion_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "audio_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "system_fingerprint": "fp_fc706eab22"
+              },
+              "type": "ai",
+              "tool_calls": [],
+              "invalid_tool_calls": [],
+              "usage_metadata": {
+                "output_tokens": 2,
+                "input_tokens": 14,
+                "total_tokens": 16,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 0
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019c8b75-6cbb-7000-8000-0d394b898e9f",
+      "name": "Langchain LLM Run",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "9c709e9b-2a30-4b58-879c-f6e2cb4ae91b",
+      "parentUuid": "019c8b75-6cb8-7ccb-aba1-bc1b115819e5",
+      "startTime": "2026-02-23T17:04:14.523Z",
+      "endTime": "2026-02-23T17:04:15.460Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Say hello in one short sentence."
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "Hello!",
+        "toolCalls": []
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "costPerInputToken": 0,
+      "costPerOutputToken": 0,
+      "inputTokenCount": 14,
+      "outputTokenCount": 2
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-23T17:04:14.505Z",
+  "endTime": "2026-02-23T17:04:15.460Z",
+  "environment": "testing",
+  "metadata": {
+    "test_type": "simple"
+  },
+  "tags": [
+    "langchain",
+    "simple"
+  ],
+  "threadId": "simple-123",
+  "userId": "test-user",
+  "input": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Say hello in one short sentence."
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Say hello in one short sentence."
+      },
+      {
+        "lc": 1,
+        "type": "constructor",
+        "id": [
+          "langchain_core",
+          "messages",
+          "AIMessage"
+        ],
+        "kwargs": {
+          "id": "chatcmpl-DCTduL6x5rEWFJUFBa3xWr57aH8s3",
+          "content": "Hello!",
+          "additional_kwargs": {},
+          "response_metadata": {
+            "tokenUsage": {
+              "promptTokens": 14,
+              "completionTokens": 2,
+              "totalTokens": 16
+            },
+            "finish_reason": "stop",
+            "model_provider": "openai",
+            "model_name": "gpt-4o-mini-2024-07-18",
+            "usage": {
+              "prompt_tokens": 14,
+              "completion_tokens": 2,
+              "total_tokens": 16,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "system_fingerprint": "fp_fc706eab22"
+          },
+          "type": "ai",
+          "tool_calls": [],
+          "invalid_tool_calls": [],
+          "usage_metadata": {
+            "output_tokens": 2,
+            "input_tokens": 14,
+            "total_tokens": 16,
+            "input_token_details": {
+              "audio": 0,
+              "cache_read": 0
+            },
+            "output_token_details": {
+              "audio": 0,
+              "reasoning": 0
+            }
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,226 @@
+{
+  "name": "Agent workflow",
+  "uuid": "598766f7-4044-4e3c-a8f7-28a0196e03bd",
+  "baseSpans": [
+    {
+      "uuid": "span_d9711807844e421eaaa6b4f8",
+      "name": "Handoff → SpanishAgent",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "598766f7-4044-4e3c-a8f7-28a0196e03bd",
+      "parentUuid": "span_987b8dc4b32440b6be761d11",
+      "startTime": "2026-02-24T11:43:52.816Z",
+      "endTime": "2026-02-24T11:43:52.816Z",
+      "input": null,
+      "output": null,
+      "metadata": {
+        "from_agent": "TriageAgent",
+        "to_agent": "SpanishAgent"
+      }
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "span_987b8dc4b32440b6be761d11",
+      "name": "TriageAgent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "traceUuid": "598766f7-4044-4e3c-a8f7-28a0196e03bd",
+      "startTime": "2026-02-24T11:43:51.753Z",
+      "endTime": "2026-02-24T11:43:52.817Z",
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "If input is Spanish, handoff to SpanishAgent. Else EnglishAgent."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Hola, ¿cómo estás?"
+        }
+      ],
+      "availableTools": [],
+      "agentHandoffs": [
+        "SpanishAgent",
+        "EnglishAgent"
+      ],
+      "metadata": {
+        "output_type": "text"
+      }
+    },
+    {
+      "uuid": "span_bfb9ca75ca2c4d6d945a4223",
+      "name": "SpanishAgent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "traceUuid": "598766f7-4044-4e3c-a8f7-28a0196e03bd",
+      "startTime": "2026-02-24T11:43:52.817Z",
+      "endTime": "2026-02-24T11:43:53.635Z",
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "If input is Spanish, handoff to SpanishAgent. Else EnglishAgent."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Hola, ¿cómo estás?"
+        }
+      ],
+      "output": "Hola.",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metadata": {
+        "output_type": "text"
+      }
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "span_0826ec011b9e4e0dbb3f09f1",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "598766f7-4044-4e3c-a8f7-28a0196e03bd",
+      "parentUuid": "span_987b8dc4b32440b6be761d11",
+      "startTime": "2026-02-24T11:43:51.753Z",
+      "endTime": "2026-02-24T11:43:52.815Z",
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "If input is Spanish, handoff to SpanishAgent. Else EnglishAgent."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Hola, ¿cómo estás?"
+        }
+      ],
+      "model": "gpt-4o-2024-08-06",
+      "inputTokenCount": 89,
+      "outputTokenCount": 15,
+      "metadata": {
+        "cached_input_tokens": 0,
+        "output_reasoning_tokens": 0,
+        "invocation_params": {
+          "max_output_tokens": null,
+          "parallel_tool_calls": true,
+          "reasoning": {
+            "effort": null,
+            "summary": null
+          },
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "temperature": 1,
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "type": "function",
+              "description": "Handoff to the SpanishAgent agent to handle the request. ",
+              "name": "transfer_to_SpanishAgent",
+              "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              },
+              "strict": true
+            },
+            {
+              "type": "function",
+              "description": "Handoff to the EnglishAgent agent to handle the request. ",
+              "name": "transfer_to_EnglishAgent",
+              "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              },
+              "strict": true
+            }
+          ],
+          "top_p": 1,
+          "truncation": "disabled"
+        }
+      }
+    },
+    {
+      "uuid": "span_247151ef70c84b43ab205579",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "598766f7-4044-4e3c-a8f7-28a0196e03bd",
+      "parentUuid": "span_bfb9ca75ca2c4d6d945a4223",
+      "startTime": "2026-02-24T11:43:52.818Z",
+      "endTime": "2026-02-24T11:43:53.634Z",
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You speak Spanish. Answer 'Hola' to everything."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Hola, ¿cómo estás?"
+        },
+        {
+          "name": "transfer_to_SpanishAgent",
+          "arguments": "{}"
+        }
+      ],
+      "output": "Hola.",
+      "model": "gpt-4o-2024-08-06",
+      "inputTokenCount": 61,
+      "outputTokenCount": 3,
+      "metadata": {
+        "cached_input_tokens": 0,
+        "output_reasoning_tokens": 0,
+        "invocation_params": {
+          "max_output_tokens": null,
+          "parallel_tool_calls": true,
+          "reasoning": {
+            "effort": null,
+            "summary": null
+          },
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "temperature": 1,
+          "tool_choice": "auto",
+          "tools": [],
+          "top_p": 1,
+          "truncation": "disabled"
+        }
+      }
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-24T11:43:51.752Z",
+  "endTime": "2026-02-24T11:43:53.635Z",
+  "environment": "testing",
+  "input": [
+    {
+      "type": "message",
+      "role": "system",
+      "content": "If input is Spanish, handoff to SpanishAgent. Else EnglishAgent."
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": "Hola, ¿cómo estás?"
+    }
+  ],
+  "output": "Hola."
+}
