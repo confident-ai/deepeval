@@ -1,32 +1,33 @@
 {
-  "uuid": "c751e83e-e610-4edb-a9f5-6f12e24ee2fa",
+  "uuid": "a08e303f-691d-44d6-86ad-243a83e9c435",
   "baseSpans": [
     {
-      "uuid": "33049366-7c88-4cf0-bb96-b1aa6dc9f596",
+      "uuid": "3128f250-fab2-4c0b-a1e9-3cc65c43102e",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-15T10:57:13.583Z",
-      "endTime": "2026-02-15T10:57:15.467Z",
+      "startTime": "2026-06-01T17:24:28.896Z",
+      "endTime": "2026-06-01T17:24:31.760Z",
       "input": {
         "input": "Sync Data"
       },
       "output": "Calculated metrics for: deterministic_test_input",
-      "metricCollection": "crew_metrics_v1",
-      "integration": "CrewAI"
+      "integration": "CrewAI",
+      "metricCollection": "crew_metrics_v1"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "c2cd5675-c848-4ac0-b64e-d4b80f76cc05",
+      "uuid": "7de5a6ba-6a40-4bbe-84e9-bada7c4ad30f",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "33049366-7c88-4cf0-bb96-b1aa6dc9f596",
-      "startTime": "2026-02-15T10:57:13.587Z",
-      "endTime": "2026-02-15T10:57:15.463Z",
+      "parentUuid": "3128f250-fab2-4c0b-a1e9-3cc65c43102e",
+      "startTime": "2026-06-01T17:24:28.902Z",
+      "endTime": "2026-06-01T17:24:31.756Z",
       "input": "STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Calculated metrics for: deterministic_test_input",
+      "integration": "CrewAI",
       "toolsCalled": [
         {
           "name": "special_metric_tool",
@@ -38,34 +39,35 @@
       ],
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "agent_metrics_v1",
-      "integration": "CrewAI"
+      "metricCollection": "agent_metrics_v1"
     }
   ],
   "llmSpans": [
     {
-      "uuid": "be6bc28f-3c31-4145-8784-4ae066510b7b",
+      "uuid": "c6398d60-38c3-47ae-ac31-e1b2cc2bfe43",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "c2cd5675-c848-4ac0-b64e-d4b80f76cc05",
-      "startTime": "2026-02-15T10:57:14.819Z",
-      "endTime": "2026-02-15T10:57:15.463Z",
+      "parentUuid": "7de5a6ba-6a40-4bbe-84e9-bada7c4ad30f",
+      "startTime": "2026-06-01T17:24:30.800Z",
+      "endTime": "2026-06-01T17:24:31.752Z",
       "input": [
         {
           "role": "system",
-          "content": "You are ToolCaller. You MUST call the provided tool exactly once. You MUST NOT reason. You MUST NOT retry. You MUST NOT modify the output.\nYour personal goal is: Call the special_metric_tool exactly once and return its raw output."
+          "content": "You are ToolCaller. You MUST call the provided tool exactly once. You MUST NOT reason. You MUST NOT retry. You MUST NOT modify the output.\nYour personal goal is: Call the special_metric_tool exactly once and return its raw output.",
+          "cache_breakpoint": true
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary."
+          "content": "\nCurrent Task: STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary.",
+          "cache_breakpoint": true
         },
         {
           "role": "assistant",
           "content": null,
           "tool_calls": [
             {
-              "id": "call_3KMBgqx9EozvQukG9BJPQ59U",
+              "id": "call_Sq5m38q6wcQNsaWicpKxgdGw",
               "type": "function",
               "function": {
                 "name": "'special_metric_tool'",
@@ -76,13 +78,9 @@
         },
         {
           "role": "tool",
-          "tool_call_id": "call_3KMBgqx9EozvQukG9BJPQ59U",
+          "tool_call_id": "call_Sq5m38q6wcQNsaWicpKxgdGw",
           "name": "special_metric_tool",
           "content": "Calculated metrics for: deterministic_test_input"
-        },
-        {
-          "role": "user",
-          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
         },
         {
           "role": "assistant",
@@ -90,7 +88,9 @@
         }
       ],
       "output": "Calculated metrics for: deterministic_test_input",
+      "integration": "CrewAI",
       "model": "gpt-4o-mini",
+      "provider": "OpenAI",
       "metricCollection": "llm-metric-collection",
       "metricsData": [
         {
@@ -98,37 +98,37 @@
           "threshold": 0.5,
           "success": false,
           "strictMode": false,
-          "evaluationModel": "gpt-4.1"
+          "evaluationModel": "gpt-5.4-mini"
         }
       ],
       "promptAlias": "asd",
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec",
-      "integration": "CrewAI",
-      "provider": "OpenAI"
+      "promptCommitHash": "bab04ec"
     },
     {
-      "uuid": "60fcc37e-5882-4674-bb4d-81cd22c842c6",
+      "uuid": "128cb2b7-42e7-4eac-bab1-fb195e8412fe",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "c2cd5675-c848-4ac0-b64e-d4b80f76cc05",
-      "startTime": "2026-02-15T10:57:13.588Z",
-      "endTime": "2026-02-15T10:57:14.815Z",
+      "parentUuid": "7de5a6ba-6a40-4bbe-84e9-bada7c4ad30f",
+      "startTime": "2026-06-01T17:24:28.905Z",
+      "endTime": "2026-06-01T17:24:30.794Z",
       "input": [
         {
           "role": "system",
-          "content": "You are ToolCaller. You MUST call the provided tool exactly once. You MUST NOT reason. You MUST NOT retry. You MUST NOT modify the output.\nYour personal goal is: Call the special_metric_tool exactly once and return its raw output."
+          "content": "You are ToolCaller. You MUST call the provided tool exactly once. You MUST NOT reason. You MUST NOT retry. You MUST NOT modify the output.\nYour personal goal is: Call the special_metric_tool exactly once and return its raw output.",
+          "cache_breakpoint": true
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary."
+          "content": "\nCurrent Task: STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary.",
+          "cache_breakpoint": true
         }
       ],
       "output": [
         {
-          "id": "call_3KMBgqx9EozvQukG9BJPQ59U",
+          "id": "call_Sq5m38q6wcQNsaWicpKxgdGw",
           "function": {
             "arguments": "{\"query\":\"deterministic_test_input\"}",
             "name": "special_metric_tool"
@@ -136,7 +136,9 @@
           "type": "function"
         }
       ],
+      "integration": "CrewAI",
       "model": "gpt-4o-mini",
+      "provider": "OpenAI",
       "metricCollection": "llm-metric-collection",
       "metricsData": [
         {
@@ -144,37 +146,35 @@
           "threshold": 0.5,
           "success": false,
           "strictMode": false,
-          "evaluationModel": "gpt-4.1"
+          "evaluationModel": "gpt-5.4-mini"
         }
       ],
       "promptAlias": "asd",
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec",
-      "integration": "CrewAI",
-      "provider": "OpenAI"
+      "promptCommitHash": "bab04ec"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "d298da7b-60f1-48b9-9253-05500f3b0006",
+      "uuid": "98c983ab-5e04-411d-b1e7-3b6e255aac63",
       "name": "special_metric_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "c2cd5675-c848-4ac0-b64e-d4b80f76cc05",
-      "startTime": "2026-02-15T10:57:14.815Z",
-      "endTime": "2026-02-15T10:57:14.819Z",
+      "parentUuid": "7de5a6ba-6a40-4bbe-84e9-bada7c4ad30f",
+      "startTime": "2026-06-01T17:24:30.795Z",
+      "endTime": "2026-06-01T17:24:30.795Z",
       "input": {
         "query": "deterministic_test_input"
       },
       "output": "Calculated metrics for: deterministic_test_input",
-      "metricCollection": "agent_metrics_v1",
-      "integration": "CrewAI"
+      "integration": "CrewAI",
+      "metricCollection": "agent_metrics_v1"
     }
   ],
-  "startTime": "2026-02-15T10:57:13.583Z",
-  "endTime": "2026-02-15T10:57:15.467Z",
+  "startTime": "2026-06-01T17:24:28.896Z",
+  "endTime": "2026-06-01T17:24:31.760Z",
   "name": "CrewAI Metadata Check Sync",
   "metadata": {
     "env": "testing"
