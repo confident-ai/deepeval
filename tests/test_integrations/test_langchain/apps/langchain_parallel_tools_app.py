@@ -77,7 +77,7 @@ stock_tools = [get_stock_price]
 stock_tools_by_name = {t.name: t for t in stock_tools}
 
 # LLMs with parallel tool calling enabled
-llm = ChatOpenAI(model="gpt-5-mini", temperature=0, seed=42)
+llm = ChatOpenAI(model="gpt-5.4-mini", temperature=0, seed=42)
 llm_weather = llm.bind_tools(weather_tools, parallel_tool_calls=True)
 llm_mixed = llm.bind_tools(mixed_tools, parallel_tool_calls=True)
 llm_stocks = llm.bind_tools(stock_tools, parallel_tool_calls=True)

@@ -50,7 +50,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
               "service_tier": "default",
@@ -116,7 +116,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2W75zlffSvMZ1UZIOU6Fxlvb2k2",
               "service_tier": "default",
@@ -185,7 +185,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
               "service_tier": "default",
@@ -256,7 +256,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2W75zlffSvMZ1UZIOU6Fxlvb2k2",
               "service_tier": "default",
@@ -324,7 +324,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
               "service_tier": "default",
@@ -390,7 +390,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2W75zlffSvMZ1UZIOU6Fxlvb2k2",
               "service_tier": "default",
@@ -460,7 +460,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
               "service_tier": "default",
@@ -570,7 +570,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
               "service_tier": "default",
@@ -664,7 +664,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
               "service_tier": "default",
@@ -741,7 +741,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
               "service_tier": "default",
@@ -883,7 +883,7 @@
         "content": "Verdict: UNVERIFIED — the fact-check tool was unable to confirm the claim \"The earth is round.\"",
         "tool_calls": []
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 264.0,
       "outputTokenCount": 224.0,
       "integration": "LangChain",
@@ -932,7 +932,7 @@
           }
         ]
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 219.0,
       "outputTokenCount": 27.0,
       "integration": "LangChain",
@@ -1016,7 +1016,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
           "service_tier": "default",
@@ -1082,7 +1082,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2W75zlffSvMZ1UZIOU6Fxlvb2k2",
           "service_tier": "default",

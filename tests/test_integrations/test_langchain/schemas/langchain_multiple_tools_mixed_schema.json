@@ -48,7 +48,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2NTac0jMLz5aijuZIQromicUcDb",
               "service_tier": "default",
@@ -113,7 +113,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2NVwtUw455wH3QqUvIEngfVCRpq",
               "service_tier": "default",
@@ -197,7 +197,7 @@
         "content": "Paris: Partly cloudy, 62°F (≈16.7°C).",
         "tool_calls": []
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 202.0,
       "outputTokenCount": 217.0,
       "integration": "LangChain",
@@ -238,7 +238,7 @@
           }
         ]
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 167.0,
       "outputTokenCount": 23.0,
       "integration": "LangChain",
@@ -321,7 +321,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2NTac0jMLz5aijuZIQromicUcDb",
           "service_tier": "default",
@@ -386,7 +386,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2NVwtUw455wH3QqUvIEngfVCRpq",
           "service_tier": "default",

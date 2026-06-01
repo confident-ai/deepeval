@@ -50,7 +50,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2VyUPfbbSWEx56uyPmw0exJe0UQ",
               "service_tier": "default",
@@ -116,7 +116,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2W0c5iSLg5sNWToM02CmTffxCfq",
               "service_tier": "default",
@@ -185,7 +185,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2VyUPfbbSWEx56uyPmw0exJe0UQ",
               "service_tier": "default",
@@ -256,7 +256,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2W0c5iSLg5sNWToM02CmTffxCfq",
               "service_tier": "default",
@@ -324,7 +324,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2VyUPfbbSWEx56uyPmw0exJe0UQ",
               "service_tier": "default",
@@ -390,7 +390,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2W0c5iSLg5sNWToM02CmTffxCfq",
               "service_tier": "default",
@@ -460,7 +460,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2VyUPfbbSWEx56uyPmw0exJe0UQ",
               "service_tier": "default",
@@ -570,7 +570,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2VyUPfbbSWEx56uyPmw0exJe0UQ",
               "service_tier": "default",
@@ -664,7 +664,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2VyUPfbbSWEx56uyPmw0exJe0UQ",
               "service_tier": "default",
@@ -741,7 +741,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2VyUPfbbSWEx56uyPmw0exJe0UQ",
               "service_tier": "default",
@@ -883,7 +883,7 @@
         "content": "- Quantum computing uses quantum bits (qubits) that exploit superposition and entanglement to perform computations not feasible for classical computers.  \n- Recent milestone: improved quantum error correction techniques have been demonstrated, advancing the stability and scalability of quantum processors.  \n- Ongoing challenges include qubit coherence, error rates, scaling hardware, and developing useful quantum algorithms and software ecosystems.",
         "tool_calls": []
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 259.0,
       "outputTokenCount": 78.0,
       "integration": "LangChain",
@@ -932,7 +932,7 @@
           }
         ]
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 219.0,
       "outputTokenCount": 26.0,
       "integration": "LangChain",
@@ -1019,7 +1019,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2VyUPfbbSWEx56uyPmw0exJe0UQ",
           "service_tier": "default",
@@ -1085,7 +1085,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2W0c5iSLg5sNWToM02CmTffxCfq",
           "service_tier": "default",

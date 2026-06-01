@@ -78,7 +78,7 @@ mixed_tools = [get_weather, calculate]
 mixed_tools_by_name = {t.name: t for t in mixed_tools}
 
 # LLMs with tool bindings
-llm = ChatOpenAI(model="gpt-5-mini", temperature=0, seed=42)
+llm = ChatOpenAI(model="gpt-5.4-mini", temperature=0, seed=42)
 llm_city_info = llm.bind_tools(city_info_tools)
 llm_mixed = llm.bind_tools(mixed_tools)
 
