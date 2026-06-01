@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Optional, Dict, List, Union, Tuple
 from deepeval.errors import DeepEvalError
 from deepeval.test_case import MLLMImage
 from deepeval.config.settings import get_settings
-from deepeval.models.utils import require_secret_api_key
+from deepeval.models.utils import require_secret_api_key, EvaluationCost
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
@@ -253,7 +253,7 @@ class GeminiModel(DeepEvalBaseLLM):
                     **self.generation_kwargs,
                 ),
             )
-            return response.parsed, 0
+            return response.parsed, self._token_cost(response)
         else:
             response = client.models.generate_content(
                 model=self.name,
@@ -264,7 +264,7 @@ class GeminiModel(DeepEvalBaseLLM):
                     **self.generation_kwargs,
                 ),
             )
-            return response.text, 0
+            return response.text, self._token_cost(response)
 
     @retry_gemini
     async def a_generate(
@@ -297,7 +297,7 @@ class GeminiModel(DeepEvalBaseLLM):
                     **self.generation_kwargs,
                 ),
             )
-            return response.parsed, 0
+            return response.parsed, self._token_cost(response)
         else:
             response = await client.aio.models.generate_content(
                 model=self.name,
@@ -308,7 +308,18 @@ class GeminiModel(DeepEvalBaseLLM):
                     **self.generation_kwargs,
                 ),
             )
-            return response.text, 0
+            return response.text, self._token_cost(response)
+
+    ###############################################
+    # Utilities
+    ###############################################
+
+    @staticmethod
+    def _token_cost(response) -> EvaluationCost:
+        usage = getattr(response, "usage_metadata", None)
+        input_tokens = getattr(usage, "prompt_token_count", None)
+        output_tokens = getattr(usage, "candidates_token_count", None)
+        return EvaluationCost(0, input_tokens, output_tokens)
 
     #########################
     # Capabilities          #

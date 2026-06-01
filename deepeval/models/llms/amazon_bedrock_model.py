@@ -23,6 +23,7 @@ from deepeval.constants import ProviderSlug as PS
 from deepeval.models.utils import (
     require_costs,
     normalize_kwargs_and_extract_aliases,
+    EvaluationCost,
 )
 
 retry_bedrock = create_retry_decorator(PS.BEDROCK)
@@ -353,7 +354,9 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         if self.model_data.input_price and self.model_data.output_price:
             input_cost = input_tokens * self.model_data.input_price
             output_cost = output_tokens * self.model_data.output_price
-            return input_cost + output_cost
+            return EvaluationCost(
+                input_cost + output_cost, input_tokens, output_tokens
+            )
         return None
 
     def load_model(self):

@@ -17,6 +17,7 @@ from deepeval.metrics.utils import (
     check_llm_test_case_params,
     generate_with_schema_and_extract,
     a_generate_with_schema_and_extract,
+    accrue_token_usage,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -111,6 +112,8 @@ class GEval(BaseMetric):
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
+        self.input_tokens = 0 if self.using_native_model else None
+        self.output_tokens = 0 if self.using_native_model else None
 
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
@@ -190,6 +193,8 @@ class GEval(BaseMetric):
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
+        self.input_tokens = 0 if self.using_native_model else None
+        self.output_tokens = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self,
             async_mode=True,
@@ -311,6 +316,7 @@ class GEval(BaseMetric):
             )
 
             self._accrue_cost(cost)
+            accrue_token_usage(self, cost)
 
             data = trimAndLoadJson(res.choices[0].message.content, self)
 
@@ -382,6 +388,7 @@ class GEval(BaseMetric):
                 prompt, top_logprobs=self.top_logprobs
             )
             self._accrue_cost(cost)
+            accrue_token_usage(self, cost)
             data = trimAndLoadJson(res.choices[0].message.content, self)
 
             reason = data["reason"]
