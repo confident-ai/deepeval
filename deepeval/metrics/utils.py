@@ -453,7 +453,10 @@ SchemaType = TypeVar("SchemaType")
 ReturnType = TypeVar("ReturnType")
 
 
-def accrue_token_usage(metric: Any, cost: Any) -> None:
+def accrue_token_usage(
+    metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
+    cost: Any,
+) -> None:
     """Accrue the input/output token counts that produced ``cost`` onto the
     metric, when available.
 
@@ -462,11 +465,10 @@ def accrue_token_usage(metric: Any, cost: Any) -> None:
     not-yet-updated providers degrade gracefully to ``None``. Call this right
     after ``metric._accrue_cost(cost)`` so token usage tracks cost exactly.
     """
-    if hasattr(metric, "_accrue_tokens"):
-        metric._accrue_tokens(
-            getattr(cost, "input_tokens", None),
-            getattr(cost, "output_tokens", None),
-        )
+    metric._accrue_tokens(
+        getattr(cost, "input_tokens", None),
+        getattr(cost, "output_tokens", None),
+    )
 
 
 def generate_with_schema_and_extract(

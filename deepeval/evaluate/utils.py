@@ -64,8 +64,8 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
             evaluationModel=metric.evaluation_model,
             error=metric.error,
             evaluationCost=metric.evaluation_cost,
-            inputTokenCount=getattr(metric, "input_tokens", None),
-            outputTokenCount=getattr(metric, "output_tokens", None),
+            inputTokenCount=metric.input_tokens,
+            outputTokenCount=metric.output_tokens,
             verboseLogs=metric.verbose_logs,
         )
     else:
@@ -79,8 +79,8 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
             evaluationModel=metric.evaluation_model,
             error=None,
             evaluationCost=metric.evaluation_cost,
-            inputTokenCount=getattr(metric, "input_tokens", None),
-            outputTokenCount=getattr(metric, "output_tokens", None),
+            inputTokenCount=metric.input_tokens,
+            outputTokenCount=metric.output_tokens,
             verboseLogs=metric.verbose_logs,
         )
 
@@ -97,8 +97,8 @@ def create_arena_metric_data(metric: ArenaGEval, contestant: str) -> MetricData:
             evaluationModel=metric.evaluation_model,
             error=metric.error,
             evaluationCost=metric.evaluation_cost,
-            inputTokenCount=getattr(metric, "input_tokens", None),
-            outputTokenCount=getattr(metric, "output_tokens", None),
+            inputTokenCount=metric.input_tokens,
+            outputTokenCount=metric.output_tokens,
             verboseLogs=metric.verbose_logs,
         )
     else:
@@ -112,8 +112,8 @@ def create_arena_metric_data(metric: ArenaGEval, contestant: str) -> MetricData:
             evaluationModel=metric.evaluation_model,
             error=None,
             evaluationCost=metric.evaluation_cost,
-            inputTokenCount=getattr(metric, "input_tokens", None),
-            outputTokenCount=getattr(metric, "output_tokens", None),
+            inputTokenCount=metric.input_tokens,
+            outputTokenCount=metric.output_tokens,
             verboseLogs=metric.verbose_logs,
         )
 
