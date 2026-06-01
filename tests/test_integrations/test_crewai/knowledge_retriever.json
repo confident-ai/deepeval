@@ -11,7 +11,8 @@
       "input": {
         "question": "What city does John live in and how old is he?"
       },
-      "output": "I'm sorry, but I don't have any information about John, including what city he lives in or how old he is."
+      "output": "I'm sorry, but I don't have any information about John, including what city he lives in or how old he is.",
+      "integration": "CrewAI"
     }
   ],
   "agentSpans": [
@@ -35,7 +36,8 @@
         }
       ],
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "CrewAI"
     }
   ],
   "llmSpans": [
@@ -58,7 +60,9 @@
         }
       ],
       "output": "I'm sorry, but I don't have any information about John, including what city he lives in or how old he is.",
-      "model": "gpt-4o-mini"
+      "model": "gpt-4o-mini",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "82736372-9030-4b02-b90e-906680d55d37",
@@ -79,7 +83,9 @@
         }
       ],
       "output": "Retrieve information about John, specifically his city of residence and age.",
-      "model": "gpt-4o-mini"
+      "model": "gpt-4o-mini",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -93,7 +99,8 @@
       "startTime": "2026-02-15T10:19:58.948Z",
       "endTime": "2026-02-15T10:19:59.971Z",
       "input": "Retrieve information about John, specifically his city of residence and age.",
-      "output": ""
+      "output": "",
+      "integration": "CrewAI"
     }
   ],
   "startTime": "2026-02-15T10:19:58.943Z",

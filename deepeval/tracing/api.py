@@ -22,6 +22,14 @@ class TraceSpanApiStatus(Enum):
     ERRORED = "ERRORED"
 
 
+class AttachmentApi(BaseModel):
+    model_config = make_model_config(extra="ignore")
+
+    url: Optional[str] = None
+    mime_type: Optional[str] = Field(None, alias="mimeType")
+    data_base_64: Optional[str] = Field(None, alias="dataBase64")
+
+
 class PromptApi(BaseModel):
     alias: Optional[str] = None
     version: Optional[str] = None
@@ -40,6 +48,8 @@ class MetricData(BaseModel):
     evaluation_model: Optional[str] = Field(None, alias="evaluationModel")
     error: Optional[str] = None
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
+    input_tokens: Optional[int] = Field(None, alias="inputTokenCount")
+    output_tokens: Optional[int] = Field(None, alias="outputTokenCount")
     verbose_logs: Optional[str] = Field(None, alias="verboseLogs")
 
 
@@ -59,6 +69,7 @@ class BaseApiSpan(BaseModel):
     input: Optional[Any] = Field(None)
     output: Optional[Any] = Field(None)
     error: Optional[str] = None
+    integration: Optional[str] = Field(None, alias="integration")
 
     # additional test case parameters
     retrieval_context: Optional[List[str]] = Field(
@@ -85,6 +96,7 @@ class BaseApiSpan(BaseModel):
 
     # llm
     model: Optional[str] = None
+    provider: Optional[str] = Field(None, alias="provider")
     prompt: Optional[PromptApi] = None
     input_token_count: Optional[float] = Field(None, alias="inputTokenCount")
     output_token_count: Optional[float] = Field(None, alias="outputTokenCount")
@@ -152,6 +164,11 @@ class TraceApi(BaseModel):
     # evals
     metric_collection: Optional[str] = Field(None, alias="metricCollection")
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
+
+    # MLLM attachments
+    attachments: Optional[Dict[str, AttachmentApi]] = Field(
+        None, alias="attachments"
+    )
 
     # Don't serialize these
     confident_api_key: Optional[str] = Field(None, exclude=True)

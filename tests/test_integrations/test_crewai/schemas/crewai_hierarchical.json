@@ -9,7 +9,8 @@
       "startTime": "2026-02-15T10:22:14.857Z",
       "endTime": "2026-02-15T10:22:17.694Z",
       "input": {},
-      "output": "SUCCESS"
+      "output": "SUCCESS",
+      "integration": "CrewAI"
     }
   ],
   "agentSpans": [
@@ -35,7 +36,8 @@
         }
       ],
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "CrewAI"
     },
     {
       "uuid": "eda4d0fb-504a-4bd9-bfbd-1212d8223bcb",
@@ -48,7 +50,8 @@
       "input": "Write the word: 'SUCCESS'.\n\nThis is the expected criteria for your final answer: Your best answer to your coworker asking you this, accounting for the context shared.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nThe task is to simply write the word 'SUCCESS' as it is, without any additional content or context. This is a straightforward writing task that requires no elaboration or explanation.",
       "output": "SUCCESS",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "CrewAI"
     }
   ],
   "llmSpans": [
@@ -95,7 +98,9 @@
         }
       ],
       "output": "SUCCESS",
-      "model": "gpt-4o-mini"
+      "model": "gpt-4o-mini",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "5de562dd-8123-4c54-b3fe-1ae5d37615fb",
@@ -116,7 +121,9 @@
         }
       ],
       "output": "SUCCESS",
-      "model": "gpt-4o-mini"
+      "model": "gpt-4o-mini",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "7d3eccdc-4316-4ee7-9d8b-a580bbf9a500",
@@ -146,7 +153,9 @@
           "type": "function"
         }
       ],
-      "model": "gpt-4o-mini"
+      "model": "gpt-4o-mini",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -164,7 +173,8 @@
         "context": "The task is to simply write the word 'SUCCESS' as it is, without any additional content or context. This is a straightforward writing task that requires no elaboration or explanation.",
         "coworker": "Writer"
       },
-      "output": "SUCCESS"
+      "output": "SUCCESS",
+      "integration": "CrewAI"
     }
   ],
   "startTime": "2026-02-15T10:22:14.857Z",

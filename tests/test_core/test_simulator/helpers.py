@@ -43,11 +43,20 @@ async def async_static_callback(input: str) -> Turn:
 
 
 class StaticSimulatorModel(DeepEvalBaseLLM):
-    def __init__(self, expected_outcome_complete: bool = False):
+    def __init__(
+        self,
+        expected_outcome_complete: bool = False,
+        edge_indices: Optional[List[Optional[int]]] = None,
+    ):
         self.schema_calls = []
         self.prompts = []
         self.user_input_count = 0
         self.expected_outcome_complete = expected_outcome_complete
+        # Successive 1-based edge indices to return for EdgeChoice classification
+        # (or None for "none of the above"). Exhausting the list keeps the last
+        # value; an empty list defaults to None.
+        self.edge_indices = list(edge_indices) if edge_indices else []
+        self.edge_choice_count = 0
         super().__init__(model="static-simulator-model")
 
     def load_model(self):
@@ -69,6 +78,15 @@ class StaticSimulatorModel(DeepEvalBaseLLM):
                 is_complete=self.expected_outcome_complete,
                 reason="complete",
             )
+        if schema.__name__ == "EdgeChoice":
+            idx_list = self.edge_indices
+            if not idx_list:
+                index = None
+            else:
+                pos = min(self.edge_choice_count, len(idx_list) - 1)
+                index = idx_list[pos]
+            self.edge_choice_count += 1
+            return schema(index=index, reason="static-mock")
         raise AssertionError(f"Unexpected schema: {schema.__name__}")
 
     async def a_generate(self, prompt: str, schema=None):

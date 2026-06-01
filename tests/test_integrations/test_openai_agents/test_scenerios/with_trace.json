@@ -9,15 +9,22 @@
       "type": "agent",
       "startTime": "2025-10-14T13:58:04.975Z",
       "endTime": "2025-10-14T13:58:14.218Z",
-      "metadata": { "output_type": "str" },
+      "metadata": {
+        "output_type": "str"
+      },
       "input": "What's the weather in London?",
-      "output": "Weather Summary:\n- London is currently experiencing clear weather with a temperature of 22.5\u00b0C, moderate humidity (55%), no precipitation, and a gentle breeze from the south (5.2 km/h). The air feels slightly cooler than the actual temperature.\n\nSuggestions:\n- Enjoy outdoor activities comfortably; it\u2019s warm and pleasant.\n- Light, breathable clothing is recommended.\n- Stay hydrated, especially if you are active outside.\n- No need for rain gear today.\n- Use sun protection (sunscreen, hat) if you'll be in direct sunlight for extended periods.",
+      "output": "Weather Summary:\n- London is currently experiencing clear weather with a temperature of 22.5°C, moderate humidity (55%), no precipitation, and a gentle breeze from the south (5.2 km/h). The air feels slightly cooler than the actual temperature.\n\nSuggestions:\n- Enjoy outdoor activities comfortably; it’s warm and pleasant.\n- Light, breathable clothing is recommended.\n- Stay hydrated, especially if you are active outside.\n- No need for rain gear today.\n- Use sun protection (sunscreen, hat) if you'll be in direct sunlight for extended periods.",
       "toolsCalled": [
         {
           "name": "Function tool: get_location_coordinates",
           "description": "Function tool",
-          "output": { "lat": 51.5074, "lng": -0.1278 },
-          "inputParameters": { "city_name": "London" }
+          "output": {
+            "lat": 51.5074,
+            "lng": -0.1278
+          },
+          "inputParameters": {
+            "city_name": "London"
+          }
         },
         {
           "name": "Function tool: get_current_weather",
@@ -32,11 +39,18 @@
             "wind_direction_10m": 180,
             "dummy": true
           },
-          "inputParameters": { "latitude": 51.5074, "longitude": -0.1278 }
+          "inputParameters": {
+            "latitude": 51.5074,
+            "longitude": -0.1278
+          }
         }
       ],
-      "availableTools": ["get_location_coordinates", "get_current_weather"],
-      "agentHandoffs": []
+      "availableTools": [
+        "get_location_coordinates",
+        "get_current_weather"
+      ],
+      "agentHandoffs": [],
+      "integration": "OpenAI Agents"
     }
   ],
   "llmSpans": [
@@ -66,7 +80,9 @@
                     "type": "string"
                   }
                 },
-                "required": ["city_name"],
+                "required": [
+                  "city_name"
+                ],
                 "title": "get_location_coordinates_args",
                 "type": "object",
                 "additionalProperties": false
@@ -90,7 +106,10 @@
                     "type": "number"
                   }
                 },
-                "required": ["latitude", "longitude"],
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
                 "title": "get_current_weather_args",
                 "type": "object",
                 "additionalProperties": false
@@ -101,8 +120,15 @@
             }
           ],
           "top_p": 1.0,
-          "reasoning": {},
-          "text": { "format": { "type": "text" }, "verbosity": "medium" },
+          "reasoning": {
+            "effort": "medium"
+          },
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
           "truncation": "disabled"
         }
       },
@@ -138,10 +164,12 @@
           "output": "{'temperature_2m': 22.5, 'humidity': 55, 'apparent_temperature': 21.0, 'precipitation': 0.0, 'weather_code': 1, 'wind_speed_10m': 5.2, 'wind_direction_10m': 180, 'dummy': True}"
         }
       ],
-      "output": "Weather Summary:\n- London is currently experiencing clear weather with a temperature of 22.5\u00b0C, moderate humidity (55%), no precipitation, and a gentle breeze from the south (5.2 km/h). The air feels slightly cooler than the actual temperature.\n\nSuggestions:\n- Enjoy outdoor activities comfortably; it\u2019s warm and pleasant.\n- Light, breathable clothing is recommended.\n- Stay hydrated, especially if you are active outside.\n- No need for rain gear today.\n- Use sun protection (sunscreen, hat) if you'll be in direct sunlight for extended periods.",
+      "output": "Weather Summary:\n- London is currently experiencing clear weather with a temperature of 22.5°C, moderate humidity (55%), no precipitation, and a gentle breeze from the south (5.2 km/h). The air feels slightly cooler than the actual temperature.\n\nSuggestions:\n- Enjoy outdoor activities comfortably; it’s warm and pleasant.\n- Light, breathable clothing is recommended.\n- Stay hydrated, especially if you are active outside.\n- No need for rain gear today.\n- Use sun protection (sunscreen, hat) if you'll be in direct sunlight for extended periods.",
       "model": "gpt-4.1-2025-04-14",
       "inputTokenCount": 417.0,
-      "outputTokenCount": 116.0
+      "outputTokenCount": 116.0,
+      "integration": "OpenAI Agents",
+      "provider": "OpenAI"
     },
     {
       "uuid": "3d96f31c-ba2f-423f-a72b-17c289c73611",
@@ -169,7 +197,9 @@
                     "type": "string"
                   }
                 },
-                "required": ["city_name"],
+                "required": [
+                  "city_name"
+                ],
                 "title": "get_location_coordinates_args",
                 "type": "object",
                 "additionalProperties": false
@@ -193,7 +223,10 @@
                     "type": "number"
                   }
                 },
-                "required": ["latitude", "longitude"],
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
                 "title": "get_current_weather_args",
                 "type": "object",
                 "additionalProperties": false
@@ -204,8 +237,15 @@
             }
           ],
           "top_p": 1.0,
-          "reasoning": {},
-          "text": { "format": { "type": "text" }, "verbosity": "medium" },
+          "reasoning": {
+            "effort": "medium"
+          },
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
           "truncation": "disabled"
         }
       },
@@ -234,7 +274,9 @@
       "output": "{\"call_id\": \"call_GNvb4jBfKWO1zr2V2ICLYiPT\", \"name\": \"get_current_weather\", \"arguments\": \"{\\\"latitude\\\":51.5074,\\\"longitude\\\":-0.1278}\"}",
       "model": "gpt-4.1-2025-04-14",
       "inputTokenCount": 310.0,
-      "outputTokenCount": 27.0
+      "outputTokenCount": 27.0,
+      "integration": "OpenAI Agents",
+      "provider": "OpenAI"
     },
     {
       "uuid": "0fb72c4d-c4ad-4cfb-92b8-58695c68559b",
@@ -262,7 +304,9 @@
                     "type": "string"
                   }
                 },
-                "required": ["city_name"],
+                "required": [
+                  "city_name"
+                ],
                 "title": "get_location_coordinates_args",
                 "type": "object",
                 "additionalProperties": false
@@ -286,7 +330,10 @@
                     "type": "number"
                   }
                 },
-                "required": ["latitude", "longitude"],
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
                 "title": "get_current_weather_args",
                 "type": "object",
                 "additionalProperties": false
@@ -297,8 +344,15 @@
             }
           ],
           "top_p": 1.0,
-          "reasoning": {},
-          "text": { "format": { "type": "text" }, "verbosity": "medium" },
+          "reasoning": {
+            "effort": "medium"
+          },
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
           "truncation": "disabled"
         }
       },
@@ -317,7 +371,9 @@
       "output": "{\"call_id\": \"call_uwnn326q8ZgCxzOid5rqSiWE\", \"name\": \"get_location_coordinates\", \"arguments\": \"{\\\"city_name\\\":\\\"London\\\"}\"}",
       "model": "gpt-4.1-2025-04-14",
       "inputTokenCount": 266.0,
-      "outputTokenCount": 17.0
+      "outputTokenCount": 17.0,
+      "integration": "OpenAI Agents",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -330,7 +386,10 @@
       "parentUuid": "d8aaa87b-41aa-4e09-933a-0bed00af705d",
       "startTime": "2025-10-14T13:58:11.013Z",
       "endTime": "2025-10-14T13:58:11.014Z",
-      "input": { "latitude": 51.5074, "longitude": -0.1278 },
+      "input": {
+        "latitude": 51.5074,
+        "longitude": -0.1278
+      },
       "output": {
         "temperature_2m": 22.5,
         "humidity": 55,
@@ -341,7 +400,8 @@
         "wind_direction_10m": 180,
         "dummy": true
       },
-      "description": "Function tool"
+      "description": "Function tool",
+      "integration": "OpenAI Agents"
     },
     {
       "uuid": "631a49a3-2dd8-4f1c-ad0f-cb04c061486b",
@@ -351,15 +411,23 @@
       "parentUuid": "d8aaa87b-41aa-4e09-933a-0bed00af705d",
       "startTime": "2025-10-14T13:58:06.972Z",
       "endTime": "2025-10-14T13:58:06.972Z",
-      "input": { "city_name": "London" },
-      "output": { "lat": 51.5074, "lng": -0.1278 },
-      "description": "Function tool"
+      "input": {
+        "city_name": "London"
+      },
+      "output": {
+        "lat": 51.5074,
+        "lng": -0.1278
+      },
+      "description": "Function tool",
+      "integration": "OpenAI Agents"
     }
   ],
   "startTime": "2025-10-14T13:58:04.974Z",
   "endTime": "2025-10-14T13:58:14.218Z",
   "name": "test_workflow_1",
-  "metadata": { "test_metadata_1": "test_metadata_1" },
+  "metadata": {
+    "test_metadata_1": "test_metadata_1"
+  },
   "environment": "development",
   "threadId": "test_group_id_1",
   "input": [
@@ -374,6 +442,6 @@
       "content": "What's the weather in London?"
     }
   ],
-  "output": "Weather Summary:\n- London is currently experiencing clear weather with a temperature of 22.5\u00b0C, moderate humidity (55%), no precipitation, and a gentle breeze from the south (5.2 km/h). The air feels slightly cooler than the actual temperature.\n\nSuggestions:\n- Enjoy outdoor activities comfortably; it\u2019s warm and pleasant.\n- Light, breathable clothing is recommended.\n- Stay hydrated, especially if you are active outside.\n- No need for rain gear today.\n- Use sun protection (sunscreen, hat) if you'll be in direct sunlight for extended periods.",
+  "output": "Weather Summary:\n- London is currently experiencing clear weather with a temperature of 22.5°C, moderate humidity (55%), no precipitation, and a gentle breeze from the south (5.2 km/h). The air feels slightly cooler than the actual temperature.\n\nSuggestions:\n- Enjoy outdoor activities comfortably; it’s warm and pleasant.\n- Light, breathable clothing is recommended.\n- Stay hydrated, especially if you are active outside.\n- No need for rain gear today.\n- Use sun protection (sunscreen, hat) if you'll be in direct sunlight for extended periods.",
   "status": "SUCCESS"
 }

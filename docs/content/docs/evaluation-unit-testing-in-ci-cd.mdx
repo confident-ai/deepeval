@@ -3,28 +3,40 @@ id: evaluation-unit-testing-in-ci-cd
 title: Unit Testing in CI/CD
 sidebar_label: Unit Testing in CI/CD
 ---
+
 import { ASSETS } from "@site/src/assets";
 
-Integrate LLM evaluations into your CI/CD pipeline with `deepeval` to catch regressions and ensure reliable performance. You can use `deepeval` with your CI/CD pipelines to run both end-to-end and component level evaluations.
+Integrate LLM evaluations into your CI/CD pipeline with `deepeval` to catch regressions before they ship. `deepeval` plugs into `pytest` via `assert_test()` and the `deepeval test run` command, so every push (or every PR) runs the same evals you'd run locally — single-turn or multi-turn, end-to-end or component-level.
 
-`deepeval` allows you to run evaluations as if you're using `pytest` via our Pytest integration.
+## How It Works
 
-## End-to-End Evals in CI/CD
+Unit testing in CI/CD is the same three steps regardless of which flavor of evaluation you're running:
 
-Run tests against your LLM app using golden datasets for every push you make. End-to-end evaluations validate overall behavior across single-turn and multi-turn interactions. Perfect for catching regressions before deploying to production.
+1. **Load your dataset** — pull goldens from Confident AI, a CSV, or a JSON file. This step is identical for every flavor.
+2. **Construct test cases & write your test** — this is where the flavor matters. End-to-end vs component-level, single-turn vs multi-turn, and (for single-turn) instrumented vs un-instrumented all change what you put inside the `pytest` test.
+3. **Run with `deepeval test run`** — same command for every flavor. Drops into a `.yml` file unchanged.
 
-### Single-Turn Evals
+`deepeval`'s `pytest` integration allows you to leverage all of `pytest` flags and functionalities, as well as capabilities offered by `deepeval`, which you can learn more about below.
+
+:::tip
+If you haven't already, we recommend reading the end-to-end and component-level guides first to understand what we're doing — `deepeval`'s `pytest` integration mirrors those workflows, just inside a `pytest` test file:
+
+- [Single-turn end-to-end evals](/docs/evaluation-end-to-end-single-turn)
+- [Multi-turn end-to-end evals](/docs/evaluation-end-to-end-multi-turn)
+- [Component-level evals](/docs/evaluation-component-level-llm-evals) (single-turn only)
+  :::
+
+## Step-by-Step Guide
 
 <Steps>
-
 <Step>
+
 ### Load your dataset
 
+`deepeval` loads datasets from Confident AI, a CSV, a JSON file, or directly in code into an `EvaluationDataset`.
 
-`deepeval` offers support for loading datasets stored in JSON files, CSV files, and hugging face datasets into an `EvaluationDataset` as either test cases or goldens.
-
-<Tabs items={["Confident AI", "From CSV", "From JSON"]}>
-<Tab value="Confident AI">
+<Tabs items={["Pull from Confident AI", "Load from CSV", "Load from JSON", "In Code"]}>
+<Tab value="Pull from Confident AI">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -34,103 +46,510 @@ dataset.pull(alias="My Evals Dataset")
 ```
 
 </Tab>
-<Tab value="From CSV">
+<Tab value="Load from CSV">
 
 ```python
 from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset()
-
 dataset.add_goldens_from_csv_file(
-    # file_path is the absolute path to you .csv file
     file_path="example.csv",
-    input_col_name="query"
+    input_col_name="query",
 )
 ```
 
 </Tab>
-<Tab value="From JSON">
+<Tab value="Load from JSON">
 
 ```python
 from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset()
-
 dataset.add_goldens_from_json_file(
-    # file_path is the absolute path to you .json file
     file_path="example.json",
-    input_key_name="query"
+    input_key_name="query",
 )
+```
+
+</Tab>
+<Tab value="In Code">
+
+```python
+from deepeval.dataset import Golden, EvaluationDataset
+
+goldens = [
+    Golden(input="What is your name?"),
+    Golden(input="Choose a number between 1 and 100"),
+    # ...
+]
+
+dataset = EvaluationDataset(goldens=goldens)
 ```
 
 </Tab>
 </Tabs>
 
-You can [learn more about loading datasets here](/docs/evaluation-datasets#load-dataset).
+:::info[Multi-turn datasets]
+For [multi-turn](/docs/evaluation-end-to-end-multi-turn) evals, use `ConversationalGolden` instead of `Golden`. See [the datasets page](/docs/evaluation-datasets#load-dataset) for the full surface.
+:::
 
 </Step>
+
 <Step>
-### Assert your tests
+### Construct test cases
 
+Pick the flavor that matches your application — [single-turn](/docs/evaluation-end-to-end-single-turn) (one input → one output) or [multi-turn](/docs/evaluation-end-to-end-multi-turn) (whole conversations).
 
-You can use `deepeval`'s `assert_test` function to write test files.
+<Tabs items={["Single-Turn", "Multi-Turn"]}>
 
-```python title="test_llm_app.py" showLineNumbers {14}
-from your_agent import your_llm_app # Replace with your LLM app
+<Tab value="Single-Turn">
+
+Within single-turn, we strongly recommend **instrumenting your app with tracing** so `deepeval` can build the `LLMTestCase` automatically from each run, and you get a full per-test-case trace on Confident AI for free.
+
+The same setup also unlocks [component-level evaluation](/docs/evaluation-component-level-llm-evals), where metrics live on individual spans (retrievers, tool calls, sub-agents) instead of the trace as a whole.
+
+**Instrument/Trace with Evals**
+
+Each example below is a complete `deepeval test run` file with instrumentation:
+
+<Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Strands", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
+<Tab value="Manual Instrumentation">
+
+```python title="test_llm_app.py" showLineNumbers
 import pytest
-
-from deepeval.dataset import Golden
-from deepeval.test_case import LLMTestCase
 from deepeval import assert_test
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.tracing import observe, update_current_trace
 
-# Loop through goldens using pytest
+@observe()
+def my_ai_agent(query: str) -> str:
+    answer = "Pi rounded to 2 decimal places is 3.14."
+    update_current_trace(input=query, output=answer)
+    return answer
 
-@pytest.mark.parametrize("golden",dataset.goldens)
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
 def test_llm_app(golden: Golden):
-    res, text_chunks = your_llm_app(golden.input)
-    test_case = LLMTestCase(input=golden.input, actual_output=res, retrieval_context=text_chunks)
+    my_ai_agent(golden.input)
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Wrap the top-level function of your LLM app with `@observe` and call `update_current_trace(...)` to set the trace-level test case fields. See [tracing](/docs/evaluation-llm-tracing) for the full `@observe` and `update_current_trace` surface.
+
+</Tab>
+<Tab value="LangChain">
+
+```python title="test_langchain_app.py" showLineNumbers
+import pytest
+from langchain.agents import create_agent
+from deepeval import assert_test
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+agent = create_agent(
+    model="openai:gpt-4o-mini",
+    tools=[],
+    system_prompt="Answer math questions concisely.",
+)
+
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_langchain_app(golden: Golden):
+    agent.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Build your agent with `create_agent` and pass `deepeval`'s `CallbackHandler` to its `invoke` method. See the [LangChain integration](/integrations/frameworks/langchain) for the full surface.
+
+</Tab>
+<Tab value="LangGraph">
+
+```python title="test_langgraph_app.py" showLineNumbers
+import pytest
+from langchain.chat_models import init_chat_model
+from langgraph.graph import StateGraph, MessagesState, START, END
+from deepeval import assert_test
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+llm = init_chat_model("openai:gpt-4o-mini")
+
+def chatbot(state: MessagesState):
+    return {"messages": [llm.invoke(state["messages"])]}
+
+graph = (
+    StateGraph(MessagesState)
+    .add_node(chatbot)
+    .add_edge(START, "chatbot")
+    .add_edge("chatbot", END)
+    .compile()
+)
+
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_langgraph_app(golden: Golden):
+    graph.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Wire your `StateGraph` and pass `deepeval`'s `CallbackHandler` to its `invoke` method. See the [LangGraph integration](/integrations/frameworks/langgraph) for the full surface.
+
+</Tab>
+<Tab value="OpenAI">
+
+```python title="test_openai_app.py" showLineNumbers
+import pytest
+from deepeval import assert_test
+from deepeval.openai import OpenAI
+from deepeval.tracing import trace
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+client = OpenAI()
+
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_openai_app(golden: Golden):
+    with trace():
+        client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Answer in one short sentence."},
+                {"role": "user", "content": golden.input},
+            ],
+        )
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Drop-in replace `from openai import OpenAI` with `from deepeval.openai import OpenAI`. Every `chat.completions.create(...)`, `chat.completions.parse(...)`, and `responses.create(...)` call becomes an LLM span automatically. See the [OpenAI integration](/integrations/frameworks/openai) for the full surface.
+
+</Tab>
+<Tab value="Pydantic AI">
+
+```python title="test_pydantic_ai_app.py" showLineNumbers
+import pytest
+from pydantic_ai import Agent
+from deepeval import assert_test
+from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+agent = Agent(
+    "openai:gpt-5",
+    system_prompt="Answer in one short sentence.",
+    instrument=DeepEvalInstrumentationSettings(),
+)
+
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_pydantic_ai_app(golden: Golden):
+    agent.run_sync(golden.input)
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Pass `DeepEvalInstrumentationSettings()` to your `Agent`'s `instrument` keyword. See the [Pydantic AI integration](/integrations/frameworks/pydanticai) for the full surface.
+
+</Tab>
+<Tab value="AgentCore">
+
+```python title="test_agentcore_app.py" showLineNumbers
+import pytest
+from bedrock_agentcore import BedrockAgentCoreApp
+from strands import Agent
+from deepeval import assert_test
+from deepeval.integrations.agentcore import instrument_agentcore
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+instrument_agentcore()
+
+app = BedrockAgentCoreApp()
+agent = Agent(model="amazon.nova-lite-v1:0")
+
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+@app.entrypoint
+def invoke(payload):
+    result = agent(payload["prompt"])
+    return {"result": result.message}
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_agentcore_app(golden: Golden):
+    invoke({"prompt": golden.input})
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Call `instrument_agentcore()` before creating your AgentCore app. The same call also instruments [Strands](https://strandsagents.com/) agents running inside AgentCore. See the [AgentCore integration](/integrations/frameworks/agentcore) for the full surface.
+
+</Tab>
+<Tab value="Strands">
+
+```python title="test_strands_agent.py" showLineNumbers
+import pytest
+from strands import Agent
+from strands.models.openai import OpenAIModel
+from deepeval import assert_test
+from deepeval.integrations.strands import instrument_strands
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+instrument_strands()
+
+agent = Agent(
+    model=OpenAIModel(model_id="gpt-4o-mini"),
+    system_prompt="You are a helpful assistant.",
+)
+
+dataset = EvaluationDataset(goldens=[Golden(input="Help me return my order.")])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_strands_agent(golden: Golden):
+    agent(golden.input)
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Call `instrument_strands()` before creating or invoking your agent. Use this when you run Strands directly; for AgentCore-hosted Strands, use the AgentCore tab. See the [Strands integration](/integrations/frameworks/strands) for the full surface.
+
+</Tab>
+<Tab value="Anthropic">
+
+```python title="test_anthropic_app.py" showLineNumbers
+import pytest
+from deepeval import assert_test
+from deepeval.anthropic import Anthropic
+from deepeval.tracing import trace
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+client = Anthropic()
+
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_anthropic_app(golden: Golden):
+    with trace():
+        client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=1024,
+            system="Answer in one short sentence.",
+            messages=[{"role": "user", "content": golden.input}],
+        )
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Drop-in replace `from anthropic import Anthropic` with `from deepeval.anthropic import Anthropic`. Every `messages.create(...)` call becomes an LLM span automatically. See the [Anthropic integration](/integrations/frameworks/anthropic) for the full surface.
+
+</Tab>
+<Tab value="LlamaIndex">
+
+```python title="test_llamaindex_app.py" showLineNumbers
+import asyncio
+import pytest
+from llama_index.llms.openai import OpenAI
+from llama_index.core.agent import FunctionAgent
+import llama_index.core.instrumentation as instrument
+from deepeval import assert_test
+from deepeval.integrations.llama_index import instrument_llama_index
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+instrument_llama_index(instrument.get_dispatcher())
+
+agent = FunctionAgent(
+    tools=[],
+    llm=OpenAI(model="gpt-4o-mini"),
+    system_prompt="Answer math questions concisely.",
+)
+
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_llamaindex_app(golden: Golden):
+    asyncio.run(agent.run(golden.input))
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Register `deepeval`'s event handler against LlamaIndex's instrumentation dispatcher. See the [LlamaIndex integration](/integrations/frameworks/llamaindex) for the full surface.
+
+</Tab>
+<Tab value="OpenAI Agents">
+
+```python title="test_openai_agents_app.py" showLineNumbers
+import pytest
+from agents import Runner, add_trace_processor
+from deepeval import assert_test
+from deepeval.openai_agents import Agent, DeepEvalTracingProcessor
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+add_trace_processor(DeepEvalTracingProcessor())
+
+agent = Agent(
+    name="math_agent",
+    instructions="Answer math questions concisely.",
+)
+
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_openai_agents_app(golden: Golden):
+    Runner.run_sync(agent, golden.input)
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Register `DeepEvalTracingProcessor` once, then build your agent with `deepeval`'s `Agent` shim. See the [OpenAI Agents integration](/integrations/frameworks/openai-agents) for the full surface.
+
+</Tab>
+<Tab value="Google ADK">
+
+```python title="test_google_adk_app.py" showLineNumbers
+import asyncio
+import pytest
+from google.adk.agents import LlmAgent
+from google.adk.runners import InMemoryRunner
+from google.genai import types
+from deepeval import assert_test
+from deepeval.integrations.google_adk import instrument_google_adk
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+instrument_google_adk()
+
+agent = LlmAgent(model="gemini-2.0-flash", name="assistant", instruction="Answer math questions concisely.")
+runner = InMemoryRunner(agent=agent, app_name="deepeval-google-adk")
+
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+async def run_agent(prompt: str) -> str:
+    session = await runner.session_service.create_session(app_name="deepeval-google-adk", user_id="demo-user")
+    message = types.Content(role="user", parts=[types.Part(text=prompt)])
+    async for event in runner.run_async(user_id="demo-user", session_id=session.id, new_message=message):
+        if event.is_final_response() and event.content:
+            return "".join(part.text for part in event.content.parts if getattr(part, "text", None))
+    return ""
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_google_adk_app(golden: Golden):
+    asyncio.run(run_agent(golden.input))
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Call `instrument_google_adk()` once before building your `LlmAgent`. See the [Google ADK integration](/integrations/frameworks/google-adk) for the full surface.
+
+</Tab>
+<Tab value="CrewAI">
+
+```python title="test_crewai_app.py" showLineNumbers
+import pytest
+from crewai import Task
+from deepeval import assert_test
+from deepeval.integrations.crewai import instrument_crewai, Crew, Agent
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+instrument_crewai()
+
+tutor = Agent(
+    role="Math Tutor",
+    goal="Answer math questions accurately and concisely.",
+    backstory="An experienced tutor who explains simple math clearly.",
+)
+task = Task(
+    description="{question}",
+    expected_output="Pi rounded to 2 decimal places is 3.14.",
+    agent=tutor,
+)
+crew = Crew(agents=[tutor], tasks=[task])
+
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_crewai_app(golden: Golden):
+    crew.kickoff({"question": golden.input})
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Call `instrument_crewai()` once, then build your crew with `deepeval`'s `Crew` and `Agent` shims. See the [CrewAI integration](/integrations/frameworks/crewai) for the full surface.
+
+</Tab>
+</Tabs>
+
+There are **ONE** mandatory and **ONE** optional parameter for `assert_test()` in this mode:
+
+- `golden`: the `Golden` you pass in through your test function.
+- [Optional] `metrics`: a list of `BaseMetric`s that you wish to run on your trace (aka. end-to-end evals).
+
+:::tip[Going component-level]
+Once your app is instrumented, you can attach metrics directly to individual `@observe`'d (or framework-emitted) spans to grade internal components — retrievers, tool calls, sub-agents — alongside the end-to-end trace.
+
+See [component-level evaluation](/docs/evaluation-component-level-llm-evals) for the per-integration metric attachment surface; trace-level and span-level metrics coexist in the same test run.
+:::
+
+**Without Tracing**
+
+Use this when you can't (or don't want to) instrument your app — e.g. a QA engineer evaluating a deployed black-box system. You build the `LLMTestCase` yourself inside the test and hand it to `assert_test()` directly. No tracing is involved, so you don't get per-test-case traces in CI.
+
+```python title="test_llm_app.py" showLineNumbers
+import pytest
+from deepeval import assert_test
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AnswerRelevancyMetric
+
+def your_llm_app(query: str) -> str:
+    return "Pi rounded to 2 decimal places is 3.14."
+
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_llm_app(golden: Golden):
+    answer = your_llm_app(golden.input)
+    test_case = LLMTestCase(
+        input=golden.input,
+        actual_output=answer,
+    )
     assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric()])
-
-@deepeval.log_hyperparameters(model="gpt-4", prompt_template="...")
-def hyperparameters():
-    return {"model": "gpt-4.1", "system prompt": "..."}
 ```
 
-Then, run the following command in your CLI:
+There are **TWO** mandatory and **ONE** optional parameter for `assert_test()` in this mode:
 
-```bash
-deepeval test run test_llm_app.py
-```
+- `test_case`: an `LLMTestCase` you constructed inside the test.
+- `metrics`: a list of `BaseMetric`s.
 
-There are **TWO** mandatory and **ONE** optional parameter when calling the `assert_test()` function for **END-TO-END** evaluation:
+The fields you populate on `LLMTestCase` must match what your metrics need (e.g. `FaithfulnessMetric` requires `retrieval_context`). See [test cases](/docs/evaluation-test-cases#llm-test-cases) for the full parameter list.
 
-- `test_case`: an `LLMTestCase`.
-- `metrics`: a list of metrics of type `BaseMetric`.
-- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics in `@observe`. Defaulted to `True`.
+</Tab>
 
-Create a YAML file to execute your test file automatically in CI/CD pipelines. [Click here for an example YAML file](#yaml-file-for-cicd-evals).
+<Tab value="Multi-Turn">
 
-</Step>
-</Steps>
+Pick this if your app is multi-turn — chatbots, support agents, and any conversational app where the unit of evaluation is the whole conversation rather than a single exchange. You wrap your chatbot in a `model_callback`, simulate conversations against goldens, then `assert_test()` each `ConversationalTestCase`. Multi-turn evaluation is end-to-end by default; for the full standalone walkthrough see the [multi-turn end-to-end guide](/docs/evaluation-end-to-end-multi-turn).
 
+**1. Wrap your chatbot in a callback**
 
-### Multi-Turn Evals
-
-<Steps>
-<Step>
-### Wrap chatbot in callback
-
-
-You need to define a chatbot callback to generate synthetic test cases from goldens using the `ConversationSimulator`. So, define a callback function to generate the **next chatbot response** in a conversation, given the conversation history.
+The `ConversationSimulator` needs a way to ask your chatbot for its next reply, given the conversation so far:
 
 <Tabs items={["Python", "OpenAI", "LangChain", "LlamaIndex", "OpenAI Agents", "Pydantic"]}>
 <Tab value="Python">
 
-```python title="main.py" showLineNumbers={true}  "
+```python title="main.py" showLineNumbers
+from typing import List
 from deepeval.test_case import Turn
 
 async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
-    # Replace with your chatbot
     response = await your_chatbot(input, turns, thread_id)
     return Turn(role="assistant", content=response)
 ```
@@ -138,13 +557,14 @@ async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
 </Tab>
 <Tab value="OpenAI">
 
-```python title=main.py showLineNumbers={true} {6}
+```python title="main.py" showLineNumbers {6}
+from typing import List
 from deepeval.test_case import Turn
 from openai import OpenAI
 
 client = OpenAI()
 
-async def model_callback(input: str, turns: List[Turn]) -> str:
+async def model_callback(input: str, turns: List[Turn]) -> Turn:
     messages = [
         {"role": "system", "content": "You are a ticket purchasing assistant"},
         *[{"role": t.role, "content": t.content} for t in turns],
@@ -157,33 +577,34 @@ async def model_callback(input: str, turns: List[Turn]) -> str:
 </Tab>
 <Tab value="LangChain">
 
-```python title=main.py showLineNumbers={true} {11}
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain_community.chat_message_histories import ChatMessageHistory
+```python title="main.py" showLineNumbers {10,13}
+from langchain.agents import create_agent
+from langgraph.checkpoint.memory import InMemorySaver
+from deepeval.test_case import Turn
 
-store = {}
-llm = ChatOpenAI(model="gpt-4")
-prompt = ChatPromptTemplate.from_messages([("system", "You are a ticket purchasing assistant."), MessagesPlaceholder(variable_name="history"), ("human", "{input}")])
-chain_with_history = RunnableWithMessageHistory(prompt | llm, lambda session_id: store.setdefault(session_id, ChatMessageHistory()), input_messages_key="input", history_messages_key="history")
+agent = create_agent(
+    model="openai:gpt-4o-mini",
+    system_prompt="You are a ticket purchasing assistant.",
+    checkpointer=InMemorySaver(),
+)
 
 async def model_callback(input: str, thread_id: str) -> Turn:
-    response = chain_with_history.invoke(
-        {"input": input},
-        config={"configurable": {"session_id": thread_id}}
+    result = agent.invoke(
+        {"messages": [{"role": "user", "content": input}]},
+        config={"configurable": {"thread_id": thread_id}},
     )
-    return Turn(role="assistant", content=response.content)
+    return Turn(role="assistant", content=result["messages"][-1].content)
 ```
 
 </Tab>
 <Tab value="LlamaIndex">
 
-```python title="main.py"  showLineNumbers={true} {9}
+```python title="main.py" showLineNumbers {9}
 from llama_index.core.storage.chat_store import SimpleChatStore
 from llama_index.llms.openai import OpenAI
 from llama_index.core.chat_engine import SimpleChatEngine
 from llama_index.core.memory import ChatMemoryBuffer
+from deepeval.test_case import Turn
 
 chat_store = SimpleChatStore()
 llm = OpenAI(model="gpt-4")
@@ -198,8 +619,9 @@ async def model_callback(input: str, thread_id: str) -> Turn:
 </Tab>
 <Tab value="OpenAI Agents">
 
-```python title="main.py" showLineNumbers={true} {6}
+```python title="main.py" showLineNumbers {6}
 from agents import Agent, Runner, SQLiteSession
+from deepeval.test_case import Turn
 
 sessions = {}
 agent = Agent(name="Test Assistant", instructions="You are a helpful assistant that answers questions concisely.")
@@ -215,12 +637,12 @@ async def model_callback(input: str, thread_id: str) -> Turn:
 </Tab>
 <Tab value="Pydantic">
 
-```python title="main.py" showLineNumbers={true} {9}
-from pydantic_ai.messages import ModelRequest, ModelResponse, UserPromptPart, TextPart
-from deepeval.test_case import Turn
+```python title="main.py" showLineNumbers {9}
+from typing import List
 from datetime import datetime
 from pydantic_ai import Agent
-from typing import List
+from pydantic_ai.messages import ModelRequest, ModelResponse, UserPromptPart, TextPart
+from deepeval.test_case import Turn
 
 agent = Agent('openai:gpt-4', system_prompt="You are a helpful assistant that answers questions concisely.")
 
@@ -239,222 +661,67 @@ async def model_callback(input: str, turns: List[Turn]) -> Turn:
 </Tabs>
 
 :::info
-Your model callback should accept an `input`, and optionally `turns` and `thread_id`. It should return a `Turn` object.
+Your `model_callback` accepts an `input` (the simulated user's next message) and may optionally accept `turns` (the history so far) and `thread_id`. It must return a `Turn(role="assistant", content=...)`.
 :::
 
-</Step>
-<Step>
-### Load your dataset
+**2. Simulate conversations & write your test**
 
+Run the simulator once at module load to produce `ConversationalTestCase`s, then parametrize over them:
 
-`deepeval` offers support for loading datasets stored in JSON files, CSV files, and hugging face datasets into an `EvaluationDataset` as either test cases or goldens.
+```python title="test_chatbot.py" showLineNumbers
+import pytest
+import deepeval
+from deepeval import assert_test
+from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics import TurnRelevancyMetric
+from deepeval.conversation_simulator import ConversationSimulator
+from your_app import model_callback
 
-<Tabs items={["Confident AI", "From CSV", "From JSON"]}>
-<Tab value="Confident AI">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.pull(alias="My Evals Dataset")
-```
-
-</Tab>
-<Tab value="From CSV">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-
-dataset.add_goldens_from_csv_file(
-    # file_path is the absolute path to you .csv file
-    file_path="example.csv",
-    input_col_name="query"
+simulator = ConversationSimulator(model_callback=model_callback)
+test_cases = simulator.simulate(
+    conversational_goldens=dataset.goldens,
+    max_user_simulations=10,
 )
+
+@pytest.mark.parametrize("test_case", test_cases)
+def test_chatbot(test_case: ConversationalTestCase):
+    assert_test(test_case=test_case, metrics=[TurnRelevancyMetric()])
+
+@deepeval.log_hyperparameters
+def hyperparameters():
+    return {"model": "gpt-4.1", "system_prompt": "Be concise."}
 ```
 
-</Tab>
-<Tab value="From JSON">
+There are **TWO** mandatory and **ONE** optional parameter for `assert_test()` in this mode:
 
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-
-dataset.add_goldens_from_json_file(
-    # file_path is the absolute path to you .json file
-    file_path="example.json",
-    input_key_name="query"
-)
-```
+- `test_case`: a `ConversationalTestCase` produced by the simulator.
+- `metrics`: a list of `BaseConversationalMetric`s. See [multi-turn metrics](/docs/metrics-introduction#multi-turn-metrics) (`TurnRelevancyMetric`, `KnowledgeRetentionMetric`, `RoleAdherenceMetric`, `ConversationCompletenessMetric`).
+- [Optional] `run_async`: defaults to `True`.
 
 </Tab>
 </Tabs>
 
-You can [learn more about loading datasets here](/docs/evaluation-datasets#load-dataset).
-
 </Step>
+
 <Step>
-### Assert your tests
+### Run with `deepeval test run`
 
-
-You can use `deepeval`'s `assert_test` function to write test files.
-
-```python title="test_llm_app.py" showLineNumbers {14}
-from main import chatbot_callback # Replace with your LLM callback
-import pytest
-
-from deepeval.dataset import Golden
-from deepeval.test_case import ConversationalTestCase
-from deepeval import assert_test
-from deepeval.conversation_simulator import ConversationSimulator
-
-# Loop through goldens using pytest
-
-simulator = ConversationSimulator(model_callback=chatbot_callback)
-conversational_test_cases = simulator.simulate(goldens=dataset.goldens, max_turns=10)
-
-@pytest.mark.parametrize("test_case", conversational_test_cases)
-def test_llm_app(test_case: ConversationalTestCase):
-    assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric()])
-
-@deepeval.log_hyperparameters(model="gpt-4", prompt_template="...")
-def hyperparameters():
-    return {"model": "gpt-4.1", "system prompt": "..."}
-```
-
-Then, run the following command in your CLI:
+Whichever flavor you picked above, the command is the same:
 
 ```bash
 deepeval test run test_llm_app.py
 ```
 
-There are **TWO** mandatory and **ONE** optional parameter when calling the `assert_test()` function for **END-TO-END** evaluation:
-
-- `test_case`: an `LLMTestCase`.
-- `metrics`: a list of metrics of type `BaseMetric`.
-- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics in `@observe`. Defaulted to `True`.
-
-Create a YAML file to execute your test file automatically in CI/CD pipelines. [Click here for an example YAML file](#yaml-file-for-cicd-evals).
-
-</Step>
-</Steps>
-
 :::caution
-The usual `pytest` command would still work but is highly not recommended. `deepeval test run` adds a range of functionalities on top of Pytest for unit-testing LLMs, which is enabled by [8+ optional flags](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run). Users typically include `deepeval test run` as a command in their `.yaml` files for pre-deployment checks in CI/CD pipelines ([example here](https://www.confident-ai.com/docs/llm-evaluation/unit-testing-cicd)).
+The plain `pytest` command works but is highly not recommended. `deepeval test run` adds a range of functionalities on top of Pytest for unit-testing LLMs, enabled by [8+ optional flags](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) — async behavior, error handling, repeats, identifiers, and more.
 :::
-
-[Click here](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about different optional flags available to `deepeval test run` to customize asynchronous behaviors, error handling, etc.
-
-
-## Component-Level Evals in CI/CD
-
-Test individual parts of your LLM pipeline like prompt templates or retrieval logic in isolation. Component-level evals offer fast, targeted feedback and integrate seamlessly into your CI/CD workflows.
-
-<Steps>
-<Step>
-### Load your dataset
-
-
-`deepeval` offers support for loading datasets stored in JSON files, CSV files, and hugging face datasets into an `EvaluationDataset` as either test cases or goldens.
-
-<Tabs items={["Confident AI", "From CSV", "From JSON"]}>
-<Tab value="Confident AI">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.pull(alias="My Evals Dataset")
-```
-
-</Tab>
-<Tab value="From CSV">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-
-dataset.add_goldens_from_csv_file(
-    # file_path is the absolute path to you .csv file
-    file_path="example.csv",
-    input_col_name="query"
-)
-```
-
-</Tab>
-<Tab value="From JSON">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-
-dataset.add_goldens_from_json_file(
-    # file_path is the absolute path to you .json file
-    file_path="example.json",
-    input_key_name="query"
-)
-```
-
-</Tab>
-</Tabs>
-
-You can [learn more about loading datasets here](/docs/evaluation-datasets#load-dataset).
-
-</Step>
-<Step>
-### Assert your tests
-
-
-You can use `deepeval`'s `assert_test` function to write test files.
-
-```python title="test_my_ai_agent.py" {10-11}
-import pytest
-
-from your_agent import my_ai_agent # Replace with your @observe-instrumented AI agent
-
-from deepeval import assert_test
-from deepeval.dataset import Golden
-
-# Loop through goldens in our dataset using pytest
-@pytest.mark.parametrize("golden", dataset.goldens)
-def test_my_ai_agent(golden: Golden):
-    my_ai_agent(golden.input)  # captures trace
-    assert_test(golden=golden)  # evaluates spans
-
-@deepeval.log_hyperparameters(model="gpt-4", prompt_template="...")
-def hyperparameters():
-    return {"model": "gpt-4.1", "system prompt": "..."}
-```
-
-Finally, don't forget to run the test file in the CLI:
-
-```bash
-deepeval test run test_my_ai_agent.py
-```
-
-There is **ONE** mandatory parameter when calling the `assert_test()` function for **COMPONENT-LEVEL** evaluation:
-
-- `golden`: the `Golden` used to identify the active trace captured during the test.
-
-Create a YAML file to execute your test file automatically in CI/CD pipelines. [Click here for an example YAML file](#yaml-file-for-cicd-evals).
 
 </Step>
 </Steps>
-
-:::info
-Similar to the `evaluate()` function, `assert_test()` for component-level evaluation does not need:
-
-- Declaration of `metrics` because component-level metrics are defined on spans with `@observe(metrics=[...])`.
-- Creation of `LLMTestCase`s because it is handled at runtime by `update_current_span` in your AI agent.
-:::
 
 ## YAML File For CI/CD Evals
 
-To run your unit tests on all changes in prod, you can use the following `YAML` file in your **github actions** or any other similar CI/CD pipelines. This example uses `poetry` for installation, `OPENAI_API_KEY` as your LLM judge to run evals locally. You can also optionally add `CONFIDENT_API_KEY` to send results to Confident AI.
+Drop `deepeval test run` into a `.yml` to run your unit tests on every push or PR. This example uses `poetry` for installation and `OPENAI_API_KEY` as your LLM judge to run evals locally. Add `CONFIDENT_API_KEY` to send results to Confident AI.
 
 ```yaml {32-33}
 name: LLM App `deepeval` Tests
@@ -492,10 +759,10 @@ jobs:
         run: poetry run deepeval test run test_llm_app.py
 ```
 
-[Click here](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about different optional flags available to `deepeval test run` to customize asynchronous behaviors, error handling, etc.
+[Click here](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about the optional flags available to `deepeval test run`.
 
 :::tip
-We highly recommend setting up [Confident AI](https://app.confident-ai.com) with your `deepeval` evaluations to get professional test reports and observe trends of your LLM application's performance overtime like this:
+We highly recommend setting up [Confident AI](https://app.confident-ai.com) with your `deepeval` evaluations to get professional test reports and observe trends of your LLM application's performance over time:
 
 <VideoDisplayer
   src={ASSETS.tracingSpans}

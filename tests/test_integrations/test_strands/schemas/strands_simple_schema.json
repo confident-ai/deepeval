@@ -1,0 +1,67 @@
+{
+  "uuid": "9177671d9ce31d2d4513ee5db56940ed",
+  "baseSpans": [
+    {
+      "uuid": "90f9236824c79014",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "3ab17c81b2cb093b",
+      "startTime": "2026-05-07T11:39:25.649Z",
+      "endTime": "2026-05-07T11:39:26.618Z",
+      "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
+      "integration": "Strands"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "3ab17c81b2cb093b",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T11:39:25.649Z",
+      "endTime": "2026-05-07T11:39:26.618Z",
+      "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
+      "output": "Hello, how are you?\n",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Strands"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "c21191a77874a2bc",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "90f9236824c79014",
+      "startTime": "2026-05-07T11:39:25.649Z",
+      "endTime": "2026-05-07T11:39:26.618Z",
+      "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
+      "output": "Hello, how are you?",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 40.0,
+      "outputTokenCount": 7.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-05-07T11:39:25.649Z",
+  "endTime": "2026-05-07T11:39:26.618Z",
+  "name": "strands-simple-test",
+  "metadata": {
+    "test_type": "simple"
+  },
+  "tags": [
+    "strands",
+    "simple"
+  ],
+  "environment": "development",
+  "threadId": "simple-123",
+  "userId": "test-user",
+  "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
+  "output": "Hello, how are you?\n",
+  "status": "SUCCESS"
+}

@@ -775,3 +775,17 @@ html > body[data-scroll-locked] {
   margin-right: 0px !important;
   --removed-body-scroll-bar-size: 0px !important;
 }
+
+/* ------------------------------------------------------------------ */
+/* Pause CSS animations when an element (or any of its descendants)   */
+/* is wrapped in <PauseOffscreen> and scrolled out of view.           */
+/*                                                                    */
+/* Used by the home-page animated sections (SOTACards, JudgeCards,    */
+/* VibeCodingLoop, hero banner) so 30+ infinite SVG animations stop   */
+/* burning GPU when they aren't visible. See                          */
+/* `src/components/PauseOffscreen/index.tsx` for the wrapper.         */
+/* ------------------------------------------------------------------ */
+[data-paused="true"],
+[data-paused="true"] * {
+  animation-play-state: paused !important;
+}

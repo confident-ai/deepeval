@@ -12,6 +12,7 @@ from deepeval.tracing.context import (
 )
 from deepeval.tracing.trace_context import current_llm_context
 from deepeval.tracing.types import ToolSpan, TraceSpanStatus
+from deepeval.tracing.integrations import Integration, Provider
 from deepeval.utils import shorten, len_long
 
 
@@ -42,6 +43,10 @@ def _update_all_attributes(
         output_token_count=output_parameters.completion_tokens,
         prompt=llm_context.prompt,
     )
+    current_span = current_span_context.get()
+    if current_span:
+        current_span.integration = Integration.ANTHROPIC.value
+        current_span.provider = Provider.ANTHROPIC.value
 
     if output_parameters.tools_called:
         create_child_tool_spans(output_parameters)

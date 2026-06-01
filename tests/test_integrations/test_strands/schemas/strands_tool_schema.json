@@ -1,0 +1,114 @@
+{
+  "uuid": "4446a2921a961c6b2e50ed8de3227ed0",
+  "baseSpans": [
+    {
+      "uuid": "74afed9879a8022c",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "06f00380ac708a38",
+      "startTime": "2026-05-07T11:39:27.579Z",
+      "endTime": "2026-05-07T11:39:28.344Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
+      "output": "{'toolUse': {'toolUseId': 'call_IW6lQhHko4NqfL6M74s5819M', 'name': 'calculate', 'input': {'operation': 'multiply', 'a': 7, 'b': 8}}}",
+      "integration": "Strands"
+    },
+    {
+      "uuid": "cc2943e533ea4409",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "06f00380ac708a38",
+      "startTime": "2026-05-07T11:39:26.624Z",
+      "endTime": "2026-05-07T11:39:27.578Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
+      "output": "{'toolUse': {'toolUseId': 'call_IW6lQhHko4NqfL6M74s5819M', 'name': 'calculate', 'input': {'operation': 'multiply', 'a': 7, 'b': 8}}}",
+      "integration": "Strands"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "06f00380ac708a38",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T11:39:26.624Z",
+      "endTime": "2026-05-07T11:39:28.344Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
+      "output": "7 multiplied by 8 is 56.\n",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Strands"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "6e4a6797f36d253d",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "74afed9879a8022c",
+      "startTime": "2026-05-07T11:39:27.579Z",
+      "endTime": "2026-05-07T11:39:28.343Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
+      "output": "7 multiplied by 8 is 56.",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 116.0,
+      "outputTokenCount": 10.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
+    },
+    {
+      "uuid": "18dc1ddf5f98c963",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "cc2943e533ea4409",
+      "startTime": "2026-05-07T11:39:26.624Z",
+      "endTime": "2026-05-07T11:39:27.576Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
+      "output": "{'toolUse': {'toolUseId': 'call_IW6lQhHko4NqfL6M74s5819M', 'name': 'calculate', 'input': {'operation': 'multiply', 'a': 7, 'b': 8}}}",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 85.0,
+      "outputTokenCount": 21.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "d559188028889b7d",
+      "name": "execute_tool calculate",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "cc2943e533ea4409",
+      "startTime": "2026-05-07T11:39:27.576Z",
+      "endTime": "2026-05-07T11:39:27.578Z",
+      "output": "56.0",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "inputParameters": {}
+        }
+      ],
+      "integration": "Strands"
+    }
+  ],
+  "startTime": "2026-05-07T11:39:26.624Z",
+  "endTime": "2026-05-07T11:39:28.344Z",
+  "name": "strands-tool-test",
+  "metadata": {
+    "test_type": "tool"
+  },
+  "tags": [
+    "strands",
+    "tool"
+  ],
+  "environment": "development",
+  "threadId": "tool-123",
+  "userId": "test-user",
+  "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
+  "output": "7 multiplied by 8 is 56.\n",
+  "status": "SUCCESS"
+}

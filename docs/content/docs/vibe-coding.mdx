@@ -1,0 +1,141 @@
+---
+id: vibe-coding
+title: Vibe Coding with DeepEval
+sidebar_label: Vibe Coding with DeepEval
+---
+
+import AgentTraceTerminal from "@site/src/components/AgentTraceTerminal";
+import ClaudeCodeTerminal from "@site/src/sections/home/ClaudeCodeTerminal";
+import TraceLoopConnector from "@site/src/sections/home/TraceLoopConnector";
+import { Rocket, Terminal } from "lucide-react";
+
+Although DeepEval is great as an AI quality validation suite — pytest assertions, regression gates, CI/CD failure tracking — that's only half the use case.
+
+The other half is using the same evals **during development**: your coding agent runs them, reads the failing metrics and traces, and uses the results to decide what to change next in your agent, RAG pipeline, or chatbot. Then re-runs to confirm.
+
+In short: **DeepEval helps you vibe code your agent without vibe coding your agents.**
+
+:::info
+If you just want to install the skill and paste the starter prompt into Cursor / Claude Code / Codex, jump to the [5-min Vibe Coder Quickstart](/docs/vibe-coder-quickstart). The rest of this page is the loop itself — what actually runs, why it works, and how to drive it.
+:::
+
+## The Loop
+
+Vibe coding with DeepEval is a feedback loop between your eval suite and your coding agent:
+
+1. Define a dataset, or let DeepEval generate one from your docs, traces, or existing examples.
+2. Add an eval suite that calls your agent against that dataset and scores the outputs with the metrics you care about.
+3. Let your coding agent run the suite, read the failures, and make targeted changes to the relevant prompts, retrieval logic, tools, or application code.
+4. Re-run the same evals until the scores and metric reasons show that the behavior has improved.
+
+A trace from `deepeval test run` gives the coding agent more than a pass/fail result. It includes scores, span-level context, and metric reasons, so a failure can be traced back to the part of the system that produced it.
+
+<AgentTraceTerminal />
+
+<TraceLoopConnector />
+
+<ClaudeCodeTerminal />
+
+For example, if a run reports `faithfulness 0.64`, the agent can open the retriever span that produced the off-source claim, narrow retrieval to active refund policies, and re-run the eval to confirm the fix. The workflow is similar to a tight unit-test cycle, except the assertions are scored model outputs and the runner is your coding agent.
+
+## Under the Hood
+
+When the [Agent Skill](/docs/vibe-coder-quickstart#install-the-agent-skill) is installed and you say _"add evals to this repo and fix the failing ones"_, your coding agent doesn't invent an evaluation framework — it shells out to DeepEval's CLI. Concretely, every iteration round walks through these stages, each backed by a single CLI command documented in the [CLI reference](/docs/command-line-interface):
+
+### 1. Load (or generate) the dataset
+
+The agent first looks for an existing dataset under `tests/evals/`, on Confident AI, or as a Hugging Face dataset.
+
+If none exists, it generates one with [`deepeval generate`](/docs/command-line-interface#generate). That single command synthesizes goldens from your docs, contexts, scratch, or existing goldens — single-turn or multi-turn — without any custom Python:
+
+```bash
+deepeval generate \
+  --method docs \
+  --variation single-turn \
+  --documents ./docs \
+  --output-dir ./tests/evals \
+  --file-name .dataset
+```
+
+The generated `.dataset.json` is committed to the repo. Future runs reuse it; new edge cases append to it.
+
+### 2. Build the eval suite
+
+The skill ships [pytest templates](https://github.com/confident-ai/deepeval/tree/main/skills/deepeval/templates) for the four common shapes — single-turn end-to-end, multi-turn end-to-end, single-turn component-level, plus a shared `conftest.py`. The agent picks the closest template, fills placeholders (dataset path, app entrypoint, metrics, thresholds), and writes a committed file like `tests/evals/test_<app>.py`. No throwaway scripts, no hidden goldens — the suite reruns without an agent.
+
+The metrics it picks are not invented either; they come from the [50+ metrics catalog](/docs/metrics-introduction) — `GEval`, `AnswerRelevancyMetric`, `FaithfulnessMetric`, `ToolCorrectnessMetric`, `ConversationalGEval`, etc. — each with a default threshold and a `reason` field the agent can read.
+
+### 3. Run the suite
+
+Now the loop's heartbeat: [`deepeval test run`](/docs/command-line-interface#test-run). Same command every round, no flake from rerunning a UI:
+
+```bash
+deepeval test run tests/evals/test_<app>.py \
+  --identifier "iterating-on-retrieval-round-1" \
+  --num-processes 5 \
+  --ignore-errors \
+  --skip-on-missing-params
+```
+
+The CLI prints per-test, per-metric scores plus the metric `reason` strings — that's the structured output the agent parses to pick the next change.
+
+### 4. Localize the failure
+
+If `@observe` is on, every span (`retriever`, `lookup_order`, `classify_intent`, `draft_response`) carries its own scored metrics. A failing Faithfulness score isn't "the app is bad" — it's "the `retrieve_policy_docs` span scored 0.64 because the response cited a deprecated policy." The agent opens _that_ file, not anything else.
+
+This is the linchpin that makes the loop actionable. See [component-level evals](/docs/evaluation-component-level-llm-evals) for the full mechanics.
+
+### 5. Patch and verify
+
+The agent edits the smallest thing that could plausibly fix the failing metric — a prompt, a retriever filter, a tool argument schema, a parser. Then it reruns the same `deepeval test run` command. If the failing metric moves green and nothing else regresses, the round closes. If not, it picks the next-smallest change.
+
+The skill's [iteration-loop reference](https://github.com/confident-ai/deepeval/blob/main/skills/deepeval/references/iteration-loop.md) bakes in guardrails the agent follows automatically: don't lower thresholds to make failures vanish, don't delete hard goldens, don't swap models or frameworks without asking.
+
+## Why This Works
+
+Three properties of DeepEval make it a uniquely good signal source for a coding agent — the things that turn "an eval ran" into "the agent knew what to change":
+
+- **Structured outputs.** Every metric returns a numeric score, a pass/fail against a threshold, and a natural-language `reason`. That's parseable by an agent without scraping logs.
+- **Span-level localization.** With `@observe(metrics=[...])`, a failure points at the file that owns the failing span — not the whole app.
+- **A single reproducible CLI.** Same `deepeval test run` command, same dataset, same metrics. The agent has one command to confirm a fix actually moved the score.
+
+## How to Prompt Your Coding Agent
+
+The single biggest mindset shift: stop asking the coding agent to "add DeepEval and call it done." Ask it to **drive the loop**.
+
+Good prompts for the build phase:
+
+- _"Run `deepeval test run tests/evals/` and fix the lowest-scoring metric. Don't change thresholds. Re-run to confirm."_
+- _"The Faithfulness metric is failing on cases 3, 7, and 12. Open the retriever span for each, find the common pattern, and patch the retriever — not the metric."_
+- _"Run 5 rounds of the iteration loop. Each round: run evals, pick one failing metric, edit the smallest thing that could fix it, re-run, summarize what changed."_
+
+That last prompt maps directly to the iteration loop the skill enforces. With the skill installed, _"Use DeepEval to fix the refund agent — run 5 rounds"_ is enough.
+
+## Connect to Confident AI
+
+DeepEval is local-first and the loop above works fully offline. Connecting to [Confident AI](https://www.confident-ai.com) extends the loop across your team:
+
+```bash
+deepeval login
+```
+
+Every `deepeval test run` your coding agent kicks off pushes a testing report your reviewers can open with `deepeval view`. Production monitoring sends new failure cases straight back into the dataset, so the next iteration round picks up real regressions automatically.
+
+## Next Steps
+
+Now go drive the loop on your own repo — and if you want to know exactly which command your coding agent runs at each stage, the CLI reference has the full surface.
+
+<Cards>
+  <Card
+    icon={<Rocket />}
+    title="5-min Vibe Coder Quickstart"
+    href="/docs/vibe-coder-quickstart"
+    description="Install the skill, paste the starter prompt, and hand the loop to your coding agent."
+  />
+  <Card
+    icon={<Terminal />}
+    title="CLI Reference"
+    href="/docs/command-line-interface"
+    description="Every flag the loop reaches for: `deepeval generate`, `deepeval test run`, `deepeval view`."
+  />
+</Cards>

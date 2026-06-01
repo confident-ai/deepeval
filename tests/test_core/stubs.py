@@ -465,20 +465,16 @@ class SuffixRewriter:
         self.calls = []
         self.a_calls = []
 
-    def rewrite(self, *, module_id, old_prompt, feedback_text, **kwargs):
-        self.calls.append((module_id, old_prompt, feedback_text))
+    def rewrite(self, *, old_prompt, feedback_diagnosis=None, **kwargs):
+        self.calls.append((old_prompt, feedback_diagnosis))
         return Prompt(
             text_template=(old_prompt.text_template or "") + self.suffix
         )
 
-    async def a_rewrite(
-        self, *, module_id, old_prompt, feedback_text, **kwargs
-    ):
-        self.a_calls.append((module_id, old_prompt, feedback_text))
+    async def a_rewrite(self, *, old_prompt, feedback_diagnosis=None, **kwargs):
+        self.a_calls.append((old_prompt, feedback_diagnosis))
         return self.rewrite(
-            module_id=module_id,
-            old_prompt=old_prompt,
-            feedback_text=feedback_text,
+            old_prompt=old_prompt, feedback_diagnosis=feedback_diagnosis
         )
 
 

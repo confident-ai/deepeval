@@ -1,0 +1,119 @@
+{
+  "uuid": "d77fcac64c5f1716d9808312bf58492a",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "f239937c0861dc3a",
+      "name": "invocation [deepeval-googleadk-tool]",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T09:06:26.773Z",
+      "endTime": "2026-05-07T09:06:31.499Z",
+      "input": "{\"user_id\": \"test-user\", \"session_id\": \"97a2b7d5-b361-41e2-ba97-1fbc972b76d8\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"What is 15 plus 25?\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The sum of 15 and 25 is 40.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":15,\"prompt_token_count\":202,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":202}],\"total_token_count\":217},\"invocation_id\":\"e-a40ea599-4cc6-4307-8972-7e028a6a293d\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"09f807bc-224e-4e40-aa26-b67c58b3aa46\",\"timestamp\":1778144789.630004}",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Google ADK"
+    },
+    {
+      "uuid": "a97422315a6196e6",
+      "name": "calculator_assistant",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "f239937c0861dc3a",
+      "startTime": "2026-05-07T09:06:26.773Z",
+      "endTime": "2026-05-07T09:06:31.499Z",
+      "input": [],
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The sum of 15 and 25 is 40.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":15,\"prompt_token_count\":202,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":202}],\"total_token_count\":217},\"invocation_id\":\"e-a40ea599-4cc6-4307-8972-7e028a6a293d\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"09f807bc-224e-4e40-aa26-b67c58b3aa46\",\"timestamp\":1778144789.630004}",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Google ADK"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "d7d60f532ba1af22",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "a97422315a6196e6",
+      "startTime": "2026-05-07T09:06:29.630Z",
+      "endTime": "2026-05-07T09:06:31.499Z",
+      "input": "{\"result\": 40}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The sum of 15 and 25 is 40.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":15,\"prompt_token_count\":202,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":202}],\"total_token_count\":217}}",
+      "model": "gemini-2.5-flash-lite",
+      "inputTokenCount": 202.0,
+      "outputTokenCount": 15.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
+    },
+    {
+      "uuid": "db1de588f20897fd",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "a97422315a6196e6",
+      "startTime": "2026-05-07T09:06:26.774Z",
+      "endTime": "2026-05-07T09:06:29.628Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise.\n\nYou are an agent. Your internal name is \"calculator_assistant\".",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"function_call\":{\"args\":{\"a\":15,\"operation\":\"add\",\"b\":25},\"name\":\"calculate\"}}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":25,\"prompt_token_count\":163,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":163}],\"total_token_count\":188}}",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "inputParameters": {
+            "a": 15,
+            "operation": "add",
+            "b": 25
+          }
+        }
+      ],
+      "model": "gemini-2.5-flash-lite",
+      "inputTokenCount": 163.0,
+      "outputTokenCount": 25.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "f3c9b41ae4fbf6c5",
+      "name": "calculate",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "db1de588f20897fd",
+      "startTime": "2026-05-07T09:06:29.626Z",
+      "endTime": "2026-05-07T09:06:29.627Z",
+      "input": "{\"a\": 15, \"operation\": \"add\", \"b\": 25}",
+      "output": "{\"id\":\"adk-129533b3-95e9-43f0-915b-07c4e2c0f635\",\"name\":\"calculate\",\"response\":{\"result\":40}}",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "inputParameters": {
+            "a": 15,
+            "operation": "add",
+            "b": 25
+          }
+        }
+      ],
+      "integration": "Google ADK"
+    }
+  ],
+  "startTime": "2026-05-07T09:06:26.773Z",
+  "endTime": "2026-05-07T09:06:31.499Z",
+  "name": "googleadk-tool-metric-test",
+  "metadata": {
+    "test_type": "tool_metric_collection"
+  },
+  "tags": [
+    "googleadk",
+    "tool",
+    "metric-collection"
+  ],
+  "environment": "development",
+  "threadId": "tool-metric-123",
+  "userId": "test-user",
+  "input": "{\"user_id\": \"test-user\", \"session_id\": \"97a2b7d5-b361-41e2-ba97-1fbc972b76d8\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"What is 15 plus 25?\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+  "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The sum of 15 and 25 is 40.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":15,\"prompt_token_count\":202,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":202}],\"total_token_count\":217},\"invocation_id\":\"e-a40ea599-4cc6-4307-8972-7e028a6a293d\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"09f807bc-224e-4e40-aa26-b67c58b3aa46\",\"timestamp\":1778144789.630004}",
+  "status": "SUCCESS"
+}

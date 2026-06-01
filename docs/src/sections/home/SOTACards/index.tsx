@@ -1,6 +1,5 @@
-"use client";
-
 import type { ReactNode } from "react";
+import { PauseOffscreen } from "@site/src/components/PauseOffscreen";
 import styles from "./SOTACards.module.scss";
 
 type Card = {
@@ -221,15 +220,17 @@ const CARDS: Card[] = [
 
 const SOTACards: React.FC = () => {
   return (
-    <div className={styles.grid}>
-      {CARDS.map((card, i) => (
-        <article key={i} className={styles.card}>
-          <div className={styles.iconWrap}>{card.icon}</div>
-          <h3 className={styles.heading}>{card.heading}</h3>
-          <p className={styles.description}>{card.description}</p>
-        </article>
-      ))}
-    </div>
+    <PauseOffscreen>
+      <div className={styles.grid}>
+        {CARDS.map((card, i) => (
+          <article key={i} className={styles.card}>
+            <div className={styles.iconWrap}>{card.icon}</div>
+            <h3 className={styles.heading}>{card.heading}</h3>
+            <p className={styles.description}>{card.description}</p>
+          </article>
+        ))}
+      </div>
+    </PauseOffscreen>
   );
 };
 

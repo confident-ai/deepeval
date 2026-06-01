@@ -72,7 +72,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -98,7 +99,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 13.0,
-      "outputTokenCount": 75.0
+      "outputTokenCount": 75.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

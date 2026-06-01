@@ -1,16 +1,15 @@
 import inspect
 from typing import Type
 
-from deepeval.simulator.template import ConversationSimulatorTemplate
+from deepeval.simulator.template import SimulationTemplate
 
 
 def validate_simulation_template(
-    simulation_template: Type[ConversationSimulatorTemplate],
+    simulation_template: Type[SimulationTemplate],
 ):
-    if not issubclass(simulation_template, ConversationSimulatorTemplate):
+    if not issubclass(simulation_template, SimulationTemplate):
         raise TypeError(
-            "simulation_template must inherit from "
-            "ConversationSimulatorTemplate."
+            "simulation_template must inherit from " "SimulationTemplate."
         )
 
     expected_signatures = {

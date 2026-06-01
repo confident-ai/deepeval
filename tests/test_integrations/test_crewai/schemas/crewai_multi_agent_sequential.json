@@ -9,7 +9,8 @@
       "startTime": "2026-02-15T10:21:58.268Z",
       "endTime": "2026-02-15T10:22:00.217Z",
       "input": {},
-      "output": "Why did the axolotl break up with its partner? Because it found them too gill-ty of not being amphibious enough!"
+      "output": "Why did the axolotl break up with its partner? Because it found them too gill-ty of not being amphibious enough!",
+      "integration": "CrewAI"
     }
   ],
   "agentSpans": [
@@ -24,7 +25,8 @@
       "input": "Write a one-sentence joke about the animal provided.\n\nThis is the expected criteria for your final answer: A joke.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nAxolotl",
       "output": "Why did the axolotl break up with its partner? Because it found them too gill-ty of not being amphibious enough!",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "CrewAI"
     },
     {
       "uuid": "c18ae400-55a3-44ee-aad0-9b0bdf696f6e",
@@ -37,7 +39,8 @@
       "input": "Pick a random animal.\n\nThis is the expected criteria for your final answer: The name of an animal.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Axolotl",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "CrewAI"
     }
   ],
   "llmSpans": [
@@ -60,7 +63,9 @@
         }
       ],
       "output": "Why did the axolotl break up with its partner? Because it found them too gill-ty of not being amphibious enough!",
-      "model": "gpt-4o-mini"
+      "model": "gpt-4o-mini",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "a76d30f6-e443-4d58-a145-a75ebb0c2ac7",
@@ -81,7 +86,9 @@
         }
       ],
       "output": "Axolotl",
-      "model": "gpt-4o-mini"
+      "model": "gpt-4o-mini",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

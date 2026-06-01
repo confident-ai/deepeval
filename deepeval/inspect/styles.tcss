@@ -1,0 +1,122 @@
+/* TCSS for `deepeval inspect`. Widget-specific defaults live in each
+ * widget's DEFAULT_CSS; this file holds layout + cross-widget overrides. */
+
+Screen {
+    background: $background;
+    color: $text;
+}
+
+HeaderBar {
+    height: 1;
+    padding: 0 1;
+    background: $boost;
+    color: $text;
+}
+
+#main-split {
+    height: 1fr;
+}
+
+/* Brief asked for ~40%, but 30% gives I/O more room without starving
+ * the tree at typical terminal widths. DetailsPane uses `width: 1fr`
+ * so it auto-fills the rest.
+ *   min-width 28: sub-80-col terminals overflow the tag+name+badges row.
+ *   max-width 60: past this the tree is mostly empty space. */
+SpanTree {
+    width: 30%;
+    min-width: 28;
+    max-width: 60;
+    background: $surface;
+    border-right: solid $boost;
+    padding: 0 1;
+}
+
+/* Cursor highlight is background-only — setting `color` would overwrite
+ * the per-type Rich Text colors (TRACE cyan, AGENT pink, LLM yellow, ...)
+ * the moment a row is selected. */
+SpanTree > .tree--cursor {
+    background: $boost-lighten-1;
+}
+SpanTree:focus > .tree--cursor {
+    background: $accent 40%;
+}
+
+DetailsPane {
+    width: 1fr;
+    background: $surface;
+    padding: 0 2;
+    overflow-y: auto;
+}
+
+DetailsPane > .details-header {
+    padding: 1 0 0 0;
+}
+
+/* Two rows above each section header so it reads as a hard break;
+ * zero below so it stays tight against its own content. */
+DetailsPane > .details-divider {
+    padding: 2 0 0 0;
+}
+
+DetailsPane > .details-empty {
+    color: $text-muted;
+    padding: 2 0;
+}
+
+DetailsPane Markdown {
+    margin: 0 0 1 0;
+    padding: 0 1;
+    background: $surface;
+}
+
+/* Input / Output / Tools-Called etc. — elevated card so the eye reads
+ * them as DATA rather than commentary under the section header. */
+DetailsPane > .details-payload {
+    background: $boost;
+    padding: 1 2;
+    margin: 0 0 1 0;
+}
+
+/* Confident AI CTA. Same card treatment as payloads, plus a brand-
+ * purple left border so it reads as promotional rather than data. */
+DetailsPane > .details-cta {
+    background: $boost;
+    padding: 1 2;
+    margin: 0 0 1 0;
+    border-left: thick #bd93f9;
+}
+
+DetailsPane Collapsible {
+    margin: 1 0 0 0;
+    background: $surface;
+}
+DetailsPane Collapsible > .collapsible--title {
+    color: $text-muted;
+}
+
+Footer {
+    background: $boost;
+    color: $text;
+}
+
+Footer > .footer--key {
+    color: $accent;
+    text-style: bold;
+}
+
+SearchBar {
+    dock: bottom;
+    height: 1;
+    background: $boost;
+    color: $text;
+}
+SearchBar:focus {
+    background: $boost;
+    border: none;
+}
+
+HelpScreen > Container {
+    background: $surface;
+    border: round $accent;
+    padding: 1 2;
+}

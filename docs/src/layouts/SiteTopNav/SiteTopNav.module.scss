@@ -121,7 +121,7 @@ $toc-visible-min: 1280px;
 .logoCell {
   display: flex;
   align-items: center;
-  padding-left: $gutter;
+  padding-left: 0.5rem;
   flex: 0 0 auto;
 
   @media (min-width: $grid-min) {
@@ -208,7 +208,7 @@ $toc-visible-min: 1280px;
   flex-shrink: 0;
 }
 
-.homeDiscordCta {
+.homeCommunityCta {
   flex-shrink: 0;
 }
 
@@ -293,7 +293,7 @@ $toc-visible-min: 1280px;
     height: 20px;
   }
 
-  .homeDiscordCta {
+  .homeCommunityCta {
     display: none;
   }
 }

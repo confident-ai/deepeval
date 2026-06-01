@@ -75,8 +75,8 @@ export function baseOptions(): BaseLayoutProps {
           aria-label={appName}
           style={{
             display: "block",
-            height: "28px",
-            width: "131px",
+            height: "24px",
+            width: "102px",
             backgroundColor: "var(--color-fd-foreground)",
             WebkitMask: 'url("/icons/DeepEval.svg") no-repeat center / contain',
             mask: 'url("/icons/DeepEval.svg") no-repeat center / contain',

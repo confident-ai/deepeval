@@ -9,7 +9,8 @@
       "startTime": "2026-02-15T10:22:47.311Z",
       "endTime": "2026-02-15T10:22:48.313Z",
       "input": {},
-      "output": "Processed output: Async Request 1 has been successfully processed."
+      "output": "Processed output: Async Request 1 has been successfully processed.",
+      "integration": "CrewAI"
     },
     {
       "uuid": "8d8bce93-8cd8-4ffc-b5ad-f1c55124e0dc",
@@ -22,7 +23,8 @@
       "input": {
         "input": "Async Request 1"
       },
-      "output": "Processed output: Async Request 1 has been successfully processed."
+      "output": "Processed output: Async Request 1 has been successfully processed.",
+      "integration": "CrewAI"
     }
   ],
   "agentSpans": [
@@ -37,7 +39,8 @@
       "input": "Process this input asynchronously: Async Request 1\n\nThis is the expected criteria for your final answer: Processed output.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Processed output: Async Request 1 has been successfully processed.",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "CrewAI"
     }
   ],
   "llmSpans": [
@@ -60,7 +63,9 @@
         }
       ],
       "output": "Processed output: Async Request 1 has been successfully processed.",
-      "model": "gpt-4o-mini"
+      "model": "gpt-4o-mini",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

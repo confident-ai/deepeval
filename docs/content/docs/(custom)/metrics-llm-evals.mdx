@@ -3,6 +3,7 @@ id: metrics-llm-evals
 title: G-Eval
 sidebar_label: G-Eval
 ---
+
 import { ASSETS } from "@site/src/assets";
 
 <MetricTagsDisplayer singleTurn={true} custom={true} />
@@ -96,6 +97,7 @@ You can upload your `GEval` metrics to [Confident AI](https://app.confident-ai.c
 metric = GEval(...)
 metric.upload()
 ```
+
 :::
 
 ### Evaluation Steps
@@ -233,11 +235,38 @@ When you provide `evaluation_steps`, the `GEval` metric skips the first step and
 In the original G-Eval paper, the authors used the probabilities of the LLM output tokens to normalize the score by calculating a weighted summation.
 
 This step was introduced in the paper because it minimizes bias in LLM scoring. **This normalization step is automatically handled by `deepeval` by default** (unless you're using a custom model).
+
+<details>
+
+<summary> See how to implement your cusotm `logprobs`</summary>
+
+To enable weighted summation for a custom model, implement `a_generate_raw_response` (and optionally `generate_raw_response`) on your `DeepEvalBaseLLM` subclass. The method must return a tuple of `(ChatCompletion, cost)` where the `ChatCompletion` object contains `logprobs` in its response:
+
+```python
+from openai.types.chat import ChatCompletion
+
+class MyCustomModel(DeepEvalBaseLLM):
+    async def a_generate_raw_response(self, prompt: str, **kwargs) -> tuple:
+        # Call your LLM with logprobs enabled (top_logprobs is passed via kwargs)
+        response: ChatCompletion = await self.client.chat.completions.create(
+            model=self.model_name,
+            messages=[{"role": "user", "content": prompt}],
+            logprobs=True,
+            top_logprobs=kwargs.get("top_logprobs", 5),
+        )
+        cost = 0  # replace with actual cost if available
+        return response, cost
+```
+
+`deepeval` will automatically use the `logprobs` in the returned `ChatCompletion` to compute the weighted summation score. If `a_generate_raw_response` is not implemented, `deepeval` falls back to the raw integer score from `a_generate`.
+
+</details>
+
 :::
 
 ## Examples
 
-`deepeval` runs more than **10 million G-Eval metrics a month** (we wrote a blog about it [here](/blog/top-5-geval-use-cases)), and in this section we will list out the top use cases we see users using G-Eval for, with a link to the fuller explanation for each at the end.
+`deepeval` runs more than **10 million G-Eval metrics a day** (we wrote a blog about it [here](/blog/top-5-geval-use-cases)), and in this section we will list out the top use cases we see users using G-Eval for, with a link to the fuller explanation for each at the end.
 
 :::caution
 Please do not directly copy and paste examples below without first assessing their fit for your use case.

@@ -16,7 +16,9 @@ import {
   Rocket,
   Route,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
+import VibeCodingLoop from "@site/src/sections/home/VibeCodingLoop";
 
 **DeepEval** is an open-source LLM evaluation framework for LLM applications. DeepEval makes it extremely easy to build and iterate on LLM (applications) and was built with the following principles in mind:
 
@@ -34,18 +36,9 @@ DeepEval is local-first: your evaluations run in your own environment. When your
 team needs shared dashboards, regression tracking, observability, or production
 monitoring, DeepEval integrates natively with [Confident AI](https://www.confident-ai.com).
 
-## Why DeepEval Exists
-
-LLM applications are hard to test with traditional assertions. The same input can
-produce multiple acceptable outputs, failures are often semantic, and quality can
-depend on tool calls, multi-step reasoning, state, retrieved context, or conversation
-history.
-
-DeepEval exists to make those behaviors testable without forcing every team into
-one workflow. You can write Pytest-style checks for CI/CD, run evals from
-standalone scripts and notebooks, score saved test cases or full datasets,
-evaluate entire traces or individual spans, and bring the same feedback loop into
-agentic coding workflows.
+:::tip[Vibe coding? Have your coding agent set DeepEval up for you.]
+Install the DeepEval Skill in **Cursor, Claude Code, Codex, Windsurf**, or any other AI coding tool, paste a starter prompt, and your coding agent will do the rest of the work. [Click here](/docs/vibe-coder-quickstart) to get started.
+:::
 
 ## Who is DeepEval For?
 
@@ -61,37 +54,60 @@ DeepEval was designed for a technical audience and here are the main personas we
 - **Tech-savvy PMs** who want to define quality criteria, inspect failures, and
   track whether product changes improve AI outputs.
 
+## Using DeepEval for Coding Agents
+
+Apart from building evaluation suites and pipelines with DeepEval, DeepEval's CLI evaluation capabilities make it one of the best eval harnesses for vibe coding agents such as Claude Code, Codex, and Cursor.
+
+The diagram below explains how DeepEval can take part in your iteration cycles, not just as a final validation check.
+
+<VibeCodingLoop />
+
+:::info
+To learn more about using DeepEval as an evaluation harness, click [here.](/docs/vibe-coding)
+:::
+
 ## Choose Your Path
 
-If you already know what you're building, start with a system-specific
-quickstart:
+We highly recommend starting with either of these two quickstarts:
 
 <Cards>
   <Card
-    className="md:col-span-2"
     icon={<Rocket />}
-    title="5 min Quickstart"
+    title="5-min Human Quickstart"
     href="/docs/getting-started"
   >
     Install DeepEval, create your first test case, run it with `deepeval test
-    run`, and inspect the results.
-  </Card>
-  <Card icon={<Bot />} title="AI Agents" href="/docs/getting-started-agents">
-    Set up tracing, evaluate end-to-end task completion, and score individual
-    agent components.
+    run`, and inspect the results — by hand.
   </Card>
   <Card
-    icon={<MessagesSquare />}
-    title="Chatbots"
-    href="/docs/getting-started-chatbots"
+    icon={<Sparkles />}
+    title="5-min Vibe Coder Quickstart"
+    href="/docs/vibe-coder-quickstart"
   >
-    Evaluate multi-turn conversations, turns, and simulated user interactions.
-  </Card>
-  <Card icon={<FileSearch />} title="RAG" href="/docs/getting-started-rag">
-    Evaluate RAG quality end-to-end, then test retrieval and generation
-    separately.
+    Install the Skill in Cursor / Claude Code / Codex and have your coding agent
+    build the test suite, run evals, and iterate for you.
   </Card>
 </Cards>
+
+## Start with a Use Case in Mind
+
+Alternatively, if you already have a concrete use case - try out one of our use case specific quickstarts:
+
+<Card icon={<Bot />} title="AI Agents" href="/docs/getting-started-agents">
+  Set up tracing, evaluate end-to-end task completion, and score individual
+  agent components.
+</Card>
+<Card
+  icon={<MessagesSquare />}
+  title="Chatbots"
+  href="/docs/getting-started-chatbots"
+>
+  Evaluate multi-turn conversations, turns, and simulated user interactions.
+</Card>
+<Card icon={<FileSearch />} title="RAG" href="/docs/getting-started-rag">
+  Evaluate RAG quality end-to-end, then test retrieval and generation
+  separately.
+</Card>
 
 :::tip
 All quickstarts include a guide on how to bring evals to production near the end.

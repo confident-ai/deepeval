@@ -1,0 +1,118 @@
+{
+  "uuid": "ffc92c50614e95bd293312ecdf2883ed",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "8c1a7ce486a80806",
+      "name": "invocation [deepeval-googleadk-evals]",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T09:09:01.394Z",
+      "endTime": "2026-05-07T09:09:04.669Z",
+      "input": "{\"user_id\": \"test-user\", \"session_id\": \"c7678db9-e1e0-4091-9944-d255f5b285bc\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use the special_tool to process 'Sync Data'\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":227},\"invocation_id\":\"e-f512e729-a99a-4667-bf1d-be37a0520e3f\",\"author\":\"evals_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"bb164a82-9e6b-4173-ae84-e1033f54d575\",\"timestamp\":1778144943.043001}",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricCollection": "agent_metrics_v1",
+      "integration": "Google ADK"
+    },
+    {
+      "uuid": "cd7b9d3470685350",
+      "name": "evals_assistant",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "8c1a7ce486a80806",
+      "startTime": "2026-05-07T09:09:01.394Z",
+      "endTime": "2026-05-07T09:09:04.669Z",
+      "input": [],
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":227},\"invocation_id\":\"e-f512e729-a99a-4667-bf1d-be37a0520e3f\",\"author\":\"evals_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"bb164a82-9e6b-4173-ae84-e1033f54d575\",\"timestamp\":1778144943.043001}",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Google ADK"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "d9ac9c9e1febceb7",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "cd7b9d3470685350",
+      "startTime": "2026-05-07T09:09:03.043Z",
+      "endTime": "2026-05-07T09:09:04.668Z",
+      "input": "{\"processed\": \"Processed: Sync Data\"}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":227}}",
+      "model": "gemini-2.5-flash-lite",
+      "inputTokenCount": 227.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
+    },
+    {
+      "uuid": "47973e09bcbac9a3",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "cd7b9d3470685350",
+      "startTime": "2026-05-07T09:09:01.395Z",
+      "endTime": "2026-05-07T09:09:03.041Z",
+      "input": "You are a helpful assistant. Be concise.\n\nYou are an agent. Your internal name is \"evals_assistant\".",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"function_call\":{\"args\":{\"query\":\"Sync Data\"},\"name\":\"special_tool\"}}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":16,\"prompt_token_count\":193,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":193}],\"total_token_count\":209}}",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "inputParameters": {
+            "query": "Sync Data"
+          }
+        }
+      ],
+      "model": "gemini-2.5-flash-lite",
+      "inputTokenCount": 193.0,
+      "outputTokenCount": 16.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "d436db94c792f56e",
+      "name": "special_tool",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "47973e09bcbac9a3",
+      "startTime": "2026-05-07T09:09:03.039Z",
+      "endTime": "2026-05-07T09:09:03.039Z",
+      "input": "{\"query\": \"Sync Data\"}",
+      "output": "{\"id\":\"adk-2b1a4c0f-8ea2-464e-a55e-6b928aef76b4\",\"name\":\"special_tool\",\"response\":{\"processed\":\"Processed: Sync Data\"}}",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "inputParameters": {
+            "query": "Sync Data"
+          }
+        }
+      ],
+      "metricCollection": "special_tool_v1",
+      "integration": "Google ADK"
+    }
+  ],
+  "startTime": "2026-05-07T09:09:01.394Z",
+  "endTime": "2026-05-07T09:09:04.669Z",
+  "name": "googleadk-full-features-sync",
+  "metadata": {
+    "env": "testing",
+    "priority": "high"
+  },
+  "tags": [
+    "googleadk",
+    "features",
+    "sync"
+  ],
+  "environment": "development",
+  "threadId": "thread-sync-features-001",
+  "userId": "user-sync-001",
+  "input": "{\"user_id\": \"test-user\", \"session_id\": \"c7678db9-e1e0-4091-9944-d255f5b285bc\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use the special_tool to process 'Sync Data'\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+  "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":227},\"invocation_id\":\"e-f512e729-a99a-4667-bf1d-be37a0520e3f\",\"author\":\"evals_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"bb164a82-9e6b-4173-ae84-e1033f54d575\",\"timestamp\":1778144943.043001}",
+  "status": "SUCCESS",
+  "metricCollection": "trace_metrics_override_v1"
+}

@@ -4,9 +4,11 @@ title: Design Philosophy
 ---
 
 import { FlaskConical, GitMerge, PackageCheck, Workflow } from "lucide-react";
-import AgentTraceTerminal from "@site/src/sections/home/AgentTraceTerminal";
+import { ASSETS } from "@site/src/assets";
+import AgentTraceTerminal from "@site/src/components/AgentTraceTerminal";
 import ClaudeCodeTerminal from "@site/src/sections/home/ClaudeCodeTerminal";
 import TraceLoopConnector from "@site/src/sections/home/TraceLoopConnector";
+import VibeCodingLoop from "@site/src/sections/home/VibeCodingLoop";
 
 DeepEval was designed around around a simple idea: evaluation should fit the way your team actually iterates.
 
@@ -52,6 +54,16 @@ You can use them together through DeepEval's built-in workflows, or compose them
 yourself when your system needs something more specific. The framework is opinionated enough to make evals repeatable, but it does not
 force you into one rigid pipeline.
 
+## No More Vibe Coding AI
+
+For vibe coders building AI, DeepEval is the validation layer in your iteration loop.
+
+Instead of asking Claude Code, Codex, etc. to change your agent runtime from LangChain to Pydantic AI, or switch a model and modify a prompt, DeepEval gives you qualitative results required so coding agents can automate the iteration loop on auto-pilot.
+
+<VibeCodingLoop />
+
+We hope that you can build reliable agents while grabbing a cup of coffee, even when vibe coding.
+
 ## Rapid Local Iteration
 
 For engineers, the fastest loop is local: run the agent, inspect the trace,
@@ -67,6 +79,10 @@ That loop starts locally, where iteration is fastest. When your team needs to
 collaborate on results, compare regressions, monitor production traces, or share
 reports with non-engineers, DeepEval integrates natively with
 [Confident AI](https://www.confident-ai.com).
+
+:::info[Vibe coding?]
+Have your coding agent drive this loop instead. **[Learn how →](/docs/vibe-coding)**
+:::
 
 ## Flexible Evaluation Models
 
@@ -91,6 +107,8 @@ where the final answer is not enough to explain the failure.
 The goal is not to choose one forever. Start with test cases when you need a
 simple quality gate. Add traces when you need to understand how your application
 arrived at the result.
+
+<ImageDisplayer src={ASSETS.deepevalTuiInspect} alt="deepeval inspect TUI showing a trace tree with per-span scores and metric reasons" />
 
 :::info
 Already using another observability tool? Visit [Comparisons](/docs/introduction-comparisons)
@@ -127,8 +145,8 @@ regression analysis, trace observability, production monitoring, dataset
 management, prompt versioning, and collaboration with non-engineers.
 
 DeepEval integrates natively with [Confident AI](https://www.confident-ai.com)
-for those workflows. The same evals you run locally can become shared test runs,
-experiments, dashboards, and monitoring jobs when your team needs a platform.
+for those workflows, with **0 lines of additional code required.** The same evals you run locally can become shared test runs,
+experiments, dashboards, and monitoring jobs when your team needs a platform, all you have to do is export a `CONFIDENT_API_KEY`.
 
 ## Opinionated Primitives, Simple API
 

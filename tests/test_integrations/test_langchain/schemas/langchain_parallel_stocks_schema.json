@@ -156,7 +156,8 @@
             "symbol": "AAPL"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -194,7 +195,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 182.0,
-      "outputTokenCount": 83.0
+      "outputTokenCount": 83.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d0510-15a3-7c63-b4fb-f168995869d9",
@@ -229,7 +232,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 147.0,
-      "outputTokenCount": 89.0
+      "outputTokenCount": 89.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -253,7 +258,8 @@
         "name": "get_stock_price",
         "tool_call_id": "call_FAFDivcGE5Rl8h9B3aAZKDbq",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:47:13.443Z",

@@ -9,6 +9,7 @@ an agent.
 tests/
   evals/
     test_<app>.py
+    metrics.py
     .dataset.json
 ```
 
@@ -17,8 +18,9 @@ Use an existing eval directory if the project already has one.
 First look for an existing test folder. If one exists, put the eval suite there.
 If none exists, create `tests/evals/`.
 
-Prefer one eval test file for the first setup. Add more files only when the app
-needs a separate component-level eval or a clearly distinct use case.
+Prefer one eval test file for the first setup. Component/span metrics belong in
+the same single-turn tracing file. Add more files only for a clearly distinct
+use case.
 
 ## Dataset Files
 
@@ -47,8 +49,9 @@ Eval tests should:
 
 - load the dataset from `tests/evals/.dataset.json` by default
 - call the real app entry point
-- build DeepEval test cases
-- run a small, explicit end-to-end metric list by default
+- prefer native DeepEval integrations and traced `Golden` assertions
+- build `LLMTestCase`s only in explicit no-tracing evals
+- import a small, explicit metric list from `metrics.py`
 - add span-level metrics only for useful component diagnostics
 - use existing metrics and thresholds when found
 - avoid network calls unrelated to the app or evaluation model
@@ -58,11 +61,11 @@ Eval tests should:
 
 Templates intentionally contain placeholders:
 
-- `TARGET_APP_ENTRYPOINT`
-- `DATASET_PATH`
-- `EVALUATION_MODEL`
-- `METRICS`
-- `APP_RESPONSE_ADAPTER`
+- dataset file paths in `add_goldens_from_*_file(...)`
+- AI app module/function names such as
+  `import_module("ai_app").run_traced_ai_app`
+- metric lists in `metrics.py`
+- integration callback/instrumentation setup when applicable
 
 Replace every placeholder before running evals. If a placeholder remains, stop
 and adapt the template instead of running a broken suite.

@@ -93,7 +93,7 @@
             "status": "success"
           },
           {
-            "content": "Here are the results for AMZN:\n\n- Stock price: $185.20 (-0.3%)\n- Company info: Amazon.com Inc. \u2014 E-commerce/Cloud, Market Cap: $1.9T\n\nWould you like historical prices, recent news, or alerts set for price changes?",
+            "content": "Here are the results for AMZN:\n\n- Stock price: $185.20 (-0.3%)\n- Company info: Amazon.com Inc. — E-commerce/Cloud, Market Cap: $1.9T\n\nWould you like historical prices, recent news, or alerts set for price changes?",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
@@ -120,7 +120,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-da7f-7023-bc45-8c5a3aae9b08",
@@ -208,7 +209,7 @@
       "output": {
         "messages": [
           {
-            "content": "Here are the results for AMZN:\n\n- Stock price: $185.20 (-0.3%)\n- Company info: Amazon.com Inc. \u2014 E-commerce/Cloud, Market Cap: $1.9T\n\nWould you like historical prices, recent news, or alerts set for price changes?",
+            "content": "Here are the results for AMZN:\n\n- Stock price: $185.20 (-0.3%)\n- Company info: Amazon.com Inc. — E-commerce/Cloud, Market Cap: $1.9T\n\nWould you like historical prices, recent news, or alerts set for price changes?",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
@@ -235,7 +236,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-e026-70f2-b150-8cabb4ea5047",
@@ -319,7 +321,7 @@
             "status": "success"
           },
           {
-            "content": "Here are the results for AMZN:\n\n- Stock price: $185.20 (-0.3%)\n- Company info: Amazon.com Inc. \u2014 E-commerce/Cloud, Market Cap: $1.9T\n\nWould you like historical prices, recent news, or alerts set for price changes?",
+            "content": "Here are the results for AMZN:\n\n- Stock price: $185.20 (-0.3%)\n- Company info: Amazon.com Inc. — E-commerce/Cloud, Market Cap: $1.9T\n\nWould you like historical prices, recent news, or alerts set for price changes?",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
@@ -347,7 +349,8 @@
           }
         ]
       },
-      "output": "__end__"
+      "output": "__end__",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-da7d-7ad1-ba0f-b3730243311b",
@@ -469,7 +472,8 @@
             "symbol": "AMZN"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-d04d-7d71-ad5e-328eef7a4f66",
@@ -537,7 +541,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-da7c-7722-8dc3-31fc25e2d66b",
@@ -602,7 +607,8 @@
           }
         ]
       },
-      "output": "tools"
+      "output": "tools",
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -643,7 +649,7 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Here are the results for AMZN:\n\n- Stock price: $185.20 (-0.3%)\n- Company info: Amazon.com Inc. \u2014 E-commerce/Cloud, Market Cap: $1.9T\n\nWould you like historical prices, recent news, or alerts set for price changes?",
+        "content": "Here are the results for AMZN:\n\n- Stock price: $185.20 (-0.3%)\n- Company info: Amazon.com Inc. — E-commerce/Cloud, Market Cap: $1.9T\n\nWould you like historical prices, recent news, or alerts set for price changes?",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
@@ -680,7 +686,7 @@
         "2026-03-19T07:54:38.055231Z": ".com",
         "2026-03-19T07:54:38.055481Z": " Inc",
         "2026-03-19T07:54:38.093828Z": ".",
-        "2026-03-19T07:54:38.094023Z": " \u2014",
+        "2026-03-19T07:54:38.094023Z": " —",
         "2026-03-19T07:54:38.113317Z": " E",
         "2026-03-19T07:54:38.113506Z": "-commerce",
         "2026-03-19T07:54:38.124769Z": "/",
@@ -714,7 +720,9 @@
         "2026-03-19T07:54:38.494845Z": "",
         "2026-03-19T07:54:38.495025Z": "",
         "2026-03-19T07:54:38.502224Z": ""
-      }
+      },
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d0516-d04d-7d71-ad5e-329f808456f7",
@@ -776,7 +784,9 @@
         "2026-03-19T07:54:37.051155Z": "",
         "2026-03-19T07:54:37.051512Z": "",
         "2026-03-19T07:54:37.051965Z": ""
-      }
+      },
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -801,7 +811,8 @@
         "id": "55d38da2-3890-4a17-81d1-3ab14b2b944b",
         "tool_call_id": "call_Mfwm1usa0oMYVLarcYvtsvog",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0516-da7e-7cd3-ae5e-5b7103d9ca8c",
@@ -823,7 +834,8 @@
         "id": "04da5e4a-dc54-48e1-b4e6-7e25751d1ece",
         "tool_call_id": "call_s2wanmn2375BcYu4T8sTBNYf",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:54:34.444Z",
@@ -921,7 +933,7 @@
         "status": "success"
       },
       {
-        "content": "Here are the results for AMZN:\n\n- Stock price: $185.20 (-0.3%)\n- Company info: Amazon.com Inc. \u2014 E-commerce/Cloud, Market Cap: $1.9T\n\nWould you like historical prices, recent news, or alerts set for price changes?",
+        "content": "Here are the results for AMZN:\n\n- Stock price: $185.20 (-0.3%)\n- Company info: Amazon.com Inc. — E-commerce/Cloud, Market Cap: $1.9T\n\nWould you like historical prices, recent news, or alerts set for price changes?",
         "additional_kwargs": {},
         "response_metadata": {
           "finish_reason": "stop",

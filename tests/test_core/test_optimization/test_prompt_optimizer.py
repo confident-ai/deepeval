@@ -112,12 +112,13 @@ def test_on_status_progress_updates_progress_when_indicator_enabled():
     )
 
     progress = DummyProgress()
-    task_id = 42
-    optimizer._progress_state = (progress, task_id)
+    iter_task_id = 42
+    step_task_id = 43
+    optimizer._progress_state = (progress, iter_task_id, step_task_id)
 
     optimizer._on_status(
         RunnerStatusType.PROGRESS,
-        detail="• iteration 1/5",
+        detail="",
         step_index=1,
         total_steps=5,
     )
@@ -140,19 +141,28 @@ def test_on_status_progress_updates_progress_when_indicator_enabled():
         if kind == "update" and "description" in kwargs
     ]
     assert desc_updates
-    desc = desc_updates[-1]["description"]
-    assert "Optimizing prompt with GEPA" in desc
-    assert "[rgb(25,227,160)]" in desc
+    descriptions = [u["description"] for u in desc_updates]
+    assert any("Optimizing prompt with GEPA" in d for d in descriptions)
 
 
-def test_format_progress_description_includes_colored_detail():
+def test_format_iter_description_includes_iteration_and_percent():
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
         metrics=[_DummyMetric()],
         display_config=DisplayConfig(show_indicator=False),
     )
 
-    text = optimizer._format_progress_description("details here")
-    assert (
-        text == "Optimizing prompt with GEPA [rgb(25,227,160)]details here[/]"
+    text = optimizer._format_iter_description(step_index=1, total_steps=5)
+    assert "Optimizing prompt with GEPA" in text
+    assert "iteration 1/5 (20%)" in text
+
+
+def test_format_step_description_includes_arrow_and_color():
+    optimizer = PromptOptimizer(
+        model_callback=_dummy_model_callback,
+        metrics=[_DummyMetric()],
+        display_config=DisplayConfig(show_indicator=False),
     )
+
+    text = optimizer._format_step_description("gathering feedback...")
+    assert text == "[rgb(25,227,160)]⤷ gathering feedback...[/]"

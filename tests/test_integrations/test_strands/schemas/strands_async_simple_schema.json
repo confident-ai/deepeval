@@ -1,0 +1,68 @@
+{
+  "uuid": "04e1113ff051518dc465c11a776d274e",
+  "baseSpans": [
+    {
+      "uuid": "98767f88d764261e",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "88deabba408aeb0f",
+      "startTime": "2026-05-07T11:39:04.280Z",
+      "endTime": "2026-05-07T11:39:05.954Z",
+      "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
+      "integration": "Strands"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "88deabba408aeb0f",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T11:39:04.280Z",
+      "endTime": "2026-05-07T11:39:05.955Z",
+      "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
+      "output": "Hello, how are you?\n",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Strands"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "419347112052acee",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "98767f88d764261e",
+      "startTime": "2026-05-07T11:39:04.280Z",
+      "endTime": "2026-05-07T11:39:05.953Z",
+      "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
+      "output": "Hello, how are you?",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 40.0,
+      "outputTokenCount": 7.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-05-07T11:39:04.280Z",
+  "endTime": "2026-05-07T11:39:05.955Z",
+  "name": "strands-async-simple-test",
+  "metadata": {
+    "test_type": "async_simple"
+  },
+  "tags": [
+    "strands",
+    "simple",
+    "async"
+  ],
+  "environment": "development",
+  "threadId": "async-simple-123",
+  "userId": "test-user-async",
+  "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
+  "output": "Hello, how are you?\n",
+  "status": "SUCCESS"
+}

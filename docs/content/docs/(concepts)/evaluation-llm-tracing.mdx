@@ -3,8 +3,12 @@ id: evaluation-llm-tracing
 title: LLM Tracing
 sidebar_label: Tracing
 ---
+
 import { ASSETS } from "@site/src/assets";
 import { SendToBack, ArrowDownWideNarrow } from "lucide-react";
+import AgentTraceTerminal from "@site/src/components/AgentTraceTerminal";
+import ClaudeCodeTerminal from "@site/src/sections/home/ClaudeCodeTerminal";
+import TraceLoopConnector from "@site/src/sections/home/TraceLoopConnector";
 
 Tracing your LLM application helps you monitor its full execution from start to finish. With `deepeval`'s `@observe` decorator, you can trace and evaluate any [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) at any point in your app no matter how complex they may be.
 
@@ -14,7 +18,12 @@ An LLM trace is made up of multiple individual spans. A **span** is a flexible, 
 
 <ImageDisplayer src={ASSETS.llmTrace} alt="LLM Trace" />
 
-Tracing allows you to run both [end-to-end](https://www.deepeval.com/docs/evaluation-end-to-end-llm-evals) and [component-level](https://www.deepeval.com/docs/evaluation-component-level-llm-evals) evals which you'll learn about in this guide.
+The most important thing to understand is how traces and spans map to evaluation in `deepeval`:
+
+- A **trace** is the [`LLMTestCase`](/docs/evaluation-test-cases) for [end-to-end evals](/docs/evaluation-end-to-end-llm-evals) — its `input`, `actual_output`, `retrieval_context`, `tools_called`, and `expected_output` describe the whole run of your LLM app.
+- A **span** is the `LLMTestCase` for [component-level evals](/docs/evaluation-component-level-llm-evals) — the same parameters apply, but they describe what happened **inside that one component** (a retriever, a tool, an LLM call, an agent step).
+
+This means you don't need a separate concept to evaluate traces. The primitives (`LLMTestCase`, [metrics](/docs/metrics-introduction), goldens) you already use for unit-style evals all work on traces and spans too — you just attach them via `update_current_trace` and `update_current_span`.
 
 <details>
 
@@ -30,8 +39,7 @@ Tracing allows you to run both [end-to-end](https://www.deepeval.com/docs/evalua
 
 Tracing only runs when you want it to run, and takes 3 lines of code:
 
-```python showLineNumbers {3,8,15}
-from deepeval.test_case import LLMTestCase
+```python showLineNumbers {2,7,14}
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.tracing import observe, update_current_span
 from openai import OpenAI
@@ -53,13 +61,21 @@ def get_res(query: str):
 
 ## Why Tracing?
 
-Tracing your LLM applications allows you to:
+Tracing turns the local eval loop — run the agent, inspect the trace, identify the failing span, patch the prompt or code, run the eval again — into something both you and a coding agent can drive without any context switch:
+
+<AgentTraceTerminal />
+
+<TraceLoopConnector />
+
+<ClaudeCodeTerminal />
+
+Concretely, tracing your LLM application lets you:
 
 - **Generate test cases dynamically:** Many components rely on upstream outputs. Tracing lets you define `LLMTestCase`s at runtime as data flows through the system.
 
-- **Debug with precision:** See exactly where and why things fail—whether it’s tool calls, intermediate outputs, or context retrieval steps.
+- **Debug with precision:** See exactly where and why things fail — whether it's tool calls, intermediate outputs, or context retrieval steps.
 
-- **Run targeted metrics on specific components:** Attach `LLMTestCase`s to agents, tools, retrievers, or LLMs and apply metrics like answer relevancy or context precision—without needing to restructure your app.
+- **Run targeted metrics on specific components:** Attach `LLMTestCase`s to agents, tools, retrievers, or LLMs and apply metrics like answer relevancy or context precision — without needing to restructure your app.
 
 - **Run end-to-end evals with trace data:** Use the `evals_iterator` with `metrics` to perform comprehensive evaluations using your traces.
 
@@ -70,274 +86,453 @@ To set up tracing in your LLM app, you need to understand two key concepts:
 - **Trace**: The full execution of your app, made up of one or more spans.
 - **Span**: A specific component or unit of work—like an LLM call, tool invocation, or document retrieval.
 
-The [`@observe`](#observe) decorator is the primary way to set up tracing for your LLM application.
-
-<Steps>
-<Step>
-### Decorate your components
-
-
-An individual function that makes up a part of your LLM application or is invoked only when necessary, can be classified as a **component**. You can decorate this component with `deepeval`'s `@observe` decorator.
-
-```python showLineNumbers {2,6}
-from openai import OpenAI
-from deepeval.tracing import observe
-
-client = OpenAI()
-
-@observe()
-def get_res(query: str):
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": query}]
-    ).choices[0].message.content
-
-    return response
-```
-
-The above `get_res()` component is treated as an individual `span` within a `trace`.
-
-</Step>
-<Step>
-### Add test cases inside components
-
-
-You can assign individual test cases to a `span` by using the [`update_current_span`](#update-current-span) function from `deepeval`. This allows you to create separate `LLMTestCase`s on a component level.
-
-```python showLineNumbers {2-3,14}
-from openai import OpenAI
-from deepeval.tracing import observe, update_current_span
-from deepeval.test_case import LLMTestCase
-
-client = OpenAI()
-
-@observe()
-def get_res(query: str):
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": query}]
-    ).choices[0].message.content
-
-    update_current_span(input=query, output=response)
-    return response
-```
-
-You can either supply the `LLMTestCase` or its parameters in the `update_current_span` to create a component-level test case. Learn more [here](#update-current-span).
-
-</Step>
-<Step>
-### Get your traces
-
-
-You can now get your traces by simply calling your observed function or application.
-
-```python
-query = "This will get you a trace."
-
-get_res(query)
-```
-
-🎉🥳 **Congratulations!** You just created your first trace with `deepeval`.
-
-:::tip
-We highly recommend setting up Confident AI to look at your traces in an intuitive UI like this:
-
-<VideoDisplayer
-  src={ASSETS.tracingTraces}
-  confidentUrl="/docs/llm-tracing/introduction"
-  label="Learn how to setup LLM tracing for Confident AI"
-/>
-
-It's free to get started. Just the following command:
+You should login to see traces for free on Confident AI:
 
 ```bash
 deepeval login
 ```
 
+Finally, pick how you want to instrument your app. `deepeval` also offers **first-class integrations** for popular agent frameworks where `deepeval` produces traces with zero or one line of setup.
+
+<Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Strands", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
+<Tab value="Manual Instrumentation">
+
+Wrap any function in your LLM app with `@observe` — each call becomes a **span**, and the outermost call becomes the **trace**. Spans nest naturally as `@observe`'d functions call each other.
+
+```python title="main.py" showLineNumbers {2,4,9}
+from openai import OpenAI
+from deepeval.tracing import observe
+
+@observe()
+def retriever(query: str) -> list[str]:
+    # Your retrieval logic
+    return [f"Context for the given {query}"]
+
+@observe()
+def llm_app(query: str) -> str:
+    context = retriever(query)
+    return OpenAI().chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": f"{query}\n\n{context}"}],
+    ).choices[0].message.content
+
+llm_app("Who founded DeepEval?")
+```
+
+`@observe` accepts a few optional parameters:
+
+- [Optional] `metrics`: a list of `BaseMetric`s to attach for [component-level evals](/docs/evaluation-component-level-llm-evals).
+- [Optional] `name`: how this span is displayed in the trace tree (defaults to the function name).
+- [Optional] `type`: classifies the span — see [Classify spans by type](#classify-spans-by-type).
+- [Optional] `metric_collection`: name of a metric collection you stored on Confident AI.
+
+</Tab>
+<Tab value="LangChain">
+
+Build your agent with `create_agent` and pass `deepeval`'s `CallbackHandler` to its `invoke` method.
+
+```python title="langchain_agent.py" showLineNumbers {1,3,15}
+from langchain.agents import create_agent
+from deepeval.integrations.langchain import CallbackHandler
+
+def multiply(a: int, b: int) -> int:
+    """Multiply two numbers."""
+    return a * b
+
+agent = create_agent(
+    model="openai:gpt-4o-mini",
+    tools=[multiply],
+    system_prompt="Be concise.",
+)
+
+agent.invoke(
+    {"messages": [{"role": "user", "content": "What is 3 * 12?"}]},
+    config={"callbacks": [CallbackHandler()]},
+)
+```
+
+See the [LangChain integration](/integrations/frameworks/langchain) for the full surface.
+
+</Tab>
+<Tab value="LangGraph">
+
+Wire your `StateGraph` (LangGraph's core abstraction) and pass `deepeval`'s `CallbackHandler` to its `invoke` method.
+
+```python title="langgraph_agent.py" showLineNumbers {2,3,18}
+from langchain.chat_models import init_chat_model
+from langgraph.graph import StateGraph, MessagesState, START, END
+from deepeval.integrations.langchain import CallbackHandler
+
+llm = init_chat_model("openai:gpt-4o-mini")
+
+def chatbot(state: MessagesState):
+    return {"messages": [llm.invoke(state["messages"])]}
+
+graph = (
+    StateGraph(MessagesState)
+    .add_node(chatbot)
+    .add_edge(START, "chatbot")
+    .add_edge("chatbot", END)
+    .compile()
+)
+
+graph.invoke(
+    {"messages": [{"role": "user", "content": "What is 3 * 12?"}]},
+    config={"callbacks": [CallbackHandler()]},
+)
+```
+
+See the [LangGraph integration](/integrations/frameworks/langgraph) for the full surface.
+
+</Tab>
+<Tab value="OpenAI">
+
+Drop-in replace `from openai import OpenAI` with `from deepeval.openai import OpenAI`. Every `chat.completions.create(...)`, `chat.completions.parse(...)`, and `responses.create(...)` call becomes an LLM span automatically.
+
+```python title="openai_app.py" showLineNumbers {1}
+from deepeval.openai import OpenAI
+
+client = OpenAI()
+client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Hello"}],
+)
+```
+
+See the [OpenAI integration](/integrations/frameworks/openai) for the full surface (including async, streaming, and tool-calling).
+
+</Tab>
+<Tab value="Pydantic AI">
+
+Pass `DeepEvalInstrumentationSettings()` to your `Agent`'s `instrument` keyword.
+
+```python title="pydanticai.py" showLineNumbers {2,7}
+from pydantic_ai import Agent
+from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
+
+agent = Agent(
+    "openai:gpt-4.1",
+    system_prompt="Be concise.",
+    instrument=DeepEvalInstrumentationSettings(),
+)
+
+agent.run_sync("Greetings, AI Agent.")
+```
+
+See the [Pydantic AI integration](/integrations/frameworks/pydanticai) for the full surface.
+
+</Tab>
+<Tab value="AgentCore">
+
+Call `instrument_agentcore()` before creating your AgentCore app. The same call also instruments [Strands](https://strandsagents.com/) agents running inside AgentCore.
+
+```python title="agentcore_agent.py" showLineNumbers {3,5}
+from bedrock_agentcore import BedrockAgentCoreApp
+from strands import Agent
+from deepeval.integrations.agentcore import instrument_agentcore
+
+instrument_agentcore()
+
+app = BedrockAgentCoreApp()
+agent = Agent(model="amazon.nova-lite-v1:0")
+
+@app.entrypoint
+def invoke(payload, context):
+    return {"result": str(agent(payload.get("prompt")))}
+```
+
+See the [AgentCore integration](/integrations/frameworks/agentcore) for the full surface (including Strands-specific spans).
+
+</Tab>
+<Tab value="Strands">
+
+Call `instrument_strands()` before creating or invoking your Strands agent. Use this when you run Strands directly (scripts, services, notebooks); if your outer boundary is the AgentCore app entrypoint, use the AgentCore tab instead.
+
+```python title="strands_agent.py" showLineNumbers {4,6}
+from strands import Agent
+from strands.models.openai import OpenAIModel
+
+from deepeval.integrations.strands import instrument_strands
+
+instrument_strands()
+
+agent = Agent(
+    model=OpenAIModel(model_id="gpt-4o-mini"),
+    system_prompt="You are a helpful assistant.",
+)
+
+agent("Help me return my order.")
+```
+
+See the [Strands integration](/integrations/frameworks/strands) for the full surface.
+
+</Tab>
+<Tab value="Anthropic">
+
+Drop-in replace `from anthropic import Anthropic` with `from deepeval.anthropic import Anthropic`. Every `messages.create(...)` call becomes an LLM span automatically.
+
+```python title="anthropic_app.py" showLineNumbers {1}
+from deepeval.anthropic import Anthropic
+
+client = Anthropic()
+client.messages.create(
+    model="claude-sonnet-4-5",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Hello"}],
+)
+```
+
+See the [Anthropic integration](/integrations/frameworks/anthropic) for the full surface (including async, streaming, and tool-use).
+
+</Tab>
+<Tab value="LlamaIndex">
+
+Register `deepeval`'s event handler against LlamaIndex's instrumentation dispatcher.
+
+```python title="llamaindex.py" showLineNumbers {6,8}
+import asyncio
+from llama_index.llms.openai import OpenAI
+from llama_index.core.agent import FunctionAgent
+import llama_index.core.instrumentation as instrument
+
+from deepeval.integrations.llama_index import instrument_llama_index
+
+instrument_llama_index(instrument.get_dispatcher())
+
+def multiply(a: float, b: float) -> float:
+    return a * b
+
+agent = FunctionAgent(
+    tools=[multiply],
+    llm=OpenAI(model="gpt-4o-mini"),
+    system_prompt="You are a helpful calculator.",
+)
+
+asyncio.run(agent.run("What is 8 multiplied by 6?"))
+```
+
+See the [LlamaIndex integration](/integrations/frameworks/llamaindex) for the full surface.
+
+</Tab>
+<Tab value="OpenAI Agents">
+
+Register `DeepEvalTracingProcessor` once, then build your agent with `deepeval`'s `Agent` and `function_tool` shims.
+
+```python title="openai_agents.py" showLineNumbers {2,4}
+from agents import Runner, add_trace_processor
+from deepeval.openai_agents import Agent, DeepEvalTracingProcessor, function_tool
+
+add_trace_processor(DeepEvalTracingProcessor())
+
+@function_tool
+def get_weather(city: str) -> str:
+    return f"It's always sunny in {city}!"
+
+agent = Agent(
+    name="weather_agent",
+    instructions="Answer weather questions concisely.",
+    tools=[get_weather],
+)
+
+Runner.run_sync(agent, "What's the weather in Paris?")
+```
+
+See the [OpenAI Agents integration](/integrations/frameworks/openai-agents) for the full surface.
+
+</Tab>
+<Tab value="Google ADK">
+
+Call `instrument_google_adk()` once before building your `LlmAgent`.
+
+```python title="google_adk.py" showLineNumbers {6,8}
+import asyncio
+from google.adk.agents import LlmAgent
+from google.adk.runners import InMemoryRunner
+from google.genai import types
+
+from deepeval.integrations.google_adk import instrument_google_adk
+
+instrument_google_adk()
+
+agent = LlmAgent(model="gemini-2.0-flash", name="assistant", instruction="Be concise.")
+runner = InMemoryRunner(agent=agent, app_name="deepeval-quickstart")
+```
+
+See the [Google ADK integration](/integrations/frameworks/google-adk) for the full surface.
+
+</Tab>
+<Tab value="CrewAI">
+
+Call `instrument_crewai()` once, then build your crew with `deepeval`'s `Crew`, `Agent`, and `@tool` shims.
+
+```python title="crewai.py" showLineNumbers {2,4}
+from crewai import Task
+from deepeval.integrations.crewai import instrument_crewai, Crew, Agent
+
+instrument_crewai()
+
+coder = Agent(
+    role="Consultant",
+    goal="Write a clear, concise explanation.",
+    backstory="An expert consultant with a keen eye for software trends.",
+)
+
+task = Task(
+    description="Explain the latest trends in AI.",
+    agent=coder,
+    expected_output="A clear and concise explanation.",
+)
+
+crew = Crew(agents=[coder], tasks=[task])
+crew.kickoff()
+```
+
+See the [CrewAI integration](/integrations/frameworks/crewai) for the full surface.
+
+</Tab>
+</Tabs>
+
+🎉🥳 **Congratulations!** Calling your instrumented app now produces a trace. The rest of this page covers what to do with it — attaching test cases, classifying spans by type, and adding metadata.
+
+:::caution
+The examples on the rest of this documentation shows how to perform operations on manually instrumented AI agents, but the same is available for **all integrations.** [Click here](/integrations) to learn how to do it for your integration of choice.
 :::
 
-</Step>
-</Steps>
+## Set test cases on traces and spans
 
-### Observe
+This is the **most important concept on this page**: traces and spans both map to `LLMTestCase`s, just at different scopes.
 
-The `@observe` decorator is a non-intrusive Python decorator that you can use on top of any component as you wish. It tracks the usage of the component whenever it is invoked to create a span.
+- **Trace = end-to-end `LLMTestCase`** — what the user asked, what your app finally answered, what context was retrieved overall, what tools ended up being called. Used for [end-to-end evals](/docs/evaluation-end-to-end-llm-evals). Set with `update_current_trace`.
+- **Span = component-level `LLMTestCase`** — the same parameters, but scoped to what happened **inside that one component** (a retriever, a tool, a single LLM call). Used for [component-level evals](/docs/evaluation-component-level-llm-evals). Set with `update_current_span`.
 
-A span can contain many child spans, forming a tree structure—just like how different components of your LLM application interact
+Both functions accept the **same** `LLMTestCase` parameters, and both can be called from anywhere inside your `@observe`'d code. A typical pattern is to set span-level test cases inside the components you want to grade individually, and let trace-level data accumulate from those same spans:
+
+```python title="main.py" showLineNumbers {2,9,17,18}
+from openai import OpenAI
+from deepeval.tracing import observe, update_current_trace, update_current_span
+
+@observe()
+def retriever(query: str) -> list[str]:
+    chunks = ["List", "of", "text", "chunks"]
+    update_current_span(input=query, retrieval_context=chunks)   # span test case
+    update_current_trace(retrieval_context=chunks)               # contributes to trace test case
+    return chunks
+
+@observe()
+def llm_app(query: str) -> str:
+    chunks = retriever(query)
+    res = OpenAI().chat.completions.create(
+        model="gpt-4o", messages=[{"role": "user", "content": f"{query}\n\n{chunks}"}],
+    ).choices[0].message.content
+
+    update_current_span(input=query, output=res)       # span test case
+    update_current_trace(input=query, output=res)      # finishes trace test case
+    return res
+```
+
+You can call either function **multiple times** from different spans — values are merged across calls, with later calls overriding earlier ones.
+
+This is what lets the trace-level test case build up incrementally as data flows through your app: a retriever span contributes `retrieval_context`, a generator span contributes `output`, and you end up with a complete `LLMTestCase` on the trace by the time the run finishes.
+
+## Map test case parameters to traces and spans
+
+Both `update_current_trace` and `update_current_span` accept the same set of `LLMTestCase` parameters, fanned out as keyword arguments. The names line up one-to-one with [`LLMTestCase`](/docs/evaluation-test-cases) — the only one that's been renamed is `actual_output`, which becomes plain `output` on a trace/span (it's still the same field, just shorter):
+
+| `LLMTestCase` parameter | `update_current_trace` / `update_current_span` |
+| ----------------------- | ---------------------------------------------- |
+| `input`                 | `input`                                        |
+| `actual_output`         | `output`                                       |
+| `expected_output`       | `expected_output`                              |
+| `retrieval_context`     | `retrieval_context`                            |
+| `context`               | `context`                                      |
+| `tools_called`          | `tools_called`                                 |
+| `expected_tools`        | `expected_tools`                               |
+| `tags`                  | `tags` _(trace only)_                          |
+| `metadata`              | `metadata`                                     |
+
+:::tip[Use `tags` and `metadata` in evals]
+`tags` and `metadata` aren't just for filtering and visualization — they're real test case fields that custom metrics like [`GEval`](/docs/metrics-llm-evals) can read. If your eval criteria depend on, say, the user tier or the retrieval source, set those on the trace/span via `tags` / `metadata` and reference them in your `GEval` criteria.
+:::
+
+## Prettifying traces for coding agents
+
+Traces aren't only read by humans. When you run evals locally and a metric fails, the failing trace is also what coding agents like **Claude Code, Codex, and Cursor** load into context to figure out which prompt, retriever, or tool actually caused the regression.
+
+The more self-describing the trace tree is, the less the agent has to guess from function names — and the faster it can propose a real fix instead of a generic one.
+
+### Trace name
+
+By default, a trace has no name. Set one at runtime with `update_current_trace(name=...)` so the failing run reads as "Customer support flow failed at retriever" rather than "`llm_app` failed at `retrieve`":
+
+```python showLineNumbers {5}
+from deepeval.tracing import observe, update_current_trace
+
+@observe()
+def llm_app(query: str):
+    update_current_trace(name="Customer support flow")
+    # ...
+```
+
+Span names default to the function name they decorate, which is usually descriptive enough — but you can override with `update_current_span(name=...)` whenever the function name doesn't reflect what the span actually does.
+
+### Span types
+
+The `type` parameter on `@observe` is a **label**, not an eval input. It does **not** affect scoring — `metrics` only care about the scope of the span. What it does is turn the trace tree from a generic call graph into a typed one, so a coding agent reading "this `retriever` span returned 0 chunks for input `X`" gets there immediately without having to infer roles from function names.
+
+There are four built-in types plus a custom fallback. Each type accepts a few type-specific kwargs:
+
+| `type`                  | Purpose                              | Type-specific kwargs                                                                                                                  |
+| ----------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `"llm"`                 | A call to a language model           | `model`, `cost_per_input_token`, `cost_per_output_token` (decorator); `input_token_count`, `output_token_count` via `update_llm_span` |
+| `"retriever"`           | Fetches chunks from a vector store   | `embedder` (decorator); `top_k`, `chunk_size` via `update_retriever_span`                                                             |
+| `"tool"`                | A function the LLM/agent invokes     | `description`                                                                                                                         |
+| `"agent"`               | An autonomous decision-making step   | `available_tools`, `handoff_agents`                                                                                                   |
+| anything else (default) | Custom — grouping or general-purpose | —                                                                                                                                     |
 
 ```python showLineNumbers
 from deepeval.tracing import observe
 
-@observe()
-def generate(query: str) -> str:
-    context = retrieve(query)
-    # Your implementation
-    return f"Output for given {query} and {context}."
+@observe(type="retriever", embedder="text-embedding-3-small")
+def retrieve(query: str) -> list[str]: ...
 
-@observe()
-def retrieve(query: str) -> str:
-    # Your implementation
-    return [f"Context for the given {query}"]
+@observe(type="llm", model="gpt-4o")
+def generate(prompt: str) -> str: ...
+
+@observe(type="tool", description="Search the web for a query.")
+def web_search(query: str) -> str: ...
+
+@observe(type="agent", available_tools=["search", "calculator"])
+def supervisor_agent(query: str) -> str: ...
 ```
 
-From the above example, an observed component `generate` calling another observed component `retrieve` create a nested span `generate` with `retrieve` inside it.
-
-There are **FOUR** optional parameters when using the `@observe` decorator:
-
-- [Optional] `metrics`: A list of metrics of type `BaseMetric` that will be used to evaluate your span.
-- [Optional] `name`: The function name or a string specifying how this span is displayed on Confident AI.
-- [Optional] `type`: A string specifying the type of span. The value can be any one of `llm`, `retriever`, `tool`, and `agent`. Any other value is treated as a custom span type.
-- [Optional] `metric_collection`: The name of the metric collection you stored on Confident AI.
-
-<details>
-<summary><strong>Click here to learn more about span types</strong></summary>
-
-For simplicity, we always recommend **custom spans** unless needed otherwise, since `metrics` only care about the scope of the span, and supplying a specified `type` is most **useful only when using Confident AI**. To summarize:
-
-- Specifying a span type (like `"llm"`) allows you to supply additional parameters in the `@observe` signature (e.g., the `model` used).
-- This information becomes extremely useful for analysis and visualization if you're using `deepeval` together with **Confident AI** (highly recommended).
-- Otherwise, for local evaluation purposes, span `type` makes **no difference** — evaluation still works the same way.
-
-To learn more about the different spans `type`s, or to run LLM evaluations with tracing with a UI for visualization and debugging, visiting the [official Confident AI docs on LLM tracing.](https://www.confident-ai.com/docs/llm-tracing/introduction)
-
-</details>
-
-:::note[Goldens and context]
-`deepeval` uses Python context variables during evaluation so your code can access the active golden for each test case. You can retrieve it with `get_current_golden()` and pass its `expected_output` when you update a span or trace.
+:::tip[Pairs well with Confident AI]
+If you also push your traces to [Confident AI](#visualize-and-monitor-on-confident-ai), span types unlock tailored displays in the observability dashboard — model + token cost rendered on LLM spans, chunk size and top-k on retriever spans, tool descriptions on tool spans. Same `type` parameter, no extra code.
 :::
 
-### Update Current Span
+## Reference goldens at runtime
 
-The `update_current_span` method can be used to create a test case for the corresponding span. This is especially useful for doing component-level evals or debugging your application.
+In `deepeval`, a **golden** is the reference test case used by your metrics, for example, to compare actual and expected outputs. During evaluation, you can read the active golden and pass its `expected_output` to spans or traces:
 
-```python showLineNumbers {1,9-13,20}
-from deepeval.tracing import observe, update_current_span
-from deepeval.test_case import LLMTestCase
-
-@observe()
-def generate(query: str) -> str:
-    context = retrieve(query)
-    # Your implementation
-    res = f"Output for given {query} and {context}."
-    update_current_span(test_case=LLMTestCase(
-        input=query,
-        actual_output=res,
-        retrieval_context=context
-    ))
-    return res
-
-@observe()
-def retrieve(query: str) -> str:
-    # Your implementation
-    context = [f"Context for the given {query}"]
-    update_current_span(input=query, retrieval_context=context)
-    return context
-```
-
-There are **TWO** ways to create test cases when using the `update_current_span` function:
-
-- [Optional] `test_case`: Takes an `LLMTestCase` to create a span level test case for that component.
-
-- Or, You can also opt to give the values of `LLMTestCase` directly by using the following attributes:
-  - [Optional] `input`
-  - [Optional] `output`
-  - [Optional] `retrieval_context`
-  - [Optional] `context`
-  - [Optional] `expected_output`
-  - [Optional] `tools_called`
-  - [Optional] `expected_tools`
-
-:::note
-You can use the individual `LLMTestCase` params in the `update_current_span` function to override the values of the `test_case` you passed.
-:::
-
-### Update Current Trace
-
-You can update your end-to-end test cases for trace by using the `update_current_trace` function provided by `deepeval`
-
-```python {2,10,17}
-from openai import OpenAI
-from deepeval.tracing import observe, update_current_trace
-
-@observe()
-def llm_app(query: str) -> str:
-
-    @observe()
-    def retriever(query: str) -> list[str]:
-        chunks = ["List", "of", "text", "chunks"]
-        update_current_trace(retrieval_context=chunks)
-        return chunks
-
-    @observe()
-    def generator(query: str, text_chunks: list[str]) -> str:
-        res = OpenAI().chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": query}]
-        ).choices[0].message.content
-        update_current_trace(input=query, output=res)
-        return res
-
-    return generator(query, retriever(query))
-```
-
-There are **TWO** ways to create test cases when using the `update_current_trace` function:
-
-- [Optional] `test_case`: Takes an `LLMTestCase` to create a span level test case for that component.
-
-- Or, You can also opt to give the values of `LLMTestCase` directly by using the following attributes:
-  - [Optional] `input`
-  - [Optional] `output`
-  - [Optional] `retrieval_context`
-  - [Optional] `context`
-  - [Optional] `expected_output`
-  - [Optional] `tools_called`
-  - [Optional] `expected_tools`
-
-:::note
-You can use the individual `LLMTestCase` params in the `update_current_trace` function to override the values of the `test_case` you passed.
-:::
-
----
-
-### Using goldens
-
-In `deepeval`, a **golden** is the reference test case used by your metrics, for example, to compare actual and expected outputs. During evaluation, you can read the active golden and pass its `expected_output` to spans or traces.
-
-```python
+```python showLineNumbers
 from deepeval.dataset import get_current_golden
 from deepeval.tracing import observe, update_current_span, update_current_trace
-from deepeval.test_case import LLMTestCase
 
 @observe()
 def tool(input: str):
-    # produce your model or tool output
-    result = ...  # <- your code here
+    result = ...  # produce your model or tool output
 
-    golden = get_current_golden()          # active golden for this test
+    golden = get_current_golden()                  # active golden for this test
     expected = golden.expected_output if golden else None
 
-    # Option A: pass via LLMTestCase to the span
-    update_current_span(
-        test_case=LLMTestCase(
-            input=input,
-            actual_output=result,
-            expected_output=expected,
-        )
-    )
+    # set on the span (component-level)
+    update_current_span(input=input, output=result, expected_output=expected)
 
-    # Option B: set it on the trace
-    update_current_trace(
-        test_case=LLMTestCase(
-            input=input,
-            actual_output=result,
-            expected_output=expected,
-        )
-    )
+    # or set on the trace (end-to-end)
+    update_current_trace(input=input, output=result, expected_output=expected)
     return result
 ```
 
-**Notes**
-
-* **`expected_output`** may be provided via `LLMTestCase` or `expected_output=`.
-* If you don’t want to use the dataset’s `expected_output`, pass your own string.
+If you don't want to use the dataset's `expected_output`, pass your own string instead.
 
 ---
 
@@ -349,6 +544,26 @@ If you run your `@observe` decorated LLM application outside of `evaluate()` or 
 CONFIDENT_TRACE_VERBOSE=0
 CONFIDENT_TRACE_FLUSH=0
 ```
+
+## Visualize and Monitor on Confident AI
+
+Everything above runs entirely locally — you don't need an account for any of it. But once your traces start carrying real data (test cases, span types, tags, metadata, token costs), reading them in a terminal stops scaling.
+
+[Confident AI](https://www.confident-ai.com) is the official platform for `deepeval` and renders the exact same trace data you're already producing into a UI:
+
+<VideoDisplayer
+  src={ASSETS.tracingTraces}
+  confidentUrl="/docs/llm-tracing/introduction"
+  label="Learn how to setup LLM tracing for Confident AI"
+/>
+
+You get this with **zero additional code** — just log in:
+
+```bash
+deepeval login
+```
+
+Once logged in, the same `@observe`-decorated app will also stream traces in real-time, let you run [online evaluations](https://www.confident-ai.com/docs/llm-tracing/online-evals) on production traffic, [log prompt versions](https://www.confident-ai.com/docs/llm-tracing/features/log-prompts) on LLM spans, and visualize [token costs](https://www.confident-ai.com/docs/llm-tracing/features/token-usage-cost) across runs.
 
 ## Next Steps
 

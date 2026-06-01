@@ -9,7 +9,8 @@
       "startTime": "2026-02-15T10:22:48.328Z",
       "endTime": "2026-02-15T10:22:50.203Z",
       "input": {},
-      "output": "Weather in Tokyo: Clear, 70\u00b0F"
+      "output": "Weather in Tokyo: Clear, 70°F",
+      "integration": "CrewAI"
     },
     {
       "uuid": "c6c8d798-9edd-4fe4-84f9-f88fe047eeb4",
@@ -22,7 +23,8 @@
       "input": {
         "city": "Tokyo"
       },
-      "output": "Weather in Tokyo: Clear, 70\u00b0F"
+      "output": "Weather in Tokyo: Clear, 70°F",
+      "integration": "CrewAI"
     }
   ],
   "agentSpans": [
@@ -35,18 +37,19 @@
       "startTime": "2026-02-15T10:22:48.332Z",
       "endTime": "2026-02-15T10:22:50.195Z",
       "input": "Check the weather in Tokyo. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary.",
-      "output": "Weather in Tokyo: Clear, 70\u00b0F",
+      "output": "Weather in Tokyo: Clear, 70°F",
       "toolsCalled": [
         {
           "name": "get_weather",
-          "output": "Weather in Tokyo: Clear, 70\u00b0F",
+          "output": "Weather in Tokyo: Clear, 70°F",
           "inputParameters": {
             "city": "Tokyo"
           }
         }
       ],
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "CrewAI"
     }
   ],
   "llmSpans": [
@@ -85,15 +88,17 @@
           "role": "tool",
           "tool_call_id": "call_sJrLqfttf0lLzk07gnX5aA5z",
           "name": "get_weather",
-          "content": "Weather in Tokyo: Clear, 70\u00b0F"
+          "content": "Weather in Tokyo: Clear, 70°F"
         },
         {
           "role": "user",
           "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
         }
       ],
-      "output": "Weather in Tokyo: Clear, 70\u00b0F",
-      "model": "gpt-4o-mini"
+      "output": "Weather in Tokyo: Clear, 70°F",
+      "model": "gpt-4o-mini",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "a5fb999a-ba66-4e75-af35-4ecec0fdc43a",
@@ -123,7 +128,9 @@
           "type": "function"
         }
       ],
-      "model": "gpt-4o-mini"
+      "model": "gpt-4o-mini",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -139,7 +146,8 @@
       "input": {
         "city": "Tokyo"
       },
-      "output": "Weather in Tokyo: Clear, 70\u00b0F"
+      "output": "Weather in Tokyo: Clear, 70°F",
+      "integration": "CrewAI"
     }
   ],
   "startTime": "2026-02-15T10:22:48.328Z",
@@ -148,6 +156,6 @@
   "input": {
     "city": "Tokyo"
   },
-  "output": "Weather in Tokyo: Clear, 70\u00b0F",
+  "output": "Weather in Tokyo: Clear, 70°F",
   "status": "SUCCESS"
 }

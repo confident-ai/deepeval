@@ -1,0 +1,99 @@
+{
+  "uuid": "45a8c66f91a7c69753f29f5db7da0c41",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "6c78bf4750f7eaeb",
+      "name": "next_span_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-05T06:45:42.902Z",
+      "endTime": "2026-05-05T06:45:45.259Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "Say hello in exactly three words."
+        }
+      ],
+      "output": "Hello, how are you?",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "PydanticAI"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "f8db462edde9bfc6",
+      "name": "chat gpt-4o-mini",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "6c78bf4750f7eaeb",
+      "startTime": "2026-05-05T06:45:42.903Z",
+      "endTime": "2026-05-05T06:45:45.258Z",
+      "metadata": {
+        "prompt_variant": "B",
+        "purpose": "next_llm_only"
+      },
+      "input": [
+        {
+          "role": "system",
+          "content": "Be concise, reply with one short sentence only."
+        },
+        {
+          "role": "user",
+          "content": "Say hello in exactly three words."
+        },
+        {
+          "role": "Model Request Parameters",
+          "content": {
+            "function_tools": [],
+            "builtin_tools": [],
+            "output_mode": "text",
+            "output_object": null,
+            "output_tools": [],
+            "prompted_output_template": null,
+            "allow_text_output": true,
+            "allow_image_output": false,
+            "instruction_parts": null,
+            "thinking": null
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": "Hello, how are you?"
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 28.0,
+      "outputTokenCount": 6.0,
+      "metricCollection": "llm_metrics_only_v1",
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-05-05T06:45:42.902Z",
+  "endTime": "2026-05-05T06:45:45.259Z",
+  "name": "pydanticai-next-llm-only-test",
+  "metadata": {
+    "test_type": "next_llm_only"
+  },
+  "tags": [
+    "pydanticai",
+    "next-llm"
+  ],
+  "environment": "development",
+  "threadId": "next-llm-only-123",
+  "userId": "test-user",
+  "input": [
+    {
+      "role": "user",
+      "content": "Say hello in exactly three words."
+    }
+  ],
+  "output": "Hello, how are you?",
+  "status": "SUCCESS"
+}

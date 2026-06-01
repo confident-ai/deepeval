@@ -2,9 +2,9 @@
   "title": "Agentic",
   "pages": [
     "metrics-task-completion",
-    "metrics-tool-correctness",
-    "metrics-argument-correctness",
     "metrics-step-efficiency",
+    "metrics-argument-correctness",
+    "metrics-tool-correctness",
     "metrics-plan-adherence",
     "metrics-plan-quality"
   ]

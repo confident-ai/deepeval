@@ -14,7 +14,7 @@ export const siteUrl = 'https://deepeval.com';
  * `config.title` for SERP continuity.
  */
 export const siteTitle =
-  'DeepEval by Confident AI - The LLM Evaluation Framework';
+  'DeepEval - The LLM Evaluation Framework';
 
 /**
  * Short meta-description used on the homepage and as the fallback for
@@ -53,6 +53,9 @@ export const gitConfig = {
  *  referenced from the Kapa disclaimer copy. Single source of truth so
  *  rotating the invite is a one-line change. */
 export const discordUrl = 'https://discord.gg/a3K9c8GRGt';
+
+/** Community subreddit — used by the `<RedditButton>` CTA. */
+export const redditUrl = 'https://www.reddit.com/r/deepeval/';
 
 /**
  * Kapa.ai Ask-AI config. Values mirror what the old Docusaurus site

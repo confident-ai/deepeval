@@ -4,6 +4,7 @@
     "index",
     "frameworks",
     "models",
-    "vector-databases"
+    "vector-databases",
+    "others"
   ]
 }

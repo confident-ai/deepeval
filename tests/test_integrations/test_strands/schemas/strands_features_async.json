@@ -1,0 +1,120 @@
+{
+  "uuid": "b780048319dc84f1be54ec8328e10957",
+  "baseSpans": [
+    {
+      "uuid": "77d52fd892fa6ada",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "785dc4fbb2de85bb",
+      "startTime": "2026-05-07T11:39:13.623Z",
+      "endTime": "2026-05-07T11:39:14.390Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
+      "output": "{'toolUse': {'toolUseId': 'call_aC0Qt8qsx0BptbzKKTdUCkel', 'name': 'special_tool', 'input': {'query': 'Async Data'}}}",
+      "integration": "Strands"
+    },
+    {
+      "uuid": "2f01095fa62a0c8a",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "785dc4fbb2de85bb",
+      "startTime": "2026-05-07T11:39:12.358Z",
+      "endTime": "2026-05-07T11:39:13.622Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
+      "output": "{'toolUse': {'toolUseId': 'call_aC0Qt8qsx0BptbzKKTdUCkel', 'name': 'special_tool', 'input': {'query': 'Async Data'}}}",
+      "integration": "Strands"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "785dc4fbb2de85bb",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T11:39:12.357Z",
+      "endTime": "2026-05-07T11:39:14.391Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
+      "output": "Processed: Async Data\n",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricCollection": "agent_metrics_async_v1",
+      "integration": "Strands"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "efda2852dbc907ee",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "77d52fd892fa6ada",
+      "startTime": "2026-05-07T11:39:13.623Z",
+      "endTime": "2026-05-07T11:39:14.389Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
+      "output": "Processed: Async Data",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 163.0,
+      "outputTokenCount": 5.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
+    },
+    {
+      "uuid": "6a5cc5df65ba1506",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "2f01095fa62a0c8a",
+      "startTime": "2026-05-07T11:39:12.358Z",
+      "endTime": "2026-05-07T11:39:13.620Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
+      "output": "{'toolUse': {'toolUseId': 'call_aC0Qt8qsx0BptbzKKTdUCkel', 'name': 'special_tool', 'input': {'query': 'Async Data'}}}",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 136.0,
+      "outputTokenCount": 15.0,
+      "metricCollection": "llm_metrics_async_v1",
+      "integration": "Strands",
+      "provider": "OpenAI"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "376b7c1024e1cccd",
+      "name": "execute_tool special_tool",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "2f01095fa62a0c8a",
+      "startTime": "2026-05-07T11:39:13.621Z",
+      "endTime": "2026-05-07T11:39:13.622Z",
+      "output": "Processed: Async Data",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "inputParameters": {}
+        }
+      ],
+      "metricCollection": "special_tool_v1",
+      "integration": "Strands"
+    }
+  ],
+  "startTime": "2026-05-07T11:39:12.357Z",
+  "endTime": "2026-05-07T11:39:14.391Z",
+  "name": "strands-full-features-async",
+  "metadata": {
+    "env": "testing_async",
+    "mode": "async"
+  },
+  "tags": [
+    "strands",
+    "features",
+    "async"
+  ],
+  "environment": "development",
+  "threadId": "thread-async-features-002",
+  "userId": "user-async-002",
+  "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
+  "output": "Processed: Async Data\n",
+  "status": "SUCCESS",
+  "metricCollection": "trace_metrics_override_async_v1"
+}

@@ -3,78 +3,166 @@ id: pydanticai
 title: Pydantic AI
 sidebar_label: Pydantic AI
 ---
-import { ASSETS } from "@site/src/assets";
 
-[Pydantic AI](https://ai.pydantic.dev/) is a Python framework for building reliable, production-grade applications with Generative AI, providing type safety and validation for agent outputs and LLM interactions.
+<IntegrationTagsDisplayer otel={true} cicdEvals={true} traceability={true} />
 
-:::tip
-We recommend logging in to [Confident AI](https://app.confident-ai.com) to view your Pydantic AI evaluations.
+[Pydantic AI](https://ai.pydantic.dev/) is a Python framework for building production-grade applications with Generative AI, with type safety and validation for agent outputs and LLM interactions.
 
-```bash
-deepeval login
-```
+The `deepeval` integration auto-instruments to trace every call to your Pydantic AI `Agent`s. Every agent run, every tool call, and every LLM call becomes a span you can inspect — without wiring trace structure by hand.
 
-For users in the EU region, please set your OTEL endpoint in the env as following:
+<AgentTraceTerminal
+  title="pydantic_ai_agent · deepeval"
+  ariaLabel="Example Pydantic AI agent trace with per-step metric scores"
+  lines={[
+    { kind: "cmd", name: "deepeval test run test_pydantic_ai_agent.py" },
+    { kind: "blank" },
+    { kind: "root", prefix: "●", name: "test_pydantic_ai_agent" },
+    { kind: "blank", prefix: "│" },
+    {
+      kind: "agent",
+      prefix: "└─",
+      name: "assistant",
+      metric: "Answer Relevancy",
+      score: "0.93",
+      duration: "180ms",
+      pass: true,
+    },
+    {
+      kind: "llm",
+      prefix: "   ├─",
+      name: "openai:gpt-5 · plan",
+      metric: "G-Eval",
+      score: "0.41",
+      duration: "62ms",
+      pass: false,
+    },
+    {
+      kind: "tool",
+      prefix: "   ├─",
+      name: 'get_weather(city="Paris")',
+      duration: "44ms",
+    },
+    {
+      kind: "llm",
+      prefix: "   └─",
+      name: "openai:gpt-5 · respond",
+      metric: "Faithfulness",
+      score: "0.94",
+      duration: "74ms",
+      pass: true,
+    },
+    { kind: "blank" },
+    {
+      kind: "summary",
+      name: "Trace score  0.76   ·   2/3 metrics passed",
+      pass: false,
+    },
+  ]}
+/>
 
-```bash
-export CONFIDENT_OTEL_URL="https://eu.otel.confident-ai.com"
+`deepeval`'s Pydantic AI integration enables you to:
 
-```
+- **Auto-instrument every `Agent`** — each `agent.run(...)` produces a trace, and each LLM, tool, and sub-agent call inside it becomes a component span.
+- **Evaluate the trace end-to-end or target model / agent components** with any `deepeval` metric.
+- **Run evals from a script** (`evals_iterator`) **or from CI/CD** (`pytest` + `deepeval test run`) — same metrics, two surfaces.
+- **Customize trace and span data at runtime** from anywhere in the call stack — your tool bodies, post-processors, or the call site.
 
-Or if you're in the AU region, please set your OTEL endpoint in the env as following:
-
-```bash
-export CONFIDENT_OTEL_URL="https://au.otel.confident-ai.com"
-
-```
-
-:::
-
-## End-to-End Evals
-
-`deepeval` allows you to evaluate Pydantic AI agents **under a minute**.
+## Getting Started
 
 <Steps>
 
 <Step>
-### Configure Pydantic AI
 
+### Installation
 
-Pass `agent_metrics` to the `ConfidentInstrumentationSettings` constructor.
+```bash
+pip install -U deepeval pydantic-ai opentelemetry-sdk opentelemetry-exporter-otlp-proto-http
+```
 
-```python title="main.py" showLineNumbers
+Under the hood the integration plugs Pydantic AI's [OpenTelemetry instrumentation](https://ai.pydantic.dev/logfire/) into `deepeval`'s span processor.
+
+:::info
+You don't need to touch OTel directly — but it's worth knowing if you're already exporting traces somewhere else.
+:::
+
+</Step>
+
+<Step>
+
+### Instrument and evaluate
+
+Pass `DeepEvalInstrumentationSettings` to the `Agent`'s `instrument` keyword. From that point on, any `agent.run(...)`, `agent.run_sync(...)`, or `agent.run_stream(...)` call produces a trace `deepeval` can read.
+
+```python title="pydantic_ai_agent.py" showLineNumbers
 from pydantic_ai import Agent
-from deepeval.integrations.pydantic_ai.instrumentator import (
-    ConfidentInstrumentationSettings,
+from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+agent = Agent(
+    "openai:gpt-5",
+    system_prompt="Be concise, reply with one sentence.",
+    instrument=DeepEvalInstrumentationSettings(),
 )
+
+# Goldens are the inputs you want to evaluate.
+dataset = EvaluationDataset(goldens=[Golden(input="What's the weather in Paris?")])
+
+# `evals_iterator` loop through goldens and applies metrics
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    agent.run_sync(golden.input) # Produces trace for evaluation
+```
+
+Done ✅. You've run your first eval with full traceability into Pydantic AI via `deepeval`.
+
+</Step>
+
+</Steps>
+
+## What gets traced
+
+Each `agent.run(...)` call produces a **trace** — the end-to-end unit your user observes, from the prompt going in to the final output coming out. Inside that trace are **component spans** for every step the agent took to produce the answer:
+
+- **LLM spans** — one per LLM call inside the run.
+- **Tool spans** — one per tool call.
+- **Agent spans** — nested for sub-agent calls (delegations, handoffs).
+
+Sync, async, and streaming paths all flow through the same instrumentation — there's nothing to configure differently between them.
+
+```text
+Trace                           ← what the user observes (end-to-end)
+└── Agent: assistant            ← one agent.run(...) call
+    ├── LLM: openai:gpt-5       ← component span: model decides which tool to call
+    ├── Tool: get_weather       ← component span: tool input + output
+    └── LLM: openai:gpt-5       ← component span: model produces the final answer
+```
+
+The trace and its component spans are independently evaluable. The next two sections describe how to run those evaluations.
+
+## Running evals
+
+There are two surfaces for running evals against a Pydantic AI agent. Pick by where you want results to surface — your terminal during a notebook session, or your CI pipeline as a pass/fail gate. Metric definitions are the same in both.
+
+### In CI/CD (pytest)
+
+Use the `deepeval` pytest integration. Each parametrized test invocation becomes one agent run; failing metrics fail the test, which fails the build. This is the right surface for regression gates and pre-merge checks.
+
+Define an `EvaluationDataset` at module scope, parametrize the test over its goldens, call the agent inside the test, and let `assert_test` evaluate the trace it just produced.
+
+```python title="test_pydantic_ai_agent.py" showLineNumbers
+import pytest
+
+from pydantic_ai import Agent
+from deepeval import assert_test
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
 from deepeval.metrics import AnswerRelevancyMetric
 
 agent = Agent(
     "openai:gpt-5",
-    instructions="You are a helpful assistant.",
-    instrument=ConfidentInstrumentationSettings(
-        is_test_mode=True,
-        agent_metrics=[AnswerRelevancyMetric()]
-    ),
+    system_prompt="Be concise, reply with one sentence.",
+    instrument=DeepEvalInstrumentationSettings(name="my-agent"),
 )
-```
-
-:::info
-Evaluations are supported for Pydantic AI `Agent`. Only metrics with parameters `input`, `output` and `tools_called` are eligible for evaluation.
-:::
-
-</Step>
-<Step>
-### Run evaluations
-
-
-Create an `EvaluationDataset` and invoke your Pydantic AI application for each golden within the `evals_iterator()` loop to run end-to-end evaluations.
-
-<Tabs items={["Asynchronous"]}>
-<Tab value="Asynchronous">
-
-```python title="main.py" showLineNumbers
-import asyncio
 
 dataset = EvaluationDataset(
     goldens=[
@@ -83,7 +171,196 @@ dataset = EvaluationDataset(
     ]
 )
 
-for golden in dataset.evals_iterator():
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_agent(golden: Golden):
+    agent.run_sync(golden.input)
+    assert_test(golden=golden, metrics=[AnswerRelevancyMetric()])
+```
+
+Run it with:
+
+```bash
+deepeval test run test_pydantic_ai_agent.py
+```
+
+The same metrics you used in `evals_iterator` work unchanged here. The only difference is what surfaces the failures: a CI badge instead of a notebook cell.
+
+### In a script
+
+Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one agent run; metrics score the resulting trace. This is the right surface for ad-hoc runs, notebooks, and one-off comparisons.
+
+```python title="pydantic_ai_agent.py" showLineNumbers
+import asyncio
+
+from pydantic_ai import Agent
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.evaluate.configs import AsyncConfig
+from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
+from deepeval.metrics import AnswerRelevancyMetric
+
+agent = Agent(
+    "openai:gpt-5",
+    system_prompt="Be concise, reply with one sentence.",
+    instrument=DeepEvalInstrumentationSettings(name="my-agent"),
+)
+
+
+dataset = EvaluationDataset(
+    goldens=[
+        Golden(input="What's the weather in Paris?"),
+        Golden(input="What's the weather in London?"),
+    ]
+)
+answer_relevancy = AnswerRelevancyMetric()
+
+for golden in dataset.evals_iterator(
+    async_config=AsyncConfig(run_async=True),
+    metrics=[answer_relevancy],
+):
+    task = asyncio.create_task(agent.run(golden.input))
+    dataset.evaluate(task)
+```
+
+`evals_iterator` is async-friendly; wrap each invocation in `asyncio.create_task` and pass it to `dataset.evaluate(...)` so multiple goldens run concurrently against the same dataset.
+
+## Applying metrics to components
+
+The `metrics=[...]` you passed to `evals_iterator` in the previous section evaluates the **trace** — the end-to-end behavior the user observes. To evaluate a **component** instead — a specific LLM call or the agent span itself — stage the metric with the appropriate `next_*_span(...)` wrapper before the run.
+
+### LLM calls
+
+Same shape with `next_llm_span(metrics=[...])`. Useful when you want to evaluate the LLM's reasoning step in isolation from the tool's effect.
+
+```python title="pydantic_ai_agent.py" showLineNumbers
+from deepeval.tracing import next_llm_span
+
+
+async def run_agent(prompt: str):
+    with next_llm_span(metrics=[answer_relevancy]):
+        return await agent.run(prompt)
+
+
+for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True)):
+    task = asyncio.create_task(run_agent(golden.input))
+    dataset.evaluate(task)
+```
+
+### Agent spans
+
+`next_agent_span(metrics=[...])` targets the agent component itself. The agent span shares its input and output with the trace, but it's a distinct unit — use this when you want a metric on the agent span specifically (rather than the trace).
+
+```python title="pydantic_ai_agent.py" showLineNumbers
+from deepeval.tracing import next_agent_span
+
+
+async def run_agent(prompt: str):
+    with next_agent_span(metrics=[answer_relevancy]):
+        return await agent.run(prompt)
+
+
+for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True)):
+    task = asyncio.create_task(run_agent(golden.input))
+    dataset.evaluate(task)
+```
+
+For deterministic tool calls, prefer `update_current_span(...)` to add metadata, inputs, and outputs instead of attaching metrics to the tool span.
+
+## Customizing trace and span data at runtime
+
+Trace-level fields you set on `DeepEvalInstrumentationSettings` are defaults; they apply to every trace produced by that agent. For anything dynamic, the right API depends on where your code runs.
+
+Pydantic AI creates most of the trace structure for you, which means the agent, LLM, and tool spans are mostly hidden behind `agent.run(...)`. Calls like `update_current_trace(...)` and `update_current_span(...)` only work while there is an active `deepeval` trace/span in context. In practice, that means a Pydantic AI tool body is your clearest mutation point, because Pydantic has already opened the trace and the tool span before your function runs.
+
+If you need to customize from outside a tool, use `DeepEvalInstrumentationSettings` for static defaults, `next_*_span(...)` to stage config for the next Pydantic-created span, or `@observe` / `with trace(...)` when you own the outer operation. The advanced section below shows those scenarios.
+
+### Trace-level fields from inside a tool
+
+`update_current_trace(...)` mutates the active trace. Use it when a tool discovers metadata you only know during the run, like a user id, request id, retrieved document id, or routing decision.
+
+```python title="pydantic_ai_agent.py" showLineNumbers
+from deepeval.tracing import update_current_trace
+...
+
+@agent.tool_plain
+def fetch_user(user_id: str) -> dict:
+    user = users_db.get(user_id)
+    update_current_trace(
+        user_id=user_id,
+        metadata={"plan": user["plan"], "region": user["region"]},
+    )
+    return user
+```
+
+### Span-level fields from inside a tool
+
+`update_current_span(...)` writes to whichever span Pydantic AI just opened — typically the tool span if you call it from inside a tool body. Useful for tagging tool-call metadata (cache hits, downstream IDs, retrieval context) without restructuring the tool.
+
+```python title="pydantic_ai_agent.py" showLineNumbers
+from deepeval.tracing import update_current_span
+...
+
+@agent.tool_plain
+def get_weather(city: str) -> str:
+    cache_hit, value = weather_cache.lookup(city)
+    update_current_span(
+        metadata={"cache_hit": cache_hit, "city": city},
+        output=value,
+    )
+    return value
+```
+
+The general rule: settings hold defaults, `next_*_span(...)` stages changes before Pydantic opens the span, and `update_current_*(...)` mutates only after your code is already inside an active trace/span.
+
+## Advanced patterns
+
+The primitives above — `DeepEvalInstrumentationSettings`, `@observe`, `with trace(...)`, `next_*_span(...)`, `update_current_*(...)` — compose around one boundary: Pydantic AI owns the auto-instrumented spans, and your code customizes them from the places it can actually see. Use `@observe` or `with trace(...)` when you own an outer workflow, `next_*_span(...)` when you want to configure a Pydantic-created span before it exists, and `update_current_*(...)` when a tool or observed function is already running inside the trace.
+
+### Evaluate subagents with `next_*_span`
+
+`next_*_span(metrics=[...])` stages a metric for the next matching Pydantic AI component span. Use this when you want to evaluate a subagent or model step instead of the full trace. Pick the helper that matches the span you want to score: `next_agent_span(...)` or `next_llm_span(...)`.
+
+```python title="pydantic_ai_agent.py" showLineNumbers
+from deepeval.tracing import next_agent_span
+...
+
+async def run_agent(prompt: str):
+    with next_agent_span(metrics=[answer_relevancy]):
+        return await agent.run(prompt)
+```
+
+#### No trace-level metrics required
+
+Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because the `AnswerRelevancyMetric` is attached to the next agent span, so CI/CD and scripts only need to run the subagent.
+
+This is how you'd run it:
+
+<Tabs items={["CI/CD", "Scripts"]}>
+<Tab value="CI/CD">
+
+```python title="test_pydantic_ai_agent.py" showLineNumbers
+import asyncio
+import pytest
+from deepeval import assert_test
+...
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_agent_span(golden: Golden):
+    asyncio.run(run_agent(golden.input))
+    assert_test(golden=golden)
+```
+
+```bash
+deepeval test run test_pydantic_ai_agent.py
+```
+
+</Tab>
+<Tab value="Scripts">
+
+```python title="pydantic_ai_agent.py" showLineNumbers
+...
+
+for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True)):
     task = asyncio.create_task(run_agent(golden.input))
     dataset.evaluate(task)
 ```
@@ -91,43 +368,64 @@ for golden in dataset.evals_iterator():
 </Tab>
 </Tabs>
 
-✅ Done. The `evals_iterator` will automatically generate a test run with individual evaluation traces for each golden.
+### Wrap an agent run in `@observe`
 
-</Step>
-<Step>
-### View on Confident AI (optional)
+When the agent run isn't your top-level unit of work — for example, a `respond_to_user(...)` function that calls the agent and post-processes the result — you can decorate that outer function with `@observe`. The Pydantic AI spans nest under your `@observe` span automatically; the result is a single trace rooted at your function with the agent run inside it.
 
+```python title="pydantic_ai_agent.py" showLineNumbers
+from deepeval.tracing import observe
+...
 
-<VideoDisplayer
-  src={ASSETS.integrationPydantic}
-/>
-
-</Step>
-
-</Steps>
-
-:::note
-If you need to evaluate individual components of your Pydantic AI application, [set up tracing](/docs/evaluation-llm-tracing) instead.
-:::
-
-
-## Evals in Production
-
-To run online evaluations in production, replace `metrics` with a [metric collection](https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string from Confident AI, and push your Pydantic AI agent to production.
-
-```python filename="main.py" showLineNumbers
-from pydantic_ai import Agent
-from deepeval.integrations.pydantic_ai import ConfidentInstrumentationSettings
-
-agent = Agent(
-    "openai:gpt-4o-mini",
-    system_prompt="Be concise, reply with one sentence.",
-    instrument=ConfidentInstrumentationSettings(
-        agent_metric_collection="test_collection_1",
-    )
-)
-
-result = agent.run_sync(
-    "What are the LLMs?"
-)
+@observe(name="respond_to_user")
+async def respond_to_user(prompt: str) -> str:
+    result = await agent.run(prompt)
+    return result.output.strip().upper()
 ```
+
+### Multiple agent runs under one trace
+
+When a single logical unit of work makes several agent calls (e.g. a planner agent followed by a worker agent), bracket them with `with trace(...)` so they share a trace_id and show up as siblings under one root.
+
+```python title="pydantic_ai_agent.py" showLineNumbers
+from deepeval.tracing import trace
+...
+
+async def run_pipeline(prompt: str):
+    with trace(name="planner_then_worker"):
+        plan = await planner.run(prompt)
+        return await worker.run(plan.output)
+```
+
+### Mix native `@observe` spans with Pydantic AI spans
+
+`@observe` works on any function, not just top-level ones. Decorating an internal helper inside a tool body adds a native `deepeval` span to the trace — useful for evaluating retrieval steps, ranker calls, or other sub-tool logic that Pydantic AI doesn't see.
+
+```python title="pydantic_ai_agent.py" showLineNumbers
+from deepeval.tracing import observe
+...
+
+@observe(name="rerank")
+def rerank(docs: list[str], query: str) -> list[str]:
+    return sorted(docs, key=lambda d: -score(d, query))
+
+
+@agent.tool_plain
+def retrieve(query: str) -> list[str]:
+    raw = vector_store.search(query)
+    return rerank(raw, query)
+```
+
+## API reference
+
+`DeepEvalInstrumentationSettings(...)` accepts the following trace-level kwargs. Each one is a default; runtime calls always win.
+
+| Kwarg         | Type        | Description                                                                |
+| ------------- | ----------- | -------------------------------------------------------------------------- |
+| `name`        | `str`       | Default trace name. Override at runtime via `update_current_trace`.        |
+| `thread_id`   | `str`       | Default thread identifier. Useful for grouping conversational turns.       |
+| `user_id`     | `str`       | Default actor identifier. Override per-request via `update_current_trace`. |
+| `metadata`    | `dict`      | Default trace metadata. Merged with runtime overrides; runtime wins.       |
+| `tags`        | `list[str]` | Default tags applied to every trace produced by this agent.                |
+| `environment` | `str`       | One of `"development"`, `"staging"`, `"production"`, `"testing"`.          |
+
+For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_span`, `next_llm_span`) and the test-decorator surface (`@observe`, `@assert_test`, `with trace(...)`), see the [tracing reference](/docs/evaluation-llm-tracing).

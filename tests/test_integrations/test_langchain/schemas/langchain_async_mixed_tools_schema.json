@@ -92,7 +92,7 @@
             "status": "success"
           },
           {
-            "content": "Paris: Partly cloudy, 62\u00b0F (about 17\u00b0C).",
+            "content": "Paris: Partly cloudy, 62°F (about 17°C).",
             "additional_kwargs": {
               "refusal": null
             },
@@ -156,7 +156,8 @@
             "city": "Paris"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -193,12 +194,14 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Paris: Partly cloudy, 62\u00b0F (about 17\u00b0C).",
+        "content": "Paris: Partly cloudy, 62°F (about 17°C).",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 202.0,
-      "outputTokenCount": 152.0
+      "outputTokenCount": 152.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d050e-3852-7eb1-b360-3cc1d1f4485b",
@@ -237,7 +240,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 167.0,
-      "outputTokenCount": 23.0
+      "outputTokenCount": 23.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -261,7 +266,8 @@
         "name": "get_weather",
         "tool_call_id": "call_hxpKlosoGijWODi9d3S8VDef",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:45:11.250Z",
@@ -357,7 +363,7 @@
         "status": "success"
       },
       {
-        "content": "Paris: Partly cloudy, 62\u00b0F (about 17\u00b0C).",
+        "content": "Paris: Partly cloudy, 62°F (about 17°C).",
         "additional_kwargs": {
           "refusal": null
         },

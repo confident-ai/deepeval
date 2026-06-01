@@ -29,6 +29,11 @@ try:
         MCPListToolsSpanData,
         ResponseSpanData,
         SpanData,
+        TaskSpanData,
+        TurnSpanData,
+        TranscriptionSpanData,
+        SpeechSpanData,
+        SpeechGroupSpanData,
     )
     from deepeval.openai_agents.patch import (
         patch_default_agent_run_single_turn,
@@ -98,6 +103,9 @@ class DeepEvalTracingProcessor(TracingProcessor):
             return
 
         span_type = self.get_span_kind(span.span_data)
+        if span_type == "noop":
+            return
+
         observer = Observer(span_type=span_type, func_name="NA")
         if span_type == "llm":
             observer.observe_kwargs["model"] = "temporary model"
@@ -108,6 +116,9 @@ class DeepEvalTracingProcessor(TracingProcessor):
         observer.__enter__()
 
     def on_span_end(self, span: "Span") -> None:
+        if self.get_span_kind(span.span_data) == "noop":
+            return
+
         update_trace_properties_from_span_data(
             current_trace_context.get(), span.span_data
         )
@@ -148,4 +159,15 @@ class DeepEvalTracingProcessor(TracingProcessor):
             return "base"
         if isinstance(span_data, GuardrailSpanData):
             return "base"
+        if isinstance(
+            span_data,
+            (
+                TaskSpanData,
+                TurnSpanData,
+                TranscriptionSpanData,
+                SpeechSpanData,
+                SpeechGroupSpanData,
+            ),
+        ):
+            return "noop"
         return "base"

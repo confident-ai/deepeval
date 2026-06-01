@@ -102,7 +102,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-7f9a-7e71-ab69-140a0ab5c03d",
@@ -199,7 +200,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-83ba-70c2-8f8b-680627c8dc7f",
@@ -293,7 +295,8 @@
           }
         ]
       },
-      "output": "__end__"
+      "output": "__end__",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-7f97-7241-8d61-81a75b12f715",
@@ -381,7 +384,8 @@
             "symbol": "MSFT"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-78b5-7393-80ec-2f6de3b0caa5",
@@ -441,7 +445,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-7f96-7082-b7a0-17c5acd4cd04",
@@ -498,7 +503,8 @@
           }
         ]
       },
-      "output": "tools"
+      "output": "tools",
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -564,7 +570,9 @@
         "2026-03-19T07:55:20.378375Z": "",
         "2026-03-19T07:55:20.378450Z": "",
         "2026-03-19T07:55:20.378664Z": ""
-      }
+      },
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d0517-78b6-7043-829c-b50ac9670354",
@@ -615,7 +623,9 @@
         "2026-03-19T07:55:19.305550Z": "",
         "2026-03-19T07:55:19.306129Z": "",
         "2026-03-19T07:55:19.317273Z": ""
-      }
+      },
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -640,7 +650,8 @@
         "id": "b940109d-8c39-4ecc-9a93-fd7efd064815",
         "tool_call_id": "call_GBrlvArfJ0mDGcvGaE12aznG",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:55:17.557Z",

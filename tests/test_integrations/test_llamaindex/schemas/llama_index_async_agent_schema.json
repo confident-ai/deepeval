@@ -18,7 +18,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "The weather in Tokyo is currently cloudy with a temperature of 20\u00b0C."
+                "text": "The weather in Tokyo is currently cloudy with a temperature of 20°C."
               }
             ]
           },
@@ -43,7 +43,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "The weather in Tokyo is currently cloudy with a temperature of 20\u00b0C."
+                "text": "The weather in Tokyo is currently cloudy with a temperature of 20°C."
               }
             ]
           },
@@ -59,7 +59,8 @@
           ],
           "retry_messages": []
         }
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActAgent.run_agent_step-0f1b3d3f-ce7b-4f10-af28-48706b53ccab",
@@ -104,7 +105,7 @@
           "blocks": [
             {
               "block_type": "text",
-              "text": "Thought: I can answer without using any more tools. I'll use the user's language to answer.\nAnswer: The weather in Tokyo is currently cloudy with a temperature of 20\u00b0C."
+              "text": "Thought: I can answer without using any more tools. I'll use the user's language to answer.\nAnswer: The weather in Tokyo is currently cloudy with a temperature of 20°C."
             }
           ]
         },
@@ -112,7 +113,8 @@
         "current_agent_name": "Agent",
         "tool_calls": [],
         "retry_messages": []
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActOutputParser.parse-848e4689-7aed-4d0a-8727-6be185527515",
@@ -123,14 +125,15 @@
       "startTime": "2026-02-16T06:12:31.814Z",
       "endTime": "2026-02-16T06:12:31.814Z",
       "input": {
-        "output": "Thought: I can answer without using any more tools. I'll use the user's language to answer.\nAnswer: The weather in Tokyo is currently cloudy with a temperature of 20\u00b0C.",
+        "output": "Thought: I can answer without using any more tools. I'll use the user's language to answer.\nAnswer: The weather in Tokyo is currently cloudy with a temperature of 20°C.",
         "is_streaming": false
       },
       "output": {
         "thought": "I can answer without using any more tools. I'll use the user's language to answer.",
-        "response": "The weather in Tokyo is currently cloudy with a temperature of 20\u00b0C.",
+        "response": "The weather in Tokyo is currently cloudy with a temperature of 20°C.",
         "is_streaming": false
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAI.astream_chat-953b3fe6-3c59-436f-b8cc-a1496ae9ab01",
@@ -184,7 +187,8 @@
           }
         ]
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x11712b5b0>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x11712b5b0>",
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActAgent.setup_agent-ef428812-4570-4184-b8c8-36076830e8c2",
@@ -236,7 +240,8 @@
           }
         ],
         "current_agent_name": "Agent"
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActAgent.aggregate_tool_results-82230a40-2765-48e8-a15f-a8b293ec23cf",
@@ -288,7 +293,8 @@
           }
         ],
         "current_agent_name": "Agent"
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActAgent.parse_agent_output-a865f950-c76b-4a07-8df3-ed5838c05f3b",
@@ -323,7 +329,8 @@
           ],
           "retry_messages": []
         }
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActAgent.run_agent_step-98dd13b4-9fdb-47fe-be0d-028b59ed7063",
@@ -384,7 +391,8 @@
           }
         ],
         "retry_messages": []
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActOutputParser.parse-0c4a4ca8-fe45-4da2-926a-56cc81086eed",
@@ -404,7 +412,8 @@
         "action_input": {
           "city": "Tokyo"
         }
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAI.astream_chat-027579d6-c094-4ece-b1fd-f40c26e87b47",
@@ -438,7 +447,8 @@
           }
         ]
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x1181a0040>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x1181a0040>",
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActAgent.setup_agent-3bbbbc14-7f56-4036-bf95-f118206bba82",
@@ -490,7 +500,8 @@
           }
         ],
         "current_agent_name": "Agent"
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActAgent.init_run-f3ad061b-3244-42bf-8d01-0f11271d3349",
@@ -523,7 +534,8 @@
           }
         ],
         "current_agent_name": "Agent"
-      }
+      },
+      "integration": "LlamaIndex"
     }
   ],
   "agentSpans": [
@@ -544,7 +556,8 @@
         "run_id": "1ZevOdCPUH"
       },
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "LlamaIndex"
     }
   ],
   "llmSpans": [
@@ -577,10 +590,12 @@
       "output": [
         {
           "role": "assistant",
-          "content": "Thought: I can answer without using any more tools. I'll use the user's language to answer.\nAnswer: The weather in Tokyo is currently cloudy with a temperature of 20\u00b0C."
+          "content": "Thought: I can answer without using any more tools. I'll use the user's language to answer.\nAnswer: The weather in Tokyo is currently cloudy with a temperature of 20°C."
         }
       ],
-      "model": "gpt-4o"
+      "model": "gpt-4o",
+      "integration": "LlamaIndex",
+      "provider": "OpenAI"
     },
     {
       "uuid": "be27b7b6-1f64-4790-842b-53321debf265",
@@ -606,7 +621,9 @@
           "content": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"city\": \"Tokyo\"}"
         }
       ],
-      "model": "gpt-4o"
+      "model": "gpt-4o",
+      "integration": "LlamaIndex",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -678,7 +695,8 @@
             "city": "Tokyo"
           }
         }
-      ]
+      ],
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "FunctionTool.acall-3b60eb5a-ce9d-4f5c-ab5d-32eb2dd421a1",
@@ -709,7 +727,8 @@
         },
         "raw_output": "Cloudy, 20C",
         "is_error": false
-      }
+      },
+      "integration": "LlamaIndex"
     }
   ],
   "startTime": "2026-02-16T06:12:29.402Z",

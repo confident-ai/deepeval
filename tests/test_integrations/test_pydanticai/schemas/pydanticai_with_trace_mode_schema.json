@@ -1,0 +1,96 @@
+{
+  "uuid": "c0579915-f8cb-428a-8d57-6f16189bf11b",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "11a9d52db22441a0",
+      "name": "modes_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-05T06:45:48.149Z",
+      "endTime": "2026-05-05T06:45:49.721Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "Say goodbye in exactly three words."
+        }
+      ],
+      "output": "Farewell, take care.",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "PydanticAI"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "84e874880339a4ea",
+      "name": "chat gpt-4o-mini",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "11a9d52db22441a0",
+      "startTime": "2026-05-05T06:45:48.150Z",
+      "endTime": "2026-05-05T06:45:49.718Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "Be concise, reply with one short sentence only."
+        },
+        {
+          "role": "user",
+          "content": "Say goodbye in exactly three words."
+        },
+        {
+          "role": "Model Request Parameters",
+          "content": {
+            "function_tools": [],
+            "builtin_tools": [],
+            "output_mode": "text",
+            "output_object": null,
+            "output_tools": [],
+            "prompted_output_template": null,
+            "allow_text_output": true,
+            "allow_image_output": false,
+            "instruction_parts": null,
+            "thinking": null
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": "Farewell, take care."
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 28.0,
+      "outputTokenCount": 6.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-05-05T06:45:48.147Z",
+  "endTime": "2026-05-05T06:45:49.721Z",
+  "name": "pydanticai-with-trace",
+  "metadata": {
+    "test_type": "with_trace_mode",
+    "mode": "with_trace",
+    "source": "runtime"
+  },
+  "tags": [
+    "with-trace",
+    "runtime"
+  ],
+  "environment": "development",
+  "threadId": "with-trace-thread",
+  "userId": "with-trace-user",
+  "input": [
+    {
+      "role": "user",
+      "content": "Say goodbye in exactly three words."
+    }
+  ],
+  "output": "Farewell, take care.",
+  "status": "SUCCESS"
+}

@@ -23,7 +23,8 @@
             "unit": "c"
           }
         }
-      ]
+      ],
+      "integration": "OpenAI"
     }
   ],
   "agentSpans": [],
@@ -43,10 +44,12 @@
           "output": "{\"location\": \"San Francisco\", \"temperature\": 18, \"unit\": \"C\", \"condition\": \"partly cloudy\"}"
         }
       ],
-      "output": "The weather in San Francisco is 18\u00b0C and partly cloudy. \n\n**Travel Tip:** Dress in layers to stay comfortable, as the temperature can change throughout the day!",
+      "output": "The weather in San Francisco is 18°C and partly cloudy. \n\n**Travel Tip:** Dress in layers to stay comfortable, as the temperature can change throughout the day!",
       "model": "gpt-4o-mini",
       "inputTokenCount": 85.0,
-      "outputTokenCount": 35.0
+      "outputTokenCount": 35.0,
+      "integration": "OpenAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "579160b5-173d-4f24-a1e6-c15bb5a18c69",
@@ -88,7 +91,9 @@
       ],
       "model": "gpt-4o-mini",
       "inputTokenCount": 106.0,
-      "outputTokenCount": 20.0
+      "outputTokenCount": 20.0,
+      "integration": "OpenAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -110,7 +115,8 @@
         "temperature": 18,
         "unit": "C",
         "condition": "partly cloudy"
-      }
+      },
+      "integration": "OpenAI"
     }
   ],
   "startTime": "2025-10-17T12:27:09.507Z",

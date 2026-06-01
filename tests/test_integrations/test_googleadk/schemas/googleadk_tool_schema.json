@@ -1,0 +1,118 @@
+{
+  "uuid": "b862eb410a91c566e7ce1dc4437a14bd",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "05afb67e7e9414d1",
+      "name": "invocation [deepeval-googleadk-tool]",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T09:06:22.586Z",
+      "endTime": "2026-05-07T09:06:26.760Z",
+      "input": "{\"user_id\": \"test-user\", \"session_id\": \"9cacf812-2b0e-4ee6-b143-f44046b0fcee\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"What is 7 multiplied by 8?\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The answer is 56.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":7,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":206},\"invocation_id\":\"e-d5ec8c1c-b406-41e3-bd2d-5b9ed1bb75e4\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"90f756d0-27e5-4b29-b285-67bb28d0130a\",\"timestamp\":1778144783.790971}",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Google ADK"
+    },
+    {
+      "uuid": "a578a122b226c4f7",
+      "name": "calculator_assistant",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "05afb67e7e9414d1",
+      "startTime": "2026-05-07T09:06:22.586Z",
+      "endTime": "2026-05-07T09:06:26.760Z",
+      "input": [],
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The answer is 56.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":7,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":206},\"invocation_id\":\"e-d5ec8c1c-b406-41e3-bd2d-5b9ed1bb75e4\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"90f756d0-27e5-4b29-b285-67bb28d0130a\",\"timestamp\":1778144783.790971}",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Google ADK"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "411da81b2927806e",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "a578a122b226c4f7",
+      "startTime": "2026-05-07T09:06:23.791Z",
+      "endTime": "2026-05-07T09:06:26.759Z",
+      "input": "{\"result\": 56}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The answer is 56.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":7,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":206}}",
+      "model": "gemini-2.5-flash-lite",
+      "inputTokenCount": 199.0,
+      "outputTokenCount": 7.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
+    },
+    {
+      "uuid": "dc3f7dfa4812e269",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "a578a122b226c4f7",
+      "startTime": "2026-05-07T09:06:22.588Z",
+      "endTime": "2026-05-07T09:06:23.789Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise.\n\nYou are an agent. Your internal name is \"calculator_assistant\".",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"function_call\":{\"args\":{\"operation\":\"multiply\",\"b\":8,\"a\":7},\"name\":\"calculate\"}}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":23,\"prompt_token_count\":162,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":162}],\"total_token_count\":185}}",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "inputParameters": {
+            "operation": "multiply",
+            "b": 8,
+            "a": 7
+          }
+        }
+      ],
+      "model": "gemini-2.5-flash-lite",
+      "inputTokenCount": 162.0,
+      "outputTokenCount": 23.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "5ef78a50c3b45b6e",
+      "name": "calculate",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "dc3f7dfa4812e269",
+      "startTime": "2026-05-07T09:06:23.786Z",
+      "endTime": "2026-05-07T09:06:23.787Z",
+      "input": "{\"operation\": \"multiply\", \"b\": 8, \"a\": 7}",
+      "output": "{\"id\":\"adk-c235bb6c-c3c8-4815-a12e-3dc28f06b3db\",\"name\":\"calculate\",\"response\":{\"result\":56}}",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "inputParameters": {
+            "operation": "multiply",
+            "b": 8,
+            "a": 7
+          }
+        }
+      ],
+      "integration": "Google ADK"
+    }
+  ],
+  "startTime": "2026-05-07T09:06:22.586Z",
+  "endTime": "2026-05-07T09:06:26.760Z",
+  "name": "googleadk-tool-test",
+  "metadata": {
+    "test_type": "tool"
+  },
+  "tags": [
+    "googleadk",
+    "tool"
+  ],
+  "environment": "development",
+  "threadId": "tool-123",
+  "userId": "test-user",
+  "input": "{\"user_id\": \"test-user\", \"session_id\": \"9cacf812-2b0e-4ee6-b143-f44046b0fcee\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"What is 7 multiplied by 8?\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+  "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The answer is 56.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":7,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":206},\"invocation_id\":\"e-d5ec8c1c-b406-41e3-bd2d-5b9ed1bb75e4\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"90f756d0-27e5-4b29-b285-67bb28d0130a\",\"timestamp\":1778144783.790971}",
+  "status": "SUCCESS"
+}

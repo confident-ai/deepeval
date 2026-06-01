@@ -1,0 +1,1178 @@
+---
+id: evaluation-end-to-end-single-turn
+title: Single-Turn End-to-End Evaluation
+sidebar_label: Single-Turn
+---
+
+import { ASSETS } from "@site/src/assets";
+
+A single-turn end-to-end test scores **one input → one output** per LLM interaction, captured as an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-cases). This is the right flavor for any LLM application with a "flat" shape — agents treated as a black box, RAG / QA, summarization, classifiers, writing assistants, and so on.
+
+If you haven't already, read the [end-to-end overview](/docs/evaluation-end-to-end-llm-evals) for the concepts and how single-turn compares to multi-turn.
+
+There are two ways to run a single-turn E2E test:
+
+| Approach                                                                 | When to choose it                                                                                                                                                                             |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`dataset.evals_iterator()` with `@observe` tracing** **— recommended** | Your app is (or can be) instrumented with [tracing](/docs/evaluation-llm-tracing). Test cases are built from traces automatically, and you get per-test-case traces on Confident AI for free. |
+| **`evaluate(test_cases=...)`**                                           | You can't (or don't want to) instrument your app — e.g. a QA engineer evaluating a deployed system. You build `LLMTestCase`s up front and hand them to `evaluate()`.                          |
+
+For projects you own, prefer `evals_iterator()` — same code, plus traces, plus a clean upgrade path to [component-level evaluation](/docs/evaluation-component-level-llm-evals).
+
+## Approach 1: `evals_iterator()` with tracing (recommended)
+
+`evals_iterator()` opens a test run, yields each golden, builds an `LLMTestCase` from the captured trace, scores your metrics against it, and uploads the trace + scores together — all in one loop.
+
+:::caution[Don't have access to your app's code?]
+This approach requires instrumenting your app with `@observe` or a framework integration. If you can't modify the app — e.g. you're testing someone else's API — skip ahead to **[Approach 2: `evaluate()`](#approach-2-evaluate)**.
+:::
+
+```mermaid
+sequenceDiagram
+    participant You as Your loop
+    participant Eval as evals_iterator()
+    participant App as Traced LLM app
+    participant Metrics as Metrics
+
+    You->>Eval: dataset.evals_iterator(metrics=[...])
+    loop For each golden
+        Eval-->>You: yield golden
+        You->>App: call with golden.input
+        App-->>Eval: trace captured
+        Eval->>Eval: build LLMTestCase from trace
+        Eval->>Metrics: score test case
+        Metrics-->>Eval: scores
+    end
+    Eval-->>You: upload test run with traces + scores
+```
+
+<Steps>
+<Step>
+
+### Build dataset
+
+[Datasets](/docs/evaluation-datasets) in `deepeval` store [`Golden`s](/docs/evaluation-datasets#what-are-goldens) — precursors to test cases. You loop over goldens at evaluation time, run your traced LLM app on each, and `deepeval` builds an `LLMTestCase` from the resulting trace.
+
+<Tabs items={["In Code", "Pull from Confident AI", "Load from CSV", "Load from JSON"]}>
+<Tab value="In Code">
+
+```python
+from deepeval.dataset import Golden, EvaluationDataset
+
+goldens = [
+    Golden(input="What is your name?"),
+    Golden(input="Choose a number between 1 and 100"),
+    # ...
+]
+
+dataset = EvaluationDataset(goldens=goldens)
+```
+
+The dataset lives only for this run — no push, no save. Perfect for quickstarts and one-off evaluations.
+
+</Tab>
+<Tab value="Pull from Confident AI">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(alias="My dataset")
+```
+
+</Tab>
+<Tab value="Load from CSV">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.add_goldens_from_csv_file(
+    file_path="example.csv",
+    input_col_name="query",
+)
+```
+
+</Tab>
+<Tab value="Load from JSON">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.add_goldens_from_json_file(
+    file_path="example.json",
+    input_key_name="query",
+)
+```
+
+</Tab>
+</Tabs>
+
+:::tip
+This page covers **sourcing** goldens for an eval run only. To **persist** a dataset (push to Confident AI, save as CSV/JSON, version it across runs), see [the datasets page](/docs/evaluation-datasets).
+:::
+
+</Step>
+
+<Step>
+
+### Instrument/trace and evaluate
+
+Instrument your AI agent based on your tech stack, then loop with `evals_iterator(metrics=[...])` to score each captured trace as one end-to-end test case.
+
+Each integration ships **Async** (default — fastest) and **Sync** variants:
+
+- **Async** keeps `evals_iterator()` on its default async dispatch and wraps each invocation in `asyncio.create_task(...)` + `dataset.evaluate(task)` so goldens run concurrently.
+- **Sync** passes `AsyncConfig(run_async=False)` and runs the loop body one golden at a time. Useful for debugging, rate-limited providers, or anywhere asyncio gets in the way (e.g. some Jupyter setups).
+
+<Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Strands", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
+<Tab value="Manual Instrumentation">
+
+Wrap the top-level function with `@observe` and call `update_current_trace(...)` to set the trace-level test case fields:
+
+<Tabs items={["Async", "Sync"]}>
+<Tab value="Async">
+
+```python title="main.py" showLineNumbers
+import asyncio
+from deepeval.tracing import observe, update_current_trace
+from deepeval.metrics import TaskCompletionMetric
+...
+
+@observe()
+async def my_ai_agent(query: str) -> str:
+    answer = "..."  # await your LLM call here
+    update_current_trace(input=query, output=answer)
+    return answer
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    task = asyncio.create_task(my_ai_agent(golden.input))
+    dataset.evaluate(task)
+```
+
+</Tab>
+<Tab value="Sync">
+
+```python title="main.py" showLineNumbers
+from deepeval.evaluate import AsyncConfig
+from deepeval.tracing import observe, update_current_trace
+from deepeval.metrics import TaskCompletionMetric
+...
+
+@observe()
+def my_ai_agent(query: str) -> str:
+    answer = "..."  # call your LLM here
+    update_current_trace(input=query, output=answer)
+    return answer
+
+for golden in dataset.evals_iterator(
+    metrics=[TaskCompletionMetric()],
+    async_config=AsyncConfig(run_async=False),
+):
+    my_ai_agent(golden.input)
+```
+
+</Tab>
+</Tabs>
+
+See [tracing](/docs/evaluation-llm-tracing) for the full `@observe` and `update_current_trace` surface.
+
+</Tab>
+<Tab value="LangChain">
+
+Build your agent with `create_agent`, then pass `deepeval`'s `CallbackHandler` to its `invoke` / `ainvoke` method inside the loop:
+
+<Tabs items={["Async", "Sync"]}>
+<Tab value="Async">
+
+```python title="langchain_app.py" showLineNumbers
+import asyncio
+from langchain.agents import create_agent
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.metrics import TaskCompletionMetric
+...
+
+def multiply(a: int, b: int) -> int:
+    """Multiply two numbers."""
+    return a * b
+
+agent = create_agent(
+    model="openai:gpt-4o-mini",
+    tools=[multiply],
+    system_prompt="Be concise.",
+)
+
+async def run_agent(prompt: str):
+    return await agent.ainvoke(
+        {"messages": [{"role": "user", "content": prompt}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    task = asyncio.create_task(run_agent(golden.input))
+    dataset.evaluate(task)
+```
+
+</Tab>
+<Tab value="Sync">
+
+```python title="langchain_app.py" showLineNumbers
+from langchain.agents import create_agent
+from deepeval.evaluate import AsyncConfig
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.metrics import TaskCompletionMetric
+...
+
+def multiply(a: int, b: int) -> int:
+    """Multiply two numbers."""
+    return a * b
+
+agent = create_agent(
+    model="openai:gpt-4o-mini",
+    tools=[multiply],
+    system_prompt="Be concise.",
+)
+
+for golden in dataset.evals_iterator(
+    metrics=[TaskCompletionMetric()],
+    async_config=AsyncConfig(run_async=False),
+):
+    agent.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
+```
+
+</Tab>
+</Tabs>
+
+See the [LangChain integration](/integrations/frameworks/langchain) for the full surface.
+
+</Tab>
+<Tab value="LangGraph">
+
+Wire your `StateGraph`, then pass `deepeval`'s `CallbackHandler` to its `invoke` / `ainvoke` method inside the loop:
+
+<Tabs items={["Async", "Sync"]}>
+<Tab value="Async">
+
+```python title="langgraph_app.py" showLineNumbers
+import asyncio
+from langchain.chat_models import init_chat_model
+from langgraph.graph import StateGraph, MessagesState, START, END
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.metrics import TaskCompletionMetric
+...
+
+llm = init_chat_model("openai:gpt-4o-mini")
+
+async def chatbot(state: MessagesState):
+    return {"messages": [await llm.ainvoke(state["messages"])]}
+
+graph = (
+    StateGraph(MessagesState)
+    .add_node(chatbot)
+    .add_edge(START, "chatbot")
+    .add_edge("chatbot", END)
+    .compile()
+)
+
+async def run_graph(prompt: str):
+    return await graph.ainvoke(
+        {"messages": [{"role": "user", "content": prompt}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    task = asyncio.create_task(run_graph(golden.input))
+    dataset.evaluate(task)
+```
+
+</Tab>
+<Tab value="Sync">
+
+```python title="langgraph_app.py" showLineNumbers
+from langchain.chat_models import init_chat_model
+from langgraph.graph import StateGraph, MessagesState, START, END
+from deepeval.evaluate import AsyncConfig
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.metrics import TaskCompletionMetric
+...
+
+llm = init_chat_model("openai:gpt-4o-mini")
+
+def chatbot(state: MessagesState):
+    return {"messages": [llm.invoke(state["messages"])]}
+
+graph = (
+    StateGraph(MessagesState)
+    .add_node(chatbot)
+    .add_edge(START, "chatbot")
+    .add_edge("chatbot", END)
+    .compile()
+)
+
+for golden in dataset.evals_iterator(
+    metrics=[TaskCompletionMetric()],
+    async_config=AsyncConfig(run_async=False),
+):
+    graph.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
+```
+
+</Tab>
+</Tabs>
+
+See the [LangGraph integration](/integrations/frameworks/langgraph) for the full surface.
+
+</Tab>
+<Tab value="OpenAI">
+
+Drop-in replace `from openai import OpenAI` with `from deepeval.openai import OpenAI` (or `AsyncOpenAI`). Wrap the call in `with trace():` so the LLM call becomes a trace:
+
+<Tabs items={["Async", "Sync"]}>
+<Tab value="Async">
+
+```python title="openai_app.py" showLineNumbers
+import asyncio
+from deepeval.openai import AsyncOpenAI
+from deepeval.tracing import trace
+from deepeval.metrics import TaskCompletionMetric
+...
+
+client = AsyncOpenAI()
+
+async def call_openai(prompt: str):
+    with trace():
+        return await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    task = asyncio.create_task(call_openai(golden.input))
+    dataset.evaluate(task)
+```
+
+</Tab>
+<Tab value="Sync">
+
+```python title="openai_app.py" showLineNumbers
+from deepeval.openai import OpenAI
+from deepeval.tracing import trace
+from deepeval.evaluate import AsyncConfig
+from deepeval.metrics import TaskCompletionMetric
+...
+
+client = OpenAI()
+
+for golden in dataset.evals_iterator(
+    metrics=[TaskCompletionMetric()],
+    async_config=AsyncConfig(run_async=False),
+):
+    with trace():
+        client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": golden.input}],
+        )
+```
+
+</Tab>
+</Tabs>
+
+See the [OpenAI integration](/integrations/frameworks/openai) for streaming and tool-calling.
+
+</Tab>
+<Tab value="Pydantic AI">
+
+Pass `DeepEvalInstrumentationSettings()` to your `Agent`'s `instrument` keyword:
+
+<Tabs items={["Async", "Sync"]}>
+<Tab value="Async">
+
+```python title="pydanticai_agent.py" showLineNumbers
+import asyncio
+from pydantic_ai import Agent
+from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
+from deepeval.metrics import TaskCompletionMetric
+...
+
+agent = Agent(
+    "openai:gpt-4.1",
+    system_prompt="Be concise.",
+    instrument=DeepEvalInstrumentationSettings(),
+)
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    task = asyncio.create_task(agent.run(golden.input))
+    dataset.evaluate(task)
+```
+
+</Tab>
+<Tab value="Sync">
+
+```python title="pydanticai_agent.py" showLineNumbers
+from pydantic_ai import Agent
+from deepeval.evaluate import AsyncConfig
+from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
+from deepeval.metrics import TaskCompletionMetric
+...
+
+agent = Agent(
+    "openai:gpt-4.1",
+    system_prompt="Be concise.",
+    instrument=DeepEvalInstrumentationSettings(),
+)
+
+for golden in dataset.evals_iterator(
+    metrics=[TaskCompletionMetric()],
+    async_config=AsyncConfig(run_async=False),
+):
+    agent.run_sync(golden.input)
+```
+
+</Tab>
+</Tabs>
+
+See the [Pydantic AI integration](/integrations/frameworks/pydanticai) for the full surface.
+
+</Tab>
+<Tab value="AgentCore">
+
+Call `instrument_agentcore()` before creating your agent. The same call also instruments [Strands](https://strandsagents.com/) agents running inside AgentCore:
+
+<Tabs items={["Async", "Sync"]}>
+<Tab value="Async">
+
+```python title="agentcore_agent.py" showLineNumbers
+import asyncio
+from strands import Agent
+from deepeval.integrations.agentcore import instrument_agentcore
+from deepeval.metrics import TaskCompletionMetric
+...
+
+instrument_agentcore()
+
+agent = Agent(model="amazon.nova-lite-v1:0")
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    task = asyncio.create_task(agent.invoke_async(golden.input))
+    dataset.evaluate(task)
+```
+
+</Tab>
+<Tab value="Sync">
+
+```python title="agentcore_agent.py" showLineNumbers
+from strands import Agent
+from deepeval.evaluate import AsyncConfig
+from deepeval.integrations.agentcore import instrument_agentcore
+from deepeval.metrics import TaskCompletionMetric
+...
+
+instrument_agentcore()
+
+agent = Agent(model="amazon.nova-lite-v1:0")
+
+for golden in dataset.evals_iterator(
+    metrics=[TaskCompletionMetric()],
+    async_config=AsyncConfig(run_async=False),
+):
+    agent(golden.input)
+```
+
+</Tab>
+</Tabs>
+
+See the [AgentCore integration](/integrations/frameworks/agentcore) for the full surface (including the `BedrockAgentCoreApp` entrypoint pattern).
+
+</Tab>
+<Tab value="Strands">
+
+Call `instrument_strands()` before invoking your Strands agent (for AgentCore-hosted Strands, use the AgentCore tab instead):
+
+<Tabs items={["Async", "Sync"]}>
+<Tab value="Async">
+
+```python title="strands_agent.py" showLineNumbers
+import asyncio
+from strands import Agent
+from strands.models.openai import OpenAIModel
+from deepeval.integrations.strands import instrument_strands
+from deepeval.metrics import TaskCompletionMetric
+...
+
+instrument_strands()
+
+agent = Agent(
+    model=OpenAIModel(model_id="gpt-4o-mini"),
+    system_prompt="You are a helpful assistant.",
+)
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    task = asyncio.create_task(agent.invoke_async(golden.input))
+    dataset.evaluate(task)
+```
+
+</Tab>
+<Tab value="Sync">
+
+```python title="strands_agent.py" showLineNumbers
+from strands import Agent
+from strands.models.openai import OpenAIModel
+from deepeval.evaluate import AsyncConfig
+from deepeval.integrations.strands import instrument_strands
+from deepeval.metrics import TaskCompletionMetric
+...
+
+instrument_strands()
+
+agent = Agent(
+    model=OpenAIModel(model_id="gpt-4o-mini"),
+    system_prompt="You are a helpful assistant.",
+)
+
+for golden in dataset.evals_iterator(
+    metrics=[TaskCompletionMetric()],
+    async_config=AsyncConfig(run_async=False),
+):
+    agent(golden.input)
+```
+
+</Tab>
+</Tabs>
+
+See the [Strands integration](/integrations/frameworks/strands) for the full surface.
+
+</Tab>
+<Tab value="Anthropic">
+
+Drop-in replace `from anthropic import Anthropic` with `from deepeval.anthropic import Anthropic` (or `AsyncAnthropic`). Wrap the call in `with trace():` so the LLM call becomes a trace:
+
+<Tabs items={["Async", "Sync"]}>
+<Tab value="Async">
+
+```python title="anthropic_app.py" showLineNumbers
+import asyncio
+from deepeval.anthropic import AsyncAnthropic
+from deepeval.tracing import trace
+from deepeval.metrics import TaskCompletionMetric
+...
+
+client = AsyncAnthropic()
+
+async def call_claude(prompt: str):
+    with trace():
+        return await client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    task = asyncio.create_task(call_claude(golden.input))
+    dataset.evaluate(task)
+```
+
+</Tab>
+<Tab value="Sync">
+
+```python title="anthropic_app.py" showLineNumbers
+from deepeval.anthropic import Anthropic
+from deepeval.tracing import trace
+from deepeval.evaluate import AsyncConfig
+from deepeval.metrics import TaskCompletionMetric
+...
+
+client = Anthropic()
+
+for golden in dataset.evals_iterator(
+    metrics=[TaskCompletionMetric()],
+    async_config=AsyncConfig(run_async=False),
+):
+    with trace():
+        client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=1024,
+            messages=[{"role": "user", "content": golden.input}],
+        )
+```
+
+</Tab>
+</Tabs>
+
+See the [Anthropic integration](/integrations/frameworks/anthropic) for streaming and tool-use.
+
+</Tab>
+<Tab value="LlamaIndex">
+
+Register `deepeval`'s event handler against LlamaIndex's instrumentation dispatcher. `agent.run(...)` is async-only, so the sync variant uses `asyncio.run(...)`:
+
+<Tabs items={["Async", "Sync"]}>
+<Tab value="Async">
+
+```python title="llamaindex_agent.py" showLineNumbers
+import asyncio
+from llama_index.llms.openai import OpenAI
+from llama_index.core.agent import FunctionAgent
+import llama_index.core.instrumentation as instrument
+from deepeval.integrations.llama_index import instrument_llama_index
+from deepeval.metrics import TaskCompletionMetric
+...
+
+instrument_llama_index(instrument.get_dispatcher())
+
+def multiply(a: float, b: float) -> float:
+    return a * b
+
+agent = FunctionAgent(
+    tools=[multiply],
+    llm=OpenAI(model="gpt-4o-mini"),
+    system_prompt="You are a helpful calculator.",
+)
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    task = asyncio.create_task(agent.run(golden.input))
+    dataset.evaluate(task)
+```
+
+</Tab>
+<Tab value="Sync">
+
+```python title="llamaindex_agent.py" showLineNumbers
+import asyncio
+from llama_index.llms.openai import OpenAI
+from llama_index.core.agent import FunctionAgent
+import llama_index.core.instrumentation as instrument
+from deepeval.evaluate import AsyncConfig
+from deepeval.integrations.llama_index import instrument_llama_index
+from deepeval.metrics import TaskCompletionMetric
+...
+
+instrument_llama_index(instrument.get_dispatcher())
+
+def multiply(a: float, b: float) -> float:
+    return a * b
+
+agent = FunctionAgent(
+    tools=[multiply],
+    llm=OpenAI(model="gpt-4o-mini"),
+    system_prompt="You are a helpful calculator.",
+)
+
+for golden in dataset.evals_iterator(
+    metrics=[TaskCompletionMetric()],
+    async_config=AsyncConfig(run_async=False),
+):
+    asyncio.run(agent.run(golden.input))
+```
+
+</Tab>
+</Tabs>
+
+See the [LlamaIndex integration](/integrations/frameworks/llamaindex) for the full surface.
+
+</Tab>
+<Tab value="OpenAI Agents">
+
+Register `DeepEvalTracingProcessor` once, then build your agent with `deepeval`'s `Agent` and `function_tool` shims:
+
+<Tabs items={["Async", "Sync"]}>
+<Tab value="Async">
+
+```python title="openai_agents_app.py" showLineNumbers
+import asyncio
+from agents import Runner, add_trace_processor
+from deepeval.openai_agents import Agent, DeepEvalTracingProcessor, function_tool
+from deepeval.metrics import TaskCompletionMetric
+...
+
+add_trace_processor(DeepEvalTracingProcessor())
+
+@function_tool
+def get_weather(city: str) -> str:
+    return f"It's always sunny in {city}!"
+
+agent = Agent(
+    name="weather_agent",
+    instructions="Answer weather questions concisely.",
+    tools=[get_weather],
+)
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    task = asyncio.create_task(Runner.run(agent, golden.input))
+    dataset.evaluate(task)
+```
+
+</Tab>
+<Tab value="Sync">
+
+```python title="openai_agents_app.py" showLineNumbers
+from agents import Runner, add_trace_processor
+from deepeval.evaluate import AsyncConfig
+from deepeval.openai_agents import Agent, DeepEvalTracingProcessor, function_tool
+from deepeval.metrics import TaskCompletionMetric
+...
+
+add_trace_processor(DeepEvalTracingProcessor())
+
+@function_tool
+def get_weather(city: str) -> str:
+    return f"It's always sunny in {city}!"
+
+agent = Agent(
+    name="weather_agent",
+    instructions="Answer weather questions concisely.",
+    tools=[get_weather],
+)
+
+for golden in dataset.evals_iterator(
+    metrics=[TaskCompletionMetric()],
+    async_config=AsyncConfig(run_async=False),
+):
+    Runner.run_sync(agent, golden.input)
+```
+
+</Tab>
+</Tabs>
+
+See the [OpenAI Agents integration](/integrations/frameworks/openai-agents) for the full surface.
+
+</Tab>
+<Tab value="Google ADK">
+
+Call `instrument_google_adk()` once before building your `LlmAgent`. ADK's `runner.run_async(...)` is async-only, so the sync variant uses `asyncio.run(...)`:
+
+<Tabs items={["Async", "Sync"]}>
+<Tab value="Async">
+
+```python title="google_adk_agent.py" showLineNumbers
+import asyncio
+from google.adk.agents import LlmAgent
+from google.adk.runners import InMemoryRunner
+from google.genai import types
+from deepeval.integrations.google_adk import instrument_google_adk
+from deepeval.metrics import TaskCompletionMetric
+...
+
+instrument_google_adk()
+
+agent = LlmAgent(model="gemini-2.0-flash", name="assistant", instruction="Be concise.")
+runner = InMemoryRunner(agent=agent, app_name="deepeval-quickstart")
+
+async def run_agent(prompt: str) -> str:
+    session = await runner.session_service.create_session(
+        app_name="deepeval-quickstart", user_id="demo-user",
+    )
+    message = types.Content(role="user", parts=[types.Part(text=prompt)])
+    async for event in runner.run_async(
+        user_id="demo-user", session_id=session.id, new_message=message,
+    ):
+        if event.is_final_response() and event.content:
+            return "".join(part.text for part in event.content.parts if getattr(part, "text", None))
+    return ""
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    task = asyncio.create_task(run_agent(golden.input))
+    dataset.evaluate(task)
+```
+
+</Tab>
+<Tab value="Sync">
+
+```python title="google_adk_agent.py" showLineNumbers
+import asyncio
+from google.adk.agents import LlmAgent
+from google.adk.runners import InMemoryRunner
+from google.genai import types
+from deepeval.evaluate import AsyncConfig
+from deepeval.integrations.google_adk import instrument_google_adk
+from deepeval.metrics import TaskCompletionMetric
+...
+
+instrument_google_adk()
+
+agent = LlmAgent(model="gemini-2.0-flash", name="assistant", instruction="Be concise.")
+runner = InMemoryRunner(agent=agent, app_name="deepeval-quickstart")
+
+async def run_agent(prompt: str) -> str:
+    session = await runner.session_service.create_session(
+        app_name="deepeval-quickstart", user_id="demo-user",
+    )
+    message = types.Content(role="user", parts=[types.Part(text=prompt)])
+    async for event in runner.run_async(
+        user_id="demo-user", session_id=session.id, new_message=message,
+    ):
+        if event.is_final_response() and event.content:
+            return "".join(part.text for part in event.content.parts if getattr(part, "text", None))
+    return ""
+
+for golden in dataset.evals_iterator(
+    metrics=[TaskCompletionMetric()],
+    async_config=AsyncConfig(run_async=False),
+):
+    asyncio.run(run_agent(golden.input))
+```
+
+</Tab>
+</Tabs>
+
+See the [Google ADK integration](/integrations/frameworks/google-adk) for the full surface.
+
+</Tab>
+<Tab value="CrewAI">
+
+Call `instrument_crewai()` once, then build your crew with `deepeval`'s `Crew`, `Agent`, and `@tool` shims:
+
+<Tabs items={["Async", "Sync"]}>
+<Tab value="Async">
+
+```python title="crewai_app.py" showLineNumbers
+import asyncio
+from crewai import Task
+from deepeval.integrations.crewai import instrument_crewai, Crew, Agent
+from deepeval.metrics import TaskCompletionMetric
+...
+
+instrument_crewai()
+
+tutor = Agent(
+    role="Math Tutor",
+    goal="Answer math questions accurately and concisely.",
+    backstory="An experienced tutor who explains simple math clearly.",
+)
+answer_task = Task(
+    description="{question}",
+    expected_output="An accurate, concise answer.",
+    agent=tutor,
+)
+crew = Crew(agents=[tutor], tasks=[answer_task])
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    task = asyncio.create_task(crew.kickoff_async({"question": golden.input}))
+    dataset.evaluate(task)
+```
+
+</Tab>
+<Tab value="Sync">
+
+```python title="crewai_app.py" showLineNumbers
+from crewai import Task
+from deepeval.evaluate import AsyncConfig
+from deepeval.integrations.crewai import instrument_crewai, Crew, Agent
+from deepeval.metrics import TaskCompletionMetric
+...
+
+instrument_crewai()
+
+tutor = Agent(
+    role="Math Tutor",
+    goal="Answer math questions accurately and concisely.",
+    backstory="An experienced tutor who explains simple math clearly.",
+)
+task = Task(
+    description="{question}",
+    expected_output="An accurate, concise answer.",
+    agent=tutor,
+)
+crew = Crew(agents=[tutor], tasks=[task])
+
+for golden in dataset.evals_iterator(
+    metrics=[TaskCompletionMetric()],
+    async_config=AsyncConfig(run_async=False),
+):
+    crew.kickoff({"question": golden.input})
+```
+
+</Tab>
+</Tabs>
+
+See the [CrewAI integration](/integrations/frameworks/crewai) for the full surface.
+
+</Tab>
+</Tabs>
+
+There are **SIX** optional parameters on `evals_iterator()`:
+
+- [Optional] `metrics`: a list of `BaseMetric`s applied at the **trace** level — these are the end-to-end metrics that score the whole trace.
+- [Optional] `identifier`: a string label for this test run on Confident AI.
+- [Optional] `async_config`: an `AsyncConfig` controlling concurrency. See [async configs](/docs/evaluation-flags-and-configs#async-configs).
+- [Optional] `display_config`: a `DisplayConfig` controlling console output. See [display configs](/docs/evaluation-flags-and-configs#display-configs).
+- [Optional] `error_config`: an `ErrorConfig` controlling error handling. See [error configs](/docs/evaluation-flags-and-configs#error-configs).
+- [Optional] `cache_config`: a `CacheConfig` controlling caching. See [cache configs](/docs/evaluation-flags-and-configs#cache-configs).
+
+Every `evals_iterator()` run is snapshotted to disk, so you can open it in a trace-tree TUI with bare `deepeval inspect`. See the [`deepeval inspect` reference](/docs/command-line-interface#inspect) for full details.
+
+To grade **individual components** (the retriever, a tool call, an inner LLM call) instead of (or in addition to) the trace, see [component-level evaluation](/docs/evaluation-component-level-llm-evals).
+
+</Step>
+</Steps>
+
+If you're logged in to Confident AI via `deepeval login`, you'll also get to storage, share, view, and annotate full traces in testing reports on the platform:
+
+<VideoDisplayer
+  src={ASSETS.evaluationSingleTurnE2eReportTracing}
+  confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports"
+  label="Test Reports For Evals and Traces on Confident AI"
+/>
+
+## Approach 2: `evaluate()`
+
+Use this when you can't (or don't want to) instrument your app — for example a QA engineer testing a deployed system, or a quick one-off eval where adding tracing is overkill. You build a list of `LLMTestCase`s up front from inputs and outputs you've already collected, pick metrics, and call `evaluate()`.
+
+**How it works:**
+
+1. You build a list of `LLMTestCase`s yourself by looping over goldens and calling your LLM app.
+2. You hand the test cases and metrics to `evaluate()` in a single call.
+3. `deepeval` runs every metric on every test case (concurrently by default) and rolls the results into a test run.
+
+```mermaid
+sequenceDiagram
+    participant User as Your code
+    participant App as Your LLM app
+    participant Eval as evaluate()
+    participant M as Metrics
+
+    loop For each golden
+        User->>App: call with golden.input
+        App-->>User: actual_output, retrieval_context, ...
+        User->>User: build LLMTestCase
+    end
+    User->>Eval: evaluate(test_cases=..., metrics=...)
+    par Concurrent metric execution
+        Eval->>M: score(test_case)
+        M-->>Eval: pass / fail + reason
+    end
+    Eval-->>User: EvaluationResult (test run)
+```
+
+Your LLM app and `deepeval` stay completely decoupled — `evaluate()` only sees the data you pass to it. That's why this approach has no tracing dependency.
+
+:::caution[Don't preload `actual_output` on your goldens]
+Because `evaluate()` only reads what you pass in, nothing stops you from skipping the app call entirely and preloading a dataset where `actual_output` is already filled in (e.g. outputs you collected last week). **We don't recommend this** — a test run should reflect the _current_ version of your LLM app, so you should re-run the app on every golden inside your loop. Treat goldens as inputs only; let `actual_output` be produced fresh each run.
+:::
+
+<Steps>
+<Step>
+### Build dataset
+
+Same as [Approach 1](#approach-1-evals_iterator-with-tracing-recommended) — wrap your goldens in an `EvaluationDataset`. Pick whichever source fits where your goldens live today:
+
+<Tabs items={["In Code", "Pull from Confident AI", "Load from CSV", "Load from JSON"]}>
+<Tab value="In Code">
+
+```python
+from deepeval.dataset import Golden, EvaluationDataset
+
+goldens = [
+    Golden(input="What is your name?"),
+    Golden(input="Choose a number between 1 and 100"),
+    # ...
+]
+
+dataset = EvaluationDataset(goldens=goldens)
+```
+
+</Tab>
+<Tab value="Pull from Confident AI">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(alias="My Evals Dataset")
+```
+
+</Tab>
+<Tab value="Load from CSV">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.add_goldens_from_csv_file(
+    file_path="example.csv",
+    input_col_name="query",
+)
+```
+
+</Tab>
+<Tab value="Load from JSON">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.add_goldens_from_json_file(
+    file_path="example.json",
+    input_key_name="query",
+)
+```
+
+</Tab>
+</Tabs>
+
+To persist a dataset (push to Confident AI, save as CSV/JSON, version across runs), see [the datasets page](/docs/evaluation-datasets).
+
+</Step>
+
+<Step>
+### Construct test cases
+
+Loop over your goldens, call your LLM app, and wrap each result in an `LLMTestCase`:
+
+```python title="main.py"
+from your_app import your_llm_app  # replace with your LLM app
+from deepeval.test_case import LLMTestCase
+...
+
+for golden in dataset.goldens:
+    answer, retrieved_chunks = your_llm_app(golden.input)
+    dataset.add_test_case(
+        LLMTestCase(
+            input=golden.input,
+            actual_output=answer,
+            retrieval_context=retrieved_chunks,
+        )
+    )
+```
+
+:::info
+The fields you populate on `LLMTestCase` must match what your metrics need. For example, `FaithfulnessMetric` requires `retrieval_context`. See [test cases](/docs/evaluation-test-cases#llm-test-cases) for the full parameter list.
+:::
+
+</Step>
+
+<Step>
+### Run `evaluate()`
+
+Now pick the metrics you want to grade your application on, and pass both `test_cases` and `metrics` to `evaluate()`.
+
+:::tip[Recommended metrics mix]
+Keep your metrics tight — **no more than 5 per run**, made up of:
+
+- **2–3 generic metrics** for your application type (agentic, RAG, chatbot, etc.)
+- **1–2 custom metrics** for the specific things you care about ([`GEval`](/docs/metrics-llm-evals) or a [custom metric](/docs/metrics-custom))
+
+See [the metrics section](/docs/metrics-introduction) for the 50+ built-in metrics, or ask for tailored recommendations on [Discord](https://discord.com/invite/a3K9c8GRGt).
+:::
+
+```python title="main.py"
+from deepeval import evaluate
+from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
+...
+
+evaluate(
+    test_cases=test_cases,
+    metrics=[AnswerRelevancyMetric(), FaithfulnessMetric()],
+)
+```
+
+There are **TWO** mandatory and **FIVE** optional parameters when calling `evaluate()` for end-to-end evaluation:
+
+- `test_cases`: a list of `LLMTestCase`s **OR** `ConversationalTestCase`s, or an `EvaluationDataset`. You cannot mix `LLMTestCase`s and `ConversationalTestCase`s in the same test run.
+- `metrics`: a list of metrics of type `BaseMetric`.
+- [Optional] `identifier`: a string label for this test run on Confident AI.
+- [Optional] `async_config`: an `AsyncConfig` controlling concurrency. See [async configs](/docs/evaluation-flags-and-configs#async-configs).
+- [Optional] `display_config`: a `DisplayConfig` controlling console output. See [display configs](/docs/evaluation-flags-and-configs#display-configs).
+- [Optional] `error_config`: an `ErrorConfig` controlling how errors are handled. See [error configs](/docs/evaluation-flags-and-configs#error-configs).
+- [Optional] `cache_config`: a `CacheConfig` controlling caching behavior. See [cache configs](/docs/evaluation-flags-and-configs#cache-configs).
+
+This is the same as `assert_test()` in `deepeval test run`, exposed as a function call instead.
+
+:::info[Sync vs async metric execution]
+By default, `evaluate()` runs metrics **concurrently** using `asyncio` under the hood — every metric for every test case is dispatched in parallel, with concurrency capped by `AsyncConfig.max_concurrent`. Set `run_async=False` to execute metrics sequentially instead:
+
+```python
+from deepeval.evaluate import AsyncConfig
+
+evaluate(
+    test_cases=test_cases,
+    metrics=[AnswerRelevancyMetric()],
+    async_config=AsyncConfig(
+        run_async=False,     # run metrics one at a time
+        max_concurrent=20,   # only used when run_async=True
+        throttle_value=0,    # delay (in seconds) between dispatches
+    ),
+)
+```
+
+[TODO: when should you choose sync vs async? trade-offs, common pitfalls (e.g. Jupyter event loops, rate-limiting providers), recommended defaults]
+:::
+
+</Step>
+</Steps>
+
+## Hyperparameters
+
+Log the model, prompt, and other configuration values with each test run so you can compare runs side-by-side on Confident AI and identify the best combination. Values must be `str | int | float` or a [`Prompt`](/docs/evaluation-prompts):
+
+```python
+import deepeval
+from deepeval.metrics import TaskCompletionMetric
+
+@deepeval.log_hyperparameters
+def hyperparameters():
+    return {"model": "gpt-4.1", "system_prompt": "Be concise."}
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    my_ai_agent(golden.input)
+```
+
+On Confident AI, the logged values become filterable axes for comparing test runs and surfacing the model/prompt configuration that performs best:
+
+<VideoDisplayer
+  src={ASSETS.evaluationParameterInsights}
+  confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dashboards/model-and-prompt-insights"
+  label="Parameter Insights To Find Best Model"
+/>
+
+## In CI/CD
+
+To run single-turn end-to-end evaluations on every PR, swap `evaluate()` / `evals_iterator()` for `assert_test()` inside a `pytest` parametrized test, then run it with `deepeval test run`.
+
+<Tabs items={["With tracing", "Without tracing"]}>
+<Tab value="With tracing">
+
+```python title="test_llm_app.py"
+import pytest
+from deepeval import assert_test
+from deepeval.dataset import Golden
+from deepeval.metrics import TaskCompletionMetric
+from your_app import my_ai_agent  # @observe-instrumented
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_llm_app(golden: Golden):
+    my_ai_agent(golden.input)
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+</Tab>
+<Tab value="Without tracing">
+
+```python title="test_llm_app.py"
+import pytest
+from deepeval import assert_test
+from deepeval.dataset import Golden
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AnswerRelevancyMetric
+from your_app import my_ai_agent
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_llm_app(golden: Golden):
+    output = my_ai_agent(golden.input)
+    test_case = LLMTestCase(input=golden.input, actual_output=output)
+    assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric()])
+```
+
+</Tab>
+</Tabs>
+
+```bash
+deepeval test run test_llm_app.py
+```
+
+See [unit testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd) for `assert_test()` parameters, YAML pipeline examples, and `deepeval test run` flags.

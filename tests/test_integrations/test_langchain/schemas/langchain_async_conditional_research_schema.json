@@ -156,7 +156,8 @@
             "topic": "quantum computing"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -194,7 +195,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 182.0,
-      "outputTokenCount": 30.0
+      "outputTokenCount": 30.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d050e-62b3-7d10-ad5b-6ab911be669f",
@@ -229,7 +232,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 142.0,
-      "outputTokenCount": 90.0
+      "outputTokenCount": 90.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -253,7 +258,8 @@
         "name": "research_topic",
         "tool_call_id": "call_SgztC6UCVLjpH5bb3oYQHFp3",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:45:22.099Z",

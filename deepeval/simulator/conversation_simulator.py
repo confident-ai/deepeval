@@ -1,9 +1,10 @@
-from typing import Optional, List, Union, Callable, Type
+from typing import Any, Optional, List, Type, Union, Callable
 from rich.progress import Progress
 from pydantic import BaseModel
 import inspect
 import asyncio
 import uuid
+import warnings
 
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -16,7 +17,7 @@ from deepeval.metrics.utils import (
 )
 from deepeval.test_case import ConversationalTestCase, Turn
 from deepeval.simulator.template import (
-    ConversationSimulatorTemplate,
+    SimulationTemplate,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import MULTIMODAL_SUPPORTED_MODELS
@@ -27,27 +28,45 @@ from deepeval.simulator.controller.controller import (
     SimulationController,
     expected_outcome_controller,
 )
-from deepeval.simulator.utils import (
-    validate_simulation_template,
+from deepeval.simulator.simulation_graph import (
+    SimulationNode,
+    default_simulation_node,
+)
+from deepeval.simulator.simulation_graph.runner import (
+    _SimulationGraphRunner,
+    _GraphConversationState,
 )
 from deepeval.progress_context import conversation_simulator_progress_context
 from deepeval.dataset import ConversationalGolden
+
+_MISSING = object()
 
 
 class ConversationSimulator:
     def __init__(
         self,
         model_callback: Callable[[str], str],
+        simulation_graph: Optional[SimulationNode] = None,
+        stopping_controller: Callable = expected_outcome_controller,
         simulator_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         max_concurrent: int = 5,
         async_mode: bool = True,
         language: str = "English",
-        controller: Callable = expected_outcome_controller,
-        simulation_template: Type[
-            ConversationSimulatorTemplate
-        ] = ConversationSimulatorTemplate,
+        controller: Any = _MISSING,
     ):
-        validate_simulation_template(simulation_template)
+        if controller is not _MISSING:
+            if stopping_controller is not expected_outcome_controller:
+                raise TypeError(
+                    "Pass either `stopping_controller` or the deprecated "
+                    "`controller`, not both."
+                )
+            warnings.warn(
+                "`controller` is deprecated; use `stopping_controller` "
+                "instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            stopping_controller = controller
 
         self.model_callback = model_callback
         self.is_callback_async = inspect.iscoroutinefunction(
@@ -57,12 +76,21 @@ class ConversationSimulator:
         self.async_mode = async_mode
         self.language = language
         self.simulated_conversations: List[ConversationalTestCase] = []
-        self.template = simulation_template
         self.simulator_model, self.using_native_model = initialize_model(
             simulator_model
         )
-        self.controller = SimulationController(
-            controller=controller,
+        # `None` is rewritten to the default node so the runtime path is
+        # uniform: `_SimulationGraphRunner` always drives user-turn generation.
+        # To customize the prompt template, pass
+        # `simulation_graph=default_simulation_node(template=MyTemplate)`.
+        self.simulation_graph = (
+            simulation_graph
+            if simulation_graph is not None
+            else default_simulation_node()
+        )
+        self._graph_runner = _SimulationGraphRunner(root=self.simulation_graph)
+        self.stopping_controller = SimulationController(
+            controller=stopping_controller,
             generate_schema=self.generate_schema,
             a_generate_schema=self.a_generate_schema,
         )
@@ -219,6 +247,9 @@ class ConversationSimulator:
         user_input = None
         thread_id = str(uuid.uuid4())
         turns: List[Turn] = []
+        graph_state: _GraphConversationState = (
+            self._graph_runner.new_conversation_state()
+        )
 
         if golden.turns is not None:
             turns.extend(golden.turns)
@@ -229,7 +260,7 @@ class ConversationSimulator:
                 break
 
             # Stop conversation if needed
-            should_stop_simulation = self.controller.run(
+            should_stop_simulation = self.stopping_controller.run(
                 turns=turns,
                 golden=golden,
                 index=index,
@@ -242,24 +273,32 @@ class ConversationSimulator:
             if should_stop_simulation:
                 break
 
-            # Generate turn from user
-            if len(turns) == 0:
-                # Generate first user input
-                user_input = self.generate_first_user_input(golden)
-                turns.append(Turn(role="user", content=user_input))
-                update_pbar(progress, pbar_max_user_simluations_id)
-                simulation_counter += 1
-            elif turns[-1].role != "user":
-                user_input = self.generate_next_user_input(golden, turns)
-                turns.append(Turn(role="user", content=user_input))
-                update_pbar(progress, pbar_max_user_simluations_id)
-                simulation_counter += 1
-            else:
+            # Generate turn from user (via simulation graph)
+            emission_end = False
+            if len(turns) > 0 and turns[-1].role == "user":
                 user_input = turns[-1].content
+            else:
+                emission = self._graph_runner.run(
+                    self,
+                    graph_state,
+                    turns,
+                    golden,
+                    thread_id,
+                    self.language,
+                )
+                emission_end = emission.end
+                if emission.turn is None:
+                    # max_visits exhausted on entry; end without another turn.
+                    update_pbar(progress, pbar_max_user_simluations_id)
+                    break
+                turns.append(emission.turn)
+                user_input = emission.turn.content
+                update_pbar(progress, pbar_max_user_simluations_id)
+                simulation_counter += 1
 
             # Generate turn from assistant
             if self.is_callback_async:
-                turn = asyncio.run(
+                assistant_turn = asyncio.run(
                     self.a_generate_turn_from_callback(
                         user_input,
                         model_callback=self.model_callback,
@@ -268,13 +307,21 @@ class ConversationSimulator:
                     )
                 )
             else:
-                turn = self.generate_turn_from_callback(
+                assistant_turn = self.generate_turn_from_callback(
                     user_input,
                     model_callback=self.model_callback,
                     turns=turns,
                     thread_id=thread_id,
                 )
-            turns.append(turn)
+            turns.append(assistant_turn)
+
+            # Route to the next graph node based on the assistant reply.
+            self._graph_runner.advance(
+                self, graph_state, assistant_turn.content
+            )
+
+            if emission_end:
+                break
 
         update_pbar(progress, pbar_id)
         conversational_test_case = ConversationalTestCase(
@@ -323,6 +370,9 @@ class ConversationSimulator:
         user_input = None
         thread_id = str(uuid.uuid4())
         turns: List[Turn] = []
+        graph_state: _GraphConversationState = (
+            self._graph_runner.new_conversation_state()
+        )
 
         if golden.turns is not None:
             turns.extend(golden.turns)
@@ -333,7 +383,7 @@ class ConversationSimulator:
                 break
 
             # Stop conversation if needed
-            should_stop_simulation = await self.controller.a_run(
+            should_stop_simulation = await self.stopping_controller.a_run(
                 turns=turns,
                 golden=golden,
                 index=index if index is not None else 0,
@@ -346,39 +396,52 @@ class ConversationSimulator:
             if should_stop_simulation:
                 break
 
-            # Generate turn from user
-            if len(turns) == 0:
-                # Generate first user input
-                user_input = await self.a_generate_first_user_input(golden)
-                turns.append(Turn(role="user", content=user_input))
-                update_pbar(progress, pbar_max_user_simluations_id)
-                simulation_counter += 1
-            elif turns[-1].role != "user":
-                user_input = await self.a_generate_next_user_input(
-                    golden, turns
-                )
-                turns.append(Turn(role="user", content=user_input))
-                update_pbar(progress, pbar_max_user_simluations_id)
-                simulation_counter += 1
-            else:
+            # Generate turn from user (via simulation graph)
+            emission_end = False
+            if len(turns) > 0 and turns[-1].role == "user":
                 user_input = turns[-1].content
+            else:
+                emission = await self._graph_runner.a_run(
+                    self,
+                    graph_state,
+                    turns,
+                    golden,
+                    thread_id,
+                    self.language,
+                )
+                emission_end = emission.end
+                if emission.turn is None:
+                    update_pbar(progress, pbar_max_user_simluations_id)
+                    break
+                turns.append(emission.turn)
+                user_input = emission.turn.content
+                update_pbar(progress, pbar_max_user_simluations_id)
+                simulation_counter += 1
 
             # Generate turn from assistant
             if self.is_callback_async:
-                turn = await self.a_generate_turn_from_callback(
+                assistant_turn = await self.a_generate_turn_from_callback(
                     user_input,
                     model_callback=self.model_callback,
                     turns=turns,
                     thread_id=thread_id,
                 )
             else:
-                turn = self.generate_turn_from_callback(
+                assistant_turn = self.generate_turn_from_callback(
                     user_input,
                     model_callback=self.model_callback,
                     turns=turns,
                     thread_id=thread_id,
                 )
-            turns.append(turn)
+            turns.append(assistant_turn)
+
+            # Route to the next graph node based on the assistant reply.
+            await self._graph_runner.a_advance(
+                self, graph_state, assistant_turn.content
+            )
+
+            if emission_end:
+                break
 
         update_pbar(progress, pbar_id)
         conversational_test_case = ConversationalTestCase(
@@ -405,33 +468,51 @@ class ConversationSimulator:
     ### Generate User Inputs ###################
     ############################################
 
-    def generate_first_user_input(self, golden: ConversationalGolden):
-        prompt = self.template.simulate_first_user_turn(golden, self.language)
+    def generate_first_user_input(
+        self,
+        golden: ConversationalGolden,
+        template: Optional[Type[SimulationTemplate]] = None,
+    ):
+        tmpl = template or SimulationTemplate
+        prompt = tmpl.simulate_first_user_turn(golden, self.language)
         simulated_input: SimulatedInput = self.generate_schema(
             prompt, SimulatedInput
         )
         return simulated_input.simulated_input
 
-    async def a_generate_first_user_input(self, golden: ConversationalGolden):
-        prompt = self.template.simulate_first_user_turn(golden, self.language)
+    async def a_generate_first_user_input(
+        self,
+        golden: ConversationalGolden,
+        template: Optional[Type[SimulationTemplate]] = None,
+    ):
+        tmpl = template or SimulationTemplate
+        prompt = tmpl.simulate_first_user_turn(golden, self.language)
         simulated_input: SimulatedInput = await self.a_generate_schema(
             prompt, SimulatedInput
         )
         return simulated_input.simulated_input
 
     def generate_next_user_input(
-        self, golden: ConversationalGolden, turns: List[Turn]
+        self,
+        golden: ConversationalGolden,
+        turns: List[Turn],
+        template: Optional[Type[SimulationTemplate]] = None,
     ):
-        prompt = self.template.simulate_user_turn(golden, turns, self.language)
+        tmpl = template or SimulationTemplate
+        prompt = tmpl.simulate_user_turn(golden, turns, self.language)
         simulated_input: SimulatedInput = self.generate_schema(
             prompt, SimulatedInput
         )
         return simulated_input.simulated_input
 
     async def a_generate_next_user_input(
-        self, golden: ConversationalGolden, turns: List[Turn]
+        self,
+        golden: ConversationalGolden,
+        turns: List[Turn],
+        template: Optional[Type[SimulationTemplate]] = None,
     ):
-        prompt = self.template.simulate_user_turn(golden, turns, self.language)
+        tmpl = template or SimulationTemplate
+        prompt = tmpl.simulate_user_turn(golden, turns, self.language)
         simulated_input: SimulatedInput = await self.a_generate_schema(
             prompt, SimulatedInput
         )

@@ -1,14 +1,39 @@
-from typing import List, Dict
+"""AgentCore evals fixture — trace-level setup with a Strands tool that
+mutates its own span via ``update_current_span``.
+
+After the OTel POC migration, ``init_evals_agentcore(...)`` carries
+ONLY trace-level kwargs. Per-call agent / LLM / tool metric collections
+and ``BaseMetric`` instances are staged at the call site:
+
+    with next_agent_span(metric_collection="agent_v1", metrics=[...]):
+        with next_llm_span(metric_collection="llm_v1"):
+            invoke_evals_agent(prompt, invoke_func=invoke_func)
+
+The Strands tool ``special_tool`` uses ``update_current_span`` from
+inside its body to set its own ``metric_collection`` — exercising the
+placeholder push/pop path that flips AgentCore from "Bad" to "Good" in
+the integrations matrix.
+"""
+
+from typing import Dict, List, Optional
+
 from bedrock_agentcore import BedrockAgentCoreApp
 from strands import Agent, tool
+
 from deepeval.integrations.agentcore import instrument_agentcore
-from deepeval.prompt import Prompt
-from deepeval.metrics import BaseMetric
+from deepeval.tracing import update_current_span
 
 
 @tool
 def special_tool(query: str) -> str:
-    """A tool to test tool metric collections."""
+    """A tool used by feature tests.
+
+    Mutates its own span via ``update_current_span(...)`` so the
+    placeholder push/pop pattern is exercised end-to-end. With the
+    POC migration this lands on ``confident.span.metric_collection``
+    of THIS tool span (no longer a no-op as it was under the old
+    ``is_test_mode`` path)."""
+    update_current_span(metric_collection="special_tool_v1")
     return f"Processed: {query}"
 
 
@@ -18,14 +43,10 @@ def init_evals_agentcore(
     metadata: Dict = None,
     thread_id: str = None,
     user_id: str = None,
-    metric_collection: str = None,
-    agent_metric_collection: str = None,
-    llm_metric_collection: str = None,
-    tool_metric_collection_map: Dict = None,
-    trace_metric_collection: str = None,
-    confident_prompt: Prompt = None,
-    agent_metrics: List[BaseMetric] = None,
+    metric_collection: Optional[str] = None,
 ):
+    """Wire deepeval OTel pipeline + a Strands agent with one
+    ``update_current_span``-using tool. Trace-only kwargs."""
     instrument_agentcore(
         name=name,
         tags=tags or ["agentcore", "evals"],
@@ -33,13 +54,6 @@ def init_evals_agentcore(
         thread_id=thread_id,
         user_id=user_id,
         metric_collection=metric_collection,
-        agent_metric_collection=agent_metric_collection,
-        llm_metric_collection=llm_metric_collection,
-        tool_metric_collection_map=tool_metric_collection_map,
-        trace_metric_collection=trace_metric_collection,
-        confident_prompt=confident_prompt,
-        agent_metrics=agent_metrics,
-        is_test_mode=True,
     )
 
     app = BedrockAgentCoreApp()

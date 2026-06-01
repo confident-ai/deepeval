@@ -2,7 +2,8 @@ from crewai.llm import LLM
 from crewai.crew import Crew
 from crewai.agent import Agent
 from functools import wraps
-from deepeval.tracing.tracing import Observer
+from deepeval.tracing.tracing import Observer, trace_manager
+from deepeval.tracing.integrations import Integration
 from typing import Any
 
 
@@ -18,6 +19,7 @@ def wrap_crew_kickoff():
             metric_collection=metric_collection,
             metrics=metrics,
         ) as observer:
+            _set_observer_integration(observer, Integration.CREW_AI.value)
             result = original_kickoff(self, *args, **kwargs)
             observer.result = str(result) if result else None
 
@@ -38,6 +40,7 @@ def wrap_crew_kickoff_for_each():
             metric_collection=metric_collection,
             metrics=metrics,
         ) as observer:
+            _set_observer_integration(observer, Integration.CREW_AI.value)
             result = original_kickoff_for_each(self, *args, **kwargs)
             observer.result = str(result) if result else None
 
@@ -58,6 +61,7 @@ def wrap_crew_kickoff_async():
             metric_collection=metric_collection,
             metrics=metrics,
         ) as observer:
+            _set_observer_integration(observer, Integration.CREW_AI.value)
             result = await original_kickoff_async(self, *args, **kwargs)
             observer.result = str(result) if result else None
 
@@ -78,6 +82,7 @@ def wrap_crew_kickoff_for_each_async():
             metric_collection=metric_collection,
             metrics=metrics,
         ) as observer:
+            _set_observer_integration(observer, Integration.CREW_AI.value)
             result = await original_kickoff_for_each_async(
                 self, *args, **kwargs
             )
@@ -103,6 +108,7 @@ def wrap_crew_akickoff():
             metric_collection=metric_collection,
             metrics=metrics,
         ) as observer:
+            _set_observer_integration(observer, Integration.CREW_AI.value)
             result = await original_akickoff(self, *args, **kwargs)
             observer.result = str(result) if result else None
 
@@ -126,6 +132,7 @@ def wrap_crew_akickoff_for_each():
             metric_collection=metric_collection,
             metrics=metrics,
         ) as observer:
+            _set_observer_integration(observer, Integration.CREW_AI.value)
             result = await original_akickoff_for_each(self, *args, **kwargs)
             observer.result = str(result) if result else None
 
@@ -146,6 +153,7 @@ def wrap_agent_execute_task():
             metric_collection=metric_collection,
             metrics=metrics,
         ) as observer:
+            _set_observer_integration(observer, Integration.CREW_AI.value)
             result = original_execute_task(self, *args, **kwargs)
             observer.result = str(result) if result else None
         return result
@@ -168,6 +176,7 @@ def wrap_agent_aexecute_task():
             metric_collection=metric_collection,
             metrics=metrics,
         ) as observer:
+            _set_observer_integration(observer, Integration.CREW_AI.value)
             result = await original_aexecute_task(self, *args, **kwargs)
             observer.result = str(result) if result else None
         return result
@@ -179,3 +188,9 @@ def _check_metrics_and_metric_collection(obj: Any):
     metric_collection = getattr(obj, "_metric_collection", None)
     metrics = getattr(obj, "_metrics", None)
     return metric_collection, metrics
+
+
+def _set_observer_integration(observer: Observer, integration: str):
+    span = trace_manager.get_span_by_uuid(observer.uuid)
+    if span:
+        span.integration = integration

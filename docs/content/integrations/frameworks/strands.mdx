@@ -1,0 +1,353 @@
+---
+id: strands
+title: Strands Agents
+sidebar_label: Strands
+---
+
+<IntegrationTagsDisplayer otel={true} cicdEvals={true} traceability={true} />
+
+The [Strands Agents SDK](https://strandsagents.com/) is a Python framework for building agents with tools, streaming, and multi-agent patterns.
+
+The `deepeval` integration auto-instruments Strands apps through OpenTelemetry. Every agent invocation, model call, and tool call becomes a span you can inspect, without wiring trace structure by hand.
+
+<AgentTraceTerminal
+  title="strands_agent · deepeval"
+  ariaLabel="Example Strands agent trace with per-step metric scores"
+  lines={[
+    { kind: "cmd", name: "deepeval test run test_strands_agent.py" },
+    { kind: "blank" },
+    { kind: "root", prefix: "●", name: "test_strands_agent" },
+    { kind: "blank", prefix: "│" },
+    {
+      kind: "agent",
+      prefix: "└─",
+      name: "support_agent",
+      metric: "Task Completion",
+      score: "0.95",
+      duration: "240ms",
+      pass: true,
+    },
+    {
+      kind: "llm",
+      prefix: "   ├─",
+      name: "gpt-4o-mini · plan",
+      metric: "G-Eval",
+      score: "0.43",
+      duration: "96ms",
+      pass: false,
+    },
+    {
+      kind: "tool",
+      prefix: "   ├─",
+      name: 'lookup_order(order_id="A-1001")',
+      duration: "52ms",
+    },
+    {
+      kind: "llm",
+      prefix: "   └─",
+      name: "gpt-4o-mini · respond",
+      metric: "Faithfulness",
+      score: "0.94",
+      duration: "88ms",
+      pass: true,
+    },
+    { kind: "blank" },
+    {
+      kind: "summary",
+      name: "Trace score  0.77   ·   2/3 metrics passed",
+      pass: false,
+    },
+  ]}
+/>
+
+`deepeval`'s Strands integration enables you to:
+
+- **Auto-instrument every Strands `Agent` invocation** — each agent call produces a trace, and each agent, LLM, and tool call becomes a component span.
+- **Evaluate traces or model / agent components** with any `deepeval` metric.
+- **Run evals from scripts or CI/CD** — same metrics, different surfaces.
+- **Customize trace and span data at runtime** from tool bodies, wrappers, or staged span config.
+
+:::tip
+If you deploy the same Strands agent on [Amazon Bedrock AgentCore](https://aws.amazon.com/bedrock/agentcore/), use the [AgentCore integration](/integrations/frameworks/agentcore) when your outer boundary is the AgentCore app entrypoint. Use **Strands** (`instrument_strands`) when you run Strands directly (scripts, services, notebooks) without the AgentCore runtime wrapper.
+:::
+
+## Getting Started
+
+<Steps>
+
+<Step>
+
+### Installation
+
+```bash
+pip install -U deepeval strands-agents
+```
+
+Under the hood the integration registers an OpenTelemetry span processor that translates Strands spans into `deepeval` traces.
+
+</Step>
+
+<Step>
+
+### Instrument and evaluate
+
+Call `instrument_strands(...)` before creating or invoking your Strands agent. From that point on, Strands spans are available to `deepeval`.
+
+```python title="strands_agent.py" showLineNumbers
+import os
+
+from strands import Agent
+from strands.models.openai import OpenAIModel
+
+from deepeval.integrations.strands import instrument_strands
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+instrument_strands()
+
+model = OpenAIModel(
+    client_args={"api_key": os.environ["OPENAI_API_KEY"]},
+    model_id="gpt-4o-mini",
+)
+agent = Agent(model=model, system_prompt="You are a helpful assistant.")
+
+# Goldens are the inputs you want to evaluate.
+dataset = EvaluationDataset(goldens=[Golden(input="Help me return my order.")])
+
+# `evals_iterator` loops through goldens and applies metrics.
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    agent(golden.input)  # Produces trace for evaluation
+```
+
+Done ✅. You've run your first eval with full traceability into Strands via `deepeval`.
+
+</Step>
+
+</Steps>
+
+## What gets traced
+
+Each Strands agent invocation produces a **trace** — the end-to-end unit your user observes. Inside that trace are **component spans** for each step the agent took:
+
+- **Agent spans** — Strands agent invocations and agent workflow steps.
+- **LLM spans** — model calls emitted through Strands.
+- **Tool spans** — tool calls and function executions.
+
+```text
+Trace                                    ← what the user observes
+└── Agent: support_agent                 ← one Strands agent invocation
+    ├── LLM: gpt-4o-mini                 ← component span: model plans
+    ├── Tool: lookup_order               ← component span: tool input + output
+    └── LLM: gpt-4o-mini                 ← component span: final answer
+```
+
+The trace and its component spans are independently evaluable.
+
+## Running evals
+
+There are two surfaces for running evals against a Strands agent. Pick by where you want results to surface — your terminal during development, or your CI pipeline as a pass/fail gate.
+
+### In CI/CD (pytest)
+
+Use the `deepeval` pytest integration. Each parametrized test invocation becomes one agent run; failing metrics fail the test, which fails the build.
+
+```python title="test_strands_agent.py" showLineNumbers
+import os
+
+import pytest
+
+from strands import Agent
+from strands.models.openai import OpenAIModel
+
+from deepeval import assert_test
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.integrations.strands import instrument_strands
+from deepeval.metrics import TaskCompletionMetric
+
+instrument_strands()
+
+model = OpenAIModel(
+    client_args={"api_key": os.environ["OPENAI_API_KEY"]},
+    model_id="gpt-4o-mini",
+)
+agent = Agent(model=model)
+
+dataset = EvaluationDataset(goldens=[
+    Golden(input="Help me return my order."),
+    Golden(input="Explain my refund options."),
+])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_strands_agent(golden: Golden):
+    agent(golden.input)
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Run it with:
+
+```bash
+deepeval test run test_strands_agent.py
+```
+
+### In a script
+
+Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one agent invocation; metrics score the resulting trace.
+
+```python title="strands_agent.py" showLineNumbers
+dataset = EvaluationDataset(goldens=[
+    Golden(input="Help me return my order."),
+    Golden(input="Explain my refund options."),
+])
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    agent(golden.input)
+```
+
+## Applying metrics to components
+
+The `metrics=[...]` you passed to `evals_iterator` evaluates the **trace**. To evaluate a **component** instead — a specific LLM call or agent span — stage the metric with the appropriate `next_*_span(...)` wrapper before calling the agent.
+
+### Agent spans
+
+```python title="strands_agent.py" showLineNumbers
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.tracing import next_agent_span
+...
+
+def run_strands(prompt: str):
+    with next_agent_span(metrics=[TaskCompletionMetric()]):
+        return agent(prompt)
+```
+
+### LLM calls
+
+```python title="strands_agent.py" showLineNumbers
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.tracing import next_llm_span
+...
+
+def run_strands(prompt: str):
+    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
+        return agent(prompt)
+```
+
+For deterministic tool calls, prefer `update_current_span(...)` to add metadata, inputs, and outputs instead of attaching metrics to the tool span.
+
+## Customizing trace and span data at runtime
+
+Trace-level fields you pass to `instrument_strands(...)` are defaults. For anything dynamic, the right API depends on where your code runs.
+
+Strands creates most of the trace structure for you, which means the agent, LLM, and tool spans are mostly hidden behind the app invocation. Calls like `update_current_trace(...)` and `update_current_span(...)` only work while there is an active `deepeval` trace/span in context. In practice, tool bodies are the clearest mutation point, because Strands has already opened the trace and tool span before your function runs.
+
+If you need to customize from outside a tool, use `instrument_strands(...)` for static defaults, `next_*_span(...)` to stage config for the next Strands-created span, or `@observe` / `with trace(...)` when you own the outer operation.
+
+### Trace-level fields from inside a tool
+
+```python title="strands_agent.py" showLineNumbers
+from deepeval.tracing import update_current_trace
+...
+
+def lookup_order(order_id: str) -> dict:
+    order = orders_db.get(order_id)
+    update_current_trace(user_id=order["user_id"], metadata={"order_id": order_id})
+    return order
+```
+
+### Span-level fields from inside a tool
+
+```python title="strands_agent.py" showLineNumbers
+from deepeval.tracing import update_current_span
+...
+
+def lookup_order(order_id: str) -> dict:
+    order = orders_db.get(order_id)
+    update_current_span(metadata={"order_id": order_id}, output=order)
+    return order
+```
+
+## Advanced patterns
+
+The primitives above — `instrument_strands(...)`, `@observe`, `with trace(...)`, `next_*_span(...)`, `update_current_*(...)` — compose around one boundary: Strands owns the auto-instrumented spans, and your code customizes them from the places it can actually see.
+
+### Evaluate subagents with `next_*_span`
+
+`next_*_span(metrics=[...])` stages a metric for the next matching Strands component span. Use this when you want to evaluate a subagent or model step instead of the full trace. Pick the helper that matches the span you want to score: `next_agent_span(...)` or `next_llm_span(...)`.
+
+```python title="strands_agent.py" showLineNumbers
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.tracing import next_agent_span
+...
+
+def run_agent(prompt: str):
+    with next_agent_span(metrics=[TaskCompletionMetric()]):
+        return agent(prompt)
+```
+
+#### No trace-level metrics required
+
+Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because the `TaskCompletionMetric` is attached to the next agent span, so CI/CD and scripts only need to run the subagent.
+
+This is how you'd run it:
+
+<Tabs items={["CI/CD", "Scripts"]}>
+<Tab value="CI/CD">
+
+```python title="test_strands_agent.py" showLineNumbers
+import pytest
+from deepeval import assert_test
+...
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_agent_span(golden: Golden):
+    run_agent(golden.input)
+    assert_test(golden=golden)
+```
+
+Then finally:
+
+```bash
+deepeval test run test_strands_agent.py
+```
+
+</Tab>
+<Tab value="Scripts">
+
+```python title="strands_agent.py" showLineNumbers
+...
+
+for golden in dataset.evals_iterator():
+    run_agent(golden.input)
+```
+
+</Tab>
+</Tabs>
+
+### Wrap a Strands invocation in `@observe`
+
+When the agent is part of a larger operation, decorate the outer function with `@observe`. Strands spans nest under your observed span automatically.
+
+```python title="strands_agent.py" showLineNumbers
+from deepeval.tracing import observe
+...
+
+@observe(name="respond_to_user")
+def respond_to_user(prompt: str) -> str:
+    result = agent(prompt)
+    return result.message.get("content", [{}])[0].get("text", "")
+```
+
+## API reference
+
+`instrument_strands(...)` accepts the following trace-level kwargs. Each one is a default; runtime calls always win.
+
+| Kwarg               | Type        | Description                                                                |
+| ------------------- | ----------- | -------------------------------------------------------------------------- |
+| `name`              | `str`       | Default trace name. Override at runtime via `update_current_trace`.        |
+| `thread_id`         | `str`       | Default thread identifier. Useful for grouping conversational turns.       |
+| `user_id`           | `str`       | Default actor identifier. Override per-request via `update_current_trace`. |
+| `metadata`          | `dict`      | Default trace metadata. Merged with runtime overrides; runtime wins.       |
+| `tags`              | `list[str]` | Default tags applied to every trace produced by this app.                  |
+| `environment`       | `str`       | One of `"development"`, `"staging"`, `"production"`, `"testing"`.          |
+| `metric_collection` | `str`       | Default metric collection applied at the trace level.                      |
+
+For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_span`, `next_llm_span`) and the test-decorator surface (`@observe`, `@assert_test`, `with trace(...)`), see the [tracing reference](/docs/evaluation-llm-tracing).

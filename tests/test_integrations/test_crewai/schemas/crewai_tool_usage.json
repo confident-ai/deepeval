@@ -11,7 +11,8 @@
       "input": {
         "city": "Paris"
       },
-      "output": "Weather in Paris: Cloudy, 65\u00b0F"
+      "output": "Weather in Paris: Cloudy, 65°F",
+      "integration": "CrewAI"
     }
   ],
   "agentSpans": [
@@ -24,18 +25,19 @@
       "startTime": "2026-02-15T10:23:52.428Z",
       "endTime": "2026-02-15T10:23:54.518Z",
       "input": "Check the weather in Paris. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary.",
-      "output": "Weather in Paris: Cloudy, 65\u00b0F",
+      "output": "Weather in Paris: Cloudy, 65°F",
       "toolsCalled": [
         {
           "name": "get_weather",
-          "output": "Weather in Paris: Cloudy, 65\u00b0F",
+          "output": "Weather in Paris: Cloudy, 65°F",
           "inputParameters": {
             "city": "Paris"
           }
         }
       ],
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "CrewAI"
     }
   ],
   "llmSpans": [
@@ -74,15 +76,17 @@
           "role": "tool",
           "tool_call_id": "call_CTv22wDJzsAecSJkXa4Q2WBa",
           "name": "get_weather",
-          "content": "Weather in Paris: Cloudy, 65\u00b0F"
+          "content": "Weather in Paris: Cloudy, 65°F"
         },
         {
           "role": "user",
           "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
         }
       ],
-      "output": "Weather in Paris: Cloudy, 65\u00b0F",
-      "model": "gpt-4o-mini"
+      "output": "Weather in Paris: Cloudy, 65°F",
+      "model": "gpt-4o-mini",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "d90045e8-451e-44e8-b670-b6d4c6b1dc6d",
@@ -112,7 +116,9 @@
           "type": "function"
         }
       ],
-      "model": "gpt-4o-mini"
+      "model": "gpt-4o-mini",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -128,7 +134,8 @@
       "input": {
         "city": "Paris"
       },
-      "output": "Weather in Paris: Cloudy, 65\u00b0F"
+      "output": "Weather in Paris: Cloudy, 65°F",
+      "integration": "CrewAI"
     }
   ],
   "startTime": "2026-02-15T10:23:52.422Z",
@@ -137,6 +144,6 @@
   "input": {
     "city": "Paris"
   },
-  "output": "Weather in Paris: Cloudy, 65\u00b0F",
+  "output": "Weather in Paris: Cloudy, 65°F",
   "status": "SUCCESS"
 }

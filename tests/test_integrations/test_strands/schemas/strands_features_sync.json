@@ -1,0 +1,120 @@
+{
+  "uuid": "5c5750b4674172b08a0c9d337ed2c120",
+  "baseSpans": [
+    {
+      "uuid": "b82f381bd296efc1",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "04b381d034f6cedd",
+      "startTime": "2026-05-07T11:39:39.136Z",
+      "endTime": "2026-05-07T11:39:40.037Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
+      "output": "{'toolUse': {'toolUseId': 'call_UghGzjp1vnuwMyzKg2R6DPnK', 'name': 'special_tool', 'input': {'query': 'Sync Data'}}}",
+      "integration": "Strands"
+    },
+    {
+      "uuid": "814d6638b8be267e",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "04b381d034f6cedd",
+      "startTime": "2026-05-07T11:39:38.072Z",
+      "endTime": "2026-05-07T11:39:39.135Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
+      "output": "{'toolUse': {'toolUseId': 'call_UghGzjp1vnuwMyzKg2R6DPnK', 'name': 'special_tool', 'input': {'query': 'Sync Data'}}}",
+      "integration": "Strands"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "04b381d034f6cedd",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T11:39:38.072Z",
+      "endTime": "2026-05-07T11:39:40.037Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
+      "output": "The query 'Sync Data' has been processed.\n",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricCollection": "agent_metrics_v1",
+      "integration": "Strands"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "c4d8de9031a6113b",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "b82f381bd296efc1",
+      "startTime": "2026-05-07T11:39:39.136Z",
+      "endTime": "2026-05-07T11:39:40.036Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
+      "output": "The query 'Sync Data' has been processed.",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 163.0,
+      "outputTokenCount": 11.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
+    },
+    {
+      "uuid": "a116118b526f797b",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "814d6638b8be267e",
+      "startTime": "2026-05-07T11:39:38.072Z",
+      "endTime": "2026-05-07T11:39:39.134Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
+      "output": "{'toolUse': {'toolUseId': 'call_UghGzjp1vnuwMyzKg2R6DPnK', 'name': 'special_tool', 'input': {'query': 'Sync Data'}}}",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 136.0,
+      "outputTokenCount": 15.0,
+      "metricCollection": "llm_metrics_v1",
+      "integration": "Strands",
+      "provider": "OpenAI"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "eb71277ae0954315",
+      "name": "execute_tool special_tool",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "814d6638b8be267e",
+      "startTime": "2026-05-07T11:39:39.134Z",
+      "endTime": "2026-05-07T11:39:39.135Z",
+      "output": "Processed: Sync Data",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "inputParameters": {}
+        }
+      ],
+      "metricCollection": "special_tool_v1",
+      "integration": "Strands"
+    }
+  ],
+  "startTime": "2026-05-07T11:39:38.072Z",
+  "endTime": "2026-05-07T11:39:40.037Z",
+  "name": "strands-full-features-sync",
+  "metadata": {
+    "env": "testing",
+    "priority": "high"
+  },
+  "tags": [
+    "strands",
+    "features",
+    "sync"
+  ],
+  "environment": "development",
+  "threadId": "thread-sync-features-001",
+  "userId": "user-sync-001",
+  "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
+  "output": "The query 'Sync Data' has been processed.\n",
+  "status": "SUCCESS",
+  "metricCollection": "trace_metrics_override_v1"
+}

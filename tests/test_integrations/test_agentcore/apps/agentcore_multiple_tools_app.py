@@ -1,5 +1,6 @@
 from bedrock_agentcore import BedrockAgentCoreApp
 from strands import Agent, tool
+
 from deepeval.integrations.agentcore import instrument_agentcore
 
 
@@ -34,13 +35,15 @@ def init_multiple_tools_agentcore(
     thread_id: str = None,
     user_id: str = None,
 ):
+    """Trace-level setup for the multiple-tools fixture. Per-tool /
+    per-agent metric collections belong on ``with next_*_span(...)``
+    blocks at the call site, not here."""
     instrument_agentcore(
         name=name,
         tags=tags or ["agentcore", "multiple-tools"],
         metadata=metadata or {"test_type": "multiple_tools"},
         thread_id=thread_id,
         user_id=user_id,
-        is_test_mode=True,
     )
 
     app = BedrockAgentCoreApp()

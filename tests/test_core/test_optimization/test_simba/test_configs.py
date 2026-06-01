@@ -1,38 +1,42 @@
 from __future__ import annotations
 
-import pytest
+import random
 
 from deepeval.optimizer.algorithms import SIMBA
 
 
-def test_simba_defaults():
-    """
-    SIMBA should have sensible defaults for all parameters.
-    """
+def test_simba_defaults() -> None:
     algo = SIMBA()
-
-    # Base defaults
-    assert algo.iterations == 5
-    assert algo.population_size == 4
-    assert algo.proposals_per_step == 4
-    assert algo.minibatch_size == 8
-
-    # SIMBA-specific defaults
-    assert algo.max_demos_per_proposal == 3
+    assert algo.iterations == 8
+    assert algo.minibatch_size == 15
+    assert algo.num_candidates == 4
+    assert algo.num_samples == 3
+    assert algo.minibatch_full_eval_steps == 4
+    assert isinstance(algo.random_state, random.Random)
+    assert isinstance(algo.seed, int)
 
 
-def test_simba_allows_zero_demos():
-    """
-    max_demos_per_proposal can be set to 0 to effectively disable
-    APPEND_DEMO, leaving SIMBA in a rule-only configuration.
-    """
-    algo = SIMBA(max_demos_per_proposal=0)
-    assert algo.max_demos_per_proposal == 0
+def test_simba_accepts_explicit_random_state() -> None:
+    r = random.Random(42)
+    algo = SIMBA(random_state=r)
+    assert algo.random_state is r
+    assert isinstance(algo.seed, int)
 
 
-def test_simba_rejects_negative_demos():
-    """
-    max_demos_per_proposal is constrained to be >= 0.
-    """
-    with pytest.raises(ValueError):
-        SIMBA(max_demos_per_proposal=-1)
+def test_simba_int_random_state_sets_seed() -> None:
+    algo = SIMBA(random_state=7)
+    assert algo.seed == 7
+    assert isinstance(algo.random_state, random.Random)
+
+
+def test_simba_allows_minimal_hyperparameters() -> None:
+    algo = SIMBA(
+        iterations=1,
+        minibatch_size=2,
+        num_candidates=1,
+        num_samples=2,
+        minibatch_full_eval_steps=1,
+        random_state=0,
+    )
+    assert algo.iterations == 1
+    assert algo.num_candidates == 1
