@@ -48,6 +48,8 @@ class MetricData(BaseModel):
     evaluation_model: Optional[str] = Field(None, alias="evaluationModel")
     error: Optional[str] = None
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
+    input_tokens: Optional[int] = Field(None, alias="inputTokenCount")
+    output_tokens: Optional[int] = Field(None, alias="outputTokenCount")
     verbose_logs: Optional[str] = Field(None, alias="verboseLogs")
 
 

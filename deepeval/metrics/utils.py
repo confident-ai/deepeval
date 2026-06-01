@@ -58,6 +58,7 @@ from deepeval.metrics import (
     BaseArenaMetric,
 )
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
+from deepeval.models.utils import EvaluationCost
 from deepeval.test_case import (
     LLMTestCase,
     SingleTurnParams,
@@ -453,6 +454,24 @@ SchemaType = TypeVar("SchemaType")
 ReturnType = TypeVar("ReturnType")
 
 
+def accrue_token_usage(
+    metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
+    cost: Optional[float],
+) -> None:
+    """Accrue the input/output token counts that produced ``cost`` onto the
+    metric.
+
+    Native models return their cost as an ``EvaluationCost`` (a ``float``
+    subclass carrying ``input_tokens``/``output_tokens``). Costs from providers
+    that aren't wrapped yet — or ``None`` when pricing is unknown — are plain
+    floats with no token data, so tokens are only accrued when ``cost`` actually
+    carries them. Call this right after ``metric._accrue_cost(cost)`` so token
+    usage tracks cost exactly.
+    """
+    if isinstance(cost, EvaluationCost):
+        metric._accrue_tokens(cost.input_tokens, cost.output_tokens)
+
+
 def generate_with_schema_and_extract(
     metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
     prompt: Any,
@@ -473,6 +492,7 @@ def generate_with_schema_and_extract(
             prompt, schema=schema_cls
         )
         metric._accrue_cost(cost)
+        accrue_token_usage(metric, cost)
     else:
         result = metric.model.generate_with_schema(prompt, schema=schema_cls)
     if isinstance(result, schema_cls):
@@ -494,6 +514,7 @@ async def a_generate_with_schema_and_extract(
             prompt, schema=schema_cls
         )
         metric._accrue_cost(cost)
+        accrue_token_usage(metric, cost)
     else:
         result = await metric.model.a_generate_with_schema(
             prompt, schema=schema_cls
@@ -504,6 +525,7 @@ async def a_generate_with_schema_and_extract(
         actual_result, cost = result
         if hasattr(metric, "_accrue_cost"):
             metric._accrue_cost(cost)
+            accrue_token_usage(metric, cost)
         result = actual_result
 
     if isinstance(result, schema_cls):
