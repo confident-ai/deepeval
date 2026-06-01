@@ -1,11 +1,14 @@
 import os
+
 import pytest
+
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.tracing import next_agent_span, next_llm_span, next_tool_span
 from tests.test_integrations.utils import (
     assert_trace_json,
     generate_trace_json,
     is_generate_mode,
 )
-from deepeval.metrics import AnswerRelevancyMetric
 
 from tests.test_integrations.test_agentcore.apps.agentcore_simple_app import (
     init_simple_agentcore,
@@ -84,19 +87,27 @@ class TestToolApp:
 
     @trace_test("agentcore_tool_metric_collection_schema.json")
     def test_tool_metric_collection(self):
+        """Tool-level metric_collection now flows through
+        ``with next_tool_span(metric_collection=...)`` at the call
+        site instead of a top-level ``tool_metric_collection_map``
+        kwarg on ``instrument_agentcore``.
+
+        ``next_tool_span`` is one-shot — it hits the FIRST tool span
+        emitted inside the ``with`` block, which matches the
+        single-tool-call test below."""
         invoke_func = init_tool_agentcore(
             name="agentcore-tool-metric-test",
             tags=["agentcore", "tool", "metric-collection"],
             metadata={"test_type": "tool_metric_collection"},
             thread_id="tool-metric-123",
             user_id="test-user",
-            tool_metric_collection_map={"calculate": "calculator-metrics"},
         )
 
-        result = invoke_tool_agent(
-            "What is 15 plus 25?",
-            invoke_func=invoke_func,
-        )
+        with next_tool_span(metric_collection="calculator-metrics"):
+            result = invoke_tool_agent(
+                "What is 15 plus 25?",
+                invoke_func=invoke_func,
+            )
 
         assert result is not None
         assert "40" in result
@@ -162,6 +173,17 @@ class TestMultipleToolsApp:
 
 
 class TestDeepEvalFeatures:
+    """Span-level configuration migrates to per-call ``with next_*_span(...)``.
+
+    Previously ``init_evals_agentcore`` accepted
+    ``agent_metric_collection`` / ``llm_metric_collection`` /
+    ``tool_metric_collection_map`` / ``agent_metrics`` and stamped them
+    onto every span at instrument time. Now the test wraps the agent
+    invocation in stacked ``with`` blocks that stage values for the
+    next agent / LLM / tool span emitted inside the wrapper. The
+    ``special_tool`` itself uses ``update_current_span(...)`` from
+    inside its body for its own metric collection — handled in
+    ``apps/agentcore_eval_app.py``."""
 
     @trace_test("agentcore_features_sync.json")
     def test_full_features_sync(self):
@@ -171,17 +193,16 @@ class TestDeepEvalFeatures:
             metadata={"env": "testing", "priority": "high"},
             thread_id="thread-sync-features-001",
             user_id="user-sync-001",
-            metric_collection="trace_metrics_v1",
-            agent_metric_collection="agent_metrics_v1",
-            llm_metric_collection="llm_metrics_v1",
-            tool_metric_collection_map={"special_tool": "tool_metrics_v1"},
-            trace_metric_collection="trace_metrics_override_v1",
-            agent_metrics=[AnswerRelevancyMetric()],
+            metric_collection="trace_metrics_override_v1",
         )
 
-        result = invoke_evals_agent(
-            "Use the special_tool to process 'Sync Data'",
-            invoke_func=invoke_func,
-        )
+        with next_agent_span(
+            metric_collection="agent_metrics_v1",
+            metrics=[AnswerRelevancyMetric()],
+        ), next_llm_span(metric_collection="llm_metrics_v1"):
+            result = invoke_evals_agent(
+                "Use the special_tool to process 'Sync Data'",
+                invoke_func=invoke_func,
+            )
 
         assert result is not None

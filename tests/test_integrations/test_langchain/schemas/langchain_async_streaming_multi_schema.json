@@ -116,7 +116,8 @@
             "symbol": "TSLA"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -181,7 +182,9 @@
         "2026-03-19T07:45:22.038117Z": "",
         "2026-03-19T07:45:22.092173Z": "",
         "2026-03-19T07:45:22.092517Z": ""
-      }
+      },
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d050e-574b-7302-af12-f0c660898ffb",
@@ -232,7 +235,9 @@
         "2026-03-19T07:45:20.767437Z": "",
         "2026-03-19T07:45:20.767753Z": "",
         "2026-03-19T07:45:20.768241Z": ""
-      }
+      },
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -256,7 +261,8 @@
         "name": "get_stock_price",
         "tool_call_id": "call_1ZEWdrPMWemO6N3T61KcyVi2",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:45:19.179Z",

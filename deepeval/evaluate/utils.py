@@ -64,6 +64,8 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
             evaluationModel=metric.evaluation_model,
             error=metric.error,
             evaluationCost=metric.evaluation_cost,
+            inputTokenCount=metric.input_tokens,
+            outputTokenCount=metric.output_tokens,
             verboseLogs=metric.verbose_logs,
         )
     else:
@@ -77,6 +79,8 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
             evaluationModel=metric.evaluation_model,
             error=None,
             evaluationCost=metric.evaluation_cost,
+            inputTokenCount=metric.input_tokens,
+            outputTokenCount=metric.output_tokens,
             verboseLogs=metric.verbose_logs,
         )
 
@@ -93,6 +97,8 @@ def create_arena_metric_data(metric: ArenaGEval, contestant: str) -> MetricData:
             evaluationModel=metric.evaluation_model,
             error=metric.error,
             evaluationCost=metric.evaluation_cost,
+            inputTokenCount=metric.input_tokens,
+            outputTokenCount=metric.output_tokens,
             verboseLogs=metric.verbose_logs,
         )
     else:
@@ -106,6 +112,8 @@ def create_arena_metric_data(metric: ArenaGEval, contestant: str) -> MetricData:
             evaluationModel=metric.evaluation_model,
             error=None,
             evaluationCost=metric.evaluation_cost,
+            inputTokenCount=metric.input_tokens,
+            outputTokenCount=metric.output_tokens,
             verboseLogs=metric.verbose_logs,
         )
 
@@ -114,6 +122,7 @@ def create_test_result(
     api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
 ) -> TestResult:
     name = api_test_case.name
+    index = api_test_case.order
 
     if isinstance(api_test_case, ConversationalApiTestCase):
         return TestResult(
@@ -121,6 +130,7 @@ def create_test_result(
             success=api_test_case.success,
             metrics_data=api_test_case.metrics_data,
             conversational=True,
+            index=index,
             metadata=api_test_case.metadata,
             turns=api_test_case.turns,
         )
@@ -134,6 +144,7 @@ def create_test_result(
                 input=api_test_case.input,
                 actual_output=api_test_case.actual_output,
                 conversational=False,
+                index=index,
                 multimodal=True,
                 metadata=api_test_case.metadata,
             )
@@ -148,6 +159,7 @@ def create_test_result(
                 context=api_test_case.context,
                 retrieval_context=api_test_case.retrieval_context,
                 conversational=False,
+                index=index,
                 multimodal=False,
                 metadata=api_test_case.metadata,
             )
@@ -163,6 +175,34 @@ def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
     # problem. The truthiness check cleanly covers the "absent" cases
     # (`None`, `{}`, `""`) that would otherwise show as garbage in the
     # trace-level Metrics Summary and break `filter_duplicate_results`.
+    #
+    # Span lists start empty and are populated by the eval-iterator's
+    # DFS walker (``_a_execute_span_test_case`` / its sync twin), which
+    # categorizes each visited span by isinstance and appends to the
+    # matching ``trace_api.*_spans`` list. We DON'T pre-populate from
+    # ``trace.root_spans`` here because the walker is also responsible
+    # for attaching per-span metric data, error flags, and trace dicts —
+    # doing it twice (here + walker) would either double-emit or require
+    # the walker to dedupe.
+    #
+    # Trace-level fields (``name``, ``tags``, ``thread_id``, ``user_id``,
+    # ``metadata``, ``environment``) are forwarded from the trace so that
+    # OTel-based integrations whose users configured them via instrumentation
+    # settings or ``update_current_trace(...)`` see them on the dashboard.
+    # The non-eval REST path (``trace_manager.create_trace_api``) already
+    # forwards these; mirror its shape here so the eval-iterator path
+    # doesn't silently drop them.
+    #
+    # ``metadata`` sources from ``trace.metadata`` (user-configured
+    # at instrument time or via ``update_current_trace(...)``). It does
+    # NOT source from ``golden.additional_metadata`` here — that field
+    # already populates ``LLMTestCase.metadata`` at every callsite that
+    # builds a test case from a golden, which is the correct home for
+    # per-row evaluation context. Conflating the two layers (test-case
+    # metadata vs trace metadata) silently overwrote whatever the user
+    # configured on the trace, which is the opposite of what we want:
+    # the user owns trace metadata, the golden owns test-case metadata,
+    # both flow to their respective surfaces.
     return TraceApi(
         uuid=trace.uuid,
         baseSpans=[],
@@ -184,10 +224,22 @@ def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
         output=trace.output,
         expected_output=trace.expected_output,
         context=trace.context,
-        retrieval_context=trace.retrieval_context,
+        retrieval_context=(
+            [
+                rc.context if hasattr(rc, "context") else rc
+                for rc in trace.retrieval_context
+            ]
+            if trace.retrieval_context
+            else None
+        ),
         tools_called=trace.tools_called,
         expected_tools=trace.expected_tools,
-        metadata=golden.additional_metadata,
+        metadata=trace.metadata,
+        name=trace.name,
+        tags=trace.tags,
+        threadId=trace.thread_id,
+        userId=trace.user_id,
+        environment=trace.environment,
         status=(
             TraceSpanApiStatus.SUCCESS
             if trace.status == TraceSpanStatus.SUCCESS
@@ -487,21 +539,10 @@ def count_metrics_in_span_subtree(span: BaseSpan) -> int:
 
 def extract_trace_test_results(trace_api: TraceApi) -> List[TestResult]:
     test_results: List[TestResult] = []
-    # extract trace result
-    if trace_api.metrics_data:
-        test_results.append(
-            TestResult(
-                name=trace_api.name,
-                success=True,
-                metrics_data=trace_api.metrics_data,
-                conversational=False,
-                input=trace_api.input,
-                actual_output=trace_api.output,
-                expected_output=trace_api.expected_output,
-                context=trace_api.context,
-                retrieval_context=trace_api.retrieval_context,
-            )
-        )
+    # Do not emit trace-level ``trace_api.metrics_data`` as its own ``TestResult``.
+    # The golden ``api_test_case`` path already records those rows via
+    # ``update_metric_data``; emitting them again here was the root cause of an
+    # extra dashboard panel (wrong ``name`` / ``success`` vs the main case).
     # extract base span results
     for span in trace_api.base_spans:
         test_results.extend(extract_span_test_results(span))

@@ -32,15 +32,15 @@ from deepeval.config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
-# Monkey patch shutil.rmtree to handle locked files better on Windows
-original_rmtree = shutil.rmtree
-
 
 def safe_rmtree(
     path,
     *args,
     **kwargs,
 ):
+    """Windows-tolerant rmtree for ChromaDB temp dirs. Call explicitly
+    instead of monkey-patching ``shutil.rmtree`` (which would leak into
+    unrelated callers like pytest tmpdir cleanup)."""
     if not os.path.exists(path):
         return
     for _ in range(3):
@@ -61,7 +61,7 @@ def safe_rmtree(
                     capture_output=True,
                 )
             kwargs["ignore_errors"] = True
-            original_rmtree(path, *args, **kwargs)
+            shutil.rmtree(path, *args, **kwargs)
             print_synthesizer_status(
                 SynthesizerStatus.SUCCESS,
                 "Successfully deleted",
@@ -98,7 +98,6 @@ def _release_chroma_client(client):
 
 
 atexit.register(close_chroma_clients)
-shutil.rmtree = safe_rmtree
 
 
 class ContextScore(BaseModel):
@@ -312,7 +311,7 @@ class ContextGenerator:
         finally:
             _release_chroma_client(client)
             if os.path.exists(temp_root):
-                shutil.rmtree(temp_root)
+                safe_rmtree(temp_root)
 
     async def a_generate_contexts(
         self,
@@ -469,7 +468,7 @@ class ContextGenerator:
         finally:
             _release_chroma_client(client)
             if os.path.exists(temp_root):
-                shutil.rmtree(temp_root)
+                safe_rmtree(temp_root)
 
     async def _a_process_document_async(
         self,

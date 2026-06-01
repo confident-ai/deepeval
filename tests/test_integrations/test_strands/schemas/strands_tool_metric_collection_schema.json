@@ -1,0 +1,116 @@
+{
+  "uuid": "1c4094fcd1ff1fad0e2024eafb1f451f",
+  "baseSpans": [
+    {
+      "uuid": "46259cbdfd523821",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "075bf93562f634e0",
+      "startTime": "2026-05-07T11:39:29.382Z",
+      "endTime": "2026-05-07T11:39:30.181Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
+      "output": "{'toolUse': {'toolUseId': 'call_TIOLUPlcYgyfJIp3FFY9EVP4', 'name': 'calculate', 'input': {'operation': 'add', 'a': 15, 'b': 25}}}",
+      "integration": "Strands"
+    },
+    {
+      "uuid": "9e51624673f361ae",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "075bf93562f634e0",
+      "startTime": "2026-05-07T11:39:28.358Z",
+      "endTime": "2026-05-07T11:39:29.382Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
+      "output": "{'toolUse': {'toolUseId': 'call_TIOLUPlcYgyfJIp3FFY9EVP4', 'name': 'calculate', 'input': {'operation': 'add', 'a': 15, 'b': 25}}}",
+      "integration": "Strands"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "075bf93562f634e0",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T11:39:28.357Z",
+      "endTime": "2026-05-07T11:39:30.181Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
+      "output": "15 plus 25 is 40.\n",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Strands"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "fdad901df9bff673",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "46259cbdfd523821",
+      "startTime": "2026-05-07T11:39:29.383Z",
+      "endTime": "2026-05-07T11:39:30.180Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
+      "output": "15 plus 25 is 40.",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 115.0,
+      "outputTokenCount": 9.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
+    },
+    {
+      "uuid": "8c3df76e91e1aea0",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "9e51624673f361ae",
+      "startTime": "2026-05-07T11:39:28.358Z",
+      "endTime": "2026-05-07T11:39:29.378Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
+      "output": "{'toolUse': {'toolUseId': 'call_TIOLUPlcYgyfJIp3FFY9EVP4', 'name': 'calculate', 'input': {'operation': 'add', 'a': 15, 'b': 25}}}",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 84.0,
+      "outputTokenCount": 21.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "60b97ccc68a6504b",
+      "name": "execute_tool calculate",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "9e51624673f361ae",
+      "startTime": "2026-05-07T11:39:29.380Z",
+      "endTime": "2026-05-07T11:39:29.381Z",
+      "output": "40.0",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "inputParameters": {}
+        }
+      ],
+      "metricCollection": "calculator-metrics",
+      "integration": "Strands"
+    }
+  ],
+  "startTime": "2026-05-07T11:39:28.357Z",
+  "endTime": "2026-05-07T11:39:30.181Z",
+  "name": "strands-tool-metric-test",
+  "metadata": {
+    "test_type": "tool_metric_collection"
+  },
+  "tags": [
+    "strands",
+    "tool",
+    "metric-collection"
+  ],
+  "environment": "development",
+  "threadId": "tool-metric-123",
+  "userId": "test-user",
+  "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
+  "output": "15 plus 25 is 40.\n",
+  "status": "SUCCESS"
+}

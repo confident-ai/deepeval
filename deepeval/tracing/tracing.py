@@ -1,3 +1,5 @@
+import json
+import re
 import weakref
 from typing import (
     TYPE_CHECKING,
@@ -19,6 +21,7 @@ import random
 import atexit
 import queue
 import uuid
+from deepeval.test_case import MLLMImage
 from openai import OpenAI
 from rich.console import Console
 from rich.progress import Progress
@@ -36,6 +39,7 @@ from deepeval.tracing.api import (
     SpanApiType,
     TraceApi,
     TraceSpanApiStatus,
+    AttachmentApi,
 )
 from deepeval.telemetry import capture_send_trace
 from deepeval.tracing.patchers import (
@@ -60,6 +64,7 @@ from deepeval.tracing.utils import (
     prepare_tool_call_input_parameters,
     replace_self_with_class_name,
     make_json_serializable,
+    normalize_trace_api_span_providers,
     perf_counter_to_datetime,
     to_zod_compatible_iso,
     tracing_enabled,
@@ -67,10 +72,16 @@ from deepeval.tracing.utils import (
     validate_sampling_rate,
 )
 from deepeval.utils import dataclass_to_dict
-from deepeval.tracing.context import current_span_context, current_trace_context
+from deepeval.tracing.context import (
+    apply_pending_to_span,
+    current_span_context,
+    current_trace_context,
+    pop_pending_for,
+)
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.api import PromptApi
 from deepeval.tracing.trace_test_manager import trace_testing_manager
+from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden
@@ -414,11 +425,41 @@ class TraceManager:
                     span.parent_uuid = None
                     trace.root_spans.remove(parent_span)
                     trace.root_spans.append(span)
+                    self._reparent_orphan_roots(trace, span)
                     return
 
                 parent_span.children.append(span)
             else:
                 trace.root_spans.append(span)
+
+        # Adopt any already-rooted spans whose ``parent_uuid`` matches this
+        # span. Without this step, the OTel-via-SimpleSpanProcessor flow
+        # produces sibling roots when a child's ``on_end`` lands at the
+        # exporter BEFORE its parent's: the exporter calls add_span_to_trace
+        # for the child first, finds no parent in ``active_spans``, and parks
+        # the child in ``root_spans``. When the parent finally arrives we
+        # need to re-knit the tree, otherwise the trace ships with multiple
+        # logical roots and downstream walkers (e.g. the evals_iterator DFS
+        # which only visits ``root_spans[0]``) silently drop subtrees.
+        self._reparent_orphan_roots(trace, span)
+
+    @staticmethod
+    def _reparent_orphan_roots(trace: Trace, parent: BaseSpan) -> None:
+        """Move root_spans whose ``parent_uuid == parent.uuid`` under
+        ``parent`` and remove them from ``trace.root_spans``.
+
+        Mutates ``trace.root_spans`` and ``parent.children`` in place. No-op
+        if no orphan roots match. Iterates a snapshot of ``root_spans`` so we
+        can safely remove items as we go.
+        """
+        if not trace.root_spans:
+            return
+        for orphan in list(trace.root_spans):
+            if orphan is parent:
+                continue
+            if orphan.parent_uuid == parent.uuid:
+                trace.root_spans.remove(orphan)
+                parent.children.append(orphan)
 
     def get_trace_by_uuid(self, trace_uuid: str) -> Optional[Trace]:
         """Get a trace by its UUID."""
@@ -558,6 +599,7 @@ class TraceManager:
                 # Build API object & payload
                 if isinstance(trace_obj, TraceApi):
                     trace_api = trace_obj
+                    normalize_trace_api_span_providers(trace_api)
                 else:
                     trace_api = self.create_trace_api(trace_obj)
 
@@ -667,6 +709,7 @@ class TraceManager:
         for trace_api in remaining_traces:
             with capture_send_trace():
                 try:
+                    normalize_trace_api_span_providers(trace_api)
                     try:
                         body = trace_api.model_dump(
                             by_alias=True,
@@ -742,6 +785,11 @@ class TraceManager:
         # Process all spans in the trace iteratively
         span_stack = list(trace.root_spans)  # Start with root spans
 
+        merged_attachment_docs: Dict[str, MLLMImage] = {}
+        trace_docs = self._extract_attachments(trace)
+        if trace_docs:
+            merged_attachment_docs.update(trace_docs)
+
         while span_stack:
             span = span_stack.pop()
 
@@ -751,6 +799,10 @@ class TraceManager:
                         child.parent_uuid = span.parent_uuid
                     span_stack.extend(span.children)
                 continue
+
+            span_docs = self._extract_attachments(span)
+            if span_docs:
+                merged_attachment_docs.update(span_docs)
 
             # Convert BaseSpan to BaseApiSpan
             api_span = self._convert_span_to_api_span(span)
@@ -785,7 +837,17 @@ class TraceManager:
             perf_counter_to_datetime(effective_end_time)
         )
 
-        return TraceApi(
+        api_attachments = None
+        if merged_attachment_docs:
+            api_attachments = {}
+            for doc_id, doc in merged_attachment_docs.items():
+                api_attachments[doc_id] = AttachmentApi(
+                    url=doc.url,
+                    mimeType=doc.mimeType,
+                    dataBase64=doc.dataBase64,
+                )
+
+        trace_api = TraceApi(
             uuid=trace.uuid,
             baseSpans=base_spans,
             agentSpans=agent_spans,
@@ -802,7 +864,14 @@ class TraceManager:
             input=trace.input,
             output=trace.output,
             metricCollection=trace.metric_collection,
-            retrievalContext=trace.retrieval_context,
+            retrievalContext=(
+                [
+                    rc.context if hasattr(rc, "context") else rc
+                    for rc in trace.retrieval_context
+                ]
+                if trace.retrieval_context
+                else None
+            ),
             context=trace.context,
             expectedOutput=trace.expected_output,
             toolsCalled=trace.tools_called,
@@ -818,7 +887,10 @@ class TraceManager:
                 if trace.status == TraceSpanStatus.SUCCESS
                 else TraceSpanApiStatus.ERRORED
             ),
+            attachments=api_attachments,
         )
+        normalize_trace_api_span_providers(trace_api)
+        return trace_api
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
         # Determine span type
@@ -865,13 +937,21 @@ class TraceManager:
             output=output_data,
             metadata=span.metadata,
             error=span.error,
+            integration=span.integration,
             metricCollection=span.metric_collection,
             metricsData=(
                 [create_metric_data(metric) for metric in span.metrics]
                 if span.metrics
                 else None
             ),
-            retrievalContext=span.retrieval_context,
+            retrievalContext=(
+                [
+                    rc.context if hasattr(rc, "context") else rc
+                    for rc in span.retrieval_context
+                ]
+                if span.retrieval_context
+                else None
+            ),
             context=span.context,
             expectedOutput=span.expected_output,
             toolsCalled=span.tools_called,
@@ -890,6 +970,7 @@ class TraceManager:
             api_span.chunk_size = span.chunk_size
         elif isinstance(span, LlmSpan):
             api_span.model = span.model
+            api_span.provider = span.provider
             # api_span.prompt = PromptApi(alias=alias, version=version, hash=hash) # Legacy won't be using anymore
             api_span.cost_per_input_token = span.cost_per_input_token
             api_span.cost_per_output_token = span.cost_per_output_token
@@ -920,6 +1001,29 @@ class TraceManager:
                 api_span.token_intervals = processed_token_intervals
 
         return api_span
+
+    def _extract_attachments(
+        self, obj: Union[Trace, BaseSpan]
+    ) -> Optional[Dict[str, MLLMImage]]:
+        """Scans an object's attributes for multimodal slugs and pulls them from the global registry."""
+        pattern = r"\[DEEPEVAL:(?:IMAGE|PDF):(.*?)]"
+        found_docs: Dict[str, MLLMImage] = {}
+
+        # Supported fields that may contain multimodal content
+        fields_to_scan = [
+            obj.input,
+            obj.output,
+            obj.context,
+            obj.retrieval_context,
+            obj.expected_output,
+        ]
+
+        matches = re.findall(pattern, str(fields_to_scan))
+        for doc_id in matches:
+            if doc_id in _MLLM_IMAGE_REGISTRY:
+                found_docs[doc_id] = _MLLM_IMAGE_REGISTRY[doc_id]
+
+        return found_docs if found_docs else None
 
 
 trace_manager = TraceManager()
@@ -992,6 +1096,23 @@ class Observer:
 
         # Now create the span instance with the correct trace_uuid and parent_uuid
         span_instance = self.create_span_instance()
+
+        # Apply any ``next_*_span(...)`` defaults the user staged before
+        # we push the span into context, so ``update_current_span(...)``
+        # and downstream readers see them as the baseline. Mirrors what
+        # ``SpanInterceptor.on_start`` does for the OTel path; without
+        # this the native ``@observe`` path silently drops staged
+        # ``metrics``/``available_tools``/etc.
+        pending = pop_pending_for(self.span_type)
+        if pending:
+            apply_pending_to_span(span_instance, pending)
+
+        if (
+            parent_span
+            and not getattr(span_instance, "integration", None)
+            and getattr(parent_span, "integration", None)
+        ):
+            span_instance.integration = parent_span.integration
 
         # stash call arguments so they are available during the span lifetime
         setattr(span_instance, "_function_kwargs", self.function_kwargs)

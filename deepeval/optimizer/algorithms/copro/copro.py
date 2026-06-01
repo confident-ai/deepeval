@@ -1,87 +1,40 @@
-# - COPRO cooperative 0-shot variant:
-#   - Works on a single set of goldens (no D_pareto split).
-#   - Maintains a bounded population of candidate prompts
-#     (size controlled by `population_size`).
-#   - At each iteration:
-#       - Select a parent via epsilon-greedy on mean minibatch score.
-#       - Sample a minibatch of goldens for scoring.
-#       - Compute feedback once for the parent + minibatch.
-#       - Propose multiple child prompts cooperatively from the same parent
-#         (up to `proposals_per_step` children).
-#       - For each child, accept it if its minibatch score improves on the
-#         parent by at least `min_delta`, add it to the pool, and prune
-#         low-scoring candidates if the population exceeds `population_size`.
-#   - Uses `full_eval_every` (if set) to periodically re-score the current
-#     best candidate on the full golden set.
-
 from __future__ import annotations
 
+import asyncio
 import random
 import time
 import uuid
-from typing import (
-    TYPE_CHECKING,
-    Awaitable,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Union,
+from typing import Callable, Dict, List, Optional, Tuple, Union
+
+from rich import box
+from rich.table import Table
+
+from deepeval.dataset.golden import Golden, ConversationalGolden
+from deepeval.metrics.utils import copy_metrics
+from deepeval.optimizer.algorithms.copro.proposer import COPROProposer
+from deepeval.optimizer.algorithms.base import BaseAlgorithm
+from deepeval.optimizer.scorer.utils import (
+    _a_measure_no_indicator,
+    _measure_no_indicator,
 )
-
-from deepeval.models.base_model import DeepEvalBaseLLM
-
-from deepeval.errors import DeepEvalError
-from deepeval.optimizer.utils import Aggregator, mean_of_all
 from deepeval.optimizer.types import (
-    AcceptedIterationDict,
+    AcceptedIteration,
+    IterationLogEntry,
     ModuleId,
     OptimizationReport,
     PromptConfiguration,
-    PromptConfigurationId,
     RunnerStatusCallback,
     RunnerStatusType,
     ScoreTable,
 )
-from deepeval.optimizer.scorer.base import BaseScorer
-from deepeval.optimizer.utils import (
-    build_prompt_config_snapshots,
-)
-from deepeval.prompt.api import PromptType
+from deepeval.optimizer.utils import build_prompt_config_snapshots
 from deepeval.prompt.prompt import Prompt
-from deepeval.optimizer.rewriter import Rewriter
-from deepeval.optimizer.algorithms.configs import MIPROV2_MIN_DELTA
-from deepeval.optimizer.algorithms.base import BaseAlgorithm
-
-if TYPE_CHECKING:  # pragma: no cover - type-checking only
-    from deepeval.dataset.golden import ConversationalGolden, Golden
 
 
 class COPRO(BaseAlgorithm):
     """
-    COPRO style cooperative prompt optimization loop with sync/async execution.
-
-    This runner is intentionally low level and does not know about metrics,
-    models, or async configs. It relies on a preconfigured Scorer and
-    Rewriter, which are typically constructed by PromptOptimizer.
-
-    Parameters
-    ----------
-    iterations : int
-        Total number of optimization trials. Default is 5.
-    minibatch_size : int
-        Number of examples drawn per iteration. Default is 8.
-    random_seed : int, optional
-        RNG seed for reproducibility. If None, derived from time.time_ns().
-    exploration_probability : float
-        Epsilon greedy exploration rate. Default is 0.2.
-    full_eval_every : int, optional
-        Fully evaluate best candidate every N trials. Default is 5.
-    population_size : int
-        Maximum number of candidates in the pool. Default is 4.
-    proposals_per_step : int
-        Number of child prompts proposed per iteration. Default is 4.
+    COPRO Optimizer (Lite Version - Single Module).
+    Uses Informed Coordinate Ascent to iteratively refine instructions based on historical scores and metric feedback.
     """
 
     name = "COPRO"
@@ -89,748 +42,494 @@ class COPRO(BaseAlgorithm):
 
     def __init__(
         self,
-        iterations: int = 5,
-        minibatch_size: int = 8,
-        random_seed: Optional[int] = None,
-        exploration_probability: float = 0.2,
-        full_eval_every: Optional[int] = 5,
-        population_size: int = 4,
-        proposals_per_step: int = 4,
-        aggregate_instances: Aggregator = mean_of_all,
-        scorer: Optional[BaseScorer] = None,
-    ) -> None:
-        # Validate parameters
-        if iterations < 1:
-            raise ValueError("iterations must be >= 1")
-        if minibatch_size < 1:
-            raise ValueError("minibatch_size must be >= 1")
-        if exploration_probability < 0.0 or exploration_probability > 1.0:
-            raise ValueError(
-                "exploration_probability must be >= 0.0 and <= 1.0"
-            )
-        if full_eval_every is not None and full_eval_every < 1:
-            raise ValueError("full_eval_every must be >= 1")
-        if population_size < 1:
-            raise ValueError("population_size must be >= 1")
-        if proposals_per_step < 1:
-            raise ValueError("proposals_per_step must be >= 1")
-
-        self.iterations = iterations
+        depth: int = 4,
+        breadth: int = 7,
+        minibatch_size: int = 25,
+        random_state: Optional[Union[int, random.Random]] = None,
+    ):
+        super().__init__()
+        self.depth = depth
+        self.breadth = breadth
         self.minibatch_size = minibatch_size
-        self.exploration_probability = exploration_probability
-        self.full_eval_every = full_eval_every
-        self.population_size = population_size
-        self.proposals_per_step = proposals_per_step
-        self.aggregate_instances = aggregate_instances
-        self.scorer = scorer
-
-        # If no seed provided, use time-based seed
-        if random_seed is None:
-            random_seed = time.time_ns()
-        self.random_seed = random_seed
-        self.random_state = random.Random(random_seed)
-
-        # Runtime state to be reset between runs
-        self.reset_state()
-
-        # Status callback set by PromptOptimizer:
-        #   (kind, step_index, total_steps, detail) -> None
+        self.pareto_score_table: ScoreTable = {}
+        self.parents_by_id: Dict[str, Optional[str]] = {}
+        self.prompt_configurations_by_id: Dict[str, PromptConfiguration] = {}
+        self.step_callback: Optional[Callable[[str], None]] = None
         self.status_callback: Optional[RunnerStatusCallback] = None
+        self.optimization_id: str = ""
+        self._iteration_log: List[IterationLogEntry] = []
 
-        # Optimizer model used by the rewriter for prompt mutation.
-        # Set by PromptOptimizer.
-        self.optimizer_model: Optional["DeepEvalBaseLLM"] = None
+        if isinstance(random_state, int):
+            self.seed = random_state
+            self.random_state = random.Random(random_state)
+        else:
+            self.seed = random.randint(0, 999999)
+            self.random_state = random_state or random.Random(self.seed)
 
-        # Lazy-loaded Rewriter set by PromptOptimizer
-        self._rewriter: Optional[Rewriter] = None
+    def _init_components(self) -> None:
+        self.proposer = COPROProposer(
+            optimizer_model=self.optimizer_model,
+            random_state=self.random_state,
+        )
 
-    ##############
-    # Public API #
-    ##############
+    def _sample_minibatch(self, goldens: List) -> List:
+        if len(goldens) <= self.minibatch_size:
+            return goldens
+        return self.random_state.sample(goldens, self.minibatch_size)
+
+    def _update_step(self, message: str) -> None:
+        if self.step_callback is not None:
+            self.step_callback(message)
+
+    def _update_trial_progress(self, step: int, total: int) -> None:
+        if self.status_callback is not None:
+            self.status_callback(
+                RunnerStatusType.PROGRESS,
+                detail="",
+                step_index=step,
+                total_steps=total,
+            )
+
+    def _extract_optimized_set(self) -> Optional[str]:
+        true_best_id: Optional[str] = None
+        true_best_score = float("-inf")
+        for cid, scores in self.pareto_score_table.items():
+            avg_score = sum(scores) / len(scores) if scores else 0.0
+            if avg_score > true_best_score:
+                true_best_score = avg_score
+                true_best_id = cid
+        return true_best_id
+
+    def _evaluate_candidate(
+        self, config: PromptConfiguration, minibatch: List
+    ) -> Tuple[float, str]:
+        scores = []
+        failure_feedbacks = []
+
+        for golden in minibatch:
+            actual = self.scorer.generate(config.prompts, golden)
+            test_case = self.scorer._golden_to_test_case(golden, actual)
+
+            metrics = copy_metrics(self.scorer.metrics)
+            for metric in metrics:
+                _measure_no_indicator(metric, test_case)
+
+            avg_score = (
+                sum(m.score for m in metrics) / len(metrics) if metrics else 0.0
+            )
+            scores.append(avg_score)
+
+            if avg_score < 1.0 and len(failure_feedbacks) < 3:
+                failure_feedbacks.append(
+                    self.scorer._build_evaluation_results_block(
+                        golden, actual, metrics
+                    )
+                )
+
+        final_score = sum(scores) / len(scores) if scores else 0.0
+        feedback_str = (
+            "\n---\n".join(failure_feedbacks)
+            if failure_feedbacks
+            else "All metrics passed perfectly."
+        )
+        return final_score, feedback_str
+
+    async def _a_evaluate_candidate(
+        self, config: PromptConfiguration, minibatch: List
+    ) -> Tuple[float, str]:
+        async def process_one(golden):
+            actual = await self.scorer.a_generate(config.prompts, golden)
+            test_case = self.scorer._golden_to_test_case(golden, actual)
+            metrics = copy_metrics(self.scorer.metrics)
+            for metric in metrics:
+                await _a_measure_no_indicator(metric, test_case)
+
+            avg_score = (
+                sum(m.score for m in metrics) / len(metrics) if metrics else 0.0
+            )
+            feedback = (
+                self.scorer._build_evaluation_results_block(
+                    golden, actual, metrics
+                )
+                if avg_score < 1.0
+                else None
+            )
+            return avg_score, feedback
+
+        tasks = [process_one(g) for g in minibatch]
+        results = await asyncio.gather(*tasks)
+
+        scores = [res[0] for res in results]
+        feedbacks = [res[1] for res in results if res[1] is not None]
+
+        final_score = sum(scores) / len(scores) if scores else 0.0
+        feedback_str = (
+            "\n---\n".join(feedbacks[:3])
+            if feedbacks
+            else "All metrics passed perfectly."
+        )
+        return final_score, feedback_str
 
     def execute(
         self,
         prompt: Prompt,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
+        goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Tuple[Prompt, OptimizationReport]:
-        """
-        Synchronous COPRO run from a full list of goldens.
+        self.optimization_id = str(uuid.uuid4())
+        self._init_components()
+        self._iteration_log = []
 
-        The full goldens set is used both for mini-batched scoring during
-        optimization and for a final full evaluation of the best candidate.
-        """
-        total_goldens = len(goldens)
-        if total_goldens < 1:
-            raise DeepEvalError(
-                "COPRO prompt optimization requires at least 1 golden, but "
-                f"received {total_goldens}. Provide at least one golden to run "
-                "the optimizer."
-            )
-
-        self._ensure_scorer()
-        self.reset_state()
-
-        # Seed candidate pool with the root prompt configuration.
-        seed_prompts_by_module = {self.SINGLE_MODULE_ID: prompt}
-        root_prompt_configuration = PromptConfiguration.new(
-            prompts=dict(seed_prompts_by_module)
+        self._update_step(
+            f"Bootstrapping {self.breadth} zero-shot variations..."
         )
-        # Add root candidate to the pool, but defer its first minibatch
-        # evaluation until the first iteration so that any long running
-        # model calls happen under the main loop (with progress updates).
-        self._add_prompt_configuration(root_prompt_configuration)
+        candidates = self.proposer.propose_bootstrap(prompt, self.breadth)
+        candidates.insert(0, prompt)
 
-        accepted_iterations: List[Dict] = []
-        self.trial_index = 0
+        global_best_score = float("-inf")
+        global_best_id: Optional[str] = None
+        accepted_iterations: List[AcceptedIteration] = []
+        history_log: List[Tuple[Prompt, float, str]] = []
 
-        def _one_iteration() -> bool:
-            nonlocal accepted_iterations
-
-            if not goldens:
-                return False
-
-            # Lazily seed with a minibatch score for the root
-            # candidate on the first iteration.
-            if not self._minibatch_score_counts:
-                seed_minibatch = self._draw_minibatch(goldens)
-                root_score = self.scorer.score_minibatch(
-                    root_prompt_configuration, seed_minibatch
-                )
-                self._record_minibatch_score(
-                    root_prompt_configuration.id, root_score
-                )
-
-            # 1. Choose which candidate prompt to mutate.
-            parent_prompt_configuration = self._select_candidate()
-            selected_module_id: ModuleId = self.SINGLE_MODULE_ID
-
-            minibatch = self._draw_minibatch(goldens)
-
-            # Compute shared feedback for this parent/minibatch that will be
-            # used by all cooperative child proposals.
-            feedback_text = self.scorer.get_minibatch_feedback(
-                parent_prompt_configuration, selected_module_id, minibatch
+        for d in range(self.depth):
+            depth_start = time.time()
+            self._update_trial_progress(d + 1, self.depth)
+            self._update_step(
+                f"Depth {d + 1}/{self.depth}: Evaluating {len(candidates)} candidates on minibatch..."
             )
 
-            before_mean = self._mean_minibatch_score(
-                parent_prompt_configuration.id
+            minibatch = self._sample_minibatch(goldens)
+            batch_results = []
+
+            for c in candidates:
+                config = PromptConfiguration.new(
+                    prompts={self.SINGLE_MODULE_ID: c}
+                )
+                self.prompt_configurations_by_id[config.id] = config
+
+                score, feedback = self._evaluate_candidate(config, minibatch)
+                batch_results.append((c, config, score, feedback))
+
+            batch_results.sort(key=lambda x: x[2], reverse=True)
+            best_batch_c, best_batch_config, best_batch_score, _ = (
+                batch_results[0]
             )
-            jitter = 1e-6
-            min_delta = max(MIPROV2_MIN_DELTA, jitter)
 
-            # 2. Generate multiple cooperative child prompts and evaluate them.
-            num_proposals = int(self.proposals_per_step)
-            for _ in range(num_proposals):
-                child_prompt = self._generate_child_prompt(
-                    selected_module_id,
-                    parent_prompt_configuration,
-                    feedback_text,
+            for c, _, score, feedback in batch_results[: self.breadth]:
+                history_log.append((c, score, feedback))
+            history_log.sort(key=lambda x: x[1], reverse=True)
+            history_log = history_log[: self.breadth]
+
+            self._iteration_log.append(
+                IterationLogEntry(
+                    iteration=d + 1,
+                    outcome="evaluated",
+                    before=(
+                        global_best_score
+                        if global_best_score != float("-inf")
+                        else 0.0
+                    ),
+                    after=best_batch_score,
+                    reason=f"Best Minibatch Candidate ID: {best_batch_config.id[:8]}",
+                    elapsed=time.time() - depth_start,
                 )
-                if child_prompt is None:
-                    # No child, nothing more to do this iteration
-                    continue
+            )
 
-                child_prompt_configuration = self._make_child(
-                    selected_module_id,
-                    parent_prompt_configuration,
-                    child_prompt,
-                )
+            self._update_step(
+                f"Depth {d + 1}/{self.depth}: Running full dataset validation on best candidate..."
+            )
+            full_scores = self.scorer.score_pareto(best_batch_config, goldens)
+            avg_full_score = sum(full_scores) / len(full_scores)
+            self.pareto_score_table[best_batch_config.id] = full_scores
 
-                child_score = self.scorer.score_minibatch(
-                    child_prompt_configuration, minibatch
-                )
-
-                # 3. Evaluate & decide whether to accept the child.
-                if child_score >= before_mean + min_delta:
-                    # Accept: add to pool, update surrogate stats, and record iteration.
-                    self._add_prompt_configuration(child_prompt_configuration)
-                    self._record_minibatch_score(
-                        child_prompt_configuration.id, child_score
-                    )
-
+            if avg_full_score > global_best_score:
+                if global_best_id is not None:
                     accepted_iterations.append(
-                        AcceptedIterationDict(
-                            parent=parent_prompt_configuration.id,
-                            child=child_prompt_configuration.id,
-                            module=selected_module_id,
-                            before=before_mean,
-                            after=child_score,
+                        AcceptedIteration(
+                            parent=global_best_id,
+                            child=best_batch_config.id,
+                            module=self.SINGLE_MODULE_ID,
+                            before=global_best_score,
+                            after=avg_full_score,
                         )
                     )
-                # else: reject; do not add child to the candidate pool.
+                    self.parents_by_id[best_batch_config.id] = global_best_id
+                else:
+                    self.parents_by_id.setdefault(best_batch_config.id, None)
 
-            self.trial_index += 1
-            if (
-                self.full_eval_every is not None
-                and self.trial_index % self.full_eval_every == 0
-            ):
-                self._full_evaluate_best(goldens)
+                global_best_score = avg_full_score
+                global_best_id = best_batch_config.id
 
-            return True
+            if d < self.depth - 1:
+                self._update_step(
+                    f"Depth {d + 1}/{self.depth}: Analyzing history and proposing next batch..."
+                )
+                candidates = self.proposer.propose_from_history(
+                    best_batch_c, history_log, self.breadth
+                )
+                if not candidates:
+                    candidates = [best_batch_c]
 
-        self._run_loop_iteration(_one_iteration)
+        true_best_id = self._extract_optimized_set()
+        final_id = true_best_id if true_best_id else global_best_id
+        best_config = self.prompt_configurations_by_id[final_id]
 
-        # Ensure at least one candidate has been fully evaluated.
-        if not self.pareto_score_table:
-            self._full_evaluate_best(goldens)
-
-        best = self._best_by_aggregate()
-        prompt_config_snapshots = build_prompt_config_snapshots(
-            self.prompt_configurations_by_id
-        )
         report = OptimizationReport(
             optimization_id=self.optimization_id,
-            best_id=best.id,
+            best_id=best_config.id,
             accepted_iterations=accepted_iterations,
             pareto_scores=self.pareto_score_table,
             parents=self.parents_by_id,
-            prompt_configurations=prompt_config_snapshots,
+            prompt_configurations=build_prompt_config_snapshots(
+                self.prompt_configurations_by_id
+            ),
         )
-        return best.prompts[self.SINGLE_MODULE_ID], report
+
+        return best_config.prompts[self.SINGLE_MODULE_ID], report
 
     async def a_execute(
         self,
         prompt: Prompt,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
+        goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Tuple[Prompt, OptimizationReport]:
-        """
-        Asynchronous twin of execute().
-        """
-        total_goldens = len(goldens)
-        if total_goldens < 1:
-            raise DeepEvalError(
-                "COPRO prompt optimization requires at least 1 golden, but "
-                f"received {total_goldens}. Provide at least one golden to run "
-                "the optimizer."
-            )
+        self.optimization_id = str(uuid.uuid4())
+        self._init_components()
+        self._iteration_log = []
 
-        self._ensure_scorer()
-        self.reset_state()
-
-        seed_prompts_by_module = {self.SINGLE_MODULE_ID: prompt}
-        root_prompt_configuration = PromptConfiguration.new(
-            prompts=dict(seed_prompts_by_module)
+        self._update_step(f"Generating {self.breadth} variations...")
+        candidates = await self.proposer.a_propose_bootstrap(
+            prompt, self.breadth
         )
-        # Add root candidate to the pool, but defer its first minibatch
-        # evaluation until the first iteration so that any long running
-        # model calls happen under the main loop (with progress updates).
-        self._add_prompt_configuration(root_prompt_configuration)
+        candidates.insert(0, prompt)
 
-        accepted_iterations: List[Dict] = []
-        self.trial_index = 0
+        global_best_score = float("-inf")
+        global_best_id: Optional[str] = None
+        accepted_iterations: List[AcceptedIteration] = []
+        history_log: List[Tuple[Prompt, float, str]] = []
 
-        async def _one_iteration() -> bool:
-            nonlocal accepted_iterations
-
-            if not goldens:
-                return False
-
-            # Lazily seed with a minibatch score for the root
-            # candidate on the first iteration.
-            if not self._minibatch_score_counts:
-                seed_minibatch = self._draw_minibatch(goldens)
-                root_score = await self.scorer.a_score_minibatch(
-                    root_prompt_configuration, seed_minibatch
-                )
-                self._record_minibatch_score(
-                    root_prompt_configuration.id, root_score
-                )
-
-            parent_prompt_configuration = self._select_candidate()
-            selected_module_id: ModuleId = self.SINGLE_MODULE_ID
-
-            minibatch = self._draw_minibatch(goldens)
-
-            feedback_text = await self.scorer.a_get_minibatch_feedback(
-                parent_prompt_configuration, selected_module_id, minibatch
+        for d in range(self.depth):
+            depth_start = time.time()
+            self._update_trial_progress(d + 1, self.depth)
+            self._update_step(
+                f"Depth {d + 1}/{self.depth}: Evaluating {len(candidates)} candidates on minibatch concurrently..."
             )
 
-            before_mean = self._mean_minibatch_score(
-                parent_prompt_configuration.id
+            minibatch = self._sample_minibatch(goldens)
+            batch_results = []
+            configs = []
+
+            for c in candidates:
+                config = PromptConfiguration.new(
+                    prompts={self.SINGLE_MODULE_ID: c}
+                )
+                self.prompt_configurations_by_id[config.id] = config
+                configs.append(config)
+
+            tasks = [
+                self._a_evaluate_candidate(conf, minibatch) for conf in configs
+            ]
+            results = await asyncio.gather(*tasks)
+
+            for c, conf, res in zip(candidates, configs, results):
+                score, feedback = res
+                batch_results.append((c, conf, score, feedback))
+
+            batch_results.sort(key=lambda x: x[2], reverse=True)
+            best_batch_c, best_batch_config, best_batch_score, _ = (
+                batch_results[0]
             )
-            jitter = 1e-6
-            min_delta = max(MIPROV2_MIN_DELTA, jitter)
 
-            num_proposals = int(self.proposals_per_step)
-            for _ in range(num_proposals):
-                child_prompt = await self._a_generate_child_prompt(
-                    selected_module_id,
-                    parent_prompt_configuration,
-                    feedback_text,
+            for c, _, score, feedback in batch_results[: self.breadth]:
+                history_log.append((c, score, feedback))
+            history_log.sort(key=lambda x: x[1], reverse=True)
+            history_log = history_log[: self.breadth]
+
+            self._iteration_log.append(
+                IterationLogEntry(
+                    iteration=d + 1,
+                    outcome="evaluated",
+                    before=(
+                        global_best_score
+                        if global_best_score != float("-inf")
+                        else 0.0
+                    ),
+                    after=best_batch_score,
+                    reason=f"Best Minibatch Candidate ID: {best_batch_config.id[:8]}",
+                    elapsed=time.time() - depth_start,
                 )
-                if child_prompt is None:
-                    continue
+            )
 
-                child_prompt_configuration = self._make_child(
-                    selected_module_id,
-                    parent_prompt_configuration,
-                    child_prompt,
-                )
+            self._update_step(
+                f"Depth {d + 1}/{self.depth}: Running full dataset validation on best candidate..."
+            )
+            full_scores = await self.scorer.a_score_pareto(
+                best_batch_config, goldens
+            )
+            avg_full_score = sum(full_scores) / len(full_scores)
+            self.pareto_score_table[best_batch_config.id] = full_scores
 
-                child_score = await self.scorer.a_score_minibatch(
-                    child_prompt_configuration, minibatch
-                )
-
-                if child_score >= before_mean + min_delta:
-                    self._add_prompt_configuration(child_prompt_configuration)
-                    self._record_minibatch_score(
-                        child_prompt_configuration.id, child_score
-                    )
-
+            if avg_full_score > global_best_score:
+                if global_best_id is not None:
                     accepted_iterations.append(
-                        AcceptedIterationDict(
-                            parent=parent_prompt_configuration.id,
-                            child=child_prompt_configuration.id,
-                            module=selected_module_id,
-                            before=before_mean,
-                            after=child_score,
+                        AcceptedIteration(
+                            parent=global_best_id,
+                            child=best_batch_config.id,
+                            module=self.SINGLE_MODULE_ID,
+                            before=global_best_score,
+                            after=avg_full_score,
                         )
                     )
+                    self.parents_by_id[best_batch_config.id] = global_best_id
+                else:
+                    self.parents_by_id.setdefault(best_batch_config.id, None)
 
-            self.trial_index += 1
-            if (
-                self.full_eval_every is not None
-                and self.trial_index % self.full_eval_every == 0
-            ):
-                await self._a_full_evaluate_best(goldens)
+                global_best_score = avg_full_score
+                global_best_id = best_batch_config.id
 
-            return True
+            if d < self.depth - 1:
+                self._update_step(
+                    f"Depth {d + 1}/{self.depth}: Analyzing history and proposing next batch..."
+                )
+                candidates = await self.proposer.a_propose_from_history(
+                    best_batch_c, history_log, self.breadth
+                )
+                if not candidates:
+                    candidates = [best_batch_c]
 
-        await self._a_run_loop_iteration(_one_iteration)
+        true_best_id = self._extract_optimized_set()
+        final_id = true_best_id if true_best_id else global_best_id
+        best_config = self.prompt_configurations_by_id[final_id]
 
-        if not self.pareto_score_table:
-            await self._a_full_evaluate_best(goldens)
-
-        best = self._best_by_aggregate()
-        prompt_config_snapshots = build_prompt_config_snapshots(
-            self.prompt_configurations_by_id
-        )
         report = OptimizationReport(
             optimization_id=self.optimization_id,
-            best_id=best.id,
+            best_id=best_config.id,
             accepted_iterations=accepted_iterations,
             pareto_scores=self.pareto_score_table,
             parents=self.parents_by_id,
-            prompt_configurations=prompt_config_snapshots,
-        )
-        return best.prompts[self.SINGLE_MODULE_ID], report
-
-    ###################
-    # State & helpers #
-    ###################
-
-    def reset_state(self) -> None:
-        self.optimization_id = str(uuid.uuid4())
-        self.prompt_configurations_by_id: Dict[
-            PromptConfigurationId, PromptConfiguration
-        ] = {}
-        self.parents_by_id: Dict[
-            PromptConfigurationId, Optional[PromptConfigurationId]
-        ] = {}
-        # For COPRO we reuse the same field name as GEPA for full evaluation scores.
-        self.pareto_score_table: ScoreTable = {}
-
-        # Surrogate stats: running mean minibatch scores per candidate.
-        self._minibatch_score_sums: Dict[PromptConfigurationId, float] = {}
-        self._minibatch_score_counts: Dict[PromptConfigurationId, int] = {}
-
-        # Trial counter (used for full_eval_every).
-        self.trial_index: int = 0
-
-    def _ensure_scorer(self) -> None:
-        if self.scorer is None:
-            raise DeepEvalError(
-                "COPRORunner requires a `scorer`. "
-                "Construct one (for example, Scorer) in "
-                "PromptOptimizer and assign it to `runner.scorer`."
-            )
-
-    def _prompts_equivalent(
-        self,
-        old_prompt: Prompt,
-        new_prompt: Prompt,
-    ) -> bool:
-        """
-        Compare two Prompts for optimization purposes.
-
-        We treat a child as "no change" if:
-        - The types differ, or
-        - For TEXT: trimmed text_template matches.
-        - For LIST: messages_template length, roles, and trimmed content match.
-        """
-
-        if new_prompt.type == PromptType.LIST:
-            old_msgs = old_prompt.messages_template
-            new_msgs = new_prompt.messages_template
-            if len(old_msgs) != len(new_msgs):
-                return False
-
-            for old_msg, new_msg in zip(old_msgs, new_msgs):
-                if old_msg.role != new_msg.role:
-                    return False
-                if (old_msg.content or "").strip() != (
-                    new_msg.content or ""
-                ).strip():
-                    return False
-
-            return True
-
-        old_txt = (old_prompt.text_template or "").strip()
-        new_txt = (new_prompt.text_template or "").strip()
-        return new_txt == old_txt
-
-    def _add_prompt_configuration(
-        self,
-        prompt_configuration: PromptConfiguration,
-    ) -> None:
-        """
-        Add a candidate to the active pool and, if a population limit is set,
-        prune the worst-scoring candidates to enforce it.
-        """
-        self.prompt_configurations_by_id[prompt_configuration.id] = (
-            prompt_configuration
-        )
-        self.parents_by_id[prompt_configuration.id] = (
-            prompt_configuration.parent
+            prompt_configurations=build_prompt_config_snapshots(
+                self.prompt_configurations_by_id
+            ),
         )
 
-        # If we exceed the population size, iteratively prune the worst
-        # (by mean minibatch score), never removing the current best.
-        while len(self.prompt_configurations_by_id) > self.population_size:
-            best_id: Optional[PromptConfigurationId] = None
-            best_score = float("-inf")
-            for cand_id in self.prompt_configurations_by_id.keys():
-                mean_score = self._mean_minibatch_score(cand_id)
-                if mean_score > best_score:
-                    best_score = mean_score
-                    best_id = cand_id
+        return best_config.prompts[self.SINGLE_MODULE_ID], report
 
-            worst_id: Optional[PromptConfigurationId] = None
-            worst_score = float("inf")
-            for cand_id in self.prompt_configurations_by_id.keys():
-                if cand_id == best_id:
-                    continue
-                mean_score = self._mean_minibatch_score(cand_id)
-                if mean_score < worst_score:
-                    worst_score = mean_score
-                    worst_id = cand_id
+    def generate_summary_table(self, report: OptimizationReport) -> List[Table]:
+        _PURPLE = "rgb(106,0,255)"
+        _GREEN = "rgb(25,227,160)"
+        _DIM = "rgb(55,65,81)"
 
-            if worst_id is None or worst_id == best_id:
-                break
+        tables = []
+        iteration_log = self._iteration_log
 
-            # Prune the chosen worst candidate from all bookkeeping tables.
-            self.prompt_configurations_by_id.pop(worst_id, None)
-            self.parents_by_id.pop(worst_id, None)
-            self._minibatch_score_sums.pop(worst_id, None)
-            self._minibatch_score_counts.pop(worst_id, None)
-            self.pareto_score_table.pop(worst_id, None)
-
-    def _record_minibatch_score(
-        self,
-        prompt_configuration_id: PromptConfigurationId,
-        score: float,
-    ) -> None:
-        self._minibatch_score_sums[prompt_configuration_id] = (
-            self._minibatch_score_sums.get(prompt_configuration_id, 0.0)
-            + float(score)
+        iter_table = Table(
+            title=f"📈 [{_PURPLE}]{self.name}[/] Coordinate Ascent (Minibatch Trials)",
+            box=box.ROUNDED,
+            border_style=_PURPLE,
+            header_style=f"bold {_PURPLE}",
+            show_lines=True,
+            expand=True,
         )
-        self._minibatch_score_counts[prompt_configuration_id] = (
-            self._minibatch_score_counts.get(prompt_configuration_id, 0) + 1
+        iter_table.add_column(
+            "Depth", style="bold white", justify="right", no_wrap=True
         )
+        iter_table.add_column("Status", justify="center", no_wrap=True)
+        iter_table.add_column("Best Prior", justify="right", no_wrap=True)
+        iter_table.add_column("Batch Top Score", justify="right", no_wrap=True)
+        iter_table.add_column("Δ to Best", justify="right", no_wrap=True)
+        iter_table.add_column("Note", style=f"{_DIM}", no_wrap=False)
+        iter_table.add_column("Time", justify="right", no_wrap=True)
 
-    def _mean_minibatch_score(
-        self,
-        prompt_configuration_id: PromptConfigurationId,
-    ) -> float:
-        total = self._minibatch_score_sums.get(prompt_configuration_id, 0.0)
-        count = self._minibatch_score_counts.get(prompt_configuration_id, 0)
-        if count <= 0:
-            # Use a sentinel that will not dominate selection if a scored
-            # candidate exists. Root is seeded explicitly in the first iteration.
-            return float("-inf")
-        return total / count
+        running_max = float("-inf")
 
-    def _best_by_minibatch(self) -> PromptConfiguration:
-        """
-        Return the candidate with the highest mean minibatch score.
-        """
-        if not self.prompt_configurations_by_id:
-            raise DeepEvalError(
-                "COPRORunner has no prompt configurations; this should not happen."
+        for entry in iteration_log:
+            i = str(entry.iteration)
+            score = entry.after
+            reason = entry.reason
+            elapsed = entry.elapsed
+
+            best_prior = running_max if running_max != float("-inf") else 0.0
+            delta = score - best_prior
+
+            if score > running_max:
+                status_cell = f"[{_GREEN}]▲ Ascended[/]"
+                color = "white"
+                sign = "+" if delta >= 0 else ""
+                running_max = score
+            else:
+                status_cell = f"[{_DIM}]◆ Explored[/]"
+                color = _DIM
+                sign = "+" if delta >= 0 else ""
+
+            best_prior_cell = f"{best_prior:.4f}"
+            score_cell = (
+                f"[bold {color}]{score:.4f}[/]"
+                if score >= running_max
+                else f"[{color}]{score:.4f}[/]"
+            )
+            delta_cell = f"[{color}]{sign}{delta:.4f}[/]"
+            time_cell = f"[{_DIM}]{elapsed:.2f}s[/]"
+
+            iter_table.add_row(
+                i,
+                status_cell,
+                best_prior_cell,
+                score_cell,
+                delta_cell,
+                reason,
+                time_cell,
             )
 
-        best_id: Optional[PromptConfigurationId] = None
-        best_score = float("-inf")
+        tables.append(iter_table)
 
-        for cand_id in self.prompt_configurations_by_id.keys():
-            mean_score = self._mean_minibatch_score(cand_id)
-            if mean_score > best_score:
-                best_score = mean_score
-                best_id = cand_id
-
-        if best_id is None:
-            # Fallback to the first candidate if all means are -inf.
-            best_id = next(iter(self.prompt_configurations_by_id.keys()))
-
-        return self.prompt_configurations_by_id[best_id]
-
-    def _best_by_aggregate(self) -> PromptConfiguration:
-        """
-        Return the best candidate based on full-eval scores.
-
-        If no full evaluation scores are available (should be rare, but possible if
-        full_eval_every is very large and the loop exits early), fall back to
-        best-by-minibatch.
-        """
-        if not self.pareto_score_table:
-            return self._best_by_minibatch()
-
-        totals = {
-            prompt_configuration_id: self.aggregate_instances(vector)
-            for prompt_configuration_id, vector in self.pareto_score_table.items()
-        }
-
-        best_ids: List[PromptConfigurationId] = []
-        best_val = float("-inf")
-
-        for cand_id, aggregate in totals.items():
-            if aggregate > best_val + 1e-12:
-                best_val = aggregate
-                best_ids = [cand_id]
-            elif abs(aggregate - best_val) <= 1e-12:
-                best_ids.append(cand_id)
-
-        chosen_id = self.random_state.choice(best_ids)
-        return self.prompt_configurations_by_id[chosen_id]
-
-    def _select_candidate(self) -> PromptConfiguration:
-        """
-        Epsilon-greedy candidate selection:
-
-        - With probability ``exploration_probability``, pick a random candidate.
-        - Otherwise, pick the candidate with the highest mean minibatch score.
-        """
-        if not self.prompt_configurations_by_id:
-            raise DeepEvalError(
-                "COPRORunner has no prompt configurations to select from."
+        if report and report.pareto_scores:
+            pareto_table = Table(
+                title=f"[{_PURPLE}]True Validation Archive (Full Dataset)[/]",
+                box=box.HORIZONTALS,
+                border_style=_PURPLE,
+                header_style=f"bold {_PURPLE}",
+                show_lines=True,
+                expand=True,
+            )
+            pareto_table.add_column(
+                "Config ID", style="white", justify="center", no_wrap=True
+            )
+            pareto_table.add_column("Role", justify="center", no_wrap=True)
+            pareto_table.add_column(
+                "Scores Array", justify="center", no_wrap=False
+            )
+            pareto_table.add_column(
+                "True Avg Score", justify="right", no_wrap=True
             )
 
-        candidate_ids = list(self.prompt_configurations_by_id.keys())
-        if not candidate_ids:
-            raise DeepEvalError(
-                "COPRORunner has an empty candidate pool; this should not happen."
-            )
+            best_id = report.best_id
 
-        eps = float(self.exploration_probability)
-        if eps > 0.0 and self.random_state.random() < eps:
-            chosen_id = self.random_state.choice(candidate_ids)
-        else:
-            chosen_id = self._best_by_minibatch().id
+            for cid, scores in report.pareto_scores.items():
+                is_best = cid == best_id
+                role = f"[{_DIM}]candidate[/]"
 
-        return self.prompt_configurations_by_id[chosen_id]
+                short_id = cid[:8] + "…"
+                if is_best:
+                    short_id = f"[bold white]{short_id} ★[/]"
 
-    def _draw_minibatch(
-        self,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> Union[List["Golden"], List["ConversationalGolden"]]:
-        """
-        Determine effective minibatch size, bounded by the available goldens,
-        and sample with replacement.
-        """
-        n = len(goldens)
-        if n <= 0:
-            return []
+                if len(scores) > 6:
+                    score_strs = (
+                        [f"{s:.3f}" for s in scores[:3]]
+                        + ["..."]
+                        + [f"{s:.3f}" for s in scores[-3:]]
+                    )
+                else:
+                    score_strs = [f"{s:.3f}" for s in scores]
+                scores_cell = f"[{_DIM}][{', '.join(score_strs)}][/]"
 
-        size = min(self.minibatch_size, n)
+                agg = sum(scores) / len(scores) if scores else 0.0
+                agg_color = "white" if is_best else _DIM
+                agg_cell = (
+                    f"[bold {agg_color}]{agg:.4f}[/]"
+                    if is_best
+                    else f"[{agg_color}]{agg:.4f}[/]"
+                )
 
-        return [goldens[self.random_state.randrange(0, n)] for _ in range(size)]
+                pareto_table.add_row(short_id, role, scores_cell, agg_cell)
 
-    async def _a_full_evaluate_best(
-        self,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> None:
-        if not self.prompt_configurations_by_id:
-            return
+            tables.append(pareto_table)
 
-        best = self._best_by_minibatch()
-        if best.id in self.pareto_score_table:
-            return
-
-        scores = await self.scorer.a_score_pareto(best, goldens)
-        self.pareto_score_table[best.id] = scores
-
-    def _full_evaluate_best(
-        self,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> None:
-        if not self.prompt_configurations_by_id:
-            return
-
-        best = self._best_by_minibatch()
-        if best.id in self.pareto_score_table:
-            return
-
-        scores = self.scorer.score_pareto(best, goldens)
-        self.pareto_score_table[best.id] = scores
-
-    async def _a_generate_child_prompt(
-        self,
-        selected_module_id: ModuleId,
-        parent_prompt_configuration: PromptConfiguration,
-        feedback_text: str,
-    ) -> Optional[Prompt]:
-        try:
-            old_prompt = parent_prompt_configuration.prompts[selected_module_id]
-        except KeyError as exc:
-            raise DeepEvalError(
-                "COPRORunner expected a prompt for module_id "
-                f"{selected_module_id!r} but none was found in the "
-                "current prompt configuration."
-            ) from exc
-
-        new_prompt = await self._rewriter.a_rewrite(
-            module_id=selected_module_id,
-            old_prompt=old_prompt,
-            feedback_text=feedback_text,
-        )
-
-        if old_prompt.type != new_prompt.type or self._prompts_equivalent(
-            old_prompt, new_prompt
-        ):
-            # Don't accept if new prompt is the same as parent, or if type changed.
-            return None
-        return new_prompt
-
-    def _generate_child_prompt(
-        self,
-        selected_module_id: ModuleId,
-        parent_prompt_configuration: PromptConfiguration,
-        feedback_text: str,
-    ) -> Optional[Prompt]:
-        try:
-            old_prompt = parent_prompt_configuration.prompts[selected_module_id]
-        except KeyError as exc:
-            # This should never happen in normal operation.
-            raise DeepEvalError(
-                "COPRORunner expected a prompt for module_id "
-                f"{selected_module_id!r} but none was found in the "
-                "current prompt configuration."
-            ) from exc
-
-        new_prompt = self._rewriter.rewrite(
-            module_id=selected_module_id,
-            old_prompt=old_prompt,
-            feedback_text=feedback_text,
-        )
-
-        if old_prompt.type != new_prompt.type or self._prompts_equivalent(
-            old_prompt, new_prompt
-        ):
-            # Don't accept if new prompt is the same as parent, or if type changed.
-            return None
-        return new_prompt
-
-    def _make_child(
-        self,
-        selected_module_id: ModuleId,
-        parent_prompt_configuration: PromptConfiguration,
-        child_prompt: Prompt,
-    ) -> PromptConfiguration:
-        child_prompt_configuration = PromptConfiguration.new(
-            prompts=dict(parent_prompt_configuration.prompts),
-            parent=parent_prompt_configuration.id,
-        )
-        child_prompt_configuration.prompts[selected_module_id] = child_prompt
-        return child_prompt_configuration
-
-    def _update_progress(
-        self,
-        total_iterations: int,
-        iteration: int,
-        remaining_iterations: int,
-        elapsed: float,
-    ) -> None:
-        if self.status_callback is not None:
-            detail = (
-                f"(iterations={total_iterations}) "
-                f"• iteration {iteration}/{total_iterations} "
-                f"• {elapsed:.2f}s • remaining={remaining_iterations}"
-            )
-            self.status_callback(
-                RunnerStatusType.PROGRESS,
-                step_index=iteration,
-                total_steps=total_iterations,
-                detail=detail,
-            )
-
-    def _update_error(
-        self,
-        total_iterations: int,
-        iteration: int,
-        exc: Exception,
-    ) -> None:
-        # Report a user-facing error event.
-        if self.status_callback is not None:
-            detail = (
-                f"(iterations={total_iterations}) "
-                f"• error {exc.__class__.__name__}: {exc} "
-                f"• halted at iteration {iteration}"
-            )
-            self.status_callback(
-                RunnerStatusType.ERROR,
-                step_index=iteration,
-                total_steps=total_iterations,
-                detail=detail,
-            )
-
-    def _run_loop_iteration(
-        self,
-        copro_iteration: Callable[[], bool],
-    ) -> None:
-        total_iterations = self.iterations
-        remaining_iterations = total_iterations
-        iteration = 0
-        self._update_progress(
-            total_iterations, iteration, remaining_iterations, 0.0
-        )
-        while remaining_iterations > 0:
-            iteration += 1
-            start_time = time.perf_counter()
-            try:
-                ok = copro_iteration()
-            except Exception as exc:
-                self._update_error(total_iterations, iteration, exc)
-                break
-            elapsed = time.perf_counter() - start_time
-            if not ok:
-                break
-            remaining_iterations -= 1
-            self._update_progress(
-                total_iterations, iteration, remaining_iterations, elapsed
-            )
-
-    async def _a_run_loop_iteration(
-        self,
-        a_copro_iteration: Callable[[], Awaitable[bool]],
-    ) -> None:
-        total_iterations = self.iterations
-        remaining_iterations = total_iterations
-        iteration = 0
-        self._update_progress(
-            total_iterations, iteration, remaining_iterations, 0.0
-        )
-        while remaining_iterations > 0:
-            iteration += 1
-            start_time = time.perf_counter()
-            try:
-                ok = await a_copro_iteration()
-            except Exception as exc:
-                self._update_error(total_iterations, iteration, exc)
-                break
-            elapsed = time.perf_counter() - start_time
-            if not ok:
-                break
-            remaining_iterations -= 1
-            self._update_progress(
-                total_iterations, iteration, remaining_iterations, elapsed
-            )
+        return tables

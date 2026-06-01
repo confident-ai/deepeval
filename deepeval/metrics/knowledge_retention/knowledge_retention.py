@@ -60,6 +60,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
+        self.input_tokens = 0 if self.using_native_model else None
+        self.output_tokens = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -111,6 +113,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
+        self.input_tokens = 0 if self.using_native_model else None
+        self.output_tokens = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self,
             async_mode=True,
@@ -299,7 +303,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)
         if number_of_verdicts == 0:
-            return 0
+            return 1
 
         retention_count = 0
         for verdict in self.verdicts:

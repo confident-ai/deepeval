@@ -13,7 +13,8 @@
       },
       "output": {
         "response": "Python is a high-level, interpreted programming language known for its simplicity."
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "RetrieverQueryEngine._aquery-ebf2e110-f9d5-4e59-90dd-4aec0838bc8b",
@@ -33,7 +34,8 @@
       },
       "output": {
         "response": "Python is a high-level, interpreted programming language known for its simplicity."
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "CompactAndRefine.asynthesize-8bbe09e8-95ae-49b1-a164-8ab9c23e6bd1",
@@ -72,7 +74,8 @@
       },
       "output": {
         "response": "Python is a high-level, interpreted programming language known for its simplicity."
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "CompactAndRefine.aget_response-c4730eb6-6585-4903-a7e2-7deea855b7cf",
@@ -88,7 +91,8 @@
           "Python is a high-level, interpreted programming language known for its simplicity."
         ]
       },
-      "output": "Python is a high-level, interpreted programming language known for its simplicity."
+      "output": "Python is a high-level, interpreted programming language known for its simplicity.",
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "CompactAndRefine.aget_response-e0f17734-315f-4852-9077-c5fa219dc3f3",
@@ -105,7 +109,8 @@
         ],
         "prev_response": null
       },
-      "output": "Python is a high-level, interpreted programming language known for its simplicity."
+      "output": "Python is a high-level, interpreted programming language known for its simplicity.",
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAI.apredict-9f86d11c-73a5-4cbd-99e8-ab1e2447f5df",
@@ -164,7 +169,8 @@
           "context_str": "Python is a high-level, interpreted programming language known for its simplicity."
         }
       },
-      "output": "Python is a high-level, interpreted programming language known for its simplicity."
+      "output": "Python is a high-level, interpreted programming language known for its simplicity.",
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAI.achat-3ad0222e-3686-442f-9ec0-92cccb3a226d",
@@ -248,7 +254,8 @@
           "completion_tokens": 14,
           "total_tokens": 142
         }
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "TokenTextSplitter.split_text-3024060c-bee7-4cfb-9e60-fce0d55b38a6",
@@ -263,7 +270,8 @@
       },
       "output": [
         "Python is a high-level, interpreted programming language known for its simplicity."
-      ]
+      ],
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "TokenTextSplitter.split_text-bf3bf0d5-2289-4e8b-b214-4934af812d19",
@@ -278,7 +286,8 @@
       },
       "output": [
         "Python is a high-level, interpreted programming language known for its simplicity."
-      ]
+      ],
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "DeterministicRetriever.aretrieve-6eacaf60-6e26-470a-983c-ec29d417f420",
@@ -317,7 +326,8 @@
       ],
       "retrievalContext": [
         "Python is a high-level, interpreted programming language known for its simplicity."
-      ]
+      ],
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "DeterministicRetriever._retrieve-eb6ba02b-39e3-4bed-a97d-ca99505dff66",
@@ -353,7 +363,8 @@
           "score": 0.95,
           "class_name": "NodeWithScore"
         }
-      ]
+      ],
+      "integration": "LlamaIndex"
     }
   ],
   "agentSpans": [],
@@ -382,7 +393,9 @@
           "content": "Python is a high-level, interpreted programming language known for its simplicity."
         }
       ],
-      "model": "gpt-4o"
+      "model": "gpt-4o",
+      "integration": "LlamaIndex",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

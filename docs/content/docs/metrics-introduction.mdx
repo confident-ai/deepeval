@@ -3,6 +3,7 @@ id: metrics-introduction
 title: Introduction to LLM Metrics
 sidebar_label: Introduction
 ---
+
 import { ASSETS } from "@site/src/assets";
 
 `deepeval` offers 50+ SOTA, ready-to-use metrics for you to quickly get started with. Essentially, while a test case represents the thing you're trying to measur, the metric acts as the ruler based on a specific criteria of interest.
@@ -33,6 +34,7 @@ You should aim to have **at least one** custom metric in your LLM evals pipeline
 RAG (retrieval augmented generation) metrics focus on the **retriever and generator components** independently.
 
 - Retriever:
+
   - Contextual Relevancy
   - Contextual Precision
   - Contextual Recall
@@ -84,7 +86,7 @@ For those looking for a full-blown LLM red teaming orchestration frameowork, che
 </Tab>
 <Tab value="Image">
 
-Metrics in `deepeval` are multi-modal by default, metrics targetting images are metrics that definitely expects an image in the test case. They include:
+Metrics in `deepeval` are multi-modal by default, metrics targeting images are metrics that definitely expects an image in the test case. They include:
 
 - Image Coherence
 - Image Helpfulness
@@ -261,7 +263,7 @@ evaluate(observed_callback=trip_planner_agent, goldens=[Golden(input="Paris, 2")
 
 Chatbots require "conversational" (or multi-turn) metrics and they include:
 
-- **Conversation Completeness:** Evaluates if conversation satisify user needs.
+- **Conversation Completeness:** Evaluates if conversation satisfy user needs.
 - **Conversation Relevancy:** Measures if the generated outputs are relevant to user inputs.
 - **Role Adherence:** Assesses if the chatbot stays in character throughout a conversation.
 - **Knowledge Retention:** Evaluates if the chatbot is able to retain knowledge learnt throughout a conversation.
@@ -286,10 +288,10 @@ print(role_adherence.score, role_adherence.reason)
 from deepeval.test_case import LLMTestCase, MLLMImage
 from deepeval.metrics import ImageCoherenceMetric
 
-test_case = LLMTestCase(input=f"What does thsi image say? {MLLMImage(...)}", actual_output="No idea!")
+test_case = LLMTestCase(input=f"What does this image say? {MLLMImage(...)}", actual_output="No idea!")
 image_coherence = ImageCoherenceMetric(threshold=0.5)
 
-image_coherence.measure(m_test_case)
+image_coherence.measure(test_case)
 print(image_coherence.score, image_coherence.reason)
 ```
 
@@ -375,7 +377,6 @@ To use OpenAI for `deepeval`'s LLM metrics, supply your `OPENAI_API_KEY` in the 
 
 ```bash
 export OPENAI_API_KEY=<your-openai-api-key>
-
 ```
 
 Alternatively, if you're working in a notebook environment (Jupyter or Colab), set your `OPENAI_API_KEY` in a cell:
@@ -384,7 +385,7 @@ Alternatively, if you're working in a notebook environment (Jupyter or Colab), s
 %env OPENAI_API_KEY=<your-openai-api-key>
 ```
 
-:::note
+:::caution
 Please **do not include** quotation marks when setting your `API_KEYS` as environment variables if you're working in a notebook environment.
 :::
 

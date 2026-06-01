@@ -69,7 +69,7 @@ class CustomLlama3_8B(DeepEvalBaseLLM):
             pad_token_id=self.tokenizer.eos_token_id,
         )
 
-        return pipeline(prompt)
+        return pipeline(prompt)[0]["generated_text"]
 
     async def a_generate(self, prompt: str) -> str:
         return self.generate(prompt)
@@ -83,12 +83,12 @@ There are **SIX** rules to follow when creating a custom LLM evaluation model:
 1. Inherit `DeepEvalBaseLLM`.
 2. Implement the `get_model_name()` method, which simply returns a string representing your custom model name.
 3. Implement the `load_model()` method, which will be responsible for returning a model object.
-4. Implement the `generate()` method with **one and only one** parameter of type string that acts as the prompt to your custom LLM.
-5. The `generate()` method should return the generated string output from your custom LLM. Note that we called `pipeline(prompt)` to access the model generations in this particular example, but this could be different depending on the implementation of your custom model object.
-6. Implement the `a_generate()` method, with the same function signature as `generate()`. **Note that this is an async method**. In this example, we called `self.generate(prompt)`, which simply reuses the synchronous `generate()` method. However, although optional, you should implement an asynchronous version (if possible) to speed up evaluation.
+4. Implement the `generate()` method whose first parameter is the prompt string. For full compatibility with all of `deepeval`'s metrics, accept an additional `schema: BaseModel | None = None` parameter — when `schema` is supplied, the method must return an instance of that Pydantic schema (see [JSON Confinement for Custom LLMs](#json-confinement-for-custom-llms) below).
+5. When called without a `schema`, `generate()` should return the model's raw output as a string. Note that we called `pipeline(prompt)[0]["generated_text"]` to access the model generation in this particular example, but this could be different depending on the implementation of your custom model object.
+6. Implement the `a_generate()` method, with the same signature as `generate()`. **Note that this is an async method**. In this example, we called `self.generate(prompt)`, which simply reuses the synchronous `generate()` method. However, although optional, you should implement an asynchronous version (if possible) to speed up evaluation.
 
 :::caution
-In later sections, you'll find an exception to rules 4. and 5., as the `generate()` and `a_generate()` method can actually be rewritten to optimize custom LLM outputs that are essential for evaluation.
+If you skip the `schema` parameter, metrics that require structured output (e.g. `SummarizationMetric`, `FaithfulnessMetric`) will fail with a confusing `AttributeError` because they cannot extract the fields they need from a raw string. Add schema-aware output as shown in [JSON Confinement for Custom LLMs](#json-confinement-for-custom-llms) below to avoid this.
 :::
 
 Then, instantiate the `CustomLlama3_8B` class and test the `generate()` (or `a_generate()`) method out:
@@ -160,9 +160,9 @@ When creating a custom LLM evaluation model you should **ALWAYS**:
 - inherit `DeepEvalBaseLLM`.
 - implement the `get_model_name()` method, which simply returns a string representing your custom model name.
 - implement the `load_model()` method, which will be responsible for returning a model object.
-- implement the `generate()` method with **one and only one** parameter of type string that acts as the prompt to your custom LLM.
-- the `generate()` method should return the final output string of your custom LLM. Note that we called `chat_model.invoke(prompt).content` to access the model generations in this particular example, but this could be different depending on the implementation of your custom model object.
-- implement the `a_generate()` method, with the same function signature as `generate()`. **Note that this is an async method**. In this example, we called `await chat_model.ainvoke(prompt)`, which is an asynchronous wrapper provided by LangChain's chat models.
+- implement the `generate()` method whose first parameter is the prompt string. For full compatibility with all of `deepeval`'s metrics, accept an additional `schema: BaseModel | None = None` parameter and, when `schema` is supplied, return an instance of that Pydantic schema (see [JSON Confinement for Custom LLMs](#json-confinement-for-custom-llms) below).
+- without a `schema`, return the final output string of your custom LLM. Note that we called `chat_model.invoke(prompt).content` to access the model generations in this particular example, but this could be different depending on the implementation of your custom model object.
+- implement the `a_generate()` method, with the same signature as `generate()`. **Note that this is an async method**. In this example, we called `await chat_model.ainvoke(prompt)`, which is an asynchronous wrapper provided by LangChain's chat models.
 
 :::tip
 The `a_generate()` method is what `deepeval` uses to generate LLM outputs when you execute metrics / run evaluations asynchronously.
@@ -186,6 +186,10 @@ While the Azure OpenAI command configures `deepeval` to use Azure OpenAI globall
 ### Mistral 7B Example
 
 Here is an example of creating a custom [Mistral 7B model](https://huggingface.co/docs/transformers/model_doc/mistral) through Hugging Face's `transformers` library for evaluation:
+
+:::caution
+This minimal `Mistral7B` implementation returns a raw string and does not accept a `schema` parameter, so it will fail with metrics that require structured output (e.g. `SummarizationMetric`, `FaithfulnessMetric`) — see the schema contract in the [rules above](#creating-a-custom-llm) and the schema-aware `CustomMistral7B` example in [JSON Confinement for Custom LLMs](#json-confinement-for-custom-llms) below before using it with these metrics.
+:::
 
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -548,6 +552,7 @@ Here's a full example of a JSON confined custom Mistral 7B model implemented thr
 
 ```python
 import json
+import transformers
 
 from pydantic import BaseModel
 import torch
@@ -588,7 +593,7 @@ class CustomMistral7B(DeepEvalBaseLLM):
 
     def generate(self, prompt: str, schema: BaseModel) -> BaseModel:
         model = self.load_model()
-        pipeline = pipeline(
+        pipeline = transformers.pipeline(
             "text-generation",
             model=model,
             tokenizer=self.tokenizer,

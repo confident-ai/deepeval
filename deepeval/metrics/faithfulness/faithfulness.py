@@ -79,6 +79,8 @@ class FaithfulnessMetric(BaseMetric):
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
+        self.input_tokens = 0 if self.using_native_model else None
+        self.output_tokens = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -136,6 +138,8 @@ class FaithfulnessMetric(BaseMetric):
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
+        self.input_tokens = 0 if self.using_native_model else None
+        self.output_tokens = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self,
             async_mode=True,
@@ -172,6 +176,11 @@ class FaithfulnessMetric(BaseMetric):
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "no":
                 contradictions.append(verdict.reason)
+            if (
+                verdict.verdict.strip().lower() == "idk"
+                and self.penalize_ambiguous_claims
+            ):
+                contradictions.append(f"(Ambiguous) {verdict.reason}")
 
         prompt = self.evaluation_template.generate_reason(
             contradictions=contradictions,
@@ -195,6 +204,11 @@ class FaithfulnessMetric(BaseMetric):
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "no":
                 contradictions.append(verdict.reason)
+            if (
+                verdict.verdict.strip().lower() == "idk"
+                and self.penalize_ambiguous_claims
+            ):
+                contradictions.append(f"(Ambiguous) {verdict.reason}")
 
         prompt = self.evaluation_template.generate_reason(
             contradictions=contradictions,

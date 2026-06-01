@@ -1,0 +1,332 @@
+/* --------------------------------------------------------------------
+ * VibeCodingLoop
+ *
+ * 4 corner cards + connecting SVG arcs that bow toward a center label.
+ * The HTML cards are absolutely positioned in % so they align with the
+ * SVG's 700×420 viewBox (cards' mid-edges are exactly the start/end
+ * points of each arc).
+ *
+ * Arc-position math (viewBox = 700 × 420):
+ *   TL card: x  20–260, y  30–160   (right-mid: 260, 95   bot-mid: 140,160)
+ *   TR card: x 440–680, y  30–160   (left-mid:  440, 95   bot-mid: 560,160)
+ *   BR card: x 440–680, y 260–390   (left-mid:  440,325   top-mid: 560,260)
+ *   BL card: x  20–260, y 260–390   (right-mid: 260,325   top-mid: 140,260)
+ *
+ * In percent (of 700/420):
+ *   left/right edge gutters     : 20/700  ≈ 2.857%
+ *   card width                  : 240/700 ≈ 34.286%
+ *   top/bottom edge gutters     : 30/420  ≈ 7.143%
+ *   card height                 : 130/420 ≈ 30.952%
+ * ------------------------------------------------------------------ */
+
+.wrap {
+  position: relative;
+  width: 100%;
+  max-width: 760px;
+  margin: 1.5rem auto 2rem;
+  aspect-ratio: 700 / 420;
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* ---------------- Cards ---------------- */
+
+.card {
+  position: absolute;
+  width: 34.286%;
+  height: 30.952%;
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  justify-content: center;
+  padding: 0.85rem 1rem;
+
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-background);
+  z-index: 2;
+}
+
+.card_tl {
+  top: 7.143%;
+  left: 2.857%;
+}
+
+.card_tr {
+  top: 7.143%;
+  right: 2.857%;
+}
+
+.card_bl {
+  bottom: 7.143%;
+  left: 2.857%;
+}
+
+.card_br {
+  bottom: 7.143%;
+  right: 2.857%;
+}
+
+.cardIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-fd-foreground);
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-background);
+}
+
+.cardTitle {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+  color: var(--color-fd-foreground);
+}
+
+.cardMeta {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 300;
+  color: var(--color-fd-muted-foreground);
+  text-wrap: pretty;
+}
+
+/* ---------------- Center anchor ---------------- */
+
+.center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.55rem 0.85rem;
+
+  background: var(--color-fd-background);
+  pointer-events: none;
+  text-align: center;
+}
+
+.centerEyebrow {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-fd-muted-foreground);
+}
+
+.centerTitle {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--color-fd-foreground);
+}
+
+/* ---------------- SVG: arcs, arrowheads, labels ---------------- */
+
+/* Background path — always visible, low opacity. */
+.arcBg {
+  // Fallback for Safari < 16.2 (no color-mix support).
+  stroke: var(--color-fd-muted-foreground);
+  stroke: color-mix(
+    in oklab,
+    var(--color-fd-muted-foreground) 55%,
+    transparent
+  );
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-dasharray: 3 4;
+}
+
+/* Foreground path — fills sequentially to suggest current flowing
+ * around the loop. pathLength="100" normalizes math regardless of
+ * the actual arc length so the dasharray keyframes work for all 4. */
+.arcFg {
+  // Fallback for Safari < 16.2 (no color-mix support).
+  stroke: var(--color-fd-foreground);
+  stroke: color-mix(
+    in oklab,
+    var(--color-fd-foreground) 80%,
+    transparent
+  );
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 30 100;
+  stroke-dashoffset: 100;
+  opacity: 0;
+  animation: arcFlow 4s linear infinite;
+}
+
+@keyframes arcFlow {
+  /* Each arc occupies a 1s slice of the 4s cycle. */
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+  3% {
+    opacity: 1;
+  }
+  25% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  35% {
+    stroke-dashoffset: -30;
+    opacity: 0;
+  }
+  100% {
+    stroke-dashoffset: -30;
+    opacity: 0;
+  }
+}
+
+.arrowhead {
+  // Fallback for Safari < 16.2 (no color-mix support).
+  fill: var(--color-fd-foreground);
+  fill: color-mix(in oklab, var(--color-fd-foreground) 90%, transparent);
+  opacity: 0.7;
+  animation: arrowPulse 4s linear infinite;
+}
+
+@keyframes arrowPulse {
+  0%,
+  20%,
+  40%,
+  100% {
+    opacity: 0.7;
+  }
+  25%,
+  35% {
+    opacity: 1;
+  }
+}
+
+.arcLabel {
+  fill: var(--color-fd-muted-foreground);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+/* ---------------- Mobile: hide diagram, show stacked list ---------------- */
+
+.mobileList {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .wrap {
+    aspect-ratio: auto;
+    max-width: 24rem;
+  }
+
+  .svg,
+  .center,
+  .card {
+    display: none;
+  }
+
+  .mobileList {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--color-fd-border);
+  }
+
+  .mobileItem {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--color-fd-border);
+
+    &:last-of-type {
+      border-bottom: none;
+    }
+  }
+
+  .mobileStep {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.4rem;
+    height: 1.4rem;
+    margin-top: 0.05rem;
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-fd-muted-foreground);
+    border: 1px solid var(--color-fd-border);
+  }
+
+  .mobileBody {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  .mobileTitle {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--color-fd-foreground);
+    line-height: 1.3;
+  }
+
+  .mobileMeta {
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--color-fd-muted-foreground);
+    line-height: 1.4;
+  }
+
+  .mobileLoopBack {
+    padding: 0.65rem 1rem;
+    border-top: 1px dashed var(--color-fd-border);
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+    font-size: 11px;
+    color: var(--color-fd-muted-foreground);
+    text-align: center;
+  }
+}
+
+/* ---------------- Reduced motion ---------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .arcFg {
+    animation: none;
+    opacity: 0.65;
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+
+  .arrowhead {
+    animation: none;
+    opacity: 0.85;
+  }
+}

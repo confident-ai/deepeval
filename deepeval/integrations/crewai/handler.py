@@ -9,7 +9,11 @@ from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.tracing import Observer, trace_manager
 from deepeval.tracing.types import ToolSpan, TraceSpanStatus, LlmSpan
 from deepeval.config.settings import get_settings
-from deepeval.tracing.utils import perf_counter_to_datetime
+from deepeval.tracing.utils import (
+    perf_counter_to_datetime,
+    infer_provider_from_model,
+)
+from deepeval.tracing.integrations import Integration
 import time
 
 logger = logging.getLogger(__name__)
@@ -175,11 +179,12 @@ class CrewAIEventsListener(BaseEventListener):
 
         @crewai_event_bus.on(LLMCallStartedEvent)
         def on_llm_started(source, event: LLMCallStartedEvent):
+            model = getattr(event, "model", "unknown")
             metric_collection, metrics = _get_metrics_data(source)
             observer = Observer(
                 span_type="llm",
                 func_name="call",
-                observe_kwargs={"model": getattr(event, "model", "unknown")},
+                observe_kwargs={"model": model},
                 metric_collection=metric_collection,
                 metrics=metrics,
             )
@@ -194,6 +199,8 @@ class CrewAIEventsListener(BaseEventListener):
                     msgs = getattr(event, "messages")
                     span.input = msgs
                     if isinstance(span, LlmSpan):
+                        span.integration = Integration.CREW_AI.value
+                        span.provider = infer_provider_from_model(model)
                         from deepeval.tracing.trace_context import (
                             current_llm_context,
                         )
@@ -247,6 +254,16 @@ class CrewAIEventsListener(BaseEventListener):
                             event, "response", getattr(event, "output", "")
                         )
                         span_to_close.output = output
+                        if isinstance(span_to_close, LlmSpan):
+                            span_to_close.integration = (
+                                Integration.CREW_AI.value
+                            )
+                            if not span_to_close.provider:
+                                span_to_close.provider = (
+                                    infer_provider_from_model(
+                                        getattr(span_to_close, "model", None)
+                                    )
+                                )
                         if (
                             not current_span
                             or current_span.uuid != observer.uuid
@@ -352,6 +369,7 @@ class CrewAIEventsListener(BaseEventListener):
             if span:
                 span.input = tool_input
                 span.output = output
+                span.integration = Integration.CREW_AI.value
                 now_wall = time.time()
                 now_perf = perf_counter()
                 span.start_time = now_perf - (
@@ -414,6 +432,7 @@ class CrewAIEventsListener(BaseEventListener):
                     if span_to_close:
                         span_to_close.input = event.query
                         span_to_close.output = event.retrieved_knowledge
+                        span_to_close.integration = Integration.CREW_AI.value
 
                         if (
                             not current_span

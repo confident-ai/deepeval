@@ -4,6 +4,7 @@ import { Card, Cards } from "fumadocs-ui/components/card";
 import { Steps, Step } from "fumadocs-ui/components/steps";
 import type { MDXComponents } from "mdx/types";
 import { DEFAULT_LLM_MODEL } from "@/lib/defaults";
+import { MdxAnchor } from "@/components/mdx-anchor";
 
 // Site-specific MDX components — globally registered so MDX authors
 // don't have to `import` them in every file.
@@ -13,6 +14,8 @@ import Callout from "@site/src/components/Callout";
 import Equation from "@site/src/components/Equation";
 import Mermaid from "@site/src/components/Mermaid";
 import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+import IntegrationTagsDisplayer from "@site/src/components/IntegrationTagsDisplayer";
+import AgentTraceTerminal from "@site/src/components/AgentTraceTerminal";
 import FeatureComparisonTable from "@site/src/components/FeatureComparisonTable";
 import LinkCards from "@site/src/components/LinkCards";
 import TechStackCards from "@site/src/components/TechStackCards";
@@ -31,6 +34,7 @@ function DefaultLLMModel() {
 export function getMDXComponents(components?: MDXComponents) {
   return {
     ...defaultMdxComponents,
+    a: MdxAnchor,
     // Fumadocs primitives
     Tabs,
     Tab,
@@ -45,6 +49,8 @@ export function getMDXComponents(components?: MDXComponents) {
     Equation,
     Mermaid,
     MetricTagsDisplayer,
+    IntegrationTagsDisplayer,
+    AgentTraceTerminal,
     FeatureComparisonTable,
     LinkCards,
     TechStackCards,

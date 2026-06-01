@@ -2,16 +2,19 @@ import { ASSETS } from "@site/src/assets";
 import HomePytestDemo from "@site/src/sections/home/HomePytestDemo";
 import JudgeCards from "@site/src/sections/home/JudgeCards";
 import SOTACards from "@site/src/sections/home/SOTACards";
-import AgentTraceTerminal from "@site/src/sections/home/AgentTraceTerminal";
+import AgentTraceTerminal from "@site/src/components/AgentTraceTerminal";
 import ClaudeCodeTerminal from "@site/src/sections/home/ClaudeCodeTerminal";
 import TraceLoopConnector from "@site/src/sections/home/TraceLoopConnector";
+import VibeCodingLoop from "@site/src/sections/home/VibeCodingLoop";
 import IntegrationGrid from "@site/src/components/IntegrationGrid";
 import RepoContributors from "@site/src/sections/home/RepoContributors";
 import { PrimaryButton } from "@site/src/components/Buttons";
+import { CONFIDENT_HOSTS_BY_NAME } from "@site/src/utils/utm";
 import {
   GoldenGenerationDemo,
   MultiTurnSimulationDemo,
 } from "@site/src/sections/home/DatasetDemos";
+import { externalRelForOutboundHref } from "@/src/utils/outbound-link-rel";
 import {
   Bot,
   Compass,
@@ -97,7 +100,9 @@ Generate synthetic goldens from your knowledge base, or simulate full conversati
 
 ## Used by agents, loved by vibe-coders.
 
-Coming soon on May 15th...
+DeepEval is the eval harness for vibe coding agents — closing the build → eval → patch loop your coding agent has been missing. Cursor, Claude Code, and Codex shell out to one CLI, read scored traces with reasons, then patch the failing span and re-run to confirm.
+
+<VibeCodingLoop />
 
 <br />
 
@@ -108,9 +113,10 @@ Coming soon on May 15th...
 DeepEval integrates natively with Confident AI, an AI observability and evaluation platform for AI quality. It is our Vercel for DeepEval. The same test file you run on your laptop now poweres engineering, product, QAs, and domain experts.
 
 <PrimaryButton
-  href="https://www.confident-ai.com"
+  href={CONFIDENT_HOSTS_BY_NAME.WWW}
   target="_blank"
-  rel="noopener noreferrer"
+  rel={externalRelForOutboundHref(CONFIDENT_HOSTS_BY_NAME.WWW)}
+  data-utm-content="home_enterprise"
   endIcon={<Compass aria-hidden />}
 >
   Explore enterprise

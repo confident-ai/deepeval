@@ -1,19 +1,15 @@
 {
-  "uuid": "e5008f4b017008ea7d495ed134321d16",
+  "uuid": "826291288f64a0f2475533f0d069297a",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "021d400b56a9fbad",
+      "uuid": "efc775c8cbfd1e17",
       "name": "simple_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:10.572Z",
-      "endTime": "2026-01-29T19:10:11.672Z",
+      "startTime": "2026-05-05T06:45:57.164Z",
+      "endTime": "2026-05-05T06:45:58.516Z",
       "input": [
-        {
-          "role": "system",
-          "content": "Be concise, reply with one short sentence only."
-        },
         {
           "role": "user",
           "content": "Say goodbye in exactly three words."
@@ -21,35 +17,61 @@
       ],
       "output": "Farewell, take care.",
       "availableTools": [],
-      "agentHandoffs": []
-    },
-    {
-      "uuid": "021d400b56a9fbad",
-      "name": "",
-      "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-01-29T19:10:10.572Z",
-      "endTime": "2026-01-29T19:10:11.672Z",
-      "input": [
-        {
-          "role": "system",
-          "content": "Be concise, reply with one short sentence only."
-        },
-        {
-          "role": "user",
-          "content": "Say goodbye in exactly three words."
-        }
-      ],
-      "output": "Farewell, take care.",
-      "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "PydanticAI"
     }
   ],
-  "llmSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "8b5fcf31ad03a5f3",
+      "name": "chat gpt-4o-mini",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "efc775c8cbfd1e17",
+      "startTime": "2026-05-05T06:45:57.166Z",
+      "endTime": "2026-05-05T06:45:58.513Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "Be concise, reply with one short sentence only."
+        },
+        {
+          "role": "user",
+          "content": "Say goodbye in exactly three words."
+        },
+        {
+          "role": "Model Request Parameters",
+          "content": {
+            "function_tools": [],
+            "builtin_tools": [],
+            "output_mode": "text",
+            "output_object": null,
+            "output_tools": [],
+            "prompted_output_template": null,
+            "allow_text_output": true,
+            "allow_image_output": false,
+            "instruction_parts": null,
+            "thinking": null
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": "Farewell, take care."
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 28.0,
+      "outputTokenCount": 6.0,
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
+    }
+  ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T19:10:10.572Z",
-  "endTime": "2026-01-29T19:10:11.672Z",
+  "startTime": "2026-05-05T06:45:57.164Z",
+  "endTime": "2026-05-05T06:45:58.516Z",
   "name": "pydanticai-async-simple-test",
   "metadata": {
     "test_type": "async_simple"
@@ -63,10 +85,6 @@
   "threadId": "async-simple-123",
   "userId": "test-user-async",
   "input": [
-    {
-      "role": "system",
-      "content": "Be concise, reply with one short sentence only."
-    },
     {
       "role": "user",
       "content": "Say goodbye in exactly three words."

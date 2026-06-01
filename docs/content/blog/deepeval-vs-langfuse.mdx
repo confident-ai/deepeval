@@ -46,17 +46,25 @@ You’ll find us in the DeepEval Discord voice chat pretty much all the time —
 
 ### 6. We scale with your evaluation needs
 
-When you use DeepEval, everything is automatically integrated with Confident AI, which is the dashboard for analyzing DeepEval's evaluation results. This means it takes 0 extra lines of code to bring LLM evaluation to your team, and entire organization:
+[DeepEval](https://github.com/confident-ai/deepeval) and [Confident AI](https://confident-ai.com) are **two separate products** built by the same team — not the same thing.
 
-- Analyze metric score distributions, averages, and median scores
-- Generate testing reports for you to inspect and debug test cases
-- Download and save testing results as CSV/JSON
-- Share testing reports within your organization and external stakeholders
-- Regression testing to determine whether your LLM app is OK to deploy
-- Experimentation with different models and prompts side-by-side
-- Keep datasets centralized on the cloud
+- **DeepEval** is the **open-source LLM evaluation framework**: metrics, test cases, datasets, synthetic data generation, benchmarks, and CI/CD evals. It runs locally, requires no account, and works fully standalone.
+- **Confident AI** is an **all-in-one enterprise platform for LLM evaluation, observability, and red teaming**. It adds shared regression reports, online evals on production traces, monitoring, cloud-hosted datasets, prompt and model experimentation, red teaming campaigns, and team collaboration.
 
-Moreover, at some point, you’ll need to test for safety, not just performance. DeepEval includes DeepTeam, a built-in package for red teaming and safety testing LLMs. No need to switch tools or leave the ecosystem as your evaluation needs grow.
+Confident AI open-sourced many of its metrics through DeepEval. That does not make them the same product, and Confident AI is not a UI layer on top of DeepEval.
+
+**Use DeepEval on its own** for fast, code-first local evaluation and CI gates. **Use DeepEval with Confident AI** when your team needs:
+
+- Shared dashboards for metric distributions, averages, and trends across runs
+- Test reports to share internally or with external stakeholders
+- Centralized cloud datasets and golden management
+- Regression gates and side-by-side prompt and model experiments
+- Production trace observability and online evaluation of live traffic
+- Red teaming campaigns and safety testing at organization scale
+
+The integration is built into DeepEval — connect once and every DeepEval run syncs to Confident AI without extra code.
+
+DeepEval also pairs with **DeepTeam**, our open-source red teaming framework, which Confident AI's red teaming features build on the same way they build on DeepEval.
 
 ## Comparing DeepEval and Langfuse
 
@@ -113,7 +121,7 @@ DeepEval also integrates directly with LLM providers to power its metrics, from 
 
 ### Platform
 
-DeepEval integrates natively with Confident AI, a separate AI quality platform with observability, evals, and monitoring built by the same team. Langfuse's platform is also called Langfuse. Confident AI is built for powerful, customizable evaluation and benchmarking on top of full observability. Langfuse, on the other hand, is more narrowly focused on observability.
+DeepEval integrates natively with Confident AI, a separate all-in-one enterprise platform for LLM evaluation, observability, and red teaming, built by the same team. Langfuse's platform is also called Langfuse. Confident AI is built for powerful, customizable evaluation and benchmarking on top of full observability, with red teaming baked in. Langfuse, on the other hand, is more narrowly focused on observability.
 
 <FeatureComparisonTable type="langfuse::platform" competitor="Langfuse" />
 
@@ -121,4 +129,6 @@ Confident AI is also self-served, meaning you don't have to talk to us to try it
 
 ## Conclusion
 
-If there’s one takeaway: Langfuse is built for debugging, Confident AI is built for evaluation. They overlap in places, but the difference comes down to focus — observability vs. benchmarking. If you care about both, go with Confident AI, since it gives you far more depth and flexibility when it comes to evaluation.
+If there’s one takeaway: Langfuse is built for observability and tracing, DeepEval is built for evaluation. They overlap in places, but the difference comes down to focus.
+
+If you also need an enterprise platform on top of evaluation, DeepEval pairs natively with [Confident AI](https://confident-ai.com), a separate all-in-one enterprise platform for LLM evaluation, observability, and red teaming, built by the same team. DeepEval and Confident AI are not the same product: DeepEval is an open-source framework, Confident AI is an enterprise platform you can graduate into when team scale demands it.

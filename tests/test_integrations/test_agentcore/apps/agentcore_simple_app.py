@@ -10,13 +10,18 @@ def init_simple_agentcore(
     thread_id: str = None,
     user_id: str = None,
 ):
+    """Wire the deepeval OTel pipeline and build a Strands agent.
+
+    All kwargs are trace-level. Span-level configuration belongs at the
+    call site via ``with next_*_span(...)`` blocks or
+    ``update_current_span(...)`` from inside a Strands ``@tool`` body.
+    """
     instrument_agentcore(
         name=name,
         tags=tags or ["agentcore", "simple"],
         metadata=metadata or {"test_type": "simple"},
         thread_id=thread_id,
         user_id=user_id,
-        is_test_mode=True,
     )
 
     app = BedrockAgentCoreApp()

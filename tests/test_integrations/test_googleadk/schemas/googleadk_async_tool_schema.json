@@ -1,0 +1,119 @@
+{
+  "uuid": "aa6092050c0ca153f5778ac9c7eb9a38",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "9936f5b07995f1c9",
+      "name": "invocation [deepeval-googleadk-tool]",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T09:09:06.519Z",
+      "endTime": "2026-05-07T09:09:09.827Z",
+      "input": "{\"user_id\": \"test-user\", \"session_id\": \"9ffe220b-c5ff-4c3e-ad7b-c97a01a13fa6\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"What is 9 multiplied by 6?\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"9 multiplied by 6 is 54.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":10,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":209},\"invocation_id\":\"e-787bc1c2-e280-463b-8eef-32069ddc7f85\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"b624bb3d-7f85-4766-98c9-ddc996bdfee4\",\"timestamp\":1778144948.787828}",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Google ADK"
+    },
+    {
+      "uuid": "218017954893cfc9",
+      "name": "calculator_assistant",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "9936f5b07995f1c9",
+      "startTime": "2026-05-07T09:09:06.519Z",
+      "endTime": "2026-05-07T09:09:09.827Z",
+      "input": [],
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"9 multiplied by 6 is 54.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":10,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":209},\"invocation_id\":\"e-787bc1c2-e280-463b-8eef-32069ddc7f85\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"b624bb3d-7f85-4766-98c9-ddc996bdfee4\",\"timestamp\":1778144948.787828}",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Google ADK"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "e0eedf4df37eac95",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "218017954893cfc9",
+      "startTime": "2026-05-07T09:09:08.788Z",
+      "endTime": "2026-05-07T09:09:09.826Z",
+      "input": "{\"result\": 54}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"9 multiplied by 6 is 54.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":10,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":209}}",
+      "model": "gemini-2.5-flash-lite",
+      "inputTokenCount": 199.0,
+      "outputTokenCount": 10.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
+    },
+    {
+      "uuid": "f794485ee6fca33b",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "218017954893cfc9",
+      "startTime": "2026-05-07T09:09:06.520Z",
+      "endTime": "2026-05-07T09:09:08.786Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise.\n\nYou are an agent. Your internal name is \"calculator_assistant\".",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"function_call\":{\"args\":{\"a\":9,\"operation\":\"multiply\",\"b\":6},\"name\":\"calculate\"}}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":23,\"prompt_token_count\":162,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":162}],\"total_token_count\":185}}",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "inputParameters": {
+            "a": 9,
+            "operation": "multiply",
+            "b": 6
+          }
+        }
+      ],
+      "model": "gemini-2.5-flash-lite",
+      "inputTokenCount": 162.0,
+      "outputTokenCount": 23.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "bc4ea4eedf14b6ed",
+      "name": "calculate",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "f794485ee6fca33b",
+      "startTime": "2026-05-07T09:09:08.784Z",
+      "endTime": "2026-05-07T09:09:08.785Z",
+      "input": "{\"a\": 9, \"operation\": \"multiply\", \"b\": 6}",
+      "output": "{\"id\":\"adk-e52f2c78-3525-46a8-93b5-5267caa58192\",\"name\":\"calculate\",\"response\":{\"result\":54}}",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "inputParameters": {
+            "a": 9,
+            "operation": "multiply",
+            "b": 6
+          }
+        }
+      ],
+      "integration": "Google ADK"
+    }
+  ],
+  "startTime": "2026-05-07T09:09:06.519Z",
+  "endTime": "2026-05-07T09:09:09.827Z",
+  "name": "googleadk-async-tool-test",
+  "metadata": {
+    "test_type": "async_tool"
+  },
+  "tags": [
+    "googleadk",
+    "tool",
+    "async"
+  ],
+  "environment": "development",
+  "threadId": "async-tool-123",
+  "userId": "test-user-async",
+  "input": "{\"user_id\": \"test-user\", \"session_id\": \"9ffe220b-c5ff-4c3e-ad7b-c97a01a13fa6\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"What is 9 multiplied by 6?\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+  "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"9 multiplied by 6 is 54.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":10,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":209},\"invocation_id\":\"e-787bc1c2-e280-463b-8eef-32069ddc7f85\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"b624bb3d-7f85-4766-98c9-ddc996bdfee4\",\"timestamp\":1778144948.787828}",
+  "status": "SUCCESS"
+}

@@ -13,12 +13,12 @@
         "output_type": "str"
       },
       "input": "Weather in Tokyo",
-      "output": "The current weather in Tokyo is cloudy with a temperature of 68\u00b0F.",
+      "output": "The current weather in Tokyo is cloudy with a temperature of 68°F.",
       "toolsCalled": [
         {
           "name": "Function tool: get_weather",
           "description": "Function tool",
-          "output": "Cloudy, 68\u00b0F",
+          "output": "Cloudy, 68°F",
           "inputParameters": {
             "city": "Tokyo"
           }
@@ -28,7 +28,8 @@
         "get_weather",
         "calculate"
       ],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "OpenAI Agents"
     }
   ],
   "llmSpans": [
@@ -119,13 +120,15 @@
         {
           "role": "tool",
           "call_id": "call_Q2RYMEJVbuA4r64HvyJbBqZv",
-          "output": "Cloudy, 68\u00b0F"
+          "output": "Cloudy, 68°F"
         }
       ],
-      "output": "The current weather in Tokyo is cloudy with a temperature of 68\u00b0F.",
+      "output": "The current weather in Tokyo is cloudy with a temperature of 68°F.",
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 127.0,
-      "outputTokenCount": 17.0
+      "outputTokenCount": 17.0,
+      "integration": "OpenAI Agents",
+      "provider": "OpenAI"
     },
     {
       "uuid": "533c7357-a066-4214-83f9-cac2c1b2ab4c",
@@ -210,7 +213,9 @@
       "output": "{\"call_id\": \"call_Q2RYMEJVbuA4r64HvyJbBqZv\", \"name\": \"get_weather\", \"arguments\": \"{\\\"city\\\":\\\"Tokyo\\\"}\"}",
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 98.0,
-      "outputTokenCount": 15.0
+      "outputTokenCount": 15.0,
+      "integration": "OpenAI Agents",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -226,8 +231,9 @@
       "input": {
         "city": "Tokyo"
       },
-      "output": "Cloudy, 68\u00b0F",
-      "description": "Function tool"
+      "output": "Cloudy, 68°F",
+      "description": "Function tool",
+      "integration": "OpenAI Agents"
     }
   ],
   "startTime": "2026-01-29T14:38:57.307Z",
@@ -254,6 +260,6 @@
       "content": "Weather in Tokyo"
     }
   ],
-  "output": "The current weather in Tokyo is cloudy with a temperature of 68\u00b0F.",
+  "output": "The current weather in Tokyo is cloudy with a temperature of 68°F.",
   "status": "SUCCESS"
 }

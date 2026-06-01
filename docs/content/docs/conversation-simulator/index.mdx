@@ -37,7 +37,7 @@ The `ConversationSimulator` repeatedly generates a simulated user turn, sends it
 - Each `ConversationalGolden` defines the scenario, user profile, and expected outcome for a conversation.
 - The simulator model role-plays the user and generates each next user message.
 - Your `model_callback` sends that message to your chatbot and returns an assistant `Turn`.
-- The simulator stops when `max_user_simulations` is reached or the controller decides the conversation should end.
+- The simulator stops when `max_user_simulations` is reached or the `stopping_controller` decides the conversation should end.
 - The final conversation is packaged as a `ConversationalTestCase` for multi-turn evaluation.
 
 ```mermaid
@@ -46,12 +46,12 @@ sequenceDiagram
     participant Simulator as ConversationSimulator
     participant UserModel as Simulator Model
     participant App as Your Chatbot
-    participant Controller as Controller
+    participant Stop as stopping_controller
 
     Golden->>Simulator: scenario, user_description, expected_outcome
-    loop Until max_user_simulations or controller ends
-        Simulator->>Controller: check whether to continue
-        Controller-->>Simulator: proceed() or end()
+    loop Until max_user_simulations or stopping_controller ends
+        Simulator->>Stop: check whether to continue
+        Stop-->>Simulator: proceed() or end()
         Simulator->>UserModel: generate next user turn
         UserModel-->>Simulator: user Turn
         Simulator->>App: model_callback(input, turns, thread_id)
@@ -80,8 +80,8 @@ There are **ONE** mandatory and **FOUR** optional parameters when creating a `Co
 - [Optional] `simulator_model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent simulation of conversations**. Defaulted to `True`.
 - [Optional] `max_concurrent`: an integer that determines the maximum number of conversations that can be generated in parallel at any point in time. You can decrease this value if you're running into rate limit errors. Defaulted to `100`.
-- [Optional] `controller`: a callback that controls whether the simulation should continue or end. By default, `deepeval` uses the `expected_outcome` in your `ConversationalGolden` to decide when the conversation is complete.
-- [Optional] `simulation_template`: a class that inherits from `ConversationSimulatorTemplate`, which allows you to customize the prompts used to generate simulated user turns.
+- [Optional] `simulation_graph`: the root `SimulationNode` of a simulation graph for the simulated user. When omitted, `deepeval` falls back to an LLM-driven default node. Pass `default_simulation_node(template=MyTemplate)` here to use a [custom prompt template](/docs/conversation-simulator-custom-templates). See [Simulation Graph](/docs/conversation-simulator-simulation-graph).
+- [Optional] `stopping_controller`: a callback that controls whether the simulation should continue or end. By default, `deepeval` uses the `expected_outcome` in your `ConversationalGolden` to decide when the conversation is complete. (Previously named `controller`, which is still accepted as a deprecated alias.)
 
 ## Simulate A Conversation
 
@@ -104,7 +104,7 @@ There are **ONE** mandatory and **ONE** optional parameter when calling the `sim
 - `conversational_goldens`: a list of `ConversationalGolden`s that specify the scenario and user description.
 - [Optional] `max_user_simulations`: an integer that specifies the maximum number of user-assistant message cycles to simulate per conversation. Defaulted to `10`.
 
-A simulation ends when `max_user_simulations` has been reached, or when the simulator's controller decides the conversation should end. By default, the controller checks whether the conversation has achieved the expected outcome outlined in a `ConversationalGolden`.
+A simulation ends when `max_user_simulations` has been reached, when the `stopping_controller` decides the conversation should end, or when the `simulation_graph` reaches a `terminal=True` node. By default, the simulator checks whether the conversation has achieved the expected outcome outlined in a `ConversationalGolden`.
 
 See [Stopping Logic](/docs/conversation-simulator-stopping-logic) to define your own stopping logic.
 
@@ -141,6 +141,7 @@ evaluate(test_cases=conversational_test_cases, metrics=[TurnRelevancyMetric()])
 Customize the simulator around your application's conversation state, stopping criteria, and post-processing needs.
 
 - [Model Callback](/docs/conversation-simulator-model-callback): pass conversation history or `thread_id` into your chatbot so simulations exercise the same stateful path as production.
+- [Simulation Graph](/docs/conversation-simulator-simulation-graph): drive the simulated user with a programmatic state machine instead of a flat LLM prompt — encode trajectories, retry budgets, and terminal success/failure states.
 - [Stopping Logic](/docs/conversation-simulator-stopping-logic): replace expected-outcome stopping with business-specific logic such as tool calls, confirmation messages, or failure states.
 - [Custom Templates](/docs/conversation-simulator-custom-templates): change the simulated user's style, domain framing, or pressure level by overriding the user-turn prompts.
 - [Lifecycle Hooks](/docs/conversation-simulator-lifecycle-hooks): process each completed conversation immediately instead of waiting for the full simulation batch to finish.

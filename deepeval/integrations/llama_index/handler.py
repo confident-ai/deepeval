@@ -25,7 +25,11 @@ from deepeval.tracing.trace_context import (
     current_trace_context,
 )
 from deepeval.test_case import ToolCall
-from deepeval.tracing.utils import make_json_serializable
+from deepeval.tracing.utils import (
+    make_json_serializable,
+    infer_provider_from_model,
+)
+from deepeval.tracing.integrations import Integration
 
 try:
     from llama_index.core.instrumentation.events.base import BaseEvent
@@ -142,6 +146,10 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                     if llm_span_context.prompt
                     else None
                 ),
+                provider=infer_provider_from_model(
+                    getattr(event, "model_dict", {}).get("model", "unknown")
+                ),
+                integration=Integration.LLAMA_INDEX.value,
             )
             trace_manager.add_span(llm_span)
             trace_manager.add_span_to_trace(llm_span)
@@ -231,6 +239,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
             start_time=perf_counter(),
             name=method_name if method_name else instance.__class__.__name__,
             input=bound_args.arguments,
+            integration=Integration.LLAMA_INDEX.value,
         )
 
         # conditions to qualify as agent start run span
@@ -261,6 +270,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                     if agent_span_context
                     else None
                 ),
+                integration=Integration.LLAMA_INDEX.value,
             )
         elif method_name in ["acall", "call_tool", "acall_tool"]:
             span = ToolSpan(
@@ -272,6 +282,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 start_time=perf_counter(),
                 input=bound_args.arguments,
                 name="Tool",
+                integration=Integration.LLAMA_INDEX.value,
             )
 
         prepare_input_llm_test_case_params(

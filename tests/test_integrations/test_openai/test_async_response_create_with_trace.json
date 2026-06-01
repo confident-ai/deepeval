@@ -28,7 +28,9 @@
       "promptAlias": "asd",
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      "promptCommitHash": "bab04ec",
+      "integration": "OpenAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

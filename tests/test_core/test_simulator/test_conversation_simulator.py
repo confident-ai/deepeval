@@ -4,7 +4,8 @@ import pytest
 
 from deepeval.simulator import (
     ConversationSimulator,
-    ConversationSimulatorTemplate,
+    SimulationTemplate,
+    default_simulation_node,
 )
 from deepeval.test_case.conversational_test_case import (
     ConversationalTestCase,
@@ -107,7 +108,7 @@ def test_invalid_max_user_simulations():
 
 
 def test_custom_simulation_template_is_used():
-    class FormalTemplate(ConversationSimulatorTemplate):
+    class FormalTemplate(SimulationTemplate):
         @staticmethod
         def simulate_first_user_turn(golden, language):
             return (
@@ -127,7 +128,7 @@ def test_custom_simulation_template_is_used():
         model_callback=static_callback,
         simulator_model=simulator_model,
         async_mode=False,
-        simulation_template=FormalTemplate,
+        simulation_graph=default_simulation_node(template=FormalTemplate),
     )
 
     simulator.simulate([golden], max_user_simulations=1)
@@ -140,42 +141,27 @@ def test_custom_simulation_template_must_inherit_base_template():
         pass
 
     with pytest.raises(TypeError):
-        ConversationSimulator(
-            model_callback=static_callback,
-            simulator_model=StaticSimulatorModel(),
-            async_mode=False,
-            simulation_template=InvalidTemplate,
-        )
+        default_simulation_node(template=InvalidTemplate)
 
 
 def test_custom_simulation_template_validates_first_turn_signature():
-    class InvalidTemplate(ConversationSimulatorTemplate):
+    class InvalidTemplate(SimulationTemplate):
         @staticmethod
         def simulate_first_user_turn(scenario, language):
             return "bad"
 
     with pytest.raises(TypeError):
-        ConversationSimulator(
-            model_callback=static_callback,
-            simulator_model=StaticSimulatorModel(),
-            async_mode=False,
-            simulation_template=InvalidTemplate,
-        )
+        default_simulation_node(template=InvalidTemplate)
 
 
 def test_custom_simulation_template_validates_next_turn_signature():
-    class InvalidTemplate(ConversationSimulatorTemplate):
+    class InvalidTemplate(SimulationTemplate):
         @staticmethod
         def simulate_user_turn(golden, language):
             return "bad"
 
     with pytest.raises(TypeError):
-        ConversationSimulator(
-            model_callback=static_callback,
-            simulator_model=StaticSimulatorModel(),
-            async_mode=False,
-            simulation_template=InvalidTemplate,
-        )
+        default_simulation_node(template=InvalidTemplate)
 
 
 def test_turn_alternation():

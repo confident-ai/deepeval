@@ -74,13 +74,23 @@ class Turn:
     role: Literal["user", "assistant"]
     content: str
     user_id: Optional[str] = None
-    retrieval_context: Optional[List[str]] = None
+    retrieval_context: Optional[List[Union[str, RetrievedContextData]]] = None
     tools_called: Optional[List[ToolCall]] = None
 ```
 
 :::info
 You should only provide the `retrieval_context` and `tools_called` parameter if the `role` is `"assistant"`.
 :::
+
+:::note
+The `retrieval_context` parameter accepts a list of strings or `RetrievedContextData` objects.
+:::
+
+```python
+class RetrievedContextData(BaseModel):
+    context: str
+    source: str
+```
 
 The `role` parameter specifies whether a particular turn is by the `"user"` (end user) or `"assistant"` (LLM). This is similar to OpenAI's API.
 

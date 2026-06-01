@@ -1,0 +1,361 @@
+---
+id: google-adk
+title: Google ADK
+sidebar_label: Google ADK
+---
+
+<IntegrationTagsDisplayer otel={true} cicdEvals={true} traceability={true} />
+
+[Google ADK](https://google.github.io/adk-docs/) is Google's Agent Development Kit for building, evaluating, and deploying AI agents.
+
+The `deepeval` integration auto-instruments Google ADK through OpenTelemetry and OpenInference. Every agent run, model call, and tool call becomes a span you can inspect, without wiring trace structure by hand.
+
+<AgentTraceTerminal
+  title="google_adk_agent · deepeval"
+  ariaLabel="Example Google ADK agent trace with per-step metric scores"
+  lines={[
+    { kind: "cmd", name: "deepeval test run test_google_adk_agent.py" },
+    { kind: "blank" },
+    { kind: "root", prefix: "●", name: "test_google_adk_agent" },
+    { kind: "blank", prefix: "│" },
+    {
+      kind: "agent",
+      prefix: "└─",
+      name: "calculator_assistant",
+      metric: "Task Completion",
+      score: "0.96",
+      duration: "210ms",
+      pass: true,
+    },
+    {
+      kind: "llm",
+      prefix: "   ├─",
+      name: "gemini-2.0-flash · plan",
+      metric: "G-Eval",
+      score: "0.44",
+      duration: "82ms",
+      pass: false,
+    },
+    {
+      kind: "tool",
+      prefix: "   ├─",
+      name: 'calculate(operation="multiply")',
+      duration: "38ms",
+    },
+    {
+      kind: "llm",
+      prefix: "   └─",
+      name: "gemini-2.0-flash · respond",
+      metric: "Faithfulness",
+      score: "0.95",
+      duration: "70ms",
+      pass: true,
+    },
+    { kind: "blank" },
+    {
+      kind: "summary",
+      name: "Trace score  0.78   ·   2/3 metrics passed",
+      pass: false,
+    },
+  ]}
+/>
+
+`deepeval`'s Google ADK integration enables you to:
+
+- **Auto-instrument every ADK agent run** — each `runner.run_async(...)` produces a trace, and each LLM, tool, and agent call becomes a component span.
+- **Evaluate traces or model / agent components** with any `deepeval` metric.
+- **Run evals from scripts or CI/CD** — same metrics, different surfaces.
+- **Customize trace and span data at runtime** from tool bodies, wrappers, or staged span config.
+
+## Getting Started
+
+<Steps>
+
+<Step>
+
+### Installation
+
+```bash
+pip install -U deepeval google-adk openinference-instrumentation-google-adk opentelemetry-sdk opentelemetry-exporter-otlp-proto-http
+```
+
+Under the hood the integration uses Google ADK's OpenInference instrumentor and routes its OpenTelemetry spans through `deepeval`'s span processor.
+
+:::info
+You don't need to touch OTel directly — `instrument_google_adk(...)` handles the ADK instrumentor and `deepeval` processor wiring.
+:::
+
+</Step>
+
+<Step>
+
+### Instrument and evaluate
+
+Call `instrument_google_adk(...)` before running your ADK agent. From that point on, ADK spans are available to `deepeval`.
+
+```python title="google_adk_agent.py" showLineNumbers
+import asyncio
+from google.adk.agents import LlmAgent
+from google.adk.runners import InMemoryRunner
+from google.genai import types
+from deepeval.integrations.google_adk import instrument_google_adk
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.evaluate.configs import AsyncConfig
+from deepeval.metrics import TaskCompletionMetric
+
+instrument_google_adk()
+
+agent = LlmAgent(model="gemini-2.0-flash", name="assistant", instruction="Be concise.")
+runner = InMemoryRunner(agent=agent, app_name="deepeval-google-adk")
+
+async def run_agent(prompt: str) -> str:
+    session = await runner.session_service.create_session(app_name="deepeval-google-adk", user_id="demo-user")
+    message = types.Content(role="user", parts=[types.Part(text=prompt)])
+    async for event in runner.run_async(user_id="demo-user", session_id=session.id, new_message=message):
+        if event.is_final_response() and event.content:
+            return "".join(part.text for part in event.content.parts if getattr(part, "text", None))
+    return ""
+
+# Goldens are the inputs you want to evaluate.
+dataset = EvaluationDataset(goldens=[Golden(input="What is 7 multiplied by 8?")])
+
+# `evals_iterator` loops through goldens and applies metrics.
+for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True), metrics=[TaskCompletionMetric()]):
+    task = asyncio.create_task(run_agent(golden.input)) # Produces trace for evaluation
+    dataset.evaluate(task)
+```
+
+Done ✅. You've run your first eval with full traceability into Google ADK via `deepeval`.
+
+</Step>
+
+</Steps>
+
+## What gets traced
+
+Each `runner.run_async(...)` call produces a **trace** — the end-to-end unit your user observes. Inside that trace are **component spans** for every ADK step:
+
+- **Agent spans** — ADK agent runs and nested agent operations.
+- **LLM spans** — Gemini / model calls emitted by ADK.
+- **Tool spans** — Python functions and ADK tools called by the agent.
+
+```text
+Trace                              ← what the user observes
+└── Agent: calculator_assistant     ← one runner.run_async(...) call
+    ├── LLM: gemini-2.0-flash      ← component span: model plans
+    ├── Tool: calculate            ← component span: tool input + output
+    └── LLM: gemini-2.0-flash      ← component span: final answer
+```
+
+The trace and its component spans are independently evaluable.
+
+## Running evals
+
+There are two surfaces for running evals against a Google ADK agent. Pick by where you want results to surface — your terminal during development, or your CI pipeline as a pass/fail gate.
+
+### In CI/CD (pytest)
+
+Use the `deepeval` pytest integration. Each parametrized test invocation becomes one ADK agent run; failing metrics fail the test, which fails the build.
+
+```python title="test_google_adk_agent.py" showLineNumbers
+import asyncio
+import pytest
+from google.adk.agents import LlmAgent
+from google.adk.runners import InMemoryRunner
+from google.genai import types
+from deepeval import assert_test
+from deepeval.integrations.google_adk import instrument_google_adk
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+instrument_google_adk()
+
+agent = LlmAgent(model="gemini-2.0-flash", name="assistant", instruction="Be concise.")
+runner = InMemoryRunner(agent=agent, app_name="deepeval-google-adk")
+dataset = EvaluationDataset(goldens=[
+    Golden(input="What is 7 multiplied by 8?"),
+    Golden(input="Summarize why tracing helps agents."),
+])
+
+async def run_agent(prompt: str) -> str:
+    session = await runner.session_service.create_session(app_name="deepeval-google-adk", user_id="demo-user")
+    message = types.Content(role="user", parts=[types.Part(text=prompt)])
+    async for event in runner.run_async(user_id="demo-user", session_id=session.id, new_message=message):
+        if event.is_final_response() and event.content:
+            return "".join(part.text for part in event.content.parts if getattr(part, "text", None))
+    return ""
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_google_adk_agent(golden: Golden):
+    asyncio.run(run_agent(golden.input))
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Run it with:
+
+```bash
+deepeval test run test_google_adk_agent.py
+```
+
+### In a script
+
+Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one ADK agent run; metrics score the resulting trace.
+
+```python title="google_adk_agent.py" showLineNumbers
+dataset = EvaluationDataset(goldens=[
+    Golden(input="What is 7 multiplied by 8?"),
+    Golden(input="Summarize why tracing helps agents."),
+])
+
+for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True), metrics=[TaskCompletionMetric()]):
+    task = asyncio.create_task(run_agent(golden.input))
+    dataset.evaluate(task)
+```
+
+## Applying metrics to components
+
+The `metrics=[...]` you passed to `evals_iterator` evaluates the **trace**. To evaluate a **component** instead — a specific LLM call or agent span — stage the metric with the appropriate `next_*_span(...)` wrapper before invoking the agent.
+
+### Agent spans
+
+```python title="google_adk_agent.py" showLineNumbers
+from deepeval.tracing import next_agent_span
+...
+
+async def run_agent_with_metric(prompt: str):
+    with next_agent_span(metrics=[TaskCompletionMetric()]):
+        return await run_agent(prompt)
+```
+
+### LLM calls
+
+```python title="google_adk_agent.py" showLineNumbers
+from deepeval.tracing import next_llm_span
+...
+
+async def run_agent_with_metric(prompt: str):
+    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
+        return await run_agent(prompt)
+```
+
+For deterministic tool calls, prefer `update_current_span(...)` to add metadata, inputs, and outputs instead of attaching metrics to the tool span.
+
+## Customizing trace and span data at runtime
+
+Trace-level fields you pass to `instrument_google_adk(...)` are defaults. For anything dynamic, the right API depends on where your code runs.
+
+Google ADK creates most of the trace structure for you, which means the agent, LLM, and tool spans are mostly hidden behind `runner.run_async(...)`. Calls like `update_current_trace(...)` and `update_current_span(...)` only work while there is an active `deepeval` trace/span in context. In practice, tool bodies are the clearest mutation point, because ADK has already opened the trace and tool span before your function runs.
+
+If you need to customize from outside a tool, use `instrument_google_adk(...)` for static defaults, `next_*_span(...)` to stage config for the next ADK-created span, or `@observe` / `with trace(...)` when you own the outer operation.
+
+### Trace-level fields from inside a tool
+
+```python title="google_adk_agent.py" showLineNumbers
+from deepeval.tracing import update_current_trace
+...
+
+def lookup_order(order_id: str) -> dict:
+    order = orders_db.get(order_id)
+    update_current_trace(user_id=order["user_id"], metadata={"order_id": order_id})
+    return order
+```
+
+### Span-level fields from inside a tool
+
+```python title="google_adk_agent.py" showLineNumbers
+from deepeval.tracing import update_current_span
+...
+
+def lookup_order(order_id: str) -> dict:
+    order = orders_db.get(order_id)
+    update_current_span(metadata={"order_id": order_id}, output=order)
+    return order
+```
+
+## Advanced patterns
+
+The primitives above — `instrument_google_adk(...)`, `@observe`, `with trace(...)`, `next_*_span(...)`, `update_current_*(...)` — compose around one boundary: Google ADK owns the auto-instrumented spans, and your code customizes them from the places it can actually see.
+
+### Evaluate subagents with `next_*_span`
+
+`next_*_span(metrics=[...])` stages a metric for the next matching Google ADK component span. Use this when you want to evaluate a subagent or model step instead of the full trace. Pick the helper that matches the span you want to score: `next_agent_span(...)` or `next_llm_span(...)`.
+
+```python title="google_adk_agent.py" showLineNumbers
+from deepeval.tracing import next_agent_span
+...
+
+async def run_agent_with_metric(prompt: str):
+    with next_agent_span(metrics=[TaskCompletionMetric()]):
+        return await run_agent(prompt)
+```
+
+#### No trace-level metrics required
+
+Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because the `TaskCompletionMetric` is attached to the next agent span, so CI/CD and scripts only need to run the subagent.
+
+This is how you'd run it:
+
+<Tabs items={["CI/CD", "Scripts"]}>
+<Tab value="CI/CD">
+
+```python title="test_google_adk_agent.py" showLineNumbers
+import asyncio
+import pytest
+from deepeval import assert_test
+...
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_agent_span(golden: Golden):
+    asyncio.run(run_agent_with_metric(golden.input))
+    assert_test(golden=golden)
+```
+
+Then finally:
+
+```bash
+deepeval test run test_google_adk_agent.py
+```
+
+</Tab>
+<Tab value="Scripts">
+
+```python title="google_adk_agent.py" showLineNumbers
+...
+
+for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True)):
+    task = asyncio.create_task(run_agent_with_metric(golden.input))
+    dataset.evaluate(task)
+```
+
+</Tab>
+</Tabs>
+
+### Wrap an ADK run in `@observe`
+
+When the ADK agent run is part of a larger operation, decorate the outer function with `@observe`. ADK spans nest under your observed span automatically.
+
+```python title="google_adk_agent.py" showLineNumbers
+from deepeval.tracing import observe
+...
+
+@observe(name="respond_to_user")
+async def respond_to_user(prompt: str) -> str:
+    result = await run_agent(prompt)
+    return result.strip()
+```
+
+## API reference
+
+`instrument_google_adk(...)` accepts the following trace-level kwargs. Each one is a default; runtime calls always win.
+
+| Kwarg              | Type        | Description                                                                |
+| ------------------ | ----------- | -------------------------------------------------------------------------- |
+| `name`             | `str`       | Default trace name. Override at runtime via `update_current_trace`.        |
+| `thread_id`        | `str`       | Default thread identifier. Useful for grouping conversational turns.       |
+| `user_id`          | `str`       | Default actor identifier. Override per-request via `update_current_trace`. |
+| `metadata`         | `dict`      | Default trace metadata. Merged with runtime overrides; runtime wins.       |
+| `tags`             | `list[str]` | Default tags applied to every trace produced by this agent.                |
+| `environment`      | `str`       | One of `"development"`, `"staging"`, `"production"`, `"testing"`.          |
+| `metric_collection`| `str`       | Default metric collection applied at the trace level.                      |
+
+For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_span`, `next_llm_span`) and the test-decorator surface (`@observe`, `@assert_test`, `with trace(...)`), see the [tracing reference](/docs/evaluation-llm-tracing).

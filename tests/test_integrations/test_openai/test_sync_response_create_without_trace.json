@@ -23,7 +23,9 @@
       "output": "Hello! I'm here and ready to help. How can I assist you today?",
       "model": "gpt-4o",
       "inputTokenCount": 29.0,
-      "outputTokenCount": 17.0
+      "outputTokenCount": 17.0,
+      "integration": "OpenAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

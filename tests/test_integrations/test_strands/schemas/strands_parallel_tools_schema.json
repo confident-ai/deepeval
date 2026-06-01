@@ -1,0 +1,131 @@
+{
+  "uuid": "d687af27d4fab2d2ab93e0c8a2573c81",
+  "baseSpans": [
+    {
+      "uuid": "47d735fc7ee32463",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e0b754b704f77e2a",
+      "startTime": "2026-05-07T11:39:36.705Z",
+      "endTime": "2026-05-07T11:39:38.028Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
+      "output": "{'toolUse': {'toolUseId': 'call_ozTGnlUfGIYCr56JvmIv6DWJ', 'name': 'get_weather', 'input': {'city': 'Paris'}}}",
+      "integration": "Strands"
+    },
+    {
+      "uuid": "1a7067dd71fbf485",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e0b754b704f77e2a",
+      "startTime": "2026-05-07T11:39:35.223Z",
+      "endTime": "2026-05-07T11:39:36.705Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
+      "output": "{'toolUse': {'toolUseId': 'call_ozTGnlUfGIYCr56JvmIv6DWJ', 'name': 'get_weather', 'input': {'city': 'Paris'}}}",
+      "integration": "Strands"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "e0b754b704f77e2a",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T11:39:35.223Z",
+      "endTime": "2026-05-07T11:39:38.029Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
+      "output": "The weather in Paris is cloudy with a temperature of 62°F. The current time is 8:00 AM CET.\n",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Strands"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "0deea9c36983076c",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "47d735fc7ee32463",
+      "startTime": "2026-05-07T11:39:36.706Z",
+      "endTime": "2026-05-07T11:39:38.027Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
+      "output": "The weather in Paris is cloudy with a temperature of 62°F. The current time is 8:00 AM CET.",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 195.0,
+      "outputTokenCount": 26.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
+    },
+    {
+      "uuid": "408e7054b607ad4a",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "1a7067dd71fbf485",
+      "startTime": "2026-05-07T11:39:35.224Z",
+      "endTime": "2026-05-07T11:39:36.703Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
+      "output": "{'toolUse': {'toolUseId': 'call_ozTGnlUfGIYCr56JvmIv6DWJ', 'name': 'get_weather', 'input': {'city': 'Paris'}}}",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 126.0,
+      "outputTokenCount": 44.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "54a7a16e9aaac228",
+      "name": "execute_tool get_time",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "1a7067dd71fbf485",
+      "startTime": "2026-05-07T11:39:36.704Z",
+      "endTime": "2026-05-07T11:39:36.705Z",
+      "output": "8:00 AM CET",
+      "toolsCalled": [
+        {
+          "name": "get_time",
+          "inputParameters": {}
+        }
+      ],
+      "integration": "Strands"
+    },
+    {
+      "uuid": "d7f17d3265612a92",
+      "name": "execute_tool get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "1a7067dd71fbf485",
+      "startTime": "2026-05-07T11:39:36.704Z",
+      "endTime": "2026-05-07T11:39:36.705Z",
+      "output": "Cloudy, 62F",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {}
+        }
+      ],
+      "integration": "Strands"
+    }
+  ],
+  "startTime": "2026-05-07T11:39:35.223Z",
+  "endTime": "2026-05-07T11:39:38.029Z",
+  "name": "strands-parallel-tools",
+  "metadata": {
+    "test_type": "parallel_tools"
+  },
+  "tags": [
+    "strands",
+    "parallel-tools"
+  ],
+  "environment": "development",
+  "threadId": "parallel-tools-123",
+  "userId": "test-user",
+  "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
+  "output": "The weather in Paris is cloudy with a temperature of 62°F. The current time is 8:00 AM CET.\n",
+  "status": "SUCCESS"
+}

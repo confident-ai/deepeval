@@ -1,0 +1,150 @@
+{
+  "uuid": "75f860abb6f97172c9444019b4a06936",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "ca9995a5423653a3",
+      "name": "invocation [deepeval-googleadk-multiple-tools]",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T09:16:30.517Z",
+      "endTime": "2026-05-07T09:16:33.499Z",
+      "input": "{\"user_id\": \"test-user\", \"session_id\": \"689dd0c7-7981-4c53-838d-4991907525e4\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Paris is cloudy and 62F. The current time is 8:00 AM CET.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":24,\"prompt_token_count\":310,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":310}],\"total_token_count\":334},\"invocation_id\":\"e-c55ee938-f46d-450e-b950-399fc58e0178\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"bc370ce3-33d3-4480-8c8c-de716decfcfd\",\"timestamp\":1778145392.021772}",
+      "integration": "Google ADK",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "681057c282b188f7",
+      "name": "multi_tool_assistant",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "ca9995a5423653a3",
+      "startTime": "2026-05-07T09:16:30.517Z",
+      "endTime": "2026-05-07T09:16:33.498Z",
+      "input": [],
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Paris is cloudy and 62F. The current time is 8:00 AM CET.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":24,\"prompt_token_count\":310,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":310}],\"total_token_count\":334},\"invocation_id\":\"e-c55ee938-f46d-450e-b950-399fc58e0178\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"bc370ce3-33d3-4480-8c8c-de716decfcfd\",\"timestamp\":1778145392.021772}",
+      "integration": "Google ADK",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "a9c5f29a219f816e",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "681057c282b188f7",
+      "startTime": "2026-05-07T09:16:32.021Z",
+      "endTime": "2026-05-07T09:16:33.497Z",
+      "input": "{\"time\": \"8:00 AM CET\"}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Paris is cloudy and 62F. The current time is 8:00 AM CET.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":24,\"prompt_token_count\":310,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":310}],\"total_token_count\":334}}",
+      "model": "gemini-2.5-flash-lite",
+      "provider": "Gemini",
+      "inputTokenCount": 310.0,
+      "outputTokenCount": 24.0,
+      "integration": "Google ADK"
+    },
+    {
+      "uuid": "b0be0bc64d0fd696",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "681057c282b188f7",
+      "startTime": "2026-05-07T09:16:30.518Z",
+      "endTime": "2026-05-07T09:16:32.019Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise.\n\nYou are an agent. Your internal name is \"multi_tool_assistant\".",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"function_call\":{\"args\":{\"city\":\"Paris\"},\"name\":\"get_weather\"}},{\"function_call\":{\"args\":{\"city\":\"Paris\"},\"name\":\"get_time\"}}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":30,\"prompt_token_count\":241,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":241}],\"total_token_count\":271}}",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        },
+        {
+          "name": "get_time",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ],
+      "model": "gemini-2.5-flash-lite",
+      "provider": "Gemini",
+      "inputTokenCount": 241.0,
+      "outputTokenCount": 30.0,
+      "integration": "Google ADK"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "b37e57dff52bc126",
+      "name": "(merged tools)",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "b0be0bc64d0fd696",
+      "startTime": "2026-05-07T09:16:32.019Z",
+      "endTime": "2026-05-07T09:16:32.019Z",
+      "integration": "Google ADK"
+    },
+    {
+      "uuid": "d9225cda3e3b1bef",
+      "name": "get_time",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "b0be0bc64d0fd696",
+      "startTime": "2026-05-07T09:16:32.018Z",
+      "endTime": "2026-05-07T09:16:32.018Z",
+      "input": "{\"city\": \"Paris\"}",
+      "output": "{\"id\":\"adk-21843c6e-f364-4397-a47d-a3a1ccdeb472\",\"name\":\"get_time\",\"response\":{\"time\":\"8:00 AM CET\"}}",
+      "toolsCalled": [
+        {
+          "name": "get_time",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ],
+      "integration": "Google ADK"
+    },
+    {
+      "uuid": "dab13797c055732b",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "b0be0bc64d0fd696",
+      "startTime": "2026-05-07T09:16:32.015Z",
+      "endTime": "2026-05-07T09:16:32.016Z",
+      "input": "{\"city\": \"Paris\"}",
+      "output": "{\"id\":\"adk-1d8d591d-4184-4b08-ab86-09bf4c9263a6\",\"name\":\"get_weather\",\"response\":{\"report\":\"Cloudy, 62F\"}}",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ],
+      "integration": "Google ADK"
+    }
+  ],
+  "startTime": "2026-05-07T09:16:30.517Z",
+  "endTime": "2026-05-07T09:16:33.499Z",
+  "name": "googleadk-parallel-tools",
+  "metadata": {
+    "test_type": "parallel_tools"
+  },
+  "tags": [
+    "googleadk",
+    "parallel-tools"
+  ],
+  "environment": "development",
+  "threadId": "parallel-tools-123",
+  "userId": "test-user",
+  "input": "{\"user_id\": \"test-user\", \"session_id\": \"689dd0c7-7981-4c53-838d-4991907525e4\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+  "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Paris is cloudy and 62F. The current time is 8:00 AM CET.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":24,\"prompt_token_count\":310,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":310}],\"total_token_count\":334},\"invocation_id\":\"e-c55ee938-f46d-450e-b950-399fc58e0178\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"bc370ce3-33d3-4480-8c8c-de716decfcfd\",\"timestamp\":1778145392.021772}",
+  "status": "SUCCESS"
+}

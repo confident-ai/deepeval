@@ -96,7 +96,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 3 apples added to your cart. What else would you like?",
+            "content": "Done — 3 apples added to your cart. What else would you like?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -334,7 +334,7 @@
             "status": "success"
           },
           {
-            "content": "Coupon \"SAVE10\" applied \u2014 10% discount added to your cart. Ready to checkout or make more changes?",
+            "content": "Coupon \"SAVE10\" applied — 10% discount added to your cart. Ready to checkout or make more changes?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -381,7 +381,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-4921-75f3-b7ad-955227ff8e34",
@@ -468,7 +469,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 3 apples added to your cart. What else would you like?",
+            "content": "Done — 3 apples added to your cart. What else would you like?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -710,7 +711,7 @@
       "output": {
         "messages": [
           {
-            "content": "Coupon \"SAVE10\" applied \u2014 10% discount added to your cart. Ready to checkout or make more changes?",
+            "content": "Coupon \"SAVE10\" applied — 10% discount added to your cart. Ready to checkout or make more changes?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -757,7 +758,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-4cb9-7031-8aa5-886d9bfcb0f2",
@@ -844,7 +846,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 3 apples added to your cart. What else would you like?",
+            "content": "Done — 3 apples added to your cart. What else would you like?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -1082,7 +1084,7 @@
             "status": "success"
           },
           {
-            "content": "Coupon \"SAVE10\" applied \u2014 10% discount added to your cart. Ready to checkout or make more changes?",
+            "content": "Coupon \"SAVE10\" applied — 10% discount added to your cart. Ready to checkout or make more changes?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -1130,7 +1132,8 @@
           }
         ]
       },
-      "output": "__end__"
+      "output": "__end__",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-491e-7b72-affa-d609d9f1b692",
@@ -1217,7 +1220,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 3 apples added to your cart. What else would you like?",
+            "content": "Done — 3 apples added to your cart. What else would you like?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -1477,7 +1480,8 @@
             "code": "SAVE10"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-43d8-77b1-9d12-db22ce9ccefa",
@@ -1564,7 +1568,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 3 apples added to your cart. What else would you like?",
+            "content": "Done — 3 apples added to your cart. What else would you like?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -1796,7 +1800,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0518-491d-7f03-a1de-911e709ffbc8",
@@ -1883,7 +1888,7 @@
             "status": "success"
           },
           {
-            "content": "Done \u2014 3 apples added to your cart. What else would you like?",
+            "content": "Done — 3 apples added to your cart. What else would you like?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -2112,7 +2117,8 @@
           }
         ]
       },
-      "output": "tools"
+      "output": "tools",
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -2144,7 +2150,7 @@
         },
         {
           "role": "ai",
-          "content": "Done \u2014 3 apples added to your cart. What else would you like?"
+          "content": "Done — 3 apples added to your cart. What else would you like?"
         },
         {
           "role": "human",
@@ -2201,12 +2207,14 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Coupon \"SAVE10\" applied \u2014 10% discount added to your cart. Ready to checkout or make more changes?",
+        "content": "Coupon \"SAVE10\" applied — 10% discount added to your cart. Ready to checkout or make more changes?",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 521.0,
-      "outputTokenCount": 27.0
+      "outputTokenCount": 27.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d0518-43da-77d0-a62f-6eef00e2b4bf",
@@ -2235,7 +2243,7 @@
         },
         {
           "role": "ai",
-          "content": "Done \u2014 3 apples added to your cart. What else would you like?"
+          "content": "Done — 3 apples added to your cart. What else would you like?"
         },
         {
           "role": "human",
@@ -2297,7 +2305,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 488.0,
-      "outputTokenCount": 24.0
+      "outputTokenCount": 24.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -2322,7 +2332,8 @@
         "id": "580a1293-4352-4664-be30-f80d7327bdd2",
         "tool_call_id": "call_Tg2Sm2BVrXQS5A6V1mFjuFUi",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:56:09.559Z",
@@ -2424,7 +2435,7 @@
         "status": "success"
       },
       {
-        "content": "Done \u2014 3 apples added to your cart. What else would you like?",
+        "content": "Done — 3 apples added to your cart. What else would you like?",
         "additional_kwargs": {
           "refusal": null
         },
@@ -2662,7 +2673,7 @@
         "status": "success"
       },
       {
-        "content": "Coupon \"SAVE10\" applied \u2014 10% discount added to your cart. Ready to checkout or make more changes?",
+        "content": "Coupon \"SAVE10\" applied — 10% discount added to your cart. Ready to checkout or make more changes?",
         "additional_kwargs": {
           "refusal": null
         },

@@ -29,7 +29,7 @@
             "id": "118e37ee-7777-4167-8e88-c03a89d909ff"
           },
           {
-            "content": "I'm doing well, thanks \u2014 ready to help. How can I assist you today?",
+            "content": "I'm doing well, thanks — ready to help. How can I assist you today?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -77,7 +77,8 @@
           }
         ],
         "intent": "general"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-c816-78e1-baf4-1db241a4c452",
@@ -102,7 +103,7 @@
       "output": {
         "messages": [
           {
-            "content": "I'm doing well, thanks \u2014 ready to help. How can I assist you today?",
+            "content": "I'm doing well, thanks — ready to help. How can I assist you today?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -149,7 +150,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-cf10-70c2-ac3f-888b05d5e001",
@@ -169,7 +171,7 @@
             "id": "118e37ee-7777-4167-8e88-c03a89d909ff"
           },
           {
-            "content": "I'm doing well, thanks \u2014 ready to help. How can I assist you today?",
+            "content": "I'm doing well, thanks — ready to help. How can I assist you today?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -218,7 +220,8 @@
         ],
         "intent": "general"
       },
-      "output": "__end__"
+      "output": "__end__",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-c815-7b22-afad-dae2e0ff2147",
@@ -250,7 +253,8 @@
           }
         ],
         "intent": "general"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-c815-7b22-afad-daf6792ed9b6",
@@ -272,7 +276,8 @@
         ],
         "intent": "general"
       },
-      "output": "general"
+      "output": "general",
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -305,12 +310,14 @@
       ],
       "output": {
         "role": "AI",
-        "content": "I'm doing well, thanks \u2014 ready to help. How can I assist you today?",
+        "content": "I'm doing well, thanks — ready to help. How can I assist you today?",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 172.0,
-      "outputTokenCount": 26.0
+      "outputTokenCount": 26.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -345,7 +352,7 @@
         "id": "118e37ee-7777-4167-8e88-c03a89d909ff"
       },
       {
-        "content": "I'm doing well, thanks \u2014 ready to help. How can I assist you today?",
+        "content": "I'm doing well, thanks — ready to help. How can I assist you today?",
         "additional_kwargs": {
           "refusal": null
         },

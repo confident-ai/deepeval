@@ -1,6 +1,5 @@
-"use client";
-
 import type { CSSProperties, ReactNode } from "react";
+import { PauseOffscreen } from "@site/src/components/PauseOffscreen";
 import styles from "./JudgeCards.module.scss";
 
 type Card = {
@@ -134,15 +133,17 @@ const CARDS: Card[] = [
 
 const JudgeCards: React.FC = () => {
   return (
-    <div className={styles.grid}>
-      {CARDS.map((card, i) => (
-        <article key={i} className={styles.card}>
-          <div className={styles.iconWrap}>{card.icon}</div>
-          <h3 className={styles.heading}>{card.heading}</h3>
-          <p className={styles.description}>{card.description}</p>
-        </article>
-      ))}
-    </div>
+    <PauseOffscreen>
+      <div className={styles.grid}>
+        {CARDS.map((card, i) => (
+          <article key={i} className={styles.card}>
+            <div className={styles.iconWrap}>{card.icon}</div>
+            <h3 className={styles.heading}>{card.heading}</h3>
+            <p className={styles.description}>{card.description}</p>
+          </article>
+        ))}
+      </div>
+    </PauseOffscreen>
   );
 };
 

@@ -1,5 +1,3 @@
-"use client";
-
 import Image from "next/image";
 import styles from "./ClaudeCodeTerminal.module.scss";
 

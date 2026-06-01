@@ -3,175 +3,387 @@ id: langgraph
 title: LangGraph
 sidebar_label: LangGraph
 ---
-import { ASSETS } from "@site/src/assets";
 
-[LangGraph](https://www.langchain.com/langgraph) is an open-source framework for developing applications powered by large language models, enabling chaining of LLMs with external data sources and expressive workflows to build advanced generative AI solutions.
+<IntegrationTagsDisplayer native={true} cicdEvals={true} traceability={true} />
 
-:::tip
-We recommend logging in to [Confident AI](https://app.confident-ai.com) to view your LangGraph evaluation traces.
+[LangGraph](https://www.langchain.com/langgraph) is a low-level orchestration framework for building stateful, graph-based agent workflows. You compose agents from `StateGraph` nodes and edges, with full control over routing, state, and tool execution.
 
-```bash
-deepeval login
-```
+The `deepeval` integration traces LangGraph runs through LangChain's `CallbackHandler`, which you pass into your graph's runtime config. Every graph run, node, model call, tool call, and nested step becomes a span you can inspect, without rewriting your LangGraph app.
 
-:::
+<AgentTraceTerminal
+  title="langgraph_agent · deepeval"
+  ariaLabel="Example LangGraph agent trace with per-step metric scores"
+  lines={[
+    { kind: "cmd", name: "deepeval test run test_langgraph_agent.py" },
+    { kind: "blank" },
+    { kind: "root", prefix: "●", name: "test_langgraph_agent" },
+    { kind: "blank", prefix: "│" },
+    {
+      kind: "agent",
+      prefix: "└─",
+      name: "weather_graph",
+      metric: "Task Completion",
+      score: "0.94",
+      duration: "190ms",
+      pass: true,
+    },
+    {
+      kind: "llm",
+      prefix: "   ├─",
+      name: "chatbot · gpt-4o-mini",
+      metric: "G-Eval",
+      score: "0.42",
+      duration: "72ms",
+      pass: false,
+    },
+    {
+      kind: "tool",
+      prefix: "   ├─",
+      name: 'get_weather(city="Paris")',
+      duration: "32ms",
+    },
+    {
+      kind: "llm",
+      prefix: "   └─",
+      name: "chatbot · gpt-4o-mini",
+      metric: "Faithfulness",
+      score: "0.95",
+      duration: "78ms",
+      pass: true,
+    },
+    { kind: "blank" },
+    {
+      kind: "summary",
+      name: "Trace score  0.77   ·   2/3 metrics passed",
+      pass: false,
+    },
+  ]}
+/>
 
-## End-to-End Evals
+`deepeval`'s LangGraph integration enables you to:
 
-`deepeval` allows you to evaluate LangGraph applications end-to-end in **under a minute**.
+- **Trace any LangGraph run** — pass `CallbackHandler(...)` through `config={"callbacks": [...]}` per call.
+- **Evaluate traces or model / agent components** with `deepeval` metrics.
+- **Run evals from scripts or CI/CD** — same callback, different surfaces.
+- **Customize trace and span data** through callback kwargs and LangChain metadata.
+
+## Getting Started
 
 <Steps>
 
 <Step>
-### Configure LangGraph
 
+### Installation
 
-Create a `CallbackHandler` with a list of [task completion metrics](/docs/metrics-task-completion) you wish to use, and pass it to your LangGraph application's `invoke` method.
+```bash
+pip install -U deepeval langgraph langchain-openai
+```
 
-```python title="main.py" showLineNumbers
-from langgraph.prebuilt import create_react_agent
+LangGraph uses LangChain's callback system, so the `deepeval` integration is per-call. You decide which graph runs are traced by passing `CallbackHandler(...)` into the graph config.
 
+</Step>
+
+<Step>
+
+### Instrument and evaluate
+
+Wire your `StateGraph` (LangGraph's core abstraction), then pass `CallbackHandler(...)` to the invocation you want to evaluate.
+
+```python title="langgraph_agent.py" showLineNumbers
+from langchain.chat_models import init_chat_model
+from langgraph.graph import StateGraph, MessagesState, START, END
+from langgraph.prebuilt import ToolNode, tools_condition
 from deepeval.integrations.langchain import CallbackHandler
- 
+from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.metrics import TaskCompletionMetric
- 
+
 def get_weather(city: str) -> str:
-    """Returns the weather in a city"""
+    """Return the weather in a city."""
     return f"It's always sunny in {city}!"
 
-agent = create_react_agent(
-    model="openai:gpt-4o-mini",  
-    tools=[get_weather],  
-    prompt="You are a helpful assistant",
+llm = init_chat_model("openai:gpt-4o-mini").bind_tools([get_weather])
+
+def chatbot(state: MessagesState):
+    return {"messages": [llm.invoke(state["messages"])]}
+
+graph = (
+    StateGraph(MessagesState)
+    .add_node(chatbot)
+    .add_node("tools", ToolNode([get_weather]))
+    .add_edge(START, "chatbot")
+    .add_conditional_edges("chatbot", tools_condition)
+    .add_edge("tools", "chatbot")
+    .compile()
 )
 
-#result = agent.invoke(
-#    input = {"messages": [{"role": "user", "content": "what is the weather in sf"}]}, 
-#    config = {"callbacks": [CallbackHandler(metrics=[task_completion_metric])]}
-#)
+# Goldens are the inputs you want to evaluate.
+dataset = EvaluationDataset(goldens=[Golden(input="What is the weather in Paris?")])
 
-#print(result)
-```
-
-:::info
-Only [Task Completion](/docs/metrics-task-completion) is supported for the LangGraph integration. To use other metrics, manually [set up tracing](/docs/evaluation-llm-tracing) instead.
-:::
-
-</Step>
-<Step>
-### Run evaluations
-
-
-Create an `EvaluationDataset` and invoke your LangGraph application for each golden within the `evals_iterator()` loop to run end-to-end evaluations.
-
-<Tabs items={["Synchronous", "Asynchronous"]}>
-<Tab value="Synchronous">
-
-```python title="main.py" showLineNumbers
-from deepeval.dataset import Golden, EvaluationDataset
-
-goldens = [
-    Golden(input="What is the weather in Bogotá, Colombia?"),
-    Golden(input="What is the weather in Paris, France?"),
-]
- 
-dataset = EvaluationDataset(goldens=goldens)
- 
+# The `TaskCompletionMetric` is passed into the LangGraph callback.
 for golden in dataset.evals_iterator():
-    agent.invoke(
-        input={"messages": [{"role": "user", "content": golden.input}]},
-        config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]}
+    graph.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]},
     )
 ```
 
-</Tab>
-<Tab value="Asynchronous">
-
-```python title="main.py" showLineNumbers
-import asyncio
-
-from deepeval.dataset import Golden, EvaluationDataset
-
-dataset = EvaluationDataset(goldens=[
-    Golden(input="What is the weather in Bogotá, Colombia?"),
-    Golden(input="What is the weather in Paris, France?"),
-])
- 
-for golden in dataset.evals_iterator():
-    task = asyncio.create_task(
-        agent.ainvoke(
-            input={"messages": [{"role": "user", "content": golden.input}]},
-            config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]}
-        )
-    )
-    dataset.evaluate(task)
-```
-
-</Tab>
-</Tabs>
-
-✅ Done. The `evals_iterator` will automatically generate a test run with individual evaluation traces for each golden.
-
-</Step>
-<Step>
-### View on Confident AI (optional)
-
-
-<VideoDisplayer
-  src={ASSETS.integrationLanggraph}
-/>
+Done ✅. You've run your first eval with full traceability into LangGraph via `deepeval`.
 
 </Step>
 
 </Steps>
 
-:::note
-If you need to evaluate individual components of your LangGraph application, [set up tracing](/docs/evaluation-llm-tracing) instead.
-:::
+## What gets traced
 
-## Component-level Evals
+Each LangGraph run that receives a `CallbackHandler` produces a **trace** — the end-to-end unit your user observes. Inside that trace are **component spans** for each callback LangGraph emits through LangChain:
 
-Using `deepeval`, you can now evaluate individual components of your LangGraph application.
+- **Graph / node spans** — the compiled `StateGraph` invocation and each node it dispatches to.
+- **LLM spans** — chat model and completion calls inside a node.
+- **Tool spans** — tool calls executed by `ToolNode` (or your own).
+- **Retriever spans** — retriever calls, when your graph uses retrieval.
 
-### LLM
-Define `metrics` in the metadata of the all the `BaseLanguageModel`s in your LangGraph application.
-
-```python title="main.py" showLineNumbers
-from langchain_openai import ChatOpenAI
-from deepeval.metrics import AnswerRelevancyMetric
-...
-
-llm = ChatOpenAI(
-    model="gpt-4o-mini", 
-    metadata={"metric": [AnswerRelevancyMetric()]}
-).bind_tools([get_weather])
+```text
+Trace                           ← what the user observes
+└── Graph: weather_graph         ← one graph invoke(...) call
+    ├── Node: chatbot           ← model picks a tool
+    │   └── LLM: gpt-4o-mini
+    ├── Node: tools             ← ToolNode runs the tool
+    │   └── Tool: get_weather
+    └── Node: chatbot           ← model writes the final answer
+        └── LLM: gpt-4o-mini
 ```
 
-### Tool
-To pass `metrics` to the tools, you can use the DeepEval's LangChain `tool` decorator.
-```python title="main.py" showLineNumbers
-# from langchain_core.tools import tool
-from deepeval.integrations.langchain import tool
-from deepeval.metrics import AnswerRelevancyMetric
-...
+The trace and its component spans are independently evaluable.
 
-@tool(metric=[AnswerRelevancyMetric()])
-def get_weather(location: str) -> str:
-    """Get the current weather in a location."""
-    return f"It's always sunny in {location}!"
+## Running evals
+
+There are two surfaces for running evals against a LangGraph app. Pick by where you want results to surface — your terminal during development, or your CI pipeline as a pass/fail gate.
+
+### In CI/CD (pytest)
+
+Use the `deepeval` pytest integration. Each parametrized test invocation becomes one LangGraph run; failing metrics fail the test, which fails the build.
+
+```python title="test_langgraph_agent.py" showLineNumbers
+import pytest
+from langchain.chat_models import init_chat_model
+from langgraph.graph import StateGraph, MessagesState, START, END
+from langgraph.prebuilt import ToolNode, tools_condition
+from deepeval import assert_test
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+def get_weather(city: str) -> str:
+    """Return the weather in a city."""
+    return f"It's always sunny in {city}!"
+
+llm = init_chat_model("openai:gpt-4o-mini").bind_tools([get_weather])
+
+def chatbot(state: MessagesState):
+    return {"messages": [llm.invoke(state["messages"])]}
+
+graph = (
+    StateGraph(MessagesState)
+    .add_node(chatbot)
+    .add_node("tools", ToolNode([get_weather]))
+    .add_edge(START, "chatbot")
+    .add_conditional_edges("chatbot", tools_condition)
+    .add_edge("tools", "chatbot")
+    .compile()
+)
+
+dataset = EvaluationDataset(goldens=[
+    Golden(input="What is the weather in Paris?"),
+    Golden(input="What is the weather in London?"),
+])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_langgraph_agent(golden: Golden):
+    graph.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
 ```
 
-## Evals in Production
+Run it with:
 
-To run online evaluations in production, simply replace `metrics` in `CallbackHandler` with a [metric collection](https://www.confident-ai.com/docs/metrics/metric-collections) string from Confident AI, and push your LangChain agent to production.
+```bash
+deepeval test run test_langgraph_agent.py
+```
 
-:::info
-This will automatically evaluate all incoming traces in production with the task completion metrics defined in your [metric collection](https://www.confident-ai.com/docs/metrics/metric-collections).
+### In a script
+
+Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one LangGraph run; metrics score the resulting trace through the callback.
+
+```python title="langgraph_agent.py" showLineNumbers
+dataset = EvaluationDataset(goldens=[
+    Golden(input="What is the weather in Paris?"),
+    Golden(input="What is the weather in London?"),
+])
+
+for golden in dataset.evals_iterator():
+    graph.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]},
+    )
+```
+
+## Applying metrics to components
+
+Passing `metrics=[...]` to `CallbackHandler` evaluates the overall LangGraph run. To evaluate a model component instead, attach metrics where the node calls the model.
+
+### LLM calls
+
+Wrap the `graph.invoke(...)` in `with next_llm_span(metrics=[...]):`. The `CallbackHandler` drains the staged metric onto the **first LLM span** the graph emits; later LLM calls on subsequent loop turns get nothing. This is the same one-shot semantic used by `next_*_span` in the Pydantic AI / Strands / AgentCore / Google ADK integrations.
+
+```python title="langgraph_agent.py" showLineNumbers
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.tracing import next_llm_span
+...
+
+for golden in dataset.evals_iterator():
+    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
+        graph.invoke(
+            {"messages": [{"role": "user", "content": golden.input}]},
+            config={"callbacks": [CallbackHandler()]},
+        )
+```
+
+:::caution[One-shot per run]
+`next_llm_span` stages a metric for the **first** LLM span the graph emits inside the `with` block. Later loop iterations through the `chatbot` node won't pick it up. To score every LLM call, drive the loop yourself (`next_llm_span` per `graph.invoke(...)`) or score the run end-to-end with trace-level metrics on `CallbackHandler(metrics=[...])`.
 :::
 
-```python filename="main.py" showLineNumbers
-result = agent_executor.invoke(
-    {"input": "What is 8 multiplied by 6?"},
-    config={"callbacks": [CallbackHandler(metric_collection="<metric-collection-name-with-task-completion>")]}
+For deterministic tool calls, use tool spans for traceability, inputs, outputs, and metadata. Avoid attaching metrics directly to tool spans.
+
+## Customizing trace and span data
+
+LangGraph is instrumented per-call through LangChain callbacks, so customization happens at the callback or span-staging boundary.
+
+- Use `CallbackHandler(...)` kwargs for trace-level defaults like `name`, `tags`, `metadata`, `thread_id`, and `user_id`.
+- Use `next_llm_span(...)` / `next_retriever_span(...)` / `next_tool_span(...)` to stage component-level fields (metrics, metric collections, test cases, custom span metadata) onto the next span the callback opens.
+- Use tool spans for deterministic traceability, inputs, outputs, and metadata.
+
+```python title="langgraph_agent.py" showLineNumbers
+callback = CallbackHandler(
+    name="weather-graph",
+    tags=["langgraph", "weather"],
+    metadata={"team": "support"},
+    user_id="user-123",
+)
+
+graph.invoke(
+    {"messages": [{"role": "user", "content": "What is the weather in Paris?"}]},
+    config={"callbacks": [callback]},
 )
 ```
+
+## Advanced patterns
+
+The primitives above — `CallbackHandler(...)` and `next_*_span(...)` — compose around one boundary: LangGraph owns the graph execution lifecycle, and your code chooses where to stage component config for the next span the callback opens.
+
+### Evaluate subagents/components
+
+Stage a component metric with `next_llm_span(...)` immediately before the `graph.invoke(...)` call. The `CallbackHandler` drains the staged metric onto the first LLM span emitted by the `chatbot` node, so the metric lives on the component span without modifying the graph or model.
+
+```python title="langgraph_agent.py" showLineNumbers
+from langchain.chat_models import init_chat_model
+from langgraph.graph import StateGraph, MessagesState, START, END
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.tracing import next_llm_span
+...
+
+llm = init_chat_model("openai:gpt-4o-mini")
+
+def chatbot(state: MessagesState):
+    return {"messages": [llm.invoke(state["messages"])]}
+
+graph = (
+    StateGraph(MessagesState)
+    .add_node(chatbot)
+    .add_edge(START, "chatbot")
+    .add_edge("chatbot", END)
+    .compile()
+)
+```
+
+#### No trace-level metrics required
+
+Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because the `AnswerRelevancyMetric` is staged for the LLM span, so CI/CD and scripts only need to run the graph inside the staging block.
+
+This is how you'd run it:
+
+<Tabs items={["CI/CD", "Scripts"]}>
+<Tab value="CI/CD">
+
+```python title="test_langgraph_agent.py" showLineNumbers
+import pytest
+from deepeval import assert_test
+...
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_component_metrics(golden: Golden):
+    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
+        graph.invoke(
+            {"messages": [{"role": "user", "content": golden.input}]},
+            config={"callbacks": [CallbackHandler()]},
+        )
+    assert_test(golden=golden)
+```
+
+```bash
+deepeval test run test_langgraph_agent.py
+```
+
+</Tab>
+<Tab value="Scripts">
+
+```python title="langgraph_agent.py" showLineNumbers
+...
+
+for golden in dataset.evals_iterator():
+    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
+        graph.invoke(
+            {"messages": [{"role": "user", "content": golden.input}]},
+            config={"callbacks": [CallbackHandler()]},
+        )
+```
+
+</Tab>
+</Tabs>
+
+### Wrap a LangGraph run in `@observe`
+
+When the LangGraph call is part of a larger operation, decorate the outer function with `@observe`. LangGraph spans nest under your observed span when the callback runs inside it.
+
+```python title="langgraph_agent.py" showLineNumbers
+from deepeval.tracing import observe
+...
+
+@observe(name="respond_to_user")
+def respond_to_user(prompt: str):
+    return graph.invoke(
+        {"messages": [{"role": "user", "content": prompt}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
+```
+
+## API reference
+
+`CallbackHandler(...)` accepts the following trace-level kwargs. Each one is a default for runs that use that callback.
+
+| Kwarg               | Type        | Description                                                       |
+| ------------------- | ----------- | ----------------------------------------------------------------- |
+| `name`              | `str`       | Default trace name.                                               |
+| `tags`              | `list[str]` | Tags applied to traces produced by this callback.                 |
+| `metadata`          | `dict`      | Trace metadata applied when the callback starts a trace.          |
+| `thread_id`         | `str`       | Groups related runs into a single trace thread.                   |
+| `user_id`           | `str`       | Actor identifier for the trace.                                   |
+| `metrics`           | `list`      | Metrics applied to the LangGraph run.                             |
+| `metric_collection` | `str`       | Metric collection applied to the LangGraph run.                   |
+| `test_case_id`      | `str`       | Optional test case identifier.                                    |
+| `turn_id`           | `str`       | Optional turn identifier for conversational traces.               |
+
+For native tracing helpers (`@observe`, `with trace(...)`, `update_current_trace`, `update_current_span`) see the [tracing reference](/docs/evaluation-llm-tracing).

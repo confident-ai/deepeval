@@ -10,7 +10,8 @@
       "endTime": "2026-02-15T10:22:51.034Z",
       "input": {},
       "output": "[CrewOutput(raw='Hello! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: Batch 1', name='Reply to the user: Batch 1', expected_output='A short greeting.', summary='Reply to the user: Batch 1...', raw='Hello! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _async_batch', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _async_batch. You are a friendly bot.\\nYour personal goal is: Reply to greetings'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: Batch 1\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nProvide your complete response:'}, {'role': 'assistant', 'content': 'Hello! How are you today?'}])], token_usage=UsageMetrics(total_tokens=178, prompt_tokens=164, cached_prompt_tokens=0, completion_tokens=14, successful_requests=2)), CrewOutput(raw='Hello! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: Batch 2', name='Reply to the user: Batch 2', expected_output='A short greeting.', summary='Reply to the user: Batch 2...', raw='Hello! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _async_batch', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _async_batch. You are a friendly bot.\\nYour personal goal is: Reply to greetings'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: Batch 2\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nProvide your complete response:'}, {'role': 'assistant', 'content': 'Hello! How are you today?'}])], token_usage=UsageMetrics(total_tokens=178, prompt_tokens=164, cached_prompt_tokens=0, completion_tokens=14, successful_requests=2))]",
-      "metricCollection": "metric_collection_1"
+      "metricCollection": "metric_collection_1",
+      "integration": "CrewAI"
     },
     {
       "uuid": "6e8c0115-828f-4721-8a7b-75f2ca22a0d9",
@@ -21,7 +22,8 @@
       "startTime": "2026-02-15T10:22:50.233Z",
       "endTime": "2026-02-15T10:22:51.034Z",
       "input": {},
-      "output": "Hello! How are you today?"
+      "output": "Hello! How are you today?",
+      "integration": "CrewAI"
     },
     {
       "uuid": "2b1fff8d-a95a-4e0d-8d5d-2ef98e22d1d9",
@@ -34,7 +36,8 @@
       "input": {
         "input": "Batch 2"
       },
-      "output": "Hello! How are you today?"
+      "output": "Hello! How are you today?",
+      "integration": "CrewAI"
     },
     {
       "uuid": "db731e39-aed3-4bc2-9f3e-12be287169fe",
@@ -45,7 +48,8 @@
       "startTime": "2026-02-15T10:22:50.232Z",
       "endTime": "2026-02-15T10:22:51.034Z",
       "input": {},
-      "output": "Hello! How are you today?"
+      "output": "Hello! How are you today?",
+      "integration": "CrewAI"
     },
     {
       "uuid": "87c2db63-71c5-48d6-9370-f030c90276e7",
@@ -58,7 +62,8 @@
       "input": {
         "input": "Batch 1"
       },
-      "output": "Hello! How are you today?"
+      "output": "Hello! How are you today?",
+      "integration": "CrewAI"
     }
   ],
   "agentSpans": [
@@ -73,7 +78,8 @@
       "input": "Reply to the user: Batch 2\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Hello! How are you today?",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "CrewAI"
     },
     {
       "uuid": "993f24ab-9a6c-4d35-a830-2234f2e752d0",
@@ -86,7 +92,8 @@
       "input": "Reply to the user: Batch 1\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Hello! How are you today?",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "CrewAI"
     }
   ],
   "llmSpans": [
@@ -110,7 +117,9 @@
       ],
       "output": "Hello! How are you today?",
       "model": "gpt-4o-mini",
-      "metricCollection": "metric_collection_1"
+      "metricCollection": "metric_collection_1",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     },
     {
       "uuid": "ea5f32f6-6b4b-4a62-8ac0-747af799663e",
@@ -132,7 +141,9 @@
       ],
       "output": "Hello! How are you today?",
       "model": "gpt-4o-mini",
-      "metricCollection": "metric_collection_1"
+      "metricCollection": "metric_collection_1",
+      "integration": "CrewAI",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

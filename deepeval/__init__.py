@@ -17,6 +17,7 @@ def _expose_public_api() -> None:
     # Do not do this at module level or ruff will complain with E402
     global __version__, evaluate, assert_test, compare
     global on_test_run_end, log_hyperparameters, login, telemetry
+    global instrument
 
     from ._version import __version__ as _version
     from deepeval.evaluate import (
@@ -40,6 +41,31 @@ def _expose_public_api() -> None:
     login = _login
     telemetry = _telemetry
 
+    def instrument(*args, **kwargs):
+        """Set up Confident AI's OTel backend.
+
+        Configures a TracerProvider, attaches deepeval's OpenInference span
+        interceptor, and routes spans through the context-aware processor
+        (REST when a deepeval trace context is active or an evaluation is
+        running, OTLP otherwise). Pair with any community OpenInference
+        instrumentor (e.g. ``GoogleADKInstrumentor``, ``OpenAIInstrumentor``)
+        to capture framework-specific telemetry.
+
+        Accepts the same trace-level kwargs as
+        ``deepeval.integrations.openinference.instrument_openinference``:
+        ``api_key``, ``name``, ``thread_id``, ``user_id``, ``metadata``,
+        ``tags``, ``environment``, ``metric_collection``, ``test_case_id``,
+        ``turn_id``. Span-level config goes on ``with next_*_span(...)``
+        / ``update_current_span(...)``.
+        """
+        from deepeval.integrations.openinference import (
+            instrument_openinference,
+        )
+
+        return instrument_openinference(*args, **kwargs)
+
+    globals()["instrument"] = instrument
+
 
 _expose_public_api()
 
@@ -60,6 +86,7 @@ __all__ = [
     "assert_test",
     "on_test_run_end",
     "compare",
+    "instrument",
 ]
 
 

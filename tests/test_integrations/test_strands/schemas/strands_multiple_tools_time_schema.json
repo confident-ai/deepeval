@@ -1,0 +1,115 @@
+{
+  "uuid": "d7837b52eb08128ffeea993417dc54ca",
+  "baseSpans": [
+    {
+      "uuid": "c962433d0bf4ce99",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "36f50c863b7df0f6",
+      "startTime": "2026-05-07T11:39:33.312Z",
+      "endTime": "2026-05-07T11:39:35.207Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London.",
+      "output": "{'toolUse': {'toolUseId': 'call_V1tsXUHukafQHnOwZjLXV7NF', 'name': 'get_time', 'input': {'city': 'London'}}}",
+      "integration": "Strands"
+    },
+    {
+      "uuid": "56f39b89a9fe6ea6",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "36f50c863b7df0f6",
+      "startTime": "2026-05-07T11:39:32.435Z",
+      "endTime": "2026-05-07T11:39:33.312Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London.",
+      "output": "{'toolUse': {'toolUseId': 'call_V1tsXUHukafQHnOwZjLXV7NF', 'name': 'get_time', 'input': {'city': 'London'}}}",
+      "integration": "Strands"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "36f50c863b7df0f6",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T11:39:32.435Z",
+      "endTime": "2026-05-07T11:39:35.208Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London.",
+      "output": "The current time in London is 7:00 AM GMT.\n",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Strands"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "8c9d19b45d109062",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "c962433d0bf4ce99",
+      "startTime": "2026-05-07T11:39:33.312Z",
+      "endTime": "2026-05-07T11:39:35.206Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London.",
+      "output": "The current time in London is 7:00 AM GMT.",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 147.0,
+      "outputTokenCount": 14.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
+    },
+    {
+      "uuid": "45e0c7008c31f377",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "56f39b89a9fe6ea6",
+      "startTime": "2026-05-07T11:39:32.435Z",
+      "endTime": "2026-05-07T11:39:33.310Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London.",
+      "output": "{'toolUse': {'toolUseId': 'call_V1tsXUHukafQHnOwZjLXV7NF', 'name': 'get_time', 'input': {'city': 'London'}}}",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 120.0,
+      "outputTokenCount": 14.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "35aae70b69f5519a",
+      "name": "execute_tool get_time",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "56f39b89a9fe6ea6",
+      "startTime": "2026-05-07T11:39:33.311Z",
+      "endTime": "2026-05-07T11:39:33.311Z",
+      "output": "7:00 AM GMT",
+      "toolsCalled": [
+        {
+          "name": "get_time",
+          "inputParameters": {}
+        }
+      ],
+      "integration": "Strands"
+    }
+  ],
+  "startTime": "2026-05-07T11:39:32.435Z",
+  "endTime": "2026-05-07T11:39:35.208Z",
+  "name": "strands-multiple-tools-time",
+  "metadata": {
+    "test_type": "multiple_tools_time"
+  },
+  "tags": [
+    "strands",
+    "multiple-tools",
+    "time"
+  ],
+  "environment": "development",
+  "threadId": "multiple-tools-time-123",
+  "userId": "test-user",
+  "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London.",
+  "output": "The current time in London is 7:00 AM GMT.\n",
+  "status": "SUCCESS"
+}

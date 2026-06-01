@@ -125,6 +125,7 @@ class HttpMethods(Enum):
 class Endpoints(Enum):
     DATASET_ALIAS_ENDPOINT = "/v1/datasets/:alias"
     DATASET_ALIAS_QUEUE_ENDPOINT = "/v1/datasets/:alias/queue"
+    DATASET_ALIAS_VERSIONS_ENDPOINT = "/v1/datasets/:alias/versions"
 
     TEST_RUN_ENDPOINT = "/v1/test-run"
     EXPERIMENT_ENDPOINT = "/v1/experiment"
@@ -145,6 +146,7 @@ class Endpoints(Enum):
     EVALUATE_SPAN_ENDPOINT = "/v1/evaluate/spans/:spanUuid"
 
     METRICS_ENDPOINT = "/v1/metrics"
+    METRIC_ENDPOINT = "/v1/metric/:name"
 
 
 def _sanitize_body(obj):

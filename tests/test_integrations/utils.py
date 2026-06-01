@@ -497,6 +497,33 @@ def generate_trace_json(json_path: str):
     return decorator
 
 
+def _assert_trace_capture_succeeded(
+    actual_dict: Dict[str, Any], expected_dict: Dict[str, Any], json_path: str
+) -> None:
+    """Sanity guard against silent no-op trace capture.
+
+    ``trace_testing_manager.wait_for_test_dict()`` returns ``{}`` after a
+    timeout when nothing populated ``test_dict`` (e.g. the integration's
+    OTel spans were routed to OTLP instead of REST, so
+    ``trace_manager.end_trace`` — the only writer — never ran). If the
+    expected schema also happens to be ``{}`` (e.g. a freshly-created
+    empty file pending generation), the structural compare passes
+    trivially and the test gives false confidence.
+
+    This guard makes that situation loud: an empty actual_dict is
+    treated as a hard failure regardless of expected content, with a
+    pointer to the most likely cause and the schema regeneration
+    command. It does NOT replace the structural compare — it runs
+    BEFORE it, since once ``actual_dict`` is empty the compare has
+    nothing meaningful to say.
+    """
+    if actual_dict != {}:
+        return
+    raise AssertionError(
+        "Trace capture produced an empty dict for " f"{json_path!r}.\n"
+    )
+
+
 def assert_trace_json(json_path: str):
     """
     Decorator that tests trace data against an expected JSON file.
@@ -530,6 +557,9 @@ def assert_trace_json(json_path: str):
                 # Store trace for upload (does not mutate)
                 _store_trace_for_upload(actual_dict)
 
+                _assert_trace_capture_succeeded(
+                    actual_dict, expected_dict, json_path
+                )
                 assert assert_json_object_structure(expected_dict, actual_dict)
 
                 return result
@@ -557,6 +587,9 @@ def assert_trace_json(json_path: str):
                 # Store trace for upload (does not mutate)
                 _store_trace_for_upload(actual_dict)
 
+                _assert_trace_capture_succeeded(
+                    actual_dict, expected_dict, json_path
+                )
                 assert assert_json_object_structure(expected_dict, actual_dict)
 
                 return result

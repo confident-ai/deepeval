@@ -1,0 +1,115 @@
+{
+  "uuid": "de50fa2b0b4c44525a09675b44d908a1",
+  "baseSpans": [
+    {
+      "uuid": "7704a5bc8e685bb3",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "14ef5e06a34798fe",
+      "startTime": "2026-05-07T11:39:07.407Z",
+      "endTime": "2026-05-07T11:39:08.809Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 9 multiplied by 6?",
+      "output": "{'toolUse': {'toolUseId': 'call_bLf4tS7qztBQsoj0SRSIraIv', 'name': 'calculate', 'input': {'operation': 'multiply', 'a': 9, 'b': 6}}}",
+      "integration": "Strands"
+    },
+    {
+      "uuid": "b913b47b21918f96",
+      "name": "execute_event_loop_cycle",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "14ef5e06a34798fe",
+      "startTime": "2026-05-07T11:39:05.989Z",
+      "endTime": "2026-05-07T11:39:07.406Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 9 multiplied by 6?",
+      "output": "{'toolUse': {'toolUseId': 'call_bLf4tS7qztBQsoj0SRSIraIv', 'name': 'calculate', 'input': {'operation': 'multiply', 'a': 9, 'b': 6}}}",
+      "integration": "Strands"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "14ef5e06a34798fe",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T11:39:05.987Z",
+      "endTime": "2026-05-07T11:39:08.810Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 9 multiplied by 6?",
+      "output": "9 multiplied by 6 is 54.\n",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Strands"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "a6c8b5d9798014bc",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "7704a5bc8e685bb3",
+      "startTime": "2026-05-07T11:39:07.407Z",
+      "endTime": "2026-05-07T11:39:08.808Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 9 multiplied by 6?",
+      "output": "9 multiplied by 6 is 54.",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 116.0,
+      "outputTokenCount": 10.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
+    },
+    {
+      "uuid": "fc355e8f70ab6816",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "b913b47b21918f96",
+      "startTime": "2026-05-07T11:39:05.989Z",
+      "endTime": "2026-05-07T11:39:07.399Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 9 multiplied by 6?",
+      "output": "{'toolUse': {'toolUseId': 'call_bLf4tS7qztBQsoj0SRSIraIv', 'name': 'calculate', 'input': {'operation': 'multiply', 'a': 9, 'b': 6}}}",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 85.0,
+      "outputTokenCount": 21.0,
+      "integration": "Strands",
+      "provider": "OpenAI"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "969afcec593f4acc",
+      "name": "execute_tool calculate",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "b913b47b21918f96",
+      "startTime": "2026-05-07T11:39:07.401Z",
+      "endTime": "2026-05-07T11:39:07.403Z",
+      "output": "54.0",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "inputParameters": {}
+        }
+      ],
+      "integration": "Strands"
+    }
+  ],
+  "startTime": "2026-05-07T11:39:05.987Z",
+  "endTime": "2026-05-07T11:39:08.810Z",
+  "name": "strands-async-tool-test",
+  "metadata": {
+    "test_type": "async_tool"
+  },
+  "tags": [
+    "strands",
+    "tool",
+    "async"
+  ],
+  "environment": "development",
+  "threadId": "async-tool-123",
+  "userId": "test-user-async",
+  "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 9 multiplied by 6?",
+  "output": "9 multiplied by 6 is 54.\n",
+  "status": "SUCCESS"
+}

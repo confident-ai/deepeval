@@ -156,7 +156,8 @@
             "query": "stock price apple"
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -198,7 +199,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 209.0,
-      "outputTokenCount": 36.0
+      "outputTokenCount": 36.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d050f-1028-71f3-a293-5965a37c5c6c",
@@ -237,7 +240,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 161.0,
-      "outputTokenCount": 25.0
+      "outputTokenCount": 25.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -261,7 +266,8 @@
         "name": "search_web",
         "tool_call_id": "call_5qYet8b7yirW2M1SiQnnDR0D",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:46:06.503Z",

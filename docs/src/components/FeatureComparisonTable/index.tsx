@@ -1,3 +1,4 @@
+import { Check, X } from "lucide-react";
 import React from "react";
 import styles from "./FeatureComparisonTable.module.scss";
 
@@ -2316,9 +2317,9 @@ const FeatureComparisonTable: React.FC<FeatureComparisonTableProps> = ({ type, c
     }
 
     return value ? (
-      <img alt="yes" src="/icons/tick.svg" className={styles.tick} />
+      <Check aria-label="yes" role="img" className={styles.tick} />
     ) : (
-      <img alt="no" src="/icons/cross.svg" className={styles.cross} />
+      <X aria-label="no" role="img" className={styles.cross} />
     );
   };
 

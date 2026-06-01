@@ -1,6 +1,7 @@
 import json
+from threading import Lock
 
-from typing import List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple, Any
 from opentelemetry.sdk.trace.export import ReadableSpan
 
 from deepeval.test_case.api import create_api_test_case
@@ -11,6 +12,30 @@ from deepeval.tracing import trace_manager, BaseSpan
 from deepeval.tracing.utils import make_json_serializable
 
 GEN_AI_OPERATION_NAMES = ["chat", "generate_content", "text_completion"]
+
+# Pending-metrics overlay: in-process side-channel for ``List[BaseMetric]``,
+# which can't fit in OTel attrs (primitives only). Writer is
+# ``SpanInterceptor.on_end`` (gated on eval mode); reader is
+# ``ConfidentSpanExporter`` after rebuilding the span from attrs. Keyed by
+# deepeval span uuid (16-char hex of OTel span_id). Pop semantics + eval gate
+# = no unbounded growth. Distinct from ``metric_collection: str``, which is a
+# server-side online-eval reference and rides along as a normal OTel attr.
+_pending_metrics_lock = Lock()
+_pending_metrics_overlay: Dict[str, List[Any]] = {}
+
+
+def stash_pending_metrics(uuid: str, metrics: Optional[List[Any]]) -> None:
+    """Stash span-level metrics for the exporter to pick up. No-op when empty."""
+    if not metrics:
+        return
+    with _pending_metrics_lock:
+        _pending_metrics_overlay[uuid] = list(metrics)
+
+
+def pop_pending_metrics(uuid: str) -> Optional[List[Any]]:
+    """One-shot retrieve metrics for ``uuid``; returns None if absent."""
+    with _pending_metrics_lock:
+        return _pending_metrics_overlay.pop(uuid, None)
 
 
 def to_hex_string(id_value: int | bytes, length: int = 32) -> str:

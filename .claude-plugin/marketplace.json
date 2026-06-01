@@ -1,0 +1,24 @@
+{
+  "name": "confident-ai-plugins",
+  "owner": {
+    "name": "Confident AI",
+    "email": "open-source@confident-ai.com"
+  },
+  "description": "DeepEval plugins for LLM evaluation, tracing, and testing in Claude Code.",
+  "plugins": [
+    {
+      "name": "deepeval",
+      "source": "./",
+      "description": "Skills for adding DeepEval evaluations, tracing, datasets, Confident AI reports, and iterative improvement loops to AI applications.",
+      "category": "developer-tools",
+      "keywords": [
+        "deepeval",
+        "llm",
+        "evaluation",
+        "tracing",
+        "datasets",
+        "confident-ai"
+      ]
+    }
+  ]
+}

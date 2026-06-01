@@ -31,6 +31,9 @@ from tests.test_integrations.test_langgraph.apps.langgraph_parallel_tools_app im
 from tests.test_integrations.test_langgraph.apps.langgraph_multi_turn_app import (
     get_async_app_with_memory,
 )
+from tests.test_integrations.test_langgraph.apps.langgraph_next_span_app import (
+    ainvoke_with_next_llm_span,
+)
 
 # =============================================================================
 # CONFIGURATION
@@ -346,3 +349,42 @@ class TestAsyncMultiTurnApp:
             },
         )
         assert len(result2["messages"]) > 0
+
+
+# =============================================================================
+# ASYNC NEXT-SPAN STAGING TESTS (next_llm_span)
+# =============================================================================
+
+
+class TestAsyncNextSpanApp:
+    """Async counterpart of ``test_sync.py::TestNextSpanApp``. The
+    pending-slot ContextVar must propagate through LangGraph's asyncio
+    task scheduling to the chat-model callback inside the agent node
+    so ``on_chat_model_start`` can pop it from the same task that
+    issued the LLM invocation."""
+
+    @pytest.mark.asyncio
+    @trace_test("langgraph_async_next_llm_span_schema.json")
+    async def test_async_next_llm_span_only(self):
+        callback = CallbackHandler(
+            name="langgraph-async-next-llm-span",
+            tags=["langgraph", "async", "next-llm"],
+            metadata={"test_type": "async_next_llm_span"},
+            thread_id="async-next-llm-span-123",
+            user_id="async-test-user",
+        )
+
+        result = await ainvoke_with_next_llm_span(
+            {
+                "messages": [
+                    HumanMessage(
+                        content="What is 9 squared? Call the tool and reply with just the number."
+                    )
+                ]
+            },
+            metric_collection="llm_quality_async_v1",
+            metadata={"prompt_variant": "B", "purpose": "async_next_llm_only"},
+            config={"callbacks": [callback]},
+        )
+
+        assert len(result["messages"]) > 0

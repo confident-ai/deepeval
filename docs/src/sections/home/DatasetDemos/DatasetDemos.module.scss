@@ -22,16 +22,30 @@
   --panel-foreground: var(--color-fd-foreground);
   --panel-dim: color-mix(in oklab, var(--panel-muted) 70%, transparent);
 
-  --accent-violet: color-mix(in oklab, #7c3aed 80%, var(--panel-foreground));
-  --accent-blue: color-mix(in oklab, #0ea5e9 78%, var(--panel-foreground));
-  --accent-teal: color-mix(in oklab, #14b8a6 76%, var(--panel-foreground));
-  --accent-green: color-mix(in oklab, #16a34a 82%, var(--panel-foreground));
-  --accent-amber: color-mix(in oklab, #d97706 82%, var(--panel-foreground));
-  --accent-rose: color-mix(in oklab, #e11d48 82%, var(--panel-foreground));
+  // Light-mode accent palette. Flat hex (rather than color-mix toward
+  // foreground) so iOS Safari < 16.2 still renders the accent text/borders
+  // instead of falling back to inherited. Modern browsers lose the
+  // subtle "tinted toward foreground" effect, which is sub-perceptual.
+  --accent-violet: #6d28d9;
+  --accent-blue: #0284c7;
+  --accent-teal: #0d9488;
+  --accent-green: #15803d;
+  --accent-amber: #b45309;
+  --accent-rose: #be123c;
 
   width: 100%;
   background: var(--panel-surface);
   overflow: hidden;
+}
+
+:global(.dark) .panel,
+:global(html.dark) .panel {
+  --accent-violet: #a78bfa;
+  --accent-blue: #7dd3fc;
+  --accent-teal: #5eead4;
+  --accent-green: #86efac;
+  --accent-amber: #fcd34d;
+  --accent-rose: #fda4af;
 }
 
 /* ---------- Shared panel header bar ---------- */

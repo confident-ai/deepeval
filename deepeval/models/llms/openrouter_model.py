@@ -15,7 +15,7 @@ from deepeval.errors import DeepEvalError
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.constants import DEFAULT_OPENROUTER_MODEL
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.utils import require_secret_api_key
+from deepeval.models.utils import require_secret_api_key, EvaluationCost
 from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
@@ -321,9 +321,11 @@ class OpenRouterModel(DeepEvalBaseLLM):
             self.cost_per_input_token is not None
             and self.cost_per_output_token is not None
         ):
-            return (
+            return EvaluationCost(
                 input_tokens * self.cost_per_input_token
-                + output_tokens * self.cost_per_output_token
+                + output_tokens * self.cost_per_output_token,
+                input_tokens,
+                output_tokens,
             )
 
         # Priority 2: Try to extract from API response (if OpenRouter includes pricing)
@@ -333,14 +335,18 @@ class OpenRouterModel(DeepEvalBaseLLM):
             usage_cost = getattr(getattr(response, "usage", None), "cost", None)
             if usage_cost is not None:
                 try:
-                    return float(usage_cost)
+                    return EvaluationCost(
+                        float(usage_cost), input_tokens, output_tokens
+                    )
                 except (ValueError, TypeError):
                     pass
             # Some responses might have cost at the top level
             response_cost = getattr(response, "cost", None)
             if response_cost is not None:
                 try:
-                    return float(response_cost)
+                    return EvaluationCost(
+                        float(response_cost), input_tokens, output_tokens
+                    )
                 except (ValueError, TypeError):
                     pass
 

@@ -13,6 +13,7 @@ import json
 from deepeval.prompt.prompt import Prompt
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
+from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.types import (
     Trace,
     TraceSpanStatus,
@@ -31,6 +32,7 @@ from deepeval.tracing.otel.utils import (
     check_llm_input_from_gen_ai_attributes,
     check_tool_name_from_gen_ai_attributes,
     check_tool_output,
+    pop_pending_metrics,
     set_trace_time,
     to_hex_string,
     parse_string,
@@ -41,8 +43,31 @@ from deepeval.tracing import perf_epoch_bridge as peb
 from deepeval.tracing.types import TraceAttributes
 from deepeval.test_case import ToolCall
 from dataclasses import dataclass
-import deepeval
-from deepeval.tracing.utils import make_json_serializable_for_metadata
+from deepeval.confident.api import set_confident_api_key
+from deepeval.tracing.utils import (
+    infer_provider_from_model,
+    make_json_serializable_for_metadata,
+    normalize_span_provider_for_platform,
+)
+
+
+def _resolve_parent_uuid(span: ReadableSpan) -> Optional[str]:
+    """Resolve a deepeval ``parent_uuid`` for an exported OTel span.
+
+    Native OTel parenthood always wins: if ``span.parent`` is set, we use it.
+    Only when the span is an OTel root do we look for a
+    ``confident.span.parent_uuid`` attribute, which integrations (currently
+    pydantic-ai's ``SpanInterceptor``) stamp onto OTel roots that started
+    inside a deepeval-managed span (``@observe``, ``with trace(...)``)
+    so the OTel root re-parents onto its logical deepeval parent instead
+    of becoming a second trace root.
+    """
+    if span.parent is not None:
+        return to_hex_string(span.parent.span_id, 16)
+    override = span.attributes.get("confident.span.parent_uuid")
+    if isinstance(override, str) and override:
+        return override
+    return None
 
 
 @dataclass
@@ -74,8 +99,12 @@ class ConfidentSpanExporter(SpanExporter):
         capture_tracing_integration("otel.ConfidentSpanExporter")
         peb.init_clock_bridge()
 
+        # Programmatic auth — set the key in settings without printing the
+        # interactive `deepeval login` banner. The banner is reserved for the
+        # CLI command; auto-firing it from inside an exporter constructor is
+        # noise (especially when CONFIDENT_API_KEY is already in env).
         if api_key:
-            deepeval.login(api_key)
+            set_confident_api_key(api_key)
 
         super().__init__()
 
@@ -93,6 +122,23 @@ class ConfidentSpanExporter(SpanExporter):
         _test_run_id: Optional[str] = None,
     ) -> SpanExportResult:
 
+        ################ Detect active deepeval trace context ################
+        # If we're inside an active ``@observe`` / ``with trace(...)`` block,
+        # the OTel spans should be merged into the existing trace_manager
+        # trace (instead of spawning a new one keyed by the OTel-derived
+        # trace_uuid) and the lifecycle is owned by the wrapping context —
+        # the exporter must NOT call ``end_trace`` / ``clear_traces`` because:
+        #   1. SimpleSpanProcessor (REST leg of ContextAwareSpanProcessor)
+        #      calls export() once per OTel span, so end_trace per call would
+        #      post the same trace N times.
+        #   2. ``@observe`` already calls end_trace exactly once when the
+        #      wrapped function returns.
+        active_trace_ctx = current_trace_context.get()
+        in_active_context = isinstance(active_trace_ctx, Trace)
+        target_trace_uuid: Optional[str] = (
+            active_trace_ctx.uuid if in_active_context else None
+        )
+
         ################ Build Forest of Spans ################
         forest = self._build_span_forest(spans)
 
@@ -105,6 +151,12 @@ class ConfidentSpanExporter(SpanExporter):
                 base_span_wrapper = self._convert_readable_span_to_base_span(
                     span
                 )
+
+                # Re-key OTel spans onto the active deepeval trace so they
+                # land in the existing trace_manager entry rather than
+                # creating a phantom duplicate keyed by the OTel trace_id.
+                if target_trace_uuid:
+                    base_span_wrapper.base_span.trace_uuid = target_trace_uuid
 
                 spans_wrappers_list.append(base_span_wrapper)
             spans_wrappers_forest.append(spans_wrappers_list)
@@ -134,6 +186,29 @@ class ConfidentSpanExporter(SpanExporter):
                 # no removing span because it can be parent of other spans
                 trace_manager.add_span(base_span_wrapper.base_span)
                 trace_manager.add_span_to_trace(base_span_wrapper.base_span)
+
+        # When inside an active deepeval trace context, the wrapping
+        # ``@observe`` / ``with trace(...)`` owns the trace lifecycle. Just
+        # contribute spans and bow out — no end_trace, no clear_traces, no
+        # post. Calling end_trace here would (a) post duplicates (one per
+        # OTel span flush) and (b) race against worker shutdown when the
+        # interpreter tears down, surfacing as
+        # ``cannot schedule new futures after shutdown``.
+        #
+        # We DO need to drop our OTel spans from ``trace_manager.active_spans``
+        # though: they've already ended on the OTel side (the SDK only calls
+        # ``export(...)`` after ``on_end``), so leaving them in the in-flight
+        # registry would block the wrapping ``@observe`` block from ending the
+        # trace — its end_trace check `not other_active_spans` would always
+        # see our OTel spans as still active and silently skip the post.
+        # The OTLP path (no active context) doesn't need this because the
+        # ``end_trace + clear_traces`` branch below wipes ``active_spans`` as
+        # a side effect.
+        if in_active_context:
+            for spans_wrappers_list in spans_wrappers_forest:
+                for base_span_wrapper in spans_wrappers_list:
+                    trace_manager.remove_span(base_span_wrapper.base_span.uuid)
+            return SpanExportResult.SUCCESS
 
         # safely end all active traces or return them for test runs
         active_traces_keys = list(trace_manager.active_traces.keys())
@@ -270,9 +345,7 @@ class ConfidentSpanExporter(SpanExporter):
         except Exception:
             pass
 
-        parent_uuid = (
-            to_hex_string(span.parent.span_id, 16) if span.parent else None
-        )
+        parent_uuid = _resolve_parent_uuid(span)
         base_span_status = TraceSpanStatus.SUCCESS
         base_span_error = None
 
@@ -431,6 +504,7 @@ class ConfidentSpanExporter(SpanExporter):
             raw_span_expected_tools = list(raw_span_expected_tools)
 
         raw_span_metadata = span.attributes.get("confident.span.metadata")
+        raw_span_integration = span.attributes.get("confident.span.integration")
 
         # Validate Span Attributes
         span_retrieval_context = parse_list_of_strings(
@@ -442,13 +516,12 @@ class ConfidentSpanExporter(SpanExporter):
         span_metadata = self._parse_json_string(raw_span_metadata)
         if span_metadata:
             span_metadata = make_json_serializable_for_metadata(span_metadata)
+        span_integration = parse_string(raw_span_integration)
 
         span_metric_collection = parse_string(raw_span_metric_collection)
 
         # Set Span Attributes
-        base_span.parent_uuid = (
-            to_hex_string(span.parent.span_id, 16) if span.parent else None
-        )
+        base_span.parent_uuid = _resolve_parent_uuid(span)
         base_span.name = None if base_span.name == "None" else base_span.name
         base_span.name = span_name or base_span.name or span.name
         base_span.status = base_span_status  # setting for boilerplate spans
@@ -465,10 +538,19 @@ class ConfidentSpanExporter(SpanExporter):
             base_span.expected_tools = span_expected_tools
         if span_metadata:
             base_span.metadata = span_metadata
+        if span_integration:
+            base_span.integration = span_integration
         if span_input:
             base_span.input = span_input
         if span_output:
             base_span.output = span_output
+
+        # Re-attach ``BaseMetric`` instances staged via
+        # ``next_*_span(metrics=[...])`` from the in-process overlay
+        # (can't ride in OTel attrs). Pop = self-cleaning.
+        pending_metrics = pop_pending_metrics(base_span.uuid)
+        if pending_metrics:
+            base_span.metrics = pending_metrics
 
     @staticmethod
     def prepare_boilerplate_base_span(span: ReadableSpan) -> Optional[BaseSpan]:
@@ -487,9 +569,7 @@ class ConfidentSpanExporter(SpanExporter):
         )
         children = []
         trace_uuid = to_hex_string(span.context.trace_id, 32)
-        parent_uuid = (
-            to_hex_string(span.parent.span_id, 16) if span.parent else None
-        )
+        parent_uuid = _resolve_parent_uuid(span)
         start_time = peb.epoch_nanos_to_perf_seconds(span.start_time)
         end_time = peb.epoch_nanos_to_perf_seconds(span.end_time)
 
@@ -507,6 +587,11 @@ class ConfidentSpanExporter(SpanExporter):
             input_token_count = span.attributes.get(
                 "confident.llm.input_token_count"
             )
+            provider = span.attributes.get("confident.span.provider")
+            if not provider:
+                provider = infer_provider_from_model(model)
+            if provider:
+                provider = normalize_span_provider_for_platform(provider)
             output_token_count = span.attributes.get(
                 "confident.llm.output_token_count"
             )
@@ -569,6 +654,7 @@ class ConfidentSpanExporter(SpanExporter):
                 end_time=end_time,
                 # llm span attributes
                 model=model,
+                provider=provider,
                 cost_per_input_token=cost_per_input_token,
                 cost_per_output_token=cost_per_output_token,
                 # prompt=prompt,

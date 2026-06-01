@@ -1,0 +1,7 @@
+{
+  "title": "End-to-End Evals",
+  "pages": [
+    "../evaluation-end-to-end-single-turn",
+    "../evaluation-end-to-end-multi-turn"
+  ]
+}

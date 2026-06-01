@@ -16,11 +16,17 @@ from deepeval.constants import PYTEST_RUN_TEST_NAME
 
 
 def create_api_turn(turn: Turn, index: int) -> TurnApi:
+    retrieval_context = None
+    if turn.retrieval_context:
+        retrieval_context = [
+            rc.context if hasattr(rc, "context") else rc
+            for rc in turn.retrieval_context
+        ]
     return TurnApi(
         role=turn.role,
         content=turn.content,
         user_id=turn.user_id,
-        retrievalContext=turn.retrieval_context,
+        retrievalContext=retrieval_context,
         toolsCalled=turn.tools_called,
         order=index,
     )
@@ -85,12 +91,19 @@ def create_api_test_case(
             name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{order}")
         metrics_data = []
 
+        retrieval_context = None
+        if test_case.retrieval_context:
+            retrieval_context = [
+                rc.context if hasattr(rc, "context") else rc
+                for rc in test_case.retrieval_context
+            ]
+
         api_test_case = LLMApiTestCase(
             name=name,
             input=test_case.input,
             actualOutput=test_case.actual_output,
             expectedOutput=test_case.expected_output,
-            retrievalContext=test_case.retrieval_context,
+            retrievalContext=retrieval_context,
             context=test_case.context,
             imagesMapping=test_case._get_images_mapping(),
             toolsCalled=test_case.tools_called,

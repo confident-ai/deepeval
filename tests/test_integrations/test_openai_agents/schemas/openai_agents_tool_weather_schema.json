@@ -13,12 +13,12 @@
         "output_type": "str"
       },
       "input": "Weather in London",
-      "output": "The current weather in London is rainy with a temperature of 55\u00b0F.",
+      "output": "The current weather in London is rainy with a temperature of 55°F.",
       "toolsCalled": [
         {
           "name": "Function tool: get_weather",
           "description": "Function tool",
-          "output": "Rainy, 55\u00b0F",
+          "output": "Rainy, 55°F",
           "inputParameters": {
             "city": "London"
           }
@@ -28,7 +28,8 @@
         "get_weather",
         "calculate"
       ],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "OpenAI Agents"
     }
   ],
   "llmSpans": [
@@ -119,13 +120,15 @@
         {
           "role": "tool",
           "call_id": "call_kHp2AnN0azrRKW71FcWXKVYW",
-          "output": "Rainy, 55\u00b0F"
+          "output": "Rainy, 55°F"
         }
       ],
-      "output": "The current weather in London is rainy with a temperature of 55\u00b0F.",
+      "output": "The current weather in London is rainy with a temperature of 55°F.",
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 127.0,
-      "outputTokenCount": 17.0
+      "outputTokenCount": 17.0,
+      "integration": "OpenAI Agents",
+      "provider": "OpenAI"
     },
     {
       "uuid": "0c5d13ca-74c0-4d76-91d5-0f2465bd10c0",
@@ -210,7 +213,9 @@
       "output": "{\"call_id\": \"call_kHp2AnN0azrRKW71FcWXKVYW\", \"name\": \"get_weather\", \"arguments\": \"{\\\"city\\\":\\\"London\\\"}\"}",
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 98.0,
-      "outputTokenCount": 15.0
+      "outputTokenCount": 15.0,
+      "integration": "OpenAI Agents",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -226,8 +231,9 @@
       "input": {
         "city": "London"
       },
-      "output": "Rainy, 55\u00b0F",
-      "description": "Function tool"
+      "output": "Rainy, 55°F",
+      "description": "Function tool",
+      "integration": "OpenAI Agents"
     }
   ],
   "startTime": "2026-01-29T14:38:31.967Z",
@@ -253,6 +259,6 @@
       "content": "Weather in London"
     }
   ],
-  "output": "The current weather in London is rainy with a temperature of 55\u00b0F.",
+  "output": "The current weather in London is rainy with a temperature of 55°F.",
   "status": "SUCCESS"
 }

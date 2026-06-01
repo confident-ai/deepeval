@@ -172,6 +172,8 @@
   }
   25%,
   75% {
+    // Fallback for Safari < 16.2 (no color-mix support).
+    fill: #15803d;
     fill: color-mix(in oklab, #16a34a 80%, currentColor);
     transform: scale(1);
   }
@@ -200,6 +202,7 @@
   }
 
   .glyphConvScore {
+    fill: #15803d;
     fill: color-mix(in oklab, #16a34a 80%, currentColor);
   }
 }

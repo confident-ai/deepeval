@@ -1,0 +1,104 @@
+{
+  "uuid": "1dceafc48fe7bab11b4840825596ac39",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "f2ff699a59938f0e",
+      "name": "next_span_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-05T06:45:45.293Z",
+      "endTime": "2026-05-05T06:45:46.775Z",
+      "metadata": {
+        "layer": "agent",
+        "scenario": "stacked"
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Say goodbye in exactly three words."
+        }
+      ],
+      "output": "Farewell, take care.",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricCollection": "agent_stacked_v1",
+      "integration": "PydanticAI"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "d195971284eff675",
+      "name": "chat gpt-4o-mini",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "f2ff699a59938f0e",
+      "startTime": "2026-05-05T06:45:45.295Z",
+      "endTime": "2026-05-05T06:45:46.773Z",
+      "metadata": {
+        "layer": "llm",
+        "scenario": "stacked"
+      },
+      "input": [
+        {
+          "role": "system",
+          "content": "Be concise, reply with one short sentence only."
+        },
+        {
+          "role": "user",
+          "content": "Say goodbye in exactly three words."
+        },
+        {
+          "role": "Model Request Parameters",
+          "content": {
+            "function_tools": [],
+            "builtin_tools": [],
+            "output_mode": "text",
+            "output_object": null,
+            "output_tools": [],
+            "prompted_output_template": null,
+            "allow_text_output": true,
+            "allow_image_output": false,
+            "instruction_parts": null,
+            "thinking": null
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": "Farewell, take care."
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 28.0,
+      "outputTokenCount": 6.0,
+      "metricCollection": "llm_stacked_v1",
+      "integration": "PydanticAI",
+      "provider": "OpenAI"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-05-05T06:45:45.293Z",
+  "endTime": "2026-05-05T06:45:46.775Z",
+  "name": "pydanticai-next-stacked-test",
+  "metadata": {
+    "test_type": "next_stacked"
+  },
+  "tags": [
+    "pydanticai",
+    "stacked"
+  ],
+  "environment": "development",
+  "threadId": "next-stacked-123",
+  "userId": "test-user",
+  "input": [
+    {
+      "role": "user",
+      "content": "Say goodbye in exactly three words."
+    }
+  ],
+  "output": "Farewell, take care.",
+  "status": "SUCCESS"
+}

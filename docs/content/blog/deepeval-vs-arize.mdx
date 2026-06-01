@@ -56,19 +56,25 @@ Because we ship more and fix faster (most bugs are resolved in under 3 days), yo
 
 ### 6. We scale with your evaluation needs
 
-When you use DeepEval, it takes no additional configuration to bring LLM evaluation to your entire organization. Everything is automatically integrated with Confident AI, which is the dashboard/UI for the evaluation results of DeepEval.
+[DeepEval](https://github.com/confident-ai/deepeval) and [Confident AI](https://confident-ai.com) are **two separate products** built by the same team — not the same thing.
 
-This means 0 extra lines of code to:
+- **DeepEval** is the **open-source LLM evaluation framework**: metrics, test cases, datasets, synthetic data generation, benchmarks, and CI/CD evals. It runs locally, requires no account, and works fully standalone.
+- **Confident AI** is an **all-in-one enterprise platform for LLM evaluation, observability, and red teaming**. It adds shared regression reports, online evals on production traces, monitoring, cloud-hosted datasets, prompt and model experimentation, red teaming campaigns, and team collaboration.
 
-- Analyze metric score distributions, averages, and median scores
-- Generate testing reports for you to inspect and debug test cases
-- Download and save testing results as CSV/JSON
-- Share testing reports within your organization and external stakeholders
-- Regression testing to determine whether your LLM app is OK to deploy
-- Experimentation with different models and prompts side-by-side
-- Keep datasets centralized on the cloud
+Confident AI open-sourced many of its metrics through DeepEval. That does not make them the same product, and Confident AI is not a UI layer on top of DeepEval.
 
-Apart from Confident AI, DeepEval also offers DeepTeam, a new package specific for red teaming, which is for safety testing LLM systems. When you use DeepEval, you won't run into a point where you have to leave its ecosystem because we don't support what you're looking for.
+**Use DeepEval on its own** for fast, code-first local evaluation and CI gates. **Use DeepEval with Confident AI** when your team needs:
+
+- Shared dashboards for metric distributions, averages, and trends across runs
+- Test reports to share internally or with external stakeholders
+- Centralized cloud datasets and golden management
+- Regression gates and side-by-side prompt and model experiments
+- Production trace observability and online evaluation of live traffic
+- Red teaming campaigns and safety testing at organization scale
+
+The integration is built into DeepEval — connect once and every DeepEval run syncs to Confident AI without extra code.
+
+DeepEval also pairs with **DeepTeam**, our open-source red teaming framework, which Confident AI's red teaming features build on the same way they build on DeepEval.
 
 ## Comparing DeepEval and Arize
 
@@ -133,9 +139,9 @@ DeepEval also integrates directly with LLM providers to power its metrics—sinc
 
 ### Platform
 
-DeepEval integrates natively with Confident AI, a separate AI quality platform with observability, evals, and monitoring built by the same team. Arize's platform is called Phoenix.
+DeepEval integrates natively with Confident AI, a separate all-in-one enterprise platform for LLM evaluation, observability, and red teaming, built by the same team. Arize's platform is called Phoenix.
 
-Confident AI is built for powerful, customizable evaluation and benchmarking. Phoenix, on the other hand, is more focused on observability.
+Confident AI is built for powerful, customizable evaluation and benchmarking, with observability and red teaming in the same platform. Phoenix, on the other hand, is more focused on observability.
 
 <FeatureComparisonTable type="arize::platform" competitor="Arize" />
 
@@ -143,8 +149,8 @@ Confident AI is also self-served, meaning you don't have to talk to us to try it
 
 ## Conclusion
 
-If there’s one thing to remember: Arize is great for debugging, while Confident AI is built for LLM evaluation and benchmarking.
+If there’s one thing to remember: Arize is great for observability and debugging, while DeepEval is built for LLM evaluation and benchmarking.
 
-Both have their strengths and some feature overlap—but it really comes down to what you care about more: evaluation or observability.
+Both have some feature overlap — but it really comes down to what you care about more: evaluation or observability.
 
-If you want to do both, go with Confident AI. Most observability tools cover the basics, but few give you the depth and flexibility we offer for evaluation. That should be more than enough to get started with DeepEval.
+If you want evaluation plus an enterprise platform that also covers observability and red teaming, pair DeepEval with [Confident AI](https://confident-ai.com), a separate all-in-one enterprise platform for LLM evaluation, observability, and red teaming, built by the same team. DeepEval and Confident AI are not the same product: DeepEval is an open-source framework, Confident AI is an enterprise platform you can graduate into when team scale demands it. That should be more than enough to get started with DeepEval.

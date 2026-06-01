@@ -1,11 +1,14 @@
 import os
+
 import pytest
+
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.tracing import next_agent_span, next_llm_span
 from tests.test_integrations.utils import (
     assert_trace_json,
     generate_trace_json,
     is_generate_mode,
 )
-from deepeval.metrics import AnswerRelevancyMetric
 
 from tests.test_integrations.test_agentcore.apps.agentcore_simple_app import (
     init_simple_agentcore,
@@ -110,6 +113,11 @@ class TestAsyncMultipleToolsApp:
 
 
 class TestDeepEvalFeaturesAsync:
+    """Async equivalent of ``TestDeepEvalFeatures``: span-level kwargs
+    migrate from ``init_evals_agentcore(...)`` to per-call
+    ``with next_*_span(...)`` blocks. The ``special_tool`` itself
+    sets its own ``metric_collection`` via ``update_current_span(...)``
+    — see ``apps/agentcore_eval_app.py``."""
 
     @pytest.mark.asyncio
     @trace_test("agentcore_features_async.json")
@@ -120,19 +128,16 @@ class TestDeepEvalFeaturesAsync:
             metadata={"env": "testing_async", "mode": "async"},
             thread_id="thread-async-features-002",
             user_id="user-async-002",
-            metric_collection="trace_metrics_async_v1",
-            agent_metric_collection="agent_metrics_async_v1",
-            llm_metric_collection="llm_metrics_async_v1",
-            tool_metric_collection_map={
-                "special_tool": "tool_metrics_async_v1"
-            },
-            trace_metric_collection="trace_metrics_override_async_v1",
-            agent_metrics=[AnswerRelevancyMetric()],
+            metric_collection="trace_metrics_override_async_v1",
         )
 
-        result = await ainvoke_evals_agent(
-            "Use the special_tool to process 'Async Data'",
-            invoke_func=invoke_func,
-        )
+        with next_agent_span(
+            metric_collection="agent_metrics_async_v1",
+            metrics=[AnswerRelevancyMetric()],
+        ), next_llm_span(metric_collection="llm_metrics_async_v1"):
+            result = await ainvoke_evals_agent(
+                "Use the special_tool to process 'Async Data'",
+                invoke_func=invoke_func,
+            )
 
         assert result is not None

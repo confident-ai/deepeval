@@ -143,7 +143,8 @@
           }
         ],
         "intent": "summarize"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-ae46-7dc0-921e-c34fa7a787df",
@@ -281,7 +282,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-b666-73b2-8efb-7a631081aa40",
@@ -416,7 +418,8 @@
         ],
         "intent": "summarize"
       },
-      "output": "__end__"
+      "output": "__end__",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-ae45-7a73-b9f3-95d53ff105bc",
@@ -525,7 +528,8 @@
             "text": "Artificial intelligence is transforming industries worldwide."
           }
         }
-      ]
+      ],
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-ae46-7dc0-921e-c333f1422282",
@@ -613,7 +617,8 @@
         ],
         "intent": "summarize"
       },
-      "output": "summarize"
+      "output": "summarize",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-a7bd-7030-8ba1-0ec16b88c190",
@@ -694,7 +699,8 @@
             }
           }
         ]
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-ae45-7a73-b9f3-95c90df8d7d9",
@@ -772,7 +778,8 @@
         ],
         "intent": "summarize"
       },
-      "output": "tools"
+      "output": "tools",
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-a7bd-7030-8ba1-0eab1da55a34",
@@ -804,7 +811,8 @@
           }
         ],
         "intent": "summarize"
-      }
+      },
+      "integration": "LangChain"
     },
     {
       "uuid": "019d0517-a7bd-7030-8ba1-0eb82c120793",
@@ -826,7 +834,8 @@
         ],
         "intent": "summarize"
       },
-      "output": "summarize"
+      "output": "summarize",
+      "integration": "LangChain"
     }
   ],
   "agentSpans": [],
@@ -876,7 +885,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 241.0,
-      "outputTokenCount": 10.0
+      "outputTokenCount": 10.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     },
     {
       "uuid": "019d0517-a7bd-7030-8ba1-0ed3cce3bfe5",
@@ -923,7 +934,9 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 194.0,
-      "outputTokenCount": 95.0
+      "outputTokenCount": 95.0,
+      "integration": "LangChain",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -948,7 +961,8 @@
         "id": "a28d1a54-f20f-4642-986f-6e7985ea3a16",
         "tool_call_id": "call_yLHzMu8wcfCWigEvczhrPgHG",
         "status": "success"
-      }
+      },
+      "integration": "LangChain"
     }
   ],
   "startTime": "2026-03-19T07:55:29.597Z",

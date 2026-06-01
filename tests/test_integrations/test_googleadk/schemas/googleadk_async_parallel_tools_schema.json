@@ -1,0 +1,151 @@
+{
+  "uuid": "ea4776ccf04c2a7b0975859119b1a378",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "bdd6057d2dd487ae",
+      "name": "invocation [deepeval-googleadk-multiple-tools]",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T09:09:09.848Z",
+      "endTime": "2026-05-07T09:09:12.943Z",
+      "input": "{\"user_id\": \"test-user\", \"session_id\": \"40f31e29-2616-4819-92f0-9fd25827fed0\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Tokyo is sunny and 72F. The current time is 3:00 PM JST.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":25,\"prompt_token_count\":310,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":310}],\"total_token_count\":335},\"invocation_id\":\"e-32afecfa-f3b1-44cf-ab93-a930706b93df\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"ed9b4b60-a300-45a7-a0e1-ee4f17010269\",\"timestamp\":1778144951.743427}",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Google ADK"
+    },
+    {
+      "uuid": "1d3245b80211b893",
+      "name": "multi_tool_assistant",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "bdd6057d2dd487ae",
+      "startTime": "2026-05-07T09:09:09.848Z",
+      "endTime": "2026-05-07T09:09:12.942Z",
+      "input": [],
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Tokyo is sunny and 72F. The current time is 3:00 PM JST.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":25,\"prompt_token_count\":310,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":310}],\"total_token_count\":335},\"invocation_id\":\"e-32afecfa-f3b1-44cf-ab93-a930706b93df\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"ed9b4b60-a300-45a7-a0e1-ee4f17010269\",\"timestamp\":1778144951.743427}",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Google ADK"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "18828162c64291e4",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "1d3245b80211b893",
+      "startTime": "2026-05-07T09:09:11.743Z",
+      "endTime": "2026-05-07T09:09:12.942Z",
+      "input": "{\"time\": \"3:00 PM JST\"}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Tokyo is sunny and 72F. The current time is 3:00 PM JST.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":25,\"prompt_token_count\":310,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":310}],\"total_token_count\":335}}",
+      "model": "gemini-2.5-flash-lite",
+      "inputTokenCount": 310.0,
+      "outputTokenCount": 25.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
+    },
+    {
+      "uuid": "5873febac299dee1",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "1d3245b80211b893",
+      "startTime": "2026-05-07T09:09:09.849Z",
+      "endTime": "2026-05-07T09:09:11.742Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise.\n\nYou are an agent. Your internal name is \"multi_tool_assistant\".",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"function_call\":{\"args\":{\"city\":\"Tokyo\"},\"name\":\"get_weather\"}},{\"function_call\":{\"args\":{\"city\":\"Tokyo\"},\"name\":\"get_time\"}}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":30,\"prompt_token_count\":241,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":241}],\"total_token_count\":271}}",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        },
+        {
+          "name": "get_time",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ],
+      "model": "gemini-2.5-flash-lite",
+      "inputTokenCount": 241.0,
+      "outputTokenCount": 30.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "ee4de028de2315a4",
+      "name": "(merged tools)",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "5873febac299dee1",
+      "startTime": "2026-05-07T09:09:11.741Z",
+      "endTime": "2026-05-07T09:09:11.741Z",
+      "integration": "Google ADK"
+    },
+    {
+      "uuid": "da0cb0571adb445c",
+      "name": "get_time",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "5873febac299dee1",
+      "startTime": "2026-05-07T09:09:11.740Z",
+      "endTime": "2026-05-07T09:09:11.741Z",
+      "input": "{\"city\": \"Tokyo\"}",
+      "output": "{\"id\":\"adk-25857627-384e-40d2-86bf-9c742744107f\",\"name\":\"get_time\",\"response\":{\"time\":\"3:00 PM JST\"}}",
+      "toolsCalled": [
+        {
+          "name": "get_time",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ],
+      "integration": "Google ADK"
+    },
+    {
+      "uuid": "aa00e1f25df078aa",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "5873febac299dee1",
+      "startTime": "2026-05-07T09:09:11.739Z",
+      "endTime": "2026-05-07T09:09:11.740Z",
+      "input": "{\"city\": \"Tokyo\"}",
+      "output": "{\"id\":\"adk-24f51cca-d976-46d0-9e7d-a5123d03c058\",\"name\":\"get_weather\",\"response\":{\"report\":\"Sunny, 72F\"}}",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ],
+      "integration": "Google ADK"
+    }
+  ],
+  "startTime": "2026-05-07T09:09:09.848Z",
+  "endTime": "2026-05-07T09:09:12.943Z",
+  "name": "googleadk-async-parallel-tools",
+  "metadata": {
+    "test_type": "async_parallel_tools"
+  },
+  "tags": [
+    "googleadk",
+    "parallel-tools",
+    "async"
+  ],
+  "environment": "development",
+  "threadId": "async-parallel-tools-123",
+  "userId": "test-user-async",
+  "input": "{\"user_id\": \"test-user\", \"session_id\": \"40f31e29-2616-4819-92f0-9fd25827fed0\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+  "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The weather in Tokyo is sunny and 72F. The current time is 3:00 PM JST.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":25,\"prompt_token_count\":310,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":310}],\"total_token_count\":335},\"invocation_id\":\"e-32afecfa-f3b1-44cf-ab93-a930706b93df\",\"author\":\"multi_tool_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"ed9b4b60-a300-45a7-a0e1-ee4f17010269\",\"timestamp\":1778144951.743427}",
+  "status": "SUCCESS"
+}

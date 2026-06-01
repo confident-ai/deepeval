@@ -61,7 +61,8 @@
           ],
           "retry_messages": []
         }
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActAgent.run_agent_step-8b6776dc-c322-4b7d-8690-47d651e35e55",
@@ -114,7 +115,8 @@
         "current_agent_name": "Agent",
         "tool_calls": [],
         "retry_messages": []
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActOutputParser.parse-9dc0458e-0c44-407f-b42c-205ac662c645",
@@ -132,7 +134,8 @@
         "thought": "I can answer without using any more tools. I'll use the user's language to answer.",
         "response": "The result of 50 * 2 is 100.",
         "is_streaming": false
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAI.astream_chat-0e3964ef-a638-47cb-9c7a-4e96dbde276c",
@@ -186,7 +189,8 @@
           }
         ]
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x118231cc0>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x118231cc0>",
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActAgent.setup_agent-2e56213e-9c1c-40b6-98dd-0d866ea84d41",
@@ -238,7 +242,8 @@
           }
         ],
         "current_agent_name": "Agent"
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActAgent.aggregate_tool_results-02402e86-cb25-4c71-825d-d4ad6c3e8fe7",
@@ -292,7 +297,8 @@
           }
         ],
         "current_agent_name": "Agent"
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActAgent.parse_agent_output-33e40173-6a3d-459d-9209-c73c3caeba81",
@@ -328,7 +334,8 @@
           ],
           "retry_messages": []
         }
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActAgent.run_agent_step-7557140d-0616-46b8-bd32-e50aa329eae1",
@@ -390,7 +397,8 @@
           }
         ],
         "retry_messages": []
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActOutputParser.parse-aabf46ef-af6e-4739-8d5a-d758470825d6",
@@ -411,7 +419,8 @@
           "a": 50,
           "b": 2
         }
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAI.astream_chat-ab1c50ff-dc19-4eea-ba20-2e473b449273",
@@ -445,7 +454,8 @@
           }
         ]
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x118231b90>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x118231b90>",
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActAgent.setup_agent-8b095608-29fd-4b6b-b41e-1790b13cc65e",
@@ -497,7 +507,8 @@
           }
         ],
         "current_agent_name": "Agent"
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "ReActAgent.init_run-526f60b8-a246-491e-86cb-42012d8b95f9",
@@ -530,7 +541,8 @@
           }
         ],
         "current_agent_name": "Agent"
-      }
+      },
+      "integration": "LlamaIndex"
     }
   ],
   "agentSpans": [
@@ -551,7 +563,8 @@
         "run_id": "HNqdOIcj7N"
       },
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "integration": "LlamaIndex"
     }
   ],
   "llmSpans": [
@@ -587,7 +600,9 @@
           "content": "Thought: I can answer without using any more tools. I'll use the user's language to answer.\nAnswer: The result of 50 * 2 is 100."
         }
       ],
-      "model": "gpt-4o"
+      "model": "gpt-4o",
+      "integration": "LlamaIndex",
+      "provider": "OpenAI"
     },
     {
       "uuid": "07fa70c6-27aa-467c-9899-03cd70625175",
@@ -613,7 +628,9 @@
           "content": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {\"a\": 50, \"b\": 2}"
         }
       ],
-      "model": "gpt-4o"
+      "model": "gpt-4o",
+      "integration": "LlamaIndex",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -690,7 +707,8 @@
             "b": 2
           }
         }
-      ]
+      ],
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "FunctionTool.acall-22486954-dc2e-49a6-83c5-b3066a1988f6",
@@ -723,7 +741,8 @@
         },
         "raw_output": 100,
         "is_error": false
-      }
+      },
+      "integration": "LlamaIndex"
     }
   ],
   "startTime": "2026-02-16T06:12:31.847Z",

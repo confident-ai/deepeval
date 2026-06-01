@@ -3,6 +3,12 @@
   width: 100%;
   max-width: 100%;
 
+  // Note: `content-visibility: auto` would be a nice perf optimization
+  // here (250+ avatars below the fold), but it implies `contain: paint`,
+  // which clips per-avatar tooltips and the hover lift on the top row.
+  // The avatar <img>s are `loading="lazy"` already, so we accept the
+  // cost in exchange for un-clipped hover affordances.
+
   *,
   *::before,
   *::after {

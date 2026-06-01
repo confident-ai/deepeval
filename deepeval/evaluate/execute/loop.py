@@ -360,7 +360,10 @@ def execute_agentic_test_cases_from_loop(
 
                 start_time = time.perf_counter()
 
-                # Handle trace-level metrics
+                # On errored traces, skip trace-level metrics (no test case
+                # to judge) but DO run the span-level DFS walker below —
+                # it's what hydrates ``trace_api.*_spans`` for the dashboard,
+                # and per-span metric skip is handled inside ``dfs``.
                 skip_metrics_for_this_golden = False
                 if _skip_metrics_for_error(trace=current_trace):
                     trace_api.status = TraceSpanApiStatus.ERRORED
@@ -372,73 +375,74 @@ def execute_agentic_test_cases_from_loop(
                                 current_trace
                             ),
                         )
-                else:
-                    if current_trace.metrics:
-                        requires_trace = any(
-                            metric.requires_trace
-                            for metric in current_trace.metrics
-                        )
+                elif current_trace.metrics:
+                    requires_trace = any(
+                        metric.requires_trace
+                        for metric in current_trace.metrics
+                    )
 
-                        # Build the trace-level LLMTestCase from the golden
-                        # directly, the same way the async iterator does
-                        # (see ``_a_evaluate_trace``). This makes top-level
-                        # ``metrics=[...]`` work out of the box even when the
-                        # user never calls ``update_current_trace(input=...)``.
-                        llm_test_case = LLMTestCase(
-                            input=golden.input,
-                            actual_output=(
-                                str(current_trace.output)
-                                if current_trace.output is not None
-                                else golden.actual_output
-                            ),
-                            expected_output=current_trace.expected_output,
-                            context=current_trace.context,
-                            retrieval_context=current_trace.retrieval_context,
-                            tools_called=current_trace.tools_called,
-                            expected_tools=current_trace.expected_tools,
-                        )
+                    # Build the trace-level LLMTestCase from the golden
+                    # directly, the same way the async iterator does
+                    # (see ``_a_evaluate_trace``). This makes top-level
+                    # ``metrics=[...]`` work out of the box even when the
+                    # user never calls ``update_current_trace(input=...)``.
+                    llm_test_case = LLMTestCase(
+                        input=golden.input,
+                        actual_output=(
+                            str(current_trace.output)
+                            if current_trace.output is not None
+                            else golden.actual_output
+                        ),
+                        expected_output=current_trace.expected_output,
+                        context=current_trace.context,
+                        retrieval_context=current_trace.retrieval_context,
+                        tools_called=current_trace.tools_called,
+                        expected_tools=current_trace.expected_tools,
+                    )
 
-                        if requires_trace:
-                            llm_test_case._trace_dict = (
-                                trace_manager.create_nested_spans_dict(
-                                    current_trace.root_spans[0]
-                                )
+                    if requires_trace:
+                        llm_test_case._trace_dict = (
+                            trace_manager.create_nested_spans_dict(
+                                current_trace.root_spans[0]
                             )
+                        )
 
-                        if not skip_metrics_for_this_golden:
-                            for metric in current_trace.metrics:
-                                metric.skipped = False
-                                metric.error = None
-                                if display_config.verbose_mode is not None:
-                                    metric.verbose_mode = (
-                                        display_config.verbose_mode
-                                    )
-
-                            trace_api.metrics_data = []
-                            for metric in current_trace.metrics:
-                                res = _execute_metric(
-                                    metric=metric,
-                                    test_case=llm_test_case,
-                                    show_metric_indicator=show_metric_indicator,
-                                    in_component=True,
-                                    error_config=error_config,
+                    if not skip_metrics_for_this_golden:
+                        for metric in current_trace.metrics:
+                            metric.skipped = False
+                            metric.error = None
+                            if display_config.verbose_mode is not None:
+                                metric.verbose_mode = (
+                                    display_config.verbose_mode
                                 )
-                                if res == "skip":
-                                    continue
 
-                                if not metric.skipped:
-                                    metric_data = create_metric_data(metric)
-                                    trace_api.metrics_data.append(metric_data)
-                                    api_test_case.update_metric_data(
-                                        metric_data
-                                    )
-                                    api_test_case.update_status(
-                                        metric_data.success
-                                    )
-                                    update_pbar(progress, pbar_eval_id)
+                        trace_api.metrics_data = []
+                        for metric in current_trace.metrics:
+                            res = _execute_metric(
+                                metric=metric,
+                                test_case=llm_test_case,
+                                show_metric_indicator=show_metric_indicator,
+                                in_component=True,
+                                error_config=error_config,
+                            )
+                            if res == "skip":
+                                continue
 
-                    # Then handle span-level metrics
-                    dfs(current_trace.root_spans[0], progress, pbar_eval_id)
+                            if not metric.skipped:
+                                metric_data = create_metric_data(metric)
+                                trace_api.metrics_data.append(metric_data)
+                                api_test_case.update_metric_data(metric_data)
+                                api_test_case.update_status(metric_data.success)
+                                update_pbar(progress, pbar_eval_id)
+
+                # Always walk spans, even on errored traces — the walker
+                # hydrates ``trace_api.*_spans`` and the user needs that
+                # data on the dashboard to diagnose. Walk EVERY root, not
+                # just ``root_spans[0]``: OTel integrations can land
+                # multiple logical roots when a child ends before its
+                # parent. Mirrors the async path in ``agentic.py``.
+                for root in current_trace.root_spans:
+                    dfs(root, progress, pbar_eval_id)
 
             end_time = time.perf_counter()
             run_duration = end_time - start_time

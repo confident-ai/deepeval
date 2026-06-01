@@ -1,0 +1,69 @@
+{
+  "uuid": "32b05c73fe577592613ad7329c8ca265",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "f92de9f191a8e115",
+      "name": "invocation [deepeval-googleadk-simple]",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-07T09:06:19.872Z",
+      "endTime": "2026-05-07T09:06:22.567Z",
+      "input": "{\"user_id\": \"test-user\", \"session_id\": \"7ae444b1-17a8-4948-997a-4e42807cef8b\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Say hello in exactly three words.\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"Hello there friend.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":4,\"prompt_token_count\":37,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":37}],\"total_token_count\":41},\"invocation_id\":\"e-c09e2d5a-482a-4d88-bfb1-6e4e4a2f84b5\",\"author\":\"simple_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"1827adbb-2b6f-4adb-8d2f-2caf48370dac\",\"timestamp\":1778144779.873003}",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Google ADK"
+    },
+    {
+      "uuid": "ec677f7900bcb843",
+      "name": "simple_assistant",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "f92de9f191a8e115",
+      "startTime": "2026-05-07T09:06:19.872Z",
+      "endTime": "2026-05-07T09:06:22.567Z",
+      "input": [],
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"Hello there friend.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":4,\"prompt_token_count\":37,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":37}],\"total_token_count\":41},\"invocation_id\":\"e-c09e2d5a-482a-4d88-bfb1-6e4e4a2f84b5\",\"author\":\"simple_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"1827adbb-2b6f-4adb-8d2f-2caf48370dac\",\"timestamp\":1778144779.873003}",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "integration": "Google ADK"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "83521c8ed2b2e454",
+      "name": "call_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "ec677f7900bcb843",
+      "startTime": "2026-05-07T09:06:19.873Z",
+      "endTime": "2026-05-07T09:06:22.566Z",
+      "input": "You are a concise assistant. Reply with one short sentence only.\n\nYou are an agent. Your internal name is \"simple_assistant\".",
+      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"Hello there friend.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":4,\"prompt_token_count\":37,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":37}],\"total_token_count\":41}}",
+      "model": "gemini-2.5-flash-lite",
+      "inputTokenCount": 37.0,
+      "outputTokenCount": 4.0,
+      "integration": "Google ADK",
+      "provider": "Gemini"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-05-07T09:06:19.872Z",
+  "endTime": "2026-05-07T09:06:22.567Z",
+  "name": "googleadk-simple-test",
+  "metadata": {
+    "test_type": "simple"
+  },
+  "tags": [
+    "googleadk",
+    "simple"
+  ],
+  "environment": "development",
+  "threadId": "simple-123",
+  "userId": "test-user",
+  "input": "{\"user_id\": \"test-user\", \"session_id\": \"7ae444b1-17a8-4948-997a-4e42807cef8b\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Say hello in exactly three words.\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
+  "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"Hello there friend.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":4,\"prompt_token_count\":37,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":37}],\"total_token_count\":41},\"invocation_id\":\"e-c09e2d5a-482a-4d88-bfb1-6e4e4a2f84b5\",\"author\":\"simple_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"1827adbb-2b6f-4adb-8d2f-2caf48370dac\",\"timestamp\":1778144779.873003}",
+  "status": "SUCCESS"
+}

@@ -13,7 +13,8 @@
       },
       "output": {
         "response": "Calculated Result: 42 (Mock)"
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "RouterQueryEngine._query-dc5bde90-c264-4bd2-ab28-4a17ef82db74",
@@ -33,7 +34,8 @@
       },
       "output": {
         "response": "Calculated Result: 42 (Mock)"
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "LLMSingleSelector._select-19f894dc-91f5-41b7-9db2-3ab19bb8719a",
@@ -74,7 +76,8 @@
             "reason": "The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2."
           }
         ]
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "SelectionOutputParser.parse-e1ef9e81-eaed-4cf6-9eb0-3f1456f3612a",
@@ -95,7 +98,8 @@
             "reason": "The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2."
           }
         ]
-      }
+      },
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAI.predict-41a92c11-dc2b-4d88-9849-3aaab27a4737",
@@ -125,7 +129,8 @@
           "query_str": "Calculate 21 + 21"
         }
       },
-      "output": "```json\n[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2.\"\n    }\n]\n```"
+      "output": "```json\n[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2.\"\n    }\n]\n```",
+      "integration": "LlamaIndex"
     },
     {
       "uuid": "OpenAI.chat-0a5e3a84-da85-4fd8-bb17-0ee8d527f383",
@@ -199,7 +204,8 @@
           "completion_tokens": 46,
           "total_tokens": 181
         }
-      }
+      },
+      "integration": "LlamaIndex"
     }
   ],
   "agentSpans": [],
@@ -224,7 +230,9 @@
           "content": "```json\n[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2.\"\n    }\n]\n```"
         }
       ],
-      "model": "gpt-4o"
+      "model": "gpt-4o",
+      "integration": "LlamaIndex",
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

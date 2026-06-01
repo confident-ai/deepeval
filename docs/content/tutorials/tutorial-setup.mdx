@@ -21,7 +21,7 @@ pip install -U deepeval
 Let's evaluate the correctness of an LLM output using [`GEval`](https://deepeval.com/docs/metrics-llm-evals), a powerful metric based on LLM-as-a-judge evaluation.
 
 :::note
-Your test file must be named with a `test_` prefix (like `test_app.py`) for DeepEval to recognize and run it.
+When you pass a file explicitly (e.g. `deepeval test run evals/my_eval.py`), DeepEval runs it regardless of its name. The `test_` prefix (like `test_app.py`) is only needed for pytest's automatic discovery when you point it at a directory.
 :::
 
 ```python title="test_app.py"

@@ -181,8 +181,13 @@ def sh(cmd: List[str]) -> str:
 
 def git_tag_date_ymd(tag: str) -> str:
     if tag not in tag_to_date:
-        date_value = sh(["git", "log", "-1", "--format=%cs", tag])
-        tag_to_date[tag] = date_value
+        try:
+            date_value = sh(["git", "log", "-1", "--format=%cs", tag])
+            tag_to_date[tag] = date_value
+        except subprocess.CalledProcessError:
+            import datetime
+
+            tag_to_date[tag] = datetime.datetime.now().strftime("%Y-%m-%d")
     return tag_to_date[tag]
 
 
@@ -836,7 +841,7 @@ def prune_ignored(idx: ChangelogIndex, ignore_prs: set[int]) -> int:
     """
     Remove any PR entries whose number is in `ignore_prs`.
 
-    This is what makes deletions persist accross updates: add the PR number to the ignore block, re-run
+    This is what makes deletions persist across updates: add the PR number to the ignore block, re-run
     the generator, and the entry will be removed and it won't be re-added by future generator updates.
     """
     removed = 0
@@ -1429,7 +1434,9 @@ def main() -> int:
     )
 
     ap.add_argument(
-        "--output-dir", default="docs/changelog", help="Docs changelog dir"
+        "--output-dir",
+        default="docs/content/changelog",
+        help="Docs changelog dir",
     )
     ap.add_argument(
         "--github",

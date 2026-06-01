@@ -3,139 +3,346 @@ id: agentcore
 title: AWS AgentCore
 sidebar_label: AgentCore
 ---
+
+<IntegrationTagsDisplayer otel={true} cicdEvals={true} traceability={true} />
+
 [Amazon AgentCore](https://aws.amazon.com/bedrock/agentcore/) is AWS's managed runtime for deploying and scaling AI agents.
 
-:::tip
-We recommend logging in to [Confident AI](https://app.confident-ai.com) to view your AgentCore evaluations.
+The `deepeval` integration auto-instruments AgentCore apps through OpenTelemetry. Every agent invocation, model call, and tool call becomes a span you can inspect, without wiring trace structure by hand.
 
-```bash
-deepeval login
-```
+<AgentTraceTerminal
+  title="agentcore_agent · deepeval"
+  ariaLabel="Example AgentCore agent trace with per-step metric scores"
+  lines={[
+    { kind: "cmd", name: "deepeval test run test_agentcore_agent.py" },
+    { kind: "blank" },
+    { kind: "root", prefix: "●", name: "test_agentcore_agent" },
+    { kind: "blank", prefix: "│" },
+    {
+      kind: "agent",
+      prefix: "└─",
+      name: "refund_assistant",
+      metric: "Task Completion",
+      score: "0.95",
+      duration: "240ms",
+      pass: true,
+    },
+    {
+      kind: "llm",
+      prefix: "   ├─",
+      name: "amazon.nova-lite-v1:0 · plan",
+      metric: "G-Eval",
+      score: "0.43",
+      duration: "96ms",
+      pass: false,
+    },
+    {
+      kind: "tool",
+      prefix: "   ├─",
+      name: 'lookup_order(order_id="A-1001")',
+      duration: "52ms",
+    },
+    {
+      kind: "llm",
+      prefix: "   └─",
+      name: "amazon.nova-lite-v1:0 · respond",
+      metric: "Faithfulness",
+      score: "0.94",
+      duration: "88ms",
+      pass: true,
+    },
+    { kind: "blank" },
+    {
+      kind: "summary",
+      name: "Trace score  0.77   ·   2/3 metrics passed",
+      pass: false,
+    },
+  ]}
+/>
 
-For users in the EU region, please set your OTEL endpoint in the env as following:
+`deepeval`'s AgentCore integration enables you to:
 
-```bash
-export CONFIDENT_OTEL_URL="https://eu.otel.confident-ai.com"
+- **Auto-instrument every AgentCore invocation** — each app entrypoint call produces a trace, and each agent, LLM, and tool call becomes a component span.
+- **Evaluate traces or model / agent components** with any `deepeval` metric.
+- **Run evals from scripts or CI/CD** — same metrics, different surfaces.
+- **Customize trace and span data at runtime** from tool bodies, wrappers, or staged span config.
 
-```
-
-Or if you're in the AU region, please set your OTEL endpoint in the env as following:
-
-```bash
-export CONFIDENT_OTEL_URL="https://au.otel.confident-ai.com"
-
-```
-
-:::
-
-## End-to-End Evals
-
-`deepeval` allows you to evaluate Strands agents using agentcore in **under a minute**.
+## Getting Started
 
 <Steps>
 
 <Step>
-### Configure AgentCore
 
+### Installation
 
-Pass `agent_metrics` to the `instrument_agentcore` method.
+```bash
+pip install -U deepeval bedrock-agentcore strands-agents opentelemetry-sdk opentelemetry-exporter-otlp-proto-http
+```
 
-```python title="main.py" showLineNumbers
-import nest_asyncio
+Under the hood the integration registers an OpenTelemetry span processor that translates AgentCore spans into `deepeval` traces.
 
-nest_asyncio.apply()
+</Step>
 
+<Step>
+
+### Instrument and evaluate
+
+Call `instrument_agentcore(...)` before creating or invoking your AgentCore app. From that point on, AgentCore spans are available to `deepeval`.
+
+```python title="agentcore_agent.py" showLineNumbers
 from bedrock_agentcore import BedrockAgentCoreApp
 from strands import Agent
 from deepeval.integrations.agentcore import instrument_agentcore
-from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
 
-instrument_agentcore(
-    name="AgentCore Tracing",
-    environment="development",
-    agent_metrics=[AnswerRelevancyMetric()],
-)
+instrument_agentcore()
 
 app = BedrockAgentCoreApp()
 agent = Agent(model="amazon.nova-lite-v1:0")
 
 @app.entrypoint
 def invoke(payload):
-    user_message = payload.get("prompt")
-    result = agent(user_message)
+    result = agent(payload["prompt"])
     return {"result": result.message}
 
-response = invoke({"prompt": "Make a funny joke"})
+# Goldens are the inputs you want to evaluate.
+dataset = EvaluationDataset(goldens=[Golden(input="Help me return my order.")])
+
+# `evals_iterator` loops through goldens and applies metrics.
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    invoke({"prompt": golden.input}) # Produces trace for evaluation
 ```
 
-:::info
-Evaluations are supported for Strands `Agent`. Only metrics with parameters `input`, `output` and `tools_called` are eligible for evaluation.
+Done ✅. You've run your first eval with full traceability into AgentCore via `deepeval`.
+
+:::tip
+The examples in this doc use Strands as the agent framework running inside AgentCore. Strands is not required; it is just one framework you can deploy with AgentCore. `deepeval`'s integration works with any framework.
 :::
-
-</Step>
-<Step>
-### Run evaluations
-
-
-Create an `EvaluationDataset` and invoke your agentcore application for each golden within the `evals_iterator()` loop to run end-to-end evaluations.
-
-<Tabs items={["Asynchronous"]}>
-<Tab value="Asynchronous">
-
-```python title="main.py" showLineNumbers
-from deepeval.evaluate.configs import AsyncConfig
-
-dataset = EvaluationDataset(
-    goldens=[
-        Golden(input="What's the weather in Paris?"),
-        Golden(input="What's the weather in London?"),
-    ]
-)
-
-for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=False)):
-    response = invoke({"prompt": golden.input})
-```
-
-</Tab>
-</Tabs>
-
-✅ Done. The `evals_iterator` will automatically generate a test run with individual evaluation traces for each golden.
 
 </Step>
 
 </Steps>
 
-## Evals in Production
+## What gets traced
 
-To run online evaluations in production, replace `metrics` with a [metric collection](https://www.confident-ai.com/docs/metrics/metric-collections) string from Confident AI, and run your Strands agent as usual with agentcore:
+Each AgentCore app invocation produces a **trace** — the end-to-end unit your user observes. Inside that trace are **component spans** for each step the agent took:
 
-```python filename="main.py" showLineNumbers
+- **Agent spans** — Strands agent invocations and agent workflow steps.
+- **LLM spans** — model calls emitted through AgentCore / Strands.
+- **Tool spans** — tool calls and function executions.
+
+```text
+Trace                                    ← what the user observes
+└── Agent: refund_assistant              ← one AgentCore app invocation
+    ├── LLM: amazon.nova-lite-v1:0       ← component span: model plans
+    ├── Tool: lookup_order               ← component span: tool input + output
+    └── LLM: amazon.nova-lite-v1:0       ← component span: final answer
+```
+
+The trace and its component spans are independently evaluable.
+
+## Running evals
+
+There are two surfaces for running evals against an AgentCore app. Pick by where you want results to surface — your terminal during development, or your CI pipeline as a pass/fail gate.
+
+### In CI/CD (pytest)
+
+Use the `deepeval` pytest integration. Each parametrized test invocation becomes one AgentCore app invocation; failing metrics fail the test, which fails the build.
+
+```python title="test_agentcore_agent.py" showLineNumbers
+import pytest
+
 from bedrock_agentcore import BedrockAgentCoreApp
 from strands import Agent
+from deepeval import assert_test
+from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.integrations.agentcore import instrument_agentcore
-from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.metrics import TaskCompletionMetric
 
-instrument_agentcore(
-    name="AgentCore Tracing",
-    environment="development",
-    trace_metric_collection="my-trace-collection",
-    agent_metric_collection="my-agent-collection",
-    llm_metric_collection="my-llm-collection",
-    tool_metric_collection_map={
-        "get_weather": "my-tool-collection",
-    },
-)
+instrument_agentcore()
 
 app = BedrockAgentCoreApp()
 agent = Agent(model="amazon.nova-lite-v1:0")
 
 @app.entrypoint
 def invoke(payload):
-    user_message = payload.get("prompt")
-    result = agent(user_message)
+    result = agent(payload["prompt"])
     return {"result": result.message}
 
-response = invoke({"prompt": "Make a funny joke"})
+dataset = EvaluationDataset(goldens=[
+    Golden(input="Help me return my order."),
+    Golden(input="Explain my refund options."),
+])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_agentcore_agent(golden: Golden):
+    invoke({"prompt": golden.input})
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
 ```
 
-`deepeval` allows you to run component evals at different levels of like Trace, Agent, LLM and Tool spans. You can pass your metric collection for any spans using the `instrument_agentcore` method.
+Run it with:
+
+```bash
+deepeval test run test_agentcore_agent.py
+```
+
+### In a script
+
+Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one app invocation; metrics score the resulting trace.
+
+```python title="agentcore_agent.py" showLineNumbers
+dataset = EvaluationDataset(goldens=[
+    Golden(input="Help me return my order."),
+    Golden(input="Explain my refund options."),
+])
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    invoke({"prompt": golden.input})
+```
+
+## Applying metrics to components
+
+The `metrics=[...]` you passed to `evals_iterator` evaluates the **trace**. To evaluate a **component** instead — a specific LLM call or agent span — stage the metric with the appropriate `next_*_span(...)` wrapper before invoking the app.
+
+### Agent spans
+
+```python title="agentcore_agent.py" showLineNumbers
+from deepeval.tracing import next_agent_span
+...
+
+def run_agentcore(prompt: str):
+    with next_agent_span(metrics=[TaskCompletionMetric()]):
+        return invoke({"prompt": prompt})
+```
+
+### LLM calls
+
+```python title="agentcore_agent.py" showLineNumbers
+from deepeval.tracing import next_llm_span
+...
+
+def run_agentcore(prompt: str):
+    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
+        return invoke({"prompt": prompt})
+```
+
+For deterministic tool calls, prefer `update_current_span(...)` to add metadata, inputs, and outputs instead of attaching metrics to the tool span.
+
+## Customizing trace and span data at runtime
+
+Trace-level fields you pass to `instrument_agentcore(...)` are defaults. For anything dynamic, the right API depends on where your code runs.
+
+AgentCore creates most of the trace structure for you, which means the agent, LLM, and tool spans are mostly hidden behind the app invocation. Calls like `update_current_trace(...)` and `update_current_span(...)` only work while there is an active `deepeval` trace/span in context. In practice, tool bodies are the clearest mutation point, because AgentCore has already opened the trace and tool span before your function runs.
+
+If you need to customize from outside a tool, use `instrument_agentcore(...)` for static defaults, `next_*_span(...)` to stage config for the next AgentCore-created span, or `@observe` / `with trace(...)` when you own the outer operation.
+
+### Trace-level fields from inside a tool
+
+```python title="agentcore_agent.py" showLineNumbers
+from deepeval.tracing import update_current_trace
+...
+
+def lookup_order(order_id: str) -> dict:
+    order = orders_db.get(order_id)
+    update_current_trace(user_id=order["user_id"], metadata={"order_id": order_id})
+    return order
+```
+
+### Span-level fields from inside a tool
+
+```python title="agentcore_agent.py" showLineNumbers
+from deepeval.tracing import update_current_span
+...
+
+def lookup_order(order_id: str) -> dict:
+    order = orders_db.get(order_id)
+    update_current_span(metadata={"order_id": order_id}, output=order)
+    return order
+```
+
+## Advanced patterns
+
+The primitives above — `instrument_agentcore(...)`, `@observe`, `with trace(...)`, `next_*_span(...)`, `update_current_*(...)` — compose around one boundary: AgentCore owns the auto-instrumented spans, and your code customizes them from the places it can actually see.
+
+### Evaluate subagents with `next_*_span`
+
+`next_*_span(metrics=[...])` stages a metric for the next matching AgentCore component span. Use this when you want to evaluate a subagent or model step instead of the full trace. Pick the helper that matches the span you want to score: `next_agent_span(...)` or `next_llm_span(...)`.
+
+```python title="agentcore_agent.py" showLineNumbers
+from deepeval.tracing import next_agent_span
+...
+
+def run_agent(prompt: str):
+    with next_agent_span(metrics=[TaskCompletionMetric()]):
+        return invoke({"prompt": prompt})
+```
+
+#### No trace-level metrics required
+
+Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because the `TaskCompletionMetric` is attached to the next agent span, so CI/CD and scripts only need to run the subagent.
+
+This is how you'd run it:
+
+<Tabs items={["CI/CD", "Scripts"]}>
+<Tab value="CI/CD">
+
+```python title="test_agentcore_agent.py" showLineNumbers
+import pytest
+from deepeval import assert_test
+...
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_agent_span(golden: Golden):
+    run_agent(golden.input)
+    assert_test(golden=golden)
+```
+
+Then finally:
+
+```bash
+deepeval test run test_agentcore_agent.py
+```
+
+</Tab>
+<Tab value="Scripts">
+
+```python title="agentcore_agent.py" showLineNumbers
+...
+
+for golden in dataset.evals_iterator():
+    run_agent(golden.input)
+```
+
+</Tab>
+</Tabs>
+
+### Wrap an AgentCore invocation in `@observe`
+
+When the AgentCore app is part of a larger operation, decorate the outer function with `@observe`. AgentCore spans nest under your observed span automatically.
+
+```python title="agentcore_agent.py" showLineNumbers
+from deepeval.tracing import observe
+...
+
+@observe(name="respond_to_user")
+def respond_to_user(prompt: str) -> str:
+    response = invoke({"prompt": prompt})
+    return response["result"]
+```
+
+## API reference
+
+`instrument_agentcore(...)` accepts the following trace-level kwargs. Each one is a default; runtime calls always win.
+
+| Kwarg               | Type        | Description                                                                |
+| ------------------- | ----------- | -------------------------------------------------------------------------- |
+| `name`              | `str`       | Default trace name. Override at runtime via `update_current_trace`.        |
+| `thread_id`         | `str`       | Default thread identifier. Useful for grouping conversational turns.       |
+| `user_id`           | `str`       | Default actor identifier. Override per-request via `update_current_trace`. |
+| `metadata`          | `dict`      | Default trace metadata. Merged with runtime overrides; runtime wins.       |
+| `tags`              | `list[str]` | Default tags applied to every trace produced by this app.                  |
+| `environment`       | `str`       | One of `"development"`, `"staging"`, `"production"`, `"testing"`.          |
+| `metric_collection` | `str`       | Default metric collection applied at the trace level.                      |
+
+For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_span`, `next_llm_span`) and the test-decorator surface (`@observe`, `@assert_test`, `with trace(...)`), see the [tracing reference](/docs/evaluation-llm-tracing).
