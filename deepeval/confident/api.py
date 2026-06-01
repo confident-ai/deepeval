@@ -147,6 +147,39 @@ class Endpoints(Enum):
     METRICS_ENDPOINT = "/v1/metrics"
     METRIC_ENDPOINT = "/v1/metric/:name"
 
+    # Organization management
+    ORGANIZATION_ENDPOINT = "/v1/organization"
+    ORGANIZATION_MEMBERS_ENDPOINT = "/v1/organization/members"
+    ORGANIZATION_MEMBER_ENDPOINT = "/v1/organization/members/:userId"
+    ORGANIZATION_INVITATIONS_ENDPOINT = "/v1/organization/invitations"
+    ORGANIZATION_INVITATION_ENDPOINT = (
+        "/v1/organization/invitations/:invitationId"
+    )
+    ORGANIZATION_ROLES_ENDPOINT = "/v1/organization/roles"
+    ORGANIZATION_ROLE_ENDPOINT = "/v1/organization/roles/:roleId"
+    ORGANIZATION_POLICIES_ENDPOINT = "/v1/organization/policies"
+    ORGANIZATION_POLICY_ENDPOINT = "/v1/organization/policies/:policyId"
+    ORGANIZATION_PERMISSIONS_ENDPOINT = "/v1/organization/permissions"
+    ORGANIZATION_API_KEYS_ENDPOINT = "/v1/organization/api-keys"
+    ORGANIZATION_API_KEY_ENDPOINT = "/v1/organization/api-keys/:apiKeyId"
+
+    # Project management
+    PROJECTS_ENDPOINT = "/v1/projects"
+    PROJECT_ENDPOINT = "/v1/projects/:projectId"
+    PROJECT_MEMBERS_ENDPOINT = "/v1/projects/:projectId/members"
+    PROJECT_MEMBER_ENDPOINT = "/v1/projects/:projectId/members/:userId"
+    PROJECT_INVITATIONS_ENDPOINT = "/v1/projects/:projectId/invitations"
+    PROJECT_INVITATION_ENDPOINT = (
+        "/v1/projects/:projectId/invitations/:invitationId"
+    )
+    PROJECT_ROLES_ENDPOINT = "/v1/projects/:projectId/roles"
+    PROJECT_ROLE_ENDPOINT = "/v1/projects/:projectId/roles/:roleId"
+    PROJECT_POLICIES_ENDPOINT = "/v1/projects/:projectId/policies"
+    PROJECT_POLICY_ENDPOINT = "/v1/projects/:projectId/policies/:policyId"
+    PROJECT_PERMISSIONS_ENDPOINT = "/v1/projects/:projectId/permissions"
+    PROJECT_API_KEYS_ENDPOINT = "/v1/projects/:projectId/api-keys"
+    PROJECT_API_KEY_ENDPOINT = "/v1/projects/:projectId/api-keys/:apiKeyId"
+
 
 def _sanitize_body(obj):
     """Recursively replace non-finite floats (NaN, Inf, -Inf) with None.
