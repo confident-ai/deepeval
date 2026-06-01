@@ -28,6 +28,8 @@ class BaseMetric:
     include_reason: bool = False
     error: Optional[str] = None
     evaluation_cost: Optional[float] = None
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
     verbose_logs: Optional[str] = None
     skipped = False
     requires_trace: bool = False
@@ -64,6 +66,16 @@ class BaseMetric:
         else:
             self.evaluation_cost = None
 
+    def _accrue_tokens(
+        self,
+        input_tokens: Optional[int],
+        output_tokens: Optional[int],
+    ) -> None:
+        if input_tokens is not None:
+            self.input_tokens = (self.input_tokens or 0) + input_tokens
+        if output_tokens is not None:
+            self.output_tokens = (self.output_tokens or 0) + output_tokens
+
 
 class BaseConversationalMetric:
     threshold: float
@@ -78,6 +90,8 @@ class BaseConversationalMetric:
     include_reason: bool = False
     error: Optional[str] = None
     evaluation_cost: Optional[float] = None
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
     verbose_logs: Optional[str] = None
     skipped = False
     model: Optional[DeepEvalBaseLLM] = None
@@ -117,6 +131,16 @@ class BaseConversationalMetric:
         else:
             self.evaluation_cost = None
 
+    def _accrue_tokens(
+        self,
+        input_tokens: Optional[int],
+        output_tokens: Optional[int],
+    ) -> None:
+        if input_tokens is not None:
+            self.input_tokens = (self.input_tokens or 0) + input_tokens
+        if output_tokens is not None:
+            self.output_tokens = (self.output_tokens or 0) + output_tokens
+
 
 class BaseArenaMetric:
     reason: Optional[str] = None
@@ -126,6 +150,8 @@ class BaseArenaMetric:
     include_reason: bool = False
     error: Optional[str] = None
     evaluation_cost: Optional[float] = None
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
     verbose_logs: Optional[str] = None
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
@@ -159,3 +185,13 @@ class BaseArenaMetric:
             self.evaluation_cost += cost
         else:
             self.evaluation_cost = None
+
+    def _accrue_tokens(
+        self,
+        input_tokens: Optional[int],
+        output_tokens: Optional[int],
+    ) -> None:
+        if input_tokens is not None:
+            self.input_tokens = (self.input_tokens or 0) + input_tokens
+        if output_tokens is not None:
+            self.output_tokens = (self.output_tokens or 0) + output_tokens

@@ -35,6 +35,7 @@ from deepeval.metrics.utils import (
     convert_turn_to_dict,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    accrue_token_usage,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -295,6 +296,7 @@ class ConversationalGEval(BaseConversationalMetric):
             )
 
             self._accrue_cost(cost)
+            accrue_token_usage(self, cost)
             data = trimAndLoadJson(res.choices[0].message.content, self)
 
             reason = data["reason"]
@@ -362,6 +364,7 @@ class ConversationalGEval(BaseConversationalMetric):
                 prompt, top_logprobs=self.top_logprobs
             )
             self._accrue_cost(cost)
+            accrue_token_usage(self, cost)
             data = trimAndLoadJson(res.choices[0].message.content, self)
 
             reason = data["reason"]

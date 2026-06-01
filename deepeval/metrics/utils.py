@@ -453,6 +453,22 @@ SchemaType = TypeVar("SchemaType")
 ReturnType = TypeVar("ReturnType")
 
 
+def accrue_token_usage(metric: Any, cost: Any) -> None:
+    """Accrue the input/output token counts that produced ``cost`` onto the
+    metric, when available.
+
+    Native models return their cost as a ``TokenCost`` (a ``float`` subclass
+    carrying ``input_tokens``/``output_tokens``), plain floats from
+    not-yet-updated providers degrade gracefully to ``None``. Call this right
+    after ``metric._accrue_cost(cost)`` so token usage tracks cost exactly.
+    """
+    if hasattr(metric, "_accrue_tokens"):
+        metric._accrue_tokens(
+            getattr(cost, "input_tokens", None),
+            getattr(cost, "output_tokens", None),
+        )
+
+
 def generate_with_schema_and_extract(
     metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
     prompt: Any,
@@ -473,6 +489,7 @@ def generate_with_schema_and_extract(
             prompt, schema=schema_cls
         )
         metric._accrue_cost(cost)
+        accrue_token_usage(metric, cost)
     else:
         result = metric.model.generate_with_schema(prompt, schema=schema_cls)
     if isinstance(result, schema_cls):
@@ -494,6 +511,7 @@ async def a_generate_with_schema_and_extract(
             prompt, schema=schema_cls
         )
         metric._accrue_cost(cost)
+        accrue_token_usage(metric, cost)
     else:
         result = await metric.model.a_generate_with_schema(
             prompt, schema=schema_cls
@@ -504,6 +522,7 @@ async def a_generate_with_schema_and_extract(
         actual_result, cost = result
         if hasattr(metric, "_accrue_cost"):
             metric._accrue_cost(cost)
+            accrue_token_usage(metric, cost)
         result = actual_result
 
     if isinstance(result, schema_cls):

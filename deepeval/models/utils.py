@@ -7,6 +7,38 @@ from deepeval.errors import DeepEvalError
 logger = logging.getLogger(__name__)
 
 
+class TokenCost(float):
+    """A generation cost (USD) that also carries the input/output token counts
+    that produced it.
+
+    It subclasses ``float``, so it behaves exactly like the plain cost float for
+    every existing call site (``output, cost = model.generate(...)``,
+    ``metric._accrue_cost(cost)``, arithmetic, comparisons). New code can read
+    ``cost.input_tokens`` / ``cost.output_tokens`` to surface token usage
+    e.g. for metric-run token visibility, without changing any return
+    signatures. Token data rides along the returned value, so it stays correct
+    under concurrent async fan-out (no shared model-instance state).
+
+    Providers that have not yet been updated simply return a plain ``float``;
+    readers fall back to ``None`` tokens via ``getattr(cost, "input_tokens",
+    None)``, so adoption can be incremental.
+    """
+
+    input_tokens: Optional[int]
+    output_tokens: Optional[int]
+
+    def __new__(
+        cls,
+        value: Optional[float],
+        input_tokens: Optional[int] = None,
+        output_tokens: Optional[int] = None,
+    ) -> "TokenCost":
+        obj = super().__new__(cls, value if value is not None else 0.0)
+        obj.input_tokens = input_tokens
+        obj.output_tokens = output_tokens
+        return obj
+
+
 def parse_model_name(model_name: Optional[str] = None) -> Optional[str]:
     """Extract base model name from provider-prefixed format.
 
