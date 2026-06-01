@@ -386,6 +386,15 @@ class TestMergeCrossFileContexts:
                 built, self._fake_embedder(), target_files_per_context=1
             )
 
+    def test_merge_rejects_max_files_below_two(self):
+        synth = _make_synthesizer()
+        built = self._build(synth, ["a.txt", "b.txt"])
+
+        with pytest.raises(ValueError):
+            synth._merge_cross_file_contexts(
+                built, self._fake_embedder(), max_files_per_context=1
+            )
+
     def test_merge_noop_for_single_context(self):
         synth = _make_synthesizer()
         built = self._build(synth, ["a.txt"])
@@ -395,6 +404,46 @@ class TestMergeCrossFileContexts:
         )
 
         assert merged == built
+
+    def test_merge_skips_embedding_when_one_distinct_file(self):
+        """Multiple same-file contexts -> nothing to merge, no embed cost."""
+        synth = _make_synthesizer()
+        built = synth._build_contexts_with_sources(
+            contexts=[["c1"], ["c2"], ["c3"]],
+            source_files=["a.txt", "a.txt", "a.txt"],
+            context_scores=[0.5, 0.5, 0.5],
+        )
+        embedder = self._fake_embedder()
+
+        merged = synth._merge_cross_file_contexts(built, embedder)
+
+        assert merged == built
+        embedder.embed_texts.assert_not_called()
+
+    def test_merge_passes_through_unlabeled_contexts(self):
+        """A source-less context must not corrupt chunk-label alignment."""
+        synth = _make_synthesizer()
+        built = synth._build_contexts_with_sources(
+            contexts=[["a chunk"], ["b chunk"], ["unlabeled chunk"]],
+            source_files=["a.txt", "b.txt"],  # 3rd context has no source
+            context_scores=[0.5, 0.5, 0.5],
+        )
+        assert built[2].source_files == []
+
+        merged = synth._merge_cross_file_contexts(
+            built, self._fake_embedder(), target_files_per_context=2
+        )
+
+        # Every merged context keeps chunk labels aligned (or has none).
+        for m in merged:
+            assert (
+                not m.chunk_source_files
+                or len(m.chunk_source_files) == len(m.context)
+            )
+        # The unlabeled chunk survives untouched in exactly one context.
+        assert any("unlabeled chunk" in m.context for m in merged)
+        # a.txt and b.txt still merged together despite the stray context.
+        assert any(set(m.source_files) == {"a.txt", "b.txt"} for m in merged)
 
     @pytest.mark.asyncio
     async def test_async_merge_uses_async_embedder(self):

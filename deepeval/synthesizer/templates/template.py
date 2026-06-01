@@ -133,8 +133,6 @@ class SynthesizerTemplate:
             if task
             else ""
         )
-        # Only inject cross-file instructions when the context genuinely spans
-        # more than one source file; single-file contexts use the default path.
         source_files_section = ""
         if available_source_files and len(available_source_files) >= 2:
             cross_file_strength_section = (
@@ -308,8 +306,6 @@ class SynthesizerTemplate:
             else ""
         )
 
-        # Only inject cross-file instructions when the context genuinely spans
-        # more than one source file; single-file contexts use the default path.
         source_files_section = ""
         if available_source_files and len(available_source_files) >= 2:
             cross_file_strength_section = (

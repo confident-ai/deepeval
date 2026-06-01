@@ -184,8 +184,13 @@ class Synthesizer:
     def _validate_merge_request(
         contexts_with_sources: List[ContextWithSources],
         target_files_per_context: Optional[int],
+        max_files_per_context: int,
     ) -> bool:
-        """Validate merge config and report whether merging is possible."""
+        """Validate merge config and report whether merging is possible.
+
+        Returns False (skip merging, no embedding cost) when there aren't at
+        least two contexts spanning two distinct source files.
+        """
         if (
             target_files_per_context is not None
             and target_files_per_context < 2
@@ -193,7 +198,18 @@ class Synthesizer:
             raise ValueError(
                 "`target_files_per_context` must be at least 2 when provided."
             )
-        return len(contexts_with_sources) >= 2
+        if max_files_per_context < 2:
+            raise ValueError(
+                "`max_files_per_context` must be at least 2."
+            )
+        if len(contexts_with_sources) < 2:
+            return False
+        distinct_files = {
+            source
+            for item in contexts_with_sources
+            for source in item.source_files
+        }
+        return len(distinct_files) >= 2
 
     def _merge_cross_file_contexts(
         self,
@@ -203,7 +219,7 @@ class Synthesizer:
         max_files_per_context: int = 3,
     ) -> List[ContextWithSources]:
         if not self._validate_merge_request(
-            contexts_with_sources, target_files_per_context
+            contexts_with_sources, target_files_per_context, max_files_per_context
         ):
             return contexts_with_sources
         context_texts = [
@@ -225,7 +241,7 @@ class Synthesizer:
         max_files_per_context: int = 3,
     ) -> List[ContextWithSources]:
         if not self._validate_merge_request(
-            contexts_with_sources, target_files_per_context
+            contexts_with_sources, target_files_per_context, max_files_per_context
         ):
             return contexts_with_sources
         context_texts = [
@@ -261,11 +277,16 @@ class Synthesizer:
 
         consumed: set = set()
         merged_contexts: List[ContextWithSources] = []
+        underfilled = 0
 
         for idx, current in enumerate(contexts_with_sources):
             if idx in consumed:
                 continue
             consumed.add(idx)
+
+            if not current.source_files:
+                merged_contexts.append(current)
+                continue
 
             if target_files_per_context is None:
                 # Cap the auto-target so we never merge every distinct file,
@@ -285,6 +306,10 @@ class Synthesizer:
             candidate_scores: List[Tuple[int, float]] = []
             for candidate_idx, candidate in enumerate(contexts_with_sources):
                 if candidate_idx in consumed:
+                    continue
+                # Skip unlabeled candidates: an empty source set never
+                # intersects, so it would otherwise be wrongly eligible.
+                if not candidate.source_files:
                     continue
                 if merged_sources & set(candidate.source_files):
                     continue
@@ -312,6 +337,14 @@ class Synthesizer:
                 if len(merged_sources) >= target_count:
                     break
 
+            # Track groups that couldn't reach the achievable target (too few
+            # disjoint-source partners available) so we can warn the user.
+            if (
+                target_files_per_context is not None
+                and len(merged_sources) < target_count
+            ):
+                underfilled += 1
+
             if not chosen_indices:
                 merged_contexts.append(current)
                 continue
@@ -335,6 +368,15 @@ class Synthesizer:
                     chunk_source_files=merged_chunk_source_files,
                     score=current.score,
                 )
+            )
+
+        if underfilled:
+            print_synthesizer_status(
+                SynthesizerStatus.WARNING,
+                "Cross-file context merging",
+                f"{underfilled} context(s) could not reach the requested "
+                f"`target_files_per_context`={target_files_per_context} due to "
+                f"too few distinct source files; generated with fewer files.",
             )
 
         return merged_contexts
