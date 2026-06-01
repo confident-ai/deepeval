@@ -23,7 +23,7 @@ from deepeval.metrics.utils import (
     initialize_model,
 )
 from deepeval.progress_context import synthesizer_progress_context
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseEmbeddingModel
 from deepeval.dataset.golden import Golden, ConversationalGolden
 from deepeval.synthesizer.types import Evolution, PromptEvolution
 from deepeval.synthesizer.templates import (
@@ -107,6 +107,13 @@ my_theme = Theme({"progress.elapsed": "cyan"})
 custom_console = Console(theme=my_theme)
 
 
+class ContextWithSources(BaseModel):
+    context: List[str]
+    source_files: List[str]
+    chunk_source_files: Optional[List[str]] = None
+    score: Optional[float] = None
+
+
 class Synthesizer:
     def __init__(
         self,
@@ -150,6 +157,257 @@ class Synthesizer:
         )
         self.cost_tracking = cost_tracking
         self.synthesis_cost = 0 if self.using_native_model else None
+
+    def _build_contexts_with_sources(
+        self,
+        contexts: List[List[str]],
+        source_files: List[str],
+        context_scores: Optional[List[float]] = None,
+    ) -> List[ContextWithSources]:
+        contexts_with_sources: List[ContextWithSources] = []
+        for idx, context in enumerate(contexts):
+            source_file = source_files[idx] if idx < len(source_files) else None
+            score = context_scores[idx] if context_scores and idx < len(context_scores) else None
+            contexts_with_sources.append(
+                ContextWithSources(
+                    context=context,
+                    source_files=[source_file] if source_file else [],
+                    chunk_source_files=(
+                        [source_file] * len(context) if source_file else []
+                    ),
+                    score=score,
+                )
+            )
+        return contexts_with_sources
+
+    @staticmethod
+    def _validate_merge_request(
+        contexts_with_sources: List[ContextWithSources],
+        target_files_per_context: Optional[int],
+        max_files_per_context: int,
+    ) -> bool:
+        """Validate merge config and report whether merging is possible.
+
+        Returns False (skip merging, no embedding cost) when there aren't at
+        least two contexts spanning two distinct source files.
+        """
+        if (
+            target_files_per_context is not None
+            and target_files_per_context < 2
+        ):
+            raise ValueError(
+                "`target_files_per_context` must be at least 2 when provided."
+            )
+        if max_files_per_context < 2:
+            raise ValueError(
+                "`max_files_per_context` must be at least 2."
+            )
+        if len(contexts_with_sources) < 2:
+            return False
+        distinct_files = {
+            source
+            for item in contexts_with_sources
+            for source in item.source_files
+        }
+        return len(distinct_files) >= 2
+
+    def _merge_cross_file_contexts(
+        self,
+        contexts_with_sources: List[ContextWithSources],
+        embedder: DeepEvalBaseEmbeddingModel,
+        target_files_per_context: Optional[int] = None,
+        max_files_per_context: int = 3,
+    ) -> List[ContextWithSources]:
+        if not self._validate_merge_request(
+            contexts_with_sources, target_files_per_context, max_files_per_context
+        ):
+            return contexts_with_sources
+        context_texts = [
+            "\n".join(item.context) for item in contexts_with_sources
+        ]
+        embeddings = embedder.embed_texts(context_texts)
+        return self._group_contexts_by_source(
+            contexts_with_sources,
+            embeddings,
+            target_files_per_context,
+            max_files_per_context,
+        )
+
+    async def _a_merge_cross_file_contexts(
+        self,
+        contexts_with_sources: List[ContextWithSources],
+        embedder: DeepEvalBaseEmbeddingModel,
+        target_files_per_context: Optional[int] = None,
+        max_files_per_context: int = 3,
+    ) -> List[ContextWithSources]:
+        if not self._validate_merge_request(
+            contexts_with_sources, target_files_per_context, max_files_per_context
+        ):
+            return contexts_with_sources
+        context_texts = [
+            "\n".join(item.context) for item in contexts_with_sources
+        ]
+        embeddings = await embedder.a_embed_texts(context_texts)
+        return self._group_contexts_by_source(
+            contexts_with_sources,
+            embeddings,
+            target_files_per_context,
+            max_files_per_context,
+        )
+
+    def _group_contexts_by_source(
+        self,
+        contexts_with_sources: List[ContextWithSources],
+        embeddings: List[List[float]],
+        target_files_per_context: Optional[int],
+        max_files_per_context: int,
+    ) -> List[ContextWithSources]:
+        """Partition contexts into disjoint-source groups by similarity.
+
+        Each context is consumed by at most one group, so the total number of
+        contexts never grows and content is never duplicated across goldens.
+        """
+        max_available_files = len(
+            {
+                source
+                for item in contexts_with_sources
+                for source in item.source_files
+            }
+        )
+
+        consumed: set = set()
+        merged_contexts: List[ContextWithSources] = []
+        underfilled = 0
+
+        for idx, current in enumerate(contexts_with_sources):
+            if idx in consumed:
+                continue
+            consumed.add(idx)
+
+            if not current.source_files:
+                merged_contexts.append(current)
+                continue
+
+            if target_files_per_context is None:
+                # Cap the auto-target so we never merge every distinct file,
+                # which would blow up context size and token cost.
+                upper = min(max_available_files, max_files_per_context)
+                target_count = random.randint(2, upper) if upper >= 2 else 1
+            else:
+                target_count = min(
+                    target_files_per_context,
+                    max_available_files,
+                    max_files_per_context,
+                )
+
+            merged_sources = set(current.source_files)
+
+            # Rank unconsumed, disjoint-source candidates by similarity.
+            candidate_scores: List[Tuple[int, float]] = []
+            for candidate_idx, candidate in enumerate(contexts_with_sources):
+                if candidate_idx in consumed:
+                    continue
+                # Skip unlabeled candidates: an empty source set never
+                # intersects, so it would otherwise be wrongly eligible.
+                if not candidate.source_files:
+                    continue
+                if merged_sources & set(candidate.source_files):
+                    continue
+                candidate_scores.append(
+                    (
+                        candidate_idx,
+                        self._cosine_similarity(
+                            embeddings[idx], embeddings[candidate_idx]
+                        ),
+                    )
+                )
+            # Shuffle first so equally-similar candidates break ties randomly.
+            random.shuffle(candidate_scores)
+            candidate_scores.sort(key=lambda pair: pair[1], reverse=True)
+
+            chosen_indices: List[int] = []
+            for candidate_idx, _ in candidate_scores:
+                candidate_sources = set(
+                    contexts_with_sources[candidate_idx].source_files
+                )
+                if merged_sources & candidate_sources:
+                    continue
+                chosen_indices.append(candidate_idx)
+                merged_sources.update(candidate_sources)
+                if len(merged_sources) >= target_count:
+                    break
+
+            # Track groups that couldn't reach the achievable target (too few
+            # disjoint-source partners available) so we can warn the user.
+            if (
+                target_files_per_context is not None
+                and len(merged_sources) < target_count
+            ):
+                underfilled += 1
+
+            if not chosen_indices:
+                merged_contexts.append(current)
+                continue
+
+            merged_context = list(current.context)
+            merged_source_files = list(current.source_files)
+            merged_chunk_source_files = list(current.chunk_source_files or [])
+            for chosen_idx in chosen_indices:
+                consumed.add(chosen_idx)
+                partner = contexts_with_sources[chosen_idx]
+                merged_context.extend(partner.context)
+                merged_source_files.extend(partner.source_files)
+                merged_chunk_source_files.extend(
+                    partner.chunk_source_files or []
+                )
+
+            merged_contexts.append(
+                ContextWithSources(
+                    context=merged_context,
+                    source_files=list(dict.fromkeys(merged_source_files)),
+                    chunk_source_files=merged_chunk_source_files,
+                    score=current.score,
+                )
+            )
+
+        if underfilled:
+            print_synthesizer_status(
+                SynthesizerStatus.WARNING,
+                "Cross-file context merging",
+                f"{underfilled} context(s) could not reach the requested "
+                f"`target_files_per_context`={target_files_per_context} due to "
+                f"too few distinct source files; generated with fewer files.",
+            )
+
+        return merged_contexts
+
+    @staticmethod
+    def _cosine_similarity(a: List[float], b: List[float]) -> float:
+        dot = sum(x * y for x, y in zip(a, b))
+        norm_a = sum(x * x for x in a) ** 0.5
+        norm_b = sum(y * y for y in b) ** 0.5
+        if norm_a == 0 or norm_b == 0:
+            return 0.0
+        return dot / (norm_a * norm_b)
+
+    @staticmethod
+    def _format_context_with_sources(
+        context: List[str],
+        chunk_source_files: Optional[List[str]],
+    ) -> List[str]:
+        # Only label chunks when the context genuinely spans >1 source file.
+        # Single-file contexts are left untouched so the default (non
+        # cross-file) generation path is unchanged.
+        if (
+            not chunk_source_files
+            or len(chunk_source_files) != len(context)
+            or len(set(chunk_source_files)) < 2
+        ):
+            return context
+        return [
+            f"[SOURCE: {source}] {chunk}"
+            for source, chunk in zip(chunk_source_files, context)
+        ]
 
     #############################################################
     # Generate Goldens from Docs
@@ -234,13 +492,36 @@ class Synthesizer:
                     update_pbar(progress, pbar_id, advance) if advance else None
                 )  # prevent pbar removal error if advance is 0
 
+                contexts_with_sources = self._build_contexts_with_sources(
+                    contexts=contexts,
+                    source_files=source_files,
+                    context_scores=context_scores,
+                )
+                if context_construction_config.allow_cross_file_contexts:
+                    contexts_with_sources = self._merge_cross_file_contexts(
+                        contexts_with_sources,
+                        context_construction_config.embedder,
+                        context_construction_config.target_files_per_context,
+                        context_construction_config.max_files_per_context,
+                    )
+
                 # Generate goldens from contexts
                 goldens = self.generate_goldens_from_contexts(
-                    contexts=contexts,
+                    contexts=[item.context for item in contexts_with_sources],
                     include_expected_output=include_expected_output,
                     max_goldens_per_context=max_goldens_per_context,
-                    source_files=source_files,
-                    _context_scores=context_scores,
+                    source_files=[
+                        item.source_files for item in contexts_with_sources
+                    ],
+                    context_chunk_source_files=[
+                        item.chunk_source_files or []
+                        for item in contexts_with_sources
+                    ],
+                    target_files_per_context=context_construction_config.target_files_per_context,
+                    _context_scores=[
+                        item.score if item.score is not None else 0.0
+                        for item in contexts_with_sources
+                    ],
                     _progress=progress,
                     _pbar_id=pbar_id,
                     _send_data=False,
@@ -330,13 +611,36 @@ class Synthesizer:
                 update_pbar(progress, pbar_id, advance) if advance else None
             )  # prevent pbar removal error if advance is 0
 
+            contexts_with_sources = self._build_contexts_with_sources(
+                contexts=contexts,
+                source_files=source_files,
+                context_scores=context_scores,
+            )
+            if context_construction_config.allow_cross_file_contexts:
+                contexts_with_sources = await self._a_merge_cross_file_contexts(
+                    contexts_with_sources,
+                    context_construction_config.embedder,
+                    context_construction_config.target_files_per_context,
+                    context_construction_config.max_files_per_context,
+                )
+
             # Generate goldens from contexts
             goldens = await self.a_generate_goldens_from_contexts(
-                contexts=contexts,
+                contexts=[item.context for item in contexts_with_sources],
                 include_expected_output=include_expected_output,
                 max_goldens_per_context=max_goldens_per_context,
-                source_files=source_files,
-                _context_scores=context_scores,
+                source_files=[
+                    item.source_files for item in contexts_with_sources
+                ],
+                context_chunk_source_files=[
+                    item.chunk_source_files or []
+                    for item in contexts_with_sources
+                ],
+                target_files_per_context=context_construction_config.target_files_per_context,
+                _context_scores=[
+                    item.score if item.score is not None else 0.0
+                    for item in contexts_with_sources
+                ],
                 _progress=progress,
                 _pbar_id=pbar_id,
                 _reset_cost=False,
@@ -364,7 +668,9 @@ class Synthesizer:
         contexts: List[List[str]],
         include_expected_output: bool = True,
         max_goldens_per_context: int = 2,
-        source_files: Optional[List[str]] = None,
+        source_files: Optional[List[Union[str, List[str]]]] = None,
+        context_chunk_source_files: Optional[List[List[str]]] = None,
+        target_files_per_context: Optional[int] = None,
         _context_scores: Optional[List[float]] = None,
         _progress: Optional[Progress] = None,
         _pbar_id: Optional[int] = None,
@@ -385,6 +691,8 @@ class Synthesizer:
                         include_expected_output=include_expected_output,
                         max_goldens_per_context=max_goldens_per_context,
                         source_files=source_files,
+                        context_chunk_source_files=context_chunk_source_files,
+                        target_files_per_context=target_files_per_context,
                     )
                 )
             )
@@ -405,6 +713,15 @@ class Synthesizer:
             ):
 
                 for context_index, context in enumerate(contexts):
+                    formatted_context = self._format_context_with_sources(
+                        context=context,
+                        chunk_source_files=(
+                            context_chunk_source_files[context_index]
+                            if context_chunk_source_files is not None
+                            and context_index < len(context_chunk_source_files)
+                            else None
+                        ),
+                    )
                     # Calculate pbar lengths
                     should_style = (
                         self.styling_config.input_format
@@ -444,11 +761,19 @@ class Synthesizer:
 
                     # Generate inputs
                     prompt = SynthesizerTemplate.generate_synthetic_inputs(
-                        context=context,
+                        context=formatted_context,
                         max_goldens_per_context=max_goldens_per_context,
                         scenario=self.styling_config.scenario,
                         task=self.styling_config.task,
                         input_format=self.styling_config.input_format,
+                        available_source_files=(
+                            source_files[context_index]
+                            if source_files is not None
+                            and context_index < len(source_files)
+                            and isinstance(source_files[context_index], list)
+                            else None
+                        ),
+                        target_files_per_context=target_files_per_context,
                     )
                     synthetic_inputs = self._generate_inputs(prompt)
                     update_pbar(progress, pbar_generate_inputs_id, remove=False)
@@ -457,7 +782,7 @@ class Synthesizer:
                     qualified_synthetic_inputs: List[SyntheticData]
                     scores: List[float]
                     qualified_synthetic_inputs, scores = self._rewrite_inputs(
-                        context, synthetic_inputs
+                        formatted_context, synthetic_inputs
                     )
                     update_pbar(progress, pbar_generate_inputs_id, remove=False)
                     update_pbar(
@@ -467,10 +792,21 @@ class Synthesizer:
                     for input_index, data in enumerate(
                         qualified_synthetic_inputs
                     ):
+                        context_source_files: List[str] = []
+                        if (
+                            source_files is not None
+                            and context_index < len(source_files)
+                        ):
+                            context_source = source_files[context_index]
+                            if isinstance(context_source, list):
+                                context_source_files = context_source
+                            elif context_source:
+                                context_source_files = [context_source]
+
                         # Evolve input
                         evolved_input, evolutions_used = self._evolve_input(
                             input=data.input,
-                            context=context,
+                            context=formatted_context,
                             num_evolutions=self.evolution_config.num_evolutions,
                             evolutions=self.evolution_config.evolutions,
                             progress=progress,
@@ -504,13 +840,17 @@ class Synthesizer:
                             input=evolved_input,
                             context=context,
                             source_file=(
-                                source_files[context_index]
-                                if source_files is not None
+                                context_source_files[0]
+                                if context_source_files
                                 else None
                             ),
                             additional_metadata={
                                 "evolutions": evolutions_used,
                                 "synthetic_input_quality": scores[input_index],
+                                "context_source_files": context_source_files,
+                                "used_source_files": (
+                                    data.used_source_files or []
+                                ),
                                 "context_quality": (
                                     _context_scores[context_index]
                                     if _context_scores is not None
@@ -562,7 +902,9 @@ class Synthesizer:
         contexts: List[List[str]],
         include_expected_output: bool = True,
         max_goldens_per_context: int = 2,
-        source_files: Optional[List[str]] = None,
+        source_files: Optional[List[Union[str, List[str]]]] = None,
+        context_chunk_source_files: Optional[List[List[str]]] = None,
+        target_files_per_context: Optional[int] = None,
         _context_scores: Optional[List[float]] = None,
         _progress: Optional[Progress] = None,
         _pbar_id: Optional[int] = None,
@@ -599,6 +941,8 @@ class Synthesizer:
                     include_expected_output=include_expected_output,
                     max_goldens_per_context=max_goldens_per_context,
                     source_files=source_files,
+                    context_chunk_source_files=context_chunk_source_files,
+                    target_files_per_context=target_files_per_context,
                     context_index=index,
                     progress=progress,
                     pbar_id=pbar_id,
@@ -620,7 +964,9 @@ class Synthesizer:
         goldens: List[Golden],
         include_expected_output: bool,
         max_goldens_per_context: int,
-        source_files: Optional[List[str]],
+        source_files: Optional[List[Union[str, List[str]]]],
+        context_chunk_source_files: Optional[List[List[str]]],
+        target_files_per_context: Optional[int],
         context_index: int,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
@@ -662,12 +1008,29 @@ class Synthesizer:
             )
 
         # Generate inputs
-        prompt = SynthesizerTemplate.generate_synthetic_inputs(
+        formatted_context = self._format_context_with_sources(
             context=context,
+            chunk_source_files=(
+                context_chunk_source_files[context_index]
+                if context_chunk_source_files is not None
+                and context_index < len(context_chunk_source_files)
+                else None
+            ),
+        )
+        prompt = SynthesizerTemplate.generate_synthetic_inputs(
+            context=formatted_context,
             max_goldens_per_context=max_goldens_per_context,
             scenario=self.styling_config.scenario,
             task=self.styling_config.task,
             input_format=self.styling_config.input_format,
+            available_source_files=(
+                source_files[context_index]
+                if source_files is not None
+                and context_index < len(source_files)
+                and isinstance(source_files[context_index], list)
+                else None
+            ),
+            target_files_per_context=target_files_per_context,
         )
         synthetic_inputs: List[SyntheticData] = await self._a_generate_inputs(
             prompt
@@ -680,7 +1043,7 @@ class Synthesizer:
         qualified_synthetic_inputs: List[SyntheticData]
         scores: List[float]
         qualified_synthetic_inputs, scores = await self._a_rewrite_inputs(
-            context, synthetic_inputs
+            formatted_context, synthetic_inputs
         )
         update_pbar(progress, pbar_generate_inputs_id, remove=False)
         update_pbar(progress, pbar_generate_goldens_id, remove=False)
@@ -691,10 +1054,18 @@ class Synthesizer:
             data: SyntheticData,
             progress: Optional[Progress] = None,
         ):
+            context_source_files: List[str] = []
+            if source_files is not None and context_index < len(source_files):
+                context_source = source_files[context_index]
+                if isinstance(context_source, list):
+                    context_source_files = context_source
+                elif context_source:
+                    context_source_files = [context_source]
+
             # Evolve input
             evolved_input, evolutions_used = await self._a_evolve_input(
                 input=data.input,
-                context=context,
+                context=formatted_context,
                 num_evolutions=self.evolution_config.num_evolutions,
                 evolutions=self.evolution_config.evolutions,
                 progress=progress,
@@ -738,14 +1109,15 @@ class Synthesizer:
                 context=context,
                 expected_output=expected_output,
                 source_file=(
-                    source_files[context_index]
-                    if source_files is not None
-                    and context_index < len(source_files)
+                    context_source_files[0]
+                    if context_source_files
                     else None
                 ),
                 additional_metadata={
                     "evolutions": evolutions_used,
                     "synthetic_input_quality": scores[input_index],
+                    "context_source_files": context_source_files,
+                    "used_source_files": (data.used_source_files or []),
                     # "context_quality": (
                     #     context_scores[data_index]
                     #     if context_scores is not None
@@ -1166,7 +1538,12 @@ class Synthesizer:
                 input = rewritten_res.rewritten_input
 
             scores.append(score)
-            filtered_inputs.append(SyntheticData(input=input))
+            filtered_inputs.append(
+                SyntheticData(
+                    input=input,
+                    used_source_files=item.used_source_files,
+                )
+            )
 
         return filtered_inputs, scores
 
@@ -1211,7 +1588,12 @@ class Synthesizer:
                 input = rewritten_res.rewritten_input
 
             scores.append(score)
-            filtered_inputs.append(SyntheticData(input=input))
+            filtered_inputs.append(
+                SyntheticData(
+                    input=input,
+                    used_source_files=item.used_source_files,
+                )
+            )
 
         return filtered_inputs, scores
 
@@ -1744,13 +2126,36 @@ class Synthesizer:
                 advance = max(num_contexts - len(contexts), 0)
                 (update_pbar(progress, pbar_id, advance) if advance else None)
 
+                contexts_with_sources = self._build_contexts_with_sources(
+                    contexts=contexts,
+                    source_files=source_files,
+                    context_scores=context_scores,
+                )
+                if context_construction_config.allow_cross_file_contexts:
+                    contexts_with_sources = self._merge_cross_file_contexts(
+                        contexts_with_sources,
+                        context_construction_config.embedder,
+                        context_construction_config.target_files_per_context,
+                        context_construction_config.max_files_per_context,
+                    )
+
                 # Generate conversational goldens from contexts
                 goldens = self.generate_conversational_goldens_from_contexts(
-                    contexts=contexts,
+                    contexts=[item.context for item in contexts_with_sources],
                     include_expected_outcome=include_expected_outcome,
                     max_goldens_per_context=max_goldens_per_context,
-                    source_files=source_files,
-                    _context_scores=context_scores,
+                    source_files=[
+                        item.source_files for item in contexts_with_sources
+                    ],
+                    context_chunk_source_files=[
+                        item.chunk_source_files or []
+                        for item in contexts_with_sources
+                    ],
+                    target_files_per_context=context_construction_config.target_files_per_context,
+                    _context_scores=[
+                        item.score if item.score is not None else 0.0
+                        for item in contexts_with_sources
+                    ],
                     _progress=progress,
                     _pbar_id=pbar_id,
                     _send_data=False,
@@ -1838,14 +2243,37 @@ class Synthesizer:
             advance = max(num_contexts - len(contexts), 0)
             (update_pbar(progress, pbar_id, advance) if advance else None)
 
+            contexts_with_sources = self._build_contexts_with_sources(
+                contexts=contexts,
+                source_files=source_files,
+                context_scores=context_scores,
+            )
+            if context_construction_config.allow_cross_file_contexts:
+                contexts_with_sources = await self._a_merge_cross_file_contexts(
+                    contexts_with_sources,
+                    context_construction_config.embedder,
+                    context_construction_config.target_files_per_context,
+                    context_construction_config.max_files_per_context,
+                )
+
             # Generate conversational goldens from contexts
             goldens = (
                 await self.a_generate_conversational_goldens_from_contexts(
-                    contexts=contexts,
+                    contexts=[item.context for item in contexts_with_sources],
                     include_expected_outcome=include_expected_outcome,
                     max_goldens_per_context=max_goldens_per_context,
-                    source_files=source_files,
-                    _context_scores=context_scores,
+                    source_files=[
+                        item.source_files for item in contexts_with_sources
+                    ],
+                    context_chunk_source_files=[
+                        item.chunk_source_files or []
+                        for item in contexts_with_sources
+                    ],
+                    target_files_per_context=context_construction_config.target_files_per_context,
+                    _context_scores=[
+                        item.score if item.score is not None else 0.0
+                        for item in contexts_with_sources
+                    ],
                     _progress=progress,
                     _pbar_id=pbar_id,
                     _reset_cost=False,
@@ -1874,7 +2302,9 @@ class Synthesizer:
         contexts: List[List[str]],
         include_expected_outcome: bool = True,
         max_goldens_per_context: int = 2,
-        source_files: Optional[List[str]] = None,
+        source_files: Optional[List[Union[str, List[str]]]] = None,
+        context_chunk_source_files: Optional[List[List[str]]] = None,
+        target_files_per_context: Optional[int] = None,
         _context_scores: Optional[List[float]] = None,
         _progress: Optional[Progress] = None,
         _pbar_id: Optional[int] = None,
@@ -1895,6 +2325,8 @@ class Synthesizer:
                         include_expected_outcome=include_expected_outcome,
                         max_goldens_per_context=max_goldens_per_context,
                         source_files=source_files,
+                        context_chunk_source_files=context_chunk_source_files,
+                        target_files_per_context=target_files_per_context,
                         _context_scores=_context_scores,
                     )
                 )
@@ -1916,6 +2348,15 @@ class Synthesizer:
             ):
 
                 for context_index, context in enumerate(contexts):
+                    formatted_context = self._format_context_with_sources(
+                        context=context,
+                        chunk_source_files=(
+                            context_chunk_source_files[context_index]
+                            if context_chunk_source_files is not None
+                            and context_index < len(context_chunk_source_files)
+                            else None
+                        ),
+                    )
                     # Calculate pbar lengths
                     should_style = (
                         self.conversational_styling_config.participant_roles
@@ -1955,11 +2396,19 @@ class Synthesizer:
 
                     # Generate scenarios
                     prompt = SynthesizerTemplate.generate_synthetic_scenarios(
-                        context=context,
+                        context=formatted_context,
                         max_goldens_per_context=max_goldens_per_context,
                         scenario_context=self.conversational_styling_config.scenario_context,
                         conversational_task=self.conversational_styling_config.conversational_task,
                         participant_roles=self.conversational_styling_config.participant_roles,
+                        available_source_files=(
+                            source_files[context_index]
+                            if source_files is not None
+                            and context_index < len(source_files)
+                            and isinstance(source_files[context_index], list)
+                            else None
+                        ),
+                        target_files_per_context=target_files_per_context,
                     )
                     synthetic_scenarios = self._generate_scenarios(prompt)
                     update_pbar(
@@ -1970,7 +2419,9 @@ class Synthesizer:
                     qualified_synthetic_scenarios: List[ConversationalScenario]
                     scores: List[float]
                     qualified_synthetic_scenarios, scores = (
-                        self._rewrite_scenarios(context, synthetic_scenarios)
+                        self._rewrite_scenarios(
+                            formatted_context, synthetic_scenarios
+                        )
                     )
                     update_pbar(
                         progress, pbar_generate_scenarios_id, remove=False
@@ -1982,11 +2433,22 @@ class Synthesizer:
                     for scenario_index, data in enumerate(
                         qualified_synthetic_scenarios
                     ):
+                        context_source_files: List[str] = []
+                        if (
+                            source_files is not None
+                            and context_index < len(source_files)
+                        ):
+                            context_source = source_files[context_index]
+                            if isinstance(context_source, list):
+                                context_source_files = context_source
+                            elif context_source:
+                                context_source_files = [context_source]
+
                         # Evolve scenario
                         evolved_scenario, evolutions_used = (
                             self._evolve_scenario(
                                 scenario=data.scenario,
-                                context=context,
+                                context=formatted_context,
                                 num_evolutions=self.evolution_config.num_evolutions,
                                 evolutions=self.evolution_config.evolutions,
                                 progress=progress,
@@ -2031,9 +2493,13 @@ class Synthesizer:
                                     else None
                                 ),
                                 "source_files": (
-                                    source_files[context_index]
-                                    if source_files is not None
+                                    context_source_files[0]
+                                    if context_source_files
                                     else None
+                                ),
+                                "context_source_files": context_source_files,
+                                "used_source_files": (
+                                    data.used_source_files or []
                                 ),
                             },
                         )
@@ -2084,7 +2550,9 @@ class Synthesizer:
         contexts: List[List[str]],
         include_expected_outcome: bool = True,
         max_goldens_per_context: int = 2,
-        source_files: Optional[List[str]] = None,
+        source_files: Optional[List[Union[str, List[str]]]] = None,
+        context_chunk_source_files: Optional[List[List[str]]] = None,
+        target_files_per_context: Optional[int] = None,
         _context_scores: Optional[List[float]] = None,
         _progress: Optional[Progress] = None,
         _pbar_id: Optional[int] = None,
@@ -2121,6 +2589,8 @@ class Synthesizer:
                     include_expected_outcome=include_expected_outcome,
                     max_goldens_per_context=max_goldens_per_context,
                     source_files=source_files,
+                    context_chunk_source_files=context_chunk_source_files,
+                    target_files_per_context=target_files_per_context,
                     context_index=index,
                     progress=progress,
                     pbar_id=pbar_id,
@@ -2142,8 +2612,10 @@ class Synthesizer:
         goldens: List[ConversationalGolden],
         include_expected_outcome: bool,
         max_goldens_per_context: int,
-        source_files: Optional[List[str]],
+        source_files: Optional[List[Union[str, List[str]]]],
         context_index: int,
+        context_chunk_source_files: Optional[List[List[str]]] = None,
+        target_files_per_context: Optional[int] = None,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
         context_scores: Optional[List[float]] = None,
@@ -2184,12 +2656,29 @@ class Synthesizer:
             )
 
         # Generate scenarios
-        prompt = SynthesizerTemplate.generate_synthetic_scenarios(
+        formatted_context = self._format_context_with_sources(
             context=context,
+            chunk_source_files=(
+                context_chunk_source_files[context_index]
+                if context_chunk_source_files is not None
+                and context_index < len(context_chunk_source_files)
+                else None
+            ),
+        )
+        prompt = SynthesizerTemplate.generate_synthetic_scenarios(
+            context=formatted_context,
             max_goldens_per_context=max_goldens_per_context,
             scenario_context=self.conversational_styling_config.scenario_context,
             conversational_task=self.conversational_styling_config.conversational_task,
             participant_roles=self.conversational_styling_config.participant_roles,
+            available_source_files=(
+                source_files[context_index]
+                if source_files is not None
+                and context_index < len(source_files)
+                and isinstance(source_files[context_index], list)
+                else None
+            ),
+            target_files_per_context=target_files_per_context,
         )
         synthetic_scenarios: List[ConversationalScenario] = (
             await self._a_generate_scenarios(prompt)
@@ -2202,7 +2691,7 @@ class Synthesizer:
         qualified_synthetic_scenarios: List[ConversationalScenario]
         scores: List[float]
         qualified_synthetic_scenarios, scores = await self._a_rewrite_scenarios(
-            context, synthetic_scenarios
+            formatted_context, synthetic_scenarios
         )
         update_pbar(progress, pbar_generate_scenarios_id, remove=False)
         update_pbar(progress, pbar_generate_goldens_id, remove=False)
@@ -2213,10 +2702,18 @@ class Synthesizer:
             data: ConversationalScenario,
             progress: Optional[Progress] = None,
         ):
+            context_source_files: List[str] = []
+            if source_files is not None and context_index < len(source_files):
+                context_source = source_files[context_index]
+                if isinstance(context_source, list):
+                    context_source_files = context_source
+                elif context_source:
+                    context_source_files = [context_source]
+
             # Evolve scenario
             evolved_scenario, evolutions_used = await self._a_evolve_scenario(
                 scenario=data.scenario,
-                context=context,
+                context=formatted_context,
                 num_evolutions=self.evolution_config.num_evolutions,
                 evolutions=self.evolution_config.evolutions,
                 progress=progress,
@@ -2271,10 +2768,12 @@ class Synthesizer:
                     "evolutions": evolutions_used,
                     "synthetic_scenario_quality": scores[scenario_index],
                     "source_files": (
-                        source_files[context_index]
-                        if source_files is not None
+                        context_source_files[0]
+                        if context_source_files
                         else None
                     ),
+                    "context_source_files": context_source_files,
+                    "used_source_files": (data.used_source_files or []),
                 },
             )
             update_pbar(progress, pbar_generate_goldens_id, remove=False)
@@ -2526,7 +3025,12 @@ class Synthesizer:
                 scenario = rewritten_res.rewritten_scenario
 
             scores.append(score)
-            filtered_scenarios.append(ConversationalScenario(scenario=scenario))
+            filtered_scenarios.append(
+                ConversationalScenario(
+                    scenario=scenario,
+                    used_source_files=item.used_source_files,
+                )
+            )
 
         return filtered_scenarios, scores
 
@@ -2571,7 +3075,12 @@ class Synthesizer:
                 scenario = rewritten_res.rewritten_scenario
 
             scores.append(score)
-            filtered_scenarios.append(ConversationalScenario(scenario=scenario))
+            filtered_scenarios.append(
+                ConversationalScenario(
+                    scenario=scenario,
+                    used_source_files=item.used_source_files,
+                )
+            )
 
         return filtered_scenarios, scores
 
