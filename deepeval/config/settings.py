@@ -382,6 +382,11 @@ class Settings(BaseSettings):
         description="Confident AI API key (used for uploading results/telemetry to Confident).",
     )
 
+    CONFIDENT_ORG_API_KEY: Optional[SecretStr] = Field(
+        None,
+        description="Confident AI organization API key (used by ConfidentClient for organization and project management).",
+    )
+
     # ======
     # Base URL for Confident AI API server
     # ======

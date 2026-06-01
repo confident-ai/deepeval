@@ -35,7 +35,8 @@ def _install_fake_http(
 
     class DummySettings:
         CONFIDENT_BASE_URL = None
-        CONFIDENT_API_KEY = SecretStr("confident_us_test")
+        CONFIDENT_API_KEY = None
+        CONFIDENT_ORG_API_KEY = SecretStr("confident_us_test")
         API_KEY = None
         DEEPEVAL_DEFAULT_SAVE = None
 
@@ -76,6 +77,7 @@ def test_client_requires_api_key_when_settings_empty(monkeypatch):
     class DummySettings:
         CONFIDENT_BASE_URL = None
         CONFIDENT_API_KEY = None
+        CONFIDENT_ORG_API_KEY = None
         API_KEY = None
         DEEPEVAL_DEFAULT_SAVE = None
 
@@ -85,10 +87,11 @@ def test_client_requires_api_key_when_settings_empty(monkeypatch):
         ConfidentClient()
 
 
-def test_client_accepts_explicit_api_key(monkeypatch):
+def test_client_accepts_explicit_org_api_key(monkeypatch):
     class DummySettings:
         CONFIDENT_BASE_URL = None
         CONFIDENT_API_KEY = None
+        CONFIDENT_ORG_API_KEY = None
         API_KEY = None
         DEEPEVAL_DEFAULT_SAVE = None
 
@@ -99,8 +102,65 @@ def test_client_accepts_explicit_api_key(monkeypatch):
         lambda *args, **kwargs: None,
     )
 
-    client = ConfidentClient(api_key="confident_us_explicit")
-    assert client._api.api_key == "confident_us_explicit"
+    client = ConfidentClient(org_api_key="confident_us_org_explicit")
+    assert client._api.api_key == "confident_us_org_explicit"
+
+
+def test_client_accepts_positional_org_api_key(monkeypatch):
+    class DummySettings:
+        CONFIDENT_BASE_URL = None
+        CONFIDENT_API_KEY = None
+        CONFIDENT_ORG_API_KEY = None
+        API_KEY = None
+        DEEPEVAL_DEFAULT_SAVE = None
+
+    monkeypatch.setattr(confident_api, "get_settings", lambda: DummySettings())
+    monkeypatch.setattr(
+        confident_api.KEY_FILE_HANDLER,
+        "fetch_data",
+        lambda *args, **kwargs: None,
+    )
+
+    client = ConfidentClient("confident_us_positional")
+    assert client._api.api_key == "confident_us_positional"
+
+
+def test_client_reads_org_api_key_from_settings(monkeypatch):
+    class DummySettings:
+        CONFIDENT_BASE_URL = None
+        CONFIDENT_API_KEY = None
+        CONFIDENT_ORG_API_KEY = SecretStr("confident_us_org")
+        API_KEY = None
+        DEEPEVAL_DEFAULT_SAVE = None
+
+    monkeypatch.setattr(confident_api, "get_settings", lambda: DummySettings())
+    monkeypatch.setattr(
+        confident_api.KEY_FILE_HANDLER,
+        "fetch_data",
+        lambda *args, **kwargs: None,
+    )
+
+    client = ConfidentClient()
+    assert client._api.api_key == "confident_us_org"
+
+
+def test_client_does_not_fall_back_to_confident_api_key(monkeypatch):
+    class DummySettings:
+        CONFIDENT_BASE_URL = None
+        CONFIDENT_API_KEY = SecretStr("confident_us_project")
+        CONFIDENT_ORG_API_KEY = None
+        API_KEY = None
+        DEEPEVAL_DEFAULT_SAVE = None
+
+    monkeypatch.setattr(confident_api, "get_settings", lambda: DummySettings())
+    monkeypatch.setattr(
+        confident_api.KEY_FILE_HANDLER,
+        "fetch_data",
+        lambda *args, **kwargs: None,
+    )
+
+    with pytest.raises(ValueError):
+        ConfidentClient()
 
 
 def test_get_organization_parses_response(monkeypatch):

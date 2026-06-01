@@ -1,6 +1,12 @@
 from typing import List, Optional
 
-from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.confident.api import (
+    Api,
+    CONFIDENT_ORG_API_KEY_ENV_VAR,
+    Endpoints,
+    HttpMethods,
+    get_confident_org_api_key,
+)
 from deepeval.confident.types import (
     ApiKey,
     ApiKeyHttpResponse,
@@ -38,8 +44,16 @@ from deepeval.confident.types import (
 
 
 class ConfidentClient:
-    def __init__(self, api_key: Optional[str] = None):
-        self._api = Api(api_key=api_key)
+    def __init__(self, org_api_key: Optional[str] = None):
+        resolved_key = org_api_key or get_confident_org_api_key()
+        if not resolved_key:
+            raise ValueError(
+                "No Confident organization API key found. Set the "
+                f"{CONFIDENT_ORG_API_KEY_ENV_VAR} environment variable or pass "
+                "org_api_key=...; ConfidentClient methods require an "
+                "Organization API Key."
+            )
+        self._api = Api(api_key=resolved_key)
 
     ############################################
     ### Organization

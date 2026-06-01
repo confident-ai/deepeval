@@ -4,7 +4,6 @@ from typing import Optional, Any, Union, Tuple
 import aiohttp
 import requests
 from enum import Enum
-import os
 from tenacity import (
     retry,
     wait_exponential_jitter,
@@ -19,6 +18,7 @@ from deepeval.confident.types import ApiResponse, ConfidentApiError
 from deepeval.config.settings import get_settings
 
 CONFIDENT_API_KEY_ENV_VAR = "CONFIDENT_API_KEY"
+CONFIDENT_ORG_API_KEY_ENV_VAR = "CONFIDENT_ORG_API_KEY"
 DEEPEVAL_BASE_URL = "https://deepeval.confident-ai.com"
 DEEPEVAL_BASE_URL_EU = "https://eu.deepeval.confident-ai.com"
 DEEPEVAL_BASE_URL_AU = "https://au.deepeval.confident-ai.com"
@@ -65,8 +65,10 @@ def get_base_api_url():
             return API_BASE_URL_AU
         return API_BASE_URL
 
-    # Otherwise, infer region from the API key prefix.
-    api_key = get_confident_api_key()
+    # Otherwise, infer region from the API key prefix. The organization key is
+    # considered too, so a management-only client (no CONFIDENT_API_KEY set)
+    # still resolves the correct region.
+    api_key = get_confident_api_key() or get_confident_org_api_key()
     inferred = _infer_region_from_api_key(api_key)
     if inferred == "EU":
         return API_BASE_URL_EU
@@ -80,6 +82,12 @@ def get_base_api_url():
 def get_confident_api_key() -> Optional[str]:
     s = get_settings()
     key: Optional[SecretStr] = s.CONFIDENT_API_KEY
+    return key.get_secret_value() if key else None
+
+
+def get_confident_org_api_key() -> Optional[str]:
+    s = get_settings()
+    key: Optional[SecretStr] = s.CONFIDENT_ORG_API_KEY
     return key.get_secret_value() if key else None
 
 
