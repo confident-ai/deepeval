@@ -21,6 +21,12 @@ from tests.test_core.stubs import (
     DummyEvolutionConfig,
 )
 
+requires_openai_key = pytest.mark.skipif(
+    os.getenv("OPENAI_API_KEY") is None
+    or not os.getenv("OPENAI_API_KEY").strip(),
+    reason="needs OPENAI_API_KEY",
+)
+
 TABLES = {
     "students": [
         """CREATE TABLE Students (
@@ -164,6 +170,7 @@ def async_conversational_synthesizer(
     )
 
 
+@requires_openai_key
 def test_generate_goldens_from_contexts(sync_synthesizer: Synthesizer):
     goldens: List[Golden] = sync_synthesizer.generate_goldens_from_contexts(
         contexts=SQL_CONTEXTS,
@@ -185,6 +192,7 @@ def test_generate_goldens_from_contexts(sync_synthesizer: Synthesizer):
             assert isinstance(golden.expected_output, str)
 
 
+@requires_openai_key
 def test_generate_goldens_from_docs(
     sync_synthesizer: Synthesizer, context_config
 ):
@@ -205,6 +213,7 @@ def test_generate_goldens_from_docs(
         assert isinstance(golden.source_file, str)
 
 
+@requires_openai_key
 def test_generate_goldens_from_scratch(sync_synthesizer: Synthesizer):
     num_goldens = 2
     goldens = sync_synthesizer.generate_goldens_from_scratch(
@@ -218,6 +227,7 @@ def test_generate_goldens_from_scratch(sync_synthesizer: Synthesizer):
     assert all(isinstance(g, Golden) for g in goldens)
 
 
+@requires_openai_key
 @pytest.mark.asyncio
 async def test_async_generate_goldens_from_contexts(
     async_synthesizer: Synthesizer,
@@ -233,6 +243,7 @@ async def test_async_generate_goldens_from_contexts(
     assert all(isinstance(g, Golden) for g in goldens)
 
 
+@requires_openai_key
 @pytest.mark.asyncio
 async def test_async_generate_goldens_from_docs(
     async_synthesizer: Synthesizer, context_config
@@ -249,6 +260,7 @@ async def test_async_generate_goldens_from_docs(
     assert all(isinstance(g, Golden) for g in goldens)
 
 
+@requires_openai_key
 @pytest.mark.asyncio
 async def test_async_generate_goldens_from_scratch(
     async_synthesizer: Synthesizer,
@@ -264,6 +276,7 @@ async def test_async_generate_goldens_from_scratch(
     assert all(isinstance(g, Golden) for g in goldens)
 
 
+@requires_openai_key
 def test_generate_conversational_goldens_from_contexts(
     sync_conversational_synthesizer: Synthesizer,
 ):
@@ -289,6 +302,7 @@ def test_generate_conversational_goldens_from_contexts(
             assert isinstance(golden.expected_outcome, str)
 
 
+@requires_openai_key
 def test_generate_conversational_goldens_from_docs(
     sync_conversational_synthesizer: Synthesizer, context_config
 ):
@@ -306,6 +320,7 @@ def test_generate_conversational_goldens_from_docs(
     assert all(isinstance(g, ConversationalGolden) for g in goldens)
 
 
+@requires_openai_key
 def test_generate_conversational_goldens_from_scratch(
     sync_conversational_synthesizer: Synthesizer,
 ):
@@ -321,6 +336,7 @@ def test_generate_conversational_goldens_from_scratch(
     assert all(isinstance(g, ConversationalGolden) for g in goldens)
 
 
+@requires_openai_key
 @pytest.mark.asyncio
 async def test_async_generate_conversational_goldens_from_contexts(
     async_conversational_synthesizer: Synthesizer,
@@ -336,6 +352,7 @@ async def test_async_generate_conversational_goldens_from_contexts(
     assert all(isinstance(g, ConversationalGolden) for g in goldens)
 
 
+@requires_openai_key
 @pytest.mark.asyncio
 async def test_async_generate_conversational_goldens_from_docs(
     async_conversational_synthesizer: Synthesizer, context_config
@@ -352,6 +369,7 @@ async def test_async_generate_conversational_goldens_from_docs(
     assert all(isinstance(g, ConversationalGolden) for g in goldens)
 
 
+@requires_openai_key
 @pytest.mark.asyncio
 async def test_async_generate_conversational_goldens_from_scratch(
     async_conversational_synthesizer: Synthesizer,
