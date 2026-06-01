@@ -541,6 +541,11 @@ export class TraceManager {
     this.traces = [];
     this.activeTraces.clear();
     this.activeSpans.clear();
+    // Reset async-local trace/span pointers so callers (notably test
+    // `beforeEach`) get a fresh context. Without this, AsyncLocalStorage
+    // leaks a stale trace UUID across tests and span attachment throws.
+    setCurrentTrace(null);
+    setCurrentSpan(null);
   }
 
   private shouldSampleTrace(): boolean {
