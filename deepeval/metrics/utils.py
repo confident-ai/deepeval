@@ -58,6 +58,7 @@ from deepeval.metrics import (
     BaseArenaMetric,
 )
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
+from deepeval.models.utils import EvaluationCost
 from deepeval.test_case import (
     LLMTestCase,
     SingleTurnParams,
@@ -455,20 +456,20 @@ ReturnType = TypeVar("ReturnType")
 
 def accrue_token_usage(
     metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
-    cost: Any,
+    cost: Optional[float],
 ) -> None:
     """Accrue the input/output token counts that produced ``cost`` onto the
-    metric, when available.
+    metric.
 
-    Native models return their cost as a ``TokenCost`` (a ``float`` subclass
-    carrying ``input_tokens``/``output_tokens``), plain floats from
-    not-yet-updated providers degrade gracefully to ``None``. Call this right
-    after ``metric._accrue_cost(cost)`` so token usage tracks cost exactly.
+    Native models return their cost as an ``EvaluationCost`` (a ``float``
+    subclass carrying ``input_tokens``/``output_tokens``). Costs from providers
+    that aren't wrapped yet — or ``None`` when pricing is unknown — are plain
+    floats with no token data, so tokens are only accrued when ``cost`` actually
+    carries them. Call this right after ``metric._accrue_cost(cost)`` so token
+    usage tracks cost exactly.
     """
-    metric._accrue_tokens(
-        getattr(cost, "input_tokens", None),
-        getattr(cost, "output_tokens", None),
-    )
+    if isinstance(cost, EvaluationCost):
+        metric._accrue_tokens(cost.input_tokens, cost.output_tokens)
 
 
 def generate_with_schema_and_extract(

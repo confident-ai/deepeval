@@ -14,7 +14,7 @@ from deepeval.config.settings import get_settings
 from deepeval.models.utils import (
     require_secret_api_key,
     normalize_kwargs_and_extract_aliases,
-    TokenCost,
+    EvaluationCost,
 )
 from deepeval.test_case import MLLMImage
 from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
@@ -435,10 +435,10 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
             # Update total evaluation cost
             self.evaluation_cost += float(cost)
-            return TokenCost(float(cost), input_tokens, output_tokens)
+            return EvaluationCost(float(cost), input_tokens, output_tokens)
         except Exception as e:
             logging.warning(f"Error calculating cost: {e}")
-            return TokenCost(0.0, None, None)
+            return EvaluationCost(0.0, None, None)
 
     def get_evaluation_cost(self) -> float:
         """Get the total evaluation cost."""

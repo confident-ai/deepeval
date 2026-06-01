@@ -7,7 +7,7 @@ from deepeval.errors import DeepEvalError
 logger = logging.getLogger(__name__)
 
 
-class TokenCost(float):
+class EvaluationCost(float):
     """A generation cost (USD) that also carries the input/output token counts
     that produced it.
 
@@ -32,7 +32,7 @@ class TokenCost(float):
         value: Optional[float],
         input_tokens: Optional[int] = None,
         output_tokens: Optional[int] = None,
-    ) -> "TokenCost":
+    ) -> "EvaluationCost":
         obj = super().__new__(cls, value if value is not None else 0.0)
         obj.input_tokens = input_tokens
         obj.output_tokens = output_tokens

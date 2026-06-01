@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Optional, Dict, List, Union, Tuple
 from deepeval.errors import DeepEvalError
 from deepeval.test_case import MLLMImage
 from deepeval.config.settings import get_settings
-from deepeval.models.utils import require_secret_api_key, TokenCost
+from deepeval.models.utils import require_secret_api_key, EvaluationCost
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
@@ -315,11 +315,11 @@ class GeminiModel(DeepEvalBaseLLM):
     ###############################################
 
     @staticmethod
-    def _token_cost(response) -> TokenCost:
+    def _token_cost(response) -> EvaluationCost:
         usage = getattr(response, "usage_metadata", None)
         input_tokens = getattr(usage, "prompt_token_count", None)
         output_tokens = getattr(usage, "candidates_token_count", None)
-        return TokenCost(0, input_tokens, output_tokens)
+        return EvaluationCost(0, input_tokens, output_tokens)
 
     #########################
     # Capabilities          #

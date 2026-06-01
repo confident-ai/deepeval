@@ -8,7 +8,7 @@ from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import (
     require_costs,
     require_secret_api_key,
-    TokenCost,
+    EvaluationCost,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.retry_policy import (
@@ -180,7 +180,7 @@ class DeepSeekModel(DeepEvalBaseLLM):
         if self.model_data.input_price and self.model_data.output_price:
             input_cost = input_tokens * self.model_data.input_price
             output_cost = output_tokens * self.model_data.output_price
-            return TokenCost(
+            return EvaluationCost(
                 input_cost + output_cost, input_tokens, output_tokens
             )
 
