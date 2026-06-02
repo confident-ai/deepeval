@@ -314,12 +314,27 @@ class GeminiModel(DeepEvalBaseLLM):
     # Utilities
     ###############################################
 
-    @staticmethod
-    def _token_cost(response) -> EvaluationCost:
+    def calculate_cost(
+        self, input_tokens: int, output_tokens: int
+    ) -> Optional[EvaluationCost]:
+        if self.model_data.input_price and self.model_data.output_price:
+            input_cost = input_tokens * self.model_data.input_price
+            output_cost = output_tokens * self.model_data.output_price
+            return EvaluationCost(
+                input_cost + output_cost, input_tokens, output_tokens
+            )
+
+    def _token_cost(self, response) -> EvaluationCost:
         usage = getattr(response, "usage_metadata", None)
         input_tokens = getattr(usage, "prompt_token_count", None)
         output_tokens = getattr(usage, "candidates_token_count", None)
-        return EvaluationCost(0, input_tokens, output_tokens)
+        if input_tokens is not None and output_tokens is not None:
+            cost = self.calculate_cost(input_tokens, output_tokens)
+            if cost is not None:
+                return cost
+        # Fall back to a zero-cost EvaluationCost that still carries whatever
+        # token info we have, so callers can distinguish "unknown" from "zero".
+        return EvaluationCost(0.0, input_tokens, output_tokens)
 
     #########################
     # Capabilities          #
