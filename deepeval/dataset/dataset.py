@@ -42,6 +42,7 @@ from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
     ToolCall,
+    RetrievedContextData,
 )
 from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.test_run.test_run import TEMP_FILE_PATH
@@ -1216,6 +1217,33 @@ class EvaluationDataset:
 
         full_file_path = os.path.join(directory, new_filename)
 
+        def _serialize_retrieval_context(retrieval_context):
+            # retrieval_context items may be RetrievedContextData, which
+            # declares its own @model_serializer ("source: context"). Honor
+            # it so structured items are not handed raw to json.dump or
+            # "|".join, both of which raise TypeError on a non-str/dict.
+            if retrieval_context is None:
+                return None
+            return [
+                (
+                    item.model_dump()
+                    if isinstance(item, RetrievedContextData)
+                    else item
+                )
+                for item in retrieval_context
+            ]
+
+        def _join_retrieval_context(retrieval_context):
+            # Flat join for csv/jsonl. The serialized items are strings today
+            # (RetrievedContextData serializes to "source: context"); coerce
+            # defensively so the join never breaks if that ever changes.
+            if retrieval_context is None:
+                return None
+            return "|".join(
+                str(item)
+                for item in _serialize_retrieval_context(retrieval_context)
+            )
+
         if file_type == "json":
             with open(full_file_path, "w", encoding="utf-8") as file:
                 if self._multi_turn:
@@ -1266,7 +1294,9 @@ class EvaluationDataset:
                                 "input": golden.input,
                                 "actual_output": golden.actual_output,
                                 "expected_output": golden.expected_output,
-                                "retrieval_context": golden.retrieval_context,
+                                "retrieval_context": _serialize_retrieval_context(
+                                    golden.retrieval_context
+                                ),
                                 "context": golden.context,
                                 "name": golden.name,
                                 "comments": golden.comments,
@@ -1358,10 +1388,8 @@ class EvaluationDataset:
                         ]
                     )
                     for golden in goldens:
-                        retrieval_context = (
-                            "|".join(golden.retrieval_context)
-                            if golden.retrieval_context is not None
-                            else None
+                        retrieval_context = _join_retrieval_context(
+                            golden.retrieval_context
                         )
                         context = (
                             "|".join(golden.context)
@@ -1441,10 +1469,8 @@ class EvaluationDataset:
                             "custom_column_key_values": golden.custom_column_key_values,
                         }
                     else:
-                        retrieval_context = (
-                            "|".join(golden.retrieval_context)
-                            if golden.retrieval_context is not None
-                            else None
+                        retrieval_context = _join_retrieval_context(
+                            golden.retrieval_context
                         )
                         context = (
                             "|".join(golden.context)

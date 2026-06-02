@@ -10,6 +10,7 @@ from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
     ToolCall,
+    RetrievedContextData,
 )
 
 
@@ -238,6 +239,67 @@ class TestSaveAndLoad:
                 if vals[custom_idx]:
                     custom_obj = json.loads(vals[custom_idx])
                     assert custom_obj["col"] == "val"
+
+    def test_save_as_serializes_retrieval_context_data(self):
+        """save_as must not crash when retrieval_context holds RetrievedContextData
+        (a type-allowed member of Golden.retrieval_context). Items are serialized
+        through the model's own @model_serializer ('source: context'), so a
+        reloaded golden carries retrieval_context as strings; structured
+        round-trip is intentionally out of scope."""
+        goldens = [
+            Golden(
+                input="q",
+                actual_output="a",
+                retrieval_context=[
+                    RetrievedContextData(context="c", source="s"),
+                    "plain",
+                ],
+            ),
+            Golden(
+                input="q2",
+                actual_output="a2",
+                retrieval_context=[
+                    RetrievedContextData(context="c2", source="s2"),
+                ],
+            ),
+            Golden(input="q3", actual_output="a3", retrieval_context=None),
+        ]
+        dataset = EvaluationDataset(goldens)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # JSON: list of flat strings, no crash
+            json_path = dataset.save_as(
+                "json", directory=tmpdir, file_name="rc_json"
+            )
+            with open(json_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            assert data[0]["retrieval_context"] == ["s: c", "plain"]
+            assert data[1]["retrieval_context"] == ["s2: c2"]  # all-RCD list
+            assert data[2]["retrieval_context"] is None  # None passes through
+
+            # JSONL: "|"-joined flat strings
+            jsonl_path = dataset.save_as(
+                "jsonl", directory=tmpdir, file_name="rc_jsonl"
+            )
+            with open(jsonl_path, "r", encoding="utf-8") as f:
+                row = json.loads(f.readline())
+            assert row["retrieval_context"] == "s: c|plain"
+
+            # CSV: "|"-joined flat strings in the retrieval_context column
+            csv_path = dataset.save_as(
+                "csv", directory=tmpdir, file_name="rc_csv"
+            )
+            with open(csv_path, "r", encoding="utf-8") as f:
+                rows = list(csv.reader(f))
+            idx = rows[0].index("retrieval_context")
+            assert rows[1][idx] == "s: c|plain"
+
+            # Round-trip: reloading the JSON rebuilds a golden whose
+            # retrieval_context is the flattened strings (documents that the
+            # structured form is not preserved, by the model's own design).
+            reloaded = EvaluationDataset()
+            reloaded.add_goldens_from_json_file(json_path)
+            assert reloaded.goldens[0].retrieval_context == ["s: c", "plain"]
 
     def test_save_as_includes_turn_fields_in_multi_turn_json_and_jsonl(self):
         """Multi-turn JSON/JSONL include full turn fields (user_id, tools)."""
