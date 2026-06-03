@@ -93,3 +93,57 @@ print(conversational_goldens)
 There is **ONE** mandatory parameter when using the `generate_goldens_from_scratch` method:
 
 - `num_goldens`: the number of goldens to generate.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "When should I generate goldens from scratch?",
+      answer: (
+        <>
+          Use it when your application doesn't rely on RAG, or when you want to
+          test queries beyond your existing knowledge base. Supply{" "}
+          <code>num_goldens</code> to set how many to generate.
+        </>
+      ),
+    },
+    {
+      question: "Why is generate_goldens_from_scratch the least grounded method?",
+      answer: (
+        <>
+          Because no documents or contexts are provided, goldens aren't grounded
+          in a knowledge base — making this the least grounded of the four
+          generation methods. Use{" "}
+          <a href="/docs/synthesizer-generate-from-docs">
+            generate_goldens_from_docs
+          </a>{" "}
+          if you need grounded goldens.
+        </>
+      ),
+    },
+    {
+      question: "How does the Synthesizer know what to generate without context?",
+      answer: (
+        <>
+          You must provide a <code>StylingConfig</code> (or a{" "}
+          <code>ConversationalStylingConfig</code> for multi-turn) defining the{" "}
+          <code>task</code>, <code>scenario</code>, and output formats, which
+          steer generation in place of grounded context.
+        </>
+      ),
+    },
+    {
+      question: "Can my team generate goldens from scratch without code?",
+      answer: (
+        <>
+          Yes. On <a href="https://www.confident-ai.com">Confident AI</a> you
+          can connect your knowledge bases and run the generation pipeline
+          no-code — tweak filtration, evolutions, and styling, experiment with
+          variations, and collaborate on the resulting dataset as a team.
+        </>
+      ),
+    },
+  ]}
+/>
+

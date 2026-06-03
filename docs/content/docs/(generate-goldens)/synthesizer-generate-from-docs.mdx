@@ -186,3 +186,58 @@ Similar to the context selection step, if the cosine similarity is still lower t
 >
   <ImageDisplayer src={ASSETS.filteringContext} />
 </div>
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What document types does generate_goldens_from_docs support?",
+      answer: (
+        <>
+          <code>.txt</code>, <code>.docx</code>, <code>.pdf</code>,{" "}
+          <code>.md</code>, <code>.markdown</code>, and <code>.mdx</code> files,
+          passed as a list to the <code>document_paths</code> parameter.
+        </>
+      ),
+    },
+    {
+      question: "How are contexts constructed from my documents?",
+      answer: (
+        <>
+          <code>deepeval</code> parses documents into token-based chunks (via{" "}
+          <code>chunk_size</code> and <code>chunk_overlap</code>), selects and
+          quality-filters chunks, then groups semantically similar chunks by
+          cosine similarity into contexts. Tune this with a{" "}
+          <code>ContextConstructionConfig</code>.
+        </>
+      ),
+    },
+    {
+      question: "When should I use this instead of generate_goldens_from_contexts?",
+      answer: (
+        <>
+          Use <code>generate_goldens_from_docs</code> when you have raw documents
+          and want <code>deepeval</code> to extract contexts for you. If you
+          already control chunking, use{" "}
+          <a href="/docs/synthesizer-generate-from-contexts">
+            generate_goldens_from_contexts
+          </a>{" "}
+          instead.
+        </>
+      ),
+    },
+    {
+      question: "Can my team generate goldens from our documents without code?",
+      answer: (
+        <>
+          Yes. On <a href="https://www.confident-ai.com">Confident AI</a> you
+          can connect your knowledge bases and run the generation pipeline
+          no-code — tweak filtration, evolutions, and styling, experiment with
+          variations, and collaborate on the resulting dataset as a team.
+        </>
+      ),
+    },
+  ]}
+/>
+

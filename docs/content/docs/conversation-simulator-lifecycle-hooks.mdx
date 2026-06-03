@@ -65,3 +65,42 @@ simulator.simulate(
 ::::tip
 When using `async_mode=True`, conversations may complete in any order due to concurrent execution. Use the `index` parameter to track which golden each test case corresponds to.
 ::::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How do I process each conversation as it finishes instead of waiting for the whole batch?",
+      answer: (
+        <>
+          Pass an <code>on_simulation_complete</code> hook to{" "}
+          <code>simulate</code>. It fires the moment each{" "}
+          <code>ConversationalTestCase</code> is generated, letting you persist,
+          inspect, or post-process results without waiting for the full batch.
+        </>
+      ),
+    },
+    {
+      question: "What arguments does the hook receive?",
+      answer: (
+        <>
+          Two: the completed <code>test_case</code> (the{" "}
+          <code>ConversationalTestCase</code> with all turns and metadata) and the{" "}
+          <code>index</code> of the golden it was simulated from.
+        </>
+      ),
+    },
+    {
+      question: "With async_mode on, how do I know which golden a result belongs to?",
+      answer: (
+        <>
+          Use the <code>index</code> argument. Under{" "}
+          <code>async_mode=True</code> conversations can complete in any order, so{" "}
+          <code>index</code> is how you map each test case back to its source golden.
+        </>
+      ),
+    },
+  ]}
+/>
+

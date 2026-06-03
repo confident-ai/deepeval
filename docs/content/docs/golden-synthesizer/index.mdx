@@ -444,3 +444,76 @@ This might be useful to you if for example you want to generate goldens in anoth
 In the final **styling** step, the `input`s and `expected_outputs` of each golden are rewritten into the desired formats and styles if required. This can be configured by setting the `scenario`, `task`, `input_format`, and `expected_output_format` parameters, and `deepeval` will use what you have provided to style goldens tailored to your use case at the end of the generation pipeline to ensure all synthetic data makes sense to you.
 
 [Click here](#styling-options) to learn how to customize the format and style of the synthetic `input`s and `expected_output`s being generated.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Does the Synthesizer generate actual_outputs for my goldens?",
+      answer: (
+        <>
+          No. The <code>Synthesizer</code> generates <code>input</code>s (and
+          optionally <code>expected_output</code>s), but{" "}
+          <code>actual_output</code>s are produced by your LLM application at
+          evaluation time, not by <code>deepeval</code>.
+        </>
+      ),
+    },
+    {
+      question: "Can the Synthesizer generate multi-turn turns?",
+      answer: (
+        <>
+          No. Multi-turn generation produces <code>ConversationalGolden</code>s
+          without <code>turns</code> — use the{" "}
+          <a href="/docs/conversation-simulator">ConversationSimulator</a> to
+          simulate the actual <code>turns</code>.
+        </>
+      ),
+    },
+    {
+      question: "Which generate_goldens_from_* method should I use?",
+      answer: (
+        <>
+          <code>generate_goldens_from_docs</code> is a superset of{" "}
+          <a href="/docs/synthesizer-generate-from-contexts">
+            generate_goldens_from_contexts
+          </a>
+          , which is a superset of{" "}
+          <a href="/docs/synthesizer-generate-from-scratch">
+            generate_goldens_from_scratch
+          </a>
+          . Use{" "}
+          <a href="/docs/synthesizer-generate-from-docs">
+            generate_goldens_from_docs
+          </a>{" "}
+          to let <code>deepeval</code> handle context extraction, or a
+          lower-level method for more control.
+        </>
+      ),
+    },
+    {
+      question: "How do I control the quality, complexity, and style of goldens?",
+      answer: (
+        <>
+          Pass a <code>FiltrationConfig</code> (input quality threshold),{" "}
+          <code>EvolutionConfig</code> (complexity via evolutions), and{" "}
+          <code>StylingConfig</code> (task, scenario, and output formats) when
+          instantiating the <code>Synthesizer</code>.
+        </>
+      ),
+    },
+    {
+      question: "Can my team generate goldens without code?",
+      answer: (
+        <>
+          Yes. On <a href="https://www.confident-ai.com">Confident AI</a> you
+          can connect your knowledge bases and run the generation pipeline
+          no-code — tweak filtration, evolutions, and styling, experiment with
+          variations, and collaborate on the resulting dataset as a team.
+        </>
+      ),
+    },
+  ]}
+/>
+

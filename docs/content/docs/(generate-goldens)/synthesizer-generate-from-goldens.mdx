@@ -76,3 +76,56 @@ There is **ONE** mandatory and **TWO** optional parameter when using the `genera
 :::info
 If your existing Goldens include `context`, the synthesizer will utilize these contexts to generate synthetic Goldens, ensuring they are grounded in truth. If no context is present, the synthesizer will employ the `generate_from_scratch` method to create additional inputs based on provided inputs.
 :::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "When should I use generate_goldens_from_goldens?",
+      answer: (
+        <>
+          Use it when you already have a set of seed goldens and want to quickly
+          expand or add complexity to your dataset — no documents or contexts
+          required. Control volume with <code>max_goldens_per_golden</code>.
+        </>
+      ),
+    },
+    {
+      question: "Does it require context to work?",
+      answer: (
+        <>
+          No. If your existing goldens include <code>context</code>, it grounds
+          generation in that context; otherwise it falls back to{" "}
+          <a href="/docs/synthesizer-generate-from-scratch">
+            generate_goldens_from_scratch
+          </a>{" "}
+          using your existing <code>input</code>s. Note <code>expected_output</code>s
+          are only generated when the seed goldens contain <code>context</code>.
+        </>
+      ),
+    },
+    {
+      question: "Can I mix single-turn and multi-turn goldens?",
+      answer: (
+        <>
+          No. You can only generate single-turn goldens from single-turn ones,
+          and multi-turn <code>ConversationalGolden</code>s from multi-turn
+          ones.
+        </>
+      ),
+    },
+    {
+      question: "Can my team generate goldens from our existing goldens without code?",
+      answer: (
+        <>
+          Yes. On <a href="https://www.confident-ai.com">Confident AI</a> you
+          can connect your knowledge bases and run the generation pipeline
+          no-code — tweak filtration, evolutions, and styling, experiment with
+          variations, and collaborate on the resulting dataset as a team.
+        </>
+      ),
+    },
+  ]}
+/>
+

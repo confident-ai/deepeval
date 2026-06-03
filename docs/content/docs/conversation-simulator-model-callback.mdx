@@ -64,3 +64,57 @@ async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
     res = await your_llm_app(input=input, turns=turns, thread_id=thread_id)
     return Turn(role="assistant", content=res)
 ```
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What does my model_callback have to return?",
+      answer: (
+        <>
+          An assistant <code>Turn</code> — i.e.{" "}
+          <code>Turn(role="assistant", content=response)</code>. The{" "}
+          <code>ConversationSimulator</code> feeds it the simulated user{" "}
+          <code>input</code> and records whatever assistant turn you return as the
+          next message in the conversation.
+        </>
+      ),
+    },
+    {
+      question: "My chatbot keeps state on the backend — how do I keep simulations on the same path as production?",
+      answer: (
+        <>
+          Add a <code>thread_id</code> argument to your callback and forward it to
+          your app so each simulated conversation maps to its own backend session,
+          cart, or tool state. Use <code>turns</code> instead (or as well) when your
+          app expects the full message history on every request.
+        </>
+      ),
+    },
+    {
+      question: "Do I have to declare turns and thread_id if I don't use them?",
+      answer: (
+        <>
+          No. Only <code>input</code> is required; <code>turns</code> and{" "}
+          <code>thread_id</code> are optional and <code>deepeval</code> passes them
+          by name only when your callback declares them. Stateless APIs can take
+          just <code>input</code>.
+        </>
+      ),
+    },
+    {
+      question: "How do I wire the callback to my real chatbot?",
+      answer: (
+        <>
+          Call your own app inside the callback — e.g.{" "}
+          <code>await your_llm_app(input)</code> — and wrap its reply as{" "}
+          <code>Turn(role="assistant", content=response)</code>. Pass{" "}
+          <code>turns</code> or <code>thread_id</code> through to your app if it
+          needs conversation history or session state.
+        </>
+      ),
+    },
+  ]}
+/>
+

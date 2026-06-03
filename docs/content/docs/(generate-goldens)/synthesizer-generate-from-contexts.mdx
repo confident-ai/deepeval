@@ -85,3 +85,57 @@ The `generate_conversational_goldens_from_docs()` method calls the `generate_con
 </Tabs>
 
 Remember, single-turn generations produces single-turn `Golden`s, while multi-turn generations produces multi-turn `ConversationalGolden`s. To learn more about goldens, [click here.](/docs/evaluation-datasets#what-are-goldens)
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What format should my contexts be in?",
+      answer: (
+        <>
+          <code>contexts</code> is a list of contexts, where each context is
+          itself a list of strings that ideally share a common theme. Each
+          context produces up to <code>max_goldens_per_context</code> goldens.
+        </>
+      ),
+    },
+    {
+      question: "When should I use this instead of generate_goldens_from_docs?",
+      answer: (
+        <>
+          Use <code>generate_goldens_from_contexts</code> when you already have
+          prepared contexts (e.g. an embedded knowledge base) and want to
+          control chunking yourself.{" "}
+          <a href="/docs/synthesizer-generate-from-docs">
+            generate_goldens_from_docs
+          </a>{" "}
+          calls this method under the hood after an extra context construction
+          step.
+        </>
+      ),
+    },
+    {
+      question: "Are the generated goldens grounded in my contexts?",
+      answer: (
+        <>
+          Yes. The provided <code>contexts</code> are used directly to generate
+          and ground each golden, and to produce <code>expected_output</code>s
+          when <code>include_expected_output</code> is enabled.
+        </>
+      ),
+    },
+    {
+      question: "Can my team generate goldens from our contexts without code?",
+      answer: (
+        <>
+          Yes. On <a href="https://www.confident-ai.com">Confident AI</a> you
+          can connect your knowledge bases and run the generation pipeline
+          no-code — tweak filtration, evolutions, and styling, experiment with
+          variations, and collaborate on the resulting dataset as a team.
+        </>
+      ),
+    },
+  ]}
+/>
+
