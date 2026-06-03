@@ -91,3 +91,62 @@ The `TurnContextualRelevancyMetric` first constructs a sliding windows of turns.
 <Equation formula="\text{Contextual Relevancy} = \frac{\text{Number of Relevant Statements}}{\text{Total Number of Statements}}" />
 
 The final score is the average of all relevancy scores across the conversation. This measures whether your retrieval system is returning contextually relevant information for each turn.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "When should I use TurnContextualRelevancyMetric instead of the single-turn version?",
+      answer: (
+        <>
+          When retrieval happens turn-by-turn in a{" "}
+          <code>ConversationalTestCase</code> and you want each turn's{" "}
+          <code>retrieval_context</code> signal-to-noise measured in context.
+          The single-turn{" "}
+          <a href="/docs/metrics-contextual-relevancy">
+            ContextualRelevancyMetric
+          </a>{" "}
+          inspects one retrieval against one query.
+        </>
+      ),
+    },
+    {
+      question: "Is this a retriever metric or a generator metric?",
+      answer: (
+        <>
+          A <strong>retriever</strong> metric. It only measures how much of each
+          turn's <code>retrieval_context</code> is relevant to the user's input
+          and never reads the answer — a low score points to a noisy retriever,
+          not a bad generator.
+        </>
+      ),
+    },
+    {
+      question:
+        "How is relevancy different from Turn Contextual Recall and Precision?",
+      answer: (
+        <>
+          Relevancy measures signal vs noise,{" "}
+          <a href="/docs/metrics-turn-contextual-recall">recall</a> measures
+          completeness, and{" "}
+          <a href="/docs/metrics-turn-contextual-precision">precision</a>{" "}
+          measures ranking.
+        </>
+      ),
+    },
+    {
+      question:
+        "My chatbot answered correctly but this score is low — is that a bug?",
+      answer: (
+        <>
+          No. It grades the retrieved context, not the reply, so irrelevant
+          nodes lower the score even when the answer is good. Tighten retrieval
+          (fewer, more targeted chunks) to raise it.
+        </>
+      ),
+    },
+  ]}
+/>
+

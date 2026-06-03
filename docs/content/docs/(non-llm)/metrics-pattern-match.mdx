@@ -72,3 +72,52 @@ The `PatternMatchMetric` score is calculated according to the following equation
 <Equation formula="\text{Pattern Match Score} = \begin{cases} 1 & \text{if actual output fully matches the regex pattern}, \\ 0 & \text{otherwise} \end{cases}" />
 
 The match is determined using Python's built-in regular expression engine `re.fullmatch`, which ensures the `actual_output` matches the provided `pattern`.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why does my pattern fail when it clearly matches part of the output?",
+      answer: (
+        <>
+          It uses <code>re.fullmatch</code>, so the <code>pattern</code> must
+          match the <strong>entire</strong> <code>actual_output</code>, not a
+          substring. <code>\d+</code> fails on <code>"The code is 1234"</code>;
+          wrap with <code>.*</code> (e.g. <code>.*\d+.*</code>) to match a
+          fragment.
+        </>
+      ),
+    },
+    {
+      question: "Does the Pattern Match metric call an LLM or cost money?",
+      answer: (
+        <>
+          No. The <code>PatternMatchMetric</code> uses pure regex matching —
+          no model, no API key, zero token cost, fully deterministic.
+        </>
+      ),
+    },
+    {
+      question: "Can I make the pattern matching case-insensitive?",
+      answer: (
+        <>
+          Yes. Set <code>ignore_case=True</code> to ignore casing when matching{" "}
+          <code>actual_output</code> against the <code>pattern</code>. Defaults
+          to <code>False</code>.
+        </>
+      ),
+    },
+    {
+      question: "When should I use Pattern Match instead of Exact Match?",
+      answer: (
+        <>
+          When the output must follow a <em>shape</em> rather than a fixed string
+          — emails, dates, phone numbers, IDs. For a single literal answer,
+          use <a href="/docs/metrics-exact-match">Exact Match</a>.
+        </>
+      ),
+    },
+  ]}
+/>
+

@@ -132,3 +132,70 @@ metric.measure(test_case)
 ```
 
 :::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "My agent called the right tool but passed wrong arguments — which metric catches that?",
+      answer: (
+        <>
+          Argument Correctness. It scores the <strong>arguments</strong> per
+          tool call, judged by an LLM against the <code>input</code>.{" "}
+          <a href="/docs/metrics-tool-correctness">Tool Correctness</a> passes
+          such a run since the right tool was selected.
+        </>
+      ),
+    },
+    {
+      question: "Do I need expected_tools for Argument Correctness?",
+      answer: (
+        <>
+          No — it's referenceless. Provide only <code>input</code>,{" "}
+          <code>actual_output</code>, and <code>tools_called</code> on the{" "}
+          <a href="/docs/evaluation-test-cases#llm-test-case">
+            <code>LLMTestCase</code>
+          </a>
+          . An LLM judges whether each call's arguments fit the input.
+        </>
+      ),
+    },
+    {
+      question: "Tool Correctness vs Argument Correctness — right tool vs right inputs?",
+      answer: (
+        <>
+          Exactly.{" "}
+          <a href="/docs/metrics-tool-correctness">Tool Correctness</a> checks
+          "right tools?" deterministically against <code>expected_tools</code>;
+          Argument Correctness checks "right inputs?" via an LLM. Use both to
+          verify selection and arguments.
+        </>
+      ),
+    },
+    {
+      question: "Is Argument Correctness deterministic or LLM-judged?",
+      answer: (
+        <>
+          LLM-judged: correct input parameters ÷ total tool calls, with an LLM
+          deciding correctness. For a deterministic comparison against expected
+          inputs, use{" "}
+          <a href="/docs/metrics-tool-correctness">Tool Correctness</a> with{" "}
+          <code>ToolCallParams.INPUT_PARAMETERS</code>.
+        </>
+      ),
+    },
+    {
+      question: "Can I use Argument Correctness with LangChain, OpenAI, or another framework?",
+      answer: (
+        <>
+          Yes. <code>deepeval</code> auto-traces agents built with{" "}
+          <a href="/integrations/frameworks/langchain">LangChain</a>,{" "}
+          <a href="/integrations/frameworks/openai">OpenAI</a>, LlamaIndex,
+          CrewAI, and more — see all{" "}
+          <a href="/integrations">framework integrations</a>.
+        </>
+      ),
+    },
+  ]}
+/>

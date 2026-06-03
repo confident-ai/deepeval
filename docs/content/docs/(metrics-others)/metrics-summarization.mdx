@@ -157,3 +157,59 @@ print(metric.score_breakdown)
 :::note
 Since the summarization score is the minimum of the `alignment_score` and `coverage_score`, a 0 value for either one of these scores will result in a final summarization score of 0.
 :::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "My summary is factually accurate, so why is it scored so low?",
+      answer: (
+        <>
+          The score is{" "}
+          <code>min(alignment_score, coverage_score)</code>, so an accurate
+          summary that drops key details is capped by a low{" "}
+          <code>coverage_score</code>. Check <code>metric.score_breakdown</code>{" "}
+          to see which half is dragging it down.
+        </>
+      ),
+    },
+    {
+      question:
+        "How does the metric detect hallucinated vs. omitted information?",
+      answer: (
+        <>
+          Two separate checks. <code>alignment_score</code> flags summary claims
+          that contradict or invent detail (hallucination);{" "}
+          <code>coverage_score</code> uses yes/no questions to catch key points
+          left out (omission).
+        </>
+      ),
+    },
+    {
+      question:
+        "When should I supply assessment_questions instead of letting deepeval generate them?",
+      answer: (
+        <>
+          Supply <code>assessment_questions</code> when you know what a good
+          summary must answer — they pin <code>coverage_score</code> to the
+          points you care about. Omitting them auto-generates <code>n</code>{" "}
+          questions (default 5), fine for exploration but less deterministic.
+        </>
+      ),
+    },
+    {
+      question: "How do I keep the metric focused on only the most important facts?",
+      answer: (
+        <>
+          Set <code>truths_extraction_limit</code> to cap how many factual
+          truths are pulled from the <code>input</code>. Truths are ordered by
+          importance, so a limit avoids penalizing long documents over minor
+          details. Defaults to <code>None</code>.
+        </>
+      ),
+    },
+  ]}
+/>
+

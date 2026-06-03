@@ -87,3 +87,60 @@ The `TurnFaithfulnessMetric` first constructs a sliding windows of turns. For ea
 <Equation formula="\text{Faithfulness} = \frac{\text{Number of Truthful Claims}}{\text{Total Number of Claims}}" />
 
 The final score is the average of all interaction faithfulness scores across the conversation.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "When should I use TurnFaithfulnessMetric instead of the single-turn FaithfulnessMetric?",
+      answer: (
+        <>
+          When a RAG assistant answers across turns and you want each claim
+          checked against its window's <code>retrieval_context</code>. The
+          single-turn{" "}
+          <a href="/docs/metrics-faithfulness">FaithfulnessMetric</a> grades one
+          output against one context and can't pinpoint which turn hallucinated.
+        </>
+      ),
+    },
+    {
+      question: "Does every turn need its own retrieval_context?",
+      answer: (
+        <>
+          Attach <code>retrieval_context</code> to turns generated from
+          retrieval. The metric extracts truths from that context and verifies
+          the assistant's claims against them — turns with no grounding context
+          are where faithfulness problems surface.
+        </>
+      ),
+    },
+    {
+      question:
+        "My answers are factually correct but faithfulness is low — how do I debug it?",
+      answer: (
+        <>
+          Faithfulness rewards claims grounded in the{" "}
+          <code>retrieval_context</code>, not claims that merely happen to be
+          true — correct-but-unretrieved facts count as unfaithful. Inspect
+          per-claim verdicts with <code>verbose_mode</code>, and try{" "}
+          <code>penalize_ambiguous_claims</code> for vague claims.
+        </>
+      ),
+    },
+    {
+      question:
+        "How do window_size and truths_extraction_limit affect long conversations?",
+      answer: (
+        <>
+          <code>window_size</code> (default <code>10</code>) groups turns per
+          evaluation; <code>truths_extraction_limit</code> caps truths pulled
+          from each document. Tune them together when long conversations make
+          scoring slow or noisy.
+        </>
+      ),
+    },
+  ]}
+/>
+

@@ -75,3 +75,54 @@ The `ExactMatchMetric` score is calculated according to the following equation:
 />
 
 The `ExactMatchMetric` performs a strict equality check to determine if the `actual_output` matches the `expected_output`.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Does the Exact Match metric call an LLM or cost money?",
+      answer: (
+        <>
+          No. The <code>ExactMatchMetric</code> is a plain string equality check
+          between <code>actual_output</code> and <code>expected_output</code> —
+          no model, no API key, zero token cost, fully deterministic.
+        </>
+      ),
+    },
+    {
+      question: "Is the comparison case-sensitive and whitespace-sensitive?",
+      answer: (
+        <>
+          Yes. Any difference — casing, whitespace, punctuation, accents
+          — scores <code>0</code>. For example,{" "}
+          <code>"Bonjour, comment ça va ?"</code> won't match{" "}
+          <code>"Bonjour, comment allez-vous ?"</code>.
+        </>
+      ),
+    },
+    {
+      question: "When should I use Exact Match instead of an LLM-judge metric?",
+      answer: (
+        <>
+          When there's exactly one acceptable answer — classification
+          labels, enum values, canned responses. For open-ended outputs with
+          many valid phrasings, use a semantic metric like{" "}
+          <a href="/docs/metrics-answer-relevancy">Answer Relevancy</a>.
+        </>
+      ),
+    },
+    {
+      question: "Why does my output fail even though it looks correct?",
+      answer: (
+        <>
+          It requires a character-for-character match. Set{" "}
+          <code>verbose_mode=True</code> to print the compared strings and spot
+          invisible differences like trailing newlines, smart quotes, or leading
+          whitespace.
+        </>
+      ),
+    },
+  ]}
+/>
+

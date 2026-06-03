@@ -73,3 +73,55 @@ The `RoleAdherenceMetric` score is calculated according to the following equatio
 <Equation formula="\text{Role Adherence} = \frac{\text{Number of Assistant Turns that Adhered to Chatbot Role in Conversation}}{\text{Total Number of Assistant Turns in Conversation}}" />
 
 The `RoleAdherenceMetric` iterates over each assistant turn and uses an LLM to evaluate whether the content adheres to the specified `chatbot_role`, using previous conversation turns as context.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why does my bot break character partway through a conversation?",
+      answer: (
+        <>
+          Drift creeps in on later turns as the conversation grows or the user
+          pushes back. <code>RoleAdherenceMetric</code> scores each assistant
+          turn against your <code>chatbot_role</code> using prior turns as
+          context, so the reason output flags which turn broke character.
+        </>
+      ),
+    },
+    {
+      question:
+        "How is this different from the single-turn Role Violation metric?",
+      answer: (
+        <>
+          Role Violation inspects one output in isolation, whereas{" "}
+          <code>RoleAdherenceMetric</code> walks every assistant turn of a{" "}
+          <code>ConversationalTestCase</code> and measures how consistently the
+          bot held its <code>chatbot_role</code>.
+        </>
+      ),
+    },
+    {
+      question: "Which turns are scored, and how?",
+      answer: (
+        <>
+          Only assistant turns — those that stayed in <code>chatbot_role</code>{" "}
+          over total assistant turns, with each turn judged against the
+          preceding conversation.
+        </>
+      ),
+    },
+    {
+      question: "What should chatbot_role contain?",
+      answer: (
+        <>
+          The persona you expect the bot to maintain (for example,{" "}
+          <code>"a 1920s detective"</code> or{" "}
+          <code>"a formal banking assistant"</code>). It's the reference every
+          assistant turn is checked against, so make it specific.
+        </>
+      ),
+    },
+  ]}
+/>
+

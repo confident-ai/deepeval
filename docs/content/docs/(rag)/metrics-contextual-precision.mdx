@@ -224,3 +224,59 @@ JSON:
 metric = ContextualPrecisionMetric(evaluation_template=CustomTemplate)
 metric.measure(...)
 ```
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Does contextual precision care about the order of my retrieved chunks?",
+      answer: (
+        <>
+          Yes — ranking is the whole point. A weighted cumulative precision
+          rewards relevant nodes appearing early in the{" "}
+          <code>retrieval_context</code> and penalizes irrelevant ones ranked
+          ahead. The same chunks in a different order score differently, which is
+          why this metric targets your re-ranker.
+        </>
+      ),
+    },
+    {
+      question:
+        "My retrieved chunks are all relevant but precision is still low — why?",
+      answer: (
+        <>
+          It asks whether relevant chunks are ranked above irrelevant ones, not
+          just present. Relevant nodes buried beneath noise in the{" "}
+          <code>retrieval_context</code> drop the score even when everything was
+          retrieved — implicating your re-ranker or top-K ordering.
+        </>
+      ),
+    },
+    {
+      question: "Should I use Contextual Precision or Contextual Recall?",
+      answer: (
+        <>
+          Use both. Precision asks "are relevant chunks ranked high enough?"
+          (ordering), while{" "}
+          <a href="/docs/metrics-contextual-recall">Contextual Recall</a> asks
+          "did I retrieve everything I needed?" (completeness). High recall with
+          low precision means right chunks, poor ranking.
+        </>
+      ),
+    },
+    {
+      question: "Why does it require an expected_output?",
+      answer: (
+        <>
+          It's reference-based: the LLM judges each node against the ideal{" "}
+          <code>expected_output</code>, not the generator's{" "}
+          <code>actual_output</code>, keeping ranking evaluation honest even
+          when the generator answered poorly. See the{" "}
+          <a href="/docs/evaluation-test-cases#llm-test-case">test case docs</a>.
+        </>
+      ),
+    },
+  ]}
+/>
+

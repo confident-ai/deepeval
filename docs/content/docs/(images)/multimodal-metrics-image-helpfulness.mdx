@@ -81,3 +81,63 @@ The `ImageHelpfulness` score is calculated as follows:
 2. **Final Score**: The overall `ImageHelpfulness` score is the average of all individual image helpfulness scores for each image:
 
 <Equation formula="O = \frac{\sum_{i=1}^n H_i}{n}" />
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Are my generated images actually adding value to the answer?",
+      answer: (
+        <>
+          That's what <code>ImageHelpfulness</code> measures — whether
+          each image aids comprehension (adds insight, clarifies, supports the
+          text) versus being decorative or redundant. Read{" "}
+          <code>metric.reason</code> for the per-image verdict.
+        </>
+      ),
+    },
+    {
+      question:
+        "How is Image Helpfulness different from Image Coherence and Image Reference?",
+      answer: (
+        <>
+          Helpfulness is <em>usefulness</em> (does the image improve
+          understanding?),{" "}
+          <a href="/docs/multimodal-metrics-image-coherence">
+            <code>ImageCoherence</code>
+          </a>{" "}
+          is <em>alignment</em> (does it fit the narrative?), and{" "}
+          <a href="/docs/multimodal-metrics-image-reference">
+            <code>ImageReference</code>
+          </a>{" "}
+          is <em>grounding</em> (does the text refer to it?). An image can be
+          coherent yet add no value.
+        </>
+      ),
+    },
+    {
+      question:
+        "How does scoring work when the response interleaves several images?",
+      answer: (
+        <>
+          Each <code>MLLMImage</code> is scored from the text directly above and
+          below it, and the final score is the <strong>average</strong>{" "}
+          (<code>O = (ΣH_i) / n</code>). Use <code>max_context_size</code> to
+          limit how much neighboring text feeds each judgment.
+        </>
+      ),
+    },
+    {
+      question: "What does a low Image Helpfulness score tell me?",
+      answer: (
+        <>
+          The model is inserting images that don't advance understanding
+          — generic stock-like visuals, repetition of the text, or images
+          only loosely related to their step. They may be coherent and
+          referenced, just not <em>helpful</em>.
+        </>
+      ),
+    },
+  ]}
+/>

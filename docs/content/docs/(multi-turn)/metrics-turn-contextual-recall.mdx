@@ -92,3 +92,62 @@ The `TurnContextualRecallMetric` first constructs a sliding windows of turns. Fo
 <Equation formula="\text{Contextual Recall} = \frac{\text{Number of Attributable Statements}}{\text{Total Number of Statements}}" />
 
 The final score is the average of all recall scores across the conversation. This measures whether your retrieval system is providing sufficient information to generate the expected responses.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "When should I use TurnContextualRecallMetric instead of the single-turn version?",
+      answer: (
+        <>
+          When retrieval feeds a multi-turn{" "}
+          <code>ConversationalTestCase</code> and you want to confirm each turn
+          retrieved everything needed for the <code>expected_outcome</code>. The
+          single-turn{" "}
+          <a href="/docs/metrics-contextual-recall">ContextualRecallMetric</a>{" "}
+          checks one query/context pair only.
+        </>
+      ),
+    },
+    {
+      question: "Why does recall require expected_outcome when relevancy doesn't?",
+      answer: (
+        <>
+          Recall is measured against a reference: it breaks the{" "}
+          <code>expected_outcome</code> into statements and checks how many map
+          to a node in the <code>retrieval_context</code>. Without it there's
+          nothing to test completeness against, which is why{" "}
+          <a href="/docs/metrics-turn-contextual-relevancy">relevancy</a>{" "}
+          (referenceless) doesn't need it.
+        </>
+      ),
+    },
+    {
+      question: "How is recall different from relevancy and precision?",
+      answer: (
+        <>
+          Recall measures completeness,{" "}
+          <a href="/docs/metrics-turn-contextual-relevancy">relevancy</a>{" "}
+          measures signal vs noise, and{" "}
+          <a href="/docs/metrics-turn-contextual-precision">precision</a>{" "}
+          measures ranking.
+        </>
+      ),
+    },
+    {
+      question:
+        "My bot missed a detail the user needed — does a low recall confirm it's a retriever problem?",
+      answer: (
+        <>
+          Largely, yes. Low recall means the <code>retrieval_context</code>{" "}
+          never contained the info the <code>expected_outcome</code> needed, so
+          the generator never had it. Fix the retriever (chunking, embeddings,
+          top-k) before blaming the LLM.
+        </>
+      ),
+    },
+  ]}
+/>
+

@@ -135,3 +135,59 @@ In `deepeval`, an opinion is defined according to the following principles:
 :::info
 A mistaken statement of fact can easily be considered an opinion when presented in a different context, which is why `deepeval` recommends using LLMs with high reasoning capabilities for evaluation.
 :::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Is a higher or lower Bias score safer?",
+      answer: (
+        <>
+          <strong>Lower is safer.</strong> The <code>threshold</code> (default
+          0.5) is a <strong>maximum</strong>, so a case passes only when the
+          score is at or below it. 0 means no biased opinions; 1 means every
+          opinion was.
+        </>
+      ),
+    },
+    {
+      question: "Which types of bias does the metric detect?",
+      answer: (
+        <>
+          Four categories: <strong>gender</strong>, <strong>political</strong>,{" "}
+          <strong>racial/ethnic</strong>, and <strong>geographical</strong>.
+          It's <strong>referenceless</strong> — no target group argument; it
+          judges the <code>actual_output</code> on its own.
+        </>
+      ),
+    },
+    {
+      question: "Will Bias flag neutral, factual statements?",
+      answer: (
+        <>
+          It shouldn't. It only scores <strong>opinions</strong> — a verifiable
+          fact or attributed source isn't a biased opinion (see the{" "}
+          <a href="/docs/metrics-bias#definition-of-opinion">
+            definition of opinion
+          </a>
+          ). Use a high-reasoning <code>model</code>, since borderline facts can
+          read as opinions out of context.
+        </>
+      ),
+    },
+    {
+      question: "When should I use Bias instead of the Toxicity metric?",
+      answer: (
+        <>
+          Use <code>BiasMetric</code> for prejudiced treatment of groups, and the{" "}
+          <a href="/docs/metrics-toxicity">
+            <code>ToxicityMetric</code>
+          </a>{" "}
+          for hostile tone like insults and threats. An output can be one without
+          the other, so suites often run both.
+        </>
+      ),
+    },
+  ]}
+/>

@@ -133,3 +133,59 @@ In `deepeval`, whether a statement represents misue is defined according to the 
 - **Off-Topic Conversations:** Any conversation that diverts from the chatbot's intended purpose.
   - Inappropriate: Let's chat about the weather and your favorite movies. (for any specialized chatbot)
   - Appropriate: Domain-specific conversations that align with the chatbot's expertise.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "How do I stop my finance bot from answering unrelated questions?",
+      answer: (
+        <>
+          Set the required <code>domain</code> argument to your bot's scope, e.g.{" "}
+          <code>MisuseMetric(domain="financial")</code>. It then flags outputs
+          that handle off-topic, general-knowledge, creative, or personal
+          requests outside that domain.
+        </>
+      ),
+    },
+    {
+      question: "Is a higher or lower Misuse score safer?",
+      answer: (
+        <>
+          <strong>Higher is safer.</strong> The score is the share of statements
+          that are <em>not</em> misuses, and the <code>threshold</code> (default
+          0.5) is a <strong>minimum</strong>. 1 means the output stayed entirely
+          within the specified <code>domain</code>.
+        </>
+      ),
+    },
+    {
+      question: "What should I pass as the domain for a niche chatbot?",
+      answer: (
+        <>
+          A concise descriptor of the bot's expertise — <code>"financial"</code>,{" "}
+          <code>"medical"</code>, <code>"legal"</code>,{" "}
+          <code>"customer service"</code>, or any specialized area. The more
+          precisely <code>domain</code> describes the scope, the more reliably
+          borderline requests are judged.
+        </>
+      ),
+    },
+    {
+      question: "When should I use Misuse vs. the Role Violation metric?",
+      answer: (
+        <>
+          <code>MisuseMetric</code> checks whether the bot strays from its{" "}
+          <code>domain</code> (off-topic questions), while the{" "}
+          <a href="/docs/metrics-role-violation">
+            <code>RoleViolationMetric</code>
+          </a>{" "}
+          checks whether it breaks its assigned <code>role</code> or persona.
+          Distinct failures.
+        </>
+      ),
+    },
+  ]}
+/>

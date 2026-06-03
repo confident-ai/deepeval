@@ -115,3 +115,57 @@ The `PromptAlignmentMetric` uses an LLM to classify whether each prompt instruct
 By providing an initial list of `prompt_instructions` instead of the entire prompt template, the `PromptAlignmentMetric` is able to more accurately determine whether the core instructions laid out in your prompt template is followed.
 
 :::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "Why do I pass prompt_instructions separately instead of the full prompt template?",
+      answer: (
+        <>
+          A full template mixes instructions with examples and formatting, making
+          the judge less reliable. Listing only the{" "}
+          <code>prompt_instructions</code> you want obeyed lets the metric score
+          each one cleanly and pinpoint which was followed or ignored.
+        </>
+      ),
+    },
+    {
+      question: "How do I find out which specific instruction was violated?",
+      answer: (
+        <>
+          Keep <code>include_reason=True</code> (default) for a{" "}
+          <code>reason</code> naming the failed instructions, or set{" "}
+          <code>verbose_mode=True</code> for the per-instruction classification.
+          Splitting bundled instructions into separate entries isolates the
+          offender.
+        </>
+      ),
+    },
+    {
+      question: "Should each prompt_instruction be a single rule or can I bundle several?",
+      answer: (
+        <>
+          One atomic rule per entry. Each item in{" "}
+          <code>prompt_instructions</code> is classified as followed or not, so
+          bundling (e.g. "uppercase and under 20 words") forces an
+          all-or-nothing verdict and hides which half failed.
+        </>
+      ),
+    },
+    {
+      question: "What does a score of 1.0 actually mean here?",
+      answer: (
+        <>
+          Every instruction in <code>prompt_instructions</code> was followed in
+          the <code>actual_output</code> — but only the ones you listed are
+          evaluated. <code>strict_mode</code> forces this same binary 1-or-0
+          outcome and sets the threshold to 1.
+        </>
+      ),
+    },
+  ]}
+/>
+

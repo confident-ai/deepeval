@@ -92,3 +92,56 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 ## How Is It Calculated?
 
 The `ArenaGEval` is an adapted version of [`GEval`](/docs/metrics-llm-evals), so alike `GEval`, the `ArenaGEval` metric is a two-step algorithm that first generates a series of `evaluation_steps` using chain of thoughts (CoTs) based on the given `criteria`, before using the generated `evaluation_steps` to determine the winner based on the `evaluation_params` presented in each `LLMTestCase`.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "When should I use ArenaGEval instead of scoring each output on its own?",
+      answer: (
+        <>
+          When the question is <em>relative</em>: which prompt, model, or config
+          is better. It compares <code>contestants</code> head-to-head and names
+          a winner — more reliable than comparing per-output{" "}
+          <a href="/docs/metrics-llm-evals">GEval</a> scores that may sit within
+          noise.
+        </>
+      ),
+    },
+    {
+      question: "How does it avoid position and verbosity bias?",
+      answer: (
+        <>
+          It uses a blinded, randomized-position, n-pairwise LLM-as-a-Judge
+          approach. Names and ordering are hidden and shuffled, so the judge
+          can't favor whichever output came first or was longer.
+        </>
+      ),
+    },
+    {
+      question: "Why is there no score or threshold on ArenaGEval?",
+      answer: (
+        <>
+          It ranks rather than passing a bar, so unlike <code>GEval</code> there's
+          no <code>threshold</code> or <code>strict_mode</code>. Read{" "}
+          <code>metric.winner</code> and <code>metric.reason</code>, not a numeric{" "}
+          <code>score</code>.
+        </>
+      ),
+    },
+    {
+      question: "How do I run a comparison across many contestants at once?",
+      answer: (
+        <>
+          Build an{" "}
+          <a href="/docs/evaluation-arena-test-cases">ArenaTestCase</a> with a
+          list of <code>Contestant</code>s (each wrapping an{" "}
+          <code>LLMTestCase</code> and <code>hyperparameters</code>) and pass it
+          to <code>compare()</code>. Use <code>measure()</code> for one-off runs.
+        </>
+      ),
+    },
+  ]}
+/>

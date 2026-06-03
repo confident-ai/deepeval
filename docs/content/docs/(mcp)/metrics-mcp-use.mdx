@@ -77,3 +77,66 @@ The **AlignmentScore** is judged by an evaluation model based on which primitive
 :::info
 The `MCPUseMetric` evaluates if the right tools have been called with the right parameters i.e, if all the optional parameters above are not provided, the `MCPUseMetric` evaluates if calling any of the available primitives would have been better.
 :::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "When should I use MCP Use instead of Multi-Turn MCP Use?",
+      answer: (
+        <>
+          Use <code>MCPUseMetric</code> for a single-turn{" "}
+          <a href="https://www.deepeval.com/docs/evaluation-test-cases">
+            LLMTestCase
+          </a>{" "}
+          (one <code>input</code>/<code>actual_output</code>). For MCP usage
+          across a conversation, use <code>MultiTurnMCPUseMetric</code> on a{" "}
+          <code>ConversationalTestCase</code>.
+        </>
+      ),
+    },
+    {
+      question:
+        "What MCP data do I have to populate for the metric to actually run?",
+      answer: (
+        <>
+          <code>input</code>, <code>actual_output</code>, and{" "}
+          <code>mcp_servers</code> (the available primitives), plus whichever
+          primitives were called — <code>mcp_tools_called</code>,{" "}
+          <code>mcp_resources_called</code>, <code>mcp_prompts_called</code>. See{" "}
+          <a href="https://www.deepeval.com/docs/evaluation-mcp#single-turn">
+            creating an MCP single-turn test case
+          </a>
+          .
+        </>
+      ),
+    },
+    {
+      question:
+        "The agent picked the wrong tool or resource — how do I debug that?",
+      answer: (
+        <>
+          A low <code>AlignmentScore</code> means a sub-optimal primitive or bad
+          arguments. Enable <code>verbose_mode</code> or read{" "}
+          <code>metric.reason</code> for the judge's rationale on the better
+          choice.
+        </>
+      ),
+    },
+    {
+      question:
+        "What happens if I don't pass any called primitives?",
+      answer: (
+        <>
+          With no <code>mcp_tools_called</code>,{" "}
+          <code>mcp_resources_called</code>, or <code>mcp_prompts_called</code>,{" "}
+          <code>MCPUseMetric</code> judges whether calling any{" "}
+          <em>available</em> primitive would have helped — i.e. the
+          decision not to use MCP at all.
+        </>
+      ),
+    },
+  ]}
+/>

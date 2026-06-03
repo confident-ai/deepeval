@@ -347,3 +347,60 @@ What would you classify the above conversation as according to our DAG? Run your
 ## How Is It Calculated
 
 The `ConversationalDAGMetric` score is determined by traversing the custom decision tree in topological order, using any evaluation models along the way to perform judgements to determine which path to take.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "When is a multi-turn DAG worth it over ConversationalGEval?",
+      answer: (
+        <>
+          When a single holistic score hides what matters — e.g. the request was
+          satisfied but the assistant was rude. A{" "}
+          <a href="/docs/metrics-conversational-g-eval">ConversationalGEval</a>{" "}
+          averages that into one fuzzy score; a DAG checks satisfaction and tone
+          on separate deterministic branches.
+        </>
+      ),
+    },
+    {
+      question: "What does turn_window do and when should I set it?",
+      answer: (
+        <>
+          An optional tuple of two inclusive turn indices that restricts a node
+          to a slice of the conversation (e.g. <code>turn_window=(0, 6)</code>).
+          Set it when a check applies to only part of the dialogue, like the
+          greeting or final resolution.
+        </>
+      ),
+    },
+    {
+      question: "How do I make one branch lead to more checks instead of ending?",
+      answer: (
+        <>
+          On a <code>ConversationalVerdictNode</code>, provide a{" "}
+          <code>child</code> instead of a <code>score</code> — e.g. point a{" "}
+          <code>True</code> verdict's <code>child</code> at a{" "}
+          <code>ConversationalNonBinaryJudgementNode</code> to grade further.
+          Provide one, never both.
+        </>
+      ),
+    },
+    {
+      question: "Can I reuse the single-turn DAG nodes here?",
+      answer: (
+        <>
+          No — use the conversational variants:{" "}
+          <code>ConversationalTaskNode</code>,{" "}
+          <code>ConversationalBinaryJudgementNode</code>,{" "}
+          <code>ConversationalNonBinaryJudgementNode</code>, and{" "}
+          <code>ConversationalVerdictNode</code>. They take{" "}
+          <code>MultiTurnParams</code> and can embed a{" "}
+          <code>ConversationalGEval</code> as a leaf.
+        </>
+      ),
+    },
+  ]}
+/>

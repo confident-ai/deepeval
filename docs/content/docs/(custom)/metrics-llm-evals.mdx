@@ -429,3 +429,70 @@ class CustomGEvalTemplate(GEvalTemplate):
 metric = GEval(evaluation_template=CustomGEvalTemplate)
 metric.measure(...)
 ```
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why are my G-Eval scores inconsistent between runs?",
+      answer: (
+        <>
+          Usually relying on <code>criteria</code> alone, which makes{" "}
+          <code>GEval</code> regenerate fresh CoT steps every run. Provide
+          explicit <code>evaluation_steps</code> to skip that, and add a{" "}
+          <a href="/docs/metrics-llm-evals#rubric">rubric</a> or{" "}
+          <code>strict_mode</code> to tighten scoring.
+        </>
+      ),
+    },
+    {
+      question: "Should I define criteria or evaluation_steps?",
+      answer: (
+        <>
+          <code>criteria</code> when exploring and you want <code>GEval</code> to
+          draft the steps; <code>evaluation_steps</code> for reproducible,
+          controllable scores. Start with a short <code>criteria</code>, inspect
+          the generated steps, then lock them in. Pass only one, never both.
+        </>
+      ),
+    },
+    {
+      question:
+        "When should I reach for G-Eval instead of DAG or a custom metric?",
+      answer: (
+        <>
+          <code>GEval</code> for subjective, use-case-specific criteria
+          (correctness, tone, safety) where some non-determinism is fine. Use{" "}
+          <a href="/docs/metrics-dag">DAGMetric</a> for deterministic, rule-based
+          scoring, and a <a href="/docs/metrics-custom">custom metric</a> to skip
+          the LLM or combine several metrics.
+        </>
+      ),
+    },
+    {
+      question: "Should I add every test case parameter to evaluation_params?",
+      answer: (
+        <>
+          No. Only include parameters referenced in your{" "}
+          <code>criteria</code>/<code>evaluation_steps</code>. Unused params
+          (e.g. <code>expected_output</code> your steps never mention) feed the
+          judge irrelevant context and degrade the score.
+        </>
+      ),
+    },
+    {
+      question: "How do I stop G-Eval from clustering scores in the middle?",
+      answer: (
+        <>
+          Pass a list of <code>Rubric</code>s via the{" "}
+          <a href="/docs/metrics-llm-evals#rubric">rubric</a> argument to confine
+          the judge to specific score bands (non-overlapping{" "}
+          <code>score_range</code>s within 0-10). For pass/fail, set{" "}
+          <code>strict_mode=True</code> to force a binary 1 or 0.
+        </>
+      ),
+    },
+  ]}
+/>
+

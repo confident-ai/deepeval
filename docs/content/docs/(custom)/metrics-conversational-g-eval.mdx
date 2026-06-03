@@ -3,6 +3,7 @@ id: metrics-conversational-g-eval
 title: Conversational G-Eval
 sidebar_label: Conversational G-Eval
 ---
+
 <MetricTagsDisplayer multiTurn={true} custom={true} chatbot={true} />
 
 The conversational G-Eval is an adopted version of `deepeval`'s popular [`GEval` metric](/docs/metrics-llm-evals) but for evaluating entire conversations instead.
@@ -67,6 +68,7 @@ You can upload your `ConversationalGEval` metrics to [Confident AI](https://app.
 metric = ConversationalGEval(...)
 metric.upload()
 ```
+
 :::
 
 ### As a standalone
@@ -141,3 +143,57 @@ class CustomConvoGEvalTemplate(ConversationalGEvalTemplate):
 metric = ConversationalGEval(evaluation_template=CustomConvoGEvalTemplate)
 metric.measure(...)
 ```
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "When should I use ConversationalGEval instead of single-turn GEval?",
+      answer: (
+        <>
+          When your criteria spans an <code>ConversationalTestCase</code> — tone
+          consistency, memory of earlier context, recovery after a bad turn.
+          Plain <a href="/docs/metrics-llm-evals">GEval</a> sees only one{" "}
+          <code>input</code>/<code>actual_output</code> pair and can't reason
+          across turns.
+        </>
+      ),
+    },
+    {
+      question: "Does it score each turn separately or the whole conversation?",
+      answer: (
+        <>
+          The whole conversation. It considers the entire <code>turns</code>{" "}
+          history and returns a single score and reason, not one per turn.
+        </>
+      ),
+    },
+    {
+      question: "Which turn parameters should I put in evaluation_params?",
+      answer: (
+        <>
+          Only the parameters you want evaluated. Include just the fields your{" "}
+          <code>criteria</code>/<code>evaluation_steps</code> reference (e.g.{" "}
+          <code>MultiTurnParams.TOOLS_CALLED</code> if it depends on tool usage)
+          — unused params add noise.
+        </>
+      ),
+    },
+    {
+      question: "Can I pass an LLMTestCase to ConversationalGEval?",
+      answer: (
+        <>
+          No. It operates on a{" "}
+          <a href="/docs/evaluation-multiturn-test-cases">
+            ConversationalTestCase
+          </a>{" "}
+          built from <code>turns</code>. For single-turn data, use{" "}
+          <a href="/docs/metrics-llm-evals">GEval</a> with an{" "}
+          <code>LLMTestCase</code>.
+        </>
+      ),
+    },
+  ]}
+/>

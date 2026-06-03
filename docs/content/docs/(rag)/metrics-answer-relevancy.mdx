@@ -192,3 +192,59 @@ JSON:
 metric = AnswerRelevancyMetric(evaluation_template=CustomTemplate)
 metric.measure(...)
 ```
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "Does a high answer relevancy score mean my answer is factually correct?",
+      answer: (
+        <>
+          No. It only checks whether statements in <code>actual_output</code>{" "}
+          address the <code>input</code>, not whether they're grounded in
+          retrieved context — an answer can be on-topic and still hallucinate.
+          Pair it with{" "}
+          <a href="/docs/metrics-faithfulness">Faithfulness</a> to catch factual
+          errors.
+        </>
+      ),
+    },
+    {
+      question:
+        "My answer relevancy is low — is this a retriever or a generator problem?",
+      answer: (
+        <>
+          Generator. It compares <code>actual_output</code> against the{" "}
+          <code>input</code> and never looks at <code>retrieval_context</code>,
+          so a low score points to a prompt or model rambling, hedging, or
+          drifting off-topic. Use the contextual metrics for retrieval.
+        </>
+      ),
+    },
+    {
+      question: "Do I need an expected_output or ground truth to use it?",
+      answer: (
+        <>
+          No. It's referenceless — only <code>input</code> and{" "}
+          <code>actual_output</code> are required, so you can run it on live
+          production traffic. See the{" "}
+          <a href="/docs/evaluation-test-cases#llm-test-case">test case docs</a>.
+        </>
+      ),
+    },
+    {
+      question: "Why is my score low when the answer looks fine to me?",
+      answer: (
+        <>
+          It counts how many statements in <code>actual_output</code> are
+          relevant to the <code>input</code>, so preamble, caveats, or tangents
+          drag the score down even when the core answer is correct. Set{" "}
+          <code>verbose_mode=True</code> to see which statements were flagged.
+        </>
+      ),
+    },
+  ]}
+/>
+

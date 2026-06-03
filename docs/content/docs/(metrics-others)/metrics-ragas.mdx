@@ -92,3 +92,61 @@ from deepeval.metrics.ragas import RAGASContextualPrecisionMetric
 
 These metrics accept the same arguments as the `RagasMetric`.
 :::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "Should I use deepeval's native RAG metrics or the RAGAS metric?",
+      answer: (
+        <>
+          Prefer <code>deepeval</code>'s native RAG metrics: they give reasons,
+          are debuggable, are JSON-confineable (avoiding <code>ragas</code>'{" "}
+          <code>NaN</code> scores), and integrate with caching,{" "}
+          <code>pytest</code>, and Confident AI. Use <code>RagasMetric</code>{" "}
+          only if you're already standardized on <code>ragas</code>.
+        </>
+      ),
+    },
+    {
+      question: "Why am I getting NaN scores from the RAGAS metric?",
+      answer: (
+        <>
+          <code>ragas</code> returns <code>NaN</code> when the model emits invalid
+          JSON, and <code>RagasMetric</code> wraps it directly.{" "}
+          <code>deepeval</code>'s native RAG metrics let you{" "}
+          <a href="/guides/guides-using-custom-llms">JSON-confine</a> any custom
+          LLM to avoid this.
+        </>
+      ),
+    },
+    {
+      question:
+        "Can I run just one sub-metric instead of the full averaged score?",
+      answer: (
+        <>
+          Yes. Import and run <code>RAGASAnswerRelevancyMetric</code>,{" "}
+          <code>RAGASFaithfulnessMetric</code>,{" "}
+          <code>RAGASContextualRecallMetric</code>, or{" "}
+          <code>RAGASContextualPrecisionMetric</code> individually — same
+          arguments as the combined <code>RagasMetric</code>.
+        </>
+      ),
+    },
+    {
+      question: "What do I need to install and provide before it will run?",
+      answer: (
+        <>
+          Run <code>pip install ragas</code> separately, and provide all four
+          fields per test case: <code>input</code>, <code>actual_output</code>,{" "}
+          <code>expected_output</code>, and <code>retrieval_context</code>. See
+          the{" "}
+          <a href="/docs/evaluation-test-cases#llm-test-case">test case docs</a>.
+        </>
+      ),
+    },
+  ]}
+/>
+

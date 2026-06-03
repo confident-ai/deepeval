@@ -76,3 +76,54 @@ The `GoalAccuracyMetric` score is calculated using the following steps:
 :::info
 The `GoalAccuracyMetric` extracts the task from user's messages in each interaction and evalutes the steps taken by the LLM agent to find it's plan and how accurately it has finished the task or reached the goal in that interaction.
 :::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "My agent answered every message but still failed the user's actual goal — will this catch it?",
+      answer: (
+        <>
+          Yes. <code>GoalAccuracyMetric</code> extracts the underlying task from
+          the user's messages and judges whether the agent's plan and steps
+          actually reached it. A conversation can look responsive turn by turn
+          yet score low if the goal was never accomplished.
+        </>
+      ),
+    },
+    {
+      question: "What's the difference between the goal score and the plan score?",
+      answer: (
+        <>
+          The final score averages a <strong>goal evaluation score</strong> (did
+          it reach the goal) and a <strong>plan evaluation score</strong>{" "}
+          (plan quality and adherence). The average reflects both reaching the
+          goal and how well it was planned.
+        </>
+      ),
+    },
+    {
+      question: "How does it know the goal if I never pass an expected outcome?",
+      answer: (
+        <>
+          It infers the goal from the <code>"user"</code> messages, then
+          evaluates the steps taken to satisfy it. You only supply{" "}
+          <code>turns</code> on the <code>ConversationalTestCase</code>.
+        </>
+      ),
+    },
+    {
+      question: "Does it account for tool calls when scoring the plan?",
+      answer: (
+        <>
+          Yes. Turns can include <code>tools_called</code>, and the metric
+          factors tool usage into the plan it reconstructs and how well that
+          plan reached the goal.
+        </>
+      ),
+    },
+  ]}
+/>
+

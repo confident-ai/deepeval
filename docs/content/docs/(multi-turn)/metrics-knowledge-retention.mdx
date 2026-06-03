@@ -70,3 +70,54 @@ The `KnowledgeRetentionMetric` score is calculated according to the following eq
 <Equation formula="\text{Knowledge Retention} = \frac{\text{Number of Assistant Turns without Knowledge Attritions}}{\text{Total Number of Assistant Turns}}" />
 
 The `KnowledgeRetentionMetric` first uses an LLM to extract knowledge supplied in `"content"` by the `"user"` role throughout `turns`, before using the same LLM to determine whether each corresponding `"assistant"` content indicates an inability to recall said knowledge.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "Why does my chatbot keep asking for information the user already gave it?",
+      answer: (
+        <>
+          Exactly the failure <code>KnowledgeRetentionMetric</code> catches. It
+          extracts facts the user supplied earlier and flags any later assistant
+          turn that asks for them again, quantifying how often your bot
+          "forgets."
+        </>
+      ),
+    },
+    {
+      question: "How does the metric detect that the bot forgot something?",
+      answer: (
+        <>
+          An LLM extracts knowledge stated in the <code>"user"</code> turns,
+          then checks each later <code>"assistant"</code> turn for a{" "}
+          <em>knowledge attrition</em> — failing to recall info already
+          provided.
+        </>
+      ),
+    },
+    {
+      question: "Which turns are scored?",
+      answer: (
+        <>
+          Assistant turns <em>without</em> a knowledge attrition over total
+          assistant turns, so a single turn that re-requests known info pulls
+          the whole conversation down.
+        </>
+      ),
+    },
+    {
+      question: "Why does strict_mode set the threshold to 0?",
+      answer: (
+        <>
+          With <code>strict_mode</code> set to <code>True</code> the metric is
+          binary (1 only for zero attritions, else 0), so the threshold is{" "}
+          <code>0</code> and any single forgotten fact fails the test case.
+        </>
+      ),
+    },
+  ]}
+/>
+

@@ -206,3 +206,59 @@ JSON:
 metric = ContextualRelevancyMetric(evaluation_template=CustomTemplate)
 metric.measure(...)
 ```
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "Why is my contextual relevancy low even though the right answer was retrieved?",
+      answer: (
+        <>
+          It measures signal-to-noise, not just presence. It scores the fraction
+          of statements in <code>retrieval_context</code> relevant to the{" "}
+          <code>input</code>, so the right passage buried in irrelevant text
+          still scores low. The fix is usually less noisy context.
+        </>
+      ),
+    },
+    {
+      question: "What does a low contextual relevancy score tell me to change?",
+      answer: (
+        <>
+          Too much irrelevant material in your <code>retrieval_context</code>.
+          Lower top-K to return fewer marginal chunks and shrink chunk size for
+          more focused nodes — the most direct ways to raise the relevant ratio.
+        </>
+      ),
+    },
+    {
+      question:
+        "How is Contextual Relevancy different from Answer Relevancy?",
+      answer: (
+        <>
+          Opposite ends of the pipeline. Contextual relevancy grades your
+          retriever via <code>retrieval_context</code>, while{" "}
+          <a href="/docs/metrics-answer-relevancy">Answer Relevancy</a> grades
+          your generator via <code>actual_output</code>. Clean context with an
+          off-topic answer points to the generator; noisy context to the
+          retriever.
+        </>
+      ),
+    },
+    {
+      question: "Do I need a ground-truth answer to run it?",
+      answer: (
+        <>
+          No. It's referenceless — judging <code>retrieval_context</code> purely
+          against the <code>input</code> with no <code>expected_output</code>,
+          unlike reference-based{" "}
+          <a href="/docs/metrics-contextual-recall">Contextual Recall</a>. That
+          makes it usable on live traffic without labeled data.
+        </>
+      ),
+    },
+  ]}
+/>
+

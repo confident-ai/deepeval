@@ -101,3 +101,62 @@ The `TurnContextualPrecisionMetric` first constructs a sliding windows of turns.
 3. Where nodes ranked higher (lower rank number) contribute more weight to the score
 
 The final score is the average of all precision scores across the conversation. This ensures that relevant retrieval context nodes appear earlier in the ranking.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "When should I use TurnContextualPrecisionMetric instead of the single-turn version?",
+      answer: (
+        <>
+          When retrieval runs per turn in a{" "}
+          <code>ConversationalTestCase</code> and you want to grade each turn's
+          node ranking against the <code>expected_outcome</code>. The
+          single-turn{" "}
+          <a href="/docs/metrics-contextual-precision">
+            ContextualPrecisionMetric
+          </a>{" "}
+          grades one retrieval only.
+        </>
+      ),
+    },
+    {
+      question: "How is precision different from recall and relevancy?",
+      answer: (
+        <>
+          Precision is <strong>ranking</strong> — are relevant nodes ranked
+          above irrelevant ones, weighted so earlier nodes matter more.{" "}
+          <a href="/docs/metrics-turn-contextual-recall">Recall</a> measures
+          completeness and{" "}
+          <a href="/docs/metrics-turn-contextual-relevancy">relevancy</a>{" "}
+          measures signal vs noise.
+        </>
+      ),
+    },
+    {
+      question:
+        "The right info is in my retrieval_context but precision is low — what's wrong?",
+      answer: (
+        <>
+          Relevant nodes are ranked too low. Since the score weights nodes by
+          position, burying a useful node beneath irrelevant ones tanks
+          precision even when it's present. Add or tune a reranker.
+        </>
+      ),
+    },
+    {
+      question: "Why does this metric need expected_outcome?",
+      answer: (
+        <>
+          It uses the <code>expected_outcome</code> to decide which nodes in the{" "}
+          <code>retrieval_context</code> were useful before scoring their
+          ranking. Without it there's no ground truth for labeling nodes
+          relevant or irrelevant.
+        </>
+      ),
+    },
+  ]}
+/>
+

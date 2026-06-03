@@ -201,3 +201,61 @@ JSON:
 metric = FaithfulnessMetric(evaluation_template=CustomTemplate)
 metric.measure(...)
 ```
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Is a low faithfulness score a retrieval or a generation problem?",
+      answer: (
+        <>
+          Generation. It grades <code>actual_output</code> against the
+          already-retrieved <code>retrieval_context</code>, so a low score means
+          unsupported claims (a prompt or model issue). Retrieval quality is
+          covered by{" "}
+          <a href="/docs/metrics-contextual-recall">Contextual Recall</a> and{" "}
+          <a href="/docs/metrics-contextual-precision">Contextual Precision</a>.
+        </>
+      ),
+    },
+    {
+      question: "How is Faithfulness different from the Hallucination metric?",
+      answer: (
+        <>
+          Faithfulness checks the <code>actual_output</code> against the
+          retrieved <code>retrieval_context</code> ("is this grounded in what I
+          retrieved?"), while <code>HallucinationMetric</code> compares it
+          against a ground-truth <code>context</code>. Use faithfulness for RAG,
+          hallucination when you have known-correct reference context.
+        </>
+      ),
+    },
+    {
+      question:
+        "My answer relevancy is high but faithfulness is low — what's going on?",
+      answer: (
+        <>
+          The classic confidently-wrong case: an on-topic answer (high{" "}
+          <a href="/docs/metrics-answer-relevancy">answer relevancy</a>) backed
+          by claims your <code>retrieval_context</code> doesn't support. The
+          model is leaning on parametric knowledge instead of retrieved
+          evidence — tighten your prompt to force grounding.
+        </>
+      ),
+    },
+    {
+      question: "Why is a claim I know is true being marked unfaithful?",
+      answer: (
+        <>
+          Faithfulness only rewards claims supported by the{" "}
+          <code>retrieval_context</code> — a real-world truth absent from the
+          retrieved text still counts as unfaithful. Use{" "}
+          <code>truths_extraction_limit</code> to focus on key truths and{" "}
+          <code>penalize_ambiguous_claims</code> to control borderline scoring.
+        </>
+      ),
+    },
+  ]}
+/>
+

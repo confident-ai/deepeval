@@ -76,3 +76,69 @@ The `StepEfficiencyMetric` score is calculated using the following steps:
 <Equation formula="\text{Step Efficiency Score} = \text{AlignmentScore}(\text{Task}, \text{Execution Steps})" />
 
 - The **Alignment Score** uses an LLM to generate the final score with all the pre-processed and extracted information like plan and execution steps. It will penalize any actions taken by the LLM agent that were not strictly required to finish the task.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How do I detect my agent taking unnecessary or redundant steps?",
+      answer: (
+        <>
+          That's what Step Efficiency is for. It scores the{" "}
+          <code>AlignmentScore</code> between the extracted <strong>Task</strong>{" "}
+          and <strong>Execution Steps</strong>, penalizing any action not
+          strictly required — duplicates, retries, detours. Set{" "}
+          <code>include_reason</code> to see flagged steps.
+        </>
+      ),
+    },
+    {
+      question: "Why can't I run Step Efficiency on a single test case?",
+      answer: (
+        <>
+          Efficiency only makes sense across a whole run, so it's trace-only. You{" "}
+          <strong>must</strong> attach <code>StepEfficiencyMetric()</code> to a
+          trace — either by{" "}
+          <a href="/docs/evaluation-llm-tracing">setting up tracing</a> or through
+          a <a href="/integrations">framework integration</a> like LangChain or
+          OpenAI.
+        </>
+      ),
+    },
+    {
+      question: "Step Efficiency vs Task Completion — doesn't an efficient agent always finish the task?",
+      answer: (
+        <>
+          Not necessarily.{" "}
+          <a href="/docs/metrics-task-completion">Task Completion</a> asks if the{" "}
+          <strong>outcome</strong> was achieved; Step Efficiency asks if the{" "}
+          <strong>path</strong> was lean. An agent can finish via a bloated route
+          or take a tight path that misses the goal — run both.
+        </>
+      ),
+    },
+    {
+      question: "Do I define the task for Step Efficiency?",
+      answer: (
+        <>
+          No — the <strong>Task</strong> is extracted automatically from the
+          trace, then execution steps are scored against it. Referenceless, so
+          there's no expected path to label.
+        </>
+      ),
+    },
+    {
+      question: "Can I use Step Efficiency with LangChain, OpenAI, or another framework?",
+      answer: (
+        <>
+          Yes. <code>deepeval</code> auto-traces agents built with{" "}
+          <a href="/integrations/frameworks/langchain">LangChain</a>,{" "}
+          <a href="/integrations/frameworks/openai">OpenAI</a>, LlamaIndex,
+          CrewAI, and more — see all{" "}
+          <a href="/integrations">framework integrations</a>.
+        </>
+      ),
+    },
+  ]}
+/>

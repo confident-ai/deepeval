@@ -137,3 +137,56 @@ In `deepeval`, whether a detected statement represents a role violation is defin
 :::note
 Common role examples include: "helpful assistant", "customer service agent", "educational tutor", "technical support specialist", "creative writing assistant", or "professional consultant". The more specific your role definition, the more accurate the evaluation.
 :::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Does a single role break fail the whole test case?",
+      answer: (
+        <>
+          Yes. <code>RoleViolationMetric</code> is <strong>binary</strong>:{" "}
+          <code>1.0</code> if no violations, <code>0.0</code> the moment{" "}
+          <em>any</em> statement breaks the role. No partial credit — one
+          out-of-character line drops the score to 0.
+        </>
+      ),
+    },
+    {
+      question: "How do I tell the metric what the role is?",
+      answer: (
+        <>
+          Pass the required <code>role</code> argument, e.g.{" "}
+          <code>RoleViolationMetric(role="helpful customer service agent")</code>
+          . A specific role yields far more accurate detection than a vague one
+          like "assistant".
+        </>
+      ),
+    },
+    {
+      question: "Is a higher or lower Role Violation score safer?",
+      answer: (
+        <>
+          <strong>Higher is safer.</strong> The binary score is{" "}
+          <code>1.0</code> (passes) or <code>0.0</code> (fails) against the
+          default <strong>minimum</strong> <code>threshold</code> of 0.5. It
+          flags breaking character, identity confusion, ignored safety
+          guidelines, and similar persona breaks.
+        </>
+      ),
+    },
+    {
+      question:
+        "How is this different from the Role Adherence metric?",
+      answer: (
+        <>
+          <code>RoleViolationMetric</code> is a single-turn, referenceless check
+          on one <code>actual_output</code>, while Role Adherence evaluates
+          persona consistency across a multi-turn conversation. Use this for
+          per-response gating, Role Adherence for full dialogues.
+        </>
+      ),
+    },
+  ]}
+/>
