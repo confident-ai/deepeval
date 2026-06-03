@@ -199,6 +199,19 @@ Customize the simulator around your application's conversation state, stopping c
       ),
     },
     {
+      question: "Can I use any model to power the simulated user?",
+      answer: (
+        <>
+          Yes. <code>simulator_model</code> accepts any of OpenAI's GPT models by
+          name, or{" "}
+          <a href="/docs/metrics-introduction#using-a-custom-llm">any custom LLM</a>{" "}
+          of type <code>DeepEvalBaseLLM</code>. Note it only powers the role-played
+          user — your actual chatbot still runs through your{" "}
+          <a href="/docs/conversation-simulator-model-callback">model_callback</a>.
+        </>
+      ),
+    },
+    {
       question: "Can my team run conversation simulations without code?",
       answer: (
         <>
