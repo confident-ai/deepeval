@@ -162,7 +162,7 @@ def stopping_controller(turns):
 <FAQs
   qas={[
     {
-      question: "What stops a simulation if I don't write a stopping_controller?",
+      question: "What stops a simulation if I don't write a `stopping_controller`?",
       answer: (
         <>
           The default <code>stopping_controller</code> ends the run once the{" "}
@@ -185,7 +185,7 @@ def stopping_controller(turns):
       ),
     },
     {
-      question: "What's the difference between proceed() and end()?",
+      question: "What's the difference between `proceed()` and `end()`?",
       answer: (
         <>
           <code>proceed()</code> continues the simulation; <code>end(reason=...)</code>{" "}
@@ -196,7 +196,7 @@ def stopping_controller(turns):
       ),
     },
     {
-      question: "Can my controller run forever if it never returns end()?",
+      question: "Can my controller run forever if it never returns `end()`?",
       answer: (
         <>
           No. <code>max_user_simulations</code> is checked <em>before</em> your

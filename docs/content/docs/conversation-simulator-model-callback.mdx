@@ -70,7 +70,7 @@ async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
 <FAQs
   qas={[
     {
-      question: "What does my model_callback have to return?",
+      question: "What does my `model_callback` have to return?",
       answer: (
         <>
           An assistant <code>Turn</code> — i.e.{" "}
@@ -93,7 +93,7 @@ async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
       ),
     },
     {
-      question: "Do I have to declare turns and thread_id if I don't use them?",
+      question: "Do I have to declare `turns` and `thread_id` if I don't use them?",
       answer: (
         <>
           No. Only <code>input</code> is required; <code>turns</code> and{" "}
