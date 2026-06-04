@@ -32,3 +32,84 @@ benchmark = IFEval(n_problems=5)
 benchmark.evaluate(model=mistral_7b)
 print(benchmark.overall_score)
 ```
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What does the `IFEval` benchmark measure?",
+      answer: (
+        <>
+          IFEval evaluates the instruction-following capabilities of language
+          models. It tests various aspects including format compliance,
+          constraint adherence, output structure requirements, and specific
+          instruction types. See the{" "}
+          <a href="/docs/benchmarks-introduction">benchmarks introduction</a> for
+          how scoring works across benchmarks.
+        </>
+      ),
+    },
+    {
+      question: "What arguments does the `IFEval` benchmark accept?",
+      answer: (
+        <>
+          There is one optional argument, <code>n_problems</code>, which limits
+          the number of test cases the benchmark will evaluate. It is defaulted
+          to <code>None</code>.
+        </>
+      ),
+    },
+    {
+      question: "What does the `n_problems` argument do?",
+      answer: (
+        <>
+          <code>n_problems</code> limits the number of test cases the benchmark
+          will evaluate. By default it is <code>None</code>, so set it to an
+          integer (for example <code>5</code>) to evaluate a smaller subset.
+        </>
+      ),
+    },
+    {
+      question: "What research is deepeval's `IFEval` implementation based on?",
+      answer: (
+        <>
+          deepeval's <code>IFEval</code> implementation is based on the original
+          research paper by Google. You can read more in the{" "}
+          <a href="/docs/benchmarks-introduction">benchmarks introduction</a>.
+        </>
+      ),
+    },
+    {
+      question: "Does `IFEval` support `tasks` or `n_shots` arguments?",
+      answer: (
+        <>
+          No. <code>IFEval</code> exposes a single optional argument,{" "}
+          <code>n_problems</code>. It does not take a <code>tasks</code> list or
+          an <code>n_shots</code> argument.
+        </>
+      ),
+    },
+    {
+      question: "How do I read the result of an `IFEval` run?",
+      answer: (
+        <>
+          After calling <code>evaluate()</code>, read the{" "}
+          <code>overall_score</code> attribute to see how the model performed on
+          the evaluated instruction-following test cases.
+        </>
+      ),
+    },
+    {
+      question: "How do I run `IFEval` on a custom LLM?",
+      answer: (
+        <>
+          Define the benchmark, then call <code>evaluate()</code> with your model
+          and read <code>overall_score</code>. See{" "}
+          <a href="/docs/benchmarks-introduction#benchmarking-your-llm">benchmarking your LLM</a>{" "}
+          to learn how to use any custom LLM.
+        </>
+      ),
+    },
+  ]}
+/>

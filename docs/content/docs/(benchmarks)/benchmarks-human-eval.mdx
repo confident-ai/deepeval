@@ -241,3 +241,85 @@ Below is the comprehensive list of all available tasks:
 - `DO_ALGEBRA`
 - `STRING_TO_MD5`
 - `GENERATE_INTEGERS`
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What does the `HumanEval` benchmark measure?",
+      answer: (
+        <>
+          <code>HumanEval</code> evaluates an LLM's code generation capabilities
+          using 164 hand-crafted programming challenges comparable to simple
+          software interview questions. It assesses the <strong>functional
+          correctness</strong> of generated code rather than textual similarity
+          to a reference solution.
+        </>
+      ),
+    },
+    {
+      question: "Which tasks can I run with `HumanEval`?",
+      answer: (
+        <>
+          You can pass a list of <code>HumanEvalTask</code> enums to the{" "}
+          <code>tasks</code> argument, for example <code>HAS_CLOSE_ELEMENTS</code>{" "}
+          or <code>SORT_NUMBERS</code>. By default, all 164 programming tasks are
+          evaluated.
+        </>
+      ),
+    },
+    {
+      question: "How is `HumanEval` scored?",
+      answer: (
+        <>
+          The <code>overall_score</code> ranges from 0 to 1 and is based on the{" "}
+          <strong>pass@k</strong> metric: the proportion of code generations that
+          pass all test cases (7.7 test cases on average per problem) for at
+          least k samples. See the{" "}
+          <a href="/docs/benchmarks-introduction">benchmarks introduction</a> for
+          how scoring works across benchmarks.
+        </>
+      ),
+    },
+    {
+      question: "What does the `n` argument control?",
+      answer: (
+        <>
+          <code>n</code> is the number of code generation samples produced for
+          each task, used by the <code>pass@k</code> metric. It is set to{" "}
+          <code>200</code> by default, meaning your LLM is invoked{" "}
+          <strong>200 times on the same prompt</strong> per task unless you lower
+          it.
+        </>
+      ),
+    },
+    {
+      question: "What is the difference between `n` and `k`?",
+      answer: (
+        <>
+          <code>n</code> is the total number of samples generated per task, while{" "}
+          <code>k</code> is the number of top samples chosen for the{" "}
+          <code>pass@k</code> metric. You supply <code>k</code> when calling{" "}
+          <code>evaluate()</code>, for example{" "}
+          <code>benchmark.evaluate(model=gpt_4, k=10)</code>.
+        </>
+      ),
+    },
+    {
+      question: "How do I run `HumanEval` on a custom LLM?",
+      answer: (
+        <>
+          You must define a <code>generate_samples</code> method on your{" "}
+          <code>DeepEvalBaseLLM</code> subclass, then create a benchmark with{" "}
+          <code>HumanEval(tasks=[...], n=100)</code> and call{" "}
+          <code>benchmark.evaluate(model=gpt_4, k=10)</code>. See the{" "}
+          <a href="/docs/benchmarks-introduction#benchmarking-your-llm">
+            benchmarking guide
+          </a>{" "}
+          for using any custom LLM.
+        </>
+      ),
+    },
+  ]}
+/>

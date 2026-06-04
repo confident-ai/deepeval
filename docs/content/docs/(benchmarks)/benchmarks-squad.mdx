@@ -106,3 +106,79 @@ Below is the comprehensive list of available tasks:
 - `CIVIL_DISOBEDIENCE`
 - `GENGHIS_KHAN`
 - `OXYGEN`
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What does the `SQuAD` benchmark measure?",
+      answer: (
+        <>
+          SQuAD tests a language model's reading comprehension by asking
+          question-answer pairs where each answer is a segment of text taken
+          directly from an accompanying Wikipedia passage. It contains 100K
+          question-answer pairs, including 10K in the validation set. See the{" "}
+          <a href="/docs/benchmarks-introduction">benchmarks introduction</a> for
+          how scoring works across benchmarks.
+        </>
+      ),
+    },
+    {
+      question: "How is `SQuAD` scored in deepeval?",
+      answer: (
+        <>
+          Unlike most benchmarks, deepeval's SQuAD implementation uses an{" "}
+          <strong>LLM-as-a-judge</strong> to generate a binary score that
+          determines whether the prediction aligns with the expected output
+          given the passage context. This assesses semantic equivalence rather
+          than relying on <strong>exact match</strong>, so an answer of "two
+          atoms" can still align with an expected "2".
+        </>
+      ),
+    },
+    {
+      question: "Why does `SQuAD` require an `evaluation_model`?",
+      answer: (
+        <>
+          Because scoring is performed by an LLM-as-a-judge, you must supply an{" "}
+          <code>evaluation_model</code>. It accepts a string for one of OpenAI's
+          GPT models, or any custom LLM of type <code>DeepEvalBaseLLM</code>, and
+          the judge decides whether a prediction and the expected output align.
+        </>
+      ),
+    },
+    {
+      question: "What is the default `n_shots` for `SQuAD`?",
+      answer: (
+        <>
+          It defaults to <code>5</code> and cannot exceed that. Use the{" "}
+          <code>n_shots</code> argument to lower it for few-shot prompting.
+        </>
+      ),
+    },
+    {
+      question: "Which tasks can I evaluate with `SQuAD`?",
+      answer: (
+        <>
+          You can pass a list of <code>SQuADTask</code> enums to the{" "}
+          <code>tasks</code> argument to target specific subject areas such as{" "}
+          <code>PHARMACY</code> or <code>NORMANS</code>. By default, all tasks
+          are evaluated.
+        </>
+      ),
+    },
+    {
+      question: "How do I run `SQuAD` on a custom LLM?",
+      answer: (
+        <>
+          Define the benchmark, then call <code>evaluate()</code> with your model
+          (for example a custom <code>DeepEvalBaseLLM</code>) and read{" "}
+          <code>overall_score</code>, which ranges from 0 to 1. See{" "}
+          <a href="/docs/benchmarks-introduction#benchmarking-your-llm">benchmarking your LLM</a>{" "}
+          for details.
+        </>
+      ),
+    },
+  ]}
+/>

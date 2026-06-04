@@ -108,3 +108,84 @@ Below is the comprehensive list of all available tasks:
 - `ELECTRICAL_ENGINEERING`
 - `ASTRONOMY`
 - `COLLEGE_BIOLOGY`
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What does the `MMLU` benchmark measure?",
+      answer: (
+        <>
+          <code>MMLU</code> (Massive Multitask Language Understanding) evaluates
+          an LLM through multiple-choice questions spanning{" "}
+          <strong>57 subjects</strong> such as math, history, law, and ethics.
+          It is good at detecting areas where a model may lack understanding in a
+          particular topic.
+        </>
+      ),
+    },
+    {
+      question: "Which tasks can I run with `MMLU`?",
+      answer: (
+        <>
+          You can pass any of the 57 <code>MMLUTask</code> enums via the{" "}
+          <code>tasks</code> argument, for example{" "}
+          <code>HIGH_SCHOOL_COMPUTER_SCIENCE</code> or <code>ASTRONOMY</code>.
+          By default, <code>deepeval</code> evaluates your LLM on all 57 subject
+          areas.
+        </>
+      ),
+    },
+    {
+      question: "How is `MMLU` scored?",
+      answer: (
+        <>
+          The <code>overall_score</code> ranges from 0 to 1 and is based on{" "}
+          <strong>exact matching</strong>: it is the proportion of
+          multiple-choice questions for which the model produces the precise
+          correct letter answer (e.g. 'A'). See the{" "}
+          <a href="/docs/benchmarks-introduction">benchmarks introduction</a> for
+          how scoring works across benchmarks.
+        </>
+      ),
+    },
+    {
+      question: "What is the default `n_shots` for `MMLU`?",
+      answer: (
+        <>
+          The <code>n_shots</code> argument defaults to <code>5</code> and{" "}
+          <strong>cannot exceed</strong> that number. Using more few-shot prompts
+          can improve the model's robustness in generating answers in the exact
+          correct format and boost the overall score.
+        </>
+      ),
+    },
+    {
+      question: "Does `MMLU` support chain-of-thought prompting?",
+      answer: (
+        <>
+          No. The <code>MMLU</code> benchmark exposes only two optional
+          arguments, <code>tasks</code> and <code>n_shots</code>, and does not
+          include an <code>enable_cot</code> option for chain-of-thought
+          prompting.
+        </>
+      ),
+    },
+    {
+      question: "How do I run `MMLU` on a custom LLM?",
+      answer: (
+        <>
+          Wrap your model in <code>DeepEvalBaseLLM</code>, create a benchmark
+          with <code>MMLU(tasks=[...], n_shots=3)</code>, and call{" "}
+          <code>benchmark.evaluate(model=mistral_7b)</code>. You can then read{" "}
+          <code>benchmark.overall_score</code>. See the{" "}
+          <a href="/docs/benchmarks-introduction#benchmarking-your-llm">
+            benchmarking guide
+          </a>{" "}
+          for using any custom LLM.
+        </>
+      ),
+    },
+  ]}
+/>

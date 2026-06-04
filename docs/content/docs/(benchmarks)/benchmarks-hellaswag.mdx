@@ -249,3 +249,82 @@ Below is the comprehensive list of available tasks:
 - `CLEAN_AND_JERK`
 - `COMPUTERS_AND_ELECTRONICS`
 - `CROQUET`
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What does the `HellaSwag` benchmark measure?",
+      answer: (
+        <>
+          <code>HellaSwag</code> evaluates an LLM's <strong>commonsense
+          reasoning</strong> through sentence completion tasks. It provides
+          10,000 challenges spanning various subject areas, making it useful for
+          pinpointing where models struggle with nuanced or complex contexts.
+        </>
+      ),
+    },
+    {
+      question: "Which tasks can I run with `HellaSwag`?",
+      answer: (
+        <>
+          You can pass a list of <code>HellaSwagTask</code> enums to the{" "}
+          <code>tasks</code> argument, for example{" "}
+          <code>TRIMMING_BRANCHES_OR_HEDGES</code> or{" "}
+          <code>BATON_TWIRLING</code>. By default, all available tasks are
+          evaluated.
+        </>
+      ),
+    },
+    {
+      question: "How is `HellaSwag` scored?",
+      answer: (
+        <>
+          The <code>overall_score</code> ranges from 0 to 1 and is based on{" "}
+          <strong>exact matching</strong>: it is the proportion of
+          multiple-choice sentence-completion questions for which the model
+          produces the precise correct letter answer (e.g. 'A'). See the{" "}
+          <a href="/docs/benchmarks-introduction">benchmarks introduction</a> for
+          how scoring works across benchmarks.
+        </>
+      ),
+    },
+    {
+      question: "What is the default `n_shots` for `HellaSwag`?",
+      answer: (
+        <>
+          The <code>n_shots</code> argument is set to <code>10</code> by default
+          and <strong>cannot exceed 15</strong>. Using more few-shot prompts can
+          improve the model's robustness in generating answers in the exact
+          correct format.
+        </>
+      ),
+    },
+    {
+      question: "Does `HellaSwag` support chain-of-thought prompting?",
+      answer: (
+        <>
+          No. Unlike <code>BigBenchHard</code>, there is no CoT prompting for the{" "}
+          <code>HellaSwag</code> benchmark. Its only optional arguments are{" "}
+          <code>tasks</code> and <code>n_shots</code>.
+        </>
+      ),
+    },
+    {
+      question: "How do I run `HellaSwag` on a custom LLM?",
+      answer: (
+        <>
+          Wrap your model in <code>DeepEvalBaseLLM</code>, create a benchmark
+          with <code>HellaSwag(tasks=[...], n_shots=5)</code>, and call{" "}
+          <code>benchmark.evaluate(model=mistral_7b)</code> before reading{" "}
+          <code>benchmark.overall_score</code>. See the{" "}
+          <a href="/docs/benchmarks-introduction#benchmarking-your-llm">
+            benchmarking guide
+          </a>{" "}
+          for using any custom LLM.
+        </>
+      ),
+    },
+  ]}
+/>
