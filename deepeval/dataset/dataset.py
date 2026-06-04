@@ -24,6 +24,9 @@ from deepeval.dataset.utils import (
     format_turns,
     check_tracer,
     parse_turns,
+    serialize_retrieval_context,
+    join_retrieval_context,
+    reconstruct_retrieval_context,
     trimAndLoadJson,
 )
 from deepeval.dataset.api import (
@@ -317,7 +320,9 @@ class EvaluationDataset:
         ]
         retrieval_contexts = [
             (
-                retrieval_context.split(retrieval_context_col_delimiter)
+                reconstruct_retrieval_context(
+                    retrieval_context.split(retrieval_context_col_delimiter)
+                )
                 if retrieval_context
                 else []
             )
@@ -453,7 +458,9 @@ class EvaluationDataset:
             actual_output = json_obj[actual_output_key_name]
             expected_output = json_obj.get(expected_output_key_name)
             context = json_obj.get(context_key_name)
-            retrieval_context = json_obj.get(retrieval_context_key_name)
+            retrieval_context = reconstruct_retrieval_context(
+                json_obj.get(retrieval_context_key_name)
+            )
             tools_called_data = json_obj.get(tools_called_key_name, [])
             tools_called = [ToolCall(**tool) for tool in tools_called_data]
             expected_tools_data = json_obj.get(expected_tools_key_name, [])
@@ -529,7 +536,9 @@ class EvaluationDataset:
         ]
         retrieval_contexts = [
             (
-                retrieval_context.split(retrieval_context_col_delimiter)
+                reconstruct_retrieval_context(
+                    retrieval_context.split(retrieval_context_col_delimiter)
+                )
                 if retrieval_context
                 else []
             )
@@ -713,7 +722,9 @@ class EvaluationDataset:
                 actual_output = json_obj.get(actual_output_key_name)
                 expected_output = json_obj.get(expected_output_key_name)
                 context = json_obj.get(context_key_name)
-                retrieval_context = json_obj.get(retrieval_context_key_name)
+                retrieval_context = reconstruct_retrieval_context(
+                    json_obj.get(retrieval_context_key_name)
+                )
                 tools_called = json_obj.get(tools_called_key_name)
                 expected_tools = json_obj.get(expected_tools_key_name)
                 comments = json_obj.get(comments_key_name)
@@ -834,9 +845,11 @@ class EvaluationDataset:
                 context = parse_context(
                     json_obj.get(context_key_name), context_col_delimiter
                 )
-                retrieval_context = parse_context(
-                    json_obj.get(retrieval_context_key_name),
-                    retrieval_context_col_delimiter,
+                retrieval_context = reconstruct_retrieval_context(
+                    parse_context(
+                        json_obj.get(retrieval_context_key_name),
+                        retrieval_context_col_delimiter,
+                    )
                 )
                 tools_called = parse_tools(json_obj.get(tools_called_key_name))
                 expected_tools = parse_tools(
@@ -1266,7 +1279,9 @@ class EvaluationDataset:
                                 "input": golden.input,
                                 "actual_output": golden.actual_output,
                                 "expected_output": golden.expected_output,
-                                "retrieval_context": golden.retrieval_context,
+                                "retrieval_context": serialize_retrieval_context(
+                                    golden.retrieval_context
+                                ),
                                 "context": golden.context,
                                 "name": golden.name,
                                 "comments": golden.comments,
@@ -1358,10 +1373,8 @@ class EvaluationDataset:
                         ]
                     )
                     for golden in goldens:
-                        retrieval_context = (
-                            "|".join(golden.retrieval_context)
-                            if golden.retrieval_context is not None
-                            else None
+                        retrieval_context = join_retrieval_context(
+                            golden.retrieval_context
                         )
                         context = (
                             "|".join(golden.context)
@@ -1441,10 +1454,8 @@ class EvaluationDataset:
                             "custom_column_key_values": golden.custom_column_key_values,
                         }
                     else:
-                        retrieval_context = (
-                            "|".join(golden.retrieval_context)
-                            if golden.retrieval_context is not None
-                            else None
+                        retrieval_context = join_retrieval_context(
+                            golden.retrieval_context
                         )
                         context = (
                             "|".join(golden.context)

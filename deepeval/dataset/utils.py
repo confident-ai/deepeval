@@ -8,7 +8,63 @@ from opentelemetry.trace import Tracer
 
 from deepeval.dataset.api import Golden
 from deepeval.dataset.golden import ConversationalGolden
-from deepeval.test_case import LLMTestCase, ConversationalTestCase, Turn
+from deepeval.test_case import (
+    LLMTestCase,
+    ConversationalTestCase,
+    Turn,
+    RetrievedContextData,
+)
+
+# RetrievedContextData declares an @model_serializer, so a plain model_dump
+# flattens it and a save/load round-trip loses the source. Serialize each item
+# to a namespaced, parseable marker instead, and reconstruct it on load.
+_RETRIEVED_CONTEXT_MARKER = re.compile(
+    r"^deepeval_source=(?P<source>.*?),deepeval_context=(?P<context>.*)$"
+)
+
+
+def serialize_retrieval_context(retrieval_context):
+    """Serialize retrieval_context items for file output, preserving the
+    source/context of any RetrievedContextData via a reconstructable marker."""
+    if retrieval_context is None:
+        return None
+    return [
+        (
+            f"deepeval_source={item.source},deepeval_context={item.context}"
+            if isinstance(item, RetrievedContextData)
+            else item
+        )
+        for item in retrieval_context
+    ]
+
+
+def join_retrieval_context(retrieval_context, delimiter="|"):
+    """Flat join of serialized retrieval_context for csv/jsonl cells."""
+    serialized = serialize_retrieval_context(retrieval_context)
+    if serialized is None:
+        return None
+    return delimiter.join(str(item) for item in serialized)
+
+
+def reconstruct_retrieval_context(retrieval_context):
+    """Inverse of serialize_retrieval_context: rebuild RetrievedContextData
+    from any marker strings, leaving plain strings untouched."""
+    if retrieval_context is None:
+        return None
+    reconstructed = []
+    for item in retrieval_context:
+        if isinstance(item, str):
+            match = _RETRIEVED_CONTEXT_MARKER.match(item)
+            if match:
+                reconstructed.append(
+                    RetrievedContextData(
+                        source=match.group("source"),
+                        context=match.group("context"),
+                    )
+                )
+                continue
+        reconstructed.append(item)
+    return reconstructed
 
 
 def convert_test_cases_to_goldens(
@@ -21,14 +77,10 @@ def convert_test_cases_to_goldens(
             "actual_output": test_case.actual_output,
             "expected_output": test_case.expected_output,
             "context": test_case.context,
-            "retrieval_context": (
-                [
-                    rc.context if hasattr(rc, "context") else rc
-                    for rc in test_case.retrieval_context
-                ]
-                if test_case.retrieval_context
-                else None
-            ),
+            # Pass retrieval_context through unchanged so save_as serializes
+            # any RetrievedContextData via the shared marker (and reloads it),
+            # rather than flattening to .context and dropping the source here.
+            "retrieval_context": test_case.retrieval_context,
             "tools_called": test_case.tools_called,
             "expected_tools": test_case.expected_tools,
             "additional_metadata": test_case.metadata,
@@ -147,13 +199,8 @@ def format_turns(turns: List[Turn]) -> str:
             "role": turn.role,
             "content": turn.content,
             "user_id": turn.user_id if turn.user_id is not None else None,
-            "retrieval_context": (
-                [
-                    rc.context if hasattr(rc, "context") else rc
-                    for rc in turn.retrieval_context
-                ]
-                if turn.retrieval_context
-                else None
+            "retrieval_context": serialize_retrieval_context(
+                turn.retrieval_context
             ),
             "tools_called": _dump_list(turn.tools_called),
             "mcp_tools_called": _dump_list(turn.mcp_tools_called),
@@ -193,6 +240,11 @@ def parse_turns(turns_str: Any) -> List[Turn]:
             raise ValueError(f"Turn at index {i} is missing a valid 'role'.")
         if "content" not in turn or not isinstance(turn["content"], str):
             raise ValueError(f"Turn at index {i} is missing a valid 'content'.")
+
+        if "retrieval_context" in turn:
+            turn["retrieval_context"] = reconstruct_retrieval_context(
+                turn["retrieval_context"]
+            )
 
         try:
             # Pydantic v2
