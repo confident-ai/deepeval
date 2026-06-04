@@ -19,7 +19,7 @@ _INSTALL_HINT = (
     "[bold red]deepeval inspect[/bold red] requires extras that are not "
     "installed.\n"
     "Install them with:\n\n"
-    "    pip install 'deepeval[inspect]'\n"
+    "    pip install 'deepeval\\[inspect]'\n"
 )
 
 
