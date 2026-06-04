@@ -379,7 +379,8 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
     ) -> Tuple[float, str]:
         number_of_verdicts = len(verdicts)
         if number_of_verdicts == 0:
-            return 1
+            reason = "<no claims to verify>" if self.include_reason else None
+            return 1.0, reason
 
         faithfulness_count = 0
         for verdict in verdicts:
@@ -405,7 +406,8 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
     ) -> Tuple[float, str]:
         number_of_verdicts = len(verdicts)
         if number_of_verdicts == 0:
-            return 1
+            reason = "<no claims to verify>" if self.include_reason else None
+            return 1.0, reason
 
         faithfulness_count = 0
         for verdict in verdicts:
