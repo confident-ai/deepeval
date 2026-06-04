@@ -16,9 +16,8 @@ if "litellm" not in sys.modules:
         get_llm_provider=lambda model: "stub-provider",
         completion_cost=lambda **k: None,
     )
-elif (
-    isinstance(sys.modules["litellm"], types.SimpleNamespace)
-    and not hasattr(sys.modules["litellm"], "completion_cost")
+elif isinstance(sys.modules["litellm"], types.SimpleNamespace) and not hasattr(
+    sys.modules["litellm"], "completion_cost"
 ):
     # Only ever patch our own test stub — never the real litellm module.
     sys.modules["litellm"].completion_cost = lambda **k: None
@@ -328,7 +327,9 @@ def test_litellm_calculate_cost_rejects_nan(settings, patch_completion_cost):
     == NaN). Must be treated as invalid and report 0.0."""
     patch_completion_cost(lambda **_: None)
     model = _mk_litellm_model(settings)
-    response = _mk_response(prompt_tokens=10, completion_tokens=5, cost=float("nan"))
+    response = _mk_response(
+        prompt_tokens=10, completion_tokens=5, cost=float("nan")
+    )
     cost = model.calculate_cost(response)
 
     assert cost == 0.0
