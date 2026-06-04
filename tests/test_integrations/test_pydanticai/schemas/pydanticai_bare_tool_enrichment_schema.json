@@ -1,35 +1,35 @@
 {
-  "uuid": "3fca53b40379cfcbad2ad80c92aa9ada",
+  "uuid": "2abcef47fd29a4002d994d8f6f30af32",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "c123377e0ee78cc0",
+      "uuid": "6ddcc82eec34d8ba",
       "name": "enrichment_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T07:12:02.424Z",
-      "endTime": "2026-05-05T07:12:05.334Z",
+      "startTime": "2026-06-01T16:36:42.528Z",
+      "endTime": "2026-06-01T16:36:46.185Z",
       "input": [
         {
           "role": "user",
           "content": "Use the lookup tool with key 'foobar' and report the result."
         }
       ],
-      "output": "The result for the key 'foobar' is: **resolved-value-for-foobar**.",
+      "output": "The result for the key 'foobar' is: resolved-value-for-foobar.",
+      "integration": "PydanticAI",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "PydanticAI"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "cb410be370ea9a70",
+      "uuid": "21e229a1fb2b494f",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "c123377e0ee78cc0",
-      "startTime": "2026-05-05T07:12:03.997Z",
-      "endTime": "2026-05-05T07:12:05.332Z",
+      "parentUuid": "6ddcc82eec34d8ba",
+      "startTime": "2026-06-01T16:36:44.384Z",
+      "endTime": "2026-06-01T16:36:46.184Z",
       "input": [
         {
           "role": "system",
@@ -43,7 +43,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_tMeJcIvY4WL8Epq5aVwFhTJj",
+            "id": "call_BNGuB0lfAODEPPEPzGpaEOY9",
             "name": "lookup",
             "arguments": "{\"key\":\"foobar\"}"
           }
@@ -52,7 +52,7 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_tMeJcIvY4WL8Epq5aVwFhTJj",
+            "id": "call_BNGuB0lfAODEPPEPzGpaEOY9",
             "name": "lookup",
             "result": "resolved-value-for-foobar"
           }
@@ -83,12 +83,14 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               }
             ],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -103,23 +105,23 @@
       "output": [
         {
           "role": "assistant",
-          "content": "The result for the key 'foobar' is: **resolved-value-for-foobar**."
+          "content": "The result for the key 'foobar' is: resolved-value-for-foobar."
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 118.0,
-      "outputTokenCount": 19.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 118.0,
+      "outputTokenCount": 17.0
     },
     {
-      "uuid": "3102fbd78136b39d",
+      "uuid": "5c98db4c273b8f23",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "c123377e0ee78cc0",
-      "startTime": "2026-05-05T07:12:02.425Z",
-      "endTime": "2026-05-05T07:12:03.992Z",
+      "parentUuid": "6ddcc82eec34d8ba",
+      "startTime": "2026-06-01T16:36:42.529Z",
+      "endTime": "2026-06-01T16:36:44.382Z",
       "input": [
         {
           "role": "system",
@@ -155,12 +157,14 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               }
             ],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -177,29 +181,29 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_tMeJcIvY4WL8Epq5aVwFhTJj",
+            "id": "call_BNGuB0lfAODEPPEPzGpaEOY9",
             "name": "lookup",
             "arguments": "{\"key\":\"foobar\"}"
           }
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 93.0,
-      "outputTokenCount": 13.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 93.0,
+      "outputTokenCount": 13.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "c8bec75570617882",
+      "uuid": "88fa490bb878d4c9",
       "name": "lookup",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "c123377e0ee78cc0",
-      "startTime": "2026-05-05T07:12:03.995Z",
-      "endTime": "2026-05-05T07:12:03.996Z",
+      "parentUuid": "6ddcc82eec34d8ba",
+      "startTime": "2026-06-01T16:36:44.383Z",
+      "endTime": "2026-06-01T16:36:44.383Z",
       "metadata": {
         "tool_called": true,
         "lookup_key": "foobar"
@@ -211,8 +215,8 @@
       "integration": "PydanticAI"
     }
   ],
-  "startTime": "2026-05-05T07:12:02.424Z",
-  "endTime": "2026-05-05T07:12:05.334Z",
+  "startTime": "2026-06-01T16:36:42.528Z",
+  "endTime": "2026-06-01T16:36:46.185Z",
   "name": "pydanticai-bare-enrichment-test",
   "metadata": {
     "test_type": "bare_tool_enrichment",
@@ -232,6 +236,6 @@
       "content": "Use the lookup tool with key 'foobar' and report the result."
     }
   ],
-  "output": "The result for the key 'foobar' is: **resolved-value-for-foobar**.",
+  "output": "The result for the key 'foobar' is: resolved-value-for-foobar.",
   "status": "SUCCESS"
 }

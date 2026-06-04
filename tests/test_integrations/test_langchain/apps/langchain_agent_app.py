@@ -57,7 +57,7 @@ complex_tools = [search_web, calculator, get_current_time]
 complex_tools_by_name = {t.name: t for t in complex_tools}
 
 # LLM with tool bindings
-llm = ChatOpenAI(model="gpt-5-mini", temperature=0, seed=42)
+llm = ChatOpenAI(model="gpt-5.4-mini", temperature=0, seed=42)
 llm_simple = llm.bind_tools(simple_tools)
 llm_multi_step = llm.bind_tools(multi_step_tools)
 llm_complex = llm.bind_tools(complex_tools)

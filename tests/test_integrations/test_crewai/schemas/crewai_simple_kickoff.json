@@ -1,72 +1,74 @@
 {
-  "uuid": "22ff82ad-a16c-44a4-b7e8-f739c266ec2a",
+  "uuid": "1fe2d4f2-9ecc-4dba-a6d0-3f9e4386ef4d",
   "baseSpans": [
     {
-      "uuid": "655f005a-eeba-4f2b-a9b3-8b97b1f54703",
+      "uuid": "21859439-6f31-4557-9122-f453665ee014",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-15T10:21:57.368Z",
-      "endTime": "2026-02-15T10:21:58.243Z",
+      "startTime": "2026-06-01T17:24:05.904Z",
+      "endTime": "2026-06-01T17:24:09.024Z",
       "input": {
         "input": "Hello World"
       },
-      "output": "Hello World! How are you today?",
-      "metricCollection": "metric_collection_1",
-      "integration": "CrewAI"
+      "output": "Hello World! \ud83d\ude0a",
+      "integration": "CrewAI",
+      "metricCollection": "metric_collection_1"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "a8b7e7d7-0117-4ebc-a602-3a9d6bd293b0",
+      "uuid": "a4c062b0-1dd8-4875-8521-d50623427e2e",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "655f005a-eeba-4f2b-a9b3-8b97b1f54703",
-      "startTime": "2026-02-15T10:21:57.375Z",
-      "endTime": "2026-02-15T10:21:58.236Z",
+      "parentUuid": "21859439-6f31-4557-9122-f453665ee014",
+      "startTime": "2026-06-01T17:24:05.913Z",
+      "endTime": "2026-06-01T17:24:09.016Z",
       "input": "Reply to the user: Hello World\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
-      "output": "Hello World! How are you today?",
+      "output": "Hello World! \ud83d\ude0a",
+      "integration": "CrewAI",
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "metric_collection_1",
-      "integration": "CrewAI"
+      "metricCollection": "metric_collection_1"
     }
   ],
   "llmSpans": [
     {
-      "uuid": "fc165bad-3b13-49db-a73a-9a413c5e4582",
+      "uuid": "d43e0366-e9fc-4d57-adff-2f2021e0c05c",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "a8b7e7d7-0117-4ebc-a602-3a9d6bd293b0",
-      "startTime": "2026-02-15T10:21:57.376Z",
-      "endTime": "2026-02-15T10:21:58.233Z",
+      "parentUuid": "a4c062b0-1dd8-4875-8521-d50623427e2e",
+      "startTime": "2026-06-01T17:24:05.917Z",
+      "endTime": "2026-06-01T17:24:09.006Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Simple Greeter _sync. You are a friendly bot.\nYour personal goal is: Reply to greetings"
+          "content": "You are Simple Greeter _sync. You are a friendly bot.\nYour personal goal is: Reply to greetings",
+          "cache_breakpoint": true
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Reply to the user: Hello World\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
+          "content": "\nCurrent Task: Reply to the user: Hello World\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:",
+          "cache_breakpoint": true
         }
       ],
-      "output": "Hello World! How are you today?",
-      "model": "gpt-4o-mini",
-      "metricCollection": "metric_collection_1",
+      "output": "Hello World! \ud83d\ude0a",
       "integration": "CrewAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "metricCollection": "metric_collection_1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-15T10:21:57.368Z",
-  "endTime": "2026-02-15T10:21:58.243Z",
+  "startTime": "2026-06-01T17:24:05.904Z",
+  "endTime": "2026-06-01T17:24:09.024Z",
   "environment": "development",
   "input": {
     "input": "Hello World"
   },
-  "output": "Hello World! How are you today?",
+  "output": "Hello World! \ud83d\ude0a",
   "status": "SUCCESS"
 }

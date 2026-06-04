@@ -1,36 +1,36 @@
 {
-  "uuid": "f1d658fc6833425f9c7fd0177fc1f876",
+  "uuid": "ea8da60991ed99754a453b9cd9e8b64b",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "59b32f364dc03906",
+      "uuid": "8e67fb7fdad8d19c",
       "name": "evals_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T06:45:37.208Z",
-      "endTime": "2026-05-05T06:45:42.879Z",
+      "startTime": "2026-06-01T16:36:36.995Z",
+      "endTime": "2026-06-01T16:36:39.059Z",
       "input": [
         {
           "role": "user",
           "content": "Use the special_tool to process 'Sync Data'"
         }
       ],
-      "output": "The query \"Sync Data\" has been processed successfully.",
+      "output": "The query \"Sync Data\" has been processed.",
+      "integration": "PydanticAI",
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "agent_metrics_v1",
-      "integration": "PydanticAI"
+      "metricCollection": "agent_metrics_v1"
     }
   ],
   "llmSpans": [
     {
-      "uuid": "6f79095aa1f88da9",
+      "uuid": "ac551573e2cb3a46",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "59b32f364dc03906",
-      "startTime": "2026-05-05T06:45:41.640Z",
-      "endTime": "2026-05-05T06:45:42.876Z",
+      "parentUuid": "8e67fb7fdad8d19c",
+      "startTime": "2026-06-01T16:36:38.293Z",
+      "endTime": "2026-06-01T16:36:39.059Z",
       "input": [
         {
           "role": "system",
@@ -44,7 +44,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_j33exAhHxnhQThUe1rjtIUJS",
+            "id": "call_mGP0znNrH6k7P8omd8FN3E9g",
             "name": "special_tool",
             "arguments": "{\"query\":\"Sync Data\"}"
           }
@@ -53,7 +53,7 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_j33exAhHxnhQThUe1rjtIUJS",
+            "id": "call_mGP0znNrH6k7P8omd8FN3E9g",
             "name": "special_tool",
             "result": "Processed: Sync Data"
           }
@@ -84,12 +84,14 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               }
             ],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -104,23 +106,23 @@
       "output": [
         {
           "role": "assistant",
-          "content": "The query \"Sync Data\" has been processed successfully."
+          "content": "The query \"Sync Data\" has been processed."
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 90.0,
-      "outputTokenCount": 12.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 90.0,
+      "outputTokenCount": 11.0
     },
     {
-      "uuid": "287314d5aaf1820a",
+      "uuid": "48c404fe398d019f",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "59b32f364dc03906",
-      "startTime": "2026-05-05T06:45:37.209Z",
-      "endTime": "2026-05-05T06:45:41.635Z",
+      "parentUuid": "8e67fb7fdad8d19c",
+      "startTime": "2026-06-01T16:36:36.997Z",
+      "endTime": "2026-06-01T16:36:38.288Z",
       "input": [
         {
           "role": "system",
@@ -156,12 +158,14 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               }
             ],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -178,29 +182,29 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_j33exAhHxnhQThUe1rjtIUJS",
+            "id": "call_mGP0znNrH6k7P8omd8FN3E9g",
             "name": "special_tool",
             "arguments": "{\"query\":\"Sync Data\"}"
           }
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 63.0,
-      "outputTokenCount": 15.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 63.0,
+      "outputTokenCount": 15.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "59edf01d82f4f4b2",
+      "uuid": "2c073e85368feab3",
       "name": "special_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "59b32f364dc03906",
-      "startTime": "2026-05-05T06:45:41.637Z",
-      "endTime": "2026-05-05T06:45:41.638Z",
+      "parentUuid": "8e67fb7fdad8d19c",
+      "startTime": "2026-06-01T16:36:38.290Z",
+      "endTime": "2026-06-01T16:36:38.291Z",
       "input": {
         "query": "Sync Data"
       },
@@ -208,8 +212,8 @@
       "integration": "PydanticAI"
     }
   ],
-  "startTime": "2026-05-05T06:45:37.208Z",
-  "endTime": "2026-05-05T06:45:42.879Z",
+  "startTime": "2026-06-01T16:36:36.995Z",
+  "endTime": "2026-06-01T16:36:39.059Z",
   "name": "pydanticai-full-features-sync",
   "metadata": {
     "env": "testing",
@@ -229,7 +233,7 @@
       "content": "Use the special_tool to process 'Sync Data'"
     }
   ],
-  "output": "The query \"Sync Data\" has been processed successfully.",
+  "output": "The query \"Sync Data\" has been processed.",
   "status": "SUCCESS",
   "metricCollection": "trace_metrics_override_v1"
 }

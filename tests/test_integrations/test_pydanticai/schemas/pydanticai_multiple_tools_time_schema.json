@@ -1,14 +1,14 @@
 {
-  "uuid": "842c3aedd574dccd88c474b5c90b89c6",
+  "uuid": "2499e95b80ee52083b04deb5695b5bd8",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "93df93b69d77884c",
+      "uuid": "ffba9fa9e11b74ac",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T06:45:28.878Z",
-      "endTime": "2026-05-05T06:45:31.438Z",
+      "startTime": "2026-06-01T16:36:31.754Z",
+      "endTime": "2026-06-01T16:36:33.940Z",
       "input": [
         {
           "role": "user",
@@ -16,20 +16,20 @@
         }
       ],
       "output": "The current time in London is 7:00 AM GMT.",
+      "integration": "PydanticAI",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "PydanticAI"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "2be4991fe805d022",
+      "uuid": "22bdd3403b06aabe",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "93df93b69d77884c",
-      "startTime": "2026-05-05T06:45:30.465Z",
-      "endTime": "2026-05-05T06:45:31.436Z",
+      "parentUuid": "ffba9fa9e11b74ac",
+      "startTime": "2026-06-01T16:36:32.833Z",
+      "endTime": "2026-06-01T16:36:33.939Z",
       "input": [
         {
           "role": "system",
@@ -43,7 +43,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_iYh0FYhTG2LMuYm42ZkDzAoN",
+            "id": "call_K1PefOjslkFyiA1r3ErrSr03",
             "name": "get_time",
             "arguments": "{\"city\":\"London\"}"
           }
@@ -52,7 +52,7 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_iYh0FYhTG2LMuYm42ZkDzAoN",
+            "id": "call_K1PefOjslkFyiA1r3ErrSr03",
             "name": "get_time",
             "result": "7:00 AM GMT"
           }
@@ -84,7 +84,9 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               },
@@ -111,12 +113,14 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               }
             ],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -134,20 +138,20 @@
           "content": "The current time in London is 7:00 AM GMT."
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 206.0,
-      "outputTokenCount": 14.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 206.0,
+      "outputTokenCount": 14.0
     },
     {
-      "uuid": "b4362f63e80a5a2a",
+      "uuid": "43617937f0f6af73",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "93df93b69d77884c",
-      "startTime": "2026-05-05T06:45:28.880Z",
-      "endTime": "2026-05-05T06:45:30.460Z",
+      "parentUuid": "ffba9fa9e11b74ac",
+      "startTime": "2026-06-01T16:36:31.756Z",
+      "endTime": "2026-06-01T16:36:32.829Z",
       "input": [
         {
           "role": "system",
@@ -184,7 +188,9 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               },
@@ -211,12 +217,14 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               }
             ],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -233,29 +241,29 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_iYh0FYhTG2LMuYm42ZkDzAoN",
+            "id": "call_K1PefOjslkFyiA1r3ErrSr03",
             "name": "get_time",
             "arguments": "{\"city\":\"London\"}"
           }
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 179.0,
-      "outputTokenCount": 14.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 179.0,
+      "outputTokenCount": 14.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "e4b3bbe917239895",
+      "uuid": "c2e3bfd592acafbb",
       "name": "get_time",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "93df93b69d77884c",
-      "startTime": "2026-05-05T06:45:30.462Z",
-      "endTime": "2026-05-05T06:45:30.463Z",
+      "parentUuid": "ffba9fa9e11b74ac",
+      "startTime": "2026-06-01T16:36:32.831Z",
+      "endTime": "2026-06-01T16:36:32.832Z",
       "input": {
         "city": "London"
       },
@@ -263,8 +271,8 @@
       "integration": "PydanticAI"
     }
   ],
-  "startTime": "2026-05-05T06:45:28.878Z",
-  "endTime": "2026-05-05T06:45:31.438Z",
+  "startTime": "2026-06-01T16:36:31.754Z",
+  "endTime": "2026-06-01T16:36:33.940Z",
   "name": "pydanticai-multiple-tools-time",
   "metadata": {
     "test_type": "multiple_tools_time"

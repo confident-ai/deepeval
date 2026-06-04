@@ -1,35 +1,35 @@
 {
-  "uuid": "44dd8eaff51a9dc6e04cff147e78238c",
+  "uuid": "66c805c213474849d77666236b140d11",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "1f3c08da3f019424",
+      "uuid": "0e03438bf2d6dfbc",
       "name": "streaming_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T06:46:04.494Z",
-      "endTime": "2026-05-05T06:46:05.881Z",
+      "startTime": "2026-06-01T16:36:07.735Z",
+      "endTime": "2026-06-01T16:36:08.602Z",
       "input": [
         {
           "role": "user",
           "content": "Say hello in exactly three words."
         }
       ],
-      "output": "Hello, how are you?",
+      "output": "Hello, how are?",
+      "integration": "PydanticAI",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "PydanticAI"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "f2f3e8cded44aebd",
+      "uuid": "bddeb8e8fb4b38de",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "1f3c08da3f019424",
-      "startTime": "2026-05-05T06:46:04.495Z",
-      "endTime": "2026-05-05T06:46:05.880Z",
+      "parentUuid": "0e03438bf2d6dfbc",
+      "startTime": "2026-06-01T16:36:07.737Z",
+      "endTime": "2026-06-01T16:36:08.601Z",
       "input": [
         {
           "role": "system",
@@ -43,7 +43,7 @@
           "role": "Model Request Parameters",
           "content": {
             "function_tools": [],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -58,20 +58,20 @@
       "output": [
         {
           "role": "assistant",
-          "content": "Hello, how are you?"
+          "content": "Hello, how are?"
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 28.0,
-      "outputTokenCount": 6.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 28.0,
+      "outputTokenCount": 5.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-05-05T06:46:04.494Z",
-  "endTime": "2026-05-05T06:46:05.881Z",
+  "startTime": "2026-06-01T16:36:07.735Z",
+  "endTime": "2026-06-01T16:36:08.602Z",
   "name": "pydanticai-streaming-test",
   "metadata": {
     "test_type": "streaming"
@@ -89,6 +89,6 @@
       "content": "Say hello in exactly three words."
     }
   ],
-  "output": "Hello, how are you?",
+  "output": "Hello, how are?",
   "status": "SUCCESS"
 }

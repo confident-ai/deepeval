@@ -50,7 +50,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2V1eX6UwCoPpftomQByvANMmZjc",
               "service_tier": "default",
@@ -122,7 +122,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2V1eX6UwCoPpftomQByvANMmZjc",
               "service_tier": "default",
@@ -190,7 +190,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2V1eX6UwCoPpftomQByvANMmZjc",
               "service_tier": "default",
@@ -250,7 +250,7 @@
         "content": "I'm doing well, thanks — how are you? What can I help you with today?",
         "tool_calls": []
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 161.0,
       "outputTokenCount": 27.0,
       "integration": "LangChain",
@@ -310,7 +310,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2V1eX6UwCoPpftomQByvANMmZjc",
           "service_tier": "default",

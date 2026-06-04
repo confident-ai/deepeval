@@ -48,7 +48,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2MhhenQBlDvTMcWHrz6FVHzy6M7",
               "service_tier": "default",
@@ -113,7 +113,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2MivewPigKcAn7Yrya28DGRYXKf",
               "service_tier": "default",
@@ -193,7 +193,7 @@
         "content": "AAPL current price: $178.50.",
         "tool_calls": []
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 181.0,
       "outputTokenCount": 83.0,
       "integration": "LangChain",
@@ -230,7 +230,7 @@
           }
         ]
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 146.0,
       "outputTokenCount": 25.0,
       "integration": "LangChain",
@@ -312,7 +312,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2MhhenQBlDvTMcWHrz6FVHzy6M7",
           "service_tier": "default",
@@ -377,7 +377,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2MivewPigKcAn7Yrya28DGRYXKf",
           "service_tier": "default",

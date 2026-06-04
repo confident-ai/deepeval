@@ -28,7 +28,7 @@ tools = [get_weather]
 tools_by_name = {t.name: t for t in tools}
 
 # LLM with tool binding
-llm = ChatOpenAI(model="gpt-5-mini", temperature=0, seed=42)
+llm = ChatOpenAI(model="gpt-5.4-mini", temperature=0, seed=42)
 llm_with_tools = llm.bind_tools(tools)
 
 

@@ -279,6 +279,29 @@ class CallbackHandler(BaseCallbackHandler):
             if span_token is not None:
                 current_span_context.reset(span_token)
 
+    def _restore_observe_parent(self, parent_run_id: Optional[UUID]) -> None:
+        """Re-point the span context at the @observe parent once the outermost
+        LangChain run finishes.
+
+        During a run, ``enter_current_context``/``exit_current_context`` use
+        ``current_span_context`` as a working span stack (the residual value is
+        load-bearing for ``@tool`` metric attachment and trace finalization). But
+        once the root run ends, ``_ctx``'s token reset can leave the context
+        pointing at an internal LangChain span. When this handler wraps an
+        ``@observe``'d function, control is about to return to user code (e.g. a
+        following ``update_current_span()``), which must target the ``@observe``
+        span — not a leftover internal one. Restore it here, at that boundary.
+
+        No-op for standalone usage (no ``@observe`` parent was captured) and when
+        the captured parent is no longer active, so it cannot disturb the
+        intra-run stack semantics that the integration relies on.
+        """
+        if parent_run_id is not None:
+            return
+        parent = self._parent_span
+        if parent is not None and trace_manager.get_span_by_uuid(parent.uuid):
+            current_span_context.set(parent)
+
     def on_chain_start(
         self,
         serialized: dict[str, Any],
@@ -340,6 +363,8 @@ class CallbackHandler(BaseCallbackHandler):
                     if trace:
                         trace.output = output
                 exit_current_context(uuid_str=uuid_str)
+        # Outermost run done: hand the span context back to the @observe frame.
+        self._restore_observe_parent(parent_run_id)
 
     def on_chat_model_start(
         self,
@@ -551,6 +576,7 @@ class CallbackHandler(BaseCallbackHandler):
             )
 
             exit_current_context(uuid_str=uuid_str)
+        self._restore_observe_parent(parent_run_id)
 
     def on_chat_model_end(
         self,
@@ -635,6 +661,7 @@ class CallbackHandler(BaseCallbackHandler):
             )
 
             exit_current_context(uuid_str=uuid_str)
+        self._restore_observe_parent(parent_run_id)
 
     def on_chat_model_error(
         self,
@@ -669,6 +696,7 @@ class CallbackHandler(BaseCallbackHandler):
             llm_span.status = TraceSpanStatus.ERRORED
             llm_span.error = str(error)
             exit_current_context(uuid_str=uuid_str)
+        self._restore_observe_parent(parent_run_id)
 
     def on_llm_error(
         self,
@@ -698,6 +726,7 @@ class CallbackHandler(BaseCallbackHandler):
             llm_span.status = TraceSpanStatus.ERRORED
             llm_span.error = str(error)
             exit_current_context(uuid_str=uuid_str)
+        self._restore_observe_parent(parent_run_id)
 
     def on_llm_new_token(
         self,
