@@ -105,8 +105,8 @@ class EvaluationDataset:
 
         self._goldens = []
         self._conversational_goldens = []
-        for golden in goldens:
-            golden._dataset_rank = len(goldens)
+        for index, golden in enumerate(goldens):
+            golden._dataset_rank = index
             if self._multi_turn:
                 self._add_conversational_golden(golden)
             else:
@@ -139,7 +139,7 @@ class EvaluationDataset:
         self._goldens = []
         self._conversational_goldens = []
         try:
-            for golden in goldens:
+            for index, golden in enumerate(goldens):
                 if not isinstance(golden, Golden) and not isinstance(
                     golden, ConversationalGolden
                 ):
@@ -149,7 +149,7 @@ class EvaluationDataset:
 
                 golden._dataset_alias = self._alias
                 golden._dataset_id = self._id
-                golden._dataset_rank = len(goldens)
+                golden._dataset_rank = index
                 if self._multi_turn:
                     self._add_conversational_golden(golden)
                 else:
