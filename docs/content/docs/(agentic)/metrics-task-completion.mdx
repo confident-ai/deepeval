@@ -70,3 +70,67 @@ The `TaskCompletionMetric` score is calculated according to the following equati
 
 - **Task** and **Outcome** are extracted from the trace (or test case for end-to-end) using an LLM.
 - The **Alignment Score** measures how well the outcome aligns with the extracted (or user-provided) task, as judged by an LLM.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Does Task Completion need me to define the task, or is it inferred?",
+      answer: (
+        <>
+          Inferred by default. <code>task</code> defaults to <code>None</code>{" "}
+          and is extracted from your agent's trace. Set it explicitly only to
+          pin the agent against a specific goal.
+        </>
+      ),
+    },
+    {
+      question: "Why does Task Completion require tracing instead of a plain `LLMTestCase`?",
+      answer: (
+        <>
+          It scores the <strong>outcome</strong> of the whole run, deriving both
+          task and outcome from the full trace. So you must{" "}
+          <a href="/docs/evaluation-llm-tracing">set up tracing</a> and attach{" "}
+          <code>TaskCompletionMetric()</code> to an <code>@observe</code> run.
+        </>
+      ),
+    },
+    {
+      question: "Task Completion vs Plan Adherence — which one should I use?",
+      answer: (
+        <>
+          Task Completion for the <strong>outcome</strong> (did it accomplish
+          the task);{" "}
+          <a href="/docs/metrics-plan-adherence">Plan Adherence</a> for the{" "}
+          <strong>process</strong> (did it follow its plan). An agent can do one
+          without the other.
+        </>
+      ),
+    },
+    {
+      question: "Is Task Completion deterministic or LLM-judged?",
+      answer: (
+        <>
+          LLM-judged and referenceless. The score is the{" "}
+          <code>AlignmentScore</code> between the extracted{" "}
+          <strong>Task</strong> and <strong>Outcome</strong> — no expected
+          outputs to label. Set <code>include_reason=True</code> for the judge's
+          explanation.
+        </>
+      ),
+    },
+    {
+      question: "Can I use Task Completion with LangChain, OpenAI, or another framework?",
+      answer: (
+        <>
+          Yes. <code>deepeval</code> auto-traces agents built with{" "}
+          <a href="/integrations/frameworks/langchain">LangChain</a>,{" "}
+          <a href="/integrations/frameworks/openai">OpenAI</a>, LlamaIndex,
+          CrewAI, and more — see all{" "}
+          <a href="/integrations">framework integrations</a>.
+        </>
+      ),
+    },
+  ]}
+/>

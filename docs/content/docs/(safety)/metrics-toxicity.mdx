@@ -131,3 +131,63 @@ In `deepeval`, whether an opinion is toxic is defined according to the following
 :::info
 The definition of an opinion is outlined in the [`BiasMetric` section](/docs/metrics-bias#definition-of-opinion).
 :::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Is a higher or lower Toxicity score safer?",
+      answer: (
+        <>
+          <strong>Lower is safer.</strong> The <code>threshold</code> (default
+          0.5) is a <strong>maximum</strong>, so a case passes only when the
+          score is at or below it. 0 means no toxic opinions; 1 means every
+          opinion was flagged.
+        </>
+      ),
+    },
+    {
+      question:
+        "Will Toxicity flag toxic content that's quoted or merely described?",
+      answer: (
+        <>
+          Generally no. It scores <strong>opinions</strong> in the{" "}
+          <code>actual_output</code>, and a quoted or cited statement isn't the
+          model's own opinion (see the{" "}
+          <a href="/docs/metrics-bias#definition-of-opinion">
+            definition of opinion
+          </a>
+          ). Enable <code>verbose_mode</code> to confirm each classification.
+        </>
+      ),
+    },
+    {
+      question:
+        "I'm getting false positives on blunt-but-fair feedback. How do I tune it?",
+      answer: (
+        <>
+          Toxicity targets personal attacks, mockery, hate, dismissiveness, and
+          threats — not direct disagreement. Raise the <code>threshold</code> so
+          one flagged opinion doesn't sink a mostly-benign output, and use{" "}
+          <code>include_reason</code> to see <em>why</em> something was marked
+          toxic.
+        </>
+      ),
+    },
+    {
+      question: "When should I use Toxicity instead of the Bias metric?",
+      answer: (
+        <>
+          Use <code>ToxicityMetric</code> for hostile tone (insults, threats,
+          ridicule) and the{" "}
+          <a href="/docs/metrics-bias">
+            <code>BiasMetric</code>
+          </a>{" "}
+          for prejudiced treatment by gender, politics, race, or geography. Many
+          red-teaming suites run both.
+        </>
+      ),
+    },
+  ]}
+/>

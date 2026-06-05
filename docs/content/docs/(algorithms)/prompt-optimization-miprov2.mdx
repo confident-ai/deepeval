@@ -254,3 +254,84 @@ MIPROv2 is particularly effective when:
 Choose **MIPROv2** when few-shot demonstrations are important for your task, or when you have a large candidate space to explore efficiently.
 
 Choose **GEPA** when you need to maintain diversity across different problem types, or when the task doesn't benefit from few-shot examples.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is MIPROv2 and when should I use it?",
+      answer: (
+        <>
+          <code>MIPROv2</code> jointly optimizes the instruction and the few-shot
+          demonstrations of a prompt, using Bayesian Optimization to search the
+          space of (instruction, demo set) combinations. Use it when few-shot
+          examples matter for your task or when you have a large candidate space
+          you want to explore efficiently.
+        </>
+      ),
+    },
+    {
+      question: "What do I need to install to run MIPROv2?",
+      answer: (
+        <>
+          MIPROv2 requires the <code>optuna</code> package for Bayesian
+          Optimization. Install it with <code>pip install optuna</code> before
+          constructing a <code>MIPROV2</code> instance.
+        </>
+      ),
+    },
+    {
+      question: "How is MIPROv2 different from GEPA?",
+      answer: (
+        <>
+          Unlike <a href="/docs/prompt-optimization-gepa">GEPA</a>, which evolves
+          prompts iteratively through mutations and does not touch demos,{" "}
+          <code>MIPROV2</code> generates all instruction candidates upfront in a
+          proposal phase and then searches (instruction, demonstration)
+          combinations with TPE. MIPROv2 jointly optimizes few-shot demos, while
+          GEPA focuses on instruction diversity via a Pareto frontier.
+        </>
+      ),
+    },
+    {
+      question: "What's the difference between bootstrapped and labeled demonstrations?",
+      answer: (
+        <>
+          Bootstrapped demos are model-generated outputs that passed all your
+          metrics, capped by <code>max_bootstrapped_demonstrations</code>{" "}
+          (default <code>4</code>). Labeled demos come from the{" "}
+          <code>expected_output</code> of your{" "}
+          <a href="/docs/evaluation-datasets#what-are-goldens">goldens</a>, capped
+          by <code>max_labeled_demonstrations</code> (default <code>4</code>).
+          MIPROv2 mixes both into <code>num_demonstration_sets</code> sets and
+          always includes a 0-shot option.
+        </>
+      ),
+    },
+    {
+      question: "How do I control the cost of a MIPROv2 run?",
+      answer: (
+        <>
+          The main levers are <code>num_trials</code> (default <code>30</code>),
+          which sets the optimization budget, <code>minibatch_size</code>{" "}
+          (default <code>25</code>), which trades reliability for cost per trial,
+          and <code>minibatch_full_eval_steps</code> (default <code>10</code>),
+          which controls how often a full-dataset evaluation runs. Lower these to
+          reduce cost at the expense of signal.
+        </>
+      ),
+    },
+    {
+      question: "How do I make MIPROv2 results reproducible?",
+      answer: (
+        <>
+          Pass <code>random_state</code> as either an <code>int</code> seed or a{" "}
+          <code>random.Random</code> instance. It affects candidate generation,
+          demo bootstrapping, minibatch sampling, and TPE sampling, so a fixed
+          seed gives identical results.
+        </>
+      ),
+    },
+  ]}
+/>

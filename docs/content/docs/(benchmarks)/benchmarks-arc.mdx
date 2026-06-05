@@ -44,3 +44,81 @@ print(benchmark.overall_score)
 ```
 
 The `overall_score` ranges from 0 to 1, signifying the fraction of accurate predictions across tasks. Both modes' performances are measured using an **exact match** scorer, focusing on the quantity of correct answers.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What does the `ARC` benchmark measure?",
+      answer: (
+        <>
+          ARC (AI2 Reasoning Challenge) benchmarks an LLM's{" "}
+          <strong>reasoning abilities</strong> using 8,000 multiple-choice
+          questions drawn from science exams for grades 3 to 9.
+        </>
+      ),
+    },
+    {
+      question: "What are the EASY and CHALLENGE modes?",
+      answer: (
+        <>
+          The <code>mode</code> argument takes an <code>ARCMode</code> enum and
+          defaults to <code>ARCMode.EASY</code>. Both <code>EASY</code> and{" "}
+          <code>CHALLENGE</code> consist of multiple-choice questions, but{" "}
+          <code>CHALLENGE</code> questions are more difficult and require more
+          advanced reasoning.
+        </>
+      ),
+    },
+    {
+      question: "How is `ARC` scored?",
+      answer: (
+        <>
+          The <code>overall_score</code> ranges from 0 to 1 and represents the
+          fraction of accurate predictions across tasks. Both modes are measured
+          using an <strong>exact match</strong> scorer focused on the quantity of
+          correct answers. See the{" "}
+          <a href="/docs/benchmarks-introduction">benchmarks introduction</a> for
+          how scoring works across benchmarks.
+        </>
+      ),
+    },
+    {
+      question: "What is the default `n_shots` for `ARC`?",
+      answer: (
+        <>
+          The <code>n_shots</code> argument is set to <code>5</code> by default
+          and <strong>cannot exceed 5</strong>. It controls the number of
+          examples used for few-shot learning.
+        </>
+      ),
+    },
+    {
+      question: "How many problems does `ARC` evaluate by default?",
+      answer: (
+        <>
+          The <code>n_problems</code> argument defaults to all problems available
+          in each benchmark mode. You can lower it, for example{" "}
+          <code>n_problems=100</code>, to run a faster evaluation.
+        </>
+      ),
+    },
+    {
+      question: "How do I run `ARC` on a custom LLM?",
+      answer: (
+        <>
+          Wrap your model in <code>DeepEvalBaseLLM</code>, create a benchmark
+          with{" "}
+          <code>ARC(n_problems=100, n_shots=3, mode=ARCMode.EASY)</code>, and call{" "}
+          <code>benchmark.evaluate(model=mistral_7b)</code> before reading{" "}
+          <code>benchmark.overall_score</code>. See the{" "}
+          <a href="/docs/benchmarks-introduction#benchmarking-your-llm">
+            benchmarking guide
+          </a>{" "}
+          for using any custom LLM.
+        </>
+      ),
+    },
+  ]}
+/>

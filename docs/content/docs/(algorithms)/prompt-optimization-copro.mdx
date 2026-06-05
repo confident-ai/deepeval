@@ -247,3 +247,85 @@ Choose **SIMBA** when your model is inconsistent across runs and you want the op
 Choose **GEPA** when your task spans diverse problem types and you need to maintain a diverse pool of prompt strategies without converging prematurely on a single approach.
 
 Choose **MIPROv2** when the joint combination of instruction and few-shot demonstrations is the main lever and you want systematic Bayesian search over that space.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is COPRO and when should I use it?",
+      answer: (
+        <>
+          <code>COPRO</code> (Co-operative Prompt Optimizer) uses coordinate
+          ascent: at each depth step it evaluates a batch of candidates, commits
+          the best as the new baseline, and uses the scored history plus metric
+          feedback to generate a more targeted next batch. Use it for fast,
+          instruction-focused optimization with reliable, monotonic improvement
+          in a small number of steps.
+        </>
+      ),
+    },
+    {
+      question: "What do `depth` and `breadth` control in COPRO?",
+      answer: (
+        <>
+          <code>depth</code> (default <code>4</code>) is the number of coordinate
+          ascent steps; each step commits the best candidate as the baseline for
+          the next. <code>breadth</code> (default <code>7</code>) is how many
+          candidates are generated and evaluated at each step. Higher{" "}
+          <code>breadth</code> explores more of the prompt space per step but
+          costs more.
+        </>
+      ),
+    },
+    {
+      question: "Does COPRO optimize few-shot demonstrations?",
+      answer: (
+        <>
+          No. COPRO focuses entirely on refining the instruction text and does
+          not inject demos. If few-shot demonstrations are an important lever for
+          your task, use{" "}
+          <a href="/docs/prompt-optimization-simba">SIMBA</a> or{" "}
+          <a href="/docs/prompt-optimization-miprov2">MIPROv2</a>, both of which
+          optimize demos.
+        </>
+      ),
+    },
+    {
+      question: "How does COPRO use metric feedback to improve candidates?",
+      answer: (
+        <>
+          At each depth step COPRO captures both a score and a diagnostic{" "}
+          metric feedback string per candidate, built from per-metric reasons on
+          failing examples. This ranked <code>history_log</code> is fed back to
+          the proposer via <code>propose_from_history</code>, so the next batch
+          explicitly targets known failure modes while preserving the traits of
+          high-scoring attempts.
+        </>
+      ),
+    },
+    {
+      question: "How often does COPRO run full-dataset validation?",
+      answer: (
+        <>
+          At every depth step. COPRO runs <code>score_pareto</code> on the best
+          minibatch candidate of each step against all goldens, which makes its
+          validation more thorough than SIMBA or MIPROv2 at the cost of more
+          evaluations. This is what makes each committed baseline genuinely
+          validated rather than minibatch-estimated.
+        </>
+      ),
+    },
+    {
+      question: "How do I make COPRO runs reproducible?",
+      answer: (
+        <>
+          Pass <code>random_state</code> as either an <code>int</code> seed or a{" "}
+          <code>random.Random</code> instance. It affects minibatch sampling and
+          candidate deduplication; by default it uses a random value, so pin it
+          for repeatable runs.
+        </>
+      ),
+    },
+  ]}
+/>

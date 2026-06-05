@@ -1,3 +1,4 @@
+import os
 from typing import List
 
 import pytest
@@ -19,7 +20,14 @@ from tests.test_core.test_simulator.helpers import (
     sync_callback,
 )
 
+requires_openai_key = pytest.mark.skipif(
+    os.getenv("OPENAI_API_KEY") is None
+    or not os.getenv("OPENAI_API_KEY").strip(),
+    reason="needs OPENAI_API_KEY",
+)
 
+
+@requires_openai_key
 def test_no_existing_turns():
     golden = ConversationalGolden(
         scenario="Purchase a concert ticket",
@@ -44,6 +52,7 @@ def test_no_existing_turns():
     assert isinstance(tc.turns[1].content, str)
 
 
+@requires_openai_key
 def test_existing_turns():
     golden = ConversationalGolden(
         scenario="Ask about availability",
@@ -68,6 +77,7 @@ def test_existing_turns():
     assert isinstance(tc.turns[2].content, str)
 
 
+@requires_openai_key
 def test_stop_early():
     golden = ConversationalGolden(
         scenario="Complete flow",
@@ -89,6 +99,7 @@ def test_stop_early():
     assert isinstance(tc.turns[1].content, str)
 
 
+@requires_openai_key
 def test_invalid_max_user_simulations():
     golden = ConversationalGolden(
         scenario="Any",
@@ -164,6 +175,7 @@ def test_custom_simulation_template_validates_next_turn_signature():
         default_simulation_node(template=InvalidTemplate)
 
 
+@requires_openai_key
 def test_turn_alternation():
     golden = ConversationalGolden(
         scenario="Purchase a concert ticket",
@@ -187,6 +199,7 @@ def test_turn_alternation():
         assert tc.turns[i].role != tc.turns[i - 1].role
 
 
+@requires_openai_key
 def test_max_simulations_ignores_existing_turns():
     golden = ConversationalGolden(
         scenario="Book a flight",
@@ -219,6 +232,7 @@ def test_max_simulations_ignores_existing_turns():
     assert new_user_turns == max_sims
 
 
+@requires_openai_key
 def test_on_simulation_complete_hook_single_conversation():
     golden = ConversationalGolden(
         scenario="Purchase a concert ticket",
@@ -249,6 +263,7 @@ def test_on_simulation_complete_hook_single_conversation():
     assert hook_calls[0]["test_case"].scenario == golden.scenario
 
 
+@requires_openai_key
 def test_on_simulation_complete_hook_multiple_conversations():
     goldens = [
         ConversationalGolden(

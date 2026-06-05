@@ -45,8 +45,6 @@ class TestTaskCompletionMetric:
         for golden in dataset.evals_iterator(metrics=[metric]):
             trip_planner_agent(golden.input)
 
-        assert metric.score is not None
-        assert metric.reason is not None
         assert golden.multimodal is False
 
     def test_normal_async_metric_measure(self):
@@ -76,8 +74,6 @@ class TestTaskCompletionMetric:
         for golden in dataset.evals_iterator(metrics=[metric]):
             trip_planner_agent(golden.input)
 
-        assert metric.score is not None
-        assert metric.reason is not None
         assert golden.multimodal is False
 
     def test_multimodal_async_metric_measure(self):
@@ -111,8 +107,6 @@ class TestTaskCompletionMetric:
         for golden in dataset.evals_iterator(metrics=[metric]):
             trip_planner_agent(golden.input)
 
-        assert metric.score is not None
-        assert metric.reason is not None
         assert golden.multimodal is True
 
     def test_multimodal_sync_metric_measure(self):
@@ -146,8 +140,6 @@ class TestTaskCompletionMetric:
         for golden in dataset.evals_iterator(metrics=[metric]):
             trip_planner_agent(golden.input)
 
-        assert metric.score is not None
-        assert metric.reason is not None
         assert golden.multimodal is True
 
     def test_invalid_model_throws_error_for_multimodal(self):

@@ -1,51 +1,51 @@
 {
-  "uuid": "b7c389a5-3d8a-41d6-ab77-8ca32ff43816",
+  "uuid": "aa0cb86b-a511-4efd-879d-f68aeffc212c",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "7106bfa5-8a63-4174-895d-b5dc67739aca",
+      "uuid": "dc02aa98-71f6-42c7-a2b8-1199691d92da",
       "name": "observe_outer",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T07:11:58.535Z",
-      "endTime": "2026-05-05T07:12:02.406Z",
+      "startTime": "2026-06-01T16:36:40.856Z",
+      "endTime": "2026-06-01T16:36:41.586Z",
       "input": {
         "p": "Say hello in exactly three words."
       },
-      "output": "Hello, how are you?",
+      "output": "Hello there, friend!",
+      "integration": "PydanticAI",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "PydanticAI"
+      "agentHandoffs": []
     },
     {
-      "uuid": "7466a29fa69e91c2",
+      "uuid": "5d4812ce8484bcae",
       "name": "modes_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "7106bfa5-8a63-4174-895d-b5dc67739aca",
-      "startTime": "2026-05-05T07:11:58.536Z",
-      "endTime": "2026-05-05T07:12:02.406Z",
+      "parentUuid": "dc02aa98-71f6-42c7-a2b8-1199691d92da",
+      "startTime": "2026-06-01T16:36:40.857Z",
+      "endTime": "2026-06-01T16:36:41.585Z",
       "input": [
         {
           "role": "user",
           "content": "Say hello in exactly three words."
         }
       ],
-      "output": "Hello, how are you?",
+      "output": "Hello there, friend!",
+      "integration": "PydanticAI",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "PydanticAI"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "ac3804761fac55ac",
+      "uuid": "db511c4597a2ffbf",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "7466a29fa69e91c2",
-      "startTime": "2026-05-05T07:11:58.537Z",
-      "endTime": "2026-05-05T07:12:02.404Z",
+      "parentUuid": "5d4812ce8484bcae",
+      "startTime": "2026-06-01T16:36:40.859Z",
+      "endTime": "2026-06-01T16:36:41.583Z",
       "input": [
         {
           "role": "system",
@@ -59,7 +59,7 @@
           "role": "Model Request Parameters",
           "content": {
             "function_tools": [],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -74,20 +74,20 @@
       "output": [
         {
           "role": "assistant",
-          "content": "Hello, how are you?"
+          "content": "Hello there, friend!"
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 28.0,
-      "outputTokenCount": 6.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 28.0,
+      "outputTokenCount": 5.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-05-05T07:11:58.535Z",
-  "endTime": "2026-05-05T07:12:02.406Z",
+  "startTime": "2026-06-01T16:36:40.856Z",
+  "endTime": "2026-06-01T16:36:41.586Z",
   "name": "pydanticai-observe-trace",
   "metadata": {
     "test_type": "observe_mode",
@@ -107,6 +107,6 @@
       "content": "Say hello in exactly three words."
     }
   ],
-  "output": "Hello, how are you?",
+  "output": "Hello there, friend!",
   "status": "SUCCESS"
 }

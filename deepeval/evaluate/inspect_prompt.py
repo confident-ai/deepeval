@@ -40,7 +40,7 @@ _DISABLE_ENV_VAR = "DEEPEVAL_NO_INSPECT_PROMPT"
 _INSTALL_HINT = (
     "[bold red]deepeval inspect[/bold red] requires extras that are not "
     "installed.\nInstall them with:\n\n"
-    "    pip install 'deepeval[inspect]'\n"
+    "    pip install 'deepeval\\[inspect]'\n"
 )
 
 

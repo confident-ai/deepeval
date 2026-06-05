@@ -81,3 +81,59 @@ The `ImageReference` score is calculated as follows:
 2. **Final Score**: The overall `ImageReference` score is the average of all individual image reference scores for each image:
 
 <Equation formula="O = \frac{\sum_{i=1}^n R_i}{n}" />
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "How is Image Reference different from Image Helpfulness and Image Coherence?",
+      answer: (
+        <>
+          Image Reference checks whether each image is <em>referred to or
+          explained</em> by nearby text, while{" "}
+          <a href="/docs/multimodal-metrics-image-helpfulness">
+            <code>ImageHelpfulness</code>
+          </a>{" "}
+          checks comprehension value and{" "}
+          <a href="/docs/multimodal-metrics-image-coherence">
+            <code>ImageCoherence</code>
+          </a>{" "}
+          checks narrative alignment.
+        </>
+      ),
+    },
+    {
+      question: "How does the metric handle an output with multiple images?",
+      answer: (
+        <>
+          Each <code>MLLMImage</code> is scored from the text immediately above
+          and below it, and the result is the <strong>average</strong> across
+          all images (<code>O = (ΣR_i) / n</code>). One well-referenced image
+          can't mask another the text never explains.
+        </>
+      ),
+    },
+    {
+      question: "What does `max_context_size` control?",
+      answer: (
+        <>
+          It caps how many characters above and below each image feed its
+          reference score. Defaults to <code>None</code> (all surrounding text);
+          lower it when images sit close together.
+        </>
+      ),
+    },
+    {
+      question: "What does a low Image Reference score usually indicate?",
+      answer: (
+        <>
+          An image dropped in without neighboring text pointing to it —
+          e.g. a diagram between two steps that never mention it. Inspect{" "}
+          <code>metric.reason</code> to see which image lacked grounding text.
+        </>
+      ),
+    },
+  ]}
+/>

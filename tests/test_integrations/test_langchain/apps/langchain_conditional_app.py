@@ -59,7 +59,7 @@ fact_check_tools = [fact_check]
 fact_check_tools_by_name = {t.name: t for t in fact_check_tools}
 
 # LLMs
-llm = ChatOpenAI(model="gpt-5-mini", temperature=0, seed=42)
+llm = ChatOpenAI(model="gpt-5.4-mini", temperature=0, seed=42)
 llm_research = llm.bind_tools(research_tools)
 llm_summarize = llm.bind_tools(summarize_tools)
 llm_fact_check = llm.bind_tools(fact_check_tools)

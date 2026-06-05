@@ -99,3 +99,58 @@ scripted_opener.add_node(
     when="The assistant asked a clarifying question",
 )
 ```
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "When do I need a custom template versus the default simulator?",
+      answer: (
+        <>
+          Reach for one when the simulated user should speak in a specific voice,
+          domain framing, or pressure level — formal buyers, frustrated customers,
+          clinicians, more adversarial or more concise users. If the default
+          role-play already sounds right, you don't need a template.
+        </>
+      ),
+    },
+    {
+      question: "How do I actually plug a custom template in?",
+      answer: (
+        <>
+          Pass it to <code>default_simulation_node(template=MyTemplate)</code> and
+          feed the returned node into <code>simulation_graph</code>. The old
+          top-level <code>simulation_template=</code> kwarg has been removed in favor
+          of this, which keeps the template attached to the node that consumes it.
+        </>
+      ),
+    },
+    {
+      question: "Which methods does my template have to override?",
+      answer: (
+        <>
+          Subclass <code>SimulationTemplate</code> and override{" "}
+          <code>simulate_first_user_turn(golden, language)</code> and/or{" "}
+          <code>simulate_user_turn(golden, turns, language)</code>. Each must return
+          a prompt string that elicits JSON with one key,{" "}
+          <code>simulated_input</code>. Templates are validated eagerly, so bad
+          subclasses raise <code>TypeError</code> at construction time.
+        </>
+      ),
+    },
+    {
+      question: "Can I keep a custom voice on some branches but script others?",
+      answer: (
+        <>
+          Yes — embed <code>default_simulation_node(template=...)</code> as one node
+          inside a larger{" "}
+          <a href="/docs/conversation-simulator-simulation-graph">simulation graph</a>,
+          using the template for free-form exploration on some branches and
+          deterministic, scripted nodes on others.
+        </>
+      ),
+    },
+  ]}
+/>
+

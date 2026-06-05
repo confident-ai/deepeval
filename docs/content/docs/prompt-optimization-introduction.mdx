@@ -241,3 +241,102 @@ There are **THREE** optional parameters when creating a `MutationConfig`:
 - [Optional] `target_index`: zero-based index used when `target_type` is `"fixed_index"`. Defaulted to `0`.
 
 These configs let you fine-tune how optimization behaves without changing your metrics or callback. You can start with the defaults and only override the specific fields you need for your use case.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "When should I use the `PromptOptimizer` instead of tuning prompts by hand?",
+      answer: (
+        <>
+          Use <code>PromptOptimizer</code> when you would otherwise run evals,
+          eyeball failures, and manually tweak prompts in a loop. It scores your{" "}
+          <a href="/docs/metrics-introduction">metrics</a> against a set of{" "}
+          <a href="/docs/evaluation-datasets#what-are-goldens">goldens</a> and
+          uses those scores to automatically search for a higher-scoring prompt,
+          so you get a data-driven rewrite instead of guesswork.
+        </>
+      ),
+    },
+    {
+      question: "What are the required parameters to create a `PromptOptimizer`?",
+      answer: (
+        <>
+          There are two required parameters: <code>metrics</code>, a list of
+          DeepEval metrics used for scoring and feedback, and{" "}
+          <code>model_callback</code>, a callback that wraps your LLM app. The
+          optional parameters are <code>algorithm</code>,{" "}
+          <code>async_config</code>, <code>display_config</code>, and{" "}
+          <code>mutation_config</code>.
+        </>
+      ),
+    },
+    {
+      question: "What does my `model_callback` receive and have to return?",
+      answer: (
+        <>
+          During optimization DeepEval passes your callback the current{" "}
+          <code>Prompt</code> candidate and a <code>Golden</code> (or{" "}
+          <code>ConversationalGolden</code>). You interpolate with{" "}
+          <code>prompt.interpolate(input=golden.input)</code>, call your app, and
+          the callback <strong>must</strong> return a <code>str</code>. That
+          string is used as the <code>actual_output</code> in a{" "}
+          <a href="/docs/evaluation-test-cases">test case</a> before scoring.
+        </>
+      ),
+    },
+    {
+      question: "Which optimization algorithm does DeepEval use by default?",
+      answer: (
+        <>
+          The default <code>algorithm</code> is <code>GEPA()</code>. DeepEval
+          also ships{" "}
+          <a href="/docs/prompt-optimization-miprov2">MIPROv2</a> for
+          surrogate-based search; pass an instance to the{" "}
+          <code>algorithm</code> argument to switch, or to override
+          algorithm-specific settings such as GEPA's <code>iterations</code>.
+        </>
+      ),
+    },
+    {
+      question: "How do I run a prompt optimization asynchronously?",
+      answer: (
+        <>
+          Call <code>a_optimize()</code>, the async counterpart of{" "}
+          <code>optimize()</code>, from within an async function and run it with{" "}
+          <code>asyncio.run(...)</code>. This lets you run optimizations
+          concurrently without blocking the main thread.
+        </>
+      ),
+    },
+    {
+      question: "What is the `optimization_report` and when do I need it?",
+      answer: (
+        <>
+          The <code>optimization_report</code> is accessible on the{" "}
+          <code>PromptOptimizer</code> instance and exposes six fields like{" "}
+          <code>optimization_id</code>, <code>best_id</code>,{" "}
+          <code>accepted_iterations</code>, and <code>parents</code>. Most
+          workflows just use <code>optimized_prompt.text_template</code> (or{" "}
+          <code>messages_template</code>), but the report is useful for
+          reconstructing the search tree or debugging why a configuration was
+          selected as <code>best_id</code>.
+        </>
+      ),
+    },
+    {
+      question: "How do I avoid rate-limit errors during optimization?",
+      answer: (
+        <>
+          Pass an <code>AsyncConfig</code> to <code>PromptOptimizer</code> and
+          tune <code>throttle_value</code> and <code>max_concurrent</code>{" "}
+          (defaulted to <code>20</code>). Both only apply when{" "}
+          <code>run_async</code> is <code>True</code>; lowering{" "}
+          <code>max_concurrent</code> and raising <code>throttle_value</code> is
+          the recommended way to handle rate limits in your judge or LLM app.
+        </>
+      ),
+    },
+  ]}
+/>

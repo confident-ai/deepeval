@@ -80,7 +80,7 @@ retriever = DeterministicRetriever()
 retriever_with_metric_collection = DeterministicRetriever(
     metadata={"metric_collection": "retriever_quality"}
 )
-llm = ChatOpenAI(model="gpt-5-mini", temperature=0, seed=42)
+llm = ChatOpenAI(model="gpt-5.4-mini", temperature=0, seed=42)
 
 
 def retrieve_node(state: RAGState, config: RunnableConfig) -> RAGState:

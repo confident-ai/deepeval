@@ -48,7 +48,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2MU3ibVQEVNYhKhMig21YxeKEP4",
               "service_tier": "default",
@@ -99,7 +99,7 @@
         "content": "Hello!",
         "tool_calls": []
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 13.0,
       "outputTokenCount": 139.0,
       "integration": "LangChain",
@@ -158,7 +158,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2MU3ibVQEVNYhKhMig21YxeKEP4",
           "service_tier": "default",

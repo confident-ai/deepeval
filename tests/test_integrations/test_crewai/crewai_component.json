@@ -1,36 +1,37 @@
 {
-  "uuid": "6b06a360-de52-4417-85f6-6c2e846863fe",
+  "uuid": "7ddf5760-e4f3-4e8f-872f-2d335b6e8b49",
   "baseSpans": [
     {
-      "uuid": "195d482e-fbdb-464a-bbba-6aa8c4f3b0bd",
+      "uuid": "8a66fea7-e217-4627-af4f-1acc584910d1",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-15T10:19:56.720Z",
-      "endTime": "2026-02-15T10:19:58.902Z",
+      "startTime": "2026-06-01T17:28:42.789Z",
+      "endTime": "2026-06-01T17:28:45.502Z",
       "input": {
         "city": "London"
       },
-      "output": "The current weather in London is 60°F with rainy conditions and a humidity level of 80%.",
-      "metricCollection": "test_collection_1",
-      "integration": "CrewAI"
+      "output": "The current weather in London is as follows:\n\n- **Temperature:** 60\u00b0F\n- **Conditions:** Rainy\n- **Humidity:** 80%\n\nMake sure to carry an umbrella if you're heading out!",
+      "integration": "CrewAI",
+      "metricCollection": "test_collection_1"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "60c7503c-45f1-4910-b7a4-84b75dda9e96",
+      "uuid": "7a52b9e2-2c6c-4038-8922-c73dba87cab7",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "195d482e-fbdb-464a-bbba-6aa8c4f3b0bd",
-      "startTime": "2026-02-15T10:19:56.723Z",
-      "endTime": "2026-02-15T10:19:58.895Z",
+      "parentUuid": "8a66fea7-e217-4627-af4f-1acc584910d1",
+      "startTime": "2026-06-01T17:28:42.806Z",
+      "endTime": "2026-06-01T17:28:45.497Z",
       "input": "Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary.",
-      "output": "The current weather in London is 60°F with rainy conditions and a humidity level of 80%.",
+      "output": "The current weather in London is as follows:\n\n- **Temperature:** 60\u00b0F\n- **Conditions:** Rainy\n- **Humidity:** 80%\n\nMake sure to carry an umbrella if you're heading out!",
+      "integration": "CrewAI",
       "toolsCalled": [
         {
           "name": "get_weather",
-          "output": "Weather in London: 60°F, Rainy, Humidity: 80%",
+          "output": "Weather in London: 60\u00b0F, Rainy, Humidity: 80%",
           "inputParameters": {
             "city": "London"
           }
@@ -38,34 +39,35 @@
       ],
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "test_collection_1",
-      "integration": "CrewAI"
+      "metricCollection": "test_collection_1"
     }
   ],
   "llmSpans": [
     {
-      "uuid": "d9a45721-c5ec-454b-8dfa-29ec28bcc478",
+      "uuid": "b1489442-3dd2-4ce3-b988-930a17bd0fd4",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "60c7503c-45f1-4910-b7a4-84b75dda9e96",
-      "startTime": "2026-02-15T10:19:57.936Z",
-      "endTime": "2026-02-15T10:19:58.892Z",
+      "parentUuid": "7a52b9e2-2c6c-4038-8922-c73dba87cab7",
+      "startTime": "2026-06-01T17:28:44.078Z",
+      "endTime": "2026-06-01T17:28:45.489Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Weather Reporter. An experienced meteorologist who loves helping people plan their day with accurate weather reports.\nYour personal goal is: Provide accurate and helpful weather information to users."
+          "content": "You are Weather Reporter. An experienced meteorologist who loves helping people plan their day with accurate weather reports.\nYour personal goal is: Provide accurate and helpful weather information to users.",
+          "cache_breakpoint": true
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary."
+          "content": "\nCurrent Task: Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary.",
+          "cache_breakpoint": true
         },
         {
           "role": "assistant",
           "content": null,
           "tool_calls": [
             {
-              "id": "call_XqIe9dke6jrc2RNzNE4mJtXs",
+              "id": "call_zU030SN26y2ODjhdu3AVL2C1",
               "type": "function",
               "function": {
                 "name": "'get_weather'",
@@ -76,42 +78,40 @@
         },
         {
           "role": "tool",
-          "tool_call_id": "call_XqIe9dke6jrc2RNzNE4mJtXs",
+          "tool_call_id": "call_zU030SN26y2ODjhdu3AVL2C1",
           "name": "get_weather",
-          "content": "Weather in London: 60°F, Rainy, Humidity: 80%"
-        },
-        {
-          "role": "user",
-          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
+          "content": "Weather in London: 60\u00b0F, Rainy, Humidity: 80%"
         }
       ],
-      "output": "The current weather in London is 60°F with rainy conditions and a humidity level of 80%.",
-      "model": "gpt-4o-mini",
-      "metricCollection": "test_collection_1",
+      "output": "The current weather in London is as follows:\n\n- **Temperature:** 60\u00b0F\n- **Conditions:** Rainy\n- **Humidity:** 80%\n\nMake sure to carry an umbrella if you're heading out!",
       "integration": "CrewAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "metricCollection": "test_collection_1"
     },
     {
-      "uuid": "f80dcdd0-139d-4f92-8b5c-b072d699fa07",
+      "uuid": "e9840170-66f5-4d2e-a405-b8b5b9488fa2",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "60c7503c-45f1-4910-b7a4-84b75dda9e96",
-      "startTime": "2026-02-15T10:19:56.726Z",
-      "endTime": "2026-02-15T10:19:57.933Z",
+      "parentUuid": "7a52b9e2-2c6c-4038-8922-c73dba87cab7",
+      "startTime": "2026-06-01T17:28:42.809Z",
+      "endTime": "2026-06-01T17:28:44.075Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Weather Reporter. An experienced meteorologist who loves helping people plan their day with accurate weather reports.\nYour personal goal is: Provide accurate and helpful weather information to users."
+          "content": "You are Weather Reporter. An experienced meteorologist who loves helping people plan their day with accurate weather reports.\nYour personal goal is: Provide accurate and helpful weather information to users.",
+          "cache_breakpoint": true
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary."
+          "content": "\nCurrent Task: Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary.",
+          "cache_breakpoint": true
         }
       ],
       "output": [
         {
-          "id": "call_XqIe9dke6jrc2RNzNE4mJtXs",
+          "id": "call_zU030SN26y2ODjhdu3AVL2C1",
           "function": {
             "arguments": "{\"city\":\"London\"}",
             "name": "get_weather"
@@ -119,32 +119,32 @@
           "type": "function"
         }
       ],
-      "model": "gpt-4o-mini",
-      "metricCollection": "test_collection_1",
       "integration": "CrewAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "metricCollection": "test_collection_1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "8fa838bb-d7c8-4e4d-9d7e-ed95e87db21d",
+      "uuid": "4a3f5871-cb34-4619-9e46-0343a6ff1990",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "60c7503c-45f1-4910-b7a4-84b75dda9e96",
-      "startTime": "2026-02-15T10:19:57.933Z",
-      "endTime": "2026-02-15T10:19:57.933Z",
+      "parentUuid": "7a52b9e2-2c6c-4038-8922-c73dba87cab7",
+      "startTime": "2026-06-01T17:28:44.075Z",
+      "endTime": "2026-06-01T17:28:44.075Z",
       "input": {
         "city": "London"
       },
-      "output": "Weather in London: 60°F, Rainy, Humidity: 80%",
-      "metricCollection": "test_collection_1",
-      "integration": "CrewAI"
+      "output": "Weather in London: 60\u00b0F, Rainy, Humidity: 80%",
+      "integration": "CrewAI",
+      "metricCollection": "test_collection_1"
     }
   ],
-  "startTime": "2026-02-15T10:19:56.720Z",
-  "endTime": "2026-02-15T10:19:58.902Z",
+  "startTime": "2026-06-01T17:28:42.789Z",
+  "endTime": "2026-06-01T17:28:45.502Z",
   "name": "crewai",
   "metadata": {
     "crewai": "crewai"
@@ -158,7 +158,7 @@
   "input": {
     "city": "London"
   },
-  "output": "The current weather in London is 60°F with rainy conditions and a humidity level of 80%.",
+  "output": "The current weather in London is as follows:\n\n- **Temperature:** 60\u00b0F\n- **Conditions:** Rainy\n- **Humidity:** 80%\n\nMake sure to carry an umbrella if you're heading out!",
   "status": "SUCCESS",
   "metricCollection": "test_collection_1"
 }

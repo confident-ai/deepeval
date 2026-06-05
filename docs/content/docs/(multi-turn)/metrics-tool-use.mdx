@@ -75,3 +75,57 @@ The `ToolUseMetric` score is determined through the following process:
 
 - The **Tool Selection Score** evaluates whether the agent chose the most appropriate tool for the task among all the available tools.
 - The **Argument Correctness Score** assesses whether the arguments provided in the tool call were accurate and suitable for the task. This score is only considered when a tool call has been made.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "How do I check whether my agent called the right tools across a conversation?",
+      answer: (
+        <>
+          <code>ToolUseMetric</code> evaluates each interaction's tool selection
+          and then the arguments passed, flagging both wrong-tool turns and
+          right-tool-but-wrong-arguments turns.
+        </>
+      ),
+    },
+    {
+      question:
+        "Why do I have to pass `available_tools` if the agent already called tools?",
+      answer: (
+        <>
+          <code>available_tools</code> is the full menu of <code>ToolCall</code>s
+          the agent could have used. Without the alternatives, the metric can't
+          tell whether a better tool existed or whether a tool should have been
+          called at all.
+        </>
+      ),
+    },
+    {
+      question:
+        "My agent picked the right tool but with wrong arguments — does that fail?",
+      answer: (
+        <>
+          Yes. The final score is{" "}
+          <code>min(ToolSelectionScore, ArgumentCorrectnessScore)</code>, so a
+          perfect tool choice with bad arguments still drags it down. The
+          argument score only applies to turns where a tool was called.
+        </>
+      ),
+    },
+    {
+      question: "Does it catch unnecessary or missing tool calls?",
+      answer: (
+        <>
+          Both hurt the <strong>Tool Selection Score</strong>: calling an
+          unneeded tool or skipping a needed one scores as poor selection
+          against <code>available_tools</code>. Use <code>verbose_mode</code> for
+          per-interaction reasoning.
+        </>
+      ),
+    },
+  ]}
+/>
+

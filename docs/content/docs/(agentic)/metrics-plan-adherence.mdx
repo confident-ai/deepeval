@@ -77,3 +77,70 @@ The `PlanAdherenceMetric` score is calculated by following these steps:
 <Equation formula="\text{Plan Adherence Score} = \text{AlignmentScore}(\text{(Task, Plan)}, \text{Execution Steps})" />
 
 - The **Alignment Score** uses an LLM to generate the final score with all the pre-processed and extracted information like plan, task and execution steps.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "My agent made a good plan but didn't follow it — which metric catches that?",
+      answer: (
+        <>
+          Plan Adherence. It scores the <code>AlignmentScore</code> between
+          (Task, Plan) and the actual <strong>Execution Steps</strong>, so an
+          ignored plan scores low.{" "}
+          <a href="/docs/metrics-plan-quality">Plan Quality</a> would still rate
+          that plan highly, since it judges only the plan.
+        </>
+      ),
+    },
+    {
+      question: "How is Plan Adherence different from Plan Quality?",
+      answer: (
+        <>
+          Plan Adherence is <strong>process</strong> — did execution follow the
+          plan.{" "}
+          <a href="/docs/metrics-plan-quality">Plan Quality</a> is the{" "}
+          <strong>plan</strong> — was it good in the first place. Run both to
+          tell a bad plan from a good plan poorly executed.
+        </>
+      ),
+    },
+    {
+      question: "Plan Adherence vs Task Completion — following the plan vs getting it done?",
+      answer: (
+        <>
+          Right. Plan Adherence checks if the agent stuck to its{" "}
+          <strong>plan</strong>;{" "}
+          <a href="/docs/metrics-task-completion">Task Completion</a> checks if
+          it achieved the <strong>outcome</strong>. An agent can deviate yet
+          finish, or follow the plan and fail — different failure modes.
+        </>
+      ),
+    },
+    {
+      question: "What happens if my agent's trace has no plan?",
+      answer: (
+        <>
+          The plan comes from the agent's <code>thinking</code> or{" "}
+          <code>reasoning</code>. With none to extract, there's nothing to adhere
+          to and the metric passes by default with <code>1</code> — an
+          unexpected perfect score usually means your trace isn't surfacing
+          reasoning.
+        </>
+      ),
+    },
+    {
+      question: "Can I use Plan Adherence with LangChain, OpenAI, or another framework?",
+      answer: (
+        <>
+          Yes. <code>deepeval</code> auto-traces agents built with{" "}
+          <a href="/integrations/frameworks/langchain">LangChain</a>,{" "}
+          <a href="/integrations/frameworks/openai">OpenAI</a>, LlamaIndex,
+          CrewAI, and more — see all{" "}
+          <a href="/integrations">framework integrations</a>.
+        </>
+      ),
+    },
+  ]}
+/>

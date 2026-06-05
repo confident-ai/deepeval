@@ -1,14 +1,14 @@
 {
-  "uuid": "8f7f5bc0128508ade293d98c49bd745e",
+  "uuid": "fbfa6c9a379a7fbffaccd77b242de506",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "46cbfb76471cc1d4",
+      "uuid": "636d7ef68e4e3aa3",
       "name": "tool_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T06:45:21.167Z",
-      "endTime": "2026-05-05T06:45:23.769Z",
+      "startTime": "2026-06-01T16:36:26.609Z",
+      "endTime": "2026-06-01T16:36:28.610Z",
       "input": [
         {
           "role": "user",
@@ -16,20 +16,20 @@
         }
       ],
       "output": "7 multiplied by 8 is 56.",
+      "integration": "PydanticAI",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "PydanticAI"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "25d7f67b4f83a795",
+      "uuid": "9341e5d8b6f87ba2",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "46cbfb76471cc1d4",
-      "startTime": "2026-05-05T06:45:22.828Z",
-      "endTime": "2026-05-05T06:45:23.765Z",
+      "parentUuid": "636d7ef68e4e3aa3",
+      "startTime": "2026-06-01T16:36:27.895Z",
+      "endTime": "2026-06-01T16:36:28.609Z",
       "input": [
         {
           "role": "system",
@@ -43,7 +43,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_52qsRBNYk15hcDQeFbU9GiKu",
+            "id": "call_Gn77M4ssS642gS3hM8IHhsjK",
             "name": "calculate",
             "arguments": "{\"operation\":\"multiply\",\"a\":7,\"b\":8}"
           }
@@ -52,7 +52,7 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_52qsRBNYk15hcDQeFbU9GiKu",
+            "id": "call_Gn77M4ssS642gS3hM8IHhsjK",
             "name": "calculate",
             "result": 56.0
           }
@@ -94,12 +94,14 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               }
             ],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -117,20 +119,20 @@
           "content": "7 multiplied by 8 is 56."
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 147.0,
-      "outputTokenCount": 10.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 147.0,
+      "outputTokenCount": 10.0
     },
     {
-      "uuid": "967e66029aae355c",
+      "uuid": "de918bb7714b8ee4",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "46cbfb76471cc1d4",
-      "startTime": "2026-05-05T06:45:21.169Z",
-      "endTime": "2026-05-05T06:45:22.814Z",
+      "parentUuid": "636d7ef68e4e3aa3",
+      "startTime": "2026-06-01T16:36:26.611Z",
+      "endTime": "2026-06-01T16:36:27.892Z",
       "input": [
         {
           "role": "system",
@@ -177,12 +179,14 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               }
             ],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -199,29 +203,29 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_52qsRBNYk15hcDQeFbU9GiKu",
+            "id": "call_Gn77M4ssS642gS3hM8IHhsjK",
             "name": "calculate",
             "arguments": "{\"operation\":\"multiply\",\"a\":7,\"b\":8}"
           }
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 116.0,
-      "outputTokenCount": 21.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 116.0,
+      "outputTokenCount": 21.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "7ec404f9c3517e41",
+      "uuid": "35c411ce825c9b4d",
       "name": "calculate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "46cbfb76471cc1d4",
-      "startTime": "2026-05-05T06:45:22.822Z",
-      "endTime": "2026-05-05T06:45:22.824Z",
+      "parentUuid": "636d7ef68e4e3aa3",
+      "startTime": "2026-06-01T16:36:27.893Z",
+      "endTime": "2026-06-01T16:36:27.894Z",
       "input": {
         "operation": "multiply",
         "a": 7,
@@ -231,8 +235,8 @@
       "integration": "PydanticAI"
     }
   ],
-  "startTime": "2026-05-05T06:45:21.167Z",
-  "endTime": "2026-05-05T06:45:23.769Z",
+  "startTime": "2026-06-01T16:36:26.609Z",
+  "endTime": "2026-06-01T16:36:28.610Z",
   "name": "pydanticai-tool-test",
   "metadata": {
     "test_type": "tool"

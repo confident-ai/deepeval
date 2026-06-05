@@ -213,3 +213,58 @@ JSON:
 metric = ContextualRecallMetric(evaluation_template=CustomTemplate)
 metric.measure(...)
 ```
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Does contextual recall tell me if I'm missing relevant chunks?",
+      answer: (
+        <>
+          Yes — exactly what it measures. It breaks <code>expected_output</code>{" "}
+          into statements and checks how many trace back to a node in{" "}
+          <code>retrieval_context</code>. Any statement that can't signals
+          information your retriever failed to surface.
+        </>
+      ),
+    },
+    {
+      question:
+        "My contextual recall is low — which retriever knobs should I tune?",
+      answer: (
+        <>
+          Needed information never made it into the{" "}
+          <code>retrieval_context</code>. Usual levers: increase top-K, adjust
+          chunk size so facts aren't split, and swap in a stronger embedding
+          model so relevant passages rank within your cutoff.
+        </>
+      ),
+    },
+    {
+      question: "Why does it use `expected_output` instead of `actual_output`?",
+      answer: (
+        <>
+          Recall measures whether the retriever fetched everything needed for
+          the ideal answer, so it attributes <code>expected_output</code>{" "}
+          (ground truth) to the <code>retrieval_context</code>. Using{" "}
+          <code>actual_output</code> would let a bad answer unfairly drag down a
+          good retriever.
+        </>
+      ),
+    },
+    {
+      question: "How is Contextual Recall different from Contextual Precision?",
+      answer: (
+        <>
+          Recall is completeness — did the retriever pull in all relevant
+          information?{" "}
+          <a href="/docs/metrics-contextual-precision">Contextual Precision</a>{" "}
+          is ordering — are relevant chunks ranked above irrelevant ones? Want
+          both high.
+        </>
+      ),
+    },
+  ]}
+/>
+

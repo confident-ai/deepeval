@@ -11,6 +11,12 @@ from deepeval.models.embedding_models.openai_embedding_model import (
 
 MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
 
+requires_openai_key = pytest.mark.skipif(
+    os.getenv("OPENAI_API_KEY") is None
+    or not os.getenv("OPENAI_API_KEY").strip(),
+    reason="needs OPENAI_API_KEY",
+)
+
 
 # stub the langchain loader/splitter
 class _FakeTextLoader:
@@ -158,6 +164,7 @@ def ensure_synthesizer_data():
         pytest.skip(f"Test PDF file not found: {pdf_path}")
 
 
+@requires_openai_key
 def test_generate_contexts(
     context_generator_fixture,
     ensure_synthesizer_data,
@@ -180,6 +187,7 @@ def test_generate_contexts(
     ), "More chunks utilized than available"
 
 
+@requires_openai_key
 def test_multiple_context_generations(
     context_generator_fixture,
     ensure_synthesizer_data,
@@ -210,6 +218,7 @@ def test_multiple_context_generations(
     ), "More chunks utilized than available"
 
 
+@requires_openai_key
 def test_many_docs_should_spawn_a_single_chroma_client(monkeypatch, tmp_path):
     """
     Ensure ContextGenerator uses a single shared Chroma PersistentClient per run.
@@ -283,6 +292,7 @@ def test_many_docs_should_spawn_a_single_chroma_client(monkeypatch, tmp_path):
         )
 
 
+@requires_openai_key
 @pytest.mark.asyncio
 async def test_async_many_docs_uses_single_chroma_client(monkeypatch, tmp_path):
     """
@@ -334,6 +344,7 @@ async def test_async_many_docs_uses_single_chroma_client(monkeypatch, tmp_path):
 ##############
 
 
+@requires_openai_key
 def test_sync_min_context_size_validation(monkeypatch, tmp_path, caplog):
     """
     If a document collection has fewer chunks than `min_context_size`,
@@ -384,6 +395,7 @@ def test_sync_min_context_size_validation(monkeypatch, tmp_path, caplog):
 ###########################
 
 
+@requires_openai_key
 @pytest.mark.asyncio
 async def test_async_per_doc_failure_is_logged_and_others_continue(
     monkeypatch, tmp_path, caplog
@@ -457,6 +469,7 @@ async def test_async_per_doc_failure_is_logged_and_others_continue(
 #####################
 
 
+@requires_openai_key
 def test_sync_deletes_one_collection_per_doc(monkeypatch, tmp_path):
     """
     After each document pipeline completes, we call delete_collection(name).

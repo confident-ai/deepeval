@@ -48,7 +48,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2MpP1Ldm3DSCbvGN13zFP5HmxFj",
               "service_tier": "default",
@@ -124,7 +124,7 @@
         "content": "LangChain is a framework for developing applications powered by language models. It provides tools for chaining LLM calls and integrating those models with external data.",
         "tool_calls": []
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 79.0,
       "outputTokenCount": 102.0,
       "integration": "LangChain",
@@ -200,7 +200,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2MpP1Ldm3DSCbvGN13zFP5HmxFj",
           "service_tier": "default",

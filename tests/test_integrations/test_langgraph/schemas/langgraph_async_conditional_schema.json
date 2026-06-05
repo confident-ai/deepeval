@@ -50,7 +50,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2VDk0lMYk7daXAEgVv8a9y8KbHI",
               "service_tier": "default",
@@ -116,7 +116,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2VEy9LKBX7ofSDesFHoilCKY1gY",
               "service_tier": "default",
@@ -185,7 +185,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2VDk0lMYk7daXAEgVv8a9y8KbHI",
               "service_tier": "default",
@@ -256,7 +256,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2VEy9LKBX7ofSDesFHoilCKY1gY",
               "service_tier": "default",
@@ -324,7 +324,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2VDk0lMYk7daXAEgVv8a9y8KbHI",
               "service_tier": "default",
@@ -390,7 +390,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2VEy9LKBX7ofSDesFHoilCKY1gY",
               "service_tier": "default",
@@ -460,7 +460,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2VDk0lMYk7daXAEgVv8a9y8KbHI",
               "service_tier": "default",
@@ -570,7 +570,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2VDk0lMYk7daXAEgVv8a9y8KbHI",
               "service_tier": "default",
@@ -664,7 +664,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2VDk0lMYk7daXAEgVv8a9y8KbHI",
               "service_tier": "default",
@@ -741,7 +741,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2VDk0lMYk7daXAEgVv8a9y8KbHI",
               "service_tier": "default",
@@ -883,7 +883,7 @@
         "content": "- Recent space exploration research includes discoveries of new exoplanets located in habitable zones.\n- These findings expand targets for future studies searching for potential life.\n- Continued missions and observations are key to characterizing these exoplanets further.",
         "tool_calls": []
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 261.0,
       "outputTokenCount": 50.0,
       "integration": "LangChain",
@@ -932,7 +932,7 @@
           }
         ]
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 219.0,
       "outputTokenCount": 25.0,
       "integration": "LangChain",
@@ -1016,7 +1016,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2VDk0lMYk7daXAEgVv8a9y8KbHI",
           "service_tier": "default",
@@ -1082,7 +1082,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2VEy9LKBX7ofSDesFHoilCKY1gY",
           "service_tier": "default",

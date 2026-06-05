@@ -302,3 +302,86 @@ Choose **SIMBA** when your model is inconsistent across runs and you want the op
 Choose **GEPA** when your task spans diverse problem types and you need the optimizer to maintain a diverse pool of prompt strategies rather than converging on one.
 
 Choose **MIPROv2** when the combination of instruction and few-shot demonstrations is the main lever, and you want systematic Bayesian search over that joint space.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is SIMBA and when should I use it?",
+      answer: (
+        <>
+          <code>SIMBA</code> (Stochastic Introspective Mini-Batch Ascent) hunts
+          for high-variance examples—inputs where the model sometimes succeeds
+          and sometimes fails—and uses that contrast to rewrite instructions or
+          inject a verified few-shot demo. Use it when your model is inconsistent
+          across runs or when the task benefits from both instruction
+          improvements and demonstrations.
+        </>
+      ),
+    },
+    {
+      question: "Why does SIMBA run multiple trajectories per golden?",
+      answer: (
+        <>
+          <code>num_samples</code> (default <code>3</code>) sets how many
+          independent executions SIMBA runs per golden to measure variance. More
+          samples give more reliable variance estimates but cost more. The runs
+          form a bucket whose <code>max_to_avg_gap</code> becomes the primary
+          signal for picking which examples to learn from.
+        </>
+      ),
+    },
+    {
+      question: "How does SIMBA pick which examples to learn from?",
+      answer: (
+        <>
+          It sorts buckets in descending order of <code>max_to_avg_gap</code>{" "}
+          (<code>max_score - avg_score</code>), surfacing the most inconsistent
+          examples first, then introspects the top <code>num_candidates</code>{" "}
+          (default <code>4</code>) buckets. The average gap is used instead of
+          max-to-min because it is more robust to a single fluke trajectory.
+        </>
+      ),
+    },
+    {
+      question: "Does SIMBA optimize few-shot demonstrations?",
+      answer: (
+        <>
+          Yes. At each bucket SIMBA randomly chooses between two strategies: a{" "}
+          rule strategy that holistically rewrites the prompt from the failing
+          and succeeding traces, and a demo strategy that injects the
+          best-scoring trajectory as a verified few-shot example. The demo comes
+          from a real high-scoring run, not from <code>expected_output</code>.
+        </>
+      ),
+    },
+    {
+      question: "What happens when all trajectories for a golden score the same?",
+      answer: (
+        <>
+          When <code>max_to_avg_gap == 0</code>, SIMBA checks whether the model
+          was already perfect (<code>max_score</code> at least{" "}
+          <code>0.99</code>) and skips the
+          bucket if so. Otherwise it falls back to using the golden's{" "}
+          <code>expected_output</code> or <code>expected_outcome</code> as a
+          synthetic perfect trace to contrast against. If no ground truth exists,
+          the bucket is skipped.
+        </>
+      ),
+    },
+    {
+      question: "How often does SIMBA validate candidates on the full dataset?",
+      answer: (
+        <>
+          Every <code>minibatch_full_eval_steps</code> iterations (default{" "}
+          <code>4</code>) and always on the final iteration, SIMBA runs{" "}
+          <code>score_pareto</code> on the best minibatch candidate against all
+          goldens. A candidate is only accepted as the new <code>current_best</code>{" "}
+          if its full-dataset average beats the global best, which separates lucky
+          minibatch wins from genuine improvements.
+        </>
+      ),
+    },
+  ]}
+/>

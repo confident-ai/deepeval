@@ -1,35 +1,35 @@
 {
-  "uuid": "826291288f64a0f2475533f0d069297a",
+  "uuid": "c03ddd0aec18870c2143e4f9a1e96e35",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "efc775c8cbfd1e17",
+      "uuid": "c4cc1004cad832d3",
       "name": "simple_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T06:45:57.164Z",
-      "endTime": "2026-05-05T06:45:58.516Z",
+      "startTime": "2026-06-01T16:35:58.939Z",
+      "endTime": "2026-06-01T16:36:00.259Z",
       "input": [
         {
           "role": "user",
           "content": "Say goodbye in exactly three words."
         }
       ],
-      "output": "Farewell, take care.",
+      "output": "Farewell and take care.",
+      "integration": "PydanticAI",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "PydanticAI"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "8b5fcf31ad03a5f3",
+      "uuid": "f8a2a4d353d31ed9",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "efc775c8cbfd1e17",
-      "startTime": "2026-05-05T06:45:57.166Z",
-      "endTime": "2026-05-05T06:45:58.513Z",
+      "parentUuid": "c4cc1004cad832d3",
+      "startTime": "2026-06-01T16:35:58.940Z",
+      "endTime": "2026-06-01T16:36:00.256Z",
       "input": [
         {
           "role": "system",
@@ -43,7 +43,7 @@
           "role": "Model Request Parameters",
           "content": {
             "function_tools": [],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -58,20 +58,20 @@
       "output": [
         {
           "role": "assistant",
-          "content": "Farewell, take care."
+          "content": "Farewell and take care."
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 28.0,
-      "outputTokenCount": 6.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 28.0,
+      "outputTokenCount": 6.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-05-05T06:45:57.164Z",
-  "endTime": "2026-05-05T06:45:58.516Z",
+  "startTime": "2026-06-01T16:35:58.939Z",
+  "endTime": "2026-06-01T16:36:00.259Z",
   "name": "pydanticai-async-simple-test",
   "metadata": {
     "test_type": "async_simple"
@@ -90,6 +90,6 @@
       "content": "Say goodbye in exactly three words."
     }
   ],
-  "output": "Farewell, take care.",
+  "output": "Farewell and take care.",
   "status": "SUCCESS"
 }

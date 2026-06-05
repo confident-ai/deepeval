@@ -37,7 +37,7 @@ def calculate(expression: str) -> str:
 
 # LLM with metric_collection and prompt in metadata
 llm = ChatOpenAI(
-    model="gpt-5-mini",
+    model="gpt-5.4-mini",
     temperature=0,
     seed=42,
     metadata={

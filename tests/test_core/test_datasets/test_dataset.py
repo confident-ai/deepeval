@@ -10,6 +10,7 @@ from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
     ToolCall,
+    RetrievedContextData,
 )
 
 
@@ -239,6 +240,82 @@ class TestSaveAndLoad:
                     custom_obj = json.loads(vals[custom_idx])
                     assert custom_obj["col"] == "val"
 
+    def test_save_as_round_trips_retrieval_context_data(self):
+        """save_as serializes a RetrievedContextData (a type-allowed member of
+        Golden.retrieval_context that used to crash the save) as a namespaced,
+        reconstructable marker, and the matching loaders rebuild it. So
+        retrieval_context survives a save/load round-trip losslessly (source
+        preserved) in all three formats. Plain strings and None pass through."""
+        goldens = [
+            Golden(
+                input="q",
+                actual_output="a",
+                retrieval_context=[
+                    RetrievedContextData(context="c", source="s"),
+                    "plain",
+                ],
+            ),
+            Golden(input="q3", actual_output="a3", retrieval_context=None),
+        ]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # On disk, a RetrievedContextData is a marker, not a raw model
+            json_path = EvaluationDataset(goldens).save_as(
+                "json", directory=tmpdir, file_name="rc_json"
+            )
+            with open(json_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            assert data[0]["retrieval_context"] == [
+                "deepeval_source=s,deepeval_context=c",
+                "plain",
+            ]
+            assert data[1]["retrieval_context"] is None
+
+            # Each loader rebuilds RetrievedContextData losslessly
+            for fmt, loader in (
+                ("json", "add_goldens_from_json_file"),
+                ("csv", "add_goldens_from_csv_file"),
+                ("jsonl", "add_goldens_from_jsonl_file"),
+            ):
+                path = EvaluationDataset(goldens).save_as(
+                    fmt, directory=tmpdir, file_name=f"rc_{fmt}"
+                )
+                reloaded = EvaluationDataset()
+                getattr(reloaded, loader)(path)
+                rc = reloaded.goldens[0].retrieval_context
+                assert len(rc) == 2
+                assert isinstance(rc[0], RetrievedContextData)
+                assert rc[0].source == "s" and rc[0].context == "c"
+                assert rc[1] == "plain"
+
+    def test_save_as_round_trips_turn_retrieval_context_data(self):
+        """Multi-turn goldens serialize through format_turns, which previously
+        dropped the source of a Turn's RetrievedContextData. It now round-trips
+        losslessly as well."""
+        golden = ConversationalGolden(
+            scenario="sc",
+            expected_outcome="o",
+            turns=[
+                Turn(
+                    role="user",
+                    content="hi",
+                    retrieval_context=[
+                        RetrievedContextData(context="c", source="s"),
+                    ],
+                )
+            ],
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = EvaluationDataset([golden]).save_as(
+                "json", directory=tmpdir, file_name="convo"
+            )
+            reloaded = EvaluationDataset()
+            reloaded.add_goldens_from_json_file(path)
+            rc = reloaded.goldens[0].turns[0].retrieval_context
+            assert len(rc) == 1
+            assert isinstance(rc[0], RetrievedContextData)
+            assert rc[0].source == "s" and rc[0].context == "c"
+
     def test_save_as_includes_turn_fields_in_multi_turn_json_and_jsonl(self):
         """Multi-turn JSON/JSONL include full turn fields (user_id, tools)."""
         convo = [
@@ -438,6 +515,31 @@ class TestSaveAndLoad:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 assert any(item["input"] == "input case" for item in data)
+
+    def test_save_as_includes_test_cases_round_trips_retrieval_context_data(
+        self,
+    ):
+        """A RetrievedContextData on an included test case survives the
+        include_test_cases save/load round-trip losslessly too (the
+        test-case -> golden conversion no longer flattens it)."""
+        test_case = LLMTestCase(
+            input="input case",
+            actual_output="actual",
+            retrieval_context=[RetrievedContextData(context="c", source="s")],
+        )
+        dataset = EvaluationDataset()
+        dataset.add_test_case(test_case)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = dataset.save_as(
+                "json", directory=tmpdir, include_test_cases=True
+            )
+            reloaded = EvaluationDataset()
+            reloaded.add_goldens_from_json_file(path)
+            rc = reloaded.goldens[0].retrieval_context
+            assert len(rc) == 1
+            assert isinstance(rc[0], RetrievedContextData)
+            assert rc[0].source == "s" and rc[0].context == "c"
 
     def test_save_as_includes_convo_test_cases(self):
         """Check that convo test cases get included when include_test_cases=True."""

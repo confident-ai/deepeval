@@ -110,3 +110,59 @@ The `HallucinationMetric` uses an LLM to determine, for each context in `context
 :::info
 Although extremely similar to the `FaithfulnessMetric`, the `HallucinationMetric` is calculated differently since it uses `contexts` as the source of truth instead. Since `contexts` is the ideal segment of your knowledge base relevant to a specific input, the degree of hallucination can be measured by the degree of which the `contexts` is disagreed upon.
 :::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "Hallucination or Faithfulness — which one should I actually use?",
+      answer: (
+        <>
+          Use <code>HallucinationMetric</code> when you have a curated,
+          ground-truth <code>context</code>. Use{" "}
+          <a href="/docs/metrics-faithfulness">Faithfulness</a> for RAG, where
+          the source of truth is the <code>retrieval_context</code> your
+          retriever fetched.
+        </>
+      ),
+    },
+    {
+      question: "Why does a lower score pass while a higher score fails?",
+      answer: (
+        <>
+          The score is the fraction of <code>context</code> documents that
+          contradict the <code>actual_output</code>, so 0 is perfect.{" "}
+          <code>threshold</code> is therefore a <em>maximum</em> — output passes
+          at or below it. <code>strict_mode</code> forces the threshold to 0.
+        </>
+      ),
+    },
+    {
+      question:
+        "It compares against `context`, not `retrieval_context` — what's the difference?",
+      answer: (
+        <>
+          <code>context</code> is ground-truth reference material you supply;{" "}
+          <code>retrieval_context</code> is what your retriever fetched. This
+          metric checks contradictions against <code>context</code> only, so it
+          measures the generator, not the retriever.
+        </>
+      ),
+    },
+    {
+      question: "When should I NOT reach for this metric?",
+      answer: (
+        <>
+          Don't use it on a live RAG system. It assumes <code>context</code> is
+          trusted ground truth, so feeding it noisy retrieved chunks misleads —
+          use{" "}
+          <a href="/docs/metrics-faithfulness">Faithfulness</a> for runtime{" "}
+          <code>retrieval_context</code> instead.
+        </>
+      ),
+    },
+  ]}
+/>
+

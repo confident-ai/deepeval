@@ -61,3 +61,76 @@ Below is the comprehensive list of available tasks:
 - `GAIN`
 - `GENERAL`
 - `OTHER`
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What does the `MathQA` benchmark measure?",
+      answer: (
+        <>
+          MathQA assesses an LLM's multi-step mathematical reasoning across 37K
+          English multiple-choice math word problems spanning diverse domains
+          such as probability and geometry. See the{" "}
+          <a href="/docs/benchmarks-introduction">benchmarks introduction</a> for
+          how scoring works across benchmarks.
+        </>
+      ),
+    },
+    {
+      question: "How is `MathQA` scored?",
+      answer: (
+        <>
+          Scoring is based on <strong>exact matching</strong>: the{" "}
+          <code>overall_score</code> is the proportion of questions for which the
+          model produces the precise correct multiple-choice answer (e.g. 'A' or
+          'C') out of the total. It ranges from 0 to 1, where 1 signifies perfect
+          performance.
+        </>
+      ),
+    },
+    {
+      question: "What is the default `n_shots` for `MathQA`?",
+      answer: (
+        <>
+          It defaults to <code>5</code> and cannot exceed that. Use the{" "}
+          <code>n_shots</code> argument to lower it for few-shot prompting.
+        </>
+      ),
+    },
+    {
+      question: "Which tasks can I evaluate with `MathQA`?",
+      answer: (
+        <>
+          Pass a list of <code>MathQATask</code> enums to the <code>tasks</code>{" "}
+          argument to target specific subject areas. Available tasks are{" "}
+          <code>PROBABILITY</code>, <code>GEOMETRY</code>, <code>PHYSICS</code>,{" "}
+          <code>GAIN</code>, <code>GENERAL</code>, and <code>OTHER</code>. By
+          default, all tasks are evaluated.
+        </>
+      ),
+    },
+    {
+      question: "Can using more few-shot prompts improve the `MathQA` score?",
+      answer: (
+        <>
+          Yes. Utilizing more few-shot prompts via <code>n_shots</code> can
+          greatly improve the model's robustness in generating answers in the
+          exact correct format and boost the <code>overall_score</code>.
+        </>
+      ),
+    },
+    {
+      question: "How do I run `MathQA` on a custom LLM?",
+      answer: (
+        <>
+          Define the benchmark, then call <code>evaluate()</code> with your model
+          and read <code>overall_score</code>. See{" "}
+          <a href="/docs/benchmarks-introduction#benchmarking-your-llm">benchmarking your LLM</a>{" "}
+          to learn how to use any custom LLM.
+        </>
+      ),
+    },
+  ]}
+/>

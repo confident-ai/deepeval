@@ -525,3 +525,66 @@ def test_llm():
 ```bash
 deepeval test run test_llm.py
 ```
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "When should I build my own `BaseMetric` instead of using `GEval` or DAG?",
+      answer: (
+        <>
+          When <a href="/docs/metrics-llm-evals">GEval</a> and{" "}
+          <a href="/docs/metrics-dag">DAG</a> aren't enough — you need full
+          control over scoring, want no LLM at all (e.g. ROUGE or regex), or
+          want to combine several <code>deepeval</code> metrics into one score.
+        </>
+      ),
+    },
+    {
+      question: "What exactly must my `measure()` and `a_measure()` set?",
+      answer: (
+        <>
+          <code>self.score</code> and <code>self.success</code> (typically{" "}
+          <code>self.success = self.score &gt;= self.threshold</code>). Set{" "}
+          <code>self.reason</code> only with an LLM, and wrap the body in a{" "}
+          <code>try</code> that assigns <code>self.error</code> and re-raises.
+        </>
+      ),
+    },
+    {
+      question: "How do I make my metric async-safe if scoring has no async path?",
+      answer: (
+        <>
+          Reuse the sync method:{" "}
+          <code>async def a_measure(self, test_case): return self.measure(test_case)</code>.
+          Fine for blocking libraries; for true concurrency under{" "}
+          <code>run_async=True</code>, <code>await</code> real async LLM calls
+          inside <code>a_measure()</code> instead.
+        </>
+      ),
+    },
+    {
+      question: "Can a custom metric work without an LLM?",
+      answer: (
+        <>
+          Yes. The <code>RougeMetric</code> example uses <code>deepeval</code>'s{" "}
+          <code>Scorer</code> module. Drop <code>include_reason</code> and{" "}
+          <code>evaluation_model</code> — there's no LLM to generate a reason.
+        </>
+      ),
+    },
+    {
+      question: "Single-turn or multi-turn — which base class do I inherit?",
+      answer: (
+        <>
+          <code>BaseMetric</code> for single-turn (takes an{" "}
+          <code>LLMTestCase</code>), <code>BaseConversationalMetric</code> for
+          multi-turn (takes a <code>ConversationalTestCase</code>). The base
+          class tells <code>deepeval</code> which test case to route.
+        </>
+      ),
+    },
+  ]}
+/>

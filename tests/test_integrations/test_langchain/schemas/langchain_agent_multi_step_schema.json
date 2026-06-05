@@ -48,7 +48,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2OG5jQlHTJJOXXr3Dw9UIgKl1bq",
               "service_tier": "default",
@@ -113,7 +113,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2OHWz11GltZ5wqTlfv8jmbN7GZx",
               "service_tier": "default",
@@ -197,7 +197,7 @@
         "content": "I searched the web for \"stock price apple\" and found a result: Apple (AAPL) stock: $178.50, up 1.2%.",
         "tool_calls": []
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 209.0,
       "outputTokenCount": 36.0,
       "integration": "LangChain",
@@ -238,7 +238,7 @@
           }
         ]
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 161.0,
       "outputTokenCount": 25.0,
       "integration": "LangChain",
@@ -319,7 +319,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2OG5jQlHTJJOXXr3Dw9UIgKl1bq",
           "service_tier": "default",
@@ -384,7 +384,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2OHWz11GltZ5wqTlfv8jmbN7GZx",
           "service_tier": "default",

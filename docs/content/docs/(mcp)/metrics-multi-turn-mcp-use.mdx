@@ -72,3 +72,59 @@ The `MultiTurnMCPUseMetric` score is calculated according to the following equat
 
 - The **AlignmentScore** is judged by an evaluation model based on which primitives were called and their generated arguments with respect to the task.
 - **MCP Interactions** are the number of times the LLM app uses the MCP server's capabilities.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "Should I reach for this over the single-turn MCP Use metric?",
+      answer: (
+        <>
+          Use <code>MultiTurnMCPUseMetric</code> for one score over MCP usage
+          spanning several <code>turns</code>. For a single{" "}
+          <code>input</code>/<code>actual_output</code>, use single-turn{" "}
+          <code>MCPUseMetric</code> on an <code>LLMTestCase</code>.
+        </>
+      ),
+    },
+    {
+      question:
+        "Where do the called primitives go in a `ConversationalTestCase`?",
+      answer: (
+        <>
+          <code>turns</code> and <code>mcp_servers</code> go on the{" "}
+          <a href="https://www.deepeval.com/docs/evaluation-multiturn-test-cases">
+            ConversationalTestCase
+          </a>
+          , but <code>mcp_tools_called</code>,{" "}
+          <code>mcp_resources_called</code>, and <code>mcp_prompts_called</code>{" "}
+          live <em>inside each turn</em>, not at the top level.
+        </>
+      ),
+    },
+    {
+      question:
+        "One turn misused a tool — how do I find which turn dragged the score down?",
+      answer: (
+        <>
+          One bad call lowers the averaged score. Enable{" "}
+          <code>verbose_mode</code> to print per-interaction reasoning and
+          pinpoint the offending turn.
+        </>
+      ),
+    },
+    {
+      question:
+        "Why is my score lower when the agent makes more MCP calls?",
+      answer: (
+        <>
+          The denominator is total MCP interactions, so every extra call is held
+          to the same alignment standard. Noisy or redundant calls pull the
+          average down.
+        </>
+      ),
+    },
+  ]}
+/>

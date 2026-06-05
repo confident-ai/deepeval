@@ -86,3 +86,84 @@ Below is the comprehensive list of available tasks:
 - `TRACKING_SHUFFLED_OBJECTS_THREE_OBJECTS`
 - `WEB_OF_LIES`
 - `WORD_SORTING`
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What does the `BigBenchHard` benchmark measure?",
+      answer: (
+        <>
+          BIG-Bench Hard comprises <strong>23 challenging</strong> BIG-Bench
+          tasks where prior language model evaluations did not outperform the
+          average human rater. <code>BigBenchHard</code> evaluates models using
+          both few-shot and chain-of-thought (CoT) prompting techniques.
+        </>
+      ),
+    },
+    {
+      question: "Which tasks can I run with `BigBenchHard`?",
+      answer: (
+        <>
+          You can pass a list of <code>BigBenchHardTask</code> enums to the{" "}
+          <code>tasks</code> argument, for example{" "}
+          <code>BOOLEAN_EXPRESSIONS</code> or <code>CAUSAL_JUDGEMENT</code>.
+          By default, all 23 tasks are evaluated.
+        </>
+      ),
+    },
+    {
+      question: "How is `BigBenchHard` scored?",
+      answer: (
+        <>
+          The <code>overall_score</code> ranges from 0 to 1 and is the
+          proportion of total correct predictions according to the target labels
+          for each task. The <strong>exact match</strong> scorer is used, even
+          though BBH answers vary widely (e.g. booleans for boolean expression
+          tasks versus numbers for arithmetic tasks). See the{" "}
+          <a href="/docs/benchmarks-introduction">benchmarks introduction</a> for
+          more on scoring.
+        </>
+      ),
+    },
+    {
+      question: "What is the default `n_shots` for `BigBenchHard`?",
+      answer: (
+        <>
+          The <code>n_shots</code> argument ranges strictly from 0-3 and is set
+          to <code>3</code> by default. Using more few-shot examples can improve
+          the model's robustness in generating answers in the exact correct
+          format.
+        </>
+      ),
+    },
+    {
+      question: "Does `BigBenchHard` support chain-of-thought prompting?",
+      answer: (
+        <>
+          Yes. The <code>enable_cot</code> argument is a boolean that determines
+          whether CoT prompting is used, and it is set to <code>True</code> by
+          default. Employing CoT prompting is extremely helpful for boosting
+          benchmark performance on BBH.
+        </>
+      ),
+    },
+    {
+      question: "How do I run `BigBenchHard` on a custom LLM?",
+      answer: (
+        <>
+          Wrap your model in <code>DeepEvalBaseLLM</code>, create a benchmark
+          with{" "}
+          <code>BigBenchHard(tasks=[...], n_shots=3, enable_cot=True)</code>, and
+          call <code>benchmark.evaluate(model=mistral_7b)</code> before reading{" "}
+          <code>benchmark.overall_score</code>. See the{" "}
+          <a href="/docs/benchmarks-introduction#benchmarking-your-llm">
+            benchmarking guide
+          </a>{" "}
+          for using any custom LLM.
+        </>
+      ),
+    },
+  ]}
+/>

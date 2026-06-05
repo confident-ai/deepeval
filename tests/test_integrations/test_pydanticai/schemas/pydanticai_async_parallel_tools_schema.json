@@ -1,35 +1,35 @@
 {
-  "uuid": "a5a02e712fe68da7bf6ac665b7cdd17c",
+  "uuid": "40d8b3d2db55d4b272cde76e54c34f20",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "0ac08d9e87bf9430",
+      "uuid": "883618466425eb3c",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T06:45:58.545Z",
-      "endTime": "2026-05-05T06:46:01.659Z",
+      "startTime": "2026-06-01T16:36:00.284Z",
+      "endTime": "2026-06-01T16:36:04.712Z",
       "input": [
         {
           "role": "user",
           "content": "Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each."
         }
       ],
-      "output": "The current weather in Tokyo is sunny with a temperature of 72°F. The time is 3:00 PM JST.",
+      "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F. The time is 3:00 PM JST.",
+      "integration": "PydanticAI",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "PydanticAI"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "cd2bbefc5c0b68de",
+      "uuid": "bb0f1a68b37b363b",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "0ac08d9e87bf9430",
-      "startTime": "2026-05-05T06:46:00.464Z",
-      "endTime": "2026-05-05T06:46:01.656Z",
+      "parentUuid": "883618466425eb3c",
+      "startTime": "2026-06-01T16:36:02.236Z",
+      "endTime": "2026-06-01T16:36:04.701Z",
       "input": [
         {
           "role": "system",
@@ -43,7 +43,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_oESfgfYmC9YZP6JUlh50Zw3p",
+            "id": "call_KnDHkfFnygO5qrjv2LQfsB5y",
             "name": "get_weather",
             "arguments": "{\"city\": \"Tokyo\"}"
           }
@@ -52,7 +52,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_FMQos1vX4bp3icF7ECbZN0Qa",
+            "id": "call_i5U3UVMDBtAmUPqSvEdcMXJj",
             "name": "get_time",
             "arguments": "{\"city\": \"Tokyo\"}"
           }
@@ -61,7 +61,7 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_oESfgfYmC9YZP6JUlh50Zw3p",
+            "id": "call_KnDHkfFnygO5qrjv2LQfsB5y",
             "name": "get_weather",
             "result": "Sunny, 72F"
           }
@@ -70,7 +70,7 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_FMQos1vX4bp3icF7ECbZN0Qa",
+            "id": "call_i5U3UVMDBtAmUPqSvEdcMXJj",
             "name": "get_time",
             "result": "3:00 PM JST"
           }
@@ -102,7 +102,9 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               },
@@ -129,12 +131,14 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               }
             ],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -149,23 +153,23 @@
       "output": [
         {
           "role": "assistant",
-          "content": "The current weather in Tokyo is sunny with a temperature of 72°F. The time is 3:00 PM JST."
+          "content": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F. The time is 3:00 PM JST."
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 253.0,
-      "outputTokenCount": 26.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 253.0,
+      "outputTokenCount": 26.0
     },
     {
-      "uuid": "dc71978cd5eda9a9",
+      "uuid": "9d240f240dac4263",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "0ac08d9e87bf9430",
-      "startTime": "2026-05-05T06:45:58.547Z",
-      "endTime": "2026-05-05T06:46:00.457Z",
+      "parentUuid": "883618466425eb3c",
+      "startTime": "2026-06-01T16:36:00.285Z",
+      "endTime": "2026-06-01T16:36:02.219Z",
       "input": [
         {
           "role": "system",
@@ -202,7 +206,9 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               },
@@ -229,12 +235,14 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               }
             ],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -251,7 +259,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_oESfgfYmC9YZP6JUlh50Zw3p",
+            "id": "call_KnDHkfFnygO5qrjv2LQfsB5y",
             "name": "get_weather",
             "arguments": "{\"city\": \"Tokyo\"}"
           }
@@ -260,29 +268,29 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_FMQos1vX4bp3icF7ECbZN0Qa",
+            "id": "call_i5U3UVMDBtAmUPqSvEdcMXJj",
             "name": "get_time",
             "arguments": "{\"city\": \"Tokyo\"}"
           }
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 185.0,
-      "outputTokenCount": 44.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 185.0,
+      "outputTokenCount": 44.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "9f7e948eee709f5e",
+      "uuid": "6b56ff48acac6382",
       "name": "get_time",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "0ac08d9e87bf9430",
-      "startTime": "2026-05-05T06:46:00.460Z",
-      "endTime": "2026-05-05T06:46:00.462Z",
+      "parentUuid": "883618466425eb3c",
+      "startTime": "2026-06-01T16:36:02.233Z",
+      "endTime": "2026-06-01T16:36:02.234Z",
       "input": {
         "city": "Tokyo"
       },
@@ -290,13 +298,13 @@
       "integration": "PydanticAI"
     },
     {
-      "uuid": "33e82a718605b96b",
+      "uuid": "5bec1309ec4bf639",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "0ac08d9e87bf9430",
-      "startTime": "2026-05-05T06:46:00.459Z",
-      "endTime": "2026-05-05T06:46:00.461Z",
+      "parentUuid": "883618466425eb3c",
+      "startTime": "2026-06-01T16:36:02.232Z",
+      "endTime": "2026-06-01T16:36:02.234Z",
       "input": {
         "city": "Tokyo"
       },
@@ -304,8 +312,8 @@
       "integration": "PydanticAI"
     }
   ],
-  "startTime": "2026-05-05T06:45:58.545Z",
-  "endTime": "2026-05-05T06:46:01.659Z",
+  "startTime": "2026-06-01T16:36:00.284Z",
+  "endTime": "2026-06-01T16:36:04.712Z",
   "name": "pydanticai-async-parallel-tools",
   "metadata": {
     "test_type": "async_parallel_tools"
@@ -324,6 +332,6 @@
       "content": "Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each."
     }
   ],
-  "output": "The current weather in Tokyo is sunny with a temperature of 72°F. The time is 3:00 PM JST.",
+  "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F. The time is 3:00 PM JST.",
   "status": "SUCCESS"
 }

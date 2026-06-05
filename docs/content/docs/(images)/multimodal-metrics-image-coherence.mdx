@@ -76,3 +76,57 @@ The `ImageCoherence` score is calculated as follows:
 2. **Final Score**: The overall `ImageCoherence` score is the average of all individual image coherence scores for each image:
 
 <Equation formula="O = \frac{\sum_{i=1}^n C_i}{n}" />
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "What's the difference between Image Coherence and Image Helpfulness?",
+      answer: (
+        <>
+          <code>ImageCoherence</code> measures <em>alignment</em> — whether
+          an image fits and flows with the text around it — while{" "}
+          <a href="/docs/multimodal-metrics-image-helpfulness">
+            <code>ImageHelpfulness</code>
+          </a>{" "}
+          measures <em>usefulness</em>. An image can be coherent yet add little
+          value, so track both together.
+        </>
+      ),
+    },
+    {
+      question: "What exactly is being aligned in a coherence check?",
+      answer: (
+        <>
+          The image against its accompanying text: does the visual complement
+          the narrative with consistent subject, style, and context? A coherent
+          image looks like it belongs where it was placed.
+        </>
+      ),
+    },
+    {
+      question: "How is the score computed across multiple images?",
+      answer: (
+        <>
+          Each <code>MLLMImage</code> is scored from the text directly above and
+          below it, and the final score is the <strong>average</strong>{" "}
+          (<code>O = (ΣC_i) / n</code>). Use <code>max_context_size</code> to cap
+          the surrounding text per image.
+        </>
+      ),
+    },
+    {
+      question: "What typically causes a low Image Coherence score?",
+      answer: (
+        <>
+          Images that clash with their context — inconsistent art style
+          between steps, a visual depicting something other than the adjacent
+          text, or one placed where it doesn't belong. Check{" "}
+          <code>metric.reason</code> to see which image broke the flow.
+        </>
+      ),
+    },
+  ]}
+/>

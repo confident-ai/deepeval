@@ -342,3 +342,67 @@ You must provide `score` or `child`, but not both.
 ## How Is It Calculated?
 
 The `DAGMetric` score is determined by traversing the custom decision tree in topological order, using any evaluation models along the way to perform judgements to determine which path to take.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "When should I use DAG instead of G-Eval?",
+      answer: (
+        <>
+          Use <code>DAGMetric</code> when criteria are explicit rules or a
+          sequence of decisions and you need the same score every run.{" "}
+          <a href="/docs/metrics-llm-evals">GEval</a> is better for fuzzy,
+          subjective judgement where one holistic score is fine.
+        </>
+      ),
+    },
+    {
+      question: "How does a DAG actually reduce LLM-judge variance?",
+      answer: (
+        <>
+          It breaks evaluation into atomic steps: a <code>TaskNode</code>{" "}
+          extracts structure, and each <code>BinaryJudgementNode</code> /{" "}
+          <code>NonBinaryJudgementNode</code> answers one narrow question. The
+          score comes from the deterministic path taken, not the LLM picking a
+          number — more decomposition, less room to hallucinate.
+        </>
+      ),
+    },
+    {
+      question: "Can I run a G-Eval (or other metric) inside a DAG?",
+      answer: (
+        <>
+          Yes. A <code>VerdictNode</code>'s <code>child</code> can be a{" "}
+          <code>GEval</code> instance (or any{" "}
+          <a href="/docs/metrics-introduction">BaseMetric</a>), letting you gate
+          a subjective check behind deterministic branches so it runs only on the
+          intended path.
+        </>
+      ),
+    },
+    {
+      question: "My `DAGMetric` keeps returning the same score — what's wrong?",
+      answer: (
+        <>
+          Check your wiring: each leaf must be a <code>VerdictNode</code> with a
+          distinct <code>score</code>. If traversal always lands on one branch,
+          a judgement node's <code>criteria</code> is likely too vague — set{" "}
+          <code>verbose_mode=True</code> to print each node's verdict.
+        </>
+      ),
+    },
+    {
+      question: "Do I have to provide both `score` and `child` on a `VerdictNode`?",
+      answer: (
+        <>
+          No — provide <strong>exactly one</strong>. Use <code>score</code> (an
+          integer 0-10) for a true leaf, or <code>child</code> to keep traversing
+          into another <code>BaseNode</code> or a metric like{" "}
+          <code>GEval</code>. Both raises an error.
+        </>
+      ),
+    },
+  ]}
+/>

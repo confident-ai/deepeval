@@ -41,3 +41,74 @@ The `overall_score` for this benchmark ranges from 0 to 1, where 1 signifies per
 :::tip
 As a result, utilizing more few-shot prompts (`n_shots`) can greatly improve the model's robustness in generating answers in the exact correct format and boost the overall score.
 :::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What does the `Winogrande` benchmark measure?",
+      answer: (
+        <>
+          Winogrande measures commonsense reasoning through 44K binary-choice
+          problems, inspired by the original WinoGrad Schema Challenge but
+          adjusted to enhance both scale and difficulty. See the{" "}
+          <a href="/docs/benchmarks-introduction">benchmarks introduction</a> for
+          how scoring works across benchmarks.
+        </>
+      ),
+    },
+    {
+      question: "How is `Winogrande` scored?",
+      answer: (
+        <>
+          Scoring is based on <strong>exact matching</strong>: the{" "}
+          <code>overall_score</code> is the proportion of questions for which the
+          model produces the precise correct answer (i.e. 'A' or 'B') out of the
+          total. It ranges from 0 to 1, where 1 signifies perfect performance.
+        </>
+      ),
+    },
+    {
+      question: "What is the default `n_shots` for `Winogrande`?",
+      answer: (
+        <>
+          It defaults to <code>5</code> and cannot exceed that. Using more
+          few-shot prompts can improve the model's robustness in generating
+          answers in the exact correct format and boost the overall score.
+        </>
+      ),
+    },
+    {
+      question: "How many problems does `Winogrande` evaluate by default?",
+      answer: (
+        <>
+          By default <code>n_problems</code> is set to 1267, which evaluates all
+          problems. You can pass a smaller value to <code>n_problems</code> to
+          evaluate fewer problems.
+        </>
+      ),
+    },
+    {
+      question: "What arguments does the `Winogrande` benchmark accept?",
+      answer: (
+        <>
+          There are two optional arguments: <code>n_problems</code> (the number
+          of problems for evaluation) and <code>n_shots</code> (the number of
+          examples for few-shot learning).
+        </>
+      ),
+    },
+    {
+      question: "How do I run `Winogrande` on a custom LLM?",
+      answer: (
+        <>
+          Define the benchmark, then call <code>evaluate()</code> with your model
+          and read <code>overall_score</code>. See{" "}
+          <a href="/docs/benchmarks-introduction#benchmarking-your-llm">benchmarking your LLM</a>{" "}
+          to learn how to use any custom LLM.
+        </>
+      ),
+    },
+  ]}
+/>

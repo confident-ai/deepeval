@@ -1,7 +1,14 @@
+import os
 import pytest
 from deepeval.synthesizer import Synthesizer
 from deepeval.dataset import Golden, ConversationalGolden
 from typing import List
+
+pytestmark = pytest.mark.skipif(
+    os.getenv("OPENAI_API_KEY") is None
+    or not os.getenv("OPENAI_API_KEY").strip(),
+    reason="needs OPENAI_API_KEY",
+)
 
 original_goldens: List[Golden] = [
     Golden(

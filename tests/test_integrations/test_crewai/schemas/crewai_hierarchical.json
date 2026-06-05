@@ -1,13 +1,13 @@
 {
-  "uuid": "b3abfe33-dfd0-4dd0-b5ec-0c220944be52",
+  "uuid": "526f2601-f909-4e81-a9fc-353cb861105d",
   "baseSpans": [
     {
-      "uuid": "afa9ffd2-8894-47da-90dc-31584315d8b1",
+      "uuid": "27b7f37b-e1b5-417c-bf3f-1017299f3c15",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-15T10:22:14.857Z",
-      "endTime": "2026-02-15T10:22:17.694Z",
+      "startTime": "2026-06-01T17:24:23.016Z",
+      "endTime": "2026-06-01T17:24:26.765Z",
       "input": {},
       "output": "SUCCESS",
       "integration": "CrewAI"
@@ -15,170 +15,172 @@
   ],
   "agentSpans": [
     {
-      "uuid": "40e56059-fbc6-4cd6-b55a-e51cafa59722",
+      "uuid": "43152fd2-a0b1-42db-b443-bf7b146671cb",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "afa9ffd2-8894-47da-90dc-31584315d8b1",
-      "startTime": "2026-02-15T10:22:14.865Z",
-      "endTime": "2026-02-15T10:22:17.687Z",
+      "parentUuid": "27b7f37b-e1b5-417c-bf3f-1017299f3c15",
+      "startTime": "2026-06-01T17:24:23.032Z",
+      "endTime": "2026-06-01T17:24:26.758Z",
       "input": "Manager: You must delegate a task to the 'Writer' agent to write the word: 'SUCCESS'. Do nothing else.\n\nThis is the expected criteria for your final answer: The word 'SUCCESS'.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "SUCCESS",
+      "integration": "CrewAI",
       "toolsCalled": [
         {
           "name": "delegate_work_to_coworker",
           "output": "SUCCESS",
           "inputParameters": {
             "task": "Write the word: 'SUCCESS'.",
-            "context": "The task is to simply write the word 'SUCCESS' as it is, without any additional content or context. This is a straightforward writing task that requires no elaboration or explanation.",
+            "context": "The task is to simply write the word 'SUCCESS' as it is, without any additional content or context.",
             "coworker": "Writer"
           }
         }
       ],
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "CrewAI"
+      "agentHandoffs": []
     },
     {
-      "uuid": "eda4d0fb-504a-4bd9-bfbd-1212d8223bcb",
+      "uuid": "25991256-89b0-4c1f-9ff2-1b8977522897",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "40e56059-fbc6-4cd6-b55a-e51cafa59722",
-      "startTime": "2026-02-15T10:22:16.539Z",
-      "endTime": "2026-02-15T10:22:17.083Z",
-      "input": "Write the word: 'SUCCESS'.\n\nThis is the expected criteria for your final answer: Your best answer to your coworker asking you this, accounting for the context shared.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nThe task is to simply write the word 'SUCCESS' as it is, without any additional content or context. This is a straightforward writing task that requires no elaboration or explanation.",
+      "parentUuid": "43152fd2-a0b1-42db-b443-bf7b146671cb",
+      "startTime": "2026-06-01T17:24:25.283Z",
+      "endTime": "2026-06-01T17:24:25.915Z",
+      "input": "Write the word: 'SUCCESS'.\n\nThis is the expected criteria for your final answer: Your best answer to your coworker asking you this, accounting for the context shared.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nThe task is to simply write the word 'SUCCESS' as it is, without any additional content or context.",
       "output": "SUCCESS",
+      "integration": "CrewAI",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "CrewAI"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "730dc135-a7fe-4c6d-b654-61d202a1e7fc",
+      "uuid": "fc0c74c9-f6db-43b1-a2a1-57840da25c5d",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "40e56059-fbc6-4cd6-b55a-e51cafa59722",
-      "startTime": "2026-02-15T10:22:17.089Z",
-      "endTime": "2026-02-15T10:22:17.684Z",
+      "parentUuid": "43152fd2-a0b1-42db-b443-bf7b146671cb",
+      "startTime": "2026-06-01T17:24:25.921Z",
+      "endTime": "2026-06-01T17:24:26.751Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Crew Manager. You are a seasoned manager with a knack for getting the best out of your team.\nYou are also known for your ability to delegate work to the right people, and to ask the right questions to get the best out of your team.\nEven though you don't perform tasks by yourself, you have a lot of experience in the field, which allows you to properly evaluate the work of your team members.\nYour personal goal is: Manage the team to complete the task in the best way possible."
+          "content": "You are Crew Manager. You are a seasoned manager with a knack for getting the best out of your team.\nYou are also known for your ability to delegate work to the right people, and to ask the right questions to get the best out of your team.\nEven though you don't perform tasks by yourself, you have a lot of experience in the field, which allows you to properly evaluate the work of your team members.\nYour personal goal is: Manage the team to complete the task in the best way possible.",
+          "cache_breakpoint": true
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Manager: You must delegate a task to the 'Writer' agent to write the word: 'SUCCESS'. Do nothing else.\n\nThis is the expected criteria for your final answer: The word 'SUCCESS'.\nyou MUST return the actual complete content as the final answer, not a summary."
+          "content": "\nCurrent Task: Manager: You must delegate a task to the 'Writer' agent to write the word: 'SUCCESS'. Do nothing else.\n\nThis is the expected criteria for your final answer: The word 'SUCCESS'.\nyou MUST return the actual complete content as the final answer, not a summary.",
+          "cache_breakpoint": true
         },
         {
           "role": "assistant",
           "content": null,
           "tool_calls": [
             {
-              "id": "call_ZOCeSudq71vvKP0v3fE02G5a",
+              "id": "call_RWUsRUMXn8PBacIedrOWgvPZ",
               "type": "function",
               "function": {
                 "name": "'delegate_work_to_coworker'",
-                "arguments": "'{\"task\":\"Write the word: \\'SUCCESS\\'.\",\"context\":\"The task is to simply write the word \\'SUCCESS\\' as it is, without any additional content or context. This is a straightforward writing task that requires no elaboration or explanation.\",\"coworker\":\"Writer\"}'"
+                "arguments": "'{\"task\":\"Write the word: \\'SUCCESS\\'.\",\"context\":\"The task is to simply write the word \\'SUCCESS\\' as it is, without any additional content or context.\",\"coworker\":\"Writer\"}'"
               }
             }
           ]
         },
         {
           "role": "tool",
-          "tool_call_id": "call_ZOCeSudq71vvKP0v3fE02G5a",
+          "tool_call_id": "call_RWUsRUMXn8PBacIedrOWgvPZ",
           "name": "delegate_work_to_coworker",
           "content": "SUCCESS"
-        },
-        {
-          "role": "user",
-          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
         }
       ],
       "output": "SUCCESS",
-      "model": "gpt-4o-mini",
       "integration": "CrewAI",
+      "model": "gpt-4o-mini",
       "provider": "OpenAI"
     },
     {
-      "uuid": "5de562dd-8123-4c54-b3fe-1ae5d37615fb",
+      "uuid": "32e0b5aa-fa1f-4f51-9976-7ff15ac8bb1d",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "eda4d0fb-504a-4bd9-bfbd-1212d8223bcb",
-      "startTime": "2026-02-15T10:22:16.543Z",
-      "endTime": "2026-02-15T10:22:17.080Z",
+      "parentUuid": "25991256-89b0-4c1f-9ff2-1b8977522897",
+      "startTime": "2026-06-01T17:24:25.287Z",
+      "endTime": "2026-06-01T17:24:25.909Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Writer. You are a junior writer. You simply write back what you are told.\nYour personal goal is: Write simple words"
+          "content": "You are Writer. You are a junior writer. You simply write back what you are told.\nYour personal goal is: Write simple words",
+          "cache_breakpoint": true
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Write the word: 'SUCCESS'.\n\nThis is the expected criteria for your final answer: Your best answer to your coworker asking you this, accounting for the context shared.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nThe task is to simply write the word 'SUCCESS' as it is, without any additional content or context. This is a straightforward writing task that requires no elaboration or explanation.\n\nProvide your complete response:"
+          "content": "\nCurrent Task: Write the word: 'SUCCESS'.\n\nThis is the expected criteria for your final answer: Your best answer to your coworker asking you this, accounting for the context shared.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nThe task is to simply write the word 'SUCCESS' as it is, without any additional content or context.\n\nProvide your complete response:",
+          "cache_breakpoint": true
         }
       ],
       "output": "SUCCESS",
-      "model": "gpt-4o-mini",
       "integration": "CrewAI",
+      "model": "gpt-4o-mini",
       "provider": "OpenAI"
     },
     {
-      "uuid": "7d3eccdc-4316-4ee7-9d8b-a580bbf9a500",
+      "uuid": "d8b5db4d-4069-4cfd-9c3d-506dac3236cd",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "40e56059-fbc6-4cd6-b55a-e51cafa59722",
-      "startTime": "2026-02-15T10:22:14.868Z",
-      "endTime": "2026-02-15T10:22:16.535Z",
+      "parentUuid": "43152fd2-a0b1-42db-b443-bf7b146671cb",
+      "startTime": "2026-06-01T17:24:23.041Z",
+      "endTime": "2026-06-01T17:24:25.282Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Crew Manager. You are a seasoned manager with a knack for getting the best out of your team.\nYou are also known for your ability to delegate work to the right people, and to ask the right questions to get the best out of your team.\nEven though you don't perform tasks by yourself, you have a lot of experience in the field, which allows you to properly evaluate the work of your team members.\nYour personal goal is: Manage the team to complete the task in the best way possible."
+          "content": "You are Crew Manager. You are a seasoned manager with a knack for getting the best out of your team.\nYou are also known for your ability to delegate work to the right people, and to ask the right questions to get the best out of your team.\nEven though you don't perform tasks by yourself, you have a lot of experience in the field, which allows you to properly evaluate the work of your team members.\nYour personal goal is: Manage the team to complete the task in the best way possible.",
+          "cache_breakpoint": true
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Manager: You must delegate a task to the 'Writer' agent to write the word: 'SUCCESS'. Do nothing else.\n\nThis is the expected criteria for your final answer: The word 'SUCCESS'.\nyou MUST return the actual complete content as the final answer, not a summary."
+          "content": "\nCurrent Task: Manager: You must delegate a task to the 'Writer' agent to write the word: 'SUCCESS'. Do nothing else.\n\nThis is the expected criteria for your final answer: The word 'SUCCESS'.\nyou MUST return the actual complete content as the final answer, not a summary.",
+          "cache_breakpoint": true
         }
       ],
       "output": [
         {
-          "id": "call_ZOCeSudq71vvKP0v3fE02G5a",
+          "id": "call_RWUsRUMXn8PBacIedrOWgvPZ",
           "function": {
-            "arguments": "{\"task\":\"Write the word: 'SUCCESS'.\",\"context\":\"The task is to simply write the word 'SUCCESS' as it is, without any additional content or context. This is a straightforward writing task that requires no elaboration or explanation.\",\"coworker\":\"Writer\"}",
+            "arguments": "{\"task\":\"Write the word: 'SUCCESS'.\",\"context\":\"The task is to simply write the word 'SUCCESS' as it is, without any additional content or context.\",\"coworker\":\"Writer\"}",
             "name": "delegate_work_to_coworker"
           },
           "type": "function"
         }
       ],
-      "model": "gpt-4o-mini",
       "integration": "CrewAI",
+      "model": "gpt-4o-mini",
       "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "8a5d0deb-6c24-48c6-8624-921973768c96",
+      "uuid": "f541ff31-87b2-4402-baac-e2c208d23538",
       "name": "delegate_work_to_coworker",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "40e56059-fbc6-4cd6-b55a-e51cafa59722",
-      "startTime": "2026-02-15T10:22:16.538Z",
-      "endTime": "2026-02-15T10:22:17.089Z",
+      "parentUuid": "43152fd2-a0b1-42db-b443-bf7b146671cb",
+      "startTime": "2026-06-01T17:24:25.282Z",
+      "endTime": "2026-06-01T17:24:25.915Z",
       "input": {
         "task": "Write the word: 'SUCCESS'.",
-        "context": "The task is to simply write the word 'SUCCESS' as it is, without any additional content or context. This is a straightforward writing task that requires no elaboration or explanation.",
+        "context": "The task is to simply write the word 'SUCCESS' as it is, without any additional content or context.",
         "coworker": "Writer"
       },
       "output": "SUCCESS",
       "integration": "CrewAI"
     }
   ],
-  "startTime": "2026-02-15T10:22:14.857Z",
-  "endTime": "2026-02-15T10:22:17.694Z",
+  "startTime": "2026-06-01T17:24:23.016Z",
+  "endTime": "2026-06-01T17:24:26.765Z",
   "environment": "development",
   "input": {},
   "output": "SUCCESS",
