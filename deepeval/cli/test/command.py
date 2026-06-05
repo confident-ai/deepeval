@@ -1,7 +1,8 @@
 import os
 import sys
+import glob
 import time
-from typing import Optional
+from typing import List, Optional
 
 import pytest
 import typer
@@ -14,7 +15,10 @@ from deepeval.test_run import (
     invoke_test_run_end_hook,
 )
 from deepeval.test_run.cache import TEMP_CACHE_FILE_NAME
+from deepeval.cli.utils import _post_github_pr_comment
 from deepeval.test_run.test_run import TestRunResultDisplay
+from deepeval.evaluate.console_report import EvaluationConsoleReport
+from deepeval.evaluate.utils import get_test_results_from_test_run
 from deepeval.utils import (
     delete_file_if_exists,
     set_identifier,
@@ -109,6 +113,16 @@ def run(
         "-m",
         help="List of marks to run the tests with.",
     ),
+    pass_rate: Optional[float] = typer.Option(
+        None,
+        "--pass-rate",
+        help="On GitHub Actions: minimum pass rate over assert_test() cases (e.g. 0.8).",
+    ),
+    required_metrics: Optional[str] = typer.Option(
+        None,
+        "--required-metrics",
+        help="On GitHub Actions: comma-separated metric display names that must pass on every assert_test() case.",
+    ),
 ):
     """Run a test"""
     delete_file_if_exists(TEMP_FILE_PATH)
@@ -171,6 +185,50 @@ def run(
     global_test_run_manager.wrap_up_test_run(run_duration, True, display)
 
     invoke_test_run_end_hook()
+
+    test_results = get_test_results_from_test_run(
+        global_test_run_manager.get_test_run()
+    )
+    is_ci = os.environ.get("GITHUB_ACTIONS") == "true"
+    
+    if is_ci and test_results:
+        print("CI environment detected. Generating PR comment...")
+        
+        passed = True
+        actual_pass_rate = len([r for r in test_results if r.success]) / len(test_results)
+        
+        if pass_rate is not None and actual_pass_rate < pass_rate:
+            passed = False
+            
+        if required_metrics:
+            parsed_metrics = [m.strip() for m in required_metrics.split(",")]
+            for test_result in test_results:
+                for metric_data in test_result.metrics_data or []:
+                    if metric_data.name in parsed_metrics and not metric_data.success:
+                        passed = False
+                        break
+
+        report = EvaluationConsoleReport(test_results)
+        output_dir = ".deepeval_ci_reports"
+        report.export_to_cicd_markdown(output_dir=output_dir, evaluation_name="pr_evaluation")
+        
+        list_of_files = glob.glob(f"{output_dir}/*.md")
+        latest_report_path = max(list_of_files, key=os.path.getctime)
+        with open(latest_report_path, "r", encoding="utf-8") as f:
+            markdown_summary = f.read()
+
+        confident_link = global_test_run_manager.get_latest_test_run_link()
+        if confident_link:
+            markdown_summary += f"\n### 🔍 Deep Dive\n[**View the full results on Confident AI**]({confident_link})"
+        else:
+            markdown_summary += f"\nSet CONFIDENT_API_KEY to view these results on the Confident AI platform"
+
+        if not passed:
+            markdown_summary = markdown_summary.replace("**Status:** ✅ Passed", "**Status:** ❌ Failed (Thresholds not met)")
+            pytest_retcode = 1
+
+        # 4. Post Comment
+        _post_github_pr_comment(markdown_summary)
 
     if pytest_retcode == 1:
         sys.exit(1)

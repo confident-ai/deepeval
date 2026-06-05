@@ -18,6 +18,7 @@ from deepeval.test_run import (
     LLMApiTestCase,
     ConversationalApiTestCase,
     MetricData,
+    TestRun,
 )
 from deepeval.evaluate.types import TestResult
 from deepeval.tracing.api import TraceApi, BaseApiSpan, TraceSpanApiStatus
@@ -163,6 +164,34 @@ def create_test_result(
                 multimodal=False,
                 metadata=api_test_case.metadata,
             )
+
+
+def _is_assert_test_api_case(
+    api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
+) -> bool:
+    """``deepeval test run`` CI reporting only includes ``assert_test()`` rows.
+
+    ``evaluate()`` / ``evals_iterator()`` set ``order`` to a dataset index;
+    ``assert_test()`` leaves it ``None`` (unless ``_dataset_rank`` is set).
+    """
+    return api_test_case.order is None
+
+
+def get_test_results_from_test_run(test_run: TestRun) -> List[TestResult]:
+    """Build ``TestResult`` rows from ``assert_test()`` cases after pytest."""
+    test_results: List[TestResult] = []
+
+    for api_test_case in test_run.test_cases:
+        if not _is_assert_test_api_case(api_test_case):
+            continue
+        test_results.append(create_test_result(api_test_case))
+
+    for api_test_case in test_run.conversational_test_cases:
+        if not _is_assert_test_api_case(api_test_case):
+            continue
+        test_results.append(create_test_result(api_test_case))
+
+    return test_results
 
 
 def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:

@@ -719,11 +719,31 @@ The plain `pytest` command works but is highly not recommended. `deepeval test r
 </Step>
 </Steps>
 
-## YAML File For CI/CD Evals
+## Pytest Integration For CI/CD Evals
 
-Drop `deepeval test run` into a `.yml` to run your unit tests on every push or PR. This example uses `poetry` for installation and `OPENAI_API_KEY` as your LLM judge to run evals locally. Add `CONFIDENT_API_KEY` to send results to Confident AI.
+Drop `deepeval test run` into a GitHub Actions workflow to run your `test_*.py` evals on every push or pull request. Use `assert_test()` in your tests, then wire the command into your pipeline with the secrets and flags below.
 
-```yaml {32-33}
+### Example test file
+
+```python title="tests/evals/test_cicd.py"
+from deepeval import assert_test
+from deepeval.dataset import Golden
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+
+def test_answer_relevancy():
+    test_case = LLMTestCase(
+        input="I have a persistent cough and fever. Should I be worried?",
+        actual_output="...",  # Replace with your LLM application's output
+    )
+    assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric()])
+```
+
+For traced apps, use `assert_test(golden=..., metrics=...)` after calling your `@observe`-decorated code inside the same `test_*` function (see the traced examples above).
+
+### GitHub Actions workflow
+
+```yaml title=".github/workflows/deepeval.yml"
 name: LLM App `deepeval` Tests
 
 on:
@@ -735,31 +755,42 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
+      - name: Check out repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
-      - name: Install Poetry
+      - name: Install dependencies
         run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          pip install poetry
+          poetry install
 
-      - name: Install Dependencies
-        run: poetry install --no-root
-
-      - name: Run `deepeval` Unit Tests
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
-        run: poetry run deepeval test run test_llm_app.py
+      - name: Run `deepeval` unit tests
+        run: |
+          poetry run deepeval test run tests/evals/test_cicd.py \
+            --pass-rate 0.80 \
+            --required-metrics "Answer Relevancy"
 ```
 
-[Click here](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about the optional flags available to `deepeval test run`.
+:::tip 
+On **pull request** workflows, `deepeval test run` posts a markdown summary on the PR after pytest finishes — passing and failing cases, per-metric scores, and aggregates.
+
+The `--pass-rate` and `--required-metrics` flags (shown in the command above) apply only to `assert_test()` results. They fail the workflow when overall pass rate or named metrics do not meet your bar. See [`--pass-rate`](/docs/evaluation-flags-and-configs#pass-rate-github-actions) and [`--required-metrics`](/docs/evaluation-flags-and-configs#required-metrics-github-actions) for details.
+:::
+
+[Click here](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about the other optional flags available to `deepeval test run`.
 
 :::tip
 We highly recommend setting up [Confident AI](https://app.confident-ai.com) with your `deepeval` evaluations to get professional test reports and observe trends of your LLM application's performance over time:

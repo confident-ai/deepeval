@@ -223,6 +223,41 @@ Repeat each test case by providing a number to the `-r` flag to specify how many
 deepeval test run test_example.py -r 2
 ```
 
+### Pass Rate (GitHub Actions)
+
+The `--pass-rate` flag sets the minimum fraction of `assert_test()` cases that must pass (e.g., `0.8` for 80%). On GitHub Actions, the job fails if the overall pass rate falls below this value. Cases from `evaluate()` or `evals_iterator()` are not counted.
+
+```
+deepeval test run test_example.py --pass-rate 0.8
+```
+
+### Required Metrics (GitHub Actions)
+
+The `--required-metrics` flag accepts a comma-separated list of metric **display names** (from each metric's `__name__` property) that must pass on every `assert_test()` case. Enforced on GitHub Actions alongside `--pass-rate`.
+
+```
+deepeval test run test_example.py --required-metrics "Answer Relevancy, Contextual Precision"
+```
+
+### GitHub Actions PR Comments
+
+On GitHub Actions pull request workflows, `deepeval test run` posts a markdown evaluation report as a PR comment when the run completes.
+
+**Requirements:**
+
+- `pull_request` trigger
+- `permissions.pull-requests: write` on the job
+- `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}`
+- `CONFIDENT_API_KEY` (optional) to link to the full run on Confident AI
+
+```yaml
+permissions:
+  pull-requests: write
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+run: poetry run deepeval test run test_example.py --pass-rate 0.8 --required-metrics "Answer Relevancy"
+```
+
 ### Hooks
 
 `deepeval`'s Pytest integration allows you to run custom code at the end of each evaluation via the `@deepeval.on_test_run_end` decorator:
