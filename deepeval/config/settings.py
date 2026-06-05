@@ -1000,8 +1000,6 @@ class Settings(BaseSettings):
         "USE_AZURE_OPENAI",
         "USE_LOCAL_MODEL",
         "USE_GEMINI_MODEL",
-        "GEMINI_COST_PER_INPUT_TOKEN",
-        "GEMINI_COST_PER_OUTPUT_TOKEN",
         "USE_MOONSHOT_MODEL",
         "USE_GROK_MODEL",
         "USE_DEEPSEEK_MODEL",
@@ -1036,6 +1034,8 @@ class Settings(BaseSettings):
     @field_validator(
         "OPENAI_COST_PER_INPUT_TOKEN",
         "OPENAI_COST_PER_OUTPUT_TOKEN",
+        "GEMINI_COST_PER_INPUT_TOKEN",
+        "GEMINI_COST_PER_OUTPUT_TOKEN",
         "AWS_BEDROCK_COST_PER_INPUT_TOKEN",
         "AWS_BEDROCK_COST_PER_OUTPUT_TOKEN",
         "TEMPERATURE",
