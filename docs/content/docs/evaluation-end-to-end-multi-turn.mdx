@@ -403,3 +403,74 @@ deepeval test run test_chatbot.py
 ```
 
 See [unit testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd) for `assert_test()` parameters, YAML pipeline examples, and `deepeval test run` flags.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is multi-turn end-to-end evaluation?",
+      answer: (
+        <>
+          It evaluates an entire conversation between a user and your chatbot or
+          assistant, scoring the back-and-forth as a whole instead of a single
+          response. It's the right approach for any app where context carries
+          across turns.
+        </>
+      ),
+    },
+    {
+      question: "Why do I need to wrap my chatbot in a callback?",
+      answer: (
+        <>
+          The <code>model_callback</code> tells <code>deepeval</code> how to
+          call your
+          chatbot for the next turn given the conversation so far. This lets the{" "}
+          <a href="/docs/conversation-simulator">conversation simulator</a>{" "}
+          drive realistic multi-turn dialogues automatically.
+        </>
+      ),
+    },
+    {
+      question: "Do I have to script every conversation by hand?",
+      answer: (
+        <>
+          No. You define <code>ConversationalGolden</code>s with a scenario and
+          user description, then let <code>ConversationSimulator.simulate()</code>{" "}
+          generate the turns up to a <code>max_turns</code> limit.
+        </>
+      ),
+    },
+    {
+      question: "Is there component-level evaluation for multi-turn apps?",
+      answer:
+        "No. Component-level evaluation only applies to single-turn use cases. Multi-turn apps are evaluated end-to-end across the full conversation.",
+    },
+    {
+      question: "How do I run multi-turn evals in CI/CD?",
+      answer: (
+        <>
+          Simulate the conversations once at module load, then{" "}
+          <code>assert_test()</code> each <code>ConversationalTestCase</code>{" "}
+          inside a <code>pytest</code> parametrized test and run it with{" "}
+          <code>deepeval test run</code>.
+        </>
+      ),
+    },
+    {
+      question:
+        "Can my team review long conversations on the cloud in a shared UI?",
+      answer: (
+        <>
+          Multi-turn runs work locally, but inspecting long transcripts in a
+          terminal is painful. When logged into{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
+          from the <code>deepeval</code> team), the same run produces a cloud
+          testing report
+          where your team can read each conversation, see per-turn scores, and
+          track trends over time — optional and requiring no code changes.
+        </>
+      ),
+    },
+  ]}
+/>

@@ -640,3 +640,69 @@ The `turns` parameter should **100%** be generated at evaluation time in your `C
 - Continue from a specific turn when test cases usually fail at the last turn where agents are calling multiple tools
 
 :::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What's the difference between a golden and a test case?",
+      answer: (
+        <>
+          A golden only needs an <code>input</code> (or <code>scenario</code>)
+          plus expected results, and acts as a "pending test case." It becomes a
+          full test case once your LLM app generates the dynamic fields like{" "}
+          <code>actual_output</code>, <code>retrieval_context</code>, and{" "}
+          <code>tools_called</code> at evaluation time.
+        </>
+      ),
+    },
+    {
+      question: "Why initialize a dataset with goldens instead of test cases?",
+      answer:
+        "Goldens are the preferred way to build a dataset because they're decoupled from any single run. You can re-run the same goldens across model versions and app iterations, generating fresh outputs each time, which makes regression testing and comparisons clean.",
+    },
+    {
+      question: "Do I need production data to create a dataset?",
+      answer: (
+        <>
+          No. You can generate synthetic goldens with the{" "}
+          <a href="/docs/golden-synthesizer">Synthesizer</a> from documents or
+          from scratch, or simulate multi-turn conversations with the{" "}
+          <a href="/docs/conversation-simulator">conversation simulator</a>.
+        </>
+      ),
+    },
+    {
+      question: "Can I load datasets from local files?",
+      answer:
+        "Yes. You can save and load datasets locally, including importing goldens from JSON and JSONL files, and convert them to test cases when you run evals.",
+    },
+    {
+      question: "Can I add custom columns to a golden?",
+      answer: (
+        <>
+          Yes. Goldens support <code>additional_metadata</code>,{" "}
+          <code>comments</code>, and <code>custom_column_key_values</code> for
+          arbitrary metadata you want to carry through evaluation.
+        </>
+      ),
+    },
+    {
+      question:
+        "Can my team store, edit, and version datasets on the cloud with a UI?",
+      answer: (
+        <>
+          Datasets are fully usable locally. For teams that want a shared
+          source of truth,{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
+          from the <code>deepeval</code> team) lets you store datasets in the
+          cloud, edit
+          goldens and custom columns in a UI, and have non-engineers contribute
+          — then pull the same dataset back into code. It's optional and local
+          datasets behave identically.
+        </>
+      ),
+    },
+  ]}
+/>

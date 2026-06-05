@@ -283,3 +283,84 @@ You can create test cases for two types of evaluation:
 - One-Off Standalone - Executes individual metrics on single test cases for debugging or custom evaluation pipelines
 
 Unlike for single-turn test cases, the concept of component-level evaluation does not exist for multi-turn use cases.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "What's the difference between a `ConversationalTestCase` and an `LLMTestCase`?",
+      answer: (
+        <>
+          A <code>ConversationalTestCase</code> represents an entire multi-turn
+          conversation through a list of <code>Turn</code>s, while an{" "}
+          <a href="/docs/evaluation-test-cases">
+            <code>LLMTestCase</code>
+          </a>{" "}
+          represents a single atomic interaction. Use the conversational one for
+          chatbots and assistants where context spans multiple turns.
+        </>
+      ),
+    },
+    {
+      question: "What does a `Turn` contain?",
+      answer: (
+        <>
+          Each <code>Turn</code> has a <code>role</code> (<code>user</code> or{" "}
+          <code>assistant</code>) and <code>content</code>, and can optionally
+          carry retrieval context, tools called, and MCP primitives so
+          per-turn behavior can be evaluated.
+        </>
+      ),
+    },
+    {
+      question: "What are `scenario` and `expected_outcome` for?",
+      answer: (
+        <>
+          They describe the conversation at a high level: <code>scenario</code>{" "}
+          sets up the situation the user is in, and{" "}
+          <code>expected_outcome</code> describes what a successful conversation
+          should achieve. They're especially useful for simulating turns and
+          for outcome-based conversational metrics.
+        </>
+      ),
+    },
+    {
+      question: "Do I have to write every turn by hand?",
+      answer: (
+        <>
+          No. You can author turns manually, or generate them automatically with
+          the{" "}
+          <a href="/docs/conversation-simulator">conversation simulator</a> from
+          a <code>ConversationalGolden</code>'s scenario and user description.
+        </>
+      ),
+    },
+    {
+      question: "Can multi-turn test cases include images?",
+      answer: (
+        <>
+          Yes. You can embed <code>MLLMImage</code> objects inside a turn's
+          content to evaluate multimodal conversations.
+        </>
+      ),
+    },
+    {
+      question:
+        "How can my team share multi-turn conversations and visualize them in a UI?",
+      answer: (
+        <>
+          Conversations run fully locally, but reading long multi-turn
+          transcripts in a terminal doesn't scale. Logging into{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
+          from the <code>deepeval</code> team) renders the same conversations
+          and their
+          per-turn scores into a shared cloud UI, so a team can review,
+          annotate, and track them over time — with no change to your test case
+          code. It's entirely optional.
+        </>
+      ),
+    },
+  ]}
+/>

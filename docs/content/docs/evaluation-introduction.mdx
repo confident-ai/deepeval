@@ -253,3 +253,95 @@ This is very useful especially if you:
 - Don't want to rewrite your codebase just to bubble up returned variables to create an `LLMTestCase`
 
 By defauly, `deepeval` will not run any metrics when you're running your LLM application outside of `evaluate()` or `assert_test()`. For the full guide on evaluating with tracing, visit [this page.](/docs/evaluation-component-level-llm-evals)
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What are the three components an LLM evaluation needs?",
+      answer: (
+        <>
+          A <a href="/docs/evaluation-test-cases">test case</a> (the{" "}
+          <code>input</code> and <code>actual_output</code> to score), one or
+          more <a href="/docs/metrics-introduction">metrics</a>, and optionally
+          an <a href="/docs/evaluation-datasets">evaluation dataset</a> to run
+          those metrics across many test cases at once.
+        </>
+      ),
+    },
+    {
+      question:
+        "When should I run end-to-end vs component-level evals in `deepeval`?",
+      answer: (
+        <>
+          Use{" "}
+          <a href="/docs/evaluation-end-to-end-llm-evals">end-to-end</a> when
+          you only care about your system's final input and output. Use{" "}
+          <a href="/docs/evaluation-component-level-llm-evals">
+            component-level
+          </a>{" "}
+          (via the <code>@observe</code> decorator) when you need to score
+          individual retrievers, tools, or agents to see exactly where things
+          break.
+        </>
+      ),
+    },
+    {
+      question:
+        "Do I need a `deepeval` account or API key to run evals?",
+      answer: (
+        <>
+          No. <code>deepeval</code> runs entirely locally. The only key you
+          typically need is an LLM provider key such as{" "}
+          <code>OPENAI_API_KEY</code> for metrics that use an LLM judge. A
+          Confident AI account is optional and only needed to push results to
+          the cloud.
+        </>
+      ),
+    },
+    {
+      question:
+        "Should I run evals with `deepeval test run` or the `evaluate()` function?",
+      answer: (
+        <>
+          Use <code>deepeval test run</code> with <code>pytest</code> when you
+          want evals gated in CI/CD, and <code>evaluate()</code> for scripts or
+          notebooks where you want parallel execution without the CLI. Both run
+          the same metrics on the same test cases.
+        </>
+      ),
+    },
+    {
+      question:
+        "How does `deepeval` score outputs without an exact match to `expected_output`?",
+      answer: (
+        <>
+          Most of <code>deepeval</code>'s 30+ metrics use an LLM judge with
+          techniques like G-Eval, DAG, and QAG rather than string matching, so
+          a correct answer phrased differently from the <code>expected_output</code>{" "}
+          can still pass.
+        </>
+      ),
+    },
+    {
+      question:
+        "Can my team keep `deepeval` results on the cloud and review them in a shared UI?",
+      answer: (
+        <>
+          Every test run is local-first, but when you're logged into{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
+          built by the <code>deepeval</code> team) the same run produces a
+          sharable{" "}
+          <a href="https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports">
+            testing report
+          </a>{" "}
+          on the cloud. That gives a team a shared UI to compare runs, track
+          regressions over time, and inspect failing cases — without changing
+          any of your evaluation code. It's optional; local runs work exactly
+          the same with or without it.
+        </>
+      ),
+    },
+  ]}
+/>

@@ -228,3 +228,76 @@ compare(test_cases=[test_case], metric=arena_geval)
 ```
 
 The `ArenaTestCase` streamlines the evaluation by automatically masking contestant names (to ensure unbiased judging) and randomizing their order.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is an `ArenaTestCase` used for?",
+      answer: (
+        <>
+          It compares multiple candidates (contestants) for the same input and
+          picks a winner, instead of scoring a single output in isolation. It's
+          ideal for choosing between models, prompts, or configurations head to
+          head.
+        </>
+      ),
+    },
+    {
+      question: "Which metric works with an `ArenaTestCase`?",
+      answer: (
+        <>
+          The{" "}
+          <a href="/docs/metrics-arena-g-eval">
+            <code>ArenaGEval</code>
+          </a>{" "}
+          metric is the only metric that consumes an <code>ArenaTestCase</code>.
+          It uses your <code>criteria</code> to pick the winning contestant via{" "}
+          <code>compare()</code>.
+        </>
+      ),
+    },
+    {
+      question:
+        "How does `deepeval` prevent bias toward a particular contestant?",
+      answer:
+        "The ArenaTestCase automatically masks contestant names and randomizes their order before judging, so the judge can't be influenced by naming or position.",
+    },
+    {
+      question: "What's the difference between arena and regular single-turn evals?",
+      answer: (
+        <>
+          A regular <code>LLMTestCase</code> scores one output against a metric
+          threshold (absolute scoring). An arena test case is relative — it asks
+          which candidate is best for the same input rather than whether a
+          single output passes.
+        </>
+      ),
+    },
+    {
+      question: "Can arena test cases include images?",
+      answer: (
+        <>
+          Yes. Each contestant can include <code>MLLMImage</code> objects, so
+          you can run head-to-head comparisons on multimodal outputs.
+        </>
+      ),
+    },
+    {
+      question:
+        "Can my team run these comparisons on the cloud and visualize the winners in a UI?",
+      answer: (
+        <>
+          Arena comparisons run locally out of the box. If your team wants a
+          shared, cloud-hosted view of which candidate won and why,{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> (built by the{" "}
+          <code>deepeval</code> team) can visualize comparison results in a UI
+          for
+          collaborative review — optional, and your <code>compare()</code> runs
+          work the same without it.
+        </>
+      ),
+    },
+  ]}
+/>

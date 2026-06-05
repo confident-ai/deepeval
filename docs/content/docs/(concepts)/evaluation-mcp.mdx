@@ -260,3 +260,72 @@ test_case = ConversationalTestCase(
 </details>
 
 ✅ Done. You can now use the [MCP metrics](/docs/metrics-multi-turn-mcp-use) to run evaluations on your MCP based application.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What does `deepeval` evaluate in an MCP-based application?",
+      answer: (
+        <>
+          It evaluates how your app uses MCP primitives — tools, resources, and
+          prompts — by capturing the calls made to an MCP server and scoring
+          them with MCP-specific metrics, for both single-turn and multi-turn
+          interactions.
+        </>
+      ),
+    },
+    {
+      question: "What are the three MCP primitives I can evaluate?",
+      answer: (
+        <>
+          <strong>Tools</strong> (functions the model can call),{" "}
+          <strong>resources</strong> (data the server exposes), and{" "}
+          <strong>prompts</strong> (server-provided prompt templates). Each is
+          captured at runtime and formatted into <code>deepeval</code>'s test
+          case objects.
+        </>
+      ),
+    },
+    {
+      question: "How do I attach MCP data to a test case?",
+      answer: (
+        <>
+          For single-turn, populate the MCP call parameters on your{" "}
+          <code>LLMTestCase</code>. For multi-turn, pass your{" "}
+          <code>MCPServer</code> instances to a{" "}
+          <code>ConversationalTestCase</code> via <code>mcp_servers</code>, and
+          optionally set per-turn calls like <code>mcp_tools_called</code> on
+          each <code>Turn</code>.
+        </>
+      ),
+    },
+    {
+      question: "Which metrics work with MCP test cases?",
+      answer: (
+        <>
+          Use the{" "}
+          <a href="/docs/metrics-multi-turn-mcp-use">MCP metrics</a> (such as{" "}
+          <code>MultiTurnMCPMetric</code>) to score whether your app called the
+          right tools, resources, and prompts correctly.
+        </>
+      ),
+    },
+    {
+      question:
+        "Can my team visualize MCP tool/resource calls on the cloud in a UI?",
+      answer: (
+        <>
+          MCP evals run locally. For teams that want to inspect which tools,
+          resources, and prompts were invoked across runs,{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
+          from the <code>deepeval</code> team) can visualize MCP interactions
+          and their
+          scores in a shared cloud UI — optional, with no change to your
+          evaluation code.
+        </>
+      ),
+    },
+  ]}
+/>

@@ -1025,3 +1025,84 @@ deepeval test run test_my_ai_agent.py
 ```
 
 See [unit testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd) for `assert_test()` parameters, YAML pipeline examples, and `deepeval test run` flags.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is component-level evaluation?",
+      answer: (
+        <>
+          Instead of scoring only the final output, it scores individual
+          components of your app — retrievers, tools, agents, and LLM calls — by
+          attaching metrics to traced spans with the <code>@observe</code>{" "}
+          decorator.
+        </>
+      ),
+    },
+    {
+      question: "When should I use component-level over end-to-end evaluation?",
+      answer: (
+        <>
+          Use it when a single end-to-end score isn't enough to tell you{" "}
+          <em>where</em> things went wrong — for example, to check the retriever
+          and the generator separately, or to run different metrics on different
+          components in one pass.
+        </>
+      ),
+    },
+    {
+      question:
+        "Do I have to manually instrument my app, or does `deepeval` integrate with my framework?",
+      answer: (
+        <>
+          You can manually instrument with the <code>@observe</code> decorator,
+          but <code>deepeval</code> also ships native{" "}
+          <a href="/integrations">integrations</a> for LangChain, LangGraph,
+          LlamaIndex, Pydantic AI, CrewAI, and more. These attach component
+          metrics to the spans your framework already emits — no manual tracing
+          required.
+        </>
+      ),
+    },
+    {
+      question: "Do I have to rewrite my app to run component-level evals?",
+      answer: (
+        <>
+          No. You add an <code>@observe</code> decorator to the components you
+          care about (or use a{" "}
+          <a href="/integrations">native framework integration</a>) and set a
+          test case with <code>update_current_span()</code>. You don't need to
+          refactor your code to bubble up intermediate values.
+        </>
+      ),
+    },
+    {
+      question: "How does `assert_test()` work with traced components in CI/CD?",
+      answer: (
+        <>
+          Because metrics stay attached to the spans, <code>assert_test()</code>{" "}
+          only needs the active golden — run your traced app on the golden's
+          input, then call <code>assert_test(golden=golden)</code> inside a{" "}
+          <code>pytest</code> test.
+        </>
+      ),
+    },
+    {
+      question:
+        "Can my team see a visual breakdown of component scores on the cloud?",
+      answer: (
+        <>
+          Component-level evals run locally, but the per-span scores are much
+          easier to read visually. Logging into{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> (the official
+          platform for <code>deepeval</code>) renders the same traces and
+          component scores
+          into a shared cloud UI, so a team can drill into which span failed and
+          track it over time — optional, with zero additional code.
+        </>
+      ),
+    },
+  ]}
+/>
