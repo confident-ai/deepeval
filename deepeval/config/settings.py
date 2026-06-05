@@ -517,6 +517,12 @@ class Settings(BaseSettings):
         None,
         description="Service account JSON key for Vertex AI auth (if not using ADC).",
     )
+    GEMINI_COST_PER_INPUT_TOKEN: Optional[float] = Field(
+        None, description="Gemini input token cost (used for cost reporting)."
+    )
+    GEMINI_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
+        None, description="Gemini output token cost (used for cost reporting)."
+    )
     # Grok
     USE_GROK_MODEL: Optional[bool] = Field(
         None, description="Select Grok as the active LLM provider."
@@ -994,6 +1000,8 @@ class Settings(BaseSettings):
         "USE_AZURE_OPENAI",
         "USE_LOCAL_MODEL",
         "USE_GEMINI_MODEL",
+        "GEMINI_COST_PER_INPUT_TOKEN",
+        "GEMINI_COST_PER_OUTPUT_TOKEN",
         "USE_MOONSHOT_MODEL",
         "USE_GROK_MODEL",
         "USE_DEEPSEEK_MODEL",
