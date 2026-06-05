@@ -248,12 +248,12 @@ def test_gemini_generate_computes_cost_from_tokens_and_registry_prices(
 
 
 @patch("deepeval.models.llms.gemini_model.require_dependency")
-def test_gemini_generate_returns_zero_cost_when_usage_metadata_missing(
+def test_gemini_generate_returns_unknown_cost_when_usage_metadata_missing(
     mock_require_dep, settings
 ):
     """
-    When the SDK response omits ``usage_metadata``, cost falls back to 0 and
-    the token attributes are ``None`` (we cannot invent a price-bearing count).
+    When the SDK response omits ``usage_metadata``, cost is unknown (None) and
+    token attributes are also ``None`` (we cannot invent a price-bearing count).
     """
     fake_response = MagicMock(spec=["text"])
     fake_response.text = "Hello world"
@@ -266,19 +266,19 @@ def test_gemini_generate_returns_zero_cost_when_usage_metadata_missing(
 
     assert output == "Hello world"
     assert isinstance(cost, EvaluationCost)
-    assert cost == 0
+    assert cost.value is None
     assert cost.input_tokens is None
     assert cost.output_tokens is None
 
 
 @patch("deepeval.models.llms.gemini_model.require_dependency")
-def test_gemini_generate_returns_zero_cost_for_unregistered_model(
+def test_gemini_generate_returns_unknown_cost_for_unregistered_model(
     mock_require_dep, settings
 ):
     """
     Unknown/custom model names resolve to a default ``DeepEvalModelData`` with
-    ``input_price=None`` / ``output_price=None``. Cost must be 0 and must not
-    raise, but token counts should still ride along on the EvaluationCost.
+    ``input_price=None`` / ``output_price=None``. Cost must be None (not 0) and
+    must not raise; token counts should still ride along on the EvaluationCost.
     """
     fake_response = SimpleNamespace(
         text="Hello world",
@@ -302,7 +302,7 @@ def test_gemini_generate_returns_zero_cost_for_unregistered_model(
 
     assert output == "Hello world"
     assert isinstance(cost, EvaluationCost)
-    assert cost == 0
+    assert cost.value is None
     assert cost.input_tokens == 42
     assert cost.output_tokens == 7
 
@@ -328,3 +328,131 @@ def test_gemini_calculate_cost_unit(mock_require_dep, settings):
     # Pricing missing -> contract is to return None (matches OpenAI/Anthropic).
     model.model_data.input_price = None
     assert model.calculate_cost(10_000, 2_500) is None
+
+
+########################################
+# Cost overrides: ctor params + env    #
+########################################
+
+
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_ctor_cost_params_override_registry(mock_require_dep, settings):
+    """
+    Explicit ``cost_per_input_token`` / ``cost_per_output_token`` passed to
+    the constructor must override whatever the built-in registry says.
+    """
+    mock_require_dep.return_value = _make_fake_genai_module()
+
+    with settings.edit(persist=False):
+        settings.GOOGLE_API_KEY = "test-key"
+
+    custom_input = 0.000001
+    custom_output = 0.000002
+    model = GeminiModel(
+        model="gemini-2.5-flash",
+        cost_per_input_token=custom_input,
+        cost_per_output_token=custom_output,
+    )
+
+    assert model.model_data.input_price == custom_input
+    assert model.model_data.output_price == custom_output
+
+
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_settings_cost_env_vars_used_as_fallback(
+    mock_require_dep, settings
+):
+    """
+    When no ctor cost params are provided, GeminiModel should fall back to
+    ``GEMINI_COST_PER_INPUT_TOKEN`` / ``GEMINI_COST_PER_OUTPUT_TOKEN`` from
+    settings (i.e. env vars).
+    """
+    mock_require_dep.return_value = _make_fake_genai_module()
+
+    env_input = 0.0000005
+    env_output = 0.0000015
+    with settings.edit(persist=False):
+        settings.GOOGLE_API_KEY = "test-key"
+        settings.GEMINI_COST_PER_INPUT_TOKEN = env_input
+        settings.GEMINI_COST_PER_OUTPUT_TOKEN = env_output
+
+    model = GeminiModel(model="gemini-2.5-flash")
+
+    assert model.model_data.input_price == env_input
+    assert model.model_data.output_price == env_output
+
+
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_ctor_cost_params_take_precedence_over_env(
+    mock_require_dep, settings
+):
+    """
+    Explicit ctor cost params must win over ``GEMINI_COST_PER_INPUT_TOKEN``
+    / ``GEMINI_COST_PER_OUTPUT_TOKEN`` env vars.
+    """
+    mock_require_dep.return_value = _make_fake_genai_module()
+
+    with settings.edit(persist=False):
+        settings.GOOGLE_API_KEY = "test-key"
+        settings.GEMINI_COST_PER_INPUT_TOKEN = 0.0000099
+        settings.GEMINI_COST_PER_OUTPUT_TOKEN = 0.0000099
+
+    ctor_input = 0.000001
+    ctor_output = 0.000002
+    model = GeminiModel(
+        model="gemini-2.5-flash",
+        cost_per_input_token=ctor_input,
+        cost_per_output_token=ctor_output,
+    )
+
+    assert model.model_data.input_price == ctor_input
+    assert model.model_data.output_price == ctor_output
+
+
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_custom_cost_used_in_generate(mock_require_dep, settings):
+    """
+    End-to-end: a custom cost set via ctor must be reflected in the
+    ``EvaluationCost`` returned by ``generate``.
+    """
+    fake_response = SimpleNamespace(
+        text="hi",
+        usage_metadata=SimpleNamespace(
+            prompt_token_count=100,
+            candidates_token_count=50,
+        ),
+    )
+
+    custom_input = 0.000010
+    custom_output = 0.000020
+
+    fake_genai = _make_fake_genai_module()
+    fake_genai.types.GenerateContentConfig = lambda **kwargs: kwargs
+    fake_client = MagicMock()
+    fake_client.models.generate_content.return_value = fake_response
+
+    def _fake_require_dependency(name, *args, **kwargs):
+        if name == "google.genai":
+            return fake_genai
+        raise AssertionError(f"Unexpected dependency: {name}")
+
+    mock_require_dep.side_effect = _fake_require_dependency
+
+    with settings.edit(persist=False):
+        settings.GOOGLE_API_KEY = "test-key"
+
+    model = GeminiModel(
+        model="gemini-2.5-flash",
+        cost_per_input_token=custom_input,
+        cost_per_output_token=custom_output,
+    )
+    model.load_model = lambda *a, **kw: fake_client
+
+    output, cost = model.generate("test prompt")
+
+    expected = 100 * custom_input + 50 * custom_output
+    assert output == "hi"
+    assert isinstance(cost, EvaluationCost)
+    assert abs(float(cost) - expected) < 1e-12
+    assert cost.input_tokens == 100
+    assert cost.output_tokens == 50
