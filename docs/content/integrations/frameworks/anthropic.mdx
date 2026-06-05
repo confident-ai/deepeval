@@ -369,3 +369,56 @@ with trace(
 | `retrieval_context` | `list[str]` | Retrieved context the model actually used (Faithfulness, Contextual Relevancy, etc.).    |
 
 `with trace(...)` accepts trace-level kwargs (`name`, `tags`, `metadata`, `thread_id`, `user_id`, `metrics`, `input`, `output`) — see the [tracing reference](/docs/evaluation-llm-tracing).
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Can I run these Claude evals as a Pytest check?",
+      answer: (
+        <>
+          Yes. The same <code>deepeval.anthropic.Anthropic</code> client works
+          under <code>pytest</code> — call{" "}
+          <code>assert_test(golden=golden)</code> after each Messages API call
+          and run <code>deepeval test run</code> so regressions block the merge.
+        </>
+      ),
+    },
+    {
+      question: "Can I evaluate whether Claude picked the right tools?",
+      answer: (
+        <>
+          Yes. When Claude returns <code>tool_use</code> blocks they're captured
+          on the LLM span's <code>tools_called</code> automatically. Pass{" "}
+          <code>expected_tools</code> to <code>LlmSpanContext</code> and use a
+          tool-aware metric to score the selection.
+        </>
+      ),
+    },
+    {
+      question: "Where can my team review these results outside the terminal?",
+      answer: (
+        <>
+          After <code>deepeval login</code>,{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> shows every
+          Claude trace and metric score in a shared cloud UI for collaborative
+          review. It's optional — local runs behave the same without it.
+        </>
+      ),
+    },
+    {
+      question: "Does this only work offline, or can I monitor Claude in production?",
+      answer: (
+        <>
+          Both. Beyond offline datasets, a logged-in client streams production
+          traces to Confident AI where you can run{" "}
+          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
+            online evals
+          </a>{" "}
+          continuously on live traffic.
+        </>
+      ),
+    },
+  ]}
+/>

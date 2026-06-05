@@ -387,3 +387,58 @@ def respond_to_user(prompt: str):
 | `turn_id`           | `str`       | Optional turn identifier for conversational traces.               |
 
 For native tracing helpers (`@observe`, `with trace(...)`, `update_current_trace`, `update_current_span`) see the [tracing reference](/docs/evaluation-llm-tracing).
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Can I evaluate a sub-agent node inside my graph?",
+      answer: (
+        <>
+          Yes. Wrap <code>graph.invoke(...)</code> in{" "}
+          <code>with next_llm_span(metrics=[...])</code> and the{" "}
+          <code>CallbackHandler</code> drains the metric onto the span that
+          sub-agent node emits — scoring it on its own. It's one-shot per run,
+          so for every loop turn either drive the loop yourself or score
+          end-to-end with trace-level metrics.
+        </>
+      ),
+    },
+    {
+      question: "Can I fail CI when a LangGraph metric regresses?",
+      answer: (
+        <>
+          Yes. Pass <code>CallbackHandler()</code> into the graph config inside a
+          parametrized <code>pytest</code> test and assert with{" "}
+          <code>assert_test(...)</code> under <code>deepeval test run</code>.
+        </>
+      ),
+    },
+    {
+      question: "Where do my LangGraph traces show up beyond the console?",
+      answer: (
+        <>
+          Run <code>deepeval login</code> and{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> visualizes the
+          full graph trace — every node, model call, and tool call as nested
+          spans — with their scores in a shared cloud UI. It's optional.
+        </>
+      ),
+    },
+    {
+      question: "Can I keep evaluating a deployed LangGraph app in production?",
+      answer: (
+        <>
+          Yes. Keep passing the <code>CallbackHandler</code> in production and
+          group runs with <code>thread_id</code>; logged into Confident AI those
+          live traces power{" "}
+          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
+            online evals
+          </a>{" "}
+          on real traffic.
+        </>
+      ),
+    },
+  ]}
+/>

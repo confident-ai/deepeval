@@ -378,3 +378,57 @@ async def run_rag(prompt: str):
 | `prompt`            | `Prompt`    | Confident AI prompt object; LLM-only.                                                    |
 
 `with trace(...)` accepts trace-level kwargs (`name`, `tags`, `metadata`, `thread_id`, `user_id`, `metrics`) — see the [tracing reference](/docs/evaluation-llm-tracing).
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Can I score the agent step separately from the LLM call?",
+      answer: (
+        <>
+          Yes. Stage a metric on the agent span with{" "}
+          <code>AgentSpanContext(metrics=[...])</code>, or target a model step
+          with <code>LlmSpanContext(metrics=[...])</code>, inside{" "}
+          <code>with trace(...)</code> — so a sub-agent and its underlying LLM
+          call are evaluable independently.
+        </>
+      ),
+    },
+    {
+      question: "Can I run these LlamaIndex evals under Pytest?",
+      answer: (
+        <>
+          Yes. Call <code>instrument_llama_index(get_dispatcher())</code> once,
+          run the agent inside a parametrized <code>pytest</code> test, and
+          assert with <code>assert_test(...)</code> under{" "}
+          <code>deepeval test run</code>.
+        </>
+      ),
+    },
+    {
+      question: "Is there a cloud view for these traces?",
+      answer: (
+        <>
+          Yes, optionally. <code>deepeval login</code> connects{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a>, which renders
+          the same dispatcher-traced spans and scores in a shared UI for your
+          team.
+        </>
+      ),
+    },
+    {
+      question: "Can I monitor a LlamaIndex app in production?",
+      answer: (
+        <>
+          Yes. The dispatcher keeps emitting spans in production, and once
+          logged into Confident AI those live traces support{" "}
+          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
+            online evals
+          </a>{" "}
+          on real traffic, not just offline datasets.
+        </>
+      ),
+    },
+  ]}
+/>

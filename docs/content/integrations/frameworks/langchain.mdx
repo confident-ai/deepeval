@@ -368,3 +368,61 @@ def respond_to_user(prompt: str) -> str:
 | `turn_id`           | `str`       | Optional turn identifier for conversational traces.      |
 
 For native tracing helpers (`@observe`, `with trace(...)`, `update_current_trace`, `update_current_span`) see the [tracing reference](/docs/evaluation-llm-tracing).
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Can I evaluate a sub-agent inside my LangChain agent run?",
+      answer: (
+        <>
+          Yes. Stage a metric with <code>with next_llm_span(metrics=[...])</code>{" "}
+          (or <code>next_retriever_span(...)</code>) right before{" "}
+          <code>agent.invoke(...)</code>, and the <code>CallbackHandler</code>{" "}
+          drains it onto that sub-agent's span — scoring the sub-agent in
+          isolation without touching the parent. It's one-shot per run, so to
+          score every step you drive the loop yourself or use trace-level
+          metrics on <code>CallbackHandler(metrics=[...])</code>.
+        </>
+      ),
+    },
+    {
+      question: "Can I gate CI/CD on my LangChain agent's metrics?",
+      answer: (
+        <>
+          Yes. Pass a <code>CallbackHandler()</code> into the agent's{" "}
+          <code>config</code> inside a parametrized <code>pytest</code> test,
+          then call <code>assert_test(golden=golden, metrics=[...])</code> and
+          run <code>deepeval test run</code> so a failing metric fails the
+          build.
+        </>
+      ),
+    },
+    {
+      question: "Can I see these LangChain traces in a cloud UI?",
+      answer: (
+        <>
+          Yes, optionally. After <code>deepeval login</code>,{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> renders every
+          agent, LLM, tool, and retriever span produced by the{" "}
+          <code>CallbackHandler</code> in a shared dashboard — no code changes.
+        </>
+      ),
+    },
+    {
+      question: "Can I monitor a LangChain app in production?",
+      answer: (
+        <>
+          Yes. Keep the <code>CallbackHandler</code> in your production calls and
+          set <code>thread_id</code> / <code>user_id</code> for grouping; when
+          logged into Confident AI those live traces support{" "}
+          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
+            online evals
+          </a>{" "}
+          on real traffic.
+        </>
+      ),
+    },
+  ]}
+/>
