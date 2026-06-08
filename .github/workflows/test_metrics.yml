@@ -2,7 +2,11 @@ name: Metrics Tests
 
 on:
   push:
+    paths-ignore:
+      - 'typescript/**'
   pull_request:
+    paths-ignore:
+      - 'typescript/**'
   workflow_dispatch:
 
 jobs:
