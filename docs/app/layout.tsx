@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
 import { RootProvider } from 'fumadocs-ui/provider/next';
+import { LanguageProvider } from '@/components/lang/language-provider';
 import './global.css';
 import 'katex/dist/katex.css';
 import { Geist, Space_Grotesk } from 'next/font/google';
@@ -187,7 +188,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
       <body className="flex flex-col min-h-screen font-sans">
         <UtmCapture />
         <RootProvider search={{ hotKey: disabledSearchHotKey }}>
-          {children}
+          <LanguageProvider>{children}</LanguageProvider>
         </RootProvider>
         {/*
           Analytics parity with the old Docusaurus site

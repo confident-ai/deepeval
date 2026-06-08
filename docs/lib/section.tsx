@@ -21,6 +21,7 @@ import Footer from "@/src/layouts/Footer";
 import NavHeader from "@/src/layouts/NavHeader";
 import TocFooter from "@/src/components/TocFooter";
 import SidebarSearch from "@/src/layouts/SidebarSearch";
+import LanguageSelector from "@/components/language-selector/language-selector";
 import Link from "next/link";
 
 // Each section's fumadocs-mdx collection resolves to a differently-typed
@@ -123,7 +124,14 @@ export function createSection(config: SectionConfig) {
           // Started") and in the mobile drawer. The header still
           // keeps the compact (magnifying-glass) search trigger for
           // mobile reachability — see NavHeader col 3.
-          sidebar={{ banner: <SidebarSearch key="sidebar-search" /> }}
+          sidebar={{
+            banner: (
+              <div key="sidebar-banner" className="flex flex-col gap-2">
+                <SidebarSearch />
+                <LanguageSelector />
+              </div>
+            ),
+          }}
         >
           {children}
         </DocsLayout>

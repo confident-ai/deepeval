@@ -5,6 +5,7 @@ import { Steps, Step } from "fumadocs-ui/components/steps";
 import type { MDXComponents } from "mdx/types";
 import { DEFAULT_LLM_MODEL } from "@/lib/defaults";
 import { MdxAnchor } from "@/components/mdx-anchor";
+import { C } from "@/components/lang/code-term";
 
 // Site-specific MDX components — globally registered so MDX authors
 // don't have to `import` them in every file.
@@ -62,6 +63,8 @@ export function getMDXComponents(components?: MDXComponents) {
     EnterprisePlatformMockup,
     RepoContributors,
     DefaultLLMModel,
+    // Inline language-aware code term, e.g. <C id="class::LLMTestCase"/>
+    C,
     ...components,
   } satisfies MDXComponents;
 }
