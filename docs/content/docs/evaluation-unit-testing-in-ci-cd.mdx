@@ -771,6 +771,27 @@ We highly recommend setting up [Confident AI](https://app.confident-ai.com) with
 />
 :::
 
+## Regression Testing Against a Baseline
+
+`deepeval` can compare test runs against an **official baseline** on Confident AI and fail the build if any metric regresses.
+
+Mark a run as official via:
+- **CLI**: `deepeval test run test_file.py --official`
+- **SDK**: `test_run.mark_official(run_id="<test-run-id>")`
+- **Platform**: mark any run as official from the Confident AI dashboard
+
+Then run with `--mode regression` on pull requests:
+
+```bash
+deepeval test run test_llm_app.py --mode regression
+```
+
+:::note
+Both `--official` and `--mode regression` require a `CONFIDENT_API_KEY`. Add `GITHUB_TOKEN` to your workflow step to get automatic PR comments with the comparison results.
+:::
+
+See the [regression testing guide](/guides/guides-regression-testing-in-cicd) for the full workflow.
+
 ## FAQs
 
 <FAQs
@@ -843,6 +864,24 @@ We highly recommend setting up [Confident AI](https://app.confident-ai.com) with
           testing reports, a
           UI to inspect failing cases, and trend lines of performance across
           commits. Without the key, the exact same tests still run locally.
+        </>
+      ),
+    },
+    {
+      question: "How do I catch regressions against a previous run?",
+      answer: (
+        <>
+          Mark a run as official via the <code>--official</code> CLI flag,{" "}
+          <code>global_test_run_manager.mark_official(run_id="...")</code>, or
+          the Confident AI platform. Then run{" "}
+          <code>deepeval test run --mode regression</code> on pull requests —{" "}
+          <code>deepeval</code> compares against the latest official run and
+          fails the build if any metric drops by more than <code>0.1</code>.
+          See the{" "}
+          <a href="/guides/guides-regression-testing-in-cicd">
+            regression testing guide
+          </a>
+          .
         </>
       ),
     },
