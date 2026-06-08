@@ -167,6 +167,57 @@ class TestRun(BaseModel):
     dataset_alias: Optional[str] = Field(None, alias="datasetAlias")
     dataset_id: Optional[str] = Field(None, alias="datasetId")
 
+    @staticmethod
+    def _stable_identity_value(value: Any) -> str:
+        return json.dumps(
+            make_json_serializable(value),
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+
+    @classmethod
+    def _get_llm_test_case_identity(
+        cls, test_case: LLMApiTestCase
+    ) -> Tuple[str, ...]:
+        return (
+            test_case.name,
+            cls._stable_identity_value(test_case.input),
+            cls._stable_identity_value(test_case.expected_output),
+            cls._stable_identity_value(test_case.context),
+            cls._stable_identity_value(test_case.retrieval_context),
+            cls._stable_identity_value(test_case.tools_called),
+            cls._stable_identity_value(test_case.expected_tools),
+            cls._stable_identity_value(test_case.tags),
+            cls._stable_identity_value(test_case.metadata),
+            cls._stable_identity_value(test_case.comments),
+            cls._stable_identity_value(test_case.images_mapping),
+        )
+
+    @classmethod
+    def _get_conversational_test_case_identity(
+        cls, test_case: ConversationalApiTestCase
+    ) -> Tuple[str, ...]:
+        return (
+            test_case.name,
+            cls._stable_identity_value(test_case.scenario),
+            cls._stable_identity_value(test_case.expected_outcome),
+            cls._stable_identity_value(test_case.user_description),
+            cls._stable_identity_value(test_case.context),
+            cls._stable_identity_value(test_case.turns),
+            cls._stable_identity_value(test_case.tags),
+            cls._stable_identity_value(test_case.metadata),
+            cls._stable_identity_value(test_case.comments),
+            cls._stable_identity_value(test_case.images_mapping),
+        )
+
+    @classmethod
+    def _get_test_case_identity(
+        cls, test_case: Union[LLMApiTestCase, ConversationalApiTestCase]
+    ) -> Tuple[str, ...]:
+        if isinstance(test_case, ConversationalApiTestCase):
+            return cls._get_conversational_test_case_identity(test_case)
+        return cls._get_llm_test_case_identity(test_case)
+
     def add_test_case(
         self, api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase]
     ):
@@ -175,9 +226,13 @@ class TestRun(BaseModel):
         else:
             target_test_cases = self.test_cases
 
+        api_test_case_identity = self._get_test_case_identity(api_test_case)
         replaced_evaluation_cost = None
         for index, test_case in enumerate(target_test_cases):
-            if test_case.name == api_test_case.name:
+            if (
+                self._get_test_case_identity(test_case)
+                == api_test_case_identity
+            ):
                 replaced_evaluation_cost = test_case.evaluation_cost
                 target_test_cases[index] = api_test_case
                 break
