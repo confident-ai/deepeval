@@ -166,6 +166,7 @@ class TestRun(BaseModel):
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
     dataset_alias: Optional[str] = Field(None, alias="datasetAlias")
     dataset_id: Optional[str] = Field(None, alias="datasetId")
+    run_id: Optional[str] = Field(None, alias="runId", exclude=True)
 
     def add_test_case(
         self, api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase]
@@ -990,7 +991,42 @@ class TestRunManager:
         )
         self.save_final_test_run_link(link)
         open_browser(link)
+        test_run.run_id = res.id
         return link, res.id
+
+    def mark_official(self, run_id: Optional[str] = None) -> None:
+        effective_run_id = run_id or (
+            self.test_run.run_id if self.test_run else None
+        )
+
+        if not effective_run_id:
+            # No run_id yet — upload the local test run first
+            if self.test_run is None or (
+                len(self.test_run.test_cases) == 0
+                and len(self.test_run.conversational_test_cases) == 0
+            ):
+                raise ValueError(
+                    "No test run loaded. Run an evaluation or provide a run_id before calling mark_official()."
+                )
+            console.print(
+                "[bold]Uploading test run to Confident AI before marking as official...[/bold]"
+            )
+            result = self.post_test_run(self.test_run)
+            if result is None:
+                raise RuntimeError(
+                    "Upload failed — cannot mark test run as official."
+                )
+            effective_run_id = result[1]
+
+        api = Api()
+        api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.MARK_OFFICIAL_ENDPOINT,
+            url_params={"testRunId": effective_run_id},
+        )
+        console.print(
+            "[rgb(5,245,141)]✓[/rgb(5,245,141)] Test run marked as official on Confident AI."
+        )
 
     def save_test_run_locally(self):
         """Persist the current TestRun to disk.
