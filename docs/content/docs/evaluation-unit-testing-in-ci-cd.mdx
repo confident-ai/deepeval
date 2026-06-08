@@ -872,7 +872,7 @@ See the [regression testing guide](/guides/guides-regression-testing-in-cicd) fo
       answer: (
         <>
           Mark a run as official via the <code>--official</code> CLI flag,{" "}
-          <code>global_test_run_manager.mark_official(run_id="...")</code>, or
+          <code>test_run.mark_official(run_id="...")</code>, or
           the Confident AI platform. Then run{" "}
           <code>deepeval test run --mode regression</code> on pull requests —{" "}
           <code>deepeval</code> compares against the latest official run and
