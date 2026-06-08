@@ -448,6 +448,45 @@ class TestRun(BaseModel):
                     "Unable to send multimodal test cases to Confident AI."
                 )
 
+    def compare_with_official(self, run_id: str):
+        from deepeval.test_run.comparison import (
+            TestRunComparisonResult,
+            TestCaseComparisonResult,
+            MetricComparisonResult,
+        )
+
+        api = Api()
+        data, _ = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.COMPARE_TEST_RUNS_ENDPOINT,
+            body={"newRunId": run_id},
+        )
+        return TestRunComparisonResult(
+            passed=data["passed"],
+            reason=data.get("reason"),
+            official_run_id=data.get("officialRunId"),
+            new_run_id=data["newRunId"],
+            total_test_cases=data.get("totalTestCases", 0),
+            regressed_test_cases=data.get("regressedTestCases", 0),
+            test_cases=[
+                TestCaseComparisonResult(
+                    name=tc["name"],
+                    passed=tc["passed"],
+                    metrics=[
+                        MetricComparisonResult(
+                            metric=m["metric"],
+                            official_score=m["officialScore"],
+                            new_score=m["newScore"],
+                            delta=m["delta"],
+                            passed=m["passed"],
+                        )
+                        for m in tc.get("metrics", [])
+                    ],
+                )
+                for tc in data.get("testCases", [])
+            ],
+        )
+
 
 class TestRunEncoder(json.JSONEncoder):
     def default(self, obj):
