@@ -1,0 +1,73 @@
+{
+  "name": "Vercel Stream Gen Trace",
+  "uuid": "5816375c-df82-4413-b23c-42234969ff3b",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "238ca562ba59c9cc",
+      "name": "ai.streamText",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "5816375c-df82-4413-b23c-42234969ff3b",
+      "startTime": "2026-02-23T14:52:39.159Z",
+      "endTime": "2026-02-23T14:52:40.368Z",
+      "input": {
+        "prompt": "Count from 1 to 5."
+      },
+      "output": "1, 2, 3, 4, 5.",
+      "model": "gpt-4o-mini",
+      "metadata": {
+        "provider": "openai.responses",
+        "finish_reason": "stop",
+        "max_retries": 2
+      }
+    },
+    {
+      "uuid": "877d125b53793f2e",
+      "name": "ai.streamText.doStream",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "5816375c-df82-4413-b23c-42234969ff3b",
+      "parentUuid": "238ca562ba59c9cc",
+      "startTime": "2026-02-23T14:52:39.161Z",
+      "endTime": "2026-02-23T14:52:40.364Z",
+      "input": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Count from 1 to 5."
+            }
+          ]
+        }
+      ],
+      "output": "1, 2, 3, 4, 5.",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 15,
+      "outputTokenCount": 15,
+      "metadata": {
+        "response_id": "resp_0863999230bd91ba00699c69b75eb8819fae55a1d2314d0fed",
+        "response_model": "gpt-4o-mini-2024-07-18",
+        "provider": "openai.responses",
+        "ms_to_first_chunk": 385.35562500000015,
+        "ms_to_finish": 1202.0747499999998,
+        "finish_reason": "stop",
+        "max_retries": 2
+      }
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-23T14:52:39.157Z",
+  "endTime": "2026-02-23T14:52:40.370Z",
+  "environment": "testing",
+  "tags": [
+    "vercel",
+    "streamText"
+  ],
+  "threadId": "vercel-thread-2",
+  "input": "{\"prompt\":\"Count from 1 to 5.\"}",
+  "output": "1, 2, 3, 4, 5."
+}

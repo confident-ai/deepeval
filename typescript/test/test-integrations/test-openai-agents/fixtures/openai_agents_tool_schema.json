@@ -1,0 +1,262 @@
+{
+  "name": "Agent workflow",
+  "uuid": "86b87bec-daef-4801-b192-57936a785e15",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "span_a0225023f7db4a8980863589",
+      "name": "ToolAgent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "traceUuid": "86b87bec-daef-4801-b192-57936a785e15",
+      "startTime": "2026-02-24T14:09:21.138Z",
+      "endTime": "2026-02-24T14:09:24.474Z",
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You are a helper. Use tools for weather or math. Do not answer from memory."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "What is the weather in London? Use your tools."
+        }
+      ],
+      "output": "The weather in London is currently rainy with a temperature of 55°F.",
+      "availableTools": [
+        "get_weather",
+        "calculate"
+      ],
+      "agentHandoffs": [],
+      "metadata": {
+        "output_type": "text"
+      }
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "span_198fdc2579ba4edda9f8d183",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "86b87bec-daef-4801-b192-57936a785e15",
+      "parentUuid": "span_a0225023f7db4a8980863589",
+      "startTime": "2026-02-24T14:09:21.138Z",
+      "endTime": "2026-02-24T14:09:23.275Z",
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You are a helper. Use tools for weather or math. Do not answer from memory."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "What is the weather in London? Use your tools."
+        }
+      ],
+      "model": "gpt-4o-2024-08-06",
+      "inputTokenCount": 106,
+      "outputTokenCount": 15,
+      "metadata": {
+        "cached_input_tokens": 0,
+        "output_reasoning_tokens": 0,
+        "invocation_params": {
+          "max_output_tokens": null,
+          "parallel_tool_calls": true,
+          "reasoning": {
+            "effort": null,
+            "summary": null
+          },
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "temperature": 1,
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "type": "function",
+              "description": "Returns the current weather in a city.",
+              "name": "get_weather",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "city": {
+                    "type": "string",
+                    "description": "The city to get weather for"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "additionalProperties": false
+              },
+              "strict": true
+            },
+            {
+              "type": "function",
+              "description": "Evaluates a mathematical expression.",
+              "name": "calculate",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "expression": {
+                    "type": "string",
+                    "description": "The math expression to evaluate"
+                  }
+                },
+                "required": [
+                  "expression"
+                ],
+                "additionalProperties": false
+              },
+              "strict": true
+            }
+          ],
+          "top_p": 1,
+          "truncation": "disabled"
+        }
+      }
+    },
+    {
+      "uuid": "span_c1f7d66bbd0f48b88d2ba288",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "86b87bec-daef-4801-b192-57936a785e15",
+      "parentUuid": "span_a0225023f7db4a8980863589",
+      "startTime": "2026-02-24T14:09:23.278Z",
+      "endTime": "2026-02-24T14:09:24.473Z",
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You are a helper. Use tools for weather or math. Do not answer from memory."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "What is the weather in London? Use your tools."
+        },
+        {
+          "name": "get_weather",
+          "arguments": "{\"city\":\"London\"}"
+        }
+      ],
+      "output": "The weather in London is currently rainy with a temperature of 55°F.",
+      "model": "gpt-4o-2024-08-06",
+      "inputTokenCount": 135,
+      "outputTokenCount": 17,
+      "metadata": {
+        "cached_input_tokens": 0,
+        "output_reasoning_tokens": 0,
+        "invocation_params": {
+          "max_output_tokens": null,
+          "parallel_tool_calls": true,
+          "reasoning": {
+            "effort": null,
+            "summary": null
+          },
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "temperature": 1,
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "type": "function",
+              "description": "Returns the current weather in a city.",
+              "name": "get_weather",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "city": {
+                    "type": "string",
+                    "description": "The city to get weather for"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "additionalProperties": false
+              },
+              "strict": true
+            },
+            {
+              "type": "function",
+              "description": "Evaluates a mathematical expression.",
+              "name": "calculate",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "expression": {
+                    "type": "string",
+                    "description": "The math expression to evaluate"
+                  }
+                },
+                "required": [
+                  "expression"
+                ],
+                "additionalProperties": false
+              },
+              "strict": true
+            }
+          ],
+          "top_p": 1,
+          "truncation": "disabled"
+        }
+      }
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "span_8aa1e8ddfd5d42e5b260ebaa",
+      "name": "Function tool: get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "traceUuid": "86b87bec-daef-4801-b192-57936a785e15",
+      "parentUuid": "span_a0225023f7db4a8980863589",
+      "startTime": "2026-02-24T14:09:23.276Z",
+      "endTime": "2026-02-24T14:09:23.277Z",
+      "input": {
+        "city": "London"
+      },
+      "output": "Rainy, 55°F",
+      "metricCollection": "tool-level-collection",
+      "description": "Function tool"
+    }
+  ],
+  "startTime": "2026-02-24T14:09:21.138Z",
+  "endTime": "2026-02-24T14:09:24.474Z",
+  "environment": "testing",
+  "input": [
+    {
+      "type": "message",
+      "role": "system",
+      "content": "You are a helper. Use tools for weather or math. Do not answer from memory."
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": "What is the weather in London? Use your tools."
+    }
+  ],
+  "output": "The weather in London is currently rainy with a temperature of 55°F.",
+  "toolsCalled": [
+    {
+      "name": "get_weather",
+      "inputParameters": {
+        "city": "London"
+      },
+      "output": "Rainy, 55°F"
+    }
+  ]
+}

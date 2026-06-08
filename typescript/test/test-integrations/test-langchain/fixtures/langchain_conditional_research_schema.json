@@ -1,0 +1,475 @@
+{
+  "name": "langchain-conditional-test",
+  "uuid": "2e41823c-ca74-4c90-bc84-8acc29fa0b59",
+  "baseSpans": [
+    {
+      "uuid": "019c8fee-74a3-7666-99b7-b24a34b61ebf",
+      "name": "research_chain",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "2e41823c-ca74-4c90-bc84-8acc29fa0b59",
+      "startTime": "2026-02-24T13:54:55.267Z",
+      "endTime": "2026-02-24T13:54:58.004Z",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Research the current state of Quantum Computing."
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Research the current state of Quantum Computing."
+          },
+          {
+            "lc": 1,
+            "type": "constructor",
+            "id": [
+              "langchain_core",
+              "messages",
+              "AIMessage"
+            ],
+            "kwargs": {
+              "id": "chatcmpl-DCnAF5glGhvKq7J8wucfNouc6rkdf",
+              "content": "",
+              "additional_kwargs": {
+                "tool_calls": [
+                  {
+                    "id": "call_eTIORyaBCndH29vHUevNOT3n",
+                    "type": "function",
+                    "function": {
+                      "name": "research_topic",
+                      "arguments": "{\"topic\":\"current state of Quantum Computing\"}"
+                    }
+                  }
+                ]
+              },
+              "response_metadata": {
+                "tokenUsage": {
+                  "promptTokens": 52,
+                  "completionTokens": 19,
+                  "totalTokens": 71
+                },
+                "finish_reason": "tool_calls",
+                "model_provider": "openai",
+                "model_name": "gpt-4o-mini-2024-07-18",
+                "usage": {
+                  "prompt_tokens": 52,
+                  "completion_tokens": 19,
+                  "total_tokens": 71,
+                  "prompt_tokens_details": {
+                    "cached_tokens": 0,
+                    "audio_tokens": 0
+                  },
+                  "completion_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "audio_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "system_fingerprint": "fp_373a14eb6f"
+              },
+              "type": "ai",
+              "tool_calls": [
+                {
+                  "name": "research_topic",
+                  "args": {
+                    "topic": "current state of Quantum Computing"
+                  },
+                  "type": "tool_call",
+                  "id": "call_eTIORyaBCndH29vHUevNOT3n"
+                }
+              ],
+              "invalid_tool_calls": [],
+              "usage_metadata": {
+                "output_tokens": 19,
+                "input_tokens": 52,
+                "total_tokens": 71,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 0
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              }
+            }
+          },
+          {
+            "lc": 1,
+            "type": "constructor",
+            "id": [
+              "langchain_core",
+              "messages",
+              "ToolMessage"
+            ],
+            "kwargs": {
+              "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Quantum computing achieves new milestone in error correction.\",\"tool_call_id\":\"call_eTIORyaBCndH29vHUevNOT3n\",\"name\":\"research_topic\",\"metadata\":{},\"additional_kwargs\":{},\"response_metadata\":{}}}",
+              "tool_call_id": "call_eTIORyaBCndH29vHUevNOT3n",
+              "additional_kwargs": {},
+              "response_metadata": {}
+            }
+          },
+          {
+            "lc": 1,
+            "type": "constructor",
+            "id": [
+              "langchain_core",
+              "messages",
+              "AIMessage"
+            ],
+            "kwargs": {
+              "id": "chatcmpl-DCnAG89XDdqfaYEnZzoIoeKayWyQ9",
+              "content": "The current state of quantum computing has seen significant advancements, particularly in the area of error correction. Researchers are making progress in developing techniques to improve the reliability and stability of quantum computations, which is crucial for practical applications. This milestone in error correction is a key step towards building more robust quantum computers capable of solving complex problems.",
+              "additional_kwargs": {},
+              "response_metadata": {
+                "tokenUsage": {
+                  "promptTokens": 157,
+                  "completionTokens": 65,
+                  "totalTokens": 222
+                },
+                "finish_reason": "stop",
+                "model_provider": "openai",
+                "model_name": "gpt-4o-mini-2024-07-18",
+                "usage": {
+                  "prompt_tokens": 157,
+                  "completion_tokens": 65,
+                  "total_tokens": 222,
+                  "prompt_tokens_details": {
+                    "cached_tokens": 0,
+                    "audio_tokens": 0
+                  },
+                  "completion_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "audio_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "system_fingerprint": "fp_373a14eb6f"
+              },
+              "type": "ai",
+              "tool_calls": [],
+              "invalid_tool_calls": [],
+              "usage_metadata": {
+                "output_tokens": 65,
+                "input_tokens": 157,
+                "total_tokens": 222,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 0
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019c8fee-74a4-7666-99b7-bf74a18929a4",
+      "name": "Langchain LLM Run",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "2e41823c-ca74-4c90-bc84-8acc29fa0b59",
+      "parentUuid": "019c8fee-74a3-7666-99b7-b24a34b61ebf",
+      "startTime": "2026-02-24T13:54:55.268Z",
+      "endTime": "2026-02-24T13:54:56.367Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Research the current state of Quantum Computing."
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "call_eTIORyaBCndH29vHUevNOT3n",
+            "name": "research_topic",
+            "args": {
+              "topic": "current state of Quantum Computing"
+            }
+          }
+        ]
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "costPerInputToken": 0,
+      "costPerOutputToken": 0,
+      "inputTokenCount": 52,
+      "outputTokenCount": 19
+    },
+    {
+      "uuid": "019c8fee-78f1-7666-99b7-cb631a5ec31b",
+      "name": "Langchain LLM Run",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "2e41823c-ca74-4c90-bc84-8acc29fa0b59",
+      "parentUuid": "019c8fee-74a3-7666-99b7-b24a34b61ebf",
+      "startTime": "2026-02-24T13:54:56.369Z",
+      "endTime": "2026-02-24T13:54:58.004Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Research the current state of Quantum Computing."
+        },
+        {
+          "role": "ai",
+          "content": "[{\"name\":\"research_topic\",\"args\":{\"topic\":\"current state of Quantum Computing\"},\"type\":\"tool_call\",\"id\":\"call_eTIORyaBCndH29vHUevNOT3n\"}]"
+        },
+        {
+          "role": "tool",
+          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Quantum computing achieves new milestone in error correction.\",\"tool_call_id\":\"call_eTIORyaBCndH29vHUevNOT3n\",\"name\":\"research_topic\",\"metadata\":{},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "The current state of quantum computing has seen significant advancements, particularly in the area of error correction. Researchers are making progress in developing techniques to improve the reliability and stability of quantum computations, which is crucial for practical applications. This milestone in error correction is a key step towards building more robust quantum computers capable of solving complex problems.",
+        "toolCalls": []
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "costPerInputToken": 0,
+      "costPerOutputToken": 0,
+      "inputTokenCount": 157,
+      "outputTokenCount": 65
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019c8fee-78f0-7666-99b7-c447682d2bf4",
+      "name": "research_topic",
+      "status": "SUCCESS",
+      "type": "tool",
+      "traceUuid": "2e41823c-ca74-4c90-bc84-8acc29fa0b59",
+      "parentUuid": "019c8fee-74a3-7666-99b7-b24a34b61ebf",
+      "startTime": "2026-02-24T13:54:56.368Z",
+      "endTime": "2026-02-24T13:54:56.368Z",
+      "input": "{\"topic\":\"current state of Quantum Computing\"}",
+      "output": {
+        "lc": 1,
+        "type": "constructor",
+        "id": [
+          "langchain_core",
+          "messages",
+          "ToolMessage"
+        ],
+        "kwargs": {
+          "status": "success",
+          "content": "Quantum computing achieves new milestone in error correction.",
+          "tool_call_id": "call_eTIORyaBCndH29vHUevNOT3n",
+          "name": "research_topic",
+          "metadata": {},
+          "additional_kwargs": {},
+          "response_metadata": {}
+        }
+      }
+    }
+  ],
+  "startTime": "2026-02-24T13:54:55.266Z",
+  "endTime": "2026-02-24T13:54:58.004Z",
+  "environment": "testing",
+  "tags": [
+    "langchain",
+    "conditional"
+  ],
+  "input": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Research the current state of Quantum Computing."
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Research the current state of Quantum Computing."
+      },
+      {
+        "lc": 1,
+        "type": "constructor",
+        "id": [
+          "langchain_core",
+          "messages",
+          "AIMessage"
+        ],
+        "kwargs": {
+          "id": "chatcmpl-DCnAF5glGhvKq7J8wucfNouc6rkdf",
+          "content": "",
+          "additional_kwargs": {
+            "tool_calls": [
+              {
+                "id": "call_eTIORyaBCndH29vHUevNOT3n",
+                "type": "function",
+                "function": {
+                  "name": "research_topic",
+                  "arguments": "{\"topic\":\"current state of Quantum Computing\"}"
+                }
+              }
+            ]
+          },
+          "response_metadata": {
+            "tokenUsage": {
+              "promptTokens": 52,
+              "completionTokens": 19,
+              "totalTokens": 71
+            },
+            "finish_reason": "tool_calls",
+            "model_provider": "openai",
+            "model_name": "gpt-4o-mini-2024-07-18",
+            "usage": {
+              "prompt_tokens": 52,
+              "completion_tokens": 19,
+              "total_tokens": 71,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "system_fingerprint": "fp_373a14eb6f"
+          },
+          "type": "ai",
+          "tool_calls": [
+            {
+              "name": "research_topic",
+              "args": {
+                "topic": "current state of Quantum Computing"
+              },
+              "type": "tool_call",
+              "id": "call_eTIORyaBCndH29vHUevNOT3n"
+            }
+          ],
+          "invalid_tool_calls": [],
+          "usage_metadata": {
+            "output_tokens": 19,
+            "input_tokens": 52,
+            "total_tokens": 71,
+            "input_token_details": {
+              "audio": 0,
+              "cache_read": 0
+            },
+            "output_token_details": {
+              "audio": 0,
+              "reasoning": 0
+            }
+          }
+        }
+      },
+      {
+        "lc": 1,
+        "type": "constructor",
+        "id": [
+          "langchain_core",
+          "messages",
+          "ToolMessage"
+        ],
+        "kwargs": {
+          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Quantum computing achieves new milestone in error correction.\",\"tool_call_id\":\"call_eTIORyaBCndH29vHUevNOT3n\",\"name\":\"research_topic\",\"metadata\":{},\"additional_kwargs\":{},\"response_metadata\":{}}}",
+          "tool_call_id": "call_eTIORyaBCndH29vHUevNOT3n",
+          "additional_kwargs": {},
+          "response_metadata": {}
+        }
+      },
+      {
+        "lc": 1,
+        "type": "constructor",
+        "id": [
+          "langchain_core",
+          "messages",
+          "AIMessage"
+        ],
+        "kwargs": {
+          "id": "chatcmpl-DCnAG89XDdqfaYEnZzoIoeKayWyQ9",
+          "content": "The current state of quantum computing has seen significant advancements, particularly in the area of error correction. Researchers are making progress in developing techniques to improve the reliability and stability of quantum computations, which is crucial for practical applications. This milestone in error correction is a key step towards building more robust quantum computers capable of solving complex problems.",
+          "additional_kwargs": {},
+          "response_metadata": {
+            "tokenUsage": {
+              "promptTokens": 157,
+              "completionTokens": 65,
+              "totalTokens": 222
+            },
+            "finish_reason": "stop",
+            "model_provider": "openai",
+            "model_name": "gpt-4o-mini-2024-07-18",
+            "usage": {
+              "prompt_tokens": 157,
+              "completion_tokens": 65,
+              "total_tokens": 222,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "system_fingerprint": "fp_373a14eb6f"
+          },
+          "type": "ai",
+          "tool_calls": [],
+          "invalid_tool_calls": [],
+          "usage_metadata": {
+            "output_tokens": 65,
+            "input_tokens": 157,
+            "total_tokens": 222,
+            "input_token_details": {
+              "audio": 0,
+              "cache_read": 0
+            },
+            "output_token_details": {
+              "audio": 0,
+              "reasoning": 0
+            }
+          }
+        }
+      }
+    ]
+  },
+  "toolsCalled": [
+    {
+      "name": "research_topic",
+      "inputParameters": "{\"topic\":\"current state of Quantum Computing\"}",
+      "output": {
+        "lc": 1,
+        "type": "constructor",
+        "id": [
+          "langchain_core",
+          "messages",
+          "ToolMessage"
+        ],
+        "kwargs": {
+          "status": "success",
+          "content": "Quantum computing achieves new milestone in error correction.",
+          "tool_call_id": "call_eTIORyaBCndH29vHUevNOT3n",
+          "name": "research_topic",
+          "metadata": {},
+          "additional_kwargs": {},
+          "response_metadata": {}
+        }
+      }
+    }
+  ]
+}

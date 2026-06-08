@@ -1,0 +1,125 @@
+{
+  "name": "Agent workflow",
+  "uuid": "6d07d1da-ec0b-4cf6-861d-89971b3c9111",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "span_484d2b2a9071424ebd2d8626",
+      "name": "StreamingAgent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "traceUuid": "6d07d1da-ec0b-4cf6-861d-89971b3c9111",
+      "startTime": "2026-02-24T11:43:47.698Z",
+      "endTime": "2026-02-24T11:43:51.748Z",
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You are a helpful assistant. \n    If asked for company info, use the tool. \n    If asked a general question, write a short poem about it to generate many tokens."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Write a short poem about artificial intelligence."
+        }
+      ],
+      "output": "In circuits deep where silence hums,  \nThe dance of thoughts like lightning comes,  \nA blend of zeros, ones in flight,  \nCreating dawn from endless night.  \n\nWith logic swift and learning vast,  \nAI dreams of futures cast,  \nFrom whispered code, a mind unfolds,  \nIn silicon, the future holds.  \n\nA partner in the quest for truth,  \nWith wisdom old yet ever youth,  \nIn synergy, we find our ways,  \nTo brighter worlds and brighter days.  ",
+      "availableTools": [
+        "get_company_info"
+      ],
+      "agentHandoffs": [],
+      "metadata": {
+        "output_type": "text"
+      }
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "span_7ec7345f0f614ccaa95a4672",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "6d07d1da-ec0b-4cf6-861d-89971b3c9111",
+      "parentUuid": "span_484d2b2a9071424ebd2d8626",
+      "startTime": "2026-02-24T11:43:47.699Z",
+      "endTime": "2026-02-24T11:43:51.747Z",
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You are a helpful assistant. \n    If asked for company info, use the tool. \n    If asked a general question, write a short poem about it to generate many tokens."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Write a short poem about artificial intelligence."
+        }
+      ],
+      "output": "In circuits deep where silence hums,  \nThe dance of thoughts like lightning comes,  \nA blend of zeros, ones in flight,  \nCreating dawn from endless night.  \n\nWith logic swift and learning vast,  \nAI dreams of futures cast,  \nFrom whispered code, a mind unfolds,  \nIn silicon, the future holds.  \n\nA partner in the quest for truth,  \nWith wisdom old yet ever youth,  \nIn synergy, we find our ways,  \nTo brighter worlds and brighter days.  ",
+      "model": "gpt-4o-2024-08-06",
+      "inputTokenCount": 100,
+      "outputTokenCount": 103,
+      "metadata": {
+        "cached_input_tokens": 0,
+        "output_reasoning_tokens": 0,
+        "invocation_params": {
+          "max_output_tokens": null,
+          "parallel_tool_calls": true,
+          "reasoning": {
+            "effort": null,
+            "summary": null
+          },
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "temperature": 1,
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "type": "function",
+              "description": "Get company information for a ticker symbol.",
+              "name": "get_company_info",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "symbol": {
+                    "type": "string",
+                    "description": "The ticker symbol, e.g. AAPL"
+                  }
+                },
+                "required": [
+                  "symbol"
+                ],
+                "additionalProperties": false
+              },
+              "strict": true
+            }
+          ],
+          "top_p": 1,
+          "truncation": "disabled"
+        }
+      }
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-24T11:43:47.695Z",
+  "endTime": "2026-02-24T11:43:51.748Z",
+  "environment": "testing",
+  "input": [
+    {
+      "type": "message",
+      "role": "system",
+      "content": "You are a helpful assistant. \n    If asked for company info, use the tool. \n    If asked a general question, write a short poem about it to generate many tokens."
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": "Write a short poem about artificial intelligence."
+    }
+  ],
+  "output": "In circuits deep where silence hums,  \nThe dance of thoughts like lightning comes,  \nA blend of zeros, ones in flight,  \nCreating dawn from endless night.  \n\nWith logic swift and learning vast,  \nAI dreams of futures cast,  \nFrom whispered code, a mind unfolds,  \nIn silicon, the future holds.  \n\nA partner in the quest for truth,  \nWith wisdom old yet ever youth,  \nIn synergy, we find our ways,  \nTo brighter worlds and brighter days.  "
+}

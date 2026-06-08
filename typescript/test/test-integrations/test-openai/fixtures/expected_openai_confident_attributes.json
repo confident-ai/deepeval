@@ -1,0 +1,53 @@
+{
+  "name": "OpenAI Attributes Trace",
+  "uuid": "bf20d915-5d5e-4cf2-97ae-095e2490b5c5",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "b682f342-3207-4427-962e-c5f439c74f8f",
+      "name": "create",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "bf20d915-5d5e-4cf2-97ae-095e2490b5c5",
+      "startTime": "2026-02-23T14:59:44.589Z",
+      "endTime": "2026-02-23T14:59:46.101Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "Tell me a fun fact about space. Be brief."
+        }
+      ],
+      "output": "A fun fact about space is that a day on Venus is longer than a year on Venus! It takes about 243 Earth days to rotate once on its axis, but only about 225 Earth days to orbit the Sun.",
+      "metricCollection": "llm-openai-metrics",
+      "retrievalContext": [],
+      "context": [],
+      "expectedTools": [],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 18,
+      "outputTokenCount": 45,
+      "promptAlias": "openai-test-prompt",
+      "promptCommitHash": "bab04ec",
+      "promptLabel": "test-label",
+      "promptVersion": "00.00.01"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-23T14:59:44.589Z",
+  "endTime": "2026-02-23T14:59:46.101Z",
+  "environment": "testing",
+  "metadata": {
+    "customer_tier": "enterprise"
+  },
+  "tags": [
+    "openai",
+    "production",
+    "v2"
+  ],
+  "threadId": "openai-thread-404",
+  "userId": "user-beta-888",
+  "input": "Tell me a fun fact about space. Be brief.",
+  "output": "A fun fact about space is that a day on Venus is longer than a year on Venus! It takes about 243 Earth days to rotate once on its axis, but only about 225 Earth days to orbit the Sun.",
+  "metricCollection": "global-openai-metrics"
+}
