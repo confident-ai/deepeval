@@ -171,9 +171,24 @@ class TestRun(BaseModel):
         self, api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase]
     ):
         if isinstance(api_test_case, ConversationalApiTestCase):
-            self.conversational_test_cases.append(api_test_case)
+            target_test_cases = self.conversational_test_cases
         else:
-            self.test_cases.append(api_test_case)
+            target_test_cases = self.test_cases
+
+        replaced_evaluation_cost = None
+        for index, test_case in enumerate(target_test_cases):
+            if test_case.name == api_test_case.name:
+                replaced_evaluation_cost = test_case.evaluation_cost
+                target_test_cases[index] = api_test_case
+                break
+        else:
+            target_test_cases.append(api_test_case)
+
+        if (
+            replaced_evaluation_cost is not None
+            and self.evaluation_cost is not None
+        ):
+            self.evaluation_cost -= replaced_evaluation_cost
 
         if api_test_case.evaluation_cost is not None:
             if self.evaluation_cost is None:
