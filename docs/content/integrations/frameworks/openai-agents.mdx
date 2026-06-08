@@ -407,3 +407,58 @@ agent = Agent(
 `function_tool(..., metrics=[...])` accepts the SDK's standard kwargs plus `metrics`, applied to that tool's span on every call.
 
 For runtime helpers (`update_current_trace`, `update_current_span`) and the test-decorator surface (`@observe`, `@assert_test`, `with trace(...)`), see the [tracing reference](/docs/evaluation-llm-tracing).
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Can I evaluate a sub-agent reached through a handoff?",
+      answer: (
+        <>
+          Yes. Attach <code>agent_metrics=[...]</code> to the sub-agent's{" "}
+          <code>deepeval.openai_agents.Agent</code>. The metric runs on that
+          agent's span every time it's invoked — including when a parent agent
+          hands off to it — so the hand-off step is scored on its own.
+        </>
+      ),
+    },
+    {
+      question: "Can I make these agent evals a CI/CD gate?",
+      answer: (
+        <>
+          Yes. Register <code>DeepEvalTracingProcessor()</code> once, build your
+          agent with the shim, then run <code>Runner.run(...)</code> in a
+          parametrized <code>pytest</code> test and assert with{" "}
+          <code>assert_test(...)</code> under <code>deepeval test run</code>.
+        </>
+      ),
+    },
+    {
+      question: "Where can I view these agent traces beyond the terminal?",
+      answer: (
+        <>
+          Run <code>deepeval login</code> and{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> renders each{" "}
+          <code>Runner.run(...)</code> as a trace — agent, LLM, and tool spans,
+          including handoffs — with their scores in a shared cloud UI. It's
+          optional.
+        </>
+      ),
+    },
+    {
+      question: "Can I monitor an OpenAI Agents app in production?",
+      answer: (
+        <>
+          Yes. With <code>DeepEvalTracingProcessor</code> registered and a
+          Confident AI login, live agent runs stream in for{" "}
+          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
+            online evals
+          </a>{" "}
+          on real traffic, and <code>confident_prompt</code> ties prompt
+          versions to each trace.
+        </>
+      ),
+    },
+  ]}
+/>

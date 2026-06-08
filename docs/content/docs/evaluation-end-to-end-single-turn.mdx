@@ -1176,3 +1176,88 @@ deepeval test run test_llm_app.py
 ```
 
 See [unit testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd) for `assert_test()` parameters, YAML pipeline examples, and `deepeval test run` flags.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is single-turn end-to-end evaluation?",
+      answer: (
+        <>
+          It treats your LLM app as a black box and scores its overall input and
+          output for one atomic interaction, rather than scoring individual
+          internal components. It's the simplest way to get started with evals.
+        </>
+      ),
+    },
+    {
+      question:
+        "Should I use `evals_iterator()` with tracing or plain `evaluate()`?",
+      answer: (
+        <>
+          The recommended approach is <code>evals_iterator()</code> with tracing
+          since it captures rich execution data and scales to nested components
+          later. Use plain <code>evaluate()</code> if you just want to score a
+          list of test cases without instrumenting your app.
+        </>
+      ),
+    },
+    {
+      question: "Do I need to instrument my app with tracing to run end-to-end evals?",
+      answer: (
+        <>
+          No. You can construct <code>LLMTestCase</code>s directly and pass them
+          to <code>evaluate()</code>. Tracing is optional and mainly helps when
+          you want to graduate to component-level evals.
+        </>
+      ),
+    },
+    {
+      question: "Does `deepeval` integrate with my agent framework?",
+      answer: (
+        <>
+          Yes. The traced approach works with native{" "}
+          <a href="/integrations">integrations</a> for LangChain, LangGraph,
+          LlamaIndex, Pydantic AI, CrewAI, and more, so you can run evals
+          against the framework you already use instead of instrumenting
+          everything by hand.
+        </>
+      ),
+    },
+    {
+      question: "How do I run these same evals in CI/CD?",
+      answer: (
+        <>
+          Swap <code>evaluate()</code> / <code>evals_iterator()</code> for{" "}
+          <code>assert_test()</code> inside a <code>pytest</code> parametrized
+          test and run it with <code>deepeval test run</code> so failing metrics
+          fail the build.
+        </>
+      ),
+    },
+    {
+      question: "What are hyperparameters used for?",
+      answer:
+        "They let you log arbitrary settings like model name, prompt template, and temperature alongside a test run, so you can compare which configuration produced the best scores.",
+    },
+    {
+      question:
+        "Can my team keep these test runs on the cloud and review results in a UI?",
+      answer: (
+        <>
+          End-to-end runs are local-first. When you're logged into{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
+          built by the <code>deepeval</code> team), the same run produces a
+          sharable cloud{" "}
+          <a href="https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports">
+            testing report
+          </a>{" "}
+          your team can review together, with hyperparameter comparisons and
+          regression tracking over time — no code changes required, and fully
+          optional.
+        </>
+      ),
+    },
+  ]}
+/>

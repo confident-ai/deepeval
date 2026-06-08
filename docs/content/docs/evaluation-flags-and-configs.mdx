@@ -234,3 +234,82 @@ deepeval test run test_example.py -r 2
 def function_to_be_called_after_test_run():
     print("Test finished!")
 ```
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "What's the difference between configs for `evaluate()` and flags for `deepeval test run`?",
+      answer: (
+        <>
+          Configs are Python objects (<code>AsyncConfig</code>,{" "}
+          <code>DisplayConfig</code>, <code>ErrorConfig</code>,{" "}
+          <code>CacheConfig</code>) passed to <code>evaluate()</code>. Flags are
+          command-line options passed to <code>deepeval test run</code>. They
+          control the same behaviors — concurrency, display, errors, caching —
+          for the two ways of running evals.
+        </>
+      ),
+    },
+    {
+      question: "How do I run evaluations faster?",
+      answer: (
+        <>
+          Use <code>AsyncConfig</code> to raise concurrency in{" "}
+          <code>evaluate()</code>, or the parallelization flag with{" "}
+          <code>deepeval test run</code>. Caching avoids re-running metrics on
+          unchanged test cases.
+        </>
+      ),
+    },
+    {
+      question: "How do I stop a single failing test case from aborting the whole run?",
+      answer: (
+        <>
+          Use <code>ErrorConfig</code> (for <code>evaluate()</code>) or the
+          ignore-errors flag (for <code>deepeval test run</code>) so errored
+          test cases are skipped and reported instead of halting the run.
+        </>
+      ),
+    },
+    {
+      question: "What does caching do?",
+      answer: (
+        <>
+          With <code>CacheConfig</code> or the cache flag, <code>deepeval</code>{" "}
+          reuses prior
+          metric results for identical test cases, which saves time and LLM cost
+          when re-running an evaluation you've already executed.
+        </>
+      ),
+    },
+    {
+      question: "Can I run custom code after a test run finishes?",
+      answer: (
+        <>
+          Yes. Use the <code>@deepeval.on_test_run_end</code> hook to run any
+          custom logic — notifications, exports, cleanup — at the end of a{" "}
+          <code>deepeval test run</code>.
+        </>
+      ),
+    },
+    {
+      question:
+        "Can I tag a run with an identifier so my team can find it later on the cloud?",
+      answer: (
+        <>
+          Yes. The <code>identifier</code> config (and flag) labels a test run
+          so it's easy to locate. That's especially handy when results are sent
+          to{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
+          from the <code>deepeval</code> team), where your team can browse
+          identified runs in
+          a shared cloud UI and compare them over time. Sending results there is
+          optional — runs work the same locally.
+        </>
+      ),
+    },
+  ]}
+/>

@@ -362,3 +362,60 @@ with trace(
 | `retrieval_context` | `list[str]` | Retrieved context the model actually used (Faithfulness, Contextual Relevancy, etc.).                    |
 
 `with trace(...)` accepts trace-level kwargs (`name`, `tags`, `metadata`, `thread_id`, `user_id`, `metrics`, `input`, `output`) — see the [tracing reference](/docs/evaluation-llm-tracing).
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Can I gate my CI/CD pipeline on these OpenAI evals?",
+      answer: (
+        <>
+          Yes. Keep the same <code>deepeval.openai.OpenAI</code> client, then
+          wrap each parametrized <code>pytest</code> case with{" "}
+          <code>assert_test(golden=golden)</code> and run{" "}
+          <code>deepeval test run</code>. A failing metric fails the test, which
+          fails the build.
+        </>
+      ),
+    },
+    {
+      question:
+        "One request makes several OpenAI calls — can I evaluate each call separately?",
+      answer: (
+        <>
+          Yes. Bracket the calls in a single <code>with trace(...)</code> so the
+          LLM spans share one root, and attach metrics to a specific call by
+          opening that call inside its own{" "}
+          <code>LlmSpanContext(metrics=[...])</code>. Each{" "}
+          <code>chat.completions.create(...)</code> is its own independently
+          scorable LLM span.
+        </>
+      ),
+    },
+    {
+      question: "Can I see these traces and scores in a UI instead of the terminal?",
+      answer: (
+        <>
+          Yes, and it's optional. Run <code>deepeval login</code> to connect{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> and the same
+          instrumented client renders every trace, LLM span, and metric score in
+          a shared cloud dashboard — no code changes.
+        </>
+      ),
+    },
+    {
+      question: "Can I keep evaluating my OpenAI app once it's in production?",
+      answer: (
+        <>
+          Yes. When logged into Confident AI, the drop-in client streams live
+          traces in real time, so you can run{" "}
+          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
+            online evals
+          </a>{" "}
+          on real production traffic instead of only offline datasets.
+        </>
+      ),
+    },
+  ]}
+/>

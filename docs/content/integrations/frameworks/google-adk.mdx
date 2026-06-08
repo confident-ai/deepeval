@@ -359,3 +359,57 @@ async def respond_to_user(prompt: str) -> str:
 | `metric_collection`| `str`       | Default metric collection applied at the trace level.                      |
 
 For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_span`, `next_llm_span`) and the test-decorator surface (`@observe`, `@assert_test`, `with trace(...)`), see the [tracing reference](/docs/evaluation-llm-tracing).
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "My ADK app has sub-agents — can I score just one of them?",
+      answer: (
+        <>
+          Yes. <code>with next_agent_span(metrics=[...])</code> stages a metric
+          on the next Google ADK agent span, isolating a single{" "}
+          <code>LlmAgent</code> or sub-agent. Reach for{" "}
+          <code>next_llm_span(...)</code> when you want a model step instead.
+        </>
+      ),
+    },
+    {
+      question: "Can I run evals on a Google ADK agent serving production traffic?",
+      answer: (
+        <>
+          Yes. Pass <code>environment="production"</code> to{" "}
+          <code>instrument_google_adk(...)</code>; with a Confident AI login the
+          live traces feed{" "}
+          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
+            online evals
+          </a>{" "}
+          on real requests.
+        </>
+      ),
+    },
+    {
+      question: "How do I block a deploy when an ADK metric regresses?",
+      answer: (
+        <>
+          Call <code>instrument_google_adk()</code>, run the agent inside a
+          parametrized <code>pytest</code> test, and assert with{" "}
+          <code>assert_test(...)</code> under <code>deepeval test run</code> — a
+          failing metric fails the pipeline.
+        </>
+      ),
+    },
+    {
+      question: "Is there a cloud dashboard for these ADK traces?",
+      answer: (
+        <>
+          Yes, optionally. <code>deepeval login</code> connects{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a>, which renders
+          the same ADK agent, LLM, and tool spans with their scores in a shared
+          UI.
+        </>
+      ),
+    },
+  ]}
+/>

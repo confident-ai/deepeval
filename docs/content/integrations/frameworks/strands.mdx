@@ -351,3 +351,59 @@ def respond_to_user(prompt: str) -> str:
 | `metric_collection` | `str`       | Default metric collection applied at the trace level.                      |
 
 For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_span`, `next_llm_span`) and the test-decorator surface (`@observe`, `@assert_test`, `with trace(...)`), see the [tracing reference](/docs/evaluation-llm-tracing).
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Can I evaluate a single Strands subagent rather than the whole run?",
+      answer: (
+        <>
+          Yes. Wrap the call in{" "}
+          <code>with next_agent_span(metrics=[...])</code> to stage a metric on
+          the next Strands agent span, which scores that subagent on its own.
+          For a model step, use <code>next_llm_span(...)</code> instead.
+        </>
+      ),
+    },
+    {
+      question: "I run Strands in production services — can I keep evaluating there?",
+      answer: (
+        <>
+          Yes. Set <code>environment="production"</code> on{" "}
+          <code>instrument_strands(...)</code> and, once logged into Confident
+          AI, live traces stream in for{" "}
+          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
+            online evals
+          </a>
+          . (If your outer boundary is the AgentCore runtime, use the{" "}
+          <a href="/integrations/frameworks/agentcore">AgentCore integration</a>{" "}
+          instead.)
+        </>
+      ),
+    },
+    {
+      question: "Can I run these Strands evals with Pytest?",
+      answer: (
+        <>
+          Yes. Call <code>instrument_strands()</code> before your test, invoke
+          the agent inside a parametrized <code>pytest</code> case, and gate the
+          build with <code>assert_test(...)</code> plus{" "}
+          <code>deepeval test run</code>.
+        </>
+      ),
+    },
+    {
+      question: "Can I view Strands traces on the cloud?",
+      answer: (
+        <>
+          Yes — optionally. After <code>deepeval login</code>,{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> visualizes the
+          same auto-instrumented Strands spans and scores in a shared UI, with
+          no extra instrumentation.
+        </>
+      ),
+    },
+  ]}
+/>
