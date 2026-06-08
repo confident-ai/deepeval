@@ -13,7 +13,9 @@ from deepeval.test_run import (
     global_test_run_manager,
     invoke_test_run_end_hook,
 )
+from deepeval.config.settings import get_settings
 from deepeval.test_run.cache import TEMP_CACHE_FILE_NAME
+from deepeval.test_run.comparison import ComparisonReason
 from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.utils import (
     delete_file_if_exists,
@@ -23,8 +25,10 @@ from deepeval.utils import (
     set_should_skip_on_missing_params,
     set_should_use_cache,
     set_verbose_mode,
+    set_test_regression_mode,
 )
 
+SETTINGS = get_settings()
 app = typer.Typer(name="test")
 
 
@@ -109,8 +113,19 @@ def run(
         "-m",
         help="List of marks to run the tests with.",
     ),
+    test_regression: bool = typer.Option(
+        False,
+        "--test-regression",
+        help="Compare this test run against the latest official run on Confident AI and exit 1 on regression.",
+    ),
 ):
     """Run a test"""
+    if test_regression and not SETTINGS.CONFIDENT_API_KEY:
+        print(
+            "Error: --test-regression requires a CONFIDENT_API_KEY environment variable to be set."
+        )
+        sys.exit(1)
+
     delete_file_if_exists(TEMP_FILE_PATH)
     delete_file_if_exists(TEMP_CACHE_FILE_NAME)
     check_if_valid_file(test_file_or_directory)
@@ -122,6 +137,7 @@ def run(
     set_should_skip_on_missing_params(skip_on_missing_params)
     set_verbose_mode(verbose)
     set_identifier(identifier)
+    set_test_regression_mode(test_regression)
 
     global_test_run_manager.reset()
 
@@ -168,11 +184,73 @@ def run(
         pytest_retcode = pytest.main(pytest_args)
     end_time = time.perf_counter()
     run_duration = end_time - start_time
-    global_test_run_manager.wrap_up_test_run(run_duration, True, display)
+    upload_result = global_test_run_manager.wrap_up_test_run(run_duration, True, display)
 
     invoke_test_run_end_hook()
+
+    if test_regression:
+        if upload_result is None:
+            print(
+                "Warning: test run was not uploaded to Confident AI — skipping baseline comparison."
+            )
+            sys.exit(0)
+
+        _, run_id = upload_result
+        test_run = global_test_run_manager.get_test_run()
+        result = test_run.compare_with_official(run_id)
+        _print_comparison_table(result)
+        sys.exit(0 if result.passed else 1)
 
     if pytest_retcode == 1:
         sys.exit(1)
 
     return pytest_retcode
+
+
+def _print_comparison_table(result) -> None:
+    from rich.console import Console
+    from rich.table import Table
+    from rich import print as rprint
+
+    console = Console()
+
+    if result.reason == ComparisonReason.NO_OFFICIAL_RUN:
+        rprint("\n[bold yellow]⚠ WARNING:[/bold yellow] No official run found for this project. Mark a run as official on Confident AI to enable regression testing.\n")
+        return
+    if result.reason == ComparisonReason.INCOMPATIBLE_RUNS:
+        rprint("\n[bold red]✗ INCOMPATIBLE RUNS:[/bold red] Test case count or metric names differ from the official run. Ensure you are running the same test cases with the same metrics.\n")
+        return
+
+    status_line = "[bold green]✓ NO REGRESSION DETECTED[/bold green]" if result.passed else "[bold red]✗ EVAL REGRESSION DETECTED[/bold red]"
+    rprint(f"\n{status_line}")
+
+    table = Table(show_header=True, header_style="bold")
+    table.add_column("Test Case", style="cyan", no_wrap=True)
+    table.add_column("Metric")
+    table.add_column("Official", justify="right")
+    table.add_column("New", justify="right")
+    table.add_column("Delta", justify="right")
+    table.add_column("", justify="center")
+
+    for tc in result.test_cases:
+        for i, m in enumerate(tc.metrics):
+            status = "[green]✓[/green]" if m.passed else "[red]✗[/red]"
+            table.add_row(
+                tc.name if i == 0 else "",
+                m.metric,
+                f"{m.official_score:.4f}",
+                f"{m.new_score:.4f}",
+                f"{m.delta:+.4f}",
+                status,
+            )
+
+    console.print(table)
+
+    if result.regressed_test_cases:
+        rprint(
+            f"[bold red]{result.regressed_test_cases}/{result.total_test_cases} test case(s) regressed.[/bold red]\n"
+        )
+    else:
+        rprint(
+            f"[bold green]All {result.total_test_cases} test case(s) within threshold.[/bold green]\n"
+        )

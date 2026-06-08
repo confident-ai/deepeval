@@ -252,6 +252,18 @@ def set_identifier(identifier: Optional[str]):
             s.DEEPEVAL_IDENTIFIER = identifier
 
 
+_test_regression_mode: bool = False
+
+
+def set_test_regression_mode(val: bool) -> None:
+    global _test_regression_mode
+    _test_regression_mode = val
+
+
+def get_test_regression_mode() -> bool:
+    return _test_regression_mode
+
+
 def get_identifier() -> Optional[str]:
     return get_settings().DEEPEVAL_IDENTIFIER
 

@@ -9,6 +9,7 @@ from rich.console import Console
 import time
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.utils import get_test_regression_mode
 from deepeval.evaluate.api import APIEvaluate
 from deepeval.evaluate.configs import (
     AsyncConfig,
@@ -151,7 +152,8 @@ def assert_test(
                 for metrics_data in failed_metrics_data
             ]
         )
-        raise AssertionError(f"Metrics: {failed_metrics_str} failed.")
+        if not get_test_regression_mode():
+            raise AssertionError(f"Metrics: {failed_metrics_str} failed.")
 
 
 def evaluate(
