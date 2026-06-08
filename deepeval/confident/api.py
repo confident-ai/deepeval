@@ -148,6 +148,8 @@ class Endpoints(Enum):
     METRICS_ENDPOINT = "/v1/metrics"
     METRIC_ENDPOINT = "/v1/metric/:name"
 
+    MARK_OFFICIAL_ENDPOINT = "/v1/test-runs/:testRunId/official"
+
 
 def _sanitize_body(obj):
     """Recursively replace non-finite floats (NaN, Inf, -Inf) with None.
