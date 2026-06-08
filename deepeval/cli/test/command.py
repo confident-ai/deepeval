@@ -7,6 +7,7 @@ import pytest
 import typer
 from typing_extensions import Annotated
 
+from deepeval.deepeval.config.settings import get_settings
 from deepeval.telemetry import capture_evaluation_run
 from deepeval.test_run import (
     TEMP_FILE_PATH,
@@ -25,6 +26,7 @@ from deepeval.utils import (
     set_verbose_mode,
 )
 
+SETTINGS = get_settings()
 app = typer.Typer(name="test")
 
 
@@ -109,6 +111,12 @@ def run(
         "-m",
         help="List of marks to run the tests with.",
     ),
+    official: bool = typer.Option(
+        False,
+        "--official",
+        "-o",
+        help="Mark this test run as the official run on Confident AI after it completes.",
+    ),
 ):
     """Run a test"""
     delete_file_if_exists(TEMP_FILE_PATH)
@@ -168,9 +176,18 @@ def run(
         pytest_retcode = pytest.main(pytest_args)
     end_time = time.perf_counter()
     run_duration = end_time - start_time
-    global_test_run_manager.wrap_up_test_run(run_duration, True, display)
+    upload_result = global_test_run_manager.wrap_up_test_run(run_duration, True, display)
 
     invoke_test_run_end_hook()
+
+    if official:
+        if not SETTINGS.CONFIDENT_API_KEY:
+            print(
+                "Warning: --official requires a CONFIDENT_API_KEY environment variable to be set. Skipping."
+            )
+        else:
+            run_id = upload_result[1] if upload_result else None
+            global_test_run_manager.mark_official(run_id=run_id)
 
     if pytest_retcode == 1:
         sys.exit(1)
