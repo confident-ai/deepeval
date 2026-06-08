@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+from enum import Enum
 from typing import Optional
 
 import pytest
@@ -30,6 +31,11 @@ from deepeval.utils import (
 
 SETTINGS = get_settings()
 app = typer.Typer(name="test")
+
+
+class TestRunMode(str, Enum):
+    DEFAULT = "default"
+    REGRESSION = "regression"
 
 
 def check_if_valid_file(test_file_or_directory: str):
@@ -113,16 +119,19 @@ def run(
         "-m",
         help="List of marks to run the tests with.",
     ),
-    test_regression: bool = typer.Option(
-        False,
-        "--test-regression",
-        help="Compare this test run against the latest official run on Confident AI and exit 1 on regression.",
+    mode: TestRunMode = typer.Option(
+        TestRunMode.DEFAULT,
+        "--mode",
+        help="Test run mode. 'regression' compares this run against the latest official run on Confident AI and exits 1 on regression. Defaults to 'default'.",
+        case_sensitive=False,
     ),
 ):
     """Run a test"""
+    test_regression = mode == TestRunMode.REGRESSION
+
     if test_regression and not SETTINGS.CONFIDENT_API_KEY:
         print(
-            "Error: --test-regression requires a CONFIDENT_API_KEY environment variable to be set."
+            "Error: --mode regression requires a CONFIDENT_API_KEY environment variable to be set."
         )
         sys.exit(1)
 
@@ -218,7 +227,7 @@ def _print_comparison_table(result) -> None:
         rprint("\n[bold yellow]⚠ WARNING:[/bold yellow] No official run found for this project. Mark a run as official on Confident AI to enable regression testing.\n")
         return
     if result.reason == ComparisonReason.INCOMPATIBLE_RUNS:
-        rprint("\n[bold red]✗ INCOMPATIBLE RUNS:[/bold red] Test case count or metric names differ from the official run. Ensure you are running the same test cases with the same metrics.\n")
+        rprint("\n[bold red]✗ INCOMPATIBLE RUNS:[/bold red] One or more test cases from the official run were not found in the new run, or their metrics differ. Ensure you are running the same test cases with the same metrics.\n")
         return
 
     status_line = "[bold green]✓ NO REGRESSION DETECTED[/bold green]" if result.passed else "[bold red]✗ EVAL REGRESSION DETECTED[/bold red]"
