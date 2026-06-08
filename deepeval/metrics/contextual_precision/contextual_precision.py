@@ -1,4 +1,4 @@
-from typing import Optional, List, Type, Union
+from typing import Any, Callable, Hashable, Optional, List, Type, Union
 
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -40,6 +40,7 @@ class ContextualPrecisionMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        group_by: Optional[Callable[[Any], Hashable]] = None,
         evaluation_template: Type[
             ContextualPrecisionTemplate
         ] = ContextualPrecisionTemplate,
@@ -51,6 +52,7 @@ class ContextualPrecisionMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.group_by = group_by
         self.evaluation_template = evaluation_template
 
     def measure(
@@ -92,17 +94,26 @@ class ContextualPrecisionMetric(BaseMetric):
             else:
                 input = test_case.input
                 expected_output = test_case.expected_output
+                retrieval_context = test_case.retrieval_context
                 grouped_retrieval_context = self._group_retrieval_contexts(
                     test_case.retrieval_context
+                )
+                verdict_retrieval_context = (
+                    self._get_raw_retrieval_contexts(retrieval_context)
+                    if self.group_by is not None
+                    else grouped_retrieval_context
                 )
 
                 self.verdicts: List[cpschema.ContextualPrecisionVerdict] = (
                     self._generate_verdicts(
                         input,
                         expected_output,
-                        grouped_retrieval_context,
+                        verdict_retrieval_context,
                         multimodal,
                     )
+                )
+                self._score_verdicts = self._get_score_verdicts(
+                    retrieval_context
                 )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason(input, multimodal)
@@ -147,18 +158,25 @@ class ContextualPrecisionMetric(BaseMetric):
         ):
             input = test_case.input
             expected_output = test_case.expected_output
+            retrieval_context = test_case.retrieval_context
             grouped_retrieval_context = self._group_retrieval_contexts(
                 test_case.retrieval_context
+            )
+            verdict_retrieval_context = (
+                self._get_raw_retrieval_contexts(retrieval_context)
+                if self.group_by is not None
+                else grouped_retrieval_context
             )
 
             self.verdicts: List[cpschema.ContextualPrecisionVerdict] = (
                 await self._a_generate_verdicts(
                     input,
                     expected_output,
-                    grouped_retrieval_context,
+                    verdict_retrieval_context,
                     multimodal,
                 )
             )
+            self._score_verdicts = self._get_score_verdicts(retrieval_context)
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(input, multimodal)
             self.success = self.score >= self.threshold
@@ -177,7 +195,7 @@ class ContextualPrecisionMetric(BaseMetric):
 
         retrieval_contexts_verdicts = [
             {"verdict": verdict.verdict, "reason": verdict.reason}
-            for verdict in self.verdicts
+            for verdict in getattr(self, "_score_verdicts", self.verdicts)
         ]
         prompt = self.evaluation_template.generate_reason(
             input=input,
@@ -200,7 +218,7 @@ class ContextualPrecisionMetric(BaseMetric):
 
         retrieval_contexts_verdicts = [
             {"verdict": verdict.verdict, "reason": verdict.reason}
-            for verdict in self.verdicts
+            for verdict in getattr(self, "_score_verdicts", self.verdicts)
         ]
         prompt = self.evaluation_template.generate_reason(
             input=input,
@@ -300,15 +318,56 @@ class ContextualPrecisionMetric(BaseMetric):
 
         return processed_contexts
 
+    def _get_raw_retrieval_contexts(
+        self, retrieval_contexts: List[Union[str, RetrievedContextData]]
+    ) -> List[str]:
+        return [
+            (
+                context.context
+                if isinstance(context, RetrievedContextData)
+                else context
+            )
+            for context in retrieval_contexts
+        ]
+
+    def _get_score_verdicts(
+        self,
+        retrieval_contexts: List[Union[str, RetrievedContextData]],
+    ) -> List[cpschema.ContextualPrecisionVerdict]:
+        if self.group_by is None:
+            return self.verdicts
+
+        grouped_verdicts = {}
+        score_verdicts = []
+
+        for index, verdict in enumerate(self.verdicts):
+            context = retrieval_contexts[index]
+            group_key = self.group_by(context)
+            if group_key is None:
+                score_verdicts.append(verdict)
+                continue
+
+            if group_key not in grouped_verdicts:
+                grouped_verdicts[group_key] = len(score_verdicts)
+                score_verdicts.append(verdict)
+                continue
+
+            score_index = grouped_verdicts[group_key]
+            if verdict.verdict.strip().lower() == "yes":
+                score_verdicts[score_index] = verdict
+
+        return score_verdicts
+
     def _calculate_score(self):
-        number_of_verdicts = len(self.verdicts)
+        score_verdicts = getattr(self, "_score_verdicts", self.verdicts)
+        number_of_verdicts = len(score_verdicts)
         if number_of_verdicts == 0:
             return 0
 
         # Convert verdicts to a binary list where 'yes' is 1 and others are 0
         node_verdicts = [
             1 if v.verdict.strip().lower() == "yes" else 0
-            for v in self.verdicts
+            for v in score_verdicts
         ]
 
         sum_weighted_precision_at_k = 0.0
