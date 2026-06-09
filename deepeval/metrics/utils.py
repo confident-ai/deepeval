@@ -699,6 +699,7 @@ def is_native_model(
         or isinstance(model, GrokModel)
         or isinstance(model, DeepSeekModel)
         or isinstance(model, OpenRouterModel)
+        or isinstance(model, PortkeyModel)
     ):
         return True
     else:
