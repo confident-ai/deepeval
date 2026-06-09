@@ -223,6 +223,22 @@ Repeat each test case by providing a number to the `-r` flag to specify how many
 deepeval test run test_example.py -r 2
 ```
 
+### Official Test Runs
+
+The `--official` flag (or `-o`) marks the resulting test run as the **official test run** on [Confident AI](https://confident-ai.com). The official run is used as the point of comparison for regression testing. This requires a `CONFIDENT_API_KEY`.
+
+```
+deepeval test run test_example.py --official
+```
+
+When evaluating with `evaluate()` instead of `deepeval test run`, pass `official=True` to achieve the same:
+
+```python
+from deepeval import evaluate
+
+evaluate(test_cases=[...], metrics=[...], official=True)
+```
+
 ### Hooks
 
 `deepeval`'s Pytest integration allows you to run custom code at the end of each evaluation via the `@deepeval.on_test_run_end` decorator:

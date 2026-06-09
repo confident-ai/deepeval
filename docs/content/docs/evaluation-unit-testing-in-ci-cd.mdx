@@ -771,6 +771,28 @@ We highly recommend setting up [Confident AI](https://app.confident-ai.com) with
 />
 :::
 
+## Marking an Official Run
+
+You can designate a test run as the **official** test run on Confident AI — the marked good run that future runs are compared against for regressions. Add the `--official` flag (or `-o`) to mark the run once it completes:
+
+```bash
+deepeval test run test_llm_app.py --official
+```
+
+If you evaluate with `evaluate()` rather than `deepeval test run`, pass `official=True` instead:
+
+```python
+from deepeval import evaluate
+
+evaluate(test_cases=[...], metrics=[...], official=True)
+```
+
+This is typically done on your main branch so every baseline reflects merged, production-ready code.
+
+:::note
+Marking a run as official requires a `CONFIDENT_API_KEY`, since official runs live on Confident AI.
+:::
+
 ## FAQs
 
 <FAQs
