@@ -24,7 +24,7 @@ These layers fall into three tiers:
 - **Capabilities**: what the agent can actually do, such as tools, memory, state, and context management.
 - **Assurance**: the outermost guardrails, including subagent orchestration and validation loops.
 
-Validation loops in the assurance layer is which is where **the eval harness lives.**
+Validation loops, in the assurance layer, are where **the eval harness lives.**
 
 ## The Eval Harness is not what it seems
 
@@ -37,7 +37,7 @@ In practice the runtime version — the guardrail — is becoming a commodity: i
 
 So now that we've determined that an eval harness is strictly for offline/dev-time validation, lets talk about how it works.
 
-## The Eval Harness is made up of metrics, and datasets
+## The Eval Harness is made up of metrics and datasets
 
 At the center of the eval harness is the idea of a benchmark. Traditionally, academic benchmarks like MMLU and Big Bench Hard are benchmarks for foundational models. These were built for academic researchers to see how well their models are performing through popular projects such as [LM Eleuther](https://github.com/EleutherAI/lm-evaluation-harness) and [Stanford HELM](https://github.com/stanford-crfm/helm), not for AI engineers looping their AI agents.
 
@@ -46,13 +46,13 @@ But that doesn't mean the idea of benchmarking can't be applied to AI agents. Wh
 1. [Metrics](/docs/metrics-introduction)
 2. [Datasets](/docs/evaluation-datasets)
 
-Both of which are custom to your agentic use case. The in one verification loop within an eval harness, it typically involves:
+Both of which are custom to your agentic use case. A single verification loop within an eval harness typically involves:
 
 1. Looping through your dataset of goldens
 2. For each golden within your dataset:
    - Invoke your agent
    - Collect the response, and execution trace if available
-3. Use all collected responses an traces to run your metric suite on it
+3. Use all collected responses and traces to run your metric suite on it
 
 Once completed, you now have a set of initial scores on how your agent performs on a particular dataset. Run this across multiple agent versions, and now you have a clear understanding of which agent of yours performs best.
 
@@ -93,7 +93,7 @@ def test_langchain_agent(golden: Golden):
 deepeval test run test_langchain_agent.py
 ```
 
-You can jump ahead and get started [here](/docs/getting-started), but do first finish the article because its about to get interesting.
+You can jump ahead and get started [here](/docs/getting-started), but do first finish the article because it's about to get interesting.
 
 ## The Eval Harnesses behaves differently based on who uses it
 
@@ -130,7 +130,7 @@ Here's a real example, from a single Claude Code session:
 
 **Notice what's NOT in that table: anything resembling an eval.** The Claude Code harness is built to get the right context into the model and shape what it does. It has no native concept of measuring the output against ground truth.
 
-This is a big deal because, although Claude Code's own harness requires concepts of Skills and Hooks - there exist no eval harness for Claude Code building AI agents, not deterministic software.
+This is a big deal because, although Claude Code's own harness requires concepts of Skills and Hooks - there exists no eval harness for Claude Code building AI agents, not deterministic software.
 
 For those vibe coding AI agents - this should be moderately concerning.
 
@@ -138,7 +138,7 @@ For those vibe coding AI agents - this should be moderately concerning.
 
 For most of what Claude Code writes, that's fine — the output is deterministic. A test is green or red; a hook can check for it. But building an AI agent breaks that.
 
-There's no assert equal for "was this response faithful?" The output is non-deterministic — the one thing hooks and lint can't catch. Claude Code's harness can validate the software it writes, but not the agent it writes.
+There's no `assertEqual` for "was this response faithful?" The output is non-deterministic — the one thing hooks and lint can't catch. Claude Code's harness can validate the software it writes, but not the agent it writes.
 
 Let's take a look how the regular eval harness DeepEval provides from [this section above](#the-eval-harness-is-made-up-of-metrics-and-datasets) maps into Claude Code's harness:
 
