@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { gitConfig } from "@/lib/shared";
 import { externalRelForOutboundHref } from "@/src/utils/outbound-link-rel";
+import Wordmark from "@/src/components/Wordmark";
 import styles from "./Footer.module.scss";
 
 type FooterLink = {
@@ -103,12 +104,11 @@ const Footer = () => {
       <div className={styles.shell}>
         <div className={styles.inner}>
           <div className={styles.brand}>
-            {/* Rendered as a masked <span> (see `.logo` in the module)
-             *  so `background-color: var(--color-fd-foreground)` drives
-             *  the fill — keeps the mark legible in both light and dark
-             *  modes without forking the SVG asset. `role="img"` + aria
-             *  label preserves the <img>'s accessibility semantics. */}
-            <span className={styles.logo} role="img" aria-label="DeepEval" />
+            {/* Inline SVG wordmark: the lettering follows the theme via
+             *  `currentColor` while the trailing dot keeps the brand
+             *  violet. A CSS mask (the old approach) would flatten both
+             *  to a single color. */}
+            <Wordmark className={styles.logo} />
             <p className={styles.tagline}>
               Open-source LLM evaluation framework. Apache 2.0 licensed.
             </p>

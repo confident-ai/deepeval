@@ -36,16 +36,13 @@
 }
 
 .logo {
-  // Loaded as a CSS mask (not an <img>) so we can paint the glyph
-  // with `--color-fd-foreground` and have it flip with the theme
-  // instead of being locked to whatever `fill` the SVG ships with.
+  // Inline <svg> (see `Wordmark`): the lettering inherits
+  // `--color-fd-foreground` via `currentColor` so it still flips with
+  // the theme, while the dot keeps the brand violet.
   display: block;
   height: 20px;
-  width: 85px; // Locked to the SVG's 298:70 aspect ratio (20 * 4.257).
+  width: 87px; // Matches the wordmark viewBox aspect ratio (322:70).
   margin: 0;
-  background-color: var(--color-fd-foreground);
-  mask: url("/icons/DeepEval.svg") no-repeat left / contain;
-  -webkit-mask: url("/icons/DeepEval.svg") no-repeat left / contain;
 }
 
 .tagline {
