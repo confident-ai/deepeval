@@ -7,6 +7,7 @@ import pytest
 import typer
 from typing_extensions import Annotated
 
+from deepeval.deepeval.config.settings import get_settings
 from deepeval.telemetry import capture_evaluation_run
 from deepeval.test_run import (
     TEMP_FILE_PATH,
@@ -22,9 +23,11 @@ from deepeval.utils import (
     set_should_ignore_errors,
     set_should_skip_on_missing_params,
     set_should_use_cache,
+    set_test_run_official,
     set_verbose_mode,
 )
 
+SETTINGS = get_settings()
 app = typer.Typer(name="test")
 
 
@@ -109,6 +112,12 @@ def run(
         "-m",
         help="List of marks to run the tests with.",
     ),
+    official: bool = typer.Option(
+        False,
+        "--official",
+        "-o",
+        help="Mark this test run as the official baseline on Confident AI.",
+    ),
 ):
     """Run a test"""
     delete_file_if_exists(TEMP_FILE_PATH)
@@ -116,12 +125,19 @@ def run(
     check_if_valid_file(test_file_or_directory)
     set_is_running_deepeval(True)
 
+    if official and not SETTINGS.CONFIDENT_API_KEY:
+        print(
+            "Warning: --official requires a CONFIDENT_API_KEY environment variable to be set. Skipping."
+        )
+        official = False
+
     should_use_cache = use_cache and repeat is None
     set_should_use_cache(should_use_cache)
     set_should_ignore_errors(ignore_errors)
     set_should_skip_on_missing_params(skip_on_missing_params)
     set_verbose_mode(verbose)
     set_identifier(identifier)
+    set_test_run_official(official)
 
     global_test_run_manager.reset()
 
