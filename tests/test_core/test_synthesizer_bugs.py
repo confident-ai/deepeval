@@ -271,9 +271,7 @@ class TestCrossFileSourceLabeling:
         synth = _make_synthesizer()
         context = ["only chunk"]
 
-        assert (
-            synth._format_context_with_sources(context, None) == context
-        )
+        assert synth._format_context_with_sources(context, None) == context
         # Mismatched lengths fall back to the raw context.
         assert (
             synth._format_context_with_sources(context, ["a", "b"]) == context
@@ -399,9 +397,7 @@ class TestMergeCrossFileContexts:
         synth = _make_synthesizer()
         built = self._build(synth, ["a.txt"])
 
-        merged = synth._merge_cross_file_contexts(
-            built, self._fake_embedder()
-        )
+        merged = synth._merge_cross_file_contexts(built, self._fake_embedder())
 
         assert merged == built
 
@@ -436,9 +432,8 @@ class TestMergeCrossFileContexts:
 
         # Every merged context keeps chunk labels aligned (or has none).
         for m in merged:
-            assert (
-                not m.chunk_source_files
-                or len(m.chunk_source_files) == len(m.context)
+            assert not m.chunk_source_files or len(m.chunk_source_files) == len(
+                m.context
             )
         # The unlabeled chunk survives untouched in exactly one context.
         assert any("unlabeled chunk" in m.context for m in merged)
@@ -589,9 +584,7 @@ class TestRewriteScenariosPreservesSources:
                 used_source_files=["a.txt", "b.txt"],
             )
         ]
-        filtered, scores = await synth._a_rewrite_scenarios(
-            ["ctx"], scenarios
-        )
+        filtered, scores = await synth._a_rewrite_scenarios(["ctx"], scenarios)
 
         assert filtered[0].used_source_files == ["a.txt", "b.txt"]
         assert scores == [1.0]

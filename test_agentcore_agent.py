@@ -25,6 +25,7 @@ import uuid
 from pathlib import Path
 
 import pytest
+
 # from strands import Agent
 
 from deepeval import assert_test
@@ -62,6 +63,7 @@ async def run_agent(prompt: str) -> str:
     ``test_pydantic_agent.py``.
     """
     return "output"
+
 
 dataset = EvaluationDataset()
 dataset.pull(alias="Single Turn QA")

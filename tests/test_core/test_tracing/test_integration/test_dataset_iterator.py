@@ -2,7 +2,10 @@ import asyncio
 import os
 import pytest
 
-if os.getenv("OPENAI_API_KEY") is None or not os.getenv("OPENAI_API_KEY").strip():
+if (
+    os.getenv("OPENAI_API_KEY") is None
+    or not os.getenv("OPENAI_API_KEY").strip()
+):
     pytest.skip("needs OPENAI_API_KEY", allow_module_level=True)
 
 
