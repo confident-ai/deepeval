@@ -33,7 +33,7 @@ const Wordmark: React.FC<WordmarkProps> = ({ className, style }) => (
     {/* Brand-violet dot. Drawn as a circle (instead of the original
         smaller path) so its size is easy to tune; bottom-aligned to the
         wordmark baseline at y≈54.69 and centered on the original dot. */}
-    <circle cx="311.11" cy="48.19" r="6.5" fill="#6200FF" />
+      <circle cx="311.11" cy="46.69" r="8" fill="#6200FF" />
   </svg>
 );
 
