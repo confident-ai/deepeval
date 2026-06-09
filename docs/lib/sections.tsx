@@ -7,6 +7,7 @@ import {
   blogSource,
   getPageMarkdownUrl,
   getPageImage,
+  getBlogPageImage,
 } from '@/lib/source';
 import { createSection } from '@/lib/section';
 import BlogPostMeta from '@/src/components/BlogPostMeta';
@@ -84,6 +85,14 @@ export const blogSection = createSection({
   source: blogSource,
   contentDir: 'content/blog',
   getMarkdownUrl: (page) => getPageMarkdownUrl(page, blogSource).url,
+  // Per-post `og:image` fallback: a generated title/description card
+  // served from `/og/blog/<slug>/image.png`. A post's `image:`
+  // frontmatter still wins — `extendMetadata` sets `openGraph.images`
+  // to it, and `generateMetadata` merges that over this base. Without
+  // this fallback, posts with no `image:` emit no `og:image` (the blog
+  // `openGraph` override clobbers the root layout's default), so social
+  // scrapers like LinkedIn grab the author avatar off the page instead.
+  getImageUrl: (page) => getBlogPageImage(page).url,
   // Blog-only global MDX components — authors can use these in any post
   // without an explicit `import`. Scoped to the blog so they don't leak
   // into docs/guides/etc.
