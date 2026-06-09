@@ -167,7 +167,6 @@ class TestRun(BaseModel):
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
     dataset_alias: Optional[str] = Field(None, alias="datasetAlias")
     dataset_id: Optional[str] = Field(None, alias="datasetId")
-    run_id: Optional[str] = Field(None, alias="runId", exclude=True)
     official: bool = False
 
     def add_test_case(
@@ -993,7 +992,6 @@ class TestRunManager:
         )
         self.save_final_test_run_link(link)
         open_browser(link)
-        test_run.run_id = res.id
         return link, res.id
 
     def save_test_run_locally(self):
