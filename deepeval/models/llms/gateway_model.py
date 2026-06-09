@@ -15,8 +15,7 @@ Two layers live here:
 ``DeepEvalBaseGatewayModel``
     Transport-agnostic contract shared by *all* gateways: the centralized retry
     policy, the standard ``(output, cost)`` return contract, ``EvaluationCost``
-    cost accounting and ``get_model_name``. ``LiteLLMModel`` extends this directly
-    because it speaks through the ``litellm`` library rather than an HTTP client.
+    cost accounting and ``get_model_name``.
 
 ``DeepEvalOpenAICompatibleModel``
     Adds the concrete OpenAI-Chat-Completions transport (the ``openai`` SDK
