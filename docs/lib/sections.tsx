@@ -10,6 +10,7 @@ import {
 } from '@/lib/source';
 import { createSection } from '@/lib/section';
 import BlogPostMeta from '@/src/components/BlogPostMeta';
+import ClaudeCodeTerminal from '@/src/sections/home/ClaudeCodeTerminal';
 import SchemaInjector from '@/src/components/SchemaInjector/SchemaInjector';
 import {
   buildArticleSchema,
@@ -83,6 +84,10 @@ export const blogSection = createSection({
   source: blogSource,
   contentDir: 'content/blog',
   getMarkdownUrl: (page) => getPageMarkdownUrl(page, blogSource).url,
+  // Blog-only global MDX components — authors can use these in any post
+  // without an explicit `import`. Scoped to the blog so they don't leak
+  // into docs/guides/etc.
+  mdxComponents: { ClaudeCodeTerminal },
   renderBeforeBody: (page) => {
     const data = page.data as BlogFrontmatter;
     const { authors, category, title, description, date } = data;
