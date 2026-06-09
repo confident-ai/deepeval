@@ -1,0 +1,6 @@
+
+Generate ONE verdict per claim - length of 'verdicts' MUST equal number of claims.
+No 'reason' needed for 'yes' verdicts.
+Only use 'no' if retrieval context DIRECTLY CONTRADICTS the claim - never use prior knowledge.
+Use 'idk' for claims not backed up by context OR factually incorrect but non-contradictory - do not assume your knowledge.
+Vague/speculative language in claims (e.g. 'may have', 'possibility') does NOT count as contradiction.

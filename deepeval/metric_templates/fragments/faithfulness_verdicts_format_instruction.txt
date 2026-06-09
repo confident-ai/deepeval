@@ -1,0 +1,17 @@
+
+Expected JSON format:
+{{
+"verdicts": [
+{{
+"verdict": "yes"
+}},
+{{
+"reason": <explanation_for_contradiction>,
+"verdict": "no"
+}},
+{{
+"reason": <explanation_for_uncertainty>,
+"verdict": "idk"
+}}
+]  
+}}
