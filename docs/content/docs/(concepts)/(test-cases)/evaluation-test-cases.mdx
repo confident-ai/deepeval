@@ -309,9 +309,12 @@ class RetrievedContextData(BaseModel):
     source: str
 ```
 
+Use `source` to identify the retrieval unit that the context belongs to. For example, you can set it to a document section ID such as `"10k/revenue"` when overlapping chunks should be evaluated as one section, or to a chunk hash when the same chunk can appear more than once after hybrid search fusion. Contextual precision metrics group `RetrievedContextData` entries with the same `source`; plain string entries remain independent retrieval nodes.
+
 ```python
 # A hypothetical LLM application example
 import chatbot
+from deepeval.test_case import RetrievedContextData
 
 input = "Why did the chicken cross the road?"
 
@@ -320,7 +323,12 @@ test_case = LLMTestCase(
     actual_output=chatbot.run(input),
     expected_output="To get to the other side!",
     context=["The chicken wanted to cross the road."],
-    retrieval_context=["The chicken liked the other side of the road better"]
+    retrieval_context=[
+        RetrievedContextData(
+            context="The chicken liked the other side of the road better",
+            source="faq/chicken-road",
+        )
+    ]
 )
 ```
 

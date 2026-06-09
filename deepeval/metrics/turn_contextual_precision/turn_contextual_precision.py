@@ -1,7 +1,12 @@
 from typing import List, Optional, Union, Type, Tuple
 import asyncio
 import itertools
-from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
+from deepeval.test_case import (
+    ConversationalTestCase,
+    MultiTurnParams,
+    RetrievedContextData,
+    Turn,
+)
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -9,10 +14,10 @@ from deepeval.utils import (
 )
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_conversational_test_case_params,
     get_unit_interactions,
     get_turns_in_sliding_window,
+    group_retrieval_contexts_by_source,
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
@@ -204,6 +209,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
                 if turn.retrieval_context is not None:
                     retrieval_context.extend(turn.retrieval_context)
 
+        retrieval_context = self._group_retrieval_contexts(retrieval_context)
         verdicts = await self._a_generate_verdicts(
             user_content,
             expected_outcome,
@@ -239,6 +245,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
                 if turn.retrieval_context is not None:
                     retrieval_context.extend(turn.retrieval_context)
 
+        retrieval_context = self._group_retrieval_contexts(retrieval_context)
         verdicts = self._generate_verdicts(
             user_content,
             expected_outcome,
@@ -267,8 +274,6 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         if len(retrieval_context) == 0:
             return []
 
-        verdicts: List[ContextualPrecisionVerdict] = []
-
         prompt = self.evaluation_template.generate_verdicts(
             input=input,
             expected_outcome=expected_outcome,
@@ -293,8 +298,6 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
     ) -> List[ContextualPrecisionVerdict]:
         if len(retrieval_context) == 0:
             return []
-
-        verdicts: List[ContextualPrecisionVerdict] = []
 
         prompt = self.evaluation_template.generate_verdicts(
             input=input,
@@ -382,6 +385,11 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
 
         score = sum_weighted_precision_at_k / relevant_nodes_count
         return 0 if self.strict_mode and score < self.threshold else score
+
+    def _group_retrieval_contexts(
+        self, retrieval_contexts: List[Union[str, RetrievedContextData]]
+    ) -> List[str]:
+        return group_retrieval_contexts_by_source(retrieval_contexts)
 
     async def _a_get_interaction_reason(
         self,
@@ -536,7 +544,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

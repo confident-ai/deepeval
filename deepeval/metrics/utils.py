@@ -64,6 +64,7 @@ from deepeval.test_case import (
     SingleTurnParams,
     ConversationalTestCase,
     MLLMImage,
+    RetrievedContextData,
     Turn,
     ArenaTestCase,
     ToolCall,
@@ -185,6 +186,36 @@ def get_unit_interactions(turns: List[Turn]) -> List[List[Turn]]:
         units.append(current)
 
     return units
+
+
+def group_retrieval_contexts_by_source(
+    retrieval_contexts: List[Union[str, RetrievedContextData]],
+) -> List[str]:
+    grouped_contexts_dict = {}
+    ordered_identifiers = []
+
+    for context in retrieval_contexts:
+        if isinstance(context, RetrievedContextData):
+            if context.source not in grouped_contexts_dict:
+                ordered_identifiers.append(
+                    {"type": "grouped", "key": context.source}
+                )
+                grouped_contexts_dict[context.source] = []
+            grouped_contexts_dict[context.source].append(context.context)
+        else:
+            ordered_identifiers.append({"type": "standalone", "value": context})
+
+    processed_contexts = []
+    for item in ordered_identifiers:
+        if item["type"] == "grouped":
+            source = item["key"]
+            contents = grouped_contexts_dict[source]
+            combined_content = f"Source: {source}\n" + "\n---\n".join(contents)
+            processed_contexts.append(combined_content)
+        else:
+            processed_contexts.append(item["value"])
+
+    return processed_contexts
 
 
 def print_tools_called(tools_called_list: List[ToolCall]):
