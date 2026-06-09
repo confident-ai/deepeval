@@ -1,1 +1,3 @@
-from .template import FaithfulnessTemplate
+from .faithfulness import FaithfulnessMetric
+
+__all__ = ["FaithfulnessMetric"]

@@ -1,4 +1,4 @@
-from typing import Optional, List, Type, Union
+from typing import Any, Dict, Optional, List, Union
 
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -17,7 +17,8 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.contextual_recall.template import ContextualRecallTemplate
+from deepeval.metric_templates import resolve_template
+from deepeval.metrics.retrieval_context_display import id_retrieval_context
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.contextual_recall.schema import (
     ContextualRecallVerdict,
@@ -25,6 +26,35 @@ from deepeval.metrics.contextual_recall.schema import (
     ContextualRecallScoreReason,
     VerdictWithExpectedOutput,
 )
+
+
+def _contextual_recall_verdict_kwargs(
+    retrieval_context: List[Any],
+    multimodal: bool,
+) -> Dict[str, object]:
+    content_type = "sentence and image" if multimodal else "sentence"
+    content_type_plural = (
+        "sentences and images" if multimodal else "sentences"
+    )
+    content_or = "sentence or image" if multimodal else "sentence"
+    context_to_display = (
+        id_retrieval_context(retrieval_context)
+        if multimodal
+        else retrieval_context
+    )
+    node_instruction = ""
+    if multimodal:
+        node_instruction = (
+            " A node is either a string or image, but not both (so do not group "
+            "images and texts in the same nodes)."
+        )
+    return {
+        "content_type": content_type,
+        "content_type_plural": content_type_plural,
+        "content_or": content_or,
+        "context_to_display": context_to_display,
+        "node_instruction": node_instruction,
+    }
 
 
 class ContextualRecallMetric(BaseMetric):
@@ -43,9 +73,6 @@ class ContextualRecallMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        evaluation_template: Type[
-            ContextualRecallTemplate
-        ] = ContextualRecallTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -54,8 +81,6 @@ class ContextualRecallMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.evaluation_template = evaluation_template
-
     def measure(
         self,
         test_case: LLMTestCase,
@@ -175,12 +200,15 @@ class ContextualRecallMetric(BaseMetric):
             else:
                 unsupportive_reasons.append(verdict.reason)
 
-        prompt = self.evaluation_template.generate_reason(
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_reason",
             expected_output=expected_output,
             supportive_reasons=supportive_reasons,
             unsupportive_reasons=unsupportive_reasons,
             score=format(self.score, ".2f"),
             multimodal=multimodal,
+            content_type="sentence or image" if multimodal else "sentence",
         )
 
         return await a_generate_with_schema_and_extract(
@@ -203,12 +231,15 @@ class ContextualRecallMetric(BaseMetric):
             else:
                 unsupportive_reasons.append(verdict.reason)
 
-        prompt = self.evaluation_template.generate_reason(
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_reason",
             expected_output=expected_output,
             supportive_reasons=supportive_reasons,
             unsupportive_reasons=unsupportive_reasons,
             score=format(self.score, ".2f"),
             multimodal=multimodal,
+            content_type="sentence or image" if multimodal else "sentence",
         )
 
         return generate_with_schema_and_extract(
@@ -238,10 +269,12 @@ class ContextualRecallMetric(BaseMetric):
         retrieval_context: List[str],
         multimodal: bool,
     ) -> List[VerdictWithExpectedOutput]:
-        prompt = self.evaluation_template.generate_verdicts(
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_verdicts",
             expected_output=expected_output,
-            retrieval_context=retrieval_context,
             multimodal=multimodal,
+            **_contextual_recall_verdict_kwargs(retrieval_context, multimodal),
         )
         verdicts = await a_generate_with_schema_and_extract(
             metric=self,
@@ -268,10 +301,12 @@ class ContextualRecallMetric(BaseMetric):
         retrieval_context: List[str],
         multimodal: bool,
     ) -> List[VerdictWithExpectedOutput]:
-        prompt = self.evaluation_template.generate_verdicts(
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_verdicts",
             expected_output=expected_output,
-            retrieval_context=retrieval_context,
             multimodal=multimodal,
+            **_contextual_recall_verdict_kwargs(retrieval_context, multimodal),
         )
         verdicts = generate_with_schema_and_extract(
             metric=self,

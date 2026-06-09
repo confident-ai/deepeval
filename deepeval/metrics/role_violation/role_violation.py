@@ -1,4 +1,4 @@
-from typing import List, Optional, Type, Union
+from typing import List, Optional, Union
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
@@ -7,6 +7,7 @@ from deepeval.test_case import (
 )
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.metric_templates import resolve_template
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -15,7 +16,6 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
-from deepeval.metrics.role_violation.template import RoleViolationTemplate
 from deepeval.metrics.role_violation.schema import (
     RoleViolationVerdict,
     Verdicts,
@@ -39,9 +39,6 @@ class RoleViolationMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        evaluation_template: Type[
-            RoleViolationTemplate
-        ] = RoleViolationTemplate,
     ):
         if role is None:
             raise ValueError(
@@ -56,8 +53,6 @@ class RoleViolationMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.evaluation_template = evaluation_template
-
     def measure(
         self,
         test_case: LLMTestCase,
@@ -94,7 +89,7 @@ class RoleViolationMetric(BaseMetric):
                 )
             else:
                 self.role_violations: List[str] = self._detect_role_violations(
-                    test_case.actual_output
+                    test_case.actual_output, multimodal=test_case.multimodal
                 )
                 self.verdicts: List[RoleViolationVerdict] = (
                     self._generate_verdicts()
@@ -142,7 +137,9 @@ class RoleViolationMetric(BaseMetric):
             _in_component=_in_component,
         ):
             self.role_violations: List[str] = (
-                await self._a_detect_role_violations(test_case.actual_output)
+                await self._a_detect_role_violations(
+                    test_case.actual_output, multimodal=test_case.multimodal
+                )
             )
             self.verdicts: List[RoleViolationVerdict] = (
                 await self._a_generate_verdicts()
@@ -171,7 +168,11 @@ class RoleViolationMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 role_violations.append(verdict.reason)
 
-        prompt: dict = self.evaluation_template.generate_reason(
+        prompt: dict = resolve_template(
+
+            self.__class__.__name__,
+
+            "generate_reason",
             role_violations=role_violations,
             score=format(self.score, ".2f"),
         )
@@ -193,7 +194,11 @@ class RoleViolationMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 role_violations.append(verdict.reason)
 
-        prompt: dict = self.evaluation_template.generate_reason(
+        prompt: dict = resolve_template(
+
+            self.__class__.__name__,
+
+            "generate_reason",
             role_violations=role_violations,
             score=format(self.score, ".2f"),
         )
@@ -210,7 +215,11 @@ class RoleViolationMetric(BaseMetric):
         if len(self.role_violations) == 0:
             return []
 
-        prompt = self.evaluation_template.generate_verdicts(
+        prompt = resolve_template(
+
+            self.__class__.__name__,
+
+            "generate_verdicts",
             role_violations=self.role_violations
         )
         return await a_generate_with_schema_and_extract(
@@ -227,7 +236,11 @@ class RoleViolationMetric(BaseMetric):
         if len(self.role_violations) == 0:
             return []
 
-        prompt = self.evaluation_template.generate_verdicts(
+        prompt = resolve_template(
+
+            self.__class__.__name__,
+
+            "generate_verdicts",
             role_violations=self.role_violations
         )
         return generate_with_schema_and_extract(
@@ -240,9 +253,15 @@ class RoleViolationMetric(BaseMetric):
             ],
         )
 
-    async def _a_detect_role_violations(self, actual_output: str) -> List[str]:
-        prompt = self.evaluation_template.detect_role_violations(
-            actual_output, self.role
+    async def _a_detect_role_violations(
+        self, actual_output: str, *, multimodal: bool
+    ) -> List[str]:
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "detect_role_violations",
+            actual_output=actual_output,
+            expected_role=self.role,
+            multimodal=multimodal,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -252,9 +271,15 @@ class RoleViolationMetric(BaseMetric):
             extract_json=lambda data: data["role_violations"],
         )
 
-    def _detect_role_violations(self, actual_output: str) -> List[str]:
-        prompt = self.evaluation_template.detect_role_violations(
-            actual_output, self.role
+    def _detect_role_violations(
+        self, actual_output: str, *, multimodal: bool
+    ) -> List[str]:
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "detect_role_violations",
+            actual_output=actual_output,
+            expected_role=self.role,
+            multimodal=multimodal,
         )
         return generate_with_schema_and_extract(
             metric=self,

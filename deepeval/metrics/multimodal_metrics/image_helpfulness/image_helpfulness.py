@@ -3,9 +3,6 @@ from typing import Optional, List, Tuple, Union
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import SingleTurnParams, LLMTestCase, MLLMImage
-from deepeval.metrics.multimodal_metrics.image_helpfulness.template import (
-    ImageHelpfulnessTemplate,
-)
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_llm_test_case_params,
@@ -14,6 +11,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.metric_templates import resolve_template
 from deepeval.metrics.multimodal_metrics.image_helpfulness.schema import (
     ReasonScore,
 )
@@ -284,8 +282,11 @@ class ImageHelpfulnessMetric(BaseMetric):
         context_above: Optional[str] = None,
         context_below: Optional[str] = None,
     ) -> Tuple[float, str]:
-        instructions = ImageHelpfulnessTemplate.evaluate_image_helpfulness(
-            context_above, context_below
+        instructions = resolve_template(
+            self.__class__.__name__,
+            "evaluate_image_helpfulness",
+            context_above=context_above,
+            context_below=context_below,
         )
         prompt = f"{instructions} \nImages: {image}"
         return generate_with_schema_and_extract(
@@ -302,8 +303,11 @@ class ImageHelpfulnessMetric(BaseMetric):
         context_above: Optional[str] = None,
         context_below: Optional[str] = None,
     ) -> Tuple[float, str]:
-        instructions = ImageHelpfulnessTemplate.evaluate_image_helpfulness(
-            context_above, context_below
+        instructions = resolve_template(
+            self.__class__.__name__,
+            "evaluate_image_helpfulness",
+            context_above=context_above,
+            context_below=context_below,
         )
         prompt = f"{instructions} \nImages: {image}"
         return await a_generate_with_schema_and_extract(

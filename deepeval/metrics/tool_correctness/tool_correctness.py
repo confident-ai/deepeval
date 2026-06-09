@@ -11,6 +11,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.metric_templates import resolve_template
 from deepeval.test_case import (
     LLMTestCase,
     SingleTurnParams,
@@ -18,7 +19,6 @@ from deepeval.test_case import (
     ToolCall,
 )
 from deepeval.metrics import BaseMetric
-from deepeval.metrics.tool_correctness.template import ToolCorrectnessTemplate
 from deepeval.metrics.tool_correctness.schema import ToolSelectionScore
 
 
@@ -98,6 +98,7 @@ class ToolCorrectnessMetric(BaseMetric):
                         test_case.input,
                         test_case.tools_called,
                         self.available_tools,
+                        multimodal=test_case.multimodal,
                     )
                 else:
                     tool_selection_score = ToolSelectionScore(
@@ -196,6 +197,7 @@ class ToolCorrectnessMetric(BaseMetric):
                     test_case.input,
                     test_case.tools_called,
                     self.available_tools,
+                    multimodal=test_case.multimodal,
                 )
             else:
                 tool_selection_score = ToolSelectionScore(
@@ -327,12 +329,17 @@ class ToolCorrectnessMetric(BaseMetric):
     ##################################################
 
     def _get_tool_selection_score(
-        self, user_input, tools_called, available_tools
+        self, user_input, tools_called, available_tools, *, multimodal: bool
     ):
         tools_called_formatted = print_tools_called(tools_called)
         available_tools_formatted = print_tools_called(available_tools)
-        prompt = ToolCorrectnessTemplate.get_tool_selection_score(
-            user_input, tools_called_formatted, available_tools_formatted
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "get_tool_selection_score",
+            user_input=user_input,
+            tools_called=tools_called_formatted,
+            available_tools=available_tools_formatted,
+            multimodal=multimodal,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -343,12 +350,17 @@ class ToolCorrectnessMetric(BaseMetric):
         )
 
     async def _a_get_tool_selection_score(
-        self, user_input, tools_called, available_tools
+        self, user_input, tools_called, available_tools, *, multimodal: bool
     ):
         tools_called_formatted = print_tools_called(tools_called)
         available_tools_formatted = print_tools_called(available_tools)
-        prompt = ToolCorrectnessTemplate.get_tool_selection_score(
-            user_input, tools_called_formatted, available_tools_formatted
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "get_tool_selection_score",
+            user_input=user_input,
+            tools_called=tools_called_formatted,
+            available_tools=available_tools_formatted,
+            multimodal=multimodal,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,

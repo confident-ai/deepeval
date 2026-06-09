@@ -5,7 +5,6 @@ from deepeval.metrics.role_adherence.schema import (
     OutOfCharacterResponseVerdicts,
     RoleAdherenceScoreReason,
 )
-from deepeval.metrics.role_adherence.template import RoleAdherenceTemplate
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
@@ -15,6 +14,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.metric_templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import Turn, ConversationalTestCase, MultiTurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
@@ -142,7 +142,11 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         if self.include_reason is False:
             return None
 
-        prompt = RoleAdherenceTemplate.generate_reason(
+        prompt = resolve_template(
+
+            self.__class__.__name__,
+
+            "generate_reason",
             score=self.score,
             role=role,
             out_of_character_responses=[
@@ -161,7 +165,9 @@ class RoleAdherenceMetric(BaseConversationalMetric):
     def _generate_reason(self, role: str) -> Optional[str]:
         if self.include_reason is False:
             return None
-        prompt = RoleAdherenceTemplate.generate_reason(
+        prompt = resolve_template(
+            self.__class__.__name__,
+            "generate_reason",
             score=self.score,
             role=role,
             out_of_character_responses=[
@@ -181,7 +187,9 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         self, turns: List[Turn], role: str
     ) -> OutOfCharacterResponseVerdicts:
         prompt = (
-            RoleAdherenceTemplate.extract_out_of_character_response_verdicts(
+            resolve_template(
+                self.__class__.__name__,
+                "extract_out_of_character_response_verdicts",
                 turns=[convert_turn_to_dict(turn) for turn in turns],
                 role=role,
             )
@@ -210,7 +218,9 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         self, turns: List[Turn], role: str
     ) -> OutOfCharacterResponseVerdicts:
         prompt = (
-            RoleAdherenceTemplate.extract_out_of_character_response_verdicts(
+            resolve_template(
+                self.__class__.__name__,
+                "extract_out_of_character_response_verdicts",
                 turns=[convert_turn_to_dict(turn) for turn in turns],
                 role=role,
             )

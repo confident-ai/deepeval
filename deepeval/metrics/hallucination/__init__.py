@@ -1,1 +1,3 @@
-from .template import HallucinationTemplate
+from .hallucination import HallucinationMetric
+
+__all__ = ["HallucinationMetric"]
