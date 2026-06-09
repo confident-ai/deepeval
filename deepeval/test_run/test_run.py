@@ -1057,9 +1057,8 @@ class TestRunManager:
             delete_file_if_exists(self.temp_file_path)
             return
 
-        # Mark the run as the official baseline if requested via the
-        # `--official` CLI flag or `evaluate(official=True)`. Set here, in the
-        # main process right before upload, so it rides along in the test run
+        # Mark the run as the official if requested via the `--official` CLI flag or `evaluate(official=True)`. 
+        # Set here, in the main process right before upload, so it rides along in the test run
         # creation payload (and survives any xdist worker disk round-trips).
         if get_test_run_official():
             test_run.official = True
