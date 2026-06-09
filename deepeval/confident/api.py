@@ -128,7 +128,6 @@ class Endpoints(Enum):
     DATASET_ALIAS_VERSIONS_ENDPOINT = "/v1/datasets/:alias/versions"
 
     TEST_RUN_ENDPOINT = "/v1/test-run"
-
     EXPERIMENT_ENDPOINT = "/v1/experiment"
     TRACES_ENDPOINT = "/v1/traces"
     ANNOTATIONS_ENDPOINT = "/v1/annotations"
@@ -148,7 +147,6 @@ class Endpoints(Enum):
 
     METRICS_ENDPOINT = "/v1/metrics"
     METRIC_ENDPOINT = "/v1/metric/:name"
-
 
 
 def _sanitize_body(obj):
