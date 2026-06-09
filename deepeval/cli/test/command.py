@@ -23,6 +23,7 @@ from deepeval.utils import (
     set_should_ignore_errors,
     set_should_skip_on_missing_params,
     set_should_use_cache,
+    set_test_run_official,
     set_verbose_mode,
 )
 
@@ -115,7 +116,7 @@ def run(
         False,
         "--official",
         "-o",
-        help="Mark this test run as the official run on Confident AI after it completes.",
+        help="Mark this test run as the official baseline on Confident AI.",
     ),
 ):
     """Run a test"""
@@ -124,12 +125,19 @@ def run(
     check_if_valid_file(test_file_or_directory)
     set_is_running_deepeval(True)
 
+    if official and not SETTINGS.CONFIDENT_API_KEY:
+        print(
+            "Warning: --official requires a CONFIDENT_API_KEY environment variable to be set. Skipping."
+        )
+        official = False
+
     should_use_cache = use_cache and repeat is None
     set_should_use_cache(should_use_cache)
     set_should_ignore_errors(ignore_errors)
     set_should_skip_on_missing_params(skip_on_missing_params)
     set_verbose_mode(verbose)
     set_identifier(identifier)
+    set_test_run_official(official)
 
     global_test_run_manager.reset()
 
@@ -176,18 +184,9 @@ def run(
         pytest_retcode = pytest.main(pytest_args)
     end_time = time.perf_counter()
     run_duration = end_time - start_time
-    upload_result = global_test_run_manager.wrap_up_test_run(run_duration, True, display)
+    global_test_run_manager.wrap_up_test_run(run_duration, True, display)
 
     invoke_test_run_end_hook()
-
-    if official:
-        if not SETTINGS.CONFIDENT_API_KEY:
-            print(
-                "Warning: --official requires a CONFIDENT_API_KEY environment variable to be set. Skipping."
-            )
-        else:
-            run_id = upload_result[1] if upload_result else None
-            global_test_run_manager.mark_official(run_id=run_id)
 
     if pytest_retcode == 1:
         sys.exit(1)

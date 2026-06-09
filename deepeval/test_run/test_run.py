@@ -24,6 +24,7 @@ from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.utils import (
     delete_file_if_exists,
     get_is_running_deepeval,
+    get_test_run_official,
     is_read_only_env,
     open_browser,
     shorten,
@@ -167,6 +168,7 @@ class TestRun(BaseModel):
     dataset_alias: Optional[str] = Field(None, alias="datasetAlias")
     dataset_id: Optional[str] = Field(None, alias="datasetId")
     run_id: Optional[str] = Field(None, alias="runId", exclude=True)
+    official: bool = False
 
     def add_test_case(
         self, api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase]
@@ -994,40 +996,6 @@ class TestRunManager:
         test_run.run_id = res.id
         return link, res.id
 
-    def mark_official(self, run_id: Optional[str] = None) -> None:
-        effective_run_id = run_id or (
-            self.test_run.run_id if self.test_run else None
-        )
-
-        if not effective_run_id:
-            # No run_id yet — upload the local test run first
-            if self.test_run is None or (
-                len(self.test_run.test_cases) == 0
-                and len(self.test_run.conversational_test_cases) == 0
-            ):
-                raise ValueError(
-                    "No test run loaded. Run an evaluation or provide a run_id before calling mark_official()."
-                )
-            console.print(
-                "[bold]Uploading test run to Confident AI before marking as official...[/bold]"
-            )
-            result = self.post_test_run(self.test_run)
-            if result is None:
-                raise RuntimeError(
-                    "Upload failed — cannot mark test run as official."
-                )
-            effective_run_id = result[1]
-
-        api = Api()
-        api.send_request(
-            method=HttpMethods.POST,
-            endpoint=Endpoints.MARK_OFFICIAL_ENDPOINT,
-            url_params={"testRunId": effective_run_id},
-        )
-        console.print(
-            "[rgb(5,245,141)]✓[/rgb(5,245,141)] Test run marked as official on Confident AI."
-        )
-
     def save_test_run_locally(self):
         """Persist the current TestRun to disk.
 
@@ -1090,6 +1058,13 @@ class TestRunManager:
             print("No test cases found, please try again.")
             delete_file_if_exists(self.temp_file_path)
             return
+
+        # Mark the run as the official baseline if requested via the
+        # `--official` CLI flag or `evaluate(official=True)`. Set here, in the
+        # main process right before upload, so it rides along in the test run
+        # creation payload (and survives any xdist worker disk round-trips).
+        if get_test_run_official():
+            test_run.official = True
 
         # Don't block the post when all metrics errored — the spans still
         # carry the underlying error info (populated by ``Observer.__exit__``)
