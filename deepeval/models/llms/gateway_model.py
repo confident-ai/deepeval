@@ -60,13 +60,8 @@ class DeepEvalBaseGatewayModel(DeepEvalBaseLLM):
     centralized retry decorator so retries are consistent across all gateways.
     """
 
-    #: Provider slug used to look up the retry policy + per-provider settings.
     PROVIDER_SLUG: ProviderSlug
-    #: Human-readable label, e.g. shown by ``get_model_name`` -> "x (OpenRouter)".
     PROVIDER_LABEL: str = "Gateway"
-
-    # Optional per-token pricing. Gateways have no built-in pricing table, so
-    # these stay ``None`` unless the user supplies them (or a subclass sets them).
     cost_per_input_token: Optional[float] = None
     cost_per_output_token: Optional[float] = None
 
@@ -123,12 +118,6 @@ class DeepEvalBaseGatewayModel(DeepEvalBaseLLM):
         output_tokens: Optional[int],
         response=None,
     ) -> Optional[EvaluationCost]:
-        """Resolve generation cost with a consistent priority across gateways:
-
-        1. user-provided per-token pricing (most explicit),
-        2. a cost the gateway itself reports in the response, then
-        3. ``None`` when the cost genuinely cannot be determined.
-        """
         if (
             self.cost_per_input_token is not None
             and self.cost_per_output_token is not None
@@ -150,11 +139,6 @@ class DeepEvalBaseGatewayModel(DeepEvalBaseLLM):
 
     @staticmethod
     def _extract_response_cost(response) -> Optional[float]:
-        """Best-effort read of a cost the gateway attached to its response.
-
-        Both OpenRouter and LiteLLM may surface a cost on ``response.usage.cost``
-        or ``response.cost``; everything else is ignored.
-        """
         if response is None:
             return None
         candidates = (
@@ -234,9 +218,6 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
                 )
                 return schema.model_validate(json_output), cost
             except Exception as e:
-                # Not every upstream model honours structured outputs — fall back
-                # to plain generation + JSON parsing (works for any JSON-capable
-                # model), and let the caller know.
                 warnings.warn(
                     f"Structured outputs not supported for model '{self.name}'. "
                     f"Falling back to regular generation with JSON parsing. "
@@ -358,8 +339,6 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
                 convert_to_multi_modal_array(input=prompt)
             )
         else:
-            # Plain text stays a string so the wire format matches a vanilla
-            # OpenAI chat request (and every OpenAI-compatible gateway accepts it).
             content = prompt
         return [{"role": "user", "content": content}]
 
@@ -383,8 +362,6 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
     def _schema_response_format(
         schema: Union[Type[BaseModel], BaseModel],
     ) -> Dict:
-        """Convert a Pydantic model into the OpenAI ``json_schema`` response
-        format used by OpenAI-compatible gateways."""
         json_schema = schema.model_json_schema()
         schema_name = (
             schema.__name__
@@ -410,11 +387,6 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
         return self._build_client(AsyncOpenAI if async_mode else OpenAI)
 
     def _client_kwargs(self) -> Dict:
-        """Kwargs forwarded to the OpenAI client constructor.
-
-        When Tenacity manages retries we force the SDK's own retries off to avoid
-        double-retrying, unless the user opted this provider into SDK retries.
-        """
         kwargs = dict(self.kwargs or {})
         if not sdk_retries_for(self.PROVIDER_SLUG):
             kwargs["max_retries"] = 0
