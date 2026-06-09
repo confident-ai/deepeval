@@ -1,4 +1,5 @@
 import logging
+import math
 from typing import Optional, Tuple, Union, Dict, List, Any
 from pydantic import BaseModel, SecretStr
 from tenacity import (
@@ -38,6 +39,23 @@ retryable_exceptions = (
 _ALIAS_MAP = {
     "base_url": ["api_base"],
 }
+
+
+def _coerce_cost(value: Any) -> Optional[float]:
+    """Return ``value`` as a non-negative finite float, or ``None`` if it
+    can't be trusted as a USD amount. Rejects bool (subclass of int — would
+    silently bill $1.00 for True), strings that don't parse, NaN, infinity,
+    and negatives — any of these would otherwise corrupt the accumulator
+    (NaN poisons every subsequent total; negative cost subtracts)."""
+    if isinstance(value, bool):
+        return None
+    try:
+        result = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(result) or result < 0.0:
+        return None
+    return result
 
 
 class LiteLLMModel(DeepEvalBaseLLM):
@@ -294,11 +312,11 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
             response = completion(**completion_params)
             cost = self.calculate_cost(response)
-            return response, float(cost)  # Ensure cost is always a float
+            return response, cost
 
         except Exception as e:
             logging.error(f"Error in LiteLLM generate_raw_response: {e}")
-            return None, 0.0  # Return 0.0 cost on error
+            return None, 0.0
 
     @retry(
         wait=wait_exponential_jitter(
@@ -341,11 +359,11 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
             response = await acompletion(**completion_params)
             cost = self.calculate_cost(response)
-            return response, float(cost)  # Ensure cost is always a float
+            return response, cost
 
         except Exception as e:
             logging.error(f"Error in LiteLLM a_generate_raw_response: {e}")
-            return None, 0.0  # Return 0.0 cost on error
+            return None, 0.0
 
     @retry(
         wait=wait_exponential_jitter(
@@ -414,31 +432,71 @@ class LiteLLMModel(DeepEvalBaseLLM):
                     )
         return content
 
-    def calculate_cost(self, response: Any) -> float:
-        """Calculate the cost of the response based on token usage."""
+    def calculate_cost(self, response: Any) -> EvaluationCost:
+        """USD cost for a completion. Prefers explicit cost on the response
+        or its usage block; else asks ``litellm.completion_cost``. Invalid or
+        unknown pricing yields 0.0 with tokens preserved — never a fabricated
+        per-token rate, and never an unvalidated NaN/negative that would
+        poison the accumulator."""
+        input_tokens: Optional[int] = None
+        output_tokens: Optional[int] = None
         try:
-            # Get token usage from response
-            input_tokens = getattr(response.usage, "prompt_tokens", 0)
-            output_tokens = getattr(response.usage, "completion_tokens", 0)
-
-            # Try to get cost from response if available
-            if hasattr(response, "cost") and response.cost is not None:
-                cost = float(response.cost)
+            usage = getattr(response, "usage", None)
+            if isinstance(usage, dict):
+                input_tokens = usage.get("prompt_tokens")
+                output_tokens = usage.get("completion_tokens")
+                usage_cost = usage.get("cost")
             else:
-                # Fallback to token-based calculation
-                # Default cost per token (can be adjusted based on provider)
-                input_cost_per_token = 0.0001
-                output_cost_per_token = 0.0002
-                cost = (input_tokens * input_cost_per_token) + (
-                    output_tokens * output_cost_per_token
+                input_tokens = getattr(usage, "prompt_tokens", None)
+                output_tokens = getattr(usage, "completion_tokens", None)
+                usage_cost = getattr(usage, "cost", None)
+
+            cost: Optional[float] = None
+            for raw, source in (
+                (getattr(response, "cost", None), "response.cost"),
+                (usage_cost, "response.usage.cost"),
+            ):
+                if raw is None:
+                    continue
+                cost = _coerce_cost(raw)
+                if cost is not None:
+                    break
+                logging.warning(
+                    f"LiteLLMModel: ignoring invalid {source}={raw!r} "
+                    f"for model '{self.name}'."
                 )
 
-            # Update total evaluation cost
-            self.evaluation_cost += float(cost)
-            return EvaluationCost(float(cost), input_tokens, output_tokens)
+            if cost is None:
+                try:
+                    from litellm import completion_cost as _completion_cost
+
+                    computed = _completion_cost(completion_response=response)
+                    if computed is not None:
+                        cost = _coerce_cost(computed)
+                        if cost is None:
+                            logging.warning(
+                                f"litellm.completion_cost returned invalid "
+                                f"value {computed!r} for model "
+                                f"'{self.name}'; reporting 0.0."
+                            )
+                except ImportError as e:
+                    logging.warning(
+                        f"litellm.completion_cost unavailable ({e}); "
+                        f"reporting 0.0 cost for model '{self.name}'. "
+                        "Upgrade litellm to enable per-model pricing."
+                    )
+                except Exception as e:
+                    logging.warning(
+                        f"LiteLLM cost lookup failed for model '{self.name}': "
+                        f"{e}. Reporting 0.0 cost for this call."
+                    )
+
+            resolved_cost = cost if cost is not None else 0.0
+            self.evaluation_cost += resolved_cost
+            return EvaluationCost(resolved_cost, input_tokens, output_tokens)
         except Exception as e:
             logging.warning(f"Error calculating cost: {e}")
-            return EvaluationCost(0.0, None, None)
+            return EvaluationCost(0.0, input_tokens, output_tokens)
 
     def get_evaluation_cost(self) -> float:
         """Get the total evaluation cost."""
