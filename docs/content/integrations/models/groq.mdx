@@ -1,0 +1,74 @@
+---
+id: groq
+title: Groq
+sidebar_label: Groq
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+`deepeval` allows you to directly integrate Groq's ultra-fast LPU inference engine into all available LLM-based metrics directly within your python code.
+
+### Python
+
+You can specify your model directly in code using `GroqModel` from `deepeval`'s model collection. By default, `model` is set to `llama3-8b-8192`.
+
+<Tabs>
+<TabItem value="python" label="Python">
+
+````python
+from deepeval.models import GroqModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = GroqModel(
+    model="llama-3.3-70b-versatile",
+    api_key="Your Groq API Key",
+    temperature=0
+)
+
+answer_relevancy = AnswerRelevancyMetric(model=model)
+</TabItem> <TabItem value="env" label="ENV">
+To use any Groq model directly in deepeval, set USE_GROQ_MODEL=1 in your environment variables and simply pass the name of your desired model in your metric initialization:
+
+Python
+
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="llama-3.3-70b-versatile",
+)
+You should also set the necessary variables like GROQ_API_KEY to be able to use the Groq models as shown above.
+
+</TabItem>
+</Tabs>
+There are ZERO mandatory and FOUR optional parameters when creating a GroqModel:
+
+[Optional] model: A string specifying the name of the Groq model to use. Defaults to "llama3-8b-8192" if not passed.
+[Optional] api_key: A string specifying the Groq API key for authentication. Defaults to the GROQ_API_KEY environment variable if not passed; raises an error at runtime if unset.
+[Optional] temperature: A float specifying the model temperature. Defaults to TEMPERATURE if not passed; falls back to 0.0 if unset.
+[Optional] **kwargs: Additional keyword arguments forwarded to the underlying Groq client initialization.
+:::note At runtime, you must provide an API key (via api_key or GROQ_API_KEY). You must also have the groq SDK installed in your environment (pip install groq). :::
+
+Available Groq Models
+:::note This list only displays some of the available models. For a comprehensive list, refer to Groq's official documentation. :::
+
+Below is a list of commonly used Groq models:
+
+llama-3.3-70b-versatile llama-3.1-8b-instant llama3-70b-8192 llama3-8b-8192 mixtral-8x7b-32768 gemma2-9b-it deepseek-r1-distill-llama-70b
+
+
+
+### 2. Update the Sidebar Navigation
+Look in the `docs/` folder for `mint.json` (DeepEval recently migrated to Mintlify for docs, so it might be `mint.json` instead of `sidebars.js`).
+
+Search for `"integrations/models/gemini"` or `"integrations/models/openai"`.
+Right next to it, add:
+`"integrations/models/groq"`
+
+### 3. Commit and Push
+Once saved, run:
+```bash
+git add docs/
+git commit -m "docs: add comprehensive documentation for Groq model integration"
+git push origin add-groq-integration
+````
