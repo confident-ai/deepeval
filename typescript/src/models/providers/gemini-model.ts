@@ -22,7 +22,7 @@ export interface GeminiModelOptions {
 
 export class GeminiModel extends DeepEvalBaseLLM {
   private readonly apiKey: string;
-  private readonly temperature: number;
+  private readonly temperature?: number;
   private readonly useVertexAI: boolean;
   private readonly project?: string;
   private readonly location?: string;
@@ -39,7 +39,8 @@ export class GeminiModel extends DeepEvalBaseLLM {
       process.env.GOOGLE_API_KEY ??
       process.env.GEMINI_API_KEY ??
       "";
-    this.temperature = options.temperature ?? 0;
+    // Only sent when explicitly set — some models (e.g. reasoning models) reject `temperature`.
+    this.temperature = options.temperature;
     this.useVertexAI =
       options.useVertexAI ?? process.env.GOOGLE_GENAI_USE_VERTEXAI === "true";
     this.project = options.project ?? process.env.GOOGLE_CLOUD_PROJECT;
@@ -70,7 +71,9 @@ export class GeminiModel extends DeepEvalBaseLLM {
   ): Promise<GenerationResult<T>> {
     const client = await this.getClient();
 
-    const config: Record<string, unknown> = { temperature: this.temperature };
+    const config: Record<string, unknown> = {
+      ...(this.temperature !== undefined && { temperature: this.temperature }),
+    };
     if (schema) {
       config.responseMimeType = "application/json";
     }

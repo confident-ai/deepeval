@@ -21,7 +21,7 @@ export interface AnthropicModelOptions {
 
 export class AnthropicModel extends DeepEvalBaseLLM {
   private readonly apiKey: string;
-  private readonly temperature: number;
+  private readonly temperature?: number;
   private readonly maxTokens: number;
   private readonly costPerInputToken?: number;
   private readonly costPerOutputToken?: number;
@@ -34,7 +34,9 @@ export class AnthropicModel extends DeepEvalBaseLLM {
         DEFAULT_ANTHROPIC_MODEL,
     );
     this.apiKey = options.apiKey ?? process.env.ANTHROPIC_API_KEY ?? "";
-    this.temperature = options.temperature ?? 0;
+    // Left undefined unless explicitly set — some models (e.g. reasoning models)
+    // reject `temperature`, so we only send it when the caller provides it.
+    this.temperature = options.temperature;
     this.maxTokens = options.maxTokens ?? DEFAULT_MAX_TOKENS;
     this.costPerInputToken = options.costPerInputToken;
     this.costPerOutputToken = options.costPerOutputToken;
@@ -62,7 +64,7 @@ export class AnthropicModel extends DeepEvalBaseLLM {
     const message = await client.messages.create({
       model: this.modelName,
       max_tokens: this.maxTokens,
-      temperature: this.temperature,
+      ...(this.temperature !== undefined && { temperature: this.temperature }),
       messages: [{ role: "user", content: prompt }],
     });
 

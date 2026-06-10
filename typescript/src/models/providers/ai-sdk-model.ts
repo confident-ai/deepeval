@@ -47,7 +47,9 @@ export class AISDKModel extends DeepEvalBaseLLM {
         model: this.aiModel,
         schema,
         prompt,
-        temperature: this.temperature,
+        ...(this.temperature !== undefined && {
+          temperature: this.temperature,
+        }),
         maxOutputTokens: this.maxOutputTokens,
       });
       const cost = computeCost(
@@ -62,7 +64,7 @@ export class AISDKModel extends DeepEvalBaseLLM {
     const { text, usage } = await ai.generateText({
       model: this.aiModel,
       prompt,
-      temperature: this.temperature,
+      ...(this.temperature !== undefined && { temperature: this.temperature }),
       maxOutputTokens: this.maxOutputTokens,
     });
     const cost = computeCost(
