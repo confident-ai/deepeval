@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 
 class HallucinationVerdict(BaseModel):
-    verdict: Literal["yes", "no"]
+    verdict: Literal["yes", "no", "idk"]
     reason: str
 
 

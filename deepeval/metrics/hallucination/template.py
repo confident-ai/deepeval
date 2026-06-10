@@ -16,8 +16,9 @@ class HallucinationTemplate:
 
 {HallucinationTemplate.multimodal_rules}
 
-The 'verdict' key should STRICTLY be either 'yes' or 'no', and states whether the given text agrees with the context. 
-The 'reason' is the reason for the verdict. When the answer is 'no', try to provide a correction in the reason. 
+The 'verdict' key should STRICTLY be 'yes', 'no', or 'idk', and states whether the given text agrees with the context.
+The 'reason' is the reason for the verdict. When the answer is 'no', try to provide a correction in the reason.
+Use 'idk' when the actual output makes a claim that cannot be clearly verified or contradicted by the context alone.
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON objects.
@@ -35,7 +36,7 @@ Example:
             "reason": "The actual output contradicts the provided context which states that Einstein won the Nobel Prize in 1968, not 1969.",
             "verdict": "no"
         }}
-    ]  
+    ]
 }}
 
 You should NOT incorporate any prior knowledge you have and take each context at face value. Since you are going to generate a verdict for each context, the number of 'verdicts' SHOULD BE STRICTLY EQUAL TO {len(contexts)}.
