@@ -65,8 +65,8 @@ class AnthropicModel(DeepEvalBaseLLM):
             temperature = float(temperature)
         elif settings.TEMPERATURE is not None:
             temperature = settings.TEMPERATURE
-        else:
-            temperature = 0.0
+        # else: leave as None so `temperature` is only sent to the client when
+        # explicitly configured — some models (e.g. reasoning models) reject it.
 
         cost_per_input_token = (
             cost_per_input_token
@@ -87,7 +87,7 @@ class AnthropicModel(DeepEvalBaseLLM):
             param_hint="model",
         )
 
-        if temperature < 0:
+        if temperature is not None and temperature < 0:
             raise DeepEvalError("Temperature must be >= 0.")
         self.temperature = temperature
 
@@ -150,9 +150,11 @@ class AnthropicModel(DeepEvalBaseLLM):
             model=self.name,
             **self.generation_kwargs,
         )
-        if self.model_data and self.model_data.supports_temperature is False:
-            pass
-        else:
+        # Only send `temperature` when explicitly configured and the model
+        # supports it — some models reject/deprecate `temperature`.
+        if self.temperature is not None and not (
+            self.model_data and self.model_data.supports_temperature is False
+        ):
             create_kwargs["temperature"] = self.temperature
         message = chat_model.messages.create(**create_kwargs)
         cost = self.calculate_cost(
@@ -188,9 +190,11 @@ class AnthropicModel(DeepEvalBaseLLM):
             model=self.name,
             **self.generation_kwargs,
         )
-        if self.model_data and self.model_data.supports_temperature is False:
-            pass
-        else:
+        # Only send `temperature` when explicitly configured and the model
+        # supports it — some models reject/deprecate `temperature`.
+        if self.temperature is not None and not (
+            self.model_data and self.model_data.supports_temperature is False
+        ):
             create_kwargs["temperature"] = self.temperature
         message = await chat_model.messages.create(**create_kwargs)
         cost = self.calculate_cost(
