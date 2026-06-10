@@ -101,3 +101,91 @@ Start with goldens to define what should be tested, then add turn simulation whe
     chatbot callback.
   </Card>
 </Cards>
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "When should I use synthetic data?",
+      answer: (
+        <>
+          Sparingly, as a starting point when you lack real examples — it should
+          complement, not replace, real data. Prefer a curated dataset first,
+          then production traffic, and only then synthetic generation.
+        </>
+      ),
+    },
+    {
+      question: "What's the best source to generate goldens from?",
+      answer: (
+        <>
+          <a href="/docs/synthesizer-generate-from-docs">From documents</a> is
+          the strongest default since goldens stay grounded in your knowledge
+          base, followed by{" "}
+          <a href="/docs/synthesizer-generate-from-goldens">existing goldens</a>.{" "}
+          <a href="/docs/synthesizer-generate-from-scratch">From scratch</a> is
+          least grounded — use it only for simple cases or rough coverage.
+        </>
+      ),
+    },
+    {
+      question: "How do I generate data for multi-turn chatbots?",
+      answer: (
+        <>
+          Generate conversational goldens (e.g.{" "}
+          <code>generate_conversational_goldens_from_docs</code>) to define the
+          scenario and expected outcome, then feed them to the{" "}
+          <a href="/docs/conversation-simulator">Conversation Simulator</a> to
+          produce the actual turns.
+        </>
+      ),
+    },
+    {
+      question: "Do I need to review generated goldens?",
+      answer: (
+        <>
+          Yes. For anything high-stakes, review, edit, and enrich generated
+          goldens before treating them as ground truth — don't generate goldens
+          you'll never look at again.
+        </>
+      ),
+    },
+    {
+      question: "Can I use any model to generate synthetic data?",
+      answer: (
+        <>
+          Yes. The <code>model</code> parameter accepts any of OpenAI's GPT models
+          by name, or{" "}
+          <a href="/docs/metrics-introduction#using-a-custom-llm">any custom LLM</a>{" "}
+          of type <code>DeepEvalBaseLLM</code> (Anthropic, Gemini, Ollama, local
+          models, and more). It's also reused as the <code>critic_model</code> for
+          filtration unless you set one explicitly.
+        </>
+      ),
+    },
+    {
+      question: "How do I turn production traffic into evaluation datasets?",
+      answer: (
+        <>
+          Ingest traces with <code>deepeval</code>, then review and promote the
+          best examples into a dataset on{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a>, the
+          enterprise platform for all-in-one evals, observability, and red
+          teaming, which automates the trace → annotate → dataset loop.
+        </>
+      ),
+    },
+    {
+      question: "Can my team generate synthetic data without code?",
+      answer: (
+        <>
+          Yes. On <a href="https://www.confident-ai.com">Confident AI</a> you
+          can generate goldens no-code — connect your knowledge bases, customize
+          the generation pipeline, experiment with variations, and collaborate
+          on the resulting dataset as a team.
+        </>
+      ),
+    },
+  ]}
+/>

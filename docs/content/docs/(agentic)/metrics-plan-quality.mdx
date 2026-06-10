@@ -76,3 +76,69 @@ The `PlanQualityMetric` score is calculated using the following steps:
 <Equation formula="\text{Plan Quality Score} = \text{AlignmentScore}(\text{Task}, \text{Plan})" />
 
 - The **Alignment Score** uses an LLM to generate the final score with all the pre-processed and extracted information like plan and task.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Where does Plan Quality find a plan if I never explicitly defined one?",
+      answer: (
+        <>
+          From your agent's <code>thinking</code> or <code>reasoning</code> in
+          the trace — any statements implying how it'll tackle the task. With no
+          such statements, the metric passes by default with <code>1</code>, so
+          surface your agent's reasoning for a meaningful score.
+        </>
+      ),
+    },
+    {
+      question: "Plan Quality vs Plan Adherence — what's the difference?",
+      answer: (
+        <>
+          Plan Quality judges whether the <strong>plan was good</strong> —{" "}
+          <code>AlignmentScore</code> between Task and Plan, ignoring execution.{" "}
+          <a href="/docs/metrics-plan-adherence">Plan Adherence</a> judges
+          whether the agent <strong>followed</strong> it. Use both to separate
+          planning from execution.
+        </>
+      ),
+    },
+    {
+      question: "Why can't I run Plan Quality on a standalone test case?",
+      answer: (
+        <>
+          The plan lives in the trace, so it's trace-only. You{" "}
+          <strong>must</strong> attach <code>PlanQualityMetric()</code> to a trace
+          — either by{" "}
+          <a href="/docs/evaluation-llm-tracing">setting up tracing</a> or through
+          a <a href="/integrations">framework integration</a> like LangChain or
+          OpenAI.
+        </>
+      ),
+    },
+    {
+      question: "My agent doesn't emit any explicit reasoning — what will Plan Quality return?",
+      answer: (
+        <>
+          A score of <code>1</code>. With no plan to extract from{" "}
+          <code>thinking</code> or <code>reasoning</code>, the metric passes by
+          default. Unexpected perfect scores usually mean your trace isn't
+          exposing planning steps.
+        </>
+      ),
+    },
+    {
+      question: "Can I use Plan Quality with LangChain, OpenAI, or another framework?",
+      answer: (
+        <>
+          Yes. <code>deepeval</code> auto-traces agents built with{" "}
+          <a href="/integrations/frameworks/langchain">LangChain</a>,{" "}
+          <a href="/integrations/frameworks/openai">OpenAI</a>, LlamaIndex,
+          CrewAI, and more — see all{" "}
+          <a href="/integrations">framework integrations</a>.
+        </>
+      ),
+    },
+  ]}
+/>

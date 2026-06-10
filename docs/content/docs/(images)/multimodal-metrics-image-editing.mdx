@@ -75,3 +75,63 @@ These scores assess aspects such as alignment with the prompt and resemblance to
 ### PQ Scores
 
 These scores evaluate the naturalness and absence of artifacts in the image. The minimum value among these sub-scores represents the PQ score. For the PQ evaluation, only the synthesized image is used to prevent confusion from the input conditions.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "What's the difference between Image Editing and Text to Image?",
+      answer: (
+        <>
+          <code>ImageEditingMetric</code> grades a transformation of an{" "}
+          <em>existing</em> image against an edit instruction, while{" "}
+          <a href="/docs/multimodal-metrics-text-to-image">
+            <code>TextToImageMetric</code>
+          </a>{" "}
+          grades an image generated from a prompt with no source. Pick Image
+          Editing whenever your model starts from a given image.
+        </>
+      ),
+    },
+    {
+      question: "How many images do the input and output each need?",
+      answer: (
+        <>
+          <strong>1 image in the input</strong> (the original, plus instruction
+          text) and <strong>1 in the output</strong> (the edited result), both
+          passed as <code>MLLMImage</code> objects in the{" "}
+          <a href="/docs/evaluation-test-cases#llm-test-case">
+            <code>LLMTestCase</code>
+          </a>
+          .
+        </>
+      ),
+    },
+    {
+      question: "Does the metric check that the edit followed the instruction?",
+      answer: (
+        <>
+          Yes — that's the SC half, scored against your edit
+          instruction and the edited image, so "change the shoes to
+          blue" producing red shoes drives SC down. PQ separately penalizes
+          artifacts from the edit.
+        </>
+      ),
+    },
+    {
+      question:
+        "My edit looks clean but scores low — what's the metric penalizing?",
+      answer: (
+        <>
+          Since <code>O = sqrt(min(SC) · min(PQ))</code>, a clean image (high PQ)
+          still scores low if it didn't apply the edit faithfully or altered
+          parts it shouldn't have (low SC). Read <code>metric.reason</code>{" "}
+          to see which pulled it down.
+        </>
+      ),
+    },
+  ]}
+/>
+

@@ -80,3 +80,53 @@ Now, the metric uses the following formula to find the final score:
 <Equation formula="\text{Topic Adherence Score} = \frac{\text{Number of True Positives and True Negatives}}{\text{Total Number of QA Pairs}}" />
 
 The `TopicAdherenceMetric` converts turns into individual unit interactions and iterates over each interaction to find the question-answer pairs separately, which are also evaluated individually for more accurate results.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How do I stop my support bot from drifting off-topic?",
+      answer: (
+        <>
+          Define allowed topics in <code>relevant_topics</code> and run{" "}
+          <code>TopicAdherenceMetric</code>. Any turn answering a question
+          outside those topics is penalized, pinpointing where the bot wandered
+          off-script.
+        </>
+      ),
+    },
+    {
+      question: "How are off-topic turns actually scored?",
+      answer: (
+        <>
+          Each user question is paired with the agent's answer: answering an
+          off-topic question is a <em>false positive</em> (bad), refusing one is
+          a <em>true negative</em> (good). The score is the share of true
+          positives and true negatives across all QA pairs.
+        </>
+      ),
+    },
+    {
+      question: "Will my agent be penalized for refusing irrelevant questions?",
+      answer: (
+        <>
+          No — refusing a question outside <code>relevant_topics</code> is a
+          true negative that <em>helps</em> the score. You're only penalized for
+          answering off-topic questions or refusing on-topic ones.
+        </>
+      ),
+    },
+    {
+      question: "What should I put in `relevant_topics`?",
+      answer: (
+        <>
+          A list of strings describing the subject areas your agent covers (for
+          example, <code>"billing"</code> or <code>"shipping"</code>). Keep them
+          specific but not so narrow that legitimate questions get flagged.
+        </>
+      ),
+    },
+  ]}
+/>
+

@@ -389,3 +389,58 @@ The deepeval-aware shims accept the framework's standard kwargs plus the followi
 | `@tool(...)`  | `metric`  | Metrics applied to this tool's span on every call.                   |
 
 For runtime helpers (`update_current_trace`, `update_current_span`) and the test-decorator surface (`@observe`, `@assert_test`, `with trace(...)`), see the [tracing reference](/docs/evaluation-llm-tracing).
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "My crew has several agents — can I evaluate each one individually?",
+      answer: (
+        <>
+          Yes. Attach <code>metrics=[...]</code> directly to the specific{" "}
+          <code>Agent(...)</code> shim and it scores that agent's span on every
+          execution, independent of the rest of the crew. You can do the same on{" "}
+          <code>LLM(...)</code> and <code>@tool</code> for finer-grained scoring.
+        </>
+      ),
+    },
+    {
+      question: "Can I gate CI/CD on a CrewAI crew's metrics?",
+      answer: (
+        <>
+          Yes. With component metrics already on your <code>Agent</code> /{" "}
+          <code>LLM</code> / <code>@tool</code> shims, just{" "}
+          <code>crew.kickoff(...)</code> inside a parametrized{" "}
+          <code>pytest</code> test and call <code>assert_test(golden=golden)</code>{" "}
+          under <code>deepeval test run</code>.
+        </>
+      ),
+    },
+    {
+      question: "Can I review crew runs on the cloud?",
+      answer: (
+        <>
+          Yes, optionally. After <code>deepeval login</code>,{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> renders each
+          kickoff as a trace — every agent, LLM, and tool span with its score —
+          in a shared UI.
+        </>
+      ),
+    },
+    {
+      question: "Can I monitor a CrewAI app in production?",
+      answer: (
+        <>
+          Yes. <code>instrument_crewai()</code> keeps emitting spans in
+          production, and when logged into Confident AI those live traces feed{" "}
+          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
+            online evals
+          </a>{" "}
+          on real traffic.
+        </>
+      ),
+    },
+  ]}
+/>

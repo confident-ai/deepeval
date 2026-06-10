@@ -1,0 +1,198 @@
+{
+  "name": "deepeval",
+  "version": "0.1.28",
+  "description": "The LLM Evaluation Framework for TypeScript",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/confident-ai/deepeval.git",
+    "directory": "typescript"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./dataset": {
+      "import": "./dist/dataset/index.js",
+      "require": "./dist/dataset/index.js",
+      "types": "./dist/dataset/index.d.ts"
+    },
+    "./testCase": {
+      "import": "./dist/test-case/index.js",
+      "require": "./dist/test-case/index.js",
+      "types": "./dist/test-case/index.d.ts"
+    },
+    "./tracing": {
+      "import": "./dist/tracing/index.js",
+      "require": "./dist/tracing/index.js",
+      "types": "./dist/tracing/index.d.ts"
+    },
+    "./confident": {
+      "import": "./dist/confident/index.js",
+      "require": "./dist/confident/index.js",
+      "types": "./dist/confident/index.d.ts"
+    },
+    "./openai": {
+      "import": "./dist/openai/index.js",
+      "require": "./dist/openai/index.js",
+      "types": "./dist/openai/index.d.ts"
+    },
+    "./integrations/ai-sdk": {
+      "import": "./dist/integrations/ai-sdk/index.js",
+      "require": "./dist/integrations/ai-sdk/index.js",
+      "types": "./dist/integrations/ai-sdk/index.d.ts"
+    },
+    "./integrations/langchain": {
+      "import": "./dist/integrations/langchain/callback-handler.js",
+      "require": "./dist/integrations/langchain/callback-handler.js",
+      "types": "./dist/integrations/langchain/callback-handler.d.ts"
+    },
+    "./integrations/openai-agents": {
+      "import": "./dist/integrations/openai-agents/index.js",
+      "require": "./dist/integrations/openai-agents/index.js",
+      "types": "./dist/integrations/openai-agents/index.d.ts"
+    },
+    "./integrations": {
+      "import": "./dist/integrations/index.js",
+      "require": "./dist/integrations/index.js",
+      "types": "./dist/integrations/index.d.ts"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "annotation": [
+        "dist/annotation/index.d.ts"
+      ],
+      "dataset": [
+        "dist/dataset/index.d.ts"
+      ],
+      "testCase": [
+        "dist/test-case/index.d.ts"
+      ],
+      "tracing": [
+        "dist/tracing/index.d.ts"
+      ],
+      "confident": [
+        "dist/confident/index.d.ts"
+      ],
+      "openai": [
+        "dist/openai/index.d.ts"
+      ],
+      "integrations/ai-sdk": [
+        "dist/integrations/ai-sdk/index.d.ts"
+      ],
+      "integrations/langchain": [
+        "dist/integrations/langchain/callback-handler.d.ts"
+      ],
+      "integrations/openai-agents": [
+        "dist/integrations/openai-agents/index.d.ts"
+      ],
+      "integrations": [
+        "dist/integrations/index.d.ts"
+      ],
+      "*": [
+        "dist/*.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-trace-otlp-grpc": "^0.207.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.211.0",
+    "@opentelemetry/resources": "^2.2.0",
+    "@opentelemetry/sdk-trace-base": "^2.2.0",
+    "@opentelemetry/sdk-trace-node": "^2.2.0",
+    "@opentelemetry/semantic-conventions": "^1.37.0",
+    "@sentry/node": "^10.21.0",
+    "axios": "^1.6.0",
+    "cli-progress": "^3.12.0",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^16.5.0",
+    "open": "^9.1.0",
+    "openai": "^6.7.0",
+    "ora": "^6.3.0",
+    "papaparse": "^5.5.3",
+    "posthog-node": "^5.10.3",
+    "uuid": "^9.0.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@ai-sdk/openai": "^3.0.30",
+    "@eslint/js": "^9.38.0",
+    "@google/genai": "^2.8.0",
+    "@jest/globals": "^29.5.0",
+    "@langchain/core": "1.1.31",
+    "@langchain/openai": "^1.2.9",
+    "@openai/agents": "^0.5.4",
+    "@opentelemetry/core": "^2.6.0",
+    "@types/cli-progress": "^3.11.0",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.17.30",
+    "@types/papaparse": "^5.3.16",
+    "@types/uuid": "^9.0.0",
+    "ai": "^6.0.97",
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.4.0",
+    "husky": "^9.1.7",
+    "jest": "^29.5.0",
+    "jiti": "^2.6.1",
+    "lint-staged": "^16.2.6",
+    "prettier": "3.6.2",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.46.2"
+  },
+  "lint-staged": {
+    "*.js": "eslint --cache --fix",
+    "*.{js,css,md}": "prettier --write"
+  },
+  "peerDependencies": {
+    "@anthropic-ai/sdk": ">=0.30.0",
+    "@aws-sdk/client-bedrock-runtime": ">=3.0.0",
+    "@google/genai": ">=1.0.0",
+    "@langchain/core": "1.1.31",
+    "@openai/agents": "^0.5.4",
+    "ai": ">=5.0.0",
+    "ollama": ">=0.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@anthropic-ai/sdk": {
+      "optional": true
+    },
+    "@aws-sdk/client-bedrock-runtime": {
+      "optional": true
+    },
+    "@google/genai": {
+      "optional": true
+    },
+    "@langchain/core": {
+      "optional": true
+    },
+    "@openai/agents": {
+      "optional": true
+    },
+    "ai": {
+      "optional": true
+    },
+    "ollama": {
+      "optional": true
+    }
+  }
+}

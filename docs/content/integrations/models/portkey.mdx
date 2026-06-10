@@ -1,5 +1,5 @@
 ---
-# id: portkey
+id: portkey
 title: Portkey
 sidebar_label: Portkey
 ---
@@ -71,14 +71,17 @@ You should also set the other necessary vars like `PORTKEY_API_KEY` to be able t
 </Tab>
 </Tabs>
 
-There are **ZERO** mandatory and **FIVE** optional parameters when creating a `PortkeyModel`:
+There are **ZERO** mandatory and **SIX** optional parameters when creating a `PortkeyModel`:
 
 - [Optional] `model`: A string specifying the name of the Portkey model to use. Defaults to `PORTKEY_MODEL_NAME` if not passed; raises an error at runtime if unset.
 - [Optional] `api_key`: A string specifying your Portkey API key for authentication. Defaults to `PORTKEY_API_KEY` if not passed; raises an error at runtime if unset.
 - [Optional] `provider`: A string specifying the Portkey provider of your model. Defaults to `PORTKEY_PROVIDER_NAME` if not passed; raises an error at runtime if unset.
 - [Optional] `base_url`: A string specifying the base URL for the model API. Defaults to `PORTKEY_BASE_URL` if not passed; raises an error at runtime if unset.
-- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to Portkey's `completion(...)` / `acompletion(...)` call
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to Portkey's `chat.completions.create(...)` call.
+
+Any additional `**kwargs` you would like to use for your `Portkey` client can be passed directly to `PortkeyModel(...)`. These are forwarded to the underlying OpenAI client constructor. We recommend double-checking the parameters supported by your chosen model and provider in the [official Portkey docs](https://portkey.ai/docs).
 
 :::tip
-Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://portkey.ai/docs/product/ai-gateway/universal-api#python).
+Pass generation parameters such as `max_tokens` via `generation_kwargs` (they are forwarded to `chat.completions.create(...)`).
 :::

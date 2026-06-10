@@ -268,7 +268,12 @@ evaluate(
 
 This creates a **test run**—a snapshot of your LLM application's conversational performance at a point in time. Each test case is evaluated against all specified metrics, producing scores, reasons, and pass/fail results.
 
-<VideoDisplayer src={ASSETS.conversationTestReport} />
+<VideoDisplayer
+  src={ASSETS.conversationTestReport}
+  confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports"
+  label="Multi-turn test reports on Confident AI"
+  description="Review full conversations alongside their metric scores and reasons."
+/>
 
 After each test run, analyze which scenarios consistently fail and which metrics score lowest. Use these insights to improve your system prompt, context management, or retrieval pipeline, then re-run the evaluation to measure impact.
 
@@ -332,7 +337,8 @@ Log in to Confident AI and create a metric collection containing the conversatio
 <VideoDisplayer
   src={ASSETS.metricsCreateCollection}
   confidentUrl="/docs/llm-tracing/evaluations"
-  label="Create a Metric Collection on Confident AI"
+  label="Create a metric collection on Confident AI"
+  description="Group the metrics you want to run automatically on incoming threads."
 />
 
 </Step>
@@ -346,6 +352,7 @@ Confident AI groups multi-turn conversations into **threads**—the production e
   src={ASSETS.tracingThreads}
   confidentUrl="/docs/llm-tracing/evaluations#offline-evaluations"
   label="Monitor conversations on Confident AI"
+  description="Replay production threads and evaluate them with your metrics."
 />
 
 </Step>
@@ -404,7 +411,7 @@ With proper evaluation in place, you can catch quality regressions before users 
         "Single-turn evaluation scores one input-output pair. Multi-turn evaluation has to handle non-deterministic conversations where each user message depends on the previous assistant response, which is why DeepEval uses scenarios and ConversationalGoldens instead of fixed input-output pairs.",
     },
     {
-      question: "What is a ConversationalTestCase in DeepEval?",
+      question: "What is a `ConversationalTestCase` in DeepEval?",
       answer: (
         <>
           A <code>ConversationalTestCase</code> wraps a list of{" "}

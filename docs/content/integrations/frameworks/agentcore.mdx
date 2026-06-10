@@ -346,3 +346,59 @@ def respond_to_user(prompt: str) -> str:
 | `metric_collection` | `str`       | Default metric collection applied at the trace level.                      |
 
 For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_span`, `next_llm_span`) and the test-decorator surface (`@observe`, `@assert_test`, `with trace(...)`), see the [tracing reference](/docs/evaluation-llm-tracing).
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Can I score a specific sub-agent running inside AgentCore?",
+      answer: (
+        <>
+          Yes. Stage a metric with{" "}
+          <code>with next_agent_span(metrics=[...])</code> right before the
+          invocation — it lands on the next AgentCore agent span, so a single
+          sub-agent step is scored in isolation without touching the others. Use{" "}
+          <code>next_llm_span(...)</code> to target a model step instead.
+        </>
+      ),
+    },
+    {
+      question: "Can I monitor an AgentCore app once it's deployed to production?",
+      answer: (
+        <>
+          Yes. Pass <code>environment="production"</code> to{" "}
+          <code>instrument_agentcore(...)</code> and, when logged into Confident
+          AI, your live AgentCore traces stream in for{" "}
+          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
+            online evals
+          </a>{" "}
+          on real traffic.
+        </>
+      ),
+    },
+    {
+      question: "Can I wire AgentCore evals into a CI/CD pipeline?",
+      answer: (
+        <>
+          Yes. Call <code>instrument_agentcore()</code> once, then run your app
+          inside a parametrized <code>pytest</code> test with{" "}
+          <code>assert_test(...)</code> and <code>deepeval test run</code> so a
+          failing metric breaks the build.
+        </>
+      ),
+    },
+    {
+      question: "Where do these traces and scores show up beyond my terminal?",
+      answer: (
+        <>
+          Run <code>deepeval login</code> and{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> renders the
+          same AgentCore traces — agent spans, LLM spans, tool calls — and their
+          scores in a shared cloud UI. It's optional; everything runs locally
+          without it.
+        </>
+      ),
+    },
+  ]}
+/>

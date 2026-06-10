@@ -48,7 +48,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2NjPl6Z6h1hFVt5v0MFDDsAJ2Yq",
               "service_tier": "default",
@@ -113,7 +113,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2NmT5iqj1DnH1GcLI6mCSFp2nei",
               "service_tier": "default",
@@ -193,7 +193,7 @@
         "content": "Summary: AI is transforming industries worldwide.",
         "tool_calls": []
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 192.0,
       "outputTokenCount": 11.0,
       "integration": "LangChain",
@@ -230,7 +230,7 @@
           }
         ]
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 147.0,
       "outputTokenCount": 174.0,
       "integration": "LangChain",
@@ -311,7 +311,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2NjPl6Z6h1hFVt5v0MFDDsAJ2Yq",
           "service_tier": "default",
@@ -376,7 +376,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2NmT5iqj1DnH1GcLI6mCSFp2nei",
           "service_tier": "default",

@@ -429,3 +429,57 @@ def retrieve(query: str) -> list[str]:
 | `environment` | `str`       | One of `"development"`, `"staging"`, `"production"`, `"testing"`.          |
 
 For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_span`, `next_llm_span`) and the test-decorator surface (`@observe`, `@assert_test`, `with trace(...)`), see the [tracing reference](/docs/evaluation-llm-tracing).
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Can I evaluate a delegated sub-agent on its own?",
+      answer: (
+        <>
+          Yes. Sub-agent calls (delegations and handoffs) already nest as their
+          own agent spans. Stage a metric for one with{" "}
+          <code>with next_agent_span(metrics=[...])</code>, or target a model
+          step with <code>next_llm_span(...)</code>, to score it in isolation.
+        </>
+      ),
+    },
+    {
+      question: "Can I run these Pydantic AI evals with Pytest?",
+      answer: (
+        <>
+          Yes. Build the <code>Agent</code> with{" "}
+          <code>instrument=DeepEvalInstrumentationSettings()</code>, run it in a
+          parametrized <code>pytest</code> test, and gate the build with{" "}
+          <code>assert_test(...)</code> and <code>deepeval test run</code>.
+        </>
+      ),
+    },
+    {
+      question: "Can I monitor a Pydantic AI agent in production?",
+      answer: (
+        <>
+          Yes. Set <code>environment="production"</code> on{" "}
+          <code>DeepEvalInstrumentationSettings(...)</code>; once logged into
+          Confident AI the live traces support{" "}
+          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
+            online evals
+          </a>{" "}
+          on real traffic.
+        </>
+      ),
+    },
+    {
+      question: "Can I see these traces and scores in a cloud dashboard?",
+      answer: (
+        <>
+          Yes, optionally. <code>deepeval login</code> connects{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a>, which
+          visualizes every auto-instrumented agent, LLM, and tool span with its
+          score in a shared UI — no extra code.
+        </>
+      ),
+    },
+  ]}
+/>

@@ -2,12 +2,19 @@ name: Confident Tests
 
 on:
   push:
+    paths-ignore:
+      - 'typescript/**'
   pull_request:
+    paths-ignore:
+      - 'typescript/**'
   workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
     steps:
       #----------------------------------------------
       #       check-out repo and set-up python
@@ -56,9 +63,10 @@ jobs:
       #----------------------------------------------
       #              run test suite
       #----------------------------------------------
+      # Only run when a Confident API key is available (e.g. not on fork PRs).
+      # Without the key these tests can't run, so skip the step outright to
+      # keep contributor PRs green.
       - name: Run tests
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+        if: ${{ env.CONFIDENT_API_KEY != '' }}
         run: |
           poetry run pytest tests/test_confident/

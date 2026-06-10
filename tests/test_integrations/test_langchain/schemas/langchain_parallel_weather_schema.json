@@ -48,7 +48,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2NulyL80wHc4gxQw1KXsiLGNard",
               "service_tier": "default",
@@ -147,7 +147,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2NxUtRL6qA8SlTArCU3iFUBBoNn",
               "service_tier": "default",
@@ -265,7 +265,7 @@
         "content": "Here are the weather results you requested:\n- Tokyo: Sunny, 72F\n- New York: Cloudy, 58F\n- London: Rainy, 52F",
         "tool_calls": []
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 250.0,
       "outputTokenCount": 40.0,
       "integration": "LangChain",
@@ -316,7 +316,7 @@
           }
         ]
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 152.0,
       "outputTokenCount": 196.0,
       "integration": "LangChain",
@@ -444,7 +444,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2NulyL80wHc4gxQw1KXsiLGNard",
           "service_tier": "default",
@@ -543,7 +543,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2NxUtRL6qA8SlTArCU3iFUBBoNn",
           "service_tier": "default",

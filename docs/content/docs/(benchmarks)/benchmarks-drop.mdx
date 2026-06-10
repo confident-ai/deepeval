@@ -639,3 +639,80 @@ Below is the comprehensive list of available tasks:
 - `HISTORY_3143`
 - `NFL_824`
 - `NFL_2034`
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What does the `DROP` benchmark measure?",
+      answer: (
+        <>
+          DROP (Discrete Reasoning Over Paragraphs) evaluates an LLM's advanced
+          reasoning through complex question answering. It encompasses over 9,500
+          challenges that demand <strong>numerical reasoning</strong> (addition,
+          subtraction, counting), multi-step reasoning, and the interpretation of
+          text-based data drawn from paragraphs about <strong>NFL and
+          history</strong>.
+        </>
+      ),
+    },
+    {
+      question: "Which tasks can I run with `DROP`?",
+      answer: (
+        <>
+          You can pass a list of <code>DROPTask</code> enums to the{" "}
+          <code>tasks</code> argument, for example <code>HISTORY_1002</code> or{" "}
+          <code>NFL_649</code>. By default, all available tasks are evaluated.
+        </>
+      ),
+    },
+    {
+      question: "How is `DROP` scored?",
+      answer: (
+        <>
+          The <code>overall_score</code> ranges from 0 to 1 and is based on{" "}
+          <strong>exact matching</strong>: it is the proportion of questions for
+          which the model produces the precise correct answer (e.g. '3' or 'John
+          Doe'). See the{" "}
+          <a href="/docs/benchmarks-introduction">benchmarks introduction</a> for
+          how scoring works across benchmarks.
+        </>
+      ),
+    },
+    {
+      question: "What is the default `n_shots` for `DROP`?",
+      answer: (
+        <>
+          The <code>n_shots</code> argument is set to <code>5</code> by default
+          and <strong>cannot exceed 5</strong>. Using more few-shot prompts can
+          improve the model's robustness in generating answers in the exact
+          correct format.
+        </>
+      ),
+    },
+    {
+      question: "Does `DROP` support chain-of-thought prompting?",
+      answer: (
+        <>
+          No. Unlike <code>BigBenchHard</code>, there is no CoT prompting for the{" "}
+          <code>DROP</code> benchmark. Its only optional arguments are{" "}
+          <code>tasks</code> and <code>n_shots</code>.
+        </>
+      ),
+    },
+    {
+      question: "How do I run `DROP` on a custom LLM?",
+      answer: (
+        <>
+          Wrap your model in <code>DeepEvalBaseLLM</code>, create a benchmark
+          with <code>DROP(tasks=[...], n_shots=3)</code>, and call{" "}
+          <code>benchmark.evaluate(model=mistral_7b)</code> before reading{" "}
+          <code>benchmark.overall_score</code>. See the{" "}
+          <a href="/guides/guides-using-custom-llms">custom LLM guide</a> for
+          details.
+        </>
+      ),
+    },
+  ]}
+/>

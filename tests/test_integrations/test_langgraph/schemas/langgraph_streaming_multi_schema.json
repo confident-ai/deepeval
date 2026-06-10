@@ -33,7 +33,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -97,7 +97,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -145,7 +145,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -213,7 +213,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -261,7 +261,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -325,7 +325,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -374,7 +374,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -501,7 +501,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -566,7 +566,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -652,7 +652,7 @@
         "content": "Here’s what I found for TSLA:\n\n- Stock price: $245.60 (up 2.1%)\n- Company info: Tesla, Inc. — Electric vehicles; Market cap: $780B\n\nNote: Prices change continuously. Want more details (intraday chart, historical prices, fundamentals, or latest news)?",
         "tool_calls": []
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 252.0,
       "outputTokenCount": 267.0,
       "tokenIntervals": {
@@ -772,7 +772,7 @@
           }
         ]
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 162.0,
       "outputTokenCount": 185.0,
       "tokenIntervals": {
@@ -878,7 +878,7 @@
         "additional_kwargs": {},
         "response_metadata": {
           "finish_reason": "tool_calls",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "service_tier": "default",
           "model_provider": "openai"
         },
@@ -942,7 +942,7 @@
         "additional_kwargs": {},
         "response_metadata": {
           "finish_reason": "stop",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "service_tier": "default",
           "model_provider": "openai"
         },

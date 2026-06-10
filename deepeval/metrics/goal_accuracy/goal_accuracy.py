@@ -9,6 +9,7 @@ from deepeval.metrics.utils import (
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    accrue_token_usage,
 )
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
 from deepeval.metrics import BaseConversationalMetric
@@ -66,6 +67,8 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
+        self.input_tokens = 0 if self.using_native_model else None
+        self.output_tokens = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -133,6 +136,8 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
+        self.input_tokens = 0 if self.using_native_model else None
+        self.output_tokens = 0 if self.using_native_model else None
 
         with metric_progress_indicator(
             self,
@@ -264,6 +269,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self._accrue_cost(cost)
+            accrue_token_usage(self, cost)
             return res
         else:
             res = self.model.generate(prompt)
@@ -296,6 +302,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self._accrue_cost(cost)
+            accrue_token_usage(self, cost)
             return res
         else:
             res = await self.model.a_generate(prompt)

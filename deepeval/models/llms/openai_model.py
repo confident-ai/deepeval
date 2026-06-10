@@ -19,6 +19,7 @@ from deepeval.models.utils import (
     require_costs,
     require_secret_api_key,
     normalize_kwargs_and_extract_aliases,
+    EvaluationCost,
 )
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -399,7 +400,12 @@ class GPTModel(DeepEvalBaseLLM):
         if self.model_data.input_price and self.model_data.output_price:
             input_cost = input_tokens * self.model_data.input_price
             output_cost = output_tokens * self.model_data.output_price
-            return input_cost + output_cost
+            # Carry token counts alongside the cost so metric runs can surface
+            # input/output token usage (EvaluationCost subclasses float, so every
+            # existing `output, cost = generate(...)` caller is unaffected).
+            return EvaluationCost(
+                input_cost + output_cost, input_tokens, output_tokens
+            )
 
     #########################
     # Capabilities          #

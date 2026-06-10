@@ -1,35 +1,35 @@
 {
-  "uuid": "5f8d726f967d83b9b0b19e811fa7ebab",
+  "uuid": "553cad75352e5c9ce54747a5ade08835",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "641c9f83f062d21f",
+      "uuid": "419d6622204b355a",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T06:45:31.462Z",
-      "endTime": "2026-05-05T06:45:37.177Z",
+      "startTime": "2026-06-01T16:36:33.959Z",
+      "endTime": "2026-06-01T16:36:36.964Z",
       "input": [
         {
           "role": "user",
           "content": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each."
         }
       ],
-      "output": "The current weather in Paris is cloudy with a temperature of 62°F. The time is 8:00 AM CET.",
+      "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET.",
+      "integration": "PydanticAI",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "PydanticAI"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "63f9e659b336b661",
+      "uuid": "1ff7209956c2c5df",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "641c9f83f062d21f",
-      "startTime": "2026-05-05T06:45:35.017Z",
-      "endTime": "2026-05-05T06:45:37.174Z",
+      "parentUuid": "419d6622204b355a",
+      "startTime": "2026-06-01T16:36:35.566Z",
+      "endTime": "2026-06-01T16:36:36.961Z",
       "input": [
         {
           "role": "system",
@@ -43,7 +43,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_AhJLecdICVFlFVl78kZr3qG7",
+            "id": "call_KCo0CJkQKiERmhujOkavOhEA",
             "name": "get_weather",
             "arguments": "{\"city\": \"Paris\"}"
           }
@@ -52,7 +52,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_oQjG9gw4vGkXnSATB8Smvjsg",
+            "id": "call_yUkAxOMa9FnCe1p2dAJYwW7o",
             "name": "get_time",
             "arguments": "{\"city\": \"Paris\"}"
           }
@@ -61,7 +61,7 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_AhJLecdICVFlFVl78kZr3qG7",
+            "id": "call_KCo0CJkQKiERmhujOkavOhEA",
             "name": "get_weather",
             "result": "Cloudy, 62F"
           }
@@ -70,7 +70,7 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_oQjG9gw4vGkXnSATB8Smvjsg",
+            "id": "call_yUkAxOMa9FnCe1p2dAJYwW7o",
             "name": "get_time",
             "result": "8:00 AM CET"
           }
@@ -102,7 +102,9 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               },
@@ -129,12 +131,14 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               }
             ],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -149,23 +153,23 @@
       "output": [
         {
           "role": "assistant",
-          "content": "The current weather in Paris is cloudy with a temperature of 62°F. The time is 8:00 AM CET."
+          "content": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET."
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 254.0,
-      "outputTokenCount": 26.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 254.0,
+      "outputTokenCount": 26.0
     },
     {
-      "uuid": "9faf1e4dbb2bf5e9",
+      "uuid": "355cbdefbce6755c",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "641c9f83f062d21f",
-      "startTime": "2026-05-05T06:45:31.463Z",
-      "endTime": "2026-05-05T06:45:35.011Z",
+      "parentUuid": "419d6622204b355a",
+      "startTime": "2026-06-01T16:36:33.960Z",
+      "endTime": "2026-06-01T16:36:35.562Z",
       "input": [
         {
           "role": "system",
@@ -202,7 +206,9 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               },
@@ -229,12 +235,14 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               }
             ],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -251,7 +259,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_AhJLecdICVFlFVl78kZr3qG7",
+            "id": "call_KCo0CJkQKiERmhujOkavOhEA",
             "name": "get_weather",
             "arguments": "{\"city\": \"Paris\"}"
           }
@@ -260,29 +268,29 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_oQjG9gw4vGkXnSATB8Smvjsg",
+            "id": "call_yUkAxOMa9FnCe1p2dAJYwW7o",
             "name": "get_time",
             "arguments": "{\"city\": \"Paris\"}"
           }
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 185.0,
-      "outputTokenCount": 44.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 185.0,
+      "outputTokenCount": 44.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "72c304782f5553ce",
+      "uuid": "e7e6720e6aa0c9c1",
       "name": "get_time",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "641c9f83f062d21f",
-      "startTime": "2026-05-05T06:45:35.013Z",
-      "endTime": "2026-05-05T06:45:35.015Z",
+      "parentUuid": "419d6622204b355a",
+      "startTime": "2026-06-01T16:36:35.563Z",
+      "endTime": "2026-06-01T16:36:35.565Z",
       "input": {
         "city": "Paris"
       },
@@ -290,13 +298,13 @@
       "integration": "PydanticAI"
     },
     {
-      "uuid": "b4c4d3583b28a693",
+      "uuid": "bda2dfe2e6af5a4d",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "641c9f83f062d21f",
-      "startTime": "2026-05-05T06:45:35.013Z",
-      "endTime": "2026-05-05T06:45:35.015Z",
+      "parentUuid": "419d6622204b355a",
+      "startTime": "2026-06-01T16:36:35.563Z",
+      "endTime": "2026-06-01T16:36:35.565Z",
       "input": {
         "city": "Paris"
       },
@@ -304,8 +312,8 @@
       "integration": "PydanticAI"
     }
   ],
-  "startTime": "2026-05-05T06:45:31.462Z",
-  "endTime": "2026-05-05T06:45:37.177Z",
+  "startTime": "2026-06-01T16:36:33.959Z",
+  "endTime": "2026-06-01T16:36:36.964Z",
   "name": "pydanticai-parallel-tools",
   "metadata": {
     "test_type": "parallel_tools"
@@ -323,6 +331,6 @@
       "content": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each."
     }
   ],
-  "output": "The current weather in Paris is cloudy with a temperature of 62°F. The time is 8:00 AM CET.",
+  "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET.",
   "status": "SUCCESS"
 }

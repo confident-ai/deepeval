@@ -48,7 +48,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2Nnf2k3n3rPWFSP8EyFMAzDnxsM",
               "service_tier": "default",
@@ -113,7 +113,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2NpfKXdSwe0w5U38LQ6rbSbYaEa",
               "service_tier": "default",
@@ -193,7 +193,7 @@
         "content": "Result: VERIFIED — The claim \"The earth is round.\" is accurate.\n\nSummary of evidence:\n- Photographs and imagery from space (satellites, crewed missions) show Earth as a spherical body.\n- Observations of planetary bodies: Other planets and moons appear spherical due to gravity; Earth behaves similarly.\n- Ship and horizon observations: Ships disappear hull-first over the horizon, consistent with curvature.\n- Lunar eclipses: Earth's circular shadow on the Moon during lunar eclipses indicates a round Earth.\n- Gravity and geodesy: Measurements of gravity, satellite orbits, and geodetic surveys (like GPS) rely on and confirm Earth's roughly oblate spheroid shape.\n- Circumnavigation: People and vehicles can travel continuously around Earth east–west and north–south (within limits), consistent with a globe.\n\nNuance: \"Round\" here means Earth is not a perfect sphere but an oblate spheroid (slightly flattened at the poles and bulging at the equator) with minor local deviations (mountains, trenches). The scientific consensus and extensive observational evidence support this.",
         "tool_calls": []
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 190.0,
       "outputTokenCount": 224.0,
       "integration": "LangChain",
@@ -230,7 +230,7 @@
           }
         ]
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 146.0,
       "outputTokenCount": 91.0,
       "integration": "LangChain",
@@ -311,7 +311,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2Nnf2k3n3rPWFSP8EyFMAzDnxsM",
           "service_tier": "default",
@@ -376,7 +376,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2NpfKXdSwe0w5U38LQ6rbSbYaEa",
           "service_tier": "default",

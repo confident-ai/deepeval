@@ -9,7 +9,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.runnables import RunnableConfig, RunnableLambda
 
 # LLM with deterministic settings
-llm = ChatOpenAI(model="gpt-5-mini", temperature=0, seed=42)
+llm = ChatOpenAI(model="gpt-5.4-mini", temperature=0, seed=42)
 
 
 def _run_simple_chain(messages: list, config: RunnableConfig = None):

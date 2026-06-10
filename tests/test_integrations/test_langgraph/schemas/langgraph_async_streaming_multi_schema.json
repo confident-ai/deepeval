@@ -33,7 +33,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -97,7 +97,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -145,7 +145,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -213,7 +213,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -261,7 +261,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -325,7 +325,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -374,7 +374,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -501,7 +501,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -566,7 +566,7 @@
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "service_tier": "default",
               "model_provider": "openai"
             },
@@ -652,7 +652,7 @@
         "content": "Here are the results for AMZN:\n\n- Stock price: $185.20 (-0.3%)\n- Company info: Amazon.com Inc. — E-commerce/Cloud, Market Cap: $1.9T\n\nWould you like historical prices, recent news, or alerts set for price changes?",
         "tool_calls": []
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 257.0,
       "outputTokenCount": 63.0,
       "tokenIntervals": {
@@ -766,7 +766,7 @@
           }
         ]
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 162.0,
       "outputTokenCount": 121.0,
       "tokenIntervals": {
@@ -873,7 +873,7 @@
         "additional_kwargs": {},
         "response_metadata": {
           "finish_reason": "tool_calls",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "service_tier": "default",
           "model_provider": "openai"
         },
@@ -937,7 +937,7 @@
         "additional_kwargs": {},
         "response_metadata": {
           "finish_reason": "stop",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "service_tier": "default",
           "model_provider": "openai"
         },

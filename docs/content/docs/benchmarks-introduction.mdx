@@ -239,3 +239,88 @@ benchmark = BigBenchHard(enable_cot=True)
 :::note
 Not all benchmarks offers CoTs as a prompting technique, but the [original paper for BIG-Bench Hard](https://arxiv.org/abs/2210.09261) found major improvements when using CoTs prompting during benchmarking.
 :::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What LLM benchmarks does `deepeval` offer?",
+      answer: (
+        <>
+          <code>deepeval</code> provides several research-backed benchmarks
+          including <a href="/docs/benchmarks-big-bench-hard">BIG-Bench Hard</a>,{" "}
+          <a href="/docs/benchmarks-hellaswag">HellaSwag</a>,{" "}
+          <a href="/docs/benchmarks-mmlu">MMLU</a>,{" "}
+          <a href="/docs/benchmarks-drop">DROP</a>,{" "}
+          <a href="/docs/benchmarks-truthful-qa">TruthfulQA</a>,{" "}
+          <a href="/docs/benchmarks-human-eval">HumanEval</a>, and{" "}
+          <a href="/docs/benchmarks-gsm8k">GSM8K</a>. Each one follows the
+          implementation of its original research paper.
+        </>
+      ),
+    },
+    {
+      question: "How do I benchmark a custom LLM with `deepeval`?",
+      answer: (
+        <>
+          Wrap your model in the <code>DeepEvalBaseLLM</code> class, instantiate
+          a benchmark (e.g. <code>MMLU()</code>), and call its{" "}
+          <code>evaluate()</code> method with your model. This works for any LLM,
+          whether it is an API call to OpenAI or a Hugging Face{" "}
+          <code>transformers</code> model.
+        </>
+      ),
+    },
+    {
+      question: "What does a benchmark consist of?",
+      answer: (
+        <>
+          A benchmark is made up of one or more <strong>tasks</strong> (each its
+          own dataset with target labels), a <strong>scorer</strong> to judge
+          predictions against those labels, and various{" "}
+          <strong>prompting techniques</strong> such as few-shot learning and/or
+          CoT prompting. Most benchmarks use the <strong>exact match</strong>{" "}
+          scorer.
+        </>
+      ),
+    },
+    {
+      question: "How do I access benchmark results?",
+      answer: (
+        <>
+          After calling <code>evaluate()</code>, you can read the{" "}
+          <code>overall_score</code> for performance across all tasks,{" "}
+          <code>task_scores</code> for a per-task pandas DataFrame, and{" "}
+          <code>predictions</code> for a detailed breakdown of every prediction
+          your model made.
+        </>
+      ),
+    },
+    {
+      question: "What does the `batch_size` argument do?",
+      answer: (
+        <>
+          When you set <code>batch_size</code>, outputs are generated in batches
+          if you have implemented <code>batch_generate()</code> on your custom
+          LLM, which can speed up benchmarking significantly. The{" "}
+          <code>batch_size</code> parameter is available for all benchmarks{" "}
+          <strong>except</strong> <code>HumanEval</code> and <code>GSM8K</code>.
+        </>
+      ),
+    },
+    {
+      question: "Can I configure tasks, few-shot prompting, and CoT?",
+      answer: (
+        <>
+          Yes. Use the <code>tasks</code> argument to choose a subset of a
+          benchmark's tasks (by default all tasks run), <code>n_shots</code> to
+          set the number of few-shot examples, and <code>enable_cot</code> for
+          benchmarks that support chain-of-thought prompting. Scorers, however,
+          are <strong>not</strong> configurable since the scorer is a universal
+          standard within each benchmark.
+        </>
+      ),
+    },
+  ]}
+/>

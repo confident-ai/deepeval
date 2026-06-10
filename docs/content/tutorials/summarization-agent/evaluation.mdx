@@ -27,7 +27,7 @@ test_case = LLMTestCase(
 ```
 
 :::tip
-In our case, the summarization agent creates two seperate LLM calls. 
+In our case, the summarization agent creates two separate LLM calls. 
 
 1. To generate summary
 2. To generate action items
@@ -35,7 +35,7 @@ In our case, the summarization agent creates two seperate LLM calls.
 As this is a special case, we will be creating 2 test cases for a single `summarize()` call from our summarizer. This means the `LLMTestCase`s can and must be tailored to your application's specific needs.
 :::
 
-## Setup Testing Enviroment
+## Setup Testing Environment
 
 For evaluating a summarization agent like ours, there is one main approach we can use:
 
@@ -107,7 +107,7 @@ dataset.push(alias="MeetingSummarizer Dataset")
 
 ### Creating Test Cases 
 
-We will now call our summarization agent on the dataset `input`s and create our `LLMTestCase`s that we can use to evaluate our agent. Since our summarization agent returns summary and action items seperately, we will create 2 test cases for 1 `summarize()` call.
+We will now call our summarization agent on the dataset `input`s and create our `LLMTestCase`s that we can use to evaluate our agent. Since our summarization agent returns summary and action items separately, we will create 2 test cases for 1 `summarize()` call.
 
 Here's how we can pull our dataset and create test cases:
 
@@ -194,7 +194,7 @@ We can now use the test cases and metrics we created to run our evaluations. Her
 
 ### Summary Eval
 
-Since we created seperate metrics and seperate test cases for our summarizer, we'll first evaluate the summary concision:
+Since we created separate metrics and separate test cases for our summarizer, we'll first evaluate the summary concision:
 
 ```python
 from deepeval import evaluate
@@ -207,7 +207,7 @@ evaluate(
 
 ### Action Item Eval
 
-We can run a seperate evaluation for action items generated as shown below:
+We can run a separate evaluation for action items generated as shown below:
 
 ```python
 from deepeval import evaluate

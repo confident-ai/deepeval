@@ -12,6 +12,7 @@ from deepeval.models.utils import (
     require_costs,
     require_secret_api_key,
     normalize_kwargs_and_extract_aliases,
+    EvaluationCost,
 )
 from deepeval.test_case import MLLMImage
 from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
@@ -64,8 +65,8 @@ class AnthropicModel(DeepEvalBaseLLM):
             temperature = float(temperature)
         elif settings.TEMPERATURE is not None:
             temperature = settings.TEMPERATURE
-        else:
-            temperature = 0.0
+        # else: leave as None so `temperature` is only sent to the client when
+        # explicitly configured — some models (e.g. reasoning models) reject it.
 
         cost_per_input_token = (
             cost_per_input_token
@@ -86,7 +87,7 @@ class AnthropicModel(DeepEvalBaseLLM):
             param_hint="model",
         )
 
-        if temperature < 0:
+        if temperature is not None and temperature < 0:
             raise DeepEvalError("Temperature must be >= 0.")
         self.temperature = temperature
 
@@ -149,9 +150,11 @@ class AnthropicModel(DeepEvalBaseLLM):
             model=self.name,
             **self.generation_kwargs,
         )
-        if self.model_data and self.model_data.supports_temperature is False:
-            pass
-        else:
+        # Only send `temperature` when explicitly configured and the model
+        # supports it — some models reject/deprecate `temperature`.
+        if self.temperature is not None and not (
+            self.model_data and self.model_data.supports_temperature is False
+        ):
             create_kwargs["temperature"] = self.temperature
         message = chat_model.messages.create(**create_kwargs)
         cost = self.calculate_cost(
@@ -187,9 +190,11 @@ class AnthropicModel(DeepEvalBaseLLM):
             model=self.name,
             **self.generation_kwargs,
         )
-        if self.model_data and self.model_data.supports_temperature is False:
-            pass
-        else:
+        # Only send `temperature` when explicitly configured and the model
+        # supports it — some models reject/deprecate `temperature`.
+        if self.temperature is not None and not (
+            self.model_data and self.model_data.supports_temperature is False
+        ):
             create_kwargs["temperature"] = self.temperature
         message = await chat_model.messages.create(**create_kwargs)
         cost = self.calculate_cost(
@@ -238,7 +243,9 @@ class AnthropicModel(DeepEvalBaseLLM):
         if self.model_data.input_price and self.model_data.output_price:
             input_cost = input_tokens * self.model_data.input_price
             output_cost = output_tokens * self.model_data.output_price
-            return input_cost + output_cost
+            return EvaluationCost(
+                input_cost + output_cost, input_tokens, output_tokens
+            )
 
     #########################
     # Capabilities          #

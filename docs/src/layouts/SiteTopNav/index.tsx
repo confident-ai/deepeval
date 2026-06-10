@@ -5,12 +5,13 @@ import Link from "next/link";
 import { buttonVariants } from "fumadocs-ui/components/ui/button";
 import { Sidebar } from "lucide-react";
 import { twMerge } from "tailwind-merge";
-import DiscordButton from "@/src/components/DiscordButton";
+import CommunityCta from "@/src/components/CommunityCta";
 import GithubCtaButton from "@/src/components/GithubCtaButton";
 import SiteThemeSwitch from "@/src/components/SiteThemeSwitch";
 import { appName } from "@/lib/shared";
 import { navLinks } from "@/lib/layout.shared";
 import AskAIButton from "@/src/components/AskAIButton";
+import Wordmark from "@/src/components/Wordmark";
 import HomeOverflowNav from "@/src/layouts/HomeOverflowNav";
 import NavLinks from "@/src/layouts/NavLinks";
 import NavMenu from "@/src/layouts/NavMenu";
@@ -120,11 +121,7 @@ const SiteTopNav: React.FC<SiteTopNavProps> = ({
         >
           <div className={styles.homeLogoCell}>
             <Link href="/" className={styles.brandLink} aria-label={appName}>
-              <span
-                className={`${styles.wordmark} ${styles.wordmarkHome}`}
-                role="img"
-                aria-label={appName}
-              />
+              <Wordmark className={styles.wordmarkHome} />
             </Link>
           </div>
 
@@ -136,8 +133,8 @@ const SiteTopNav: React.FC<SiteTopNavProps> = ({
 
           <div className={styles.homeUtilsCell}>
             <div className={styles.homeUtilities}>
-              <div className={styles.homeDiscordCta}>
-                <DiscordButton layout="inline" />
+              <div className={styles.homeCommunityCta}>
+                <CommunityCta layout="inline" />
               </div>
               <div className={styles.homeGithubCta}>
                 <GithubCtaButton layout="inline" tone="secondary" />

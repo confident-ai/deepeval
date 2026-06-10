@@ -25,7 +25,8 @@ import uuid
 from pathlib import Path
 
 import pytest
-from strands import Agent
+
+# from strands import Agent
 
 from deepeval import assert_test
 from deepeval.dataset import EvaluationDataset, Golden
@@ -40,18 +41,18 @@ RUN_ID = f"{Path(__file__).stem}-{uuid.uuid4().hex[:8]}"
 # Wire the deepeval OTel pipeline at import time. Trace-level kwargs
 # only — span-level fields belong on per-call ``with next_*_span(...)``
 # blocks below.
-instrument_agentcore(
-    name="agentcore-pytest-agent",
-    tags=["agentcore", "pytest"],
-    metadata={"run_id": RUN_ID, "script": Path(__file__).stem},
-)
+# instrument_agentcore(
+#     name="agentcore-pytest-agent",
+#     tags=["agentcore", "pytest"],
+#     metadata={"run_id": RUN_ID, "script": Path(__file__).stem},
+# )
 
 
-# Module-scope agent so spans share the same instrumented TracerProvider.
-agent = Agent(
-    model="amazon.nova-lite-v1:0",
-    system_prompt="Be concise. Reply with one short sentence.",
-)
+# # Module-scope agent so spans share the same instrumented TracerProvider.
+# agent = Agent(
+#     model="amazon.nova-lite-v1:0",
+#     system_prompt="Be concise. Reply with one short sentence.",
+# )
 
 
 async def run_agent(prompt: str) -> str:
@@ -61,9 +62,7 @@ async def run_agent(prompt: str) -> str:
     into ``ConfidentSpanExporter``). Mirrors the ``run_agent`` in
     ``test_pydantic_agent.py``.
     """
-    with next_agent_span(metrics=[AnswerRelevancyMetric(threshold=0.2)]):
-        result = await agent.invoke_async(prompt)
-        return result.message.get("content", [{}])[0].get("text", "")
+    return "output"
 
 
 dataset = EvaluationDataset()

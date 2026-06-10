@@ -1,0 +1,475 @@
+{
+  "name": "langchain-agent-test",
+  "uuid": "82e95120-e66c-4a33-b926-cc9fffff9bfa",
+  "baseSpans": [
+    {
+      "uuid": "019c8fee-8e7b-7666-99b8-121fd4e98e1f",
+      "name": "multi_step_agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "82e95120-e66c-4a33-b926-cc9fffff9bfa",
+      "startTime": "2026-02-24T13:55:01.883Z",
+      "endTime": "2026-02-24T13:55:05.799Z",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Search for Apple stock price and explain it."
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Search for Apple stock price and explain it."
+          },
+          {
+            "lc": 1,
+            "type": "constructor",
+            "id": [
+              "langchain_core",
+              "messages",
+              "AIMessage"
+            ],
+            "kwargs": {
+              "id": "chatcmpl-DCnAMrJccpgifLjlH1ecWP7Eu0VSg",
+              "content": "",
+              "additional_kwargs": {
+                "tool_calls": [
+                  {
+                    "id": "call_tSEnE6oxYyHH7KKiDAi7WzFw",
+                    "type": "function",
+                    "function": {
+                      "name": "search_web",
+                      "arguments": "{\"query\":\"Apple stock price\"}"
+                    }
+                  }
+                ]
+              },
+              "response_metadata": {
+                "tokenUsage": {
+                  "promptTokens": 69,
+                  "completionTokens": 16,
+                  "totalTokens": 85
+                },
+                "finish_reason": "tool_calls",
+                "model_provider": "openai",
+                "model_name": "gpt-4o-mini-2024-07-18",
+                "usage": {
+                  "prompt_tokens": 69,
+                  "completion_tokens": 16,
+                  "total_tokens": 85,
+                  "prompt_tokens_details": {
+                    "cached_tokens": 0,
+                    "audio_tokens": 0
+                  },
+                  "completion_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "audio_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "system_fingerprint": "fp_373a14eb6f"
+              },
+              "type": "ai",
+              "tool_calls": [
+                {
+                  "name": "search_web",
+                  "args": {
+                    "query": "Apple stock price"
+                  },
+                  "type": "tool_call",
+                  "id": "call_tSEnE6oxYyHH7KKiDAi7WzFw"
+                }
+              ],
+              "invalid_tool_calls": [],
+              "usage_metadata": {
+                "output_tokens": 16,
+                "input_tokens": 69,
+                "total_tokens": 85,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 0
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              }
+            }
+          },
+          {
+            "lc": 1,
+            "type": "constructor",
+            "id": [
+              "langchain_core",
+              "messages",
+              "ToolMessage"
+            ],
+            "kwargs": {
+              "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Apple (AAPL) stock: $178.50, up 1.2%\",\"tool_call_id\":\"call_tSEnE6oxYyHH7KKiDAi7WzFw\",\"name\":\"search_web\",\"metadata\":{},\"additional_kwargs\":{},\"response_metadata\":{}}}",
+              "tool_call_id": "call_tSEnE6oxYyHH7KKiDAi7WzFw",
+              "additional_kwargs": {},
+              "response_metadata": {}
+            }
+          },
+          {
+            "lc": 1,
+            "type": "constructor",
+            "id": [
+              "langchain_core",
+              "messages",
+              "AIMessage"
+            ],
+            "kwargs": {
+              "id": "chatcmpl-DCnAMVROYvrLxFp1TULoDhY9uLoQ4",
+              "content": "The current stock price of Apple Inc. (AAPL) is $178.50, which reflects an increase of 1.2%. \n\n### Explanation:\n- **Stock Price**: The stock price represents the current value of a single share of a company's stock. In this case, $178.50 is the price at which shares of Apple are being traded on the stock market.\n- **Percentage Change**: The increase of 1.2% indicates that the stock price has risen compared to its previous closing price. This can be influenced by various factors, including company performance, market trends, investor sentiment, and broader economic conditions.\n\nInvestors often look at stock prices and their changes to gauge the performance of a company and make investment decisions.",
+              "additional_kwargs": {},
+              "response_metadata": {
+                "tokenUsage": {
+                  "promptTokens": 185,
+                  "completionTokens": 152,
+                  "totalTokens": 337
+                },
+                "finish_reason": "stop",
+                "model_provider": "openai",
+                "model_name": "gpt-4o-mini-2024-07-18",
+                "usage": {
+                  "prompt_tokens": 185,
+                  "completion_tokens": 152,
+                  "total_tokens": 337,
+                  "prompt_tokens_details": {
+                    "cached_tokens": 0,
+                    "audio_tokens": 0
+                  },
+                  "completion_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "audio_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "system_fingerprint": "fp_373a14eb6f"
+              },
+              "type": "ai",
+              "tool_calls": [],
+              "invalid_tool_calls": [],
+              "usage_metadata": {
+                "output_tokens": 152,
+                "input_tokens": 185,
+                "total_tokens": 337,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 0
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019c8fee-8e7c-7666-99b8-1d86946ee10e",
+      "name": "Langchain LLM Run",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "82e95120-e66c-4a33-b926-cc9fffff9bfa",
+      "parentUuid": "019c8fee-8e7b-7666-99b8-121fd4e98e1f",
+      "startTime": "2026-02-24T13:55:01.884Z",
+      "endTime": "2026-02-24T13:55:02.678Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Search for Apple stock price and explain it."
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "call_tSEnE6oxYyHH7KKiDAi7WzFw",
+            "name": "search_web",
+            "args": {
+              "query": "Apple stock price"
+            }
+          }
+        ]
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "costPerInputToken": 0,
+      "costPerOutputToken": 0,
+      "inputTokenCount": 69,
+      "outputTokenCount": 16
+    },
+    {
+      "uuid": "019c8fee-9196-7666-99b8-2e997aee2d94",
+      "name": "Langchain LLM Run",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "82e95120-e66c-4a33-b926-cc9fffff9bfa",
+      "parentUuid": "019c8fee-8e7b-7666-99b8-121fd4e98e1f",
+      "startTime": "2026-02-24T13:55:02.678Z",
+      "endTime": "2026-02-24T13:55:05.799Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Search for Apple stock price and explain it."
+        },
+        {
+          "role": "ai",
+          "content": "[{\"name\":\"search_web\",\"args\":{\"query\":\"Apple stock price\"},\"type\":\"tool_call\",\"id\":\"call_tSEnE6oxYyHH7KKiDAi7WzFw\"}]"
+        },
+        {
+          "role": "tool",
+          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Apple (AAPL) stock: $178.50, up 1.2%\",\"tool_call_id\":\"call_tSEnE6oxYyHH7KKiDAi7WzFw\",\"name\":\"search_web\",\"metadata\":{},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "The current stock price of Apple Inc. (AAPL) is $178.50, which reflects an increase of 1.2%. \n\n### Explanation:\n- **Stock Price**: The stock price represents the current value of a single share of a company's stock. In this case, $178.50 is the price at which shares of Apple are being traded on the stock market.\n- **Percentage Change**: The increase of 1.2% indicates that the stock price has risen compared to its previous closing price. This can be influenced by various factors, including company performance, market trends, investor sentiment, and broader economic conditions.\n\nInvestors often look at stock prices and their changes to gauge the performance of a company and make investment decisions.",
+        "toolCalls": []
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "costPerInputToken": 0,
+      "costPerOutputToken": 0,
+      "inputTokenCount": 185,
+      "outputTokenCount": 152
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019c8fee-9196-7666-99b8-2790c2dfaa59",
+      "name": "search_web",
+      "status": "SUCCESS",
+      "type": "tool",
+      "traceUuid": "82e95120-e66c-4a33-b926-cc9fffff9bfa",
+      "parentUuid": "019c8fee-8e7b-7666-99b8-121fd4e98e1f",
+      "startTime": "2026-02-24T13:55:02.678Z",
+      "endTime": "2026-02-24T13:55:02.678Z",
+      "input": "{\"query\":\"Apple stock price\"}",
+      "output": {
+        "lc": 1,
+        "type": "constructor",
+        "id": [
+          "langchain_core",
+          "messages",
+          "ToolMessage"
+        ],
+        "kwargs": {
+          "status": "success",
+          "content": "Apple (AAPL) stock: $178.50, up 1.2%",
+          "tool_call_id": "call_tSEnE6oxYyHH7KKiDAi7WzFw",
+          "name": "search_web",
+          "metadata": {},
+          "additional_kwargs": {},
+          "response_metadata": {}
+        }
+      }
+    }
+  ],
+  "startTime": "2026-02-24T13:55:01.883Z",
+  "endTime": "2026-02-24T13:55:05.799Z",
+  "environment": "testing",
+  "tags": [
+    "langchain",
+    "agent"
+  ],
+  "input": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Search for Apple stock price and explain it."
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Search for Apple stock price and explain it."
+      },
+      {
+        "lc": 1,
+        "type": "constructor",
+        "id": [
+          "langchain_core",
+          "messages",
+          "AIMessage"
+        ],
+        "kwargs": {
+          "id": "chatcmpl-DCnAMrJccpgifLjlH1ecWP7Eu0VSg",
+          "content": "",
+          "additional_kwargs": {
+            "tool_calls": [
+              {
+                "id": "call_tSEnE6oxYyHH7KKiDAi7WzFw",
+                "type": "function",
+                "function": {
+                  "name": "search_web",
+                  "arguments": "{\"query\":\"Apple stock price\"}"
+                }
+              }
+            ]
+          },
+          "response_metadata": {
+            "tokenUsage": {
+              "promptTokens": 69,
+              "completionTokens": 16,
+              "totalTokens": 85
+            },
+            "finish_reason": "tool_calls",
+            "model_provider": "openai",
+            "model_name": "gpt-4o-mini-2024-07-18",
+            "usage": {
+              "prompt_tokens": 69,
+              "completion_tokens": 16,
+              "total_tokens": 85,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "system_fingerprint": "fp_373a14eb6f"
+          },
+          "type": "ai",
+          "tool_calls": [
+            {
+              "name": "search_web",
+              "args": {
+                "query": "Apple stock price"
+              },
+              "type": "tool_call",
+              "id": "call_tSEnE6oxYyHH7KKiDAi7WzFw"
+            }
+          ],
+          "invalid_tool_calls": [],
+          "usage_metadata": {
+            "output_tokens": 16,
+            "input_tokens": 69,
+            "total_tokens": 85,
+            "input_token_details": {
+              "audio": 0,
+              "cache_read": 0
+            },
+            "output_token_details": {
+              "audio": 0,
+              "reasoning": 0
+            }
+          }
+        }
+      },
+      {
+        "lc": 1,
+        "type": "constructor",
+        "id": [
+          "langchain_core",
+          "messages",
+          "ToolMessage"
+        ],
+        "kwargs": {
+          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Apple (AAPL) stock: $178.50, up 1.2%\",\"tool_call_id\":\"call_tSEnE6oxYyHH7KKiDAi7WzFw\",\"name\":\"search_web\",\"metadata\":{},\"additional_kwargs\":{},\"response_metadata\":{}}}",
+          "tool_call_id": "call_tSEnE6oxYyHH7KKiDAi7WzFw",
+          "additional_kwargs": {},
+          "response_metadata": {}
+        }
+      },
+      {
+        "lc": 1,
+        "type": "constructor",
+        "id": [
+          "langchain_core",
+          "messages",
+          "AIMessage"
+        ],
+        "kwargs": {
+          "id": "chatcmpl-DCnAMVROYvrLxFp1TULoDhY9uLoQ4",
+          "content": "The current stock price of Apple Inc. (AAPL) is $178.50, which reflects an increase of 1.2%. \n\n### Explanation:\n- **Stock Price**: The stock price represents the current value of a single share of a company's stock. In this case, $178.50 is the price at which shares of Apple are being traded on the stock market.\n- **Percentage Change**: The increase of 1.2% indicates that the stock price has risen compared to its previous closing price. This can be influenced by various factors, including company performance, market trends, investor sentiment, and broader economic conditions.\n\nInvestors often look at stock prices and their changes to gauge the performance of a company and make investment decisions.",
+          "additional_kwargs": {},
+          "response_metadata": {
+            "tokenUsage": {
+              "promptTokens": 185,
+              "completionTokens": 152,
+              "totalTokens": 337
+            },
+            "finish_reason": "stop",
+            "model_provider": "openai",
+            "model_name": "gpt-4o-mini-2024-07-18",
+            "usage": {
+              "prompt_tokens": 185,
+              "completion_tokens": 152,
+              "total_tokens": 337,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "system_fingerprint": "fp_373a14eb6f"
+          },
+          "type": "ai",
+          "tool_calls": [],
+          "invalid_tool_calls": [],
+          "usage_metadata": {
+            "output_tokens": 152,
+            "input_tokens": 185,
+            "total_tokens": 337,
+            "input_token_details": {
+              "audio": 0,
+              "cache_read": 0
+            },
+            "output_token_details": {
+              "audio": 0,
+              "reasoning": 0
+            }
+          }
+        }
+      }
+    ]
+  },
+  "toolsCalled": [
+    {
+      "name": "search_web",
+      "inputParameters": "{\"query\":\"Apple stock price\"}",
+      "output": {
+        "lc": 1,
+        "type": "constructor",
+        "id": [
+          "langchain_core",
+          "messages",
+          "ToolMessage"
+        ],
+        "kwargs": {
+          "status": "success",
+          "content": "Apple (AAPL) stock: $178.50, up 1.2%",
+          "tool_call_id": "call_tSEnE6oxYyHH7KKiDAi7WzFw",
+          "name": "search_web",
+          "metadata": {},
+          "additional_kwargs": {},
+          "response_metadata": {}
+        }
+      }
+    }
+  ]
+}

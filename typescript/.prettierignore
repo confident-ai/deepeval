@@ -1,0 +1,30 @@
+# Ignore artifacts:
+dist
+build
+coverage
+node_modules
+
+# Ignore lock files:
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Ignore editor/project config:
+.env
+.vscode
+.idea
+
+# Ignore test outputs:
+*.log
+*.tmp
+
+# Ignore TypeScript build outputs:
+*.tsbuildinfo
+
+# Ignore misc:
+.DS_Store
+Thumbs.db
+
+# Optional: ignore example outputs and temporary files
+examples/**/*.out
+examples/**/*.tmp

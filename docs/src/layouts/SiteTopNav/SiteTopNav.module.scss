@@ -174,15 +174,9 @@ $toc-visible-min: 1280px;
   text-decoration: none;
 }
 
-.wordmark {
-  display: block;
-  background-color: var(--color-fd-foreground);
-  -webkit-mask: url("/icons/DeepEval.svg") no-repeat center / contain;
-  mask: url("/icons/DeepEval.svg") no-repeat center / contain;
-}
-
 .wordmarkHome {
-  width: 103px;
+  display: block;
+  width: 105px;
   height: 22px;
 }
 
@@ -208,7 +202,7 @@ $toc-visible-min: 1280px;
   flex-shrink: 0;
 }
 
-.homeDiscordCta {
+.homeCommunityCta {
   flex-shrink: 0;
 }
 
@@ -293,7 +287,7 @@ $toc-visible-min: 1280px;
     height: 20px;
   }
 
-  .homeDiscordCta {
+  .homeCommunityCta {
     display: none;
   }
 }

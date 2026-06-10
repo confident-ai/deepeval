@@ -60,3 +60,79 @@ Below is the comprehensive list of available tasks:
 - `NECESSARY_CONDITIONAL_REASONING`
 - `DISJUNCTIVE_REASONING`
 - `CONJUNCTIVE_REASONING`
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What does the `LogiQA` benchmark measure?",
+      answer: (
+        <>
+          LogiQA assesses an LLM's logical reasoning across various types of
+          deductive reasoning, including categorical and disjunctive reasoning.
+          It features 8,678 multiple-choice questions, each paired with a reading
+          passage. See the{" "}
+          <a href="/docs/benchmarks-introduction">benchmarks introduction</a> for
+          how scoring works across benchmarks.
+        </>
+      ),
+    },
+    {
+      question: "How is `LogiQA` scored?",
+      answer: (
+        <>
+          Scoring is based on <strong>exact matching</strong>: the{" "}
+          <code>overall_score</code> is the proportion of questions for which the
+          model produces the precise correct multiple-choice answer (e.g. 'A' or
+          'C') out of the total. It ranges from 0 to 1, where 1 signifies perfect
+          performance.
+        </>
+      ),
+    },
+    {
+      question: "What is the default `n_shots` for `LogiQA`?",
+      answer: (
+        <>
+          It defaults to <code>5</code> and cannot exceed that. Use the{" "}
+          <code>n_shots</code> argument to lower it for few-shot prompting.
+        </>
+      ),
+    },
+    {
+      question: "Which reasoning tasks can I evaluate with `LogiQA`?",
+      answer: (
+        <>
+          Pass a list of <code>LogiQATask</code> enums to the <code>tasks</code>{" "}
+          argument. Available tasks are <code>CATEGORICAL_REASONING</code>,{" "}
+          <code>SUFFICIENT_CONDITIONAL_REASONING</code>,{" "}
+          <code>NECESSARY_CONDITIONAL_REASONING</code>,{" "}
+          <code>DISJUNCTIVE_REASONING</code>, and{" "}
+          <code>CONJUNCTIVE_REASONING</code>. By default, all tasks are
+          evaluated.
+        </>
+      ),
+    },
+    {
+      question: "Can using more few-shot prompts improve the `LogiQA` score?",
+      answer: (
+        <>
+          Yes. Utilizing more few-shot prompts via <code>n_shots</code> can
+          greatly improve the model's robustness in generating answers in the
+          exact correct format and boost the <code>overall_score</code>.
+        </>
+      ),
+    },
+    {
+      question: "How do I run `LogiQA` on a custom LLM?",
+      answer: (
+        <>
+          Define the benchmark, then call <code>evaluate()</code> with your model
+          and read <code>overall_score</code>. See{" "}
+          <a href="/docs/benchmarks-introduction#benchmarking-your-llm">benchmarking your LLM</a>{" "}
+          to learn how to use any custom LLM.
+        </>
+      ),
+    },
+  ]}
+/>

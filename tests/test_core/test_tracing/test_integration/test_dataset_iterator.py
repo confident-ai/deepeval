@@ -1,5 +1,12 @@
 import asyncio
+import os
 import pytest
+
+if (
+    os.getenv("OPENAI_API_KEY") is None
+    or not os.getenv("OPENAI_API_KEY").strip()
+):
+    pytest.skip("needs OPENAI_API_KEY", allow_module_level=True)
 
 
 from tests.test_core.test_tracing.apps.async_app import (

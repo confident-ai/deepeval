@@ -54,7 +54,7 @@ class TestOpenRouterModel:
         assert model.cost_per_input_token == 0.0001
         assert model.cost_per_output_token == 0.0002
 
-    @patch("deepeval.models.llms.openrouter_model.AsyncOpenAI")
+    @patch("deepeval.models.llms.gateway_model.AsyncOpenAI")
     def test_generate_with_generation_kwargs(
         self, mock_async_openai_class, settings
     ):
@@ -96,7 +96,7 @@ class TestOpenRouterModel:
         assert call_args["top_p"] == 0.9
         assert output == "test response"
 
-    @patch("deepeval.models.llms.openrouter_model.AsyncOpenAI")
+    @patch("deepeval.models.llms.gateway_model.AsyncOpenAI")
     async def test_async_generate(self, mock_async_openai_class, settings):
         """Test async generation"""
         mock_client = MagicMock()
@@ -119,7 +119,7 @@ class TestOpenRouterModel:
 
         assert output == "async response"
 
-    @patch("deepeval.models.llms.openrouter_model.AsyncOpenAI")
+    @patch("deepeval.models.llms.gateway_model.AsyncOpenAI")
     def test_generate_with_structured_outputs(
         self, mock_async_openai_class, settings
     ):
@@ -161,7 +161,7 @@ class TestOpenRouterModel:
         assert output.field1 == "test"
         assert output.field2 == 42
 
-    @patch("deepeval.models.llms.openrouter_model.AsyncOpenAI")
+    @patch("deepeval.models.llms.gateway_model.AsyncOpenAI")
     def test_generate_with_structured_outputs_fallback(
         self, mock_async_openai_class, settings
     ):
@@ -252,7 +252,7 @@ class TestOpenRouterModel:
         cost = model.calculate_cost(input_tokens=100, output_tokens=50)
         assert cost is None
 
-    @patch("deepeval.models.llms.openrouter_model.OpenAI")
+    @patch("deepeval.models.llms.gateway_model.OpenAI")
     def test_client_kwargs_includes_custom_headers(
         self, mock_openai_class, settings
     ):
@@ -307,7 +307,7 @@ class TestOpenRouterModel:
             model = OpenRouterModel(model=model_name)
             assert model.name == model_name
 
-    @patch("deepeval.models.llms.openrouter_model.OpenAI")
+    @patch("deepeval.models.llms.gateway_model.OpenAI")
     def test_generate_raw_response(self, mock_openai_class, settings):
         """Test generate_raw_response method"""
         mock_client = Mock()
@@ -335,7 +335,7 @@ class TestOpenRouterModel:
         )
         assert completion == mock_completion
 
-    @patch("deepeval.models.llms.openrouter_model.OpenAI")
+    @patch("deepeval.models.llms.gateway_model.OpenAI")
     def test_generate_samples(self, mock_openai_class, settings):
         """Test generate_samples method"""
         mock_client = Mock()

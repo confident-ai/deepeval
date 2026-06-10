@@ -555,6 +555,7 @@ Everything above runs entirely locally — you don't need an account for any of 
   src={ASSETS.tracingTraces}
   confidentUrl="/docs/llm-tracing/introduction"
   label="Learn how to setup LLM tracing for Confident AI"
+  description="Stream traces in real time from your @observe-decorated app."
 />
 
 You get this with **zero additional code** — just log in:
@@ -583,3 +584,87 @@ Now that you have your traces, you can run either end-to-end or component-level 
     href="/docs/evaluation-component-level-llm-evals#use-python-scripts"
   />
 </Cards>
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is tracing and why would I use it for evals?",
+      answer: (
+        <>
+          Tracing records the execution of your LLM app as a tree of spans
+          (retrievers, tools, LLM calls, agents). It lets you attach metrics to
+          individual components for{" "}
+          <a href="/docs/evaluation-component-level-llm-evals">
+            component-level evaluation
+          </a>{" "}
+          without rewriting your code to bubble up intermediate values.
+        </>
+      ),
+    },
+    {
+      question: "How much code does it take to set up tracing?",
+      answer: (
+        <>
+          Usually a single <code>@observe</code> decorator per component. You
+          add metrics and a test case with <code>update_current_span()</code>{" "}
+          inside the function, and <code>deepeval</code> handles the rest.
+        </>
+      ),
+    },
+    {
+      question:
+        "Do I have to use `@observe`, or does tracing work with my framework automatically?",
+      answer: (
+        <>
+          Both. Beyond manual <code>@observe</code> instrumentation,{" "}
+          <code>deepeval</code> ships native{" "}
+          <a href="/integrations">integrations</a> for LangChain, LangGraph,
+          LlamaIndex, Pydantic AI, CrewAI, and more that auto-trace the spans
+          your framework emits — typically just one setup call.
+        </>
+      ),
+    },
+    {
+      question: "Does tracing run my metrics in production?",
+      answer: (
+        <>
+          By default, no. When you run your <code>@observe</code>-decorated app
+          outside of <code>evaluate()</code> or <code>assert_test()</code>,
+          metrics don't run. You can silence local trace logs with{" "}
+          <code>CONFIDENT_TRACE_VERBOSE=0</code> and{" "}
+          <code>CONFIDENT_TRACE_FLUSH=0</code>.
+        </>
+      ),
+    },
+    {
+      question: "Do I need an account to use tracing?",
+      answer:
+        "No. Everything — spans, test cases on spans, span types, metadata, token costs — runs entirely locally. An account is only needed if you want to stream and visualize traces on the cloud.",
+    },
+    {
+      question:
+        "Can my team visualize traces in a UI, keep them on the cloud, and monitor production?",
+      answer: (
+        <>
+          Once traces carry real data, reading them in a terminal stops
+          scaling. Logging into{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> (the official
+          platform for <code>deepeval</code>) renders the exact same trace data
+          into a UI
+          with zero extra code — your team gets a shared cloud view, real-time
+          production traces,{" "}
+          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
+            online evals
+          </a>
+          , and{" "}
+          <a href="https://www.confident-ai.com/docs/llm-tracing/features/token-usage-cost">
+            token cost
+          </a>{" "}
+          tracking. It's optional and local tracing works the same without it.
+        </>
+      ),
+    },
+  ]}
+/>

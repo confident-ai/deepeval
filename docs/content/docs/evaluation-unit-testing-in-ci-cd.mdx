@@ -767,6 +767,107 @@ We highly recommend setting up [Confident AI](https://app.confident-ai.com) with
 <VideoDisplayer
   src={ASSETS.tracingSpans}
   confidentUrl="/docs/llm-tracing/introduction"
-  label="Span-Level Evals in Production"
+  label="Span-level evals in production"
+  description="Keep evaluating components in production after your CI/CD checks pass."
 />
 :::
+
+## Marking an Official Run
+
+You can designate a test run as the **official** test run on Confident AI — the marked good run that future runs are compared against for regressions. Add the `--official` flag (or `-o`) to mark the run once it completes:
+
+```bash
+deepeval test run test_llm_app.py --official
+```
+
+If you evaluate with `evaluate()` rather than `deepeval test run`, pass `official=True` instead:
+
+```python
+from deepeval import evaluate
+
+evaluate(test_cases=[...], metrics=[...], official=True)
+```
+
+This is typically done on your main branch so every baseline reflects merged, production-ready code.
+
+:::note
+Marking a run as official requires a `CONFIDENT_API_KEY`, since official runs live on Confident AI.
+:::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How does `deepeval` fit into CI/CD?",
+      answer: (
+        <>
+          You write your evals as <code>pytest</code> tests using{" "}
+          <code>assert_test()</code> and run them with{" "}
+          <code>deepeval test run</code> as a step in your pipeline. Failing
+          metrics fail the build, so regressions get caught before they ship.
+        </>
+      ),
+    },
+    {
+      question: "What's the difference between `assert_test()` and `evaluate()`?",
+      answer: (
+        <>
+          <code>assert_test()</code> is built for CI/CD and raises an assertion
+          error when a metric falls below its threshold, while{" "}
+          <code>evaluate()</code> is for scripts and notebooks and collects
+          results without failing. Use <code>assert_test()</code> for gating.
+        </>
+      ),
+    },
+    {
+      question: "Do I need a Confident AI account to run evals in CI/CD?",
+      answer: (
+        <>
+          No. Provide an LLM judge key such as <code>OPENAI_API_KEY</code> and
+          your tests run entirely locally. Adding <code>CONFIDENT_API_KEY</code>{" "}
+          is optional and only sends results to the cloud.
+        </>
+      ),
+    },
+    {
+      question: "Which CI providers does this work with?",
+      answer: (
+        <>
+          Any provider that runs a shell step. The docs show a GitHub Actions{" "}
+          <code>.yml</code> using <code>poetry</code>, but the same{" "}
+          <code>deepeval test run</code> command works in GitLab CI, CircleCI,
+          Jenkins, and others.
+        </>
+      ),
+    },
+    {
+      question: "How do I speed up or control test runs in CI?",
+      answer: (
+        <>
+          Use <code>deepeval test run</code> flags like parallelization,
+          caching, and ignore-errors. See{" "}
+          <a href="/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run">
+            flags and configs
+          </a>{" "}
+          for the full list.
+        </>
+      ),
+    },
+    {
+      question:
+        "Can my team see professional test reports on the cloud and track results over time?",
+      answer: (
+        <>
+          Yes — and it's optional. Add <code>CONFIDENT_API_KEY</code> to your CI
+          secrets and the same <code>deepeval test run</code> sends results to{" "}
+          <a href="https://app.confident-ai.com">Confident AI</a> (the platform
+          from the <code>deepeval</code> team), giving your team sharable
+          testing reports, a
+          UI to inspect failing cases, and trend lines of performance across
+          commits. Without the key, the exact same tests still run locally.
+        </>
+      ),
+    },
+  ]}
+/>

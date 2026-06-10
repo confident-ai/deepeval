@@ -436,3 +436,73 @@ prompt.update(
     tools=[tool2]
 )
 ```
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How do I attribute metric scores to a specific prompt?",
+      answer: (
+        <>
+          Pass your <code>Prompt</code> object into the{" "}
+          <code>hyperparameters</code> dictionary of <code>evaluate()</code> for
+          end-to-end evals, or via <code>update_llm_span</code> for
+          component-level evals. <code>deepeval</code> then ties each test
+          run's scores to
+          that prompt so you can pick the best one.
+        </>
+      ),
+    },
+    {
+      question: "Can I evaluate multiple prompts at once?",
+      answer: (
+        <>
+          Yes. You can log multiple prompts under different keys, e.g.{" "}
+          <code>hyperparameters=&#123;"prompt_1": prompt_1, "prompt_2":
+          prompt_2&#125;</code>, which is common when your app chains several
+          prompts.
+        </>
+      ),
+    },
+    {
+      question: "Where can prompts be loaded from?",
+      answer: (
+        <>
+          You can build a <code>Prompt</code> from scratch in code, load one
+          from a local <code>.json</code> or <code>.txt</code> file, or{" "}
+          <code>pull()</code> a specific version from Confident AI. You must call{" "}
+          <code>load()</code> or <code>pull()</code> before using the prompt in
+          an eval.
+        </>
+      ),
+    },
+    {
+      question: "Can a prompt store more than just the template text?",
+      answer: (
+        <>
+          Yes. A <code>Prompt</code> can carry model settings (like temperature
+          and model name), output settings, and a list of <code>Tool</code>s
+          your agent has access to, so the full generation configuration is
+          versioned alongside the template.
+        </>
+      ),
+    },
+    {
+      question:
+        "Can my team manage and version prompts on the cloud with a UI instead of in code?",
+      answer: (
+        <>
+          Prompts work entirely locally from files or code. If your team prefers
+          a shared, versioned prompt store,{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
+          from the <code>deepeval</code> team) lets you edit and version prompts
+          in a UI and{" "}
+          <code>pull()</code> a specific version into your evals by alias — so
+          non-engineers can iterate on prompts while your code just references a
+          version. It's optional and file/code-based prompts behave identically.
+        </>
+      ),
+    },
+  ]}
+/>

@@ -267,3 +267,98 @@ After all iterations complete, GEPA selects the **final optimized prompt** from 
 3. **Break ties**: If multiple prompts tie for the highest score, the `tie_breaker` policy determines the winner (`PREFER_CHILD` by default, which favors more recently evolved prompts)
 
 The winning prompt is returned as the optimized result.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is GEPA and when should I use it?",
+      answer: (
+        <>
+          <code>GEPA</code> (Genetic-Pareto) combines evolutionary optimization
+          with multi-objective Pareto selection to improve prompts while keeping
+          a diverse pool of candidates. Use it when your task spans different
+          problem types and you want to avoid converging prematurely on a single
+          prompt that only does well on some{" "}
+          <a href="/docs/evaluation-datasets#what-are-goldens">goldens</a>.
+        </>
+      ),
+    },
+    {
+      question: "Do I need to pass `GEPA()` explicitly to the optimizer?",
+      answer: (
+        <>
+          No. <code>GEPA</code> is already the default for the{" "}
+          <code>algorithm</code> argument of{" "}
+          <a href="/docs/prompt-optimization-introduction">PromptOptimizer</a>,
+          so you only need to construct a <code>GEPA</code> instance and pass it
+          in when you want to customize how it runs.
+        </>
+      ),
+    },
+    {
+      question: "How do I make GEPA runs reproducible?",
+      answer: (
+        <>
+          Set a fixed <code>random_seed</code> (for example <code>42</code>) on
+          the <code>GEPA</code> constructor. It controls golden splitting,
+          minibatch sampling, Pareto parent selection, and tie-breaking. By
+          default it uses <code>time.time_ns()</code>, so runs vary unless you
+          pin the seed.
+        </>
+      ),
+    },
+    {
+      question: "What is the difference between `pareto_size` and `minibatch_size`?",
+      answer: (
+        <>
+          <code>pareto_size</code> (default <code>3</code>) is the number of
+          goldens in the held-out validation set <code>D_pareto</code> that every
+          candidate is scored on for fair comparison. <code>minibatch_size</code>{" "}
+          (default <code>8</code>) is how many goldens are drawn from{" "}
+          <code>D_feedback</code> each iteration to drive feedback and mutation.
+          The two sets are disjoint to avoid overfitting.
+        </>
+      ),
+    },
+    {
+      question: "How does GEPA decide when to stop early?",
+      answer: (
+        <>
+          GEPA tracks consecutive rejected children. When a child is rejected by
+          the Pareto gate it increments a rejection counter, and once that
+          counter reaches <code>patience</code> (default <code>3</code>) the
+          search stops early before exhausting all <code>iterations</code>{" "}
+          (default <code>5</code>).
+        </>
+      ),
+    },
+    {
+      question: "What happens when prompts tie on the final score?",
+      answer: (
+        <>
+          During final selection, prompts are ranked by their aggregate{" "}
+          <code>D_pareto</code> score (mean by default via{" "}
+          <code>aggregate_instances</code>). If several tie for the top score the{" "}
+          <code>tie_breaker</code> policy decides the winner—{" "}
+          <code>PREFER_CHILD</code> (the default) favors more recently evolved
+          prompts, with <code>PREFER_ROOT</code> and <code>RANDOM</code> also
+          available.
+        </>
+      ),
+    },
+    {
+      question: "Which models does GEPA use to diagnose and rewrite prompts?",
+      answer: (
+        <>
+          GEPA uses two separate LLMs: <code>reflection_model</code> (default{" "}
+          <code>"gpt-4o-mini"</code>) generates the diagnosis and feedback, and{" "}
+          <code>mutation_model</code> (default <code>"gpt-4o"</code>) rewrites the
+          prompt from that feedback. You can override either when constructing
+          the <code>GEPA</code> instance.
+        </>
+      ),
+    },
+  ]}
+/>

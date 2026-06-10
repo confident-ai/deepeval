@@ -231,7 +231,27 @@ for golden in dataset.evals_iterator():
 
 ## Applying metrics to components
 
-Passing `metrics=[...]` to `CallbackHandler` evaluates the overall LangGraph run. To evaluate a model component instead, attach metrics where the node calls the model.
+Passing `metrics=[...]` to `CallbackHandler` evaluates the overall LangGraph run. To evaluate a component instead, attach metrics where the graph creates that component.
+
+### Agent spans (sub-agents)
+
+Wrap the `graph.invoke(...)` in `with next_agent_span(metrics=[...]):`. The `CallbackHandler` drains the staged metric onto the **first agent span** the graph emits — useful for scoring a sub-agent node or subgraph in isolation.
+
+```python title="langgraph_agent.py" showLineNumbers
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.tracing import next_agent_span
+...
+
+for golden in dataset.evals_iterator():
+    with next_agent_span(metrics=[TaskCompletionMetric()]):
+        graph.invoke(
+            {"messages": [{"role": "user", "content": golden.input}]},
+            config={"callbacks": [CallbackHandler()]},
+        )
+```
+
+The same one-shot semantic as `next_llm_span` applies: only the first agent span in the graph run picks up the staged metric.
 
 ### LLM calls
 
@@ -262,7 +282,7 @@ For deterministic tool calls, use tool spans for traceability, inputs, outputs, 
 LangGraph is instrumented per-call through LangChain callbacks, so customization happens at the callback or span-staging boundary.
 
 - Use `CallbackHandler(...)` kwargs for trace-level defaults like `name`, `tags`, `metadata`, `thread_id`, and `user_id`.
-- Use `next_llm_span(...)` / `next_retriever_span(...)` / `next_tool_span(...)` to stage component-level fields (metrics, metric collections, test cases, custom span metadata) onto the next span the callback opens.
+- Use `next_agent_span(...)` / `next_llm_span(...)` / `next_retriever_span(...)` / `next_tool_span(...)` to stage component-level fields (metrics, metric collections, test cases, custom span metadata) onto the next span the callback opens.
 - Use tool spans for deterministic traceability, inputs, outputs, and metadata.
 
 ```python title="langgraph_agent.py" showLineNumbers
@@ -283,16 +303,16 @@ graph.invoke(
 
 The primitives above — `CallbackHandler(...)` and `next_*_span(...)` — compose around one boundary: LangGraph owns the graph execution lifecycle, and your code chooses where to stage component config for the next span the callback opens.
 
-### Evaluate subagents/components
+### Evaluate subagents with `next_*_span`
 
-Stage a component metric with `next_llm_span(...)` immediately before the `graph.invoke(...)` call. The `CallbackHandler` drains the staged metric onto the first LLM span emitted by the `chatbot` node, so the metric lives on the component span without modifying the graph or model.
+`next_*_span(metrics=[...])` stages a metric for the next matching span the `CallbackHandler` opens during the graph run. Use this when you want to evaluate a subagent node or model step instead of the full graph. Pick the helper that matches the span you want to score: `next_agent_span(...)` or `next_llm_span(...)`.
 
 ```python title="langgraph_agent.py" showLineNumbers
 from langchain.chat_models import init_chat_model
 from langgraph.graph import StateGraph, MessagesState, START, END
 from deepeval.integrations.langchain import CallbackHandler
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.tracing import next_llm_span
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.tracing import next_agent_span
 ...
 
 llm = init_chat_model("openai:gpt-4o-mini")
@@ -307,11 +327,18 @@ graph = (
     .add_edge("chatbot", END)
     .compile()
 )
+
+def run_graph(prompt: str):
+    with next_agent_span(metrics=[TaskCompletionMetric()]):
+        return graph.invoke(
+            {"messages": [{"role": "user", "content": prompt}]},
+            config={"callbacks": [CallbackHandler()]},
+        )
 ```
 
 #### No trace-level metrics required
 
-Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because the `AnswerRelevancyMetric` is staged for the LLM span, so CI/CD and scripts only need to run the graph inside the staging block.
+Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because the `TaskCompletionMetric` is staged for the agent span, so CI/CD and scripts only need to run the graph inside the staging block.
 
 This is how you'd run it:
 
@@ -325,11 +352,7 @@ from deepeval import assert_test
 
 @pytest.mark.parametrize("golden", dataset.goldens)
 def test_component_metrics(golden: Golden):
-    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
-        graph.invoke(
-            {"messages": [{"role": "user", "content": golden.input}]},
-            config={"callbacks": [CallbackHandler()]},
-        )
+    run_graph(golden.input)
     assert_test(golden=golden)
 ```
 
@@ -344,11 +367,7 @@ deepeval test run test_langgraph_agent.py
 ...
 
 for golden in dataset.evals_iterator():
-    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
-        graph.invoke(
-            {"messages": [{"role": "user", "content": golden.input}]},
-            config={"callbacks": [CallbackHandler()]},
-        )
+    run_graph(golden.input)
 ```
 
 </Tab>
@@ -387,3 +406,58 @@ def respond_to_user(prompt: str):
 | `turn_id`           | `str`       | Optional turn identifier for conversational traces.               |
 
 For native tracing helpers (`@observe`, `with trace(...)`, `update_current_trace`, `update_current_span`) see the [tracing reference](/docs/evaluation-llm-tracing).
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Can I evaluate a sub-agent node inside my graph?",
+      answer: (
+        <>
+          Yes. Wrap <code>graph.invoke(...)</code> in{" "}
+          <code>with next_agent_span(metrics=[...])</code> and the{" "}
+          <code>CallbackHandler</code> drains the metric onto the agent span
+          that sub-agent node emits — scoring it on its own. It's one-shot per
+          run, so for every loop turn either drive the loop yourself or score
+          end-to-end with trace-level metrics.
+        </>
+      ),
+    },
+    {
+      question: "Can I fail CI when a LangGraph metric regresses?",
+      answer: (
+        <>
+          Yes. Pass <code>CallbackHandler()</code> into the graph config inside a
+          parametrized <code>pytest</code> test and assert with{" "}
+          <code>assert_test(...)</code> under <code>deepeval test run</code>.
+        </>
+      ),
+    },
+    {
+      question: "Where do my LangGraph traces show up beyond the console?",
+      answer: (
+        <>
+          Run <code>deepeval login</code> and{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a> visualizes the
+          full graph trace — every node, model call, and tool call as nested
+          spans — with their scores in a shared cloud UI. It's optional.
+        </>
+      ),
+    },
+    {
+      question: "Can I keep evaluating a deployed LangGraph app in production?",
+      answer: (
+        <>
+          Yes. Keep passing the <code>CallbackHandler</code> in production and
+          group runs with <code>thread_id</code>; logged into Confident AI those
+          live traces power{" "}
+          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
+            online evals
+          </a>{" "}
+          on real traffic.
+        </>
+      ),
+    },
+  ]}
+/>

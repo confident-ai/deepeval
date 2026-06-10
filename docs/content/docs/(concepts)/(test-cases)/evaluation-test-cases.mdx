@@ -9,25 +9,25 @@ import { ASSETS } from "@site/src/assets";
 
 ## Quick Summary
 
-A **single-turn test case** is a blueprint provided by `deepeval` to unit test LLM outputs, and **represents a single, atomic unit of interaction** with your LLM app.
+A **single-turn test case** is a blueprint provided by <C id="module::deepeval"/> to unit test LLM outputs, and **represents a single, atomic unit of interaction** with your LLM app.
 
 :::caution
-Throughout this documentation, you should assume the term 'test case' refers to an `LLMTestCase` instead of `MLLMImage` or `ConversationalTestCase`.
+Throughout this documentation, you should assume the term 'test case' refers to an <C id="class::LLMTestCase"/> instead of `MLLMImage` or <C id="class::ConversationalTestCase"/>.
 :::
 
-An `LLMTestCase` is the most prominent type of test case in `deepeval`. It has **NINE** parameters:
+An <C id="class::LLMTestCase"/> is the most prominent type of test case in <C id="module::deepeval"/>. It has **NINE** parameters:
 
 - `input`
-- [Optional] `actual_output`
-- [Optional] `expected_output`
+- [Optional] <C id="field::actual_output"/>
+- [Optional] <C id="field::expected_output"/>
 - [Optional] `context`
-- [Optional] `retrieval_context`
-- [Optional] `tools_called`
+- [Optional] <C id="field::retrieval_context"/>
+- [Optional] <C id="field::tools_called"/>
 - [Optional] `expected_tools`
 - [Optional] `token_cost`
 - [Optional] `completion_time`
 
-Here's an example implementation of an `LLMTestCase`:
+Here's an example implementation of an <C id="class::LLMTestCase"/>:
 
 ```python title="main.py"
 from deepeval.test_case import LLMTestCase, ToolCall
@@ -43,9 +43,9 @@ test_case = LLMTestCase(
 ```
 
 :::info
-Since `deepeval` is an LLM evaluation framework, the ** `input` and `actual_output` are always mandatory.** However, this does not mean they are necessarily used for evaluation, and you can also add additional parameters such as the `tools_called` for each `LLMTestCase`.
+Since <C id="module::deepeval"/> is an LLM evaluation framework, the ** `input` and <C id="field::actual_output"/> are always mandatory.** However, this does not mean they are necessarily used for evaluation, and you can also add additional parameters such as the <C id="field::tools_called"/> for each <C id="class::LLMTestCase"/>.
 
-<video width="100%" autoPlay loop muted playsInlines>
+<video width="100%" autoPlay loop muted playsInline>
   <source
     src={ASSETS.testCaseToolsCalled}
     type="video/mp4"
@@ -65,7 +65,7 @@ deepeval login
 An **LLM interaction** is any **discrete exchange** of information between **components of your LLM system** — from a full user request to a single internal step. The scope of interaction is arbitrary and is entirely up to you.
 
 :::note
-Since an `LLMTestCase` represents a single, atomic unit of interaction in your LLM app, it is important to understand what this means.
+Since an <C id="class::LLMTestCase"/> represents a single, atomic unit of interaction in your LLM app, it is important to understand what this means.
 :::
 
 Let’s take this LLM system as an example:
@@ -333,7 +333,7 @@ Remember, `context` is the ideal retrieval results for a given input and typical
 The `tools_called` parameter is an **optional** parameter that represents the tools your LLM agent actually invoked during execution. By providing `tools_called`, you can evaluate how effectively your LLM agent utilized the tools available to it.
 
 :::note
-The `tools_called` parameter accepts a list of `ToolCall` objects.
+The <C id="field::tools_called"/> parameter accepts a list of <C id="class::ToolCall"/> objects.
 :::
 
 ```python
@@ -345,7 +345,7 @@ class ToolCall(BaseModel):
     input_parameters: Optional[Dict[str, Any]] = None
 ```
 
-A `ToolCall` object accepts 1 mandatory and 4 optional parameters:
+A <C id="class::ToolCall"/> object accepts 1 mandatory and 4 optional parameters:
 
 - `name`: a string representing the **name** of the tool.
 - [Optional] `description`: a string describing the **tool's purpose**.
@@ -565,3 +565,80 @@ You can create test cases for three types of evaluation:
 - One-Off Standalone - Executes individual metrics on single test cases for debugging or custom evaluation pipelines
 
 Click on each of the links to learn how to use test cases for evals.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Which `LLMTestCase` parameters are required?",
+      answer: (
+        <>
+          Only <code>input</code> and <code>actual_output</code> are always
+          mandatory. Every other parameter — <code>expected_output</code>,{" "}
+          <code>context</code>, <code>retrieval_context</code>,{" "}
+          <code>tools_called</code>, and so on — is optional and only needed by
+          the specific metrics you're running.
+        </>
+      ),
+    },
+    {
+      question: "What's the difference between `context` and `retrieval_context`?",
+      answer: (
+        <>
+          <code>context</code> is the ideal, static ground truth for an input
+          (usually from your dataset), while <code>retrieval_context</code> is
+          what your RAG pipeline actually retrieved at runtime. Comparing the
+          two is how you measure retriever quality.
+        </>
+      ),
+    },
+    {
+      question: "When should I use a single-turn test case vs a multi-turn one?",
+      answer: (
+        <>
+          Use an <code>LLMTestCase</code> for a single, atomic interaction (one
+          request and response). Use a{" "}
+          <a href="/docs/evaluation-multiturn-test-cases">
+            <code>ConversationalTestCase</code>
+          </a>{" "}
+          when you need to evaluate a back-and-forth conversation across
+          multiple turns.
+        </>
+      ),
+    },
+    {
+      question: "Can I evaluate precomputed outputs instead of generating them live?",
+      answer:
+        "Yes. You can populate actual_output (and retrieval_context, tools_called, etc.) ahead of time and evaluate them later, or generate them dynamically at evaluation time by invoking your app inside your test file.",
+    },
+    {
+      question: "Can a test case include images?",
+      answer: (
+        <>
+          Yes. Embed <code>MLLMImage</code> objects (local files, remote URLs,
+          or base64) into the <code>input</code> or <code>actual_output</code>{" "}
+          and <code>deepeval</code> automatically treats it as a multimodal
+          test case for
+          multimodal-supported metrics.
+        </>
+      ),
+    },
+    {
+      question:
+        "How do I organize and search test cases across a team or keep them on the cloud?",
+      answer: (
+        <>
+          Locally you can label test cases with <code>name</code> and{" "}
+          <code>tags</code> for filtering. If your team wants a shared,
+          cloud-hosted view, those same labels carry over to{" "}
+          <a href="https://www.confident-ai.com">Confident AI</a>, where you can
+          search, filter, and visualize test cases and their results in a UI —
+          useful when importing from external data sources or collaborating
+          across a team. It's optional and your test cases run identically
+          without it.
+        </>
+      ),
+    },
+  ]}
+/>

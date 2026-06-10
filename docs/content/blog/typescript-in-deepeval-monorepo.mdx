@@ -1,0 +1,192 @@
+---
+title: "We're releasing TypeScript in DeepEval's Python monorepo"
+description: DeepEval is going TypeScript. Here's why we put it in the same repo as Python, and how we keep the two implementations from drifting apart.
+date: 2026-06-08
+authors: [penguine]
+category: announcements
+---
+
+:::info
+DeepEval for Typescript is releasing on July 1st. Keep track of it on [our GitHub](https://github.com/confident-ai/deepeval) for more.
+:::
+
+DeepEval started Python-only. For most of its life, TypeScript existed in our world as exactly one thing: a thin client for shipping eval results up to Confident AI. It couldn't _run_ a metric — it had no `GEval`, no `AnswerRelevancyMetric`, no judge logic.
+
+In fact, that's why we didn't even bother to promote it. If you're a user of Confident AI, you'll find it in Confident's docs. Otherwise, it didn't matter to you.
+
+But with the new [DeepEval as an evaluation harness](/blog/introducing-deepeval-4) direction we're headed into - I thought it was absolutely necessary to support Typescript.
+
+Don't get me wrong - we're still not at the "typescript-native, feature parity with python" stage yet. But now we're building a real TypeScript SDK, and the first decision wasn't what the API should look like — it was where the code should live. One repo alongside Python, or a separate `deepeval-ts`?
+
+## Actually, we did start with a separate Typescript repo
+
+For those that are users of Confident AI, you'll know that I'd by lying if I said we were always crystal clear on day one that a monorepo with typescript in it was the decision we always had from day 1.
+
+Internally, we did have a `deepeval-ts` private repo, and we did even release `deepeval-ts` `npm` package. But it was all to act as an SDK for Confident AI.
+
+But overtime, we decided it wasn't good enough and frankly - pointless as its own Typescript repo when everyone was asking for it to be open-sourced. So really it came down to 2 decision:
+
+- Do we open-source the Typescript repo, or
+- Do we include it within the existing DeepEval repo
+
+We chose the latter.
+
+## How we weighed our options
+
+So here was our objective for DeepEval in the typescript system: To allow for typescript users to use DeepEval for non-experimental features. This meant local evals, tracing, synthetic data generation, and simulation.
+
+Hence, the goal was never parity. The goal is to narrow the gap between the reference and the follower as much as we possibly can. That distinction matters, because a second language that's allowed to drift is worse than no second language at all — it produces different scores from the "same" metric, quietly invalidates cross-language comparisons, and erodes trust in both. If we can't keep the gap small, we might as well not ship TypeScript at all.
+
+That single belief — _narrow the gap or don't bother_ — is what drove the repo decision. Here are the three structures we looked at, judged on the only axis we cared about: how hard does the structure fight drift?
+
+So we came up with 4 options, each with its pros and cons:
+
+- **Two repos, nothing shared** — maximum freedom for each ecosystem to move on its own.
+- **Two repos, generated from one source** — zero drift, for free.
+- **One repo, shared contract** — drift caught at the PR boundary.
+- **One repo, AI-synced** — docs carry over by construction, code changes ported across languages with AI.
+
+## Camp 1: Two repos, nothing shared (the LLM-framework default)
+
+This is what most of our space does. LangChain keeps [`langchain`](https://github.com/langchain-ai/langchain) (Python) and [`langchainjs`](https://github.com/langchain-ai/langchainjs) as fully separate repositories; [LlamaIndex](https://github.com/run-llama/llama_index) does the same. Each gets its own release cadence, issue tracker, and contributors. It's a reasonable default — the Python and JS ecosystems disagree about package managers, test runners, and versioning, and two repos let each move freely.
+
+But nothing holds the two surfaces together. A new feature is two independent PRs in two places, and the second one is the path of least resistance to skip. The result is the well-known reality that LangChain's JS surface trails its Python surface on features and integrations. Drift isn't an accident here — it's the default state, because no one is ever forced to look at both at once:
+
+<Tabs items={["Python", "TypeScript"]}>
+<Tab value="Python">
+
+```python title="repo: deepeval"
+AnswerRelevancyMetric(
+    threshold=0.7,
+    include_reason=True,
+)
+```
+
+</Tab>
+<Tab value="TypeScript">
+
+```typescript title="repo: deepeval-ts"
+new AnswerRelevancyMetric({
+  threshold: 0.5, // ← drifted default
+  // includeReason: not implemented yet
+});
+```
+
+</Tab>
+</Tabs>
+
+We decided this wasn't where we want to take DeepEval.
+
+## Camp 2: Two repos, generated from one source (Stripe)
+
+There's a smarter version of the split that kills drift entirely. Stripe ships [`stripe-python`](https://github.com/stripe/stripe-python), [`stripe-node`](https://github.com/stripe/stripe-node), [`stripe-go`](https://github.com/stripe/stripe-go), and a dozen others as separate repos — but every one is generated from a single [`stripe/openapi`](https://github.com/stripe/openapi) spec repo. The repos are split; the source of truth is not. Parity is mechanical, because no human hand-writes the per-language surface:
+
+```yaml
+# stripe/openapi — the single source of truth
+PaymentIntent:
+  properties:
+    amount: { type: integer }
+    currency: { type: string }
+```
+
+```python
+# stripe-python — File generated from our OpenAPI spec
+class PaymentIntent:
+    amount: int
+    currency: str
+```
+
+```typescript
+// stripe-node — File generated from our OpenAPI spec
+interface PaymentIntent {
+  amount: number;
+  currency: string;
+}
+```
+
+The gap here is zero, and it stays zero for free. We'd love that. But it doesn't transfer, for a structural reason: Stripe's SDKs are API clients — thin wrappers over HTTP endpoints, fully describable by a schema.
+
+DeepEval is a framework, and although this would have worked if DeepEval were a mere wrapper for Confident AI's APIs — it isn't, that's the whole point of making TypeScript OS.
+
+So pure codegen is out: there's no spec to generate a metric from. Keep that failure in mind, though — it comes back in a different form once you add AI to the picture.
+
+## Camp 3: One repo, shared contract (Apache Arrow)
+
+So we can't generate our way to a small gap, and we don't want the split that lets the gap widen. That leaves the structure that actively fights drift by hand: a single repo.
+
+[Apache Arrow](https://github.com/apache/arrow) is the model. It keeps C++, Python, JavaScript, and more in one repository — clean per-language directories around a shared format spec, with per-language CI, plus integration tests that check the languages _against each other_. The shared contract is what makes "did these two implementations stay in sync" a single, atomic question instead of a cross-repo coordination problem.
+
+The contract is a set of shared, language-neutral fixtures — golden cases that both implementations must agree on:
+
+```json
+// shared/fixtures/answer_relevancy/basic.json
+{
+  "input": "What is the capital of France?",
+  "actual_output": "Paris is the capital of France.",
+  "expected_score_min": 0.8
+}
+```
+
+Both test suites consume the _same_ file in the _same_ CI run:
+
+```python
+# python/tests/test_answer_relevancy.py
+case = load_fixture("answer_relevancy/basic.json")
+metric.measure(LLMTestCase(input=case["input"], actual_output=case["actual_output"]))
+assert metric.score >= case["expected_score_min"]
+```
+
+```typescript
+// typescript/tests/answerRelevancy.test.ts
+const c = loadFixture("answer_relevancy/basic.json");
+await metric.measure(
+  new LLMTestCase({ input: c.input, actualOutput: c.actualOutput })
+);
+expect(metric.score).toBeGreaterThanOrEqual(c.expectedScoreMin);
+```
+
+The TypeScript surface stays idiomatic — `camelCase`, an options object instead of keyword arguments, `new`, `await` — while being held to the same behavioral contract as Python, with the gap checked at the PR boundary rather than discovered later by a confused user.
+
+This is genuinely strong: a drift regression fails the build immediately. But the contract isn't free — every behavior needs a hand-written, language-neutral fixture, and someone has to keep that corpus in lockstep with both implementations forever. For a metric surface that changes often, maintaining the fixtures can become the bottleneck. We wanted Arrow's one-repo backbone without committing to that much hand-maintained machinery up front.
+
+## Camp 4: One repo, AI-synced (what we actually do)
+
+This is where we landed, and it's an option that didn't really exist a couple of years ago. It's Arrow's structure — one repo, clean per-language directories — minus the hand-maintained fixture contract. Two things hold the languages together instead.
+
+The first is docs. Prose is written once and rendered per-language: a shared [term-map](https://github.com/confident-ai/deepeval/blob/main/docs/lib/lang/terms.ts) pairs the Python and TypeScript spelling of every inline identifier — `test_case` ↔ `testCase`, `actual_output` ↔ `actualOutput` — so the documentation never silently describes one language while showing the other. An unknown term fails the build instead of being dropped silently.
+
+The second is code, and this is the part that wasn't possible before. Camp 2 failed because a framework's logic isn't describable by a spec — there was nothing to generate from. But you no longer need a rigid spec: an LLM can read the Python implementation of a metric — its judge prompts, scoring math, thresholds — and port that exact change into the TypeScript implementation.
+
+```python
+# python/metrics/answer_relevancy.py — the reference change
+- threshold: float = 0.5
++ threshold: float = 0.7  # bumped default after eval study
+```
+
+```typescript
+// typescript/metrics/answerRelevancy.ts — ported by AI from the Python diff
+- threshold: 0.5,
++ threshold: 0.7,  // bumped default after eval study
+```
+
+Python stays the reference where behavior is decided; AI is what carries the diff across the gap. So a change to `AnswerRelevancyMetric` is still one PR in one repo, but the TypeScript side isn't transliterated from scratch by hand, nor gated behind a fixture corpus we have to grow forever — it's ported from the Python reference with AI and reviewed by a human who knows both. It doesn't make TypeScript first-class — Python still decides behavior — but it's the lightest structure that keeps the follower honest, and it only works now because the tooling to translate logic, not just schemas, finally exists.
+
+## The costs we're signing up for
+
+One repo isn't free; the reasons everyone else splits are real and we inherit them:
+
+- **Mixed toolchains in one CI** — pip _and_ npm, pytest _and_ vitest, two lint stacks, two release pipelines. Arrow's CI is heavy for exactly this reason.
+- **Release-coupling pressure** — npm and PyPI users upgrade on different schedules, so one repo must _not_ mean one version number. We have to deliberately decouple release tags per package.
+- **Contributor friction** — a TypeScript contributor clones a repo full of Python they don't care about, and vice versa.
+
+We're accepting these because the alternative — a quietly drifting TypeScript SDK — costs more than a heavier build.
+
+## What's next from here
+
+So, when can we actually see Typescript in DeepEval? In fact, as of today it's already out here: https://github.com/confident-ai/deepeval/tree/main/typescript.
+
+But so far its still a client wrapper around Confident AI. The actual local evals, simulation, etc. will be released on **July 1st.**
+
+[Star and watch the DeepEval repo](https://github.com/confident-ai/deepeval) if you're interested in how this will look like, and for Python users - don't worry, nothing you won't notice a single change in your day to day experience.
+
+In conclusion: Python leads, TypeScript follows close behind, and one repo is what keeps "close behind" true. We're not pretending TypeScript is first-class. We're making sure that the day it isn't first-class is never the day it silently stops agreeing with Python.

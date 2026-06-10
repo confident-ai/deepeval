@@ -1,0 +1,103 @@
+{
+  "name": "Agent workflow",
+  "uuid": "a8266012-16fb-472d-a8b4-b44015ca4cad",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "span_9de73117f48b4ed1a4def220",
+      "name": "SimpleAgent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "traceUuid": "a8266012-16fb-472d-a8b4-b44015ca4cad",
+      "startTime": "2026-02-24T11:43:44.657Z",
+      "endTime": "2026-02-24T11:43:45.665Z",
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You are a helpful assistant. Answer the user's question concisely. Do not use any tools."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Say hello concisely."
+        }
+      ],
+      "output": "Hello!",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metadata": {
+        "output_type": "text"
+      }
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "span_eb8b4812bb744a8480f0f8f1",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "a8266012-16fb-472d-a8b4-b44015ca4cad",
+      "parentUuid": "span_9de73117f48b4ed1a4def220",
+      "startTime": "2026-02-24T11:43:44.659Z",
+      "endTime": "2026-02-24T11:43:45.662Z",
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You are a helpful assistant. Answer the user's question concisely. Do not use any tools."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Say hello concisely."
+        }
+      ],
+      "output": "Hello!",
+      "model": "gpt-4o-2024-08-06",
+      "inputTokenCount": 37,
+      "outputTokenCount": 3,
+      "metadata": {
+        "cached_input_tokens": 0,
+        "output_reasoning_tokens": 0,
+        "invocation_params": {
+          "max_output_tokens": null,
+          "parallel_tool_calls": true,
+          "reasoning": {
+            "effort": null,
+            "summary": null
+          },
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "temperature": 1,
+          "tool_choice": "auto",
+          "tools": [],
+          "top_p": 1,
+          "truncation": "disabled"
+        }
+      }
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-24T11:43:44.655Z",
+  "endTime": "2026-02-24T11:43:45.665Z",
+  "environment": "testing",
+  "input": [
+    {
+      "type": "message",
+      "role": "system",
+      "content": "You are a helpful assistant. Answer the user's question concisely. Do not use any tools."
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": "Say hello concisely."
+    }
+  ],
+  "output": "Hello!"
+}

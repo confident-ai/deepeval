@@ -83,3 +83,59 @@ These scores assess aspects such as alignment with the prompt and resemblance to
 ### PQ Scores
 
 These scores evaluate the naturalness and absence of artifacts in the image. The minimum value among these sub-scores represents the PQ score. For the PQ evaluation, only the synthesized image is used to prevent confusion from the input conditions.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "Should I use Text to Image or Image Editing to evaluate my model?",
+      answer: (
+        <>
+          <code>TextToImageMetric</code> when generating from a prompt alone (no
+          source image). Use the{" "}
+          <a href="/docs/multimodal-metrics-image-editing">
+            <code>ImageEditingMetric</code>
+          </a>{" "}
+          when transforming an existing image.
+        </>
+      ),
+    },
+    {
+      question:
+        "How many images should the input and output contain for this metric?",
+      answer: (
+        <>
+          <strong>0 images</strong> in the <code>input</code> and exactly{" "}
+          <strong>1</strong> <code>MLLMImage</code> in the{" "}
+          <code>actual_output</code>. A source image in the input means you want
+          Image Editing instead.
+        </>
+      ),
+    },
+    {
+      question:
+        "My Text to Image score is low — is it a prompt-alignment or an image-quality problem?",
+      answer: (
+        <>
+          Check the SC and PQ sub-scores separately: low SC means the image
+          doesn't match the prompt, low PQ means artifacts or unnatural
+          results. Read <code>metric.reason</code> to see which dragged the score
+          down.
+        </>
+      ),
+    },
+    {
+      question: "Why does one weak sub-score tank the overall score so hard?",
+      answer: (
+        <>
+          The score is <code>O = sqrt(min(SC) · min(PQ))</code>, multiplying the{" "}
+          <em>minimum</em> SC and PQ sub-scores. So a single failing aspect (e.g.
+          one badly rendered object) intentionally caps the whole result.
+        </>
+      ),
+    },
+  ]}
+/>
+

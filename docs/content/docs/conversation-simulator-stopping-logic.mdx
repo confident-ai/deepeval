@@ -156,3 +156,55 @@ def stopping_controller(turns):
 ::::note
 `max_user_simulations` is always checked before your callback runs. This means the max-turn limit remains the hard safety cap, even if your callback keeps returning `proceed()`.
 ::::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What stops a simulation if I don't write a `stopping_controller`?",
+      answer: (
+        <>
+          The default <code>stopping_controller</code> ends the run once the{" "}
+          <code>expected_outcome</code> in your <code>ConversationalGolden</code> has
+          been met. Write a custom one only when you need a different signal, like a
+          specific tool call or confirmation message.
+        </>
+      ),
+    },
+    {
+      question: "How do I stop as soon as my chatbot confirms or calls a specific tool?",
+      answer: (
+        <>
+          Return <code>end(reason=...)</code> from your controller when you see the
+          signal — e.g. a "confirmation number" in{" "}
+          <code>last_assistant_turn.content</code>, or a matching{" "}
+          <code>tool.name</code> in <code>last_assistant_turn.tools_called</code> —
+          and <code>proceed()</code> otherwise.
+        </>
+      ),
+    },
+    {
+      question: "What's the difference between `proceed()` and `end()`?",
+      answer: (
+        <>
+          <code>proceed()</code> continues the simulation; <code>end(reason=...)</code>{" "}
+          stops it and optionally records why. Anything else your callback returns
+          (including <code>None</code>) is treated as <code>proceed()</code>, so you
+          only need to handle the terminal cases.
+        </>
+      ),
+    },
+    {
+      question: "Can my controller run forever if it never returns `end()`?",
+      answer: (
+        <>
+          No. <code>max_user_simulations</code> is checked <em>before</em> your
+          controller on every iteration, so it stays the hard safety cap even if you
+          keep returning <code>proceed()</code>.
+        </>
+      ),
+    },
+  ]}
+/>
+

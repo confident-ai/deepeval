@@ -1,102 +1,106 @@
 {
-  "uuid": "28f1c428-afcf-4f23-9dcc-25cba8bc2c74",
+  "uuid": "b640f29b-5b0c-4595-ba43-793110678509",
   "baseSpans": [
     {
-      "uuid": "153e7ef1-cee8-4378-a85e-4a1d696a1064",
+      "uuid": "33ff953c-74e3-42a0-8856-9213f3ef8bc4",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-15T10:21:58.268Z",
-      "endTime": "2026-02-15T10:22:00.217Z",
+      "startTime": "2026-06-01T17:24:09.054Z",
+      "endTime": "2026-06-01T17:24:12.294Z",
       "input": {},
-      "output": "Why did the axolotl break up with its partner? Because it found them too gill-ty of not being amphibious enough!",
+      "output": "Why did the narwhal always bring a pencil to the ocean? Because it wanted to draw attention with its \"tusk-tastic\" personality!",
       "integration": "CrewAI"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "b4db5989-fa0f-4823-a6d1-e9ebddc034a7",
+      "uuid": "380c21a6-3725-4016-a391-05a22deb9412",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "153e7ef1-cee8-4378-a85e-4a1d696a1064",
-      "startTime": "2026-02-15T10:21:59.058Z",
-      "endTime": "2026-02-15T10:22:00.210Z",
-      "input": "Write a one-sentence joke about the animal provided.\n\nThis is the expected criteria for your final answer: A joke.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nAxolotl",
-      "output": "Why did the axolotl break up with its partner? Because it found them too gill-ty of not being amphibious enough!",
+      "parentUuid": "33ff953c-74e3-42a0-8856-9213f3ef8bc4",
+      "startTime": "2026-06-01T17:24:10.976Z",
+      "endTime": "2026-06-01T17:24:12.291Z",
+      "input": "Write a one-sentence joke about the animal provided.\n\nThis is the expected criteria for your final answer: A joke.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nNarwhal",
+      "output": "Why did the narwhal always bring a pencil to the ocean? Because it wanted to draw attention with its \"tusk-tastic\" personality!",
+      "integration": "CrewAI",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "CrewAI"
+      "agentHandoffs": []
     },
     {
-      "uuid": "c18ae400-55a3-44ee-aad0-9b0bdf696f6e",
+      "uuid": "7bc5db50-01a1-4aec-b40b-acd85cab17ad",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "153e7ef1-cee8-4378-a85e-4a1d696a1064",
-      "startTime": "2026-02-15T10:21:58.272Z",
-      "endTime": "2026-02-15T10:21:59.051Z",
+      "parentUuid": "33ff953c-74e3-42a0-8856-9213f3ef8bc4",
+      "startTime": "2026-06-01T17:24:09.072Z",
+      "endTime": "2026-06-01T17:24:10.973Z",
       "input": "Pick a random animal.\n\nThis is the expected criteria for your final answer: The name of an animal.\nyou MUST return the actual complete content as the final answer, not a summary.",
-      "output": "Axolotl",
+      "output": "Narwhal",
+      "integration": "CrewAI",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "CrewAI"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "65e880e3-e71c-41ca-a9f2-277d87a784cf",
+      "uuid": "d95e69e1-75a2-4fb4-a636-865d725b0223",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "b4db5989-fa0f-4823-a6d1-e9ebddc034a7",
-      "startTime": "2026-02-15T10:21:59.062Z",
-      "endTime": "2026-02-15T10:22:00.208Z",
+      "parentUuid": "380c21a6-3725-4016-a391-05a22deb9412",
+      "startTime": "2026-06-01T17:24:10.980Z",
+      "endTime": "2026-06-01T17:24:12.288Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Writer. Funny writer\nYour personal goal is: Write a joke about the topic"
+          "content": "You are Writer. Funny writer\nYour personal goal is: Write a joke about the topic",
+          "cache_breakpoint": true
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Write a one-sentence joke about the animal provided.\n\nThis is the expected criteria for your final answer: A joke.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nAxolotl\n\nProvide your complete response:"
+          "content": "\nCurrent Task: Write a one-sentence joke about the animal provided.\n\nThis is the expected criteria for your final answer: A joke.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nNarwhal\n\nProvide your complete response:",
+          "cache_breakpoint": true
         }
       ],
-      "output": "Why did the axolotl break up with its partner? Because it found them too gill-ty of not being amphibious enough!",
-      "model": "gpt-4o-mini",
+      "output": "Why did the narwhal always bring a pencil to the ocean? Because it wanted to draw attention with its \"tusk-tastic\" personality!",
       "integration": "CrewAI",
+      "model": "gpt-4o-mini",
       "provider": "OpenAI"
     },
     {
-      "uuid": "a76d30f6-e443-4d58-a145-a75ebb0c2ac7",
+      "uuid": "8da52854-47da-43bf-a869-3deb00b75cd4",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "c18ae400-55a3-44ee-aad0-9b0bdf696f6e",
-      "startTime": "2026-02-15T10:21:58.275Z",
-      "endTime": "2026-02-15T10:21:59.049Z",
+      "parentUuid": "7bc5db50-01a1-4aec-b40b-acd85cab17ad",
+      "startTime": "2026-06-01T17:24:09.077Z",
+      "endTime": "2026-06-01T17:24:10.968Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Researcher. Curious researcher\nYour personal goal is: Find a topic"
+          "content": "You are Researcher. Curious researcher\nYour personal goal is: Find a topic",
+          "cache_breakpoint": true
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Pick a random animal.\n\nThis is the expected criteria for your final answer: The name of an animal.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
+          "content": "\nCurrent Task: Pick a random animal.\n\nThis is the expected criteria for your final answer: The name of an animal.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:",
+          "cache_breakpoint": true
         }
       ],
-      "output": "Axolotl",
-      "model": "gpt-4o-mini",
+      "output": "Narwhal",
       "integration": "CrewAI",
+      "model": "gpt-4o-mini",
       "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-15T10:21:58.268Z",
-  "endTime": "2026-02-15T10:22:00.217Z",
+  "startTime": "2026-06-01T17:24:09.054Z",
+  "endTime": "2026-06-01T17:24:12.294Z",
   "environment": "development",
   "input": {},
-  "output": "Why did the axolotl break up with its partner? Because it found them too gill-ty of not being amphibious enough!",
+  "output": "Why did the narwhal always bring a pencil to the ocean? Because it wanted to draw attention with its \"tusk-tastic\" personality!",
   "status": "SUCCESS"
 }

@@ -455,7 +455,8 @@ Log in to Confident AI and create a metric collection containing the component-l
 <VideoDisplayer
   src={ASSETS.metricsCreateCollection}
   confidentUrl="/docs/llm-tracing/evaluations"
-  label="Create a Metric Collection on Confident AI"
+  label="Create a metric collection on Confident AI"
+  description="Group RAG metrics to score retrievals and generations automatically."
 />
 
 </Step>
@@ -482,9 +483,10 @@ Whenever your application runs, `deepeval` automatically exports the traces to C
 Once your traces are exported, you can visualize the entire execution graph, inspect the dynamic context attached to every span, and review the asynchronous metric scores to catch regressions before they affect users.
 
 <VideoDisplayer
-src={ASSETS.tracingTraces}
-confidentUrl="/docs/llm-tracing/evaluations"
-label="Track tracing performance overtime on Confident AI"
+  src={ASSETS.tracingTraces}
+  confidentUrl="/docs/llm-tracing/evaluations"
+  label="Track tracing performance over time on Confident AI"
+  description="Watch metric scores trend across your RAG pipeline in production."
 />
 
 </Step>
@@ -540,7 +542,7 @@ In this guide, you learned how to instrument your single-turn and RAG applicatio
       ),
     },
     {
-      question: "How do I attach retrieval_context to a span?",
+      question: "How do I attach `retrieval_context` to a span?",
       answer: (
         <>
           Call <code>update_current_span(retrieval_context=...)</code> inside
@@ -574,7 +576,7 @@ In this guide, you learned how to instrument your single-turn and RAG applicatio
       ),
     },
     {
-      question: "How does sampling_rate affect production tracing?",
+      question: "How does `sampling_rate` affect production tracing?",
       answer: (
         <>
           The <code>sampling_rate</code> on{" "}

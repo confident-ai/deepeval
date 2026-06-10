@@ -1,45 +1,46 @@
 {
-  "uuid": "130ca326-d232-43ed-8a4d-4aebbc7ae304",
+  "uuid": "211ead8d-2dde-4beb-a720-30eafc0e88c3",
   "baseSpans": [
     {
-      "uuid": "6f905651-acad-403e-b035-c1a25e9c4d8a",
+      "uuid": "0ec604b8-54c8-4c2d-a19c-7b69f44f40e6",
       "name": "kickoff_async",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-15T10:59:46.551Z",
-      "endTime": "2026-02-15T10:59:48.755Z",
+      "startTime": "2026-06-01T17:24:38.871Z",
+      "endTime": "2026-06-01T17:24:46.096Z",
       "input": {},
       "output": "Calculated metrics for: deterministic_test_input",
-      "metricCollection": "crew_metrics_v1",
-      "integration": "CrewAI"
+      "integration": "CrewAI",
+      "metricCollection": "crew_metrics_v1"
     },
     {
-      "uuid": "6d6b8176-7764-496c-a486-e1ba94883380",
+      "uuid": "c87c21d1-6d0d-498e-a2c5-83dc2d2dda11",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "6f905651-acad-403e-b035-c1a25e9c4d8a",
-      "startTime": "2026-02-15T10:59:46.551Z",
-      "endTime": "2026-02-15T10:59:48.755Z",
+      "parentUuid": "0ec604b8-54c8-4c2d-a19c-7b69f44f40e6",
+      "startTime": "2026-06-01T17:24:38.871Z",
+      "endTime": "2026-06-01T17:24:46.095Z",
       "input": {
         "input": "Async Data"
       },
       "output": "Calculated metrics for: deterministic_test_input",
-      "metricCollection": "crew_metrics_v1",
-      "integration": "CrewAI"
+      "integration": "CrewAI",
+      "metricCollection": "crew_metrics_v1"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "9249f27a-3493-4d8f-a8d3-5be7a9e68a49",
+      "uuid": "c1064d18-0ccd-440a-97d4-066775d68510",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "6d6b8176-7764-496c-a486-e1ba94883380",
-      "startTime": "2026-02-15T10:59:46.555Z",
-      "endTime": "2026-02-15T10:59:48.747Z",
+      "parentUuid": "c87c21d1-6d0d-498e-a2c5-83dc2d2dda11",
+      "startTime": "2026-06-01T17:24:38.878Z",
+      "endTime": "2026-06-01T17:24:46.090Z",
       "input": "STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Calculated metrics for: deterministic_test_input",
+      "integration": "CrewAI",
       "toolsCalled": [
         {
           "name": "special_metric_tool",
@@ -51,34 +52,35 @@
       ],
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "agent_metrics_v1",
-      "integration": "CrewAI"
+      "metricCollection": "agent_metrics_v1"
     }
   ],
   "llmSpans": [
     {
-      "uuid": "0763f351-67b7-4768-b619-ff3c5057bef0",
+      "uuid": "b3dd2172-6896-4e97-8709-69c4772abe4b",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "9249f27a-3493-4d8f-a8d3-5be7a9e68a49",
-      "startTime": "2026-02-15T10:59:47.926Z",
-      "endTime": "2026-02-15T10:59:48.746Z",
+      "parentUuid": "c1064d18-0ccd-440a-97d4-066775d68510",
+      "startTime": "2026-06-01T17:24:45.183Z",
+      "endTime": "2026-06-01T17:24:46.085Z",
       "input": [
         {
           "role": "system",
-          "content": "You are ToolCaller. You MUST call the provided tool exactly once. You MUST NOT reason. You MUST NOT retry. You MUST NOT modify the output.\nYour personal goal is: Call the special_metric_tool exactly once and return its raw output."
+          "content": "You are ToolCaller. You MUST call the provided tool exactly once. You MUST NOT reason. You MUST NOT retry. You MUST NOT modify the output.\nYour personal goal is: Call the special_metric_tool exactly once and return its raw output.",
+          "cache_breakpoint": true
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary."
+          "content": "\nCurrent Task: STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary.",
+          "cache_breakpoint": true
         },
         {
           "role": "assistant",
           "content": null,
           "tool_calls": [
             {
-              "id": "call_7oGcUlfWgkXKd70aOI7rKY4Z",
+              "id": "call_i1Q4EwqV7cYn06EIVtSFS8sI",
               "type": "function",
               "function": {
                 "name": "'special_metric_tool'",
@@ -89,13 +91,9 @@
         },
         {
           "role": "tool",
-          "tool_call_id": "call_7oGcUlfWgkXKd70aOI7rKY4Z",
+          "tool_call_id": "call_i1Q4EwqV7cYn06EIVtSFS8sI",
           "name": "special_metric_tool",
           "content": "Calculated metrics for: deterministic_test_input"
-        },
-        {
-          "role": "user",
-          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
         },
         {
           "role": "assistant",
@@ -103,35 +101,37 @@
         }
       ],
       "output": "Calculated metrics for: deterministic_test_input",
+      "integration": "CrewAI",
       "model": "gpt-4o-mini",
+      "provider": "OpenAI",
       "promptAlias": "asd",
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec",
-      "integration": "CrewAI",
-      "provider": "OpenAI"
+      "promptCommitHash": "bab04ec"
     },
     {
-      "uuid": "0ae93119-57ff-4485-8257-494e83989e59",
+      "uuid": "0cf16b3c-8f5e-415c-8ea7-734b0a622306",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "9249f27a-3493-4d8f-a8d3-5be7a9e68a49",
-      "startTime": "2026-02-15T10:59:46.556Z",
-      "endTime": "2026-02-15T10:59:47.922Z",
+      "parentUuid": "c1064d18-0ccd-440a-97d4-066775d68510",
+      "startTime": "2026-06-01T17:24:38.881Z",
+      "endTime": "2026-06-01T17:24:45.177Z",
       "input": [
         {
           "role": "system",
-          "content": "You are ToolCaller. You MUST call the provided tool exactly once. You MUST NOT reason. You MUST NOT retry. You MUST NOT modify the output.\nYour personal goal is: Call the special_metric_tool exactly once and return its raw output."
+          "content": "You are ToolCaller. You MUST call the provided tool exactly once. You MUST NOT reason. You MUST NOT retry. You MUST NOT modify the output.\nYour personal goal is: Call the special_metric_tool exactly once and return its raw output.",
+          "cache_breakpoint": true
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary."
+          "content": "\nCurrent Task: STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary.",
+          "cache_breakpoint": true
         }
       ],
       "output": [
         {
-          "id": "call_7oGcUlfWgkXKd70aOI7rKY4Z",
+          "id": "call_i1Q4EwqV7cYn06EIVtSFS8sI",
           "function": {
             "arguments": "{\"query\":\"deterministic_test_input\"}",
             "name": "special_metric_tool"
@@ -139,35 +139,35 @@
           "type": "function"
         }
       ],
+      "integration": "CrewAI",
       "model": "gpt-4o-mini",
+      "provider": "OpenAI",
       "promptAlias": "asd",
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec",
-      "integration": "CrewAI",
-      "provider": "OpenAI"
+      "promptCommitHash": "bab04ec"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "12ef19ec-6d64-466e-b8c6-ca149357ad68",
+      "uuid": "e5af4376-24d3-4538-870e-372ea71238ed",
       "name": "special_metric_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "9249f27a-3493-4d8f-a8d3-5be7a9e68a49",
-      "startTime": "2026-02-15T10:59:47.921Z",
-      "endTime": "2026-02-15T10:59:47.922Z",
+      "parentUuid": "c1064d18-0ccd-440a-97d4-066775d68510",
+      "startTime": "2026-06-01T17:24:45.177Z",
+      "endTime": "2026-06-01T17:24:45.178Z",
       "input": {
         "query": "deterministic_test_input"
       },
       "output": "Calculated metrics for: deterministic_test_input",
-      "metricCollection": "agent_metrics_v1",
-      "integration": "CrewAI"
+      "integration": "CrewAI",
+      "metricCollection": "agent_metrics_v1"
     }
   ],
-  "startTime": "2026-02-15T10:59:46.551Z",
-  "endTime": "2026-02-15T10:59:48.755Z",
+  "startTime": "2026-06-01T17:24:38.871Z",
+  "endTime": "2026-06-01T17:24:46.096Z",
   "name": "CrewAI Metadata Check Async",
   "metadata": {
     "env": "testing_async"

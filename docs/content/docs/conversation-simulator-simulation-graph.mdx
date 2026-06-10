@@ -177,3 +177,59 @@ scripted_root.add_node(
 Use a [**custom template**](/docs/conversation-simulator-custom-templates) (`default_simulation_node(template=...)`) when you want the simulated user to keep speaking in a specific _voice_ but the overall trajectory should remain LLM-driven and emergent.
 
 Use a **simulation graph** when the _trajectory_ matters — e.g., you need deterministic ordering, retry budgets, branching on assistant behavior, or terminal success/failure states. Inside a node's `action` you can still call any LLM (including the one in `simulator.simulator_model`) to phrase the user's message, so the two are not mutually exclusive.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "When should I pass a `simulation_graph` instead of using the default LLM-driven user?",
+      answer: (
+        <>
+          When the <em>trajectory</em> matters — deterministic ordering, retry
+          budgets, branching on assistant behavior, or terminal success/failure
+          states. The default single-prompt user is fine for fuzzy exploration, but
+          a <code>simulation_graph</code> lets you encode a specific path like "ask,
+          push back, escalate after three pushbacks, accept any compromise".
+        </>
+      ),
+    },
+    {
+      question: "How do I make the simulation stop from inside the graph?",
+      answer: (
+        <>
+          Use <code>SimulationNode(terminal=True)</code> to emit one final user turn,
+          record the assistant reply, then end — or set <code>max_visits=N</code> to
+          cap how many times a node fires (the (N+1)-th entry ends the run with no
+          new turn). Pair <code>max_visits</code> with a self-loop for "complain up
+          to N times, then give up".
+        </>
+      ),
+    },
+    {
+      question: "How does the graph decide which node runs next?",
+      answer: (
+        <>
+          After each assistant reply, <code>simulator_model</code> classifies it
+          against the current node's outgoing <code>when=</code> edge descriptions
+          (one LLM call, with a "None of the above" option appended) and advances to
+          the matching child, staying put if nothing matches. A node with no edges
+          loops on itself.
+        </>
+      ),
+    },
+    {
+      question: "Can the `stopping_controller` end a graph-driven simulation early?",
+      answer: (
+        <>
+          Yes — the{" "}
+          <a href="/docs/conversation-simulator-stopping-logic">stopping_controller</a>{" "}
+          runs <em>before</em> every user turn (including the first) and can end the
+          run before a <code>terminal</code> node is ever reached. Both terminators
+          can be active in the same run, and whichever fires first wins.
+        </>
+      ),
+    },
+  ]}
+/>
+

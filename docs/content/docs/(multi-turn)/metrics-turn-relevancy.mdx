@@ -73,3 +73,54 @@ The `TurnRelevancyMetric` score is calculated according to the following equatio
 <Equation formula="\text{Conversation Relevancy} = \frac{\text{Number of Turns with Relevant Assistant Content}}{\text{Total Number of Assistant Turns}}" />
 
 The `TurnRelevancyMetric` first constructs a sliding windows of turns for each turn, before using an LLM to determine whether the last turn in each sliding window has an `"assistant"` content that is relevant to the previous conversational context found in the sliding window.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "When should I use `TurnRelevancyMetric` instead of the single-turn `AnswerRelevancyMetric`?",
+      answer: (
+        <>
+          On a <code>ConversationalTestCase</code> when each assistant reply must
+          stay relevant given prior turns. The single-turn{" "}
+          <a href="/docs/metrics-answer-relevancy">AnswerRelevancyMetric</a>{" "}
+          judges one input/output pair in isolation.
+        </>
+      ),
+    },
+    {
+      question: "Which turns actually get scored?",
+      answer: (
+        <>
+          Only <code>"assistant"</code> turns — relevant assistant turns over
+          total assistant turns. User and tool turns never affect the numerator.
+        </>
+      ),
+    },
+    {
+      question:
+        "Each reply looks fine on its own but my score is low — why?",
+      answer: (
+        <>
+          Relevancy is judged against a sliding window of prior turns, not just
+          the last message. A reply that ignores context established several
+          turns ago counts as irrelevant. Use <code>verbose_mode</code> to see
+          which window dragged the score down.
+        </>
+      ),
+    },
+    {
+      question: "What does `window_size` control and when should I change it?",
+      answer: (
+        <>
+          <code>window_size</code> (default <code>10</code>) sets how many recent
+          turns are bundled per judgment. Lower it when only recent exchanges
+          matter; raise it when older context still counts.
+        </>
+      ),
+    },
+  ]}
+/>
+

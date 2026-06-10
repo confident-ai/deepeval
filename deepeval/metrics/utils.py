@@ -58,6 +58,7 @@ from deepeval.metrics import (
     BaseArenaMetric,
 )
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
+from deepeval.models.utils import EvaluationCost
 from deepeval.test_case import (
     LLMTestCase,
     SingleTurnParams,
@@ -431,22 +432,44 @@ def trimAndLoadJson(
         end = len(input_string)
 
     jsonStr = input_string[start:end] if start != -1 and end != 0 else ""
-    # Remove trailing comma if one is present
-    jsonStr = re.sub(r",\s*([\]}])", r"\1", jsonStr)
 
     try:
         return json.loads(jsonStr)
     except json.JSONDecodeError:
-        error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
-        if metric is not None:
-            metric.error = error_str
-        raise ValueError(error_str)
+        # Some models emit a trailing comma before a closing ] or }. Strip it
+        # and retry, but only after a direct parse fails, so valid JSON string
+        # values containing ", ]" or ", }" are never corrupted.
+        try:
+            return json.loads(re.sub(r",\s*([\]}])", r"\1", jsonStr))
+        except json.JSONDecodeError:
+            error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
+            if metric is not None:
+                metric.error = error_str
+            raise ValueError(error_str)
     except Exception as e:
         raise Exception(f"An unexpected error occurred: {str(e)}")
 
 
 SchemaType = TypeVar("SchemaType")
 ReturnType = TypeVar("ReturnType")
+
+
+def accrue_token_usage(
+    metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
+    cost: Optional[float],
+) -> None:
+    """Accrue the input/output token counts that produced ``cost`` onto the
+    metric.
+
+    Native models return their cost as an ``EvaluationCost`` (a ``float``
+    subclass carrying ``input_tokens``/``output_tokens``). Costs from providers
+    that aren't wrapped yet — or ``None`` when pricing is unknown — are plain
+    floats with no token data, so tokens are only accrued when ``cost`` actually
+    carries them. Call this right after ``metric._accrue_cost(cost)`` so token
+    usage tracks cost exactly.
+    """
+    if isinstance(cost, EvaluationCost):
+        metric._accrue_tokens(cost.input_tokens, cost.output_tokens)
 
 
 def generate_with_schema_and_extract(
@@ -469,6 +492,7 @@ def generate_with_schema_and_extract(
             prompt, schema=schema_cls
         )
         metric._accrue_cost(cost)
+        accrue_token_usage(metric, cost)
     else:
         result = metric.model.generate_with_schema(prompt, schema=schema_cls)
     if isinstance(result, schema_cls):
@@ -490,6 +514,7 @@ async def a_generate_with_schema_and_extract(
             prompt, schema=schema_cls
         )
         metric._accrue_cost(cost)
+        accrue_token_usage(metric, cost)
     else:
         result = await metric.model.a_generate_with_schema(
             prompt, schema=schema_cls
@@ -500,6 +525,7 @@ async def a_generate_with_schema_and_extract(
         actual_result, cost = result
         if hasattr(metric, "_accrue_cost"):
             metric._accrue_cost(cost)
+            accrue_token_usage(metric, cost)
         result = actual_result
 
     if isinstance(result, schema_cls):
@@ -673,6 +699,7 @@ def is_native_model(
         or isinstance(model, GrokModel)
         or isinstance(model, DeepSeekModel)
         or isinstance(model, OpenRouterModel)
+        or isinstance(model, PortkeyModel)
     ):
         return True
     else:

@@ -31,7 +31,7 @@ def square(n: int) -> int:
     return n * n
 
 
-_llm = ChatOpenAI(model="gpt-5-mini", temperature=0, seed=42)
+_llm = ChatOpenAI(model="gpt-5.4-mini", temperature=0, seed=42)
 _llm_with_tools = _llm.bind_tools([square])
 _tools = [square]
 

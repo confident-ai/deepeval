@@ -71,3 +71,58 @@ The `MCPTaskCompletionMetric` score is calculated according to the following equ
 <Equation formula="\text{MCP Task Completeness} = \frac{\text{Number of Tasks Satisfied in Each Interaction}}{\text{Total Number of Interactions}}" />
 
 The `MCPTaskCompletionMetric` converts turns into individual unit interactions and iterates over each interaction to evaluate whether the agent finished the task given by user for that interaction using an LLM.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question:
+        "MCP Use vs MCP Task Completion — usage quality or goal completion?",
+      answer: (
+        <>
+          <code>MCPTaskCompletionMetric</code> scores the <em>outcome</em> (did
+          the agent accomplish the task); <code>MultiTurnMCPUseMetric</code>{" "}
+          scores the <em>process</em> (primitive and argument choices). An agent
+          can use tools perfectly and still fail — they're complementary.
+        </>
+      ),
+    },
+    {
+      question:
+        "How does it turn a multi-turn conversation into a completion score?",
+      answer: (
+        <>
+          It splits <code>turns</code> into unit interactions and uses an LLM to
+          judge each one. Score = tasks satisfied / total interactions.
+        </>
+      ),
+    },
+    {
+      question:
+        "Does the score explain why the task was marked incomplete?",
+      answer: (
+        <>
+          Yes — it's a self-explaining LLM-Eval that outputs{" "}
+          <code>metric.reason</code>. Keep <code>include_reason</code> set to{" "}
+          <code>True</code> (default) to see which interaction failed.
+        </>
+      ),
+    },
+    {
+      question:
+        "What do I need to provide so it can judge task completion over MCP?",
+      answer: (
+        <>
+          A{" "}
+          <a href="https://www.deepeval.com/docs/evaluation-multiturn-test-cases">
+            ConversationalTestCase
+          </a>{" "}
+          with <code>turns</code> and <code>mcp_servers</code>, plus{" "}
+          <code>mcp_tools_called</code>, <code>mcp_resources_called</code>, and{" "}
+          <code>mcp_prompts_called</code> inside the relevant turns.
+        </>
+      ),
+    },
+  ]}
+/>

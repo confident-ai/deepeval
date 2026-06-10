@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
 import { RootProvider } from 'fumadocs-ui/provider/next';
+import { LanguageProvider } from '@/components/lang/language-provider';
 import './global.css';
 import 'katex/dist/katex.css';
 import { Geist, Space_Grotesk } from 'next/font/google';
@@ -90,14 +91,15 @@ export const metadata: Metadata = {
 const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'DeepEval by Confident AI',
-  alternateName: 'DeepEval - The LLM Evaluation Framework',
+  name: 'Confident AI Inc.',
+  alternateName: 'Confident AI',
   url: siteUrl,
   logo: `${siteUrl}/icons/DeepEval.svg`,
   sameAs: [
     'https://github.com/confident-ai/deepeval',
     'https://x.com/deepeval',
     'https://discord.gg/a3K9c8GRGt',
+    'https://www.reddit.com/r/deepeval/',
   ],
 };
 
@@ -186,7 +188,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
       <body className="flex flex-col min-h-screen font-sans">
         <UtmCapture />
         <RootProvider search={{ hotKey: disabledSearchHotKey }}>
-          {children}
+          <LanguageProvider>{children}</LanguageProvider>
         </RootProvider>
         {/*
           Analytics parity with the old Docusaurus site

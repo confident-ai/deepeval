@@ -47,7 +47,7 @@ multi_tools_by_name = {t.name: t for t in multi_tools}
 
 # Streaming LLMs
 llm_streaming = ChatOpenAI(
-    model="gpt-5-mini", temperature=0, seed=42, streaming=True
+    model="gpt-5.4-mini", temperature=0, seed=42, streaming=True
 )
 llm_single = llm_streaming.bind_tools(single_tools)
 llm_multi = llm_streaming.bind_tools(multi_tools)

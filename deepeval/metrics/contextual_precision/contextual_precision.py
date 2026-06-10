@@ -75,6 +75,8 @@ class ContextualPrecisionMetric(BaseMetric):
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
+        self.input_tokens = 0 if self.using_native_model else None
+        self.output_tokens = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -136,6 +138,8 @@ class ContextualPrecisionMetric(BaseMetric):
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
+        self.input_tokens = 0 if self.using_native_model else None
+        self.output_tokens = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self,
             async_mode=True,

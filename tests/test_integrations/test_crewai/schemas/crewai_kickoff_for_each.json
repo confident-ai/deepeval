@@ -1,26 +1,26 @@
 {
-  "uuid": "16f74069-1124-4946-9411-f9458d157d29",
+  "uuid": "93d38b22-167b-4ffc-be23-6d2c6997a026",
   "baseSpans": [
     {
-      "uuid": "5bed86d0-d0b8-4044-b739-b82319cede4b",
+      "uuid": "2a1fcd9f-4527-472e-910e-f110c3dec421",
       "name": "kickoff_for_each",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-15T10:22:17.723Z",
-      "endTime": "2026-02-15T10:22:19.150Z",
+      "startTime": "2026-06-01T17:24:26.796Z",
+      "endTime": "2026-06-01T17:24:28.853Z",
       "input": {},
-      "output": "[CrewOutput(raw='Hello, User A! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: User A', name='Reply to the user: User A', expected_output='A short greeting.', summary='Reply to the user: User A...', raw='Hello, User A! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _foreach', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _foreach. You are a friendly bot.\\nYour personal goal is: Reply to greetings'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: User A\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nProvide your complete response:'}, {'role': 'assistant', 'content': 'Hello, User A! How are you today?'}])], token_usage=UsageMetrics(total_tokens=90, prompt_tokens=80, cached_prompt_tokens=0, completion_tokens=10, successful_requests=1)), CrewOutput(raw='Hello, User B! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: User B', name='Reply to the user: User B', expected_output='A short greeting.', summary='Reply to the user: User B...', raw='Hello, User B! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _foreach', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _foreach. You are a friendly bot.\\nYour personal goal is: Reply to greetings'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: User B\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nProvide your complete response:'}, {'role': 'assistant', 'content': 'Hello, User B! How are you today?'}])], token_usage=UsageMetrics(total_tokens=180, prompt_tokens=160, cached_prompt_tokens=0, completion_tokens=20, successful_requests=2))]",
-      "metricCollection": "metric_collection_1",
-      "integration": "CrewAI"
+      "output": "[CrewOutput(raw='Hello, User A! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: User A', name='Reply to the user: User A', expected_output='A short greeting.', summary='Reply to the user: User A...', raw='Hello, User A! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _foreach', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _foreach. You are a friendly bot.\\nYour personal goal is: Reply to greetings'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: User A\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nProvide your complete response:'}])], token_usage=UsageMetrics(total_tokens=90, prompt_tokens=80, cached_prompt_tokens=0, completion_tokens=10, reasoning_tokens=0, cache_creation_tokens=0, successful_requests=1)), CrewOutput(raw='Hello, User B! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: User B', name='Reply to the user: User B', expected_output='A short greeting.', summary='Reply to the user: User B...', raw='Hello, User B! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _foreach', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _foreach. You are a friendly bot.\\nYour personal goal is: Reply to greetings'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: User B\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nProvide your complete response:'}])], token_usage=UsageMetrics(total_tokens=180, prompt_tokens=160, cached_prompt_tokens=0, completion_tokens=20, reasoning_tokens=0, cache_creation_tokens=0, successful_requests=2))]",
+      "integration": "CrewAI",
+      "metricCollection": "metric_collection_1"
     },
     {
-      "uuid": "83358ce8-7c8b-432b-9c88-7774235fcd8b",
+      "uuid": "63d85d5f-dcbc-421b-9815-744b2caae74d",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "5bed86d0-d0b8-4044-b739-b82319cede4b",
-      "startTime": "2026-02-15T10:22:18.521Z",
-      "endTime": "2026-02-15T10:22:19.148Z",
+      "parentUuid": "2a1fcd9f-4527-472e-910e-f110c3dec421",
+      "startTime": "2026-06-01T17:24:27.849Z",
+      "endTime": "2026-06-01T17:24:28.851Z",
       "input": {
         "input": "User B"
       },
@@ -28,13 +28,13 @@
       "integration": "CrewAI"
     },
     {
-      "uuid": "09111740-359e-4a57-9db1-311ba0fcd9f9",
+      "uuid": "e6cdfcf2-b672-4d6c-927a-4b6c3c4d033e",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "5bed86d0-d0b8-4044-b739-b82319cede4b",
-      "startTime": "2026-02-15T10:22:17.727Z",
-      "endTime": "2026-02-15T10:22:18.518Z",
+      "parentUuid": "2a1fcd9f-4527-472e-910e-f110c3dec421",
+      "startTime": "2026-06-01T17:24:26.798Z",
+      "endTime": "2026-06-01T17:24:27.848Z",
       "input": {
         "input": "User A"
       },
@@ -44,88 +44,92 @@
   ],
   "agentSpans": [
     {
-      "uuid": "83a41489-4782-4056-bded-c58698b6384b",
+      "uuid": "6148c467-aa11-4219-a1d8-213eabbb16c0",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "83358ce8-7c8b-432b-9c88-7774235fcd8b",
-      "startTime": "2026-02-15T10:22:18.527Z",
-      "endTime": "2026-02-15T10:22:19.139Z",
+      "parentUuid": "63d85d5f-dcbc-421b-9815-744b2caae74d",
+      "startTime": "2026-06-01T17:24:27.855Z",
+      "endTime": "2026-06-01T17:24:28.846Z",
       "input": "Reply to the user: User B\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Hello, User B! How are you today?",
+      "integration": "CrewAI",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "CrewAI"
+      "agentHandoffs": []
     },
     {
-      "uuid": "cacd13f6-2b01-4b66-b2b9-729a44304590",
+      "uuid": "f9e6fabd-bdca-46fc-9aa8-9a2881f93d4e",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "09111740-359e-4a57-9db1-311ba0fcd9f9",
-      "startTime": "2026-02-15T10:22:17.731Z",
-      "endTime": "2026-02-15T10:22:18.510Z",
+      "parentUuid": "e6cdfcf2-b672-4d6c-927a-4b6c3c4d033e",
+      "startTime": "2026-06-01T17:24:26.806Z",
+      "endTime": "2026-06-01T17:24:27.845Z",
       "input": "Reply to the user: User A\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Hello, User A! How are you today?",
+      "integration": "CrewAI",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "CrewAI"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "0086887b-1636-4627-9723-0e767a4d7fba",
+      "uuid": "ef56e306-c19f-46b8-ba7f-743d6162555f",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "83a41489-4782-4056-bded-c58698b6384b",
-      "startTime": "2026-02-15T10:22:18.531Z",
-      "endTime": "2026-02-15T10:22:19.136Z",
+      "parentUuid": "6148c467-aa11-4219-a1d8-213eabbb16c0",
+      "startTime": "2026-06-01T17:24:27.859Z",
+      "endTime": "2026-06-01T17:24:28.841Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Simple Greeter _foreach. You are a friendly bot.\nYour personal goal is: Reply to greetings"
+          "content": "You are Simple Greeter _foreach. You are a friendly bot.\nYour personal goal is: Reply to greetings",
+          "cache_breakpoint": true
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Reply to the user: User B\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
+          "content": "\nCurrent Task: Reply to the user: User B\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:",
+          "cache_breakpoint": true
         }
       ],
       "output": "Hello, User B! How are you today?",
-      "model": "gpt-4o-mini",
-      "metricCollection": "metric_collection_1",
       "integration": "CrewAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "metricCollection": "metric_collection_1"
     },
     {
-      "uuid": "1389bc17-e93e-434a-ac5f-498f775803b4",
+      "uuid": "d338f11e-099f-428d-8924-1e87d20a89ae",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "cacd13f6-2b01-4b66-b2b9-729a44304590",
-      "startTime": "2026-02-15T10:22:17.734Z",
-      "endTime": "2026-02-15T10:22:18.507Z",
+      "parentUuid": "f9e6fabd-bdca-46fc-9aa8-9a2881f93d4e",
+      "startTime": "2026-06-01T17:24:26.810Z",
+      "endTime": "2026-06-01T17:24:27.842Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Simple Greeter _foreach. You are a friendly bot.\nYour personal goal is: Reply to greetings"
+          "content": "You are Simple Greeter _foreach. You are a friendly bot.\nYour personal goal is: Reply to greetings",
+          "cache_breakpoint": true
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Reply to the user: User A\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
+          "content": "\nCurrent Task: Reply to the user: User A\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:",
+          "cache_breakpoint": true
         }
       ],
       "output": "Hello, User A! How are you today?",
-      "model": "gpt-4o-mini",
-      "metricCollection": "metric_collection_1",
       "integration": "CrewAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "metricCollection": "metric_collection_1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-15T10:22:17.723Z",
-  "endTime": "2026-02-15T10:22:19.150Z",
+  "startTime": "2026-06-01T17:24:26.796Z",
+  "endTime": "2026-06-01T17:24:28.853Z",
   "environment": "development",
   "input": {
     "input": "User B"

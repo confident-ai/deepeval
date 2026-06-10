@@ -28,6 +28,49 @@ function extractText(node: ReactNode): string {
 }
 
 /**
+ * Mirrors the typography plugin's `.prose code` chip (border, muted
+ * background, rounded corners, normal weight). The accordion header is
+ * marked `not-prose`, so prose code styling never reaches the title —
+ * we replicate it here, sized relative to the trigger text.
+ */
+const questionCodeStyle: React.CSSProperties = {
+  padding: "0px 4px",
+  border: "solid 1px var(--color-fd-border)",
+  borderRadius: "4px",
+  fontSize: "0.8em",
+  fontWeight: 400,
+  background: "var(--color-fd-muted)",
+  color: "var(--color-fd-foreground)",
+};
+
+/**
+ * Renders a question authored with Markdown-style `backticks` as inline
+ * <code> spans for the accordion title, leaving the rest as plain text.
+ * Authors get code formatting in questions without hand-writing JSX.
+ */
+function renderQuestion(question: string): ReactNode {
+  const segments = question.split(/(`[^`]+`)/g);
+  return segments.map((segment, index) =>
+    segment.length > 1 && segment.startsWith("`") && segment.endsWith("`") ? (
+      <code key={index} style={questionCodeStyle}>
+        {segment.slice(1, -1)}
+      </code>
+    ) : (
+      segment
+    )
+  );
+}
+
+/**
+ * Strips backticks so the question can be used as a plain string for the
+ * accordion `value` (deep-link/open state) and the FAQPage JSON-LD `name`,
+ * both of which must be plain text rather than rich nodes.
+ */
+function plainQuestion(question: string): string {
+  return question.replace(/`/g, "");
+}
+
+/**
  * Accordion-style FAQ list that also emits a schema.org FAQPage JSON-LD
  * block. The UI is delegated to Fumadocs' `Accordions` component so we
  * inherit Radix-powered a11y, keyboard nav, and deep-link support for
@@ -37,20 +80,27 @@ function extractText(node: ReactNode): string {
 export const FAQs: React.FC<FAQsProps> = ({ qas }) => {
   const schema = buildFAQPageSchema(
     qas.map(({ question, answer }) => ({
-      question,
+      question: plainQuestion(question),
       answer: extractText(answer).replace(/\s+/g, " ").trim(),
-    })),
+    }))
   );
 
   return (
     <>
       <SchemaInjector schema={schema} />
       <Accordions type="single">
-        {qas.map(({ question, answer }) => (
-          <Accordion key={question} title={question}>
-            {answer}
-          </Accordion>
-        ))}
+        {qas.map(({ question, answer }) => {
+          const plain = plainQuestion(question);
+          return (
+            <Accordion
+              key={plain}
+              title={renderQuestion(question)}
+              value={plain}
+            >
+              {answer}
+            </Accordion>
+          );
+        })}
       </Accordions>
     </>
   );

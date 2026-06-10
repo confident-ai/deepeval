@@ -1,77 +1,79 @@
 {
-  "uuid": "4749e9a7-0bc3-4472-88a8-b95a62e6afb9",
+  "uuid": "3d5d60fa-e95c-4d7c-a8ae-121323fba2ed",
   "baseSpans": [
     {
-      "uuid": "f308dfa7-4594-40ab-805f-db7eb81e2911",
+      "uuid": "c6601e19-2829-45c4-8f8b-0c02d6839fdb",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-15T10:19:58.943Z",
-      "endTime": "2026-02-15T10:20:00.992Z",
+      "startTime": "2026-06-01T17:28:46.949Z",
+      "endTime": "2026-06-01T17:28:50.338Z",
       "input": {
         "question": "What city does John live in and how old is he?"
       },
-      "output": "I'm sorry, but I don't have any information about John, including what city he lives in or how old he is.",
+      "output": "John lives in San Francisco and is 30 years old.",
       "integration": "CrewAI"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "782d07ac-6735-4fcc-8426-eb3b9df66b2b",
+      "uuid": "133509f6-1522-4528-9ad8-64b796919c16",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "f308dfa7-4594-40ab-805f-db7eb81e2911",
-      "startTime": "2026-02-15T10:19:58.947Z",
-      "endTime": "2026-02-15T10:20:00.985Z",
-      "input": "Answer the following questions about the user: What city does John live in and how old is he?\n\nThis is the expected criteria for your final answer: An answer to the question.\nyou MUST return the actual complete content as the final answer, not a summary.",
-      "output": "John lives in San Francisco and he is 30 years old.",
+      "parentUuid": "c6601e19-2829-45c4-8f8b-0c02d6839fdb",
+      "startTime": "2026-06-01T17:28:47.766Z",
+      "endTime": "2026-06-01T17:28:50.331Z",
+      "input": "Answer the following questions about the user: What city does John live in and how old is he?\n\nThis is the expected criteria for your final answer: An answer to the question.\nyou MUST return the actual complete content as the final answer, not a summary.Additional Information: Users name is John. He is 30 years old and lives in San Francisco.\nThe secret launch code is ALPHA-ZULU-99.",
+      "output": "John lives in San Francisco and is 30 years old.",
+      "integration": "CrewAI",
       "toolsCalled": [
         {
           "name": "knowledge_retrieval",
-          "output": "",
+          "output": "Additional Information: Users name is John. He is 30 years old and lives in San Francisco.\nThe secret launch code is ALPHA-ZULU-99.",
           "inputParameters": {
             "output": "Retrieve information about John, specifically his city of residence and age."
           }
         }
       ],
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "CrewAI"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "352dba10-ed63-45d2-bcc6-15516af874a6",
+      "uuid": "6f22fe41-a37e-4ad0-b6b1-a9f66cacf81f",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "782d07ac-6735-4fcc-8426-eb3b9df66b2b",
-      "startTime": "2026-02-15T10:19:59.973Z",
-      "endTime": "2026-02-15T10:20:00.983Z",
+      "parentUuid": "133509f6-1522-4528-9ad8-64b796919c16",
+      "startTime": "2026-06-01T17:28:49.377Z",
+      "endTime": "2026-06-01T17:28:50.323Z",
       "input": [
         {
           "role": "system",
-          "content": "You are About User. You are a master at understanding people and their preferences.\nYour personal goal is: You know everything about the user."
+          "content": "You are About User. You are a master at understanding people and their preferences.\nYour personal goal is: You know everything about the user.",
+          "cache_breakpoint": true
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Answer the following questions about the user: What city does John live in and how old is he?\n\nThis is the expected criteria for your final answer: An answer to the question.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
+          "content": "\nCurrent Task: Answer the following questions about the user: What city does John live in and how old is he?\n\nThis is the expected criteria for your final answer: An answer to the question.\nyou MUST return the actual complete content as the final answer, not a summary.Additional Information: Users name is John. He is 30 years old and lives in San Francisco.\nThe secret launch code is ALPHA-ZULU-99.\n\nProvide your complete response:",
+          "cache_breakpoint": true
         }
       ],
-      "output": "I'm sorry, but I don't have any information about John, including what city he lives in or how old he is.",
-      "model": "gpt-4o-mini",
+      "output": "John lives in San Francisco and is 30 years old.",
       "integration": "CrewAI",
+      "model": "gpt-4o-mini",
       "provider": "OpenAI"
     },
     {
-      "uuid": "82736372-9030-4b02-b90e-906680d55d37",
+      "uuid": "f8536b10-6e4a-40c5-84c3-d1afe98c7c76",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "782d07ac-6735-4fcc-8426-eb3b9df66b2b",
-      "startTime": "2026-02-15T10:19:58.950Z",
-      "endTime": "2026-02-15T10:19:59.937Z",
+      "parentUuid": "133509f6-1522-4528-9ad8-64b796919c16",
+      "startTime": "2026-06-01T17:28:47.770Z",
+      "endTime": "2026-06-01T17:28:49.049Z",
       "input": [
         {
           "role": "system",
@@ -83,32 +85,32 @@
         }
       ],
       "output": "Retrieve information about John, specifically his city of residence and age.",
-      "model": "gpt-4o-mini",
       "integration": "CrewAI",
+      "model": "gpt-4o-mini",
       "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "4f9a9791-0293-49f7-9d58-8e702fbfa274",
+      "uuid": "d7d26e35-3ffe-4b92-86ed-7b181b06dc9e",
       "name": "knowledge_retrieval",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "782d07ac-6735-4fcc-8426-eb3b9df66b2b",
-      "startTime": "2026-02-15T10:19:58.948Z",
-      "endTime": "2026-02-15T10:19:59.971Z",
+      "parentUuid": "133509f6-1522-4528-9ad8-64b796919c16",
+      "startTime": "2026-06-01T17:28:47.771Z",
+      "endTime": "2026-06-01T17:28:49.372Z",
       "input": "Retrieve information about John, specifically his city of residence and age.",
-      "output": "",
+      "output": "Additional Information: Users name is John. He is 30 years old and lives in San Francisco.\nThe secret launch code is ALPHA-ZULU-99.",
       "integration": "CrewAI"
     }
   ],
-  "startTime": "2026-02-15T10:19:58.943Z",
-  "endTime": "2026-02-15T10:20:00.992Z",
+  "startTime": "2026-06-01T17:28:46.949Z",
+  "endTime": "2026-06-01T17:28:50.338Z",
   "environment": "development",
   "input": {
     "question": "What city does John live in and how old is he?"
   },
-  "output": "I'm sorry, but I don't have any information about John, including what city he lives in or how old he is.",
+  "output": "John lives in San Francisco and is 30 years old.",
   "status": "SUCCESS"
 }

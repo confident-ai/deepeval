@@ -8,7 +8,8 @@ import {
 } from 'collections/server';
 import { loader, type PageTreeTransformer } from 'fumadocs-core/source';
 import { lucideIconsPlugin } from 'fumadocs-core/source/lucide-icons';
-import { contentRouteFor, docsImageRoute } from './shared';
+import { contentRouteFor, docsImageRoute, blogImageRoute } from './shared';
+import { getTerm } from './lang/terms';
 
 /**
  * Docusaurus-style `sidebar_label` → override the sidebar node's name
@@ -96,6 +97,25 @@ export function getPageImage(page: (typeof source)['$inferPage']) {
 }
 
 /**
+ * Generated-OG-image URL for a blog page. Mirrors `getPageImage` but
+ * targets the blog's own `/og/blog/<slug>/image.png` route handler.
+ * Used as the per-post `og:image` fallback when a post doesn't set
+ * an explicit `image:` in frontmatter — without it, the blog section's
+ * `openGraph` override would emit no `og:image` (Next overwrites, not
+ * deep-merges, the root layout's `openGraph`), and scrapers like
+ * LinkedIn would fall back to grabbing the author avatar off the page.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getBlogPageImage(page: any) {
+  const segments = [...page.slugs, 'image.png'];
+
+  return {
+    segments,
+    url: `${blogImageRoute}/${segments.join('/')}`,
+  };
+}
+
+/**
  * Build the raw-markdown URL for a page in *any* section. The section
  * prefix is inferred from the page's `url` (e.g. a page at `/guides/foo`
  * lives under the `guides` section), so the same helper works for docs,
@@ -116,6 +136,33 @@ export function getPageMarkdownUrl(page: any, _src?: unknown) {
   };
 }
 
+/**
+ * Lower inline `<C id="..."/>` term components into plain inline code on
+ * the markdown/LLM surface.
+ *
+ * `getText('processed')` serializes mdast back to markdown but does NOT
+ * React-render components, so a `<C>` would survive as a literal JSX tag —
+ * useless to LLM crawlers (and stripped entirely by the description
+ * cleaner). We rewrite each tag to the term's Python spelling wrapped in
+ * backticks so the markdown reads identically to the old hardcoded spans.
+ *
+ * This lives on the markdown surface ONLY (not in the shared remark
+ * pipeline) so the page body keeps rendering the real `<C>` component,
+ * which is what lets it become language-reactive later. Markdown stays
+ * Python-only for now — per-language markdown is part of the deferred
+ * routing work.
+ *
+ * `getTerm` throws on unknown ids, so the statically-generated `/llms.*`
+ * routes fail the build loudly too.
+ */
+const C_TAG = /<C\s+id="([^"]+)"\s*\/>/g;
+
+export function lowerCodeTerms(markdown: string): string {
+  return markdown.replace(C_TAG, (_match, id: string) => {
+    return `\`${getTerm(id, 'python')}\``;
+  });
+}
+
 export async function getLLMText(page: (typeof source)['$inferPage']) {
   // `getText` is injected by fumadocs-mdx when `postprocess.includeProcessedMarkdown`
   // is set (see source.config.ts) but isn't part of the static PageData type,
@@ -123,7 +170,7 @@ export async function getLLMText(page: (typeof source)['$inferPage']) {
   const data = page.data as typeof page.data & {
     getText: (format: 'raw' | 'processed') => Promise<string>;
   };
-  const processed = await data.getText('processed');
+  const processed = lowerCodeTerms(await data.getText('processed'));
 
   return `# ${page.data.title} (${page.url})
 
@@ -226,7 +273,10 @@ export async function getPageDescription(
   if (typeof data.getText !== 'function') return undefined;
 
   try {
-    const processed = await data.getText('processed');
+    // Lower `<C id="..."/>` to plain code first; otherwise the JSX-tag
+    // stripping in `cleanMarkdownForDescription` would delete the term
+    // text and leave gaps in the derived meta description.
+    const processed = lowerCodeTerms(await data.getText('processed'));
     const para = extractFirstParagraph(processed);
     if (!para) return undefined;
     return truncateOnWord(para, DESCRIPTION_MAX);

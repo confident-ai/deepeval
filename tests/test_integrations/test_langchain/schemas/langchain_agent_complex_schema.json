@@ -48,7 +48,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2OIVfa0XnimqWoE0fyCzsTLfZqA",
               "service_tier": "default",
@@ -111,7 +111,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2OL75o35e3wvZmHnMCzNyKruQcp",
               "service_tier": "default",
@@ -197,7 +197,7 @@
         "content": "Current time: 2024-01-15 10:30:00 UTC.",
         "tool_calls": []
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 223.0,
       "outputTokenCount": 155.0,
       "integration": "LangChain",
@@ -240,7 +240,7 @@
           }
         ]
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 180.0,
       "outputTokenCount": 148.0,
       "integration": "LangChain",
@@ -319,7 +319,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2OIVfa0XnimqWoE0fyCzsTLfZqA",
           "service_tier": "default",
@@ -382,7 +382,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2OL75o35e3wvZmHnMCzNyKruQcp",
           "service_tier": "default",

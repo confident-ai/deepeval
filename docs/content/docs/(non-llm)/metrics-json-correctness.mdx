@@ -140,3 +140,55 @@ The `PromptAlignmentMetric` score is calculated according to the following equat
 />
 
 The `JsonCorrectnessMetric` does not use an LLM for evaluation and instead uses the provided `expected_schema` to determine whether the `actual_output` can be loaded into the schema.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why do I still need to pass a model if the metric is deterministic?",
+      answer: (
+        <>
+          Scoring is deterministic — it only checks whether{" "}
+          <code>actual_output</code> loads into your <code>expected_schema</code>.
+          The <code>model</code> only <em>generates the reason</em> on invalid
+          schemas when <code>include_reason</code> is <code>True</code>; set{" "}
+          <code>include_reason=False</code> to skip it.
+        </>
+      ),
+    },
+    {
+      question: "Does scoring cost money or call an LLM?",
+      answer: (
+        <>
+          Schema validation is free and deterministic. A model is only invoked
+          — incurring token cost — when an output fails the schema and{" "}
+          <code>include_reason</code> is <code>True</code>.
+        </>
+      ),
+    },
+    {
+      question: "How do I validate an output that's a list of JSON objects?",
+      answer: (
+        <>
+          Wrap your <code>pydantic</code> <code>BaseModel</code> in a{" "}
+          <code>RootModel</code> — e.g.{" "}
+          <code>class ExampleSchemaList(RootModel[List[ExampleSchema]])</code>{" "}
+          — and pass it as the <code>expected_schema</code>.
+        </>
+      ),
+    },
+    {
+      question: "When should I use Json Correctness over an LLM-judge metric?",
+      answer: (
+        <>
+          When you care about <em>structure</em> rather than meaning —
+          verifying tool calls, function arguments, or API responses parse into
+          the expected fields and types. To judge the JSON's <em>contents</em>,
+          pair it with an LLM-based metric.
+        </>
+      ),
+    },
+  ]}
+/>
+

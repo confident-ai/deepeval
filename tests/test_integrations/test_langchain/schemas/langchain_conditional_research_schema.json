@@ -48,7 +48,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2NeuSPhzCa2q51ENqzSYKnvqbqy",
               "service_tier": "default",
@@ -113,7 +113,7 @@
                 }
               },
               "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
+              "model_name": "gpt-5.4-mini-2025-08-07",
               "system_fingerprint": null,
               "id": "chatcmpl-DL2NgnoEFJVTxTtoRVQQVkRKTmeTr",
               "service_tier": "default",
@@ -193,7 +193,7 @@
         "content": "I used the research tool to look up \"quantum computing.\" The tool returned: \"Quantum computing achieves new milestone in error correction.\"",
         "tool_calls": []
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 182.0,
       "outputTokenCount": 30.0,
       "integration": "LangChain",
@@ -230,7 +230,7 @@
           }
         ]
       },
-      "model": "gpt-5-mini-2025-08-07",
+      "model": "gpt-5.4-mini-2025-08-07",
       "inputTokenCount": 142.0,
       "outputTokenCount": 90.0,
       "integration": "LangChain",
@@ -314,7 +314,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2NeuSPhzCa2q51ENqzSYKnvqbqy",
           "service_tier": "default",
@@ -379,7 +379,7 @@
             }
           },
           "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
+          "model_name": "gpt-5.4-mini-2025-08-07",
           "system_fingerprint": null,
           "id": "chatcmpl-DL2NgnoEFJVTxTtoRVQQVkRKTmeTr",
           "service_tier": "default",

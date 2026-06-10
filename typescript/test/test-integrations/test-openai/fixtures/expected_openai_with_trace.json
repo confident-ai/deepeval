@@ -1,0 +1,50 @@
+{
+  "name": "test_name_1",
+  "uuid": "e2ded4c2-46ac-4aca-9d67-3e681393432d",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "71bed055-94cc-47fc-964a-6f22dc540f2d",
+      "name": "create",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "e2ded4c2-46ac-4aca-9d67-3e681393432d",
+      "startTime": "2026-02-23T14:59:41.954Z",
+      "endTime": "2026-02-23T14:59:43.540Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "Hello, how are you?"
+        }
+      ],
+      "output": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
+      "metricCollection": "test_collection_1",
+      "retrievalContext": [],
+      "context": [],
+      "expectedTools": [],
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 13,
+      "outputTokenCount": 29,
+      "promptAlias": "asd",
+      "promptCommitHash": "bab04ec",
+      "promptLabel": "test-label",
+      "promptVersion": "00.00.01"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-23T14:59:41.954Z",
+  "endTime": "2026-02-23T14:59:43.541Z",
+  "environment": "testing",
+  "metadata": {
+    "test_metadata_1": "test_value_1"
+  },
+  "tags": [
+    "test_tag_1"
+  ],
+  "threadId": "test_thread_id_1",
+  "userId": "test_user_id_1",
+  "input": "Hello, how are you?",
+  "output": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?"
+}

@@ -1,36 +1,36 @@
 {
-  "uuid": "e749ccab18ab87d06b909a167fecce78",
+  "uuid": "a6ae3a361297a69d773f841e61992748",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "94b87c183fa8adbe",
+      "uuid": "9ac329154b446486",
       "name": "evals_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T06:46:05.908Z",
-      "endTime": "2026-05-05T06:46:08.674Z",
+      "startTime": "2026-06-01T16:36:08.630Z",
+      "endTime": "2026-06-01T16:36:10.694Z",
       "input": [
         {
           "role": "user",
           "content": "Use the special_tool to process 'Async Data'"
         }
       ],
-      "output": "The special tool processed the input as: **Async Data**.",
+      "output": "The special tool processed the input and resulted in: **Processed: Async Data**.",
+      "integration": "PydanticAI",
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "agent_metrics_async_v1",
-      "integration": "PydanticAI"
+      "metricCollection": "agent_metrics_async_v1"
     }
   ],
   "llmSpans": [
     {
-      "uuid": "d9dfc255911191d1",
+      "uuid": "aa7c93b2b75f2765",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "94b87c183fa8adbe",
-      "startTime": "2026-05-05T06:46:07.610Z",
-      "endTime": "2026-05-05T06:46:08.672Z",
+      "parentUuid": "9ac329154b446486",
+      "startTime": "2026-06-01T16:36:09.667Z",
+      "endTime": "2026-06-01T16:36:10.692Z",
       "input": [
         {
           "role": "system",
@@ -44,7 +44,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_5PTD8KZe1MBqmJ7XCuWraRE5",
+            "id": "call_3XniXRbaWiUvXHOwvhByJAqG",
             "name": "special_tool",
             "arguments": "{\"query\":\"Async Data\"}"
           }
@@ -53,7 +53,7 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_5PTD8KZe1MBqmJ7XCuWraRE5",
+            "id": "call_3XniXRbaWiUvXHOwvhByJAqG",
             "name": "special_tool",
             "result": "Processed: Async Data"
           }
@@ -84,12 +84,14 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               }
             ],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -104,23 +106,23 @@
       "output": [
         {
           "role": "assistant",
-          "content": "The special tool processed the input as: **Async Data**."
+          "content": "The special tool processed the input and resulted in: **Processed: Async Data**."
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 90.0,
-      "outputTokenCount": 14.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 90.0,
+      "outputTokenCount": 18.0
     },
     {
-      "uuid": "690bdab31ec1c3c0",
+      "uuid": "450fa34cfb0f128f",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "94b87c183fa8adbe",
-      "startTime": "2026-05-05T06:46:05.911Z",
-      "endTime": "2026-05-05T06:46:07.602Z",
+      "parentUuid": "9ac329154b446486",
+      "startTime": "2026-06-01T16:36:08.632Z",
+      "endTime": "2026-06-01T16:36:09.665Z",
       "input": [
         {
           "role": "system",
@@ -156,12 +158,14 @@
                 "metadata": null,
                 "timeout": null,
                 "defer_loading": false,
-                "prefer_builtin": null,
+                "unless_native": null,
+                "with_native": null,
+                "tool_kind": null,
                 "return_schema": null,
                 "include_return_schema": null
               }
             ],
-            "builtin_tools": [],
+            "native_tools": [],
             "output_mode": "text",
             "output_object": null,
             "output_tools": [],
@@ -178,29 +182,29 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_5PTD8KZe1MBqmJ7XCuWraRE5",
+            "id": "call_3XniXRbaWiUvXHOwvhByJAqG",
             "name": "special_tool",
             "arguments": "{\"query\":\"Async Data\"}"
           }
         }
       ],
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 63.0,
-      "outputTokenCount": 15.0,
       "integration": "PydanticAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 63.0,
+      "outputTokenCount": 15.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "72e90196d374ed3f",
+      "uuid": "b908dde6e760b4b7",
       "name": "special_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "94b87c183fa8adbe",
-      "startTime": "2026-05-05T06:46:07.604Z",
-      "endTime": "2026-05-05T06:46:07.606Z",
+      "parentUuid": "9ac329154b446486",
+      "startTime": "2026-06-01T16:36:09.665Z",
+      "endTime": "2026-06-01T16:36:09.666Z",
       "input": {
         "query": "Async Data"
       },
@@ -208,8 +212,8 @@
       "integration": "PydanticAI"
     }
   ],
-  "startTime": "2026-05-05T06:46:05.908Z",
-  "endTime": "2026-05-05T06:46:08.674Z",
+  "startTime": "2026-06-01T16:36:08.630Z",
+  "endTime": "2026-06-01T16:36:10.694Z",
   "name": "pydanticai-full-features-async",
   "metadata": {
     "env": "testing_async",
@@ -229,7 +233,7 @@
       "content": "Use the special_tool to process 'Async Data'"
     }
   ],
-  "output": "The special tool processed the input as: **Async Data**.",
+  "output": "The special tool processed the input and resulted in: **Processed: Async Data**.",
   "status": "SUCCESS",
   "metricCollection": "trace_metrics_override_async_v1"
 }

@@ -1,68 +1,70 @@
 {
-  "uuid": "ee386991-dca7-4cb8-8b49-edc0d4cefca3",
+  "uuid": "06d9d656-e1c4-42ce-a100-f199493db815",
   "baseSpans": [
     {
-      "uuid": "92c4b1b6-6568-4bc0-9099-45ee14d5409e",
+      "uuid": "06a2ac42-ea7b-4139-8c95-e8cc2428633b",
       "name": "akickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-15T10:22:51.051Z",
-      "endTime": "2026-02-15T10:22:51.978Z",
+      "startTime": "2026-06-01T17:24:36.525Z",
+      "endTime": "2026-06-01T17:24:38.830Z",
       "input": {
         "input": "Testing Alias"
       },
       "output": "Hello, Testing Alias! How can I assist you today?",
-      "metricCollection": "metric_collection_1",
-      "integration": "CrewAI"
+      "integration": "CrewAI",
+      "metricCollection": "metric_collection_1"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "a5c76499-d503-4df5-879b-a8f329f07cbc",
+      "uuid": "f051f239-7ca9-4893-a8c0-87ebcd01b8e7",
       "name": "aexecute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "92c4b1b6-6568-4bc0-9099-45ee14d5409e",
-      "startTime": "2026-02-15T10:22:51.062Z",
-      "endTime": "2026-02-15T10:22:51.971Z",
+      "parentUuid": "06a2ac42-ea7b-4139-8c95-e8cc2428633b",
+      "startTime": "2026-06-01T17:24:36.532Z",
+      "endTime": "2026-06-01T17:24:38.823Z",
       "input": "Reply to the user: Testing Alias\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Hello, Testing Alias! How can I assist you today?",
+      "integration": "CrewAI",
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "metric_collection_1",
-      "integration": "CrewAI"
+      "metricCollection": "metric_collection_1"
     }
   ],
   "llmSpans": [
     {
-      "uuid": "a795e5b9-02b1-4c66-b687-3fe4b7e3384a",
+      "uuid": "12cbb38f-48c4-429e-9c94-023928a4f1f7",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "a5c76499-d503-4df5-879b-a8f329f07cbc",
-      "startTime": "2026-02-15T10:22:51.065Z",
-      "endTime": "2026-02-15T10:22:51.969Z",
+      "parentUuid": "f051f239-7ca9-4893-a8c0-87ebcd01b8e7",
+      "startTime": "2026-06-01T17:24:36.536Z",
+      "endTime": "2026-06-01T17:24:38.817Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Simple Greeter _akickoff. You are a friendly bot.\nYour personal goal is: Reply to greetings"
+          "content": "You are Simple Greeter _akickoff. You are a friendly bot.\nYour personal goal is: Reply to greetings",
+          "cache_breakpoint": true
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Reply to the user: Testing Alias\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
+          "content": "\nCurrent Task: Reply to the user: Testing Alias\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:",
+          "cache_breakpoint": true
         }
       ],
       "output": "Hello, Testing Alias! How can I assist you today?",
-      "model": "gpt-4o-mini",
-      "metricCollection": "metric_collection_1",
       "integration": "CrewAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "metricCollection": "metric_collection_1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-15T10:22:51.051Z",
-  "endTime": "2026-02-15T10:22:51.978Z",
+  "startTime": "2026-06-01T17:24:36.525Z",
+  "endTime": "2026-06-01T17:24:38.830Z",
   "environment": "development",
   "input": {
     "input": "Testing Alias"

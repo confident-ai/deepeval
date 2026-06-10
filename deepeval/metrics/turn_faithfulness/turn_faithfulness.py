@@ -88,6 +88,8 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         multimodal = test_case.multimodal
 
         self.evaluation_cost = 0 if self.using_native_model else None
+        self.input_tokens = 0 if self.using_native_model else None
+        self.output_tokens = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -148,6 +150,8 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         multimodal = test_case.multimodal
 
         self.evaluation_cost = 0 if self.using_native_model else None
+        self.input_tokens = 0 if self.using_native_model else None
+        self.output_tokens = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self,
             async_mode=True,
@@ -375,7 +379,8 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
     ) -> Tuple[float, str]:
         number_of_verdicts = len(verdicts)
         if number_of_verdicts == 0:
-            return 1
+            reason = "<no claims to verify>" if self.include_reason else None
+            return 1.0, reason
 
         faithfulness_count = 0
         for verdict in verdicts:
@@ -401,7 +406,8 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
     ) -> Tuple[float, str]:
         number_of_verdicts = len(verdicts)
         if number_of_verdicts == 0:
-            return 1
+            reason = "<no claims to verify>" if self.include_reason else None
+            return 1.0, reason
 
         faithfulness_count = 0
         for verdict in verdicts:

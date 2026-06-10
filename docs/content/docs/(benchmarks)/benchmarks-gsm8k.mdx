@@ -41,3 +41,83 @@ print(benchmark.overall_score)
 The `overall_score` for this benchmark ranges from 0 to 1, where 1 signifies perfect performance and 0 indicates no correct answers. The model's score, based on **exact matching**, is calculated by determining the proportion of math word problems for which the model produces the precise correct answer number (e.g. '56') in relation to the total number of questions.
 
 As a result, utilizing more few-shot prompts (`n_shots`) can greatly improve the model's robustness in generating answers in the exact correct format and boost the overall score.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What does the `GSM8K` benchmark measure?",
+      answer: (
+        <>
+          <code>GSM8K</code> evaluates an LLM's ability to perform{" "}
+          <strong>multi-step mathematical reasoning</strong>. It comprises 1,319
+          grade school math word problems involving elementary arithmetic
+          operations that require between 2 and 8 steps to solve.
+        </>
+      ),
+    },
+    {
+      question: "How many problems does `GSM8K` evaluate by default?",
+      answer: (
+        <>
+          The <code>n_problems</code> argument controls how many problems are
+          used and defaults to <code>1319</code> (all problems in the benchmark).
+          You can lower it, for example <code>n_problems=10</code>, to run a
+          quicker evaluation.
+        </>
+      ),
+    },
+    {
+      question: "How is `GSM8K` scored?",
+      answer: (
+        <>
+          The <code>overall_score</code> ranges from 0 to 1 and is based on{" "}
+          <strong>exact matching</strong>: it is the proportion of math word
+          problems for which the model produces the precise correct answer number
+          (e.g. '56'). See the{" "}
+          <a href="/docs/benchmarks-introduction">benchmarks introduction</a> for
+          how scoring works across benchmarks.
+        </>
+      ),
+    },
+    {
+      question: "What is the default `n_shots` for `GSM8K`?",
+      answer: (
+        <>
+          The <code>n_shots</code> argument ranges strictly from 0-3 and is set
+          to <code>3</code> by default. Using more few-shot prompts can improve
+          the model's robustness in generating answers in the exact correct
+          format.
+        </>
+      ),
+    },
+    {
+      question: "Does `GSM8K` support chain-of-thought prompting?",
+      answer: (
+        <>
+          Yes. The <code>enable_cot</code> argument is a boolean that determines
+          whether CoT prompting is used, and it is set to <code>True</code> by
+          default, prompting the model to articulate its reasoning before
+          answering.
+        </>
+      ),
+    },
+    {
+      question: "How do I run `GSM8K` on a custom LLM?",
+      answer: (
+        <>
+          Wrap your model in <code>DeepEvalBaseLLM</code>, create a benchmark
+          with{" "}
+          <code>GSM8K(n_problems=10, n_shots=3, enable_cot=True)</code>, and call{" "}
+          <code>benchmark.evaluate(model=mistral_7b)</code> before reading{" "}
+          <code>benchmark.overall_score</code>. See the{" "}
+          <a href="/docs/benchmarks-introduction#benchmarking-your-llm">
+            benchmarking guide
+          </a>{" "}
+          for using any custom LLM.
+        </>
+      ),
+    },
+  ]}
+/>

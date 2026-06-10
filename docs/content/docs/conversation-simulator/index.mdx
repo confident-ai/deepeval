@@ -145,3 +145,82 @@ Customize the simulator around your application's conversation state, stopping c
 - [Stopping Logic](/docs/conversation-simulator-stopping-logic): replace expected-outcome stopping with business-specific logic such as tool calls, confirmation messages, or failure states.
 - [Custom Templates](/docs/conversation-simulator-custom-templates): change the simulated user's style, domain framing, or pressure level by overriding the user-turn prompts.
 - [Lifecycle Hooks](/docs/conversation-simulator-lifecycle-hooks): process each completed conversation immediately instead of waiting for the full simulation batch to finish.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "When should I use the `ConversationSimulator` instead of the `Synthesizer`?",
+      answer: (
+        <>
+          Use <code>ConversationSimulator</code> when you need full multi-turn
+          conversations between a fake user and your chatbot. The{" "}
+          <a href="/docs/golden-synthesizer">synthesizer</a> generates regular
+          goldens representing single, atomic LLM interactions, not back-and-forth
+          dialogue.
+        </>
+      ),
+    },
+    {
+      question: "What does a `ConversationalGolden` actually drive in a simulation?",
+      answer: (
+        <>
+          Its <code>scenario</code>, <code>user_description</code>, and{" "}
+          <code>expected_outcome</code> tell the simulator model who to role-play,
+          what to attempt, and (by default) when the conversation is complete. The
+          simulator generates each user turn from these fields and sends it to your{" "}
+          <a href="/docs/conversation-simulator-model-callback">model_callback</a>.
+        </>
+      ),
+    },
+    {
+      question: "What does `simulate()` return, and how do I seed an existing conversation?",
+      answer: (
+        <>
+          It returns a list of <code>ConversationalTestCase</code>s you can pass
+          straight into <code>evaluate</code> with multi-turn metrics. To seed a
+          conversation, populate the <code>ConversationalGolden</code> with initial{" "}
+          <code>turns</code> (such as a hardcoded opening assistant message) and the
+          simulator continues from there.
+        </>
+      ),
+    },
+    {
+      question: "When does a simulation stop?",
+      answer: (
+        <>
+          When <code>max_user_simulations</code> is reached, when the{" "}
+          <a href="/docs/conversation-simulator-stopping-logic">stopping_controller</a>{" "}
+          returns <code>end()</code> (by default once the <code>expected_outcome</code>{" "}
+          is met), or when a <code>simulation_graph</code> hits a{" "}
+          <code>terminal=True</code> node — whichever fires first.
+        </>
+      ),
+    },
+    {
+      question: "Can I use any model to power the simulated user?",
+      answer: (
+        <>
+          Yes. <code>simulator_model</code> accepts any of OpenAI's GPT models by
+          name, or{" "}
+          <a href="/docs/metrics-introduction#using-a-custom-llm">any custom LLM</a>{" "}
+          of type <code>DeepEvalBaseLLM</code>. Note it only powers the role-played
+          user — your actual chatbot still runs through your{" "}
+          <a href="/docs/conversation-simulator-model-callback">model_callback</a>.
+        </>
+      ),
+    },
+    {
+      question: "Can my team run conversation simulations without code?",
+      answer: (
+        <>
+          Yes. On <a href="https://www.confident-ai.com">Confident AI</a> you
+          can simulate multi-turn conversations no-code — define scenarios and
+          user personas, run simulations against your chatbot, experiment with
+          variations, and collaborate on the resulting test cases as a team.
+        </>
+      ),
+    },
+  ]}
+/>

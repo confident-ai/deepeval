@@ -96,3 +96,83 @@ Below is the comprehensive list of available tasks:
 - `ADVERTISING`
 - `SOCIOLOGY`
 - `PARANORMAL`
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What does the `TruthfulQA` benchmark measure?",
+      answer: (
+        <>
+          <code>TruthfulQA</code> assesses how truthfully an LLM answers
+          questions. It includes 817 questions across 38 topics like health,
+          law, finance, and politics, targeting common <strong>misconceptions
+          </strong> that some humans would falsely answer due to false belief.
+        </>
+      ),
+    },
+    {
+      question: "Which tasks can I run with `TruthfulQA`?",
+      answer: (
+        <>
+          You can pass a list of <code>TruthfulQATask</code> enums to the{" "}
+          <code>tasks</code> argument, for example <code>ADVERTISING</code> or{" "}
+          <code>FICTION</code>. By default, all available tasks are evaluated.
+        </>
+      ),
+    },
+    {
+      question: "What are the MC1 and MC2 modes?",
+      answer: (
+        <>
+          The <code>mode</code> argument takes a <code>TruthfulQAMode</code> enum
+          and defaults to <code>TruthfulQAMode.MC1</code>. <strong>MC1</strong>{" "}
+          involves selecting one correct answer from 4-5 options, while{" "}
+          <strong>MC2</strong> (Multi-true) requires identifying multiple correct
+          answers from a set. Both are multiple-choice evaluations.
+        </>
+      ),
+    },
+    {
+      question: "How is `TruthfulQA` scored?",
+      answer: (
+        <>
+          The <code>overall_score</code> ranges from 0 to 1. MC1 uses an{" "}
+          <strong>exact match</strong> scorer focused on singular correct
+          answers, while MC2 uses a <strong>truth identification</strong> scorer
+          that compares sorted lists of predicted and target truthful answer IDs.
+          See the{" "}
+          <a href="/docs/benchmarks-introduction">benchmarks introduction</a> for
+          more on scoring.
+        </>
+      ),
+    },
+    {
+      question: "Should I use MC1 or MC2?",
+      answer: (
+        <>
+          Use <strong>MC1</strong> as a benchmark for pinpoint accuracy and{" "}
+          <strong>MC2</strong> for depth of understanding. Both modes use the
+          same set of questions, so you can compare them directly.
+        </>
+      ),
+    },
+    {
+      question: "How do I run `TruthfulQA` on a custom LLM?",
+      answer: (
+        <>
+          Wrap your model in <code>DeepEvalBaseLLM</code>, create a benchmark
+          with{" "}
+          <code>TruthfulQA(tasks=[...], mode=TruthfulQAMode.MC2)</code>, and call{" "}
+          <code>benchmark.evaluate(model=mistral_7b)</code> before reading{" "}
+          <code>benchmark.overall_score</code>. See the{" "}
+          <a href="/docs/benchmarks-introduction#benchmarking-your-llm">
+            benchmarking guide
+          </a>{" "}
+          for using any custom LLM.
+        </>
+      ),
+    },
+  ]}
+/>

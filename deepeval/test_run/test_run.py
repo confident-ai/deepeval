@@ -24,6 +24,7 @@ from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.utils import (
     delete_file_if_exists,
     get_is_running_deepeval,
+    get_test_run_official,
     is_read_only_env,
     open_browser,
     shorten,
@@ -166,6 +167,7 @@ class TestRun(BaseModel):
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
     dataset_alias: Optional[str] = Field(None, alias="datasetAlias")
     dataset_id: Optional[str] = Field(None, alias="datasetId")
+    official: bool = False
 
     def add_test_case(
         self, api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase]
@@ -1054,6 +1056,12 @@ class TestRunManager:
             print("No test cases found, please try again.")
             delete_file_if_exists(self.temp_file_path)
             return
+
+        # Mark the run as the official if requested via the `--official` CLI flag or `evaluate(official=True)`.
+        # Set here, in the main process right before upload, so it rides along in the test run
+        # creation payload (and survives any xdist worker disk round-trips).
+        if get_test_run_official():
+            test_run.official = True
 
         # Don't block the post when all metrics errored — the spans still
         # carry the underlying error info (populated by ``Observer.__exit__``)

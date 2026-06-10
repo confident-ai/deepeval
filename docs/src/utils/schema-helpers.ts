@@ -1,7 +1,7 @@
 import { siteUrl as BASE_URL } from "@/lib/shared";
 
 export interface ArticleSchemaProps {
-  title: string
+  title: string;
   url: string;
   description?: string;
   datePublished?: string;
@@ -37,12 +37,11 @@ export interface BlogPost {
   date: string;
 }
 
-
 export function buildWebSiteSchema(): object {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "DeepEval by Confident AI - The LLM Evaluation Framework", 
+    name: "DeepEval - The LLM Evaluation Framework",
     url: BASE_URL,
   };
 }
@@ -56,36 +55,36 @@ export function buildArticleSchema({
   authors,
   image,
 }: ArticleSchemaProps): object {
-  const authorSchema = authors && authors.length > 0 
-    ? authors.map(name => ({
-        "@type": "Person",
-        name: name,
-      }))
-    : undefined;
+  const authorSchema =
+    authors && authors.length > 0
+      ? authors.map((name) => ({
+          "@type": "Person",
+          name: name,
+        }))
+      : undefined;
 
   return {
     "@context": "https://schema.org",
-    "@type": "TechArticle", 
+    "@type": "TechArticle",
     headline: title,
     ...(description ? { description } : {}),
     ...(image ? { image } : {}),
     ...(datePublished ? { datePublished } : {}),
     ...(dateModified ? { dateModified } : {}),
-    mainEntityOfPage: { 
-      "@type": "WebPage", 
-      "@id": `${BASE_URL}${url}` 
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${BASE_URL}${url}`,
     },
-    ...(authorSchema 
-        ? { author: authorSchema.length === 1 ? authorSchema[0] : authorSchema } 
-        : {}
-    ),
+    ...(authorSchema
+      ? { author: authorSchema.length === 1 ? authorSchema[0] : authorSchema }
+      : {}),
     publisher: {
       "@type": "Organization",
       name: "Confident AI Inc.",
       url: BASE_URL,
-      logo: { 
-        "@type": "ImageObject", 
-        url: `${BASE_URL}/icons/DeepEval.svg` 
+      logo: {
+        "@type": "ImageObject",
+        url: `${BASE_URL}/icons/DeepEval.svg`,
       },
     },
   };
@@ -95,19 +94,19 @@ export function buildBreadcrumbSchema(trail: BreadcrumbItem[]): object | null {
   if (!trail || trail.length === 0) return null;
 
   const items: object[] = [
-    { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL }
+    { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
   ];
 
-  let currentPosition = 2; 
+  let currentPosition = 2;
 
   trail.forEach((crumb, i) => {
     const isLast = i === trail.length - 1;
     let itemUrl = crumb.url;
 
     if (itemUrl) {
-      if (itemUrl.startsWith('/')) {
+      if (itemUrl.startsWith("/")) {
         itemUrl = `${BASE_URL}${itemUrl}`;
-      } else if (!itemUrl.startsWith('http')) {
+      } else if (!itemUrl.startsWith("http")) {
         itemUrl = `${BASE_URL}/${itemUrl}`;
       }
     }
@@ -157,7 +156,8 @@ export function buildBlogHomeSchema(posts: BlogPost[]): object {
     "@context": "https://schema.org",
     "@type": "Blog",
     name: "DeepEval LLM Evaluation Blog",
-    description: "Deep dives into LLM-as-a-judge, unit testing for RAG, and AI quality assurance.",
+    description:
+      "Deep dives into LLM-as-a-judge, unit testing for RAG, and AI quality assurance.",
     url: `${BASE_URL}/blog`,
     publisher: {
       "@type": "Organization",

@@ -136,3 +136,58 @@ In `deepeval`, whether an extracted statement contains PII or privacy violations
 :::note
 The `PIILeakageMetric` detects PII violations in LLM outputs for evaluation purposes. It does not prevent PII leakage in real-time - consider implementing additional safeguards in your production pipeline.
 :::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Is a higher or lower PII Leakage score safer?",
+      answer: (
+        <>
+          <strong>Higher is safer</strong> — the opposite of Toxicity. The score
+          is the share of extracted statements with <em>no</em> PII, and the{" "}
+          <code>threshold</code> (default 0.5) is a <strong>minimum</strong>. 1
+          means nothing leaked; 0 means every statement exposed PII.
+        </>
+      ),
+    },
+    {
+      question: "What counts as PII for this metric?",
+      answer: (
+        <>
+          Six categories: <strong>personal identifiers</strong>,{" "}
+          <strong>financial information</strong>,{" "}
+          <strong>medical information</strong>, <strong>government IDs</strong>,{" "}
+          <strong>personal relationships</strong>, and{" "}
+          <strong>private communications</strong>. Aggregated or anonymized
+          references (e.g. "a customer from New York") don't count as leaks.
+        </>
+      ),
+    },
+    {
+      question:
+        "My app legitimately handles user data — should it still fail this metric?",
+      answer: (
+        <>
+          Set a strict bar (high <code>threshold</code> or{" "}
+          <code>strict_mode</code> for binary pass/fail) so <em>any</em> leaked
+          PII fails. If your app must surface a user's own details, evaluate
+          those flows separately rather than loosening the threshold globally.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric prevent PII leakage in production?",
+      answer: (
+        <>
+          No. <code>PIILeakageMetric</code> <strong>detects</strong> leaks during
+          evaluation; it doesn't redact or block them at runtime. Pair it with
+          dedicated output guardrails in your{" "}
+          <a href="/docs/evaluation-end-to-end-llm-evals">production pipeline</a>{" "}
+          for real-time protection.
+        </>
+      ),
+    },
+  ]}
+/>

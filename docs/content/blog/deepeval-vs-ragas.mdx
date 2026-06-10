@@ -50,19 +50,25 @@ There's going to be a few comparison tables in later sections to talk more about
 
 ### 6. We scale with your evaluation needs
 
-When you use DeepEval, it takes no additional configuration to bring LLM evaluation to your entire organization. Everything is automatically integrated with Confident AI, which is the dashboard/UI for the evaluation results of DeepEval.
+[DeepEval](https://github.com/confident-ai/deepeval) and [Confident AI](https://confident-ai.com) are **two separate products** built by the same team — not the same thing.
 
-This means 0 extra lines of code to:
+- **DeepEval** is the **open-source LLM evaluation framework**: metrics, test cases, datasets, synthetic data generation, benchmarks, and CI/CD evals. It runs locally, requires no account, and works fully standalone.
+- **Confident AI** is an **all-in-one enterprise platform for LLM evaluation, observability, and red teaming**. It adds shared regression reports, online evals on production traces, monitoring, cloud-hosted datasets, prompt and model experimentation, red teaming campaigns, and team collaboration.
 
-- Analyze metric score distributions, averages, and median scores
-- Generate testing reports for you to inspect and debug test cases
-- Download and save testing results as CSV/JSON
-- Share testing reports within your organization and external stakeholders
-- Regression testing to determine whether your LLM app is OK to deploy
-- Experimentation with different models and prompts side-by-side
-- Keep datasets centralized on the cloud
+Confident AI open-sourced many of its metrics through DeepEval. That does not make them the same product, and Confident AI is not a UI layer on top of DeepEval.
 
-Apart from Confident AI, DeepEval also offers DeepTeam, a new package specific for red teaming, which is for safety testing LLM systems. When you use DeepEval, you won't run into a point where you have to leave its ecosystem because we don't support what you're looking for.
+**Use DeepEval on its own** for fast, code-first local evaluation and CI gates. **Use DeepEval with Confident AI** when your team needs:
+
+- Shared dashboards for metric distributions, averages, and trends across runs
+- Test reports to share internally or with external stakeholders
+- Centralized cloud datasets and golden management
+- Regression gates and side-by-side prompt and model experiments
+- Production trace observability and online evaluation of live traffic
+- Red teaming campaigns and safety testing at organization scale
+
+The integration is built into DeepEval — connect once and every DeepEval run syncs to Confident AI without extra code.
+
+DeepEval also pairs with **DeepTeam**, our open-source red teaming framework, which Confident AI's red teaming features build on the same way they build on DeepEval.
 
 ## Comparing DeepEval and Ragas
 
@@ -128,7 +134,7 @@ You'll notice that Ragas does not own their platform integrations such as LangSm
 
 ### Platform
 
-DeepEval integrates natively with Confident AI, a separate AI quality platform with observability, evals, and monitoring built by the same team. Ragas's platform is also called Ragas.
+DeepEval integrates natively with Confident AI, a separate all-in-one enterprise platform for LLM evaluation, observability, and red teaming, built by the same team. Ragas's platform is also called Ragas.
 
 Both have varying degrees of capabilities, and you can draw your own conclusions from the table below.
 

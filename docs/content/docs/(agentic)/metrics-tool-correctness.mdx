@@ -162,3 +162,68 @@ If `exact_match` is not specified and `ToolCall.INPUT_PARAMETERS` is included in
 :::
 
 2. If the `available_tools` are provided, the `ToolCorrectnessMetric` also uses an LLM to find whether the `tools_called` were the most optimal for the given task using the `available_tools` as reference. The final score is the **minimum of both scores**. If `available_tools` is not provided, the LLM-based evaluation does not take place.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Does Tool Correctness use an LLM?",
+      answer: (
+        <>
+          Mostly not. The core score is deterministic — <code>tools_called</code>{" "}
+          vs <code>expected_tools</code>, counting matches. An LLM is only used
+          if you pass <code>available_tools</code> to judge optimality, and the
+          final score is the <strong>minimum</strong> of both.
+        </>
+      ),
+    },
+    {
+      question: "How do I make matching stricter than just tool names?",
+      answer: (
+        <>
+          Add <code>ToolCallParams.INPUT_PARAMETERS</code> or{" "}
+          <code>ToolCallParams.OUTPUT</code> to <code>evaluation_params</code> to
+          also match inputs/outputs. Use{" "}
+          <code>should_consider_ordering=True</code> for call order, or{" "}
+          <code>should_exact_match=True</code> for identical lists (overrides
+          ordering).
+        </>
+      ),
+    },
+    {
+      question: "Tool Correctness vs Argument Correctness — what's the difference?",
+      answer: (
+        <>
+          Tool Correctness checks the <strong>right tools</strong> were called,
+          deterministically against <code>expected_tools</code>.{" "}
+          <a href="/docs/metrics-argument-correctness">Argument Correctness</a>{" "}
+          checks the <strong>arguments</strong> passed to those tools, via an LLM
+          with no reference.
+        </>
+      ),
+    },
+    {
+      question: "Can I evaluate whether the agent picked the best tool, not just a valid one?",
+      answer: (
+        <>
+          Yes — pass <code>available_tools</code> and an LLM judges whether the{" "}
+          <code>tools_called</code> were optimal. Without it, the metric only
+          checks calls against <code>expected_tools</code> deterministically.
+        </>
+      ),
+    },
+    {
+      question: "Can I use Tool Correctness with LangChain, OpenAI, or another framework?",
+      answer: (
+        <>
+          Yes. <code>deepeval</code> auto-traces agents built with{" "}
+          <a href="/integrations/frameworks/langchain">LangChain</a>,{" "}
+          <a href="/integrations/frameworks/openai">OpenAI</a>, LlamaIndex,
+          CrewAI, and more — see all{" "}
+          <a href="/integrations">framework integrations</a>.
+        </>
+      ),
+    },
+  ]}
+/>

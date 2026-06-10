@@ -1,0 +1,87 @@
+{
+  "name": "DeepEval Attributes Trace",
+  "uuid": "13450eb8-658b-41a0-82a4-9c1a15922aa5",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "376659e0d5b792ae",
+      "name": "ai.generateText",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "13450eb8-658b-41a0-82a4-9c1a15922aa5",
+      "startTime": "2026-02-23T14:52:43.311Z",
+      "endTime": "2026-02-23T14:52:44.121Z",
+      "input": {
+        "prompt": "What is the capital of France?"
+      },
+      "output": "The capital of France is Paris.",
+      "metricCollection": "llm-specific-metrics",
+      "model": "gpt-4o-mini",
+      "promptAlias": "ai-sdk-test-prompt",
+      "promptCommitHash": "abcdef123",
+      "promptLabel": "testing",
+      "promptVersion": "01.00.00",
+      "metadata": {
+        "provider": "openai.responses",
+        "finish_reason": "stop",
+        "max_retries": 2
+      }
+    },
+    {
+      "uuid": "c082a634c3b99480",
+      "name": "ai.generateText.doGenerate",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "13450eb8-658b-41a0-82a4-9c1a15922aa5",
+      "parentUuid": "376659e0d5b792ae",
+      "startTime": "2026-02-23T14:52:43.312Z",
+      "endTime": "2026-02-23T14:52:44.118Z",
+      "input": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "What is the capital of France?"
+            }
+          ]
+        }
+      ],
+      "output": "The capital of France is Paris.",
+      "metricCollection": "llm-specific-metrics",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 14,
+      "outputTokenCount": 8,
+      "promptAlias": "ai-sdk-test-prompt",
+      "promptCommitHash": "abcdef123",
+      "promptLabel": "testing",
+      "promptVersion": "01.00.00",
+      "metadata": {
+        "response_id": "resp_09e3e94eee603a1700699c69bb8b348190b0f6acb2e04a2c2c",
+        "response_model": "gpt-4o-mini-2024-07-18",
+        "provider": "openai.responses",
+        "finish_reason": "stop",
+        "max_retries": 2
+      }
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-23T14:52:43.310Z",
+  "endTime": "2026-02-23T14:52:44.123Z",
+  "environment": "testing",
+  "metadata": {
+    "custom_business_id": "biz_789"
+  },
+  "tags": [
+    "vercel",
+    "attributes-test",
+    "evaluation"
+  ],
+  "threadId": "test_thread_id",
+  "userId": "test_user_id",
+  "input": "{\"prompt\":\"What is the capital of France?\"}",
+  "output": "The capital of France is Paris.",
+  "metricCollection": "global-trace-metrics"
+}

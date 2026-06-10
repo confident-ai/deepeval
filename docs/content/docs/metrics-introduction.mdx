@@ -86,7 +86,7 @@ For those looking for a full-blown LLM red teaming orchestration frameowork, che
 </Tab>
 <Tab value="Image">
 
-Metrics in `deepeval` are multi-modal by default, metrics targetting images are metrics that definitely expects an image in the test case. They include:
+Metrics in `deepeval` are multi-modal by default, metrics targeting images are metrics that definitely expects an image in the test case. They include:
 
 - Image Coherence
 - Image Helpfulness
@@ -131,7 +131,8 @@ If you're logged into [Confident AI](https://confident-ai.com) before running an
 <VideoDisplayer
   src={ASSETS.evaluationSingleTurnE2eReport}
   confidentUrl="/docs/llm-evaluation/dashboards/testing-reports"
-  label="Run Evaluations on Confident AI"
+  label="Run evaluations on Confident AI"
+  description="Get sharable test reports for every metric you run with deepeval."
 />
 
 More information on everything can be found on the [Confident AI evaluation docs.](https://www.confident-ai.com/docs/llm-evaluation/quickstart)
@@ -263,7 +264,7 @@ evaluate(observed_callback=trip_planner_agent, goldens=[Golden(input="Paris, 2")
 
 Chatbots require "conversational" (or multi-turn) metrics and they include:
 
-- **Conversation Completeness:** Evaluates if conversation satisify user needs.
+- **Conversation Completeness:** Evaluates if conversation satisfy user needs.
 - **Conversation Relevancy:** Measures if the generated outputs are relevant to user inputs.
 - **Role Adherence:** Assesses if the chatbot stays in character throughout a conversation.
 - **Knowledge Retention:** Evaluates if the chatbot is able to retain knowledge learnt throughout a conversation.
@@ -288,10 +289,10 @@ print(role_adherence.score, role_adherence.reason)
 from deepeval.test_case import LLMTestCase, MLLMImage
 from deepeval.metrics import ImageCoherenceMetric
 
-test_case = LLMTestCase(input=f"What does thsi image say? {MLLMImage(...)}", actual_output="No idea!")
+test_case = LLMTestCase(input=f"What does this image say? {MLLMImage(...)}", actual_output="No idea!")
 image_coherence = ImageCoherenceMetric(threshold=0.5)
 
-image_coherence.measure(m_test_case)
+image_coherence.measure(test_case)
 print(image_coherence.score, image_coherence.reason)
 ```
 
@@ -766,3 +767,92 @@ You can find examples of how this can be done in more detail on the **Customize 
 If you're looking to use something like **ROUGE**, **BLEU**, or **BLEURT**, etc. you can create a custom metric and use the `scorer` module available in `deepeval` for scoring by following [this guide](/docs/metrics-custom).
 
 The [`scorer` module](https://github.com/confident-ai/deepeval/blob/main/deepeval/scorer/scorer.py) is available but not documented because our experience tells us these scorers are not useful as LLM metrics where outputs require a high level of reasoning to evaluate.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How many metrics should I use?",
+      answer: (
+        <>
+          No more than 5: roughly <strong>2-3</strong> generic system metrics
+          (e.g. RAG or agent metrics) and <strong>1-2</strong> custom use-case
+          metrics. Capping forces you to prioritize what you actually care
+          about.
+        </>
+      ),
+    },
+    {
+      question: "Do all of deepeval's metrics use an LLM?",
+      answer: (
+        <>
+          Most do — they're <strong>LLM-as-a-judge</strong> (QAG, G-Eval). The{" "}
+          <a href="/docs/metrics-dag">DAGMetric</a> can be fully deterministic,
+          and for statistical scorers like ROUGE/BLEU you build a{" "}
+          <a href="/docs/metrics-custom">custom metric</a> with the{" "}
+          <code>scorer</code> module.
+        </>
+      ),
+    },
+    {
+      question: "Which metrics can I use in production?",
+      answer: (
+        <>
+          Only <strong>referenceless</strong> ones, since no labeled data exists
+          live. Reference-based metrics (e.g.{" "}
+          <a href="/docs/metrics-contextual-recall">Contextual Recall</a>,{" "}
+          <a href="/docs/metrics-tool-correctness">Tool Correctness</a>) need a
+          ground truth and are for development.
+        </>
+      ),
+    },
+    {
+      question: "Should I use G-Eval or DAG for a custom metric?",
+      answer: (
+        <>
+          <a href="/docs/metrics-llm-evals">G-Eval</a> for subjective criteria
+          (correctness, tone) — easy to set up.{" "}
+          <a href="/docs/metrics-dag">DAG</a> is a decision-tree for
+          objective/mixed criteria and gives deterministic scores. Start with
+          G-Eval, move to DAG for more control.
+        </>
+      ),
+    },
+    {
+      question: "Can I use my own LLM as the judge?",
+      answer: (
+        <>
+          Yes. Pass any model via the <code>model</code> param — OpenAI, Azure,
+          Ollama, Gemini, LiteLLM — or wrap your own by subclassing{" "}
+          <code>DeepEvalBaseLLM</code>. See the{" "}
+          <a href="/guides/guides-using-custom-llms">custom LLM guide</a>.
+        </>
+      ),
+    },
+    {
+      question: "How do I run metrics in production for monitoring?",
+      answer: (
+        <>
+          In production you run <strong>referenceless</strong> metrics on your
+          live LLM <a href="/docs/evaluation-llm-tracing">traces</a> rather than
+          test cases. For continuous online evals, dashboards, and alerts on
+          live traffic, run them on{" "}
+          <a href="https://confident-ai.com">Confident AI</a>, the enterprise
+          platform for all-in-one evals, observability, and red teaming.
+        </>
+      ),
+    },
+    {
+      question: "Can I run metrics on traces for monitoring?",
+      answer: (
+        <>
+          Yes. Once you <a href="/docs/evaluation-llm-tracing">set up tracing</a>
+          , metrics can score spans and traces automatically. Wire them up on{" "}
+          <a href="https://confident-ai.com">Confident AI</a> to track metric
+          scores on production traffic over time.
+        </>
+      ),
+    },
+  ]}
+/>

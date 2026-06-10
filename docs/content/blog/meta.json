@@ -4,10 +4,12 @@
     "index",
 
     "---[Megaphone]Announcements---",
+    "typescript-in-deepeval-monorepo",
     "introducing-deepeval-4",
     "deepeval-got-a-new-look",
 
     "---[Users]Community---",
+    "what-is-an-eval-harness",
     "medical-chatbot-deepeval-guide",
     "rag-contract-assistant-deepeval-guide",
     "use-case-cognee-ai-memory",

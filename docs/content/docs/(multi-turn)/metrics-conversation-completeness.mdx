@@ -73,3 +73,53 @@ The `ConversationCompletenessMetric` score is calculated according to the follow
 The `ConversationCompletenessMetric` assumes that a conversion is only complete if user intentions, such as asking for help to an LLM chatbot, are met by the LLM chatbot.
 
 Hence, the `ConversationCompletenessMetric` first uses an LLM to extract a list of high level user intentions found in `turns` (in `"user"` roles), before using the same LLM to determine whether each intention was met and/or satisfied throughout the conversation by the `"assistant"`.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is Conversation Completeness different from Goal Accuracy?",
+      answer: (
+        <>
+          Completeness measures <em>breadth</em> — did the assistant satisfy{" "}
+          <strong>every</strong> intention raised.{" "}
+          <a href="/docs/metrics-goal-accuracy">Goal Accuracy</a> measures
+          reaching a single overarching task. A bot can hit the main goal yet
+          leave secondary requests unaddressed.
+        </>
+      ),
+    },
+    {
+      question: "What does an incomplete conversation look like?",
+      answer: (
+        <>
+          The user voiced several intentions but only some were met — e.g.
+          asking to reset a password <em>and</em> update billing, where the bot
+          only handled the reset. The unaddressed intention lowers the score.
+        </>
+      ),
+    },
+    {
+      question: "How does the metric decide what the user wanted?",
+      answer: (
+        <>
+          An LLM extracts high-level intentions from the <code>"user"</code>{" "}
+          turns, then checks each against the <code>"assistant"</code> turns.
+          The score is satisfied intentions over total intentions.
+        </>
+      ),
+    },
+    {
+      question: "Can I use this as a user-satisfaction proxy?",
+      answer: (
+        <>
+          Yes. Since it reflects how many user needs were met end to end,{" "}
+          <code>ConversationCompletenessMetric</code> works well as a proxy for
+          overall satisfaction in chatbot use cases.
+        </>
+      ),
+    },
+  ]}
+/>
+
