@@ -242,7 +242,9 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
         usage = getattr(response, "usage", None)
         input_tokens = getattr(usage, "prompt_tokens", None)
         output_tokens = getattr(usage, "completion_tokens", None)
-        return self.calculate_cost(input_tokens, output_tokens, response=response)
+        return self.calculate_cost(
+            input_tokens, output_tokens, response=response
+        )
 
     def generate_content(
         self, multimodal_input: Optional[List[Union[str, MLLMImage]]] = None
