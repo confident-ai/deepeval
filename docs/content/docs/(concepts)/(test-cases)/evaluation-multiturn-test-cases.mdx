@@ -92,6 +92,8 @@ class RetrievedContextData(BaseModel):
     source: str
 ```
 
+Use `source` to identify the retrieval unit that the context belongs to. Contextual precision metrics group `RetrievedContextData` entries with the same `source`, so you can use a section ID for section-level evaluation or a chunk hash when the same chunk can appear multiple times after hybrid search fusion. Plain string entries remain independent retrieval nodes. Empty sources are treated as independent nodes and will emit a warning, while overly broad sources may warn that grouping granularity is too coarse.
+
 The `role` parameter specifies whether a particular turn is by the `"user"` (end user) or `"assistant"` (LLM). This is similar to OpenAI's API.
 
 ### Scenario

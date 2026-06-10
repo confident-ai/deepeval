@@ -7,6 +7,7 @@ from deepeval.utils import (
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_llm_test_case_params,
+    group_retrieval_contexts_by_source,
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
@@ -270,35 +271,7 @@ class ContextualPrecisionMetric(BaseMetric):
     def _group_retrieval_contexts(
         self, retrieval_contexts: List[Union[str, RetrievedContextData]]
     ) -> List[str]:
-        grouped_contexts_dict = {}
-        ordered_identifiers = []
-
-        for context in retrieval_contexts:
-            if isinstance(context, RetrievedContextData):
-                if context.source not in grouped_contexts_dict:
-                    ordered_identifiers.append(
-                        {"type": "grouped", "key": context.source}
-                    )
-                    grouped_contexts_dict[context.source] = []
-                grouped_contexts_dict[context.source].append(context.context)
-            else:
-                ordered_identifiers.append(
-                    {"type": "standalone", "value": context}
-                )
-
-        processed_contexts = []
-        for item in ordered_identifiers:
-            if item["type"] == "grouped":
-                source = item["key"]
-                contents = grouped_contexts_dict[source]
-                combined_content = f"Source: {source}\n" + "\n---\n".join(
-                    contents
-                )
-                processed_contexts.append(combined_content)
-            else:
-                processed_contexts.append(item["value"])
-
-        return processed_contexts
+        return group_retrieval_contexts_by_source(retrieval_contexts)
 
     def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)
