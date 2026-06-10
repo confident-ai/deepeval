@@ -20,7 +20,7 @@ export class AmazonBedrockModel extends DeepEvalBaseLLM {
   private readonly awsAccessKeyId?: string;
   private readonly awsSecretAccessKey?: string;
   private readonly awsSessionToken?: string;
-  private readonly temperature: number;
+  private readonly temperature?: number;
   private readonly costPerInputToken?: number;
   private readonly costPerOutputToken?: number;
   private sdk?: any;
@@ -39,7 +39,8 @@ export class AmazonBedrockModel extends DeepEvalBaseLLM {
       options.awsSecretAccessKey ?? process.env.AWS_SECRET_ACCESS_KEY;
     this.awsSessionToken =
       options.awsSessionToken ?? process.env.AWS_SESSION_TOKEN;
-    this.temperature = options.temperature ?? 0;
+    // Only sent when explicitly set — some models (e.g. reasoning models) reject `temperature`.
+    this.temperature = options.temperature;
     this.costPerInputToken = options.costPerInputToken;
     this.costPerOutputToken = options.costPerOutputToken;
   }
@@ -89,7 +90,9 @@ export class AmazonBedrockModel extends DeepEvalBaseLLM {
       new ConverseCommand({
         modelId: this.modelName,
         messages: [{ role: "user", content: [{ text: prompt }] }],
-        inferenceConfig: { temperature: this.temperature },
+        ...(this.temperature !== undefined && {
+          inferenceConfig: { temperature: this.temperature },
+        }),
       }),
     );
 

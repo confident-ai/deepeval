@@ -1,14 +1,14 @@
-import { defineConfig, defineDocs } from 'fumadocs-mdx/config';
-import { remarkMdxMermaid } from 'fumadocs-core/mdx-plugins/remark-mdx-mermaid';
-import lastModified from 'fumadocs-mdx/plugins/last-modified';
-import { metaSchema, pageSchema } from 'fumadocs-core/source/schema';
-import { z } from 'zod';
-import remarkMath from 'remark-math';
-import remarkDirective from 'remark-directive';
-import rehypeKatex from 'rehype-katex';
-import { remarkAdmonitions } from './lib/remark-admonitions';
-import { AUTHOR_IDS } from './lib/authors';
-import { BLOG_CATEGORY_IDS } from './lib/blog-categories';
+import { defineConfig, defineDocs } from "fumadocs-mdx/config";
+import { remarkMdxMermaid } from "fumadocs-core/mdx-plugins/remark-mdx-mermaid";
+import lastModified from "fumadocs-mdx/plugins/last-modified";
+import { metaSchema, pageSchema } from "fumadocs-core/source/schema";
+import { z } from "zod";
+import remarkMath from "remark-math";
+import remarkDirective from "remark-directive";
+import rehypeKatex from "rehype-katex";
+import { remarkAdmonitions } from "./lib/remark-admonitions";
+import { AUTHOR_IDS } from "./lib/authors";
+import { BLOG_CATEGORY_IDS } from "./lib/blog-categories";
 
 /**
  * Extend Fumadocs' default page frontmatter with a Docusaurus-style
@@ -63,21 +63,21 @@ const blogOptions = {
   },
 } as const;
 
-export const docs = defineDocs({ dir: 'content/docs', ...commonOptions });
-export const guides = defineDocs({ dir: 'content/guides', ...commonOptions });
+export const docs = defineDocs({ dir: "content/docs", ...commonOptions });
+export const guides = defineDocs({ dir: "content/guides", ...commonOptions });
 export const tutorials = defineDocs({
-  dir: 'content/tutorials',
+  dir: "content/tutorials",
   ...commonOptions,
 });
 export const integrations = defineDocs({
-  dir: 'content/integrations',
+  dir: "content/integrations",
   ...commonOptions,
 });
 export const changelog = defineDocs({
-  dir: 'content/changelog',
+  dir: "content/changelog",
   ...commonOptions,
 });
-export const blog = defineDocs({ dir: 'content/blog', ...blogOptions });
+export const blog = defineDocs({ dir: "content/blog", ...blogOptions });
 
 export default defineConfig({
   // `lastModified` reads each file's latest git commit timestamp at build

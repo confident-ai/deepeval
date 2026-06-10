@@ -22,7 +22,7 @@ export interface OpenAICompatibleModelOptions {
 export class DeepEvalOpenAICompatibleModel extends DeepEvalBaseLLM {
   protected apiKey: string;
   protected baseURL?: string;
-  protected temperature: number;
+  protected temperature?: number;
   protected defaultHeaders?: Record<string, string>;
   protected costPerInputToken?: number;
   protected costPerOutputToken?: number;
@@ -35,7 +35,8 @@ export class DeepEvalOpenAICompatibleModel extends DeepEvalBaseLLM {
     super(options.model);
     this.apiKey = options.apiKey ?? "";
     this.baseURL = options.baseURL;
-    this.temperature = options.temperature ?? 0;
+    // Only sent when explicitly set — some models (e.g. reasoning models) reject `temperature`.
+    this.temperature = options.temperature;
     this.defaultHeaders = options.defaultHeaders;
     this.costPerInputToken = options.costPerInputToken;
     this.costPerOutputToken = options.costPerOutputToken;
@@ -70,7 +71,7 @@ export class DeepEvalOpenAICompatibleModel extends DeepEvalBaseLLM {
     const request: Record<string, unknown> = {
       model: this.modelName,
       messages: [{ role: "user", content: prompt }],
-      temperature: this.temperature,
+      ...(this.temperature !== undefined && { temperature: this.temperature }),
     };
     if (schema) {
       request.response_format = {

@@ -11,6 +11,7 @@ import SiteThemeSwitch from "@/src/components/SiteThemeSwitch";
 import { appName } from "@/lib/shared";
 import { navLinks } from "@/lib/layout.shared";
 import AskAIButton from "@/src/components/AskAIButton";
+import Wordmark from "@/src/components/Wordmark";
 import HomeOverflowNav from "@/src/layouts/HomeOverflowNav";
 import NavLinks from "@/src/layouts/NavLinks";
 import NavMenu from "@/src/layouts/NavMenu";
@@ -120,11 +121,7 @@ const SiteTopNav: React.FC<SiteTopNavProps> = ({
         >
           <div className={styles.homeLogoCell}>
             <Link href="/" className={styles.brandLink} aria-label={appName}>
-              <span
-                className={`${styles.wordmark} ${styles.wordmarkHome}`}
-                role="img"
-                aria-label={appName}
-              />
+              <Wordmark className={styles.wordmarkHome} />
             </Link>
           </div>
 

@@ -8,7 +8,7 @@ import {
 } from 'collections/server';
 import { loader, type PageTreeTransformer } from 'fumadocs-core/source';
 import { lucideIconsPlugin } from 'fumadocs-core/source/lucide-icons';
-import { contentRouteFor, docsImageRoute } from './shared';
+import { contentRouteFor, docsImageRoute, blogImageRoute } from './shared';
 import { getTerm } from './lang/terms';
 
 /**
@@ -93,6 +93,25 @@ export function getPageImage(page: (typeof source)['$inferPage']) {
   return {
     segments,
     url: `${docsImageRoute}/${segments.join('/')}`,
+  };
+}
+
+/**
+ * Generated-OG-image URL for a blog page. Mirrors `getPageImage` but
+ * targets the blog's own `/og/blog/<slug>/image.png` route handler.
+ * Used as the per-post `og:image` fallback when a post doesn't set
+ * an explicit `image:` in frontmatter — without it, the blog section's
+ * `openGraph` override would emit no `og:image` (Next overwrites, not
+ * deep-merges, the root layout's `openGraph`), and scrapers like
+ * LinkedIn would fall back to grabbing the author avatar off the page.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getBlogPageImage(page: any) {
+  const segments = [...page.slugs, 'image.png'];
+
+  return {
+    segments,
+    url: `${blogImageRoute}/${segments.join('/')}`,
   };
 }
 

@@ -34,7 +34,9 @@ class OpenRouterModel(DeepEvalOpenAICompatibleModel):
         **kwargs,
     ):
         settings = get_settings()
-        model = model or settings.OPENROUTER_MODEL_NAME or DEFAULT_OPENROUTER_MODEL
+        model = (
+            model or settings.OPENROUTER_MODEL_NAME or DEFAULT_OPENROUTER_MODEL
+        )
 
         if api_key is not None:
             # keep it secret, keep it safe from serializing, logging and alike

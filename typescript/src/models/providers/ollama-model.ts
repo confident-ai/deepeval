@@ -19,7 +19,7 @@ export interface OllamaModelOptions {
 
 export class OllamaModel extends DeepEvalBaseLLM {
   private readonly baseURL: string;
-  private readonly temperature: number;
+  private readonly temperature?: number;
   private readonly costPerInputToken?: number;
   private readonly costPerOutputToken?: number;
   private client?: any;
@@ -30,7 +30,8 @@ export class OllamaModel extends DeepEvalBaseLLM {
       options.baseURL ??
       process.env.LOCAL_MODEL_BASE_URL ??
       DEFAULT_OLLAMA_BASE_URL;
-    this.temperature = options.temperature ?? 0;
+    // Only sent when explicitly set — some models (e.g. reasoning models) reject `temperature`.
+    this.temperature = options.temperature;
     this.costPerInputToken = options.costPerInputToken;
     this.costPerOutputToken = options.costPerOutputToken;
   }
@@ -57,7 +58,9 @@ export class OllamaModel extends DeepEvalBaseLLM {
     const request: Record<string, unknown> = {
       model: this.modelName,
       messages: [{ role: "user", content: prompt }],
-      options: { temperature: this.temperature },
+      ...(this.temperature !== undefined && {
+        options: { temperature: this.temperature },
+      }),
     };
     if (schema) {
       request.format = toJsonSchema(schema);

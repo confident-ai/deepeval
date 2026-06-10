@@ -26,6 +26,7 @@ export const siteDescription =
 
 export const docsRoute = '/docs';
 export const docsImageRoute = '/og/docs';
+export const blogImageRoute = '/og/blog';
 
 /**
  * Raw-markdown API route prefix for any section. We host a Next.js

@@ -77,7 +77,7 @@ So today, we're releasing [1-line integrations](/integrations) with what we thin
 
 These integrations mean that you can trace **and** evaluate entire agents in 1 line of code. Let's take LangChain for example. Say you want a local evaluation suite that runs in CI/CD — this is how you'd do it with DeepEval in 4.0:
 
-```python test_langchain_agent.py
+```python title="test_langchain_agent.py"
 import pytest
 from langchain.agents import create_agent
 from deepeval import assert_test
