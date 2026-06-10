@@ -2,6 +2,7 @@ import inspect
 import json
 import re
 import sys
+import warnings
 from typing import (
     Any,
     Callable,
@@ -82,6 +83,8 @@ MULTIMODAL_SUPPORTED_MODELS = {
 }
 
 SETTINGS = get_settings()
+SOURCE_GROUPING_GRANULARITY_WARNING_THRESHOLD = 0.5
+SOURCE_GROUPING_GRANULARITY_WARNING_MIN_COUNT = 3
 
 
 def copy_metrics(
@@ -190,20 +193,65 @@ def get_unit_interactions(turns: List[Turn]) -> List[List[Turn]]:
 
 def group_retrieval_contexts_by_source(
     retrieval_contexts: List[Union[str, RetrievedContextData]],
+    source_granularity_warning_threshold: Optional[
+        float
+    ] = SOURCE_GROUPING_GRANULARITY_WARNING_THRESHOLD,
 ) -> List[str]:
-    grouped_contexts_dict = {}
+    grouped_contexts_dict: Dict[str, List[str]] = {}
+    source_counts: Dict[str, int] = {}
     ordered_identifiers = []
+    retrieved_context_data_count = 0
+    empty_source_count = 0
 
     for context in retrieval_contexts:
         if isinstance(context, RetrievedContextData):
-            if context.source not in grouped_contexts_dict:
+            retrieved_context_data_count += 1
+            source = (context.source or "").strip()
+
+            if source == "":
+                empty_source_count += 1
                 ordered_identifiers.append(
-                    {"type": "grouped", "key": context.source}
+                    {"type": "standalone", "value": context.context}
                 )
-                grouped_contexts_dict[context.source] = []
-            grouped_contexts_dict[context.source].append(context.context)
+                continue
+
+            source_counts[source] = source_counts.get(source, 0) + 1
+            if source not in grouped_contexts_dict:
+                ordered_identifiers.append({"type": "grouped", "key": source})
+                grouped_contexts_dict[source] = []
+            grouped_contexts_dict[source].append(context.context)
         else:
             ordered_identifiers.append({"type": "standalone", "value": context})
+
+    if empty_source_count > 0:
+        warnings.warn(
+            "RetrievedContextData entries with an empty source are not grouped "
+            "for contextual precision. Set source to a section/span ID or "
+            "chunk hash to enable source-based grouping.",
+            UserWarning,
+            stacklevel=2,
+        )
+
+    if (
+        source_granularity_warning_threshold is not None
+        and retrieved_context_data_count > 0
+    ):
+        for source, count in source_counts.items():
+            source_ratio = count / retrieved_context_data_count
+            if (
+                count >= SOURCE_GROUPING_GRANULARITY_WARNING_MIN_COUNT
+                and source_ratio > source_granularity_warning_threshold
+            ):
+                warnings.warn(
+                    f'RetrievedContextData source "{source}" is shared by '
+                    f"{count}/{retrieved_context_data_count} retrieved context "
+                    "entries. This may be too broad for meaningful "
+                    "source-based grouping; use a more granular section/span "
+                    "ID or chunk hash if unrelated contexts should be scored "
+                    "separately.",
+                    UserWarning,
+                    stacklevel=2,
+                )
 
     processed_contexts = []
     for item in ordered_identifiers:

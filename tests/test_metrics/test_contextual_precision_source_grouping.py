@@ -3,10 +3,12 @@ from types import MethodType
 from deepeval.metrics.contextual_precision.contextual_precision import (
     ContextualPrecisionMetric,
 )
+from deepeval.metrics.utils import group_retrieval_contexts_by_source
 from deepeval.metrics.turn_contextual_precision.turn_contextual_precision import (
     TurnContextualPrecisionMetric,
 )
 from deepeval.test_case import RetrievedContextData, Turn
+import pytest
 
 
 def test_contextual_precision_groups_retrieved_context_data_by_source():
@@ -84,4 +86,55 @@ def test_turn_contextual_precision_groups_retrieved_context_data_by_source():
             "dense retrieval copy\n---\nsparse retrieval copy",
             "standalone appendix",
         ]
+    ]
+
+
+def test_source_grouping_warns_and_skips_empty_sources():
+    with pytest.warns(UserWarning, match="empty source"):
+        grouped_contexts = group_retrieval_contexts_by_source(
+            [
+                RetrievedContextData(
+                    source="",
+                    context="context without source",
+                ),
+                RetrievedContextData(
+                    source="chunk-hash/revenue",
+                    context="context with source",
+                ),
+            ]
+        )
+
+    assert grouped_contexts == [
+        "context without source",
+        "Source: chunk-hash/revenue\ncontext with source",
+    ]
+
+
+def test_source_grouping_warns_when_source_granularity_is_too_broad():
+    with pytest.warns(UserWarning, match="may be too broad"):
+        grouped_contexts = group_retrieval_contexts_by_source(
+            [
+                RetrievedContextData(
+                    source="document",
+                    context="revenue section",
+                ),
+                RetrievedContextData(
+                    source="document",
+                    context="risk factor section",
+                ),
+                RetrievedContextData(
+                    source="document",
+                    context="appendix section",
+                ),
+                RetrievedContextData(
+                    source="chunk-hash/guidance",
+                    context="guidance section",
+                ),
+            ]
+        )
+
+    assert grouped_contexts == [
+        "Source: document\n"
+        "revenue section\n---\nrisk factor section\n---\nappendix section",
+        "Source: chunk-hash/guidance\nguidance section",
     ]
