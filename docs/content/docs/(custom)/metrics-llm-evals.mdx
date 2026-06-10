@@ -47,7 +47,7 @@ correctness_metric = GEval(
 )
 ```
 
-There are **THREE** mandatory and **SEVEN** optional parameters required when instantiating an `GEval` class:
+There are **THREE** mandatory and several optional parameters required when instantiating an `GEval` class:
 
 - `name`: name of custom metric.
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
@@ -59,6 +59,7 @@ There are **THREE** mandatory and **SEVEN** optional parameters required when in
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+- [Optional] `max_retrieval_context_tokens`: an integer token budget for `retrieval_context` when it is included in `evaluation_params`. When set, large retrieved chunks are compacted before they are added to the G-Eval prompt. Defaulted to `None`.
 - [Optional] `evaluation_template`: a class of type `GEvalTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `GEval` score. Defaulted to `deepeval`'s `GEvalTemplate`.
 
 :::danger
@@ -117,6 +118,29 @@ correctness_metric = GEval(
     evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
 )
 ```
+
+### Large Retrieval Contexts
+
+When you use `SingleTurnParams.RETRIEVAL_CONTEXT` in a custom G-Eval metric, the retrieved chunks become part of the judge prompt. If your retriever returns very large documents, this can push the prompt toward the model context limit and make the judge focus on irrelevant middle sections.
+
+Use `max_retrieval_context_tokens` to keep the retrieval evidence bounded:
+
+```python
+from deepeval.metrics import GEval
+from deepeval.test_case import SingleTurnParams
+
+faithfulness = GEval(
+    name="RAG Faithfulness",
+    criteria="Check whether the actual output is supported by the retrieval context.",
+    evaluation_params=[
+        SingleTurnParams.ACTUAL_OUTPUT,
+        SingleTurnParams.RETRIEVAL_CONTEXT,
+    ],
+    max_retrieval_context_tokens=4000,
+)
+```
+
+When the retrieval context is over budget, `GEval` preserves the start and end of each visible chunk, includes source labels for `RetrievedContextData`, and inserts an omission marker so the judge knows the context was compacted.
 
 ### Rubric
 
@@ -495,4 +519,3 @@ metric.measure(...)
     },
   ]}
 />
-

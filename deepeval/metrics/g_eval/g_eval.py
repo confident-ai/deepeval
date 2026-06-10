@@ -57,6 +57,7 @@ class GEval(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        max_retrieval_context_tokens: Optional[int] = None,
         evaluation_template: Type[GEvalTemplate] = GEvalTemplate,
         _include_g_eval_suffix: bool = True,
     ):
@@ -65,6 +66,14 @@ class GEval(BaseMetric):
 
         if criteria is not None or evaluation_steps is not None:
             validate_criteria_and_evaluation_steps(criteria, evaluation_steps)
+
+        if (
+            max_retrieval_context_tokens is not None
+            and max_retrieval_context_tokens <= 0
+        ):
+            raise ValueError(
+                "max_retrieval_context_tokens must be greater than 0."
+            )
 
         self.name = name
         self.evaluation_params = evaluation_params
@@ -84,6 +93,7 @@ class GEval(BaseMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
+        self.max_retrieval_context_tokens = max_retrieval_context_tokens
         self._include_g_eval_suffix = _include_g_eval_suffix
         self.evaluation_template = evaluation_template
 
@@ -276,7 +286,9 @@ class GEval(BaseMetric):
         _additional_context: Optional[str] = None,
     ) -> Tuple[Union[int, float], str]:
         test_case_content = construct_test_case_string(
-            self.evaluation_params, test_case
+            self.evaluation_params,
+            test_case,
+            self.max_retrieval_context_tokens,
         )
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
@@ -349,7 +361,9 @@ class GEval(BaseMetric):
         _additional_context: Optional[str] = None,
     ) -> Tuple[Union[int, float], str]:
         test_case_content = construct_test_case_string(
-            self.evaluation_params, test_case
+            self.evaluation_params,
+            test_case,
+            self.max_retrieval_context_tokens,
         )
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params

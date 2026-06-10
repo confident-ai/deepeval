@@ -7,16 +7,13 @@ from deepeval.test_case import (
     SingleTurnParams,
     MultiTurnParams,
     LLMTestCase,
+    RetrievedContextData,
     ToolCall,
 )
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 from deepeval.models.llms.constants import OPENAI_MODELS_DATA
 
 from deepeval.test_case.conversational_test_case import ConversationalTestCase
-
-
-from pydantic import BaseModel, Field
-from typing import Optional, List, Tuple
 
 
 class APIRubric(BaseModel):
@@ -321,14 +318,115 @@ def construct_non_turns_test_case_string(
     return f"Conversation-level fields:\n{body}"
 
 
+TOKEN_CHAR_RATIO = 4
+MIN_CONTEXT_WINDOW_TOKENS = 32
+
+
+def estimate_token_count(text: str) -> int:
+    return max(1, math.ceil(len(text) / TOKEN_CHAR_RATIO))
+
+
+def _normalize_retrieval_context_item(
+    item: Union[str, RetrievedContextData],
+) -> Tuple[Optional[str], str]:
+    if isinstance(item, RetrievedContextData):
+        return item.source, item.context
+    return None, str(item)
+
+
+def _truncate_middle(text: str, max_tokens: int, label: str) -> str:
+    max_chars = max_tokens * TOKEN_CHAR_RATIO
+    if len(text) <= max_chars:
+        return text
+
+    marker = (
+        f"\n\n[... omitted ~{estimate_token_count(text) - max_tokens} "
+        f"tokens from {label} to fit GEval retrieval context budget ...]\n\n"
+    )
+    if max_chars <= len(marker) + 16:
+        return text[:max_chars]
+
+    remaining_chars = max_chars - len(marker)
+    head_chars = math.ceil(remaining_chars * 0.6)
+    tail_chars = remaining_chars - head_chars
+
+    return f"{text[:head_chars]}{marker}{text[-tail_chars:]}"
+
+
+def format_retrieval_context_with_budget(
+    retrieval_context: List[Union[str, RetrievedContextData]],
+    max_retrieval_context_tokens: int,
+) -> str:
+    if max_retrieval_context_tokens <= 0:
+        raise ValueError("max_retrieval_context_tokens must be greater than 0.")
+
+    normalized_contexts = [
+        _normalize_retrieval_context_item(item) for item in retrieval_context
+    ]
+    total_tokens = sum(
+        estimate_token_count(context) for _, context in normalized_contexts
+    )
+
+    if total_tokens <= max_retrieval_context_tokens:
+        return str(retrieval_context)
+
+    if not normalized_contexts:
+        return str(retrieval_context)
+
+    context_count = len(normalized_contexts)
+    visible_context_count = min(
+        context_count,
+        max(1, max_retrieval_context_tokens // MIN_CONTEXT_WINDOW_TOKENS),
+    )
+    visible_contexts = normalized_contexts[:visible_context_count]
+    omitted_context_count = context_count - visible_context_count
+    context_token_budget = max(
+        1,
+        max_retrieval_context_tokens // visible_context_count,
+    )
+
+    rendered_contexts = [
+        (
+            "[retrieval_context compacted for GEval: "
+            f"estimated {total_tokens} tokens across {context_count} chunks; "
+            f"budget {max_retrieval_context_tokens} tokens]"
+        )
+    ]
+    for index, (source, context) in enumerate(visible_contexts, start=1):
+        label = f"retrieval chunk {index}"
+        source_label = f" source={source}" if source else ""
+        rendered_contexts.append(
+            f"[{index}{source_label}]\n"
+            f"{_truncate_middle(context, context_token_budget, label)}"
+        )
+
+    if omitted_context_count > 0:
+        rendered_contexts.append(
+            f"[... omitted {omitted_context_count} retrieval chunks because "
+            "the GEval retrieval context budget was reached ...]"
+        )
+
+    return "\n\n".join(rendered_contexts)
+
+
 def construct_test_case_string(
-    evaluation_params: List[SingleTurnParams], test_case: LLMTestCase
+    evaluation_params: List[SingleTurnParams],
+    test_case: LLMTestCase,
+    max_retrieval_context_tokens: Optional[int] = None,
 ) -> str:
     text = """"""
     for param in evaluation_params:
         value = getattr(test_case, param.value)
         if isinstance(value, ToolCall):
             value = repr(value)
+        elif (
+            param == SingleTurnParams.RETRIEVAL_CONTEXT
+            and max_retrieval_context_tokens is not None
+            and isinstance(value, list)
+        ):
+            value = format_retrieval_context_with_budget(
+                value, max_retrieval_context_tokens
+            )
         text += f"{G_EVAL_PARAMS[param]}:\n{value} \n\n"
     return text
 
