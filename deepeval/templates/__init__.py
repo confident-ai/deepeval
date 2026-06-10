@@ -1,4 +1,4 @@
-from deepeval.metric_templates.resolver import (
+from deepeval.templates.resolver import (
     MetricTemplateInterpolationError,
     MetricTemplateNotFoundError,
     clear_metric_template_cache,
