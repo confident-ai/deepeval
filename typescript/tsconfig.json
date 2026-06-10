@@ -4,6 +4,7 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "declaration": true,
+    "resolveJsonModule": true,
     "rootDir": "./src",
     "outDir": "./dist",
     "strict": true,
