@@ -19,7 +19,7 @@ from deepeval.metrics.utils import (
     accrue_token_usage,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.g_eval import schema as gschema
 from deepeval.metrics.g_eval.utils import (
@@ -233,7 +233,7 @@ class GEval(BaseMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_evaluation_steps",
             criteria=self.criteria,
@@ -255,7 +255,7 @@ class GEval(BaseMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_evaluation_steps",
             criteria=self.criteria,
@@ -284,7 +284,7 @@ class GEval(BaseMetric):
         )
         if not self.strict_mode:
             rubric_str = format_rubrics(self.rubric) if self.rubric else None
-            prompt = resolve_template(
+            prompt = resolve_template("metrics", 
                 self.__class__.__name__,
                 "generate_evaluation_results",
                 evaluation_steps=number_evaluation_steps(self.evaluation_steps),
@@ -297,7 +297,7 @@ class GEval(BaseMetric):
             )
         else:
             prompt = (
-                resolve_template(
+                resolve_template("metrics", 
                     self.__class__.__name__,
                     "generate_strict_evaluation_results",
                     evaluation_steps=number_evaluation_steps(
@@ -362,7 +362,7 @@ class GEval(BaseMetric):
 
         if not self.strict_mode:
             rubric_str = format_rubrics(self.rubric) if self.rubric else None
-            prompt = resolve_template(
+            prompt = resolve_template("metrics", 
                 self.__class__.__name__,
                 "generate_evaluation_results",
                 evaluation_steps=number_evaluation_steps(self.evaluation_steps),
@@ -375,7 +375,7 @@ class GEval(BaseMetric):
             )
         else:
             prompt = (
-                resolve_template(
+                resolve_template("metrics", 
                     self.__class__.__name__,
                     "generate_strict_evaluation_results",
                     evaluation_steps=number_evaluation_steps(

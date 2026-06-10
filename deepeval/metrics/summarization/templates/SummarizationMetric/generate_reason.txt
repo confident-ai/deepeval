@@ -7,7 +7,7 @@ Given the summarization score, which is a 0-1 score indicating how good the summ
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
 Example JSON:
 {
-"reason": "The score is <summarization_score> because <your_reason>."
+  "reason": "The score is <summarization_score> because <your_reason>."
 }
 
 For 'None' values in contradictions, extra information, or questions that the original text can answer but not the summary, DON'T mention anything and instead offer some praise.

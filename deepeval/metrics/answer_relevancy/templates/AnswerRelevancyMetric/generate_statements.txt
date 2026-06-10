@@ -7,13 +7,13 @@ Our new laptop model features a high-resolution Retina display for crystal-clear
 {% if multimodal %}{{ _fragments.multimodal_input_rules }}{% endif %}
 
 {
-"statements": [
-"The new laptop model has a high-resolution Retina display.",
-"It includes a fast-charging battery with up to 12 hours of usage.",
-"Security features include fingerprint authentication and an encrypted SSD.",
-"Every purchase comes with a one-year warranty.",
-"24/7 customer support is included."
-]
+  "statements": [
+    "The new laptop model has a high-resolution Retina display.",
+    "It includes a fast-charging battery with up to 12 hours of usage.",
+    "Security features include fingerprint authentication and an encrypted SSD.",
+    "Every purchase comes with a one-year warranty.",
+    "24/7 customer support is included."
+  ]
 }
 ===== END OF EXAMPLE ======
 

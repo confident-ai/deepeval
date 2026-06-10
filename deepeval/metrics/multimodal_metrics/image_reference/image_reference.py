@@ -11,7 +11,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.metrics.multimodal_metrics.image_reference.schema import (
     ReasonScore,
 )
@@ -282,7 +282,7 @@ class ImageReferenceMetric(BaseMetric):
         context_above: Optional[str] = None,
         context_below: Optional[str] = None,
     ) -> Tuple[float, str]:
-        instructions = resolve_template(
+        instructions = resolve_template("metrics", 
             self.__class__.__name__,
             "evaluate_image_reference",
             context_above=context_above,
@@ -303,7 +303,7 @@ class ImageReferenceMetric(BaseMetric):
         context_above: Optional[str] = None,
         context_below: Optional[str] = None,
     ) -> Tuple[float, str]:
-        instructions = resolve_template(
+        instructions = resolve_template("metrics", 
             self.__class__.__name__,
             "evaluate_image_reference",
             context_above=context_above,

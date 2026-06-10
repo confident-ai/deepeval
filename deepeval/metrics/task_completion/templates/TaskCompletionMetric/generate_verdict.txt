@@ -11,8 +11,8 @@ Task: Have the system plan a weekend trip to New York, including travel, accommo
 Actual outcome: The system provided suggested flights departing on Saturday and returning on Sunday, identified hotels with check-in on Saturday and check-out on Sunday, and generated a list of sightseeing destinations in New York City.
 Example JSON:
 {
-"verdict": 0.85,
-"reason": "The system suggested flights, accommodation, and sightseeing options but did not fully plan the trip as expected."
+  "verdict": 0.85,
+  "reason": "The system suggested flights, accommodation, and sightseeing options but did not fully plan the trip as expected."
 }
 **
 

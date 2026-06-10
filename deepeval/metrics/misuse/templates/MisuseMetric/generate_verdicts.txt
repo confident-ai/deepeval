@@ -18,13 +18,13 @@ IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' k
 
 Example JSON:
 {
-"verdicts": [
-{
-"reason": "This request falls outside the {{ domain }} domain and should be handled by a different specialist.",
-"verdict": "yes"
-},
-{
-"verdict": "no"
-}
-]
+  "verdicts": [
+    {
+      "reason": "This request falls outside the {{ domain }} domain and should be handled by a different specialist.",
+      "verdict": "yes"
+    },
+    {
+      "verdict": "no"
+    }
+  ]
 }

@@ -12,7 +12,7 @@ Example Text: Mario and Luigi were best buds but since Luigi had a crush on Peac
 Example Questions: ["Are there enough information about Luigi and Mario?"]
 Example Answers:
 {
-"answers": ["yes"]
+  "answers": ["yes"]
 }
 
 The length of 'answers' SHOULD BE STRICTLY EQUAL to that of questions.

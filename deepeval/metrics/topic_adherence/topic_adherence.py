@@ -12,7 +12,7 @@ from deepeval.metrics.utils import (
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.topic_adherence.schema import (
     RelevancyVerdict,
@@ -233,7 +233,7 @@ class TopicAdherenceMetric(BaseConversationalMetric):
         tn_line = prettify_list(TN[1]) if TN[1] else "(none)"
         fp_line = prettify_list(FP[1]) if FP[1] else "(none)"
         fn_line = prettify_list(FN[1]) if FN[1] else "(none)"
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_reason",
             success=self.success,
@@ -258,7 +258,7 @@ class TopicAdherenceMetric(BaseConversationalMetric):
         tn_line = prettify_list(TN[1]) if TN[1] else "(none)"
         fp_line = prettify_list(FP[1]) if FP[1] else "(none)"
         fn_line = prettify_list(FN[1]) if FN[1] else "(none)"
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_reason",
             success=self.success,
@@ -290,7 +290,7 @@ class TopicAdherenceMetric(BaseConversationalMetric):
     def _get_qa_verdict(
         self, qa_pair: QAPair, *, multimodal: bool
     ) -> RelevancyVerdict:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "get_qa_pair_verdict",
             relevant_topics=self.relevant_topics,
@@ -309,7 +309,7 @@ class TopicAdherenceMetric(BaseConversationalMetric):
     async def _a_get_qa_verdict(
         self, qa_pair: QAPair, *, multimodal: bool
     ) -> RelevancyVerdict:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "get_qa_pair_verdict",
             relevant_topics=self.relevant_topics,
@@ -334,7 +334,7 @@ class TopicAdherenceMetric(BaseConversationalMetric):
             for turn in unit_interaction:
                 conversation += f"{turn.role} \n"
                 conversation += f"{turn.content} \n\n"
-            prompt = resolve_template(
+            prompt = resolve_template("metrics", 
                 self.__class__.__name__,
                 "get_qa_pairs",
                 conversation=conversation,
@@ -364,7 +364,7 @@ class TopicAdherenceMetric(BaseConversationalMetric):
             for turn in unit_interaction:
                 conversation += f"{turn.role} \n"
                 conversation += f"{turn.content} \n\n"
-            prompt = resolve_template(
+            prompt = resolve_template("metrics", 
                 self.__class__.__name__,
                 "get_qa_pairs",
                 conversation=conversation,

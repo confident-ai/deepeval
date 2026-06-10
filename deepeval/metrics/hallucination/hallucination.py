@@ -14,7 +14,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.hallucination.schema import (
     HallucinationVerdict,
@@ -157,7 +157,7 @@ class HallucinationMetric(BaseMetric):
             else:
                 contradictions.append(verdict.reason)
 
-        prompt: dict = resolve_template(
+        prompt: dict = resolve_template("metrics", 
 
             self.__class__.__name__,
 
@@ -187,7 +187,7 @@ class HallucinationMetric(BaseMetric):
             else:
                 contradictions.append(verdict.reason)
 
-        prompt: dict = resolve_template(
+        prompt: dict = resolve_template("metrics", 
 
             self.__class__.__name__,
 
@@ -208,7 +208,7 @@ class HallucinationMetric(BaseMetric):
     async def _a_generate_verdicts(
         self, actual_output: str, contexts: List[str]
     ) -> List[HallucinationVerdict]:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             actual_output=actual_output,
@@ -228,7 +228,7 @@ class HallucinationMetric(BaseMetric):
     def _generate_verdicts(
         self, actual_output: str, contexts: List[str]
     ) -> List[HallucinationVerdict]:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             actual_output=actual_output,

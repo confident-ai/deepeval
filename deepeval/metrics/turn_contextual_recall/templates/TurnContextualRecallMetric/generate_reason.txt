@@ -9,7 +9,7 @@ In your reason, you should {% if multimodal %}related{% else %}relate{% endif %}
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
 Example JSON:
 {
-"reason": "The score is <contextual_recall_score> because <your_reason>."
+  "reason": "The score is <contextual_recall_score> because <your_reason>."
 }
 
 DO NOT mention 'supportive reasons' and 'unsupportive reasons' in your reason, these terms are just here for you to understand the broader scope of things.

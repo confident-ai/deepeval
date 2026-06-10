@@ -7,7 +7,7 @@ The reasons are from metrics that were used to evaluate an MCP application by de
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
 Example JSON:
 {
-"reason": "The score is <score> because <your_reason>."
+  "reason": "The score is <score> because <your_reason>."
 }
 
 Inputs:

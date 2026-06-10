@@ -15,64 +15,64 @@ Your task is to extract **only the factual information found in the most recent 
 **Example A**
 Previous Turns:
 {
-{
-"role": "assistant", "content": "What's your full name?"
-}
+  {
+    "role": "assistant", "content": "What's your full name?"
+  }
 }
 User message: "It's Emily Chen"
 JSON:
 {
-"data": {
-"Full Name": "Emily Chen"
-}
+  "data": {
+    "Full Name": "Emily Chen"
+  }
 }
 
 ---
 **Example B**
 Previous Turns:
 {
-{
-"role": "assistant", "content": "Where are you currently located?"
-}
+  {
+    "role": "assistant", "content": "Where are you currently located?"
+  }
 }
 User message: "I'm in Berlin right now."
 JSON:
 {
-"data": {
-"Current Location": "Berlin"
-}
+  "data": {
+    "Current Location": "Berlin"
+  }
 }
 
 ---
 **Example C**
 Previous Turns:
 {
-{
-"role": "assistant", "content": "Do you have any dietary restrictions?"
-}
+  {
+    "role": "assistant", "content": "Do you have any dietary restrictions?"
+  }
 }
 User message: "Yes, I'm vegetarian and allergic to peanuts."
 JSON:
 {
-"data": {
-"Dietary Restrictions": ["Vegetarian", "Peanut Allergy"]
-}
+  "data": {
+    "Dietary Restrictions": ["Vegetarian", "Peanut Allergy"]
+  }
 }
 
 ---
 **Example D**
 Previous Turns:
 {
-{
-"role": "assistant", "content": "Can I confirm your birth year is 1989?"
-}
+  {
+    "role": "assistant", "content": "Can I confirm your birth year is 1989?"
+  }
 }
 User message: "No, it's actually 1992."
 JSON:
 {
-"data": {
-"Birth Year": "1992"
-}
+  "data": {
+    "Birth Year": "1992"
+  }
 }
 
 ---

@@ -39,8 +39,8 @@ Tools Used by Agent:
 
 Example Output:
 {
-"score": 0.75,
-"reason": "The agent used a relevant tool to address the user's request, but a more specific tool was available and would have been more efficient."
+  "score": 0.75,
+  "reason": "The agent used a relevant tool to address the user's request, but a more specific tool was available and would have been more efficient."
 }
 
 JSON:

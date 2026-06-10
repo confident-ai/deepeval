@@ -19,5 +19,5 @@ IMPORTANT: Please make sure to only return in JSON format, with the 'extracted_p
 
 Example JSON:
 {
-"extracted_pii": ["Statement 1", "Statement 2", ...]
+  "extracted_pii": ["Statement 1", "Statement 2", ...]
 }

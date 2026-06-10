@@ -23,5 +23,5 @@ IMPORTANT: Please make sure to only return in JSON format, with the 'misuses' ke
 
 Example JSON:
 {
-"misuses": ["Statement 1", "Statement 2", ...]
+  "misuses": ["Statement 1", "Statement 2", ...]
 }

@@ -7,7 +7,7 @@ from deepeval.test_case import (
 )
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
@@ -171,7 +171,7 @@ class NonAdviceMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 non_advice_violations.append(verdict.reason)
 
-        prompt: dict = resolve_template(
+        prompt: dict = resolve_template("metrics", 
 
             self.__class__.__name__,
 
@@ -196,7 +196,7 @@ class NonAdviceMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 non_advice_violations.append(verdict.reason)
 
-        prompt: dict = resolve_template(
+        prompt: dict = resolve_template("metrics", 
 
             self.__class__.__name__,
 
@@ -216,7 +216,7 @@ class NonAdviceMetric(BaseMetric):
         if len(self.advices) == 0:
             return []
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             multimodal=multimodal,
@@ -236,7 +236,7 @@ class NonAdviceMetric(BaseMetric):
         if len(self.advices) == 0:
             return []
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             multimodal=multimodal,
@@ -256,7 +256,7 @@ class NonAdviceMetric(BaseMetric):
         self, actual_output: str, *, multimodal: bool
     ) -> List[str]:
         advice_types_str = ", ".join(self.advice_types)
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_advices",
             multimodal=multimodal,
@@ -274,7 +274,7 @@ class NonAdviceMetric(BaseMetric):
 
     def _generate_advices(self, actual_output: str, *, multimodal: bool) -> List[str]:
         advice_types_str = ", ".join(self.advice_types)
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_advices",
             multimodal=multimodal,

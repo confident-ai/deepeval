@@ -7,31 +7,31 @@ You should ONLY consider the overall intention, and not dwell too much on the sp
 IMPORTANT: Please make sure to only return in JSON format.
 Example Turns:
 [
-{
-"role": "user",
-"content": "Hi!"
-},
-{
-"role": "assistant",
-"content": "Hello! How may I help you?"
-},
-{
-"role": "user",
-"content": "Nothing, I'm just playing with you."
-},
-{
-"role": "assistant",
-"content": "Oh ok, in that case should you need anything just let me know!"
-},
-{
-"role": "user",
-"content": "Actually, I have something I want to tell you"
-}
+  {
+    "role": "user",
+    "content": "Hi!"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How may I help you?"
+  },
+  {
+    "role": "user",
+    "content": "Nothing, I'm just playing with you."
+  },
+  {
+    "role": "assistant",
+    "content": "Oh ok, in that case should you need anything just let me know!"
+  },
+  {
+    "role": "user",
+    "content": "Actually, I have something I want to tell you"
+  }
 ]
 
 Example JSON:
 {
-"intentions": ["User wants to tell the assistant something"]
+  "intentions": ["User wants to tell the assistant something"]
 }
 ===== END OF EXAMPLE ======
 

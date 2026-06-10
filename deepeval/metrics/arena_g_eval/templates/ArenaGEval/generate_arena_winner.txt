@@ -34,8 +34,8 @@ Parameters:
 ---
 **Example JSON:**
 {
-"winner": "Grace",
-"reason": "<your-concise-and-informative-reason-here>"
+  "winner": "Grace",
+  "reason": "<your-concise-and-informative-reason-here>"
 }
 
 JSON:

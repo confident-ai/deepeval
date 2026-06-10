@@ -3,7 +3,7 @@ Given the faithfulness score, which is a 0-1 score indicating how faithful the `
 
 Expected JSON format:
 {
-"reason": "The score is <faithfulness_score> because <your_reason>."
+  "reason": "The score is <faithfulness_score> because <your_reason>."
 }
 
 ** 

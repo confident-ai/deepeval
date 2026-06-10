@@ -8,7 +8,7 @@ Given the completeness score, which is a 0-1 score indicating how incomplete the
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
 Example JSON:
 {
-"reason": "The score is <completeness_score> because <your_reason>."
+  "reason": "The score is <completeness_score> because <your_reason>."
 }
 
 Always quote information that are cited from messages in the incompletenesses in your final reason.

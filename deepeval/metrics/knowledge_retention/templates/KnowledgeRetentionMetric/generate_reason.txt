@@ -6,7 +6,7 @@ Given a list of attritions, which highlights forgetfulness in the LLM response a
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
 Example JSON:
 {
-"reason": "The score is <knowledge_retention_score> because <your_reason>."
+  "reason": "The score is <knowledge_retention_score> because <your_reason>."
 }
 
 Please include or quote as much factual information in attritions as possible when generating a reason.

@@ -28,8 +28,8 @@ Agent Steps:
 
 Example Output:
 {
-"score": 0.75,
-"reason": "The agent used a tool that was generally appropriate but missed a more specialized tool available in the list that could have provided more accurate results."
+  "score": 0.75,
+  "reason": "The agent used a tool that was generally appropriate but missed a more specialized tool available in the list that could have provided more accurate results."
 }
 
 JSON:

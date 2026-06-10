@@ -12,7 +12,7 @@ Given the following instructions, generate an output.
 IMPORTANT: Please make sure to only return in JSON format, with the 'output' key as the output from the instructions.
 Example JSON:
 {
-"output": "your output goes here"
+  "output": "your output goes here"
 }
 **
 

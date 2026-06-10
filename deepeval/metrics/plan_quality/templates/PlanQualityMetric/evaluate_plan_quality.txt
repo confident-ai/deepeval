@@ -70,8 +70,8 @@ OUTPUT FORMAT:
 Return a JSON object with this exact structure:
 
 {
-"score": 0.0,
-"reason": "1-3 short, precise sentences explaining what the plan lacks or how it could fail."
+  "score": 0.0,
+  "reason": "1-3 short, precise sentences explaining what the plan lacks or how it could fail."
 }
 
 The `"reason"` must:

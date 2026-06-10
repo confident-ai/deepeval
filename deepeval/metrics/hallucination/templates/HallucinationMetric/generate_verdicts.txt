@@ -12,16 +12,16 @@ Example actual output: "Einstein won the Nobel Prize in 1969 for his discovery o
 
 Example:
 {
-"verdicts": [
-{
-"reason": "The actual output agrees with the provided context which states that Einstein won the Nobel Prize for his discovery of the photoelectric effect.",
-"verdict": "yes"
-},
-{
-"reason": "The actual output contradicts the provided context which states that Einstein won the Nobel Prize in 1968, not 1969.",
-"verdict": "no"
-}
-]  
+  "verdicts": [
+    {
+      "reason": "The actual output agrees with the provided context which states that Einstein won the Nobel Prize for his discovery of the photoelectric effect.",
+      "verdict": "yes"
+    },
+    {
+      "reason": "The actual output contradicts the provided context which states that Einstein won the Nobel Prize in 1968, not 1969.",
+      "verdict": "no"
+    }
+  ]  
 }
 
 You should NOT incorporate any prior knowledge you have and take each context at face value. Since you are going to generate a verdict for each context, the number of 'verdicts' SHOULD BE STRICTLY EQUAL TO {{ contexts_count }}.

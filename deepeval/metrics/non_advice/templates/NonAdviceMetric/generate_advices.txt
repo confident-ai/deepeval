@@ -25,5 +25,5 @@ IMPORTANT: Please make sure to only return in JSON format, with the 'advices' ke
 
 Example JSON:
 {
-"advices": ["Statement 1", "Statement 2", ...]
+  "advices": ["Statement 1", "Statement 2", ...]
 }

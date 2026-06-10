@@ -15,7 +15,7 @@ DAG Traversal:
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
 Example JSON:
 {
-"reason": "The score is <metric_name_score> because <your_reason>."
+  "reason": "The score is <metric_name_score> because <your_reason>."
 }
 **
 

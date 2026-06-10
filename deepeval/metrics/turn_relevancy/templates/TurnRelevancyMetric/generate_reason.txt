@@ -8,7 +8,7 @@ Given the relevancy score, which is a 0-1 score indicating how irrelevant the OV
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
 Example JSON:
 {
-"reason": "The score is <relevancy_score> because <your_reason>."
+  "reason": "The score is <relevancy_score> because <your_reason>."
 }
 
 Always quote WHICH MESSAGE and the INFORMATION in the reason in your final reason.

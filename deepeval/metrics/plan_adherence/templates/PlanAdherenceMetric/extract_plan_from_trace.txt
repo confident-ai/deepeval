@@ -32,16 +32,16 @@ OUTPUT FORMAT:
 
 Return a JSON object with exactly this structure:
 {
-"plan": [
-"step 1",
-"step 2",
-...
-]
+  "plan": [
+    "step 1",
+    "step 2",
+    ...
+  ]
 }
 
 If no plan is evidenced in the trace, return:
 {
-"plan": []
+  "plan": []
 }
 
 Do not include commentary, confidence scores, or explanations.

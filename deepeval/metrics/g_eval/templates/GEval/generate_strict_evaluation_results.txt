@@ -16,8 +16,8 @@ IMPORTANT: Please make sure to only return in JSON format, with the "score" and 
 
 Example JSON:
 {
-"reason": "The text does not follow the evaluation steps provided.",
-"score": 0
+  "reason": "The text does not follow the evaluation steps provided.",
+  "score": 0
 }
 **
 

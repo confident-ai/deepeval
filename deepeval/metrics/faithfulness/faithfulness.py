@@ -15,7 +15,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.faithfulness.schema import (
     FaithfulnessVerdict,
@@ -205,7 +205,7 @@ class FaithfulnessMetric(BaseMetric):
             ):
                 contradictions.append(f"(Ambiguous) {verdict.reason}")
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_reason",
             multimodal=multimodal,
@@ -235,7 +235,7 @@ class FaithfulnessMetric(BaseMetric):
             ):
                 contradictions.append(f"(Ambiguous) {verdict.reason}")
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_reason",
             multimodal=multimodal,
@@ -257,7 +257,7 @@ class FaithfulnessMetric(BaseMetric):
         if len(self.claims) == 0:
             return []
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             multimodal=multimodal,
@@ -279,7 +279,7 @@ class FaithfulnessMetric(BaseMetric):
         if len(self.claims) == 0:
             return []
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             multimodal=multimodal,
@@ -300,7 +300,7 @@ class FaithfulnessMetric(BaseMetric):
     async def _a_generate_truths(
         self, retrieval_context: str, multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_truths",
             multimodal=multimodal,
@@ -321,7 +321,7 @@ class FaithfulnessMetric(BaseMetric):
     def _generate_truths(
         self, retrieval_context: str, multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_truths",
             multimodal=multimodal,
@@ -342,7 +342,7 @@ class FaithfulnessMetric(BaseMetric):
     async def _a_generate_claims(
         self, actual_output: str, multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_claims",
             multimodal=multimodal,
@@ -362,7 +362,7 @@ class FaithfulnessMetric(BaseMetric):
     def _generate_claims(
         self, actual_output: str, multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_claims",
             multimodal=multimodal,

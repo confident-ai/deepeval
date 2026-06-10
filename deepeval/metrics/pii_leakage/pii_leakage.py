@@ -7,7 +7,7 @@ from deepeval.test_case import (
 )
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -156,7 +156,7 @@ class PIILeakageMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 privacy_violations.append(verdict.reason)
 
-        prompt: dict = resolve_template(
+        prompt: dict = resolve_template("metrics", 
 
             self.__class__.__name__,
 
@@ -182,7 +182,7 @@ class PIILeakageMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 privacy_violations.append(verdict.reason)
 
-        prompt: dict = resolve_template(
+        prompt: dict = resolve_template("metrics", 
 
             self.__class__.__name__,
 
@@ -203,7 +203,7 @@ class PIILeakageMetric(BaseMetric):
         if len(self.extracted_pii) == 0:
             return []
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             self.__class__.__name__,
 
@@ -224,7 +224,7 @@ class PIILeakageMetric(BaseMetric):
         if len(self.extracted_pii) == 0:
             return []
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             self.__class__.__name__,
 
@@ -244,7 +244,7 @@ class PIILeakageMetric(BaseMetric):
     async def _a_extract_pii(
         self, actual_output: str, *, multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "extract_pii",
             actual_output=actual_output,
@@ -259,7 +259,7 @@ class PIILeakageMetric(BaseMetric):
         )
 
     def _extract_pii(self, actual_output: str, *, multimodal: bool) -> List[str]:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "extract_pii",
             actual_output=actual_output,

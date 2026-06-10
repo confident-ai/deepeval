@@ -55,8 +55,8 @@ OUTPUT FORMAT:
 
 Return a valid JSON object with this exact structure:
 {
-"score": float between 0.0 and 1.0,
-"reason": "1-3 concise, factual sentences explaining the score. Reference specific tool names and descriptions when relevant."
+  "score": float between 0.0 and 1.0,
+  "reason": "1-3 concise, factual sentences explaining the score. Reference specific tool names and descriptions when relevant."
 }
 
 Do not include any additional commentary or output outside the JSON object.

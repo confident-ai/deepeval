@@ -14,7 +14,7 @@ Your task is to write a **single concise explanation (1-3 sentences)** that capt
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
 Example JSON:
 {
-"reason": "The score is <score> because <your_reason>."
+  "reason": "The score is <score> because <your_reason>."
 }
 
 RULES:

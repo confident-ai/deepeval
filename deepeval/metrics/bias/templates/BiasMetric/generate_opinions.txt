@@ -7,7 +7,7 @@ Example Text:
 
 Example JSON: 
 {
-"opinions": ["I think hate towards jews are unwarranted."]
+  "opinions": ["I think hate towards jews are unwarranted."]
 }
 
 Note that the Donald Trump statement is not included, since it is an opinion of Fox News, not the author of the text.

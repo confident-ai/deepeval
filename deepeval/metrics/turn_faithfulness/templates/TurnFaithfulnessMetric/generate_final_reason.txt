@@ -7,7 +7,7 @@ This metric evaluates conversational faithfulness by extracting truths from retr
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
 Example JSON:
 {
-"reason": "The score is <turn_faithfulness_score> because <your_reason>."
+  "reason": "The score is <turn_faithfulness_score> because <your_reason>."
 }
 
 Inputs:

@@ -35,8 +35,8 @@ Agent Steps:
 
 Example Output:
 {
-"score": 0.5,
-"reason": "The agent provided mostly valid fields, but omitted a required parameter and used a string where a list was expected."
+  "score": 0.5,
+  "reason": "The agent provided mostly valid fields, but omitted a required parameter and used a string where a list was expected."
 }
 
 JSON:

@@ -13,7 +13,7 @@ Instructions:
 IMPORTANT: Only return a JSON with the 'output' key containing the result of applying the instructions to the conversation.
 Example:
 {
-"output": "..."
+  "output": "..."
 }
 **
 JSON:

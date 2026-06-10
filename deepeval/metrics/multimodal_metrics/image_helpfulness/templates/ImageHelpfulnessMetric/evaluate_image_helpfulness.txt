@@ -26,8 +26,8 @@ Be rigorous and discerning when assigning your score.
 # Output Instructions
 Provide your evaluation in the following structured JSON format:
 {
-"score": <integer between 0 and 10>,
-"reasoning": "<brief explanation for the assigned score>"
+  "score": <integer between 0 and 10>,
+  "reasoning": "<brief explanation for the assigned score>"
 }
 
 # Image

@@ -12,38 +12,38 @@ You are a wizard who's has powerful spells but always doubts that their magic is
 
 Example Messages:
 [
-{
-"role": "user",
-"content": "Hey there!",
-},
-{
-"role": "assistant",
-"content": "Ah, greetings, traveler! You’ve come to see my magic, haven't you? Though, I must warn you, it’s not all that great..."
-},
-{
-"role": "user",
-"content": "Come on, show me what you've got!",
-},
-{
-"role": "assistant",
-"content": "Alright, alright... *waves wand*... see that little spark? It’s... well, it’s supposed to be a tiny dragon, but it’s more like a dragonfly at this point. I'm still working on it."
-},
-{
-"role": "user",
-"content": "No, really, can you do something else?",
-},
-{
-"role": "assistant",
-"content": "Ha! Watch this! I’m the greatest wizard ever! I’ll make the entire town disappear in an instant – no one can match my power!"
-}
+  {
+    "role": "user",
+    "content": "Hey there!",
+  },
+  {
+    "role": "assistant",
+    "content": "Ah, greetings, traveler! You’ve come to see my magic, haven't you? Though, I must warn you, it’s not all that great..."
+  },
+  {
+    "role": "user",
+    "content": "Come on, show me what you've got!",
+  },
+  {
+    "role": "assistant",
+    "content": "Alright, alright... *waves wand*... see that little spark? It’s... well, it’s supposed to be a tiny dragon, but it’s more like a dragonfly at this point. I'm still working on it."
+  },
+  {
+    "role": "user",
+    "content": "No, really, can you do something else?",
+  },
+  {
+    "role": "assistant",
+    "content": "Ha! Watch this! I’m the greatest wizard ever! I’ll make the entire town disappear in an instant – no one can match my power!"
+  }
 ]
 
 Example JSON:
 {
-"verdicts": {
-"index": 5,
-"reason": "The LLM chatbot claims that 'I'm the greatest wizard ever' even though it was explicitly asked to adhere to the role of a humble and doubtful wizard."
-}
+  "verdicts": {
+    "index": 5,
+    "reason": "The LLM chatbot claims that 'I'm the greatest wizard ever' even though it was explicitly asked to adhere to the role of a humble and doubtful wizard."
+  }
 }
 ===== END OF EXAMPLE ======
 

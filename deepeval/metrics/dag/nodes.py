@@ -18,7 +18,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.test_case import LLMTestCase, SingleTurnParams, ToolCall
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.utils import prettify_list
 
 
@@ -216,7 +216,7 @@ class VerdictNode(BaseNode):
                 metric.reason = await self._a_generate_reason(metric=metric)
 
     def _generate_reason(self, metric: BaseMetric):
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             "VerdictNode",
             "generate_reason",
             verbose_steps=metric._verbose_steps,
@@ -232,7 +232,7 @@ class VerdictNode(BaseNode):
         )
 
     async def _a_generate_reason(self, metric: BaseMetric):
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             "VerdictNode",
             "generate_reason",
             verbose_steps=metric._verbose_steps,
@@ -300,7 +300,7 @@ class TaskNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             "TaskNode",
 
@@ -350,7 +350,7 @@ class TaskNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             "TaskNode",
 
@@ -445,7 +445,7 @@ class BinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             "BinaryJudgement",
 
@@ -489,7 +489,7 @@ class BinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             "BinaryJudgement",
 
@@ -594,7 +594,7 @@ class NonBinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             "BinaryJudgement",
 
@@ -639,7 +639,7 @@ class NonBinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             "BinaryJudgement",
 

@@ -36,8 +36,8 @@ OUTPUT FORMAT:
 Return a JSON object with:
 
 {
-"score": float between 0.0 and 1.0,
-"reason": "1-3 factual sentences explaining which tools were appropriate or inappropriate for the task, referencing specific tool names."
+  "score": float between 0.0 and 1.0,
+  "reason": "1-3 factual sentences explaining which tools were appropriate or inappropriate for the task, referencing specific tool names."
 }
 
 USER INPUT:

@@ -15,19 +15,19 @@ Example actual output: HEY THERE! I think what you meant is "What is the number 
 Example prompt instructions: ["Answer the input in a well-mannered fashion.", "Do not correct user of any grammatical errors.", "Respond in all upper case"]
 Example JSON:
 {
-"verdicts": [
-{
-"verdict": "yes"
-},
-{
-"reason": "The LLM corrected the user when the user used the wrong grammar in asking about the number of stars in the sky.",
-"verdict": "no"
-},
-{
-"reason": "The LLM only made 'HEY THERE' uppercase, which does not follow the instruction of making everything uppercase completely.",
-"verdict": "no"
-}
-]  
+  "verdicts": [
+    {
+      "verdict": "yes"
+    },
+    {
+      "reason": "The LLM corrected the user when the user used the wrong grammar in asking about the number of stars in the sky.",
+      "verdict": "no"
+    },
+    {
+      "reason": "The LLM only made 'HEY THERE' uppercase, which does not follow the instruction of making everything uppercase completely.",
+      "verdict": "no"
+    }
+  ]  
 }
 
 Since you are going to generate a verdict for each instruction, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to the number of prompt instructions.

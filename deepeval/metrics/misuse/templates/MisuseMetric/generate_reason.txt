@@ -10,5 +10,5 @@ IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key
 
 Example JSON:
 {
-"reason": "The score is <misuse_score> because <your_reason>."
+  "reason": "The score is <misuse_score> because <your_reason>."
 }

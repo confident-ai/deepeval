@@ -16,8 +16,8 @@ IMPORTANT: Only return JSON with two keys:
 
 Example:
 {
-"reason": "The assistant partially addressed the user's issue but missed clarifying their follow-up question.",
-"verdict": "{{ example_verdict_option }}"
+  "reason": "The assistant partially addressed the user's issue but missed clarifying their follow-up question.",
+  "verdict": "{{ example_verdict_option }}"
 }
 **
 JSON:

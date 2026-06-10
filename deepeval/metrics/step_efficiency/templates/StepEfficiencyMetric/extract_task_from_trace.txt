@@ -39,7 +39,7 @@ OUTPUT FORMAT:
 Return **only** a JSON object of this form:
 
 {
-"task": "<a single clear sentence summarizing the user's explicit goal>"
+  "task": "<a single clear sentence summarizing the user's explicit goal>"
 }
 
 - The `"task"` value should be a single, coherent natural language sentence or two at most.
@@ -48,64 +48,64 @@ Return **only** a JSON object of this form:
 EXAMPLES:
 
 Example Trace: { 
-"name": "trip_planner", 
-"type": "agent", 
-"input": { 
-"input": "Help me plan a business trip to Chicago next week." 
-}, 
-"children": [ 
-{ 
-"name": "flight_tool", 
-"type": "tool", 
-"input": { 
-"inputParameters": { 
-"destination": "Chicago", 
-"date": "2024-07-10" 
-} }, 
-"output": { 
-"flights": ["Flight 101", "Flight 202"] 
-}, 
-"children": [] 
-}, 
-{ 
-"name": "hotel_tool", 
-"type": "tool", 
-"input": { 
-"inputParameters": { 
-"location": "Chicago", 
-"check_in": "2024-07-10", 
-"check_out": "2024-07-12" 
-} }, 
-"output": { 
-"hotels": ["The Grand Chicago", "Lakeview Inn"] 
-}, 
-"children": [] 
-}, 
-{ 
-"name": "agenda_llm", 
-"type": "llm", 
-"input": { 
-"prompt": "Draft a meeting agenda", 
-"input": [ 
-{ 
-"role": "system", 
-"content": "You are an executive assistant." 
-}, 
-{ 
-"role": "user", 
-"content": "Create an agenda for a client strategy meeting." 
-} 
-] 
-}, 
-"output": "1. Q2 review\n2. Client feedback\n3. Strategy planning", 
-"children": [] 
-} 
-] 
+  "name": "trip_planner", 
+  "type": "agent", 
+  "input": { 
+    "input": "Help me plan a business trip to Chicago next week." 
+  }, 
+  "children": [ 
+    { 
+      "name": "flight_tool", 
+      "type": "tool", 
+      "input": { 
+        "inputParameters": { 
+          "destination": "Chicago", 
+          "date": "2024-07-10" 
+        } }, 
+      "output": { 
+        "flights": ["Flight 101", "Flight 202"] 
+      }, 
+      "children": [] 
+    }, 
+    { 
+      "name": "hotel_tool", 
+      "type": "tool", 
+      "input": { 
+        "inputParameters": { 
+          "location": "Chicago", 
+          "check_in": "2024-07-10", 
+          "check_out": "2024-07-12" 
+        } }, 
+      "output": { 
+        "hotels": ["The Grand Chicago", "Lakeview Inn"] 
+      }, 
+      "children": [] 
+    }, 
+    { 
+      "name": "agenda_llm", 
+      "type": "llm", 
+      "input": { 
+        "prompt": "Draft a meeting agenda", 
+        "input": [ 
+          { 
+            "role": "system", 
+            "content": "You are an executive assistant." 
+          }, 
+          { 
+            "role": "user", 
+            "content": "Create an agenda for a client strategy meeting." 
+          } 
+        ] 
+      }, 
+      "output": "1. Q2 review\n2. Client feedback\n3. Strategy planning", 
+      "children": [] 
+    } 
+  ] 
 } 
 
 Expected JSON: 
 { 
-"task": "Plan a business trip to Chicago next week, including booking a flight, reserving a hotel, and drafting a client meeting agenda." 
+  "task": "Plan a business trip to Chicago next week, including booking a flight, reserving a hotel, and drafting a client meeting agenda." 
 }
 
 IMPORTANT ENFORCEMENT RULES:

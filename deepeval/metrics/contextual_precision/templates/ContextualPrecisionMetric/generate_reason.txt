@@ -6,7 +6,7 @@ Contextual precision represents if the relevant nodes are ranked higher than irr
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
 Example JSON:
 {
-"reason": "The score is <contextual_precision_score> because <your_reason>."
+  "reason": "The score is <contextual_precision_score> because <your_reason>."
 }
 
 

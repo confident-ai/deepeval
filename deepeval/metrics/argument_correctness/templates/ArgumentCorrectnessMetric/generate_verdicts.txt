@@ -16,54 +16,54 @@ Example input:
 
 Example tool calls: 
 [
-ToolCall(
-name="WeatherHistoryAPI",
-description="Fetches historical weather data for a given city and date range",
-reasoning="I need to check all 2023 temperature records for Paris to find the highest one.",
-input_parameters={
-"city_name": "Paris",
-"country_code": "FR",
-"date_range_start": "2023-01-01",
-"date_range_end": "2023-12-31",
-"data_type": "temperature_max_daily_celsius"
-}
-),
-ToolCall(
-name="MathAnalyzer",
-description="Performs statistical calculations on numeric datasets",
-reasoning="I will calculate the maximum temperature value from the daily dataset.",
-input_parameters={
-"operation": "max",
-"dataset_source": "WeatherHistoryAPI.daily_max_temperatures",
-"expected_unit": "celsius"
-}
-),
-ToolCall(
-name="MovieRecommender",
-description="Recommends movies based on user mood or location",
-reasoning="I thought Paris movies might be fun to suggest, but this is unrelated to the question.",
-input_parameters={
-"preferred_genres": ["romance", "comedy"],
-"setting_city": "Paris",
-"language_preference": "French or English"
-}
-)
+  ToolCall(
+    name="WeatherHistoryAPI",
+    description="Fetches historical weather data for a given city and date range",
+    reasoning="I need to check all 2023 temperature records for Paris to find the highest one.",
+    input_parameters={
+      "city_name": "Paris",
+      "country_code": "FR",
+      "date_range_start": "2023-01-01",
+      "date_range_end": "2023-12-31",
+      "data_type": "temperature_max_daily_celsius"
+    }
+  ),
+  ToolCall(
+    name="MathAnalyzer",
+    description="Performs statistical calculations on numeric datasets",
+    reasoning="I will calculate the maximum temperature value from the daily dataset.",
+    input_parameters={
+      "operation": "max",
+      "dataset_source": "WeatherHistoryAPI.daily_max_temperatures",
+      "expected_unit": "celsius"
+    }
+  ),
+  ToolCall(
+    name="MovieRecommender",
+    description="Recommends movies based on user mood or location",
+    reasoning="I thought Paris movies might be fun to suggest, but this is unrelated to the question.",
+    input_parameters={
+      "preferred_genres": ["romance", "comedy"],
+      "setting_city": "Paris",
+      "language_preference": "French or English"
+    }
+  )
 ]
 
 Example JSON:
 {
-"verdicts": [
-{
-"verdict": "yes"
-},
-{
-"verdict": "yes"
-},
-{
-"reason": "Recommending romantic Parisian comedies does not help find the highest temperature in 2023.",
-"verdict": "no"
-}
-]  
+  "verdicts": [
+    {
+      "verdict": "yes"
+    },
+    {
+      "verdict": "yes"
+    },
+    {
+      "reason": "Recommending romantic Parisian comedies does not help find the highest temperature in 2023.",
+      "verdict": "no"
+    }
+  ]  
 }
 ===== END OF EXAMPLE ======
 

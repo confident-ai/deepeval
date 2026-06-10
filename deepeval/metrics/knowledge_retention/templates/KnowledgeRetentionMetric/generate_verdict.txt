@@ -26,13 +26,13 @@ Return a JSON object with:
 LLM message: Since you've already been to London for holiday, why not visit Zurich?
 Previous Knowledge:
 {
-"Trips": ["London (work trip)", "Zurich (work trip)"],
-"Allergies": ["Sunflowers"]
+  "Trips": ["London (work trip)", "Zurich (work trip)"],
+  "Allergies": ["Sunflowers"]
 }
 JSON:
 {
-"verdict": "yes",
-"reason": "The LLM incorrectly assumes the London trip was a holiday. Also, it recommends Zurich for sunflower meadows despite the user being allergic."
+  "verdict": "yes",
+  "reason": "The LLM incorrectly assumes the London trip was a holiday. Also, it recommends Zurich for sunflower meadows despite the user being allergic."
 }
 
 ---
@@ -40,11 +40,11 @@ JSON:
 LLM message: Are you sure this is your phone number?
 Previous Knowledge:
 {
-"Phone Number": "555-1029"
+  "Phone Number": "555-1029"
 }
 JSON:
 {
-"verdict": "no"
+  "verdict": "no"
 }
 
 ---
@@ -52,12 +52,12 @@ JSON:
 LLM message: Are you allergic to anything again?
 Previous Knowledge:
 {
-"Allergies": ["Peanuts"]
+  "Allergies": ["Peanuts"]
 }
 JSON:
 {
-"verdict": "yes",
-"reason": "The LLM asks for allergies when the user is already known to be allergic to peanuts."
+  "verdict": "yes",
+  "reason": "The LLM asks for allergies when the user is already known to be allergic to peanuts."
 }
 
 ---

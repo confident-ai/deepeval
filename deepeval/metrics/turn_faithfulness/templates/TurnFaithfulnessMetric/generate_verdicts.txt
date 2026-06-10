@@ -20,19 +20,19 @@ RULES:
 Output MUST be ONLY valid JSON:
 
 {
-"verdicts": [
-{
-"verdict": "yes"
-},
-{
-"verdict": "no",
-"reason": "<explanation>"
-},
-{
-"verdict": "idk",
-"reason": "<explanation>"
-}
-]
+  "verdicts": [
+    {
+      "verdict": "yes"
+    },
+    {
+      "verdict": "no",
+      "reason": "<explanation>"
+    },
+    {
+      "verdict": "idk",
+      "reason": "<explanation>"
+    }
+  ]
 }
 
 REFERENCE CONTEXT:

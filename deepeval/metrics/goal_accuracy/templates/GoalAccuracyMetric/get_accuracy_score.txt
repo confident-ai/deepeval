@@ -45,8 +45,8 @@ OUTPUT FORMAT:
 Return only a valid JSON object with this structure:
 
 {
-"score": 0.0,
-"reason": "1-3 factual sentences explaining what parts of the user's goal were or were not achieved."
+  "score": 0.0,
+  "reason": "1-3 factual sentences explaining what parts of the user's goal were or were not achieved."
 }
 
 The reason must:
@@ -61,8 +61,8 @@ Task: "Translate 'good night' into French."
 Assistant Reply: "Bonne nuit."  
 →  
 {
-"score": 1.0,
-"reason": "The assistant provided the exact, correct translation requested by the user."
+  "score": 1.0,
+  "reason": "The assistant provided the exact, correct translation requested by the user."
 }
 
 **Example 2**
@@ -70,8 +70,8 @@ Task: "List three renewable energy sources."
 Assistant Reply: "Solar and wind energy."  
 →  
 {
-"score": 0.5,
-"reason": "The assistant only listed two sources instead of three, so the goal was partially achieved."
+  "score": 0.5,
+  "reason": "The assistant only listed two sources instead of three, so the goal was partially achieved."
 }
 
 **Example 3**
@@ -79,8 +79,8 @@ Task: "Summarize this paragraph."
 Assistant Reply: "It talks about technology."  
 →  
 {
-"score": 0.25,
-"reason": "The summary is too vague and fails to convey key information from the text."
+  "score": 0.25,
+  "reason": "The summary is too vague and fails to convey key information from the text."
 }
 
 *** END OF EXAMPLES ***

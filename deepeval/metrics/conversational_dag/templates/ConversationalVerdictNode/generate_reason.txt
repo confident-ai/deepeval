@@ -18,7 +18,7 @@ DAG Traversal:
 IMPORTANT: Only return JSON with a 'reason' key.
 Example:
 {
-"reason": "The score is <metric_score_in_example> because the assistant repeatedly failed to clarify the user's ambiguous statements, as shown in the DAG traversal path."
+  "reason": "The score is <metric_score_in_example> because the assistant repeatedly failed to clarify the user's ambiguous statements, as shown in the DAG traversal path."
 }
 **
 JSON:

@@ -18,8 +18,8 @@ Return a **JSON object** with a single 2 keys:
 If no valid QA pairs are found, return:
 ```json
 {
-question: "",
-response: ""
+  question: "",
+  response: ""
 }
 
 CHAIN OF THOUGHT:
@@ -40,8 +40,8 @@ assistant: While muesli is good for diabetic people, steel-cut oats are preferre
 
 Example JSON:
 {
-"question": "Which food is best for diabetic patients?",
-"response": "Steel-cut oats are good for diabetic patients"
+  "question": "Which food is best for diabetic patients?",
+  "response": "Steel-cut oats are good for diabetic patients"
 }
 ===== END OF EXAMPLE ======
 

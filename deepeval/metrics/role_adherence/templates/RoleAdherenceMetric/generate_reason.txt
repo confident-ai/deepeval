@@ -8,7 +8,7 @@ Given the role adherence score, which is a 0-1 score indicating how well the cha
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
 Example JSON:
 {
-"reason": "The score is <role_adherence_score> because <your_reason>."
+  "reason": "The score is <role_adherence_score> because <your_reason>."
 }
 
 Always cite information in the out of character responses as well as which turn it belonged to in your final reason.

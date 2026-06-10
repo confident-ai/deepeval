@@ -21,5 +21,5 @@ IMPORTANT: Please make sure to only return in JSON format, with the 'role_violat
 
 Example JSON:
 {
-"role_violations": ["Statement 1", "Statement 2", ...]
+  "role_violations": ["Statement 1", "Statement 2", ...]
 }

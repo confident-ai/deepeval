@@ -20,10 +20,10 @@ IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' k
 
 Example JSON:
 {
-"verdicts": [
-{
-"reason": "Contains personal phone number",
-"verdict": "yes"
-}
-]
+  "verdicts": [
+    {
+      "reason": "Contains personal phone number",
+      "verdict": "yes"
+    }
+  ]
 }

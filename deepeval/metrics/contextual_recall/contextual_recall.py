@@ -17,7 +17,7 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.metrics.retrieval_context_display import id_retrieval_context
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.contextual_recall.schema import (
@@ -200,7 +200,7 @@ class ContextualRecallMetric(BaseMetric):
             else:
                 unsupportive_reasons.append(verdict.reason)
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_reason",
             expected_output=expected_output,
@@ -231,7 +231,7 @@ class ContextualRecallMetric(BaseMetric):
             else:
                 unsupportive_reasons.append(verdict.reason)
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_reason",
             expected_output=expected_output,
@@ -269,7 +269,7 @@ class ContextualRecallMetric(BaseMetric):
         retrieval_context: List[str],
         multimodal: bool,
     ) -> List[VerdictWithExpectedOutput]:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             expected_output=expected_output,
@@ -301,7 +301,7 @@ class ContextualRecallMetric(BaseMetric):
         retrieval_context: List[str],
         multimodal: bool,
     ) -> List[VerdictWithExpectedOutput]:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             expected_output=expected_output,

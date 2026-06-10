@@ -11,19 +11,19 @@ IMPORTANT: Please make sure to only return in valid and parseable JSON format, w
 
 Expected JSON format:
 {
-"verdicts": [
-{
-"verdict": "yes"
-},
-{
-"reason": <explanation_for_irrelevance>,
-"verdict": "no"
-},
-{
-"reason": <explanation_for_ambiguity>,
-"verdict": "idk"
-}
-]  
+  "verdicts": [
+    {
+      "verdict": "yes"
+    },
+    {
+      "reason": <explanation_for_irrelevance>,
+      "verdict": "no"
+    },
+    {
+      "reason": <explanation_for_ambiguity>,
+      "verdict": "idk"
+    }
+  ]  
 }
 
 Generate ONE verdict per statement - number of 'verdicts' MUST equal number of statements.

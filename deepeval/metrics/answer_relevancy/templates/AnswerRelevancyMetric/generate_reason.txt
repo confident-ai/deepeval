@@ -10,7 +10,7 @@ IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key
 Example:
 Example JSON:
 {
-"reason": "The score is <answer_relevancy_score> because <your_reason>."
+  "reason": "The score is <answer_relevancy_score> because <your_reason>."
 }
 ===== END OF EXAMPLE ======
 **

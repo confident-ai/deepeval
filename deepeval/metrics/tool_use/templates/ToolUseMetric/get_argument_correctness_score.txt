@@ -42,8 +42,8 @@ OUTPUT FORMAT:
 
 Return a JSON object with:
 {
-"score": float between 0.0 and 1.0,
-"reason": "1-3 sentences explaining argument alignment or issues, referencing specific parameter names or values when possible."
+  "score": float between 0.0 and 1.0,
+  "reason": "1-3 sentences explaining argument alignment or issues, referencing specific parameter names or values when possible."
 }
 
 ---

@@ -18,7 +18,7 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.metrics.retrieval_context_display import id_retrieval_context
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import MLLMImage
@@ -190,7 +190,7 @@ class ContextualPrecisionMetric(BaseMetric):
             {"verdict": verdict.verdict, "reason": verdict.reason}
             for verdict in self.verdicts
         ]
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_reason",
             multimodal=multimodal,
@@ -215,7 +215,7 @@ class ContextualPrecisionMetric(BaseMetric):
             {"verdict": verdict.verdict, "reason": verdict.reason}
             for verdict in self.verdicts
         ]
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_reason",
             multimodal=multimodal,
@@ -242,7 +242,7 @@ class ContextualPrecisionMetric(BaseMetric):
         doc_str, ctx_disp, mm_note = _contextual_precision_verdict_fields(
             retrieval_context, multimodal
         )
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             multimodal=multimodal,
@@ -274,7 +274,7 @@ class ContextualPrecisionMetric(BaseMetric):
         doc_str, ctx_disp, mm_note = _contextual_precision_verdict_fields(
             retrieval_context, multimodal
         )
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             multimodal=multimodal,

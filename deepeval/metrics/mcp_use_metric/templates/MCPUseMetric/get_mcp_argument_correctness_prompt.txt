@@ -41,8 +41,8 @@ Primitives Used by Agent (with arguments passed):
 
 Example Output:
 {
-"score": 0.5,
-"reason": "The agent passed arguments of the correct type to all tools, but one tool received an input that did not match the user's intent and another had a missing required field."
+  "score": 0.5,
+  "reason": "The agent passed arguments of the correct type to all tools, but one tool received an input that did not match the user's intent and another had a missing required field."
 }
 
 JSON:

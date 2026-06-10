@@ -17,7 +17,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.metrics.retrieval_context_display import id_retrieval_context
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.turn_contextual_recall.schema import (
@@ -284,7 +284,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
 
         verdicts: List[ContextualRecallVerdict] = []
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             expected_outcome=expected_outcome,
@@ -311,7 +311,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
 
         verdicts: List[ContextualRecallVerdict] = []
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             expected_outcome=expected_outcome,
@@ -405,7 +405,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
             else:
                 unsupportive_reasons.append(verdict.reason)
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_reason",
             expected_outcome=expected_outcome,
@@ -443,7 +443,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
             else:
                 unsupportive_reasons.append(verdict.reason)
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_reason",
             expected_outcome=expected_outcome,
@@ -489,7 +489,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         for score in scores:
             reasons.append(score.reason)
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_final_reason",
             final_score=self.score,
@@ -518,7 +518,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         for score in scores:
             reasons.append(score.reason)
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_final_reason",
             final_score=self.score,

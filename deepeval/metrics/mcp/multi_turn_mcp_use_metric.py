@@ -1,7 +1,7 @@
 import asyncio
 from typing import Optional, Union, List
 
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import (
@@ -195,7 +195,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         self, task: Task, test_case: ConversationalTestCase
     ) -> ToolScore:
         available_tools, _, _ = available_mcp_servers_block(test_case.mcp_servers)
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             _MCP_TASK_COMPLETION_TEMPLATES,
             "get_tool_correctness_score",
             task=task,
@@ -215,7 +215,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         self, task: Task, test_case: ConversationalTestCase
     ) -> ToolScore:
         available_tools, _, _ = available_mcp_servers_block(test_case.mcp_servers)
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             _MCP_TASK_COMPLETION_TEMPLATES,
             "get_tool_correctness_score",
             task=task,
@@ -239,7 +239,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
             available_resources,
             available_prompts,
         ) = available_mcp_servers_block(test_case.mcp_servers)
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             _MCP_TASK_COMPLETION_TEMPLATES,
             "get_args_correctness_score",
             task=task,
@@ -265,7 +265,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
             available_resources,
             available_prompts,
         ) = available_mcp_servers_block(test_case.mcp_servers)
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             _MCP_TASK_COMPLETION_TEMPLATES,
             "get_args_correctness_score",
             task=task,
@@ -369,7 +369,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         for arg_score in args_accuracy_score:
             reasons.append(arg_score.reason)
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             _MCP_TASK_COMPLETION_TEMPLATES,
             "generate_final_reason",
             final_score=self.score,
@@ -400,7 +400,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         for arg_score in args_accuracy_score:
             reasons.append(arg_score.reason)
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             _MCP_TASK_COMPLETION_TEMPLATES,
             "generate_final_reason",
             final_score=self.score,

@@ -18,7 +18,7 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from .schema import MCPPrimitivesScore, MCPArgsScore
 
@@ -191,7 +191,7 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPPrimitivesScore:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             "MCPUseMetric",
             "get_primitive_correctness_prompt",
             test_case=test_case,
@@ -213,7 +213,7 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPPrimitivesScore:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             "MCPUseMetric",
             "get_primitive_correctness_prompt",
             test_case=test_case,
@@ -235,7 +235,7 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPArgsScore:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             "MCPUseMetric",
             "get_mcp_argument_correctness_prompt",
             test_case=test_case,
@@ -257,7 +257,7 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPArgsScore:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             "MCPUseMetric",
             "get_mcp_argument_correctness_prompt",
             test_case=test_case,

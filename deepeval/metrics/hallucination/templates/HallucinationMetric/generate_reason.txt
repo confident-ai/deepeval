@@ -6,7 +6,7 @@ Given a list of factual alignments and contradictions, which highlights alignmen
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
 Example JSON:
 {
-"reason": "The score is <hallucination_score> because <your_reason>."
+  "reason": "The score is <hallucination_score> because <your_reason>."
 }
 **
 

@@ -20,7 +20,7 @@ from deepeval.test_case import (
     Turn,
 )
 from deepeval.utils import prettify_list
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 
 from deepeval.metrics.dag.schema import (
     BinaryJudgementVerdict,
@@ -257,7 +257,7 @@ class ConversationalVerdictNode(ConversationalBaseNode):
                 metric.reason = await self._a_generate_reason(metric=metric)
 
     def _generate_reason(self, metric: BaseConversationalMetric):
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             "VerdictNode",
             "generate_reason",
             verbose_steps=metric._verbose_steps,
@@ -274,7 +274,7 @@ class ConversationalVerdictNode(ConversationalBaseNode):
         )
 
     async def _a_generate_reason(self, metric: BaseConversationalMetric):
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             "VerdictNode",
             "generate_reason",
             verbose_steps=metric._verbose_steps,
@@ -357,7 +357,7 @@ class ConversationalTaskNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             "TaskNode",
 
@@ -422,7 +422,7 @@ class ConversationalTaskNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             "TaskNode",
 
@@ -537,7 +537,7 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             "BinaryJudgement",
 
@@ -597,7 +597,7 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             "BinaryJudgement",
 
@@ -724,7 +724,7 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             "BinaryJudgement",
 
@@ -783,7 +783,7 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             "BinaryJudgement",
 

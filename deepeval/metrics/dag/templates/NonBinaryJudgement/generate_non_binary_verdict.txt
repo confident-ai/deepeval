@@ -8,8 +8,8 @@
 IMPORTANT: Please make sure to only return a json with two keys: 'verdict' {{ options }} and 'reason' providing the reason.
 Example JSON:
 {
-"reason": "...",
-"verdict": {{ options }}
+  "reason": "...",
+  "verdict": {{ options }}
 }
 **
 

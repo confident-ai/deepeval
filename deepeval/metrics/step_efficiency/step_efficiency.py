@@ -12,7 +12,7 @@ from deepeval.metrics.utils import (
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.step_efficiency.schema import Task, EfficiencyVerdict
 
@@ -154,7 +154,7 @@ class StepEfficiencyMetric(BaseMetric):
             if isinstance(raw, dict)
             else (str(raw) if raw is not None else "{}")
         )
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "get_execution_efficiency",
             task=task,
@@ -179,7 +179,7 @@ class StepEfficiencyMetric(BaseMetric):
             if isinstance(raw, dict)
             else (str(raw) if raw is not None else "{}")
         )
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "get_execution_efficiency",
             task=task,
@@ -202,7 +202,7 @@ class StepEfficiencyMetric(BaseMetric):
             if isinstance(raw, dict)
             else (str(raw) if raw is not None else "{}")
         )
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "extract_task_from_trace",
             trace_json=trace_json,
@@ -223,7 +223,7 @@ class StepEfficiencyMetric(BaseMetric):
             if isinstance(raw, dict)
             else (str(raw) if raw is not None else "{}")
         )
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "extract_task_from_trace",
             trace_json=trace_json,

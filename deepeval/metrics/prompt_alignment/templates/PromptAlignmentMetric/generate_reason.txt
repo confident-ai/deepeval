@@ -9,7 +9,7 @@ Don't have to talk about whether the actual output is a good fit for the input, 
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
 Example JSON:
 {
-"reason": "The score is <prompt_alignment_score> because <your_reason>."
+  "reason": "The score is <prompt_alignment_score> because <your_reason>."
 }
 **
 

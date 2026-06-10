@@ -71,8 +71,8 @@ OUTPUT FORMAT:
 Return a single JSON object in this exact format:
 
 {
-"score": 0.0,
-"reason": "1-3 concise factual sentences describing where inefficiencies occurred."
+  "score": 0.0,
+  "reason": "1-3 concise factual sentences describing where inefficiencies occurred."
 }
 
 The `reason` must:
@@ -88,8 +88,8 @@ Trace: Agent calls an LLM twice, then performs an extra web search.
 
 → Output:
 {
-"score": 0.25,
-"reason": "The agent used redundant LLM calls and performed an unnecessary web search. Only one LLM call was required for the summary."
+  "score": 0.25,
+  "reason": "The agent used redundant LLM calls and performed an unnecessary web search. Only one LLM call was required for the summary."
 }
 
 **Example 2:**
@@ -98,8 +98,8 @@ Trace: Agent performs one computation directly.
 
 → Output:
 {
-"score": 1.0,
-"reason": "The agent completed the task with one minimal action and no unnecessary steps."
+  "score": 1.0,
+  "reason": "The agent completed the task with one minimal action and no unnecessary steps."
 }
 
 FINAL REMINDERS

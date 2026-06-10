@@ -48,8 +48,8 @@ OUTPUT FORMAT:
 Return only a valid JSON object with exactly two fields:
 
 {
-"score": 0.0,
-"reason": "1-3 concise sentences explaining the quality of the plan and how well execution matched it. Specify missing or extra steps, plan clarity, and adherence issues."
+  "score": 0.0,
+  "reason": "1-3 concise sentences explaining the quality of the plan and how well execution matched it. Specify missing or extra steps, plan clarity, and adherence issues."
 }
 
 EXAMPLE:
@@ -64,8 +64,8 @@ Agent Steps include:
 Example JSON:
 
 {
-"score": 0.75,
-"reason": "The agent formed a clear plan covering flights, hotel, and agenda, but failed to execute the agenda preparation step, reducing adherence."
+  "score": 0.75,
+  "reason": "The agent formed a clear plan covering flights, hotel, and agenda, but failed to execute the agenda preparation step, reducing adherence."
 }
 
 **** END OF EXAMPLE ****

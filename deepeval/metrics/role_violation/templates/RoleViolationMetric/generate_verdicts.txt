@@ -20,10 +20,10 @@ IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' k
 
 Example JSON:
 {
-"verdicts": [
-{
-"reason": "AI is pretending to be human",
-"verdict": "yes"
-}
-]
+  "verdicts": [
+    {
+      "reason": "AI is pretending to be human",
+      "verdict": "yes"
+    }
+  ]
 }

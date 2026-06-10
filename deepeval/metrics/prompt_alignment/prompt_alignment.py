@@ -20,7 +20,7 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.prompt_alignment import schema as paschema
 
@@ -172,7 +172,7 @@ class PromptAlignmentMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 unalignment_reasons.append(verdict.reason)
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             self.__class__.__name__,
 
@@ -200,7 +200,7 @@ class PromptAlignmentMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 unalignment_reasons.append(verdict.reason)
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             self.__class__.__name__,
 
@@ -222,7 +222,7 @@ class PromptAlignmentMetric(BaseMetric):
     async def _a_generate_verdicts(
         self, input: str, actual_output: str
     ) -> List[paschema.PromptAlignmentVerdict]:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             prompt_instructions=self.prompt_instructions,
@@ -243,7 +243,7 @@ class PromptAlignmentMetric(BaseMetric):
     def _generate_verdicts(
         self, input: str, actual_output: str
     ) -> List[paschema.PromptAlignmentVerdict]:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             prompt_instructions=self.prompt_instructions,

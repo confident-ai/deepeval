@@ -7,7 +7,7 @@ Your task is to go through these reasons and give a single final explaination th
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
 Example JSON:
 {
-"reason": "The score is <score> because <your_reason>."
+  "reason": "The score is <score> because <your_reason>."
 }
 
 {{ _fragments.multimodal_input_rules }}

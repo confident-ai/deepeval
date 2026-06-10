@@ -21,8 +21,8 @@ OUTPUT FORMAT:
 Return only a **JSON object** with one key:
 ```json
 {
-"verdict": "TP"  // or TN, FP, FN
-"reason": "Reason why the verdict is 'TP'"
+  "verdict": "TP"  // or TN, FP, FN
+  "reason": "Reason why the verdict is 'TP'"
 }
 
 CHAIN OF THOUGHT:
@@ -41,8 +41,8 @@ Response: "Steel-cut oats are good for diabetic patients"
 
 Example JSON:
 {
-"verdict": "TP",
-"reason": The question asks about food for diabetic patients and the response clearly answers that oats are good for diabetic patients. Both align with the relevant topics of heath nutrition and food and their benefits... 
+  "verdict": "TP",
+  "reason": The question asks about food for diabetic patients and the response clearly answers that oats are good for diabetic patients. Both align with the relevant topics of heath nutrition and food and their benefits... 
 }
 
 ===== END OF EXAMPLE ======

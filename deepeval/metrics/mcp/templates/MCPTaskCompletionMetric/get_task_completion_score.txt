@@ -27,8 +27,8 @@ Agent Steps:
 
 Example Output:
 {
-"score": 1.0,
-"reason": "The agent successfully completed all required steps with accurate results."
+  "score": 1.0,
+  "reason": "The agent successfully completed all required steps with accurate results."
 }
 
 JSON:

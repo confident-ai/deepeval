@@ -14,7 +14,7 @@ from deepeval.metrics.utils import (
 from deepeval.test_case import LLMTestCase, SingleTurnParams, MLLMImage
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.answer_relevancy.schema import (
     Statements,
@@ -165,7 +165,7 @@ class AnswerRelevancyMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 irrelevant_statements.append(verdict.reason)
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_reason",
             multimodal=multimodal,
@@ -191,7 +191,7 @@ class AnswerRelevancyMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 irrelevant_statements.append(verdict.reason)
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_reason",
             multimodal=multimodal,
@@ -214,7 +214,7 @@ class AnswerRelevancyMetric(BaseMetric):
         if len(self.statements) == 0:
             return []
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             multimodal=multimodal,
@@ -238,7 +238,7 @@ class AnswerRelevancyMetric(BaseMetric):
         if len(self.statements) == 0:
             return []
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             multimodal=multimodal,
@@ -261,7 +261,7 @@ class AnswerRelevancyMetric(BaseMetric):
         actual_output: str,
         multimodal: bool,
     ) -> List[str]:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_statements",
             multimodal=multimodal,
@@ -283,7 +283,7 @@ class AnswerRelevancyMetric(BaseMetric):
         actual_output: str,
         multimodal: bool,
     ) -> List[str]:
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_statements",
             multimodal=multimodal,

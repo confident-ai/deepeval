@@ -10,20 +10,20 @@ Example Assistant Output: "Einstein won the Nobel Prize in 1968 for his discover
 
 Example:
 {
-"verdicts": [
-{
-"reason": "It clearly addresses the question by stating that 'Einstein won the Nobel Prize for his discovery of the photoelectric effect.'",
-"verdict": "yes"
-},
-{
-"reason": "The text verifies that the prize was indeed won in 1968.",
-"verdict": "yes"
-},
-{
-"reason": "'There was a cat' is not at all relevant to the topic of winning a Nobel Prize.",
-"verdict": "no"
-}
-]  
+  "verdicts": [
+    {
+      "reason": "It clearly addresses the question by stating that 'Einstein won the Nobel Prize for his discovery of the photoelectric effect.'",
+      "verdict": "yes"
+    },
+    {
+      "reason": "The text verifies that the prize was indeed won in 1968.",
+      "verdict": "yes"
+    },
+    {
+      "reason": "'There was a cat' is not at all relevant to the topic of winning a Nobel Prize.",
+      "verdict": "no"
+    }
+  ]  
 }
 Since you are going to generate a verdict for each context, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to that of the contexts.
 **

@@ -17,7 +17,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.metrics.retrieval_context_display import id_retrieval_context
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import MLLMImage
@@ -281,7 +281,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         doc_str, ctx_disp, mm_note = _contextual_precision_verdict_fields(
             retrieval_context, multimodal
         )
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             input=input,
@@ -315,7 +315,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         doc_str, ctx_disp, mm_note = _contextual_precision_verdict_fields(
             retrieval_context, multimodal
         )
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_verdicts",
             input=input,
@@ -427,7 +427,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
                 }
             )
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             self.__class__.__name__,
 
@@ -467,7 +467,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
                 }
             )
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
 
             self.__class__.__name__,
 
@@ -513,7 +513,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         for score in scores:
             reasons.append(score.reason)
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_final_reason",
             final_score=self.score,
@@ -542,7 +542,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         for score in scores:
             reasons.append(score.reason)
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "generate_final_reason",
             final_score=self.score,

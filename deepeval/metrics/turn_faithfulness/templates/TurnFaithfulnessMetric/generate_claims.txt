@@ -16,7 +16,7 @@ RULES:
 Output MUST be ONLY valid JSON:
 
 {
-"claims": ["claim 1", "claim 2", ...]
+  "claims": ["claim 1", "claim 2", ...]
 }
 
 USER MESSAGE:

@@ -8,13 +8,13 @@ The `reason` key should provide a reason why to the verdict. In the reason, you 
 IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON objects, each with two keys: `verdict` and `reason`.
 
 {
-"verdicts": [
-{
-"reason": "...",
-"verdict": "yes"
-},
-...
-]  
+  "verdicts": [
+    {
+      "reason": "...",
+      "verdict": "yes"
+    },
+    ...
+  ]  
 }
 
 Since you are going to generate a verdict for each sentence, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to the number of {{ content_type_plural }} in {% if multimodal %}the{% else %}`assistant output`{% endif %}{% if multimodal %} `assistant output`{% endif %}.

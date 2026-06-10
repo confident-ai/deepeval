@@ -33,8 +33,8 @@ Additional Context:
 ---
 **Example JSON:**
 {
-"reason": "your concise and informative reason here",
-"score": {{ score_range[0] }}
+  "reason": "your concise and informative reason here",
+  "score": {{ score_range[0] }}
 }
 
 JSON:

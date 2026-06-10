@@ -29,8 +29,8 @@ IMPORTANT: You MUST return only a valid JSON object with the exact keys `"score"
 ---
 Example JSON:
 {
-"reason": "Your concise and informative reason here.",
-"score": 0
+  "reason": "Your concise and informative reason here.",
+  "score": 0
 }
 
 JSON:

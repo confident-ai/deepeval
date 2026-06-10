@@ -10,26 +10,26 @@ You MUST USE look at all messages provided in the list of messages to make an in
 IMPORTANT: Please make sure to only return in JSON format.
 Example Turns:
 [
-{
-"role": "user",
-"content": "Hi!"
-},
-{
-"role": "assistant",
-"content": "Hello! How may I help you?"
-},
-{
-"role": "user",
-"content": "Nothing, I'm just playing with you."
-},
-{
-"role": "assistant",
-"content": "Oh ok, in that case should you need anything just let me know!"
-},
-{
-"role": "user",
-"content": "Actually, I have something I want to tell you"
-}
+  {
+    "role": "user",
+    "content": "Hi!"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How may I help you?"
+  },
+  {
+    "role": "user",
+    "content": "Nothing, I'm just playing with you."
+  },
+  {
+    "role": "assistant",
+    "content": "Oh ok, in that case should you need anything just let me know!"
+  },
+  {
+    "role": "user",
+    "content": "Actually, I have something I want to tell you"
+  }
 ]
 
 Example Intention:
@@ -37,8 +37,8 @@ User wants to tell the assistant something.
 
 Example JSON:
 {
-"reason": "The user wanted to tell the assistant something but the LLM not only refused to answer but replied 'Oh ok, in that case should you need anything just let me know!', which is completely irrelevant and doesn't satisfy the user at all.",
-"verdict": "no"
+  "reason": "The user wanted to tell the assistant something but the LLM not only refused to answer but replied 'Oh ok, in that case should you need anything just let me know!', which is completely irrelevant and doesn't satisfy the user at all.",
+  "verdict": "no"
 }
 ===== END OF EXAMPLE ======
 

@@ -14,8 +14,8 @@ IMPORTANT: Only return JSON with two keys:
 
 Example:
 {
-"reason": "The assistant provided a clear and direct answer in response to every user query.",
-"verdict": true
+  "reason": "The assistant provided a clear and direct answer in response to every user query.",
+  "verdict": true
 }
 **
 JSON:

@@ -14,7 +14,7 @@ from deepeval.metrics.utils import (
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metric_templates import resolve_template
+from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.goal_accuracy.schema import (
     GoalSteps,
@@ -203,7 +203,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         return goal_and_steps_taken
 
     def _get_plan_scores(self, user_goal, steps_taken, multimodal: bool):
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "get_plan_evaluation_score",
             task=user_goal,
@@ -221,7 +221,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
     async def _a_get_plan_scores(
         self, user_goal, steps_taken, multimodal: bool
     ):
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "get_plan_evaluation_score",
             task=user_goal,
@@ -265,7 +265,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 f"Score: {plan_score.score}, Reason: {plan_score.reason} \n"
             )
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "get_final_reason",
             final_score=self.score,
@@ -300,7 +300,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 f"Score: {plan_score.score}, Reason: {plan_score.reason} \n"
             )
 
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "get_final_reason",
             final_score=self.score,
@@ -321,7 +321,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
     def _get_goal_accuracy_score(
         self, user_goal, steps_taken, multimodal: bool
     ):
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "get_accuracy_score",
             task=user_goal,
@@ -339,7 +339,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
     async def _a_get_goal_accuracy_score(
         self, user_goal, steps_taken, multimodal: bool
     ):
-        prompt = resolve_template(
+        prompt = resolve_template("metrics", 
             self.__class__.__name__,
             "get_accuracy_score",
             task=user_goal,
