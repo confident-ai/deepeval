@@ -772,6 +772,9 @@ DEEPSEEK_ERROR_POLICY = OPENAI_ERROR_POLICY
 KIMI_ERROR_POLICY = OPENAI_ERROR_POLICY
 LOCAL_ERROR_POLICY = OPENAI_ERROR_POLICY
 OPENROUTER_ERROR_POLICY = OPENAI_ERROR_POLICY
+# Portkey is reached through the OpenAI SDK (OpenAI-compatible gateway), so it
+# raises the same exception classes and shares OpenAI's retry classification.
+PORTKEY_ERROR_POLICY = OPENAI_ERROR_POLICY
 
 ######################
 # AWS Bedrock Policy #
@@ -999,6 +1002,7 @@ _POLICY_BY_SLUG: dict[str, Optional[ErrorPolicy]] = {
     PS.LOCAL.value: LOCAL_ERROR_POLICY,
     PS.OLLAMA.value: OLLAMA_ERROR_POLICY,
     PS.OPENROUTER.value: OPENROUTER_ERROR_POLICY,
+    PS.PORTKEY.value: PORTKEY_ERROR_POLICY,
 }
 
 
@@ -1021,6 +1025,7 @@ _STATIC_PRED_BY_SLUG: dict[str, Optional[Callable[[Exception], bool]]] = {
     PS.LOCAL.value: _opt_pred(LOCAL_ERROR_POLICY),
     PS.OLLAMA.value: _opt_pred(OLLAMA_ERROR_POLICY),
     PS.OPENROUTER.value: _opt_pred(OPENROUTER_ERROR_POLICY),
+    PS.PORTKEY.value: _opt_pred(PORTKEY_ERROR_POLICY),
 }
 
 

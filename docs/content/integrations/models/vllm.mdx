@@ -1,5 +1,5 @@
 ---
-# id: vllm
+id: vllm
 title: vLLM
 sidebar_label: vLLM
 ---
@@ -24,6 +24,58 @@ You can enter any value when prompted for an api key if authentication is not en
 :::tip[Persisting settings]
 You can persist CLI settings with the optional `--save` flag.
 See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
+### Python
+
+Alternatively, you can define `LocalModel` directly in Python code:
+
+<Tabs items={["Python", "ENV"]}>
+<Tab value="Python">
+
+```python
+from deepeval.models import LocalModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = LocalModel(
+    model="<model_name>",
+    base_url="http://localhost:8000/v1/",
+    api_key="vllm",  # any placeholder works if your server has no auth
+    temperature=0
+)
+
+answer_relevancy = AnswerRelevancyMetric(model=model)
+```
+
+</Tab>
+<Tab value="ENV">
+
+To use a local model directly in `deepeval`, set `USE_LOCAL_MODEL=1` in your `env` and simply pass the name of your desired model in your metric initialization:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="<model_name>",
+)
+```
+
+You should also set the other necessary vars like `LOCAL_MODEL_BASE_URL` and `LOCAL_MODEL_API_KEY` to be able to use your local model as shown above.
+
+</Tab>
+</Tabs>
+
+There are **ZERO** mandatory and **SIX** optional parameters when creating a `LocalModel`:
+
+- [Optional] `model`: A string specifying the local model to use. Defaults to `LOCAL_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `api_key`: A string specifying the API key for your local server. Defaults to `LOCAL_MODEL_API_KEY` if not passed; raises an error at runtime if unset. Local servers without authentication accept any placeholder string.
+- [Optional] `base_url`: A string specifying the base URL of your local server. Defaults to `LOCAL_MODEL_BASE_URL` if not passed.
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `format`: A string specifying the structured-output response format. Defaults to `LOCAL_MODEL_FORMAT` if not passed; falls back to `"json"` if unset.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the local server's `chat.completions.create(...)` call.
+
+:::tip
+Any `**kwargs` you would like to use for your model can be passed directly to `LocalModel(...)`; these are forwarded to the underlying OpenAI client constructor.
 :::
 
 ### Reverting to OpenAI
