@@ -21,7 +21,7 @@ const DEFAULT_LOGO_ITEMS: EnterpriseLogoItem[] = [
   },
   { name: "Panasonic", slug: "panasonic" },
   { name: "Finom", slug: "finom" },
-  { name: "Humach", slug: "humach" },
+  { name: "Siemens", slug: "siemens" },
   { name: "Toshiba", slug: "toshiba" },
   { name: "BCG", slug: "bcg" },
   {
