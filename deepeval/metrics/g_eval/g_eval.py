@@ -40,6 +40,7 @@ from deepeval.metrics.g_eval.utils import (
     G_EVAL_API_PARAMS,
     RetrievalContextBudgetReport,
     build_retrieval_context_budget_report,
+    build_retrieval_relevance_query,
 )
 from deepeval.config.settings import get_settings
 from deepeval.confident.api import Api, Endpoints, HttpMethods
@@ -465,6 +466,9 @@ class GEval(BaseMetric):
         return build_retrieval_context_budget_report(
             test_case.retrieval_context,
             self.max_retrieval_context_tokens,
+            relevance_query=build_retrieval_relevance_query(
+                self.evaluation_params, test_case
+            ),
         )
 
     def is_successful(self) -> bool:

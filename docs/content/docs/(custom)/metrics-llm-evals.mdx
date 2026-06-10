@@ -140,7 +140,7 @@ faithfulness = GEval(
 )
 ```
 
-When the retrieval context is over budget, `GEval` preserves the start and end of each visible chunk, includes source labels for `RetrievedContextData`, and inserts an omission marker so the judge knows the context was compacted.
+When the retrieval context is over budget, `GEval` keeps the chunks with the strongest lexical overlap against the selected input, actual output, and expected output fields. It then preserves the start and end of each visible chunk, includes source labels for `RetrievedContextData`, and inserts an omission marker so the judge knows the context was compacted.
 
 You can also inspect the bounded prompt before running an evaluation. This is useful in CI or when tuning a RAG evaluator because it does not call the evaluation model:
 
@@ -176,7 +176,7 @@ print(report.compression_ratio)
 print(prompt)
 ```
 
-`get_retrieval_context_budget_report()` returns the estimated original tokens, rendered tokens, compression ratio, visible chunks, omitted chunks, and per-chunk source metadata. `preview_evaluation_prompt()` requires explicit `evaluation_steps` so it never triggers a hidden LLM call to generate steps.
+`get_retrieval_context_budget_report()` returns the estimated original tokens, rendered tokens, compression ratio, visible chunks, omitted chunks, per-chunk relevance scores, and per-chunk source metadata. `preview_evaluation_prompt()` requires explicit `evaluation_steps` so it never triggers a hidden LLM call to generate steps.
 
 ### Rubric
 

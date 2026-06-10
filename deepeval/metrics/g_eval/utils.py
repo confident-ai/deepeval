@@ -1,6 +1,7 @@
 from typing import List, Optional, Union, Tuple, Dict
 from openai.types.chat.chat_completion import ChatCompletion
 import math
+import re
 
 from deepeval.models import DeepEvalBaseLLM, GPTModel, AzureOpenAIModel
 from deepeval.test_case import (
@@ -34,6 +35,7 @@ class RetrievalContextChunkBudget(BaseModel):
     source: Optional[str]
     original_tokens: int
     rendered_tokens: int
+    relevance_score: float = 0.0
     omitted: bool = False
 
 
@@ -341,6 +343,35 @@ def construct_non_turns_test_case_string(
 
 TOKEN_CHAR_RATIO = 4
 MIN_CONTEXT_WINDOW_TOKENS = 32
+RELEVANCE_STOPWORDS = {
+    "about",
+    "after",
+    "also",
+    "because",
+    "before",
+    "being",
+    "between",
+    "could",
+    "does",
+    "from",
+    "have",
+    "into",
+    "only",
+    "should",
+    "that",
+    "their",
+    "there",
+    "these",
+    "they",
+    "this",
+    "through",
+    "what",
+    "when",
+    "where",
+    "which",
+    "with",
+    "would",
+}
 
 
 def estimate_token_count(text: str) -> int:
@@ -353,6 +384,53 @@ def _normalize_retrieval_context_item(
     if isinstance(item, RetrievedContextData):
         return item.source, item.context
     return None, str(item)
+
+
+def _relevance_terms(text: Optional[str]) -> set[str]:
+    if not text:
+        return set()
+
+    return {
+        term
+        for term in re.findall(r"[A-Za-z0-9_]{3,}", text.lower())
+        if term not in RELEVANCE_STOPWORDS
+    }
+
+
+def _retrieval_context_relevance_score(
+    context: str,
+    relevance_terms: set[str],
+) -> float:
+    if not relevance_terms:
+        return 0.0
+
+    context_terms = _relevance_terms(context)
+    if not context_terms:
+        return 0.0
+
+    overlap = context_terms & relevance_terms
+    coverage = len(overlap) / len(relevance_terms)
+    density = len(overlap) / max(1, len(context_terms))
+    return round(coverage + density, 4)
+
+
+def build_retrieval_relevance_query(
+    evaluation_params: List[SingleTurnParams],
+    test_case: LLMTestCase,
+) -> str:
+    query_parts: List[str] = []
+    for param in (
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
+        SingleTurnParams.EXPECTED_OUTPUT,
+    ):
+        if param not in evaluation_params:
+            continue
+        value = getattr(test_case, param.value, None)
+        if value:
+            query_parts.append(str(value))
+
+    return "\n".join(query_parts)
 
 
 def _truncate_middle(text: str, max_tokens: int, label: str) -> str:
@@ -377,25 +455,33 @@ def _truncate_middle(text: str, max_tokens: int, label: str) -> str:
 def format_retrieval_context_with_budget(
     retrieval_context: List[Union[str, RetrievedContextData]],
     max_retrieval_context_tokens: int,
+    relevance_query: Optional[str] = None,
 ) -> str:
     return build_retrieval_context_budget_report(
         retrieval_context,
         max_retrieval_context_tokens,
+        relevance_query=relevance_query,
     ).rendered_context
 
 
 def build_retrieval_context_budget_report(
     retrieval_context: List[Union[str, RetrievedContextData]],
     max_retrieval_context_tokens: int,
+    relevance_query: Optional[str] = None,
 ) -> RetrievalContextBudgetReport:
     if max_retrieval_context_tokens <= 0:
         raise ValueError("max_retrieval_context_tokens must be greater than 0.")
 
+    relevance_terms = _relevance_terms(relevance_query)
     normalized_contexts = [
-        _normalize_retrieval_context_item(item) for item in retrieval_context
+        (
+            index,
+            *_normalize_retrieval_context_item(item),
+        )
+        for index, item in enumerate(retrieval_context, start=1)
     ]
     total_tokens = sum(
-        estimate_token_count(context) for _, context in normalized_contexts
+        estimate_token_count(context) for _, _, context in normalized_contexts
     )
 
     if total_tokens <= max_retrieval_context_tokens:
@@ -417,11 +503,12 @@ def build_retrieval_context_budget_report(
                     source=source,
                     original_tokens=estimate_token_count(context),
                     rendered_tokens=estimate_token_count(context),
+                    relevance_score=_retrieval_context_relevance_score(
+                        context, relevance_terms
+                    ),
                     omitted=False,
                 )
-                for index, (source, context) in enumerate(
-                    normalized_contexts, start=1
-                )
+                for index, source, context in normalized_contexts
             ],
         )
 
@@ -445,7 +532,25 @@ def build_retrieval_context_budget_report(
         context_count,
         max(1, max_retrieval_context_tokens // MIN_CONTEXT_WINDOW_TOKENS),
     )
-    visible_contexts = normalized_contexts[:visible_context_count]
+    scored_contexts = [
+        (
+            index,
+            source,
+            context,
+            _retrieval_context_relevance_score(context, relevance_terms),
+        )
+        for index, source, context in normalized_contexts
+    ]
+    ranked_contexts = sorted(
+        scored_contexts,
+        key=lambda item: (-item[3], item[0]),
+    )
+    selected_indices = {
+        index for index, _, _, _ in ranked_contexts[:visible_context_count]
+    }
+    visible_contexts = [
+        item for item in scored_contexts if item[0] in selected_indices
+    ]
     omitted_context_count = context_count - visible_context_count
     context_token_budget = max(
         1,
@@ -456,11 +561,12 @@ def build_retrieval_context_budget_report(
         (
             "[retrieval_context compacted for GEval: "
             f"estimated {total_tokens} tokens across {context_count} chunks; "
-            f"budget {max_retrieval_context_tokens} tokens]"
+            f"budget {max_retrieval_context_tokens} tokens; "
+            f"kept {visible_context_count} highest-relevance chunks]"
         )
     ]
     chunk_reports: List[RetrievalContextChunkBudget] = []
-    for index, (source, context) in enumerate(visible_contexts, start=1):
+    for index, source, context, relevance_score in visible_contexts:
         label = f"retrieval chunk {index}"
         source_label = f" source={source}" if source else ""
         rendered_chunk = _truncate_middle(context, context_token_budget, label)
@@ -473,6 +579,7 @@ def build_retrieval_context_budget_report(
                 source=source,
                 original_tokens=estimate_token_count(context),
                 rendered_tokens=estimate_token_count(rendered_chunk),
+                relevance_score=relevance_score,
                 omitted=estimate_token_count(context)
                 > estimate_token_count(rendered_chunk),
             )
@@ -483,16 +590,16 @@ def build_retrieval_context_budget_report(
             f"[... omitted {omitted_context_count} retrieval chunks because "
             "the GEval retrieval context budget was reached ...]"
         )
-        for index, (source, context) in enumerate(
-            normalized_contexts[visible_context_count:],
-            start=visible_context_count + 1,
-        ):
+        for index, source, context, relevance_score in scored_contexts:
+            if index in selected_indices:
+                continue
             chunk_reports.append(
                 RetrievalContextChunkBudget(
                     index=index,
                     source=source,
                     original_tokens=estimate_token_count(context),
                     rendered_tokens=0,
+                    relevance_score=relevance_score,
                     omitted=True,
                 )
             )
@@ -533,7 +640,11 @@ def construct_test_case_string(
             and isinstance(value, list)
         ):
             value = format_retrieval_context_with_budget(
-                value, max_retrieval_context_tokens
+                value,
+                max_retrieval_context_tokens,
+                relevance_query=build_retrieval_relevance_query(
+                    evaluation_params, test_case
+                ),
             )
         text += f"{G_EVAL_PARAMS[param]}:\n{value} \n\n"
     return text

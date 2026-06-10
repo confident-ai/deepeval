@@ -151,6 +151,50 @@ def test_geval_retrieval_context_budget_report_quantifies_compaction():
     assert "source=kb/refunds.md" in report.rendered_context
 
 
+def test_geval_retrieval_context_budget_prioritizes_relevant_chunks():
+    retrieval_context = [
+        RetrievedContextData(
+            source="kb/security.md",
+            context="SAML setup and audit logging configuration. " * 160,
+        ),
+        RetrievedContextData(
+            source="kb/sales.md",
+            context="Pipeline stages and account ownership notes. " * 160,
+        ),
+        RetrievedContextData(
+            source="kb/refunds.md",
+            context=(
+                "Enterprise refunds are available within 30 days after purchase. "
+                "Onboarding fees are non-refundable."
+            ),
+        ),
+        RetrievedContextData(
+            source="kb/procurement.md",
+            context="Vendor review and procurement workflow details. " * 160,
+        ),
+    ]
+
+    report = build_retrieval_context_budget_report(
+        retrieval_context,
+        max_retrieval_context_tokens=64,
+        relevance_query=(
+            "Can enterprise customers get a refund after onboarding? "
+            "Enterprise customers can request a refund within 30 days, "
+            "but onboarding fees are non-refundable."
+        ),
+    )
+
+    assert "kb/refunds.md" in report.rendered_context
+    assert "Enterprise refunds are available" in report.rendered_context
+    assert "kb/procurement.md" not in report.rendered_context
+    refund_chunk = next(
+        chunk for chunk in report.chunks if chunk.source == "kb/refunds.md"
+    )
+    assert refund_chunk.omitted is False
+    assert refund_chunk.relevance_score > 0
+    assert report.omitted_chunks == 2
+
+
 def test_geval_retrieval_context_budget_rejects_invalid_budget():
     with pytest.raises(ValueError, match="greater than 0"):
         format_retrieval_context_with_budget(
