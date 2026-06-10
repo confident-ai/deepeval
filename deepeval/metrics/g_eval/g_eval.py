@@ -38,6 +38,8 @@ from deepeval.metrics.g_eval.utils import (
     construct_geval_pull_evaluation_params,
     ensure_required_params,
     G_EVAL_API_PARAMS,
+    RetrievalContextBudgetReport,
+    build_retrieval_context_budget_report,
 )
 from deepeval.config.settings import get_settings
 from deepeval.confident.api import Api, Endpoints, HttpMethods
@@ -285,37 +287,12 @@ class GEval(BaseMetric):
         multimodal: bool,
         _additional_context: Optional[str] = None,
     ) -> Tuple[Union[int, float], str]:
-        test_case_content = construct_test_case_string(
-            self.evaluation_params,
-            test_case,
-            self.max_retrieval_context_tokens,
+        prompt = self._build_evaluation_prompt(
+            test_case=test_case,
+            evaluation_steps=self.evaluation_steps,
+            multimodal=multimodal,
+            _additional_context=_additional_context,
         )
-        g_eval_params_str = construct_g_eval_params_string(
-            self.evaluation_params
-        )
-        if not self.strict_mode:
-            rubric_str = format_rubrics(self.rubric) if self.rubric else None
-            prompt = self.evaluation_template.generate_evaluation_results(
-                evaluation_steps=number_evaluation_steps(self.evaluation_steps),
-                test_case_content=test_case_content,
-                parameters=g_eval_params_str,
-                rubric=rubric_str,
-                score_range=self.score_range,
-                _additional_context=_additional_context,
-                multimodal=multimodal,
-            )
-        else:
-            prompt = (
-                self.evaluation_template.generate_strict_evaluation_results(
-                    evaluation_steps=number_evaluation_steps(
-                        self.evaluation_steps
-                    ),
-                    test_case_content=test_case_content,
-                    parameters=g_eval_params_str,
-                    _additional_context=_additional_context,
-                    multimodal=multimodal,
-                )
-            )
         try:
             # don't use log probabilities for unsupported gpt models
             if no_log_prob_support(self.model):
@@ -360,38 +337,12 @@ class GEval(BaseMetric):
         multimodal: bool,
         _additional_context: Optional[str] = None,
     ) -> Tuple[Union[int, float], str]:
-        test_case_content = construct_test_case_string(
-            self.evaluation_params,
-            test_case,
-            self.max_retrieval_context_tokens,
+        prompt = self._build_evaluation_prompt(
+            test_case=test_case,
+            evaluation_steps=self.evaluation_steps,
+            multimodal=multimodal,
+            _additional_context=_additional_context,
         )
-        g_eval_params_str = construct_g_eval_params_string(
-            self.evaluation_params
-        )
-
-        if not self.strict_mode:
-            rubric_str = format_rubrics(self.rubric) if self.rubric else None
-            prompt = self.evaluation_template.generate_evaluation_results(
-                evaluation_steps=number_evaluation_steps(self.evaluation_steps),
-                test_case_content=test_case_content,
-                parameters=g_eval_params_str,
-                rubric=rubric_str,
-                score_range=self.score_range,
-                _additional_context=_additional_context,
-                multimodal=multimodal,
-            )
-        else:
-            prompt = (
-                self.evaluation_template.generate_strict_evaluation_results(
-                    evaluation_steps=number_evaluation_steps(
-                        self.evaluation_steps
-                    ),
-                    test_case_content=test_case_content,
-                    parameters=g_eval_params_str,
-                    _additional_context=_additional_context,
-                    multimodal=multimodal,
-                )
-            )
 
         try:
             # don't use log probabilities for unsupported gpt models
@@ -426,6 +377,95 @@ class GEval(BaseMetric):
                 extract_schema=lambda s: (s.score, s.reason),
                 extract_json=lambda d: (d["score"], d["reason"]),
             )
+
+    def _build_evaluation_prompt(
+        self,
+        test_case: LLMTestCase,
+        evaluation_steps: List[str],
+        multimodal: bool,
+        _additional_context: Optional[str] = None,
+    ) -> str:
+        test_case_content = construct_test_case_string(
+            self.evaluation_params,
+            test_case,
+            self.max_retrieval_context_tokens,
+        )
+        g_eval_params_str = construct_g_eval_params_string(
+            self.evaluation_params
+        )
+
+        if not self.strict_mode:
+            rubric_str = format_rubrics(self.rubric) if self.rubric else None
+            prompt = self.evaluation_template.generate_evaluation_results(
+                evaluation_steps=number_evaluation_steps(evaluation_steps),
+                test_case_content=test_case_content,
+                parameters=g_eval_params_str,
+                rubric=rubric_str,
+                score_range=self.score_range,
+                _additional_context=_additional_context,
+                multimodal=multimodal,
+            )
+        else:
+            prompt = (
+                self.evaluation_template.generate_strict_evaluation_results(
+                    evaluation_steps=number_evaluation_steps(evaluation_steps),
+                    test_case_content=test_case_content,
+                    parameters=g_eval_params_str,
+                    _additional_context=_additional_context,
+                    multimodal=multimodal,
+                )
+            )
+        return prompt
+
+    def preview_evaluation_prompt(
+        self,
+        test_case: LLMTestCase,
+        evaluation_steps: Optional[List[str]] = None,
+        _additional_context: Optional[str] = None,
+    ) -> str:
+        ensure_required_params(
+            self.evaluation_params, self.criteria, self.evaluation_steps
+        )
+        multimodal = test_case.multimodal
+        check_llm_test_case_params(
+            test_case,
+            self.evaluation_params,
+            None,
+            None,
+            self,
+            self.model,
+            multimodal,
+        )
+        prompt_steps = evaluation_steps or self.evaluation_steps
+        if not prompt_steps:
+            raise ValueError(
+                "preview_evaluation_prompt requires evaluation_steps. "
+                "Pass evaluation_steps explicitly or initialize GEval with "
+                "evaluation_steps to avoid an LLM call."
+            )
+
+        return self._build_evaluation_prompt(
+            test_case=test_case,
+            evaluation_steps=prompt_steps,
+            multimodal=multimodal,
+            _additional_context=_additional_context,
+        )
+
+    def get_retrieval_context_budget_report(
+        self, test_case: LLMTestCase
+    ) -> Optional[RetrievalContextBudgetReport]:
+        if (
+            self.max_retrieval_context_tokens is None
+            or self.evaluation_params is None
+            or SingleTurnParams.RETRIEVAL_CONTEXT not in self.evaluation_params
+            or test_case.retrieval_context is None
+        ):
+            return None
+
+        return build_retrieval_context_budget_report(
+            test_case.retrieval_context,
+            self.max_retrieval_context_tokens,
+        )
 
     def is_successful(self) -> bool:
         if self.error is not None:

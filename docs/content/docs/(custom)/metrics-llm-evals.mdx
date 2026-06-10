@@ -142,6 +142,42 @@ faithfulness = GEval(
 
 When the retrieval context is over budget, `GEval` preserves the start and end of each visible chunk, includes source labels for `RetrievedContextData`, and inserts an omission marker so the judge knows the context was compacted.
 
+You can also inspect the bounded prompt before running an evaluation. This is useful in CI or when tuning a RAG evaluator because it does not call the evaluation model:
+
+```python
+from deepeval.metrics import GEval
+from deepeval.test_case import LLMTestCase, SingleTurnParams
+
+metric = GEval(
+    name="RAG Faithfulness",
+    evaluation_steps=[
+        "Check whether the actual output is supported by retrieval context.",
+        "Penalize unsupported claims.",
+    ],
+    evaluation_params=[
+        SingleTurnParams.ACTUAL_OUTPUT,
+        SingleTurnParams.RETRIEVAL_CONTEXT,
+    ],
+    max_retrieval_context_tokens=4000,
+)
+
+test_case = LLMTestCase(
+    input="Can customers get a refund?",
+    actual_output="Customers can request a refund within 30 days.",
+    retrieval_context=[...],
+)
+
+report = metric.get_retrieval_context_budget_report(test_case)
+prompt = metric.preview_evaluation_prompt(test_case)
+
+print(report.original_tokens)
+print(report.rendered_tokens)
+print(report.compression_ratio)
+print(prompt)
+```
+
+`get_retrieval_context_budget_report()` returns the estimated original tokens, rendered tokens, compression ratio, visible chunks, omitted chunks, and per-chunk source metadata. `preview_evaluation_prompt()` requires explicit `evaluation_steps` so it never triggers a hidden LLM call to generate steps.
+
 ### Rubric
 
 You can provide a list of `Rubric`s through the `rubric` argument to confine your evaluation LLM to output in specific score ranges:

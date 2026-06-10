@@ -29,6 +29,27 @@ class MetricPullResponse(BaseModel):
     rubric: Optional[List[APIRubric]] = None
 
 
+class RetrievalContextChunkBudget(BaseModel):
+    index: int
+    source: Optional[str]
+    original_tokens: int
+    rendered_tokens: int
+    omitted: bool = False
+
+
+class RetrievalContextBudgetReport(BaseModel):
+    original_tokens: int
+    rendered_tokens: int
+    budget_tokens: int
+    total_chunks: int
+    visible_chunks: int
+    omitted_chunks: int
+    compression_ratio: float
+    exceeded_budget: bool
+    rendered_context: str
+    chunks: List[RetrievalContextChunkBudget]
+
+
 class Rubric(BaseModel):
     score_range: Tuple[int, int]
     expected_outcome: str
@@ -357,6 +378,16 @@ def format_retrieval_context_with_budget(
     retrieval_context: List[Union[str, RetrievedContextData]],
     max_retrieval_context_tokens: int,
 ) -> str:
+    return build_retrieval_context_budget_report(
+        retrieval_context,
+        max_retrieval_context_tokens,
+    ).rendered_context
+
+
+def build_retrieval_context_budget_report(
+    retrieval_context: List[Union[str, RetrievedContextData]],
+    max_retrieval_context_tokens: int,
+) -> RetrievalContextBudgetReport:
     if max_retrieval_context_tokens <= 0:
         raise ValueError("max_retrieval_context_tokens must be greater than 0.")
 
@@ -368,10 +399,46 @@ def format_retrieval_context_with_budget(
     )
 
     if total_tokens <= max_retrieval_context_tokens:
-        return str(retrieval_context)
+        rendered_context = str(retrieval_context)
+        rendered_tokens = estimate_token_count(rendered_context)
+        return RetrievalContextBudgetReport(
+            original_tokens=total_tokens,
+            rendered_tokens=rendered_tokens,
+            budget_tokens=max_retrieval_context_tokens,
+            total_chunks=len(normalized_contexts),
+            visible_chunks=len(normalized_contexts),
+            omitted_chunks=0,
+            compression_ratio=1.0,
+            exceeded_budget=False,
+            rendered_context=rendered_context,
+            chunks=[
+                RetrievalContextChunkBudget(
+                    index=index,
+                    source=source,
+                    original_tokens=estimate_token_count(context),
+                    rendered_tokens=estimate_token_count(context),
+                    omitted=False,
+                )
+                for index, (source, context) in enumerate(
+                    normalized_contexts, start=1
+                )
+            ],
+        )
 
     if not normalized_contexts:
-        return str(retrieval_context)
+        rendered_context = str(retrieval_context)
+        return RetrievalContextBudgetReport(
+            original_tokens=0,
+            rendered_tokens=estimate_token_count(rendered_context),
+            budget_tokens=max_retrieval_context_tokens,
+            total_chunks=0,
+            visible_chunks=0,
+            omitted_chunks=0,
+            compression_ratio=1.0,
+            exceeded_budget=False,
+            rendered_context=rendered_context,
+            chunks=[],
+        )
 
     context_count = len(normalized_contexts)
     visible_context_count = min(
@@ -392,12 +459,23 @@ def format_retrieval_context_with_budget(
             f"budget {max_retrieval_context_tokens} tokens]"
         )
     ]
+    chunk_reports: List[RetrievalContextChunkBudget] = []
     for index, (source, context) in enumerate(visible_contexts, start=1):
         label = f"retrieval chunk {index}"
         source_label = f" source={source}" if source else ""
+        rendered_chunk = _truncate_middle(context, context_token_budget, label)
         rendered_contexts.append(
-            f"[{index}{source_label}]\n"
-            f"{_truncate_middle(context, context_token_budget, label)}"
+            f"[{index}{source_label}]\n" f"{rendered_chunk}"
+        )
+        chunk_reports.append(
+            RetrievalContextChunkBudget(
+                index=index,
+                source=source,
+                original_tokens=estimate_token_count(context),
+                rendered_tokens=estimate_token_count(rendered_chunk),
+                omitted=estimate_token_count(context)
+                > estimate_token_count(rendered_chunk),
+            )
         )
 
     if omitted_context_count > 0:
@@ -405,8 +483,38 @@ def format_retrieval_context_with_budget(
             f"[... omitted {omitted_context_count} retrieval chunks because "
             "the GEval retrieval context budget was reached ...]"
         )
+        for index, (source, context) in enumerate(
+            normalized_contexts[visible_context_count:],
+            start=visible_context_count + 1,
+        ):
+            chunk_reports.append(
+                RetrievalContextChunkBudget(
+                    index=index,
+                    source=source,
+                    original_tokens=estimate_token_count(context),
+                    rendered_tokens=0,
+                    omitted=True,
+                )
+            )
 
-    return "\n\n".join(rendered_contexts)
+    rendered_context = "\n\n".join(rendered_contexts)
+    rendered_tokens = estimate_token_count(rendered_context)
+    return RetrievalContextBudgetReport(
+        original_tokens=total_tokens,
+        rendered_tokens=rendered_tokens,
+        budget_tokens=max_retrieval_context_tokens,
+        total_chunks=context_count,
+        visible_chunks=visible_context_count,
+        omitted_chunks=omitted_context_count,
+        compression_ratio=(
+            round(rendered_tokens / total_tokens, 4)
+            if total_tokens > 0
+            else 1.0
+        ),
+        exceeded_budget=True,
+        rendered_context=rendered_context,
+        chunks=chunk_reports,
+    )
 
 
 def construct_test_case_string(

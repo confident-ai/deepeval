@@ -8,6 +8,7 @@ from deepeval.metrics.g_eval.utils import (
     construct_non_turns_test_case_string,
     construct_test_case_string,
     format_retrieval_context_with_budget,
+    build_retrieval_context_budget_report,
 )
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
@@ -115,6 +116,39 @@ def test_geval_retrieval_context_budget_marks_omitted_chunks():
     assert "retrieval chunk 0" in text
     assert "omitted" in text
     assert "retrieval chunks because" in text
+
+
+def test_geval_retrieval_context_budget_report_quantifies_compaction():
+    retrieval_context = [
+        RetrievedContextData(
+            source="kb/refunds.md",
+            context=(
+                "Refund policy anchor. "
+                + ("irrelevant body " * 500)
+                + "Refund policy tail evidence."
+            ),
+        ),
+        RetrievedContextData(
+            source="kb/warranty.md",
+            context="Warranty claims need receipts. " * 400,
+        ),
+        "Shipping delays are excluded from refunds. " * 400,
+    ]
+
+    report = build_retrieval_context_budget_report(
+        retrieval_context,
+        max_retrieval_context_tokens=120,
+    )
+
+    assert report.exceeded_budget is True
+    assert report.original_tokens > report.rendered_tokens
+    assert report.compression_ratio < 0.25
+    assert report.total_chunks == 3
+    assert report.visible_chunks >= 1
+    assert any(chunk.source == "kb/refunds.md" for chunk in report.chunks)
+    assert "Refund policy anchor" in report.rendered_context
+    assert "tail evidence" in report.rendered_context
+    assert "source=kb/refunds.md" in report.rendered_context
 
 
 def test_geval_retrieval_context_budget_rejects_invalid_budget():
