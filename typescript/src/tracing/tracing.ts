@@ -12,7 +12,7 @@ import {
 } from "./utils";
 
 import { Api, Endpoints, HttpMethods } from "../confident/api";
-import { LLMTestCase, ToolCall } from "../test-case";
+import { LLMTestCase, ToolCall, resolveRetrievalContext } from "../test-case";
 import { Prompt } from "../prompt";
 import { SpanApiType, BaseApiSpan, TraceApi, TraceSpanApiStatus } from "./api";
 import { TraceWorkerStatus, printTraceStatus } from "./logging";
@@ -1318,7 +1318,9 @@ export const updateCurrentSpan = ({
   if (testCase) {
     currentSpan.input = testCase.input;
     currentSpan.output = testCase.actualOutput;
-    currentSpan.retrievalContext = testCase.retrievalContext;
+    currentSpan.retrievalContext = resolveRetrievalContext(
+      testCase.retrievalContext,
+    );
     currentSpan.toolsCalled = testCase.toolsCalled;
     currentSpan.expectedTools = testCase.expectedTools;
     currentSpan.context = testCase.context;
@@ -1406,7 +1408,9 @@ export const updateCurrentTrace = ({
   if (testCase !== undefined) {
     currentTrace.input = testCase.input;
     currentTrace.output = testCase.actualOutput;
-    currentTrace.retrievalContext = testCase.retrievalContext;
+    currentTrace.retrievalContext = resolveRetrievalContext(
+      testCase.retrievalContext,
+    );
     currentTrace.toolsCalled = testCase.toolsCalled;
     currentTrace.expectedTools = testCase.expectedTools;
     currentTrace.context = testCase.context;
