@@ -215,7 +215,12 @@ This creates a test run, which is a "snapshot"/benchmark of your multi-turn chat
 
 If you've set your `CONFIDENT_API_KEY`, test runs will appear automatically on [Confident AI](https://app.confident-ai.com), which `deepeval` integrates with natively.
 
-<VideoDisplayer src={ASSETS.conversationTestReport} />
+<VideoDisplayer
+  src={ASSETS.conversationTestReport}
+  confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports"
+  label="Conversation test reports on Confident AI"
+  description="Review full conversations alongside their metric scores and reasons."
+/>
 
 :::tip
 If you haven't logged in, you can still upload the test run to Confident AI from local cache:
@@ -284,7 +289,12 @@ If you've set your `CONFIDENT_API_KEY` correctly, you can save them on the platf
 dataset.push(alias="A new multi-turn dataset")
 ```
 
-<VideoDisplayer src={ASSETS.gettingStartedChatbotEvalsMultiturnDataset} />
+<VideoDisplayer
+  src={ASSETS.gettingStartedChatbotEvalsMultiturnDataset}
+  confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens"
+  label="Multi-turn datasets on Confident AI"
+  description="Push conversational goldens to the platform and edit them with your team."
+/>
 
 </Step>
 <Step>
@@ -467,7 +477,12 @@ evaluate(conversational_test_cases, metrics=[TurnRelevancyMetric()])
 
 ✅ Done. You've successfully learnt how to benchmark your chatbot.
 
-<VideoDisplayer src={ASSETS.conversationTestReport} />
+<VideoDisplayer
+  src={ASSETS.conversationTestReport}
+  confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports"
+  label="Conversation test reports on Confident AI"
+  description="Review full conversations alongside their metric scores and reasons."
+/>
 
 </Step>
 
@@ -486,5 +501,6 @@ You'll be able to analyze performance over time on **threads** this way, and add
 <VideoDisplayer
   src={ASSETS.tracingThreads}
   confidentUrl="/docs/llm-tracing/evaluations#offline-evaluations"
-  label="Chatbot Evals in Production"
+  label="Chatbot evals in production"
+  description="Group traces into threads to evaluate live conversations."
 />

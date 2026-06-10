@@ -217,7 +217,12 @@ The `type` parameter is optional but recommended—it helps `deepeval` understan
 
 Another thing that is recommended is logging into Confident AI — an AI quality platform `deepeval` integrates with natively. If you've set your `CONFIDENT_API_KEY` or run `deepeval login`, test runs will appear automatically on the platform whenever you run an evaluation as you will quickly learn,
 
-<VideoDisplayer src={ASSETS.gettingStartedAgentEvalsEndToEnd} />
+<VideoDisplayer
+  src={ASSETS.gettingStartedAgentEvalsEndToEnd}
+  confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports"
+  label="Agent evals test reports on Confident AI"
+  description="Run agent evals locally and get a test report on the platform."
+/>
 
 ### Evaluating the Reasoning Layer
 
@@ -385,7 +390,8 @@ Log in to Confident AI and create a metric collection containing the metrics you
 <VideoDisplayer
   src={ASSETS.metricsCreateCollection}
   confidentUrl="/docs/llm-tracing/evaluations"
-  label="Run Online Evals on Confident AI"
+  label="Run online evals on Confident AI"
+  description="Create a metric collection to score production traffic automatically."
 />
 
 ### Reference the Collection
@@ -404,7 +410,8 @@ That's it. Whenever your agent runs, `deepeval` automatically exports traces to 
 <VideoDisplayer
   src={ASSETS.tracingTraces}
   confidentUrl="/docs/llm-tracing/evaluations"
-  label="Track agent performance overtime on Confident AI"
+  label="Track agent performance over time on Confident AI"
+  description="Monitor traces and metric scores as your agent runs in production."
 />
 
 :::tip
