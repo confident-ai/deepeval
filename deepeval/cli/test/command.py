@@ -188,7 +188,12 @@ def run(
 
     invoke_test_run_end_hook()
 
-    if pytest_retcode == 1:
-        sys.exit(1)
+    # Propagate any non-zero pytest exit code so failures surface in CI.
+    # pytest distinguishes: 1=tests failed, 2=interrupted (e.g. -x stop on
+    # first failure, which is how xdist/-n reports a halted run), 3=internal
+    # error, 4=usage error, 5=no tests collected. Typer ignores a command's
+    # return value, so we must sys.exit explicitly to set the process code.
+    if pytest_retcode != 0:
+        sys.exit(int(pytest_retcode))
 
     return pytest_retcode
