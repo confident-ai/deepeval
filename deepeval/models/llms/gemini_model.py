@@ -117,6 +117,8 @@ class GeminiModel(DeepEvalBaseLLM):
             raise DeepEvalError("Temperature must be >= 0.")
 
         self.temperature = temperature
+        if self.model_data.supports_temperature is False:
+            self.temperature = 1
 
         # Raw kwargs destined for the underlying Client
         self.kwargs = kwargs
