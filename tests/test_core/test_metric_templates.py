@@ -1,11 +1,13 @@
-"""Guards that the compiled ``templates.json`` stays in sync with its sources.
+"""Guards that the compiled ``templates.json`` bundles stay in sync with sources.
 
 The metric prompt templates live as ``.txt`` files under
 ``deepeval/metrics/**/templates/<Class>/<method>.txt`` (plus shared fragments),
-and are compiled into a single ``deepeval/metric_templates/templates.json`` by
-``scripts/compile_metric_templates.py``. That JSON is a committed build artifact,
-so it can silently drift if someone edits a ``.txt`` without recompiling. This
-test fails loudly when that happens.
+and are compiled into ``templates/metrics/templates.json`` by
+``scripts/compile_metric_templates.py``, which emits the bundle into BOTH the
+Python package (``deepeval/templates/metrics/``) and the TypeScript package
+(``typescript/src/templates/metrics/``). Those JSON files are committed build
+artifacts, so they can silently drift if someone edits a ``.txt`` without
+recompiling. These tests fail loudly when that happens.
 """
 
 import importlib.util
@@ -14,7 +16,12 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 COMPILE_SCRIPT = REPO_ROOT / "scripts" / "compile_metric_templates.py"
-TEMPLATES_JSON = REPO_ROOT / "deepeval" / "metric_templates" / "templates.json"
+PY_TEMPLATES_JSON = (
+    REPO_ROOT / "deepeval" / "templates" / "metrics" / "templates.json"
+)
+TS_TEMPLATES_JSON = (
+    REPO_ROOT / "typescript" / "src" / "templates" / "metrics" / "templates.json"
+)
 
 
 def _load_compiler():
@@ -30,15 +37,15 @@ def _load_compiler():
 def test_templates_json_is_up_to_date():
     compiler = _load_compiler()
     expected = compiler.render_bundle_json(compiler.build_bundle())
-    actual = TEMPLATES_JSON.read_text(encoding="utf-8")
-    assert actual == expected, (
-        "deepeval/metric_templates/templates.json is out of date with the "
-        "template .txt files. Re-run `python scripts/compile_metric_templates.py`."
-    )
+    for path in (PY_TEMPLATES_JSON, TS_TEMPLATES_JSON):
+        assert path.read_text(encoding="utf-8") == expected, (
+            f"{path} is out of date with the template .txt files. "
+            "Re-run `python scripts/compile_metric_templates.py`."
+        )
 
 
 def test_templates_json_is_valid_and_nonempty():
-    data = json.loads(TEMPLATES_JSON.read_text(encoding="utf-8"))
+    data = json.loads(PY_TEMPLATES_JSON.read_text(encoding="utf-8"))
     assert isinstance(data, dict) and data
     # Every class entry maps method -> string template.
     for class_name, methods in data.items():

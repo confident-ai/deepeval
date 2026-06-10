@@ -7,7 +7,7 @@ import pytest
 import typer
 from typing_extensions import Annotated
 
-from deepeval.deepeval.config.settings import get_settings
+from deepeval.config.settings import get_settings
 from deepeval.telemetry import capture_evaluation_run
 from deepeval.test_run import (
     TEMP_FILE_PATH,
