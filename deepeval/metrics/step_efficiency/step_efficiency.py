@@ -86,6 +86,14 @@ class StepEfficiencyMetric(BaseMetric):
                     else efficiency_verdict.score
                 )
                 self.reason = efficiency_verdict.reason
+                if efficiency_verdict.steps:
+                    self.score_breakdown = {
+                        step.step_name: {
+                            "necessary": step.is_necessary,
+                            "reason": step.reason,
+                        }
+                        for step in efficiency_verdict.steps
+                    }
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -134,6 +142,14 @@ class StepEfficiencyMetric(BaseMetric):
                 else efficiency_verdict.score
             )
             self.reason = efficiency_verdict.reason
+            if efficiency_verdict.steps:
+                self.score_breakdown = {
+                    step.step_name: {
+                        "necessary": step.is_necessary,
+                        "reason": step.reason,
+                    }
+                    for step in efficiency_verdict.steps
+                }
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
