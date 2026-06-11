@@ -5,7 +5,7 @@ import {
   MCPPromptCall,
   validateMcpServers,
 } from "./mcp";
-import { checkIfMultimodal } from "./mllm-image";
+import { checkIfMultimodal, extractImageIdsFromList, extractImageIdsFromString, MLLM_IMAGE_REGISTRY, MLLMImage, SLUG_PATTERN } from "./mllm-image";
 
 export enum SingleTurnParams {
   INPUT = "input",
@@ -95,6 +95,7 @@ export class LLMTestCase {
   completionTime?: number;
   name?: string;
   multimodal: boolean = false;
+  _traceDict?: Record<string, unknown>;
   _datasetRank?: number;
   _datasetAlias?: string;
   _datasetId?: string;
@@ -144,6 +145,30 @@ export class LLMTestCase {
     this._datasetId = params._datasetId;
     this.multimodal = params.multimodal ?? this.detectMultimodal();
     this.validate();
+  }
+
+  public getImagesMapping(): Record<string, MLLMImage> | undefined {
+    const ids = new Set<string>();
+
+    extractImageIdsFromString(this.input, ids);
+    extractImageIdsFromString(this.actualOutput, ids);
+    extractImageIdsFromString(this.expectedOutput, ids);
+    extractImageIdsFromList(this.context, ids);
+    
+    extractImageIdsFromList(
+      this.retrievalContext?.map((c) => (typeof c === "string" ? c : c.context)),
+      ids,
+    );
+
+    if (ids.size === 0) return undefined;
+
+    const mapping: Record<string, MLLMImage> = {};
+    ids.forEach((id) => {
+      const img = MLLM_IMAGE_REGISTRY.get(id);
+      if (img) mapping[id] = img;
+    });
+
+    return mapping;
   }
 
   /** Auto-detect multimodality from image slugs in the string fields (mirrors Python). */

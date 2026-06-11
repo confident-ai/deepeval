@@ -7,8 +7,8 @@ import { randomUUID } from "node:crypto";
 // normal string fields as `[DEEPEVAL:IMAGE|PDF:{id}]` slugs (via toString) and
 // are looked back up by id from a global registry.
 
-const SLUG_PATTERN = /\[DEEPEVAL:(?:IMAGE|PDF):(.*?)\]/;
-const SLUG_PATTERN_G = /\[DEEPEVAL:(?:IMAGE|PDF):(.*?)\]/g;
+export const SLUG_PATTERN = /\[DEEPEVAL:(?:IMAGE|PDF):(.*?)\]/;
+export const SLUG_PATTERN_G = /\[DEEPEVAL:(?:IMAGE|PDF):(.*?)\]/g;
 
 /** Global id → image registry (mirrors Python's `_MLLM_IMAGE_REGISTRY`). */
 export const MLLM_IMAGE_REGISTRY = new Map<string, MLLMImage>();
@@ -181,4 +181,24 @@ export function convertToMultiModalArray(
 ): (string | MLLMImage)[] {
   if (typeof input === "string") return MLLMImage.parseMultimodalString(input);
   return input.flatMap((c) => MLLMImage.parseMultimodalString(c));
+}
+
+export function extractImageIdsFromString(
+  s: string | undefined | null,
+  targetSet: Set<string>,
+): void {
+  if (!s) return;
+  for (const m of s.matchAll(SLUG_PATTERN_G)) {
+    targetSet.add(m[1]);
+  }
+}
+
+export function extractImageIdsFromList(
+  lst: (string | undefined | null)[] | undefined | null,
+  targetSet: Set<string>,
+): void {
+  if (!lst) return;
+  for (const item of lst) {
+    extractImageIdsFromString(item, targetSet);
+  }
 }

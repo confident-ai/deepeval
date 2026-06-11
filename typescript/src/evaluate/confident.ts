@@ -105,6 +105,7 @@ export async function postTestRun(
         expectedOutcome: testCase.expectedOutcome,
         userDescription: testCase.userDescription,
         chatbotRole: testCase.chatbotRole,
+        imagesMapping: testCase.getImagesMapping(),
       });
     } else {
       testCases.push({
@@ -121,6 +122,7 @@ export async function postTestRun(
         runDuration: caseDuration,
         evaluationCost,
         order,
+        imagesMapping: testCase.getImagesMapping(),
       });
     }
   });

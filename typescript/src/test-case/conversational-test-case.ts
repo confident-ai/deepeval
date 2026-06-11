@@ -1,5 +1,5 @@
 import { ToolCall, RetrievedContextData } from "./llm-test-case";
-import { checkIfMultimodal } from "./mllm-image";
+import { checkIfMultimodal, extractImageIdsFromList, extractImageIdsFromString, MLLM_IMAGE_REGISTRY, MLLMImage } from "./mllm-image";
 import {
   MCPServer,
   MCPToolCall,
@@ -138,6 +138,35 @@ export class ConversationalTestCase {
     this._datasetAlias = params._datasetAlias;
     this._datasetId = params._datasetId;
     this.validate();
+  }
+
+  public getImagesMapping(): Record<string, MLLMImage> | undefined {
+    const ids = new Set<string>();
+
+    extractImageIdsFromString(this.scenario, ids);
+    extractImageIdsFromString(this.expectedOutcome, ids);
+    extractImageIdsFromString(this.userDescription, ids);
+    extractImageIdsFromList(this.context, ids);
+
+    if (this.turns) {
+      this.turns.forEach((turn) => {
+        extractImageIdsFromString(turn.content, ids);
+        extractImageIdsFromList(
+          turn.retrievalContext?.map((c) => (typeof c === "string" ? c : c.context)),
+          ids,
+        );
+      });
+    }
+
+    if (ids.size === 0) return undefined;
+
+    const mapping: Record<string, MLLMImage> = {};
+    ids.forEach((id) => {
+      const img = MLLM_IMAGE_REGISTRY.get(id);
+      if (img) mapping[id] = img;
+    });
+
+    return mapping;
   }
 
   /** Auto-detect multimodality from image slugs in the fields/turns (mirrors Python). */
