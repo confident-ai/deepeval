@@ -1,4 +1,5 @@
 import { ToolCall, RetrievedContextData } from "./llm-test-case";
+import { checkIfMultimodal } from "./mllm-image";
 import {
   MCPServer,
   MCPToolCall,
@@ -132,11 +133,30 @@ export class ConversationalTestCase {
     this.additionalMetadata = params.additionalMetadata;
     this.comments = params.comments;
     this.tags = params.tags;
-    this.multimodal = params.multimodal ?? false;
+    this.multimodal = params.multimodal ?? this.detectMultimodal();
     this._datasetRank = params._datasetRank;
     this._datasetAlias = params._datasetAlias;
     this._datasetId = params._datasetId;
     this.validate();
+  }
+
+  /** Auto-detect multimodality from image slugs in the fields/turns (mirrors Python). */
+  private detectMultimodal(): boolean {
+    const has = (s?: string) => s != null && checkIfMultimodal(s);
+    if (has(this.scenario) || has(this.expectedOutcome) || has(this.userDescription)) {
+      return true;
+    }
+    for (const turn of this.turns ?? []) {
+      if (checkIfMultimodal(turn.content)) return true;
+      if (
+        turn.retrievalContext?.some((c) =>
+          checkIfMultimodal(typeof c === "string" ? c : c.context),
+        )
+      ) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private validate(): void {

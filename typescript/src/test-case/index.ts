@@ -24,3 +24,10 @@ export {
   type MCPTransport,
 } from "./mcp";
 export { ArenaTestCase, Contestant } from "./arena-test-case";
+export {
+  MLLMImage,
+  MLLM_IMAGE_REGISTRY,
+  checkIfMultimodal,
+  convertToMultiModalArray,
+  type MLLMImageParams,
+} from "./mllm-image";

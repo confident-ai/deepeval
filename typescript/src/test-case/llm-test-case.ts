@@ -5,6 +5,7 @@ import {
   MCPPromptCall,
   validateMcpServers,
 } from "./mcp";
+import { checkIfMultimodal } from "./mllm-image";
 
 export enum SingleTurnParams {
   INPUT = "input",
@@ -93,6 +94,7 @@ export class LLMTestCase {
   tokenCost?: number;
   completionTime?: number;
   name?: string;
+  multimodal: boolean = false;
   _datasetRank?: number;
   _datasetAlias?: string;
   _datasetId?: string;
@@ -115,6 +117,7 @@ export class LLMTestCase {
     tokenCost?: number;
     completionTime?: number;
     name?: string;
+    multimodal?: boolean;
     _datasetRank?: number;
     _datasetAlias?: string;
     _datasetId?: string;
@@ -139,7 +142,26 @@ export class LLMTestCase {
     this._datasetRank = params._datasetRank;
     this._datasetAlias = params._datasetAlias;
     this._datasetId = params._datasetId;
+    this.multimodal = params.multimodal ?? this.detectMultimodal();
     this.validate();
+  }
+
+  /** Auto-detect multimodality from image slugs in the string fields (mirrors Python). */
+  private detectMultimodal(): boolean {
+    const has = (s?: string) => s != null && checkIfMultimodal(s);
+    let detect =
+      has(this.input) || has(this.actualOutput) || has(this.expectedOutput);
+    if (this.retrievalContext != null) {
+      detect =
+        detect ||
+        this.retrievalContext.some((c) =>
+          checkIfMultimodal(typeof c === "string" ? c : c.context),
+        );
+    }
+    if (this.context != null) {
+      detect = detect || this.context.some((c) => checkIfMultimodal(c));
+    }
+    return detect;
   }
 
   private validate(): void {
