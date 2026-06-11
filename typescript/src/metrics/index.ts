@@ -61,6 +61,22 @@ export {
 } from "./conversational-g-eval";
 export { ToolUseMetric, type ToolUseMetricOptions } from "./tool-use";
 export {
+  TaskCompletionMetric,
+  type TaskCompletionMetricOptions,
+} from "./task-completion";
+export {
+  PlanAdherenceMetric,
+  type PlanAdherenceMetricOptions,
+} from "./plan-adherence";
+export {
+  PlanQualityMetric,
+  type PlanQualityMetricOptions,
+} from "./plan-quality";
+export {
+  StepEfficiencyMetric,
+  type StepEfficiencyMetricOptions,
+} from "./step-efficiency";
+export {
   ImageCoherenceMetric,
   type ImageCoherenceMetricOptions,
   ImageHelpfulnessMetric,

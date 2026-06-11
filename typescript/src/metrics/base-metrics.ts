@@ -39,6 +39,7 @@ export abstract class BaseMetricCore {
   evaluationCost?: number;
   verboseLogs?: string;
   skipped: boolean = false;
+  requiresTrace: boolean = false;
   model?: DeepEvalBaseLLM;
   usingNativeModel?: boolean = undefined;
   private _spinner: import("ora").Ora | null = null;
