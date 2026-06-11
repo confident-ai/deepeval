@@ -23,3 +23,4 @@ export {
   type Prompt,
   type MCPTransport,
 } from "./mcp";
+export { ArenaTestCase, Contestant } from "./arena-test-case";

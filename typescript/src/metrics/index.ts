@@ -60,6 +60,8 @@ export {
   type ConversationalGEvalMetricOptions,
 } from "./conversational-g-eval";
 export { ToolUseMetric, type ToolUseMetricOptions } from "./tool-use";
+export { BaseArenaMetric } from "./base-arena-metric";
+export { ArenaGEval, type ArenaGEvalMetricOptions } from "./arena-g-eval";
 export { MCPUseMetric, type MCPUseMetricOptions } from "./mcp-use-metric";
 export {
   MCPTaskCompletionMetric,

@@ -1,8 +1,13 @@
 import type { ZodType } from "zod";
 import { DeepEvalBaseLLM, OpenAIModel } from "../models";
-import { LLMTestCase, SingleTurnParams, ToolCall } from "../test-case";
+import {
+  LLMTestCase,
+  SingleTurnParams,
+  ToolCall,
+  ArenaTestCase,
+} from "../test-case";
 import { DeepEvalError, MissingTestCaseParamsError } from "../errors";
-import { BaseMetric, BaseMetricCore } from "./base-metrics";
+import { BaseMetricCore } from "./base-metrics";
 
 // Canonical helper lives in test-case (used by serialization boundaries too).
 export { resolveRetrievalContext } from "../test-case";
@@ -79,7 +84,7 @@ function joinMissingParams(params: string[]): string {
 export function checkSingleTurnParams(
   testCase: LLMTestCase,
   requiredParams: SingleTurnParams[],
-  metric: BaseMetric,
+  metric: BaseMetricCore,
 ): void {
   if (!(testCase instanceof LLMTestCase)) {
     const err = `Unable to evaluate test cases that are not of type 'LLMTestCase' using the '${metric.name}' metric.`;
@@ -104,6 +109,30 @@ export function checkSingleTurnParams(
     const err = `${joinMissingParams(missing)} cannot be None for the '${metric.name}' metric`;
     metric.error = err;
     throw new MissingTestCaseParamsError(err);
+  }
+}
+
+/**
+ * Validate an `ArenaTestCase`: all contestants share the same input/expected
+ * output, and each contestant's test case provides the required params.
+ * Mirrors Python's `check_arena_test_case_params`.
+ */
+export function checkArenaTestCaseParams(
+  arenaTestCase: ArenaTestCase,
+  requiredParams: SingleTurnParams[],
+  metric: BaseMetricCore,
+): void {
+  const cases = arenaTestCase.contestants.map((c) => c.testCase);
+  const refInput = cases[0].input;
+  if (cases.slice(1).some((c) => c.input !== refInput)) {
+    throw new TypeError("All contestants must have the same 'input'.");
+  }
+  const refExpected = cases[0].expectedOutput;
+  if (cases.slice(1).some((c) => c.expectedOutput !== refExpected)) {
+    throw new TypeError("All contestants must have the same 'expectedOutput'.");
+  }
+  for (const tc of cases) {
+    checkSingleTurnParams(tc, requiredParams, metric);
   }
 }
 

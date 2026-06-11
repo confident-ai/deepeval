@@ -26,7 +26,8 @@ import {
   printHyperparametersWarning,
   printCompletionSummary,
 } from "./console-report";
-import { postTestRun, type EvaluatedCase } from "./confident";
+import { postTestRun } from "./confident";
+import { type EvaluatedCase } from "./types";
 
 type AnyTestCase = LLMTestCase | ConversationalTestCase;
 type AnyMetric = BaseMetric | BaseConversationalMetric;

@@ -19,12 +19,16 @@ export {
   ToolCallParams,
   TurnParams,
   Turn,
+  ArenaTestCase,
+  Contestant,
 } from "./test-case";
 export {
   evaluate,
+  compare,
   type EvaluationResult,
   type TestResult,
   type EvaluateOptions,
+  type CompareOptions,
 } from "./evaluate";
 export { Prompt } from "./prompt";
 export { ConversationSimulator } from "./simulate";
