@@ -66,6 +66,7 @@ export async function postTestRun(
   cases: EvaluatedCase[],
   runDuration: number,
   official = false,
+  silent = false,
 ): Promise<{ link: string | null; testRunId: string | null }> {
   // Silent check (isConfident() logs a warning — not wanted on the no-op path).
   const apiKey = process.env.CONFIDENT_API_KEY;
@@ -80,7 +81,7 @@ export async function postTestRun(
   let totalCost = 0;
   let hasCost = false;
 
-  cases.forEach(({ testCase, metricsData, runDuration: caseDuration }, order) => {
+  cases.forEach(({ testCase, metricsData, runDuration: caseDuration, trace }, order) => {
     const success = metricsData.every((m) => m.skipped || m.success);
     if (success) testPassed += 1;
     else testFailed += 1;
@@ -123,6 +124,7 @@ export async function postTestRun(
         evaluationCost,
         order,
         imagesMapping: testCase.getImagesMapping(),
+        trace,
       });
     }
   });
@@ -147,7 +149,9 @@ export async function postTestRun(
     );
     const link = result?.link ?? null;
     const testRunId = result?.id ?? null;
-    if (link) console.log(`\n✅ Test run posted to Confident AI: ${link}`);
+    if (link && !silent) {
+      console.log(`\n✅ Test run posted to Confident AI: ${link}`);
+    }
     return { link, testRunId };
   } catch (e) {
     console.warn(

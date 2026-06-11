@@ -1,6 +1,36 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { MultiBar, Presets } from "cli-progress";
 import { TestResult, MetricData } from "./types";
+
+/** A MultiBar styled like the rest of the runner (purple filled / dim track). */
+export function newProgressMultiBar(): MultiBar {
+  const FILLED = "\x1b[38;2;106;0;255m";
+  const TRACK = "\x1b[38;2;70;70;82m";
+  const ANSI_RESET = "\x1b[0m";
+  const BARSIZE = 40;
+  return new MultiBar(
+    {
+      format: "{label} {bar} {percentage}% {duration_formatted}",
+      formatBar: (progress, options) => {
+        const size = options.barsize ?? BARSIZE;
+        const filled = Math.round(progress * size);
+        return (
+          FILLED +
+          "━".repeat(filled) +
+          TRACK +
+          "━".repeat(size - filled) +
+          ANSI_RESET
+        );
+      },
+      hideCursor: true,
+      clearOnComplete: true,
+      stream: process.stderr,
+      barsize: BARSIZE,
+    },
+    Presets.shades_classic,
+  );
+}
 
 // Palette mirrors Python's console_report (DEEPEVAL_PURPLE / DEEPEVAL_GREEN).
 const PURPLE = "\x1b[38;2;106;0;255m";

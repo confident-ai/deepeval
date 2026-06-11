@@ -209,7 +209,7 @@ export async function evaluate(
   return { testResults, confidentLink: link, testRunId };
 }
 
-async function runMetric(
+export async function runMetric(
   metric: AnyMetric,
   testCase: AnyTestCase,
   errorCfg: Required<ErrorConfig>,
@@ -255,7 +255,7 @@ function buildMetricData(metric: BaseMetricCore): MetricData {
   };
 }
 
-function buildTestResult(
+export function buildTestResult(
   index: number,
   testCase: AnyTestCase,
   metricsData: MetricData[],
