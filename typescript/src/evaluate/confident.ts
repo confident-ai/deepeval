@@ -65,6 +65,7 @@ function buildMetricsScores(cases: EvaluatedCase[]) {
 export async function postTestRun(
   cases: EvaluatedCase[],
   runDuration: number,
+  official = false,
 ): Promise<{ link: string | null; testRunId: string | null }> {
   // Silent check (isConfident() logs a warning — not wanted on the no-op path).
   const apiKey = process.env.CONFIDENT_API_KEY;
@@ -132,6 +133,7 @@ export async function postTestRun(
     testFailed,
     runDuration,
     evaluationCost: hasCost ? totalCost : undefined,
+    official: official || undefined,
   };
 
   try {

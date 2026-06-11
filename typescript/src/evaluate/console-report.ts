@@ -1,3 +1,5 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { TestResult, MetricData } from "./types";
 
 // Palette mirrors Python's console_report (DEEPEVAL_PURPLE / DEEPEVAL_GREEN).
@@ -75,6 +77,50 @@ function termWidth(): number {
   return process.stdout.columns || 100;
 }
 
+/** Word-wrap plain text to `width` display columns (hard-breaks over-long words). */
+function wrapText(s: string, width: number): string[] {
+  const out: string[] = [];
+  for (const segment of s.split("\n")) {
+    let cur = "";
+    for (const word of segment.split(/\s+/).filter(Boolean)) {
+      let w = word;
+      if (cur === "") {
+        while (visLen(w) > width) {
+          out.push(w.slice(0, width));
+          w = w.slice(width);
+        }
+        cur = w;
+      } else if (visLen(cur) + 1 + visLen(word) <= width) {
+        cur += " " + word;
+      } else {
+        out.push(cur);
+        while (visLen(w) > width) {
+          out.push(w.slice(0, width));
+          w = w.slice(width);
+        }
+        cur = w;
+      }
+    }
+    out.push(cur);
+  }
+  return out.length ? out : [""];
+}
+
+/** A table cell as one-or-more physical lines: short/ANSI cells stay single, long text wraps. */
+function wrapCell(c: string, width: number): string[] {
+  if (visLen(c) <= width && !c.includes("\n")) return [c];
+  return wrapText(c, width);
+}
+
+/** A labeled panel line (`Label: value`) wrapped to `inner`, continuations indented. */
+function wrapLabeledLine(prefix: string, value: string, inner: number): string[] {
+  const indent = visLen(prefix);
+  const chunks = wrapText(value, Math.max(10, inner - indent));
+  return chunks.map((chunk, i) =>
+    i === 0 ? `${prefix}${chunk}` : `${" ".repeat(indent)}${chunk}`,
+  );
+}
+
 /** A full-width rounded-border panel (rich `Panel`), border optionally colored. */
 function panel(lines: string[], borderColor = ""): void {
   const width = termWidth();
@@ -121,16 +167,26 @@ function tableLines(
   innerWidth: number,
 ): string[] {
   const widths = computeWidths(headers, rows, innerWidth);
-  const row = (cells: string[], sep: string) =>
-    cells
-      .map((c, i) => ` ${padEndVis(truncVis(c, widths[i]), widths[i])} `)
-      .join(sep);
+  // A row can span multiple physical lines when a cell (e.g. Reason) wraps.
+  const row = (cells: string[], sep: string): string[] => {
+    const wrapped = cells.map((c, i) => wrapCell(c, widths[i]));
+    const height = Math.max(...wrapped.map((w) => w.length), 1);
+    const lines: string[] = [];
+    for (let ln = 0; ln < height; ln++) {
+      lines.push(
+        wrapped
+          .map((w, i) => ` ${padEndVis(w[ln] ?? "", widths[i])} `)
+          .join(sep),
+      );
+    }
+    return lines;
+  };
   const header = row(
     headers.map((h) => `${PURPLE}${BOLD}${h}${RESET}`),
     "┃",
   );
   const divider = widths.map((w) => "━".repeat(w + 2)).join("╇");
-  return [header, divider, ...rows.map((r) => row(r, "│"))];
+  return [...header, divider, ...rows.flatMap((r) => row(r, "│"))];
 }
 
 function metricStatusCell(m: MetricData): string {
@@ -179,14 +235,16 @@ export function printResultsTable(
       lines.push(`${CYAN}${BOLD}Conversation Turns${RESET}`);
       for (const turn of tc.turns ?? []) {
         const role = turn.role.charAt(0).toUpperCase() + turn.role.slice(1);
-        lines.push(`  ${BOLD}${role}:${RESET} ${turn.content}`);
+        lines.push(...wrapLabeledLine(`  ${BOLD}${role}:${RESET} `, turn.content, inner));
       }
     } else {
-      lines.push(`${CYAN}${BOLD}Input:${RESET} ${tc.input}`);
-      lines.push(`${CYAN}${BOLD}Actual Output:${RESET} ${tc.actualOutput}`);
+      lines.push(...wrapLabeledLine(`${CYAN}${BOLD}Input:${RESET} `, String(tc.input), inner));
+      lines.push(
+        ...wrapLabeledLine(`${CYAN}${BOLD}Actual Output:${RESET} `, String(tc.actualOutput), inner),
+      );
       if (tc.expectedOutput && tc.expectedOutput !== "N/A") {
         lines.push(
-          `${CYAN}${BOLD}Expected Output:${RESET} ${tc.expectedOutput}`,
+          ...wrapLabeledLine(`${CYAN}${BOLD}Expected Output:${RESET} `, tc.expectedOutput, inner),
         );
       }
     }
@@ -194,6 +252,8 @@ export function printResultsTable(
     lines.push(`${PURPLE}${BOLD}Metrics${RESET}`);
 
     const rows = metrics.map((m) => {
+      // Full reason for shown (failing) cases — the table wraps it. Passing
+      // cases are truncated (only relevant when truncatePassing is off).
       let reason = String(m.reason ?? m.error ?? "N/A");
       if (truncate && m.success && reason.length > 50) {
         reason = reason.slice(0, 47) + "...";
@@ -216,12 +276,31 @@ export function printResultsTable(
     panel(lines, color);
   }
 
-  // Aggregate metrics across all test cases (by metric name).
+  const aggRows = aggregateRows(sorted);
+  if (aggRows.length > 0) {
+    panel(
+      [
+        `${BOLD}Aggregate Metrics${RESET}`,
+        "",
+        ...tableLines(
+          ["Metric", "Average Score", "Pass Rate", "Total"],
+          aggRows,
+          inner,
+        ),
+      ],
+      PURPLE,
+    );
+  }
+  console.log();
+}
+
+/** Aggregate rows `[metric, avgScore, passRate, total]` across all test cases. */
+function aggregateRows(testResults: TestResult[]): string[][] {
   const agg = new Map<
     string,
     { total: number; passes: number; scoreSum: number; scoreCount: number }
   >();
-  for (const tc of sorted) {
+  for (const tc of testResults) {
     for (const m of tc.metricsData ?? []) {
       const a = agg.get(m.name) ?? {
         total: 0,
@@ -238,27 +317,12 @@ export function printResultsTable(
       agg.set(m.name, a);
     }
   }
-  if (agg.size > 0) {
-    const rows = [...agg.entries()].map(([name, a]) => [
-      name,
-      a.scoreCount > 0 ? (a.scoreSum / a.scoreCount).toFixed(2) : "N/A",
-      a.total > 0 ? `${((a.passes / a.total) * 100).toFixed(2)}%` : "N/A",
-      String(a.total),
-    ]);
-    panel(
-      [
-        `${BOLD}Aggregate Metrics${RESET}`,
-        "",
-        ...tableLines(
-          ["Metric", "Average Score", "Pass Rate", "Total"],
-          rows,
-          inner,
-        ),
-      ],
-      PURPLE,
-    );
-  }
-  console.log();
+  return [...agg.entries()].map(([name, a]) => [
+    name,
+    a.scoreCount > 0 ? (a.scoreSum / a.scoreCount).toFixed(2) : "N/A",
+    a.total > 0 ? `${((a.passes / a.total) * 100).toFixed(2)}%` : "N/A",
+    String(a.total),
+  ]);
 }
 
 const SEP = "=".repeat(80);
@@ -292,4 +356,85 @@ export function printCompletionSummary(opts: {
       `» Want to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n` +
       `  » Set ${BOLD}CONFIDENT_API_KEY${RESET} to post test runs to ${PURPLE}Confident AI${RESET}.\n`,
   );
+}
+
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+/**
+ * Export the results to a Markdown/MDX file (mirrors Python's
+ * `export_to_markdown`). Markdown is valid MDX, so both file types share the
+ * same content. Returns the written file path.
+ */
+export function exportToMarkdown(
+  testResults: TestResult[],
+  outputDir: string,
+  fileType: "md" | "mdx" = "md",
+  evaluationName = "evaluation",
+): string {
+  fs.mkdirSync(outputDir, { recursive: true });
+  const d = new Date();
+  const ts =
+    `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}` +
+    `_${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
+  const safe = (evaluationName || "evaluation").replace(/\s+/g, "_").toLowerCase();
+  const filepath = path.join(outputDir, `${safe}_${ts}.${fileType}`);
+
+  const sorted = [...testResults].sort(
+    (a, b) => (a.index ?? Infinity) - (b.index ?? Infinity),
+  );
+  const md: string[] = ["# 🚀 DeepEval Evaluation Results\n"];
+
+  for (const tc of sorted) {
+    md.push(`## ${tc.success ? "✅ PASS" : "❌ FAIL"} - ${tc.name}\n`);
+    md.push("<details><summary><b>View Test Case Data</b></summary>\n");
+    if (tc.conversational) {
+      for (const turn of tc.turns ?? []) {
+        const role = turn.role.charAt(0).toUpperCase() + turn.role.slice(1);
+        md.push(`- **${role}**: ${turn.content}`);
+      }
+    } else {
+      md.push(`- **Input:** ${tc.input}`);
+      md.push(`- **Actual Output:** ${tc.actualOutput}`);
+      if (tc.expectedOutput && tc.expectedOutput !== "N/A") {
+        md.push(`- **Expected Output:** ${tc.expectedOutput}`);
+      }
+    }
+    md.push("\n</details>\n\n### Metrics\n");
+    md.push("| Status | Metric | Score | Threshold | Reason |");
+    md.push("|:---:|:---|:---:|:---:|:---|");
+    for (const m of tc.metricsData ?? []) {
+      const icon = m.skipped
+        ? "⏭️ SKIP"
+        : m.error
+          ? "⚠️ ERROR"
+          : m.success
+            ? "✅"
+            : "❌";
+      const score = m.score != null ? m.score.toFixed(2) : "N/A";
+      const thresh = m.threshold != null ? m.threshold.toFixed(2) : "N/A";
+      const reason = String(m.reason ?? m.error ?? "N/A").replace(
+        /\n/g,
+        " <br> ",
+      );
+      md.push(`| ${icon} | **${m.name}** | ${score} | ${thresh} | ${reason} |`);
+    }
+    md.push("\n---\n");
+  }
+
+  const aggRows = aggregateRows(sorted);
+  if (aggRows.length > 0) {
+    md.push("## Aggregate Metrics\n");
+    md.push("| Metric | Average Score | Pass Rate | Total |");
+    md.push("|:---|:---:|:---:|:---:|");
+    for (const [name, avg, rate, total] of aggRows) {
+      md.push(`| **${name}** | ${avg} | ${rate} | ${total} |`);
+    }
+    md.push("\n---\n");
+  }
+
+  fs.writeFileSync(filepath, md.join("\n"), "utf-8");
+  console.log(`✅ Markdown report saved to: ${filepath}`);
+  return filepath;
 }

@@ -25,6 +25,7 @@ import {
   printResultsTable,
   printHyperparametersWarning,
   printCompletionSummary,
+  exportToMarkdown,
 } from "./console-report";
 import { postTestRun } from "./confident";
 import { type EvaluatedCase } from "./types";
@@ -37,6 +38,8 @@ export interface EvaluateOptions {
   displayConfig?: DisplayConfig;
   errorConfig?: ErrorConfig;
   cacheConfig?: CacheConfig;
+  /** Mark this as the official test run for the dataset on Confident AI. */
+  official?: boolean;
 }
 
 /** A conversational metric runs on a `ConversationalTestCase`; otherwise single-turn. */
@@ -178,8 +181,17 @@ export async function evaluate(
     printHyperparametersWarning();
   }
 
+  // Optionally write the report to a Markdown/MDX file.
+  if (display.fileOutputDir) {
+    exportToMarkdown(testResults, display.fileOutputDir, display.fileType);
+  }
+
   // Post results to Confident AI (no-op + returns nulls unless logged in).
-  const { link, testRunId } = await postTestRun(evaluatedCases, runDuration);
+  const { link, testRunId } = await postTestRun(
+    evaluatedCases,
+    runDuration,
+    options.official ?? false,
+  );
 
   if (display.printResults && !link) {
     const tokenCost = testResults

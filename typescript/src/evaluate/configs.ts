@@ -14,6 +14,10 @@ export interface DisplayConfig {
   verboseMode?: boolean;
   /** Truncate (hide) passing cases' detail tables, like Python. */
   truncatePassingCases?: boolean;
+  /** When set, also write the report to this directory as a file. */
+  fileOutputDir?: string;
+  /** File format for `fileOutputDir` (Markdown; MDX is the same content). */
+  fileType?: "md" | "mdx";
 }
 
 export interface ErrorConfig {
@@ -38,6 +42,8 @@ export const DEFAULT_DISPLAY_CONFIG: Required<DisplayConfig> = {
   printResults: true,
   verboseMode: false,
   truncatePassingCases: true,
+  fileOutputDir: "", // empty = no file output
+  fileType: "md",
 };
 
 export const DEFAULT_ERROR_CONFIG: Required<ErrorConfig> = {
