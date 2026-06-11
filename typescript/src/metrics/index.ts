@@ -60,6 +60,18 @@ export {
   type ConversationalGEvalMetricOptions,
 } from "./conversational-g-eval";
 export { ToolUseMetric, type ToolUseMetricOptions } from "./tool-use";
+export {
+  ImageCoherenceMetric,
+  type ImageCoherenceMetricOptions,
+  ImageHelpfulnessMetric,
+  type ImageHelpfulnessMetricOptions,
+  ImageReferenceMetric,
+  type ImageReferenceMetricOptions,
+  TextToImageMetric,
+  type TextToImageMetricOptions,
+  ImageEditingMetric,
+  type ImageEditingMetricOptions,
+} from "./multimodal-metrics";
 export { BaseArenaMetric } from "./base-arena-metric";
 export { ArenaGEval, type ArenaGEvalMetricOptions } from "./arena-g-eval";
 export { MCPUseMetric, type MCPUseMetricOptions } from "./mcp-use-metric";
