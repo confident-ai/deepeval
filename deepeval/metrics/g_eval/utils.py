@@ -39,6 +39,14 @@ class RetrievalContextChunkBudget(BaseModel):
     omitted: bool = False
 
 
+class RetrievalContextEvidenceCoverage(BaseModel):
+    query_terms_count: int
+    covered_terms: List[str]
+    missing_terms: List[str]
+    coverage_ratio: float
+    warning: Optional[str] = None
+
+
 class RetrievalContextBudgetReport(BaseModel):
     original_tokens: int
     rendered_tokens: int
@@ -50,6 +58,7 @@ class RetrievalContextBudgetReport(BaseModel):
     exceeded_budget: bool
     rendered_context: str
     chunks: List[RetrievalContextChunkBudget]
+    evidence_coverage: RetrievalContextEvidenceCoverage
 
 
 class Rubric(BaseModel):
@@ -391,10 +400,16 @@ def _relevance_terms(text: Optional[str]) -> set[str]:
         return set()
 
     return {
-        term
+        _normalize_relevance_term(term)
         for term in re.findall(r"[A-Za-z0-9_]{3,}", text.lower())
-        if term not in RELEVANCE_STOPWORDS
+        if _normalize_relevance_term(term) not in RELEVANCE_STOPWORDS
     }
+
+
+def _normalize_relevance_term(term: str) -> str:
+    if len(term) > 4 and term.endswith("s"):
+        return term[:-1]
+    return term
 
 
 def _retrieval_context_relevance_score(
@@ -412,6 +427,48 @@ def _retrieval_context_relevance_score(
     coverage = len(overlap) / len(relevance_terms)
     density = len(overlap) / max(1, len(context_terms))
     return round(coverage + density, 4)
+
+
+def _build_evidence_coverage(
+    original_context: str,
+    rendered_context: str,
+    relevance_terms: set[str],
+) -> RetrievalContextEvidenceCoverage:
+    if not relevance_terms:
+        return RetrievalContextEvidenceCoverage(
+            query_terms_count=0,
+            covered_terms=[],
+            missing_terms=[],
+            coverage_ratio=1.0,
+        )
+
+    original_terms = _relevance_terms(original_context)
+    rendered_terms = _relevance_terms(rendered_context)
+    evidence_terms = relevance_terms & original_terms
+    if not evidence_terms:
+        return RetrievalContextEvidenceCoverage(
+            query_terms_count=len(relevance_terms),
+            covered_terms=[],
+            missing_terms=[],
+            coverage_ratio=1.0,
+        )
+
+    covered_terms = sorted(evidence_terms & rendered_terms)
+    missing_terms = sorted(evidence_terms - rendered_terms)
+    coverage_ratio = round(len(covered_terms) / len(evidence_terms), 4)
+    warning = None
+    if missing_terms:
+        warning = (
+            "Some relevance-query terms appeared in the original retrieval "
+            "context but were not present after GEval compaction."
+        )
+    return RetrievalContextEvidenceCoverage(
+        query_terms_count=len(relevance_terms),
+        covered_terms=covered_terms,
+        missing_terms=missing_terms,
+        coverage_ratio=coverage_ratio,
+        warning=warning,
+    )
 
 
 def build_retrieval_relevance_query(
@@ -483,6 +540,9 @@ def build_retrieval_context_budget_report(
     total_tokens = sum(
         estimate_token_count(context) for _, _, context in normalized_contexts
     )
+    original_context = "\n\n".join(
+        context for _, _, context in normalized_contexts
+    )
 
     if total_tokens <= max_retrieval_context_tokens:
         rendered_context = str(retrieval_context)
@@ -510,6 +570,11 @@ def build_retrieval_context_budget_report(
                 )
                 for index, source, context in normalized_contexts
             ],
+            evidence_coverage=_build_evidence_coverage(
+                original_context,
+                rendered_context,
+                relevance_terms,
+            ),
         )
 
     if not normalized_contexts:
@@ -525,6 +590,11 @@ def build_retrieval_context_budget_report(
             exceeded_budget=False,
             rendered_context=rendered_context,
             chunks=[],
+            evidence_coverage=_build_evidence_coverage(
+                original_context,
+                rendered_context,
+                relevance_terms,
+            ),
         )
 
     context_count = len(normalized_contexts)
@@ -621,6 +691,11 @@ def build_retrieval_context_budget_report(
         exceeded_budget=True,
         rendered_context=rendered_context,
         chunks=chunk_reports,
+        evidence_coverage=_build_evidence_coverage(
+            original_context,
+            rendered_context,
+            relevance_terms,
+        ),
     )
 
 

@@ -168,15 +168,20 @@ test_case = LLMTestCase(
 )
 
 report = metric.get_retrieval_context_budget_report(test_case)
+coverage = metric.get_retrieval_context_evidence_coverage(test_case)
 prompt = metric.preview_evaluation_prompt(test_case)
 
 print(report.original_tokens)
 print(report.rendered_tokens)
 print(report.compression_ratio)
+print(coverage.coverage_ratio)
+print(coverage.missing_terms)
 print(prompt)
 ```
 
-`get_retrieval_context_budget_report()` returns the estimated original tokens, rendered tokens, compression ratio, visible chunks, omitted chunks, per-chunk relevance scores, and per-chunk source metadata. `preview_evaluation_prompt()` requires explicit `evaluation_steps` so it never triggers a hidden LLM call to generate steps.
+`get_retrieval_context_budget_report()` returns the estimated original tokens, rendered tokens, compression ratio, visible chunks, omitted chunks, per-chunk relevance scores, per-chunk source metadata, and an evidence coverage summary. The coverage summary compares terms from the selected input, actual output, and expected output fields against the rendered retrieval context, so you can catch cases where compaction removed evidence the judge still needs.
+
+You can call `get_retrieval_context_evidence_coverage()` directly when you only need the coverage ratio, covered terms, missing terms, and warning message. `preview_evaluation_prompt()` requires explicit `evaluation_steps` so it never triggers a hidden LLM call to generate steps.
 
 ### Rubric
 

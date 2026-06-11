@@ -39,6 +39,7 @@ from deepeval.metrics.g_eval.utils import (
     ensure_required_params,
     G_EVAL_API_PARAMS,
     RetrievalContextBudgetReport,
+    RetrievalContextEvidenceCoverage,
     build_retrieval_context_budget_report,
     build_retrieval_relevance_query,
 )
@@ -470,6 +471,14 @@ class GEval(BaseMetric):
                 self.evaluation_params, test_case
             ),
         )
+
+    def get_retrieval_context_evidence_coverage(
+        self, test_case: LLMTestCase
+    ) -> Optional[RetrievalContextEvidenceCoverage]:
+        report = self.get_retrieval_context_budget_report(test_case)
+        if report is None:
+            return None
+        return report.evidence_coverage
 
     def is_successful(self) -> bool:
         if self.error is not None:

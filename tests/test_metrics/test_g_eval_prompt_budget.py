@@ -95,11 +95,15 @@ def test_geval_preview_prompt_bounds_large_rag_context_without_model_call():
 
     prompt = metric.preview_evaluation_prompt(test_case)
     report = metric.get_retrieval_context_budget_report(test_case)
+    coverage = metric.get_retrieval_context_evidence_coverage(test_case)
 
     assert report is not None
+    assert coverage is not None
     assert report.original_tokens > 3000
     assert report.rendered_tokens < 260
     assert report.compression_ratio < 0.1
+    assert coverage.coverage_ratio > 0
+    assert "refund" in coverage.covered_terms
     assert "handbook/refunds.md" in prompt
     assert "Refunds are allowed" in prompt
     assert "n-refundable" in prompt

@@ -149,6 +149,7 @@ def test_geval_retrieval_context_budget_report_quantifies_compaction():
     assert "Refund policy anchor" in report.rendered_context
     assert "tail evidence" in report.rendered_context
     assert "source=kb/refunds.md" in report.rendered_context
+    assert report.evidence_coverage.coverage_ratio == 1.0
 
 
 def test_geval_retrieval_context_budget_prioritizes_relevant_chunks():
@@ -193,6 +194,36 @@ def test_geval_retrieval_context_budget_prioritizes_relevant_chunks():
     assert refund_chunk.omitted is False
     assert refund_chunk.relevance_score > 0
     assert report.omitted_chunks == 2
+    assert "enterprise" in report.evidence_coverage.covered_terms
+    assert "refund" in report.evidence_coverage.covered_terms
+    assert report.evidence_coverage.missing_terms == []
+
+
+def test_geval_retrieval_context_budget_reports_missing_evidence_terms():
+    retrieval_context = [
+        RetrievedContextData(
+            source="kb/refunds.md",
+            context=(
+                "enterprise refund policy starts. "
+                + ("background notes " * 120)
+                + "nonrefundable onboarding fee."
+            ),
+        )
+    ]
+
+    report = build_retrieval_context_budget_report(
+        retrieval_context,
+        max_retrieval_context_tokens=18,
+        relevance_query=(
+            "Enterprise customers can request a refund, "
+            "but onboarding is nonrefundable."
+        ),
+    )
+
+    assert report.evidence_coverage.coverage_ratio < 1.0
+    assert "enterprise" in report.evidence_coverage.covered_terms
+    assert "nonrefundable" in report.evidence_coverage.missing_terms
+    assert report.evidence_coverage.warning is not None
 
 
 def test_geval_retrieval_context_budget_rejects_invalid_budget():
