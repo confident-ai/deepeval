@@ -1,8 +1,23 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import Mock, MagicMock, patch
+from pydantic import BaseModel
 
 from deepeval.errors import DeepEvalError
 from deepeval.models.llms.portkey_model import PortkeyModel
+
+
+class SampleSchema(BaseModel):
+    field1: str
+    field2: int
+
+
+def _seed_settings(settings):
+    with settings.edit(persist=False):
+        settings.PORTKEY_MODEL_NAME = "gpt-4o-mini"
+        settings.PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
+        settings.PORTKEY_PROVIDER_NAME = "openai"
+        settings.PORTKEY_API_KEY = "portkey-secret"
+
 
 #####################################
 # __init__ / configuration behavior #
@@ -10,12 +25,7 @@ from deepeval.models.llms.portkey_model import PortkeyModel
 
 
 def test_portkey_model_prefers_explicit_params_over_settings(settings):
-
-    with settings.edit(persist=False):
-        settings.PORTKEY_MODEL_NAME = "gpt-4o-mini"
-        settings.PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
-        settings.PORTKEY_PROVIDER_NAME = "openai"
-        settings.PORTKEY_API_KEY = "portkey-secret"
+    _seed_settings(settings)
 
     model = PortkeyModel(
         model="explicit-model",
@@ -26,23 +36,17 @@ def test_portkey_model_prefers_explicit_params_over_settings(settings):
 
     # Explicit params should win over settings
     assert model.name == "explicit-model"
-    assert (
-        model.base_url == "https://explicit.example.com"
-    )  # trailing slash stripped
+    assert model.base_url == "https://explicit.example.com"  # slash stripped
     assert model.provider == "explicit-provider"
 
-    # _headers should use the explicit api_key
-    headers = model._headers()
+    # Portkey auth headers are injected as OpenAI-client default headers
+    headers = model._client_extra_kwargs()["default_headers"]
     assert headers["x-portkey-api-key"] == "explicit-secret"
     assert headers["x-portkey-provider"] == "explicit-provider"
 
 
 def test_portkey_model_uses_settings_when_params_missing(settings):
-    with settings.edit(persist=False):
-        settings.PORTKEY_MODEL_NAME = "gpt-4o-mini"
-        settings.PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
-        settings.PORTKEY_PROVIDER_NAME = "openai"
-        settings.PORTKEY_API_KEY = "portkey-secret"
+    _seed_settings(settings)
 
     model = PortkeyModel()
 
@@ -50,19 +54,16 @@ def test_portkey_model_uses_settings_when_params_missing(settings):
     assert model.base_url == "https://api.portkey.ai/v1"
     assert model.provider == "openai"
 
-    headers = model._headers()
+    headers = model._client_extra_kwargs()["default_headers"]
     # SecretStr should be unwrapped by require_secret_api_key
     assert headers["x-portkey-api-key"] == "portkey-secret"
     assert headers["x-portkey-provider"] == "openai"
 
 
 def test_portkey_model_raises_if_model_missing(settings):
-    # Model missing both as arg and in settings
+    _seed_settings(settings)
     with settings.edit(persist=False):
         settings.PORTKEY_MODEL_NAME = None
-        settings.PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
-        settings.PORTKEY_PROVIDER_NAME = "openai"
-        settings.PORTKEY_API_KEY = "portkey-secret"
 
     with pytest.raises(DeepEvalError) as exc:
         PortkeyModel(model=None)
@@ -74,12 +75,9 @@ def test_portkey_model_raises_if_model_missing(settings):
 
 
 def test_portkey_model_raises_if_base_url_missing(settings):
-    # Model present but base URL missing in both places
+    _seed_settings(settings)
     with settings.edit(persist=False):
-        settings.PORTKEY_MODEL_NAME = "gpt-4o-mini"
         settings.PORTKEY_BASE_URL = None
-        settings.PORTKEY_PROVIDER_NAME = "openai"
-        settings.PORTKEY_API_KEY = "portkey-secret"
 
     with pytest.raises(DeepEvalError) as exc:
         PortkeyModel(model="gpt-4o-mini", base_url=None)
@@ -91,12 +89,9 @@ def test_portkey_model_raises_if_base_url_missing(settings):
 
 
 def test_portkey_model_raises_if_provider_missing(settings):
-    # Model and base URL present, provider missing
+    _seed_settings(settings)
     with settings.edit(persist=False):
-        settings.PORTKEY_MODEL_NAME = "gpt-4o-mini"
-        settings.PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
         settings.PORTKEY_PROVIDER_NAME = None
-        settings.PORTKEY_API_KEY = "portkey-secret"
 
     with pytest.raises(DeepEvalError) as exc:
         PortkeyModel(model="gpt-4o-mini", base_url="https://api.portkey.ai/v1")
@@ -107,142 +102,133 @@ def test_portkey_model_raises_if_provider_missing(settings):
     assert "provider" in msg
 
 
+def test_portkey_get_model_name(settings):
+    _seed_settings(settings)
+    model = PortkeyModel()
+    assert model.get_model_name() == "gpt-4o-mini (Portkey)"
+
+
 ##############
 # generate() #
 ##############
 
 
-@patch("deepeval.models.llms.portkey_model.requests.post")
-def test_portkey_generate_sends_request_and_returns_content(
-    mock_post, settings
+@patch("deepeval.models.llms.gateway_model.AsyncOpenAI")
+def test_portkey_generate_returns_output_and_cost_tuple(
+    mock_async_openai_class, settings
 ):
-    with settings.edit(persist=False):
-        settings.PORTKEY_MODEL_NAME = "gpt-4o-mini"
-        settings.PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
-        settings.PORTKEY_PROVIDER_NAME = "openai"
-        settings.PORTKEY_API_KEY = "portkey-secret"
+    _seed_settings(settings)
+
+    mock_client = MagicMock()
+    mock_async_openai_class.return_value = mock_client
+    mock_completion = Mock()
+    mock_completion.choices = [Mock(message=Mock(content="Portkey says hi!"))]
+    mock_completion.usage.prompt_tokens = 10
+    mock_completion.usage.completion_tokens = 20
+
+    call_args = {}
+
+    async def async_create(*args, **kwargs):
+        call_args.update(kwargs)
+        return mock_completion
+
+    mock_client.chat.completions.create = async_create
 
     model = PortkeyModel()
-    prompt = "Hello from DeepEval"
+    result = model.generate("Hello from DeepEval")
 
-    mock_response = MagicMock()
-    mock_response.raise_for_status.return_value = None
-    mock_response.json.return_value = {
-        "choices": [
-            {
-                "message": {
-                    "content": "Portkey says hi!",
-                }
-            }
-        ]
-    }
-    mock_post.return_value = mock_response
-
-    output = model.generate(prompt)
-
+    # Standard gateway contract: (output, cost) tuple
+    assert isinstance(result, tuple) and len(result) == 2
+    output, _cost = result
     assert output == "Portkey says hi!"
-    mock_post.assert_called_once()
-
-    args, kwargs = mock_post.call_args
-    # URL
-    assert args[0] == f"{model.base_url}/chat/completions"
-    # Payload
-    assert kwargs["json"] == model._payload(prompt)
-    # Headers
-    headers = kwargs["headers"]
-    assert headers["x-portkey-api-key"] == "portkey-secret"
-    assert headers["x-portkey-provider"] == "openai"
-    assert headers["Content-Type"] == "application/json"
+    assert call_args["model"] == "gpt-4o-mini"
+    assert call_args["messages"] == [
+        {"role": "user", "content": "Hello from DeepEval"}
+    ]
 
 
-################
-# a_generate() #
-################
-
-
-@pytest.mark.asyncio
-async def test_portkey_a_generate_sends_request_and_returns_content(
-    settings,
+@patch("deepeval.models.llms.gateway_model.AsyncOpenAI")
+async def test_portkey_a_generate_returns_output_and_cost_tuple(
+    mock_async_openai_class, settings
 ):
-    with settings.edit(persist=False):
-        settings.PORTKEY_MODEL_NAME = "gpt-4o-mini"
-        settings.PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
-        settings.PORTKEY_PROVIDER_NAME = "openai"
-        settings.PORTKEY_API_KEY = "portkey-secret"
+    _seed_settings(settings)
+
+    mock_client = MagicMock()
+    mock_async_openai_class.return_value = mock_client
+    mock_completion = Mock()
+    mock_completion.choices = [Mock(message=Mock(content="Portkey async hi!"))]
+    mock_completion.usage.prompt_tokens = 5
+    mock_completion.usage.completion_tokens = 7
+
+    async def async_create(*args, **kwargs):
+        return mock_completion
+
+    mock_client.chat.completions.create = async_create
 
     model = PortkeyModel()
-    prompt = "Hello from async DeepEval"
-
-    # Mock the response object returned inside the inner async with
-    mock_response = AsyncMock()
-    mock_response.status = 200
-    mock_response.json.return_value = {
-        "choices": [
-            {
-                "message": {
-                    "content": "Portkey async hi!",
-                }
-            }
-        ]
-    }
-
-    # Context manager returned by call to session.post
-    mock_post_ctx = MagicMock()
-    mock_post_ctx.__aenter__ = AsyncMock(return_value=mock_response)
-    mock_post_ctx.__aexit__ = AsyncMock(return_value=None)
-
-    # session object from aiohttp.ClientSession
-    mock_session = MagicMock()
-    # async with ClientSession() as session -> session is mock_session
-    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-    mock_session.__aexit__ = AsyncMock(return_value=None)
-    # call to session.post should return our post context manager
-    mock_session.post = MagicMock(return_value=mock_post_ctx)
-
-    # Patch ClientSession() to return mock_session
-    with patch(
-        "deepeval.models.llms.portkey_model.aiohttp.ClientSession",
-        return_value=mock_session,
-    ):
-        output = await model.a_generate(prompt)
+    output, _cost = await model.a_generate("Hello from async DeepEval")
 
     assert output == "Portkey async hi!"
 
-    # Verify we called the right URL with the right payload & headers
-    mock_session.post.assert_called_once()
-    args, kwargs = mock_session.post.call_args
-    assert args[0] == f"{model.base_url}/chat/completions"
-    assert kwargs["json"] == model._payload(prompt)
-    headers = kwargs["headers"]
-    assert headers["x-portkey-api-key"] == "portkey-secret"
-    assert headers["x-portkey-provider"] == "openai"
-    assert headers["Content-Type"] == "application/json"
 
+@patch("deepeval.models.llms.gateway_model.AsyncOpenAI")
+def test_portkey_generate_with_structured_outputs(
+    mock_async_openai_class, settings
+):
+    _seed_settings(settings)
 
-##################################################
-# Cost behavior: Portkey returns str, not a tuple
-##################################################
+    mock_client = MagicMock()
+    mock_async_openai_class.return_value = mock_client
+    mock_completion = Mock()
+    mock_completion.choices = [
+        Mock(message=Mock(content='{"field1": "test", "field2": 42}'))
+    ]
+    mock_completion.usage.prompt_tokens = 10
+    mock_completion.usage.completion_tokens = 20
 
+    call_args = {}
 
-@patch("deepeval.models.llms.portkey_model.requests.post")
-def test_portkey_generate_returns_str_not_cost_tuple(mock_post, settings):
-    with settings.edit(persist=False):
-        settings.PORTKEY_MODEL_NAME = "gpt-4o-mini"
-        settings.PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
-        settings.PORTKEY_PROVIDER_NAME = "openai"
-        settings.PORTKEY_API_KEY = "portkey-secret"
+    async def async_create(*args, **kwargs):
+        call_args.update(kwargs)
+        return mock_completion
+
+    mock_client.chat.completions.create = async_create
 
     model = PortkeyModel()
+    output, _cost = model.generate("prompt", schema=SampleSchema)
 
-    mock_response = MagicMock()
-    mock_response.raise_for_status.return_value = None
-    mock_response.json.return_value = {
-        "choices": [{"message": {"content": "response text"}}]
-    }
-    mock_post.return_value = mock_response
+    assert call_args["response_format"]["type"] == "json_schema"
+    assert isinstance(output, SampleSchema)
+    assert output.field1 == "test"
+    assert output.field2 == 42
 
-    result = model.generate("test prompt")
 
-    assert isinstance(result, str)
-    assert not isinstance(result, tuple)
-    assert result == "response text"
+###################
+# client building #
+###################
+
+
+@patch("deepeval.models.llms.gateway_model.OpenAI")
+def test_portkey_build_client_sets_auth_headers(mock_openai_class, settings):
+    _seed_settings(settings)
+
+    model = PortkeyModel()
+    _ = model.load_model(async_mode=False)
+
+    call_kwargs = mock_openai_class.call_args[1]
+    assert call_kwargs["base_url"] == "https://api.portkey.ai/v1"
+    headers = call_kwargs["default_headers"]
+    assert headers["x-portkey-api-key"] == "portkey-secret"
+    assert headers["x-portkey-provider"] == "openai"
+
+
+def test_portkey_is_recognized_as_native_model(settings):
+    from deepeval.metrics.utils import initialize_model, is_native_model
+
+    _seed_settings(settings)
+    model = PortkeyModel()
+    assert is_native_model(model)
+
+    returned_model, using_native = initialize_model(model)
+    assert using_native is True
+    assert returned_model is model

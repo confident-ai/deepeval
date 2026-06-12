@@ -120,15 +120,20 @@ def test_litellm_model_accepts_legacy_api_base_keyword_and_maps_to_base_url(
 
 
 ##############################
-# calculate_cost unit tests  #
+# cost unit tests            #
 ##############################
+#
+# LiteLLM is now standardized on the shared gateway cost contract:
+#   1. user-supplied per-token pricing,
+#   2. a cost reported by the gateway on the response, otherwise
+#   3. None (no more inventing hardcoded per-token rates).
 
 
-def _mk_litellm_model(settings):
+def _mk_litellm_model(settings, **kwargs):
     with settings.edit(persist=False):
         settings.LITELLM_MODEL_NAME = "test-model"
         settings.LITELLM_API_KEY = "test-key"
-    return LiteLLMModel()
+    return LiteLLMModel(**kwargs)
 
 
 def _mk_response(prompt_tokens=100, completion_tokens=50, cost=None):
@@ -142,54 +147,31 @@ def _mk_response(prompt_tokens=100, completion_tokens=50, cost=None):
     return resp
 
 
-def test_litellm_calculate_cost_prefers_response_cost(settings):
+def test_litellm_cost_prefers_reported_response_cost(settings):
     model = _mk_litellm_model(settings)
     response = _mk_response(prompt_tokens=100, completion_tokens=50, cost=0.042)
-    cost = model.calculate_cost(response)
+    cost = model._response_cost(response)
     assert cost == 0.042
+    assert cost.input_tokens == 100
+    assert cost.output_tokens == 50
 
 
-def test_litellm_calculate_cost_falls_back_to_hardcoded_rates(settings):
-    model = _mk_litellm_model(settings)
-    response = _mk_response(prompt_tokens=100, completion_tokens=50)
-    cost = model.calculate_cost(response)
-    expected = (100 * 0.0001) + (50 * 0.0002)
-    assert cost == expected
-
-
-def test_litellm_calculate_cost_response_cost_none_uses_fallback(settings):
+def test_litellm_cost_is_none_when_unknown(settings):
+    # No user pricing and no cost reported by the gateway -> unknown.
     model = _mk_litellm_model(settings)
     response = _mk_response(prompt_tokens=200, completion_tokens=100, cost=None)
-    cost = model.calculate_cost(response)
-    expected = (200 * 0.0001) + (100 * 0.0002)
-    assert cost == expected
+    assert model._response_cost(response) is None
 
 
-def test_litellm_calculate_cost_accumulates_evaluation_cost(settings):
+def test_litellm_cost_uses_user_pricing(settings):
+    model = _mk_litellm_model(
+        settings, cost_per_input_token=0.0001, cost_per_output_token=0.0002
+    )
+    response = _mk_response(prompt_tokens=100, completion_tokens=50)
+    cost = model._response_cost(response)
+    assert cost == pytest.approx((100 * 0.0001) + (50 * 0.0002))
+
+
+def test_litellm_cost_handles_missing_usage_gracefully(settings):
     model = _mk_litellm_model(settings)
-    assert model.evaluation_cost == 0.0
-
-    resp1 = _mk_response(cost=0.01)
-    resp2 = _mk_response(cost=0.02)
-    resp3 = _mk_response(cost=0.03)
-
-    model.calculate_cost(resp1)
-    model.calculate_cost(resp2)
-    model.calculate_cost(resp3)
-
-    assert model.evaluation_cost == pytest.approx(0.06)
-    assert model.get_evaluation_cost() == pytest.approx(0.06)
-
-
-def test_litellm_calculate_cost_with_zero_tokens_no_response_cost(settings):
-    model = _mk_litellm_model(settings)
-    response = _mk_response(prompt_tokens=0, completion_tokens=0)
-    cost = model.calculate_cost(response)
-    assert cost == 0.0
-
-
-def test_litellm_calculate_cost_handles_exception_gracefully(settings):
-    model = _mk_litellm_model(settings)
-    bad_response = SimpleNamespace()
-    cost = model.calculate_cost(bad_response)
-    assert cost == 0.0
+    assert model._response_cost(SimpleNamespace()) is None

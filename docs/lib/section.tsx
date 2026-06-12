@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
+import type { MDXComponents } from "mdx/types";
 import { notFound } from "next/navigation";
 import { Banner } from "fumadocs-ui/components/banner";
 import { DocsLayout } from "fumadocs-ui/layouts/notebook";
@@ -21,6 +22,7 @@ import Footer from "@/src/layouts/Footer";
 import NavHeader from "@/src/layouts/NavHeader";
 import TocFooter from "@/src/components/TocFooter";
 import SidebarSearch from "@/src/layouts/SidebarSearch";
+import LanguageSelector from "@/components/language-selector/language-selector";
 import Link from "next/link";
 
 // Each section's fumadocs-mdx collection resolves to a differently-typed
@@ -75,6 +77,14 @@ export type SectionConfig = {
    * `modifiedTime`, and the author list on individual posts.
    */
   extendMetadata?: (page: Page) => Promise<Metadata> | Metadata;
+  /**
+   * Section-scoped MDX components, merged on top of the global map from
+   * `getMDXComponents`. Lets a section register components globally for
+   * its own content (so authors don't `import` them per file) without
+   * leaking them into other sections. Used by the blog to expose
+   * `ClaudeCodeTerminal` and friends.
+   */
+  mdxComponents?: MDXComponents;
 };
 
 /**
@@ -97,6 +107,7 @@ export function createSection(config: SectionConfig) {
     renderBeforeBody,
     showContributors,
     extendMetadata,
+    mdxComponents,
   } = config;
 
   function Layout({ children }: { children: ReactNode }) {
@@ -123,7 +134,14 @@ export function createSection(config: SectionConfig) {
           // Started") and in the mobile drawer. The header still
           // keeps the compact (magnifying-glass) search trigger for
           // mobile reachability — see NavHeader col 3.
-          sidebar={{ banner: <SidebarSearch key="sidebar-search" /> }}
+          sidebar={{
+            banner: (
+              <div key="sidebar-banner" className="flex flex-col gap-2">
+                <SidebarSearch />
+                <LanguageSelector />
+              </div>
+            ),
+          }}
         >
           {children}
         </DocsLayout>
@@ -195,6 +213,7 @@ export function createSection(config: SectionConfig) {
           <MDX
             components={getMDXComponents({
               a: createRelativeLink(source, page),
+              ...mdxComponents,
             })}
           />
         </DocsBody>

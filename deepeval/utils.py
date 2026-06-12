@@ -268,6 +268,21 @@ def get_identifier() -> Optional[str]:
     return get_settings().DEEPEVAL_IDENTIFIER
 
 
+# Whether the next test run should be marked as the official baseline on
+# Confident AI. Read in the main process at upload time (TestRunManager.
+# wrap_up_test_run), so a plain module global is sufficient.
+_test_run_official: bool = False
+
+
+def set_test_run_official(official: bool):
+    global _test_run_official
+    _test_run_official = bool(official)
+
+
+def get_test_run_official() -> bool:
+    return _test_run_official
+
+
 def should_use_cache() -> bool:
     return bool(get_settings().ENABLE_DEEPEVAL_CACHE)
 

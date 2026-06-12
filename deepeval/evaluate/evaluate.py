@@ -33,6 +33,7 @@ from deepeval.test_run.test_run import TEMP_FILE_PATH
 from deepeval.utils import (
     get_or_create_event_loop,
     open_browser,
+    set_test_run_official,
     should_ignore_errors,
     should_skip_on_missing_params,
     should_use_cache,
@@ -169,6 +170,7 @@ def evaluate(
     hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
     # agnostic
     identifier: Optional[str] = None,
+    official: bool = False,
     _skip_reset: bool = False,
     # Configs
     async_config: Optional[AsyncConfig] = AsyncConfig(),
@@ -187,6 +189,7 @@ def evaluate(
 
         if not _skip_reset and not get_is_running_deepeval():
             global_test_run_manager.reset()
+        set_test_run_official(official)
         start_time = time.perf_counter()
 
         if display_config.show_indicator:

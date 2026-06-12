@@ -203,6 +203,29 @@ for golden in dataset.evals_iterator():
 
 Passing `metrics=[...]` to `CallbackHandler` evaluates the overall LangChain run. To evaluate a component instead, attach metrics where LangChain creates that component.
 
+### Agent spans (sub-agents)
+
+Wrap the invocation in `with next_agent_span(metrics=[...]):`. The `CallbackHandler` drains the staged metric onto the **first agent span** it opens inside the `with` block — useful for scoring a sub-agent (e.g. an agent invoked as a tool, or a nested `create_agent` run) in isolation.
+
+```python title="langchain_agent.py" showLineNumbers
+from langchain.agents import create_agent
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.tracing import next_agent_span
+...
+
+agent = create_agent(model="openai:gpt-4o-mini", tools=[multiply], system_prompt="Be concise.")
+
+for golden in dataset.evals_iterator():
+    with next_agent_span(metrics=[TaskCompletionMetric()]):
+        agent.invoke(
+            {"messages": [{"role": "user", "content": golden.input}]},
+            config={"callbacks": [CallbackHandler()]},
+        )
+```
+
+The same one-shot semantic as `next_llm_span` applies: only the first agent span in the run picks up the staged metric.
+
 ### LLM calls
 
 Wrap the invocation in `with next_llm_span(metrics=[...]):`. The `CallbackHandler` drains the staged metric onto the **first LLM span** it opens inside the `with` block; later LLM calls in the same run get nothing. This is the same one-shot semantic used by `next_*_span` in the Pydantic AI / Strands / AgentCore / Google ADK integrations.
@@ -254,7 +277,7 @@ for golden in dataset.evals_iterator():
 LangChain is instrumented per-call through callbacks, so customization happens at the callback or span-staging boundary.
 
 - Use `CallbackHandler(...)` kwargs for trace-level defaults like `name`, `tags`, `metadata`, `thread_id`, and `user_id`.
-- Use `next_llm_span(...)` / `next_retriever_span(...)` / `next_tool_span(...)` to stage component-level fields (metrics, metric collections, test cases, custom span metadata) onto the next span the callback opens.
+- Use `next_agent_span(...)` / `next_llm_span(...)` / `next_retriever_span(...)` / `next_tool_span(...)` to stage component-level fields (metrics, metric collections, test cases, custom span metadata) onto the next span the callback opens.
 - Use tool spans for deterministic traceability, inputs, outputs, and metadata.
 
 ```python title="langchain_agent.py" showLineNumbers
@@ -275,23 +298,30 @@ agent.invoke(
 
 The primitives above — `CallbackHandler(...)`, `next_*_span(...)`, and `deepeval`'s tool decorator — compose around one boundary: LangChain owns the callback lifecycle, and your code chooses where to stage component config for the next span the callback opens.
 
-### Evaluate subagents/components
+### Evaluate subagents with `next_*_span`
 
-Stage a component metric with `next_llm_span(...)` immediately before the `agent.invoke(...)` call. The `CallbackHandler` drains the staged metric onto the first LLM span LangChain opens inside the `with` block, so the metric lives on the LLM span inside the agent loop without modifying the agent or model.
+`next_*_span(metrics=[...])` stages a metric for the next matching span the `CallbackHandler` opens. Use this when you want to evaluate a subagent or model step instead of the full run. Pick the helper that matches the span you want to score: `next_agent_span(...)` or `next_llm_span(...)`.
 
 ```python title="langchain_agent.py" showLineNumbers
 from langchain.agents import create_agent
 from deepeval.integrations.langchain import CallbackHandler
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.tracing import next_llm_span
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.tracing import next_agent_span
 ...
 
 agent = create_agent(model="openai:gpt-4o-mini", tools=[multiply], system_prompt="Be concise.")
+
+def run_agent(prompt: str):
+    with next_agent_span(metrics=[TaskCompletionMetric()]):
+        return agent.invoke(
+            {"messages": [{"role": "user", "content": prompt}]},
+            config={"callbacks": [CallbackHandler()]},
+        )
 ```
 
 #### No trace-level metrics required
 
-Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because the `AnswerRelevancyMetric` is staged for the LLM span, so CI/CD and scripts only need to run the agent inside the staging block.
+Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because the `TaskCompletionMetric` is staged for the agent span, so CI/CD and scripts only need to run the agent inside the staging block.
 
 This is how you'd run it:
 
@@ -305,11 +335,7 @@ from deepeval import assert_test
 
 @pytest.mark.parametrize("golden", dataset.goldens)
 def test_component_metrics(golden: Golden):
-    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
-        agent.invoke(
-            {"messages": [{"role": "user", "content": golden.input}]},
-            config={"callbacks": [CallbackHandler()]},
-        )
+    run_agent(golden.input)
     assert_test(golden=golden)
 ```
 
@@ -324,11 +350,7 @@ deepeval test run test_langchain_agent.py
 ...
 
 for golden in dataset.evals_iterator():
-    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
-        agent.invoke(
-            {"messages": [{"role": "user", "content": golden.input}]},
-            config={"callbacks": [CallbackHandler()]},
-        )
+    run_agent(golden.input)
 ```
 
 </Tab>
@@ -377,8 +399,8 @@ For native tracing helpers (`@observe`, `with trace(...)`, `update_current_trace
       question: "Can I evaluate a sub-agent inside my LangChain agent run?",
       answer: (
         <>
-          Yes. Stage a metric with <code>with next_llm_span(metrics=[...])</code>{" "}
-          (or <code>next_retriever_span(...)</code>) right before{" "}
+          Yes. Stage a metric with{" "}
+          <code>with next_agent_span(metrics=[...])</code> right before{" "}
           <code>agent.invoke(...)</code>, and the <code>CallbackHandler</code>{" "}
           drains it onto that sub-agent's span — scoring the sub-agent in
           isolation without touching the parent. It's one-shot per run, so to

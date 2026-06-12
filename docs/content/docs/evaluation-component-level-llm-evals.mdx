@@ -978,7 +978,8 @@ deepeval login
 <VideoDisplayer
   src={ASSETS.tracingSpans}
   confidentUrl="/docs/llm-tracing/introduction"
-  label="Span-Level Evals on Confident AI"
+  label="Span-level evals on Confident AI"
+  description="Inspect component-level scores on every span in your traces."
 />
 
 :::tip[Go further]
@@ -986,6 +987,202 @@ deepeval login
 - **Trace-level scoring too?** Component metrics live on **spans**. Pass `metrics=[...]` to `evals_iterator()` to _also_ grade the whole trace end-to-end — both kinds of scores coexist in the same test run.
 - **Deeper integration API.** Each integration exposes more (sub-agent handoffs, retriever scoring, span context customization). Read the [integration docs](/integrations/frameworks/openai) for your stack to see what else is available.
   :::
+
+## Evaluate Sub-Agents
+
+In multi-agent systems, every sub-agent invocation — a delegation, handoff, or nested call — emits its own **agent span** inside the trace. To evaluate a sub-agent in isolation, attach metrics to its agent span instead of the trace.
+
+:::note
+Only integrations that emit agent spans are shown below. The OpenAI and Anthropic clients don't — they produce LLM spans only, which you can target with `LlmSpanContext` instead.
+:::
+
+<Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "Pydantic AI", "AgentCore", "Strands", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
+<Tab value="Manual Instrumentation">
+
+Mark your sub-agent with `@observe(type="agent")` and pass `metrics=[...]` to it:
+
+```python title="main.py" showLineNumbers
+from deepeval.tracing import observe, update_current_trace
+from deepeval.metrics import TaskCompletionMetric
+...
+
+@observe()
+def supervisor_agent(query: str) -> str:
+    research = research_agent(query)
+    answer = "..."  # synthesize final answer here
+    update_current_trace(input=query, output=answer)
+    return answer
+
+@observe(type="agent", metrics=[TaskCompletionMetric()])
+def research_agent(query: str) -> str:
+    return "..."  # your sub-agent implementation
+```
+
+</Tab>
+<Tab value="LangChain">
+
+Stage a metric for the next agent span with `next_agent_span(...)` — the `CallbackHandler` drains it onto the next agent span opened during the run:
+
+```python title="langchain_app.py" showLineNumbers
+from deepeval.tracing import next_agent_span
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.metrics import TaskCompletionMetric
+...
+
+def run_agent(prompt: str):
+    with next_agent_span(metrics=[TaskCompletionMetric()]):
+        return agent.invoke(
+            {"messages": [{"role": "user", "content": prompt}]},
+            config={"callbacks": [CallbackHandler()]},
+        )
+```
+
+Like `next_llm_span`, this is one-shot — only the first agent span in the run picks up the metric.
+
+</Tab>
+<Tab value="LangGraph">
+
+Stage a metric for the next agent span with `next_agent_span(...)` — the `CallbackHandler` drains it onto the next agent span opened during the graph run (e.g. a sub-agent node or subgraph):
+
+```python title="langgraph_app.py" showLineNumbers
+from deepeval.tracing import next_agent_span
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.metrics import TaskCompletionMetric
+...
+
+def run_graph(prompt: str):
+    with next_agent_span(metrics=[TaskCompletionMetric()]):
+        return graph.invoke(
+            {"messages": [{"role": "user", "content": prompt}]},
+            config={"callbacks": [CallbackHandler()]},
+        )
+```
+
+Like `next_llm_span`, this is one-shot — only the first agent span in the graph run picks up the metric.
+
+</Tab>
+<Tab value="Pydantic AI">
+
+Stage a metric for the next agent span with `next_agent_span(...)` — delegations and handoffs nest as their own agent spans:
+
+```python title="pydanticai_agent.py" showLineNumbers
+from deepeval.tracing import next_agent_span
+from deepeval.metrics import TaskCompletionMetric
+...
+
+async def run_agent(prompt: str):
+    with next_agent_span(metrics=[TaskCompletionMetric()]):
+        return await agent.run(prompt)
+```
+
+</Tab>
+<Tab value="AgentCore">
+
+Stage a metric for the next agent span with `next_agent_span(...)`:
+
+```python title="agentcore_agent.py" showLineNumbers
+from deepeval.tracing import next_agent_span
+from deepeval.metrics import TaskCompletionMetric
+...
+
+def run_agent(prompt: str):
+    with next_agent_span(metrics=[TaskCompletionMetric()]):
+        return invoke({"prompt": prompt})
+```
+
+</Tab>
+<Tab value="Strands">
+
+Stage a metric for the next agent span with `next_agent_span(...)`:
+
+```python title="strands_agent.py" showLineNumbers
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.tracing import next_agent_span
+...
+
+def run_agent(prompt: str):
+    with next_agent_span(metrics=[TaskCompletionMetric()]):
+        return agent(prompt)
+```
+
+</Tab>
+<Tab value="LlamaIndex">
+
+Stage a metric for the agent span with `AgentSpanContext(metrics=[...])` inside `with trace(...)`:
+
+```python title="llamaindex_agent.py" showLineNumbers
+from deepeval.tracing import trace, AgentSpanContext
+from deepeval.metrics import TaskCompletionMetric
+...
+
+async def run_agent(prompt: str):
+    with trace(agent_span_context=AgentSpanContext(metrics=[TaskCompletionMetric()])):
+        return await agent.run(prompt)
+```
+
+</Tab>
+<Tab value="OpenAI Agents">
+
+Attach `agent_metrics=[...]` to the sub-agent's `Agent` shim — it scores that agent's span on every run, including when it's reached through a handoff:
+
+```python title="openai_agents_app.py" showLineNumbers
+from deepeval.openai_agents import Agent
+from deepeval.metrics import TaskCompletionMetric, AnswerRelevancyMetric
+...
+
+triage_agent = Agent(
+    name="triage",
+    instructions="Route the question to the right specialist.",
+    handoffs=[
+        Agent(
+            name="weather_specialist",
+            instructions="Answer weather questions.",
+            tools=[get_weather],
+            agent_metrics=[TaskCompletionMetric()],
+        ),
+    ],
+    agent_metrics=[AnswerRelevancyMetric()],
+)
+```
+
+</Tab>
+<Tab value="Google ADK">
+
+Stage a metric for the next agent span with `next_agent_span(...)`:
+
+```python title="google_adk_agent.py" showLineNumbers
+from deepeval.tracing import next_agent_span
+from deepeval.metrics import TaskCompletionMetric
+...
+
+async def run_agent_with_metric(prompt: str):
+    with next_agent_span(metrics=[TaskCompletionMetric()]):
+        return await run_agent(prompt)
+```
+
+</Tab>
+<Tab value="CrewAI">
+
+Attach `metrics=[...]` to the specific `Agent` shim — it scores that agent's span on every execution, independent of the rest of the crew:
+
+```python title="crewai_app.py" showLineNumbers
+from deepeval.integrations.crewai import Agent
+from deepeval.metrics import TaskCompletionMetric
+...
+
+reporter = Agent(
+    role="Weather Reporter",
+    goal="Provide accurate weather information.",
+    backstory="An experienced meteorologist.",
+    tools=[get_weather],
+    metrics=[TaskCompletionMetric()],
+)
+```
+
+</Tab>
+</Tabs>
+
+Then run your evals exactly as before — `evals_iterator()` in scripts, or `assert_test(golden=golden)` [in CI/CD](#in-cicd). Trace-level metrics are optional here since the metrics already live on the sub-agent spans.
 
 ## Hyperparameters
 

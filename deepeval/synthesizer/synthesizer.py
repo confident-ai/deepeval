@@ -167,7 +167,11 @@ class Synthesizer:
         contexts_with_sources: List[ContextWithSources] = []
         for idx, context in enumerate(contexts):
             source_file = source_files[idx] if idx < len(source_files) else None
-            score = context_scores[idx] if context_scores and idx < len(context_scores) else None
+            score = (
+                context_scores[idx]
+                if context_scores and idx < len(context_scores)
+                else None
+            )
             contexts_with_sources.append(
                 ContextWithSources(
                     context=context,
@@ -199,9 +203,7 @@ class Synthesizer:
                 "`target_files_per_context` must be at least 2 when provided."
             )
         if max_files_per_context < 2:
-            raise ValueError(
-                "`max_files_per_context` must be at least 2."
-            )
+            raise ValueError("`max_files_per_context` must be at least 2.")
         if len(contexts_with_sources) < 2:
             return False
         distinct_files = {
@@ -219,7 +221,9 @@ class Synthesizer:
         max_files_per_context: int = 3,
     ) -> List[ContextWithSources]:
         if not self._validate_merge_request(
-            contexts_with_sources, target_files_per_context, max_files_per_context
+            contexts_with_sources,
+            target_files_per_context,
+            max_files_per_context,
         ):
             return contexts_with_sources
         context_texts = [
@@ -241,7 +245,9 @@ class Synthesizer:
         max_files_per_context: int = 3,
     ) -> List[ContextWithSources]:
         if not self._validate_merge_request(
-            contexts_with_sources, target_files_per_context, max_files_per_context
+            contexts_with_sources,
+            target_files_per_context,
+            max_files_per_context,
         ):
             return contexts_with_sources
         context_texts = [
@@ -793,9 +799,8 @@ class Synthesizer:
                         qualified_synthetic_inputs
                     ):
                         context_source_files: List[str] = []
-                        if (
-                            source_files is not None
-                            and context_index < len(source_files)
+                        if source_files is not None and context_index < len(
+                            source_files
                         ):
                             context_source = source_files[context_index]
                             if isinstance(context_source, list):
@@ -1109,9 +1114,7 @@ class Synthesizer:
                 context=context,
                 expected_output=expected_output,
                 source_file=(
-                    context_source_files[0]
-                    if context_source_files
-                    else None
+                    context_source_files[0] if context_source_files else None
                 ),
                 additional_metadata={
                     "evolutions": evolutions_used,
@@ -2257,27 +2260,25 @@ class Synthesizer:
                 )
 
             # Generate conversational goldens from contexts
-            goldens = (
-                await self.a_generate_conversational_goldens_from_contexts(
-                    contexts=[item.context for item in contexts_with_sources],
-                    include_expected_outcome=include_expected_outcome,
-                    max_goldens_per_context=max_goldens_per_context,
-                    source_files=[
-                        item.source_files for item in contexts_with_sources
-                    ],
-                    context_chunk_source_files=[
-                        item.chunk_source_files or []
-                        for item in contexts_with_sources
-                    ],
-                    target_files_per_context=context_construction_config.target_files_per_context,
-                    _context_scores=[
-                        item.score if item.score is not None else 0.0
-                        for item in contexts_with_sources
-                    ],
-                    _progress=progress,
-                    _pbar_id=pbar_id,
-                    _reset_cost=False,
-                )
+            goldens = await self.a_generate_conversational_goldens_from_contexts(
+                contexts=[item.context for item in contexts_with_sources],
+                include_expected_outcome=include_expected_outcome,
+                max_goldens_per_context=max_goldens_per_context,
+                source_files=[
+                    item.source_files for item in contexts_with_sources
+                ],
+                context_chunk_source_files=[
+                    item.chunk_source_files or []
+                    for item in contexts_with_sources
+                ],
+                target_files_per_context=context_construction_config.target_files_per_context,
+                _context_scores=[
+                    item.score if item.score is not None else 0.0
+                    for item in contexts_with_sources
+                ],
+                _progress=progress,
+                _pbar_id=pbar_id,
+                _reset_cost=False,
             )
             if _reset_cost and self.cost_tracking and self.using_native_model:
                 print(f"💰 API cost: {self.synthesis_cost:.6f}")
@@ -2434,9 +2435,8 @@ class Synthesizer:
                         qualified_synthetic_scenarios
                     ):
                         context_source_files: List[str] = []
-                        if (
-                            source_files is not None
-                            and context_index < len(source_files)
+                        if source_files is not None and context_index < len(
+                            source_files
                         ):
                             context_source = source_files[context_index]
                             if isinstance(context_source, list):
