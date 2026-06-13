@@ -31,7 +31,6 @@ export abstract class BaseMetricCore {
   success?: boolean;
   evaluationModel?: string;
   strictMode: boolean = false;
-  asyncMode: boolean = true;
   verboseMode: boolean = false;
   includeReason: boolean = false;
   showIndicator: boolean = true;
@@ -49,7 +48,6 @@ export abstract class BaseMetricCore {
     threshold: number,
     options?: {
       strictMode?: boolean;
-      asyncMode?: boolean;
       verboseMode?: boolean;
       includeReason?: boolean;
       showIndicator?: boolean;
@@ -58,7 +56,6 @@ export abstract class BaseMetricCore {
     this.threshold = threshold;
     if (options) {
       this.strictMode = options.strictMode ?? this.strictMode;
-      this.asyncMode = options.asyncMode ?? this.asyncMode;
       this.verboseMode = options.verboseMode ?? this.verboseMode;
       this.includeReason = options.includeReason ?? this.includeReason;
       this.showIndicator = options.showIndicator ?? this.showIndicator;
@@ -73,7 +70,7 @@ export abstract class BaseMetricCore {
     const GRAY = "\x1b[38;2;55;65;81m";
     const RESET = "\x1b[0m";
     const strict = this.strictMode ? "True" : "False";
-    const asyncMode = this.asyncMode ? "True" : "False";
+    const asyncMode = "True";
     // Deterministic metrics have no model — omit the "using <model>" clause.
     const usingClause = this.evaluationModel
       ? `using ${this.evaluationModel}, `
