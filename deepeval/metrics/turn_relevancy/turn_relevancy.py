@@ -1,6 +1,7 @@
 import asyncio
 import itertools
-from typing import Optional, Union, Dict, List
+import re
+from typing import Optional, Type, Union, Dict, List
 
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.turn_relevancy.template import (
@@ -38,8 +39,12 @@ class TurnRelevancyMetric(BaseConversationalMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         window_size: int = 10,
+        evaluation_template: Type[
+            TurnRelevancyTemplate
+        ] = TurnRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
+        self.evaluation_template = evaluation_template
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
@@ -172,7 +177,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
                     {"message number": f"{index+1}", "reason": verdict.reason}
                 )
 
-        prompt = TurnRelevancyTemplate.generate_reason(
+        prompt = self.evaluation_template.generate_reason(
             score=self.score, irrelevancies=irrelevancies
         )
 
@@ -199,7 +204,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
                     {"message number": f"{index+1}", "reason": verdict.reason}
                 )
 
-        prompt = TurnRelevancyTemplate.generate_reason(
+        prompt = self.evaluation_template.generate_reason(
             score=self.score, irrelevancies=irrelevancies
         )
 
@@ -214,7 +219,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
     async def _a_generate_verdict(
         self, turns_sliding_window: List[Turn]
     ) -> TurnRelevancyVerdict:
-        prompt = TurnRelevancyTemplate.generate_verdicts(
+        prompt = self.evaluation_template.generate_verdicts(
             sliding_window=[
                 convert_turn_to_dict(turn) for turn in turns_sliding_window
             ]
@@ -225,13 +230,13 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             prompt=prompt,
             schema_cls=TurnRelevancyVerdict,
             extract_schema=lambda s: s,
-            extract_json=lambda data: TurnRelevancyVerdict(**data),
+            extract_json=self._verdict_from_json,
         )
 
     def _generate_verdict(
         self, turns_sliding_window: List[Turn]
     ) -> TurnRelevancyVerdict:
-        prompt = TurnRelevancyTemplate.generate_verdicts(
+        prompt = self.evaluation_template.generate_verdicts(
             sliding_window=[
                 convert_turn_to_dict(turn) for turn in turns_sliding_window
             ]
@@ -242,8 +247,29 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             prompt=prompt,
             schema_cls=TurnRelevancyVerdict,
             extract_schema=lambda s: s,
-            extract_json=lambda data: TurnRelevancyVerdict(**data),
+            extract_json=self._verdict_from_json,
         )
+
+    @staticmethod
+    def _verdict_from_json(data: Dict) -> Optional[TurnRelevancyVerdict]:
+        # A non-native judge may not honor the strict 'yes'/'no' instruction
+        # (e.g. replying "No, it's off-topic"). With the Literal verdict
+        # schema such a value must neither crash the metric nor be silently
+        # counted as relevant (issue #2321): normalize a leading yes/no, and
+        # drop anything genuinely ambiguous as an unparseable verdict, which
+        # _calculate_score already excludes (consistent with #2327's None
+        # handling).
+        match = re.match(
+            r"[a-z]+", str(data.get("verdict", "")).strip().lower()
+        )
+        leading = match.group(0) if match else ""
+        if leading == "no":
+            verdict = "no"
+        elif leading == "yes":
+            verdict = "yes"
+        else:
+            return None
+        return TurnRelevancyVerdict(verdict=verdict, reason=data.get("reason"))
 
     def _calculate_score(self) -> float:
         # Filter out None verdicts that can occur during parallel evaluation
