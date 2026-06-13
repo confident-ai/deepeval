@@ -61,8 +61,9 @@ class BaseMetric:
         return "Base Metric"
 
     def _accrue_cost(self, cost: Optional[float]) -> None:
-        if self.evaluation_cost is not None and cost is not None:
-            self.evaluation_cost += cost
+        effective = getattr(cost, "value", cost)
+        if self.evaluation_cost is not None and effective is not None:
+            self.evaluation_cost += effective
         else:
             self.evaluation_cost = None
 
@@ -126,8 +127,9 @@ class BaseConversationalMetric:
         return "Base Conversational Metric"
 
     def _accrue_cost(self, cost: Optional[float]) -> None:
-        if self.evaluation_cost is not None and cost is not None:
-            self.evaluation_cost += cost
+        effective = getattr(cost, "value", cost)
+        if self.evaluation_cost is not None and effective is not None:
+            self.evaluation_cost += effective
         else:
             self.evaluation_cost = None
 
@@ -181,8 +183,9 @@ class BaseArenaMetric:
         return "Base Arena Metric"
 
     def _accrue_cost(self, cost: Optional[float]) -> None:
-        if self.evaluation_cost is not None and cost is not None:
-            self.evaluation_cost += cost
+        effective = getattr(cost, "value", cost)
+        if self.evaluation_cost is not None and effective is not None:
+            self.evaluation_cost += effective
         else:
             self.evaluation_cost = None
 
