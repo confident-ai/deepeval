@@ -1,6 +1,14 @@
 """Compile metric template .txt files into templates/metrics/templates.json.
 
-Every template lives at ``**/templates/<ClassName>/<method>.txt`` under ``deepeval/``.
+Templates live under ``**/templates/`` directories in one of two layouts:
+
+* Flat (default): the directory holds a ``class.txt`` marker naming the owning
+  class, and the sibling ``<method>.txt`` files are that class's methods —
+  ``**/templates/class.txt`` + ``**/templates/<method>.txt``.
+* Nested (multi-class, e.g. ``dag``): the directory has no ``class.txt`` marker
+  and instead groups methods under one subfolder per class —
+  ``**/templates/<ClassName>/<method>.txt``.
+
 Fragments live at ``templates/metrics/fragments/<name>.txt``.
 
 The compiled bundle is written to BOTH the Python package and the TypeScript
@@ -29,11 +37,29 @@ FRAGMENTS_DIR = PACKAGE_ROOT / "templates" / FEATURE / "fragments"
 
 def _collect_from_disk() -> tuple[dict[str, dict[str, str]], dict[str, str]]:
     classes: dict[str, dict[str, str]] = defaultdict(dict)
-    for path in PACKAGE_ROOT.rglob("templates/*/*.txt"):
-        if path.parent.parent.name != "templates":
+    for templates_dir in PACKAGE_ROOT.rglob("templates"):
+        if not templates_dir.is_dir():
             continue
-        class_name = path.parent.name
-        classes[class_name][path.stem] = path.read_text(encoding="utf-8")
+        # Don't descend into the compiled-bundle dir (it holds templates.json
+        # and the fragments folder, not raw .txt sources).
+        if templates_dir == TEMPLATES_JSON.parent:
+            continue
+
+        marker = templates_dir / "class.txt"
+        if marker.is_file():
+            # Flat layout: class name comes from the marker; siblings are methods.
+            class_name = marker.read_text(encoding="utf-8").strip()
+            for path in templates_dir.glob("*.txt"):
+                if path.name == "class.txt":
+                    continue
+                classes[class_name][path.stem] = path.read_text(encoding="utf-8")
+        else:
+            # Nested layout: one subfolder per class (multi-class metrics).
+            for sub in templates_dir.iterdir():
+                if not sub.is_dir():
+                    continue
+                for path in sub.glob("*.txt"):
+                    classes[sub.name][path.stem] = path.read_text(encoding="utf-8")
 
     fragments = {
         path.stem: path.read_text(encoding="utf-8")
