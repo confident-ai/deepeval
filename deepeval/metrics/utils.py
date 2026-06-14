@@ -363,12 +363,6 @@ def check_llm_test_case_params(
             metric.error = error_str
             raise MissingTestCaseParamsError(error_str)
 
-    # A string-content list param (e.g. 'context', 'retrieval_context') that is
-    # present but contains only empty/whitespace strings carries no usable
-    # content, so the metric would otherwise score a meaningless input (see
-    # issue #2248). Reject it as a missing param, mirroring the empty
-    # 'actual_output' check above. An intentionally empty list ([]) is left
-    # untouched.
     for param in test_case_params:
         value = getattr(test_case, param.value)
         if (
