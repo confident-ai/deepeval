@@ -2,6 +2,7 @@ import copy
 import pytest
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional
+from unittest.mock import MagicMock, patch
 
 from tests.test_core.stubs import _RecordingClient
 from deepeval.models.llms.amazon_bedrock_model import AmazonBedrockModel
@@ -209,3 +210,38 @@ def test_bedrock_calculate_cost_with_zero_tokens():
     model = _mk_model_with_prices(0.003, 0.006)
     cost = model.calculate_cost(input_tokens=0, output_tokens=0)
     assert cost == 0.0
+
+
+@patch("deepeval.models.llms.amazon_bedrock_model.require_dependency")
+def test_bedrock_user_supplied_costs_are_written_to_model_data(
+    mock_require_dep, settings
+):
+    """
+    For an unregistered model id, explicit ``cost_per_input_token`` /
+    ``cost_per_output_token`` must be written back onto ``self.model_data`` so
+    that ``calculate_cost`` (which reads only ``model_data.input_price`` /
+    ``.output_price``) returns the user-supplied cost instead of ``None``.
+
+    The sibling providers (anthropic, openai, azure, deepseek, grok, kimi,
+    gemini) already do this writeback in ``__init__``; Bedrock was the only one
+    missing it.
+    """
+    mock_require_dep.return_value = MagicMock()
+
+    with settings.edit(persist=False):
+        settings.AWS_BEDROCK_REGION = "us-east-1"
+
+    model = AmazonBedrockModel(
+        model="my-custom-unregistered-model",
+        cost_per_input_token=0.003,
+        cost_per_output_token=0.006,
+    )
+
+    # The resolved per-token costs landed on model_data ...
+    assert model.model_data.input_price == 0.003
+    assert model.model_data.output_price == 0.006
+
+    # ... so calculate_cost returns the real value, not None.
+    cost = model.calculate_cost(input_tokens=1000, output_tokens=500)
+    assert cost is not None
+    assert cost == 1000 * 0.003 + 500 * 0.006
