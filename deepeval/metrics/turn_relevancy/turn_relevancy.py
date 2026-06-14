@@ -1,6 +1,5 @@
 import asyncio
 import itertools
-import re
 from typing import Optional, Type, Union, Dict, List
 
 from deepeval.metrics import BaseConversationalMetric
@@ -16,6 +15,7 @@ from deepeval.metrics.utils import (
     convert_turn_to_dict,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    verdict_from_json,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -230,7 +230,9 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             prompt=prompt,
             schema_cls=TurnRelevancyVerdict,
             extract_schema=lambda s: s,
-            extract_json=self._verdict_from_json,
+            extract_json=lambda data: verdict_from_json(
+                data, TurnRelevancyVerdict
+            ),
         )
 
     def _generate_verdict(
@@ -247,29 +249,10 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             prompt=prompt,
             schema_cls=TurnRelevancyVerdict,
             extract_schema=lambda s: s,
-            extract_json=self._verdict_from_json,
+            extract_json=lambda data: verdict_from_json(
+                data, TurnRelevancyVerdict
+            ),
         )
-
-    @staticmethod
-    def _verdict_from_json(data: Dict) -> Optional[TurnRelevancyVerdict]:
-        # A non-native judge may not honor the strict 'yes'/'no' instruction
-        # (e.g. replying "No, it's off-topic"). With the Literal verdict
-        # schema such a value must neither crash the metric nor be silently
-        # counted as relevant (issue #2321): normalize a leading yes/no, and
-        # drop anything genuinely ambiguous as an unparseable verdict, which
-        # _calculate_score already excludes (consistent with #2327's None
-        # handling).
-        match = re.match(
-            r"[a-z]+", str(data.get("verdict", "")).strip().lower()
-        )
-        leading = match.group(0) if match else ""
-        if leading == "no":
-            verdict = "no"
-        elif leading == "yes":
-            verdict = "yes"
-        else:
-            return None
-        return TurnRelevancyVerdict(verdict=verdict, reason=data.get("reason"))
 
     def _calculate_score(self) -> float:
         # Filter out None verdicts that can occur during parallel evaluation
