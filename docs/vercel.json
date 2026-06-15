@@ -2,6 +2,11 @@
   "framework": "nextjs",
   "redirects": [
     {
+      "source": "/guides/guides-llm-as-a-judge",
+      "destination": "/blog/llm-as-a-judge",
+      "statusCode": 301
+    },
+    {
       "source": "/docs/synthesizer-introduction",
       "destination": "/docs/golden-synthesizer",
       "statusCode": 301
