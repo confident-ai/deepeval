@@ -188,6 +188,7 @@ def update_llm_span(
     model: Optional[str] = None,
     input_token_count: Optional[float] = None,
     output_token_count: Optional[float] = None,
+    cached_input_token_count: Optional[float] = None,
     cost_per_input_token: Optional[float] = None,
     cost_per_output_token: Optional[float] = None,
     token_intervals: Optional[Dict[float, str]] = None,
@@ -202,6 +203,8 @@ def update_llm_span(
         current_span.input_token_count = input_token_count
     if output_token_count:
         current_span.output_token_count = output_token_count
+    if cached_input_token_count:
+        current_span.cached_input_token_count = cached_input_token_count
     if cost_per_input_token:
         current_span.cost_per_input_token = cost_per_input_token
     if cost_per_output_token:

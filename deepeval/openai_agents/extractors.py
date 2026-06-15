@@ -114,11 +114,11 @@ def update_span_properties_from_response_span_data(
     )
     # Update Span
     metadata = {
-        "cached_input_tokens": cached_input_tokens,
         "ouptut_reasoning_tokens": ouptut_reasoning_tokens,
     }
     span.input_token_count = input_tokens
     span.output_token_count = output_tokens
+    span.cached_input_token_count = cached_input_tokens
     span.metadata = metadata
     span.model = "NA" if response.model is None else str(response.model)
     span.provider = infer_provider_from_model(span.model)

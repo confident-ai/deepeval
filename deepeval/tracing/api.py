@@ -100,6 +100,9 @@ class BaseApiSpan(BaseModel):
     prompt: Optional[PromptApi] = None
     input_token_count: Optional[float] = Field(None, alias="inputTokenCount")
     output_token_count: Optional[float] = Field(None, alias="outputTokenCount")
+    cached_input_token_count: Optional[float] = Field(
+        None, alias="cachedInputTokenCount"
+    )
     cost_per_input_token: Optional[float] = Field(
         None, alias="costPerInputToken"
     )
