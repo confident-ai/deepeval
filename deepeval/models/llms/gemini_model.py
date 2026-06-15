@@ -137,9 +137,17 @@ class GeminiModel(DeepEvalBaseLLM):
 
         self.generation_kwargs = dict(generation_kwargs or {})
         self.generation_kwargs.pop("temperature", None)
-        
-        self.model_data.input_price = cost_per_input_token if cost_per_input_token is not None else self.model_data.input_price
-        self.model_data.output_price = cost_per_output_token if cost_per_output_token is not None else self.model_data.output_price
+
+        self.model_data.input_price = (
+            cost_per_input_token
+            if cost_per_input_token is not None
+            else self.model_data.input_price
+        )
+        self.model_data.output_price = (
+            cost_per_output_token
+            if cost_per_output_token is not None
+            else self.model_data.output_price
+        )
 
         self._module = self._require_module()
         # Configure default model generation settings
