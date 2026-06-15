@@ -930,7 +930,7 @@ class ContextGenerator:
             # 1. Suggest adjusting the number of contexts if applicable.
             if num_chunks > 0:
                 error_lines.append(
-                    f"{suggestion_num}. Adjust the `min_contexts_per_document` to no more than {num_chunks}."
+                    f"{suggestion_num}. Adjust the `min_contexts_per_source_file` to no more than {num_chunks}."
                 )
                 suggestion_num += 1
 
