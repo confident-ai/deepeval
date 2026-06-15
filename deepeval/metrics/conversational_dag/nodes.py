@@ -155,6 +155,11 @@ class ConversationalVerdictNode(ConversationalBaseNode):
                 metric.score = copied_convo_g_eval.score
                 if metric.include_reason:
                     metric.reason = copied_convo_g_eval.reason
+                metric._accrue_cost(copied_convo_g_eval.evaluation_cost)
+                metric._accrue_tokens(
+                    copied_convo_g_eval.input_tokens,
+                    copied_convo_g_eval.output_tokens,
+                )
 
             elif isinstance(self.child, BaseConversationalMetric):
                 copied_metric: BaseConversationalMetric = copy_metrics(
@@ -173,6 +178,10 @@ class ConversationalVerdictNode(ConversationalBaseNode):
                 metric.score = copied_metric.score
                 if metric.include_reason:
                     metric.reason = copied_metric.reason
+                metric._accrue_cost(copied_metric.evaluation_cost)
+                metric._accrue_tokens(
+                    copied_metric.input_tokens, copied_metric.output_tokens
+                )
             else:
                 self.child._execute(
                     metric=metric, test_case=test_case, depth=depth
@@ -231,6 +240,11 @@ class ConversationalVerdictNode(ConversationalBaseNode):
                 metric.score = copied_convo_g_eval.score
                 if metric.include_reason:
                     metric.reason = copied_convo_g_eval.reason
+                metric._accrue_cost(copied_convo_g_eval.evaluation_cost)
+                metric._accrue_tokens(
+                    copied_convo_g_eval.input_tokens,
+                    copied_convo_g_eval.output_tokens,
+                )
 
             elif isinstance(self.child, BaseConversationalMetric):
                 copied_metric: BaseConversationalMetric = copy_metrics(
@@ -249,6 +263,10 @@ class ConversationalVerdictNode(ConversationalBaseNode):
                 metric.score = copied_metric.score
                 if metric.include_reason:
                     metric.reason = copied_metric.reason
+                metric._accrue_cost(copied_metric.evaluation_cost)
+                metric._accrue_tokens(
+                    copied_metric.input_tokens, copied_metric.output_tokens
+                )
             else:
                 await self.child._a_execute(
                     metric=metric, test_case=test_case, depth=depth
