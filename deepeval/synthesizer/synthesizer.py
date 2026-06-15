@@ -15,6 +15,7 @@ import csv
 import os
 from contextlib import nullcontext
 
+from deepeval.errors import DeepEvalError
 from deepeval.utils import get_or_create_event_loop
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 from deepeval.metrics.utils import (
@@ -486,6 +487,11 @@ class Synthesizer:
                         pbar_id=pbar_id,
                     )
                 )
+                if not contexts:
+                    raise DeepEvalError(
+                        "No contexts were generated from the provided documents. "
+                        "This may be caused by an incompatible model or invalid document format."
+                    )
                 if self.synthesis_cost:
                     self.synthesis_cost += context_generator.total_cost
                 print_synthesizer_status(
@@ -605,6 +611,11 @@ class Synthesizer:
                     pbar_id=pbar_id,
                 )
             )
+            if not contexts:
+                raise DeepEvalError(
+                    "No contexts were generated from the provided documents. "
+                    "This may be caused by an incompatible model or invalid document format."
+                )
             if self.synthesis_cost:
                 self.synthesis_cost += context_generator.total_cost
             print_synthesizer_status(
@@ -1686,7 +1697,7 @@ class Synthesizer:
     ) -> BaseModel:
         if is_native_model(model):
             res, cost = model.generate(prompt, schema)
-            if self.synthesis_cost is not None:
+            if cost is not None and self.synthesis_cost is not None:
                 self.synthesis_cost += cost
             return res
         else:
@@ -1712,7 +1723,7 @@ class Synthesizer:
     ) -> BaseModel:
         if is_native_model(model):
             res, cost = await model.a_generate(prompt, schema)
-            if self.synthesis_cost is not None:
+            if cost is not None and self.synthesis_cost is not None:
                 self.synthesis_cost += cost
             return res
         else:
@@ -1733,7 +1744,7 @@ class Synthesizer:
     def _generate(self, prompt: str) -> str:
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
-            if self.synthesis_cost is not None:
+            if cost is not None and self.synthesis_cost is not None:
                 self.synthesis_cost += cost
             return res
         else:
@@ -1747,7 +1758,7 @@ class Synthesizer:
     async def _a_generate(self, prompt: str) -> str:
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
-            if self.synthesis_cost is not None:
+            if cost is not None and self.synthesis_cost is not None:
                 self.synthesis_cost += cost
             return res
         else:
@@ -2119,6 +2130,11 @@ class Synthesizer:
                         pbar_id=pbar_id,
                     )
                 )
+                if not contexts:
+                    raise DeepEvalError(
+                        "No contexts were generated from the provided documents. "
+                        "This may be caused by an incompatible model or invalid document format."
+                    )
                 if self.synthesis_cost:
                     self.synthesis_cost += context_generator.total_cost
                 print_synthesizer_status(
@@ -2236,6 +2252,11 @@ class Synthesizer:
                     pbar_id=pbar_id,
                 )
             )
+            if not contexts:
+                raise DeepEvalError(
+                    "No contexts were generated from the provided documents. "
+                    "This may be caused by an incompatible model or invalid document format."
+                )
             if self.synthesis_cost:
                 self.synthesis_cost += context_generator.total_cost
             print_synthesizer_status(
