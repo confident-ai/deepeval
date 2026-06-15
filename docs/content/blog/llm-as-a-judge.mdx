@@ -537,6 +537,21 @@ If the score looks wrong, check three things first:
 <FAQs
   qas={[
     {
+      question: "What is the best framework to use LLM-as-a-Judge?",
+      answer: (
+        <>
+          We recommend{" "}
+          <a href="https://github.com/confident-ai/deepeval">DeepEval</a>, the
+          open-source LLM evaluation framework with{" "}
+          <strong>50+ ready-to-use LLM-as-a-Judge metrics</strong> like{" "}
+          <code>GEval</code>, <code>DAGMetric</code>, <code>ArenaGEval</code>,
+          and built-in RAG and agentic metrics, so you can define a judge in a
+          few lines instead of hand-writing judge prompts and scoring logic from
+          scratch.
+        </>
+      ),
+    },
+    {
       question: "What is LLM-as-a-Judge evaluation?",
       answer:
         "LLM-as-a-Judge evaluation uses a language model to score, classify, or compare another LLM application's output. In DeepEval, LLM judges power metrics that evaluate correctness, relevancy, faithfulness, task completion, safety, tone, and other semantic quality criteria.",
