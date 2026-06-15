@@ -21,14 +21,10 @@ export class KimiModel extends DeepEvalOpenAICompatibleModel {
     super({
       ...options,
       model:
-        options.model ??
-        process.env.MOONSHOT_MODEL_NAME ??
-        DEFAULT_KIMI_MODEL,
+        options.model ?? process.env.MOONSHOT_MODEL_NAME ?? DEFAULT_KIMI_MODEL,
       apiKey: options.apiKey ?? process.env.MOONSHOT_API_KEY,
       baseURL:
-        options.baseURL ??
-        process.env.MOONSHOT_BASE_URL ??
-        MOONSHOT_BASE_URL,
+        options.baseURL ?? process.env.MOONSHOT_BASE_URL ?? MOONSHOT_BASE_URL,
     });
   }
 }
