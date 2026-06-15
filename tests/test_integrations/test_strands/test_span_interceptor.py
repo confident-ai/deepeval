@@ -48,6 +48,7 @@ from deepeval.tracing.context import (
 )
 from deepeval.tracing.trace_context import trace
 
+
 _span_id_counter = count(start=1)
 _trace_id_counter = count(start=1)
 

@@ -5,7 +5,8 @@ class ImageHelpfulnessTemplate:
 
     @staticmethod
     def evaluate_image_helpfulness(context_above, context_below):
-        return textwrap.dedent(f"""
+        return textwrap.dedent(
+            f"""
             # Task Description
             You are a multi-modal document evaluation assistant. You will receive an image and its textual context.
             Your task is to evaluate the helpfulness of the image in enabling human readers to comprehend the text (context above and below) it accompanies.
@@ -39,4 +40,5 @@ class ImageHelpfulnessTemplate:
 
             # Image
             [Insert Image Here]
-            """)
+            """
+        )

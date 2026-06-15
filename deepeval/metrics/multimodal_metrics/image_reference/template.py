@@ -5,7 +5,8 @@ class ImageReferenceTemplate:
 
     @staticmethod
     def evaluate_image_reference(context_above, context_below):
-        return textwrap.dedent(f"""
+        return textwrap.dedent(
+            f"""
             # Task Description
             You are a multi-modal document quality assessment assistant. You will receive an image and its accompanying textual context.
             Your task is to determine whether the image is explicitly referenced or explained within the surrounding text (both above and below the image).
@@ -38,4 +39,5 @@ class ImageReferenceTemplate:
 
             # Image
             [Insert Image Here]
-            """)
+            """
+        )

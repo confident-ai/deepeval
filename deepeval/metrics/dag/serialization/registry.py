@@ -15,6 +15,7 @@ from deepeval.metrics.conversational_dag.nodes import (
 
 from .types import NodeType
 
+
 NODE_CLASSES: Dict[bool, Dict[NodeType, Type]] = {
     False: {
         NodeType.TASK: TaskNode,

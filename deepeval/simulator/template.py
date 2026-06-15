@@ -61,7 +61,8 @@ class SimulationTemplate:
             indent=4,
             ensure_ascii=False,
         )
-        prompt = textwrap.dedent(f"""
+        prompt = textwrap.dedent(
+            f"""
             Pretend you are a user of an LLM app. Your task is to generate the next user input in {language} 
             based on the provided scenario, user profile, and the previous conversation.
 
@@ -96,5 +97,6 @@ class SimulationTemplate:
             {previous_conversation}
 
             JSON Output:
-        """)
+        """
+        )
         return prompt
