@@ -17,8 +17,7 @@ class TurnFaithfulnessTemplate:
     def generate_claims(
         input: str, assistant_output: str, multimodal: bool = False
     ):
-        return textwrap.dedent(
-            f"""
+        return textwrap.dedent(f"""
             Extract every factual-sounding claim asserted in the ASSISTANT'S OUTPUT.
 
             A claim is any statement presented as fact, even if it is incorrect, vague, implied, or unverifiable.
@@ -46,8 +45,7 @@ class TurnFaithfulnessTemplate:
             {assistant_output}
 
             JSON:
-            """
-        )
+            """)
 
     @staticmethod
     def generate_truths(
@@ -62,8 +60,7 @@ class TurnFaithfulnessTemplate:
         else:
             limit_description = f"{extraction_limit} factual, explicit truths"
 
-        return textwrap.dedent(
-            f"""
+        return textwrap.dedent(f"""
             Extract {limit_description} from the REFERENCE CONTEXT.
 
             RULES:
@@ -86,15 +83,13 @@ class TurnFaithfulnessTemplate:
             {reference_context}
 
             JSON:
-            """
-        )
+            """)
 
     @staticmethod
     def generate_verdicts(
         claims: List[str], reference_context: str, multimodal: bool = False
     ):
-        return textwrap.dedent(
-            f"""
+        return textwrap.dedent(f"""
             For each claim, determine whether it is supported, contradicted, or not addressed by the reference context.
 
             DEFINITIONS:
@@ -138,15 +133,13 @@ class TurnFaithfulnessTemplate:
             {claims}
 
             JSON:
-            """
-        )
+            """)
 
     @staticmethod
     def generate_reason(
         score: float, contradictions: List[str], multimodal: bool = False
     ):
-        return textwrap.dedent(
-            f"""
+        return textwrap.dedent(f"""
             Below is a list of contradictions extracted from verdicts. Write a concise justification of the score.
 
             RULES:
@@ -174,8 +167,7 @@ class TurnFaithfulnessTemplate:
             {contradictions}
 
             JSON:
-            """
-        )
+            """)
 
     @staticmethod
     def generate_final_reason(

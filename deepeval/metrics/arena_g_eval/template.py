@@ -46,8 +46,7 @@ class ArenaGEvalTemplate:
             "Be specific and grounded in the evaluation steps."
         )
 
-        return textwrap.dedent(
-            f"""
+        return textwrap.dedent(f"""
             You are a judge. Given the following evaluation steps, select the single contestant that best aligns with the evaluation steps.
 
             {ArenaGEvalTemplate.multimodal_rules if multimodal else ""}
@@ -88,16 +87,14 @@ class ArenaGEvalTemplate:
             }}
 
             JSON:
-        """
-        )
+        """)
 
     @staticmethod
     def rewrite_reason(
         reason: str,
         dummy_to_real_names: Dict[str, str],
     ):
-        return textwrap.dedent(
-            f"""
+        return textwrap.dedent(f"""
             Given the following reason that explains which contestant is the winner, rewrite the reason to REPLACE all contestant names with their real names.
 
             The contestant names are wrapped in $name$ format (e.g., $Alice$, $Bob$, $Charlie$).
@@ -129,5 +126,4 @@ class ArenaGEvalTemplate:
             }}
 
             JSON:
-            """
-        )
+            """)
