@@ -37,6 +37,7 @@ class AnswerRelevancyMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        penalize_ambiguous_claims: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -45,6 +46,7 @@ class AnswerRelevancyMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.penalize_ambiguous_claims = penalize_ambiguous_claims
 
     def measure(
         self,
@@ -163,6 +165,11 @@ class AnswerRelevancyMetric(BaseMetric):
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "no":
                 irrelevant_statements.append(verdict.reason)
+            if (
+                verdict.verdict.strip().lower() == "idk"
+                and self.penalize_ambiguous_claims
+            ):
+                irrelevant_statements.append(f"(Ambiguous) {verdict.reason}")
 
         prompt = self._get_prompt(
             "generate_reason",
@@ -188,6 +195,11 @@ class AnswerRelevancyMetric(BaseMetric):
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "no":
                 irrelevant_statements.append(verdict.reason)
+            if (
+                verdict.verdict.strip().lower() == "idk"
+                and self.penalize_ambiguous_claims
+            ):
+                irrelevant_statements.append(f"(Ambiguous) {verdict.reason}")
 
         prompt = self._get_prompt(
             "generate_reason",
@@ -302,6 +314,12 @@ class AnswerRelevancyMetric(BaseMetric):
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() != "no":
                 relevant_count += 1
+
+            if (
+                self.penalize_ambiguous_claims
+                and verdict.verdict.strip().lower() == "idk"
+            ):
+                relevant_count -= 1
 
         score = relevant_count / number_of_verdicts
         return 0 if self.strict_mode and score < self.threshold else score

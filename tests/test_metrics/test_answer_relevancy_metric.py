@@ -1,6 +1,7 @@
 import os
 import pytest
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.metrics.answer_relevancy.schema import AnswerRelevancyVerdict
 from deepeval.test_case import LLMTestCase, MLLMImage, ToolCall
 from deepeval import evaluate
 
@@ -150,6 +151,29 @@ class TestAnswerRelevancyMetric:
         results = evaluate([test_case], [metric])
 
         assert results is not None
+
+    def test_penalize_ambiguous_claims_reduces_score(self):
+        metric = AnswerRelevancyMetric(
+            async_mode=False, penalize_ambiguous_claims=True
+        )
+        metric.verdicts = [
+            AnswerRelevancyVerdict(verdict="yes", reason="relevant"),
+            AnswerRelevancyVerdict(verdict="idk", reason="unclear"),
+            AnswerRelevancyVerdict(verdict="idk", reason="ambiguous"),
+        ]
+        score_with_penalty = metric._calculate_score()
+
+        metric_no_penalty = AnswerRelevancyMetric(
+            async_mode=False, penalize_ambiguous_claims=False
+        )
+        metric_no_penalty.verdicts = metric.verdicts
+        score_without_penalty = metric_no_penalty._calculate_score()
+
+        assert score_with_penalty < score_without_penalty
+
+    def test_penalize_ambiguous_claims_default_false(self):
+        metric = AnswerRelevancyMetric(async_mode=False)
+        assert metric.penalize_ambiguous_claims is False
 
     def test_multimodal_evaluate_method(self):
         image = MLLMImage(url=CAR)
