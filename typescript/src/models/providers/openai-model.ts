@@ -20,9 +20,7 @@ export class OpenAIModel extends DeepEvalOpenAICompatibleModel {
     super({
       ...options,
       model:
-        options.model ??
-        process.env.OPENAI_MODEL_NAME ??
-        DEFAULT_OPENAI_MODEL,
+        options.model ?? process.env.OPENAI_MODEL_NAME ?? DEFAULT_OPENAI_MODEL,
       apiKey: options.apiKey ?? process.env.OPENAI_API_KEY,
     });
   }
