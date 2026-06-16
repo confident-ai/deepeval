@@ -135,7 +135,7 @@ The compile script scans all `**/templates/<MetricClassName>/*.txt` files under 
 
 3. Run the compile script (see above) and commit the new `.txt` files and updated `templates.json`.
 
-4. Add or extend tests under `tests/test_core/test_metric_templates/` if the template introduces new Jinja variables or fragment usage.
+4. Add or extend tests under `tests/test_templates/` if the template introduces new Jinja variables or fragment usage.
 
 ## Compile script
 
@@ -223,7 +223,7 @@ Centralizing prompts in JSON is what makes translation practical: the CLI can wa
 - [ ] Committed updated `templates.json`
 - [ ] New Jinja variables match what the metric passes into `resolve_template`
 - [ ] Fragment references use names that exist under `metric_templates/fragments/`
-- [ ] Tests pass: `pytest tests/test_core/test_metric_templates/`
+- [ ] Tests pass: `pytest tests/test_templates/test_metric_templates.py`
 
 ## Related files
 
