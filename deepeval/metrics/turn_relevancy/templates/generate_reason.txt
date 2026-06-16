@@ -1,0 +1,24 @@
+Below is a list of irrelevancies drawn from some messages in a conversation, which you have minimal knowledge of. It is a list of strings explaining why the 'assistant' messages are irrelevant to the 'user' messages.
+
+{{ _fragments.multimodal_input_rules }}
+
+Given the relevancy score, which is a 0-1 score indicating how irrelevant the OVERALL AI messages are in a conversation (higher the better), CONCISELY summarize the irrelevancies to justify the score. 
+
+** 
+IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+Example JSON:
+{
+  "reason": "The score is <relevancy_score> because <your_reason>."
+}
+
+Always quote WHICH MESSAGE and the INFORMATION in the reason in your final reason.
+Be sure in your reason, as if you know what the `assistant` messages from messages in a conversation is from the irrelevancies.
+**
+
+Relevancy Score:
+{{ score }}
+
+Irrelevancies:
+{{ irrelevancies }}
+
+JSON:

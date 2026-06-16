@@ -517,6 +517,12 @@ class Settings(BaseSettings):
         None,
         description="Service account JSON key for Vertex AI auth (if not using ADC).",
     )
+    GEMINI_COST_PER_INPUT_TOKEN: Optional[float] = Field(
+        None, description="Gemini input token cost (used for cost reporting)."
+    )
+    GEMINI_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
+        None, description="Gemini output token cost (used for cost reporting)."
+    )
     # Grok
     USE_GROK_MODEL: Optional[bool] = Field(
         None, description="Select Grok as the active LLM provider."
@@ -1028,6 +1034,8 @@ class Settings(BaseSettings):
     @field_validator(
         "OPENAI_COST_PER_INPUT_TOKEN",
         "OPENAI_COST_PER_OUTPUT_TOKEN",
+        "GEMINI_COST_PER_INPUT_TOKEN",
+        "GEMINI_COST_PER_OUTPUT_TOKEN",
         "AWS_BEDROCK_COST_PER_INPUT_TOKEN",
         "AWS_BEDROCK_COST_PER_OUTPUT_TOKEN",
         "TEMPERATURE",

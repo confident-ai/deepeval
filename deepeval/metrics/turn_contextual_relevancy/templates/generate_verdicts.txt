@@ -1,0 +1,35 @@
+Based on the user message and {{ context_type }}, please generate a JSON object to indicate whether {% if multimodal %}the context{% else %}each statement found in the context{% endif %} is relevant to the provided user message. The JSON will be a list of 'verdicts', with 2 mandatory fields: 'verdict' and 'statement', and 1 optional field: 'reason'.
+{{ extraction_instructions }}
+The 'verdict' key should STRICTLY be either 'yes' or 'no', and states whether the {{ statement_or_image }} is relevant to the user message.
+Provide a 'reason' ONLY IF verdict is no. You MUST quote the irrelevant parts of the {{ statement_or_image }} to back up your reason.{{ empty_context_instruction }}
+
+{% if multimodal %}{{ _fragments.multimodal_input_rules_turn_metric }}{% endif %}
+
+**
+IMPORTANT: Please make sure to only return in JSON format.
+Example Context: "Einstein won the Nobel Prize for his discovery of the photoelectric effect. He won the Nobel Prize in 1968. There was a cat."
+Example User Message: "What were some of Einstein's achievements?"
+
+Example:
+{
+  "verdicts": [
+    {
+      "statement": "Einstein won the Nobel Prize for his discovery of the photoelectric effect in 1968",
+      "verdict": "yes"
+    },
+    {
+      "statement": "There was a cat.",
+      "reason": "The retrieval context contained the information 'There was a cat' when it has nothing to do with Einstein's achievements.",
+      "verdict": "no"
+    }
+  ]
+}
+**
+
+User Message:
+{{ input }}
+
+Context:
+{{ context }}
+
+JSON:

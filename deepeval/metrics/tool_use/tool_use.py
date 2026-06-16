@@ -17,8 +17,8 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.tool_use.template import ToolUseTemplate
 from deepeval.metrics.tool_use.schema import (
     ToolSelectionScore,
     UserInputAndTools,
@@ -91,11 +91,15 @@ class ToolUseMetric(BaseConversationalMetric):
                     unit_interactions
                 )
                 tool_selection_scores = [
-                    self._get_tool_selection_score(user_and_tools)
+                    self._get_tool_selection_score(
+                        user_and_tools, multimodal=test_case.multimodal
+                    )
                     for user_and_tools in user_input_and_tools
                 ]
                 argument_correctness_scores = [
-                    self._get_argument_correctness_score(user_and_tools)
+                    self._get_argument_correctness_score(
+                        user_and_tools, multimodal=test_case.multimodal
+                    )
                     for user_and_tools in user_input_and_tools
                     if user_and_tools.tools_used
                 ]
@@ -104,12 +108,13 @@ class ToolUseMetric(BaseConversationalMetric):
                 )
                 tool_selection_reason = (
                     self._generate_reason_for_tool_selection(
-                        tool_selection_scores
+                        tool_selection_scores, multimodal=test_case.multimodal
                     )
                 )
                 argument_correctness_reason = (
                     self._generate_reason_for_argument_correctness(
-                        argument_correctness_scores
+                        argument_correctness_scores,
+                        multimodal=test_case.multimodal,
                     )
                 )
                 self.reason = str(
@@ -161,13 +166,17 @@ class ToolUseMetric(BaseConversationalMetric):
             )
             tool_selection_scores = await asyncio.gather(
                 *[
-                    self._a_get_tool_selection_score(user_and_tools)
+                    self._a_get_tool_selection_score(
+                        user_and_tools, multimodal=test_case.multimodal
+                    )
                     for user_and_tools in user_input_and_tools
                 ]
             )
             argument_correctness_scores = await asyncio.gather(
                 *[
-                    self._a_get_argument_correctness_score(user_and_tools)
+                    self._a_get_argument_correctness_score(
+                        user_and_tools, multimodal=test_case.multimodal
+                    )
                     for user_and_tools in user_input_and_tools
                     if user_and_tools.tools_used
                 ]
@@ -177,12 +186,13 @@ class ToolUseMetric(BaseConversationalMetric):
             )
             tool_selection_reason = (
                 await self._a_generate_reason_for_tool_selection(
-                    tool_selection_scores
+                    tool_selection_scores, multimodal=test_case.multimodal
                 )
             )
             argument_correctness_reason = (
                 await self._a_generate_reason_for_argument_correctness(
-                    argument_correctness_scores
+                    argument_correctness_scores,
+                    multimodal=test_case.multimodal,
                 )
             )
             self.reason = str(
@@ -202,13 +212,16 @@ class ToolUseMetric(BaseConversationalMetric):
             return self.score
 
     def _get_argument_correctness_score(
-        self, user_and_tools: UserInputAndTools
+        self, user_and_tools: UserInputAndTools, *, multimodal: bool
     ):
-        prompt = ToolUseTemplate.get_argument_correctness_score(
-            user_and_tools.user_messages,
-            user_and_tools.assistant_messages,
-            user_and_tools.tools_called,
-            user_and_tools.available_tools,
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "get_argument_correctness_score",
+            user_input=user_and_tools.user_messages,
+            assistant_messages=user_and_tools.assistant_messages,
+            tools_called=user_and_tools.tools_called,
+            available_tools=user_and_tools.available_tools,
+            multimodal=multimodal,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -221,12 +234,17 @@ class ToolUseMetric(BaseConversationalMetric):
     async def _a_get_argument_correctness_score(
         self,
         user_and_tools: UserInputAndTools,
+        *,
+        multimodal: bool,
     ):
-        prompt = ToolUseTemplate.get_argument_correctness_score(
-            user_and_tools.user_messages,
-            user_and_tools.assistant_messages,
-            user_and_tools.tools_called,
-            user_and_tools.available_tools,
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "get_argument_correctness_score",
+            user_input=user_and_tools.user_messages,
+            assistant_messages=user_and_tools.assistant_messages,
+            tools_called=user_and_tools.tools_called,
+            available_tools=user_and_tools.available_tools,
+            multimodal=multimodal,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -239,12 +257,17 @@ class ToolUseMetric(BaseConversationalMetric):
     def _get_tool_selection_score(
         self,
         user_and_tools: UserInputAndTools,
+        *,
+        multimodal: bool,
     ):
-        prompt = ToolUseTemplate.get_tool_selection_score(
-            user_and_tools.user_messages,
-            user_and_tools.assistant_messages,
-            user_and_tools.tools_called,
-            user_and_tools.available_tools,
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "get_tool_selection_score",
+            user_input=user_and_tools.user_messages,
+            assistant_messages=user_and_tools.assistant_messages,
+            tools_called=user_and_tools.tools_called,
+            available_tools=user_and_tools.available_tools,
+            multimodal=multimodal,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -257,12 +280,17 @@ class ToolUseMetric(BaseConversationalMetric):
     async def _a_get_tool_selection_score(
         self,
         user_and_tools: UserInputAndTools,
+        *,
+        multimodal: bool,
     ):
-        prompt = ToolUseTemplate.get_tool_selection_score(
-            user_and_tools.user_messages,
-            user_and_tools.assistant_messages,
-            user_and_tools.tools_called,
-            user_and_tools.available_tools,
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "get_tool_selection_score",
+            user_input=user_and_tools.user_messages,
+            assistant_messages=user_and_tools.assistant_messages,
+            tools_called=user_and_tools.tools_called,
+            available_tools=user_and_tools.available_tools,
+            multimodal=multimodal,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -341,14 +369,21 @@ class ToolUseMetric(BaseConversationalMetric):
     def _generate_reason_for_tool_selection(
         self,
         tool_use_scores: List[ToolSelectionScore],
+        *,
+        multimodal: bool,
     ):
         scores_and_reasons = ""
         for tool_use in tool_use_scores:
             scores_and_reasons += (
                 f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
             )
-        prompt = ToolUseTemplate.get_tool_selection_final_reason(
-            scores_and_reasons, self.score, self.threshold
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "get_tool_selection_final_reason",
+            all_scores_and_reasons=scores_and_reasons,
+            final_score=self.score,
+            threshold=self.threshold,
+            multimodal=multimodal,
         )
 
         return generate_with_schema_and_extract(
@@ -362,14 +397,21 @@ class ToolUseMetric(BaseConversationalMetric):
     def _generate_reason_for_argument_correctness(
         self,
         argument_correctness_scores: List[ArgumentCorrectnessScore],
+        *,
+        multimodal: bool,
     ):
         scores_and_reasons = ""
         for tool_use in argument_correctness_scores:
             scores_and_reasons += (
                 f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
             )
-        prompt = ToolUseTemplate.get_tool_selection_final_reason(
-            scores_and_reasons, self.score, self.threshold
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "get_tool_selection_final_reason",
+            all_scores_and_reasons=scores_and_reasons,
+            final_score=self.score,
+            threshold=self.threshold,
+            multimodal=multimodal,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -380,15 +422,20 @@ class ToolUseMetric(BaseConversationalMetric):
         )
 
     async def _a_generate_reason_for_tool_selection(
-        self, tool_use_scores: List[ToolSelectionScore]
+        self, tool_use_scores: List[ToolSelectionScore], *, multimodal: bool
     ):
         scores_and_reasons = ""
         for tool_use in tool_use_scores:
             scores_and_reasons += (
                 f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
             )
-        prompt = ToolUseTemplate.get_tool_selection_final_reason(
-            scores_and_reasons, self.score, self.threshold
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "get_tool_selection_final_reason",
+            all_scores_and_reasons=scores_and_reasons,
+            final_score=self.score,
+            threshold=self.threshold,
+            multimodal=multimodal,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -399,15 +446,23 @@ class ToolUseMetric(BaseConversationalMetric):
         )
 
     async def _a_generate_reason_for_argument_correctness(
-        self, argument_correctness_scores: List[ArgumentCorrectnessScore]
+        self,
+        argument_correctness_scores: List[ArgumentCorrectnessScore],
+        *,
+        multimodal: bool,
     ):
         scores_and_reasons = ""
         for tool_use in argument_correctness_scores:
             scores_and_reasons += (
                 f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
             )
-        prompt = ToolUseTemplate.get_tool_selection_final_reason(
-            scores_and_reasons, self.score, self.threshold
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "get_tool_selection_final_reason",
+            all_scores_and_reasons=scores_and_reasons,
+            final_score=self.score,
+            threshold=self.threshold,
+            multimodal=multimodal,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,

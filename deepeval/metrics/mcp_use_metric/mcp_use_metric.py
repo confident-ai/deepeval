@@ -18,8 +18,8 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
-from .template import MCPUseMetricTemplate
 from .schema import MCPPrimitivesScore, MCPArgsScore
 
 
@@ -191,8 +191,13 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPPrimitivesScore:
-        prompt = MCPUseMetricTemplate.get_primitive_correctness_prompt(
-            test_case, available_primitives, primitives_used
+        prompt = resolve_template("metrics", 
+            "MCPUseMetric",
+            "get_primitive_correctness_prompt",
+            test_case=test_case,
+            available_primitives=available_primitives,
+            primitives_used=primitives_used,
+            multimodal=test_case.multimodal,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -208,8 +213,13 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPPrimitivesScore:
-        prompt = MCPUseMetricTemplate.get_primitive_correctness_prompt(
-            test_case, available_primitives, primitives_used
+        prompt = resolve_template("metrics", 
+            "MCPUseMetric",
+            "get_primitive_correctness_prompt",
+            test_case=test_case,
+            available_primitives=available_primitives,
+            primitives_used=primitives_used,
+            multimodal=test_case.multimodal,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -225,8 +235,13 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPArgsScore:
-        prompt = MCPUseMetricTemplate.get_mcp_argument_correctness_prompt(
-            test_case, available_primitives, primitives_used
+        prompt = resolve_template("metrics", 
+            "MCPUseMetric",
+            "get_mcp_argument_correctness_prompt",
+            test_case=test_case,
+            available_primitives=available_primitives,
+            primitives_used=primitives_used,
+            multimodal=test_case.multimodal,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -242,8 +257,13 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPArgsScore:
-        prompt = MCPUseMetricTemplate.get_mcp_argument_correctness_prompt(
-            test_case, available_primitives, primitives_used
+        prompt = resolve_template("metrics", 
+            "MCPUseMetric",
+            "get_mcp_argument_correctness_prompt",
+            test_case=test_case,
+            available_primitives=available_primitives,
+            primitives_used=primitives_used,
+            multimodal=test_case.multimodal,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,

@@ -1,0 +1,63 @@
+You are an expert evaluator assessing the **Tool Argument Quality** of an AI agent.
+
+OBJECTIVE:
+
+Evaluate whether the **arguments and parameters** passed to each tool were:
+- Correctly structured and complete.
+- Contextually appropriate for the user's goal.
+- Compatible with each tool's intended purpose.
+
+This metric focuses **only** on argument-level correctness and relevance — not which tools were chosen.
+
+EVALUATION RULES
+
+1. Relevance
+- Each argument must align with the task and the tool's documented input fields.
+- Unrelated, empty, or default arguments reduce the score sharply.
+
+2. **Completeness**
+- All required parameters must be provided.
+- Missing or malformed arguments (e.g., wrong data types or incomplete context) lower the score.
+
+3. **Specificity**
+- Arguments should reflect task-specific values, not generic placeholders.
+- Overly vague or default arguments are penalized.
+
+4. **Justification**
+- Each argument must make sense in context.
+- If it doesn't clearly derive from the user's request, assume it's incorrect.
+
+5. **Strict Bias**
+- When uncertain whether arguments fit the tool or task, assume they were **incorrect**.
+
+SCORING GUIDE:
+
+- **1.0** → All arguments are accurate, specific, and fully aligned with both the task and tool requirements.  
+- **0.75** → Mostly correct; minor omissions or small mismatches.  
+- **0.5** → Partial correctness; some valid parameters, but key ones missing or off-target.  
+- **0.25** → Poor argument quality; several invalid or irrelevant fields.  
+- **0.0** → Arguments nonsensical, generic, or unrelated to task/tool intent.
+
+OUTPUT FORMAT:
+
+Return a JSON object with:
+{
+  "score": float between 0.0 and 1.0,
+  "reason": "1-3 sentences explaining argument alignment or issues, referencing specific parameter names or values when possible."
+}
+
+---
+
+USER INPUT:
+{{ user_input }}
+
+ASSISTANT MESSAGES:
+{{ assistant_messages }}
+
+TOOLS CALLED (with arguments):
+{{ tools_called }}
+
+AVAILABLE TOOLS:
+{{ available_tools }}
+
+JSON:

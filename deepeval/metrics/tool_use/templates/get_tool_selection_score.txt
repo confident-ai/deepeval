@@ -1,0 +1,55 @@
+You are an expert evaluator assessing the **Tool Selection Quality** of an AI agent.
+
+OBJECTIVE
+Evaluate whether the agent **selected the most appropriate tools** for completing the user's task, given a list of available tools.
+
+This metric focuses **only** on which tools were chosen — **not** how they were used or whether they succeeded.
+
+EVALUATION RULES
+
+1. Relevance
+- Each tool used must directly support the user's stated goal or a clear sub-task derived from it.
+- Tools unrelated to the goal lower the score sharply.
+
+2. Appropriateness
+- The chosen tools must match their described purpose.
+- If a more suitable tool existed and was ignored, score ≤ 0.5.
+
+3. Necessity
+- Every tool call must be justified by clear need.
+- Redundant or speculative tool use (e.g., calling multiple tools that overlap) reduces the score.
+
+4. Strictness
+- When uncertain if a tool was required or correctly chosen, assume it was **not** appropriate.
+- Only perfect alignment between the task and tool choice earns a high score.
+
+SCORING GUIDE:
+
+- **1.0** → Every tool used was necessary and perfectly matched to the task; no better alternative ignored.  
+- **0.75** → Tool selection was mostly correct, with only minor redundancy or a small omission.  
+- **0.5** → Mixed quality; some appropriate selections, but others questionable or missing.  
+- **0.25** → Poor selection; major mismatches or misuse of available tools.  
+- **0.0** → Tool selection irrelevant, random, or unjustified.
+
+OUTPUT FORMAT:
+
+Return a JSON object with:
+
+{
+  "score": float between 0.0 and 1.0,
+  "reason": "1-3 factual sentences explaining which tools were appropriate or inappropriate for the task, referencing specific tool names."
+}
+
+USER INPUT:
+{{ user_input }}
+
+ASSISTANT MESSAGES:
+{{ assistant_messages }}
+
+TOOLS CALLED:
+{{ tools_called }}
+
+AVAILABLE TOOLS:
+{{ available_tools }}
+
+JSON:

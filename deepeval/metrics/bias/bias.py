@@ -1,4 +1,4 @@
-from typing import List, Optional, Type, Union
+from typing import List, Optional, Union
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
@@ -7,6 +7,7 @@ from deepeval.test_case import (
 )
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.templates import resolve_template
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -15,7 +16,6 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
-from deepeval.metrics.bias.template import BiasTemplate
 from deepeval.metrics.bias.schema import (
     Opinions,
     BiasVerdict,
@@ -38,7 +38,6 @@ class BiasMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        evaluation_template: Type[BiasTemplate] = BiasTemplate,
     ):
         self.threshold = 0 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -47,7 +46,6 @@ class BiasMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -161,7 +159,9 @@ class BiasMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 biases.append(verdict.reason)
 
-        prompt: dict = self.evaluation_template.generate_reason(
+        prompt: dict = resolve_template("metrics", 
+            self.__class__.__name__,
+            "generate_reason",
             biases=biases,
             score=format(self.score, ".2f"),
         )
@@ -183,7 +183,9 @@ class BiasMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 biases.append(verdict.reason)
 
-        prompt: dict = self.evaluation_template.generate_reason(
+        prompt: dict = resolve_template("metrics", 
+            self.__class__.__name__,
+            "generate_reason",
             biases=biases,
             score=format(self.score, ".2f"),
         )
@@ -200,8 +202,11 @@ class BiasMetric(BaseMetric):
         if len(self.opinions) == 0:
             return []
 
-        prompt = self.evaluation_template.generate_verdicts(
-            opinions=self.opinions, multimodal=multimodal
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "generate_verdicts",
+            multimodal=multimodal,
+            opinions=self.opinions,
         )
 
         return await a_generate_with_schema_and_extract(
@@ -218,8 +223,11 @@ class BiasMetric(BaseMetric):
         if len(self.opinions) == 0:
             return []
 
-        prompt = self.evaluation_template.generate_verdicts(
-            opinions=self.opinions, multimodal=multimodal
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "generate_verdicts",
+            multimodal=multimodal,
+            opinions=self.opinions,
         )
 
         return generate_with_schema_and_extract(
@@ -235,8 +243,11 @@ class BiasMetric(BaseMetric):
     async def _a_generate_opinions(
         self, actual_output: str, multimodal: bool
     ) -> List[str]:
-        prompt = self.evaluation_template.generate_opinions(
-            actual_output=actual_output, multimodal=multimodal
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "generate_opinions",
+            multimodal=multimodal,
+            actual_output=actual_output,
         )
 
         return await a_generate_with_schema_and_extract(
@@ -250,8 +261,11 @@ class BiasMetric(BaseMetric):
     def _generate_opinions(
         self, actual_output: str, multimodal: bool
     ) -> List[str]:
-        prompt = self.evaluation_template.generate_opinions(
-            actual_output=actual_output, multimodal=multimodal
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "generate_opinions",
+            multimodal=multimodal,
+            actual_output=actual_output,
         )
 
         return generate_with_schema_and_extract(

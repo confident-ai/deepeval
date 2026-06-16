@@ -1,0 +1,15 @@
+
+{{ _fragments.multimodal_image_generation_eval_context }}
+
+RULES:
+
+The image is an AI-generated image according to the text prompt.
+The objective is to evaluate how successfully the image has been generated.
+
+From scale 0 to 10: 
+A score from 0 to 10 will be given based on the success in following the prompt. 
+(0 indicates that the AI generated image does not follow the prompt at all. 10 indicates the AI generated image follows the prompt perfectly.)
+
+Put the score in a list such that output score = [score].
+
+Text Prompt: {{ text_prompt }}

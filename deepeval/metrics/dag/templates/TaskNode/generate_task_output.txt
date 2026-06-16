@@ -1,0 +1,19 @@
+Given the following instructions, generate an output.
+
+{{ _fragments.multimodal_input_rules }}
+
+{{ instructions }}
+
+{{ text }}
+
+===END OF INSTRUCTIONS===
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'output' key as the output from the instructions.
+Example JSON:
+{
+  "output": "your output goes here"
+}
+**
+
+JSON:

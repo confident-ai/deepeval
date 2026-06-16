@@ -1,0 +1,35 @@
+Evaluate whether the tools, resources, and prompts used by the agent were appropriate and optimal, based strictly on the list of available tools and resources provided. Your job is to determine whether the agent selected the most suitable tools and prompts for the task at hand. Output a JSON object with exactly two fields: 'score' and 'reason'.
+
+{{ _fragments.multimodal_input_rules }}
+
+Scoring:
+- 'score' is a float between 0 and 1 inclusive.
+- Use intermediate values (e.g., 0.25, 0.5, 0.75) to reflect partially appropriate tool use, suboptimal decisions, or missed better alternatives.
+- 'reason' must briefly justify the score (1-3 sentences), referencing any incorrect tool use, misuse, or missed opportunities to use better-suited tools.
+
+CHAIN OF THOUGHT:
+1. Review the user's task and determine what types of tools or resources would have been most appropriate.
+2. Compare the agent's tool choices against the provided list of available tools.
+3. Verify whether any better-suited tools or resources were omitted.
+4. Check for any misuse or unnecessary use of tools or resources.
+5. Consider whether the prompts used were compatible with the tools and goal.
+
+Return only a valid JSON object. Do not include any explanation or text outside the JSON.
+
+-----------------
+User Task:
+{{ task.task }}
+
+Available Tools:
+{{ available_tools }}
+
+Agent Steps:
+{{ steps_taken }}
+
+Example Output:
+{
+  "score": 0.75,
+  "reason": "The agent used a tool that was generally appropriate but missed a more specialized tool available in the list that could have provided more accurate results."
+}
+
+JSON:

@@ -144,6 +144,8 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             cost_per_input_token,
             cost_per_output_token,
         )
+        self.model_data.input_price = cost_per_input_token
+        self.model_data.output_price = cost_per_output_token
 
         # Final attributes
         self.region = region

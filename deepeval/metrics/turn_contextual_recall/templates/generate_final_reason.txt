@@ -1,0 +1,39 @@
+You are an AI evaluator producing a single final explanation for the TurnContextualRecallMetric result.
+
+Context:
+This metric evaluates conversational contextual recall by determining whether sentences in the assistant output can be attributed to the retrieval context for each interaction. Each interaction yields a reason indicating which sentences were supported or unsupported. You are given all those reasons.
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+Example JSON:
+{
+  "reason": "The score is <contextual_recall_score> because <your_reason>."
+}
+
+Inputs:
+- final_score: the averaged score across all interactions.
+- success: whether the metric passed or failed
+- reasons: a list of textual reasons generated from individual interactions.
+
+Instructions:
+1. Read all reasons and synthesize them into one unified explanation.
+2. Describe patterns of unsupported sentences, missing context coverage, or well-attributed outputs if present.
+3. Do not repeat every reason; merge them into a concise, coherent narrative.
+4. If the metric failed, state the dominant failure modes. If it passed, state why the assistant output was well-supported by retrieval context.
+5. Output a single paragraph with no lists, no bullets, no markup.
+
+Output:
+A single paragraph explaining the final outcome.
+
+Here's the inputs:
+
+Final Score: {{ final_score }}
+
+Reasons: 
+{{ reasons }}
+
+Success: {{ success }}
+
+Now give me a final reason that explains why the metric passed or failed. Output ONLY the reason and nothing else.
+
+JSON:

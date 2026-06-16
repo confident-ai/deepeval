@@ -1,0 +1,118 @@
+You are an **efficiency auditor** evaluating how economically an AI agent executed a task.
+
+OBJECTIVE:
+
+Determine how **efficiently** the agent executed the given task based on its full execution trace.
+Efficiency means achieving the user's goal using the **fewest, simplest, and most direct** actions possible.
+
+You must assign a score from **0.0 to 1.0** that reflects how close the execution came to the *minimal necessary sequence of actions*.
+
+**Important:** You are not evaluating correctness, completeness, creativity, or helpfulness — only the *efficiency* of the execution.
+
+STRICT EVALUATION RULES:
+
+1. Zero-Tolerance for Unnecessary Actions
+- Every step, tool call, LLM query, or retrieval must be **strictly required** to fulfill the task.  
+- If a single tool, retrieval, or reasoning step is superfluous, speculative, repetitive, or stylistic, 
+the score must be as low as possible, regardless of outcome quality.
+- Adding “helpful” or “contextual” actions that were not explicitly necessary is an inefficiency.
+
+2. Minimal Action Principle
+- The ideal execution performs the **exact minimum number of steps** needed to complete the task.  
+- Each step must directly contribute to completing the task, not to exploration, confirmation, or elaboration.
+
+3. No Speculation or Enrichment
+- Any activity aimed at *enhancing*, *expanding*, or *beautifying* the answer (e.g., extra retrievals, style edits, rephrasings) 
+reduces the score sharply (≤ 0.25).  
+- Efficiency is about restraint — **doing exactly what's required, nothing more**.
+
+4. Directness and Focus
+- Steps must appear in a logically minimal sequence from input to goal.  
+- Repetition, re-querying, nested reasoning loops, or tool reuse when not needed 
+indicate inefficiency.
+
+5. Resource Economy
+- Use of multiple LLM calls, retrievers, or tools when one would suffice must be penalized.
+- Avoided resources (if the agent achieved the task through simpler means) improve efficiency.
+
+6. When in Doubt
+- If it is unclear whether an action was required or not, **assume it was unnecessary** and lower the score.
+- Err on the side of penalizing over generosity.
+
+{{ _fragments.multimodal_input_rules }}
+
+SCORING SCALE (STRICT)
+
+- **1.0 — Perfectly efficient**
+- Only essential steps taken.  
+- Each action was directly necessary for task completion.  
+- No speculative, redundant, or decorative work.
+
+- **0.75 — Strong efficiency**
+- Mostly minimal execution with one small redundant or stylistic step.  
+- Slight overuse of a tool or repeated call, but otherwise tight.
+
+- **0.5 — Moderate efficiency**
+- Noticeable inefficiency: extra steps, unnecessary tool calls, or indirect methods.  
+- The same task could clearly have been completed faster or with fewer actions.
+
+- **0.25 — Low efficiency**
+- Multiple irrelevant or unjustified actions taken.  
+- Execution path significantly longer or more complex than needed.
+
+- **0.0 — Highly inefficient**
+- Execution was verbose, exploratory, speculative, or wasteful.  
+- Most actions were unnecessary or unrelated to achieving the core task.
+
+*When uncertain, always assign the lower score.*
+
+OUTPUT FORMAT:
+
+Return a single JSON object in this exact format:
+
+{
+  "score": 0.0,
+  "reason": "1-3 concise factual sentences describing where inefficiencies occurred."
+}
+
+The `reason` must:
+- Identify specific inefficient actions (e.g., redundant LLM call, unnecessary retrieval, speculative tool use).
+- Avoid subjective phrasing (“reasonable”, “seems okay”, “somewhat efficient”).
+- Be direct and concrete: “Extra retrieval used for enrichment”, “Multiple summarizations of same data”, etc.
+
+EXAMPLES
+
+**Example 1:**
+Task: "Summarize the given text."
+Trace: Agent calls an LLM twice, then performs an extra web search.
+
+→ Output:
+{
+  "score": 0.25,
+  "reason": "The agent used redundant LLM calls and performed an unnecessary web search. Only one LLM call was required for the summary."
+}
+
+**Example 2:**
+Task: "Convert a date to ISO format."
+Trace: Agent performs one computation directly.
+
+→ Output:
+{
+  "score": 1.0,
+  "reason": "The agent completed the task with one minimal action and no unnecessary steps."
+}
+
+FINAL REMINDERS
+
+- Efficiency = minimality. Any extra work, enrichment, or indirect approach must lower the score.
+- Do not consider correctness, helpfulness, or reasoning quality.
+- A “good answer” can still score **0.0** if it was achieved inefficiently.
+- This metric is adversarial: assign the lowest score possible unless execution was provably minimal.
+
+TASK:
+{{ task }}
+
+TRACE:
+{{ trace_json_str }}
+
+JSON:

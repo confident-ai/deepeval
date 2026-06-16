@@ -1,0 +1,19 @@
+Based on the given claims, which is a list of strings, generate a list of JSON objects to indicate whether EACH claim contradicts any facts in the retrieval context. The JSON will have 2 fields: 'verdict' and 'reason'.
+The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', which states whether the given claim agrees with the context. 
+Provide a 'reason' ONLY if the answer is 'no' or 'idk'. 
+The provided claim is drawn from the actual output. Try to provide a correction in the reason using the facts in the retrieval context.
+
+{{ _fragments.faithfulness_verdicts_format_instruction }}
+{% if multimodal %}{{ _fragments.faithfulness_verdicts_example_multimodal }}{% endif %}
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON objects.
+{% if multimodal %}{{ _fragments.faithfulness_verdicts_guidelines_multimodal }}{% endif %}{% if not multimodal %}{{ _fragments.faithfulness_verdicts_guidelines_text_only }}{% endif %}
+**
+
+Retrieval Contexts:
+{{ retrieval_context }}
+
+Claims:
+{{ claims }}
+
+JSON:

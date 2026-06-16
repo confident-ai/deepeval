@@ -1,0 +1,38 @@
+Given the input, expected output, and retrieval context, please generate a list of JSON objects to determine whether each node in the retrieval context was remotely useful in arriving at the expected output.
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON. These JSON only contain the `verdict` key that outputs only 'yes' or 'no', and a `reason` key to justify the verdict. In your reason, you should aim to quote parts of the context {{ multimodal_note }}.
+Example Retrieval Context: ["Einstein won the Nobel Prize for his discovery of the photoelectric effect", "He won the Nobel Prize in 1968.", "There was a cat."]
+Example Input: "Who won the Nobel Prize in 1968 and for what?"
+Example Expected Output: "Einstein won the Nobel Prize in 1968 for his discovery of the photoelectric effect."
+
+Example:
+{
+  "verdicts": [
+    {
+      "reason": "It clearly addresses the question by stating that 'Einstein won the Nobel Prize for his discovery of the photoelectric effect.'",
+      "verdict": "yes"
+    },
+    {
+      "reason": "The text verifies that the prize was indeed won in 1968.",
+      "verdict": "yes"
+    },
+    {
+      "reason": "'There was a cat' is not at all relevant to the topic of winning a Nobel Prize.",
+      "verdict": "no"
+    }
+  ]  
+}
+Since you are going to generate a verdict for each context, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to that of the contexts.
+**
+
+Input:
+{{ input }}
+
+Expected output:
+{{ expected_output }}
+
+Retrieval Context {{ document_count_str }}:
+{{ context_to_display }}
+
+JSON:

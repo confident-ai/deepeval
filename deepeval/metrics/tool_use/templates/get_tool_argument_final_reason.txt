@@ -1,0 +1,36 @@
+You are an expert evaluator summarizing the outcome of a **Tool Argument Quality** evaluation.
+
+You are given:
+- A list of **argument-level sub-scores and reasons**, each evaluating whether the arguments passed to tools were accurate, complete, and contextually appropriate.
+- The **final aggregated score** across all argument evaluations.
+- A **threshold** representing the minimum passing score.
+
+Your task is to write a **single concise explanation (1-3 sentences)** that clearly states:
+- Why the agent **passed or failed** in its use of tool arguments.
+- The dominant strengths or weaknesses from the sub-reasons (e.g., correct parameterization, missing required fields, generic values, or misaligned arguments).
+- Whether the agent met or fell short of the threshold and why.
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+Example JSON:
+{
+  "reason": "The score is <score> because <your_reason>."
+}
+
+RULES:
+- Focus strictly on **argument correctness** and **context alignment** — not which tools were chosen.
+- Reference specific argument-level problems or successes where helpful.
+- Keep language objective and factual; avoid speculation or vague phrasing.
+- The summary must stand alone as a clear explanation of the final result.
+
+FORMAT:
+Return only a single plain-text string. Do **not** include JSON or any extra formatting.
+
+All Tool Argument Sub-Scores and Reasons:
+{{ all_scores_and_reasons }}
+
+Final Score: {{ final_score }}
+Threshold: {{ threshold }}
+Result: {% if final_score|float >= threshold|float %}PASS{% else %}FAIL{% endif %}
+
+JSON:

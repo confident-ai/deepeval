@@ -71,6 +71,7 @@ export interface BaseApiSpan {
   // evals
   llmTestCase?: LLMTestCase;
   metrics?: string[];
+  metricsData?: unknown[];
 
   // metadata
   metadata?: Record<string, any>;
@@ -112,6 +113,7 @@ export interface TraceApi {
   toolsCalled?: ToolCall[];
   expectedTools?: ToolCall[];
   metricCollection?: string;
+  metricsData?: unknown[];
 
   // Don't serialize this
   confidentApiKey?: string;

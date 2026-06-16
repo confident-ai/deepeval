@@ -25,6 +25,7 @@ from deepeval.tracing.types import (
 )
 from deepeval.tracing.otel.utils import (
     check_pydantic_ai_agent_input_output,
+    check_pydantic_ai_tools_called,
     check_pydantic_ai_trace_input_output,
     check_tool_input_parameters_from_gen_ai_attributes,
     check_span_type_from_gen_ai_attributes,
@@ -698,6 +699,7 @@ class ConfidentSpanExporter(SpanExporter):
                     pass
 
             input, output = check_pydantic_ai_agent_input_output(span)
+            tools_called = check_pydantic_ai_tools_called(span)
             agent_span = AgentSpan(
                 uuid=uuid,
                 status=status,
@@ -712,6 +714,7 @@ class ConfidentSpanExporter(SpanExporter):
                 agent_handoffs=agent_handoffs,
                 input=input,
                 output=output,
+                tools_called=tools_called,
             )
             return agent_span
 

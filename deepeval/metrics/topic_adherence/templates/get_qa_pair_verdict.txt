@@ -1,0 +1,58 @@
+You are given:
+- A list of **relevant topics**
+- A **user question**
+- An **assistant response**
+
+Your task is to:
+1. Determine if the question is relevant to the list of topics.
+2. If it is relevant, evaluate whether the response properly answers the question.
+3. Based on both relevance and correctness, assign one of four possible verdicts.
+4. Give a simple, comprehensive reason explaining why this question-answer pair was assigned this verdict
+
+{{ _fragments.multimodal_input_rules }}
+
+VERDICTS:
+- `"TP"` (True Positive): Question is relevant and the response correctly answers it.
+- `"FN"` (False Negative): Question is relevant, but the assistant refused to answer or gave an irrelevant response.
+- `"FP"` (False Positive): Question is NOT relevant, but the assistant still gave an answer (based on general/training knowledge).
+- `"TN"` (True Negative): Question is NOT relevant, and the assistant correctly refused to answer.
+
+OUTPUT FORMAT:
+Return only a **JSON object** with one key:
+```json
+{
+  "verdict": "TP"  // or TN, FP, FN
+  "reason": "Reason why the verdict is 'TP'"
+}
+
+CHAIN OF THOUGHT:
+- Check if the question aligns with any of the relevant topics.
+- If yes:
+- Assess if the response is correct, complete, and directly answers the question.
+- If no:
+- Check if the assistant refused appropriately or gave an unwarranted answer.
+- Choose the correct verdict using the definitions above.
+
+EXAMPLE:
+
+Relevant topics: ["heath nutrition", "food and their benefits"]
+Question: "Which food is best for diabetic patients?"
+Response: "Steel-cut oats are good for diabetic patients"
+
+Example JSON:
+{
+  "verdict": "TP",
+  "reason": The question asks about food for diabetic patients and the response clearly answers that oats are good for diabetic patients. Both align with the relevant topics of heath nutrition and food and their benefits... 
+}
+
+===== END OF EXAMPLE ======
+
+**
+IMPORTANT: Please make sure to only return in JSON format with two keys: 'verdict' and 'reason'
+**
+
+Relevant topics: {{ relevant_topics }}
+Question: {{ question }}
+Response: {{ response }}
+
+JSON:

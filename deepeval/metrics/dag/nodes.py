@@ -9,12 +9,6 @@ from deepeval.metrics.dag.schema import (
     NonBinaryJudgementVerdict,
     TaskNodeOutput,
 )
-from deepeval.metrics.dag.templates import (
-    VerdictNodeTemplate,
-    TaskNodeTemplate,
-    BinaryJudgementTemplate,
-    NonBinaryJudgementTemplate,
-)
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.metrics.g_eval.g_eval import GEval
 from deepeval.metrics.g_eval.utils import G_EVAL_PARAMS
@@ -24,6 +18,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.test_case import LLMTestCase, SingleTurnParams, ToolCall
+from deepeval.templates import resolve_template
 from deepeval.utils import prettify_list
 
 
@@ -125,6 +120,10 @@ class VerdictNode(BaseNode):
                 metric.score = copied_g_eval.score
                 if metric.include_reason:
                     metric.reason = copied_g_eval.reason
+                metric._accrue_cost(copied_g_eval.evaluation_cost)
+                metric._accrue_tokens(
+                    copied_g_eval.input_tokens, copied_g_eval.output_tokens
+                )
             elif isinstance(self.child, BaseMetric):
                 copied_metric: BaseMetric = copy_metrics([self.child])[0]
                 copied_metric.verbose_mode = False
@@ -140,6 +139,10 @@ class VerdictNode(BaseNode):
                 metric.score = copied_metric.score
                 if metric.include_reason:
                     metric.reason = copied_metric.reason
+                metric._accrue_cost(copied_metric.evaluation_cost)
+                metric._accrue_tokens(
+                    copied_metric.input_tokens, copied_metric.output_tokens
+                )
             else:
                 self.child._execute(
                     metric=metric, test_case=test_case, depth=depth
@@ -192,6 +195,10 @@ class VerdictNode(BaseNode):
                 metric.score = copied_g_eval.score
                 if metric.include_reason:
                     metric.reason = copied_g_eval.reason
+                metric._accrue_cost(copied_g_eval.evaluation_cost)
+                metric._accrue_tokens(
+                    copied_g_eval.input_tokens, copied_g_eval.output_tokens
+                )
 
             elif isinstance(self.child, BaseMetric):
                 copied_metric: BaseMetric = copy_metrics([self.child])[0]
@@ -208,6 +215,10 @@ class VerdictNode(BaseNode):
                 metric.score = copied_metric.score
                 if metric.include_reason:
                     metric.reason = copied_metric.reason
+                metric._accrue_cost(copied_metric.evaluation_cost)
+                metric._accrue_tokens(
+                    copied_metric.input_tokens, copied_metric.output_tokens
+                )
             else:
                 await self.child._a_execute(
                     metric=metric, test_case=test_case, depth=depth
@@ -221,7 +232,9 @@ class VerdictNode(BaseNode):
                 metric.reason = await self._a_generate_reason(metric=metric)
 
     def _generate_reason(self, metric: BaseMetric):
-        prompt = VerdictNodeTemplate.generate_reason(
+        prompt = resolve_template("metrics", 
+            "VerdictNode",
+            "generate_reason",
             verbose_steps=metric._verbose_steps,
             score=metric.score,
             name=metric.__name__,
@@ -235,7 +248,9 @@ class VerdictNode(BaseNode):
         )
 
     async def _a_generate_reason(self, metric: BaseMetric):
-        prompt = VerdictNodeTemplate.generate_reason(
+        prompt = resolve_template("metrics", 
+            "VerdictNode",
+            "generate_reason",
             verbose_steps=metric._verbose_steps,
             score=metric.score,
             name=metric.__name__,
@@ -301,7 +316,11 @@ class TaskNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = TaskNodeTemplate.generate_task_output(
+        prompt = resolve_template("metrics", 
+
+            "TaskNode",
+
+            "generate_task_output",
             instructions=self.instructions,
             text=text,
         )
@@ -347,7 +366,11 @@ class TaskNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = TaskNodeTemplate.generate_task_output(
+        prompt = resolve_template("metrics", 
+
+            "TaskNode",
+
+            "generate_task_output",
             instructions=self.instructions,
             text=text,
         )
@@ -438,7 +461,11 @@ class BinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = BinaryJudgementTemplate.generate_binary_verdict(
+        prompt = resolve_template("metrics", 
+
+            "BinaryJudgement",
+
+            "generate_binary_verdict",
             criteria=self.criteria,
             text=text,
         )
@@ -478,7 +505,11 @@ class BinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = BinaryJudgementTemplate.generate_binary_verdict(
+        prompt = resolve_template("metrics", 
+
+            "BinaryJudgement",
+
+            "generate_binary_verdict",
             criteria=self.criteria,
             text=text,
         )
@@ -579,7 +610,11 @@ class NonBinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = NonBinaryJudgementTemplate.generate_non_binary_verdict(
+        prompt = resolve_template("metrics", 
+
+            "BinaryJudgement",
+
+            "generate_non_binary_verdict",
             criteria=self.criteria, text=text, options=self._verdict_options
         )
 
@@ -620,7 +655,11 @@ class NonBinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = NonBinaryJudgementTemplate.generate_non_binary_verdict(
+        prompt = resolve_template("metrics", 
+
+            "BinaryJudgement",
+
+            "generate_non_binary_verdict",
             criteria=self.criteria, text=text, options=self._verdict_options
         )
 

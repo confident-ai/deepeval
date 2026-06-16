@@ -1,0 +1,6 @@
+
+--- MULTIMODAL INPUT RULES ---
+- Treat image content as factual evidence.
+- Only reference visual details that are explicitly and clearly visible.
+- Do not infer or guess objects, text, or details not visibly present.
+- If an image is unclear or ambiguous, mark uncertainty explicitly.

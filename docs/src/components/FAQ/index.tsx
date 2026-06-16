@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
+import { ChevronRight } from "lucide-react";
 import SchemaInjector from "../SchemaInjector/SchemaInjector";
 import { buildFAQPageSchema } from "@/src/utils/schema-helpers";
 
@@ -63,18 +63,38 @@ function renderQuestion(question: string): ReactNode {
 
 /**
  * Strips backticks so the question can be used as a plain string for the
- * accordion `value` (deep-link/open state) and the FAQPage JSON-LD `name`,
- * both of which must be plain text rather than rich nodes.
+ * `<details>` key and the FAQPage JSON-LD `name`, both of which must be
+ * plain text rather than rich nodes.
  */
 function plainQuestion(question: string): string {
   return question.replace(/`/g, "");
 }
 
 /**
- * Accordion-style FAQ list that also emits a schema.org FAQPage JSON-LD
- * block. The UI is delegated to Fumadocs' `Accordions` component so we
- * inherit Radix-powered a11y, keyboard nav, and deep-link support for
- * free. The schema emission stays inside this wrapper so callers don't
+ * Derives a stable, page-safe group name for the `<details name>` so a
+ * single FAQ block behaves like a single-open accordion (the browser
+ * auto-closes siblings sharing a name). Keyed off the first question so
+ * two separate FAQ blocks on the same page don't fight over open state.
+ */
+function groupName(qas: QA[]): string {
+  const seed = plainQuestion(qas[0]?.question ?? "faq");
+  return `faq-${seed.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48)}`;
+}
+
+/**
+ * FAQ list rendered with native `<details>/<summary>` so every answer
+ * ships inside the server-rendered HTML body (crawlable + visible with
+ * JavaScript disabled — search People-Also-Ask and LLM crawlers read
+ * the text without executing JS), unlike a Radix accordion which only
+ * mounts answer content client-side on expand.
+ *
+ * `name` on each `<details>` gives native single-open accordion behavior
+ * with zero JS; older browsers without `name` support simply allow more
+ * than one panel open at a time (graceful degradation). The classes
+ * mirror Fumadocs' accordion so the UI stays visually identical.
+ *
+ * A schema.org FAQPage JSON-LD block is still emitted alongside for rich
+ * results; the schema emission stays inside this wrapper so callers don't
  * have to remember to pair the two manually.
  */
 export const FAQs: React.FC<FAQsProps> = ({ qas }) => {
@@ -85,23 +105,31 @@ export const FAQs: React.FC<FAQsProps> = ({ qas }) => {
     }))
   );
 
+  const name = groupName(qas);
+
   return (
     <>
       <SchemaInjector schema={schema} />
-      <Accordions type="single">
+      <div className="divide-y divide-fd-border overflow-hidden rounded-lg border bg-fd-card">
         {qas.map(({ question, answer }) => {
           const plain = plainQuestion(question);
           return (
-            <Accordion
+            <details
               key={plain}
-              title={renderQuestion(question)}
-              value={plain}
+              name={name}
+              className="group scroll-m-24 not-prose"
             >
-              {answer}
-            </Accordion>
+              <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-start font-medium text-fd-card-foreground focus-visible:bg-fd-accent focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+                <ChevronRight className="size-4 shrink-0 text-fd-muted-foreground transition-transform duration-200 group-open:rotate-90" />
+                {renderQuestion(question)}
+              </summary>
+              <div className="px-4 pb-2 text-[0.9375rem] prose-no-margin">
+                {answer}
+              </div>
+            </details>
           );
         })}
-      </Accordions>
+      </div>
     </>
   );
 };

@@ -12,8 +12,8 @@ from deepeval.metrics.utils import (
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.topic_adherence.template import TopicAdherenceTemplate
 from deepeval.metrics.topic_adherence.schema import (
     RelevancyVerdict,
     QAPairs,
@@ -81,7 +81,9 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                 )
             else:
                 unit_interactions = get_unit_interactions(test_case.turns)
-                interaction_pairs = self._get_qa_pairs(unit_interactions)
+                interaction_pairs = self._get_qa_pairs(
+                    unit_interactions, multimodal=test_case.multimodal
+                )
                 True_Positives = [0, []]
                 True_Negatives = [0, []]
                 False_Positives = [0, []]
@@ -89,7 +91,7 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                 for interaction_pair in interaction_pairs:
                     for qa_pair in interaction_pair.qa_pairs:
                         qa_verdict: RelevancyVerdict = self._get_qa_verdict(
-                            qa_pair
+                            qa_pair, multimodal=test_case.multimodal
                         )
                         if qa_verdict.verdict == "TP":
                             True_Positives[0] += 1
@@ -116,6 +118,7 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                     True_Negatives,
                     False_Positives,
                     False_Negatives,
+                    multimodal=test_case.multimodal,
                 )
 
                 self.verbose_logs = construct_verbose_logs(
@@ -165,14 +168,18 @@ class TopicAdherenceMetric(BaseConversationalMetric):
             _in_component=_in_component,
         ):
             unit_interactions = get_unit_interactions(test_case.turns)
-            interaction_pairs = await self._a_get_qa_pairs(unit_interactions)
+            interaction_pairs = await self._a_get_qa_pairs(
+                unit_interactions, multimodal=test_case.multimodal
+            )
             True_Positives = [0, []]
             True_Negatives = [0, []]
             False_Positives = [0, []]
             False_Negatives = [0, []]
             for interaction_pair in interaction_pairs:
                 for qa_pair in interaction_pair.qa_pairs:
-                    qa_verdict: RelevancyVerdict = self._get_qa_verdict(qa_pair)
+                    qa_verdict: RelevancyVerdict = await self._a_get_qa_verdict(
+                        qa_pair, multimodal=test_case.multimodal
+                    )
                     if qa_verdict.verdict == "TP":
                         True_Positives[0] += 1
                         True_Positives[1].append(qa_verdict.reason)
@@ -191,7 +198,11 @@ class TopicAdherenceMetric(BaseConversationalMetric):
             )
             self.success = self.score >= self.threshold
             self.reason = await self._a_generate_reason(
-                True_Positives, True_Negatives, False_Positives, False_Negatives
+                True_Positives,
+                True_Negatives,
+                False_Positives,
+                False_Negatives,
+                multimodal=test_case.multimodal,
             )
 
             self.verbose_logs = construct_verbose_logs(
@@ -214,12 +225,25 @@ class TopicAdherenceMetric(BaseConversationalMetric):
 
             return self.score
 
-    def _generate_reason(self, TP, TN, FP, FN):
+    def _generate_reason(self, TP, TN, FP, FN, *, multimodal: bool):
         total = TP[0] + TN[0] + FP[0] + FN[0]
         if total <= 0:
             return "There were no question-answer pairs to evaluate. Please enable verbose logs to look at the evaluation steps taken"
-        prompt = TopicAdherenceTemplate.generate_reason(
-            self.success, self.score, self.threshold, TP, TN, FP, FN
+        tp_line = prettify_list(TP[1]) if TP[1] else "(none)"
+        tn_line = prettify_list(TN[1]) if TN[1] else "(none)"
+        fp_line = prettify_list(FP[1]) if FP[1] else "(none)"
+        fn_line = prettify_list(FN[1]) if FN[1] else "(none)"
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "generate_reason",
+            success=self.success,
+            score=self.score,
+            threshold=self.threshold,
+            true_positives_reason_line=tp_line,
+            true_negatives_reason_line=tn_line,
+            false_positives_reason_line=fp_line,
+            false_negatives_reason_line=fn_line,
+            multimodal=multimodal,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -229,9 +253,22 @@ class TopicAdherenceMetric(BaseConversationalMetric):
             extract_json=lambda data: data["reason"],
         )
 
-    async def _a_generate_reason(self, TP, TN, FP, FN):
-        prompt = TopicAdherenceTemplate.generate_reason(
-            self.success, self.score, self.threshold, TP, TN, FP, FN
+    async def _a_generate_reason(self, TP, TN, FP, FN, *, multimodal: bool):
+        tp_line = prettify_list(TP[1]) if TP[1] else "(none)"
+        tn_line = prettify_list(TN[1]) if TN[1] else "(none)"
+        fp_line = prettify_list(FP[1]) if FP[1] else "(none)"
+        fn_line = prettify_list(FN[1]) if FN[1] else "(none)"
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "generate_reason",
+            success=self.success,
+            score=self.score,
+            threshold=self.threshold,
+            true_positives_reason_line=tp_line,
+            true_negatives_reason_line=tn_line,
+            false_positives_reason_line=fp_line,
+            false_negatives_reason_line=fn_line,
+            multimodal=multimodal,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -250,9 +287,16 @@ class TopicAdherenceMetric(BaseConversationalMetric):
             score = true_values / total
         return 0 if self.strict_mode and score < self.threshold else score
 
-    def _get_qa_verdict(self, qa_pair: QAPair) -> RelevancyVerdict:
-        prompt = TopicAdherenceTemplate.get_qa_pair_verdict(
-            self.relevant_topics, qa_pair.question, qa_pair.response
+    def _get_qa_verdict(
+        self, qa_pair: QAPair, *, multimodal: bool
+    ) -> RelevancyVerdict:
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "get_qa_pair_verdict",
+            relevant_topics=self.relevant_topics,
+            question=qa_pair.question,
+            response=qa_pair.response,
+            multimodal=multimodal,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -262,9 +306,16 @@ class TopicAdherenceMetric(BaseConversationalMetric):
             extract_json=lambda data: RelevancyVerdict(**data),
         )
 
-    async def _a_get_qa_verdict(self, qa_pair: QAPair) -> RelevancyVerdict:
-        prompt = TopicAdherenceTemplate.get_qa_pair_verdict(
-            self.relevant_topics, qa_pair.question, qa_pair.response
+    async def _a_get_qa_verdict(
+        self, qa_pair: QAPair, *, multimodal: bool
+    ) -> RelevancyVerdict:
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "get_qa_pair_verdict",
+            relevant_topics=self.relevant_topics,
+            question=qa_pair.question,
+            response=qa_pair.response,
+            multimodal=multimodal,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -274,14 +325,21 @@ class TopicAdherenceMetric(BaseConversationalMetric):
             extract_json=lambda data: RelevancyVerdict(**data),
         )
 
-    def _get_qa_pairs(self, unit_interactions: List) -> List[QAPairs]:
+    def _get_qa_pairs(
+        self, unit_interactions: List, *, multimodal: bool
+    ) -> List[QAPairs]:
         qa_pairs = []
         for unit_interaction in unit_interactions:
             conversation = "Conversation: \n"
             for turn in unit_interaction:
                 conversation += f"{turn.role} \n"
                 conversation += f"{turn.content} \n\n"
-            prompt = TopicAdherenceTemplate.get_qa_pairs(conversation)
+            prompt = resolve_template("metrics", 
+                self.__class__.__name__,
+                "get_qa_pairs",
+                conversation=conversation,
+                multimodal=multimodal,
+            )
             new_pair = None
 
             new_pair = generate_with_schema_and_extract(
@@ -297,14 +355,21 @@ class TopicAdherenceMetric(BaseConversationalMetric):
 
         return qa_pairs
 
-    async def _a_get_qa_pairs(self, unit_interactions: List) -> List[QAPairs]:
+    async def _a_get_qa_pairs(
+        self, unit_interactions: List, *, multimodal: bool
+    ) -> List[QAPairs]:
         qa_pairs = []
         for unit_interaction in unit_interactions:
             conversation = "Conversation: \n"
             for turn in unit_interaction:
                 conversation += f"{turn.role} \n"
                 conversation += f"{turn.content} \n\n"
-            prompt = TopicAdherenceTemplate.get_qa_pairs(conversation)
+            prompt = resolve_template("metrics", 
+                self.__class__.__name__,
+                "get_qa_pairs",
+                conversation=conversation,
+                multimodal=multimodal,
+            )
             new_pair = None
 
             new_pair = await a_generate_with_schema_and_extract(

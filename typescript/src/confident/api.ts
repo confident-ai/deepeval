@@ -84,6 +84,7 @@ export enum Endpoints {
   BASELINE_ATTACKS_ENDPOINT = "/generate-baseline-attacks",
   SIMULATE_ENDPOINT = "/v1/simulate",
   ANNOTATION_ENDPOINT = "/v1/annotations",
+  EXPERIMENT_ENDPOINT = "/v1/experiment",
 }
 
 interface RetryOptions {
