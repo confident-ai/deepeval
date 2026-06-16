@@ -1,1 +1,3 @@
-from .template import MisuseTemplate
+from .misuse import MisuseMetric
+
+__all__ = ["MisuseMetric"]

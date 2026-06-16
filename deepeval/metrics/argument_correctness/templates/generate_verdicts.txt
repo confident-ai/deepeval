@@ -1,0 +1,79 @@
+
+For the provided list of tool calls, determine whether each tool call input parameter is relevantly and correctly addresses the input.
+
+Please generate a list of JSON with two keys: `verdict` and `reason`.
+The 'verdict' key should STRICTLY be either a 'yes' or 'no'. Answer 'yes' if the tool call input parameter is relevantly and correctly addresses the original input, 'no' if the tool call input parameter doesn't correctly and relevantly address the original input.
+The 'reason' is the reason for the verdict.
+Provide a 'reason' ONLY if the answer is 'no'. 
+If there is no input parameter, answer 'no' for the verdict and provide the reason as "No input parameter provided".
+
+{% if multimodal %}{{ _fragments.multimodal_input_rules }}{% endif %}
+
+**
+IMPORTANT: Please make sure to only return in valid and parseable JSON format, with the 'verdicts' key mapping to a list of JSON objects. Ensure all strings are closed appropriately. Repair any invalid JSON before you output it.
+Example input: 
+"What was the highest temperature recorded in Paris in 2023?"
+
+Example tool calls: 
+[
+  ToolCall(
+    name="WeatherHistoryAPI",
+    description="Fetches historical weather data for a given city and date range",
+    reasoning="I need to check all 2023 temperature records for Paris to find the highest one.",
+    input_parameters={
+      "city_name": "Paris",
+      "country_code": "FR",
+      "date_range_start": "2023-01-01",
+      "date_range_end": "2023-12-31",
+      "data_type": "temperature_max_daily_celsius"
+    }
+  ),
+  ToolCall(
+    name="MathAnalyzer",
+    description="Performs statistical calculations on numeric datasets",
+    reasoning="I will calculate the maximum temperature value from the daily dataset.",
+    input_parameters={
+      "operation": "max",
+      "dataset_source": "WeatherHistoryAPI.daily_max_temperatures",
+      "expected_unit": "celsius"
+    }
+  ),
+  ToolCall(
+    name="MovieRecommender",
+    description="Recommends movies based on user mood or location",
+    reasoning="I thought Paris movies might be fun to suggest, but this is unrelated to the question.",
+    input_parameters={
+      "preferred_genres": ["romance", "comedy"],
+      "setting_city": "Paris",
+      "language_preference": "French or English"
+    }
+  )
+]
+
+Example JSON:
+{
+  "verdicts": [
+    {
+      "verdict": "yes"
+    },
+    {
+      "verdict": "yes"
+    },
+    {
+      "reason": "Recommending romantic Parisian comedies does not help find the highest temperature in 2023.",
+      "verdict": "no"
+    }
+  ]  
+}
+===== END OF EXAMPLE ======
+
+Since you are going to generate a verdict for each statement, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to the number of `statements`.
+**          
+
+Input:
+{{ input }}
+
+Tool Calls:
+{{ stringified_tools_called }}
+
+JSON:

@@ -1,0 +1,28 @@
+
+Extract every factual-sounding claim asserted in the ASSISTANT'S OUTPUT.
+
+A claim is any statement presented as fact, even if it is incorrect, vague, implied, or unverifiable.
+
+RULES:
+- Use ONLY the assistant's output as the source of claims.
+- Use the user's preceding message ONLY to resolve pronouns or references, not as factual evidence.
+- Extract claims exactly as stated without rewriting, summarizing, merging, or omitting details.
+- If a sentence contains multiple factual assertions, extract each as a separate claim.
+- Claims may involve text or images if multimodal.
+- Do NOT add, infer, or transform information.
+
+{% if multimodal %}{{ _fragments.multimodal_input_rules_turn_metric }}{% endif %}
+
+Output MUST be ONLY valid JSON:
+
+{
+  "claims": ["claim 1", "claim 2", ...]
+}
+
+USER MESSAGE:
+{{ input }}
+
+ASSISTANT OUTPUT:
+{{ assistant_output }}
+
+JSON:

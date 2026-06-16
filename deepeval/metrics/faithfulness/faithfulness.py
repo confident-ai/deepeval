@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Type
+from typing import List, Optional, Union
 import asyncio
 
 from deepeval.test_case import LLMTestCase, SingleTurnParams
@@ -15,7 +15,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
+from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.faithfulness.schema import (
     FaithfulnessVerdict,
@@ -24,6 +24,31 @@ from deepeval.metrics.faithfulness.schema import (
     Truths,
     Claims,
 )
+
+
+def _faithfulness_truths_limit_phrase(extraction_limit: Optional[int]) -> str:
+    if extraction_limit is None:
+        return " FACTUAL, undisputed truths"
+    if extraction_limit == 1:
+        return " the single most important FACTUAL, undisputed truth"
+    return (
+        f" the {extraction_limit} most important FACTUAL, undisputed truths per document"
+    )
+
+
+def _faithfulness_truths_multimodal_instruction(multimodal: bool) -> str:
+    if multimodal:
+        return " The excerpt may contain both text and images."
+    return ""
+
+
+def _faithfulness_claims_multimodal_instruction(multimodal: bool) -> str:
+    if multimodal:
+        return (
+            " The excerpt may contain both text and images, so extract claims from "
+            "all provided content."
+        )
+    return ""
 
 
 class FaithfulnessMetric(BaseMetric):
@@ -43,7 +68,6 @@ class FaithfulnessMetric(BaseMetric):
         verbose_mode: bool = False,
         truths_extraction_limit: Optional[int] = None,
         penalize_ambiguous_claims: bool = False,
-        evaluation_template: Type[FaithfulnessTemplate] = FaithfulnessTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -52,7 +76,6 @@ class FaithfulnessMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.evaluation_template = evaluation_template
         self.penalize_ambiguous_claims = penalize_ambiguous_claims
 
         self.truths_extraction_limit = truths_extraction_limit
@@ -182,10 +205,12 @@ class FaithfulnessMetric(BaseMetric):
             ):
                 contradictions.append(f"(Ambiguous) {verdict.reason}")
 
-        prompt = self.evaluation_template.generate_reason(
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "generate_reason",
+            multimodal=multimodal,
             contradictions=contradictions,
             score=format(self.score, ".2f"),
-            multimodal=multimodal,
         )
 
         return await a_generate_with_schema_and_extract(
@@ -210,10 +235,12 @@ class FaithfulnessMetric(BaseMetric):
             ):
                 contradictions.append(f"(Ambiguous) {verdict.reason}")
 
-        prompt = self.evaluation_template.generate_reason(
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "generate_reason",
+            multimodal=multimodal,
             contradictions=contradictions,
             score=format(self.score, ".2f"),
-            multimodal=multimodal,
         )
 
         return generate_with_schema_and_extract(
@@ -230,10 +257,12 @@ class FaithfulnessMetric(BaseMetric):
         if len(self.claims) == 0:
             return []
 
-        prompt = self.evaluation_template.generate_verdicts(
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "generate_verdicts",
+            multimodal=multimodal,
             claims=self.claims,
             retrieval_context="\n\n".join(self.truths),
-            multimodal=multimodal,
         )
 
         return await a_generate_with_schema_and_extract(
@@ -250,10 +279,12 @@ class FaithfulnessMetric(BaseMetric):
         if len(self.claims) == 0:
             return []
 
-        prompt = self.evaluation_template.generate_verdicts(
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "generate_verdicts",
+            multimodal=multimodal,
             claims=self.claims,
             retrieval_context="\n\n".join(self.truths),
-            multimodal=multimodal,
         )
 
         return generate_with_schema_and_extract(
@@ -269,10 +300,15 @@ class FaithfulnessMetric(BaseMetric):
     async def _a_generate_truths(
         self, retrieval_context: str, multimodal: bool
     ) -> List[str]:
-        prompt = self.evaluation_template.generate_truths(
-            retrieval_context="\n\n".join(retrieval_context),
-            extraction_limit=self.truths_extraction_limit,
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "generate_truths",
             multimodal=multimodal,
+            retrieval_context="\n\n".join(retrieval_context),
+            limit=_faithfulness_truths_limit_phrase(self.truths_extraction_limit),
+            multimodal_instruction=_faithfulness_truths_multimodal_instruction(
+                multimodal
+            ),
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -285,10 +321,15 @@ class FaithfulnessMetric(BaseMetric):
     def _generate_truths(
         self, retrieval_context: str, multimodal: bool
     ) -> List[str]:
-        prompt = self.evaluation_template.generate_truths(
-            retrieval_context="\n\n".join(retrieval_context),
-            extraction_limit=self.truths_extraction_limit,
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "generate_truths",
             multimodal=multimodal,
+            retrieval_context="\n\n".join(retrieval_context),
+            limit=_faithfulness_truths_limit_phrase(self.truths_extraction_limit),
+            multimodal_instruction=_faithfulness_truths_multimodal_instruction(
+                multimodal
+            ),
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -301,8 +342,14 @@ class FaithfulnessMetric(BaseMetric):
     async def _a_generate_claims(
         self, actual_output: str, multimodal: bool
     ) -> List[str]:
-        prompt = self.evaluation_template.generate_claims(
-            actual_output=actual_output, multimodal=multimodal
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "generate_claims",
+            multimodal=multimodal,
+            actual_output=actual_output,
+            multimodal_instruction=_faithfulness_claims_multimodal_instruction(
+                multimodal
+            ),
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -315,8 +362,14 @@ class FaithfulnessMetric(BaseMetric):
     def _generate_claims(
         self, actual_output: str, multimodal: bool
     ) -> List[str]:
-        prompt = self.evaluation_template.generate_claims(
-            actual_output=actual_output, multimodal=multimodal
+        prompt = resolve_template("metrics", 
+            self.__class__.__name__,
+            "generate_claims",
+            multimodal=multimodal,
+            actual_output=actual_output,
+            multimodal_instruction=_faithfulness_claims_multimodal_instruction(
+                multimodal
+            ),
         )
         return generate_with_schema_and_extract(
             metric=self,

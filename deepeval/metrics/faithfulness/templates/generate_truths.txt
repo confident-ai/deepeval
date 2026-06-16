@@ -1,0 +1,24 @@
+Based on the given {% if multimodal %}excerpt (text and images){% else %}text{% endif %}, please generate a comprehensive list of{{ limit }}, that can inferred from the provided {% if multimodal %}excerpt{% else %}text{% endif %}.{{ multimodal_instruction }}
+These truths, MUST BE COHERENT. They must NOT be taken out of context.
+
+Example:
+Example Text: 
+"Albert Einstein, the genius often associated with wild hair and mind-bending theories, famously won the Nobel Prize in Physics—though not for his groundbreaking work on relativity, as many assume. Instead, in 1968, he was honored for his discovery of the photoelectric effect, a phenomenon that laid the foundation for quantum mechanics."
+
+Example JSON: 
+{
+  "truths": [
+    "Einstein won the noble prize for his discovery of the photoelectric effect in 1968.",
+    "The photoelectric effect is a phenomenon that laid the foundation for quantum mechanics."
+  ]  
+}
+===== END OF EXAMPLE ======
+**
+IMPORTANT: Please make sure to only return in JSON format, with the "truths" key as a list of strings. No words or explanation is needed.
+Only include truths that are factual, BUT IT DOESN'T MATTER IF THEY ARE FACTUALLY CORRECT.
+**
+
+{% if multimodal %}Excerpt{% else %}Text{% endif %}:
+{{ retrieval_context }}
+
+JSON:

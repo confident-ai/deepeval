@@ -1,0 +1,27 @@
+Based on the list of close-ended 'yes' or 'no' questions, generate a JSON with key 'answers', which is a list of strings that determines whether the provided text contains sufficient information to answer EACH question.
+
+{{ _fragments.multimodal_input_rules }}
+
+Answers should STRICTLY be either 'yes' or 'no'.
+Answer 'no' if the provided text does not contain enough information to answer the question.
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'answers' key as a list of strings.
+
+Example:
+Example Text: Mario and Luigi were best buds but since Luigi had a crush on Peach Mario ended up killing him.
+Example Questions: ["Are there enough information about Luigi and Mario?"]
+Example Answers:
+{
+  "answers": ["yes"]
+}
+
+The length of 'answers' SHOULD BE STRICTLY EQUAL to that of questions.
+===== END OF EXAMPLE ======
+
+Text:
+{{ text }}
+
+Questions:
+{{ questions }}
+
+JSON:

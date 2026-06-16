@@ -1,6 +1,7 @@
 import asyncio
 from typing import Optional, Union, List
 
+from deepeval.templates import resolve_template
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import (
@@ -14,9 +15,14 @@ from deepeval.metrics.utils import (
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.metrics.mcp.utils import (
+    available_mcp_servers_block,
+    task_steps_taken_text,
+)
 from deepeval.metrics.mcp.schema import Task, ArgsScore, ToolScore, Reason
-from deepeval.metrics.mcp.template import MCPTaskCompletionTemplate
 from deepeval.errors import MissingTestCaseParamsError
+
+_MCP_TASK_COMPLETION_TEMPLATES = "MCPTaskCompletionMetric"
 
 
 class MultiTurnMCPUseMetric(BaseConversationalMetric):
@@ -188,8 +194,14 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
     def _get_tool_accuracy_score(
         self, task: Task, test_case: ConversationalTestCase
     ) -> ToolScore:
-        prompt = MCPTaskCompletionTemplate.get_tool_correctness_score(
-            task, test_case.mcp_servers
+        available_tools, _, _ = available_mcp_servers_block(test_case.mcp_servers)
+        prompt = resolve_template("metrics", 
+            _MCP_TASK_COMPLETION_TEMPLATES,
+            "get_tool_correctness_score",
+            task=task,
+            available_tools=available_tools,
+            steps_taken=task_steps_taken_text(task),
+            multimodal=test_case.multimodal,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -202,8 +214,14 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
     async def _a_get_tool_accuracy_score(
         self, task: Task, test_case: ConversationalTestCase
     ) -> ToolScore:
-        prompt = MCPTaskCompletionTemplate.get_tool_correctness_score(
-            task, test_case.mcp_servers
+        available_tools, _, _ = available_mcp_servers_block(test_case.mcp_servers)
+        prompt = resolve_template("metrics", 
+            _MCP_TASK_COMPLETION_TEMPLATES,
+            "get_tool_correctness_score",
+            task=task,
+            available_tools=available_tools,
+            steps_taken=task_steps_taken_text(task),
+            multimodal=test_case.multimodal,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -216,8 +234,20 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
     def _get_args_score(
         self, task: Task, test_case: ConversationalTestCase
     ) -> ArgsScore:
-        prompt = MCPTaskCompletionTemplate.get_args_correctness_score(
-            task, test_case.mcp_servers
+        (
+            available_tools,
+            available_resources,
+            available_prompts,
+        ) = available_mcp_servers_block(test_case.mcp_servers)
+        prompt = resolve_template("metrics", 
+            _MCP_TASK_COMPLETION_TEMPLATES,
+            "get_args_correctness_score",
+            task=task,
+            available_tools=available_tools,
+            available_resources=available_resources,
+            available_prompts=available_prompts,
+            steps_taken=task_steps_taken_text(task),
+            multimodal=test_case.multimodal,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -230,8 +260,20 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
     async def _a_get_args_score(
         self, task: Task, test_case: ConversationalTestCase
     ) -> ArgsScore:
-        prompt = MCPTaskCompletionTemplate.get_args_correctness_score(
-            task, test_case.mcp_servers
+        (
+            available_tools,
+            available_resources,
+            available_prompts,
+        ) = available_mcp_servers_block(test_case.mcp_servers)
+        prompt = resolve_template("metrics", 
+            _MCP_TASK_COMPLETION_TEMPLATES,
+            "get_args_correctness_score",
+            task=task,
+            available_tools=available_tools,
+            available_resources=available_resources,
+            available_prompts=available_prompts,
+            steps_taken=task_steps_taken_text(task),
+            multimodal=test_case.multimodal,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -327,8 +369,12 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         for arg_score in args_accuracy_score:
             reasons.append(arg_score.reason)
 
-        prompt = MCPTaskCompletionTemplate.generate_final_reason(
-            self.score, self.success, reasons
+        prompt = resolve_template("metrics", 
+            _MCP_TASK_COMPLETION_TEMPLATES,
+            "generate_final_reason",
+            final_score=self.score,
+            success=self.success,
+            reasons=reasons,
         )
 
         return generate_with_schema_and_extract(
@@ -354,8 +400,12 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         for arg_score in args_accuracy_score:
             reasons.append(arg_score.reason)
 
-        prompt = MCPTaskCompletionTemplate.generate_final_reason(
-            self.score, self.success, reasons
+        prompt = resolve_template("metrics", 
+            _MCP_TASK_COMPLETION_TEMPLATES,
+            "generate_final_reason",
+            final_score=self.score,
+            success=self.success,
+            reasons=reasons,
         )
 
         return await a_generate_with_schema_and_extract(

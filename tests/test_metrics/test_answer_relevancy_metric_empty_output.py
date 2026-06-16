@@ -14,7 +14,6 @@ These tests use DummyModel and do not require OPENAI_API_KEY.
 import pytest
 from unittest.mock import patch
 from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.metrics.answer_relevancy.template import AnswerRelevancyTemplate
 from deepeval.metrics.utils import check_llm_test_case_params
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.errors import MissingTestCaseParamsError
@@ -29,7 +28,6 @@ def make_metric(*, async_mode: bool = False) -> AnswerRelevancyMetric:
         mock_init.return_value = (DummyModel(), True)
         return AnswerRelevancyMetric(
             async_mode=async_mode,
-            evaluation_template=AnswerRelevancyTemplate,
         )
 
 

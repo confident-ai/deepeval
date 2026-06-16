@@ -20,13 +20,8 @@ from deepeval.test_case import (
     Turn,
 )
 from deepeval.utils import prettify_list
+from deepeval.templates import resolve_template
 
-from .templates import (
-    ConversationalBinaryJudgementTemplate,
-    ConversationalNonBinaryJudgementTemplate,
-    ConversationalTaskNodeTemplate,
-    ConversationalVerdictNodeTemplate,
-)
 from deepeval.metrics.dag.schema import (
     BinaryJudgementVerdict,
     MetricScoreReason,
@@ -280,7 +275,9 @@ class ConversationalVerdictNode(ConversationalBaseNode):
                 metric.reason = await self._a_generate_reason(metric=metric)
 
     def _generate_reason(self, metric: BaseConversationalMetric):
-        prompt = ConversationalVerdictNodeTemplate.generate_reason(
+        prompt = resolve_template("metrics", 
+            "VerdictNode",
+            "generate_reason",
             verbose_steps=metric._verbose_steps,
             score=metric.score,
             name=metric.__name__,
@@ -295,7 +292,9 @@ class ConversationalVerdictNode(ConversationalBaseNode):
         )
 
     async def _a_generate_reason(self, metric: BaseConversationalMetric):
-        prompt = ConversationalVerdictNodeTemplate.generate_reason(
+        prompt = resolve_template("metrics", 
+            "VerdictNode",
+            "generate_reason",
             verbose_steps=metric._verbose_steps,
             score=metric.score,
             name=metric.__name__,
@@ -376,7 +375,11 @@ class ConversationalTaskNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = ConversationalTaskNodeTemplate.generate_task_output(
+        prompt = resolve_template("metrics", 
+
+            "TaskNode",
+
+            "generate_task_output",
             instructions=self.instructions,
             text=text,
         )
@@ -437,7 +440,11 @@ class ConversationalTaskNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = ConversationalTaskNodeTemplate.generate_task_output(
+        prompt = resolve_template("metrics", 
+
+            "TaskNode",
+
+            "generate_task_output",
             instructions=self.instructions,
             text=text,
         )
@@ -548,7 +555,11 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = ConversationalBinaryJudgementTemplate.generate_binary_verdict(
+        prompt = resolve_template("metrics", 
+
+            "BinaryJudgement",
+
+            "generate_binary_verdict",
             criteria=self.criteria,
             text=text,
         )
@@ -604,7 +615,11 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = ConversationalBinaryJudgementTemplate.generate_binary_verdict(
+        prompt = resolve_template("metrics", 
+
+            "BinaryJudgement",
+
+            "generate_binary_verdict",
             criteria=self.criteria,
             text=text,
         )
@@ -727,7 +742,11 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = ConversationalNonBinaryJudgementTemplate.generate_non_binary_verdict(
+        prompt = resolve_template("metrics", 
+
+            "BinaryJudgement",
+
+            "generate_non_binary_verdict",
             criteria=self.criteria, text=text, options=self._verdict_options
         )
 
@@ -782,7 +801,11 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = ConversationalNonBinaryJudgementTemplate.generate_non_binary_verdict(
+        prompt = resolve_template("metrics", 
+
+            "BinaryJudgement",
+
+            "generate_non_binary_verdict",
             criteria=self.criteria, text=text, options=self._verdict_options
         )
 

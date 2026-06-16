@@ -6,6 +6,7 @@ import {
   importOptional,
   requireApiKey,
 } from "../utils";
+import { geminiContents } from "../multimodal";
 
 const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 
@@ -80,7 +81,7 @@ export class GeminiModel extends DeepEvalBaseLLM {
 
     const response = await client.models.generateContent({
       model: this.modelName,
-      contents: prompt,
+      contents: await geminiContents(prompt),
       config,
     });
 
