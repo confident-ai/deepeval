@@ -15,9 +15,6 @@
     "guides-rag-triad",
     "guides-using-synthesizer",
 
-    "---[Scale]LLM-as-a-Judge---",
-    "guides-llm-as-a-judge",
-
     "---[Waypoints]Tracing + Evals---",
     "guides-tracing-ai-agents",
     "guides-tracing-multi-turn",

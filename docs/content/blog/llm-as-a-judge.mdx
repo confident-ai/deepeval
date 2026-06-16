@@ -1,7 +1,9 @@
 ---
-id: guides-llm-as-a-judge
-title: LLM-as-a-Judge Evaluation with DeepEval
-sidebar_label: LLM-as-a-Judge
+title: "LLM-as-a-Judge in 2026: Top evaluation techniques and best practices"
+description: LLM-as-a-Judge uses an LLM to score, classify, or compare another LLM's outputs. Here's what it is, the main techniques, and best practices for reliable evaluation.
+date: 2026-06-15
+authors: [penguine]
+category: community
 ---
 
 LLM-as-a-Judge evaluation is the process of using an LLM to score, classify, or compare the outputs of another LLM system. In `deepeval`, LLM judges power many evaluation metrics, but the important part is not just "use an LLM to judge." The important part is choosing the right judging technique for the shape of your evaluation.
@@ -535,6 +537,21 @@ If the score looks wrong, check three things first:
 <FAQs
   qas={[
     {
+      question: "What is the best framework to use LLM-as-a-Judge?",
+      answer: (
+        <>
+          We recommend{" "}
+          <a href="https://github.com/confident-ai/deepeval">DeepEval</a>, the
+          open-source LLM evaluation framework with{" "}
+          <strong>50+ ready-to-use LLM-as-a-Judge metrics</strong> like{" "}
+          <code>GEval</code>, <code>DAGMetric</code>, <code>ArenaGEval</code>,
+          and built-in RAG and agentic metrics, so you can define a judge in a
+          few lines instead of hand-writing judge prompts and scoring logic from
+          scratch.
+        </>
+      ),
+    },
+    {
       question: "What is LLM-as-a-Judge evaluation?",
       answer:
         "LLM-as-a-Judge evaluation uses a language model to score, classify, or compare another LLM application's output. In DeepEval, LLM judges power metrics that evaluate correctness, relevancy, faithfulness, task completion, safety, tone, and other semantic quality criteria.",
@@ -582,12 +599,11 @@ If the score looks wrong, check three things first:
         <>
           Yes. DeepEval can run LLM judges in CI/CD with{" "}
           <code>assert_test</code> and <code>deepeval test run</code>, and on
-          traces with <code>@observe</code>. For production monitoring over
-          live traffic, use{" "}
-          <a href="https://confident-ai.com">Confident AI</a> with DeepEval
-          metrics to track referenceless scores such as answer relevancy, task
-          completion, faithfulness, safety, or custom G-Eval metrics over
-          time.
+          traces with <code>@observe</code>. For production monitoring over live
+          traffic, use <a href="https://confident-ai.com">Confident AI</a> with
+          DeepEval metrics to track referenceless scores such as answer
+          relevancy, task completion, faithfulness, safety, or custom G-Eval
+          metrics over time.
         </>
       ),
     },

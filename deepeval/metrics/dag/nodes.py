@@ -120,6 +120,10 @@ class VerdictNode(BaseNode):
                 metric.score = copied_g_eval.score
                 if metric.include_reason:
                     metric.reason = copied_g_eval.reason
+                metric._accrue_cost(copied_g_eval.evaluation_cost)
+                metric._accrue_tokens(
+                    copied_g_eval.input_tokens, copied_g_eval.output_tokens
+                )
             elif isinstance(self.child, BaseMetric):
                 copied_metric: BaseMetric = copy_metrics([self.child])[0]
                 copied_metric.verbose_mode = False
@@ -135,6 +139,10 @@ class VerdictNode(BaseNode):
                 metric.score = copied_metric.score
                 if metric.include_reason:
                     metric.reason = copied_metric.reason
+                metric._accrue_cost(copied_metric.evaluation_cost)
+                metric._accrue_tokens(
+                    copied_metric.input_tokens, copied_metric.output_tokens
+                )
             else:
                 self.child._execute(
                     metric=metric, test_case=test_case, depth=depth
@@ -187,6 +195,10 @@ class VerdictNode(BaseNode):
                 metric.score = copied_g_eval.score
                 if metric.include_reason:
                     metric.reason = copied_g_eval.reason
+                metric._accrue_cost(copied_g_eval.evaluation_cost)
+                metric._accrue_tokens(
+                    copied_g_eval.input_tokens, copied_g_eval.output_tokens
+                )
 
             elif isinstance(self.child, BaseMetric):
                 copied_metric: BaseMetric = copy_metrics([self.child])[0]
@@ -203,6 +215,10 @@ class VerdictNode(BaseNode):
                 metric.score = copied_metric.score
                 if metric.include_reason:
                     metric.reason = copied_metric.reason
+                metric._accrue_cost(copied_metric.evaluation_cost)
+                metric._accrue_tokens(
+                    copied_metric.input_tokens, copied_metric.output_tokens
+                )
             else:
                 await self.child._a_execute(
                     metric=metric, test_case=test_case, depth=depth

@@ -34,6 +34,7 @@ class EvaluationCost(float):
         output_tokens: Optional[int] = None,
     ) -> "EvaluationCost":
         obj = super().__new__(cls, value if value is not None else 0.0)
+        obj.value = value
         obj.input_tokens = input_tokens
         obj.output_tokens = output_tokens
         return obj

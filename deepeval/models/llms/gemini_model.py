@@ -67,6 +67,8 @@ class GeminiModel(DeepEvalBaseLLM):
         service_account_key: Optional[Union[str, Dict[str, str]]] = None,
         use_vertexai: Optional[bool] = None,
         generation_kwargs: Optional[Dict] = None,
+        cost_per_input_token: Optional[float] = None,
+        cost_per_output_token: Optional[float] = None,
         **kwargs,
     ):
 
@@ -74,6 +76,17 @@ class GeminiModel(DeepEvalBaseLLM):
 
         model = model or settings.GEMINI_MODEL_NAME or default_gemini_model
         self.model_data = GEMINI_MODELS_DATA.get(model)
+
+        cost_per_input_token = (
+            cost_per_input_token
+            if cost_per_input_token is not None
+            else settings.GEMINI_COST_PER_INPUT_TOKEN
+        )
+        cost_per_output_token = (
+            cost_per_output_token
+            if cost_per_output_token is not None
+            else settings.GEMINI_COST_PER_OUTPUT_TOKEN
+        )
 
         # Get API key from settings if not provided
         if api_key is not None:
@@ -124,6 +137,9 @@ class GeminiModel(DeepEvalBaseLLM):
 
         self.generation_kwargs = dict(generation_kwargs or {})
         self.generation_kwargs.pop("temperature", None)
+        
+        self.model_data.input_price = cost_per_input_token if cost_per_input_token is not None else self.model_data.input_price
+        self.model_data.output_price = cost_per_output_token if cost_per_output_token is not None else self.model_data.output_price
 
         self._module = self._require_module()
         # Configure default model generation settings
@@ -332,9 +348,7 @@ class GeminiModel(DeepEvalBaseLLM):
             cost = self.calculate_cost(input_tokens, output_tokens)
             if cost is not None:
                 return cost
-        # Fall back to a zero-cost EvaluationCost that still carries whatever
-        # token info we have, so callers can distinguish "unknown" from "zero".
-        return EvaluationCost(0.0, input_tokens, output_tokens)
+        return EvaluationCost(None, input_tokens, output_tokens)
 
     #########################
     # Capabilities          #
