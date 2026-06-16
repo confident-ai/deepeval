@@ -7,6 +7,7 @@ from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
     SingleTurnParams,
+    MultiTurnParams,
     ArenaTestCase,
 )
 
@@ -79,6 +80,7 @@ class BaseMetric:
 
 
 class BaseConversationalMetric:
+    _required_test_case_params = List[MultiTurnParams]
     threshold: float
     score: Optional[float] = None
     score_breakdown: Dict = None
