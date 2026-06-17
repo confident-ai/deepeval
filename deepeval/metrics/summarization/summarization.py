@@ -7,7 +7,6 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.metrics.faithfulness.faithfulness import (
     _faithfulness_claims_multimodal_instruction,
     _faithfulness_truths_limit_phrase,
@@ -221,9 +220,7 @@ class SummarizationMetric(BaseMetric):
                 ):
                     questions.append(verdict.question)
 
-        prompt: dict = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt: dict = self._get_prompt(
             "generate_reason",
             contradictions=contradictions,
             redundancies=redundancies,
@@ -268,9 +265,7 @@ class SummarizationMetric(BaseMetric):
                 ):
                     questions.append(verdict.question)
 
-        prompt: dict = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt: dict = self._get_prompt(
             "generate_reason",
             contradictions=contradictions,
             redundancies=redundancies,
@@ -327,9 +322,7 @@ class SummarizationMetric(BaseMetric):
         return 0 if self.strict_mode and score < self.threshold else score
 
     async def _a_generate_answers(self, text: str) -> List[str]:
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_answers",
             questions=self.assessment_questions,
             text=text,
@@ -343,9 +336,7 @@ class SummarizationMetric(BaseMetric):
         )
 
     def _generate_answers(self, text: str) -> List[str]:
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_answers",
             questions=self.assessment_questions,
             text=text,
@@ -359,9 +350,7 @@ class SummarizationMetric(BaseMetric):
         )
 
     async def _a_generate_assessment_questions(self, text: str) -> List[str]:
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_questions",
             text=text,
             n=self.n,
@@ -375,9 +364,7 @@ class SummarizationMetric(BaseMetric):
         )
 
     def _generate_assessment_questions(self, text: str) -> List[str]:
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_questions",
             text=text,
             n=self.n,
@@ -452,9 +439,7 @@ class SummarizationMetric(BaseMetric):
         if len(self.claims) == 0:
             return []
 
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_alignment_verdicts",
             summary_claims=self.claims,
             original_text="\n\n".join(self.truths),
@@ -476,9 +461,7 @@ class SummarizationMetric(BaseMetric):
         if len(self.claims) == 0:
             return []
 
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_alignment_verdicts",
             summary_claims=self.claims,
             original_text="\n\n".join(self.truths),
@@ -496,10 +479,9 @@ class SummarizationMetric(BaseMetric):
 
     async def _a_generate_truths(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = resolve_template(
-            "metrics",
-            "FaithfulnessMetric",
+        prompt = self._get_prompt(
             "generate_truths",
+            template_class="FaithfulnessMetric",
             multimodal=False,
             retrieval_context=text,
             limit=_faithfulness_truths_limit_phrase(
@@ -519,10 +501,9 @@ class SummarizationMetric(BaseMetric):
 
     async def _a_generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = resolve_template(
-            "metrics",
-            "FaithfulnessMetric",
+        prompt = self._get_prompt(
             "generate_claims",
+            template_class="FaithfulnessMetric",
             multimodal=False,
             actual_output=text,
             multimodal_instruction=_faithfulness_claims_multimodal_instruction(
@@ -539,10 +520,9 @@ class SummarizationMetric(BaseMetric):
 
     def _generate_truths(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = resolve_template(
-            "metrics",
-            "FaithfulnessMetric",
+        prompt = self._get_prompt(
             "generate_truths",
+            template_class="FaithfulnessMetric",
             multimodal=False,
             retrieval_context=text,
             limit=_faithfulness_truths_limit_phrase(
@@ -562,10 +542,9 @@ class SummarizationMetric(BaseMetric):
 
     def _generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = resolve_template(
-            "metrics",
-            "FaithfulnessMetric",
+        prompt = self._get_prompt(
             "generate_claims",
+            template_class="FaithfulnessMetric",
             multimodal=False,
             actual_output=text,
             multimodal_instruction=_faithfulness_claims_multimodal_instruction(

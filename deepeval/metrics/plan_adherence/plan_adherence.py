@@ -12,7 +12,6 @@ from deepeval.metrics.utils import (
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.step_efficiency.schema import Task
 from deepeval.metrics.plan_adherence.schema import (
@@ -172,10 +171,9 @@ class PlanAdherenceMetric(BaseMetric):
             if isinstance(test_case._trace_dict, dict)
             else str(test_case._trace_dict or {})
         )
-        prompt = resolve_template(
-            "metrics",
-            "PlanAdherenceMetric",
+        prompt = self._get_prompt(
             "evaluate_adherence",
+            template_class="PlanAdherenceMetric",
             user_task=task,
             agent_plan="\n".join(plan),
             execution_trace_json=execution_trace_json,
@@ -195,10 +193,9 @@ class PlanAdherenceMetric(BaseMetric):
             if isinstance(test_case._trace_dict, dict)
             else str(test_case._trace_dict or {})
         )
-        prompt = resolve_template(
-            "metrics",
-            "PlanAdherenceMetric",
+        prompt = self._get_prompt(
             "evaluate_adherence",
+            template_class="PlanAdherenceMetric",
             user_task=task,
             agent_plan="\n".join(plan),
             execution_trace_json=execution_trace_json,
@@ -218,10 +215,9 @@ class PlanAdherenceMetric(BaseMetric):
             if isinstance(test_case._trace_dict, dict)
             else str(test_case._trace_dict or {})
         )
-        prompt = resolve_template(
-            "metrics",
-            "PlanAdherenceMetric",
+        prompt = self._get_prompt(
             "extract_plan_from_trace",
+            template_class="PlanAdherenceMetric",
             trace_json_str=trace_json_str,
             multimodal=test_case.multimodal,
         )
@@ -241,10 +237,9 @@ class PlanAdherenceMetric(BaseMetric):
             if isinstance(test_case._trace_dict, dict)
             else str(test_case._trace_dict or {})
         )
-        prompt = resolve_template(
-            "metrics",
-            "PlanAdherenceMetric",
+        prompt = self._get_prompt(
             "extract_plan_from_trace",
+            template_class="PlanAdherenceMetric",
             trace_json_str=trace_json_str,
             multimodal=test_case.multimodal,
         )
@@ -262,10 +257,9 @@ class PlanAdherenceMetric(BaseMetric):
             if isinstance(test_case._trace_dict, dict)
             else str(test_case._trace_dict or {})
         )
-        prompt = resolve_template(
-            "metrics",
-            "StepEfficiencyMetric",
+        prompt = self._get_prompt(
             "extract_task_from_trace",
+            template_class="StepEfficiencyMetric",
             trace_json=trace_json,
             multimodal=test_case.multimodal,
         )
@@ -283,10 +277,9 @@ class PlanAdherenceMetric(BaseMetric):
             if isinstance(test_case._trace_dict, dict)
             else str(test_case._trace_dict or {})
         )
-        prompt = resolve_template(
-            "metrics",
-            "StepEfficiencyMetric",
+        prompt = self._get_prompt(
             "extract_task_from_trace",
+            template_class="StepEfficiencyMetric",
             trace_json=trace_json,
             multimodal=test_case.multimodal,
         )

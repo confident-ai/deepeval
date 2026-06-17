@@ -15,7 +15,6 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.argument_correctness.schema import (
     ArgumentCorrectnessVerdict,
@@ -170,9 +169,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 incorrect_tool_calls_reasons.append(verdict.reason)
 
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_reason",
             incorrect_tool_calls_reasons=incorrect_tool_calls_reasons,
             input=input,
@@ -197,9 +194,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 incorrect_tool_calls_reasons.append(verdict.reason)
 
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_reason",
             incorrect_tool_calls_reasons=incorrect_tool_calls_reasons,
             input=input,
@@ -218,9 +213,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
     async def _a_generate_verdicts(
         self, input: str, tools_called: List[ToolCall], multimodal: bool
     ) -> List[ArgumentCorrectnessVerdict]:
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_verdicts",
             input=input,
             tools_called=tools_called,
@@ -240,9 +233,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
     def _generate_verdicts(
         self, input: str, tools_called: List[ToolCall], multimodal: bool
     ) -> List[ArgumentCorrectnessVerdict]:
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_verdicts",
             input=input,
             tools_called=tools_called,

@@ -1,7 +1,6 @@
 import asyncio
 from typing import Optional, Union, List
 
-from deepeval.templates import resolve_template
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import (
@@ -197,10 +196,9 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         available_tools, _, _ = available_mcp_servers_block(
             test_case.mcp_servers
         )
-        prompt = resolve_template(
-            "metrics",
-            _MCP_TASK_COMPLETION_TEMPLATES,
+        prompt = self._get_prompt(
             "get_tool_correctness_score",
+            template_class=_MCP_TASK_COMPLETION_TEMPLATES,
             task=task,
             available_tools=available_tools,
             steps_taken=task_steps_taken_text(task),
@@ -220,10 +218,9 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         available_tools, _, _ = available_mcp_servers_block(
             test_case.mcp_servers
         )
-        prompt = resolve_template(
-            "metrics",
-            _MCP_TASK_COMPLETION_TEMPLATES,
+        prompt = self._get_prompt(
             "get_tool_correctness_score",
+            template_class=_MCP_TASK_COMPLETION_TEMPLATES,
             task=task,
             available_tools=available_tools,
             steps_taken=task_steps_taken_text(task),
@@ -245,10 +242,9 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
             available_resources,
             available_prompts,
         ) = available_mcp_servers_block(test_case.mcp_servers)
-        prompt = resolve_template(
-            "metrics",
-            _MCP_TASK_COMPLETION_TEMPLATES,
+        prompt = self._get_prompt(
             "get_args_correctness_score",
+            template_class=_MCP_TASK_COMPLETION_TEMPLATES,
             task=task,
             available_tools=available_tools,
             available_resources=available_resources,
@@ -272,10 +268,9 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
             available_resources,
             available_prompts,
         ) = available_mcp_servers_block(test_case.mcp_servers)
-        prompt = resolve_template(
-            "metrics",
-            _MCP_TASK_COMPLETION_TEMPLATES,
+        prompt = self._get_prompt(
             "get_args_correctness_score",
+            template_class=_MCP_TASK_COMPLETION_TEMPLATES,
             task=task,
             available_tools=available_tools,
             available_resources=available_resources,
@@ -377,10 +372,9 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         for arg_score in args_accuracy_score:
             reasons.append(arg_score.reason)
 
-        prompt = resolve_template(
-            "metrics",
-            _MCP_TASK_COMPLETION_TEMPLATES,
+        prompt = self._get_prompt(
             "generate_final_reason",
+            template_class=_MCP_TASK_COMPLETION_TEMPLATES,
             final_score=self.score,
             success=self.success,
             reasons=reasons,
@@ -409,10 +403,9 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         for arg_score in args_accuracy_score:
             reasons.append(arg_score.reason)
 
-        prompt = resolve_template(
-            "metrics",
-            _MCP_TASK_COMPLETION_TEMPLATES,
+        prompt = self._get_prompt(
             "generate_final_reason",
+            template_class=_MCP_TASK_COMPLETION_TEMPLATES,
             final_score=self.score,
             success=self.success,
             reasons=reasons,

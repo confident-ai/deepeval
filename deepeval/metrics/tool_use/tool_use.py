@@ -17,7 +17,6 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.tool_use.schema import (
     ToolSelectionScore,
@@ -214,9 +213,7 @@ class ToolUseMetric(BaseConversationalMetric):
     def _get_argument_correctness_score(
         self, user_and_tools: UserInputAndTools, *, multimodal: bool
     ):
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "get_argument_correctness_score",
             user_input=user_and_tools.user_messages,
             assistant_messages=user_and_tools.assistant_messages,
@@ -238,9 +235,7 @@ class ToolUseMetric(BaseConversationalMetric):
         *,
         multimodal: bool,
     ):
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "get_argument_correctness_score",
             user_input=user_and_tools.user_messages,
             assistant_messages=user_and_tools.assistant_messages,
@@ -262,9 +257,7 @@ class ToolUseMetric(BaseConversationalMetric):
         *,
         multimodal: bool,
     ):
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "get_tool_selection_score",
             user_input=user_and_tools.user_messages,
             assistant_messages=user_and_tools.assistant_messages,
@@ -286,9 +279,7 @@ class ToolUseMetric(BaseConversationalMetric):
         *,
         multimodal: bool,
     ):
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "get_tool_selection_score",
             user_input=user_and_tools.user_messages,
             assistant_messages=user_and_tools.assistant_messages,
@@ -381,9 +372,7 @@ class ToolUseMetric(BaseConversationalMetric):
             scores_and_reasons += (
                 f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
             )
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "get_tool_selection_final_reason",
             all_scores_and_reasons=scores_and_reasons,
             final_score=self.score,
@@ -410,9 +399,7 @@ class ToolUseMetric(BaseConversationalMetric):
             scores_and_reasons += (
                 f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
             )
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "get_tool_selection_final_reason",
             all_scores_and_reasons=scores_and_reasons,
             final_score=self.score,
@@ -435,9 +422,7 @@ class ToolUseMetric(BaseConversationalMetric):
             scores_and_reasons += (
                 f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
             )
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "get_tool_selection_final_reason",
             all_scores_and_reasons=scores_and_reasons,
             final_score=self.score,
@@ -463,9 +448,7 @@ class ToolUseMetric(BaseConversationalMetric):
             scores_and_reasons += (
                 f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
             )
-        prompt = resolve_template(
-            "metrics",
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "get_tool_selection_final_reason",
             all_scores_and_reasons=scores_and_reasons,
             final_score=self.score,

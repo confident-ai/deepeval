@@ -14,7 +14,7 @@ That pattern does not scale when you need to have multi-language templates or ne
 - Let contributors run **`deepeval translate`** to add keys to those JSON files without forking Python code
 - Keep **one standardized shape** for all metrics (`class_name` → `method_name` → template string) for tooling and multi-language layouts
 
-So shipped prompts now live in a single bundled [`templates.json`](../metric_templates/templates.json). Metrics load them through [`resolve_template`](../metric_templates/resolver.py) instead of building prompts in Python.
+So shipped prompts now live in a single bundled [`templates.json`](../metric_templates/templates.json). Metrics render them by calling `self._get_prompt(...)` (a thin helper on the metric/node base classes that delegates to [`resolve_template`](../metric_templates/resolver.py)) instead of building prompts in Python.
 
 ### Why `.txt` files live next to each metric
 
@@ -47,8 +47,8 @@ deepeval/metrics/<metric_package>/templates/<MetricClassName>/<method_name>.txt
 | Part                | Rule                                                                                                      |
 | ------------------- | --------------------------------------------------------------------------------------------------------- |
 | `<metric_package>`  | Snake-case folder for the metric (e.g. `answer_relevancy`, `tool_correctness`)                            |
-| `<MetricClassName>` | **Must match** the Python class name passed to `resolve_template` (e.g. `AnswerRelevancyMetric`)          |
-| `<method_name>.txt` | **Must match** the method string passed to `resolve_template` (e.g. `generate_statements` → `.txt` stem)  |
+| `<MetricClassName>` | **Must match** the rendering class name (usually `self.__class__.__name__`, e.g. `AnswerRelevancyMetric`)   |
+| `<method_name>.txt` | **Must match** the method string passed to `self._get_prompt` (e.g. `generate_statements` → `.txt` stem)   |
 
 **Example** (answer relevancy):
 
@@ -109,19 +109,18 @@ The compile script scans all `**/templates/<MetricClassName>/*.txt` files under 
 
 ## Adding templates for a new metric
 
-1. Implement the metric class (e.g. `MyNewMetric`) and call `resolve_template` with that class name and method names:
+1. Implement the metric class (e.g. `MyNewMetric`). Subclasses of `BaseMetric` / `BaseConversationalMetric` / `BaseArenaMetric` (and DAG nodes) inherit `self._get_prompt(...)`, which renders the template for the current class:
 
    ```python
-   from deepeval.metric_templates import resolve_template
-
-   prompt = resolve_template(
-       self.__class__.__name__,
+   prompt = self._get_prompt(
        "generate_verdicts",
        multimodal=test_case.multimodal,
        input=input,
        ...
    )
    ```
+
+   The template is looked up by `self.__class__.__name__`. To render another class's template (e.g. borrowing `FaithfulnessMetric`), pass `template_class="FaithfulnessMetric"`. The `method` arg is typed as `MetricTemplateMethod`, so editors autocomplete it and flag typos.
 
 2. Create the template directory and files:
 
@@ -131,7 +130,7 @@ The compile script scans all `**/templates/<MetricClassName>/*.txt` files under 
      generate_reason.txt
    ```
 
-   Use the exact `ClassName` and method names your code passes to `resolve_template`.
+   Use the exact `ClassName` and method names your code passes to `self._get_prompt(...)` (the class name defaults to `self.__class__.__name__`).
 
 3. Run the compile script (see above) and commit the new `.txt` files and updated `templates.json`.
 
@@ -166,9 +165,11 @@ flowchart LR
   Txt --> Compile --> JSON --> Resolver --> Metric
 ```
 
-1. **`get_raw_template(class_name, method)`** — If `DEEPEVAL_METRIC_TEMPLATE_LANGUAGE` is set to a community language, loads from `metric_templates/community/templates.<lang>.json` when present; otherwise falls back to the English `templates.json` bundle (via `importlib.resources`) and logs a one-time warning per missing class/method.
+0. **`self._get_prompt(method, *, template_class=None, multimodal=False, strict=True, **kwargs)`** — The call-site entry point on the metric/node base classes. Binds `feature="metrics"` and `class_name = template_class or self.__class__.__name__`, then delegates to `resolve_template`.
 
-2. **`resolve_template(class_name, method, multimodal=..., **kwargs)`** — Parses the string as a Jinja2 template, injects:
+1. **`get_raw_template(feature, class_name, method)`** — If `DEEPEVAL_METRIC_TEMPLATE_LANGUAGE` is set to a community language, loads from `metric_templates/community/templates.<lang>.json` when present; otherwise falls back to the English `templates.json` bundle (via `importlib.resources`) and logs a one-time warning per missing class/method.
+
+2. **`resolve_template(feature, class_name, method, *, multimodal=..., strict=..., **kwargs)`** — Parses the string as a Jinja2 template, injects:
    - `multimodal` — toggles `{% if multimodal %}` blocks
    - `_fragments` — dict of shared snippets from the `"_fragments"` key in the bundle
    - Any other kwargs the metric passes (`input`, `actual_output`, `score`, etc.)
@@ -180,8 +181,7 @@ Relevant code: [`deepeval/metric_templates/resolver.py`](../metric_templates/res
 Example (from answer relevancy):
 
 ```python
-prompt = resolve_template(
-    self.__class__.__name__,
+prompt = self._get_prompt(
     "generate_statements",
     multimodal=multimodal,
     actual_output=actual_output,
@@ -218,10 +218,10 @@ Centralizing prompts in JSON is what makes translation practical: the CLI can wa
 
 ## Checklist for template changes
 
-- [ ] `.txt` path is `templates/<MetricClassName>/<method>.txt` and names match `resolve_template(...)` call sites
+- [ ] `.txt` path is `templates/<MetricClassName>/<method>.txt` and names match `self._get_prompt(...)` call sites
 - [ ] Ran `python scripts/compile_metric_templates.py`
 - [ ] Committed updated `templates.json`
-- [ ] New Jinja variables match what the metric passes into `resolve_template`
+- [ ] New Jinja variables match what the metric passes into `self._get_prompt(...)`
 - [ ] Fragment references use names that exist under `metric_templates/fragments/`
 - [ ] Tests pass: `pytest tests/test_templates/test_metric_templates.py`
 
