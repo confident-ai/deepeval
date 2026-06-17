@@ -154,7 +154,8 @@ class StepEfficiencyMetric(BaseMetric):
             if isinstance(raw, dict)
             else (str(raw) if raw is not None else "{}")
         )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_execution_efficiency",
             task=task,
@@ -179,7 +180,8 @@ class StepEfficiencyMetric(BaseMetric):
             if isinstance(raw, dict)
             else (str(raw) if raw is not None else "{}")
         )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_execution_efficiency",
             task=task,
@@ -202,7 +204,8 @@ class StepEfficiencyMetric(BaseMetric):
             if isinstance(raw, dict)
             else (str(raw) if raw is not None else "{}")
         )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "extract_task_from_trace",
             trace_json=trace_json,
@@ -223,7 +226,8 @@ class StepEfficiencyMetric(BaseMetric):
             if isinstance(raw, dict)
             else (str(raw) if raw is not None else "{}")
         )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "extract_task_from_trace",
             trace_json=trace_json,

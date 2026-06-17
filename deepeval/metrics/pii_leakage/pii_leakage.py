@@ -46,6 +46,7 @@ class PIILeakageMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+
     def measure(
         self,
         test_case: LLMTestCase,
@@ -156,10 +157,9 @@ class PIILeakageMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 privacy_violations.append(verdict.reason)
 
-        prompt: dict = resolve_template("metrics", 
-
+        prompt: dict = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             privacy_violations=privacy_violations,
             score=format(self.score, ".2f"),
@@ -182,10 +182,9 @@ class PIILeakageMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 privacy_violations.append(verdict.reason)
 
-        prompt: dict = resolve_template("metrics", 
-
+        prompt: dict = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             privacy_violations=privacy_violations,
             score=format(self.score, ".2f"),
@@ -203,12 +202,11 @@ class PIILeakageMetric(BaseMetric):
         if len(self.extracted_pii) == 0:
             return []
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_verdicts",
-            extracted_pii=self.extracted_pii
+            extracted_pii=self.extracted_pii,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -224,12 +222,11 @@ class PIILeakageMetric(BaseMetric):
         if len(self.extracted_pii) == 0:
             return []
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_verdicts",
-            extracted_pii=self.extracted_pii
+            extracted_pii=self.extracted_pii,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -244,7 +241,8 @@ class PIILeakageMetric(BaseMetric):
     async def _a_extract_pii(
         self, actual_output: str, *, multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "extract_pii",
             actual_output=actual_output,
@@ -258,8 +256,11 @@ class PIILeakageMetric(BaseMetric):
             extract_json=lambda data: data["extracted_pii"],
         )
 
-    def _extract_pii(self, actual_output: str, *, multimodal: bool) -> List[str]:
-        prompt = resolve_template("metrics", 
+    def _extract_pii(
+        self, actual_output: str, *, multimodal: bool
+    ) -> List[str]:
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "extract_pii",
             actual_output=actual_output,

@@ -45,7 +45,7 @@ def _contextual_relevancy_verdict_kwargs(multimodal: bool) -> Dict[str, str]:
             "verdict and optionally a reason for each statement."
         )
         empty_context_instruction = (
-            '\nIf provided context contains no actual content or statements then: '
+            "\nIf provided context contains no actual content or statements then: "
             'give "no" as a "verdict",\nput context into "statement", and '
             '"No statements found in provided context." into "reason".'
         )
@@ -79,6 +79,7 @@ class ContextualRelevancyMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+
     def measure(
         self,
         test_case: LLMTestCase,
@@ -202,10 +203,9 @@ class ContextualRelevancyMetric(BaseMetric):
                 else:
                     relevant_statements.append(verdict.statement)
 
-        prompt: dict = resolve_template("metrics", 
-
+        prompt: dict = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             input=input,
             irrelevant_statements=irrelevant_statements,
@@ -235,10 +235,9 @@ class ContextualRelevancyMetric(BaseMetric):
                 else:
                     relevant_statements.append(verdict.statement)
 
-        prompt: dict = resolve_template("metrics", 
-
+        prompt: dict = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             input=input,
             irrelevant_statements=irrelevant_statements,
@@ -273,7 +272,8 @@ class ContextualRelevancyMetric(BaseMetric):
     async def _a_generate_verdicts(
         self, input: str, context: List[str], multimodal: bool
     ) -> ContextualRelevancyVerdicts:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             input=input,
@@ -293,7 +293,8 @@ class ContextualRelevancyMetric(BaseMetric):
     def _generate_verdicts(
         self, input: str, context: str, multimodal: bool
     ) -> ContextualRelevancyVerdicts:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             input=input,

@@ -172,10 +172,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             ):
                 incompletenesses.append(verdict.reason)
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             score=self.score,
             incompletenesses=incompletenesses,
@@ -203,10 +202,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             ):
                 incompletenesses.append(verdict.reason)
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             score=self.score,
             incompletenesses=incompletenesses,
@@ -224,7 +222,8 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
     async def _a_generate_verdict(
         self, turns: List[Turn], intention: str, multimodal: bool
     ) -> ConversationCompletenessVerdict:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             turns=[convert_turn_to_dict(turn) for turn in turns],
@@ -243,7 +242,8 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
     def _generate_verdict(
         self, turns: List[Turn], intention: str, multimodal: bool
     ) -> ConversationCompletenessVerdict:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             turns=[convert_turn_to_dict(turn) for turn in turns],
@@ -261,7 +261,8 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
     async def _a_extract_user_intentions(
         self, turns: List[Turn], multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "extract_user_intentions",
             turns=[convert_turn_to_dict(turn) for turn in turns],
@@ -279,7 +280,8 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
     def _extract_user_intentions(
         self, turns: List[Turn], multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "extract_user_intentions",
             turns=[convert_turn_to_dict(turn) for turn in turns],

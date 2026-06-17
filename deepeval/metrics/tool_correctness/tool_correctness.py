@@ -333,7 +333,8 @@ class ToolCorrectnessMetric(BaseMetric):
     ):
         tools_called_formatted = print_tools_called(tools_called)
         available_tools_formatted = print_tools_called(available_tools)
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_tool_selection_score",
             user_input=user_input,
@@ -354,7 +355,8 @@ class ToolCorrectnessMetric(BaseMetric):
     ):
         tools_called_formatted = print_tools_called(tools_called)
         available_tools_formatted = print_tools_called(available_tools)
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_tool_selection_score",
             user_input=user_input,

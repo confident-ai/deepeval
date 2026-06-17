@@ -232,7 +232,8 @@ class VerdictNode(BaseNode):
                 metric.reason = await self._a_generate_reason(metric=metric)
 
     def _generate_reason(self, metric: BaseMetric):
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             "VerdictNode",
             "generate_reason",
             verbose_steps=metric._verbose_steps,
@@ -248,7 +249,8 @@ class VerdictNode(BaseNode):
         )
 
     async def _a_generate_reason(self, metric: BaseMetric):
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             "VerdictNode",
             "generate_reason",
             verbose_steps=metric._verbose_steps,
@@ -316,10 +318,9 @@ class TaskNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             "TaskNode",
-
             "generate_task_output",
             instructions=self.instructions,
             text=text,
@@ -366,10 +367,9 @@ class TaskNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             "TaskNode",
-
             "generate_task_output",
             instructions=self.instructions,
             text=text,
@@ -461,10 +461,9 @@ class BinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             "BinaryJudgement",
-
             "generate_binary_verdict",
             criteria=self.criteria,
             text=text,
@@ -505,10 +504,9 @@ class BinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             "BinaryJudgement",
-
             "generate_binary_verdict",
             criteria=self.criteria,
             text=text,
@@ -610,12 +608,13 @@ class NonBinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             "BinaryJudgement",
-
             "generate_non_binary_verdict",
-            criteria=self.criteria, text=text, options=self._verdict_options
+            criteria=self.criteria,
+            text=text,
+            options=self._verdict_options,
         )
 
         self._verdict = generate_with_schema_and_extract(
@@ -655,12 +654,13 @@ class NonBinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             "BinaryJudgement",
-
             "generate_non_binary_verdict",
-            criteria=self.criteria, text=text, options=self._verdict_options
+            criteria=self.criteria,
+            text=text,
+            options=self._verdict_options,
         )
 
         self._verdict = await a_generate_with_schema_and_extract(

@@ -282,7 +282,8 @@ class ImageReferenceMetric(BaseMetric):
         context_above: Optional[str] = None,
         context_below: Optional[str] = None,
     ) -> Tuple[float, str]:
-        instructions = resolve_template("metrics", 
+        instructions = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "evaluate_image_reference",
             context_above=context_above,
@@ -303,7 +304,8 @@ class ImageReferenceMetric(BaseMetric):
         context_above: Optional[str] = None,
         context_below: Optional[str] = None,
     ) -> Tuple[float, str]:
-        instructions = resolve_template("metrics", 
+        instructions = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "evaluate_image_reference",
             context_above=context_above,

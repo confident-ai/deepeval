@@ -35,7 +35,9 @@ def _contextual_precision_verdict_fields(
         f"{'s' if len(retrieval_context) > 1 else ''})"
     )
     context_to_display = (
-        id_retrieval_context(retrieval_context) if multimodal else retrieval_context
+        id_retrieval_context(retrieval_context)
+        if multimodal
+        else retrieval_context
     )
     multimodal_note = " (which can be text or an image)" if multimodal else ""
     return document_count_str, context_to_display, multimodal_note
@@ -191,7 +193,8 @@ class ContextualPrecisionMetric(BaseMetric):
             {"verdict": verdict.verdict, "reason": verdict.reason}
             for verdict in self.verdicts
         ]
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_reason",
             multimodal=multimodal,
@@ -216,7 +219,8 @@ class ContextualPrecisionMetric(BaseMetric):
             {"verdict": verdict.verdict, "reason": verdict.reason}
             for verdict in self.verdicts
         ]
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_reason",
             multimodal=multimodal,
@@ -243,7 +247,8 @@ class ContextualPrecisionMetric(BaseMetric):
         doc_str, ctx_disp, mm_note = _contextual_precision_verdict_fields(
             retrieval_context, multimodal
         )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             multimodal=multimodal,
@@ -275,7 +280,8 @@ class ContextualPrecisionMetric(BaseMetric):
         doc_str, ctx_disp, mm_note = _contextual_precision_verdict_fields(
             retrieval_context, multimodal
         )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             multimodal=multimodal,

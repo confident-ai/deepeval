@@ -8,7 +8,9 @@ from deepeval.test_case import MLLMImage
 from deepeval.utils import convert_to_multi_modal_array
 
 
-def id_retrieval_context(retrieval_context: List[Any]) -> List[Union[str, MLLMImage]]:
+def id_retrieval_context(
+    retrieval_context: List[Any],
+) -> List[Union[str, MLLMImage]]:
     """Prefix each text node with ``Node N:``; image nodes get a label line then the image."""
     annotated: List[Union[str, MLLMImage]] = []
     seq = convert_to_multi_modal_array(retrieval_context)

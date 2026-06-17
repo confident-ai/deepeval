@@ -175,7 +175,8 @@ class ArenaGEval(BaseArenaMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_evaluation_steps",
             criteria=self.criteria,
@@ -198,7 +199,8 @@ class ArenaGEval(BaseArenaMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_evaluation_steps",
             criteria=self.criteria,
@@ -222,7 +224,8 @@ class ArenaGEval(BaseArenaMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_arena_winner",
             evaluation_steps=number_evaluation_steps(self.evaluation_steps),
@@ -256,7 +259,8 @@ class ArenaGEval(BaseArenaMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_arena_winner",
             evaluation_steps=number_evaluation_steps(self.evaluation_steps),
@@ -285,7 +289,8 @@ class ArenaGEval(BaseArenaMetric):
         reason: str,
         dummy_to_real_names: Dict[str, str],
     ) -> str:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "rewrite_reason",
             reason=reason,
@@ -305,7 +310,8 @@ class ArenaGEval(BaseArenaMetric):
         reason: str,
         dummy_to_real_names: Dict[str, str],
     ) -> str:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "rewrite_reason",
             reason=reason,

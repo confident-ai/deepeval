@@ -31,9 +31,7 @@ def _faithfulness_truths_limit_phrase(extraction_limit: Optional[int]) -> str:
         return " FACTUAL, undisputed truths"
     if extraction_limit == 1:
         return " the single most important FACTUAL, undisputed truth"
-    return (
-        f" the {extraction_limit} most important FACTUAL, undisputed truths per document"
-    )
+    return f" the {extraction_limit} most important FACTUAL, undisputed truths per document"
 
 
 def _faithfulness_truths_multimodal_instruction(multimodal: bool) -> str:
@@ -205,7 +203,8 @@ class FaithfulnessMetric(BaseMetric):
             ):
                 contradictions.append(f"(Ambiguous) {verdict.reason}")
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_reason",
             multimodal=multimodal,
@@ -235,7 +234,8 @@ class FaithfulnessMetric(BaseMetric):
             ):
                 contradictions.append(f"(Ambiguous) {verdict.reason}")
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_reason",
             multimodal=multimodal,
@@ -257,7 +257,8 @@ class FaithfulnessMetric(BaseMetric):
         if len(self.claims) == 0:
             return []
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             multimodal=multimodal,
@@ -279,7 +280,8 @@ class FaithfulnessMetric(BaseMetric):
         if len(self.claims) == 0:
             return []
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             multimodal=multimodal,
@@ -300,12 +302,15 @@ class FaithfulnessMetric(BaseMetric):
     async def _a_generate_truths(
         self, retrieval_context: str, multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_truths",
             multimodal=multimodal,
             retrieval_context="\n\n".join(retrieval_context),
-            limit=_faithfulness_truths_limit_phrase(self.truths_extraction_limit),
+            limit=_faithfulness_truths_limit_phrase(
+                self.truths_extraction_limit
+            ),
             multimodal_instruction=_faithfulness_truths_multimodal_instruction(
                 multimodal
             ),
@@ -321,12 +326,15 @@ class FaithfulnessMetric(BaseMetric):
     def _generate_truths(
         self, retrieval_context: str, multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_truths",
             multimodal=multimodal,
             retrieval_context="\n\n".join(retrieval_context),
-            limit=_faithfulness_truths_limit_phrase(self.truths_extraction_limit),
+            limit=_faithfulness_truths_limit_phrase(
+                self.truths_extraction_limit
+            ),
             multimodal_instruction=_faithfulness_truths_multimodal_instruction(
                 multimodal
             ),
@@ -342,7 +350,8 @@ class FaithfulnessMetric(BaseMetric):
     async def _a_generate_claims(
         self, actual_output: str, multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_claims",
             multimodal=multimodal,
@@ -362,7 +371,8 @@ class FaithfulnessMetric(BaseMetric):
     def _generate_claims(
         self, actual_output: str, multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_claims",
             multimodal=multimodal,

@@ -160,7 +160,8 @@ class ToxicityMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 toxics.append(verdict.reason)
 
-        prompt: dict = resolve_template("metrics", 
+        prompt: dict = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_reason",
             toxics=toxics,
@@ -184,7 +185,8 @@ class ToxicityMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 toxics.append(verdict.reason)
 
-        prompt: dict = resolve_template("metrics", 
+        prompt: dict = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_reason",
             toxics=toxics,
@@ -203,7 +205,8 @@ class ToxicityMetric(BaseMetric):
         if len(self.opinions) == 0:
             return []
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             opinions=self.opinions,
@@ -226,7 +229,8 @@ class ToxicityMetric(BaseMetric):
         if len(self.opinions) == 0:
             return []
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             opinions=self.opinions,
@@ -244,7 +248,8 @@ class ToxicityMetric(BaseMetric):
         return verdicts
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_opinions",
             actual_output=actual_output,
@@ -259,7 +264,8 @@ class ToxicityMetric(BaseMetric):
         )
 
     def _generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_opinions",
             actual_output=actual_output,

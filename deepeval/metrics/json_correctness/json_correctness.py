@@ -163,10 +163,9 @@ class JsonCorrectnessMetric(BaseMetric):
         if is_valid_json:
             return DEFAULT_CORRECT_REASON
 
-        prompt: dict = resolve_template("metrics", 
-
+        prompt: dict = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             actual_output=actual_output,
             expected_schema=json.dumps(
@@ -191,10 +190,9 @@ class JsonCorrectnessMetric(BaseMetric):
         if is_valid_json:
             return DEFAULT_CORRECT_REASON
 
-        prompt: dict = resolve_template("metrics", 
-
+        prompt: dict = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             actual_output=actual_output,
             expected_schema=json.dumps(

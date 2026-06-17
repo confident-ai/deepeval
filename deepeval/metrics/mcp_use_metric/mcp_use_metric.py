@@ -191,7 +191,8 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPPrimitivesScore:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             "MCPUseMetric",
             "get_primitive_correctness_prompt",
             test_case=test_case,
@@ -213,7 +214,8 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPPrimitivesScore:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             "MCPUseMetric",
             "get_primitive_correctness_prompt",
             test_case=test_case,
@@ -235,7 +237,8 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPArgsScore:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             "MCPUseMetric",
             "get_mcp_argument_correctness_prompt",
             test_case=test_case,
@@ -257,7 +260,8 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPArgsScore:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             "MCPUseMetric",
             "get_mcp_argument_correctness_prompt",
             test_case=test_case,

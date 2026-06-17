@@ -46,6 +46,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+
     def measure(
         self,
         test_case: LLMTestCase,
@@ -169,10 +170,9 @@ class ArgumentCorrectnessMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 incorrect_tool_calls_reasons.append(verdict.reason)
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             incorrect_tool_calls_reasons=incorrect_tool_calls_reasons,
             input=input,
@@ -197,10 +197,9 @@ class ArgumentCorrectnessMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 incorrect_tool_calls_reasons.append(verdict.reason)
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             incorrect_tool_calls_reasons=incorrect_tool_calls_reasons,
             input=input,
@@ -219,10 +218,13 @@ class ArgumentCorrectnessMetric(BaseMetric):
     async def _a_generate_verdicts(
         self, input: str, tools_called: List[ToolCall], multimodal: bool
     ) -> List[ArgumentCorrectnessVerdict]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
-            input=input, tools_called=tools_called, multimodal=multimodal
+            input=input,
+            tools_called=tools_called,
+            multimodal=multimodal,
         )
 
         return await a_generate_with_schema_and_extract(
@@ -238,10 +240,13 @@ class ArgumentCorrectnessMetric(BaseMetric):
     def _generate_verdicts(
         self, input: str, tools_called: List[ToolCall], multimodal: bool
     ) -> List[ArgumentCorrectnessVerdict]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
-            input=input, tools_called=tools_called, multimodal=multimodal
+            input=input,
+            tools_called=tools_called,
+            multimodal=multimodal,
         )
 
         return generate_with_schema_and_extract(

@@ -13,7 +13,9 @@ def indent_multiline_string(s: object, indent_level: int = 4) -> str:
     return "\n".join(f"{indent}{line}" for line in str(s).splitlines())
 
 
-def available_mcp_servers_block(mcp_servers: List[MCPServer]) -> tuple[str, str, str]:
+def available_mcp_servers_block(
+    mcp_servers: List[MCPServer],
+) -> tuple[str, str, str]:
     """Return (available_tools, available_resources, available_prompts) for bundled prompts."""
     available_tools = ""
     available_resources = ""

@@ -214,7 +214,8 @@ class ToolUseMetric(BaseConversationalMetric):
     def _get_argument_correctness_score(
         self, user_and_tools: UserInputAndTools, *, multimodal: bool
     ):
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_argument_correctness_score",
             user_input=user_and_tools.user_messages,
@@ -237,7 +238,8 @@ class ToolUseMetric(BaseConversationalMetric):
         *,
         multimodal: bool,
     ):
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_argument_correctness_score",
             user_input=user_and_tools.user_messages,
@@ -260,7 +262,8 @@ class ToolUseMetric(BaseConversationalMetric):
         *,
         multimodal: bool,
     ):
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_tool_selection_score",
             user_input=user_and_tools.user_messages,
@@ -283,7 +286,8 @@ class ToolUseMetric(BaseConversationalMetric):
         *,
         multimodal: bool,
     ):
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_tool_selection_score",
             user_input=user_and_tools.user_messages,
@@ -377,7 +381,8 @@ class ToolUseMetric(BaseConversationalMetric):
             scores_and_reasons += (
                 f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
             )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_tool_selection_final_reason",
             all_scores_and_reasons=scores_and_reasons,
@@ -405,7 +410,8 @@ class ToolUseMetric(BaseConversationalMetric):
             scores_and_reasons += (
                 f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
             )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_tool_selection_final_reason",
             all_scores_and_reasons=scores_and_reasons,
@@ -429,7 +435,8 @@ class ToolUseMetric(BaseConversationalMetric):
             scores_and_reasons += (
                 f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
             )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_tool_selection_final_reason",
             all_scores_and_reasons=scores_and_reasons,
@@ -456,7 +463,8 @@ class ToolUseMetric(BaseConversationalMetric):
             scores_and_reasons += (
                 f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
             )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_tool_selection_final_reason",
             all_scores_and_reasons=scores_and_reasons,

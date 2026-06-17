@@ -46,6 +46,7 @@ class HallucinationMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+
     def measure(
         self,
         test_case: LLMTestCase,
@@ -157,10 +158,9 @@ class HallucinationMetric(BaseMetric):
             else:
                 contradictions.append(verdict.reason)
 
-        prompt: dict = resolve_template("metrics", 
-
+        prompt: dict = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             factual_alignments=factual_alignments,
             contradictions=contradictions,
@@ -187,10 +187,9 @@ class HallucinationMetric(BaseMetric):
             else:
                 contradictions.append(verdict.reason)
 
-        prompt: dict = resolve_template("metrics", 
-
+        prompt: dict = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             factual_alignments=factual_alignments,
             contradictions=contradictions,
@@ -208,7 +207,8 @@ class HallucinationMetric(BaseMetric):
     async def _a_generate_verdicts(
         self, actual_output: str, contexts: List[str]
     ) -> List[HallucinationVerdict]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             actual_output=actual_output,
@@ -228,7 +228,8 @@ class HallucinationMetric(BaseMetric):
     def _generate_verdicts(
         self, actual_output: str, contexts: List[str]
     ) -> List[HallucinationVerdict]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             actual_output=actual_output,

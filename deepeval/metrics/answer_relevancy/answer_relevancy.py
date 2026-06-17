@@ -165,7 +165,8 @@ class AnswerRelevancyMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 irrelevant_statements.append(verdict.reason)
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_reason",
             multimodal=multimodal,
@@ -191,7 +192,8 @@ class AnswerRelevancyMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 irrelevant_statements.append(verdict.reason)
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_reason",
             multimodal=multimodal,
@@ -214,7 +216,8 @@ class AnswerRelevancyMetric(BaseMetric):
         if len(self.statements) == 0:
             return []
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             multimodal=multimodal,
@@ -238,7 +241,8 @@ class AnswerRelevancyMetric(BaseMetric):
         if len(self.statements) == 0:
             return []
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             multimodal=multimodal,
@@ -261,7 +265,8 @@ class AnswerRelevancyMetric(BaseMetric):
         actual_output: str,
         multimodal: bool,
     ) -> List[str]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_statements",
             multimodal=multimodal,
@@ -283,7 +288,8 @@ class AnswerRelevancyMetric(BaseMetric):
         actual_output: str,
         multimodal: bool,
     ) -> List[str]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_statements",
             multimodal=multimodal,

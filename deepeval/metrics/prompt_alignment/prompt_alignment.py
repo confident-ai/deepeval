@@ -172,10 +172,9 @@ class PromptAlignmentMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 unalignment_reasons.append(verdict.reason)
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             unalignment_reasons=unalignment_reasons,
             input=input,
@@ -200,10 +199,9 @@ class PromptAlignmentMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 unalignment_reasons.append(verdict.reason)
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             unalignment_reasons=unalignment_reasons,
             input=input,
@@ -222,7 +220,8 @@ class PromptAlignmentMetric(BaseMetric):
     async def _a_generate_verdicts(
         self, input: str, actual_output: str
     ) -> List[paschema.PromptAlignmentVerdict]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             prompt_instructions=self.prompt_instructions,
@@ -243,7 +242,8 @@ class PromptAlignmentMetric(BaseMetric):
     def _generate_verdicts(
         self, input: str, actual_output: str
     ) -> List[paschema.PromptAlignmentVerdict]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             prompt_instructions=self.prompt_instructions,

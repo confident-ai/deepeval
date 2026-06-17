@@ -46,7 +46,7 @@ def _contextual_relevancy_verdict_kwargs(multimodal: bool) -> Dict[str, str]:
             "verdict and optionally a reason for each statement."
         )
         empty_context_instruction = (
-            '\nIf provided context contains no actual content or statements then: '
+            "\nIf provided context contains no actual content or statements then: "
             'give "no" as a "verdict",\nput context into "statement", and '
             '"No statements found in provided context." into "reason".'
         )
@@ -83,6 +83,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.window_size = window_size
+
     def measure(
         self,
         test_case: ConversationalTestCase,
@@ -278,7 +279,8 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
 
         # Generate verdicts for each context node
         for context in retrieval_context:
-            prompt = resolve_template("metrics", 
+            prompt = resolve_template(
+                "metrics",
                 self.__class__.__name__,
                 "generate_verdicts",
                 input=input,
@@ -309,7 +311,8 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
 
         # Generate verdicts for each context node
         for context in retrieval_context:
-            prompt = resolve_template("metrics", 
+            prompt = resolve_template(
+                "metrics",
                 self.__class__.__name__,
                 "generate_verdicts",
                 input=input,
@@ -411,10 +414,9 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                     f"{verdict.statement}: {verdict.reason}"
                 )
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             input=input,
             irrelevant_statements=irrelevant_statements,
@@ -454,10 +456,9 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                     f"{verdict.statement}: {verdict.reason}"
                 )
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             input=input,
             irrelevant_statements=irrelevant_statements,
@@ -501,7 +502,8 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         for score in scores:
             reasons.append(score.reason)
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_final_reason",
             final_score=self.score,
@@ -530,7 +532,8 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         for score in scores:
             reasons.append(score.reason)
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_final_reason",
             final_score=self.score,

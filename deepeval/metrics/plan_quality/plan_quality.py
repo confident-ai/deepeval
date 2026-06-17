@@ -166,7 +166,8 @@ class PlanQualityMetric(BaseMetric):
             return self.score
 
     def _get_plan_quality_score(self, task, plan, *, multimodal: bool):
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             "PlanQualityMetric",
             "evaluate_plan_quality",
             user_task=task,
@@ -182,7 +183,8 @@ class PlanQualityMetric(BaseMetric):
         )
 
     async def _a_get_plan_quality_score(self, task, plan, *, multimodal: bool):
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             "PlanQualityMetric",
             "evaluate_plan_quality",
             user_task=task,
@@ -203,7 +205,8 @@ class PlanQualityMetric(BaseMetric):
             if isinstance(test_case._trace_dict, dict)
             else str(test_case._trace_dict or {})
         )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             "PlanAdherenceMetric",
             "extract_plan_from_trace",
             trace_json_str=trace_json_str,
@@ -225,7 +228,8 @@ class PlanQualityMetric(BaseMetric):
             if isinstance(test_case._trace_dict, dict)
             else str(test_case._trace_dict or {})
         )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             "PlanAdherenceMetric",
             "extract_plan_from_trace",
             trace_json_str=trace_json_str,
@@ -245,7 +249,8 @@ class PlanQualityMetric(BaseMetric):
             if isinstance(test_case._trace_dict, dict)
             else str(test_case._trace_dict or {})
         )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             "StepEfficiencyMetric",
             "extract_task_from_trace",
             trace_json=trace_json,
@@ -265,7 +270,8 @@ class PlanQualityMetric(BaseMetric):
             if isinstance(test_case._trace_dict, dict)
             else str(test_case._trace_dict or {})
         )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             "StepEfficiencyMetric",
             "extract_task_from_trace",
             trace_json=trace_json,

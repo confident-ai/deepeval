@@ -221,10 +221,9 @@ class SummarizationMetric(BaseMetric):
                 ):
                     questions.append(verdict.question)
 
-        prompt: dict = resolve_template("metrics", 
-
+        prompt: dict = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             contradictions=contradictions,
             redundancies=redundancies,
@@ -269,10 +268,9 @@ class SummarizationMetric(BaseMetric):
                 ):
                     questions.append(verdict.question)
 
-        prompt: dict = resolve_template("metrics", 
-
+        prompt: dict = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             contradictions=contradictions,
             redundancies=redundancies,
@@ -329,10 +327,12 @@ class SummarizationMetric(BaseMetric):
         return 0 if self.strict_mode and score < self.threshold else score
 
     async def _a_generate_answers(self, text: str) -> List[str]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_answers",
-            questions=self.assessment_questions, text=text
+            questions=self.assessment_questions,
+            text=text,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -343,10 +343,12 @@ class SummarizationMetric(BaseMetric):
         )
 
     def _generate_answers(self, text: str) -> List[str]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_answers",
-            questions=self.assessment_questions, text=text
+            questions=self.assessment_questions,
+            text=text,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -357,9 +359,13 @@ class SummarizationMetric(BaseMetric):
         )
 
     async def _a_generate_assessment_questions(self, text: str) -> List[str]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
-            "generate_questions",text=text, n=self.n)
+            "generate_questions",
+            text=text,
+            n=self.n,
+        )
         return await a_generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
@@ -369,9 +375,13 @@ class SummarizationMetric(BaseMetric):
         )
 
     def _generate_assessment_questions(self, text: str) -> List[str]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
-            "generate_questions",text=text, n=self.n)
+            "generate_questions",
+            text=text,
+            n=self.n,
+        )
         return generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
@@ -442,12 +452,12 @@ class SummarizationMetric(BaseMetric):
         if len(self.claims) == 0:
             return []
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_alignment_verdicts",
-            summary_claims=self.claims, original_text="\n\n".join(self.truths)
+            summary_claims=self.claims,
+            original_text="\n\n".join(self.truths),
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -466,12 +476,12 @@ class SummarizationMetric(BaseMetric):
         if len(self.claims) == 0:
             return []
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_alignment_verdicts",
-            summary_claims=self.claims, original_text="\n\n".join(self.truths)
+            summary_claims=self.claims,
+            original_text="\n\n".join(self.truths),
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -486,12 +496,15 @@ class SummarizationMetric(BaseMetric):
 
     async def _a_generate_truths(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             "FaithfulnessMetric",
             "generate_truths",
             multimodal=False,
             retrieval_context=text,
-            limit=_faithfulness_truths_limit_phrase(self.truths_extraction_limit),
+            limit=_faithfulness_truths_limit_phrase(
+                self.truths_extraction_limit
+            ),
             multimodal_instruction=_faithfulness_truths_multimodal_instruction(
                 False
             ),
@@ -506,7 +519,8 @@ class SummarizationMetric(BaseMetric):
 
     async def _a_generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             "FaithfulnessMetric",
             "generate_claims",
             multimodal=False,
@@ -525,12 +539,15 @@ class SummarizationMetric(BaseMetric):
 
     def _generate_truths(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             "FaithfulnessMetric",
             "generate_truths",
             multimodal=False,
             retrieval_context=text,
-            limit=_faithfulness_truths_limit_phrase(self.truths_extraction_limit),
+            limit=_faithfulness_truths_limit_phrase(
+                self.truths_extraction_limit
+            ),
             multimodal_instruction=_faithfulness_truths_multimodal_instruction(
                 False
             ),
@@ -545,7 +562,8 @@ class SummarizationMetric(BaseMetric):
 
     def _generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             "FaithfulnessMetric",
             "generate_claims",
             multimodal=False,

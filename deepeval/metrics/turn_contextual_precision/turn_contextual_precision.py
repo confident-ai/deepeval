@@ -38,7 +38,9 @@ def _contextual_precision_verdict_fields(
         f"{'s' if len(retrieval_context) > 1 else ''})"
     )
     context_to_display = (
-        id_retrieval_context(retrieval_context) if multimodal else retrieval_context
+        id_retrieval_context(retrieval_context)
+        if multimodal
+        else retrieval_context
     )
     multimodal_note = " (which can be text or an image)" if multimodal else ""
     return document_count_str, context_to_display, multimodal_note
@@ -70,6 +72,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.window_size = window_size
+
     def measure(
         self,
         test_case: ConversationalTestCase,
@@ -281,7 +284,8 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         doc_str, ctx_disp, mm_note = _contextual_precision_verdict_fields(
             retrieval_context, multimodal
         )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             input=input,
@@ -315,7 +319,8 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         doc_str, ctx_disp, mm_note = _contextual_precision_verdict_fields(
             retrieval_context, multimodal
         )
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             input=input,
@@ -427,10 +432,9 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
                 }
             )
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             input=input,
             score=format(score, ".2f"),
@@ -467,10 +471,9 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
                 }
             )
 
-        prompt = resolve_template("metrics", 
-
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
-
             "generate_reason",
             input=input,
             score=format(score, ".2f"),
@@ -513,7 +516,8 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         for score in scores:
             reasons.append(score.reason)
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_final_reason",
             final_score=self.score,
@@ -542,7 +546,8 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         for score in scores:
             reasons.append(score.reason)
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_final_reason",
             final_score=self.score,

@@ -33,9 +33,7 @@ def _contextual_recall_verdict_kwargs(
     multimodal: bool,
 ) -> Dict[str, object]:
     content_type = "sentence and image" if multimodal else "sentence"
-    content_type_plural = (
-        "sentences and images" if multimodal else "sentences"
-    )
+    content_type_plural = "sentences and images" if multimodal else "sentences"
     content_or = "sentence or image" if multimodal else "sentence"
     context_to_display = (
         id_retrieval_context(retrieval_context)
@@ -81,6 +79,7 @@ class ContextualRecallMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+
     def measure(
         self,
         test_case: LLMTestCase,
@@ -200,7 +199,8 @@ class ContextualRecallMetric(BaseMetric):
             else:
                 unsupportive_reasons.append(verdict.reason)
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_reason",
             expected_output=expected_output,
@@ -231,7 +231,8 @@ class ContextualRecallMetric(BaseMetric):
             else:
                 unsupportive_reasons.append(verdict.reason)
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_reason",
             expected_output=expected_output,
@@ -269,7 +270,8 @@ class ContextualRecallMetric(BaseMetric):
         retrieval_context: List[str],
         multimodal: bool,
     ) -> List[VerdictWithExpectedOutput]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             expected_output=expected_output,
@@ -301,7 +303,8 @@ class ContextualRecallMetric(BaseMetric):
         retrieval_context: List[str],
         multimodal: bool,
     ) -> List[VerdictWithExpectedOutput]:
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "generate_verdicts",
             expected_output=expected_output,

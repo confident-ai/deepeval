@@ -203,7 +203,8 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         return goal_and_steps_taken
 
     def _get_plan_scores(self, user_goal, steps_taken, multimodal: bool):
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_plan_evaluation_score",
             task=user_goal,
@@ -221,7 +222,8 @@ class GoalAccuracyMetric(BaseConversationalMetric):
     async def _a_get_plan_scores(
         self, user_goal, steps_taken, multimodal: bool
     ):
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_plan_evaluation_score",
             task=user_goal,
@@ -265,7 +267,8 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 f"Score: {plan_score.score}, Reason: {plan_score.reason} \n"
             )
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_final_reason",
             final_score=self.score,
@@ -300,7 +303,8 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 f"Score: {plan_score.score}, Reason: {plan_score.reason} \n"
             )
 
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_final_reason",
             final_score=self.score,
@@ -321,7 +325,8 @@ class GoalAccuracyMetric(BaseConversationalMetric):
     def _get_goal_accuracy_score(
         self, user_goal, steps_taken, multimodal: bool
     ):
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_accuracy_score",
             task=user_goal,
@@ -339,7 +344,8 @@ class GoalAccuracyMetric(BaseConversationalMetric):
     async def _a_get_goal_accuracy_score(
         self, user_goal, steps_taken, multimodal: bool
     ):
-        prompt = resolve_template("metrics", 
+        prompt = resolve_template(
+            "metrics",
             self.__class__.__name__,
             "get_accuracy_score",
             task=user_goal,
