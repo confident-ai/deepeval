@@ -90,3 +90,55 @@ Although we only showed GitHub workflows in this guide, it will be extremely sim
 
 You should also note that you don't have to strictly use poetry (as shown in the example above) to install dependencies, and you may need to configure additional environment variables such as an `OPENAI_API_KEY` if you're using GPT models for evaluation and a `CONFIDENT_API_KEY` if you're using Confident AI to keep track of testing results.
 :::
+
+## Comparing Against an Official Baseline
+
+To catch regressions, mark one run as the **official baseline** and compare future runs against it using `--mode regression`.
+
+### Marking a Run as Official
+
+There are three ways to mark a test run as official:
+
+**CLI** — use the `--official` (or `-o`) flag:
+
+```bash
+deepeval test run test_file.py --official
+```
+
+**SDK** — call `mark_official()` on `TestRun` instance with a test run ID:
+
+```python
+from deepeval.test_run import TestRun
+
+test_run = TestRun(...)
+test_run.mark_official(run_id="<test-run-id>")
+```
+
+**Platform** — mark any run as official from the Confident AI dashboard.
+
+### Running in Regression Mode
+
+Use `--mode regression` on pull requests to compare the current run against the latest official run:
+
+```bash
+deepeval test run test_file.py --mode regression
+```
+
+`deepeval` prints a comparison table of official vs. new scores and exits non-zero if any metric drops by more than `0.1`.
+
+:::note
+`--mode regression` and `--official` both require a `CONFIDENT_API_KEY`.
+:::
+
+### GitHub PR Comments
+
+When running inside GitHub Actions, `deepeval test run` automatically posts a comment on the pull request with the evaluation results. Just add `GITHUB_TOKEN` to your workflow file to enable this feature:
+
+```yaml title=".github/workflows/regression.yml"
+      - name: Run DeepEval Regression Tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: poetry run deepeval test run test_file.py --mode regression
+```

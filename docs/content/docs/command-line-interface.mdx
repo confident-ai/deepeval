@@ -133,20 +133,21 @@ deepeval test run test_chatbot.py::test_answer_relevancy
 
 Useful options:
 
-| Option                           | Description                                                    |
-| -------------------------------- | -------------------------------------------------------------- |
-| `--verbose`, `-v`                | Show verbose pytest output and turn on deepeval verbose mode.  |
-| `--exit-on-first-failure`, `-x`  | Stop after the first failed test.                              |
-| `--show-warnings`, `-w`          | Show pytest warnings instead of disabling them.                |
-| `--identifier`, `-id`            | Attach an identifier to the test run.                          |
-| `--num-processes`, `-n`          | Run tests with multiple pytest-xdist processes.                |
-| `--repeat`, `-r`                 | Rerun each test case the specified number of times.            |
-| `--use-cache`, `-c`              | Use cached evaluation results when `--repeat` is not set.      |
-| `--ignore-errors`, `-i`          | Continue when deepeval evaluation errors occur.                |
-| `--skip-on-missing-params`, `-s` | Skip test cases with missing metric parameters.                |
-| `--display`, `-d`                | Control final result display. Defaults to showing all results. |
-| `--mark`, `-m`                   | Run tests matching a pytest marker expression.                 |
-| `--official`, `-o`               | Mark this test run as the official baseline on Confident AI.   |
+| Option                           | Description                                                                                                                                        |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--verbose`, `-v`                | Show verbose pytest output and turn on deepeval verbose mode.                                                                                      |
+| `--exit-on-first-failure`, `-x`  | Stop after the first failed test.                                                                                                                  |
+| `--show-warnings`, `-w`          | Show pytest warnings instead of disabling them.                                                                                                    |
+| `--identifier`, `-id`            | Attach an identifier to the test run.                                                                                                              |
+| `--num-processes`, `-n`          | Run tests with multiple pytest-xdist processes.                                                                                                    |
+| `--repeat`, `-r`                 | Rerun each test case the specified number of times.                                                                                                |
+| `--use-cache`, `-c`              | Use cached evaluation results when `--repeat` is not set.                                                                                          |
+| `--ignore-errors`, `-i`          | Continue when deepeval evaluation errors occur.                                                                                                    |
+| `--skip-on-missing-params`, `-s` | Skip test cases with missing metric parameters.                                                                                                    |
+| `--display`, `-d`                | Control final result display. Defaults to showing all results.                                                                                     |
+| `--mark`, `-m`                   | Run tests matching a pytest marker expression.                                                                                                     |
+| `--official`, `-o`               | Mark this test run as the official baseline on Confident AI after it completes.                                                                    |
+| `--mode`                         | Test run mode. Use `regression` to compare against the latest official run on Confident AI and exit non-zero on regression. Defaults to `default`. |
 
 You can pass additional pytest flags after the `deepeval` options. For example:
 
