@@ -2,6 +2,7 @@ import json
 from typing import Optional, List, Tuple, Union, Dict
 
 from deepeval.utils import get_or_create_event_loop
+from deepeval.tracing.utils import make_json_serializable
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_llm_test_case_params,
@@ -186,7 +187,11 @@ class TaskCompletionMetric(BaseMetric):
         if has_trace:
             prompt = self._get_prompt(
                 "extract_task_and_outcome_from_trace",
-                trace_json=json.dumps(test_case._trace_dict, default=str),
+                trace_json=json.dumps(
+                    test_case._trace_dict,
+                    default=make_json_serializable,
+                    indent=2,
+                ),
             )
         else:
             # TODO: Deprecate this soon
@@ -212,7 +217,11 @@ class TaskCompletionMetric(BaseMetric):
         if has_trace:
             prompt = self._get_prompt(
                 "extract_task_and_outcome_from_trace",
-                trace_json=json.dumps(test_case._trace_dict, default=str),
+                trace_json=json.dumps(
+                    test_case._trace_dict,
+                    default=make_json_serializable,
+                    indent=2,
+                ),
             )
         else:
             # TODO: Deprecate this soon

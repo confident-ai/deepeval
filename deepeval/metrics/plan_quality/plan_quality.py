@@ -1,7 +1,8 @@
-from typing import Optional, List, Union
 import json
+from typing import Optional, List, Union
 
 from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.tracing.utils import make_json_serializable
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_llm_test_case_params,
@@ -197,10 +198,8 @@ class PlanQualityMetric(BaseMetric):
         )
 
     def _extract_plan_from_trace(self, test_case: LLMTestCase) -> AgentPlan:
-        trace_json_str = (
-            json.dumps(test_case._trace_dict, indent=2)
-            if isinstance(test_case._trace_dict, dict)
-            else str(test_case._trace_dict or {})
+        trace_json_str = json.dumps(
+            test_case._trace_dict, default=make_json_serializable, indent=2
         )
         prompt = self._get_prompt(
             "extract_plan_from_trace",
@@ -219,10 +218,8 @@ class PlanQualityMetric(BaseMetric):
     async def _a_extract_plan_from_trace(
         self, test_case: LLMTestCase
     ) -> AgentPlan:
-        trace_json_str = (
-            json.dumps(test_case._trace_dict, indent=2)
-            if isinstance(test_case._trace_dict, dict)
-            else str(test_case._trace_dict or {})
+        trace_json_str = json.dumps(
+            test_case._trace_dict, default=make_json_serializable, indent=2
         )
         prompt = self._get_prompt(
             "extract_plan_from_trace",
@@ -239,10 +236,8 @@ class PlanQualityMetric(BaseMetric):
         )
 
     def _extract_task_from_trace(self, test_case: LLMTestCase) -> str:
-        trace_json = (
-            json.dumps(test_case._trace_dict, indent=2)
-            if isinstance(test_case._trace_dict, dict)
-            else str(test_case._trace_dict or {})
+        trace_json = json.dumps(
+            test_case._trace_dict, default=make_json_serializable, indent=2
         )
         prompt = self._get_prompt(
             "extract_task_from_trace",
@@ -259,10 +254,8 @@ class PlanQualityMetric(BaseMetric):
         )
 
     async def _a_extract_task_from_trace(self, test_case: LLMTestCase) -> str:
-        trace_json = (
-            json.dumps(test_case._trace_dict, indent=2)
-            if isinstance(test_case._trace_dict, dict)
-            else str(test_case._trace_dict or {})
+        trace_json = json.dumps(
+            test_case._trace_dict, default=make_json_serializable, indent=2
         )
         prompt = self._get_prompt(
             "extract_task_from_trace",
