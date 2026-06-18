@@ -108,6 +108,29 @@ export function parsePromptsToMessages(
   return messages;
 }
 
+// Confident AI expects `toolsCalled[].inputParameters` to be an object. LangChain
+// can hand us the tool input as a JSON string, so normalize it to an object —
+// mirrors Python's prepare_tool_call_input_parameters.
+export function prepareToolCallInputParameters(
+  input: any,
+): Record<string, any> {
+  let res = input;
+  if (typeof res === "string") {
+    try {
+      res = JSON.parse(res);
+    } catch {
+      // leave as string; wrapped below
+    }
+  }
+  if (res === null || res === undefined || typeof res !== "object") {
+    return { output: res };
+  }
+  if (Array.isArray(res)) {
+    return { output: res };
+  }
+  return res;
+}
+
 interface EnterCurrentContextParams {
   spanType?: SpanType;
   funcName: string;

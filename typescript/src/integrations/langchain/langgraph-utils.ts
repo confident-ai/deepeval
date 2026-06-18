@@ -11,29 +11,6 @@ export interface TraceInitFields {
   turnId?: string;
 }
 
-// Confident AI expects `toolsCalled[].inputParameters` to be an object. LangChain
-// (esp. via the LangGraph server) hands us the tool input as a JSON string, so
-// normalize it to an object — mirrors Python's prepare_tool_call_input_parameters.
-export function prepareToolCallInputParameters(
-  input: any,
-): Record<string, any> {
-  let res = input;
-  if (typeof res === "string") {
-    try {
-      res = JSON.parse(res);
-    } catch {
-      // leave as string; wrapped below
-    }
-  }
-  if (res === null || res === undefined || typeof res !== "object") {
-    return { output: res };
-  }
-  if (Array.isArray(res)) {
-    return { output: res };
-  }
-  return res;
-}
-
 /**
  * Tracks the run_id/parent_run_id hierarchy for a single CallbackHandler instance
  * and resolves each run's owning trace + parent span without depending on
