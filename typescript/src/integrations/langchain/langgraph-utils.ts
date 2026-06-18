@@ -70,7 +70,7 @@ export class RunHierarchyTracker {
         return { traceUuid: ancestorTrace, parentUuid: undefined };
       }
     }
-    const trace = this.ensureRootTrace();
+    const trace = this.ensureTrace();
     return { traceUuid: trace.uuid, parentUuid: undefined };
   }
 
@@ -106,7 +106,7 @@ export class RunHierarchyTracker {
     return undefined;
   }
 
-  private ensureRootTrace() {
+  private ensureTrace() {
     const threadId = this.initFields.threadId;
     if (threadId) {
       const existing = this.threadIdToTraceUuid.get(threadId);
