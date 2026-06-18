@@ -1,13 +1,14 @@
+import json
 from typing import Optional, List, Union
 
 from deepeval.utils import get_or_create_event_loop
+from deepeval.tracing.utils import make_json_serializable
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_llm_test_case_params,
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
-    trace_dict_to_json,
 )
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import BaseMetric
@@ -147,7 +148,9 @@ class StepEfficiencyMetric(BaseMetric):
     def _get_score(
         self, task: str, test_case: LLMTestCase
     ) -> EfficiencyVerdict:
-        trace_json_str = trace_dict_to_json(test_case._trace_dict)
+        trace_json_str = json.dumps(
+            test_case._trace_dict, default=make_json_serializable, indent=2
+        )
         prompt = self._get_prompt(
             "get_execution_efficiency",
             task=task,
@@ -166,7 +169,9 @@ class StepEfficiencyMetric(BaseMetric):
     async def _a_get_score(
         self, task: str, test_case: LLMTestCase
     ) -> EfficiencyVerdict:
-        trace_json_str = trace_dict_to_json(test_case._trace_dict)
+        trace_json_str = json.dumps(
+            test_case._trace_dict, default=make_json_serializable, indent=2
+        )
         prompt = self._get_prompt(
             "get_execution_efficiency",
             task=task,
@@ -183,7 +188,9 @@ class StepEfficiencyMetric(BaseMetric):
         )
 
     def _extract_task_from_trace(self, test_case: LLMTestCase) -> str:
-        trace_json = trace_dict_to_json(test_case._trace_dict)
+        trace_json = json.dumps(
+            test_case._trace_dict, default=make_json_serializable, indent=2
+        )
         prompt = self._get_prompt(
             "extract_task_from_trace",
             trace_json=trace_json,
@@ -198,7 +205,9 @@ class StepEfficiencyMetric(BaseMetric):
         )
 
     async def _a_extract_task_from_trace(self, test_case: LLMTestCase) -> str:
-        trace_json = trace_dict_to_json(test_case._trace_dict)
+        trace_json = json.dumps(
+            test_case._trace_dict, default=make_json_serializable, indent=2
+        )
         prompt = self._get_prompt(
             "extract_task_from_trace",
             trace_json=trace_json,
