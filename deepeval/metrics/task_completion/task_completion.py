@@ -1,4 +1,3 @@
-import json
 from typing import Optional, List, Tuple, Union, Dict
 
 from deepeval.utils import get_or_create_event_loop
@@ -8,6 +7,7 @@ from deepeval.metrics.utils import (
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    trace_dict_to_json,
 )
 from deepeval.test_case import (
     LLMTestCase,
@@ -186,7 +186,7 @@ class TaskCompletionMetric(BaseMetric):
         if has_trace:
             prompt = self._get_prompt(
                 "extract_task_and_outcome_from_trace",
-                trace_json=json.dumps(test_case._trace_dict, default=str),
+                trace_json=trace_dict_to_json(test_case._trace_dict),
             )
         else:
             # TODO: Deprecate this soon
@@ -212,7 +212,7 @@ class TaskCompletionMetric(BaseMetric):
         if has_trace:
             prompt = self._get_prompt(
                 "extract_task_and_outcome_from_trace",
-                trace_json=json.dumps(test_case._trace_dict, default=str),
+                trace_json=trace_dict_to_json(test_case._trace_dict),
             )
         else:
             # TODO: Deprecate this soon

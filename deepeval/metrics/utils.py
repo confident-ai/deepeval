@@ -14,6 +14,7 @@ from typing import (
     Union,
 )
 
+from pydantic import BaseModel
 from deepeval.errors import (
     MissingTestCaseParamsError,
 )
@@ -81,6 +82,18 @@ MULTIMODAL_SUPPORTED_MODELS = {
 }
 
 SETTINGS = get_settings()
+
+
+def trace_dict_to_json(trace_dict: Any, indent: Optional[int] = 2) -> str:
+    if not isinstance(trace_dict, dict):
+        return str(trace_dict) if trace_dict is not None else "{}"
+
+    def _default(obj: Any) -> Any:
+        if isinstance(obj, BaseModel):
+            return obj.model_dump(mode="json")
+        return str(obj)
+
+    return json.dumps(trace_dict, indent=indent, default=_default)
 
 
 def copy_metrics(
