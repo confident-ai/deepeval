@@ -61,6 +61,9 @@ from deepeval.cli.utils import (
 )
 from deepeval.confident.api import (
     is_confident,
+    Api,
+    Endpoints,
+    HttpMethods,
 )
 
 app = typer.Typer(name="deepeval", no_args_is_help=True)
@@ -368,6 +371,64 @@ def view():
                 upload_and_open_link(_span=span)
         else:
             upload_and_open_link(_span=span)
+
+
+@app.command(
+    name="gate",
+    help=(
+        "Check your project against its governance policy and fail (non-zero exit) "
+        "if it doesn't pass. Your project must be associated with a governance policy "
+        "on Confident AI; if it isn't, contact your organization administrator."
+    ),
+)
+def gate(
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI). Exit code still reflects the verdict.",
+    ),
+):
+    """Check your project against its governance policy."""
+    try:
+        api = Api()
+    except ValueError as e:
+        if not quiet:
+            print(f"❌ {e}")
+        raise typer.Exit(code=1)
+
+    try:
+        data, _ = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.GOVERNANCE_ASSESS_ENDPOINT,
+        )
+    except Exception as e:
+        if not quiet:
+            print(
+                f"❌ Could not assess governance for your project: {e}\n"
+                "Make sure your project is associated with a governance policy. "
+                "If it isn't, please contact your organization administrator."
+            )
+        raise typer.Exit(code=1)
+
+    data = data or {}
+    passed = bool(data.get("passed"))
+    policy = data.get("governancePolicy") or {}
+    policy_name = policy.get("name") or "governance policy"
+
+    if passed:
+        if not quiet:
+            print(
+                f"✅ Governance gate passed against [bold]{escape(str(policy_name))}[/bold]."
+            )
+        raise typer.Exit(code=0)
+
+    if not quiet:
+        print(
+            f"❌ Governance gate failed against [bold]{escape(str(policy_name))}[/bold]. "
+            "One or more controls did not pass."
+        )
+    raise typer.Exit(code=1)
 
 
 @app.command(
