@@ -85,6 +85,7 @@ export enum Endpoints {
   SIMULATE_ENDPOINT = "/v1/simulate",
   ANNOTATION_ENDPOINT = "/v1/annotations",
   EXPERIMENT_ENDPOINT = "/v1/experiment",
+  GOVERNANCE_ASSESS_ENDPOINT = "/v1/governance/assess",
 }
 
 interface RetryOptions {
