@@ -57,8 +57,10 @@ class ContextualPrecisionMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        threshold_overrides: Optional[dict] = None,
     ):
         self.threshold = 1 if strict_mode else threshold
+        self.threshold_overrides = threshold_overrides or {}
         self.include_reason = include_reason
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -119,7 +121,8 @@ class ContextualPrecisionMetric(BaseMetric):
                 )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason(input, multimodal)
-                self.success = self.score >= self.threshold
+                effective_threshold = self._get_effective_threshold(test_case)
+                self.success = self.score >= effective_threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -174,7 +177,8 @@ class ContextualPrecisionMetric(BaseMetric):
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(input, multimodal)
-            self.success = self.score >= self.threshold
+            effective_threshold = self._get_effective_threshold(test_case)
+            self.success = self.score >= effective_threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -352,6 +356,19 @@ class ContextualPrecisionMetric(BaseMetric):
         # Calculate weighted cumulative precision
         score = sum_weighted_precision_at_k / relevant_nodes_count
         return 0 if self.strict_mode and score < self.threshold else score
+
+
+    def _get_effective_threshold(
+        self, test_case: Optional[LLMTestCase] = None
+    ) -> float:
+        if test_case and getattr(test_case, "metadata", None):
+            doc_type = test_case.metadata.get("document_type")
+            if doc_type:
+                return self.threshold_overrides.get(
+                    doc_type,
+                    self.threshold,
+                )
+        return self.threshold
 
     def is_successful(self) -> bool:
         if self.error is not None:
