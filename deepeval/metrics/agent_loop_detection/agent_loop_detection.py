@@ -1,0 +1,236 @@
+import json
+from typing import Optional, List, Union
+
+from deepeval.utils import get_or_create_event_loop
+from deepeval.tracing.utils import make_json_serializable
+from deepeval.metrics.utils import (
+    construct_verbose_logs,
+    check_llm_test_case_params,
+    initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
+)
+from deepeval.test_case import LLMTestCase, SingleTurnParams
+from deepeval.metrics import BaseMetric
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.metrics.agent_loop_detection.schema import Task, LoopVerdict
+
+
+class AgentLoopDetectionMetric(BaseMetric):
+
+    _required_params: List[SingleTurnParams] = [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
+    ]
+
+    def __init__(
+        self,
+        threshold: float = 0.5,
+        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        include_reason: bool = True,
+        async_mode: bool = True,
+        strict_mode: bool = False,
+        verbose_mode: bool = False,
+    ):
+        self.threshold = 1 if strict_mode else threshold
+        self.model, self.using_native_model = initialize_model(model)
+        self.evaluation_model = self.model.get_model_name()
+        self.include_reason = include_reason
+        self.async_mode = async_mode
+        self.strict_mode = strict_mode
+        self.verbose_mode = verbose_mode
+        self.requires_trace = True
+
+    def measure(
+        self,
+        test_case: LLMTestCase,
+        _show_indicator: bool = True,
+        _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
+    ):
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
+        )
+
+        self.evaluation_cost = 0 if self.using_native_model else None
+        self.input_tokens = 0 if self.using_native_model else None
+        self.output_tokens = 0 if self.using_native_model else None
+        with metric_progress_indicator(
+            self, _show_indicator=_show_indicator, _in_component=_in_component
+        ):
+            if self.async_mode:
+                loop = get_or_create_event_loop()
+                loop.run_until_complete(
+                    self.a_measure(
+                        test_case,
+                        _show_indicator=False,
+                        _in_component=_in_component,
+                        _log_metric_to_confident=_log_metric_to_confident,
+                    )
+                )
+            else:
+                task = self._extract_loop_patterns(test_case)
+                loop_verdict = self._get_score(task, test_case)
+                self.score = (
+                    0
+                    if self.strict_mode
+                    and loop_verdict.score < self.threshold
+                    else loop_verdict.score
+                )
+                self.reason = loop_verdict.reason
+                self.success = self.score >= self.threshold
+                self.verbose_logs = construct_verbose_logs(
+                    self,
+                    steps=[
+                        f"Task: {task} \n",
+                        f"Loop Score: {self.score}",
+                        f"Loop Reason: {self.reason}",
+                    ],
+                )
+
+                return self.score
+
+    async def a_measure(
+        self,
+        test_case: LLMTestCase,
+        _show_indicator: bool = True,
+        _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
+    ):
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
+        )
+
+        self.evaluation_cost = 0 if self.using_native_model else None
+        self.input_tokens = 0 if self.using_native_model else None
+        self.output_tokens = 0 if self.using_native_model else None
+
+        with metric_progress_indicator(
+            self,
+            async_mode=True,
+            _show_indicator=_show_indicator,
+            _in_component=_in_component,
+        ):
+            task = await self._a_extract_loop_patterns(test_case)
+            loop_verdict = await self._a_get_score(task, test_case)
+            self.score = (
+                0
+                if self.strict_mode
+                and loop_verdict.score < self.threshold
+                else loop_verdict.score
+            )
+            self.reason = loop_verdict.reason
+            self.success = self.score >= self.threshold
+            self.verbose_logs = construct_verbose_logs(
+                self,
+                steps=[
+                    f"Task: {task} \n",
+                    f"Loop Score: {self.score}",
+                    f"Loop Reason: {self.reason}",
+                ],
+            )
+
+            return self.score
+
+    def _get_score(
+        self, task: str, test_case: LLMTestCase
+    ) -> LoopVerdict:
+        trace_json_str = json.dumps(
+            test_case._trace_dict, default=make_json_serializable, indent=2
+        )
+        prompt = self._get_prompt(
+            "evaluate_loop_severity",
+            task=task,
+            trace_json_str=trace_json_str,
+            multimodal=test_case.multimodal,
+        )
+
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=LoopVerdict,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: LoopVerdict(**data),
+        )
+
+    async def _a_get_score(
+        self, task: str, test_case: LLMTestCase
+    ) -> LoopVerdict:
+        trace_json_str = json.dumps(
+            test_case._trace_dict, default=make_json_serializable, indent=2
+        )
+        prompt = self._get_prompt(
+            "evaluate_loop_severity",
+            task=task,
+            trace_json_str=trace_json_str,
+            multimodal=test_case.multimodal,
+        )
+
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=LoopVerdict,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: LoopVerdict(**data),
+        )
+
+    def _extract_loop_patterns(self, test_case: LLMTestCase) -> str:
+        trace_json = json.dumps(
+            test_case._trace_dict, default=make_json_serializable, indent=2
+        )
+        prompt = self._get_prompt(
+            "extract_loop_patterns",
+            trace_json=trace_json,
+            multimodal=test_case.multimodal,
+        )
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Task,
+            extract_schema=lambda s: s.task,
+            extract_json=lambda data: data["task"],
+        )
+
+    async def _a_extract_loop_patterns(self, test_case: LLMTestCase) -> str:
+        trace_json = json.dumps(
+            test_case._trace_dict, default=make_json_serializable, indent=2
+        )
+        prompt = self._get_prompt(
+            "extract_loop_patterns",
+            trace_json=trace_json,
+            multimodal=test_case.multimodal,
+        )
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Task,
+            extract_schema=lambda s: s.task,
+            extract_json=lambda data: data["task"],
+        )
+
+    def is_successful(self) -> bool:
+        if self.error is not None:
+            self.success = False
+        else:
+            try:
+                self.success = self.score >= self.threshold
+            except TypeError:
+                self.success = False
+        return self.success
+
+    @property
+    def __name__(self):
+        return "Agent Loop Detection"
