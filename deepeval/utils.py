@@ -201,9 +201,6 @@ def serialize_to_json(obj: Any, **kwargs) -> str:
     Extra keyword arguments (e.g. ``indent``, ``ensure_ascii``) are
     forwarded to ``json.dumps``.
     """
-    # Imported lazily: deepeval.utils is a foundational, widely-imported
-    # module, so a top-level import of the tracing package could risk a
-    # cycle. The import is cached after first use.
     from deepeval.tracing.utils import make_json_serializable
 
     return json.dumps(make_json_serializable(obj), **kwargs)
