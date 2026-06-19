@@ -1,10 +1,10 @@
 from __future__ import annotations
 import asyncio
 import random
-import json
 import difflib
 from typing import List, Optional, Union
 
+from deepeval.utils import serialize_to_json
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.prompt.prompt import Prompt
 from deepeval.prompt.api import PromptType
@@ -168,7 +168,7 @@ class InstructionProposer:
 
                 if new_text:
                     if isinstance(new_text, list):
-                        new_text = json.dumps(new_text)
+                        new_text = serialize_to_json(new_text)
 
                     if new_text.strip():
                         new_prompt = _create_prompt(prompt, new_text)
@@ -268,7 +268,7 @@ class InstructionProposer:
         for new_text in results:
             if new_text:
                 if isinstance(new_text, list):
-                    new_text = json.dumps(new_text)
+                    new_text = serialize_to_json(new_text)
 
                 if new_text.strip():
                     new_prompt = _create_prompt(prompt, new_text)

@@ -1,8 +1,8 @@
 from __future__ import annotations
 import random
-import json
 from typing import Optional, Union
 
+from deepeval.utils import serialize_to_json
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.optimizer.scorer.schema import ScorerDiagnosisResult
 from deepeval.optimizer.types import (
@@ -78,7 +78,7 @@ class Rewriter:
         )
 
         if isinstance(revised_prompt_text, list):
-            revised_prompt_text = json.dumps(revised_prompt_text)
+            revised_prompt_text = serialize_to_json(revised_prompt_text)
 
         return _create_prompt(old_prompt, revised_prompt_text)
 
@@ -114,7 +114,7 @@ class Rewriter:
         )
 
         if isinstance(revised_prompt_text, list):
-            revised_prompt_text = json.dumps(revised_prompt_text)
+            revised_prompt_text = serialize_to_json(revised_prompt_text)
 
         return _create_prompt(old_prompt, revised_prompt_text)
 

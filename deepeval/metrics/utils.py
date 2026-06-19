@@ -17,7 +17,7 @@ from typing import (
 from deepeval.errors import (
     MissingTestCaseParamsError,
 )
-from deepeval.utils import convert_to_multi_modal_array
+from deepeval.utils import convert_to_multi_modal_array, serialize_to_json
 from deepeval.config.settings import get_settings
 from deepeval.models import (
     DeepEvalBaseLLM,
@@ -192,7 +192,7 @@ def print_tools_called(tools_called_list: List[ToolCall]):
         return ""
     string = "[\n"
     for index, tools_called in enumerate(tools_called_list):
-        json_string = json.dumps(tools_called.model_dump(), indent=4)
+        json_string = serialize_to_json(tools_called, indent=4)
         indented_json_string = "\n".join(
             "  " + line for line in json_string.splitlines()
         )

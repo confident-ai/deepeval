@@ -1,4 +1,3 @@
-import json
 import uuid
 from typing import Any, List, Optional
 
@@ -13,7 +12,7 @@ from deepeval.tracing.context import (
 from deepeval.tracing.trace_context import current_llm_context
 from deepeval.tracing.types import ToolSpan, TraceSpanStatus
 from deepeval.tracing.integrations import Integration, Provider
-from deepeval.utils import shorten, len_long
+from deepeval.utils import shorten, len_long, serialize_to_json
 
 
 def _update_all_attributes(
@@ -105,8 +104,8 @@ _JSON_MAX = max(
 
 def compact_dump(value: Any) -> str:
     try:
-        dumped = json.dumps(
-            value, ensure_ascii=False, default=str, separators=(",", ":")
+        dumped = serialize_to_json(
+            value, ensure_ascii=False, separators=(",", ":")
         )
     except Exception:
         dumped = repr(value)

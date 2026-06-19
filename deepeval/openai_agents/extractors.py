@@ -18,6 +18,7 @@ from openai.types.responses import (
     ResponseOutputText,
 )
 
+from deepeval.utils import serialize_to_json
 from deepeval.tracing.integrations import Integration
 from deepeval.tracing.types import (
     AgentSpan,
@@ -110,7 +111,9 @@ def update_span_properties_from_response_span_data(
     )
     raw_output = parse_response_output(response.output)
     output = (
-        raw_output if isinstance(raw_output, str) else json.dumps(raw_output)
+        raw_output
+        if isinstance(raw_output, str)
+        else serialize_to_json(raw_output)
     )
     # Update Span
     metadata = {
@@ -157,7 +160,9 @@ def update_span_properties_from_generation_span_data(
     input = generation_span_data.input
     raw_output = generation_span_data.output
     output = (
-        raw_output if isinstance(raw_output, str) else json.dumps(raw_output)
+        raw_output
+        if isinstance(raw_output, str)
+        else serialize_to_json(raw_output)
     )
     # Update span
     span.input_token_count = input_tokens
@@ -434,7 +439,7 @@ def update_trace_properties_from_span_data(
         output = (
             raw_output
             if isinstance(raw_output, str)
-            else json.dumps(raw_output)
+            else serialize_to_json(raw_output)
         )
         trace.output = output
 
@@ -445,6 +450,6 @@ def update_trace_properties_from_span_data(
         output = (
             raw_output
             if isinstance(raw_output, str)
-            else json.dumps(raw_output)
+            else serialize_to_json(raw_output)
         )
         trace.output = output
