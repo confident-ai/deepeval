@@ -80,8 +80,7 @@ class AgentLoopDetectionMetric(BaseMetric):
                 loop_verdict = self._get_score(task, test_case)
                 self.score = (
                     0
-                    if self.strict_mode
-                    and loop_verdict.score < self.threshold
+                    if self.strict_mode and loop_verdict.score < self.threshold
                     else loop_verdict.score
                 )
                 self.reason = loop_verdict.reason
@@ -128,8 +127,7 @@ class AgentLoopDetectionMetric(BaseMetric):
             loop_verdict = await self._a_get_score(task, test_case)
             self.score = (
                 0
-                if self.strict_mode
-                and loop_verdict.score < self.threshold
+                if self.strict_mode and loop_verdict.score < self.threshold
                 else loop_verdict.score
             )
             self.reason = loop_verdict.reason
@@ -145,9 +143,7 @@ class AgentLoopDetectionMetric(BaseMetric):
 
             return self.score
 
-    def _get_score(
-        self, task: str, test_case: LLMTestCase
-    ) -> LoopVerdict:
+    def _get_score(self, task: str, test_case: LLMTestCase) -> LoopVerdict:
         trace_json_str = json.dumps(
             test_case._trace_dict, default=make_json_serializable, indent=2
         )
