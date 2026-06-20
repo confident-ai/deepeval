@@ -469,7 +469,7 @@ class GEval(BaseMetric):
             self.max_retrieval_context_tokens,
             relevance_query=build_retrieval_relevance_query(
                 self.evaluation_params, test_case
-            )
+            ),
         )
 
     def get_retrieval_context_evidence_coverage(
