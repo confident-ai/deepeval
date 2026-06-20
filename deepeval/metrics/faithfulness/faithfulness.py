@@ -407,7 +407,6 @@ class FaithfulnessMetric(BaseMetric):
                 )
         return self.threshold
 
-
     def is_successful(self) -> bool:
         if self.error is not None:
             self.success = False

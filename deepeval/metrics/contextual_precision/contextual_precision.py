@@ -357,7 +357,6 @@ class ContextualPrecisionMetric(BaseMetric):
         score = sum_weighted_precision_at_k / relevant_nodes_count
         return 0 if self.strict_mode and score < self.threshold else score
 
-
     def _get_effective_threshold(
         self, test_case: Optional[LLMTestCase] = None
     ) -> float:

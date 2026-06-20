@@ -325,7 +325,6 @@ class ContextualRecallMetric(BaseMetric):
             final_verdicts.append(new_verdict)
         return final_verdicts
 
-
     def _get_effective_threshold(
         self, test_case: Optional[LLMTestCase] = None
     ) -> float:
