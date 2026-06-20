@@ -3,7 +3,10 @@ from dataclasses import dataclass
 from pydantic import create_model
 import asyncio
 
-from deepeval.metrics.base_metric import BaseConversationalMetric
+from deepeval.metrics.base_metric import (
+    BaseConversationalMetric,
+    PromptMixin,
+)
 from deepeval.metrics.conversational_g_eval.conversational_g_eval import (
     ConversationalGEval,
 )
@@ -21,12 +24,6 @@ from deepeval.test_case import (
 )
 from deepeval.utils import prettify_list
 
-from .templates import (
-    ConversationalBinaryJudgementTemplate,
-    ConversationalNonBinaryJudgementTemplate,
-    ConversationalTaskNodeTemplate,
-    ConversationalVerdictNodeTemplate,
-)
 from deepeval.metrics.dag.schema import (
     BinaryJudgementVerdict,
     MetricScoreReason,
@@ -35,7 +32,7 @@ from deepeval.metrics.dag.schema import (
 )
 
 
-class ConversationalBaseNode:
+class ConversationalBaseNode(PromptMixin):
     _indegree: int = 0
     _depth: int = 0
 
@@ -280,7 +277,9 @@ class ConversationalVerdictNode(ConversationalBaseNode):
                 metric.reason = await self._a_generate_reason(metric=metric)
 
     def _generate_reason(self, metric: BaseConversationalMetric):
-        prompt = ConversationalVerdictNodeTemplate.generate_reason(
+        prompt = self._get_prompt(
+            "generate_reason",
+            template_class="VerdictNode",
             verbose_steps=metric._verbose_steps,
             score=metric.score,
             name=metric.__name__,
@@ -295,7 +294,9 @@ class ConversationalVerdictNode(ConversationalBaseNode):
         )
 
     async def _a_generate_reason(self, metric: BaseConversationalMetric):
-        prompt = ConversationalVerdictNodeTemplate.generate_reason(
+        prompt = self._get_prompt(
+            "generate_reason",
+            template_class="VerdictNode",
             verbose_steps=metric._verbose_steps,
             score=metric.score,
             name=metric.__name__,
@@ -376,7 +377,9 @@ class ConversationalTaskNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = ConversationalTaskNodeTemplate.generate_task_output(
+        prompt = self._get_prompt(
+            "generate_task_output",
+            template_class="TaskNode",
             instructions=self.instructions,
             text=text,
         )
@@ -437,7 +440,9 @@ class ConversationalTaskNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = ConversationalTaskNodeTemplate.generate_task_output(
+        prompt = self._get_prompt(
+            "generate_task_output",
+            template_class="TaskNode",
             instructions=self.instructions,
             text=text,
         )
@@ -548,7 +553,9 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = ConversationalBinaryJudgementTemplate.generate_binary_verdict(
+        prompt = self._get_prompt(
+            "generate_binary_verdict",
+            template_class="BinaryJudgement",
             criteria=self.criteria,
             text=text,
         )
@@ -604,7 +611,9 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = ConversationalBinaryJudgementTemplate.generate_binary_verdict(
+        prompt = self._get_prompt(
+            "generate_binary_verdict",
+            template_class="BinaryJudgement",
             criteria=self.criteria,
             text=text,
         )
@@ -727,8 +736,12 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = ConversationalNonBinaryJudgementTemplate.generate_non_binary_verdict(
-            criteria=self.criteria, text=text, options=self._verdict_options
+        prompt = self._get_prompt(
+            "generate_non_binary_verdict",
+            template_class="BinaryJudgement",
+            criteria=self.criteria,
+            text=text,
+            options=self._verdict_options,
         )
 
         self._verdict = generate_with_schema_and_extract(
@@ -782,8 +795,12 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
 
-        prompt = ConversationalNonBinaryJudgementTemplate.generate_non_binary_verdict(
-            criteria=self.criteria, text=text, options=self._verdict_options
+        prompt = self._get_prompt(
+            "generate_non_binary_verdict",
+            template_class="BinaryJudgement",
+            criteria=self.criteria,
+            text=text,
+            options=self._verdict_options,
         )
 
         self._verdict = await a_generate_with_schema_and_extract(

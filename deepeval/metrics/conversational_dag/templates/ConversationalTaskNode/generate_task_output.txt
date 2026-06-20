@@ -1,0 +1,19 @@
+You are given a set of task instructions and a full conversation between a user and an assistant.
+
+{{ _fragments.multimodal_input_rules }}
+
+Instructions:
+{{ instructions }}
+
+{{ text }}
+
+===END OF INPUT===
+
+**
+IMPORTANT: Only return a JSON with the 'output' key containing the result of applying the instructions to the conversation.
+Example:
+{
+  "output": "..."
+}
+**
+JSON:

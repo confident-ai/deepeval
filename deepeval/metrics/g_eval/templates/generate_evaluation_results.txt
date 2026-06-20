@@ -1,0 +1,40 @@
+You are an evaluator. Given the following {% if rubric %}evaluation steps and rubric{% else %}evaluation steps{% endif %}, assess the response below and return a JSON object with two fields:
+
+- `"score"`: an integer between {{ score_range[0] }} and {{ score_range[1] }}, {% if rubric %}based on the rubric provided{% else %}with {{ score_range[1] }} indicating strong alignment with the evaluation steps and {{ score_range[0] }} indicating no alignment{% endif %}.
+- `"reason"`: a brief explanation for why the score was given. This must mention specific strengths or shortcomings, referencing relevant details from the input. Do **not** quote the score itself in the explanation.
+
+Your explanation should:
+- {% if rubric %}Be specific and grounded in the evaluation steps and rubric.{% else %}Be specific and grounded in the evaluation steps.{% endif %}
+- Mention key details from the test case parameters.
+- Be concise, clear, and focused on the evaluation logic.
+{% if multimodal %}{{ _fragments.multimodal_input_rules }}{% endif %}
+
+Only return valid JSON. Do **not** include any extra commentary or text.
+
+---
+
+Evaluation Steps:
+{{ evaluation_steps }}
+
+{% if rubric %}Rubric:
+{{ rubric }}
+
+{% endif %}Test Case:
+{{ test_case_content }}
+
+Parameters:
+{{ parameters }}
+{% if _additional_context %}
+
+Additional Context:
+{{ _additional_context }}
+{% endif %}
+
+---
+**Example JSON:**
+{
+  "reason": "your concise and informative reason here",
+  "score": {{ score_range[0] }}
+}
+
+JSON:

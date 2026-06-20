@@ -1,0 +1,36 @@
+You are given a set of {% if rubric %}Evaluation Steps and Rubric{% else %}Evaluation Steps{% endif %} that describe how to assess a conversation between a user and an LLM chatbot. Your task is to return a JSON object with exactly two fields:
+
+1. `"score"`: An integer from 0 to 10 (inclusive), where:
+- 10 = The conversation *fully* meets the criteria described in the Evaluation Steps
+- 0 = The conversation *completely fails* to meet the criteria
+- All other scores represent varying degrees of partial fulfillment,
+{% if rubric %}based on how well the conversation follows the rubric and evaluation steps{% else %}based on how well the conversation follows the evaluation steps{% endif %}.
+
+2. `"reason"`: A **concise but precise** explanation for the score. {% if rubric %}Your reasoning must reference specific aspects of both the rubric and the evaluation steps,{% else %}Your reasoning must reference specific aspects of the evaluation steps,{% endif %} and mention relevant details from the conversation and the given parameters. DO NOT include the score value in your explanation.
+
+Evaluation Steps:
+{{ evaluation_steps }}
+
+{% if rubric %}Rubric:
+{{ rubric }}
+
+{% endif %}Per-turn fields:
+{{ turns }}
+
+{{ test_case_content }}
+Parameters to consider during evaluation:
+{{ parameters }}
+
+Note: the "Per-turn fields" block lists each turn separately, while the "Conversation-level fields" block applies to the whole conversation. Do not penalize individual turns for missing conversation-level fields.
+
+---
+IMPORTANT: You MUST return only a valid JSON object with the exact keys `"score"` and `"reason"`. No additional text, commentary, or formatting.
+
+---
+Example JSON:
+{
+  "reason": "Your concise and informative reason here.",
+  "score": 0
+}
+
+JSON:

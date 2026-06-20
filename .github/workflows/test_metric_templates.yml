@@ -1,0 +1,42 @@
+name: Metric Templates
+
+# Guards that the compiled `templates.json` bundles (Python + TypeScript) stay in
+# sync with the metric template `.txt` sources. The check spans both packages, so
+# it lives in its own workflow rather than the Python-only Core Tests workflow.
+
+on:
+  push:
+    paths:
+      - 'deepeval/**/templates/**'
+      - 'typescript/src/templates/metrics/**'
+      - 'scripts/compile_metric_templates.py'
+      - 'tests/test_templates/test_metric_templates.py'
+      - '.github/workflows/test_metric_templates.yml'
+  pull_request:
+    paths:
+      - 'deepeval/**/templates/**'
+      - 'typescript/src/templates/metrics/**'
+      - 'scripts/compile_metric_templates.py'
+      - 'tests/test_templates/test_metric_templates.py'
+      - '.github/workflows/test_metric_templates.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      # The test only uses the standard library + the compile script (also
+      # stdlib-only), so no project install is needed — just pytest.
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Check templates.json is in sync with the .txt sources
+        run: pytest -vv -rA tests/test_templates/test_metric_templates.py

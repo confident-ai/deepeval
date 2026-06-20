@@ -1,6 +1,8 @@
 import type { ZodType } from "zod";
 import { DeepEvalBaseLLM, type GenerationResult } from "../base-model";
 import { computeCost } from "../utils";
+import { aiSdkContent } from "../multimodal";
+import { checkIfMultimodal } from "../../test-case/mllm-image";
 
 export interface AISDKModelOptions {
   /**
@@ -42,11 +44,16 @@ export class AISDKModel extends DeepEvalBaseLLM {
     // its generics. The runtime call shape matches AI SDK v5/v6.
     const ai: any = await import("ai");
 
+    // Plain `prompt` for text; AI SDK `messages` (text + image parts) for multimodal.
+    const input = checkIfMultimodal(prompt)
+      ? { messages: [{ role: "user", content: aiSdkContent(prompt) }] }
+      : { prompt };
+
     if (schema) {
       const { object, usage } = await ai.generateObject({
         model: this.aiModel,
         schema,
-        prompt,
+        ...input,
         ...(this.temperature !== undefined && {
           temperature: this.temperature,
         }),
@@ -63,7 +70,7 @@ export class AISDKModel extends DeepEvalBaseLLM {
 
     const { text, usage } = await ai.generateText({
       model: this.aiModel,
-      prompt,
+      ...input,
       ...(this.temperature !== undefined && { temperature: this.temperature }),
       maxOutputTokens: this.maxOutputTokens,
     });
@@ -81,6 +88,10 @@ export class AISDKModel extends DeepEvalBaseLLM {
   }
 
   supportsStructuredOutputs(): boolean {
+    return true;
+  }
+
+  supportsMultimodal(): boolean {
     return true;
   }
 }

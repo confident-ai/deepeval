@@ -1,6 +1,6 @@
 import { Golden, ConversationalGolden } from "./golden";
 import { LLMTestCase, ConversationalTestCase, ToolCall } from "../test-case";
-import { Turn } from "../test-case";
+import { Turn, resolveRetrievalContext } from "../test-case";
 
 export function convertTestCasesToGoldens(testCases: LLMTestCase[]): Golden[] {
   const goldens: Golden[] = [];
@@ -12,7 +12,7 @@ export function convertTestCasesToGoldens(testCases: LLMTestCase[]): Golden[] {
         actualOutput: llmTestCase.actualOutput,
         expectedOutput: llmTestCase.expectedOutput,
         context: llmTestCase.context,
-        retrievalContext: llmTestCase.retrievalContext,
+        retrievalContext: resolveRetrievalContext(llmTestCase.retrievalContext),
         toolsCalled: llmTestCase.toolsCalled,
         expectedTools: llmTestCase.expectedTools,
         additionalMetadata: llmTestCase.additionalMetadata,

@@ -1,0 +1,32 @@
+
+Given the following reason that explains which contestant is the winner, rewrite the reason to REPLACE all contestant names with their real names.
+
+The contestant names are wrapped in $name$ format (e.g., $Alice$, $Bob$, $Charlie$).
+
+Use the provided dummy-to-real names mapping to convert each $dummy_name$ to its corresponding real name.
+
+Dummy-to-real mapping:
+{{ dummy_to_real_names }}
+
+Reason:
+{{ reason }}
+
+**Instructions:**
+1. Find all instances of $name$ in the reason text
+2. Look up each name in the dummy_to_real_names mapping
+3. Replace $name$ with the corresponding real name
+4. Keep all other text unchanged
+
+**Example:**
+If mapping is {"Alice": "gpt-4", "Bob": "claude-3"} and reason contains "$Alice$ provided better answers than $Bob$", 
+the result should be "gpt-4 provided better answers than claude-3"
+
+Return only the rewritten reason as JSON.
+
+---
+**Example JSON:**
+{
+  "rewritten_reason": <your-rewritten-reason-here>
+}
+
+JSON:

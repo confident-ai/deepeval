@@ -1,15 +1,15 @@
 {
   "name": "langchain-streaming-test",
-  "uuid": "2aeea33f-490f-4b25-8618-c07d917484bc",
+  "uuid": "98c1f1ba-222b-4ee2-a843-6ab1d8f1b21a",
   "baseSpans": [
     {
-      "uuid": "019c8fee-6a7c-7666-99b7-942b61e2ba86",
+      "uuid": "019ed9d8-ae7a-74c0-a99a-59388b6183c6",
       "name": "streaming_single_chain",
       "status": "SUCCESS",
       "type": "base",
-      "traceUuid": "2aeea33f-490f-4b25-8618-c07d917484bc",
-      "startTime": "2026-02-24T13:54:52.668Z",
-      "endTime": "2026-02-24T13:54:55.260Z",
+      "traceUuid": "98c1f1ba-222b-4ee2-a843-6ab1d8f1b21a",
+      "startTime": "2026-06-18T08:28:36.858Z",
+      "endTime": "2026-06-18T08:28:39.055Z",
       "input": {
         "messages": [
           {
@@ -38,7 +38,7 @@
                 "tool_calls": [
                   {
                     "index": 0,
-                    "id": "call_Rzstb9ekieX7SjXBe0m1qEjJ",
+                    "id": "call_XzKkdD4UkyAAd8kcawlZwU0D",
                     "type": "function",
                     "function": {
                       "name": "get_stock_price",
@@ -56,7 +56,7 @@
                 "prompt": 0,
                 "completion": 0,
                 "finish_reason": "tool_calls",
-                "system_fingerprint": "fp_373a14eb6f",
+                "system_fingerprint": "fp_0185f8e998",
                 "model_name": "gpt-4o-mini-2024-07-18",
                 "service_tier": "default",
                 "model_provider": "openai",
@@ -80,7 +80,7 @@
                 {
                   "name": "get_stock_price",
                   "args": "{\"symbol\":\"AAPL\"}",
-                  "id": "call_Rzstb9ekieX7SjXBe0m1qEjJ",
+                  "id": "call_XzKkdD4UkyAAd8kcawlZwU0D",
                   "index": 0,
                   "type": "tool_call_chunk"
                 }
@@ -91,11 +91,11 @@
                   "args": {
                     "symbol": "AAPL"
                   },
-                  "id": "call_Rzstb9ekieX7SjXBe0m1qEjJ",
+                  "id": "call_XzKkdD4UkyAAd8kcawlZwU0D",
                   "type": "tool_call"
                 }
               ],
-              "id": "chatcmpl-DCnAChpDV4fDoZsKe8qVhKlxIAooZ",
+              "id": "chatcmpl-Ds2OzrkhVj9hRrD18TdkGzh1pmLlI",
               "usage_metadata": {
                 "input_tokens": 56,
                 "output_tokens": 16,
@@ -121,8 +121,8 @@
               "ToolMessage"
             ],
             "kwargs": {
-              "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"$178.50 (+1.2%)\",\"tool_call_id\":\"call_Rzstb9ekieX7SjXBe0m1qEjJ\",\"name\":\"get_stock_price\",\"metadata\":{},\"additional_kwargs\":{},\"response_metadata\":{}}}",
-              "tool_call_id": "call_Rzstb9ekieX7SjXBe0m1qEjJ",
+              "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"$178.50 (+1.2%)\",\"tool_call_id\":\"call_XzKkdD4UkyAAd8kcawlZwU0D\",\"name\":\"get_stock_price\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.1.31\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}",
+              "tool_call_id": "call_XzKkdD4UkyAAd8kcawlZwU0D",
               "additional_kwargs": {},
               "response_metadata": {}
             }
@@ -136,25 +136,25 @@
               "AIMessageChunk"
             ],
             "kwargs": {
-              "content": "The current stock price for Apple (AAPL) is $178.50, with an increase of 1.2%.",
+              "content": "The current stock price for Apple (AAPL) is $178.50, which is up by 1.2%.",
               "additional_kwargs": {},
               "response_metadata": {
                 "estimatedTokenUsage": {
-                  "promptTokens": 121,
+                  "promptTokens": 135,
                   "completionTokens": 25,
-                  "totalTokens": 146
+                  "totalTokens": 160
                 },
                 "prompt": 0,
                 "completion": 0,
                 "finish_reason": "stop",
-                "system_fingerprint": "fp_373a14eb6f",
+                "system_fingerprint": "fp_0185f8e998",
                 "model_name": "gpt-4o-mini-2024-07-18",
                 "service_tier": "default",
                 "model_provider": "openai",
                 "usage": {
-                  "prompt_tokens": 165,
+                  "prompt_tokens": 176,
                   "completion_tokens": 26,
-                  "total_tokens": 191,
+                  "total_tokens": 202,
                   "prompt_tokens_details": {
                     "cached_tokens": 0,
                     "audio_tokens": 0
@@ -169,11 +169,11 @@
               },
               "tool_call_chunks": [],
               "tool_calls": [],
-              "id": "chatcmpl-DCnAEddc0OUlh28dfm1XiuC4BHmOB",
+              "id": "chatcmpl-Ds2P0Xu3Z944sURKASyEZ86HU7Keq",
               "usage_metadata": {
-                "input_tokens": 165,
+                "input_tokens": 176,
                 "output_tokens": 26,
-                "total_tokens": 191,
+                "total_tokens": 202,
                 "input_token_details": {
                   "audio": 0,
                   "cache_read": 0
@@ -193,14 +193,14 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019c8fee-6a7d-7666-99b7-9933ba346748",
+      "uuid": "019ed9d8-ae7c-741e-b620-b9ed939fc314",
       "name": "Langchain LLM Run",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "2aeea33f-490f-4b25-8618-c07d917484bc",
-      "parentUuid": "019c8fee-6a7c-7666-99b7-942b61e2ba86",
-      "startTime": "2026-02-24T13:54:52.669Z",
-      "endTime": "2026-02-24T13:54:54.133Z",
+      "traceUuid": "98c1f1ba-222b-4ee2-a843-6ab1d8f1b21a",
+      "parentUuid": "019ed9d8-ae7a-74c0-a99a-59388b6183c6",
+      "startTime": "2026-06-18T08:28:36.860Z",
+      "endTime": "2026-06-18T08:28:38.124Z",
       "input": [
         {
           "role": "human",
@@ -212,7 +212,7 @@
         "content": "",
         "toolCalls": [
           {
-            "id": "call_Rzstb9ekieX7SjXBe0m1qEjJ",
+            "id": "call_XzKkdD4UkyAAd8kcawlZwU0D",
             "name": "get_stock_price",
             "args": {
               "symbol": "AAPL"
@@ -227,14 +227,14 @@
       "outputTokenCount": 0
     },
     {
-      "uuid": "019c8fee-7037-7666-99b7-a9bb481a433f",
+      "uuid": "019ed9d8-b370-7409-b239-00b77122ec93",
       "name": "Langchain LLM Run",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "2aeea33f-490f-4b25-8618-c07d917484bc",
-      "parentUuid": "019c8fee-6a7c-7666-99b7-942b61e2ba86",
-      "startTime": "2026-02-24T13:54:54.135Z",
-      "endTime": "2026-02-24T13:54:55.260Z",
+      "traceUuid": "98c1f1ba-222b-4ee2-a843-6ab1d8f1b21a",
+      "parentUuid": "019ed9d8-ae7a-74c0-a99a-59388b6183c6",
+      "startTime": "2026-06-18T08:28:38.128Z",
+      "endTime": "2026-06-18T08:28:39.054Z",
       "input": [
         {
           "role": "human",
@@ -242,16 +242,16 @@
         },
         {
           "role": "ai",
-          "content": "[{\"name\":\"get_stock_price\",\"args\":{\"symbol\":\"AAPL\"},\"id\":\"call_Rzstb9ekieX7SjXBe0m1qEjJ\",\"type\":\"tool_call\"}]"
+          "content": "[{\"name\":\"get_stock_price\",\"args\":{\"symbol\":\"AAPL\"},\"id\":\"call_XzKkdD4UkyAAd8kcawlZwU0D\",\"type\":\"tool_call\"}]"
         },
         {
           "role": "tool",
-          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"$178.50 (+1.2%)\",\"tool_call_id\":\"call_Rzstb9ekieX7SjXBe0m1qEjJ\",\"name\":\"get_stock_price\",\"metadata\":{},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"$178.50 (+1.2%)\",\"tool_call_id\":\"call_XzKkdD4UkyAAd8kcawlZwU0D\",\"name\":\"get_stock_price\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.1.31\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
         }
       ],
       "output": {
         "role": "AI",
-        "content": "The current stock price for Apple (AAPL) is $178.50, with an increase of 1.2%.",
+        "content": "The current stock price for Apple (AAPL) is $178.50, which is up by 1.2%.",
         "toolCalls": []
       },
       "model": "gpt-4o-mini-2024-07-18",
@@ -264,14 +264,14 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019c8fee-7035-7666-99b7-a1a3c055ae3c",
+      "uuid": "019ed9d8-b36d-7783-b101-158b63c2e45e",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "traceUuid": "2aeea33f-490f-4b25-8618-c07d917484bc",
-      "parentUuid": "019c8fee-6a7c-7666-99b7-942b61e2ba86",
-      "startTime": "2026-02-24T13:54:54.133Z",
-      "endTime": "2026-02-24T13:54:54.134Z",
+      "traceUuid": "98c1f1ba-222b-4ee2-a843-6ab1d8f1b21a",
+      "parentUuid": "019ed9d8-ae7a-74c0-a99a-59388b6183c6",
+      "startTime": "2026-06-18T08:28:38.125Z",
+      "endTime": "2026-06-18T08:28:38.125Z",
       "input": "{\"symbol\":\"AAPL\"}",
       "output": {
         "lc": 1,
@@ -284,17 +284,21 @@
         "kwargs": {
           "status": "success",
           "content": "$178.50 (+1.2%)",
-          "tool_call_id": "call_Rzstb9ekieX7SjXBe0m1qEjJ",
+          "tool_call_id": "call_XzKkdD4UkyAAd8kcawlZwU0D",
           "name": "get_stock_price",
-          "metadata": {},
+          "metadata": {
+            "versions": {
+              "@langchain/core": "1.1.31"
+            }
+          },
           "additional_kwargs": {},
           "response_metadata": {}
         }
       }
     }
   ],
-  "startTime": "2026-02-24T13:54:52.668Z",
-  "endTime": "2026-02-24T13:54:55.260Z",
+  "startTime": "2026-06-18T08:28:36.858Z",
+  "endTime": "2026-06-18T08:28:39.055Z",
   "environment": "testing",
   "tags": [
     "langchain",
@@ -328,7 +332,7 @@
             "tool_calls": [
               {
                 "index": 0,
-                "id": "call_Rzstb9ekieX7SjXBe0m1qEjJ",
+                "id": "call_XzKkdD4UkyAAd8kcawlZwU0D",
                 "type": "function",
                 "function": {
                   "name": "get_stock_price",
@@ -346,7 +350,7 @@
             "prompt": 0,
             "completion": 0,
             "finish_reason": "tool_calls",
-            "system_fingerprint": "fp_373a14eb6f",
+            "system_fingerprint": "fp_0185f8e998",
             "model_name": "gpt-4o-mini-2024-07-18",
             "service_tier": "default",
             "model_provider": "openai",
@@ -370,7 +374,7 @@
             {
               "name": "get_stock_price",
               "args": "{\"symbol\":\"AAPL\"}",
-              "id": "call_Rzstb9ekieX7SjXBe0m1qEjJ",
+              "id": "call_XzKkdD4UkyAAd8kcawlZwU0D",
               "index": 0,
               "type": "tool_call_chunk"
             }
@@ -381,11 +385,11 @@
               "args": {
                 "symbol": "AAPL"
               },
-              "id": "call_Rzstb9ekieX7SjXBe0m1qEjJ",
+              "id": "call_XzKkdD4UkyAAd8kcawlZwU0D",
               "type": "tool_call"
             }
           ],
-          "id": "chatcmpl-DCnAChpDV4fDoZsKe8qVhKlxIAooZ",
+          "id": "chatcmpl-Ds2OzrkhVj9hRrD18TdkGzh1pmLlI",
           "usage_metadata": {
             "input_tokens": 56,
             "output_tokens": 16,
@@ -411,8 +415,8 @@
           "ToolMessage"
         ],
         "kwargs": {
-          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"$178.50 (+1.2%)\",\"tool_call_id\":\"call_Rzstb9ekieX7SjXBe0m1qEjJ\",\"name\":\"get_stock_price\",\"metadata\":{},\"additional_kwargs\":{},\"response_metadata\":{}}}",
-          "tool_call_id": "call_Rzstb9ekieX7SjXBe0m1qEjJ",
+          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"$178.50 (+1.2%)\",\"tool_call_id\":\"call_XzKkdD4UkyAAd8kcawlZwU0D\",\"name\":\"get_stock_price\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.1.31\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}",
+          "tool_call_id": "call_XzKkdD4UkyAAd8kcawlZwU0D",
           "additional_kwargs": {},
           "response_metadata": {}
         }
@@ -426,25 +430,25 @@
           "AIMessageChunk"
         ],
         "kwargs": {
-          "content": "The current stock price for Apple (AAPL) is $178.50, with an increase of 1.2%.",
+          "content": "The current stock price for Apple (AAPL) is $178.50, which is up by 1.2%.",
           "additional_kwargs": {},
           "response_metadata": {
             "estimatedTokenUsage": {
-              "promptTokens": 121,
+              "promptTokens": 135,
               "completionTokens": 25,
-              "totalTokens": 146
+              "totalTokens": 160
             },
             "prompt": 0,
             "completion": 0,
             "finish_reason": "stop",
-            "system_fingerprint": "fp_373a14eb6f",
+            "system_fingerprint": "fp_0185f8e998",
             "model_name": "gpt-4o-mini-2024-07-18",
             "service_tier": "default",
             "model_provider": "openai",
             "usage": {
-              "prompt_tokens": 165,
+              "prompt_tokens": 176,
               "completion_tokens": 26,
-              "total_tokens": 191,
+              "total_tokens": 202,
               "prompt_tokens_details": {
                 "cached_tokens": 0,
                 "audio_tokens": 0
@@ -459,11 +463,11 @@
           },
           "tool_call_chunks": [],
           "tool_calls": [],
-          "id": "chatcmpl-DCnAEddc0OUlh28dfm1XiuC4BHmOB",
+          "id": "chatcmpl-Ds2P0Xu3Z944sURKASyEZ86HU7Keq",
           "usage_metadata": {
-            "input_tokens": 165,
+            "input_tokens": 176,
             "output_tokens": 26,
-            "total_tokens": 191,
+            "total_tokens": 202,
             "input_token_details": {
               "audio": 0,
               "cache_read": 0
@@ -481,7 +485,9 @@
   "toolsCalled": [
     {
       "name": "get_stock_price",
-      "inputParameters": "{\"symbol\":\"AAPL\"}",
+      "inputParameters": {
+        "symbol": "AAPL"
+      },
       "output": {
         "lc": 1,
         "type": "constructor",
@@ -493,13 +499,18 @@
         "kwargs": {
           "status": "success",
           "content": "$178.50 (+1.2%)",
-          "tool_call_id": "call_Rzstb9ekieX7SjXBe0m1qEjJ",
+          "tool_call_id": "call_XzKkdD4UkyAAd8kcawlZwU0D",
           "name": "get_stock_price",
-          "metadata": {},
+          "metadata": {
+            "versions": {
+              "@langchain/core": "1.1.31"
+            }
+          },
           "additional_kwargs": {},
           "response_metadata": {}
         }
       }
     }
-  ]
+  ],
+  "status": "SUCCESS"
 }

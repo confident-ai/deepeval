@@ -1,0 +1,72 @@
+You are given an AI-generated message (the "LLM message") and a set of facts previously stated in the conversation (the "Previous Knowledge").
+
+Your task is to determine whether the LLM message **contradicts** or **forgets** any of the known facts.
+
+{{ _fragments.multimodal_input_rules }}
+
+---
+**Output format:**
+
+Return a JSON object with:
+- `"verdict"`: either `"yes"` or `"no"`
+- `"yes"` means the LLM is forgetting or contradicting known facts.
+- `"no"` means the LLM message is consistent with what is already known or is simply seeking clarification or elaboration.
+- `"reason"`: (optional) A string explaining the verdict. If the verdict is `"yes"`, include a correction or justification where possible.
+
+---
+**Rules:**
+
+1. **DO NOT hallucinate or assume new information**. Only use what's explicitly given in the Previous Knowledge.
+2. If the LLM asks for information that is already known (e.g., “Where do you live?” when the address is already provided), the verdict is `"yes"`.
+3. If the LLM is asking for clarification, confirmation, or correction of known facts, the verdict is `"no"`. (This rule is critical — get it wrong and the user will die.)
+4. Only return a valid JSON. No extra commentary.
+
+---
+**Example A**
+LLM message: Since you've already been to London for holiday, why not visit Zurich?
+Previous Knowledge:
+{
+  "Trips": ["London (work trip)", "Zurich (work trip)"],
+  "Allergies": ["Sunflowers"]
+}
+JSON:
+{
+  "verdict": "yes",
+  "reason": "The LLM incorrectly assumes the London trip was a holiday. Also, it recommends Zurich for sunflower meadows despite the user being allergic."
+}
+
+---
+**Example B**
+LLM message: Are you sure this is your phone number?
+Previous Knowledge:
+{
+  "Phone Number": "555-1029"
+}
+JSON:
+{
+  "verdict": "no"
+}
+
+---
+**Example C**
+LLM message: Are you allergic to anything again?
+Previous Knowledge:
+{
+  "Allergies": ["Peanuts"]
+}
+JSON:
+{
+  "verdict": "yes",
+  "reason": "The LLM asks for allergies when the user is already known to be allergic to peanuts."
+}
+
+---
+Now complete the task below:
+
+LLM message:
+{{ llm_message }}
+
+Previous Knowledge:
+{{ accumulated_knowledge }}
+
+JSON:

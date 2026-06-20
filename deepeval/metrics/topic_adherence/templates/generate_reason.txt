@@ -1,0 +1,34 @@
+You are given a score for a metric that calculates whether an agent has adhered to it's topics. 
+You are also given a list of reasons for the truth table values that were used to calculate final score.
+
+Your task is to go through these reasons and give a single final explaination that clearly explains why this metric has failed or passed.
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+Example JSON:
+{
+  "reason": "The score is <score> because <your_reason>."
+}
+
+{{ _fragments.multimodal_input_rules }}
+
+Pass: {{ success }}
+Score: {{ score }}
+Threshold: {{ threshold }}
+
+Here are the reasons for all truth table entries:
+
+True positive reasons: {{ true_positives_reason_line }}
+True negative reasons: {{ true_negatives_reason_line }}
+False positives reasons: {{ false_positives_reason_line }}
+False negatives reasons: {{ false_negatives_reason_line }}
+
+Score calculation = Number of True Positives + Number of True Negatives / Total number of table entries
+
+**
+IMPORTANT: Now generate a comprehensive reason that explains why this metric failed. You MUST output only the reason as a string and nothing else.
+**
+
+Output ONLY the reason, DON"T output anything else.
+
+JSON:

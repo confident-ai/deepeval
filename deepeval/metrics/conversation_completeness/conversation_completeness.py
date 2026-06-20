@@ -2,9 +2,6 @@ import asyncio
 from typing import Optional, Union, List
 
 from deepeval.metrics import BaseConversationalMetric
-from deepeval.metrics.conversation_completeness.template import (
-    ConversationCompletenessTemplate,
-)
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
@@ -174,7 +171,8 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             ):
                 incompletenesses.append(verdict.reason)
 
-        prompt = ConversationCompletenessTemplate.generate_reason(
+        prompt = self._get_prompt(
+            "generate_reason",
             score=self.score,
             incompletenesses=incompletenesses,
             intentions=self.user_intentions,
@@ -201,7 +199,8 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             ):
                 incompletenesses.append(verdict.reason)
 
-        prompt = ConversationCompletenessTemplate.generate_reason(
+        prompt = self._get_prompt(
+            "generate_reason",
             score=self.score,
             incompletenesses=incompletenesses,
             intentions=self.user_intentions,
@@ -218,7 +217,8 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
     async def _a_generate_verdict(
         self, turns: List[Turn], intention: str, multimodal: bool
     ) -> ConversationCompletenessVerdict:
-        prompt = ConversationCompletenessTemplate.generate_verdicts(
+        prompt = self._get_prompt(
+            "generate_verdicts",
             turns=[convert_turn_to_dict(turn) for turn in turns],
             intention=intention,
             multimodal=multimodal,
@@ -235,7 +235,8 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
     def _generate_verdict(
         self, turns: List[Turn], intention: str, multimodal: bool
     ) -> ConversationCompletenessVerdict:
-        prompt = ConversationCompletenessTemplate.generate_verdicts(
+        prompt = self._get_prompt(
+            "generate_verdicts",
             turns=[convert_turn_to_dict(turn) for turn in turns],
             intention=intention,
             multimodal=multimodal,
@@ -251,7 +252,8 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
     async def _a_extract_user_intentions(
         self, turns: List[Turn], multimodal: bool
     ) -> List[str]:
-        prompt = ConversationCompletenessTemplate.extract_user_intentions(
+        prompt = self._get_prompt(
+            "extract_user_intentions",
             turns=[convert_turn_to_dict(turn) for turn in turns],
             multimodal=multimodal,
         )
@@ -267,7 +269,8 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
     def _extract_user_intentions(
         self, turns: List[Turn], multimodal: bool
     ) -> List[str]:
-        prompt = ConversationCompletenessTemplate.extract_user_intentions(
+        prompt = self._get_prompt(
+            "extract_user_intentions",
             turns=[convert_turn_to_dict(turn) for turn in turns],
             multimodal=multimodal,
         )

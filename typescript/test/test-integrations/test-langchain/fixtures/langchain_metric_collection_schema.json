@@ -1,15 +1,15 @@
 {
   "name": "LangChain Full Attributes Trace",
-  "uuid": "b418ccb7-d514-4aa3-91d0-e04aa915d1ef",
+  "uuid": "844ff542-147a-4475-b683-5cb662f80451",
   "baseSpans": [
     {
-      "uuid": "019c8fee-9dd1-7666-99b8-37ee42b002c1",
+      "uuid": "019ed9d8-e817-739f-83f9-8fff5c657fb9",
       "name": "metric_collection_chain",
       "status": "SUCCESS",
       "type": "base",
-      "traceUuid": "b418ccb7-d514-4aa3-91d0-e04aa915d1ef",
-      "startTime": "2026-02-24T13:55:05.809Z",
-      "endTime": "2026-02-24T13:55:07.578Z",
+      "traceUuid": "844ff542-147a-4475-b683-5cb662f80451",
+      "startTime": "2026-06-18T08:28:51.607Z",
+      "endTime": "2026-06-18T08:28:55.895Z",
       "input": {
         "messages": [
           {
@@ -33,12 +33,12 @@
               "AIMessage"
             ],
             "kwargs": {
-              "id": "chatcmpl-DCnAQFk8SgcBhttUjr04eNJRnMnty",
+              "id": "chatcmpl-Ds2PFYN5rEnwq4CRDdKukqWSpheYo",
               "content": "",
               "additional_kwargs": {
                 "tool_calls": [
                   {
-                    "id": "call_49wxuwhoNyOomfKcBr2c3T5b",
+                    "id": "call_ZcBoSQHFSbg1U4vuEnB677gK",
                     "type": "function",
                     "function": {
                       "name": "calculate",
@@ -71,7 +71,7 @@
                     "rejected_prediction_tokens": 0
                   }
                 },
-                "system_fingerprint": "fp_373a14eb6f"
+                "system_fingerprint": "fp_623c0b2958"
               },
               "type": "ai",
               "tool_calls": [
@@ -81,7 +81,7 @@
                     "expression": "125 * 5"
                   },
                   "type": "tool_call",
-                  "id": "call_49wxuwhoNyOomfKcBr2c3T5b"
+                  "id": "call_ZcBoSQHFSbg1U4vuEnB677gK"
                 }
               ],
               "invalid_tool_calls": [],
@@ -109,8 +109,8 @@
               "ToolMessage"
             ],
             "kwargs": {
-              "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"625\",\"tool_call_id\":\"call_49wxuwhoNyOomfKcBr2c3T5b\",\"name\":\"calculate\",\"metadata\":{},\"additional_kwargs\":{},\"response_metadata\":{}}}",
-              "tool_call_id": "call_49wxuwhoNyOomfKcBr2c3T5b",
+              "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"625\",\"tool_call_id\":\"call_ZcBoSQHFSbg1U4vuEnB677gK\",\"name\":\"calculate\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.1.31\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}",
+              "tool_call_id": "call_ZcBoSQHFSbg1U4vuEnB677gK",
               "additional_kwargs": {},
               "response_metadata": {}
             }
@@ -124,22 +124,22 @@
               "AIMessage"
             ],
             "kwargs": {
-              "id": "chatcmpl-DCnAQisKEhSluMt9qjlKQQzqiX77i",
+              "id": "chatcmpl-Ds2PHFEWoAS7bzW0Hvr0XytPBeGc9",
               "content": "The result of \\( 125 \\times 5 \\) is 625.",
               "additional_kwargs": {},
               "response_metadata": {
                 "tokenUsage": {
-                  "promptTokens": 153,
+                  "promptTokens": 163,
                   "completionTokens": 17,
-                  "totalTokens": 170
+                  "totalTokens": 180
                 },
                 "finish_reason": "stop",
                 "model_provider": "openai",
                 "model_name": "gpt-4o-mini-2024-07-18",
                 "usage": {
-                  "prompt_tokens": 153,
+                  "prompt_tokens": 163,
                   "completion_tokens": 17,
-                  "total_tokens": 170,
+                  "total_tokens": 180,
                   "prompt_tokens_details": {
                     "cached_tokens": 0,
                     "audio_tokens": 0
@@ -151,15 +151,15 @@
                     "rejected_prediction_tokens": 0
                   }
                 },
-                "system_fingerprint": "fp_373a14eb6f"
+                "system_fingerprint": "fp_623c0b2958"
               },
               "type": "ai",
               "tool_calls": [],
               "invalid_tool_calls": [],
               "usage_metadata": {
                 "output_tokens": 17,
-                "input_tokens": 153,
-                "total_tokens": 170,
+                "input_tokens": 163,
+                "total_tokens": 180,
                 "input_token_details": {
                   "audio": 0,
                   "cache_read": 0
@@ -179,14 +179,14 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019c8fee-9dd3-7666-99b8-3d98357840dc",
+      "uuid": "019ed9d8-e818-720e-a1f9-d6f2556542fa",
       "name": "Langchain LLM Run",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "b418ccb7-d514-4aa3-91d0-e04aa915d1ef",
-      "parentUuid": "019c8fee-9dd1-7666-99b8-37ee42b002c1",
-      "startTime": "2026-02-24T13:55:05.811Z",
-      "endTime": "2026-02-24T13:55:06.627Z",
+      "traceUuid": "844ff542-147a-4475-b683-5cb662f80451",
+      "parentUuid": "019ed9d8-e817-739f-83f9-8fff5c657fb9",
+      "startTime": "2026-06-18T08:28:51.608Z",
+      "endTime": "2026-06-18T08:28:54.401Z",
       "input": [
         {
           "role": "system",
@@ -202,7 +202,7 @@
         "content": "",
         "toolCalls": [
           {
-            "id": "call_49wxuwhoNyOomfKcBr2c3T5b",
+            "id": "call_ZcBoSQHFSbg1U4vuEnB677gK",
             "name": "calculate",
             "args": {
               "expression": "125 * 5"
@@ -222,14 +222,14 @@
       "promptVersion": "01.00.00"
     },
     {
-      "uuid": "019c8fee-a105-7666-99b8-4f20a07a3e1c",
+      "uuid": "019ed9d8-f303-762f-8571-fc47c5751fc8",
       "name": "Langchain LLM Run",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "b418ccb7-d514-4aa3-91d0-e04aa915d1ef",
-      "parentUuid": "019c8fee-9dd1-7666-99b8-37ee42b002c1",
-      "startTime": "2026-02-24T13:55:06.629Z",
-      "endTime": "2026-02-24T13:55:07.577Z",
+      "traceUuid": "844ff542-147a-4475-b683-5cb662f80451",
+      "parentUuid": "019ed9d8-e817-739f-83f9-8fff5c657fb9",
+      "startTime": "2026-06-18T08:28:54.403Z",
+      "endTime": "2026-06-18T08:28:55.895Z",
       "input": [
         {
           "role": "system",
@@ -241,11 +241,11 @@
         },
         {
           "role": "ai",
-          "content": "[{\"name\":\"calculate\",\"args\":{\"expression\":\"125 * 5\"},\"type\":\"tool_call\",\"id\":\"call_49wxuwhoNyOomfKcBr2c3T5b\"}]"
+          "content": "[{\"name\":\"calculate\",\"args\":{\"expression\":\"125 * 5\"},\"type\":\"tool_call\",\"id\":\"call_ZcBoSQHFSbg1U4vuEnB677gK\"}]"
         },
         {
           "role": "tool",
-          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"625\",\"tool_call_id\":\"call_49wxuwhoNyOomfKcBr2c3T5b\",\"name\":\"calculate\",\"metadata\":{},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"625\",\"tool_call_id\":\"call_ZcBoSQHFSbg1U4vuEnB677gK\",\"name\":\"calculate\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.1.31\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
         }
       ],
       "output": {
@@ -257,7 +257,7 @@
       "model": "gpt-4o-mini-2024-07-18",
       "costPerInputToken": 0,
       "costPerOutputToken": 0,
-      "inputTokenCount": 153,
+      "inputTokenCount": 163,
       "outputTokenCount": 17,
       "promptAlias": "langchain-metric-collection-test",
       "promptCommitHash": "bab04ec",
@@ -268,14 +268,14 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019c8fee-a104-7666-99b8-41ee4c097fe0",
+      "uuid": "019ed9d8-f301-77a1-aaee-b54f4fef3702",
       "name": "calculate",
       "status": "SUCCESS",
       "type": "tool",
-      "traceUuid": "b418ccb7-d514-4aa3-91d0-e04aa915d1ef",
-      "parentUuid": "019c8fee-9dd1-7666-99b8-37ee42b002c1",
-      "startTime": "2026-02-24T13:55:06.628Z",
-      "endTime": "2026-02-24T13:55:06.629Z",
+      "traceUuid": "844ff542-147a-4475-b683-5cb662f80451",
+      "parentUuid": "019ed9d8-e817-739f-83f9-8fff5c657fb9",
+      "startTime": "2026-06-18T08:28:54.402Z",
+      "endTime": "2026-06-18T08:28:54.403Z",
       "input": "{\"expression\":\"125 * 5\"}",
       "output": {
         "lc": 1,
@@ -288,17 +288,21 @@
         "kwargs": {
           "status": "success",
           "content": "625",
-          "tool_call_id": "call_49wxuwhoNyOomfKcBr2c3T5b",
+          "tool_call_id": "call_ZcBoSQHFSbg1U4vuEnB677gK",
           "name": "calculate",
-          "metadata": {},
+          "metadata": {
+            "versions": {
+              "@langchain/core": "1.1.31"
+            }
+          },
           "additional_kwargs": {},
           "response_metadata": {}
         }
       }
     }
   ],
-  "startTime": "2026-02-24T13:55:05.808Z",
-  "endTime": "2026-02-24T13:55:07.578Z",
+  "startTime": "2026-06-18T08:28:51.607Z",
+  "endTime": "2026-06-18T08:28:55.895Z",
   "environment": "testing",
   "metadata": {
     "deployment": "test-env",
@@ -334,12 +338,12 @@
           "AIMessage"
         ],
         "kwargs": {
-          "id": "chatcmpl-DCnAQFk8SgcBhttUjr04eNJRnMnty",
+          "id": "chatcmpl-Ds2PFYN5rEnwq4CRDdKukqWSpheYo",
           "content": "",
           "additional_kwargs": {
             "tool_calls": [
               {
-                "id": "call_49wxuwhoNyOomfKcBr2c3T5b",
+                "id": "call_ZcBoSQHFSbg1U4vuEnB677gK",
                 "type": "function",
                 "function": {
                   "name": "calculate",
@@ -372,7 +376,7 @@
                 "rejected_prediction_tokens": 0
               }
             },
-            "system_fingerprint": "fp_373a14eb6f"
+            "system_fingerprint": "fp_623c0b2958"
           },
           "type": "ai",
           "tool_calls": [
@@ -382,7 +386,7 @@
                 "expression": "125 * 5"
               },
               "type": "tool_call",
-              "id": "call_49wxuwhoNyOomfKcBr2c3T5b"
+              "id": "call_ZcBoSQHFSbg1U4vuEnB677gK"
             }
           ],
           "invalid_tool_calls": [],
@@ -410,8 +414,8 @@
           "ToolMessage"
         ],
         "kwargs": {
-          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"625\",\"tool_call_id\":\"call_49wxuwhoNyOomfKcBr2c3T5b\",\"name\":\"calculate\",\"metadata\":{},\"additional_kwargs\":{},\"response_metadata\":{}}}",
-          "tool_call_id": "call_49wxuwhoNyOomfKcBr2c3T5b",
+          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"625\",\"tool_call_id\":\"call_ZcBoSQHFSbg1U4vuEnB677gK\",\"name\":\"calculate\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.1.31\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}",
+          "tool_call_id": "call_ZcBoSQHFSbg1U4vuEnB677gK",
           "additional_kwargs": {},
           "response_metadata": {}
         }
@@ -425,22 +429,22 @@
           "AIMessage"
         ],
         "kwargs": {
-          "id": "chatcmpl-DCnAQisKEhSluMt9qjlKQQzqiX77i",
+          "id": "chatcmpl-Ds2PHFEWoAS7bzW0Hvr0XytPBeGc9",
           "content": "The result of \\( 125 \\times 5 \\) is 625.",
           "additional_kwargs": {},
           "response_metadata": {
             "tokenUsage": {
-              "promptTokens": 153,
+              "promptTokens": 163,
               "completionTokens": 17,
-              "totalTokens": 170
+              "totalTokens": 180
             },
             "finish_reason": "stop",
             "model_provider": "openai",
             "model_name": "gpt-4o-mini-2024-07-18",
             "usage": {
-              "prompt_tokens": 153,
+              "prompt_tokens": 163,
               "completion_tokens": 17,
-              "total_tokens": 170,
+              "total_tokens": 180,
               "prompt_tokens_details": {
                 "cached_tokens": 0,
                 "audio_tokens": 0
@@ -452,15 +456,15 @@
                 "rejected_prediction_tokens": 0
               }
             },
-            "system_fingerprint": "fp_373a14eb6f"
+            "system_fingerprint": "fp_623c0b2958"
           },
           "type": "ai",
           "tool_calls": [],
           "invalid_tool_calls": [],
           "usage_metadata": {
             "output_tokens": 17,
-            "input_tokens": 153,
-            "total_tokens": 170,
+            "input_tokens": 163,
+            "total_tokens": 180,
             "input_token_details": {
               "audio": 0,
               "cache_read": 0
@@ -477,7 +481,9 @@
   "toolsCalled": [
     {
       "name": "calculate",
-      "inputParameters": "{\"expression\":\"125 * 5\"}",
+      "inputParameters": {
+        "expression": "125 * 5"
+      },
       "output": {
         "lc": 1,
         "type": "constructor",
@@ -489,13 +495,18 @@
         "kwargs": {
           "status": "success",
           "content": "625",
-          "tool_call_id": "call_49wxuwhoNyOomfKcBr2c3T5b",
+          "tool_call_id": "call_ZcBoSQHFSbg1U4vuEnB677gK",
           "name": "calculate",
-          "metadata": {},
+          "metadata": {
+            "versions": {
+              "@langchain/core": "1.1.31"
+            }
+          },
           "additional_kwargs": {},
           "response_metadata": {}
         }
       }
     }
-  ]
+  ],
+  "status": "SUCCESS"
 }

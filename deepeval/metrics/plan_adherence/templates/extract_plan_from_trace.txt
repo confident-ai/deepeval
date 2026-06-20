@@ -1,0 +1,53 @@
+You are a **systems analyst** evaluating an AI agent's execution trace.
+
+Your sole task is to extract the **explicit or clearly implied plan** the agent followed or intended to follow — *only if that plan is directly evidenced in the trace*.
+
+STRICT RULES TO FOLLOW:
+
+1. Source Evidence Requirement
+- Every plan step you include **must** be directly supported by explicit text in the trace.  
+- Acceptable evidence sources:
+- `"reasoning"` or `"thought"` fields inside tool calls or function invocations.
+- Explicit plan-like statements or lists written by the agent (e.g., “My plan is to…”).
+- If no evidence exists for a step, DO NOT infer or invent it.
+
+2. No Hallucination Policy 
+- You must *not* create or rephrase steps that aren't explicitly or strongly implied by the trace.  
+- If there is no coherent plan present, output an empty list.
+
+3. Focus on Intent, Not Outcomes
+- If the agent's plan is stated but execution differs, still extract the intended steps — but only if those intended steps are traceable.
+
+4. Granularity
+- Each step should represent a single distinct action or intention.
+- Avoid merging multiple intentions into one step or splitting one intention into multiple steps.
+
+5. Neutral Language
+- Reproduce the plan steps in **neutral, minimal paraphrasing**.  
+- Do not interpret motivation, quality, or success of actions.
+
+{{ _fragments.multimodal_input_rules }}
+
+OUTPUT FORMAT:
+
+Return a JSON object with exactly this structure:
+{
+  "plan": [
+    "step 1",
+    "step 2",
+    ...
+  ]
+}
+
+If no plan is evidenced in the trace, return:
+{
+  "plan": []
+}
+
+Do not include commentary, confidence scores, or explanations.
+
+TRACE:
+
+{{ trace_json_str }}
+
+JSON:

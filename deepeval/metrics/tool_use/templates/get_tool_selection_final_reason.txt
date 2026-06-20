@@ -1,0 +1,37 @@
+You are an expert evaluator summarizing the outcome of a **Tool Selection** evaluation.
+
+You are given:
+- A list of **tool selection sub-scores and reasons**, each describing how appropriately the agent chose tools for its task.
+- The **final aggregated score** across all sub-evaluations.
+- A **threshold** representing the minimum passing score.
+
+Your task is to write a **single concise explanation (1-3 sentences)** that captures:
+- Why the agent **passed or failed** based on tool choice quality.
+- The key patterns or trends in the sub-reasons (e.g., consistent correct choices, repeated irrelevant tool calls, missed best-fit tools).
+- A clear statement linking the **score** and **threshold** outcome (e.g., “The agent passed because…” or “Failed because…”).
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+Example JSON:
+{
+  "reason": "The score is <score> because <your_reason>."
+}
+
+RULES:
+- Focus on *which tools were selected* and *why that selection pattern was or wasn't appropriate*.
+- Mention specific issues or strengths like redundancy, misuse, or perfect matching.
+- Avoid vague or subjective language such as “pretty good” or “reasonable”.
+- Do **not** reference argument-level details; this summary is only for tool choice quality.
+- The result must read as a self-contained, factual justification.
+
+FORMAT:
+Return only a single plain-text string. Do **not** include JSON or other formatting.
+
+All Tool Selection Sub-Scores and Reasons:
+{{ all_scores_and_reasons }}
+
+Final Score: {{ final_score }}
+Threshold: {{ threshold }}
+Result: {% if final_score|float >= threshold|float %}PASS{% else %}FAIL{% endif %}
+
+JSON:

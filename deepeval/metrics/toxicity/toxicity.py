@@ -1,4 +1,4 @@
-from typing import List, Optional, Type, Union
+from typing import List, Optional, Union
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
@@ -15,7 +15,6 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
-from deepeval.metrics.toxicity.template import ToxicityTemplate
 from deepeval.metrics.toxicity.schema import (
     Opinions,
     ToxicityVerdict,
@@ -39,7 +38,6 @@ class ToxicityMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        evaluation_template: Type[ToxicityTemplate] = ToxicityTemplate,
     ):
         self.threshold = 0 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -48,7 +46,6 @@ class ToxicityMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -162,7 +159,8 @@ class ToxicityMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 toxics.append(verdict.reason)
 
-        prompt: dict = self.evaluation_template.generate_reason(
+        prompt: dict = self._get_prompt(
+            "generate_reason",
             toxics=toxics,
             score=format(self.score, ".2f"),
         )
@@ -184,7 +182,8 @@ class ToxicityMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 toxics.append(verdict.reason)
 
-        prompt: dict = self.evaluation_template.generate_reason(
+        prompt: dict = self._get_prompt(
+            "generate_reason",
             toxics=toxics,
             score=format(self.score, ".2f"),
         )
@@ -201,8 +200,9 @@ class ToxicityMetric(BaseMetric):
         if len(self.opinions) == 0:
             return []
 
-        prompt = self.evaluation_template.generate_verdicts(
-            opinions=self.opinions
+        prompt = self._get_prompt(
+            "generate_verdicts",
+            opinions=self.opinions,
         )
 
         verdicts: List[ToxicityVerdict] = (
@@ -222,8 +222,9 @@ class ToxicityMetric(BaseMetric):
         if len(self.opinions) == 0:
             return []
 
-        prompt = self.evaluation_template.generate_verdicts(
-            opinions=self.opinions
+        prompt = self._get_prompt(
+            "generate_verdicts",
+            opinions=self.opinions,
         )
 
         verdicts: List[ToxicityVerdict] = generate_with_schema_and_extract(
@@ -238,8 +239,9 @@ class ToxicityMetric(BaseMetric):
         return verdicts
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = self.evaluation_template.generate_opinions(
-            actual_output=actual_output
+        prompt = self._get_prompt(
+            "generate_opinions",
+            actual_output=actual_output,
         )
 
         return await a_generate_with_schema_and_extract(
@@ -251,8 +253,9 @@ class ToxicityMetric(BaseMetric):
         )
 
     def _generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = self.evaluation_template.generate_opinions(
-            actual_output=actual_output
+        prompt = self._get_prompt(
+            "generate_opinions",
+            actual_output=actual_output,
         )
 
         return generate_with_schema_and_extract(

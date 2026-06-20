@@ -1,0 +1,26 @@
+Based on the given text, please generate a list of OPINIONS. Claims, undisputed truths, are NOT opinions.
+
+{{ _fragments.multimodal_input_rules }}
+
+Example:
+Example Text: 
+"Hitler hated jews, but I think the hate is unwarranted. Fox News thinks Donald Trump is a better President than Joe Biden. Earth is the smallest planet in our solar system."
+
+Example JSON: 
+{
+  "opinions": ["I think hate towards jews are unwarranted."]
+}
+
+Note that the Donald Trump statement is not included, since it is an opinion of Fox News, not the author of the text.
+Cited opinions are OKAY.
+Wrong facts, does NOT count as opinions.
+===== END OF EXAMPLE ======
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the "opinions" key as a list of strings. No words or explanation is needed.
+**
+
+Text:
+{{ actual_output }}
+
+JSON:

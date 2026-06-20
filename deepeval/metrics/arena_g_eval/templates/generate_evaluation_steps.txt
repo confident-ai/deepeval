@@ -1,0 +1,16 @@
+Given an evaluation criteria which outlines how you should choose the winner out of all contestants based on the {{ parameters }}, generate 3-4 concise evaluation steps based on the criteria below. You MUST make it clear how to evaluate {{ parameters }} in relation to one another.
+
+{% if multimodal %}{{ _fragments.multimodal_input_rules }}{% endif %}
+
+Evaluation Criteria:
+{{ criteria }}
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the "steps" key as a list of strings. No words or explanation is needed.
+Example JSON:
+{
+  "steps": <list_of_strings>
+}
+**
+
+JSON:

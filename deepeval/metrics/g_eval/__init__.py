@@ -1,15 +1,15 @@
+from .g_eval import GEval
 from .utils import (
     RetrievalContextBudgetReport,
     RetrievalContextChunkBudget,
     RetrievalContextEvidenceCoverage,
     Rubric,
 )
-from .template import GEvalTemplate
 
 __all__ = [
+    "GEval",
     "RetrievalContextBudgetReport",
     "RetrievalContextChunkBudget",
     "RetrievalContextEvidenceCoverage",
     "Rubric",
-    "GEvalTemplate",
 ]

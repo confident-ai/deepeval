@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Type, Tuple
+from typing import Any, Dict, List, Optional, Union, Tuple
 import asyncio
 import itertools
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
@@ -9,7 +9,6 @@ from deepeval.utils import (
 )
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_conversational_test_case_params,
     get_unit_interactions,
     get_turns_in_sliding_window,
@@ -18,9 +17,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.turn_contextual_recall.template import (
-    TurnContextualRecallTemplate,
-)
+from deepeval.metrics.retrieval_context_display import id_retrieval_context
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.turn_contextual_recall.schema import (
     ContextualRecallVerdict,
@@ -28,6 +25,33 @@ from deepeval.metrics.turn_contextual_recall.schema import (
     ContextualRecallScoreReason,
     InteractionContextualRecallScore,
 )
+
+
+def _contextual_recall_verdict_kwargs(
+    retrieval_context: List[Any],
+    multimodal: bool,
+) -> Dict[str, object]:
+    content_type = "sentence and image" if multimodal else "sentence"
+    content_type_plural = "sentences and images" if multimodal else "sentences"
+    content_or = "sentence or image" if multimodal else "sentence"
+    context_to_display = (
+        id_retrieval_context(retrieval_context)
+        if multimodal
+        else retrieval_context
+    )
+    node_instruction = ""
+    if multimodal:
+        node_instruction = (
+            " A node is either a string or image, but not both (so do not group "
+            "images and texts in the same nodes)."
+        )
+    return {
+        "content_type": content_type,
+        "content_type_plural": content_type_plural,
+        "content_or": content_or,
+        "context_to_display": context_to_display,
+        "node_instruction": node_instruction,
+    }
 
 
 class TurnContextualRecallMetric(BaseConversationalMetric):
@@ -47,9 +71,6 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         window_size: int = 10,
-        evaluation_template: Type[
-            TurnContextualRecallTemplate
-        ] = TurnContextualRecallTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -59,7 +80,6 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.window_size = window_size
-        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -262,10 +282,11 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
 
         verdicts: List[ContextualRecallVerdict] = []
 
-        prompt = self.evaluation_template.generate_verdicts(
+        prompt = self._get_prompt(
+            "generate_verdicts",
             expected_outcome=expected_outcome,
-            retrieval_context=retrieval_context,
             multimodal=multimodal,
+            **_contextual_recall_verdict_kwargs(retrieval_context, multimodal),
         )
 
         return await a_generate_with_schema_and_extract(
@@ -287,10 +308,11 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
 
         verdicts: List[ContextualRecallVerdict] = []
 
-        prompt = self.evaluation_template.generate_verdicts(
+        prompt = self._get_prompt(
+            "generate_verdicts",
             expected_outcome=expected_outcome,
-            retrieval_context=retrieval_context,
             multimodal=multimodal,
+            **_contextual_recall_verdict_kwargs(retrieval_context, multimodal),
         )
 
         return generate_with_schema_and_extract(
@@ -379,12 +401,14 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
             else:
                 unsupportive_reasons.append(verdict.reason)
 
-        prompt = self.evaluation_template.generate_reason(
+        prompt = self._get_prompt(
+            "generate_reason",
             expected_outcome=expected_outcome,
             supportive_reasons=supportive_reasons,
             unsupportive_reasons=unsupportive_reasons,
             score=format(score, ".2f"),
             multimodal=multimodal,
+            content_type="sentence or image" if multimodal else "sentence",
         )
 
         return await a_generate_with_schema_and_extract(
@@ -414,12 +438,14 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
             else:
                 unsupportive_reasons.append(verdict.reason)
 
-        prompt = self.evaluation_template.generate_reason(
+        prompt = self._get_prompt(
+            "generate_reason",
             expected_outcome=expected_outcome,
             supportive_reasons=supportive_reasons,
             unsupportive_reasons=unsupportive_reasons,
             score=format(score, ".2f"),
             multimodal=multimodal,
+            content_type="sentence or image" if multimodal else "sentence",
         )
 
         return generate_with_schema_and_extract(
@@ -457,8 +483,11 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         for score in scores:
             reasons.append(score.reason)
 
-        prompt = self.evaluation_template.generate_final_reason(
-            self.score, self.success, reasons
+        prompt = self._get_prompt(
+            "generate_final_reason",
+            final_score=self.score,
+            success=self.success,
+            reasons=reasons,
         )
 
         return generate_with_schema_and_extract(
@@ -482,8 +511,11 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         for score in scores:
             reasons.append(score.reason)
 
-        prompt = self.evaluation_template.generate_final_reason(
-            self.score, self.success, reasons
+        prompt = self._get_prompt(
+            "generate_final_reason",
+            final_score=self.score,
+            success=self.success,
+            reasons=reasons,
         )
 
         return await a_generate_with_schema_and_extract(

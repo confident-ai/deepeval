@@ -5,7 +5,6 @@ from deepeval.metrics.role_adherence.schema import (
     OutOfCharacterResponseVerdicts,
     RoleAdherenceScoreReason,
 )
-from deepeval.metrics.role_adherence.template import RoleAdherenceTemplate
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
@@ -142,7 +141,8 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         if self.include_reason is False:
             return None
 
-        prompt = RoleAdherenceTemplate.generate_reason(
+        prompt = self._get_prompt(
+            "generate_reason",
             score=self.score,
             role=role,
             out_of_character_responses=[
@@ -161,7 +161,8 @@ class RoleAdherenceMetric(BaseConversationalMetric):
     def _generate_reason(self, role: str) -> Optional[str]:
         if self.include_reason is False:
             return None
-        prompt = RoleAdherenceTemplate.generate_reason(
+        prompt = self._get_prompt(
+            "generate_reason",
             score=self.score,
             role=role,
             out_of_character_responses=[
@@ -180,11 +181,10 @@ class RoleAdherenceMetric(BaseConversationalMetric):
     async def _a_extract_out_of_character_verdicts(
         self, turns: List[Turn], role: str
     ) -> OutOfCharacterResponseVerdicts:
-        prompt = (
-            RoleAdherenceTemplate.extract_out_of_character_response_verdicts(
-                turns=[convert_turn_to_dict(turn) for turn in turns],
-                role=role,
-            )
+        prompt = self._get_prompt(
+            "extract_out_of_character_response_verdicts",
+            turns=[convert_turn_to_dict(turn) for turn in turns],
+            role=role,
         )
         res: OutOfCharacterResponseVerdicts = (
             await a_generate_with_schema_and_extract(
@@ -209,11 +209,10 @@ class RoleAdherenceMetric(BaseConversationalMetric):
     def _extract_out_of_character_verdicts(
         self, turns: List[Turn], role: str
     ) -> OutOfCharacterResponseVerdicts:
-        prompt = (
-            RoleAdherenceTemplate.extract_out_of_character_response_verdicts(
-                turns=[convert_turn_to_dict(turn) for turn in turns],
-                role=role,
-            )
+        prompt = self._get_prompt(
+            "extract_out_of_character_response_verdicts",
+            turns=[convert_turn_to_dict(turn) for turn in turns],
+            role=role,
         )
         res: OutOfCharacterResponseVerdicts = generate_with_schema_and_extract(
             metric=self,

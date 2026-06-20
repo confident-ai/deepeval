@@ -1,0 +1,28 @@
+Given the prompt alignment score, the reasons for unalignment found in the LLM actual output, the actual output, and input, provide a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score.
+The unalignments represent prompt instructions that are not followed by the LLM in the actual output.
+If there no unaligments, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
+Don't have to talk about whether the actual output is a good fit for the input, access ENTIRELY based on the unalignment reasons.
+
+{{ _fragments.multimodal_input_rules }}
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+Example JSON:
+{
+  "reason": "The score is <prompt_alignment_score> because <your_reason>."
+}
+**
+
+Input:
+{{ input }}
+
+LLM Actual Output:
+{{ actual_output }}
+
+Prompt Alignment Score:
+{{ score }}
+
+Reasons for unalignment:
+{{ unalignment_reasons }}
+
+JSON:

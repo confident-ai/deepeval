@@ -1,0 +1,27 @@
+Given the argument correctness score, the list of reasons of incorrect tool calls, and the input, provide a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score. You can mention tool calls or input, but do not mention an output or a response.
+If there is nothing incorrect, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
+
+{% if multimodal %}{{ _fragments.multimodal_input_rules }}{% endif %}
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason. Ensure all strings are closed appropriately. Repair any invalid JSON before you output it.
+
+Example:
+Example JSON:
+{
+  "reason": "The score is <argument_correctness_score> because <your_reason>."
+}
+===== END OF EXAMPLE ======
+**
+
+
+Argument Correctness Score:
+{{ score }}
+
+Reasons why the score can't be higher based on incorrect tool calls:
+{{ incorrect_tool_calls_reasons }}
+
+Input:
+{{ input }}
+
+JSON:

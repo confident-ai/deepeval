@@ -1,6 +1,7 @@
 import type { ZodType } from "zod";
 import { DeepEvalBaseLLM, type GenerationResult } from "./base-model";
 import { computeCost, extractJson, requireApiKey, toJsonSchema } from "./utils";
+import { openAIContent } from "./multimodal";
 
 export interface OpenAICompatibleModelOptions {
   model?: string;
@@ -70,7 +71,7 @@ export class DeepEvalOpenAICompatibleModel extends DeepEvalBaseLLM {
 
     const request: Record<string, unknown> = {
       model: this.modelName,
-      messages: [{ role: "user", content: prompt }],
+      messages: [{ role: "user", content: openAIContent(prompt) }],
       ...(this.temperature !== undefined && { temperature: this.temperature }),
     };
     if (schema) {
@@ -104,6 +105,10 @@ export class DeepEvalOpenAICompatibleModel extends DeepEvalBaseLLM {
   }
 
   supportsStructuredOutputs(): boolean {
+    return true;
+  }
+
+  supportsMultimodal(): boolean {
     return true;
   }
 }

@@ -16,7 +16,6 @@ from deepeval.metrics.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.json_correctness.template import JsonCorrectnessTemplate
 from deepeval.metrics.json_correctness.schema import JsonCorrectnessScoreReason
 from deepeval.utils import get_or_create_event_loop
 
@@ -163,7 +162,8 @@ class JsonCorrectnessMetric(BaseMetric):
         if is_valid_json:
             return DEFAULT_CORRECT_REASON
 
-        prompt: dict = JsonCorrectnessTemplate.generate_reason(
+        prompt: dict = self._get_prompt(
+            "generate_reason",
             actual_output=actual_output,
             expected_schema=json.dumps(
                 self.expected_schema.model_json_schema(), indent=4
@@ -187,7 +187,8 @@ class JsonCorrectnessMetric(BaseMetric):
         if is_valid_json:
             return DEFAULT_CORRECT_REASON
 
-        prompt: dict = JsonCorrectnessTemplate.generate_reason(
+        prompt: dict = self._get_prompt(
+            "generate_reason",
             actual_output=actual_output,
             expected_schema=json.dumps(
                 self.expected_schema.model_json_schema(), indent=4

@@ -7,6 +7,11 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.metrics.faithfulness.faithfulness import (
+    _faithfulness_claims_multimodal_instruction,
+    _faithfulness_truths_limit_phrase,
+    _faithfulness_truths_multimodal_instruction,
+)
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -15,8 +20,6 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
-from deepeval.metrics.summarization.template import SummarizationTemplate
-from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.summarization.schema import (
     ScoreType,
@@ -217,7 +220,8 @@ class SummarizationMetric(BaseMetric):
                 ):
                     questions.append(verdict.question)
 
-        prompt: dict = SummarizationTemplate.generate_reason(
+        prompt: dict = self._get_prompt(
+            "generate_reason",
             contradictions=contradictions,
             redundancies=redundancies,
             questions=questions,
@@ -261,7 +265,8 @@ class SummarizationMetric(BaseMetric):
                 ):
                     questions.append(verdict.question)
 
-        prompt: dict = SummarizationTemplate.generate_reason(
+        prompt: dict = self._get_prompt(
+            "generate_reason",
             contradictions=contradictions,
             redundancies=redundancies,
             questions=questions,
@@ -317,8 +322,10 @@ class SummarizationMetric(BaseMetric):
         return 0 if self.strict_mode and score < self.threshold else score
 
     async def _a_generate_answers(self, text: str) -> List[str]:
-        prompt = SummarizationTemplate.generate_answers(
-            questions=self.assessment_questions, text=text
+        prompt = self._get_prompt(
+            "generate_answers",
+            questions=self.assessment_questions,
+            text=text,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -329,8 +336,10 @@ class SummarizationMetric(BaseMetric):
         )
 
     def _generate_answers(self, text: str) -> List[str]:
-        prompt = SummarizationTemplate.generate_answers(
-            questions=self.assessment_questions, text=text
+        prompt = self._get_prompt(
+            "generate_answers",
+            questions=self.assessment_questions,
+            text=text,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -341,7 +350,11 @@ class SummarizationMetric(BaseMetric):
         )
 
     async def _a_generate_assessment_questions(self, text: str) -> List[str]:
-        prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
+        prompt = self._get_prompt(
+            "generate_questions",
+            text=text,
+            n=self.n,
+        )
         return await a_generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
@@ -351,7 +364,11 @@ class SummarizationMetric(BaseMetric):
         )
 
     def _generate_assessment_questions(self, text: str) -> List[str]:
-        prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
+        prompt = self._get_prompt(
+            "generate_questions",
+            text=text,
+            n=self.n,
+        )
         return generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
@@ -422,8 +439,10 @@ class SummarizationMetric(BaseMetric):
         if len(self.claims) == 0:
             return []
 
-        prompt = SummarizationTemplate.generate_alignment_verdicts(
-            summary_claims=self.claims, original_text="\n\n".join(self.truths)
+        prompt = self._get_prompt(
+            "generate_alignment_verdicts",
+            summary_claims=self.claims,
+            original_text="\n\n".join(self.truths),
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -442,8 +461,10 @@ class SummarizationMetric(BaseMetric):
         if len(self.claims) == 0:
             return []
 
-        prompt = SummarizationTemplate.generate_alignment_verdicts(
-            summary_claims=self.claims, original_text="\n\n".join(self.truths)
+        prompt = self._get_prompt(
+            "generate_alignment_verdicts",
+            summary_claims=self.claims,
+            original_text="\n\n".join(self.truths),
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -458,9 +479,17 @@ class SummarizationMetric(BaseMetric):
 
     async def _a_generate_truths(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = FaithfulnessTemplate.generate_truths(
+        prompt = self._get_prompt(
+            "generate_truths",
+            template_class="FaithfulnessMetric",
+            multimodal=False,
             retrieval_context=text,
-            extraction_limit=self.truths_extraction_limit,
+            limit=_faithfulness_truths_limit_phrase(
+                self.truths_extraction_limit
+            ),
+            multimodal_instruction=_faithfulness_truths_multimodal_instruction(
+                False
+            ),
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -472,7 +501,15 @@ class SummarizationMetric(BaseMetric):
 
     async def _a_generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = FaithfulnessTemplate.generate_claims(actual_output=text)
+        prompt = self._get_prompt(
+            "generate_claims",
+            template_class="FaithfulnessMetric",
+            multimodal=False,
+            actual_output=text,
+            multimodal_instruction=_faithfulness_claims_multimodal_instruction(
+                False
+            ),
+        )
         return await a_generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
@@ -483,9 +520,17 @@ class SummarizationMetric(BaseMetric):
 
     def _generate_truths(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = FaithfulnessTemplate.generate_truths(
+        prompt = self._get_prompt(
+            "generate_truths",
+            template_class="FaithfulnessMetric",
+            multimodal=False,
             retrieval_context=text,
-            extraction_limit=self.truths_extraction_limit,
+            limit=_faithfulness_truths_limit_phrase(
+                self.truths_extraction_limit
+            ),
+            multimodal_instruction=_faithfulness_truths_multimodal_instruction(
+                False
+            ),
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -497,7 +542,15 @@ class SummarizationMetric(BaseMetric):
 
     def _generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = FaithfulnessTemplate.generate_claims(actual_output=text)
+        prompt = self._get_prompt(
+            "generate_claims",
+            template_class="FaithfulnessMetric",
+            multimodal=False,
+            actual_output=text,
+            multimodal_instruction=_faithfulness_claims_multimodal_instruction(
+                False
+            ),
+        )
         return generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,

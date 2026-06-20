@@ -1,6 +1,8 @@
-from typing import Optional, List, Union, Dict
+import json
+from typing import Optional, List, Union
 
 from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.tracing.utils import make_json_serializable
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_llm_test_case_params,
@@ -12,19 +14,10 @@ from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.step_efficiency.template import (
-    StepEfficiencyTemplate,
-)
 from deepeval.metrics.step_efficiency.schema import Task
 from deepeval.metrics.plan_quality.schema import (
     AgentPlan,
     PlanQualityScore,
-)
-from deepeval.metrics.plan_quality.template import (
-    PlanQualityTemplate,
-)
-from deepeval.metrics.plan_adherence.template import (
-    PlanAdherenceTemplate,
 )
 
 
@@ -94,7 +87,7 @@ class PlanQualityMetric(BaseMetric):
                     self.reason = "There were no plans to evaluate within the trace of your agent's execution. Please check if the agent's planning or reasoning or thinking is stored in any one of the trace attributes."
                 else:
                     plan_quality_score = self._get_plan_quality_score(
-                        task, agent_plan.plan
+                        task, agent_plan.plan, multimodal=test_case.multimodal
                     )
                     self.score = (
                         0
@@ -150,7 +143,7 @@ class PlanQualityMetric(BaseMetric):
                 self.reason = "There are no plans to evaluate within the trace of your agent's execution. Please check if the agent's planning or reasoning or thinking is stored in the trace attributes."
             else:
                 plan_quality_score = await self._a_get_plan_quality_score(
-                    task, agent_plan.plan
+                    task, agent_plan.plan, multimodal=test_case.multimodal
                 )
                 self.score = (
                     0
@@ -172,9 +165,13 @@ class PlanQualityMetric(BaseMetric):
 
             return self.score
 
-    def _get_plan_quality_score(self, task, plan):
-        prompt = PlanQualityTemplate.evaluate_plan_quality(
-            task, "\n".join(plan)
+    def _get_plan_quality_score(self, task, plan, *, multimodal: bool):
+        prompt = self._get_prompt(
+            "evaluate_plan_quality",
+            template_class="PlanQualityMetric",
+            user_task=task,
+            agent_plan="\n".join(plan),
+            multimodal=multimodal,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -184,9 +181,13 @@ class PlanQualityMetric(BaseMetric):
             extract_json=lambda data: PlanQualityScore(**data),
         )
 
-    async def _a_get_plan_quality_score(self, task, plan):
-        prompt = PlanQualityTemplate.evaluate_plan_quality(
-            task, "\n".join(plan)
+    async def _a_get_plan_quality_score(self, task, plan, *, multimodal: bool):
+        prompt = self._get_prompt(
+            "evaluate_plan_quality",
+            template_class="PlanQualityMetric",
+            user_task=task,
+            agent_plan="\n".join(plan),
+            multimodal=multimodal,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -197,8 +198,14 @@ class PlanQualityMetric(BaseMetric):
         )
 
     def _extract_plan_from_trace(self, test_case: LLMTestCase) -> AgentPlan:
-        prompt = PlanAdherenceTemplate.extract_plan_from_trace(
-            test_case._trace_dict
+        trace_json_str = json.dumps(
+            test_case._trace_dict, default=make_json_serializable, indent=2
+        )
+        prompt = self._get_prompt(
+            "extract_plan_from_trace",
+            template_class="PlanAdherenceMetric",
+            trace_json_str=trace_json_str,
+            multimodal=test_case.multimodal,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -211,8 +218,14 @@ class PlanQualityMetric(BaseMetric):
     async def _a_extract_plan_from_trace(
         self, test_case: LLMTestCase
     ) -> AgentPlan:
-        prompt = PlanAdherenceTemplate.extract_plan_from_trace(
-            test_case._trace_dict
+        trace_json_str = json.dumps(
+            test_case._trace_dict, default=make_json_serializable, indent=2
+        )
+        prompt = self._get_prompt(
+            "extract_plan_from_trace",
+            template_class="PlanAdherenceMetric",
+            trace_json_str=trace_json_str,
+            multimodal=test_case.multimodal,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -223,8 +236,14 @@ class PlanQualityMetric(BaseMetric):
         )
 
     def _extract_task_from_trace(self, test_case: LLMTestCase) -> str:
-        prompt = StepEfficiencyTemplate.extract_task_from_trace(
-            test_case._trace_dict
+        trace_json = json.dumps(
+            test_case._trace_dict, default=make_json_serializable, indent=2
+        )
+        prompt = self._get_prompt(
+            "extract_task_from_trace",
+            template_class="StepEfficiencyMetric",
+            trace_json=trace_json,
+            multimodal=test_case.multimodal,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -235,8 +254,14 @@ class PlanQualityMetric(BaseMetric):
         )
 
     async def _a_extract_task_from_trace(self, test_case: LLMTestCase) -> str:
-        prompt = StepEfficiencyTemplate.extract_task_from_trace(
-            test_case._trace_dict
+        trace_json = json.dumps(
+            test_case._trace_dict, default=make_json_serializable, indent=2
+        )
+        prompt = self._get_prompt(
+            "extract_task_from_trace",
+            template_class="StepEfficiencyMetric",
+            trace_json=trace_json,
+            multimodal=test_case.multimodal,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,

@@ -1,0 +1,27 @@
+Given the text, breakdown and generate a list of statements presented. Ambiguous statements and single words can be considered as statements, but only if outside of a coherent statement.
+
+Example:
+Example text: 
+Our new laptop model features a high-resolution Retina display for crystal-clear visuals. It also includes a fast-charging battery, giving you up to 12 hours of usage on a single charge. For security, we’ve added fingerprint authentication and an encrypted SSD. Plus, every purchase comes with a one-year warranty and 24/7 customer support.
+
+{% if multimodal %}{{ _fragments.multimodal_input_rules }}{% endif %}
+
+{
+  "statements": [
+    "The new laptop model has a high-resolution Retina display.",
+    "It includes a fast-charging battery with up to 12 hours of usage.",
+    "Security features include fingerprint authentication and an encrypted SSD.",
+    "Every purchase comes with a one-year warranty.",
+    "24/7 customer support is included."
+  ]
+}
+===== END OF EXAMPLE ======
+
+**
+IMPORTANT: Please make sure to only return in valid and parseable JSON format, with the "statements" key mapping to a list of strings. No words or explanation are needed. Ensure all strings are closed appropriately. Repair any invalid JSON before you output it.
+**
+
+Text:
+{{ actual_output }}
+
+JSON:

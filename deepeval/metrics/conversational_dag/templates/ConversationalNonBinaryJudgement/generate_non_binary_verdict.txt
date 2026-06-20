@@ -1,0 +1,23 @@
+{{ criteria }}
+
+You are evaluating the following conversation. Choose one of the options that best reflects the assistant's behavior.
+
+{{ _fragments.multimodal_input_rules }}
+
+Options: {{ options }}
+
+Full Conversation:
+{{ text }}
+
+**
+IMPORTANT: Only return JSON with two keys:
+- 'verdict': one of the listed options
+- 'reason': explanation referencing specific conversation points
+
+Example:
+{
+  "reason": "The assistant partially addressed the user's issue but missed clarifying their follow-up question.",
+  "verdict": "{{ example_verdict_option }}"
+}
+**
+JSON:
