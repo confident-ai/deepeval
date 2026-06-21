@@ -6,6 +6,7 @@ import {
   importOptional,
   requireApiKey,
 } from "../utils";
+import { anthropicContent } from "../multimodal";
 
 const DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 4096;
@@ -65,7 +66,7 @@ export class AnthropicModel extends DeepEvalBaseLLM {
       model: this.modelName,
       max_tokens: this.maxTokens,
       ...(this.temperature !== undefined && { temperature: this.temperature }),
-      messages: [{ role: "user", content: prompt }],
+      messages: [{ role: "user", content: anthropicContent(prompt) }],
     });
 
     const text: string = (message.content ?? [])

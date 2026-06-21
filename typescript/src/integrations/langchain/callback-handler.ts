@@ -17,14 +17,11 @@ import {
   isAIMessage,
   isChatGeneration,
   parsePromptsToMessages,
+  prepareToolCallInputParameters,
   safeExtractTokenUsage,
 } from "./utils";
-import {
-  getCurrentTrace,
-  setCurrentTrace,
-  SpanType,
-  TraceSpanStatus,
-} from "../../tracing/tracing";
+import { RunHierarchyTracker } from "./langgraph-utils";
+import { SpanType, TraceSpanStatus } from "../../tracing/tracing";
 import { traceManager } from "../../tracing";
 import { withCaptureTracingIntegration } from "../../telemetry";
 import { BaseMetric } from "../../metrics/base-metrics";
@@ -61,9 +58,13 @@ export class DeepEvalCallbackHandler
   implements BaseCallbackHandlerInput
 {
   name = "DeepEvalCallbackHandler";
-  private traceUuid?: string;
   private metrics?: BaseMetric[];
   private metricCollection?: string;
+
+  // Resolves trace/parent from run_id/parent_run_id and owns lazy per-run trace
+  // creation, so this handler works under the LangGraph server (where the ALS
+  // "current span/trace" is lost across callbacks). See RunHierarchyTracker.
+  private hierarchy: RunHierarchyTracker;
 
   constructor({
     name,
@@ -90,21 +91,21 @@ export class DeepEvalCallbackHandler
 
     isLangchainInstalled();
 
-    const trace = traceManager.startNewTrace();
-    this.traceUuid = trace.uuid;
-    if (trace) {
-      trace.name = name;
-      trace.tags = tags;
-      trace.metadata = metadata;
-      trace.threadId = threadId;
-      trace.userId = userId;
-      trace.testCaseId = testCaseId;
-      trace.turnId = turnId;
-    }
+    // NOTE: the trace is created lazily on the first callback (not here). Creating
+    // it in the constructor binds a single trace at construction time, which is
+    // wrong when one handler is baked into a long-lived graph (e.g. exported via
+    // langgraph.json) and reused across many server requests.
+    this.hierarchy = new RunHierarchyTracker({
+      name,
+      tags,
+      metadata,
+      threadId,
+      userId,
+      testCaseId,
+      turnId,
+    });
     this.metrics = metrics;
     this.metricCollection = metricCollection;
-
-    setCurrentTrace(trace);
 
     this.captureTelemetry();
   }
@@ -125,21 +126,33 @@ export class DeepEvalCallbackHandler
     runType?: string,
     runName?: string,
   ) {
-    if (parentRunId === undefined || parentRunId === null) {
-      const uuidStr = String(runId);
+    const uuidStr = String(runId);
+    const { traceUuid, parentUuid } = this.hierarchy.resolveContext(
+      uuidStr,
+      parentRunId,
+    );
+    // Record linkage for EVERY chain (incl. intermediate LangGraph nodes) so that
+    // descendant LLM/tool callbacks can resolve their ancestry without ALS.
+    this.hierarchy.recordRun(uuidStr, parentRunId, traceUuid);
 
+    // Only the root chain gets a span (preserves the established trace shape:
+    // the agent/graph as root, with LLM/tool spans beneath it).
+    if (parentUuid === undefined) {
       const baseSpan = enterCurrentContext({
         uuidStr,
         spanType: SpanType.CUSTOM,
         funcName: runName ?? "Langchain Chain Run",
+        traceUuidOverride: traceUuid,
+        parentUuidOverride: undefined,
       });
 
       if (baseSpan) {
+        this.hierarchy.recordSpan(uuidStr);
         baseSpan.input = inputs;
 
-        const currentTrace = getCurrentTrace();
-        if (currentTrace) {
-          currentTrace.input = inputs;
+        const trace = traceManager.getTraceByUuid(traceUuid);
+        if (trace) {
+          trace.input = inputs;
         }
 
         // TODO(tanay): Add metrics to BaseSpan
@@ -162,20 +175,51 @@ export class DeepEvalCallbackHandler
     if (baseSpan) {
       baseSpan.output = outputs;
 
-      const currentTrace = getCurrentTrace();
-      if (currentTrace) {
-        currentTrace.output = outputs;
+      const trace = traceManager.getTraceByUuid(baseSpan.traceUuid);
+      if (trace) {
+        trace.output = outputs;
       }
 
       exitCurrentContext({ uuidStr: uuidStr });
     }
+    this.hierarchy.cleanupRun(uuidStr);
+  }
+
+  async handleChainError(
+    err: any,
+    runId: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    _kwargs?: { inputs?: Record<string, unknown> },
+  ) {
+    const uuidStr = String(runId);
+    const baseSpan = traceManager.getSpanByUuid(uuidStr);
+    if (baseSpan) {
+      baseSpan.status = TraceSpanStatus.ERRORED;
+      baseSpan.error = String(err);
+      exitCurrentContext({ uuidStr, excType: "error", excVal: err });
+    } else {
+      // Root chain may error without ever having created a span; finalize the
+      // trace by ancestry so it is not left dangling.
+      const traceUuid = this.hierarchy.getTraceUuid(uuidStr);
+      if (traceUuid && traceManager.getTraceByUuid(traceUuid)) {
+        const others = Array.from(traceManager.getActiveSpans().values()).filter(
+          (s) => s.traceUuid === traceUuid,
+        );
+        if (others.length === 0) {
+          traceManager.setTraceStatus(traceUuid, TraceSpanStatus.ERRORED);
+          traceManager.endTrace(traceUuid);
+        }
+      }
+    }
+    this.hierarchy.cleanupRun(uuidStr);
   }
 
   async handleLLMStart(
     llm: Serialized,
     prompts: string[],
     runId: string,
-    _parentRunId?: string,
+    parentRunId?: string,
     extraParams?: Record<string, unknown>,
     _tags?: string[],
     metadata?: Record<string, unknown>,
@@ -185,12 +229,21 @@ export class DeepEvalCallbackHandler
     const inputMessages = parsePromptsToMessages(prompts, extraParams);
     const modelName = llm.name;
 
+    const { traceUuid, parentUuid } = this.hierarchy.resolveContext(
+      uuidStr,
+      parentRunId,
+    );
+    this.hierarchy.recordRun(uuidStr, parentRunId, traceUuid);
+
     // TODO(tanay): Fix `any`
     const llmSpan: any = enterCurrentContext({
       uuidStr: uuidStr,
       spanType: SpanType.LLM,
       funcName: runName ?? "Langchain LLM Run",
+      traceUuidOverride: traceUuid,
+      parentUuidOverride: parentUuid,
     });
+    this.hierarchy.recordSpan(uuidStr);
 
     llmSpan.input = inputMessages;
     llmSpan.model = modelName;
@@ -212,6 +265,11 @@ export class DeepEvalCallbackHandler
   ) {
     const uuidStr = String(runId);
     const llmSpan: any = traceManager.getSpanByUuid(uuidStr);
+
+    if (!llmSpan) {
+      this.hierarchy.cleanupRun(uuidStr);
+      return;
+    }
 
     let llmOutput;
     let totalInputTokens = 0;
@@ -267,6 +325,7 @@ export class DeepEvalCallbackHandler
     llmSpan.outputTokenCount = totalOutputTokens > 0 ? totalOutputTokens : 0;
 
     exitCurrentContext({ uuidStr: uuidStr });
+    this.hierarchy.cleanupRun(uuidStr);
   }
 
   async handleLLMError(
@@ -279,9 +338,12 @@ export class DeepEvalCallbackHandler
     const uuidStr = String(runId);
     const llmSpan: any = traceManager.getSpanByUuid(uuidStr);
 
-    llmSpan.status = TraceSpanStatus.ERRORED;
-    llmSpan.error = String(err);
-    exitCurrentContext({ uuidStr: uuidStr });
+    if (llmSpan) {
+      llmSpan.status = TraceSpanStatus.ERRORED;
+      llmSpan.error = String(err);
+      exitCurrentContext({ uuidStr, excType: "error", excVal: err });
+    }
+    this.hierarchy.cleanupRun(uuidStr);
   }
 
   async handleLLMNewToken(
@@ -294,6 +356,8 @@ export class DeepEvalCallbackHandler
   ) {
     const uuidStr = String(runId);
     const llmSpan: any = traceManager.getSpanByUuid(uuidStr);
+
+    if (!llmSpan) return;
 
     if (!llmSpan.tokenIntervals) {
       llmSpan.tokenIntervals = {};
@@ -314,11 +378,20 @@ export class DeepEvalCallbackHandler
   ) {
     const uuidStr = String(runId);
 
+    const { traceUuid, parentUuid } = this.hierarchy.resolveContext(
+      uuidStr,
+      parentRunId,
+    );
+    this.hierarchy.recordRun(uuidStr, parentRunId, traceUuid);
+
     const toolSpan: any = enterCurrentContext({
       uuidStr: uuidStr,
       spanType: SpanType.TOOL,
       funcName: runName ?? "Langchain Tool Run",
+      traceUuidOverride: traceUuid,
+      parentUuidOverride: parentUuid,
     });
+    this.hierarchy.recordSpan(uuidStr);
 
     toolSpan.input = input;
     if (
@@ -335,47 +408,40 @@ export class DeepEvalCallbackHandler
     }
   }
 
-  async handleToolEnd(
-    output: any,
-    runId: string,
-    _parentRunId?: string,
-    _tags?: string[],
-  ) {
+  async handleToolEnd(output: any, runId: string, _parentRunId?: string, _tags?: string[]) {
     const uuidStr = String(runId);
     const toolSpan: any = traceManager.getSpanByUuid(uuidStr);
 
     if (toolSpan) {
       toolSpan.output = output;
-      const currentTrace = getCurrentTrace();
-      if (currentTrace) {
-        if (!currentTrace.toolsCalled) {
-          currentTrace.toolsCalled = [];
+      const trace = traceManager.getTraceByUuid(toolSpan.traceUuid);
+      if (trace) {
+        if (!trace.toolsCalled) {
+          trace.toolsCalled = [];
         }
         const toolCall = {
           name: toolSpan.name,
-          inputParameters: toolSpan.input,
+          inputParameters: prepareToolCallInputParameters(toolSpan.input),
           output: output,
           description: toolSpan.description || undefined,
         };
-        currentTrace.toolsCalled.push(toolCall);
+        trace.toolsCalled.push(toolCall);
       }
+      exitCurrentContext({ uuidStr: uuidStr });
     }
-
-    exitCurrentContext({ uuidStr: uuidStr });
+    this.hierarchy.cleanupRun(uuidStr);
   }
 
-  async handleToolError(
-    err: any,
-    runId: string,
-    _parentRunId?: string,
-    _tags?: string[],
-  ) {
+  async handleToolError(err: any, runId: string, _parentRunId?: string, _tags?: string[]) {
     const uuidStr = String(runId);
     const toolSpan: any = traceManager.getSpanByUuid(uuidStr);
 
-    toolSpan.status = TraceSpanStatus.ERRORED;
-    toolSpan.error = String(err);
-    exitCurrentContext({ uuidStr: uuidStr });
+    if (toolSpan) {
+      toolSpan.status = TraceSpanStatus.ERRORED;
+      toolSpan.error = String(err);
+      exitCurrentContext({ uuidStr, excType: "error", excVal: err });
+    }
+    this.hierarchy.cleanupRun(uuidStr);
   }
 
   async handleRetrieverStart(
@@ -388,14 +454,24 @@ export class DeepEvalCallbackHandler
     name?: string,
   ) {
     const uuidStr = String(runId);
+
+    const { traceUuid, parentUuid } = this.hierarchy.resolveContext(
+      uuidStr,
+      parentRunId,
+    );
+    this.hierarchy.recordRun(uuidStr, parentRunId, traceUuid);
+
     const retrieverSpan = enterCurrentContext({
       uuidStr: uuidStr,
       spanType: SpanType.RETRIEVER,
       funcName: name ?? "Langchain Retriever Run",
+      traceUuidOverride: traceUuid,
+      parentUuidOverride: parentUuid,
       observeKwargs: {
         embedder: metadata?.["ls_embedding_provider"] ?? "unknown",
       },
     });
+    this.hierarchy.recordSpan(uuidStr);
     retrieverSpan.input = query;
   }
 
@@ -408,13 +484,16 @@ export class DeepEvalCallbackHandler
     const uuidStr = String(runId);
     const retrieverSpan: any = traceManager.getSpanByUuid(uuidStr);
 
-    const outputArray = [];
-    for (const document of documents) {
-      outputArray.push(String(document));
-    }
+    if (retrieverSpan) {
+      const outputArray = [];
+      for (const document of documents) {
+        outputArray.push(String(document));
+      }
 
-    retrieverSpan.output = outputArray;
-    exitCurrentContext({ uuidStr: uuidStr });
+      retrieverSpan.output = outputArray;
+      exitCurrentContext({ uuidStr: uuidStr });
+    }
+    this.hierarchy.cleanupRun(uuidStr);
   }
 
   async handleRetrieverError(
@@ -426,8 +505,11 @@ export class DeepEvalCallbackHandler
     const uuidStr = String(runId);
     const retrieverSpan: any = traceManager.getSpanByUuid(uuidStr);
 
-    retrieverSpan.status = TraceSpanStatus.ERRORED;
-    retrieverSpan.error = String(err);
-    exitCurrentContext({ uuidStr: uuidStr });
+    if (retrieverSpan) {
+      retrieverSpan.status = TraceSpanStatus.ERRORED;
+      retrieverSpan.error = String(err);
+      exitCurrentContext({ uuidStr, excType: "error", excVal: err });
+    }
+    this.hierarchy.cleanupRun(uuidStr);
   }
 }

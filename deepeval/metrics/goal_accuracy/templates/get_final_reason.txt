@@ -1,0 +1,42 @@
+You are an expert evaluator providing a **final justification** for whether an AI agent has passed or failed an evaluation metric.
+
+You are given:
+- An agent's goal execution scores and reasons.
+- The agent's plan evaluation scores and reasons.
+- The **final combined score**.
+- The **threshold** required to pass.
+- Whether the result is a **pass** or **fail**.
+
+Your job is to write a short, precise explanation of **why** the agent passed or failed — taking into account the quality of execution and planning, and the threshold.
+
+---
+
+INSTRUCTIONS:
+
+- Write 2-4 clear, objective sentences explaining the overall result.
+- Explicitly reference both the task and plan performance — **both must be addressed**.
+- Mention how the final score compares to the threshold.
+- If the agent **passed**, highlight how both task execution and planning were sufficient to meet the goal.
+- If the agent **failed**, explain which aspects (task or plan or both) led to the failure.
+- Avoid vague praise or criticism — ground the reason in the actual scores and justifications.
+
+{% if multimodal %}{{ _fragments.multimodal_input_rules }}{% endif %}
+
+---
+
+FORMAT:
+Return only a single string. Do **not** include JSON or any extra formatting.
+
+---
+
+Goal evaluations:
+{{ goal_evaluations }}
+
+Plan evaluations:
+{{ plan_evalautions }}
+
+Final Score: {{ final_score }}
+Threshold: {{ threshold }}
+Result: {% if final_score|float >= threshold|float %}PASS{% else %}FAIL{% endif %}
+
+Final Reason:

@@ -12,7 +12,9 @@ import {
 } from "./utils";
 
 import { Api, Endpoints, HttpMethods } from "../confident/api";
-import { LLMTestCase, ToolCall } from "../test-case";
+import { LLMTestCase, ToolCall, resolveRetrievalContext } from "../test-case";
+import type { BaseMetric } from "../metrics/base-metrics";
+import type { MetricData } from "../evaluate/types";
 import { Prompt } from "../prompt";
 import { SpanApiType, BaseApiSpan, TraceApi, TraceSpanApiStatus } from "./api";
 import { TraceWorkerStatus, printTraceStatus } from "./logging";
@@ -58,6 +60,9 @@ export class BaseSpan {
   output?: any;
   error?: string;
   metricCollection?: string;
+  metrics?: BaseMetric[];
+  /** Metric results computed locally by the trace-eval executor (for posting). */
+  metricsData?: MetricData[];
   type: SpanType | string;
   metadata?: Record<string, any>;
   retrievalContext?: string[];
@@ -78,6 +83,7 @@ export class BaseSpan {
     output?: any;
     error?: string;
     metricCollection?: string;
+    metrics?: BaseMetric[];
     metadata?: Record<string, any>;
     retrievalContext?: string[];
     context?: string[];
@@ -96,6 +102,7 @@ export class BaseSpan {
     this.output = params.output;
     this.error = params.error;
     this.metricCollection = params.metricCollection;
+    this.metrics = params.metrics;
     this.metadata = params.metadata;
     this.retrievalContext = params.retrievalContext;
     this.context = params.context;
@@ -273,6 +280,8 @@ export interface Trace {
   toolsCalled?: ToolCall[];
   expectedTools?: ToolCall[];
   metricCollection?: string;
+  metrics?: BaseMetric[];
+  metricsData?: MetricData[];
   confidentApiKey?: string;
   drop?: boolean;
 }
@@ -355,8 +364,15 @@ export class TraceManager {
   private samplingRate: number;
   private customMaskFn: MaskFunction | null = null;
   private evaluating: boolean = false;
+  /** When set, completed traces are captured here (for local eval) instead of posted. */
+  private traceCaptureSink?: (trace: Trace) => void;
   private confidentApiKey: string = "";
   private tracingEnabled: boolean = true;
+
+  /** Register/clear a sink that receives each completed trace (used by `evalsIterator`). */
+  public setTraceCaptureSink(sink?: (trace: Trace) => void): void {
+    this.traceCaptureSink = sink;
+  }
 
   private settings = getSettings();
 
@@ -377,6 +393,36 @@ export class TraceManager {
     } else {
       return data;
     }
+  }
+
+  /**
+   * Serialize a span subtree into a nested dict for trace-based metrics
+   * (mirrors Python's `create_nested_spans_dict`). Keeps the eval-relevant
+   * fields + recurses children; drops bookkeeping (uuids, times, status,
+   * metrics, metricCollection, metadata) and null values.
+   */
+  public createNestedSpansDict(span: BaseSpan): Record<string, unknown> {
+    const dict: Record<string, unknown> = {};
+    const put = (k: string, v: unknown) => {
+      if (v !== undefined && v !== null) dict[k] = v;
+    };
+    put("name", span.name);
+    put("type", span.type);
+    put("input", span.input);
+    put("output", span.output);
+    put("error", span.error);
+    put("expectedOutput", span.expectedOutput);
+    put("context", span.context);
+    put("retrievalContext", span.retrievalContext);
+    put("toolsCalled", span.toolsCalled);
+    put("expectedTools", span.expectedTools);
+    // Span-type extras (model / tools) when present, like Python's api span.
+    put("model", (span as { model?: unknown }).model);
+    put("availableTools", (span as { availableTools?: unknown }).availableTools);
+    dict.children = (span.children ?? []).map((child) =>
+      this.createNestedSpansDict(child),
+    );
+    return dict;
   }
 
   public configure(config: TraceManagerConfig): void {
@@ -420,7 +466,9 @@ export class TraceManager {
       if (trace.status === TraceSpanStatus.IN_PROGRESS) {
         trace.status = TraceSpanStatus.SUCCESS;
       }
-      if (!this.evaluating) {
+      if (this.traceCaptureSink) {
+        this.traceCaptureSink(trace);
+      } else if (!this.evaluating) {
         this.postTrace(trace);
       } else {
         trace.rootSpans = [trace.rootSpans[0].children[0]];
@@ -587,6 +635,14 @@ export class TraceManager {
     return "ok";
   }
 
+  /** Wait for all queued + in-flight trace posts to finish (for scripts/eval loops). */
+  public async flush(): Promise<void> {
+    while (this.traceQueue.length > 0 || this.isProcessing) {
+      await wait(20);
+    }
+    await Promise.allSettled([...this.inFlightRequests]);
+  }
+
   private async processTraceQueue(): Promise<void> {
     this.isProcessing = true;
     try {
@@ -677,7 +733,7 @@ export class TraceManager {
     }
   }
 
-  private createTraceApi(trace: Trace): TraceApi {
+  public createTraceApi(trace: Trace): TraceApi {
     // Initialize empty arrays for each span type
     const baseSpans: BaseApiSpan[] = [];
     const agentSpans: BaseApiSpan[] = [];
@@ -746,6 +802,7 @@ export class TraceManager {
       output: trace.output,
       toolsCalled: trace.toolsCalled,
       metricCollection: trace.metricCollection,
+      metricsData: trace.metricsData,
       confidentApiKey: trace.confidentApiKey,
       status:
         trace.status === TraceSpanStatus.SUCCESS
@@ -791,6 +848,7 @@ export class TraceManager {
       output: span.output,
       error: span.error,
       metricCollection: span.metricCollection,
+      metricsData: span.metricsData,
       expectedOutput: span.expectedOutput,
       retrievalContext: span.retrievalContext,
       context: span.context,
@@ -877,6 +935,7 @@ export class Tracer {
   private spanType: SpanType | string;
   private name: string;
   private metricCollection?: string;
+  private metrics?: BaseMetric[];
   private observeKwargs: Record<string, any>;
   private functionKwargs: Record<string, any>;
   private result: any = null;
@@ -886,6 +945,7 @@ export class Tracer {
     funcName: string,
     metricCollection?: string,
     kwargs: Record<string, any> = {},
+    metrics?: BaseMetric[],
   ) {
     this.uuid = crypto.randomUUID();
     this.observeKwargs = kwargs.observeKwargs || {};
@@ -894,6 +954,7 @@ export class Tracer {
     // Initialize name from options or function name
     this.name = this.observeKwargs.name || funcName;
     this.metricCollection = metricCollection;
+    this.metrics = metrics;
 
     // Initialize span type from parameter or name
     this.spanType = spanType === null ? this.name : spanType;
@@ -1013,6 +1074,7 @@ export class Tracer {
       input: undefined,
       output: undefined,
       metricCollection: this.metricCollection,
+      metrics: this.metrics,
       type: this.spanType,
       metadata: undefined,
       expectedOutput: undefined,
@@ -1059,6 +1121,7 @@ interface AgentOptions<Args extends any[], T> {
   name?: string | undefined;
   agentHandoffs?: string[] | undefined;
   metricCollection?: string | undefined;
+  metrics?: BaseMetric[];
   fn: (...args: Args) => T | Promise<T>;
 }
 
@@ -1068,6 +1131,7 @@ interface LLMOptions<Args extends any[], T> {
   costPerOutputToken?: number | undefined;
   name?: string | undefined;
   metricCollection?: string | undefined;
+  metrics?: BaseMetric[];
   fn: (...args: Args) => T | Promise<T>;
 }
 
@@ -1075,6 +1139,7 @@ interface RetrieverOptions<Args extends any[], T> {
   embedder?: string;
   name?: string | undefined;
   metricCollection?: string | undefined;
+  metrics?: BaseMetric[];
   fn: (...args: Args) => T | Promise<T>;
 }
 
@@ -1082,6 +1147,7 @@ interface ToolOptions<Args extends any[], T> {
   description?: string | undefined;
   name?: string | undefined;
   metricCollection?: string | undefined;
+  metrics?: BaseMetric[];
   fn: (...args: Args) => T | Promise<T>;
 }
 
@@ -1089,6 +1155,7 @@ interface CustomOptions<Args extends any[], T> {
   type: string;
   name?: string | undefined;
   metricCollection?: string | undefined;
+  metrics?: BaseMetric[];
   fn: (...args: Args) => T | Promise<T>;
 }
 
@@ -1109,6 +1176,7 @@ function ObserveAgent<Args extends any[], T>(
         },
         functionKwargs: { args },
       },
+      options.metrics,
     );
 
     return tracer.trace(async () => {
@@ -1137,6 +1205,7 @@ function ObserveLLM<Args extends any[], T>(
         },
         functionKwargs: { args },
       },
+      options.metrics,
     );
     return tracer.trace(async () => {
       const result = options.fn(...args);
@@ -1162,6 +1231,7 @@ function ObserveRetriever<Args extends any[], T>(
         },
         functionKwargs: { args },
       },
+      options.metrics,
     );
     return tracer.trace(async () => {
       const result = options.fn(...args);
@@ -1187,6 +1257,7 @@ function ObserveTool<Args extends any[], T>(
         },
         functionKwargs: { args },
       },
+      options.metrics,
     );
     return tracer.trace(async () => {
       const result = options.fn(...args);
@@ -1211,6 +1282,7 @@ function ObserveCustom<Args extends any[], T>(
         },
         functionKwargs: { args },
       },
+      options.metrics,
     );
     return tracer.trace(async () => {
       const result = options.fn(...args);
@@ -1224,6 +1296,7 @@ export function observe<Args extends any[], T>(options: {
   type?: SpanType | string;
   name?: string;
   metricCollection?: string;
+  metrics?: BaseMetric[];
   model?: string;
   costPerInputToken?: number;
   costPerOutputToken?: number;
@@ -1241,6 +1314,7 @@ export function observe<Args extends any[], T>(options: {
       fn,
       name: rest.name,
       metricCollection: rest.metricCollection,
+      metrics: rest.metrics,
       availableTools: rest.availableTools,
       agentHandoffs: rest.agentHandoffs,
     });
@@ -1249,6 +1323,7 @@ export function observe<Args extends any[], T>(options: {
       fn,
       name: rest.name,
       metricCollection: rest.metricCollection,
+      metrics: rest.metrics,
       model: rest.model,
       costPerInputToken: rest.costPerInputToken,
       costPerOutputToken: rest.costPerOutputToken,
@@ -1258,6 +1333,7 @@ export function observe<Args extends any[], T>(options: {
       fn,
       name: rest.name,
       metricCollection: rest.metricCollection,
+      metrics: rest.metrics,
       embedder: rest.embedder,
     });
   } else if (type === SpanType.TOOL) {
@@ -1265,6 +1341,7 @@ export function observe<Args extends any[], T>(options: {
       fn,
       name: rest.name,
       metricCollection: rest.metricCollection,
+      metrics: rest.metrics,
       description: rest.description,
     });
   } else {
@@ -1273,6 +1350,7 @@ export function observe<Args extends any[], T>(options: {
       fn,
       name: rest.name,
       metricCollection: rest.metricCollection,
+      metrics: rest.metrics,
       type: "base",
     });
   }
@@ -1294,6 +1372,7 @@ export interface UpdateCurrentSpanParams {
   expectedOutput?: string;
   context?: string[];
   metricCollection?: string;
+  metrics?: BaseMetric[];
 }
 
 export const updateCurrentSpan = ({
@@ -1308,6 +1387,7 @@ export const updateCurrentSpan = ({
   expectedOutput,
   context,
   metricCollection,
+  metrics,
 }: UpdateCurrentSpanParams) => {
   const currentSpan = getCurrentSpan();
 
@@ -1318,7 +1398,9 @@ export const updateCurrentSpan = ({
   if (testCase) {
     currentSpan.input = testCase.input;
     currentSpan.output = testCase.actualOutput;
-    currentSpan.retrievalContext = testCase.retrievalContext;
+    currentSpan.retrievalContext = resolveRetrievalContext(
+      testCase.retrievalContext,
+    );
     currentSpan.toolsCalled = testCase.toolsCalled;
     currentSpan.expectedTools = testCase.expectedTools;
     currentSpan.context = testCase.context;
@@ -1354,6 +1436,9 @@ export const updateCurrentSpan = ({
   if (metricCollection) {
     currentSpan.metricCollection = metricCollection;
   }
+  if (metrics) {
+    currentSpan.metrics = metrics;
+  }
 };
 
 export interface UpdateCurrentTraceParams {
@@ -1373,6 +1458,7 @@ export interface UpdateCurrentTraceParams {
   expectedOutput?: string;
   context?: string[];
   metricCollection?: string;
+  metrics?: BaseMetric[];
   confidentApiKey?: string;
   drop?: boolean;
 }
@@ -1394,6 +1480,7 @@ export const updateCurrentTrace = ({
   expectedOutput,
   context,
   metricCollection,
+  metrics,
   confidentApiKey,
   drop,
 }: UpdateCurrentTraceParams) => {
@@ -1406,7 +1493,9 @@ export const updateCurrentTrace = ({
   if (testCase !== undefined) {
     currentTrace.input = testCase.input;
     currentTrace.output = testCase.actualOutput;
-    currentTrace.retrievalContext = testCase.retrievalContext;
+    currentTrace.retrievalContext = resolveRetrievalContext(
+      testCase.retrievalContext,
+    );
     currentTrace.toolsCalled = testCase.toolsCalled;
     currentTrace.expectedTools = testCase.expectedTools;
     currentTrace.context = testCase.context;
@@ -1456,6 +1545,9 @@ export const updateCurrentTrace = ({
   }
   if (metricCollection !== undefined) {
     currentTrace.metricCollection = metricCollection;
+  }
+  if (metrics !== undefined) {
+    currentTrace.metrics = metrics;
   }
   if (confidentApiKey !== undefined) {
     currentTrace.confidentApiKey = confidentApiKey;

@@ -1,15 +1,15 @@
 {
   "name": "langchain-rag-test",
-  "uuid": "076fb640-b8ed-4bb9-82c5-83ed57170067",
+  "uuid": "436ed716-4d85-4a90-95c3-2c7254f8c760",
   "baseSpans": [
     {
-      "uuid": "019c8fee-8a36-7666-99b7-fcae56b1cc1f",
+      "uuid": "019ed9d8-d1c0-7183-810e-442429f4b96d",
       "name": "rag_chain",
       "status": "SUCCESS",
       "type": "base",
-      "traceUuid": "076fb640-b8ed-4bb9-82c5-83ed57170067",
-      "startTime": "2026-02-24T13:55:00.790Z",
-      "endTime": "2026-02-24T13:55:01.879Z",
+      "traceUuid": "436ed716-4d85-4a90-95c3-2c7254f8c760",
+      "startTime": "2026-06-18T08:28:45.888Z",
+      "endTime": "2026-06-18T08:28:47.093Z",
       "input": {
         "messages": [
           {
@@ -33,7 +33,7 @@
               "AIMessage"
             ],
             "kwargs": {
-              "id": "chatcmpl-DCnAL1g0xHBmCKm6uxB3jaGo31nbM",
+              "id": "chatcmpl-Ds2P8OPgVM9oHRFL2Bo6gVWWfwEyQ",
               "content": "Python is a high-level programming language known for its simplicity. It supports multiple programming paradigms, including procedural and object-oriented programming (OOP).",
               "additional_kwargs": {},
               "response_metadata": {
@@ -60,7 +60,7 @@
                     "rejected_prediction_tokens": 0
                   }
                 },
-                "system_fingerprint": "fp_fc706eab22"
+                "system_fingerprint": "fp_0721cf3e68"
               },
               "type": "ai",
               "tool_calls": [],
@@ -102,14 +102,14 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019c8fee-8a3a-7666-99b8-0939adb9d480",
+      "uuid": "019ed9d8-d1c3-7107-9720-11eb02914b8b",
       "name": "Langchain LLM Run",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "076fb640-b8ed-4bb9-82c5-83ed57170067",
-      "parentUuid": "019c8fee-8a36-7666-99b7-fcae56b1cc1f",
-      "startTime": "2026-02-24T13:55:00.794Z",
-      "endTime": "2026-02-24T13:55:01.879Z",
+      "traceUuid": "436ed716-4d85-4a90-95c3-2c7254f8c760",
+      "parentUuid": "019ed9d8-d1c0-7183-810e-442429f4b96d",
+      "startTime": "2026-06-18T08:28:45.891Z",
+      "endTime": "2026-06-18T08:28:47.093Z",
       "input": [
         {
           "role": "system",
@@ -134,14 +134,14 @@
   ],
   "retrieverSpans": [
     {
-      "uuid": "019c8fee-8a37-7666-99b8-02c9dbe0c8ad",
+      "uuid": "019ed9d8-d1c2-700d-b85c-5fd30959a374",
       "name": "Langchain Retriever Run",
       "status": "SUCCESS",
       "type": "retriever",
-      "traceUuid": "076fb640-b8ed-4bb9-82c5-83ed57170067",
-      "parentUuid": "019c8fee-8a36-7666-99b7-fcae56b1cc1f",
-      "startTime": "2026-02-24T13:55:00.792Z",
-      "endTime": "2026-02-24T13:55:00.793Z",
+      "traceUuid": "436ed716-4d85-4a90-95c3-2c7254f8c760",
+      "parentUuid": "019ed9d8-d1c0-7183-810e-442429f4b96d",
+      "startTime": "2026-06-18T08:28:45.890Z",
+      "endTime": "2026-06-18T08:28:45.891Z",
       "input": "Tell me about Python.",
       "output": [
         "[object Object]",
@@ -151,8 +151,8 @@
     }
   ],
   "toolSpans": [],
-  "startTime": "2026-02-24T13:55:00.789Z",
-  "endTime": "2026-02-24T13:55:01.879Z",
+  "startTime": "2026-06-18T08:28:45.888Z",
+  "endTime": "2026-06-18T08:28:47.093Z",
   "environment": "testing",
   "tags": [
     "langchain",
@@ -181,7 +181,7 @@
           "AIMessage"
         ],
         "kwargs": {
-          "id": "chatcmpl-DCnAL1g0xHBmCKm6uxB3jaGo31nbM",
+          "id": "chatcmpl-Ds2P8OPgVM9oHRFL2Bo6gVWWfwEyQ",
           "content": "Python is a high-level programming language known for its simplicity. It supports multiple programming paradigms, including procedural and object-oriented programming (OOP).",
           "additional_kwargs": {},
           "response_metadata": {
@@ -208,7 +208,7 @@
                 "rejected_prediction_tokens": 0
               }
             },
-            "system_fingerprint": "fp_fc706eab22"
+            "system_fingerprint": "fp_0721cf3e68"
           },
           "type": "ai",
           "tool_calls": [],
@@ -244,5 +244,6 @@
         }
       }
     ]
-  }
+  },
+  "status": "SUCCESS"
 }

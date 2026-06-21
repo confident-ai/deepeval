@@ -11,9 +11,6 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.knowledge_retention.template import (
-    KnowledgeRetentionTemplate,
-)
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.knowledge_retention.schema import (
     Knowledge,
@@ -149,7 +146,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             if verdict.verdict.strip().lower() == "yes":
                 attritions.append(verdict.reason)
 
-        prompt: dict = KnowledgeRetentionTemplate.generate_reason(
+        prompt: dict = self._get_prompt(
+            "generate_reason",
             attritions=attritions,
             score=format(self.score, ".2f"),
         )
@@ -170,7 +168,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             if verdict.verdict.strip().lower() == "yes":
                 attritions.append(verdict.reason)
 
-        prompt: dict = KnowledgeRetentionTemplate.generate_reason(
+        prompt: dict = self._get_prompt(
+            "generate_reason",
             attritions=attritions,
             score=format(self.score, ".2f"),
         )
@@ -198,7 +197,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             if len(accumulated_knowledge) == 0:
                 continue
 
-            prompt = KnowledgeRetentionTemplate.generate_verdict(
+            prompt = self._get_prompt(
+                "generate_verdict",
                 llm_message=turns[i].content,
                 accumulated_knowledge=accumulated_knowledge,
             )
@@ -228,7 +228,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             if len(accumulated_knowledge) == 0:
                 continue
 
-            prompt = KnowledgeRetentionTemplate.generate_verdict(
+            prompt = self._get_prompt(
+                "generate_verdict",
                 llm_message=turns[i].content,
                 accumulated_knowledge=accumulated_knowledge,
             )
@@ -255,7 +256,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             previous_turns = turns[:i]
             user_message = turns[i].content
 
-            prompt = KnowledgeRetentionTemplate.extract_data(
+            prompt = self._get_prompt(
+                "extract_data",
                 user_message=user_message,
                 previous_turns=[
                     convert_turn_to_dict(turn) for turn in previous_turns
@@ -283,7 +285,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             previous_turns = turns[:i]
             user_message = turns[i].content
 
-            prompt = KnowledgeRetentionTemplate.extract_data(
+            prompt = self._get_prompt(
+                "extract_data",
                 user_message=user_message,
                 previous_turns=[
                     convert_turn_to_dict(turn) for turn in previous_turns

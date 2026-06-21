@@ -1,0 +1,21 @@
+{{ criteria }}
+
+Below is the full conversation you should evaluate. Consider dialogue context, speaker roles, and how responses were handled.
+
+{{ _fragments.multimodal_input_rules }}
+
+Full Conversation:
+{{ text }}
+
+**
+IMPORTANT: Only return JSON with two keys:
+- 'verdict': true or false
+- 'reason': justification based on specific parts of the conversation
+
+Example:
+{
+  "reason": "The assistant provided a clear and direct answer in response to every user query.",
+  "verdict": true
+}
+**
+JSON:

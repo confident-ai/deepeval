@@ -1,1 +1,3 @@
-from .template import BiasTemplate
+from .bias import BiasMetric
+
+__all__ = ["BiasMetric"]

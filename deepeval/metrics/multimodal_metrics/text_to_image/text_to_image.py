@@ -5,9 +5,6 @@ import textwrap
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import SingleTurnParams, LLMTestCase, MLLMImage
-from deepeval.metrics.multimodal_metrics.text_to_image.template import (
-    TextToImageTemplate,
-)
 from deepeval.utils import (
     get_or_create_event_loop,
     convert_to_multi_modal_array,
@@ -194,8 +191,9 @@ class TextToImageMetric(BaseMetric):
         images: List[MLLMImage] = [actual_image_output]
         prompt = f"""
             {
-                TextToImageTemplate.generate_semantic_consistency_evaluation_results(
-                    text_prompt=text_prompt
+                self._get_prompt(
+                    "generate_semantic_consistency_evaluation_results",
+                    text_prompt=text_prompt,
                 )
             }
             Images:
@@ -217,8 +215,9 @@ class TextToImageMetric(BaseMetric):
         images: List[MLLMImage] = [actual_image_output]
         prompt = f"""
             {
-                TextToImageTemplate.generate_semantic_consistency_evaluation_results(
-                    text_prompt=text_prompt
+                self._get_prompt(
+                    "generate_semantic_consistency_evaluation_results",
+                    text_prompt=text_prompt,
                 )
             }
             Images:
@@ -238,7 +237,9 @@ class TextToImageMetric(BaseMetric):
         images: List[MLLMImage] = [actual_image_output]
         prompt = f"""
             {
-                TextToImageTemplate.generate_perceptual_quality_evaluation_results()
+                self._get_prompt(
+                    "generate_perceptual_quality_evaluation_results",
+                )
             }
             Images:
             {images}
@@ -257,7 +258,9 @@ class TextToImageMetric(BaseMetric):
         images: List[MLLMImage] = [actual_image_output]
         prompt = f"""
             {
-                TextToImageTemplate.generate_perceptual_quality_evaluation_results()
+                self._get_prompt(
+                    "generate_perceptual_quality_evaluation_results",
+                )
             }
             Images:
             {images}

@@ -1,0 +1,87 @@
+You are given a conversation between an AI assistant and a user. The assistant is asking questions to collect structured information, and the user is responding casually or factually.
+
+Your task is to extract **only the factual information found in the most recent user message** and return it as a JSON object.
+
+---
+**Guidelines:**
+1. Only extract information that is **explicitly stated** in the user message.
+2. Use the previous turns only to understand what the assistant is asking about.
+3. Do not extract anything based on assumptions or the assistant's message alone.
+4. If the user message confirms, corrects, or adds to earlier facts, treat the user message as the source of truth.
+5. Output a valid **JSON object**. All keys must be **strings**, and all values must be **strings or lists of strings**.
+6. If there is no factual content in the user message, return an empty JSON (`{}`).
+
+---
+**Example A**
+Previous Turns:
+{
+  {
+    "role": "assistant", "content": "What's your full name?"
+  }
+}
+User message: "It's Emily Chen"
+JSON:
+{
+  "data": {
+    "Full Name": "Emily Chen"
+  }
+}
+
+---
+**Example B**
+Previous Turns:
+{
+  {
+    "role": "assistant", "content": "Where are you currently located?"
+  }
+}
+User message: "I'm in Berlin right now."
+JSON:
+{
+  "data": {
+    "Current Location": "Berlin"
+  }
+}
+
+---
+**Example C**
+Previous Turns:
+{
+  {
+    "role": "assistant", "content": "Do you have any dietary restrictions?"
+  }
+}
+User message: "Yes, I'm vegetarian and allergic to peanuts."
+JSON:
+{
+  "data": {
+    "Dietary Restrictions": ["Vegetarian", "Peanut Allergy"]
+  }
+}
+
+---
+**Example D**
+Previous Turns:
+{
+  {
+    "role": "assistant", "content": "Can I confirm your birth year is 1989?"
+  }
+}
+User message: "No, it's actually 1992."
+JSON:
+{
+  "data": {
+    "Birth Year": "1992"
+  }
+}
+
+---
+Now complete the task below:
+
+Previous Turns:
+{{ previous_turns }}
+
+Latest User Message:
+{{ user_message }}
+
+JSON:

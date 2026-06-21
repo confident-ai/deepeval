@@ -1,0 +1,29 @@
+For EACH {{ content_type }} in the given assistant output below, determine whether the {{ content_or }} can be attributed to the nodes of retrieval contexts. Please generate a list of JSON with two keys: `verdict` and `reason`.
+The `verdict` key should STRICTLY be either a 'yes' or 'no'. Answer 'yes' if the {{ content_or }} can be attributed to any parts of the retrieval context, else answer 'no'.
+The `reason` key should provide a reason why to the verdict. In the reason, you should aim to include the node(s) count in the retrieval context (eg., 1st node, and 2nd node in the retrieval context) that is attributed to said {{ content_or }}.{{ node_instruction }} You should also aim to quote the specific part of the retrieval context to justify your verdict, but keep it extremely concise and cut short the quote with an ellipsis if possible. 
+
+{% if multimodal %}{{ _fragments.multimodal_input_rules_turn_metric }}{% endif %}
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON objects, each with two keys: `verdict` and `reason`.
+
+{
+  "verdicts": [
+    {
+      "reason": "...",
+      "verdict": "yes"
+    },
+    ...
+  ]  
+}
+
+Since you are going to generate a verdict for each sentence, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to the number of {{ content_type_plural }} in {% if multimodal %}the{% else %}`assistant output`{% endif %}{% if multimodal %} `assistant output`{% endif %}.
+**
+
+Assistant Output:
+{{ expected_outcome }}
+
+Retrieval Context:
+{{ context_to_display }}
+
+JSON:

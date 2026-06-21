@@ -10,7 +10,7 @@ They pin down:
     (leading yes/no) or dropped, never crashing and never silently counted as
     relevant
   - the documented fallback when no valid verdicts exist (score = 1)
-  - custom `evaluation_template` is honored
+  - a custom template_class is threaded through to prompt resolution
 """
 
 import json
@@ -23,7 +23,6 @@ from deepeval.metrics.turn_relevancy.schema import (
     TurnRelevancyVerdict,
     TurnRelevancyScoreReason,
 )
-from deepeval.metrics.turn_relevancy.template import TurnRelevancyTemplate
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import ConversationalTestCase, Turn
 
@@ -230,16 +229,25 @@ class TestTurnRelevancyAggregation:
         assert metric.verdicts[0] is None
         assert score == 1  # no valid verdicts -> documented fallback
 
-    def test_custom_evaluation_template_is_used(self):
-        class StrictTemplate(TurnRelevancyTemplate):
-            @staticmethod
-            def generate_verdicts(sliding_window):
-                return (
-                    "CUSTOM_STRICT_RUBRIC\n"
-                    + TurnRelevancyTemplate.generate_verdicts(sliding_window)
-                )
+    def test_custom_template_class_is_threaded_through(self):
+        # the configured template_class must thread through to prompt resolution
+        seen = {}
 
-        score, metric, judge = _measure(
-            _conversation(1), ["yes"], evaluation_template=StrictTemplate
+        metric = TurnRelevancyMetric(
+            model=ScriptedJudge(["yes"]),
+            async_mode=False,
+            include_reason=False,
+            template_class="MyStrictRubric",
         )
-        assert "CUSTOM_STRICT_RUBRIC" in judge.prompts[0]
+
+        def spy(method, **kwargs):
+            seen[method] = kwargs.get("template_class")
+            return "PROMPT"
+
+        metric._get_prompt = spy
+        metric.measure(
+            _conversation(1),
+            _show_indicator=False,
+            _log_metric_to_confident=False,
+        )
+        assert seen["generate_verdicts"] == "MyStrictRubric"

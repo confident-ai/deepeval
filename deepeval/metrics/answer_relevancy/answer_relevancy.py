@@ -1,4 +1,4 @@
-from typing import Optional, List, Type, Union
+from typing import Optional, List, Union
 
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -14,7 +14,6 @@ from deepeval.metrics.utils import (
 from deepeval.test_case import LLMTestCase, SingleTurnParams, MLLMImage
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.answer_relevancy.template import AnswerRelevancyTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.answer_relevancy.schema import (
     Statements,
@@ -38,9 +37,6 @@ class AnswerRelevancyMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        evaluation_template: Type[
-            AnswerRelevancyTemplate
-        ] = AnswerRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -49,7 +45,6 @@ class AnswerRelevancyMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -169,11 +164,12 @@ class AnswerRelevancyMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 irrelevant_statements.append(verdict.reason)
 
-        prompt = self.evaluation_template.generate_reason(
+        prompt = self._get_prompt(
+            "generate_reason",
+            multimodal=multimodal,
             irrelevant_statements=irrelevant_statements,
             input=input,
             score=format(self.score, ".2f"),
-            multimodal=multimodal,
         )
 
         return await a_generate_with_schema_and_extract(
@@ -193,11 +189,12 @@ class AnswerRelevancyMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 irrelevant_statements.append(verdict.reason)
 
-        prompt = self.evaluation_template.generate_reason(
+        prompt = self._get_prompt(
+            "generate_reason",
+            multimodal=multimodal,
             irrelevant_statements=irrelevant_statements,
             input=input,
             score=format(self.score, ".2f"),
-            multimodal=multimodal,
         )
 
         return generate_with_schema_and_extract(
@@ -214,8 +211,11 @@ class AnswerRelevancyMetric(BaseMetric):
         if len(self.statements) == 0:
             return []
 
-        prompt = self.evaluation_template.generate_verdicts(
-            input=input, statements=self.statements, multimodal=multimodal
+        prompt = self._get_prompt(
+            "generate_verdicts",
+            multimodal=multimodal,
+            input=input,
+            statements=self.statements,
         )
 
         return await a_generate_with_schema_and_extract(
@@ -234,8 +234,11 @@ class AnswerRelevancyMetric(BaseMetric):
         if len(self.statements) == 0:
             return []
 
-        prompt = self.evaluation_template.generate_verdicts(
-            input=input, statements=self.statements, multimodal=multimodal
+        prompt = self._get_prompt(
+            "generate_verdicts",
+            multimodal=multimodal,
+            input=input,
+            statements=self.statements,
         )
 
         return generate_with_schema_and_extract(
@@ -253,8 +256,10 @@ class AnswerRelevancyMetric(BaseMetric):
         actual_output: str,
         multimodal: bool,
     ) -> List[str]:
-        prompt = self.evaluation_template.generate_statements(
-            actual_output=actual_output, multimodal=multimodal
+        prompt = self._get_prompt(
+            "generate_statements",
+            multimodal=multimodal,
+            actual_output=actual_output,
         )
 
         return generate_with_schema_and_extract(
@@ -272,8 +277,10 @@ class AnswerRelevancyMetric(BaseMetric):
         actual_output: str,
         multimodal: bool,
     ) -> List[str]:
-        prompt = self.evaluation_template.generate_statements(
-            actual_output=actual_output, multimodal=multimodal
+        prompt = self._get_prompt(
+            "generate_statements",
+            multimodal=multimodal,
+            actual_output=actual_output,
         )
 
         return await a_generate_with_schema_and_extract(

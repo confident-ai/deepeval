@@ -1,4 +1,3 @@
-import asyncio
 from deepeval.tracing.otel.exporter import ConfidentSpanExporter
 from tests.test_integrations.test_exporter.readable_spans import (
     list_of_readable_spans,
@@ -74,6 +73,31 @@ async def test_llm_trace():
         assert (
             actual_dict["llmSpans"][0]["outputTokenCount"] == 500
         ), f"Expected output token count to be 500, got {actual_dict['llmSpans'][0]['outputTokenCount']}"
+
+    finally:
+        trace_testing_manager.test_name = None
+        trace_testing_manager.test_dict = None
+
+
+async def test_pydantic_ai_tools_called():
+    try:
+        trace_testing_manager.test_name = "any_name"
+        exporter.export(list_of_readable_spans)
+        actual_dict = await trace_testing_manager.wait_for_test_dict()
+
+        tools_called = actual_dict["agentSpans"][0]["toolsCalled"]
+        assert (
+            len(tools_called) == 1
+        ), f"Expected 1 tool call, got {len(tools_called)}"
+        assert (
+            tools_called[0]["name"] == "test_tool"
+        ), f"Expected tool name 'test_tool', got {tools_called[0]['name']}"
+        assert tools_called[0]["inputParameters"] == {
+            "query": "test query"
+        }, f"Expected inputParameters, got {tools_called[0]['inputParameters']}"
+        assert (
+            tools_called[0]["output"] == "Test tool result"
+        ), f"Expected output 'Test tool result', got {tools_called[0]['output']}"
 
     finally:
         trace_testing_manager.test_name = None

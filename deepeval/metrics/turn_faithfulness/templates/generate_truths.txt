@@ -1,0 +1,23 @@
+
+Extract {{ limit_description }} from the REFERENCE CONTEXT.
+
+RULES:
+- Truths must be atomic, explicit factual statements.
+- Do not summarize or combine multiple facts.
+- Select truths based on reading order, not 'importance'.
+- Do not infer or expand beyond what is explicitly stated.
+- Keep each truth minimal but complete.
+- Treat images as factual evidence if multimodal, using only clearly visible information.
+
+{% if multimodal %}{{ _fragments.multimodal_input_rules_turn_metric }}{% endif %}
+
+Output MUST be ONLY valid JSON:
+
+{
+  "truths": ["truth 1", "truth 2", ...]
+}
+
+REFERENCE CONTEXT:
+{{ reference_context }}
+
+JSON:

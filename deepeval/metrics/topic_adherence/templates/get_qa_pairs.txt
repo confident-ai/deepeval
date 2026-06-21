@@ -1,0 +1,54 @@
+Your task is to extract question-answer (QA) pairs from a multi-turn conversation between a `user` and an `assistant`.
+
+You must return only valid pairs where:
+- The **question** comes from the `user`.
+- The **response** comes from the `assistant`.
+- Both question and response must appear **explicitly** in the conversation.
+
+Do not infer information beyond what is stated. Ignore irrelevant or conversational turns (e.g. greetings, affirmations) that do not constitute clear QA pairs.
+If there are multiple questions and multiple answers in a single sentence, break them into separate pairs. Each pair must be standalone, and should not contain more than one question or response.
+
+{{ _fragments.multimodal_input_rules }}
+
+OUTPUT Format:
+Return a **JSON object** with a single 2 keys:
+- `"question"`: the user's question
+- `"response"`: the assistant's direct response
+
+If no valid QA pairs are found, return:
+```json
+{
+  question: "",
+  response: ""
+}
+
+CHAIN OF THOUGHT:
+- Read the full conversation sequentially.
+- Identify user turns that clearly ask a question (explicit or strongly implied).
+- Match each question with the immediate assistant response.
+- Only include pairs where the assistant's reply directly addresses the user's question.
+- Do not include incomplete, ambiguous, or out-of-context entries.
+
+EXAMPLE:
+
+Conversation:
+
+user: Which food is best for diabetic patients?
+assistant: Steel-cut oats are good for diabetic patients
+user: Is it better if I eat muesli instead of oats?
+assistant: While muesli is good for diabetic people, steel-cut oats are preferred. Refer to your nutritionist for better guidance.
+
+Example JSON:
+{
+  "question": "Which food is best for diabetic patients?",
+  "response": "Steel-cut oats are good for diabetic patients"
+}
+===== END OF EXAMPLE ======
+
+**
+IMPORTANT: Please make sure to only return in JSON format with one key: 'qa_pairs' and the value MUST be a list of dictionaries
+**
+
+Conversation: 
+{{ conversation }}
+JSON:

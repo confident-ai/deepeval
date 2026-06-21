@@ -9,12 +9,39 @@ from deepeval.test_case import (
     SingleTurnParams,
     ArenaTestCase,
 )
+from deepeval.templates.resolver import (
+    MetricTemplateMethod,
+    resolve_template,
+)
 
 if TYPE_CHECKING:
     from deepeval.models import DeepEvalBaseLLM
 
 
-class BaseMetric:
+class PromptMixin:
+    """Renders a metric prompt template. `template_class` overrides the default
+    `self.__class__.__name__` when borrowing another class's templates."""
+
+    def _get_prompt(
+        self,
+        method: MetricTemplateMethod,
+        *,
+        template_class: Optional[str] = None,
+        multimodal: bool = False,
+        strict: bool = True,
+        **kwargs,
+    ) -> str:
+        return resolve_template(
+            "metrics",
+            template_class or self.__class__.__name__,
+            method,
+            multimodal=multimodal,
+            strict=strict,
+            **kwargs,
+        )
+
+
+class BaseMetric(PromptMixin):
     _required_params = List[SingleTurnParams]
     threshold: float
     score: Optional[float] = None
@@ -61,8 +88,9 @@ class BaseMetric:
         return "Base Metric"
 
     def _accrue_cost(self, cost: Optional[float]) -> None:
-        if self.evaluation_cost is not None and cost is not None:
-            self.evaluation_cost += cost
+        effective = getattr(cost, "value", cost)
+        if self.evaluation_cost is not None and effective is not None:
+            self.evaluation_cost += effective
         else:
             self.evaluation_cost = None
 
@@ -77,7 +105,7 @@ class BaseMetric:
             self.output_tokens = (self.output_tokens or 0) + output_tokens
 
 
-class BaseConversationalMetric:
+class BaseConversationalMetric(PromptMixin):
     threshold: float
     score: Optional[float] = None
     score_breakdown: Dict = None
@@ -126,8 +154,9 @@ class BaseConversationalMetric:
         return "Base Conversational Metric"
 
     def _accrue_cost(self, cost: Optional[float]) -> None:
-        if self.evaluation_cost is not None and cost is not None:
-            self.evaluation_cost += cost
+        effective = getattr(cost, "value", cost)
+        if self.evaluation_cost is not None and effective is not None:
+            self.evaluation_cost += effective
         else:
             self.evaluation_cost = None
 
@@ -142,7 +171,7 @@ class BaseConversationalMetric:
             self.output_tokens = (self.output_tokens or 0) + output_tokens
 
 
-class BaseArenaMetric:
+class BaseArenaMetric(PromptMixin):
     reason: Optional[str] = None
     evaluation_model: Optional[str] = None
     async_mode: bool = True
@@ -181,8 +210,9 @@ class BaseArenaMetric:
         return "Base Arena Metric"
 
     def _accrue_cost(self, cost: Optional[float]) -> None:
-        if self.evaluation_cost is not None and cost is not None:
-            self.evaluation_cost += cost
+        effective = getattr(cost, "value", cost)
+        if self.evaluation_cost is not None and effective is not None:
+            self.evaluation_cost += effective
         else:
             self.evaluation_cost = None
 

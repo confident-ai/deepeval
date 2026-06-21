@@ -5,9 +5,6 @@ import textwrap
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import SingleTurnParams, LLMTestCase, MLLMImage
-from deepeval.metrics.multimodal_metrics.image_editing.template import (
-    ImageEditingTemplate,
-)
 from deepeval.utils import (
     get_or_create_event_loop,
     convert_to_multi_modal_array,
@@ -203,8 +200,9 @@ class ImageEditingMetric(BaseMetric):
         images: List[MLLMImage] = []
         images.extend([image_input, actual_image_output])
         prompt = [
-            ImageEditingTemplate.generate_semantic_consistency_evaluation_results(
-                text_prompt=text_prompt
+            self._get_prompt(
+                "generate_semantic_consistency_evaluation_results",
+                text_prompt=text_prompt,
             )
         ]
         return await a_generate_with_schema_and_extract(
@@ -224,8 +222,9 @@ class ImageEditingMetric(BaseMetric):
         images: List[MLLMImage] = []
         images.extend([image_input, actual_image_output])
         prompt = [
-            ImageEditingTemplate.generate_semantic_consistency_evaluation_results(
-                text_prompt=text_prompt
+            self._get_prompt(
+                "generate_semantic_consistency_evaluation_results",
+                text_prompt=text_prompt,
             )
         ]
         return generate_with_schema_and_extract(
@@ -241,7 +240,9 @@ class ImageEditingMetric(BaseMetric):
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = [actual_image_output]
         prompt = [
-            ImageEditingTemplate.generate_perceptual_quality_evaluation_results()
+            self._get_prompt(
+                "generate_perceptual_quality_evaluation_results",
+            )
         ]
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -256,7 +257,9 @@ class ImageEditingMetric(BaseMetric):
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = [actual_image_output]
         prompt = [
-            ImageEditingTemplate.generate_perceptual_quality_evaluation_results()
+            self._get_prompt(
+                "generate_perceptual_quality_evaluation_results",
+            )
         ]
         return generate_with_schema_and_extract(
             metric=self,

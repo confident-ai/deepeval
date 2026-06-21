@@ -108,6 +108,29 @@ export function parsePromptsToMessages(
   return messages;
 }
 
+// Confident AI expects `toolsCalled[].inputParameters` to be an object. LangChain
+// can hand us the tool input as a JSON string, so normalize it to an object —
+// mirrors Python's prepare_tool_call_input_parameters.
+export function prepareToolCallInputParameters(
+  input: any,
+): Record<string, any> {
+  let res = input;
+  if (typeof res === "string") {
+    try {
+      res = JSON.parse(res);
+    } catch {
+      // leave as string; wrapped below
+    }
+  }
+  if (res === null || res === undefined || typeof res !== "object") {
+    return { output: res };
+  }
+  if (Array.isArray(res)) {
+    return { output: res };
+  }
+  return res;
+}
+
 interface EnterCurrentContextParams {
   spanType?: SpanType;
   funcName: string;
@@ -118,6 +141,13 @@ interface EnterCurrentContextParams {
   progress?: typeof cliProgress;
   pbarCallbackId?: number;
   uuidStr?: string;
+  // When set, the span is placed using these explicit ids instead of the
+  // AsyncLocalStorage "current span/trace". The LangGraph server invokes graphs
+  // across async boundaries where ALS context is not preserved, so the caller
+  // (the callback handler) resolves trace/parent from run_id/parent_run_id and
+  // passes them in here. `traceUuidOverride` must reference an active trace.
+  traceUuidOverride?: string;
+  parentUuidOverride?: string;
 }
 
 export const enterCurrentContext = ({
@@ -128,6 +158,8 @@ export const enterCurrentContext = ({
   observeKwargs,
   functionKwargs,
   uuidStr,
+  traceUuidOverride,
+  parentUuidOverride,
 }: EnterCurrentContextParams) => {
   const startTime = new Date();
   observeKwargs = observeKwargs ?? {};
@@ -137,21 +169,28 @@ export const enterCurrentContext = ({
   const prompt = observeKwargs["prompt"] ?? "";
   const uuidString = uuidStr ?? crypto.randomUUID();
 
-  const parentSpan = getCurrentSpan();
   let traceUuid: string | undefined;
   let parentUuid: string | undefined;
 
-  if (parentSpan) {
-    parentUuid = parentSpan.uuid;
-    traceUuid = parentSpan.traceUuid;
+  if (traceUuidOverride) {
+    // Caller-driven placement (keyed off run_id/parent_run_id). Do not consult
+    // AsyncLocalStorage: it is unreliable under the LangGraph server.
+    traceUuid = traceUuidOverride;
+    parentUuid = parentUuidOverride;
   } else {
-    const currentTrace = getCurrentTrace();
-    if (currentTrace) {
-      traceUuid = currentTrace.uuid;
+    const parentSpan = getCurrentSpan();
+    if (parentSpan) {
+      parentUuid = parentSpan.uuid;
+      traceUuid = parentSpan.traceUuid;
     } else {
-      const trace = traceManager.startNewTrace();
-      traceUuid = trace.uuid;
-      setCurrentTrace(trace);
+      const currentTrace = getCurrentTrace();
+      if (currentTrace) {
+        traceUuid = currentTrace.uuid;
+      } else {
+        const trace = traceManager.startNewTrace();
+        traceUuid = trace.uuid;
+        setCurrentTrace(trace);
+      }
     }
   }
 
@@ -301,20 +340,24 @@ export const exitCurrentContext = ({
       setCurrentSpan(null);
     }
   } else {
-    const currentTrace = getCurrentTrace();
-    if (currentSpan.status === TraceSpanStatus.ERRORED && currentTrace) {
-      currentTrace.status = TraceSpanStatus.ERRORED;
+    // Root span finished. Resolve the owning trace by the span's OWN traceUuid
+    // rather than the AsyncLocalStorage "current trace": under the LangGraph
+    // server the ALS context is routinely lost across callbacks, which used to
+    // leave the trace un-finalized (and therefore never posted). traceManager is
+    // a global registry, so currentSpan.traceUuid is always reliable.
+    const owningTrace =
+      traceManager.getTraceByUuid(currentSpan.traceUuid) ?? getCurrentTrace();
+    if (currentSpan.status === TraceSpanStatus.ERRORED && owningTrace) {
+      owningTrace.status = TraceSpanStatus.ERRORED;
     }
 
-    if (currentTrace && currentTrace.uuid === currentSpan.traceUuid) {
-      const otherActiveSpans = Array.from(
-        traceManager.getActiveSpans().values(),
-      ).filter((span) => span.traceUuid === currentSpan.traceUuid);
+    const otherActiveSpans = Array.from(
+      traceManager.getActiveSpans().values(),
+    ).filter((span) => span.traceUuid === currentSpan.traceUuid);
 
-      if (!otherActiveSpans || otherActiveSpans.length == 0) {
-        traceManager.endTrace(currentSpan.traceUuid);
-        setCurrentTrace(null);
-      }
+    if (otherActiveSpans.length === 0) {
+      traceManager.endTrace(currentSpan.traceUuid);
+      setCurrentTrace(null);
     }
 
     setCurrentSpan(null);

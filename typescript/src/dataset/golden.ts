@@ -1,4 +1,4 @@
-import { ToolCall, Turn } from "../test-case/llm-test-case";
+import { ToolCall, Turn } from "../test-case";
 
 export class Golden {
   input: string;

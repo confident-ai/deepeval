@@ -557,6 +557,62 @@ def check_pydantic_ai_agent_input_output(
     return system_instructions + input_val, output_val
 
 
+def check_pydantic_ai_tools_called(
+    span: ReadableSpan,
+) -> Optional[List[ToolCall]]:
+    """Extract tool calls (and their resuls) from pydantic-ai message history
+
+    Tool call live inside `pydantic_ai.all_messages` as parts of type
+    `̀tool_call` ({id, name, arguments}) paired with `tool_call_response`
+    parts ({id, name, result}). We rebuild structured `ToolCall` objects,
+    matching responses to call by `id`.
+    """
+    try:
+        normalized = normalize_pydantic_ai_messages(span)
+        if not normalized:
+            return None
+
+        calls_by_id: dict = {}
+        ordered: List[ToolCall] = []
+
+        for message in normalized:
+            if not isinstance(message, dict):
+                continue
+            for part in message.get("parts", []) or []:
+                if not isinstance(part, dict):
+                    continue
+                part_type = part.get("type")
+
+                if part_type == "tool_call":
+                    raw_args = part.get("arguments")
+                    input_parameters = {}
+                    if isinstance(raw_args, str):
+                        try:
+                            input_parameters = json.loads(raw_args)
+                        except Exception:
+                            input_parameters = {}
+                    elif isinstance(raw_args, dict):
+                        input_parameters = raw_args
+
+                    tool_call = ToolCall(
+                        name=part.get("name", ""),
+                        input_parameters=input_parameters,
+                    )
+                    ordered.append(tool_call)
+                    call_id = part.get("id")
+                    if call_id is not None:
+                        calls_by_id[call_id] = tool_call
+
+                elif part_type == "tool_call_response":
+                    call_id = part.get("id")
+                    if call_id in calls_by_id:
+                        calls_by_id[call_id].output = part.get("result")
+
+        return ordered or None
+    except Exception:
+        return None
+
+
 def check_tool_output(span: ReadableSpan):
     try:
         return span.attributes.get("tool_response")

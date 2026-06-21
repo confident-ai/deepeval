@@ -15,9 +15,6 @@ from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.goal_accuracy.template import (
-    GoalAccuracyTemplate,
-)
 from deepeval.metrics.goal_accuracy.schema import (
     GoalSteps,
     GoalScore,
@@ -205,8 +202,11 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         return goal_and_steps_taken
 
     def _get_plan_scores(self, user_goal, steps_taken, multimodal: bool):
-        prompt = GoalAccuracyTemplate.get_plan_evaluation_score(
-            user_goal, "\n".join(steps_taken), multimodal
+        prompt = self._get_prompt(
+            "get_plan_evaluation_score",
+            task=user_goal,
+            steps_taken="\n".join(steps_taken),
+            multimodal=multimodal,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -219,8 +219,11 @@ class GoalAccuracyMetric(BaseConversationalMetric):
     async def _a_get_plan_scores(
         self, user_goal, steps_taken, multimodal: bool
     ):
-        prompt = GoalAccuracyTemplate.get_plan_evaluation_score(
-            user_goal, "\n".join(steps_taken), multimodal
+        prompt = self._get_prompt(
+            "get_plan_evaluation_score",
+            task=user_goal,
+            steps_taken="\n".join(steps_taken),
+            multimodal=multimodal,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -259,12 +262,13 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 f"Score: {plan_score.score}, Reason: {plan_score.reason} \n"
             )
 
-        prompt = GoalAccuracyTemplate.get_final_reason(
-            self.score,
-            self.threshold,
-            goal_evaluations,
-            plan_evalautions,
-            multimodal,
+        prompt = self._get_prompt(
+            "get_final_reason",
+            final_score=self.score,
+            threshold=self.threshold,
+            goal_evaluations=goal_evaluations,
+            plan_evalautions=plan_evalautions,
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
@@ -292,12 +296,13 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 f"Score: {plan_score.score}, Reason: {plan_score.reason} \n"
             )
 
-        prompt = GoalAccuracyTemplate.get_final_reason(
-            self.score,
-            self.threshold,
-            goal_evaluations,
-            plan_evalautions,
-            multimodal,
+        prompt = self._get_prompt(
+            "get_final_reason",
+            final_score=self.score,
+            threshold=self.threshold,
+            goal_evaluations=goal_evaluations,
+            plan_evalautions=plan_evalautions,
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -311,8 +316,11 @@ class GoalAccuracyMetric(BaseConversationalMetric):
     def _get_goal_accuracy_score(
         self, user_goal, steps_taken, multimodal: bool
     ):
-        prompt = GoalAccuracyTemplate.get_accuracy_score(
-            user_goal, "\n".join(steps_taken), multimodal
+        prompt = self._get_prompt(
+            "get_accuracy_score",
+            task=user_goal,
+            steps_taken="\n".join(steps_taken),
+            multimodal=multimodal,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -325,8 +333,11 @@ class GoalAccuracyMetric(BaseConversationalMetric):
     async def _a_get_goal_accuracy_score(
         self, user_goal, steps_taken, multimodal: bool
     ):
-        prompt = GoalAccuracyTemplate.get_accuracy_score(
-            user_goal, "\n".join(steps_taken), multimodal
+        prompt = self._get_prompt(
+            "get_accuracy_score",
+            task=user_goal,
+            steps_taken="\n".join(steps_taken),
+            multimodal=multimodal,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,

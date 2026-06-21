@@ -1,4 +1,4 @@
-from typing import Optional, List, Type, Union
+from typing import Optional, List, Union
 
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -15,9 +15,6 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.argument_correctness.template import (
-    ArgumentCorrectnessTemplate,
-)
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.argument_correctness.schema import (
     ArgumentCorrectnessVerdict,
@@ -40,9 +37,6 @@ class ArgumentCorrectnessMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        evaluation_template: Type[
-            ArgumentCorrectnessTemplate
-        ] = ArgumentCorrectnessTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -51,7 +45,6 @@ class ArgumentCorrectnessMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -176,7 +169,8 @@ class ArgumentCorrectnessMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 incorrect_tool_calls_reasons.append(verdict.reason)
 
-        prompt = self.evaluation_template.generate_reason(
+        prompt = self._get_prompt(
+            "generate_reason",
             incorrect_tool_calls_reasons=incorrect_tool_calls_reasons,
             input=input,
             score=format(self.score, ".2f"),
@@ -200,7 +194,8 @@ class ArgumentCorrectnessMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 incorrect_tool_calls_reasons.append(verdict.reason)
 
-        prompt = self.evaluation_template.generate_reason(
+        prompt = self._get_prompt(
+            "generate_reason",
             incorrect_tool_calls_reasons=incorrect_tool_calls_reasons,
             input=input,
             score=format(self.score, ".2f"),
@@ -218,8 +213,11 @@ class ArgumentCorrectnessMetric(BaseMetric):
     async def _a_generate_verdicts(
         self, input: str, tools_called: List[ToolCall], multimodal: bool
     ) -> List[ArgumentCorrectnessVerdict]:
-        prompt = self.evaluation_template.generate_verdicts(
-            input=input, tools_called=tools_called, multimodal=multimodal
+        prompt = self._get_prompt(
+            "generate_verdicts",
+            input=input,
+            tools_called=tools_called,
+            multimodal=multimodal,
         )
 
         return await a_generate_with_schema_and_extract(
@@ -235,8 +233,11 @@ class ArgumentCorrectnessMetric(BaseMetric):
     def _generate_verdicts(
         self, input: str, tools_called: List[ToolCall], multimodal: bool
     ) -> List[ArgumentCorrectnessVerdict]:
-        prompt = self.evaluation_template.generate_verdicts(
-            input=input, tools_called=tools_called, multimodal=multimodal
+        prompt = self._get_prompt(
+            "generate_verdicts",
+            input=input,
+            tools_called=tools_called,
+            multimodal=multimodal,
         )
 
         return generate_with_schema_and_extract(

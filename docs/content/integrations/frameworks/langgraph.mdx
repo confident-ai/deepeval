@@ -389,6 +389,53 @@ def respond_to_user(prompt: str):
     )
 ```
 
+## Tracing a LangGraph server deployment
+
+When you deploy with the [LangGraph server](https://langchain-ai.github.io/langgraph/cloud/) (`langgraph dev` or LangGraph Platform), the **server** invokes your graph. So instead you can attach the handler to the compiled graph with `.with_config(...)` and export that. The callback then applies to every run the server executes.
+
+```python title="langgraph_agent.py" showLineNumbers
+from langgraph.graph import StateGraph, MessagesState, START, END
+from langgraph.prebuilt import ToolNode, tools_condition
+from deepeval.integrations.langchain import CallbackHandler
+...
+
+graph = (
+    StateGraph(MessagesState)
+    .add_node(chatbot)
+    .add_node("tools", ToolNode([get_weather]))
+    .add_edge(START, "chatbot")
+    .add_conditional_edges("chatbot", tools_condition)
+    .add_edge("tools", "chatbot")
+    .compile()
+    .with_config(callbacks=[CallbackHandler()])  # baked into every server run
+)
+```
+
+Point `langgraph.json` at the exported `graph`:
+
+```json title="langgraph.json"
+{
+  "dependencies": ["."],
+  "graphs": { "agent": "./langgraph_agent.py:graph" },
+  "env": ".env"
+}
+```
+
+Then start the server — every request it runs against the graph is traced:
+
+```bash
+pip install -U "langgraph-cli[inmem]"
+langgraph dev
+```
+
+:::note[Modern agent builder]
+If you build agents with `create_agent` (`from langchain.agents import create_agent`, which replaces the deprecated `langgraph.prebuilt.create_react_agent`), the same applies — call `.with_config(callbacks=[CallbackHandler()])` on the returned graph before exporting it.
+:::
+
+:::caution[Baked-in trace attributes are per-handler, not per-request]
+Attributes set on a baked-in `CallbackHandler(...)` — `thread_id`, `user_id`, etc. — are the same for every request the server serves, because the handler is constructed once. For per-request values, attach the callback per call instead of baking it into the graph.
+:::
+
 ## API reference
 
 `CallbackHandler(...)` accepts the following trace-level kwargs. Each one is a default for runs that use that callback.
@@ -442,6 +489,18 @@ For native tracing helpers (`@observe`, `with trace(...)`, `update_current_trace
           <a href="https://www.confident-ai.com">Confident AI</a> visualizes the
           full graph trace — every node, model call, and tool call as nested
           spans — with their scores in a shared cloud UI. It's optional.
+        </>
+      ),
+    },
+    {
+      question: "How do I trace a LangGraph server deployment (langgraph.json)?",
+      answer: (
+        <>
+          The server invokes your graph, so there's no <code>invoke</code> call
+          of your own to pass the callback to. Attach it to the compiled graph
+          with <code>.with_config(callbacks=[CallbackHandler()])</code> and point{" "}
+          <code>langgraph.json</code> at that exported graph — every server run
+          is then traced.
         </>
       ),
     },

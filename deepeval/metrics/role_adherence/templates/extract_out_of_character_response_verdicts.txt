@@ -1,0 +1,60 @@
+Based on the given list of message exchanges between a user and an LLM chatbot, generate a JSON object to specify which `ai_message` did not adhere to the specified chatbot role. 
+
+{{ _fragments.multimodal_input_rules }}
+
+The JSON will have 1 field: "verdicts", which is a list of verdicts specifying the indices and reasons of the LLM ai_message/responses that did NOT adhere to the chatbot role.
+You MUST USE look at all messages provided in the list of messages to make an informed judgement on role adherence.
+
+**
+IMPORTANT: Please make sure to only return in JSON format.
+Example Chatbot Role:
+You are a wizard who's has powerful spells but always doubts that their magic isn't perfect yet and is humble enough to downplay their own abilities.
+
+Example Messages:
+[
+  {
+    "role": "user",
+    "content": "Hey there!",
+  },
+  {
+    "role": "assistant",
+    "content": "Ah, greetings, traveler! You’ve come to see my magic, haven't you? Though, I must warn you, it’s not all that great..."
+  },
+  {
+    "role": "user",
+    "content": "Come on, show me what you've got!",
+  },
+  {
+    "role": "assistant",
+    "content": "Alright, alright... *waves wand*... see that little spark? It’s... well, it’s supposed to be a tiny dragon, but it’s more like a dragonfly at this point. I'm still working on it."
+  },
+  {
+    "role": "user",
+    "content": "No, really, can you do something else?",
+  },
+  {
+    "role": "assistant",
+    "content": "Ha! Watch this! I’m the greatest wizard ever! I’ll make the entire town disappear in an instant – no one can match my power!"
+  }
+]
+
+Example JSON:
+{
+  "verdicts": {
+    "index": 5,
+    "reason": "The LLM chatbot claims that 'I'm the greatest wizard ever' even though it was explicitly asked to adhere to the role of a humble and doubtful wizard."
+  }
+}
+===== END OF EXAMPLE ======
+
+In this example, the 5th indexed was selected as it drastically deviates from the character's humble nature and shows extreme arrogance and overconfidence instead.
+You DON'T have to provide anything else other than the JSON of "verdicts".
+**
+
+Chatbot Role:
+{{ role }}
+
+Messages:
+{{ turns }}
+
+JSON:

@@ -19,6 +19,20 @@ import {
 } from "./api";
 import { ConversationalGolden, Golden } from "./golden";
 import { ConversationalTestCase, LLMTestCase } from "../test-case";
+import type { MultiBar, SingleBar } from "cli-progress";
+import { traceManager, Trace, BaseSpan } from "../tracing/tracing";
+import { evaluateTrace, countTraceMetrics } from "../evaluate/trace-eval";
+import { buildTestResult } from "../evaluate/evaluate";
+import { postTestRun } from "../evaluate/confident";
+import {
+  printResultsTable,
+  printCompletionSummary,
+  printHyperparametersWarning,
+  newProgressMultiBar,
+} from "../evaluate/console-report";
+import type { TestResult, EvaluatedCase } from "../evaluate/types";
+import type { ErrorConfig, DisplayConfig } from "../evaluate/configs";
+import type { BaseMetric } from "../metrics/base-metrics";
 
 export type GoldenUnion = Golden | ConversationalGolden;
 export type GoldenUnionArray = Golden[] | ConversationalGolden[];
@@ -36,6 +50,7 @@ export class EvaluationDataset {
 
   private _llmTestCases: LLMTestCase[] = [];
   private _conversationalTestCases: ConversationalTestCase[] = [];
+  private _evalResults: TestResult[] = [];
 
   constructor(params: { goldens?: GoldenUnionArray } = {}) {
     this._alias = null;
@@ -497,5 +512,151 @@ export class EvaluationDataset {
           ),
         }),
     );
+  }
+
+  get evalResults(): TestResult[] {
+    return this._evalResults;
+  }
+
+  /**
+   * Traced/agentic evaluation loop (TS port of Python's `evals_iterator`). Yields
+   * each golden; you run your `observe`-wrapped agent in the loop body, and the
+   * trace it produces is evaluated with `metrics` (trace-level) plus any metrics
+   * attached to spans via `observe`/`updateCurrentSpan`. Results are printed at
+   * the end and available via `dataset.evalResults`.
+   *
+   * @example
+   * for await (const golden of dataset.evalsIterator({ metrics: [taskCompletion] })) {
+   *   await myAgent(golden.input);
+   * }
+   */
+  async *evalsIterator(
+    options: {
+      metrics?: BaseMetric[];
+      errorConfig?: ErrorConfig;
+      displayConfig?: DisplayConfig;
+    } = {},
+  ): AsyncGenerator<GoldenUnion> {
+    const goldens = this.goldens;
+    const metrics = options.metrics ?? [];
+    const showIndicator = options.displayConfig?.showIndicator ?? true;
+
+    let multibar: MultiBar | null = null;
+    let mainBar: SingleBar | null = null;
+    let callbackBar: SingleBar | null = null;
+    if (showIndicator && goldens.length > 0) {
+      multibar = newProgressMultiBar();
+      mainBar = multibar.create(goldens.length, 0, {
+        label: "Running Component-Level Evals",
+      });
+      callbackBar = multibar.create(goldens.length, 0, {
+        label: `\t⚡ Calling LLM app (with ${goldens.length} goldens)`,
+      });
+    }
+
+    // Suppress per-metric spinners (the bars are the progress UI).
+    const suppressSpinners = (spans: BaseSpan[]) => {
+      for (const s of spans) {
+        (s.metrics ?? []).forEach((m) => (m.showIndicator = false));
+        suppressSpinners(s.children ?? []);
+      }
+    };
+
+    const captured: Trace[] = [];
+    traceManager.setTraceCaptureSink((t) => captured.push(t));
+    const allCases: EvaluatedCase[] = [];
+    const startTime = Date.now();
+    let count = 0;
+    try {
+      for (const golden of goldens) {
+        const start = captured.length;
+        yield golden;
+        // Resumed: the agent ran in the loop body — evaluate the traces it produced.
+        callbackBar?.increment();
+        count += 1;
+        const newTraces = captured.slice(start);
+        for (const trace of newTraces) {
+          if (metrics.length > 0) {
+            metrics.forEach((m) => (m.showIndicator = false));
+            trace.metrics = [...(trace.metrics ?? []), ...metrics];
+          }
+          suppressSpinners(trace.rootSpans);
+        }
+        const total = newTraces.reduce((s, t) => s + countTraceMetrics(t), 0);
+        const evalBar = multibar?.create(Math.max(total, 1), 0, {
+          label: `     🎯 Evaluating component(s) (#${count})`,
+        });
+        for (const trace of newTraces) {
+          // Run all metrics (span + trace); attaches metricsData to each scope.
+          await evaluateTrace(trace, {
+            errorConfig: options.errorConfig,
+            onMetric: () => evalBar?.increment(),
+          });
+          // One golden-based test case per trace, with the trace embedded — so
+          // the platform shows the I/O and links to the trace (mirrors Python).
+          const g = golden as Golden;
+          const rootOutput = trace.output ?? trace.rootSpans?.[0]?.output;
+          const testCase = new LLMTestCase({
+            input: g.input,
+            actualOutput:
+              rootOutput != null
+                ? String(rootOutput)
+                : (g.actualOutput ?? "None"),
+            expectedOutput: trace.expectedOutput,
+            context: trace.context,
+            retrievalContext: trace.retrievalContext,
+            toolsCalled: trace.toolsCalled,
+            expectedTools: trace.expectedTools,
+          });
+          const { confidentApiKey: _omit, ...traceApi } =
+            traceManager.createTraceApi(trace);
+          allCases.push({
+            testCase,
+            metricsData: trace.metricsData ?? [],
+            runDuration: 0,
+            trace: traceApi,
+          });
+        }
+        evalBar?.update(Math.max(total, 1));
+        mainBar?.increment();
+      }
+    } finally {
+      traceManager.setTraceCaptureSink(undefined);
+      multibar?.stop();
+    }
+    const runDuration = (Date.now() - startTime) / 1000;
+    const results: TestResult[] = allCases.map((c, i) =>
+      buildTestResult(i, c.testCase, c.metricsData),
+    );
+    this._evalResults = results;
+
+    const printResults = options.displayConfig?.printResults ?? true;
+    if (printResults && results.length > 0) {
+      printResultsTable(results, {
+        truncatePassing: options.displayConfig?.truncatePassingCases ?? true,
+      });
+      printHyperparametersWarning();
+    }
+
+    // Post a TestRun to Confident AI (mirrors Python's evals_iterator); silent so
+    // we control the wrap-up message below.
+    const { link } = await postTestRun(allCases, runDuration, false, true);
+
+    if (printResults && results.length > 0) {
+      if (link) {
+        console.log(`\n✓ Done 🎉! View results on ${link}`);
+      } else {
+        const tokenCost = results
+          .flatMap((r) => r.metricsData ?? [])
+          .reduce((s, m) => s + (m.evaluationCost ?? 0), 0);
+        const passed = results.filter((r) => r.success).length;
+        printCompletionSummary({
+          runDuration,
+          tokenCost,
+          passed,
+          failed: results.length - passed,
+        });
+      }
+    }
   }
 }

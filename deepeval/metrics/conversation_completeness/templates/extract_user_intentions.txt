@@ -1,0 +1,45 @@
+Based on the given list of message exchanges between a user and an LLM, generate a JSON object to extract all user intentions in the conversation. The JSON will have 1 field: 'intentions'.
+You should ONLY consider the overall intention, and not dwell too much on the specifics, as we are more concerned about the overall objective of the conversation.
+
+{% if multimodal %}{{ _fragments.multimodal_input_rules }}{% endif %}
+
+**
+IMPORTANT: Please make sure to only return in JSON format.
+Example Turns:
+[
+  {
+    "role": "user",
+    "content": "Hi!"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How may I help you?"
+  },
+  {
+    "role": "user",
+    "content": "Nothing, I'm just playing with you."
+  },
+  {
+    "role": "assistant",
+    "content": "Oh ok, in that case should you need anything just let me know!"
+  },
+  {
+    "role": "user",
+    "content": "Actually, I have something I want to tell you"
+  }
+]
+
+Example JSON:
+{
+  "intentions": ["User wants to tell the assistant something"]
+}
+===== END OF EXAMPLE ======
+
+The 'intentions' key must be a list of strings.
+If there are multiple individual tasks at each turn, please give the intentions separately, DON'T summarize the intentions into a single one
+**
+
+Turns:
+{{ turns }}
+
+JSON:
