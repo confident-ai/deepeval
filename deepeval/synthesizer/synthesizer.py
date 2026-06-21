@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Tuple, Dict, Literal
+from typing import List, Optional, Union, Tuple, Dict, Literal, Type
 from rich.progress import (
     Progress,
 )
@@ -425,6 +425,7 @@ class Synthesizer:
         include_expected_output: bool = True,
         max_goldens_per_context: int = 2,
         context_construction_config: Optional[ContextConstructionConfig] = None,
+        expected_output_schema: Optional[Type[BaseModel]] = None,
         _send_data=True,
     ) -> List[Golden]:
         self.synthetic_goldens = []
@@ -524,6 +525,7 @@ class Synthesizer:
                         for item in contexts_with_sources
                     ],
                     target_files_per_context=context_construction_config.target_files_per_context,
+                    expected_output_schema=expected_output_schema,
                     _context_scores=[
                         item.score if item.score is not None else 0.0
                         for item in contexts_with_sources
@@ -556,6 +558,7 @@ class Synthesizer:
         max_goldens_per_context: int = 2,
         context_construction_config: Optional[ContextConstructionConfig] = None,
         _reset_cost=True,
+        expected_output_schema: Optional[Type[BaseModel]] = None,
     ):
         if context_construction_config is None:
             context_construction_config = ContextConstructionConfig(
@@ -643,6 +646,7 @@ class Synthesizer:
                     for item in contexts_with_sources
                 ],
                 target_files_per_context=context_construction_config.target_files_per_context,
+                expected_output_schema=expected_output_schema,
                 _context_scores=[
                     item.score if item.score is not None else 0.0
                     for item in contexts_with_sources
@@ -677,6 +681,7 @@ class Synthesizer:
         source_files: Optional[List[Union[str, List[str]]]] = None,
         context_chunk_source_files: Optional[List[List[str]]] = None,
         target_files_per_context: Optional[int] = None,
+        expected_output_schema: Optional[Type[BaseModel]] = None,
         _context_scores: Optional[List[float]] = None,
         _progress: Optional[Progress] = None,
         _pbar_id: Optional[int] = None,
@@ -699,6 +704,7 @@ class Synthesizer:
                         source_files=source_files,
                         context_chunk_source_files=context_chunk_source_files,
                         target_files_per_context=target_files_per_context,
+                        expected_output_schema=expected_output_schema,
                     )
                 )
             )
@@ -871,7 +877,12 @@ class Synthesizer:
                                 context="\n".join(golden.context),
                                 expected_output_format=self.styling_config.expected_output_format,
                             )
-                            res = self._generate(prompt)
+                            if expected_output_schema is not None:
+                                res = self._generate_schema(
+                                    prompt, expected_output_schema, self.model
+                                ).model_dump_json()
+                            else:
+                                res = self._generate(prompt)
                             golden.expected_output = res
                             update_pbar(
                                 progress,
@@ -910,6 +921,7 @@ class Synthesizer:
         source_files: Optional[List[Union[str, List[str]]]] = None,
         context_chunk_source_files: Optional[List[List[str]]] = None,
         target_files_per_context: Optional[int] = None,
+        expected_output_schema: Optional[Type[BaseModel]] = None,
         _context_scores: Optional[List[float]] = None,
         _progress: Optional[Progress] = None,
         _pbar_id: Optional[int] = None,
@@ -948,6 +960,7 @@ class Synthesizer:
                     source_files=source_files,
                     context_chunk_source_files=context_chunk_source_files,
                     target_files_per_context=target_files_per_context,
+                    expected_output_schema=expected_output_schema,
                     context_index=index,
                     progress=progress,
                     pbar_id=pbar_id,
@@ -973,6 +986,7 @@ class Synthesizer:
         context_chunk_source_files: Optional[List[List[str]]],
         target_files_per_context: Optional[int],
         context_index: int,
+        expected_output_schema: Optional[Type[BaseModel]] = None,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
         context_scores: Optional[List[float]] = None,
@@ -1103,7 +1117,17 @@ class Synthesizer:
                     context="\n".join(context),
                     expected_output_format=self.styling_config.expected_output_format,
                 )
-                expected_output = await self._a_generate(expected_output_prompt)
+                if expected_output_schema is not None:
+                    structured = await self._a_generate_schema(
+                        expected_output_prompt,
+                        expected_output_schema,
+                        self.model,
+                    )
+                    expected_output = structured.model_dump_json()
+                else:
+                    expected_output = await self._a_generate(
+                        expected_output_prompt
+                    )
                 update_pbar(
                     progress, pbar_evolve_input_ids[input_index], remove=False
                 )
