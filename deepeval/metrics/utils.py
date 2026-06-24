@@ -472,6 +472,27 @@ def accrue_token_usage(
         metric._accrue_tokens(cost.input_tokens, cost.output_tokens)
 
 
+def verdict_from_json(
+    data: Dict,
+    verdict_cls: Type[SchemaType],
+    allowed: Tuple[str, ...] = ("yes", "no"),
+) -> Optional[SchemaType]:
+    """Build a yes/no-style verdict object from a judge's JSON output.
+
+    Judges don't always honor a strict yes/no instruction — a non-native model
+    may reply "No, it's off-topic". This normalizes the verbose reply to its
+    leading word and drops anything outside ``allowed`` to ``None`` (so the
+    caller can exclude it from scoring) rather than crashing a ``Literal`` schema
+    or silently miscounting it. ``verdict_cls`` is expected to have ``verdict``
+    and ``reason`` fields and to permit every value in ``allowed``.
+    """
+    match = re.match(r"[a-z]+", str(data.get("verdict", "")).strip().lower())
+    leading = match.group(0) if match else ""
+    if leading not in allowed:
+        return None
+    return verdict_cls(verdict=leading, reason=data.get("reason"))
+
+
 def generate_with_schema_and_extract(
     metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
     prompt: Any,
