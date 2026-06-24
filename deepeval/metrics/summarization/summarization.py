@@ -95,6 +95,30 @@ class SummarizationMetric(BaseMetric):
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
+            if test_case.input == test_case.actual_output:
+                self.truths = []
+                self.claims = []
+                self.coverage_verdicts = []
+                self.alignment_verdicts = []
+                self.score_breakdown = {
+                    ScoreType.ALIGNMENT.value: 1.0,
+                    ScoreType.COVERAGE.value: 1.0,
+                }
+                self.score = 1.0
+                self.reason = (
+                    "The score is 1.00 because the summary is"
+                    " identical to the original text."
+                )
+                self.success = self.score >= self.threshold
+                self.verbose_logs = construct_verbose_logs(
+                    self,
+                    steps=[
+                        "Input and actual output are identical."
+                        " Short-circuiting to score 1.0.",
+                    ],
+                )
+                return self.score
+
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
@@ -165,6 +189,30 @@ class SummarizationMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if test_case.input == test_case.actual_output:
+                self.truths = []
+                self.claims = []
+                self.coverage_verdicts = []
+                self.alignment_verdicts = []
+                self.score_breakdown = {
+                    ScoreType.ALIGNMENT.value: 1.0,
+                    ScoreType.COVERAGE.value: 1.0,
+                }
+                self.score = 1.0
+                self.reason = (
+                    "The score is 1.00 because the summary is"
+                    " identical to the original text."
+                )
+                self.success = self.score >= self.threshold
+                self.verbose_logs = construct_verbose_logs(
+                    self,
+                    steps=[
+                        "Input and actual output are identical."
+                        " Short-circuiting to score 1.0.",
+                    ],
+                )
+                return self.score
+
             self.truths, self.claims = await asyncio.gather(
                 self._a_generate_truths(test_case.input),
                 self._a_generate_claims(test_case.actual_output),
