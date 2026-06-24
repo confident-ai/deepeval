@@ -7,6 +7,7 @@ function printHelp(): void {
 
 Commands:
   gate          Check your project against its governance policy and exit with a non-zero code if it doesn't pass.
+  test run      Run test files with Jest/Vitest and post results to Confident AI.
 
 Options:
   -q, --quiet   Suppress output. The exit code still reflects the verdict.
@@ -46,9 +47,33 @@ async function runGate(quiet: boolean): Promise<void> {
   }
 }
 
+async function runTestRun(args: string[]): Promise<void> {
+  let jestArgs = args.filter((a) => a !== "run");
+  const quiet = jestArgs.includes("-q") || jestArgs.includes("--quiet");
+
+  if (!quiet) {
+    console.log("🚀 Running DeepEval test suite...");
+  }
+
+  // Try Jest first, fall back to Vitest
+  const jestPath = require.resolve("jest-cli/bin/jest", { paths: [process.cwd()] });
+  const { run: jestRun } = await import(jestPath);
+
+  try {
+    const success = await jestRun(jestArgs);
+    process.exit(success ? 0 : 1);
+  } catch (err) {
+    if (!quiet) {
+      console.error("Failed to run tests:", (err as Error).message);
+    }
+    process.exit(1);
+  }
+}
+
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const command = args[0];
+  const subcommand = args[1];
   const quiet = args.includes("-q") || args.includes("--quiet");
 
   if (command === "-h" || command === "--help") {
@@ -64,6 +89,15 @@ async function main(): Promise<void> {
   switch (command) {
     case "gate":
       await runGate(quiet);
+      return;
+    case "test":
+      if (subcommand === "run") {
+        await runTestRun(args.slice(1));
+        return;
+      }
+      console.error(`Unknown subcommand: test ${subcommand}\n`);
+      printHelp();
+      process.exit(1);
       return;
     default:
       console.error(`Unknown command: ${command}\n`);

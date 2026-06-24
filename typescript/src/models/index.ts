@@ -41,3 +41,16 @@ export {
   PortkeyModel,
   type PortkeyModelOptions,
 } from "./gateways/portkey-model";
+
+// Embedding models
+export {
+  DeepEvalBaseEmbeddingModel,
+  type EmbeddingResult,
+} from "./embedding-models/base-embedding-model";
+export {
+  OpenAIEmbeddingModel,
+  type OpenAIEmbeddingModelOptions,
+} from "./embedding-models/openai-embedding-model";
+
+// Factory
+export { ModelFactory, type ModelProvider, type ModelFactoryOptions } from "./factory";
