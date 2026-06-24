@@ -1,12 +1,18 @@
 import os
 import portalocker
+import pytest
 
 import deepeval.test_run.test_run as tr_mod
 
 from types import SimpleNamespace
 
 from deepeval.test_case import LLMTestCase
-from deepeval.test_run.test_run import TestRunManager, LLMApiTestCase
+from deepeval.test_run.test_run import (
+    LLMApiTestCase,
+    PromptData,
+    TestRun,
+    TestRunManager,
+)
 from tests.test_core.helpers import _make_fake_portalocker
 from tests.test_core.stubs import RecordingPortalockerLock
 
@@ -150,3 +156,103 @@ def test_save_test_run_with_save_under_key_flushes_and_syncs(
         fsync_calls
     ), "save_test_run(..., save_under_key=...) should call os.fsync(file.fileno())"
     assert fsync_calls[-1] == f.fileno()
+
+
+def _make_api_test_cases(count: int):
+    return [
+        LLMApiTestCase(
+            name=f"tc{i}",
+            input=f"in-{i}",
+            actual_output=f"out-{i}",
+            order=i,
+        )
+        for i in range(count)
+    ]
+
+
+def test_post_test_run_restores_full_test_case_list_after_batched_upload(
+    monkeypatch,
+):
+    trm = TestRunManager()
+    test_cases = _make_api_test_cases(45)
+    prompts = [PromptData(alias="prompt-1")]
+    test_run = TestRun(testCases=test_cases, prompts=prompts)
+    original_test_cases = test_run.test_cases
+    original_prompts = test_run.prompts
+    sent_batches = []
+
+    class FakeApi:
+        def send_request(self, method, endpoint, body):
+            sent_batches.append(
+                (
+                    method,
+                    len(body["testCases"]),
+                    len(body["conversationalTestCases"]),
+                )
+            )
+            if method == tr_mod.HttpMethods.POST:
+                return {"id": "run-id"}, "https://confident.example/run-id"
+            return {"ok": True}, None
+
+    monkeypatch.setattr(tr_mod, "Api", FakeApi)
+    monkeypatch.setattr(tr_mod, "open_browser", lambda link: None)
+    monkeypatch.setattr(tr_mod.console, "print", lambda *args, **kwargs: None)
+    monkeypatch.setattr(trm, "save_final_test_run_link", lambda link: None)
+
+    result = trm.post_test_run(test_run)
+
+    assert result == ("https://confident.example/run-id", "run-id")
+    assert test_run.test_cases is original_test_cases
+    assert len(test_run.test_cases) == 45
+    assert test_run.test_cases[0].name == "tc0"
+    assert test_run.test_cases[-1].name == "tc44"
+    assert test_run.prompts is original_prompts
+    assert sent_batches == [
+        (tr_mod.HttpMethods.POST, 40, 0),
+        (tr_mod.HttpMethods.PUT, 5, 0),
+    ]
+
+
+def test_post_test_run_restores_full_test_case_list_when_batch_upload_fails(
+    monkeypatch,
+):
+    trm = TestRunManager()
+    test_cases = _make_api_test_cases(45)
+    prompts = [PromptData(alias="prompt-1")]
+    test_run = TestRun(testCases=test_cases, prompts=prompts)
+    original_test_cases = test_run.test_cases
+    original_prompts = test_run.prompts
+    sent_batches = []
+
+    class FakeApi:
+        def send_request(self, method, endpoint, body):
+            sent_batches.append(
+                (
+                    method,
+                    len(body["testCases"]),
+                    len(body["conversationalTestCases"]),
+                )
+            )
+            if method == tr_mod.HttpMethods.POST:
+                return {"id": "run-id"}, "https://confident.example/run-id"
+            raise RuntimeError("upload failed")
+
+    monkeypatch.setattr(tr_mod, "Api", FakeApi)
+    monkeypatch.setattr(tr_mod, "open_browser", lambda link: None)
+    monkeypatch.setattr(tr_mod.console, "print", lambda *args, **kwargs: None)
+    monkeypatch.setattr(trm, "save_final_test_run_link", lambda link: None)
+
+    with pytest.raises(
+        Exception, match="Unexpected error when sending some test cases"
+    ):
+        trm.post_test_run(test_run)
+
+    assert test_run.test_cases is original_test_cases
+    assert len(test_run.test_cases) == 45
+    assert test_run.test_cases[0].name == "tc0"
+    assert test_run.test_cases[-1].name == "tc44"
+    assert test_run.prompts is original_prompts
+    assert sent_batches == [
+        (tr_mod.HttpMethods.POST, 40, 0),
+        (tr_mod.HttpMethods.PUT, 5, 0),
+    ]
