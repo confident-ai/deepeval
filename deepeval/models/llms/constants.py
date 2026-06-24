@@ -1091,6 +1091,22 @@ DEEPSEEK_MODELS_DATA = ModelDataRegistry(
             input_price=1.00 / 1e6,
             output_price=2.00 / 1e6,
         ),
+        "deepseek-v4-flash": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=None,
+            output_price=None,
+        ),
+        "deepseek-v4-pro": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=None,
+            output_price=None,
+        ),
     }
 )
 
