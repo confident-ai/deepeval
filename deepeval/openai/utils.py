@@ -137,6 +137,15 @@ def render_messages(
                         name = ""
                         arguments = ""
 
+                    # Parse arguments JSON safely
+                    parsed_arguments = {}
+                    if arguments:
+                        try:
+                            parsed_arguments = json.loads(arguments)
+                        except (json.JSONDecodeError, TypeError):
+                            # If parsing fails, use the raw string or empty dict
+                            parsed_arguments = arguments if isinstance(arguments, dict) else {}
+                    
                     messages_list.append(
                         {
                             "id": tool_call.get("id", ""),
@@ -145,7 +154,7 @@ def render_messages(
                             ),  # OpenAI uses 'id', not 'call_id'
                             "name": name,
                             "type": tool_type,
-                            "arguments": json.loads(arguments),
+                            "arguments": parsed_arguments,
                         }
                     )
 
