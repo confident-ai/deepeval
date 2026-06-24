@@ -75,7 +75,9 @@ def propagate_skip(node: Optional["BaseNode"]) -> None:
     if node._indegree != 0:
         return
 
-    if isinstance(node, (TaskNode, BinaryJudgementNode, NonBinaryJudgementNode)):
+    if isinstance(
+        node, (TaskNode, BinaryJudgementNode, NonBinaryJudgementNode)
+    ):
         for child in node.children:
             propagate_skip(child)
     elif isinstance(node, VerdictNode):

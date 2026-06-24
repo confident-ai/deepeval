@@ -356,12 +356,16 @@ class TestDAGMetricReuse:
             children=[outer_judge],
         )
         dag = DeepAcyclicGraph(root_nodes=[task])
-        metric = DAGMetric(name="test", dag=dag, async_mode=False, _include_dag_suffix=False)
+        metric = DAGMetric(
+            name="test", dag=dag, async_mode=False, _include_dag_suffix=False
+        )
 
         outer_iter = iter(outer_verdicts)
         inner_iter = iter(inner_verdicts)
 
-        def fake_extract(metric, prompt, schema_cls, extract_schema, extract_json):
+        def fake_extract(
+            metric, prompt, schema_cls, extract_schema, extract_json
+        ):
             if schema_cls is BinaryJudgementVerdict:
                 # The two judges share the same schema; distinguish by which
                 # iter still has elements (outer is consumed first per turn).
@@ -373,6 +377,7 @@ class TestDAGMetricReuse:
                     verdict=next(inner_iter), reason="mocked"
                 )
             from deepeval.metrics.dag.schema import TaskNodeOutput
+
             return TaskNodeOutput(output="mocked task output")
 
         patcher = patch(
@@ -384,6 +389,7 @@ class TestDAGMetricReuse:
     def test_score_resets_across_measure_calls(self):
         """Consecutive measurements with different verdicts produce different scores."""
         from deepeval.test_case import LLMTestCase
+
         metric, patcher = self._build_metric_with_mocked_judge(
             outer_verdicts=[True, False],
             inner_verdicts=[True],
@@ -444,6 +450,7 @@ class TestDAGMetricReuse:
 
     def test_verbose_steps_does_not_accumulate(self):
         from deepeval.test_case import LLMTestCase
+
         metric, patcher = self._build_metric_with_mocked_judge(
             outer_verdicts=[True, True, True],
             inner_verdicts=[True, False, True],
