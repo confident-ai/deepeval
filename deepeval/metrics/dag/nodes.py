@@ -54,6 +54,35 @@ def decrement_indegree(node: BaseNode):
     node._indegree -= 1
 
 
+def propagate_skip(node: Optional["BaseNode"]) -> None:
+    """Decrement ``_indegree`` on a node and cascade through its construction-
+    time descendants when the counter reaches zero.
+
+    JudgementNodes call this on each non-selected ``VerdictNode`` sibling so
+    that any indegree the dead branch contributed during construction flows
+    back out. Without it, a downstream node reachable from both a dead and a
+    live verdict branch stays gated on the dead branch's contribution and
+    never fires.
+
+    The ``_indegree == 0`` check is what keeps diamond shapes correct: a node
+    with N dead incoming edges receives N calls, and only the last one
+    cascades into its own ``__post_init__`` contributions — so each
+    downstream node is decremented exactly N times to match.
+    """
+    if not isinstance(node, BaseNode):
+        return
+    decrement_indegree(node)
+    if node._indegree != 0:
+        return
+
+    if isinstance(node, (TaskNode, BinaryJudgementNode, NonBinaryJudgementNode)):
+        for child in node.children:
+            propagate_skip(child)
+    elif isinstance(node, VerdictNode):
+        if isinstance(node.child, BaseNode):
+            propagate_skip(node.child)
+
+
 @dataclass
 class VerdictNode(BaseNode):
     verdict: Union[str, bool]
@@ -472,10 +501,18 @@ class BinaryJudgementNode(BaseNode):
         metric._verbose_steps.append(
             construct_node_verbose_log(self, self._depth)
         )
-        for children in self.children:
-            children._execute(
-                metric=metric, test_case=test_case, depth=self._depth + 1
-            )
+        # Release the dead branch's pre-incremented indegree before the live
+        # branch reaches any shared downstream node.
+        for child in self.children:
+            if child.verdict != self._verdict.verdict:
+                propagate_skip(child)
+        for child in self.children:
+            if child.verdict == self._verdict.verdict:
+                child._execute(
+                    metric=metric,
+                    test_case=test_case,
+                    depth=self._depth + 1,
+                )
 
     async def _a_execute(
         self, metric: BaseMetric, test_case: LLMTestCase, depth: int
@@ -515,12 +552,18 @@ class BinaryJudgementNode(BaseNode):
         metric._verbose_steps.append(
             construct_node_verbose_log(self, self._depth)
         )
+        for child in self.children:
+            if child.verdict != self._verdict.verdict:
+                propagate_skip(child)
         await asyncio.gather(
             *(
                 child._a_execute(
-                    metric=metric, test_case=test_case, depth=self._depth + 1
+                    metric=metric,
+                    test_case=test_case,
+                    depth=self._depth + 1,
                 )
                 for child in self.children
+                if child.verdict == self._verdict.verdict
             )
         )
 
@@ -620,10 +663,18 @@ class NonBinaryJudgementNode(BaseNode):
         metric._verbose_steps.append(
             construct_node_verbose_log(self, self._depth)
         )
-        for children in self.children:
-            children._execute(
-                metric=metric, test_case=test_case, depth=self._depth + 1
-            )
+        # Release the dead branches' pre-incremented indegree before the live
+        # branch reaches any shared downstream node.
+        for child in self.children:
+            if child.verdict != self._verdict.verdict:
+                propagate_skip(child)
+        for child in self.children:
+            if child.verdict == self._verdict.verdict:
+                child._execute(
+                    metric=metric,
+                    test_case=test_case,
+                    depth=self._depth + 1,
+                )
 
     async def _a_execute(
         self, metric: BaseMetric, test_case: LLMTestCase, depth: int
@@ -665,12 +716,18 @@ class NonBinaryJudgementNode(BaseNode):
         metric._verbose_steps.append(
             construct_node_verbose_log(self, self._depth)
         )
+        for child in self.children:
+            if child.verdict != self._verdict.verdict:
+                propagate_skip(child)
         await asyncio.gather(
             *(
                 child._a_execute(
-                    metric=metric, test_case=test_case, depth=self._depth + 1
+                    metric=metric,
+                    test_case=test_case,
+                    depth=self._depth + 1,
                 )
                 for child in self.children
+                if child.verdict == self._verdict.verdict
             )
         )
 
