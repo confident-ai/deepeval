@@ -9,6 +9,7 @@ from deepeval.benchmarks.base_benchmark import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.squad.task import SQuADTask
 from deepeval.benchmarks.squad.template import SQuADTemplate
+from deepeval.benchmarks.utils import should_use_batch
 from deepeval.benchmarks.schema import StringSchema
 from deepeval.telemetry import capture_benchmark_run
 from deepeval.metrics.utils import initialize_model
@@ -49,7 +50,11 @@ class SQuAD(DeepEvalBaseBenchmark):
             self.confinement_instructions = confinement_instructions
 
     def evaluate(
-        self, model: DeepEvalBaseLLM, *args, **kwargs
+        self,
+        model: DeepEvalBaseLLM,
+        *args,
+        batch_size: Union[int, None] = None,
+        **kwargs,
     ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
@@ -58,6 +63,7 @@ class SQuAD(DeepEvalBaseBenchmark):
             overall_total_predictions = 0
             predictions_row = []
             scores_row = []
+            use_batch = should_use_batch(model, batch_size)
 
             for task in self.tasks:
                 goldens = self.load_benchmark_dataset(task)
@@ -70,31 +76,59 @@ class SQuAD(DeepEvalBaseBenchmark):
                 task_total_predictions = len(goldens)
                 overall_total_predictions += len(goldens)
 
-                for idx, golden in enumerate(
-                    tqdm(goldens, desc=f"Processing {task.value}")
-                ):
-                    prediction, score = self.predict(model, golden).values()
-                    if score:
-                        task_correct_predictions += 1
-                        overall_correct_predictions += 1
-                    predictions_row.append(
-                        (
-                            task.value,
-                            golden.input,
-                            prediction,
-                            golden.expected_output,
-                            score,
+                # Calculate task accuracy
+                if use_batch:
+                    for i in tqdm(
+                        range(0, len(goldens), batch_size),
+                        desc=f"Batch Processing {task.value} (batch_size={batch_size})",
+                    ):
+                        goldens_batch = goldens[i : i + batch_size]
+                        batch_predictions = self.batch_predict(
+                            model, goldens_batch
                         )
-                    )
-                    if self.verbose_mode:
-                        self.print_verbose_logs(
-                            idx,
-                            task.value,
-                            golden.input,
-                            golden.expected_output,
-                            prediction,
-                            score,
+                        for golden, prediction_dict in zip(
+                            goldens_batch, batch_predictions
+                        ):
+                            prediction = prediction_dict["prediction"]
+                            score = prediction_dict["score"]
+                            if score:
+                                task_correct_predictions += 1
+                                overall_correct_predictions += 1
+                            predictions_row.append(
+                                (
+                                    task.value,
+                                    golden.input,
+                                    prediction,
+                                    golden.expected_output,
+                                    score,
+                                )
+                            )
+                else:
+                    for idx, golden in enumerate(
+                        tqdm(goldens, desc=f"Processing {task.value}")
+                    ):
+                        prediction, score = self.predict(model, golden).values()
+                        if score:
+                            task_correct_predictions += 1
+                            overall_correct_predictions += 1
+                        predictions_row.append(
+                            (
+                                task.value,
+                                golden.input,
+                                prediction,
+                                golden.expected_output,
+                                score,
+                            )
                         )
+                        if self.verbose_mode:
+                            self.print_verbose_logs(
+                                idx,
+                                task.value,
+                                golden.input,
+                                golden.expected_output,
+                                prediction,
+                                score,
+                            )
 
                 task_accuracy = (
                     task_correct_predictions / task_total_predictions
@@ -162,6 +196,57 @@ class SQuAD(DeepEvalBaseBenchmark):
             self.using_native_evaluation_model,
         )
         return {"prediction": prediction, "score": score}
+
+    def batch_predict(
+        self, model: DeepEvalBaseLLM, goldens: List[Golden]
+    ) -> List[Dict]:
+        prompts = []
+        for golden in goldens:
+            prompt: dict = SQuADTemplate.generate_output(
+                input=golden.input,
+                n_shots=self.n_shots,
+            )
+            prompts.append(prompt)
+
+        # Enforced model generation
+        try:
+            responses: List[StringSchema] = model.batch_generate(
+                prompts=prompts,
+                schemas=[StringSchema for _ in prompts],
+            )
+            if not isinstance(responses, list):
+                raise TypeError("batch_generate must return List[StringSchema]")
+            predictions = [res.answer for res in responses]
+        except TypeError:
+            prompts = [
+                prompt + f"\n\n{self.confinement_instructions}"
+                for prompt in prompts
+            ]
+            predictions = model.batch_generate(prompts)
+
+        if len(predictions) is not len(goldens):
+            raise ValueError(
+                "Custom `batch_generate` method did not return the same "
+                "number of generations as the number of prompts."
+            )
+
+        res = []
+        for i in range(len(predictions)):
+            prediction = predictions[i]
+            golden = goldens[i]
+            if isinstance(prediction, tuple):
+                prediction = prediction[0]
+            prediction = str(prediction)
+            score = self.scorer.squad_score(
+                golden.input,
+                prediction,
+                golden.expected_output,
+                self.evaluation_model,
+                self.using_native_evaluation_model,
+            )
+            res.append({"prediction": prediction, "score": score})
+
+        return res
 
     def load_benchmark_dataset(self, task: SQuADTask) -> List[Golden]:
         from datasets import load_dataset
