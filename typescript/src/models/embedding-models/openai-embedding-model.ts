@@ -70,16 +70,19 @@ export class OpenAIEmbeddingModel extends DeepEvalBaseEmbeddingModel {
       request.dimensions = this.dimensions;
     }
     const response = await client.embeddings.create(request);
+    const batchSize = texts.length;
     const results: EmbeddingResult[] = [];
     for (const item of response.data) {
+      const cost = computeCost(
+        response.usage?.prompt_tokens,
+        0,
+        this.costPerInputToken,
+        0,
+      );
+      const perItemCost = cost != null ? cost / batchSize : null;
       results.push({
         embedding: item.embedding,
-        cost: computeCost(
-          response.usage?.prompt_tokens,
-          0,
-          this.costPerInputToken,
-          0,
-        ),
+        cost: perItemCost,
       });
     }
     return results;

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { spawn } from "node:child_process";
 import { assessGovernance } from "../governance";
 
 function printHelp(): void {
@@ -7,7 +8,7 @@ function printHelp(): void {
 
 Commands:
   gate          Check your project against its governance policy and exit with a non-zero code if it doesn't pass.
-  test run      Run test files with Jest/Vitest and post results to Confident AI.
+  test run      Run test files with Jest and post results to Confident AI.
 
 Options:
   -q, --quiet   Suppress output. The exit code still reflects the verdict.
@@ -22,14 +23,14 @@ async function runGate(quiet: boolean): Promise<void> {
 
     if (passed) {
       if (!quiet) {
-        console.log(`✅ Governance gate passed against ${policyName}.`);
+        console.log(`[deepeval] Governance gate passed against ${policyName}.`);
       }
       process.exit(0);
     }
 
     if (!quiet) {
       console.error(
-        `❌ Governance gate failed against ${policyName}. ` +
+        `[deepeval] Governance gate failed against ${policyName}. ` +
           "One or more controls did not pass.",
       );
     }
@@ -38,7 +39,7 @@ async function runGate(quiet: boolean): Promise<void> {
     if (!quiet) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(
-        `❌ Could not assess governance for your project: ${message}\n` +
+        `[deepeval] Could not assess governance for your project: ${message}\n` +
           "Make sure your project is associated with a governance policy. " +
           "If it isn't, please contact your organization administrator.",
       );
@@ -47,27 +48,53 @@ async function runGate(quiet: boolean): Promise<void> {
   }
 }
 
+function findJestBin(): string | null {
+  const candidates = [
+    "jest-cli/bin/jest.js",
+    "jest-cli/bin/jest",
+    "jest/build/cli.js",
+    "@jest/core/build/cli/index.js",
+    ".bin/jest",
+  ];
+  for (const rel of candidates) {
+    try {
+      const p = require.resolve(rel, { paths: [process.cwd()] });
+      return p;
+    } catch {
+      // try next
+    }
+  }
+  return null;
+}
+
 async function runTestRun(args: string[]): Promise<void> {
-  let jestArgs = args.filter((a) => a !== "run");
+  const jestArgs = args.filter((a) => a !== "run");
   const quiet = jestArgs.includes("-q") || jestArgs.includes("--quiet");
 
   if (!quiet) {
-    console.log("🚀 Running DeepEval test suite...");
+    console.log("[deepeval] Running test suite...");
   }
 
-  // Try Jest first, fall back to Vitest
-  const jestPath = require.resolve("jest-cli/bin/jest", { paths: [process.cwd()] });
-  const { run: jestRun } = await import(jestPath);
-
-  try {
-    const success = await jestRun(jestArgs);
-    process.exit(success ? 0 : 1);
-  } catch (err) {
-    if (!quiet) {
-      console.error("Failed to run tests:", (err as Error).message);
-    }
+  const jestPath = findJestBin();
+  if (!jestPath) {
+    console.error(
+      "[deepeval] Could not find Jest. Ensure `jest` is installed as a devDependency.",
+    );
     process.exit(1);
   }
+
+  const child = spawn(process.execPath, [jestPath, ...jestArgs], {
+    stdio: "inherit",
+    cwd: process.cwd(),
+    env: { ...process.env },
+  });
+
+  const exitCode = await new Promise<number>((resolve) => {
+    child.on("exit", (code) => resolve(code ?? 1));
+    child.on("error", () => resolve(1));
+  });
+
+  process.exit(exitCode);
 }
 
 async function main(): Promise<void> {

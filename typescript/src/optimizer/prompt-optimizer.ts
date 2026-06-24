@@ -5,6 +5,7 @@ import {
 } from "../metrics";
 import { Golden, ConversationalGolden } from "../dataset";
 import { Prompt } from "../prompt";
+import { LLMTestCase } from "../test-case";
 import {
   ModelCallback,
   OptimizationConfig,
@@ -13,26 +14,6 @@ import {
   OptimizationReport,
 } from "./types";
 
-/**
- * PromptOptimizer — the TS counterpart of Python's `PromptOptimizer`.
- *
- * Uses a simple evolutionary algorithm to iteratively improve a prompt based on
- * evaluation metrics applied to a set of goldens.
- *
- * @example
- * ```ts
- * const optimizer = new PromptOptimizer({
- *   modelCallback: async (prompt, golden) => {
- *     const template = prompt.interpolate({ input: golden.input }) as string;
- *     const { output } = await myModel.generate(template);
- *     return output;
- *   },
- *   metrics: [new FaithfulnessMetric()],
- * });
- *
- * const best = await optimizer.optimize(prompt, goldens);
- * ```
- */
 export class PromptOptimizer {
   private modelCallback: ModelCallback;
   private metrics: (BaseMetric | BaseConversationalMetric)[];
@@ -65,13 +46,6 @@ export class PromptOptimizer {
     };
   }
 
-  /**
-   * Run prompt optimization.
-   *
-   * @param prompt - The base prompt to optimize.
-   * @param goldens - Evaluation goldens to optimize against.
-   * @returns The optimized prompt.
-   */
   async optimize(
     prompt: Prompt,
     goldens: (Golden | ConversationalGolden)[],
@@ -79,41 +53,31 @@ export class PromptOptimizer {
     const logs: IterationLog[] = [];
     const acceptedIterations: AcceptedIteration[] = [];
 
-    // Split goldens into feedback set and pareto set
     const paretoSet = goldens.slice(0, this.config.paretoSize);
     const feedbackSet = goldens.slice(this.config.paretoSize);
 
-    // Score the original prompt on the pareto set as baseline
     const baseScore = await this.scorePrompt(prompt, paretoSet);
     let bestPrompt = prompt;
     let bestScore = baseScore;
     let consecutiveRejections = 0;
 
     console.log(
-      `\n🚀 Starting prompt optimization (${this.config.iterations} max iterations)...`,
+      `\n[deepeval] Starting prompt optimization (${this.config.iterations} max iterations)...`,
     );
     console.log(`   Base prompt score: ${(baseScore * 100).toFixed(1)}%\n`);
 
     for (let i = 0; i < this.config.iterations; i++) {
       const iterationStart = Date.now();
 
-      // Select a minibatch from the feedback set
       const minibatch = this.selectMinibatch(feedbackSet);
-
-      // Evaluate parent on minibatch
       const parentScore = await this.scorePrompt(bestPrompt, minibatch);
-
-      // Generate feedback from the scorer on failure cases
       const feedback = await this.generateFeedback(bestPrompt, minibatch);
-
-      // Rewrite the prompt using the feedback
       const candidatePrompt = await this.rewritePrompt(bestPrompt, feedback);
       const candidateScore = await this.scorePrompt(candidatePrompt, minibatch);
 
       const elapsed = (Date.now() - iterationStart) / 1000;
 
       if (candidateScore > parentScore) {
-        // Full evaluation on pareto set
         const fullCandidateScore = await this.scorePrompt(
           candidatePrompt,
           paretoSet,
@@ -141,7 +105,7 @@ export class PromptOptimizer {
 
           consecutiveRejections = 0;
           console.log(
-            `   ✓ Iteration ${i + 1}: ${(fullCandidateScore * 100).toFixed(1)}% (improved, ${elapsed.toFixed(1)}s)`,
+            `   [✓] Iteration ${i + 1}: ${(fullCandidateScore * 100).toFixed(1)}% (improved, ${elapsed.toFixed(1)}s)`,
           );
         } else {
           logs.push({
@@ -153,7 +117,7 @@ export class PromptOptimizer {
           });
           consecutiveRejections++;
           console.log(
-            `   ✗ Iteration ${i + 1}: ${(fullCandidateScore * 100).toFixed(1)}% (no improvement, ${elapsed.toFixed(1)}s)`,
+            `   [✗] Iteration ${i + 1}: ${(fullCandidateScore * 100).toFixed(1)}% (no improvement, ${elapsed.toFixed(1)}s)`,
           );
         }
       } else {
@@ -166,7 +130,7 @@ export class PromptOptimizer {
         });
         consecutiveRejections++;
         console.log(
-          `   ✗ Iteration ${i + 1}: ${(candidateScore * 100).toFixed(1)}% (no improvement, ${elapsed.toFixed(1)}s)`,
+          `   [✗] Iteration ${i + 1}: ${(candidateScore * 100).toFixed(1)}% (no improvement, ${elapsed.toFixed(1)}s)`,
         );
       }
 
@@ -179,7 +143,7 @@ export class PromptOptimizer {
     }
 
     console.log(
-      `\n✅ Optimization complete. Best score: ${(bestScore * 100).toFixed(1)}%\n`,
+      `\n[deepeval] Optimization complete. Best score: ${(bestScore * 100).toFixed(1)}%\n`,
     );
 
     return {
@@ -213,11 +177,7 @@ export class PromptOptimizer {
         const testCase = this.goldenToTestCase(golden, actualOutput);
 
         for (const metric of this.metrics) {
-          metric.score = undefined;
-          metric.success = undefined;
-          metric.reason = undefined;
-          metric.error = undefined;
-          metric.skipped = false;
+          this.resetMetric(metric);
           await (metric.measure as (tc: any) => Promise<number>)(testCase);
 
           if (metric.score != null) {
@@ -233,6 +193,14 @@ export class PromptOptimizer {
     return count > 0 ? totalScore / count : 0;
   }
 
+  private resetMetric(metric: BaseMetric | BaseConversationalMetric): void {
+    metric.score = undefined;
+    metric.success = undefined;
+    metric.reason = undefined;
+    metric.error = undefined;
+    metric.skipped = false;
+  }
+
   private async generateFeedback(
     prompt: Prompt,
     goldens: (Golden | ConversationalGolden)[],
@@ -245,11 +213,7 @@ export class PromptOptimizer {
         const testCase = this.goldenToTestCase(golden, actualOutput);
 
         for (const metric of this.metrics) {
-          metric.score = undefined;
-          metric.success = undefined;
-          metric.reason = undefined;
-          metric.error = undefined;
-          metric.skipped = false;
+          this.resetMetric(metric);
           await (metric.measure as (tc: any) => Promise<number>)(testCase);
 
           if (!metric.success && metric.reason) {
@@ -285,22 +249,17 @@ export class PromptOptimizer {
       `Given the current prompt:\n\n${currentText}\n\nAnd the following feedback on its failures:\n\n${feedback}\n\nGenerate an improved version of the prompt that addresses the feedback. Keep the same variable placeholders (e.g. {{input}}). Return only the improved prompt text, no explanation.`,
     );
 
-    // Create a local Prompt with the improved text
-    const newPrompt = new Prompt({ alias: `${(basePrompt as any)._alias}_optimized` });
-    Object.assign(newPrompt, {
-      _textTemplate: output,
-      _type: "TEXT",
-      _interpolationType: "FSTRING",
+    const alias = (basePrompt as any)._alias ?? "optimized_prompt";
+    return Prompt.fromText({
+      alias: `${alias}_v${Date.now()}`,
+      text: output,
     });
-
-    return newPrompt;
   }
 
   private goldenToTestCase(
     golden: Golden | ConversationalGolden,
     actualOutput: string,
   ): any {
-    const { LLMTestCase } = require("../test-case");
     const g = golden as Golden;
     return new LLMTestCase({
       input: g.input,

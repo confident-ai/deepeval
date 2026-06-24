@@ -8,7 +8,13 @@ import {
   ConversationalStylingConfig,
   ContextConstructionConfig,
   Evolution,
+  PromptEvolution,
 } from "./types";
+import {
+  EvolutionTemplate,
+  PromptEvolutionTemplate,
+  SynthesizerPromptTemplate,
+} from "./templates";
 
 const DEFAULT_FILTRATION: Required<FiltrationConfig> = {
   syntheticInputQualityThreshold: 0.5,
@@ -28,14 +34,25 @@ const DEFAULT_EVOLUTION: Required<EvolutionConfig> = {
   },
 };
 
-/**
- * Synthesizer for generating synthetic evaluation data.
- *
- * Supports generating goldens from documents, contexts, scratch, or existing
- * goldens. Uses either the Confident AI API or a local LLM for generation.
- *
- * Mirrors Python's `deepeval.synthesizer.Synthesizer`.
- */
+const evolutionMap: Record<string, (input: string, context: string | null) => string> = {
+  [Evolution.Reasoning]: EvolutionTemplate.reasoning_evolution,
+  [Evolution.MultiContext]: (input, context) => EvolutionTemplate.multi_context_evolution(input, context!),
+  [Evolution.Concretizing]: EvolutionTemplate.concretizing_evolution,
+  [Evolution.Constrained]: EvolutionTemplate.constrained_evolution,
+  [Evolution.Comparative]: EvolutionTemplate.comparative_question_evolution,
+  [Evolution.Hypothetical]: EvolutionTemplate.hypothetical_scenario_evolution,
+  [Evolution.InBreadth]: EvolutionTemplate.in_breadth_evolution,
+};
+
+const promptEvolutionMap: Record<string, (input: string) => string> = {
+  [PromptEvolution.Reasoning]: PromptEvolutionTemplate.reasoning_evolution,
+  [PromptEvolution.Concretizing]: PromptEvolutionTemplate.concretizing_evolution,
+  [PromptEvolution.Constrained]: PromptEvolutionTemplate.constrained_evolution,
+  [PromptEvolution.Comparative]: PromptEvolutionTemplate.comparative_question_evolution,
+  [PromptEvolution.Hypothetical]: PromptEvolutionTemplate.hypothetical_scenario_evolution,
+  [PromptEvolution.InBreadth]: PromptEvolutionTemplate.in_breadth_evolution,
+};
+
 export class Synthesizer {
   private model?: DeepEvalBaseLLM;
   private filtrationConfig: Required<FiltrationConfig>;
@@ -74,9 +91,6 @@ export class Synthesizer {
     return this._conversationalGoldens;
   }
 
-  /**
-   * Generate goldens from document files.
-   */
   async generateGoldensFromDocs(
     documentPaths: string[],
     options?: {
@@ -107,9 +121,6 @@ export class Synthesizer {
     });
   }
 
-  /**
-   * Generate goldens from provided contexts.
-   */
   async generateGoldensFromContexts(
     contexts: string[][],
     options?: {
@@ -131,14 +142,9 @@ export class Synthesizer {
       for (let i = 0; i < maxGoldensPerContext; i++) {
         const contextText = contextGroup.join("\n\n");
         const input = await this.generateInput(contextText);
-        const quality = await this.assessQuality(input);
+        const qualifiedInput = await this.qualifyInput(input, contextText);
+        const evolvedInput = await this.evolveInput(qualifiedInput, contextText);
 
-        let finalInput = input;
-        if (quality < this.filtrationConfig.syntheticInputQualityThreshold) {
-          finalInput = await this.rewriteInput(input);
-        }
-
-        const evolvedInput = await this.evolveInput(finalInput);
         const expectedOutput = includeExpectedOutput
           ? await this.generateExpectedOutputInline(evolvedInput, contextText)
           : undefined;
@@ -157,9 +163,6 @@ export class Synthesizer {
     return results;
   }
 
-  /**
-   * Generate goldens from scratch (requires styling config).
-   */
   async generateGoldensFromScratch(
     numGoldens: number,
   ): Promise<Golden[]> {
@@ -176,17 +179,14 @@ export class Synthesizer {
     }
 
     const results: Golden[] = [];
+    const { scenario, task, inputFormat } = this.stylingConfig;
 
     for (let i = 0; i < numGoldens; i++) {
-      const prompt = `Generate a synthetic user input for the following scenario:
-Scenario: ${this.stylingConfig.scenario ?? "N/A"}
-Task: ${this.stylingConfig.task ?? "N/A"}
-Input Format: ${this.stylingConfig.inputFormat ?? "N/A"}
+      const { output: input } = await this.model.generate(
+        `Generate a synthetic user input for the following scenario:\nScenario: ${scenario ?? "N/A"}\nTask: ${task ?? "N/A"}\nInput Format: ${inputFormat ?? "N/A"}\n\nReturn only the generated input text.`,
+      );
 
-Return only the generated input text.`;
-
-      const { output: input } = await this.model.generate(prompt);
-      const evolvedInput = await this.evolveInput(input);
+      const evolvedInput = await this.evolveInputNoContext(input);
 
       const expectedOutput = this.stylingConfig.expectedOutputFormat
         ? await this.model.generate(
@@ -205,9 +205,6 @@ Return only the generated input text.`;
     return results;
   }
 
-  /**
-   * Evolve existing goldens to create new variations.
-   */
   async generateGoldensFromGoldens(
     goldens: Golden[],
     options?: {
@@ -227,7 +224,10 @@ Return only the generated input text.`;
 
     for (const golden of goldens) {
       for (let i = 0; i < maxGoldensPerGolden; i++) {
-        const evolvedInput = await this.evolveInput(golden.input);
+        const contextText = golden.context?.join("\n\n") ?? null;
+        const evolvedInput = contextText
+          ? await this.evolveInput(golden.input, contextText)
+          : await this.evolveInputNoContext(golden.input);
 
         let expectedOutput: string | undefined;
         if (includeExpectedOutput && golden.expectedOutput) {
@@ -252,9 +252,6 @@ Return only the generated input text.`;
     return results;
   }
 
-  /**
-   * Generate conversational goldens from documents.
-   */
   async generateConversationalGoldensFromDocs(
     documentPaths: string[],
     options?: {
@@ -284,9 +281,6 @@ Return only the generated input text.`;
     });
   }
 
-  /**
-   * Generate conversational goldens from provided contexts.
-   */
   async generateConversationalGoldensFromContexts(
     contexts: string[][],
     options?: {
@@ -331,9 +325,6 @@ Return only the generated input text.`;
     return results;
   }
 
-  /**
-   * Generate conversational goldens from scratch.
-   */
   async generateConversationalGoldensFromScratch(
     numGoldens: number,
   ): Promise<ConversationalGolden[]> {
@@ -351,12 +342,7 @@ Return only the generated input text.`;
     const results: ConversationalGolden[] = [];
 
     for (let i = 0; i < numGoldens; i++) {
-      const prompt = `Generate a conversational scenario:
-Scenario Context: ${this.conversationalStylingConfig.scenarioContext ?? "N/A"}
-Task: ${this.conversationalStylingConfig.conversationalTask ?? "N/A"}
-Participant Roles: ${this.conversationalStylingConfig.participantRoles ?? "N/A"}
-
-Return only the scenario description.`;
+      const prompt = `Generate a conversational scenario:\nScenario Context: ${this.conversationalStylingConfig.scenarioContext ?? "N/A"}\nTask: ${this.conversationalStylingConfig.conversationalTask ?? "N/A"}\nParticipant Roles: ${this.conversationalStylingConfig.participantRoles ?? "N/A"}\n\nReturn only the scenario description.`;
 
       const { output: scenario } = await this.model.generate(prompt);
 
@@ -377,9 +363,6 @@ Return only the scenario description.`;
     return results;
   }
 
-  /**
-   * Generate conversational goldens from existing goldens.
-   */
   async generateConversationalGoldensFromGoldens(
     goldens: ConversationalGolden[],
     options?: {
@@ -427,53 +410,90 @@ Return only the scenario description.`;
     input: string,
     context: string,
   ): Promise<string> {
-    const { output } = await this.model!.generate(
-      `Given the input "${input}" and the following context, generate the expected correct output:\n${context}\n\nReturn only the expected output, no explanation.`,
-    );
+    const prompt = SynthesizerPromptTemplate.generate_expected_output(input, context);
+    const { output } = await this.model!.generate(prompt);
     return output;
   }
 
   private async generateInput(context: string): Promise<string> {
-    const { output } = await this.model!.generate(
-      `Based on the following context, generate a realistic user input that a user might ask about this content:\n${context}\n\nReturn only the input text, no explanation.`,
-    );
+    const prompt = SynthesizerPromptTemplate.generate_inputs(context, 1);
+    const { output } = await this.model!.generate(prompt);
     return output;
   }
 
-  private async assessQuality(input: string): Promise<number> {
-    const { output } = await this.model!.generate(
-      `Rate the quality of this synthetic input on a scale of 0 to 1 (where 1 is highest quality):\n"${input}"\n\nReturn only a number between 0 and 1.`,
-    );
-    const parsed = parseFloat(output);
-    return isNaN(parsed) ? 0.5 : Math.max(0, Math.min(1, parsed));
+  private async evaluateInputQuality(input: string): Promise<{ score: number; feedback: string }> {
+    const prompt = SynthesizerPromptTemplate.evaluate_input_quality(input);
+    const { output } = await this.model!.generate(prompt);
+    try {
+      const parsed = JSON.parse(output);
+      return {
+        score: typeof parsed.score === "number" ? Math.max(0, Math.min(1, parsed.score)) : 0.5,
+        feedback: typeof parsed.feedback === "string" ? parsed.feedback : "",
+      };
+    } catch {
+      return { score: 0.5, feedback: "" };
+    }
   }
 
-  private async rewriteInput(input: string): Promise<string> {
-    const { output } = await this.model!.generate(
-      `Rewrite the following input to be more realistic, specific, and useful for testing an LLM:\n"${input}"\n\nReturn only the rewritten input, no explanation.`,
-    );
-    return output;
+  private async qualifyInput(
+    input: string,
+    context: string,
+  ): Promise<string> {
+    let current = input;
+    for (let attempt = 0; attempt < this.filtrationConfig.maxQualityRetries; attempt++) {
+      const { score, feedback } = await this.evaluateInputQuality(current);
+      if (score >= this.filtrationConfig.syntheticInputQualityThreshold) {
+        return current;
+      }
+      const prompt = SynthesizerPromptTemplate.rewrite_input(current, feedback);
+      const { output } = await this.model!.generate(prompt);
+      current = output;
+    }
+    return current;
   }
 
-  private async evolveInput(input: string): Promise<string> {
+  private get evolutionWeights(): Record<Evolution, number> {
+    return this.evolutionConfig.evolutions as Record<Evolution, number>;
+  }
+
+  private async evolveInput(input: string, context: string): Promise<string> {
     const { numEvolutions } = this.evolutionConfig;
+    const evolutions = this.evolutionWeights;
     let current = input;
 
     for (let i = 0; i < numEvolutions; i++) {
-      const evolution = this.sampleEvolution();
-      const instruction = this.getEvolutionInstruction(evolution);
-      const { output } = await this.model!.generate(
-        `${instruction}"${current}"\n\nReturn only the evolved input, no explanation.`,
-      );
+      const evolution = this.sampleEvolution(evolutions);
+      const method = evolutionMap[evolution];
+      if (!method) continue;
+      const prompt = method(current, context);
+      const { output } = await this.model!.generate(prompt);
       current = output;
     }
 
     return current;
   }
 
-  private sampleEvolution(): Evolution {
-    const { evolutions } = this.evolutionConfig;
-    const entries = Object.entries(evolutions) as [Evolution, number][];
+  private async evolveInputNoContext(input: string): Promise<string> {
+    const { numEvolutions } = this.evolutionConfig;
+    const promptEvolutions = this.toPromptEvolutions(this.evolutionWeights);
+    let current = input;
+
+    for (let i = 0; i < numEvolutions; i++) {
+      const evolution = this.sampleEvolution(promptEvolutions);
+      const method = promptEvolutionMap[evolution];
+      if (!method) continue;
+      const prompt = method(current);
+      const { output } = await this.model!.generate(prompt);
+      current = output;
+    }
+
+    return current;
+  }
+
+  private sampleEvolution(
+    evolutions: Record<string, number>,
+  ): string {
+    const entries = Object.entries(evolutions);
     const r = Math.random();
     let cumulative = 0;
     for (const [evolution, weight] of entries) {
@@ -483,22 +503,21 @@ Return only the scenario description.`;
     return entries[entries.length - 1][0];
   }
 
-  private getEvolutionInstruction(evolution: Evolution): string {
-    switch (evolution) {
-      case Evolution.Reasoning:
-        return "Add a reasoning requirement to the following input, requiring multi-step logical thinking. Evolve the input to make it more complex:";
-      case Evolution.MultiContext:
-        return "Add multiple contextual dimensions to the following input, making it require cross-reference of different topics. Evolve the input:";
-      case Evolution.Concretizing:
-        return "Make the following input more concrete and specific, adding real-world details and constraints. Evolve the input:";
-      case Evolution.Constrained:
-        return "Add specific constraints (format, length, style, etc.) to the following input. Evolve the input:";
-      case Evolution.Comparative:
-        return "Add a comparative or contrastive element to the following input, requiring comparison between options. Evolve the input:";
-      case Evolution.Hypothetical:
-        return "Add a hypothetical or 'what if' scenario twist to the following input. Evolve the input:";
-      case Evolution.InBreadth:
-        return "Broaden the scope of the following input, adding related but distinct sub-questions. Evolve the input:";
+  private toPromptEvolutions(
+    evolutions: Record<Evolution, number>,
+  ): Record<PromptEvolution, number> {
+    const result: Record<string, number> = {};
+    for (const [key, weight] of Object.entries(evolutions)) {
+      if (key === Evolution.MultiContext) continue;
+      result[key] = weight;
     }
+    // Renormalize weights after removing MultiContext
+    const total = Object.values(result).reduce((s, w) => s + w, 0);
+    if (total > 0) {
+      for (const key of Object.keys(result)) {
+        result[key] /= total;
+      }
+    }
+    return result as unknown as Record<PromptEvolution, number>;
   }
 }
