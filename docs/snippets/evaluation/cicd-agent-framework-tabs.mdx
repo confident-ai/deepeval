@@ -1,0 +1,411 @@
+<Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Strands", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
+<Tab value="Manual Instrumentation">
+
+```python title="test_llm_app.py" showLineNumbers
+import pytest
+from deepeval import assert_test
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.tracing import observe, update_current_trace
+
+# 1. Load your dataset of goldens
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+# 2. Instrument your agent
+@observe()
+def my_ai_agent(query: str) -> str:
+    answer = "Pi rounded to 2 decimal places is 3.14."
+    update_current_trace(input=query, output=answer)
+    return answer
+
+# 3. Evaluate end-to-end on each golden
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_llm_app(golden: Golden):
+    my_ai_agent(golden.input)
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Wrap your agent's top-level function with `@observe` and set the trace-level test case fields with `update_current_trace(...)`. See [LLM tracing](/docs/evaluation-llm-tracing) for the full surface.
+
+</Tab>
+<Tab value="LangChain">
+
+```python title="test_langchain_app.py" showLineNumbers
+import pytest
+from langchain.agents import create_agent
+from deepeval import assert_test
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+# 1. Load your dataset of goldens
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+# 2. Instrument your agent
+agent = create_agent(
+    model="openai:gpt-4o-mini",
+    tools=[],
+    system_prompt="Answer math questions concisely.",
+)
+
+# 3. Evaluate end-to-end on each golden
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_langchain_app(golden: Golden):
+    agent.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Pass `deepeval`'s `CallbackHandler` to your agent's `invoke` method. See the [LangChain integration](/integrations/frameworks/langchain) for the full surface.
+
+</Tab>
+<Tab value="LangGraph">
+
+```python title="test_langgraph_app.py" showLineNumbers
+import pytest
+from langchain.chat_models import init_chat_model
+from langgraph.graph import StateGraph, MessagesState, START, END
+from deepeval import assert_test
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+# 1. Load your dataset of goldens
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+# 2. Instrument your agent
+llm = init_chat_model("openai:gpt-4o-mini")
+
+def chatbot(state: MessagesState):
+    return {"messages": [llm.invoke(state["messages"])]}
+
+graph = (
+    StateGraph(MessagesState)
+    .add_node(chatbot)
+    .add_edge(START, "chatbot")
+    .add_edge("chatbot", END)
+    .compile()
+)
+
+# 3. Evaluate end-to-end on each golden
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_langgraph_app(golden: Golden):
+    graph.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Pass `deepeval`'s `CallbackHandler` to your `StateGraph`'s `invoke` method. See the [LangGraph integration](/integrations/frameworks/langgraph) for the full surface.
+
+</Tab>
+<Tab value="OpenAI">
+
+```python title="test_openai_app.py" showLineNumbers
+import pytest
+from deepeval import assert_test
+from deepeval.openai import OpenAI
+from deepeval.tracing import trace
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+# 1. Load your dataset of goldens
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+# 2. Instrument your agent (drop-in replace `from openai import OpenAI`)
+client = OpenAI()
+
+# 3. Evaluate end-to-end on each golden
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_openai_app(golden: Golden):
+    with trace():
+        client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Answer in one short sentence."},
+                {"role": "user", "content": golden.input},
+            ],
+        )
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Drop-in replace `from openai import OpenAI` with `from deepeval.openai import OpenAI` — every completion call becomes an LLM span automatically. See the [OpenAI integration](/integrations/frameworks/openai) for the full surface.
+
+</Tab>
+<Tab value="Pydantic AI">
+
+```python title="test_pydantic_ai_app.py" showLineNumbers
+import pytest
+from pydantic_ai import Agent
+from deepeval import assert_test
+from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+# 1. Load your dataset of goldens
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+# 2. Instrument your agent
+agent = Agent(
+    "openai:gpt-5",
+    system_prompt="Answer in one short sentence.",
+    instrument=DeepEvalInstrumentationSettings(),
+)
+
+# 3. Evaluate end-to-end on each golden
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_pydantic_ai_app(golden: Golden):
+    agent.run_sync(golden.input)
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Pass `DeepEvalInstrumentationSettings()` to your `Agent`'s `instrument` keyword. See the [Pydantic AI integration](/integrations/frameworks/pydanticai) for the full surface.
+
+</Tab>
+<Tab value="AgentCore">
+
+```python title="test_agentcore_app.py" showLineNumbers
+import pytest
+from bedrock_agentcore import BedrockAgentCoreApp
+from strands import Agent
+from deepeval import assert_test
+from deepeval.integrations.agentcore import instrument_agentcore
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+# 1. Load your dataset of goldens
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+# 2. Instrument your agent
+instrument_agentcore()
+
+app = BedrockAgentCoreApp()
+agent = Agent(model="amazon.nova-lite-v1:0")
+
+@app.entrypoint
+def invoke(payload):
+    result = agent(payload["prompt"])
+    return {"result": result.message}
+
+# 3. Evaluate end-to-end on each golden
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_agentcore_app(golden: Golden):
+    invoke({"prompt": golden.input})
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Call `instrument_agentcore()` before creating your AgentCore app — it also instruments [Strands](https://strandsagents.com/) agents running inside AgentCore. See the [AgentCore integration](/integrations/frameworks/agentcore) for the full surface.
+
+</Tab>
+<Tab value="Strands">
+
+```python title="test_strands_agent.py" showLineNumbers
+import pytest
+from strands import Agent
+from strands.models.openai import OpenAIModel
+from deepeval import assert_test
+from deepeval.integrations.strands import instrument_strands
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+# 1. Load your dataset of goldens
+dataset = EvaluationDataset(goldens=[Golden(input="Help me return my order.")])
+
+# 2. Instrument your agent
+instrument_strands()
+
+agent = Agent(
+    model=OpenAIModel(model_id="gpt-4o-mini"),
+    system_prompt="You are a helpful assistant.",
+)
+
+# 3. Evaluate end-to-end on each golden
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_strands_agent(golden: Golden):
+    agent(golden.input)
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Call `instrument_strands()` before creating or invoking your agent (for AgentCore-hosted Strands, use the AgentCore tab). See the [Strands integration](/integrations/frameworks/strands) for the full surface.
+
+</Tab>
+<Tab value="Anthropic">
+
+```python title="test_anthropic_app.py" showLineNumbers
+import pytest
+from deepeval import assert_test
+from deepeval.anthropic import Anthropic
+from deepeval.tracing import trace
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+# 1. Load your dataset of goldens
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+# 2. Instrument your agent (drop-in replace `from anthropic import Anthropic`)
+client = Anthropic()
+
+# 3. Evaluate end-to-end on each golden
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_anthropic_app(golden: Golden):
+    with trace():
+        client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=1024,
+            system="Answer in one short sentence.",
+            messages=[{"role": "user", "content": golden.input}],
+        )
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Drop-in replace `from anthropic import Anthropic` with `from deepeval.anthropic import Anthropic` — every `messages.create(...)` call becomes an LLM span automatically. See the [Anthropic integration](/integrations/frameworks/anthropic) for the full surface.
+
+</Tab>
+<Tab value="LlamaIndex">
+
+```python title="test_llamaindex_app.py" showLineNumbers
+import asyncio
+import pytest
+from llama_index.llms.openai import OpenAI
+from llama_index.core.agent import FunctionAgent
+import llama_index.core.instrumentation as instrument
+from deepeval import assert_test
+from deepeval.integrations.llama_index import instrument_llama_index
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+# 1. Load your dataset of goldens
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+# 2. Instrument your agent
+instrument_llama_index(instrument.get_dispatcher())
+
+agent = FunctionAgent(
+    tools=[],
+    llm=OpenAI(model="gpt-4o-mini"),
+    system_prompt="Answer math questions concisely.",
+)
+
+# 3. Evaluate end-to-end on each golden
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_llamaindex_app(golden: Golden):
+    asyncio.run(agent.run(golden.input))
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Register `deepeval`'s event handler against LlamaIndex's instrumentation dispatcher. See the [LlamaIndex integration](/integrations/frameworks/llamaindex) for the full surface.
+
+</Tab>
+<Tab value="OpenAI Agents">
+
+```python title="test_openai_agents_app.py" showLineNumbers
+import pytest
+from agents import Runner, add_trace_processor
+from deepeval import assert_test
+from deepeval.openai_agents import Agent, DeepEvalTracingProcessor
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+# 1. Load your dataset of goldens
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+# 2. Instrument your agent
+add_trace_processor(DeepEvalTracingProcessor())
+
+agent = Agent(
+    name="math_agent",
+    instructions="Answer math questions concisely.",
+)
+
+# 3. Evaluate end-to-end on each golden
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_openai_agents_app(golden: Golden):
+    Runner.run_sync(agent, golden.input)
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Register `DeepEvalTracingProcessor` once, then build your agent with `deepeval`'s `Agent` shim. See the [OpenAI Agents integration](/integrations/frameworks/openai-agents) for the full surface.
+
+</Tab>
+<Tab value="Google ADK">
+
+```python title="test_google_adk_app.py" showLineNumbers
+import asyncio
+import pytest
+from google.adk.agents import LlmAgent
+from google.adk.runners import InMemoryRunner
+from google.genai import types
+from deepeval import assert_test
+from deepeval.integrations.google_adk import instrument_google_adk
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+# 1. Load your dataset of goldens
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+# 2. Instrument your agent
+instrument_google_adk()
+
+agent = LlmAgent(model="gemini-2.0-flash", name="assistant", instruction="Answer math questions concisely.")
+runner = InMemoryRunner(agent=agent, app_name="deepeval-google-adk")
+
+async def run_agent(prompt: str) -> str:
+    session = await runner.session_service.create_session(app_name="deepeval-google-adk", user_id="demo-user")
+    message = types.Content(role="user", parts=[types.Part(text=prompt)])
+    async for event in runner.run_async(user_id="demo-user", session_id=session.id, new_message=message):
+        if event.is_final_response() and event.content:
+            return "".join(part.text for part in event.content.parts if getattr(part, "text", None))
+    return ""
+
+# 3. Evaluate end-to-end on each golden
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_google_adk_app(golden: Golden):
+    asyncio.run(run_agent(golden.input))
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Call `instrument_google_adk()` once before building your `LlmAgent`. See the [Google ADK integration](/integrations/frameworks/google-adk) for the full surface.
+
+</Tab>
+<Tab value="CrewAI">
+
+```python title="test_crewai_app.py" showLineNumbers
+import pytest
+from crewai import Task
+from deepeval import assert_test
+from deepeval.integrations.crewai import instrument_crewai, Crew, Agent
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+# 1. Load your dataset of goldens
+dataset = EvaluationDataset(goldens=[Golden(input="What is pi rounded to 2 decimal places?")])
+
+# 2. Instrument your agent
+instrument_crewai()
+
+tutor = Agent(
+    role="Math Tutor",
+    goal="Answer math questions accurately and concisely.",
+    backstory="An experienced tutor who explains simple math clearly.",
+)
+task = Task(
+    description="{question}",
+    expected_output="Pi rounded to 2 decimal places is 3.14.",
+    agent=tutor,
+)
+crew = Crew(agents=[tutor], tasks=[task])
+
+# 3. Evaluate end-to-end on each golden
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_crewai_app(golden: Golden):
+    crew.kickoff({"question": golden.input})
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
+```
+
+Call `instrument_crewai()` once, then build your crew with `deepeval`'s `Crew` and `Agent` shims. See the [CrewAI integration](/integrations/frameworks/crewai) for the full surface.
+
+</Tab>
+</Tabs>

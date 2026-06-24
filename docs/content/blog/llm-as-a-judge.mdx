@@ -8,7 +8,7 @@ category: community
 
 LLM-as-a-Judge evaluation is the process of using an LLM to score, classify, or compare the outputs of another LLM system. In `deepeval`, LLM judges power many evaluation metrics, but the important part is not just "use an LLM to judge." The important part is choosing the right judging technique for the shape of your evaluation.
 
-This guide explains how to use LLM-as-a-Judge in DeepEval through three main techniques:
+This guide explains what LLM-as-a-Judge is, and how to use it in an open-source LLM evaluation framework like DeepEval through three main techniques:
 
 | Technique         | Best for                                                            | DeepEval API                                                                                                                   |
 | ----------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
@@ -16,7 +16,9 @@ This guide explains how to use LLM-as-a-Judge in DeepEval through three main tec
 | DAG               | Deterministic, branching, multi-condition criteria                  | [`DAGMetric`](/docs/metrics-dag)                                                                                               |
 | QAG-style metrics | Built-in metrics that decompose evaluation into closed-ended checks | [RAG metrics](/guides/guides-rag-evaluation), [agent metrics](/guides/guides-ai-agent-evaluation-metrics), and other built-ins |
 
-If you need to compare two or more versions of an LLM app instead of scoring one output in isolation, use [`ArenaGEval`](/docs/metrics-arena-g-eval), DeepEval's pairwise LLM judge.
+These three techniques all score a single output. A fourth pattern, pairwise comparison, judges two or more outputs against each other instead, which is useful when you want to know which prompt or model version is better rather than how good one output is on its own.
+
+But before we dive too deep, let's go through the fundamentals of what LLM-as-a-judge is.
 
 ## What is LLM-as-a-Judge Evaluation?
 

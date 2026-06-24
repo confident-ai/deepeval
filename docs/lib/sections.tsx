@@ -59,6 +59,10 @@ export const guidesSection = createSection({
   contentDir: 'content/guides',
   getMarkdownUrl: (page) => getPageMarkdownUrl(page, guidesSource).url,
   showContributors: true,
+  // Guides-only global MDX components — authors can use these in any
+  // guide without an explicit `import`. Scoped to guides so they don't
+  // leak into docs/tutorials/etc.
+  mdxComponents: { ClaudeCodeTerminal },
 });
 
 export const tutorialsSection = createSection({
