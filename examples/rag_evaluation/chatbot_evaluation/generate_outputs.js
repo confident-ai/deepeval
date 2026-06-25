@@ -2,7 +2,7 @@ const fs = require("fs");
 
 const dataset = JSON.parse(
     fs.readFileSync(
-        "examples/rag_evaluation/browser_chatbot_evaluation/dataset.json",
+        "examples/rag_evaluation/chatbot_evaluation/dataset.json",
         "utf-8"
     )
 );
@@ -20,7 +20,7 @@ const outputs = dataset.map(item => ({
 }));
 
 fs.writeFileSync(
-    "examples/rag_evaluation/browser_chatbot_evaluation/outputs.json",
+    "examples/rag_evaluation/chatbot_evaluation/outputs.json",
     JSON.stringify(outputs, null, 2)
 );
 
