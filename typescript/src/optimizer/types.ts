@@ -1,4 +1,3 @@
-import { DeepEvalBaseLLM } from "../models";
 import { Golden, ConversationalGolden } from "../dataset";
 import { Prompt } from "../prompt";
 

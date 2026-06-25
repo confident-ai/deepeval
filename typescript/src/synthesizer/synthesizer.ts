@@ -437,7 +437,7 @@ export class Synthesizer {
 
   private async qualifyInput(
     input: string,
-    context: string,
+    _context: string,
   ): Promise<string> {
     let current = input;
     for (let attempt = 0; attempt < this.filtrationConfig.maxQualityRetries; attempt++) {

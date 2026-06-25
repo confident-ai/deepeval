@@ -700,7 +700,7 @@ export class TraceManager {
       const traceApi = this.createTraceApi(trace);
       const apiKey = traceApi.confidentApiKey || this.confidentApiKey;
       const api = new Api(apiKey);
-      const { confidentApiKey, ...traceApiBody } = traceApi;
+      const { confidentApiKey: _confidentApiKey, ...traceApiBody } = traceApi;
 
       const response = await api.sendRequest(
         HttpMethods.POST,
