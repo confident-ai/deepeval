@@ -5,7 +5,7 @@ import {
   MCPPromptCall,
   validateMcpServers,
 } from "./mcp";
-import { checkIfMultimodal, extractImageIdsFromList, extractImageIdsFromString, MLLM_IMAGE_REGISTRY, MLLMImage, SLUG_PATTERN } from "./mllm-image";
+import { checkIfMultimodal, extractImageIdsFromList, extractImageIdsFromString, MLLM_IMAGE_REGISTRY, MLLMImage } from "./mllm-image";
 
 export enum SingleTurnParams {
   INPUT = "input",
