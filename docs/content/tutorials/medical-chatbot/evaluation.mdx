@@ -74,7 +74,7 @@ This example assumes each conversation is a list of messages following the OpenA
 
 ### Manual prompting
 
-To generate conversations manually, you have to create `turn`s from interacting with your chatbot and constructing a `ConversationalTestCase` once a conversation has compeleted:
+To generate conversations manually, you have to create `turn`s from interacting with your chatbot and constructing a `ConversationalTestCase` once a conversation has completed:
 
 ```python
 from deepeval.test_case import ConversationalTestCase, Turn
@@ -119,7 +119,7 @@ It is highly recommended to simulate turns instead, because you:
 - Avoid **manual prompting** and can fully automate the process
 - Create **consistent benchmarks**, e.g., simulating a fixed number of conversations across the same scenarios, which makes performance comparisons straightforward (more on this later)
 
-First standardize your testing dataset by createing a list of goldens ([click here](/docs/evaluation-datasets#what-are-goldens) to learn more):
+First standardize your testing dataset by creating a list of goldens ([click here](/docs/evaluation-datasets#what-are-goldens) to learn more):
 
 ```python title="main.py"
 from deepeval.dataset import EvaluationDataset, ConversationalGolden
