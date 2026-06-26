@@ -14,7 +14,7 @@ We will be using `langchain` and `qdrant` to build our chatbot, with functionali
 We'll also implement our chatbot with an independent **model and system prompt** variable - which we'll be evaluating in the next section.
 
 :::tip
-If you already have a multi-turn chatbot that you want to evaluate, feel free to skip to the [**evaluation section of this tuorial**](/tutorials/medical-chatbot/evaluation).
+If you already have a multi-turn chatbot that you want to evaluate, feel free to skip to the [**evaluation section of this tutorial**](/tutorials/medical-chatbot/evaluation).
 :::
 
 ## Setup Your Model
@@ -102,7 +102,7 @@ class MedicalChatbot:
         )
 ```
 
-Then, simply run your `index_knowledge` method usign the encyclopedia you've downloaded as `.txt`:
+Then, simply run your `index_knowledge` method using the encyclopedia you've downloaded as `.txt`:
 
 ```python title="main.py"
 chatbot = MedicalChatbot()
@@ -134,7 +134,7 @@ class MedicalChatbot:
 
     @tool
     def retrieve_knowledge(self, query: str) -> str:
-        """"A tool to retrive data on various diagnosis methods from gale encyclopedia"""
+        """"A tool to retrieve data on various diagnosis methods from gale encyclopedia"""
         hits = self.client.query_points(collection_name="gale_encyclopedia", query=self.encoder.encode(query).tolist(), limit=3).points
 
         contexts = [hit.payload['content'] for hit in hits]
@@ -285,7 +285,7 @@ class MedicalChatbot:
     ...
 ```
 
-🎉🥳 Congratulations! You've just created a fully functional medical chatbot with memory, the abiliy to diagnose users, and book appointments when needed.
+🎉🥳 Congratulations! You've just created a fully functional medical chatbot with memory, the ability to diagnose users, and book appointments when needed.
 
 ## Eyeball Your First Output
 
