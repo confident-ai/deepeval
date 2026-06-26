@@ -66,6 +66,11 @@ from .multimodal_metrics import (
     ImageReferenceMetric,
 )
 
+try:
+    from .juryeval import JuryEvalMetric, PairwiseJudgeMetric, PointwiseJudgeMetric
+except ImportError:
+    pass
+
 __all__ = [
     # Base classes
     "BaseMetric",
@@ -129,4 +134,8 @@ __all__ = [
     "ImageCoherenceMetric",
     "ImageHelpfulnessMetric",
     "ImageReferenceMetric",
+    # JuryEval metrics (optional)
+    "JuryEvalMetric",
+    "PairwiseJudgeMetric",
+    "PointwiseJudgeMetric",
 ]
