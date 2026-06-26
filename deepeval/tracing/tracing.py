@@ -331,11 +331,7 @@ class TraceManager:
                 trace.status = TraceSpanStatus.SUCCESS
 
             # Inside a `trace_test_run(...)` block, stamp the trace so it becomes
-            # one test case in that run. Done here (on the originating thread)
-            # because the trace-posting worker thread does not inherit the
-            # ContextVar. Skip when test_run_id is already set (e.g. the OTel
-            # exporter resolved it from the `confident.trace.test_run_id`
-            # attribute) so an explicit value is never clobbered.
+            # one test case in that run. 
             if not trace.test_run_id:
                 active_test_run_id = trace_test_run_id.get()
                 if active_test_run_id:
