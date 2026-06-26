@@ -3,6 +3,7 @@
   "pages": [
     "metrics-answer-relevancy",
     "metrics-faithfulness",
+    "metrics-citation-faithfulness",
     "metrics-contextual-precision",
     "metrics-contextual-recall",
     "metrics-contextual-relevancy"
