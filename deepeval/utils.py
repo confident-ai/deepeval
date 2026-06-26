@@ -189,6 +189,23 @@ def serialize(obj) -> Union[str, None]:
     return json.dumps(serialize_dict_with_sorting(obj), sort_keys=True)
 
 
+def serialize_to_json(obj: Any, **kwargs) -> str:
+    """Safely serialize an arbitrary object to a JSON string.
+
+    Pre-converts ``obj`` via ``make_json_serializable`` so nested pydantic
+    models, non-finite floats (NaN/Infinity), circular references, and
+    non-string dict keys are all handled. Prefer this over a bare
+    ``json.dumps`` for any agent/trace/tool/test-case derived data, where a
+    raw ``json.dumps`` would raise ``TypeError`` or emit invalid JSON.
+
+    Extra keyword arguments (e.g. ``indent``, ``ensure_ascii``) are
+    forwarded to ``json.dumps``.
+    """
+    from deepeval.tracing.utils import make_json_serializable
+
+    return json.dumps(make_json_serializable(obj), **kwargs)
+
+
 def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
     try:
         loop = asyncio.get_event_loop()

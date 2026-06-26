@@ -7,7 +7,6 @@ input · output · optional payloads · raw JSON (collapsed).
 
 from __future__ import annotations
 
-import json
 from typing import Any, List, Optional
 
 from rich.text import Text
@@ -15,6 +14,7 @@ from textual.app import ComposeResult
 from textual.containers import VerticalScroll
 from textual.widgets import Collapsible, Markdown, Static
 
+from deepeval.utils import serialize_to_json
 from deepeval.inspect.types import (
     BaseSpan,
     MetricData,
@@ -234,7 +234,7 @@ def _kv_block(label: str, data: Any) -> Static:
     text = Text()
     text.append(f"{label}: ", style="dim")
     if data:
-        text.append(json.dumps(data, indent=2, default=str), style="dim")
+        text.append(serialize_to_json(data, indent=2), style="dim")
     else:
         # Explicit None placeholder so the row reads as "no value" rather
         # than the label hanging with no value at all.
@@ -418,7 +418,7 @@ def _payload_widget(value: Any) -> Static:
     if isinstance(value, str):
         content = value
     elif isinstance(value, (dict, list)):
-        content = json.dumps(value, indent=2, default=str)
+        content = serialize_to_json(value, indent=2)
     else:
         content = repr(value)
     # Wrap in Text so Textual's Static doesn't parse `[...]` in the

@@ -1,7 +1,7 @@
 from typing import List
 import textwrap
-import json
 
+from deepeval.utils import serialize_to_json
 from deepeval.dataset import ConversationalGolden
 from deepeval.test_case import Turn
 
@@ -56,10 +56,8 @@ class SimulationTemplate:
         turns: List[Turn],
         language: str,
     ) -> str:
-        previous_conversation = json.dumps(
-            [t.model_dump() for t in turns],
-            indent=4,
-            ensure_ascii=False,
+        previous_conversation = serialize_to_json(
+            turns, indent=4, ensure_ascii=False
         )
         prompt = textwrap.dedent(
             f"""

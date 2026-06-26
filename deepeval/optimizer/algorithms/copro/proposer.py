@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import difflib
-import json
 import random
 from typing import List, Optional, Tuple, Union
 
+from deepeval.utils import serialize_to_json
 from deepeval.prompt.api import PromptType
 from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
@@ -151,7 +151,7 @@ class COPROProposer:
                 )
 
                 if isinstance(revised_content, list):
-                    revised_content = json.dumps(revised_content)
+                    revised_content = serialize_to_json(revised_content)
 
                 if revised_content and revised_content.strip():
                     new_prompt = _create_prompt(
@@ -245,7 +245,7 @@ class COPROProposer:
                 )
 
                 if isinstance(revised_content, list):
-                    revised_content = json.dumps(revised_content)
+                    revised_content = serialize_to_json(revised_content)
                 elif not isinstance(revised_content, str):
                     revised_content = str(revised_content)
 

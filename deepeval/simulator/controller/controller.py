@@ -1,6 +1,5 @@
 import asyncio
 import inspect
-import json
 from typing import Awaitable, Callable, List, Optional
 
 from pydantic import BaseModel
@@ -11,7 +10,7 @@ from deepeval.simulator.controller.template import SimulatorControllerTemplate
 from deepeval.simulator.controller.types import Context, Decision
 from deepeval.simulator.schema import ConversationCompletion
 from deepeval.test_case import Turn
-from deepeval.utils import update_pbar
+from deepeval.utils import update_pbar, serialize_to_json
 
 
 def proceed() -> Decision:
@@ -104,10 +103,8 @@ class SimulationController:
         if golden.expected_outcome is None:
             return False
 
-        conversation_history = json.dumps(
-            [t.model_dump() for t in turns],
-            indent=4,
-            ensure_ascii=False,
+        conversation_history = serialize_to_json(
+            turns, indent=4, ensure_ascii=False
         )
         prompt = self.template.check_expected_outcome(
             conversation_history, golden.expected_outcome
@@ -133,10 +130,8 @@ class SimulationController:
         if golden.expected_outcome is None:
             return False
 
-        conversation_history = json.dumps(
-            [t.model_dump() for t in turns],
-            indent=4,
-            ensure_ascii=False,
+        conversation_history = serialize_to_json(
+            turns, indent=4, ensure_ascii=False
         )
         prompt = self.template.check_expected_outcome(
             conversation_history, golden.expected_outcome

@@ -39,8 +39,8 @@ from deepeval.tracing.integrations import Integration
 from deepeval.tracing.utils import (
     infer_provider_from_model,
     normalize_span_provider_for_platform,
-    make_json_serializable,
 )
+from deepeval.utils import serialize_to_json
 from deepeval.tracing.types import (
     AgentSpan,
     BaseSpan,
@@ -734,21 +734,19 @@ class AgentCoreSpanInterceptor(SpanProcessor):
             cls._set_attr_post_end(
                 span,
                 "confident.span.metadata",
-                json.dumps(
-                    placeholder.metadata, default=make_json_serializable
-                ),
+                serialize_to_json(placeholder.metadata),
             )
         if placeholder.input is not None:
             cls._set_attr_post_end(
                 span,
                 "confident.span.input",
-                json.dumps(placeholder.input, default=make_json_serializable),
+                serialize_to_json(placeholder.input),
             )
         if placeholder.output is not None:
             cls._set_attr_post_end(
                 span,
                 "confident.span.output",
-                json.dumps(placeholder.output, default=make_json_serializable),
+                serialize_to_json(placeholder.output),
             )
         if placeholder.metric_collection:
             cls._set_attr_post_end(
@@ -760,16 +758,13 @@ class AgentCoreSpanInterceptor(SpanProcessor):
             cls._set_attr_post_end(
                 span,
                 "confident.span.retrieval_context",
-                json.dumps(
-                    placeholder.retrieval_context,
-                    default=make_json_serializable,
-                ),
+                serialize_to_json(placeholder.retrieval_context),
             )
         if placeholder.context:
             cls._set_attr_post_end(
                 span,
                 "confident.span.context",
-                json.dumps(placeholder.context, default=make_json_serializable),
+                serialize_to_json(placeholder.context),
             )
         if placeholder.expected_output:
             cls._set_attr_post_end(
@@ -828,7 +823,7 @@ class AgentCoreSpanInterceptor(SpanProcessor):
             self._set_attr_post_end(
                 span,
                 "confident.trace.metadata",
-                json.dumps(_metadata, default=make_json_serializable),
+                serialize_to_json(_metadata),
             )
         if _trace_metric_collection:
             self._set_attr_post_end(
@@ -942,10 +937,7 @@ class AgentCoreSpanInterceptor(SpanProcessor):
                     self._set_attr_post_end(
                         span,
                         "confident.span.input",
-                        json.dumps(
-                            tc.input_parameters,
-                            default=make_json_serializable,
-                        ),
+                        serialize_to_json(tc.input_parameters),
                     )
 
             if "confident.span.output" not in attrs:
