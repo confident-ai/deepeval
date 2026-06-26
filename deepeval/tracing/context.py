@@ -59,6 +59,48 @@ class TraceContext:
 
 current_span_context = SpanContext()
 current_trace_context = TraceContext()
+trace_test_run_id: ContextVar[Optional[str]] = ContextVar(
+    "trace_test_run_id", default=None
+)
+trace_test_run_metric_collection: ContextVar[Optional[str]] = ContextVar(
+    "trace_test_run_metric_collection", default=None
+)
+
+
+@contextmanager
+def trace_test_run(
+    metric_collection: str, identifier: Optional[str] = None
+) -> Iterator[Optional[str]]:
+    from deepeval.confident.api import (
+        Api,
+        Endpoints,
+        HttpMethods,
+        is_confident,
+    )
+
+    if not is_confident():
+        raise ValueError(
+            "No Confident AI API key found. Set one to use trace_test_run(...)."
+        )
+
+    body: Dict[str, Any] = {"metricCollection": metric_collection}
+    if identifier is not None:
+        body["identifier"] = identifier
+
+    data, _ = Api().send_request(
+        method=HttpMethods.POST,
+        endpoint=Endpoints.TEST_RUNS_ENDPOINT,
+        body=body,
+    )
+    test_run_id = data.get("id") if isinstance(data, dict) else data
+
+    id_token = trace_test_run_id.set(test_run_id)
+    mc_token = trace_test_run_metric_collection.set(metric_collection)
+    try:
+        yield test_run_id
+    finally:
+        trace_test_run_id.reset(id_token)
+        trace_test_run_metric_collection.reset(mc_token)
 
 
 def update_current_span(

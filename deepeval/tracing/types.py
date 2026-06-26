@@ -197,6 +197,7 @@ class Trace(BaseModel):
     metrics: Optional[List[BaseMetric]] = None
     metric_collection: Optional[str] = None
     test_case_id: Optional[str] = Field(None, serialization_alias="testCaseId")
+    test_run_id: Optional[str] = Field(None, serialization_alias="testRunId")
     turn_id: Optional[str] = Field(None, serialization_alias="turnId")
 
     # Don't serialize these
