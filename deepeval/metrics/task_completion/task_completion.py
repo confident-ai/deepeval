@@ -7,6 +7,7 @@ from deepeval.metrics.utils import (
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    print_tools_called,
 )
 from deepeval.test_case import (
     LLMTestCase,
@@ -189,11 +190,12 @@ class TaskCompletionMetric(BaseMetric):
             )
         else:
             # TODO: Deprecate this soon
+            tools_called_formatted = print_tools_called(test_case.tools_called or [])
             prompt = self._get_prompt(
                 "extract_goal_and_outcome",
                 input=test_case.input,
                 actual_output=test_case.actual_output,
-                tools_called=test_case.tools_called,
+                tools_called_formatted=tools_called_formatted,
             )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -215,11 +217,12 @@ class TaskCompletionMetric(BaseMetric):
             )
         else:
             # TODO: Deprecate this soon
+            tools_called_formatted = print_tools_called(test_case.tools_called or [])
             prompt = self._get_prompt(
                 "extract_goal_and_outcome",
                 input=test_case.input,
                 actual_output=test_case.actual_output,
-                tools_called=test_case.tools_called,
+                tools_called_formatted=tools_called_formatted,
             )
         return generate_with_schema_and_extract(
             metric=self,
