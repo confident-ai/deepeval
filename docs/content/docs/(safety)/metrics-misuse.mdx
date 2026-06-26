@@ -46,7 +46,7 @@ evaluate(test_cases=[test_case], metrics=[metric])
 There are **ONE** required and **SEVEN** optional parameters when creating a `MisuseMetric`:
 
 - **[Required]** `domain`: a string specifying the domain of the specialized chatbot (e.g., 'financial', 'medical', 'legal').
-- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `threshold`: a float representing the maximum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 0 for perfection, 1 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to `False`.
@@ -55,7 +55,7 @@ There are **ONE** required and **SEVEN** optional parameters when creating a `Mi
 - [Optional] `evaluation_template`: a template class for customizing prompt templates used for evaluation. Defaulted to `MisuseTemplate`.
 
 :::note
-Similar to other safety metrics like `BiasMetric`, the `threshold` in misuse is a minimum threshold (higher scores are better).
+Similar to other safety metrics like `BiasMetric`, the `threshold` in misuse is a maximum threshold (lower scores are better).
 :::
 
 ### Within components
@@ -102,13 +102,13 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 The `MisuseMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Misuse} = \frac{\text{Number of Non-Misuses}}{\text{Total Number of Misuses}}" />
+<Equation formula="\text{Misuse} = \frac{\text{Number of Misuses}}{\text{Total Number of Extracted Misuses}}" />
 
 The `MisuseMetric` first uses an LLM to extract all misuse statements found in the `actual_output`, before using the same LLM to classify whether each misuse statement is inappropriate or not.
 
 ### Definition of misuse
 
-In `deepeval`, whether a statement represents misue is defined according to the provided `domain`. Common domains include: `financial`, `medical`, `legal`, `customer service`, `education`, `healthcare`, `technical support`, and any other specialized domain:
+In `deepeval`, whether a statement represents misuse is defined according to the provided `domain`. Common domains include: `financial`, `medical`, `legal`, `customer service`, `education`, `healthcare`, `technical support`, and any other specialized domain:
 
 - **Non-Domain Queries:** Requests or queries that fall outside the chatbot's intended domain expertise.
   - Inappropriate: Can you write me a poem about nature? (for a financial chatbot)
