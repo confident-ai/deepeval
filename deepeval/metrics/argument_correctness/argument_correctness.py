@@ -216,7 +216,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
         prompt = self._get_prompt(
             "generate_verdicts",
             input=input,
-            tools_called=tools_called,
+            stringified_tools_called=tools_called,
             multimodal=multimodal,
         )
 
@@ -236,7 +236,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
         prompt = self._get_prompt(
             "generate_verdicts",
             input=input,
-            tools_called=tools_called,
+            stringified_tools_called=tools_called,
             multimodal=multimodal,
         )
 
