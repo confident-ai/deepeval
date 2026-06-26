@@ -1,5 +1,5 @@
 from asyncio import Task
-from typing import TYPE_CHECKING, Iterator, List, Optional, Union, Literal
+from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Union, Literal
 from dataclasses import dataclass, field
 from opentelemetry.trace import Tracer
 from opentelemetry.context import Context, attach, detach
@@ -38,6 +38,7 @@ from deepeval.dataset.api import (
     CreateDatasetVersionHttpResponse,
 )
 from deepeval.dataset.golden import Golden, ConversationalGolden
+from deepeval.prompt import Prompt
 from deepeval.evaluate.console_report import EvaluationConsoleReport
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.telemetry import capture_evaluation_run, capture_pull_dataset
@@ -46,7 +47,10 @@ from deepeval.test_case import (
     ConversationalTestCase,
     ToolCall,
 )
-from deepeval.test_run.hyperparameters import process_hyperparameters
+from deepeval.test_run.hyperparameters import (
+    process_hyperparameters,
+    process_prompts,
+)
 from deepeval.test_run.test_run import TEMP_FILE_PATH
 from deepeval.utils import (
     convert_keys_to_snake_case,
@@ -1503,6 +1507,9 @@ class EvaluationDataset:
     def evals_iterator(
         self,
         metrics: Optional[List[BaseMetric]] = None,
+        hyperparameters: Optional[
+            Dict[str, Union[str, int, float, Prompt]]
+        ] = None,
         identifier: Optional[str] = None,
         display_config: Optional["DisplayConfig"] = None,
         cache_config: Optional["CacheConfig"] = None,
@@ -1617,6 +1624,13 @@ class EvaluationDataset:
                         raise ValueError(
                             f"Invalid file type: {display_config.file_type}"
                         )
+
+            test_run = global_test_run_manager.get_test_run()
+            if hyperparameters is not None or test_run.hyperparameters is None:
+                test_run.hyperparameters = process_hyperparameters(
+                    hyperparameters
+                )
+                test_run.prompts = process_prompts(hyperparameters)
 
             global_test_run_manager.configure_local_store(
                 results_folder=display_config.results_folder,

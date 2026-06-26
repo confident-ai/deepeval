@@ -355,8 +355,11 @@ def stitch_truncated_title(title: str, body: str) -> str:
 
 
 def sanitize_for_multimodal_sentinel(prompt: str) -> str:
-    # Avoid DeepEval multimodal marker from being interpreted inside plain text prompts.
-    return prompt.replace("[DEEPEVAL:IMAGE:", "[DEEPEVAL:IMG:")
+    # DeepEval's GPTModel treats [DEEPEVAL:IMAGE:...] and [DEEPEVAL:PDF:...] tokens in a
+    # plain-text prompt as real image/PDF inputs (see check_if_multimodal). PR titles,
+    # bodies, and diffs can contain these tokens literally, which makes the model try to
+    # load a bogus URL. Break the sentinel so it can never be parsed as multimodal.
+    return re.sub(r"\[DEEPEVAL:(IMAGE|PDF):", r"[DEEPEVAL:\1_:", prompt)
 
 
 ######################
