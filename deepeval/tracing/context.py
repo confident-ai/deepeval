@@ -175,6 +175,7 @@ def update_current_trace(
     test_case: Optional[LLMTestCase] = None,
     confident_api_key: Optional[str] = None,
     test_case_id: Optional[str] = None,
+    test_run_id: Optional[str] = None,
     turn_id: Optional[str] = None,
     metric_collection: Optional[str] = None,
     metrics: Optional[List[BaseMetric]] = None,
@@ -218,6 +219,8 @@ def update_current_trace(
         current_trace.confident_api_key = confident_api_key
     if test_case_id:
         current_trace.test_case_id = test_case_id
+    if test_run_id:
+        current_trace.test_run_id = test_run_id
     if turn_id:
         current_trace.turn_id = turn_id
     if metric_collection:
