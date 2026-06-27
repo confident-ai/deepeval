@@ -193,6 +193,39 @@ metric = AnswerRelevancyMetric(evaluation_template=CustomTemplate)
 metric.measure(...)
 ```
 
+You can also override `generate_verdicts` to change how the metric decides whether each statement is relevant. This is useful when the default yes/no/idk verdict logic doesn't match your domain — for example, if you want to treat all ambiguous statements as irrelevant, or if you want to add domain-specific instructions:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.metrics.answer_relevancy import AnswerRelevancyTemplate
+
+class StrictRelevancyTemplate(AnswerRelevancyTemplate):
+    @staticmethod
+    def generate_verdicts(input: str, statements: str, multimodal: bool = False):
+        return f"""For each statement below, determine if it directly and specifically addresses the input.
+Be strict: only mark a statement 'yes' if it clearly answers the question asked.
+Mark 'no' if the statement is off-topic, generic, or only tangentially related.
+Do not use 'idk' — every statement must be 'yes' or 'no'.
+
+Input: {input}
+
+Statements: {statements}
+
+Return JSON in this exact format:
+{{
+    "verdicts": [
+        {{"verdict": "yes"}},
+        {{"verdict": "no", "reason": "Statement does not address the input."}}
+    ]
+}}
+
+JSON:
+"""
+
+metric = AnswerRelevancyMetric(evaluation_template=StrictRelevancyTemplate)
+metric.measure(...)
+```
+
 ## FAQs
 
 <FAQs
