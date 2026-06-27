@@ -10,6 +10,22 @@ sidebar_label: Turn Relevancy
   rag={true}
 />
 
+:::caution Migrating from ConversationRelevancyMetric
+`ConversationRelevancyMetric` was removed in deepeval v3.7.x and replaced by `TurnRelevancyMetric`.
+
+The key behavioral difference: `TurnRelevancyMetric` evaluates relevancy using a sliding window of turns (default `window_size=10`), which produces higher scores than the deprecated metric's full-conversation scoring. If you need stricter scoring, reduce `window_size` or use `strict_mode=True`.
+
+```python
+# Before (v3.6.x and earlier — now raises ImportError)
+# from deepeval.metrics import ConversationRelevancyMetric
+# metric = ConversationRelevancyMetric(threshold=0.5)
+
+# After (v3.7.x+)
+from deepeval.metrics import TurnRelevancyMetric
+metric = TurnRelevancyMetric(threshold=0.5, window_size=10)
+```
+:::
+
 The turn relevancy metric is a conversational metric that determines whether your LLM chatbot is able to consistently generate relevant responses **throughout a conversation**.
 
 ## Required Arguments
