@@ -262,6 +262,10 @@ class MyCustomModel(DeepEvalBaseLLM):
 
 </details>
 
+**Not all OpenAI models support log probabilities.** The o-series models (`o1`, `o1-mini`, `o3-mini`, `o4-mini`) and `gpt-5-mini` do not return log probs. When you use one of these as your `GEval` judge, `deepeval` automatically falls back to parsing the raw integer score from the model's text output instead of using weighted summation. Scores from the fallback path tend to be less granular and may differ from scores produced by log-prob-capable models like `gpt-4o` or `gpt-4.1`.
+
+If you need consistent, log-prob-based scoring, use a model that supports it (e.g. `gpt-4o`, `gpt-4.1`, `gpt-4.1-mini`).
+
 :::
 
 ## Examples
