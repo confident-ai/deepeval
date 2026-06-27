@@ -36,6 +36,7 @@ def test_metrics_imports():
         NonAdviceMetric,
         MisuseMetric,
         RoleViolationMetric,
+        AdversarialRobustnessMetric,
         # Agentic metrics
         ToolCorrectnessMetric,
         TaskCompletionMetric,
