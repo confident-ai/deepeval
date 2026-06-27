@@ -154,6 +154,36 @@ These text chunks are then embedded by the `embedder` and stored in a vector dat
 The synthesizer will raise an error if `chunk_size` is too large to generate n=`max_contexts_per_document` unique contexts.
 :::
 
+**Tuning for short documents:** If you're synthesizing from short documents (e.g., FAQ entries, short articles, or single-page PDFs), you may hit the following error:
+
+```
+Impossible to generate N contexts from a document with M chunks.
+```
+
+This happens when a document is too short to be split into enough chunks to satisfy `min_contexts_per_document`. To fix it, adjust one or more of the following in your `ContextConstructionConfig`:
+
+| Parameter | Effect |
+|-----------|--------|
+| Reduce `chunk_size` | Smaller chunks → more chunks per document |
+| Reduce `chunk_overlap` | Less overlap → slightly more unique chunks |
+| Reduce `min_contexts_per_document` | Require fewer contexts per document |
+
+For example, if your documents average ~500 tokens and the default `chunk_size=1024` produces only 1 chunk per document, reduce `chunk_size` to `256` so each document yields more chunks:
+
+```python
+from deepeval.synthesizer import Synthesizer
+from deepeval.synthesizer.config import ContextConstructionConfig
+
+synthesizer = Synthesizer()
+synthesizer.generate_goldens_from_docs(
+    document_paths=["short_doc.pdf"],
+    context_construction_config=ContextConstructionConfig(
+        chunk_size=256,           # reduced from default 1024
+        min_contexts_per_document=1,
+    ),
+)
+```
+
 ### Context Selection
 
 In the **context selection** step, random nodes are selected from the vector database that contains the previously indexed nodes. Each time a node is selected, it is subject to filtering. This is because chunked contexts can result in trivial or undesirable content, such as a series of white spaces or unwanted characters from document structures, which is why filtering is important to ensure subsequently generated goldens are meaningful, relevant, and coherent.
