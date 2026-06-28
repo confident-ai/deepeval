@@ -103,7 +103,7 @@ def render_login_message():
         "🥳 Welcome to [rgb(106,0,255)]Confident AI[/rgb(106,0,255)], the evals cloud platform 🏡❤️"
     )
     print("")
-    print(pyfiglet.Figlet(font="big_money-ne").renderText("Confident AI"))
+    print(pyfiglet.Figlet(font="big_money-ne", width=150).renderText("Confident AI"))
 
 
 def upload_and_open_link(_span: Optional[Span] = None):
