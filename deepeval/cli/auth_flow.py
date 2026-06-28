@@ -1,18 +1,3 @@
-"""Interactive authentication flows for `deepeval login`.
-
-Two flows live here:
-
-1. ``email_password_login`` — a fully in-terminal flow. It signs in against the
-   platform's better-auth endpoints, handles optional TOTP 2FA, lists the
-   user's projects, and mints (or reuses) a project API key. No browser needed.
-
-2. ``browser_pairing_login`` — opens the platform in the browser so the user can
-   authenticate however they like (Google, SSO, or a fresh signup), pick a
-   project there, and have the resulting API key posted back to a short-lived
-   local server. This is the only viable path for OAuth/SSO since those finish
-   in the browser.
-"""
-
 import random
 import socket
 import string
