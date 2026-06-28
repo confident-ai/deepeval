@@ -270,6 +270,7 @@ export interface Trace {
   threadId?: string;
   userId?: string;
   testCaseId?: string;
+  testRunId?: string;
   turnId?: string;
   input?: any;
   output?: any;
@@ -317,6 +318,43 @@ export function setCurrentTrace(trace: Trace | null): void {
     ...current,
     currentTrace: trace ?? undefined,
   });
+}
+
+const traceTestRunContext = new AsyncLocalStorage<{
+  testRunId: string;
+  metricCollection: string;
+}>();
+
+export function getTraceTestRunId(): string | undefined {
+  return traceTestRunContext.getStore()?.testRunId;
+}
+
+export async function traceTestRun<T>(
+  options: { metricCollection: string; identifier?: string },
+  fn: (testRunId: string) => T | Promise<T>,
+): Promise<T> {
+  const body: Record<string, any> = {
+    metricCollection: options.metricCollection,
+  };
+  if (options.identifier !== undefined) {
+    body.identifier = options.identifier;
+  }
+
+  const api = new Api();
+  const result = await api.sendRequest(
+    HttpMethods.POST,
+    Endpoints.TEST_RUNS_ENDPOINT,
+    body,
+  );
+  const testRunId: string | undefined = result?.data?.id ?? result?.id;
+  if (!testRunId) {
+    throw new Error("Failed to create test run: no id returned.");
+  }
+
+  return traceTestRunContext.run(
+    { testRunId, metricCollection: options.metricCollection },
+    () => fn(testRunId),
+  );
 }
 
 export function withTracingContext<T>(
@@ -465,6 +503,15 @@ export class TraceManager {
       trace.endTime = new Date();
       if (trace.status === TraceSpanStatus.IN_PROGRESS) {
         trace.status = TraceSpanStatus.SUCCESS;
+      }
+      if (!trace.testRunId) {
+        const testRunStore = traceTestRunContext.getStore();
+        if (testRunStore?.testRunId) {
+          trace.testRunId = testRunStore.testRunId;
+          if (testRunStore.metricCollection) {
+            trace.metricCollection = testRunStore.metricCollection;
+          }
+        }
       }
       if (this.traceCaptureSink) {
         this.traceCaptureSink(trace);
@@ -797,6 +844,7 @@ export class TraceManager {
       threadId: trace.threadId,
       userId: trace.userId,
       testCaseId: trace.testCaseId,
+      testRunId: trace.testRunId,
       turnId: trace.turnId,
       input: trace.input,
       output: trace.output,
@@ -1447,6 +1495,7 @@ export interface UpdateCurrentTraceParams {
   threadId?: string;
   userId?: string;
   testCaseId?: string;
+  testRunId?: string;
   turnId?: string;
   input?: any;
   output?: any;
@@ -1469,6 +1518,7 @@ export const updateCurrentTrace = ({
   threadId,
   userId,
   testCaseId,
+  testRunId,
   turnId,
   input,
   output,
@@ -1515,6 +1565,9 @@ export const updateCurrentTrace = ({
   }
   if (testCaseId !== undefined) {
     currentTrace.testCaseId = testCaseId;
+  }
+  if (testRunId !== undefined) {
+    currentTrace.testRunId = testRunId;
   }
   if (turnId !== undefined) {
     currentTrace.turnId = turnId;
