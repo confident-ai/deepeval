@@ -36,7 +36,8 @@ from deepeval.confident.api import get_confident_api_key, set_confident_api_key
 from deepeval.cli.dotenv_handler import DotenvHandler
 
 StrOrEnum = Union[str, "Enum"]
-PROD = "https://app.confident-ai.com"
+# PROD = "https://app.confident-ai.com"
+PROD = "http://localhost:3000"
 WWW = "https://www.confident-ai.com"
 
 # Hosts considered "browser-clickable" Confident AI properties. Programmatic
