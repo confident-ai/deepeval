@@ -30,6 +30,7 @@ from .prompt_alignment.prompt_alignment import PromptAlignmentMetric
 from .task_completion.task_completion import TaskCompletionMetric
 from .topic_adherence.topic_adherence import TopicAdherenceMetric
 from .step_efficiency.step_efficiency import StepEfficiencyMetric
+from .agent_loop_detection.agent_loop_detection import AgentLoopDetectionMetric
 from .plan_adherence.plan_adherence import PlanAdherenceMetric
 from .plan_quality.plan_quality import PlanQualityMetric
 from .tool_use.tool_use import ToolUseMetric
@@ -116,6 +117,7 @@ __all__ = [
     "PlanQualityMetric",
     "ToolUseMetric",
     "GoalAccuracyMetric",
+        "AgentLoopDetectionMetric",
     # Conversational metrics
     "TurnRelevancyMetric",
     "ConversationCompletenessMetric",
