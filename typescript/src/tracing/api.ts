@@ -101,6 +101,7 @@ export interface TraceApi {
   threadId?: string;
   userId?: string;
   testCaseId?: string;
+  testRunId?: string;
   turnId?: string;
   input?: any;
   output?: any;
