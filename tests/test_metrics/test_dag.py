@@ -13,6 +13,7 @@ from deepeval.metrics.dag.utils import (
     copy_graph,
     is_valid_dag,
 )
+from deepeval.metrics.dag.nodes import propagate_skip
 
 
 class TestDeepAcyclicGraph:
@@ -269,3 +270,199 @@ class TestDeepAcyclicGraph:
         task = TaskNode("Check", "result", [], [judge])
         dag = DeepAcyclicGraph(root_nodes=[task])
         assert is_valid_dag_from_roots(dag.root_nodes, multiturn=False)
+
+
+class TestPropagateSkip:
+    """Tests for ``propagate_skip``."""
+
+    def test_decrements_self_indegree(self):
+        leaf = VerdictNode(verdict=True, score=10)
+        BinaryJudgementNode(
+            criteria="?",
+            children=[VerdictNode(verdict=False, score=0), leaf],
+        )
+        assert leaf._indegree == 1
+        propagate_skip(leaf)
+        assert leaf._indegree == 0
+
+    def test_recurses_through_verdict_child_into_subtree(self):
+        inner_yes = VerdictNode(verdict=True, score=10)
+        inner_no = VerdictNode(verdict=False, score=0)
+        inner_judge = BinaryJudgementNode(
+            criteria="inner?", children=[inner_yes, inner_no]
+        )
+        outer_a = VerdictNode(verdict="a", child=inner_judge)
+        outer_b = VerdictNode(verdict="b", score=0)
+        NonBinaryJudgementNode(criteria="outer?", children=[outer_a, outer_b])
+
+        propagate_skip(outer_a)
+
+        assert outer_a._indegree == 0
+        assert inner_judge._indegree == 0
+        assert inner_yes._indegree == 0
+        assert inner_no._indegree == 0
+
+    def test_shared_downstream_node_decrements_once_per_dead_path(self):
+        """Each construction-time +1 must be matched by exactly one skip."""
+        shared_leaf_t = VerdictNode(verdict=True, score=10)
+        shared_leaf_f = VerdictNode(verdict=False, score=0)
+        shared_judge = BinaryJudgementNode(
+            criteria="shared?", children=[shared_leaf_t, shared_leaf_f]
+        )
+        a = VerdictNode(verdict="a", child=shared_judge)
+        b = VerdictNode(verdict="b", child=shared_judge)
+        NonBinaryJudgementNode(criteria="?", children=[a, b])
+        assert shared_judge._indegree == 2
+
+        propagate_skip(a)
+        propagate_skip(b)
+
+        assert shared_judge._indegree == 0
+        assert shared_leaf_t._indegree == 0
+        assert shared_leaf_f._indegree == 0
+
+    def test_no_op_on_non_basenode(self):
+        propagate_skip(None)
+        propagate_skip("not a node")
+
+
+class TestDAGMetricReuse:
+    """End-to-end: a ``DAGMetric`` instance must produce correct scores and
+    clean verbose logs across repeated ``.measure()`` calls on the same dag."""
+
+    def _build_metric_with_mocked_judge(self, outer_verdicts, inner_verdicts):
+        from unittest.mock import patch
+        from deepeval.metrics import DAGMetric
+        from deepeval.metrics.dag.schema import BinaryJudgementVerdict
+
+        inner_true = VerdictNode(verdict=True, score=10)
+        inner_false = VerdictNode(verdict=False, score=5)
+        inner_judge = BinaryJudgementNode(
+            criteria="inner?",
+            children=[inner_true, inner_false],
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        outer_true = VerdictNode(verdict=True, child=inner_judge)
+        outer_false = VerdictNode(verdict=False, score=0)
+        outer_judge = BinaryJudgementNode(
+            criteria="outer?",
+            children=[outer_true, outer_false],
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        task = TaskNode(
+            instructions="dummy",
+            output_label="result",
+            evaluation_params=[SingleTurnParams.INPUT],
+            children=[outer_judge],
+        )
+        dag = DeepAcyclicGraph(root_nodes=[task])
+        metric = DAGMetric(
+            name="test", dag=dag, async_mode=False, _include_dag_suffix=False
+        )
+
+        outer_iter = iter(outer_verdicts)
+        inner_iter = iter(inner_verdicts)
+
+        def fake_extract(
+            metric, prompt, schema_cls, extract_schema, extract_json
+        ):
+            if schema_cls is BinaryJudgementVerdict:
+                # The two judges share the same schema; distinguish by which
+                # iter still has elements (outer is consumed first per turn).
+                if "outer?" in prompt:
+                    return BinaryJudgementVerdict(
+                        verdict=next(outer_iter), reason="mocked"
+                    )
+                return BinaryJudgementVerdict(
+                    verdict=next(inner_iter), reason="mocked"
+                )
+            from deepeval.metrics.dag.schema import TaskNodeOutput
+
+            return TaskNodeOutput(output="mocked task output")
+
+        patcher = patch(
+            "deepeval.metrics.dag.nodes.generate_with_schema_and_extract",
+            side_effect=fake_extract,
+        )
+        return metric, patcher
+
+    def test_score_resets_across_measure_calls(self):
+        """Consecutive measurements with different verdicts produce different scores."""
+        from deepeval.test_case import LLMTestCase
+
+        metric, patcher = self._build_metric_with_mocked_judge(
+            outer_verdicts=[True, False],
+            inner_verdicts=[True],
+        )
+        patcher.start()
+        try:
+            metric.measure(LLMTestCase(input="first", actual_output="x"))
+            first_score = metric.score  # outer=True → inner=True → 10/10
+            metric.measure(LLMTestCase(input="second", actual_output="x"))
+            second_score = metric.score  # outer=False → 0
+            assert first_score == 1.0
+            assert second_score == 0
+        finally:
+            patcher.stop()
+
+    def test_shared_downstream_judgement_node_fires_via_either_path(self):
+        """JudgementNode shared between two sibling verdict branches must fire
+        on whichever branch the verdict picks.
+        """
+        from unittest.mock import patch
+        from deepeval.metrics import DAGMetric
+        from deepeval.metrics.dag.schema import BinaryJudgementVerdict
+        from deepeval.test_case import LLMTestCase
+
+        shared_judge = BinaryJudgementNode(
+            criteria="shared?",
+            children=[
+                VerdictNode(verdict=True, score=10),
+                VerdictNode(verdict=False, score=5),
+            ],
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        root = BinaryJudgementNode(
+            criteria="root?",
+            children=[
+                VerdictNode(verdict=True, child=shared_judge),
+                VerdictNode(verdict=False, child=shared_judge),
+            ],
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        metric = DAGMetric(
+            name="t",
+            dag=DeepAcyclicGraph(root_nodes=[root]),
+            async_mode=False,
+            _include_dag_suffix=False,
+        )
+
+        def fake(metric, prompt, schema_cls, **_):
+            return BinaryJudgementVerdict(verdict=True, reason="m")
+
+        with patch(
+            "deepeval.metrics.dag.nodes.generate_with_schema_and_extract",
+            side_effect=fake,
+        ):
+            metric.measure(LLMTestCase(input="x", actual_output="y"))
+
+        assert metric.score == 1.0
+
+    def test_verbose_steps_does_not_accumulate(self):
+        from deepeval.test_case import LLMTestCase
+
+        metric, patcher = self._build_metric_with_mocked_judge(
+            outer_verdicts=[True, True, True],
+            inner_verdicts=[True, False, True],
+        )
+        patcher.start()
+        try:
+            metric.measure(LLMTestCase(input="A", actual_output="x"))
+            first = len(metric._verbose_steps)
+            metric.measure(LLMTestCase(input="B", actual_output="x"))
+            second = len(metric._verbose_steps)
+            metric.measure(LLMTestCase(input="C", actual_output="x"))
+            third = len(metric._verbose_steps)
+            assert first == second == third
+        finally:
+            patcher.stop()
