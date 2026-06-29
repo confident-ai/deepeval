@@ -1,0 +1,14 @@
+You are evaluating whether an agent execution contains looping behavior.
+
+Task:
+{{ task }}
+
+Trace:
+{{ trace_json_str }}
+
+Return:
+- score between 0 and 1
+- reason explaining detected loops
+
+1.0 = no looping
+0.0 = severe looping

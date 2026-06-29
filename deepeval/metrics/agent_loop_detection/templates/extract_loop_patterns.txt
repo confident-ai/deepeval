@@ -1,0 +1,6 @@
+Analyze the agent trace and identify repeated tool calls, repeated reasoning steps, or cyclical behavior.
+
+Trace:
+{{ trace_json }}
+
+Return a concise description of detected loop patterns.
