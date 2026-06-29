@@ -13,6 +13,9 @@ on:
       - '.github/workflows/typescript_test.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -26,6 +29,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install dependencies
+        id: install
         run: npm ci
 
       - name: Run Jest tests
@@ -34,3 +38,7 @@ jobs:
           CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
           CONFIDENT_TRACE_VERBOSE: 0
         run: npm test
+
+      - name: Validate package exports
+        if: ${{ always() && steps.install.outcome == 'success' }}
+        run: npm run test:package-exports
