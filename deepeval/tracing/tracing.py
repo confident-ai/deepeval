@@ -877,6 +877,7 @@ class TraceManager:
             toolsCalled=trace.tools_called,
             expectedTools=trace.expected_tools,
             testCaseId=trace.test_case_id,
+            testRunId=trace.test_run_id,
             turnId=trace.turn_id,
             confident_api_key=trace.confident_api_key,
             environment=(
