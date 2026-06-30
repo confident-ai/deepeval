@@ -83,20 +83,30 @@ export class NonAdviceMetric extends BaseMetric {
   }
 
   private async generateAdvices(actualOutput: string): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_advices", {
-      actual_output: actualOutput,
-      advice_types: this.adviceTypes,
-      advice_types_str: this.adviceTypes.join(", "),
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_advices",
+      {
+        actual_output: actualOutput,
+        advice_types: this.adviceTypes,
+        advice_types_str: this.adviceTypes.join(", "),
+      },
+    );
     const { advices } = await generateWithSchema(this, prompt, AdvicesSchema);
     return advices;
   }
 
   private async generateVerdicts(): Promise<NonAdviceVerdict[]> {
     if (this.advices.length === 0) return [];
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
-      advices: this.advices,
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_verdicts",
+      {
+        advices: this.advices,
+      },
+    );
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
   }
@@ -106,10 +116,15 @@ export class NonAdviceMetric extends BaseMetric {
     const nonAdviceViolations = this.verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "yes")
       .map((v) => v.reason);
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
-      non_advice_violations: nonAdviceViolations,
-      score: (this.score ?? 0).toFixed(2),
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_reason",
+      {
+        non_advice_violations: nonAdviceViolations,
+        score: (this.score ?? 0).toFixed(2),
+      },
+    );
     const { reason } = await generateWithSchema(
       this,
       prompt,

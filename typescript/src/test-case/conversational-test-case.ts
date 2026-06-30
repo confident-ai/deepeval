@@ -1,5 +1,11 @@
 import { ToolCall, RetrievedContextData } from "./llm-test-case";
-import { checkIfMultimodal, extractImageIdsFromList, extractImageIdsFromString, MLLM_IMAGE_REGISTRY, MLLMImage } from "./mllm-image";
+import {
+  checkIfMultimodal,
+  extractImageIdsFromList,
+  extractImageIdsFromString,
+  MLLM_IMAGE_REGISTRY,
+  MLLMImage,
+} from "./mllm-image";
 import {
   MCPServer,
   MCPToolCall,
@@ -152,7 +158,9 @@ export class ConversationalTestCase {
       this.turns.forEach((turn) => {
         extractImageIdsFromString(turn.content, ids);
         extractImageIdsFromList(
-          turn.retrievalContext?.map((c) => (typeof c === "string" ? c : c.context)),
+          turn.retrievalContext?.map((c) =>
+            typeof c === "string" ? c : c.context,
+          ),
           ids,
         );
       });
@@ -172,7 +180,11 @@ export class ConversationalTestCase {
   /** Auto-detect multimodality from image slugs in the fields/turns (mirrors Python). */
   private detectMultimodal(): boolean {
     const has = (s?: string) => s != null && checkIfMultimodal(s);
-    if (has(this.scenario) || has(this.expectedOutcome) || has(this.userDescription)) {
+    if (
+      has(this.scenario) ||
+      has(this.expectedOutcome) ||
+      has(this.userDescription)
+    ) {
       return true;
     }
     for (const turn of this.turns ?? []) {

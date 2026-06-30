@@ -99,7 +99,12 @@ export async function evaluateTrace(
     const metricsData: MetricData[] = [];
     for (const metric of metrics) {
       metricsData.push(
-        await runMetric(metric, testCase, errorCfg, options.onMetric ?? (() => {})),
+        await runMetric(
+          metric,
+          testCase,
+          errorCfg,
+          options.onMetric ?? (() => {}),
+        ),
       );
     }
     scope.metricsData = metricsData; // also attach to the span/trace
