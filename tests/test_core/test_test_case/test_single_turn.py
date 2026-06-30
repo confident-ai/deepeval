@@ -450,6 +450,43 @@ class TestToolCallFunctionality:
         hash_value = hash(tool_call)
         assert isinstance(hash_value, int)
 
+    def test_tool_call_hashing_with_unhashable_types(self):
+        """Regression test for #2815.
+
+        ToolCall must stay hashable even when its output (or a value nested in
+        input_parameters) is an arbitrary unhashable object, such as a
+        LangChain ToolMessage or a pydantic model that defines __eq__ without
+        __hash__. ToolCorrectnessMetric puts ToolCall instances into a set, so a
+        crash here breaks component-level evaluation of agent traces.
+        """
+
+        class _Unhashable:
+            # Mirrors objects that define __eq__ without __hash__, which Python
+            # then makes unhashable.
+            __hash__ = None
+
+            def __init__(self, value):
+                self.value = value
+
+            def __repr__(self):
+                return f"_Unhashable({self.value!r})"
+
+        # Sanity check: the helper object really is unhashable.
+        with pytest.raises(TypeError):
+            hash(_Unhashable("x"))
+
+        # Unhashable object as the output.
+        tool_output = ToolCall(name="tool", output=_Unhashable("x"))
+        assert isinstance(hash(tool_output), int)
+        assert len({tool_output}) == 1  # usable in a set
+
+        # Unhashable object nested inside input_parameters.
+        tool_input = ToolCall(
+            name="tool", input_parameters={"arg": _Unhashable("y")}
+        )
+        assert isinstance(hash(tool_input), int)
+        assert len({tool_input}) == 1
+
     def test_tool_call_repr(self):
         tool_call = ToolCall(
             name="test_tool",
