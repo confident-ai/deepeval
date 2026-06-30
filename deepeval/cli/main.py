@@ -30,8 +30,6 @@ from pydantic_core import PydanticUndefined
 from deepeval.key_handler import (
     EmbeddingKeyValues,
     ModelKeyValues,
-    KeyValues,
-    KEY_FILE_HANDLER,
 )
 from deepeval.telemetry import capture_login_event, capture_view_event
 from deepeval.config.settings import get_settings
@@ -57,18 +55,11 @@ from deepeval.cli.utils import (
 )
 from deepeval.confident.api import (
     is_confident,
-    get_base_api_url,
     Api,
     Endpoints,
     HttpMethods,
 )
-from deepeval.cli.auth_flow import (
-    AuthFlowError,
-    browser_pairing_login,
-    email_password_login,
-    email_password_signup,
-    prompt_select,
-)
+from deepeval.cli.auth_flow import browser_pairing_login, prompt_select
 
 app = typer.Typer(name="deepeval", no_args_is_help=True)
 app.add_typer(test_app, name="test")
@@ -81,15 +72,6 @@ class Regions(Enum):
     EU = "EU"
     AU = "AU"
 
-class AccountAction(Enum):
-    LOGIN = "LOGIN"
-    SIGNUP = "SIGNUP"
-
-class LoginMethod(Enum):
-    EMAIL = "EMAIL"
-    GOOGLE = "GOOGLE"
-    SSO = "SSO"
-    PASTE = "PASTE"
 
 def version_callback(value: Optional[bool] = None) -> None:
     if not value:
@@ -221,65 +203,32 @@ def _prompt_paste_api_key() -> str:
         print("❌ API Key cannot be empty. Please try again.\n")
 
 
-def _current_data_center() -> str:
-    region = KEY_FILE_HANDLER.fetch_data(KeyValues.CONFIDENT_REGION)
-    return "EU" if region == "EU" else "US"
-
-
-def _resolve_key_via_browser(intent: Optional[str] = None) -> str:
-    key = browser_pairing_login(PROD, with_utm, intent=intent)
-    if key:
-        return key
-    print("You can finish by pasting an API key from the platform instead.")
-    return _prompt_paste_api_key()
-
 def _resolve_login_key() -> str:
     render_login_message()
-
-    account_action = prompt_select(
-        "How would you like to get started?",
-        [
-            ("Log in to an existing account", AccountAction.LOGIN),
-            ("Create a new account", AccountAction.SIGNUP),
-        ],
-    )
-
-    if account_action == AccountAction.SIGNUP:
-        signup_method = prompt_select(
-            "How would you like to create your account?",
-            [
-                ("Email & password (in this terminal)", LoginMethod.EMAIL),
-                ("Google (opens browser)", LoginMethod.GOOGLE),
-                ("SSO (opens browser)", LoginMethod.SSO),
-            ],
-        )
-        if signup_method == LoginMethod.EMAIL:
-            return email_password_signup(
-                get_base_api_url(), PROD, _current_data_center()
-            )
-        return _resolve_key_via_browser(intent="signup")
 
     method = prompt_select(
         "How would you like to log in?",
         [
-            ("Email & password", LoginMethod.EMAIL),
-            ("Google (opens browser)", LoginMethod.GOOGLE),
-            ("SSO (opens browser)", LoginMethod.SSO),
-            ("Paste an existing API key", LoginMethod.PASTE),
+            ("Log in via your browser", "browser"),
+            ("Paste an API key", "paste"),
         ],
     )
 
-    if method == LoginMethod.EMAIL:
-        return email_password_login(get_base_api_url(), PROD)
-    if method in (LoginMethod.GOOGLE, LoginMethod.SSO):
-        return _resolve_key_via_browser()
+    if method == "paste":
+        return _prompt_paste_api_key()
+
+    key = browser_pairing_login(PROD, with_utm)
+    if key:
+        return key
+    print("\nNo problem — paste an API key from the platform instead.")
     return _prompt_paste_api_key()
 
 
 @app.command(
     help=(
-        "Log in to Confident AI. Choose between email & password (in-terminal), "
-        "Google or SSO (browser), or pasting an existing API key. "
+        "Log in to Confident AI. Opens the platform in your browser to sign in "
+        "(or create an account) and pick a project; the API key is paired back "
+        "automatically. "
         f"Get a key from {with_utm(PROD, medium='cli', content='login_help_text')}. "
         "The API key is saved to your environment variables, typically .env.local, "
         "unless a different path is provided with --save."
@@ -303,15 +252,11 @@ def login(
     with capture_login_event() as span:
         completed = False
         try:
-            # Resolve the key from the CLI flag or the interactive menu.
+            # Resolve the key from the CLI flag or the browser pairing flow.
             if api_key is not None:
                 key = api_key
             else:
-                try:
-                    key = _resolve_login_key()
-                except AuthFlowError as error:
-                    print(f"❌ {error}")
-                    return
+                key = _resolve_login_key()
 
             settings = get_settings()
             save = save or settings.DEEPEVAL_DEFAULT_SAVE or "dotenv:.env.local"
