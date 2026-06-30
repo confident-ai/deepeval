@@ -107,7 +107,17 @@ There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `
 - [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the OpenAI `chat.completions.create(...)` and `beta.chat.completions.parse(...)` calls.
 
 :::info
-You can use custom providers by setting `api_key` and `base_url` with your custom provider's details.
+You can use custom providers by setting `api_key` and `base_url` with your custom provider's details. For example, to use [CometAPI](https://www.cometapi.com/):
+
+```python
+from deepeval.models import GPTModel
+
+model = GPTModel(
+    model="gpt-4.1",
+    api_key="your-cometapi-key",
+    base_url="https://api.cometapi.com/v1",
+)
+```
 :::
 
 :::tip
