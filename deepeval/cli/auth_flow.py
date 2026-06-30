@@ -214,6 +214,54 @@ def email_password_login(base_url: str, origin: str) -> str:
     return _create_api_key(session, base_url, origin, token, project["id"])
 
 
+def email_password_signup(base_url: str, origin: str, data_center: str) -> str:
+    session = requests.Session()
+
+    name = typer.prompt("👤 Your name")
+    organization_name = typer.prompt("🏢 Organization name")
+
+    token: Optional[str] = None
+    while True:
+        email = typer.prompt("📧 Work email")
+        password = typer.prompt(
+            "🔑 Password (min 8 characters)", hide_input=True
+        )
+
+        resp = session.post(
+            f"{base_url}/cli/signup",
+            json={
+                "email": email,
+                "password": password,
+                "name": name,
+                "organizationName": organization_name,
+                "dataCenter": data_center,
+            },
+            headers=_auth_headers(origin),
+            timeout=REQUEST_TIMEOUT,
+        )
+
+        if resp.status_code == 409:
+            raise AuthFlowError(
+                "An account with this email already exists. Run `deepeval login` "
+                "again and choose “Log in to an existing account”."
+            )
+        if resp.status_code == 400:
+            print(f"❌ {_describe_error(resp, 'Sign up failed')}")
+            continue
+        if not resp.ok:
+            raise AuthFlowError(_describe_error(resp, "Sign up failed"))
+
+        token = resp.json().get("token")
+        break
+
+    if not token:
+        raise AuthFlowError("Sign up did not return a session token.")
+
+    projects = _list_projects(session, base_url, origin, token)
+    project = _select_project(projects)
+    return _create_api_key(session, base_url, origin, token, project["id"])
+
+
 # --------------------------------------------------------------------------- #
 # Browser pairing (Google / SSO / signup)
 # --------------------------------------------------------------------------- #

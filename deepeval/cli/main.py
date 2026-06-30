@@ -30,6 +30,8 @@ from pydantic_core import PydanticUndefined
 from deepeval.key_handler import (
     EmbeddingKeyValues,
     ModelKeyValues,
+    KeyValues,
+    KEY_FILE_HANDLER,
 )
 from deepeval.telemetry import capture_login_event, capture_view_event
 from deepeval.config.settings import get_settings
@@ -64,6 +66,7 @@ from deepeval.cli.auth_flow import (
     AuthFlowError,
     browser_pairing_login,
     email_password_login,
+    email_password_signup,
     prompt_select,
 )
 
@@ -218,6 +221,11 @@ def _prompt_paste_api_key() -> str:
         print("❌ API Key cannot be empty. Please try again.\n")
 
 
+def _current_data_center() -> str:
+    region = KEY_FILE_HANDLER.fetch_data(KeyValues.CONFIDENT_REGION)
+    return "EU" if region == "EU" else "US"
+
+
 def _resolve_key_via_browser(intent: Optional[str] = None) -> str:
     key = browser_pairing_login(PROD, with_utm, intent=intent)
     if key:
@@ -237,6 +245,18 @@ def _resolve_login_key() -> str:
     )
 
     if account_action == AccountAction.SIGNUP:
+        signup_method = prompt_select(
+            "How would you like to create your account?",
+            [
+                ("Email & password (in this terminal)", LoginMethod.EMAIL),
+                ("Google (opens browser)", LoginMethod.GOOGLE),
+                ("SSO (opens browser)", LoginMethod.SSO),
+            ],
+        )
+        if signup_method == LoginMethod.EMAIL:
+            return email_password_signup(
+                get_base_api_url(), PROD, _current_data_center()
+            )
         return _resolve_key_via_browser(intent="signup")
 
     method = prompt_select(
