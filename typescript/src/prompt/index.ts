@@ -108,7 +108,8 @@ export class Tool {
 
 export class Prompt {
   private alias: string;
-  private api: Api;
+  private _api: Api | null = null;
+  private _confidentApiKey?: string;
 
   // Class variables to store prompt data
   public hash: string = "latest";
@@ -125,6 +126,32 @@ export class Prompt {
   private _outputType: OutputType | null = null;
   private _outputSchema: OutputSchema | null = null;
 
+  private get api(): Api {
+    if (!this._api) {
+      this._api = new Api(this._confidentApiKey);
+    }
+    return this._api;
+  }
+
+  /**
+   * Create a Prompt from a raw text template without fetching from Confident AI.
+   * Useful for the PromptOptimizer and other programmatic use cases.
+   * Does NOT require a Confident AI API key — the prompt works locally.
+   * Calling pull/push will require the key.
+   */
+  static fromText(params: {
+    alias: string;
+    text: string;
+    interpolationType?: string;
+    branch?: string;
+  }): Prompt {
+    const p = new Prompt({ alias: params.alias, branch: params.branch });
+    p._textTemplate = params.text;
+    p._type = "TEXT";
+    p._interpolationType = params.interpolationType ?? "MUSTACHE_WITH_SPACE";
+    return p;
+  }
+
   constructor({
     alias,
     branch,
@@ -139,7 +166,7 @@ export class Prompt {
     }
     this.alias = alias;
     this.branch = branch;
-    this.api = new Api(confidentApiKey);
+    this._confidentApiKey = confidentApiKey;
   }
 
   private _normalizeTools(toolsInput?: ToolData[] | Tool[]): Tool[] | null {

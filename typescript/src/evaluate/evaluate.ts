@@ -239,7 +239,7 @@ export async function runMetric(
   return buildMetricData(metric);
 }
 
-function buildMetricData(metric: BaseMetricCore): MetricData {
+export function buildMetricData(metric: BaseMetricCore): MetricData {
   return {
     name: metric.name,
     threshold: metric.threshold,

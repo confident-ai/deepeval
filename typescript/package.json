@@ -43,6 +43,36 @@
       "require": "./dist/openai/index.js",
       "types": "./dist/openai/index.d.ts"
     },
+    "./models": {
+      "import": "./dist/models/index.js",
+      "require": "./dist/models/index.js",
+      "types": "./dist/models/index.d.ts"
+    },
+    "./metrics": {
+      "import": "./dist/metrics/index.js",
+      "require": "./dist/metrics/index.js",
+      "types": "./dist/metrics/index.d.ts"
+    },
+    "./evaluate": {
+      "import": "./dist/evaluate/index.js",
+      "require": "./dist/evaluate/index.js",
+      "types": "./dist/evaluate/index.d.ts"
+    },
+    "./prompt": {
+      "import": "./dist/prompt/index.js",
+      "require": "./dist/prompt/index.js",
+      "types": "./dist/prompt/index.d.ts"
+    },
+    "./synthesizer": {
+      "import": "./dist/synthesizer/index.js",
+      "require": "./dist/synthesizer/index.js",
+      "types": "./dist/synthesizer/index.d.ts"
+    },
+    "./optimizer": {
+      "import": "./dist/optimizer/index.js",
+      "require": "./dist/optimizer/index.js",
+      "types": "./dist/optimizer/index.d.ts"
+    },
     "./integrations/ai-sdk": {
       "import": "./dist/integrations/ai-sdk/index.js",
       "require": "./dist/integrations/ai-sdk/index.js",
@@ -83,6 +113,24 @@
       ],
       "openai": [
         "dist/openai/index.d.ts"
+      ],
+      "models": [
+        "dist/models/index.d.ts"
+      ],
+      "metrics": [
+        "dist/metrics/index.d.ts"
+      ],
+      "evaluate": [
+        "dist/evaluate/index.d.ts"
+      ],
+      "prompt": [
+        "dist/prompt/index.d.ts"
+      ],
+      "synthesizer": [
+        "dist/synthesizer/index.d.ts"
+      ],
+      "optimizer": [
+        "dist/optimizer/index.d.ts"
       ],
       "integrations/ai-sdk": [
         "dist/integrations/ai-sdk/index.d.ts"

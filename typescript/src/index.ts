@@ -26,6 +26,8 @@ export {
 export {
   evaluate,
   compare,
+  assertTest,
+  AssertionError,
   type EvaluationResult,
   type TestResult,
   type EvaluateOptions,
@@ -38,3 +40,18 @@ export {
   type GovernanceAssessment,
   type GovernancePolicyReference,
 } from "./governance";
+export { Synthesizer, Evolution, PromptEvolution } from "./synthesizer";
+export type {
+  FiltrationConfig,
+  EvolutionConfig,
+  StylingConfig,
+  ConversationalStylingConfig,
+  ContextConstructionConfig,
+  SynthesizerOptions,
+} from "./synthesizer";
+export { PromptOptimizer } from "./optimizer";
+export type {
+  ModelCallback,
+  OptimizationConfig,
+  OptimizationReport,
+} from "./optimizer";
