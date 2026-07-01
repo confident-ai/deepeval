@@ -3,6 +3,7 @@
   "pages": [
     "metrics-exact-match",
     "metrics-pattern-match",
-    "metrics-json-correctness"
+    "metrics-json-correctness",
+    "metrics-tool-permission"
   ]
 }
