@@ -345,6 +345,7 @@ export interface TraceManagerConfig {
   mask?: MaskFunction;
   confidentApiKey?: string;
   tracingEnabled?: boolean;
+  maxTraces?: number;
 }
 
 export class TraceManager {
@@ -369,6 +370,7 @@ export class TraceManager {
   private traceCaptureSink?: (trace: Trace) => void;
   private confidentApiKey: string = "";
   private tracingEnabled: boolean = true;
+  private maxTraces: number = 0; // 0 = unlimited
 
   /** Register/clear a sink that receives each completed trace (used by `evalsIterator`). */
   public setTraceCaptureSink(sink?: (trace: Trace) => void): void {
@@ -404,23 +406,25 @@ export class TraceManager {
    */
   public createNestedSpansDict(span: BaseSpan): Record<string, unknown> {
     const dict: Record<string, unknown> = {};
-    const put = (k: string, v: unknown) => {
-      if (v !== undefined && v !== null) dict[k] = v;
+    const add = (k: string, v: unknown) => {
+      if (v != null) dict[k] = v;
     };
-    put("name", span.name);
-    put("type", span.type);
-    put("input", span.input);
-    put("output", span.output);
-    put("error", span.error);
-    put("expectedOutput", span.expectedOutput);
-    put("context", span.context);
-    put("retrievalContext", span.retrievalContext);
-    put("toolsCalled", span.toolsCalled);
-    put("expectedTools", span.expectedTools);
-    // Span-type extras (model / tools) when present, like Python's api span.
-    put("model", (span as { model?: unknown }).model);
-    put("availableTools", (span as { availableTools?: unknown }).availableTools);
-    dict.children = (span.children ?? []).map((child) =>
+    add("name", span.name);
+    add("type", span.type);
+    add("input", span.input);
+    add("output", span.output);
+    add("error", span.error);
+    add("expectedOutput", span.expectedOutput);
+    add("context", span.context);
+    add("retrievalContext", span.retrievalContext);
+    add("toolsCalled", span.toolsCalled);
+    add("expectedTools", span.expectedTools);
+    add("model", (span as { model?: unknown }).model);
+    add(
+      "availableTools",
+      (span as { availableTools?: unknown }).availableTools,
+    );
+    dict.children = span.children.map((child) =>
       this.createNestedSpansDict(child),
     );
     return dict;
@@ -444,6 +448,9 @@ export class TraceManager {
     if (config.tracingEnabled !== undefined) {
       this.tracingEnabled = config.tracingEnabled;
     }
+    if (config.maxTraces !== undefined) {
+      this.maxTraces = config.maxTraces;
+    }
   }
 
   public startNewTrace(): Trace {
@@ -457,6 +464,15 @@ export class TraceManager {
     };
     this.activeTraces.set(traceUuid, newTrace);
     this.traces.push(newTrace);
+    if (this.maxTraces > 0 && this.traces.length > this.maxTraces) {
+      const evicted = this.traces.splice(
+        0,
+        this.traces.length - this.maxTraces,
+      );
+      for (const t of evicted) {
+        this.activeTraces.delete(t.uuid);
+      }
+    }
     return newTrace;
   }
 
@@ -701,7 +717,7 @@ export class TraceManager {
       const traceApi = this.createTraceApi(trace);
       const apiKey = traceApi.confidentApiKey || this.confidentApiKey;
       const api = new Api(apiKey);
-      const { confidentApiKey, ...traceApiBody } = traceApi;
+      const { confidentApiKey: _, ...traceApiBody } = traceApi;
 
       const response = await api.sendRequest(
         HttpMethods.POST,
@@ -735,41 +751,35 @@ export class TraceManager {
   }
 
   public createTraceApi(trace: Trace): TraceApi {
-    // Initialize empty arrays for each span type
     const baseSpans: BaseApiSpan[] = [];
     const agentSpans: BaseApiSpan[] = [];
     const llmSpans: BaseApiSpan[] = [];
     const retrieverSpans: BaseApiSpan[] = [];
     const toolSpans: BaseApiSpan[] = [];
-    // Process all spans in the trace, including child spans
-    const processSpans = (spans: BaseSpan[]) => {
-      for (const span of spans) {
-        // Convert BaseSpan to BaseApiSpan
-        const apiSpan = this.convertSpanToApiSpan(span);
-        // Ensure required fields are present based on span type
-        if (apiSpan.type === SpanType.RETRIEVER && !apiSpan.embedder) {
-          apiSpan.embedder = "default-embedder";
-        }
-        // Categorize spans by type and add ALL spans (not just root spans)
-        if (apiSpan.type === SpanType.AGENT) {
-          agentSpans.push(apiSpan);
-        } else if (apiSpan.type === SpanType.LLM) {
-          llmSpans.push(apiSpan);
-        } else if (apiSpan.type === SpanType.RETRIEVER) {
-          retrieverSpans.push(apiSpan);
-        } else if (apiSpan.type === SpanType.TOOL) {
-          toolSpans.push(apiSpan);
-        } else {
-          baseSpans.push(apiSpan);
-        }
-        // Process children recursively
-        if (span.children && span.children.length > 0) {
-          processSpans(span.children);
+    const stack = [...trace.rootSpans];
+    while (stack.length > 0) {
+      const span = stack.pop()!;
+      const apiSpan = this.convertSpanToApiSpan(span);
+      if (apiSpan.type === SpanType.RETRIEVER && !apiSpan.embedder) {
+        apiSpan.embedder = "default-embedder";
+      }
+      if (apiSpan.type === SpanType.AGENT) {
+        agentSpans.push(apiSpan);
+      } else if (apiSpan.type === SpanType.LLM) {
+        llmSpans.push(apiSpan);
+      } else if (apiSpan.type === SpanType.RETRIEVER) {
+        retrieverSpans.push(apiSpan);
+      } else if (apiSpan.type === SpanType.TOOL) {
+        toolSpans.push(apiSpan);
+      } else {
+        baseSpans.push(apiSpan);
+      }
+      if (span.children.length > 0) {
+        for (let i = span.children.length - 1; i >= 0; i--) {
+          stack.push(span.children[i]);
         }
       }
-    };
-    // Start processing from root spans
-    processSpans(trace.rootSpans);
+    }
     // Ensure proper datetime formatting for start and end times
     const startTime = trace.startTime
       ? toZodCompatibleISO(trace.startTime)
@@ -813,27 +823,17 @@ export class TraceManager {
     };
   }
 
-  // Convert a BaseSpan to a BaseApiSpan
   private convertSpanToApiSpan(span: BaseSpan): BaseApiSpan {
-    let _inputData: any = span.input;
-    let _outputData: any = span.output;
-
-    // Ensure input and output are not undefined
-    _inputData = _inputData ?? "";
-    _outputData = _outputData ?? (span.type === SpanType.RETRIEVER ? [] : "");
-
-    // Convert Date objects to ISO strings
     const startTime = span.startTime
       ? toZodCompatibleISO(span.startTime)
       : toZodCompatibleISO(new Date());
-    // If no end time or if end time is before start time, use start time
-    let endTime;
+    let endTime: string;
     if (!span.endTime || span.endTime < span.startTime) {
       endTime = startTime;
     } else {
       endTime = toZodCompatibleISO(span.endTime);
     }
-    // Create the base API span
+
     const apiSpan: BaseApiSpan = {
       uuid: span.uuid,
       name: span.name,
@@ -856,9 +856,9 @@ export class TraceManager {
       context: span.context,
       toolsCalled: span.toolsCalled,
       expectedTools: span.expectedTools,
+      metadata: span.metadata,
     };
 
-    // Add type-specific fields
     if (span.type === SpanType.AGENT) {
       const agentSpan = span as AgentSpan;
       apiSpan.availableTools = agentSpan.availableTools || [];
@@ -886,30 +886,6 @@ export class TraceManager {
     } else {
       span.type = "base";
       apiSpan.type = span.type;
-    }
-    // Add test case information if available
-    if (span.expectedOutput) {
-      apiSpan.expectedOutput = span.expectedOutput;
-    }
-    if (span.retrievalContext) {
-      apiSpan.retrievalContext = span.retrievalContext;
-    }
-    if (span.context) {
-      apiSpan.context = span.context;
-    }
-    if (span.toolsCalled) {
-      apiSpan.toolsCalled = span.toolsCalled;
-    }
-    if (span.expectedTools) {
-      apiSpan.expectedTools = span.expectedTools;
-    }
-    // Add metric collection if available
-    if (span.metricCollection) {
-      apiSpan.metricCollection = span.metricCollection;
-    }
-    // Add metadata if available
-    if (span.metadata) {
-      apiSpan.metadata = span.metadata;
     }
     return apiSpan;
   }
