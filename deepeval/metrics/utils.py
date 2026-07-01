@@ -122,11 +122,10 @@ def format_turns(
 
 def convert_turn_to_dict(
     turn: Turn,
-    turn_params: List[MultiTurnParams] = [
-        MultiTurnParams.CONTENT,
-        MultiTurnParams.ROLE,
-    ],
+    turn_params: Optional[List[MultiTurnParams]] = None,
 ) -> Dict:
+    if turn_params is None:
+        turn_params = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE]
     result = {}
     for param in turn_params:
         if param in (
