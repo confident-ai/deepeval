@@ -142,6 +142,9 @@ class LlmSpan(BaseSpan):
     output_token_count: Optional[float] = Field(
         None, serialization_alias="outputTokenCount"
     )
+    cached_input_token_count: Optional[float] = Field(
+        None, serialization_alias="cachedInputTokenCount"
+    )
     cost_per_input_token: Optional[float] = Field(
         None, serialization_alias="costPerInputToken"
     )
