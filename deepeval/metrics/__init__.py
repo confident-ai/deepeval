@@ -25,6 +25,7 @@ from .contextual_relevancy.contextual_relevancy import ContextualRelevancyMetric
 from .contextual_precision.contextual_precision import ContextualPrecisionMetric
 from .knowledge_retention.knowledge_retention import KnowledgeRetentionMetric
 from .tool_correctness.tool_correctness import ToolCorrectnessMetric
+from .tool_permission.tool_permission import ToolPermissionMetric
 from .json_correctness.json_correctness import JsonCorrectnessMetric
 from .prompt_alignment.prompt_alignment import PromptAlignmentMetric
 from .task_completion.task_completion import TaskCompletionMetric
@@ -101,6 +102,7 @@ __all__ = [
     "NonAdviceMetric",
     "MisuseMetric",
     "RoleViolationMetric",
+    "ToolPermissionMetric",
     "RoleAdherenceMetric",
     # Task-specific metrics
     "ToolCorrectnessMetric",
