@@ -5,6 +5,7 @@ from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_llm_test_case_params,
     initialize_model,
+    print_tools_called,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
@@ -194,6 +195,9 @@ class TaskCompletionMetric(BaseMetric):
                 input=test_case.input,
                 actual_output=test_case.actual_output,
                 tools_called=test_case.tools_called,
+                tools_called_formatted=print_tools_called(
+                    test_case.tools_called
+                ),
             )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -220,6 +224,9 @@ class TaskCompletionMetric(BaseMetric):
                 input=test_case.input,
                 actual_output=test_case.actual_output,
                 tools_called=test_case.tools_called,
+                tools_called_formatted=print_tools_called(
+                    test_case.tools_called
+                ),
             )
         return generate_with_schema_and_extract(
             metric=self,

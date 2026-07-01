@@ -29,7 +29,6 @@ from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.tracing.context import next_agent_span
 
-
 RUN_ID = f"{Path(__file__).stem}-{uuid.uuid4().hex[:8]}"
 
 
