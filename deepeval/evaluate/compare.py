@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Callable
+from typing import Optional, List, Dict, Callable, Union
 import asyncio
 import time
 from rich.progress import (
@@ -44,11 +44,12 @@ def compare(
     test_cases: List[ArenaTestCase],
     metric: ArenaGEval,
     name: str = "compare()",
+    return_details: bool = False,
     # Configs
     async_config: Optional[AsyncConfig] = AsyncConfig(),
     display_config: Optional[DisplayConfig] = DisplayConfig(),
     error_config: Optional[ErrorConfig] = ErrorConfig(),
-) -> Dict[str, int]:
+) -> Union[Dict[str, int], Dict[str, object]]:
 
     # Prepare test run map
     unique_contestant_names = set(
@@ -119,6 +120,12 @@ def compare(
         winner_counts=winner_counts,
         run_duration=run_duration,
     )
+    if return_details:
+        verdicts = [
+            {"test_case_index": i, "winner": winner}
+            for i, winner in enumerate(winners)
+        ]
+        return {"winner_counts": dict(winner_counts), "verdicts": verdicts}
     return dict(winner_counts)
 
 
@@ -139,7 +146,7 @@ async def a_execute_arena_test_cases(
         async with semaphore:
             return await func(*args, **kwargs)
 
-    winners = []
+    winners: List[Optional[str]] = [None] * len(test_cases)
     semaphore = asyncio.Semaphore(max_concurrent)
 
     async def evaluate_single_test_case(
@@ -179,8 +186,7 @@ async def a_execute_arena_test_cases(
         end_time = time.perf_counter()
         run_duration = end_time - start_time
 
-        if winner:
-            winners.append(winner)
+        winners[index] = winner
 
         update_pbar(progress, pbar_id)
         update_test_run_map(
@@ -236,7 +242,7 @@ def execute_arena_test_cases(
     """
     Non-async version of comparing arena test cases.
     """
-    winners = []
+    winners: List[Optional[str]] = [None] * len(test_cases)
 
     # TODO: doesn't work
     def evaluate_test_cases(progress=None, pbar_id=None):
@@ -272,8 +278,7 @@ def execute_arena_test_cases(
             end_time = time.perf_counter()
             run_duration = end_time - start_time
 
-            if winner:
-                winners.append(winner)
+            winners[i] = winner
 
             update_pbar(progress, pbar_id)
             update_test_run_map(
