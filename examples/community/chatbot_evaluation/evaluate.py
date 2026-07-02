@@ -2,6 +2,7 @@
 Simple RAG evaluation example using DeepEval.
 Runs Answer Relevancy metric on sample outputs.
 """
+
 import json
 import os
 from deepeval.test_case import LLMTestCase
@@ -21,8 +22,7 @@ print("\n--- DeepEval Results ---\n")
 for item in data:
 
     test_case = LLMTestCase(
-        input=item["input"],
-        actual_output=item["actual_output"]
+        input=item["input"], actual_output=item["actual_output"]
     )
 
     score = metric.measure(test_case)
