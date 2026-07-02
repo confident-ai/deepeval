@@ -120,8 +120,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
-.env.local
 .venv
 env/
 venv/
@@ -176,3 +174,4 @@ secrets
 # Cursor IDE local config (rules, etc.)
 .cursor/
 
+config.bat

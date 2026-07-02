@@ -105,7 +105,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "node init && tsc",
     "test": "jest",
     "lint": "eslint",
     "lint:fix": "eslint --fix"
