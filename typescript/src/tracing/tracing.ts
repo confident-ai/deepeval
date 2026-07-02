@@ -352,6 +352,7 @@ export class TraceManager {
   private traces: Trace[] = [];
   private activeTraces: Map<string, Trace> = new Map(); // Map of traceUuid to Trace
   private activeSpans: Map<string, BaseSpan> = new Map(); // Map of spanUuid to BaseSpan
+  private traceSpanCounters: Map<string, number> = new Map(); // Map of traceUuid to active span count
 
   // Queue for trace posting
   private traceQueue: Trace[] = [];
@@ -506,10 +507,29 @@ export class TraceManager {
 
   public addSpan(span: BaseSpan): void {
     this.activeSpans.set(span.uuid, span);
+    this.traceSpanCounters.set(
+      span.traceUuid,
+      (this.traceSpanCounters.get(span.traceUuid) ?? 0) + 1,
+    );
   }
 
   public removeSpan(spanUuid: string): void {
-    this.activeSpans.delete(spanUuid);
+    const span = this.activeSpans.get(spanUuid);
+    if (span) {
+      this.activeSpans.delete(spanUuid);
+      const count = this.traceSpanCounters.get(span.traceUuid);
+      if (count !== undefined) {
+        if (count <= 1) {
+          this.traceSpanCounters.delete(span.traceUuid);
+        } else {
+          this.traceSpanCounters.set(span.traceUuid, count - 1);
+        }
+      }
+    }
+  }
+
+  public getActiveSpanCount(traceUuid: string): number {
+    return this.traceSpanCounters.get(traceUuid) ?? 0;
   }
 
   public addSpanToTrace(span: BaseSpan): void {
@@ -606,6 +626,7 @@ export class TraceManager {
     this.traces = [];
     this.activeTraces.clear();
     this.activeSpans.clear();
+    this.traceSpanCounters.clear();
     // Reset async-local trace/span pointers so callers (notably test
     // `beforeEach`) get a fresh context. Without this, AsyncLocalStorage
     // leaks a stale trace UUID across tests and span attachment throws.
@@ -906,8 +927,8 @@ export class Tracer {
   private uuid: string;
   private traceUuid: string | null = null;
   private parentUuid: string | null = null;
-  private startTime: Date = new Date();
-  private endTime: Date = new Date();
+  private startTime!: Date;
+  private endTime!: Date;
   private status: TraceSpanStatus = TraceSpanStatus.IN_PROGRESS;
   private error: string | null = null;
   private spanType: SpanType | string;
@@ -1005,10 +1026,8 @@ export class Tracer {
       if (span.status === TraceSpanStatus.ERRORED) {
         trace.status = TraceSpanStatus.ERRORED;
       }
-      const otherActiveSpans = Array.from(
-        traceManager.getActiveSpans().values(),
-      ).filter((activeSpan) => activeSpan.traceUuid === span.traceUuid);
-      if (otherActiveSpans.length === 0) {
+      const otherActiveSpans = traceManager.getActiveSpanCount(span.traceUuid);
+      if (otherActiveSpans === 0) {
         traceManager.endTrace(span.traceUuid);
       }
     }
@@ -1018,29 +1037,182 @@ export class Tracer {
   public async trace<T>(callback: () => T | Promise<T>): Promise<T> {
     const trace = getCurrentTrace() ?? traceManager.startNewTrace();
     const parentSpan = getCurrentSpan();
+
+    this.startTime = new Date();
+    this.parentUuid = parentSpan?.uuid ?? null;
+    this.traceUuid = trace.uuid;
+
     const span = this.createSpanInstance();
-    // Link span to parent or trace
-    span.traceUuid = trace.uuid;
-    span.parentUuid = parentSpan?.uuid;
+    traceManager.addSpan(span);
+    traceManager.addSpanToTrace(span);
+
     return await withTracingContext(span, trace, async () => {
-      this.enter(); // activate the span
       try {
         this.result = await callback();
-        const finalResult =
-          this.result instanceof Promise ? await this.result : this.result;
-        return finalResult;
+        return this.result;
       } catch (error) {
         this.error = error instanceof Error ? error.message : String(error);
         throw error;
       } finally {
-        this.exit(this.error ? new Error() : undefined, this.error, undefined);
+        this.endTime = new Date();
+        const currentSpan = getCurrentSpan();
+        if (!currentSpan || currentSpan.uuid !== this.uuid) {
+          console.error(
+            `Mismatch exiting span. Expected: ${this.uuid}, got: ${
+              currentSpan?.uuid || "None"
+            }`,
+          );
+        } else {
+          if (this.error) {
+            currentSpan.status = TraceSpanStatus.ERRORED;
+            currentSpan.error = this.error;
+          } else {
+            currentSpan.status = TraceSpanStatus.SUCCESS;
+          }
+
+          if (currentSpan.input === undefined) {
+            currentSpan.input = traceManager.mask(this.functionKwargs);
+          } else {
+            currentSpan.input = traceManager.mask(currentSpan.input);
+          }
+
+          if (currentSpan.output === undefined) {
+            currentSpan.output = traceManager.mask(this.result);
+          } else {
+            currentSpan.output = traceManager.mask(currentSpan.output);
+          }
+
+          traceManager.removeSpan(currentSpan.uuid);
+
+          const currentTrace = getCurrentTrace();
+          const isRootSpan = currentSpan.parentUuid === undefined;
+          if (
+            currentTrace &&
+            currentTrace.uuid === currentSpan.traceUuid &&
+            isRootSpan
+          ) {
+            if (currentSpan.input === undefined) {
+              updateCurrentTrace({
+                input: this.functionKwargs,
+              });
+            }
+            if (currentSpan.output === undefined) {
+              updateCurrentTrace({
+                output: this.result,
+              });
+            }
+            if (currentSpan.status === TraceSpanStatus.ERRORED) {
+              currentTrace.status = TraceSpanStatus.ERRORED;
+            }
+            if (traceManager.getActiveSpanCount(currentSpan.traceUuid) === 0) {
+              traceManager.endTrace(currentSpan.traceUuid);
+            }
+          }
+        }
       }
     });
   }
 
   // Create a span instance based on the span type.
   private createSpanInstance(): BaseSpan {
-    const spanKwargs: BaseSpan = {
+    if (this.spanType === SpanType.AGENT) {
+      return {
+        uuid: this.uuid,
+        traceUuid: this.traceUuid!,
+        parentUuid: this.parentUuid || undefined,
+        startTime: this.startTime,
+        endTime: this.endTime,
+        status: TraceSpanStatus.SUCCESS,
+        children: [],
+        name: this.name,
+        input: undefined,
+        output: undefined,
+        metricCollection: this.metricCollection,
+        metrics: this.metrics,
+        type: this.spanType,
+        metadata: undefined,
+        expectedOutput: undefined,
+        retrievalContext: undefined,
+        context: undefined,
+        toolsCalled: undefined,
+        expectedTools: undefined,
+        availableTools: this.observeKwargs.availableTools || [],
+        agentHandoffs: this.observeKwargs.agentHandoffs || [],
+      } as AgentSpan;
+    }
+    if (this.spanType === SpanType.LLM) {
+      return {
+        uuid: this.uuid,
+        traceUuid: this.traceUuid!,
+        parentUuid: this.parentUuid || undefined,
+        startTime: this.startTime,
+        endTime: this.endTime,
+        status: TraceSpanStatus.SUCCESS,
+        children: [],
+        name: this.name,
+        input: undefined,
+        output: undefined,
+        metricCollection: this.metricCollection,
+        metrics: this.metrics,
+        type: this.spanType,
+        metadata: undefined,
+        expectedOutput: undefined,
+        retrievalContext: undefined,
+        context: undefined,
+        toolsCalled: undefined,
+        expectedTools: undefined,
+        model: this.observeKwargs.model,
+      } as LlmSpan;
+    }
+    if (this.spanType === SpanType.RETRIEVER) {
+      return {
+        uuid: this.uuid,
+        traceUuid: this.traceUuid!,
+        parentUuid: this.parentUuid || undefined,
+        startTime: this.startTime,
+        endTime: this.endTime,
+        status: TraceSpanStatus.SUCCESS,
+        children: [],
+        name: this.name,
+        input: undefined,
+        output: undefined,
+        metricCollection: this.metricCollection,
+        metrics: this.metrics,
+        type: this.spanType,
+        metadata: undefined,
+        expectedOutput: undefined,
+        retrievalContext: undefined,
+        context: undefined,
+        toolsCalled: undefined,
+        expectedTools: undefined,
+        embedder: this.observeKwargs.embedder,
+      } as RetrieverSpan;
+    }
+    if (this.spanType === SpanType.TOOL) {
+      return {
+        uuid: this.uuid,
+        traceUuid: this.traceUuid!,
+        parentUuid: this.parentUuid || undefined,
+        startTime: this.startTime,
+        endTime: this.endTime,
+        status: TraceSpanStatus.SUCCESS,
+        children: [],
+        name: this.name,
+        input: undefined,
+        output: undefined,
+        metricCollection: this.metricCollection,
+        metrics: this.metrics,
+        type: this.spanType,
+        metadata: undefined,
+        expectedOutput: undefined,
+        retrievalContext: undefined,
+        context: undefined,
+        toolsCalled: undefined,
+        expectedTools: undefined,
+        description: this.observeKwargs.description,
+      } as ToolSpan;
+    }
+    return {
       uuid: this.uuid,
       traceUuid: this.traceUuid!,
       parentUuid: this.parentUuid || undefined,
@@ -1061,36 +1233,6 @@ export class Tracer {
       toolsCalled: undefined,
       expectedTools: undefined,
     };
-    if (this.spanType === SpanType.AGENT) {
-      const availableTools = this.observeKwargs.availableTools || [];
-      const agentHandoffs = this.observeKwargs.agentHandoffs || [];
-      return {
-        ...spanKwargs,
-        availableTools,
-        agentHandoffs,
-      } as AgentSpan;
-    } else if (this.spanType === SpanType.LLM) {
-      const model = this.observeKwargs.model;
-      return {
-        ...spanKwargs,
-        model,
-      } as LlmSpan;
-    } else if (this.spanType === SpanType.RETRIEVER) {
-      const embedder = this.observeKwargs.embedder;
-      return {
-        ...spanKwargs,
-        embedder,
-      } as RetrieverSpan;
-    } else if (this.spanType === SpanType.TOOL) {
-      return {
-        ...spanKwargs,
-        name: this.name,
-        description: this.observeKwargs.description,
-        ...this.observeKwargs,
-      } as ToolSpan;
-    } else {
-      return spanKwargs;
-    }
   }
 }
 
