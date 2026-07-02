@@ -131,3 +131,108 @@ def test_evaluation_console_report_aggregate_metrics():
     assert list(table.columns[1].cells)[0] == "0.50"
     assert list(table.columns[2].cells)[0] == "50.00%"
     assert list(table.columns[3].cells)[0] == "2"
+
+
+def _make_metric(success: bool) -> MetricData:
+    return MetricData(
+        name="Answer Relevancy",
+        score=1.0 if success else 0.0,
+        threshold=0.5,
+        reason=None,
+        success=success,
+        strictMode=False,
+        evaluationModel=None,
+        error=None,
+        evaluationCost=None,
+        verboseLogs=None,
+    )
+
+
+def _make_case(name: str, success: bool) -> EvalTestResult:
+    return EvalTestResult(
+        name=name,
+        success=success,
+        input="test input",
+        actual_output="test output",
+        conversational=False,
+        metrics_data=[_make_metric(success)],
+        turns=None,
+    )
+
+
+def _render_text(report: EvaluationConsoleReport, **kwargs) -> str:
+    from rich.console import Console
+
+    console = Console(record=True, width=200)
+    console.print(report._build_display_elements(**kwargs))
+    return console.export_text()
+
+
+def test_display_option_failing_hides_passing_cases():
+    from deepeval.test_run.test_run import TestRunResultDisplay
+
+    report = EvaluationConsoleReport(
+        [_make_case("passing_case", True), _make_case("failing_case", False)]
+    )
+
+    text = _render_text(
+        report,
+        truncate=True,
+        display_option=TestRunResultDisplay.FAILING,
+    )
+
+    assert "failing_case" in text
+    assert "passing_case" not in text
+    # Aggregate is computed over ALL cases regardless of the filter.
+    assert "Aggregate Metrics" in text
+
+
+def test_display_option_passing_hides_failing_cases():
+    from deepeval.test_run.test_run import TestRunResultDisplay
+
+    report = EvaluationConsoleReport(
+        [_make_case("passing_case", True), _make_case("failing_case", False)]
+    )
+
+    text = _render_text(
+        report,
+        truncate=False,
+        display_option=TestRunResultDisplay.PASSING,
+    )
+
+    assert "passing_case" in text
+    assert "failing_case" not in text
+
+
+def test_display_option_all_shows_every_case():
+    from deepeval.test_run.test_run import TestRunResultDisplay
+
+    report = EvaluationConsoleReport(
+        [_make_case("passing_case", True), _make_case("failing_case", False)]
+    )
+
+    # Explicit ALL and the default should both render every case.
+    text_explicit = _render_text(
+        report, truncate=False, display_option=TestRunResultDisplay.ALL
+    )
+    assert "passing_case" in text_explicit
+    assert "failing_case" in text_explicit
+
+    text_default = _render_text(report, truncate=False)
+    assert "passing_case" in text_default
+    assert "failing_case" in text_default
+
+
+def test_display_option_filter_all_hidden_shows_note():
+    from deepeval.test_run.test_run import TestRunResultDisplay
+
+    report = EvaluationConsoleReport([_make_case("passing_case", True)])
+
+    text = _render_text(
+        report,
+        truncate=True,
+        display_option=TestRunResultDisplay.FAILING,
+    )
+
+    assert "passing_case" not in text
+    assert "No failing test cases to display." in text

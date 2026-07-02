@@ -10,6 +10,7 @@ from rich.tree import Tree
 from rich.terminal_theme import TerminalTheme
 
 from deepeval.evaluate.types import TestResult
+from deepeval.test_run.test_run import TestRunResultDisplay
 
 LIGHT_THEME = TerminalTheme(
     background=(0, 0, 0),
@@ -61,7 +62,27 @@ class EvaluationConsoleReport:
         )
         self.console = Console()
 
-    def _build_display_elements(self, truncate: bool = True) -> Group:
+    @staticmethod
+    def _should_skip_case(
+        case: TestResult, display_option: TestRunResultDisplay
+    ) -> bool:
+        """Determine if a test case should be hidden based on the display filter.
+
+        Mirrors ``TestRunManager._should_skip_test_case`` so the ``evaluate()``
+        console output honors ``DisplayConfig.display_option`` exactly like the
+        ``deepeval test run --display`` CLI. ``None`` is treated as ``ALL``.
+        """
+        if display_option == TestRunResultDisplay.PASSING and not case.success:
+            return True
+        elif display_option == TestRunResultDisplay.FAILING and case.success:
+            return True
+        return False
+
+    def _build_display_elements(
+        self,
+        truncate: bool = True,
+        display_option: TestRunResultDisplay = TestRunResultDisplay.ALL,
+    ) -> Group:
 
         renderables = [
             Panel(
@@ -70,7 +91,11 @@ class EvaluationConsoleReport:
             )
         ]
 
+        displayed_any = False
         for case in self.test_results:
+            if self._should_skip_case(case, display_option):
+                continue
+            displayed_any = True
             status_color = DEEPEVAL_GREEN if case.success else FAIL_RED
             status_icon = "✅" if case.success else "❌"
 
@@ -150,6 +175,22 @@ class EvaluationConsoleReport:
                 )
             )
 
+        # When a display filter hides every case, surface a short note instead
+        # of showing only the header + aggregate, so the output isn't confusing.
+        if not displayed_any and self.test_results:
+            filter_label = (
+                display_option.value
+                if isinstance(display_option, TestRunResultDisplay)
+                else TestRunResultDisplay.ALL.value
+            )
+            renderables.append(
+                Panel(
+                    f"No {filter_label} test cases to display.",
+                    border_style=DEEPEVAL_PURPLE,
+                    expand=True,
+                )
+            )
+
         # Calculate aggregate metrics
         metric_aggregates = {}
         for case in self.test_results:
@@ -205,10 +246,17 @@ class EvaluationConsoleReport:
 
         return Group(*renderables)
 
-    def render_to_terminal(self, truncate_passing_cases: bool = True):
+    def render_to_terminal(
+        self,
+        truncate_passing_cases: bool = True,
+        display_option: TestRunResultDisplay = TestRunResultDisplay.ALL,
+    ):
         self.console.print()
         self.console.print(
-            self._build_display_elements(truncate=truncate_passing_cases)
+            self._build_display_elements(
+                truncate=truncate_passing_cases,
+                display_option=display_option,
+            )
         )
         self.console.print()
 
