@@ -1,6 +1,9 @@
 from .context import (
     update_current_span,
     update_current_trace,
+    trace_test_run,
+    trace_test_run_id,
+    trace_test_run_metric_collection,
     current_trace_context,
     current_span_context,
     update_agent_span,
@@ -23,6 +26,9 @@ from .offline_evals import evaluate_thread, evaluate_trace, evaluate_span
 __all__ = [
     "update_current_span",
     "update_current_trace",
+    "trace_test_run",
+    "trace_test_run_id",
+    "trace_test_run_metric_collection",
     "current_trace_context",
     "current_span_context",
     "update_agent_span",

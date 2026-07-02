@@ -76,6 +76,8 @@ from deepeval.tracing.context import (
     apply_pending_to_span,
     current_span_context,
     current_trace_context,
+    trace_test_run_id,
+    trace_test_run_metric_collection,
     pop_pending_for,
 )
 from deepeval.tracing.types import TestCaseMetricPair
@@ -327,6 +329,18 @@ class TraceManager:
             # Users can manually set the status to ERROR if needed
             if trace.status == TraceSpanStatus.IN_PROGRESS:
                 trace.status = TraceSpanStatus.SUCCESS
+
+            # Inside a `trace_test_run(...)` block, stamp the trace so it becomes
+            # one test case in that run. 
+            if not trace.test_run_id:
+                active_test_run_id = trace_test_run_id.get()
+                if active_test_run_id:
+                    trace.test_run_id = active_test_run_id
+                    active_metric_collection = (
+                        trace_test_run_metric_collection.get()
+                    )
+                    if active_metric_collection:
+                        trace.metric_collection = active_metric_collection
 
             if trace_testing_manager.test_name:
                 # Trace testing mode is enabled
