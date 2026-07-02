@@ -451,41 +451,39 @@ class TestToolCallFunctionality:
         assert isinstance(hash_value, int)
 
     def test_tool_call_hashing_with_unhashable_types(self):
-        """Regression test for #2815.
-
-        ToolCall must stay hashable even when its output (or a value nested in
-        input_parameters) is an arbitrary unhashable object, such as a
-        LangChain ToolMessage or a pydantic model that defines __eq__ without
-        __hash__. ToolCorrectnessMetric puts ToolCall instances into a set, so a
-        crash here breaks component-level evaluation of agent traces.
-        """
+        """ToolCall stays hashable when output or input_parameters contain
+        unhashable objects, e.g. pydantic models with __eq__ but no __hash__
+        (#2815)."""
 
         class _Unhashable:
-            # Mirrors objects that define __eq__ without __hash__, which Python
-            # then makes unhashable.
             __hash__ = None
 
             def __init__(self, value):
                 self.value = value
 
-            def __repr__(self):
-                return f"_Unhashable({self.value!r})"
+            def __eq__(self, other):
+                return (
+                    isinstance(other, _Unhashable) and self.value == other.value
+                )
 
-        # Sanity check: the helper object really is unhashable.
         with pytest.raises(TypeError):
             hash(_Unhashable("x"))
 
-        # Unhashable object as the output.
         tool_output = ToolCall(name="tool", output=_Unhashable("x"))
         assert isinstance(hash(tool_output), int)
-        assert len({tool_output}) == 1  # usable in a set
+        assert len({tool_output}) == 1
 
-        # Unhashable object nested inside input_parameters.
         tool_input = ToolCall(
             name="tool", input_parameters={"arg": _Unhashable("y")}
         )
         assert isinstance(hash(tool_input), int)
         assert len({tool_input}) == 1
+
+        # hash must stay consistent with __eq__: equal ToolCalls collapse in a set
+        duplicate = ToolCall(name="tool", output=_Unhashable("x"))
+        assert tool_output == duplicate
+        assert hash(tool_output) == hash(duplicate)
+        assert len({tool_output, duplicate}) == 1
 
     def test_tool_call_repr(self):
         tool_call = ToolCall(
