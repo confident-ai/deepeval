@@ -28,7 +28,8 @@ from deepeval.metrics.g_eval.utils import (
     construct_test_case_string,
     format_rubrics,
     no_log_prob_support,
-    calculate_weighted_summed_score,
+    resolve_weighted_score,
+    G_EVAL_SCORE_MODES,
     validate_and_sort_rubrics,
     validate_criteria_and_evaluation_steps,
     number_evaluation_steps,
@@ -40,6 +41,7 @@ from deepeval.metrics.g_eval.utils import (
 )
 from deepeval.config.settings import get_settings
 from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.errors import DeepEvalError
 
 
 class GEval(BaseMetric):
@@ -53,6 +55,7 @@ class GEval(BaseMetric):
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: float = 0.5,
         top_logprobs: int = 20,
+        score_mode: str = "auto",
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
@@ -63,6 +66,12 @@ class GEval(BaseMetric):
 
         if criteria is not None or evaluation_steps is not None:
             validate_criteria_and_evaluation_steps(criteria, evaluation_steps)
+
+        if score_mode not in G_EVAL_SCORE_MODES:
+            raise ValueError(
+                f"score_mode must be one of {G_EVAL_SCORE_MODES}, "
+                f"received {score_mode!r}."
+            )
 
         self.name = name
         self.evaluation_params = evaluation_params
@@ -79,6 +88,7 @@ class GEval(BaseMetric):
         )
         self.threshold = 1 if strict_mode else threshold
         self.top_logprobs = top_logprobs
+        self.score_mode = score_mode
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
@@ -198,9 +208,9 @@ class GEval(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            self.evaluation_steps: List[str] = (
-                await self._a_generate_evaluation_steps(multimodal)
-            )
+            self.evaluation_steps: List[
+                str
+            ] = await self._a_generate_evaluation_steps(multimodal)
             g_score, reason = await self._a_evaluate(
                 test_case,
                 _additional_context=_additional_context,
@@ -246,6 +256,15 @@ class GEval(BaseMetric):
             extract_schema=lambda s: s.steps,
             extract_json=lambda d: d["steps"],
         )
+
+    def _raise_if_logprobs_required(self) -> None:
+        if self.score_mode == "logprobs_weighted":
+            raise DeepEvalError(
+                "score_mode='logprobs_weighted' requires an evaluator model "
+                f"that exposes logprobs, and '{self.evaluation_model}' does "
+                "not. Use score_mode='top_token' or 'auto' to score without "
+                "logprobs."
+            )
 
     def _generate_evaluation_steps(self, multimodal: bool) -> List[str]:
         if self.evaluation_steps:
@@ -322,15 +341,13 @@ class GEval(BaseMetric):
             if self.strict_mode:
                 return score, reason
 
-            try:
-                weighted_summed_score = calculate_weighted_summed_score(
-                    score, res
-                )
-                return weighted_summed_score, reason
-            except (KeyError, AttributeError, TypeError, ValueError):
-                return score, reason
+            return (
+                resolve_weighted_score(score, res, self.score_mode),
+                reason,
+            )
         except AttributeError:
             # This catches the case where a_generate_raw_response doesn't exist.
+            self._raise_if_logprobs_required()
             return await a_generate_with_schema_and_extract(
                 metric=self,
                 prompt=prompt,
@@ -391,15 +408,13 @@ class GEval(BaseMetric):
             if self.strict_mode:
                 return score, reason
 
-            try:
-                weighted_summed_score = calculate_weighted_summed_score(
-                    score, res
-                )
-                return weighted_summed_score, reason
-            except (KeyError, AttributeError, TypeError, ValueError):
-                return score, reason
+            return (
+                resolve_weighted_score(score, res, self.score_mode),
+                reason,
+            )
         except AttributeError:
             # This catches the case where a_generate_raw_response doesn't exist.
+            self._raise_if_logprobs_required()
             return generate_with_schema_and_extract(
                 metric=self,
                 prompt=prompt,
