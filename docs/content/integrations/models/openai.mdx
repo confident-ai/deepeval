@@ -141,3 +141,7 @@ Below is a list of commonly used OpenAI models:
 - `gpt-3.5-turbo-16k-0613`
 - `davinci-002`
 - `babbage-002`
+
+:::caution[G-Eval requires log probabilities]
+`GEval` and `ConversationalGEval` compute scores from token-level log probabilities, which some OpenAI models do not expose. The `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5-chat-latest`, `gpt-5.1`, and `gpt-5.2` models return no log probabilities, so passing any of them as the judge model for these metrics raises `AttributeError: log_probs unsupported.`. For `GEval` and `ConversationalGEval`, use a log-probability-capable model such as `gpt-5.4` (the default) or `gpt-4.1`. Other metrics are unaffected.
+:::
