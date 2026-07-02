@@ -1,4 +1,4 @@
-export { BaseApiSpan, TraceApi } from "./api";
+export type { BaseApiSpan, TraceApi } from "./api";
 
 export {
   updateCurrentSpan,

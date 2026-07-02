@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 
-import { evaluate } from "../../src/evaluate";
+import { evaluate } from "../../src/confident/evaluate";
 import { LLMTestCase } from "../../src/test-case";
 
 config();
