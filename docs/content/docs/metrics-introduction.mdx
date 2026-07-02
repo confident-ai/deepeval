@@ -1,6 +1,6 @@
 ---
 id: metrics-introduction
-title: Introduction to LLM Metrics
+title: Introduction to LLM Evaluation Metrics
 sidebar_label: Introduction
 ---
 
@@ -29,6 +29,20 @@ Custom metrics allow you to define your **custom criteria** using SOTA implement
 You should aim to have **at least one** custom metric in your LLM evals pipeline.
 
 </Tab>
+<Tab value="AI Agents">
+
+Agentic metrics evaluates the **overall execution flow** of your agent. In `deepeval`, there are six main agentic metrics:
+
+- Task Completion
+- Argument Correctness
+- Tool Correctness
+- Step Efficiency
+- Plan Adherence
+- Plan Quality
+
+The task completion metric does not require a test case and will take an LLM trace to evaluate task completion (i.e. you'll have to [setup LLM tracing](/docs/evaluation-llm-tracing)).
+
+</Tab>
 <Tab value="RAG">
 
 RAG (retrieval augmented generation) metrics focus on the **retriever and generator components** independently.
@@ -42,20 +56,6 @@ RAG (retrieval augmented generation) metrics focus on the **retriever and genera
 - Generator:
   - Answer Relevancy
   - Faithfulness
-
-</Tab>
-<Tab value="Agents">
-
-Agentic metrics evaluates the **overall execution flow** of your agent. In `deepeval`, there are six main agentic metrics:
-
-- Task Completion
-- Argument Correctness
-- Tool Correctness
-- Step Efficiency
-- Plan Adherence
-- Plan Quality
-
-The task completion metric does not require a test case and will take an LLM trace to evaluate task completion (i.e. you'll have to [setup LLM tracing](/docs/evaluation-llm-tracing)).
 
 </Tab>
 <Tab value="Chatbots (multi-turn)">
@@ -847,8 +847,9 @@ The [`scorer` module](https://github.com/confident-ai/deepeval/blob/main/deepeva
       question: "Can I run metrics on traces for monitoring?",
       answer: (
         <>
-          Yes. Once you <a href="/docs/evaluation-llm-tracing">set up tracing</a>
-          , metrics can score spans and traces automatically. Wire them up on{" "}
+          Yes. Once you{" "}
+          <a href="/docs/evaluation-llm-tracing">set up tracing</a>, metrics can
+          score spans and traces automatically. Wire them up on{" "}
           <a href="https://confident-ai.com">Confident AI</a> to track metric
           scores on production traffic over time.
         </>
