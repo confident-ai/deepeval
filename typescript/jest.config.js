@@ -3,4 +3,9 @@ module.exports = {
   testEnvironment: "node",
   testMatch: ["**/test/**/*.test.ts"],
   moduleFileExtensions: ["ts", "js", "json", "node"],
+  globals: {
+    "ts-jest": {
+      isolatedModules: true,
+    },
+  },
 };
