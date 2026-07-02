@@ -7,6 +7,10 @@ sidebar_label: Citation Faithfulness
 
 The citation faithfulness metric uses LLM-as-a-judge to check whether every `[N]` citation marker in your RAG pipeline's `actual_output` points to the passage in `retrieval_context` that actually supports the specific claim the marker is attached to. `deepeval`'s citation faithfulness metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
+:::info
+The `CitationFaithfulnessMetric` is a **community metric**, contributed and maintained by the `deepeval` community. Community metrics are not exported from `deepeval.metrics` — import them explicitly from `deepeval.metrics.community` instead.
+:::
+
 :::note
 This metric is stricter than the [`FaithfulnessMetric`](/docs/metrics-faithfulness). Faithfulness asks whether a claim is supported by the retrieval context _somewhere_. Citation faithfulness additionally checks that the cited passage is the one that supports the claim, so it catches misattribution: a claim cited to passage `[1]` that does not support it, even when another passage `[2]` in the context would.
 :::
@@ -28,7 +32,7 @@ The `CitationFaithfulnessMetric()` can be used for [end-to-end](/docs/evaluation
 ```python
 from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import CitationFaithfulnessMetric
+from deepeval.metrics.community import CitationFaithfulnessMetric
 
 # Replace this with the actual output from your LLM application.
 # The completion-year claim is cited to passage [1], which only covers height.

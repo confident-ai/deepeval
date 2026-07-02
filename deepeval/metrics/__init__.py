@@ -20,9 +20,6 @@ from .summarization.summarization import SummarizationMetric
 from .g_eval.g_eval import GEval
 from .arena_g_eval.arena_g_eval import ArenaGEval
 from .faithfulness.faithfulness import FaithfulnessMetric
-from .citation_faithfulness.citation_faithfulness import (
-    CitationFaithfulnessMetric,
-)
 from .contextual_recall.contextual_recall import ContextualRecallMetric
 from .contextual_relevancy.contextual_relevancy import ContextualRelevancyMetric
 from .contextual_precision.contextual_precision import ContextualPrecisionMetric
@@ -87,7 +84,6 @@ __all__ = [
     # RAG metrics
     "AnswerRelevancyMetric",
     "FaithfulnessMetric",
-    "CitationFaithfulnessMetric",
     "ContextualRecallMetric",
     "ContextualRelevancyMetric",
     "ContextualPrecisionMetric",

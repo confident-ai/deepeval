@@ -12,10 +12,10 @@ from deepeval.metrics.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.citation_faithfulness.template import (
+from deepeval.metrics.community.citation_faithfulness.template import (
     CitationFaithfulnessTemplate,
 )
-from deepeval.metrics.citation_faithfulness.schema import (
+from deepeval.metrics.community.citation_faithfulness.schema import (
     CitationFaithfulnessVerdict,
 )
 

@@ -6,8 +6,8 @@ that does not support it, even though another passage would) and PASSES the
 correctly-cited case.
 """
 
-from deepeval.metrics import CitationFaithfulnessMetric
-from deepeval.metrics.citation_faithfulness.schema import (
+from deepeval.metrics.community import CitationFaithfulnessMetric
+from deepeval.metrics.community.citation_faithfulness.schema import (
     CitationFaithfulnessVerdict,
 )
 from deepeval.models import DeepEvalBaseLLM
