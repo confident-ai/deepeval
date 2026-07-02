@@ -12,6 +12,7 @@ from deepeval.metrics.utils import (
     convert_turn_to_dict,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    verdict_from_json,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -35,6 +36,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         window_size: int = 10,
+        template_class: Optional[str] = None,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -44,6 +46,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.window_size = window_size
+        self.template_class = template_class
 
     def measure(
         self,
@@ -173,6 +176,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             "generate_reason",
             score=self.score,
             irrelevancies=irrelevancies,
+            template_class=self.template_class,
         )
 
         return await a_generate_with_schema_and_extract(
@@ -202,6 +206,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             "generate_reason",
             score=self.score,
             irrelevancies=irrelevancies,
+            template_class=self.template_class,
         )
 
         return generate_with_schema_and_extract(
@@ -220,6 +225,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             sliding_window=[
                 convert_turn_to_dict(turn) for turn in turns_sliding_window
             ],
+            template_class=self.template_class,
         )
 
         return await a_generate_with_schema_and_extract(
@@ -227,7 +233,9 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             prompt=prompt,
             schema_cls=TurnRelevancyVerdict,
             extract_schema=lambda s: s,
-            extract_json=lambda data: TurnRelevancyVerdict(**data),
+            extract_json=lambda data: verdict_from_json(
+                data, TurnRelevancyVerdict
+            ),
         )
 
     def _generate_verdict(
@@ -238,6 +246,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             sliding_window=[
                 convert_turn_to_dict(turn) for turn in turns_sliding_window
             ],
+            template_class=self.template_class,
         )
 
         return generate_with_schema_and_extract(
@@ -245,7 +254,9 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             prompt=prompt,
             schema_cls=TurnRelevancyVerdict,
             extract_schema=lambda s: s,
-            extract_json=lambda data: TurnRelevancyVerdict(**data),
+            extract_json=lambda data: verdict_from_json(
+                data, TurnRelevancyVerdict
+            ),
         )
 
     def _calculate_score(self) -> float:
