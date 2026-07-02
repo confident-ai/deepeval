@@ -12,3 +12,13 @@ export {
   type CacheConfig,
 } from "./configs";
 export { printResultsTable } from "./console-report";
+export {
+  assertTest,
+  type AssertTestOptions,
+  AssertTestError,
+} from "./assert-test";
+export {
+  testRunManager,
+  TestRunManager,
+  type TestRunSummary,
+} from "./test-run-manager";

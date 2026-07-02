@@ -26,10 +26,16 @@ export {
 export {
   evaluate,
   compare,
+  assertTest,
+  testRunManager,
+  TestRunManager,
+  AssertTestError,
   type EvaluationResult,
   type TestResult,
   type EvaluateOptions,
   type CompareOptions,
+  type AssertTestOptions,
+  type TestRunSummary,
 } from "./evaluate";
 export { Prompt } from "./prompt";
 export { ConversationSimulator } from "./simulate";
