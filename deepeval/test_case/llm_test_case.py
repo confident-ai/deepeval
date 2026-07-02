@@ -229,7 +229,16 @@ def _make_hashable(obj):
         # Handle frozenset that might contain unhashable elements
         return frozenset(_make_hashable(item) for item in obj)
     else:
-        # For primitive hashable types (str, int, float, bool, etc.)
+        # Primitive hashable types (str, int, float, bool, etc.) pass through
+        # unchanged. Some objects reach here while being unhashable, e.g. a
+        # LangChain ToolMessage or a pydantic model that defines __eq__ without
+        # __hash__. Returning those as-is makes ToolCall.__hash__ raise
+        # ``TypeError: unhashable type`` (#2815), so fall back to a stable
+        # string representation for anything that is not hashable.
+        try:
+            hash(obj)
+        except TypeError:
+            return repr(obj)
         return obj
 
 
