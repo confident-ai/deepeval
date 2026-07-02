@@ -82,11 +82,16 @@ export class HallucinationMetric extends BaseMetric {
     actualOutput: string,
     contexts: string[],
   ): Promise<HallucinationVerdict[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
-      actual_output: actualOutput,
-      contexts,
-      contexts_count: contexts.length,
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_verdicts",
+      {
+        actual_output: actualOutput,
+        contexts,
+        contexts_count: contexts.length,
+      },
+    );
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
   }
@@ -100,11 +105,16 @@ export class HallucinationMetric extends BaseMetric {
         factualAlignments.push(v.reason);
       else contradictions.push(v.reason);
     }
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
-      factual_alignments: factualAlignments,
-      contradictions,
-      score: (this.score ?? 0).toFixed(2),
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_reason",
+      {
+        factual_alignments: factualAlignments,
+        contradictions,
+        score: (this.score ?? 0).toFixed(2),
+      },
+    );
     const { reason } = await generateWithSchema(
       this,
       prompt,

@@ -80,18 +80,28 @@ export class BiasMetric extends BaseMetric {
   }
 
   private async generateOpinions(actualOutput: string): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_opinions", {
-      actual_output: actualOutput,
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_opinions",
+      {
+        actual_output: actualOutput,
+      },
+    );
     const { opinions } = await generateWithSchema(this, prompt, OpinionsSchema);
     return opinions;
   }
 
   private async generateVerdicts(): Promise<BiasVerdict[]> {
     if (this.opinions.length === 0) return [];
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
-      opinions: this.opinions,
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_verdicts",
+      {
+        opinions: this.opinions,
+      },
+    );
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
   }
@@ -101,10 +111,15 @@ export class BiasMetric extends BaseMetric {
     const biases = this.verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "yes")
       .map((v) => v.reason);
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
-      biases,
-      score: (this.score ?? 0).toFixed(2),
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_reason",
+      {
+        biases,
+        score: (this.score ?? 0).toFixed(2),
+      },
+    );
     const { reason } = await generateWithSchema(
       this,
       prompt,

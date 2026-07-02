@@ -126,13 +126,18 @@ export class ContextualPrecisionMetric extends BaseMetric {
     retrievalContext: string[],
   ): Promise<ContextualPrecisionVerdict[]> {
     const n = retrievalContext.length;
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
-      input,
-      expected_output: expectedOutput,
-      document_count_str: ` (${n} document${n > 1 ? "s" : ""})`,
-      context_to_display: retrievalContext,
-      multimodal_note: "",
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_verdicts",
+      {
+        input,
+        expected_output: expectedOutput,
+        document_count_str: ` (${n} document${n > 1 ? "s" : ""})`,
+        context_to_display: retrievalContext,
+        multimodal_note: "",
+      },
+    );
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
   }
@@ -143,11 +148,16 @@ export class ContextualPrecisionMetric extends BaseMetric {
       verdict: v.verdict,
       reason: v.reason,
     }));
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
-      input,
-      verdicts,
-      score: (this.score ?? 0).toFixed(2),
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_reason",
+      {
+        input,
+        verdicts,
+        score: (this.score ?? 0).toFixed(2),
+      },
+    );
     const { reason } = await generateWithSchema(
       this,
       prompt,

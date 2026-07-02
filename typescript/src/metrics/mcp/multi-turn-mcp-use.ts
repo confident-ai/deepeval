@@ -12,7 +12,11 @@ import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
 } from "../conversational-utils";
-import { getTasks, taskStepsTakenText, availableMcpServersBlock } from "./utils";
+import {
+  getTasks,
+  taskStepsTakenText,
+  availableMcpServersBlock,
+} from "./utils";
 import {
   ToolScoreSchema,
   ArgsScoreSchema,
@@ -75,11 +79,16 @@ export class MultiTurnMCPUseMetric extends BaseConversationalMetric {
         tasks.map((task) =>
           generateWithSchema(
             this,
-            resolveTemplate("metrics", TEMPLATE_CLASS, "get_tool_correctness_score", {
-              task,
-              available_tools: availableTools,
-              steps_taken: taskStepsTakenText(task),
-            }),
+            resolveTemplate(
+              "metrics",
+              TEMPLATE_CLASS,
+              "get_tool_correctness_score",
+              {
+                task,
+                available_tools: availableTools,
+                steps_taken: taskStepsTakenText(task),
+              },
+            ),
             ToolScoreSchema,
           ),
         ),
@@ -88,13 +97,18 @@ export class MultiTurnMCPUseMetric extends BaseConversationalMetric {
         tasks.map((task) =>
           generateWithSchema(
             this,
-            resolveTemplate("metrics", TEMPLATE_CLASS, "get_args_correctness_score", {
-              task,
-              available_tools: availableTools,
-              available_resources: availableResources,
-              available_prompts: availablePrompts,
-              steps_taken: taskStepsTakenText(task),
-            }),
+            resolveTemplate(
+              "metrics",
+              TEMPLATE_CLASS,
+              "get_args_correctness_score",
+              {
+                task,
+                available_tools: availableTools,
+                available_resources: availableResources,
+                available_prompts: availablePrompts,
+                steps_taken: taskStepsTakenText(task),
+              },
+            ),
             ArgsScoreSchema,
           ),
         ),

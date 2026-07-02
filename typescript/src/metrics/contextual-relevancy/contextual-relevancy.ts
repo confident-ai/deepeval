@@ -25,7 +25,7 @@ const EXTRACTION_INSTRUCTIONS =
   "high level information found in the context, before deciding on a " +
   "verdict and optionally a reason for each statement.";
 const EMPTY_CONTEXT_INSTRUCTION =
-  '\nIf provided context contains no actual content or statements then: ' +
+  "\nIf provided context contains no actual content or statements then: " +
   'give "no" as a "verdict",\nput context into "statement", and ' +
   '"No statements found in provided context." into "reason".';
 
@@ -97,14 +97,19 @@ export class ContextualRelevancyMetric extends BaseMetric {
     input: string,
     context: string,
   ): Promise<ContextualRelevancyVerdicts> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
-      input,
-      context,
-      context_type: "context",
-      statement_or_image: "statement",
-      extraction_instructions: EXTRACTION_INSTRUCTIONS,
-      empty_context_instruction: EMPTY_CONTEXT_INSTRUCTION,
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_verdicts",
+      {
+        input,
+        context,
+        context_type: "context",
+        statement_or_image: "statement",
+        extraction_instructions: EXTRACTION_INSTRUCTIONS,
+        empty_context_instruction: EMPTY_CONTEXT_INSTRUCTION,
+      },
+    );
     return generateWithSchema(this, prompt, ContextualRelevancyVerdictsSchema);
   }
 
@@ -119,12 +124,17 @@ export class ContextualRelevancyMetric extends BaseMetric {
         else relevantStatements.push(v.statement);
       }
     }
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
-      input,
-      irrelevant_statements: irrelevantStatements,
-      relevant_statements: relevantStatements,
-      score: (this.score ?? 0).toFixed(2),
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_reason",
+      {
+        input,
+        irrelevant_statements: irrelevantStatements,
+        relevant_statements: relevantStatements,
+        score: (this.score ?? 0).toFixed(2),
+      },
+    );
     const { reason } = await generateWithSchema(
       this,
       prompt,

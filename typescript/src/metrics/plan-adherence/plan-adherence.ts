@@ -8,7 +8,11 @@ import {
   checkSingleTurnParams,
   constructVerboseLogs,
 } from "../utils";
-import { TaskSchema, AgentPlanSchema, PlanAdherenceScoreSchema } from "./schema";
+import {
+  TaskSchema,
+  AgentPlanSchema,
+  PlanAdherenceScoreSchema,
+} from "./schema";
 
 // `extract_task_from_trace` lives under StepEfficiencyMetric (shared, mirrors Python).
 const TASK_TEMPLATE_CLASS = "StepEfficiencyMetric";
@@ -68,9 +72,14 @@ export class PlanAdherenceMetric extends BaseMetric {
 
       const { task } = await generateWithSchema(
         this,
-        resolveTemplate("metrics", TASK_TEMPLATE_CLASS, "extract_task_from_trace", {
-          trace_json: json,
-        }),
+        resolveTemplate(
+          "metrics",
+          TASK_TEMPLATE_CLASS,
+          "extract_task_from_trace",
+          {
+            trace_json: json,
+          },
+        ),
         TaskSchema,
       );
       const { plan } = await generateWithSchema(

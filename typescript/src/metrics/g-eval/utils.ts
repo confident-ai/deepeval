@@ -58,9 +58,7 @@ function formatValue(value: unknown): string {
 }
 
 /** Join param labels: "A", "A and B", or "A, B, and C". */
-export function constructGEvalParamsString(
-  params: SingleTurnParams[],
-): string {
+export function constructGEvalParamsString(params: SingleTurnParams[]): string {
   const labels = params.map((p) => G_EVAL_PARAMS[p] ?? p);
   if (labels.length === 1) return labels[0];
   if (labels.length === 2) return labels.join(" and ");
@@ -102,7 +100,9 @@ export function getScoreRange(rubrics?: Rubric[]): [number, number] {
 }
 
 /** Sort rubrics by start and reject overlaps. Returns undefined for none. */
-export function validateAndSortRubrics(rubrics?: Rubric[]): Rubric[] | undefined {
+export function validateAndSortRubrics(
+  rubrics?: Rubric[],
+): Rubric[] | undefined {
   if (!rubrics || rubrics.length === 0) return undefined;
   const sorted = [...rubrics].sort((a, b) => a.scoreRange[0] - b.scoreRange[0]);
   for (let i = 0; i < sorted.length; i++) {
