@@ -97,11 +97,18 @@ export class TaskCompletionMetric extends BaseMetric {
             "extract_task_and_outcome_from_trace",
             { trace_json: JSON.stringify(testCase._traceDict) },
           )
-        : resolveTemplate("metrics", TEMPLATE_CLASS, "extract_goal_and_outcome", {
-            input: testCase.input,
-            actual_output: testCase.actualOutput,
-            tools_called_formatted: printToolsCalled(testCase.toolsCalled ?? []),
-          });
+        : resolveTemplate(
+            "metrics",
+            TEMPLATE_CLASS,
+            "extract_goal_and_outcome",
+            {
+              input: testCase.input,
+              actual_output: testCase.actualOutput,
+              tools_called_formatted: printToolsCalled(
+                testCase.toolsCalled ?? [],
+              ),
+            },
+          );
     return generateWithSchema(this, prompt, TaskAndOutcomeSchema);
   }
 

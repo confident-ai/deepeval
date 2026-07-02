@@ -203,9 +203,9 @@ export class DeepEvalCallbackHandler
       // trace by ancestry so it is not left dangling.
       const traceUuid = this.hierarchy.getTraceUuid(uuidStr);
       if (traceUuid && traceManager.getTraceByUuid(traceUuid)) {
-        const others = Array.from(traceManager.getActiveSpans().values()).filter(
-          (s) => s.traceUuid === traceUuid,
-        );
+        const others = Array.from(
+          traceManager.getActiveSpans().values(),
+        ).filter((s) => s.traceUuid === traceUuid);
         if (others.length === 0) {
           traceManager.setTraceStatus(traceUuid, TraceSpanStatus.ERRORED);
           traceManager.endTrace(traceUuid);
@@ -408,7 +408,12 @@ export class DeepEvalCallbackHandler
     }
   }
 
-  async handleToolEnd(output: any, runId: string, _parentRunId?: string, _tags?: string[]) {
+  async handleToolEnd(
+    output: any,
+    runId: string,
+    _parentRunId?: string,
+    _tags?: string[],
+  ) {
     const uuidStr = String(runId);
     const toolSpan: any = traceManager.getSpanByUuid(uuidStr);
 
@@ -432,7 +437,12 @@ export class DeepEvalCallbackHandler
     this.hierarchy.cleanupRun(uuidStr);
   }
 
-  async handleToolError(err: any, runId: string, _parentRunId?: string, _tags?: string[]) {
+  async handleToolError(
+    err: any,
+    runId: string,
+    _parentRunId?: string,
+    _tags?: string[],
+  ) {
     const uuidStr = String(runId);
     const toolSpan: any = traceManager.getSpanByUuid(uuidStr);
 

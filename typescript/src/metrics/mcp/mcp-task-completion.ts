@@ -65,10 +65,15 @@ export class MCPTaskCompletionMetric extends BaseConversationalMetric {
         tasks.map((task) =>
           generateWithSchema(
             this,
-            resolveTemplate("metrics", TEMPLATE_CLASS, "get_task_completion_score", {
-              task,
-              steps_taken: taskStepsTakenText(task),
-            }),
+            resolveTemplate(
+              "metrics",
+              TEMPLATE_CLASS,
+              "get_task_completion_score",
+              {
+                task,
+                steps_taken: taskStepsTakenText(task),
+              },
+            ),
             TaskScoreSchema,
           ),
         ),

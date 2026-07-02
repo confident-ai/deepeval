@@ -14,7 +14,10 @@ import {
   testRunManager,
 } from "../../src/evaluate/test-run-manager";
 import { LLMTestCase } from "../../src/test-case/llm-test-case";
-import { ConversationalTestCase, Turn } from "../../src/test-case/conversational-test-case";
+import {
+  ConversationalTestCase,
+  Turn,
+} from "../../src/test-case/conversational-test-case";
 import { BaseMetric } from "../../src/metrics/base-metrics";
 import { BaseConversationalMetric } from "../../src/metrics/base-conversational-metric";
 import { MissingTestCaseParamsError } from "../../src/errors";
@@ -170,7 +173,11 @@ describe("assertTest()", () => {
 
     it("throws AssertTestError containing metric details in the message", async () => {
       const tc = makeLLMTestCase();
-      const metric = makeMetric({ name: "Relevancy", score: 0.2, threshold: 0.7 });
+      const metric = makeMetric({
+        name: "Relevancy",
+        score: 0.2,
+        threshold: 0.7,
+      });
 
       const err = await assertTest(tc, [metric]).catch((e) => e);
       expect(err).toBeInstanceOf(AssertTestError);
@@ -193,7 +200,9 @@ describe("assertTest()", () => {
       expect(err.failedMetrics.map((m: { name: string }) => m.name)).toEqual(
         expect.arrayContaining(["Fail1", "Fail2"]),
       );
-      expect(err.failedMetrics.map((m: { name: string }) => m.name)).not.toContain("Pass");
+      expect(
+        err.failedMetrics.map((m: { name: string }) => m.name),
+      ).not.toContain("Pass");
     });
 
     it("throws when metric score is just below threshold", async () => {
@@ -211,7 +220,11 @@ describe("assertTest()", () => {
   describe("async metrics", () => {
     it("awaits async metric measurement before asserting", async () => {
       const tc = makeLLMTestCase();
-      const slowMetric = makeMetric({ score: 0.9, threshold: 0.5, delayMs: 30 });
+      const slowMetric = makeMetric({
+        score: 0.9,
+        threshold: 0.5,
+        delayMs: 30,
+      });
 
       await expect(assertTest(tc, [slowMetric])).resolves.toBeUndefined();
     });
@@ -309,9 +322,7 @@ describe("assertTest()", () => {
   describe("input validation", () => {
     it("throws when testCase is null", async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await expect(assertTest(null as any, [])).rejects.toThrow(
-        "testCase",
-      );
+      await expect(assertTest(null as any, [])).rejects.toThrow("testCase");
     });
 
     it("throws when metrics array is empty", async () => {
@@ -539,9 +550,27 @@ describe("TestRunManager", () => {
 
   describe("getSummary()", () => {
     it("counts passes and fails correctly", () => {
-      manager.record({ name: "a", success: true, metricsData: [], conversational: false, index: 0 });
-      manager.record({ name: "b", success: false, metricsData: [], conversational: false, index: 1 });
-      manager.record({ name: "c", success: true, metricsData: [], conversational: false, index: 2 });
+      manager.record({
+        name: "a",
+        success: true,
+        metricsData: [],
+        conversational: false,
+        index: 0,
+      });
+      manager.record({
+        name: "b",
+        success: false,
+        metricsData: [],
+        conversational: false,
+        index: 1,
+      });
+      manager.record({
+        name: "c",
+        success: true,
+        metricsData: [],
+        conversational: false,
+        index: 2,
+      });
 
       const { total, passed, failed } = manager.getSummary();
       expect(total).toBe(3);
@@ -554,8 +583,22 @@ describe("TestRunManager", () => {
         name: "a",
         success: true,
         metricsData: [
-          { name: "M1", threshold: 0.5, success: true, strictMode: false, skipped: false, evaluationCost: 0.001 },
-          { name: "M2", threshold: 0.5, success: true, strictMode: false, skipped: false, evaluationCost: 0.002 },
+          {
+            name: "M1",
+            threshold: 0.5,
+            success: true,
+            strictMode: false,
+            skipped: false,
+            evaluationCost: 0.001,
+          },
+          {
+            name: "M2",
+            threshold: 0.5,
+            success: true,
+            strictMode: false,
+            skipped: false,
+            evaluationCost: 0.002,
+          },
         ],
         conversational: false,
         index: 0,
@@ -564,7 +607,14 @@ describe("TestRunManager", () => {
         name: "b",
         success: true,
         metricsData: [
-          { name: "M1", threshold: 0.5, success: true, strictMode: false, skipped: false, evaluationCost: 0.003 },
+          {
+            name: "M1",
+            threshold: 0.5,
+            success: true,
+            strictMode: false,
+            skipped: false,
+            evaluationCost: 0.003,
+          },
         ],
         conversational: false,
         index: 1,
@@ -579,7 +629,13 @@ describe("TestRunManager", () => {
         name: "a",
         success: true,
         metricsData: [
-          { name: "M", threshold: 0.5, success: true, strictMode: false, skipped: false },
+          {
+            name: "M",
+            threshold: 0.5,
+            success: true,
+            strictMode: false,
+            skipped: false,
+          },
         ],
         conversational: false,
         index: 0,
@@ -589,10 +645,22 @@ describe("TestRunManager", () => {
     });
 
     it("returns independent snapshot objects on each call", () => {
-      manager.record({ name: "a", success: true, metricsData: [], conversational: false, index: 0 });
+      manager.record({
+        name: "a",
+        success: true,
+        metricsData: [],
+        conversational: false,
+        index: 0,
+      });
 
       const s1 = manager.getSummary();
-      manager.record({ name: "b", success: false, metricsData: [], conversational: false, index: 1 });
+      manager.record({
+        name: "b",
+        success: false,
+        metricsData: [],
+        conversational: false,
+        index: 1,
+      });
       const s2 = manager.getSummary();
 
       expect(s1.total).toBe(1);
@@ -606,14 +674,26 @@ describe("TestRunManager", () => {
 
   describe("reset()", () => {
     it("clears all recorded results", () => {
-      manager.record({ name: "t", success: true, metricsData: [], conversational: false, index: 0 });
+      manager.record({
+        name: "t",
+        success: true,
+        metricsData: [],
+        conversational: false,
+        index: 0,
+      });
       manager.reset();
 
       expect(manager.getResults()).toHaveLength(0);
     });
 
     it("getSummary returns zeros after reset", () => {
-      manager.record({ name: "t", success: true, metricsData: [], conversational: false, index: 0 });
+      manager.record({
+        name: "t",
+        success: true,
+        metricsData: [],
+        conversational: false,
+        index: 0,
+      });
       manager.reset();
 
       const { total, passed, failed } = manager.getSummary();
@@ -623,9 +703,21 @@ describe("TestRunManager", () => {
     });
 
     it("allows recording after reset", () => {
-      manager.record({ name: "old", success: true, metricsData: [], conversational: false, index: 0 });
+      manager.record({
+        name: "old",
+        success: true,
+        metricsData: [],
+        conversational: false,
+        index: 0,
+      });
       manager.reset();
-      manager.record({ name: "new", success: false, metricsData: [], conversational: false, index: 0 });
+      manager.record({
+        name: "new",
+        success: false,
+        metricsData: [],
+        conversational: false,
+        index: 0,
+      });
 
       const results = manager.getResults();
       expect(results).toHaveLength(1);
@@ -641,14 +733,26 @@ describe("TestRunManager", () => {
     it("accumulates results across multiple simulate assertTest calls", () => {
       // Simulate run 1
       for (let i = 0; i < 3; i++) {
-        manager.record({ name: `run1_${i}`, success: true, metricsData: [], conversational: false, index: i });
+        manager.record({
+          name: `run1_${i}`,
+          success: true,
+          metricsData: [],
+          conversational: false,
+          index: i,
+        });
       }
       expect(manager.getSummary().total).toBe(3);
 
       // Simulate reset + run 2
       manager.reset();
       for (let i = 0; i < 2; i++) {
-        manager.record({ name: `run2_${i}`, success: false, metricsData: [], conversational: false, index: i });
+        manager.record({
+          name: `run2_${i}`,
+          success: false,
+          metricsData: [],
+          conversational: false,
+          index: i,
+        });
       }
 
       const summary = manager.getSummary();

@@ -164,9 +164,7 @@ export const testRunManager = new TestRunManager();
  * Sum `evaluationCost` fields across a list of {@link MetricData}.
  * Returns `undefined` when no metric reported a cost.
  */
-function _sumMetricCosts(
-  metricsData: MetricData[],
-): number | undefined {
+function _sumMetricCosts(metricsData: MetricData[]): number | undefined {
   let total: number | undefined = undefined;
   for (const m of metricsData) {
     if (m.evaluationCost != null) {
