@@ -1,96 +1,85 @@
-name: Generate AI Release
+name: Release
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "deepeval/_version.py"
     tags:
-      - "v*"
+      - "python-v*"
+      - "typescript-v*"
   workflow_dispatch:
     inputs:
       tag_name:
-        description: "Tag to release (e.g. v3.7.0). Leave empty to use version from deepeval/_version.py"
-        required: false
+        description: "Existing tag to release (e.g. python-v4.0.8 or typescript-v0.1.29)."
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.event.inputs.tag_name || github.ref_name }}
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set Tag Name and Auto-Tag (if needed)
+      - name: Resolve tag and SDK
         id: vars
         run: |
-          # 1. Determine intended tag name
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.tag_name }}" ]; then
-            TAG_NAME="${{ github.event.inputs.tag_name }}"
-          elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            TAG_NAME="${GITHUB_REF#refs/tags/}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
           else
-            # Triggered by version bump in main branch OR manual dispatch with empty tag
-            VERSION=$(grep '__version__' deepeval/_version.py | cut -d '"' -f 2)
-            TAG_NAME="v$VERSION"
+            TAG="${GITHUB_REF#refs/tags/}"
           fi
-          
-          # 2. Check if tag exists and handle creation
-          if git ls-remote --tags origin | grep -q "refs/tags/$TAG_NAME"; then
-            echo "Tag $TAG_NAME already exists."
-            # If this was an automatic push to _version.py, we don't want to re-release an existing tag
-            if [ "${{ github.event_name }}" = "push" ] && [[ "${GITHUB_REF}" != refs/tags/* ]]; then
-              echo "Tag $TAG_NAME already exists! Skipping auto-release."
-              echo "SKIP_RELEASE=true" >> $GITHUB_ENV
-              exit 0
-            fi
+
+          case "$TAG" in
+            python-v*)     SDK="Python";     PREFIX="python-v" ;;
+            typescript-v*) SDK="TypeScript"; PREFIX="typescript-v" ;;
+            *)
+              echo "::error::Tag '$TAG' does not match python-v* or typescript-v*."
+              exit 1
+              ;;
+          esac
+
+          PREV=$(
+            { echo "$TAG"; git tag --list "${PREFIX}*"; } \
+              | grep -v '^$' | sort -u -V -r \
+              | awk -v cur="$TAG" 'found{print; exit} $0==cur{found=1}'
+          )
+
+          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
+          echo "TITLE=$SDK ${TAG#$PREFIX}" >> "$GITHUB_OUTPUT"
+          echo "PREV=$PREV" >> "$GITHUB_OUTPUT"
+
+          if [ -n "$PREV" ]; then
+            echo "Releasing $TAG (notes since $PREV)."
           else
-            echo "Tag $TAG_NAME does not exist. Creating and pushing it..."
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git tag "$TAG_NAME"
-            git push origin "$TAG_NAME"
+            echo "Releasing $TAG (no previous $SDK tag; full notes)."
           fi
-          
-          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
 
-      - name: Set up Python
-        if: env.SKIP_RELEASE != 'true'
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
-        if: env.SKIP_RELEASE != 'true'
-        run: pip install rich pydantic deepeval
-
-      - name: Run AI changelog generator for the tag
-        if: env.SKIP_RELEASE != 'true'
+      - name: Create draft release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ steps.vars.outputs.TAG }}
+          TITLE: ${{ steps.vars.outputs.TITLE }}
+          PREV: ${{ steps.vars.outputs.PREV }}
         run: |
-          python .scripts/changelog/generate.py --tag ${{ env.TAG_NAME }} --github --ai
-
-      - name: Extract Release Notes for this Tag
-        if: env.SKIP_RELEASE != 'true'
-        run: |
-          python .scripts/changelog/extract_release_notes.py --tag ${{ env.TAG_NAME }} --output release_notes.md
-
-      - name: Create Draft GitHub Release
-        if: env.SKIP_RELEASE != 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # If the notes file is empty, fallback to a basic release
-          if [ ! -s release_notes.md ]; then
-            echo "No AI notes found, creating basic release..."
-            gh release create "${{ env.TAG_NAME }}" --title "${{ env.TAG_NAME }}" --draft
-          else
-            gh release create "${{ env.TAG_NAME }}" --title "${{ env.TAG_NAME }}" --notes-file release_notes.md --draft
+          API_ARGS=(-f tag_name="$TAG")
+          if [ -n "$PREV" ]; then
+            API_ARGS+=(-f previous_tag_name="$PREV")
           fi
+          BODY=$(gh api "repos/$REPO/releases/generate-notes" "${API_ARGS[@]}" --jq .body)
+
+          {
+            echo "New to \`deepeval\`? Get started [here](https://deepeval.com/docs/introduction)."
+            echo
+            echo "$BODY"
+            echo
+            echo "A huge thank you to everyone who contributed to this release ❤️"
+          } > notes.md
+
+          gh release create "$TAG" --title "$TITLE" --draft --notes-file notes.md
