@@ -1,9 +1,5 @@
 import { BaseConversationalMetric } from "../base-conversational-metric";
-import {
-  ConversationalTestCase,
-  MultiTurnParams,
-  Turn,
-} from "../../test-case";
+import { ConversationalTestCase, MultiTurnParams, Turn } from "../../test-case";
 import { DeepEvalBaseLLM } from "../../models";
 import { resolveTemplate } from "../../templates";
 import {
@@ -89,7 +85,8 @@ export class RoleAdherenceMetric extends BaseConversationalMetric {
     turns: Turn[],
     role: string,
   ): Promise<OutOfCharacterResponseVerdict[]> {
-    const prompt = resolveTemplate("metrics", 
+    const prompt = resolveTemplate(
+      "metrics",
       TEMPLATE_CLASS,
       "extract_out_of_character_response_verdicts",
       { turns: turns.map((turn) => convertTurnToDict(turn)), role },
@@ -109,13 +106,18 @@ export class RoleAdherenceMetric extends BaseConversationalMetric {
 
   private async generateReason(role: string): Promise<string | undefined> {
     if (!this.includeReason) return undefined;
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
-      score: this.score,
-      role,
-      out_of_character_responses: this.outOfCharacterVerdicts.map(
-        (v) => v.ai_message,
-      ),
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_reason",
+      {
+        score: this.score,
+        role,
+        out_of_character_responses: this.outOfCharacterVerdicts.map(
+          (v) => v.ai_message,
+        ),
+      },
+    );
     const { reason } = await generateWithSchema(
       this,
       prompt,

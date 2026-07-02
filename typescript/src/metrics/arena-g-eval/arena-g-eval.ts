@@ -156,13 +156,18 @@ export class ArenaGEval extends BaseArenaMetric {
     reason: string,
     dummyToReal: Record<string, string>,
   ): Promise<string> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "rewrite_reason", {
-      reason,
-      // Pass as JSON text: Nunjucks renders a bare object as "[object Object]"
-      // (the resolver only gives arrays a Python-repr toString). The template
-      // renders {{ dummy_to_real_names }} directly and its example is JSON.
-      dummy_to_real_names: JSON.stringify(dummyToReal),
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "rewrite_reason",
+      {
+        reason,
+        // Pass as JSON text: Nunjucks renders a bare object as "[object Object]"
+        // (the resolver only gives arrays a Python-repr toString). The template
+        // renders {{ dummy_to_real_names }} directly and its example is JSON.
+        dummy_to_real_names: JSON.stringify(dummyToReal),
+      },
+    );
     const { rewritten_reason } = await generateWithSchema(
       this,
       prompt,

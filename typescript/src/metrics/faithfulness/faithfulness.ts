@@ -22,7 +22,8 @@ const TEMPLATE_CLASS = "FaithfulnessMetric";
 
 function truthsLimitPhrase(limit?: number): string {
   if (limit == null) return " FACTUAL, undisputed truths";
-  if (limit === 1) return " the single most important FACTUAL, undisputed truth";
+  if (limit === 1)
+    return " the single most important FACTUAL, undisputed truth";
   return ` the ${limit} most important FACTUAL, undisputed truths per document`;
 }
 
@@ -103,30 +104,45 @@ export class FaithfulnessMetric extends BaseMetric {
   }
 
   private async generateTruths(retrievalContext: string[]): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_truths", {
-      retrieval_context: retrievalContext.join("\n\n"),
-      limit: truthsLimitPhrase(this.truthsExtractionLimit),
-      multimodal_instruction: "",
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_truths",
+      {
+        retrieval_context: retrievalContext.join("\n\n"),
+        limit: truthsLimitPhrase(this.truthsExtractionLimit),
+        multimodal_instruction: "",
+      },
+    );
     const { truths } = await generateWithSchema(this, prompt, TruthsSchema);
     return truths;
   }
 
   private async generateClaims(actualOutput: string): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_claims", {
-      actual_output: actualOutput,
-      multimodal_instruction: "",
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_claims",
+      {
+        actual_output: actualOutput,
+        multimodal_instruction: "",
+      },
+    );
     const { claims } = await generateWithSchema(this, prompt, ClaimsSchema);
     return claims;
   }
 
   private async generateVerdicts(): Promise<FaithfulnessVerdict[]> {
     if (this.claims.length === 0) return [];
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
-      claims: this.claims,
-      retrieval_context: this.truths.join("\n\n"),
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_verdicts",
+      {
+        claims: this.claims,
+        retrieval_context: this.truths.join("\n\n"),
+      },
+    );
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
   }
@@ -140,10 +156,15 @@ export class FaithfulnessMetric extends BaseMetric {
       else if (vd === "idk" && this.penalizeAmbiguousClaims)
         contradictions.push(`(Ambiguous) ${v.reason}`);
     }
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
-      contradictions,
-      score: (this.score ?? 0).toFixed(2),
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_reason",
+      {
+        contradictions,
+        score: (this.score ?? 0).toFixed(2),
+      },
+    );
     const { reason } = await generateWithSchema(
       this,
       prompt,

@@ -114,10 +114,15 @@ export class GEval extends BaseMetric {
 
   private async generateEvaluationSteps(): Promise<string[]> {
     if (this.evaluationSteps) return this.evaluationSteps;
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_evaluation_steps", {
-      criteria: this.criteria,
-      parameters: constructGEvalParamsString(this.evaluationParams),
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_evaluation_steps",
+      {
+        criteria: this.criteria,
+        parameters: constructGEvalParamsString(this.evaluationParams),
+      },
+    );
     const { steps } = await generateWithSchema(this, prompt, StepsSchema);
     return steps;
   }
@@ -131,20 +136,30 @@ export class GEval extends BaseMetric {
     const numberedSteps = numberEvaluationSteps(this.evaluationSteps ?? []);
 
     const prompt = this.strictMode
-      ? resolveTemplate("metrics", TEMPLATE_CLASS, "generate_strict_evaluation_results", {
-          evaluation_steps: numberedSteps,
-          test_case_content: testCaseContent,
-          parameters,
-          _additional_context: null,
-        })
-      : resolveTemplate("metrics", TEMPLATE_CLASS, "generate_evaluation_results", {
-          evaluation_steps: numberedSteps,
-          test_case_content: testCaseContent,
-          parameters,
-          rubric: this.rubric ? formatRubrics(this.rubric) : null,
-          score_range: this.scoreRange,
-          _additional_context: null,
-        });
+      ? resolveTemplate(
+          "metrics",
+          TEMPLATE_CLASS,
+          "generate_strict_evaluation_results",
+          {
+            evaluation_steps: numberedSteps,
+            test_case_content: testCaseContent,
+            parameters,
+            _additional_context: null,
+          },
+        )
+      : resolveTemplate(
+          "metrics",
+          TEMPLATE_CLASS,
+          "generate_evaluation_results",
+          {
+            evaluation_steps: numberedSteps,
+            test_case_content: testCaseContent,
+            parameters,
+            rubric: this.rubric ? formatRubrics(this.rubric) : null,
+            score_range: this.scoreRange,
+            _additional_context: null,
+          },
+        );
 
     const { score, reason } = await generateWithSchema(
       this,

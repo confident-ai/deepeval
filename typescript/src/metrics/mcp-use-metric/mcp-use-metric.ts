@@ -84,20 +84,30 @@ export class MCPUseMetric extends BaseMetric {
 
       const primScore = await generateWithSchema(
         this,
-        resolveTemplate("metrics", TEMPLATE_CLASS, "get_primitive_correctness_prompt", {
-          test_case: testCaseVars,
-          available_primitives: availablePrimitives,
-          primitives_used: primitivesUsed,
-        }),
+        resolveTemplate(
+          "metrics",
+          TEMPLATE_CLASS,
+          "get_primitive_correctness_prompt",
+          {
+            test_case: testCaseVars,
+            available_primitives: availablePrimitives,
+            primitives_used: primitivesUsed,
+          },
+        ),
         MCPPrimitivesScoreSchema,
       );
       const argScore = await generateWithSchema(
         this,
-        resolveTemplate("metrics", TEMPLATE_CLASS, "get_mcp_argument_correctness_prompt", {
-          test_case: testCaseVars,
-          available_primitives: availablePrimitives,
-          primitives_used: primitivesUsed,
-        }),
+        resolveTemplate(
+          "metrics",
+          TEMPLATE_CLASS,
+          "get_mcp_argument_correctness_prompt",
+          {
+            test_case: testCaseVars,
+            available_primitives: availablePrimitives,
+            primitives_used: primitivesUsed,
+          },
+        ),
         MCPArgsScoreSchema,
       );
 
@@ -129,7 +139,10 @@ export class MCPUseMetric extends BaseMetric {
     let availablePrimitives = "MCP Primitives Available: \n";
     for (const server of mcpServers) {
       availablePrimitives += `MCP Server ${server.serverName}\n`;
-      availablePrimitives += block("Available Tools", server.availableTools ?? []);
+      availablePrimitives += block(
+        "Available Tools",
+        server.availableTools ?? [],
+      );
       availablePrimitives += block(
         "Available Resources",
         server.availableResources ?? [],

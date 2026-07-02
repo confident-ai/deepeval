@@ -1,6 +1,9 @@
 import { isConfident } from "../utils";
 import { Api, Endpoints, HttpMethods } from "./api";
-import { ConfidentEvaluateRequestData, ConfidentEvaluateResponseData } from "./types";
+import {
+  ConfidentEvaluateRequestData,
+  ConfidentEvaluateResponseData,
+} from "./types";
 
 export async function evaluate(
   data: ConfidentEvaluateRequestData,

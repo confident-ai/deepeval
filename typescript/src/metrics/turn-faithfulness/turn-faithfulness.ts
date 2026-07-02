@@ -1,9 +1,5 @@
 import { BaseConversationalMetric } from "../base-conversational-metric";
-import {
-  ConversationalTestCase,
-  MultiTurnParams,
-  Turn,
-} from "../../test-case";
+import { ConversationalTestCase, MultiTurnParams, Turn } from "../../test-case";
 import { DeepEvalBaseLLM } from "../../models";
 import { resolveTemplate } from "../../templates";
 import {
@@ -144,10 +140,15 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
   }
 
   private async generateTruths(retrievalContext: string[]): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_truths", {
-      reference_context: retrievalContext.join("\n\n"),
-      limit_description: limitDescription(this.truthsExtractionLimit),
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_truths",
+      {
+        reference_context: retrievalContext.join("\n\n"),
+        limit_description: limitDescription(this.truthsExtractionLimit),
+      },
+    );
     const { truths } = await generateWithSchema(this, prompt, TruthsSchema);
     return truths;
   }
@@ -156,10 +157,15 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
     userContent: string,
     assistantContent: string,
   ): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_claims", {
-      input: userContent,
-      assistant_output: assistantContent,
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_claims",
+      {
+        input: userContent,
+        assistant_output: assistantContent,
+      },
+    );
     const { claims } = await generateWithSchema(this, prompt, ClaimsSchema);
     return claims;
   }
@@ -169,10 +175,15 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
     truths: string[],
   ): Promise<FaithfulnessVerdict[]> {
     if (claims.length === 0) return [];
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
-      claims,
-      reference_context: truths.join("\n\n"),
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_verdicts",
+      {
+        claims,
+        reference_context: truths.join("\n\n"),
+      },
+    );
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
   }
@@ -206,10 +217,15 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
     const contradictions = verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "no")
       .map((v) => v.reason);
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
-      contradictions,
-      score: score.toFixed(2),
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_reason",
+      {
+        contradictions,
+        score: score.toFixed(2),
+      },
+    );
     const { reason } = await generateWithSchema(
       this,
       prompt,
@@ -230,11 +246,16 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
       return "There were no retrieval contexts in your turns to evaluate, hence the score is 1";
     }
     const reasons = this.scores.map((s) => s.reason);
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_final_reason", {
-      final_score: this.score,
-      success: this.success,
-      reasons,
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_final_reason",
+      {
+        final_score: this.score,
+        success: this.success,
+        reasons,
+      },
+    );
     const { reason } = await generateWithSchema(
       this,
       prompt,

@@ -70,16 +70,26 @@ export class PlanQualityMetric extends BaseMetric {
 
       const { task } = await generateWithSchema(
         this,
-        resolveTemplate("metrics", TASK_TEMPLATE_CLASS, "extract_task_from_trace", {
-          trace_json: json,
-        }),
+        resolveTemplate(
+          "metrics",
+          TASK_TEMPLATE_CLASS,
+          "extract_task_from_trace",
+          {
+            trace_json: json,
+          },
+        ),
         TaskSchema,
       );
       const { plan } = await generateWithSchema(
         this,
-        resolveTemplate("metrics", PLAN_TEMPLATE_CLASS, "extract_plan_from_trace", {
-          trace_json_str: json,
-        }),
+        resolveTemplate(
+          "metrics",
+          PLAN_TEMPLATE_CLASS,
+          "extract_plan_from_trace",
+          {
+            trace_json_str: json,
+          },
+        ),
         AgentPlanSchema,
       );
 

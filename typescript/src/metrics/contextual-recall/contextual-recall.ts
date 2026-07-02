@@ -82,14 +82,19 @@ export class ContextualRecallMetric extends BaseMetric {
     expectedOutput: string,
     retrievalContext: string[],
   ): Promise<ContextualRecallVerdict[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
-      expected_output: expectedOutput,
-      content_type: "sentence",
-      content_type_plural: "sentences",
-      content_or: "sentence",
-      context_to_display: retrievalContext,
-      node_instruction: "",
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_verdicts",
+      {
+        expected_output: expectedOutput,
+        content_type: "sentence",
+        content_type_plural: "sentences",
+        content_or: "sentence",
+        context_to_display: retrievalContext,
+        node_instruction: "",
+      },
+    );
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
   }
@@ -104,13 +109,18 @@ export class ContextualRecallMetric extends BaseMetric {
       if (v.verdict.toLowerCase() === "yes") supportiveReasons.push(v.reason);
       else unsupportiveReasons.push(v.reason);
     }
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
-      expected_output: expectedOutput,
-      supportive_reasons: supportiveReasons,
-      unsupportive_reasons: unsupportiveReasons,
-      score: (this.score ?? 0).toFixed(2),
-      content_type: "sentence",
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_reason",
+      {
+        expected_output: expectedOutput,
+        supportive_reasons: supportiveReasons,
+        unsupportive_reasons: unsupportiveReasons,
+        score: (this.score ?? 0).toFixed(2),
+        content_type: "sentence",
+      },
+    );
     const { reason } = await generateWithSchema(
       this,
       prompt,

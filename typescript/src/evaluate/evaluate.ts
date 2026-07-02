@@ -226,7 +226,10 @@ export async function runMetric(
     // Dispatched in `evaluate`, so the metric matches the test case type.
     await (metric.measure as (tc: AnyTestCase) => Promise<number>)(testCase);
   } catch (e) {
-    if (e instanceof MissingTestCaseParamsError && errorCfg.skipOnMissingParams) {
+    if (
+      e instanceof MissingTestCaseParamsError &&
+      errorCfg.skipOnMissingParams
+    ) {
       metric.skipped = true;
     } else if (errorCfg.ignoreErrors) {
       metric.error = (e as Error).message;
