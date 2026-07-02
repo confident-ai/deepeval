@@ -223,10 +223,12 @@ def test_display_option_all_shows_every_case():
     assert "failing_case" in text_default
 
 
-def test_display_option_filter_all_hidden_shows_note():
+def test_display_option_failing_all_hidden_shows_all_passed_note():
     from deepeval.test_run.test_run import TestRunResultDisplay
 
-    report = EvaluationConsoleReport([_make_case("passing_case", True)])
+    report = EvaluationConsoleReport(
+        [_make_case("passing_case_1", True), _make_case("passing_case_2", True)]
+    )
 
     text = _render_text(
         report,
@@ -235,4 +237,19 @@ def test_display_option_filter_all_hidden_shows_note():
     )
 
     assert "passing_case" not in text
-    assert "No failing test cases to display." in text
+    assert "All 2 test cases passed — no failing test cases to display." in text
+
+
+def test_display_option_passing_all_hidden_shows_all_failed_note():
+    from deepeval.test_run.test_run import TestRunResultDisplay
+
+    report = EvaluationConsoleReport([_make_case("failing_case", False)])
+
+    text = _render_text(
+        report,
+        truncate=True,
+        display_option=TestRunResultDisplay.PASSING,
+    )
+
+    assert "failing_case" not in text
+    assert "All 1 test case failed — no passing test cases to display." in text

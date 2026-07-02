@@ -66,12 +66,7 @@ class EvaluationConsoleReport:
     def _should_skip_case(
         case: TestResult, display_option: TestRunResultDisplay
     ) -> bool:
-        """Determine if a test case should be hidden based on the display filter.
-
-        Mirrors ``TestRunManager._should_skip_test_case`` so the ``evaluate()``
-        console output honors ``DisplayConfig.display_option`` exactly like the
-        ``deepeval test run --display`` CLI. ``None`` is treated as ``ALL``.
-        """
+        """Mirrors ``TestRunManager._should_skip_test_case``."""
         if display_option == TestRunResultDisplay.PASSING and not case.success:
             return True
         elif display_option == TestRunResultDisplay.FAILING and case.success:
@@ -175,21 +170,26 @@ class EvaluationConsoleReport:
                 )
             )
 
-        # When a display filter hides every case, surface a short note instead
-        # of showing only the header + aggregate, so the output isn't confusing.
+        # Only FAILING/PASSING can hide every case.
         if not displayed_any and self.test_results:
-            filter_label = (
-                display_option.value
-                if isinstance(display_option, TestRunResultDisplay)
-                else TestRunResultDisplay.ALL.value
-            )
-            renderables.append(
-                Panel(
-                    f"No {filter_label} test cases to display.",
-                    border_style=DEEPEVAL_PURPLE,
-                    expand=True,
+            total = len(self.test_results)
+            plural = "s" if total != 1 else ""
+            if display_option == TestRunResultDisplay.FAILING:
+                renderables.append(
+                    Panel(
+                        f"[{DEEPEVAL_GREEN} bold]✅ All {total} test case{plural} passed — no failing test cases to display.[/{DEEPEVAL_GREEN} bold]",
+                        border_style=DEEPEVAL_GREEN,
+                        expand=True,
+                    )
                 )
-            )
+            elif display_option == TestRunResultDisplay.PASSING:
+                renderables.append(
+                    Panel(
+                        f"[{FAIL_RED} bold]❌ All {total} test case{plural} failed — no passing test cases to display.[/{FAIL_RED} bold]",
+                        border_style=FAIL_RED,
+                        expand=True,
+                    )
+                )
 
         # Calculate aggregate metrics
         metric_aggregates = {}
