@@ -20,7 +20,9 @@ export class DeepSeekModel extends DeepEvalOpenAICompatibleModel {
     super({
       ...options,
       model:
-        options.model ?? process.env.DEEPSEEK_MODEL_NAME ?? DEFAULT_DEEPSEEK_MODEL,
+        options.model ??
+        process.env.DEEPSEEK_MODEL_NAME ??
+        DEFAULT_DEEPSEEK_MODEL,
       apiKey: options.apiKey ?? process.env.DEEPSEEK_API_KEY,
       baseURL: options.baseURL ?? DEEPSEEK_BASE_URL,
     });

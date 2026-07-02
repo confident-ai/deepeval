@@ -146,7 +146,12 @@ export async function compare(
   for (const w of winners) counts[w] = (counts[w] ?? 0) + 1;
 
   if (display.printResults) {
-    printArenaCompleted(counts, runDuration, winners.length, hasCost ? totalCost : 0);
+    printArenaCompleted(
+      counts,
+      runDuration,
+      winners.length,
+      hasCost ? totalCost : 0,
+    );
   }
 
   // Post to Confident AI as an experiment (no-op unless logged in).
@@ -171,7 +176,10 @@ function printArenaCompleted(
   const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   const breakdown = sorted.length
     ? sorted
-        .map(([name, wins]) => `    » ${GREEN}${BOLD}${name}${RESET}: ${wins} wins`)
+        .map(
+          ([name, wins]) =>
+            `    » ${GREEN}${BOLD}${name}${RESET}: ${wins} wins`,
+        )
         .join("\n")
     : "No winners";
   const cost = tokenCost ? `${tokenCost} USD` : "None";

@@ -5,7 +5,14 @@ import {
   MCPPromptCall,
   validateMcpServers,
 } from "./mcp";
-import { checkIfMultimodal, extractImageIdsFromList, extractImageIdsFromString, MLLM_IMAGE_REGISTRY, MLLMImage, SLUG_PATTERN } from "./mllm-image";
+import {
+  checkIfMultimodal,
+  extractImageIdsFromList,
+  extractImageIdsFromString,
+  MLLM_IMAGE_REGISTRY,
+  MLLMImage,
+  SLUG_PATTERN,
+} from "./mllm-image";
 
 export enum SingleTurnParams {
   INPUT = "input",
@@ -154,9 +161,11 @@ export class LLMTestCase {
     extractImageIdsFromString(this.actualOutput, ids);
     extractImageIdsFromString(this.expectedOutput, ids);
     extractImageIdsFromList(this.context, ids);
-    
+
     extractImageIdsFromList(
-      this.retrievalContext?.map((c) => (typeof c === "string" ? c : c.context)),
+      this.retrievalContext?.map((c) =>
+        typeof c === "string" ? c : c.context,
+      ),
       ids,
     );
 

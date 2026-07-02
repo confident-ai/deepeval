@@ -48,7 +48,12 @@ function buildMetricsScores(cases: EvaluatedCase[]) {
   for (const { metricsData } of cases) {
     for (const m of metricsData) {
       if (m.skipped) continue;
-      const e = map.get(m.name) ?? { scores: [], passes: 0, fails: 0, errors: 0 };
+      const e = map.get(m.name) ?? {
+        scores: [],
+        passes: 0,
+        fails: 0,
+        errors: 0,
+      };
       if (m.error) {
         e.errors += 1;
       } else {
@@ -81,53 +86,55 @@ export async function postTestRun(
   let totalCost = 0;
   let hasCost = false;
 
-  cases.forEach(({ testCase, metricsData, runDuration: caseDuration, trace }, order) => {
-    const success = metricsData.every((m) => m.skipped || m.success);
-    if (success) testPassed += 1;
-    else testFailed += 1;
+  cases.forEach(
+    ({ testCase, metricsData, runDuration: caseDuration, trace }, order) => {
+      const success = metricsData.every((m) => m.skipped || m.success);
+      if (success) testPassed += 1;
+      else testFailed += 1;
 
-    const evaluationCost = caseCost(metricsData);
-    if (evaluationCost != null) {
-      totalCost += evaluationCost;
-      hasCost = true;
-    }
-    const metricsDataApi = metricsData.map(convertMetricData);
+      const evaluationCost = caseCost(metricsData);
+      if (evaluationCost != null) {
+        totalCost += evaluationCost;
+        hasCost = true;
+      }
+      const metricsDataApi = metricsData.map(convertMetricData);
 
-    if (testCase instanceof ConversationalTestCase) {
-      conversationalTestCases.push({
-        name: testCase.name ?? `test_case_${order}`,
-        success,
-        metricsData: metricsDataApi,
-        runDuration: caseDuration,
-        evaluationCost,
-        order,
-        turns: testCase.turns.map((t, i) => convertTurn(t, i)),
-        scenario: testCase.scenario,
-        expectedOutcome: testCase.expectedOutcome,
-        userDescription: testCase.userDescription,
-        chatbotRole: testCase.chatbotRole,
-        imagesMapping: testCase.getImagesMapping(),
-      });
-    } else {
-      testCases.push({
-        name: testCase.name ?? `test_case_${order}`,
-        input: testCase.input,
-        actualOutput: testCase.actualOutput,
-        expectedOutput: testCase.expectedOutput,
-        context: testCase.context,
-        retrievalContext: resolveRetrievalContext(testCase.retrievalContext),
-        toolsCalled: testCase.toolsCalled?.map(convertTool),
-        expectedTools: testCase.expectedTools?.map(convertTool),
-        success,
-        metricsData: metricsDataApi,
-        runDuration: caseDuration,
-        evaluationCost,
-        order,
-        imagesMapping: testCase.getImagesMapping(),
-        trace,
-      });
-    }
-  });
+      if (testCase instanceof ConversationalTestCase) {
+        conversationalTestCases.push({
+          name: testCase.name ?? `test_case_${order}`,
+          success,
+          metricsData: metricsDataApi,
+          runDuration: caseDuration,
+          evaluationCost,
+          order,
+          turns: testCase.turns.map((t, i) => convertTurn(t, i)),
+          scenario: testCase.scenario,
+          expectedOutcome: testCase.expectedOutcome,
+          userDescription: testCase.userDescription,
+          chatbotRole: testCase.chatbotRole,
+          imagesMapping: testCase.getImagesMapping(),
+        });
+      } else {
+        testCases.push({
+          name: testCase.name ?? `test_case_${order}`,
+          input: testCase.input,
+          actualOutput: testCase.actualOutput,
+          expectedOutput: testCase.expectedOutput,
+          context: testCase.context,
+          retrievalContext: resolveRetrievalContext(testCase.retrievalContext),
+          toolsCalled: testCase.toolsCalled?.map(convertTool),
+          expectedTools: testCase.expectedTools?.map(convertTool),
+          success,
+          metricsData: metricsDataApi,
+          runDuration: caseDuration,
+          evaluationCost,
+          order,
+          imagesMapping: testCase.getImagesMapping(),
+          trace,
+        });
+      }
+    },
+  );
 
   const payload = {
     testCases,
@@ -261,7 +268,13 @@ export async function postExperiment(
     testCases: e.testCases,
     conversationalTestCases: [],
     metricsScores: [
-      { metric: metricName, scores: e.scores, passes: e.passes, fails: e.fails, errors: e.errors },
+      {
+        metric: metricName,
+        scores: e.scores,
+        passes: e.passes,
+        fails: e.fails,
+        errors: e.errors,
+      },
     ],
     identifier: e.identifier,
     testPassed: e.testPassed,
