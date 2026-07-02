@@ -21,12 +21,17 @@ on:
       - '.github/workflows/test_metric_templates.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
+        with:
+          persist-credentials: false
 
       - name: Set up python
         uses: actions/setup-python@v4
