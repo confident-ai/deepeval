@@ -5,6 +5,7 @@ from strands.models.openai import OpenAIModel
 
 from deepeval.integrations.strands import instrument_strands
 
+
 _DEFAULT_MODEL_ID = os.environ.get("STRANDS_TEST_MODEL", "gpt-4o-mini")
 
 

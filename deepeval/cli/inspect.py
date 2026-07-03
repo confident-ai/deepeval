@@ -14,6 +14,7 @@ from typing import Optional
 import typer
 from rich import print
 
+
 _INSTALL_HINT = (
     "[bold red]deepeval inspect[/bold red] requires extras that are not "
     "installed.\n"

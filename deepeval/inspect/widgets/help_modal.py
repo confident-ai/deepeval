@@ -9,6 +9,7 @@ from textual.containers import Container
 from textual.screen import ModalScreen
 from textual.widgets import Static
 
+
 _HELP_ROWS = [
     ("↑ ↓ / k j", "move selection in the tree"),
     ("h / l", "go to parent / select child in the tree"),

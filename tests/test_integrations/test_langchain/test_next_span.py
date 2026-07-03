@@ -41,6 +41,7 @@ from deepeval.tracing import (
 )
 from deepeval.tracing.types import LlmSpan, RetrieverSpan, ToolSpan
 
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

@@ -37,6 +37,7 @@ from tests.test_integrations.test_googleadk.apps.googleadk_eval_app import (
 )
 from tests.test_integrations.test_googleadk.conftest import trace_test
 
+
 pytestmark = pytest.mark.skipif(
     not os.getenv("GOOGLE_API_KEY"),
     reason="GOOGLE_API_KEY is required to run Google ADK tests against Gemini.",
