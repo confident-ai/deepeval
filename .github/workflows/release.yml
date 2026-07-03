@@ -2,9 +2,10 @@ name: Release
 
 on:
   push:
-    tags:
-      - "python-v*"
-      - "typescript-v*"
+    branches: [main]
+    paths:
+      - "pyproject.toml"
+      - "typescript/package.json"
   workflow_dispatch:
     inputs:
       tag_name:
@@ -26,60 +27,75 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Resolve tag and SDK
-        id: vars
+      - name: Determine tags to release
+        id: tags
         run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          declare -a TAGS=()
+
+          add_tag() {
+            local tag="$1"
+            if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+              echo "Tag $tag already exists; skipping."
+            else
+              echo "Creating tag $tag."
+              git tag "$tag"
+              git push origin "$tag"
+              TAGS+=("$tag")
+            fi
+          }
+
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             TAG="${{ github.event.inputs.tag_name }}"
+            case "$TAG" in
+              python-v*|typescript-v*) TAGS+=("$TAG") ;;
+              *) echo "::error::Tag '$TAG' must match python-v* or typescript-v*."; exit 1 ;;
+            esac
           else
-            TAG="${GITHUB_REF#refs/tags/}"
+            PY_VERSION=$(grep -m1 -E '^version = ' pyproject.toml | sed -E 's/^version = "([^"]+)".*/\1/')
+            TS_VERSION=$(jq -r .version typescript/package.json)
+            add_tag "python-v$PY_VERSION"
+            add_tag "typescript-v$TS_VERSION"
           fi
 
-          case "$TAG" in
-            python-v*)     SDK="Python";     PREFIX="python-v" ;;
-            typescript-v*) SDK="TypeScript"; PREFIX="typescript-v" ;;
-            *)
-              echo "::error::Tag '$TAG' does not match python-v* or typescript-v*."
-              exit 1
-              ;;
-          esac
+          echo "list=${TAGS[*]:-}" >> "$GITHUB_OUTPUT"
 
-          PREV=$(
-            { echo "$TAG"; git tag --list "${PREFIX}*"; } \
-              | grep -v '^$' | sort -u -V -r \
-              | awk -v cur="$TAG" 'found{print; exit} $0==cur{found=1}'
-          )
-
-          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
-          echo "TITLE=$SDK ${TAG#$PREFIX}" >> "$GITHUB_OUTPUT"
-          echo "PREV=$PREV" >> "$GITHUB_OUTPUT"
-
-          if [ -n "$PREV" ]; then
-            echo "Releasing $TAG (notes since $PREV)."
-          else
-            echo "Releasing $TAG (no previous $SDK tag; full notes)."
-          fi
-
-      - name: Create draft release
+      - name: Create draft releases
+        if: steps.tags.outputs.list != ''
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
-          TAG: ${{ steps.vars.outputs.TAG }}
-          TITLE: ${{ steps.vars.outputs.TITLE }}
-          PREV: ${{ steps.vars.outputs.PREV }}
+          TAGS: ${{ steps.tags.outputs.list }}
         run: |
-          API_ARGS=(-f tag_name="$TAG")
-          if [ -n "$PREV" ]; then
-            API_ARGS+=(-f previous_tag_name="$PREV")
-          fi
-          BODY=$(gh api "repos/$REPO/releases/generate-notes" "${API_ARGS[@]}" --jq .body)
+          set -euo pipefail
+          for TAG in $TAGS; do
+            case "$TAG" in
+              python-v*)     SDK="Python";     PREFIX="python-v" ;;
+              typescript-v*) SDK="TypeScript"; PREFIX="typescript-v" ;;
+            esac
 
-          {
-            echo "New to \`deepeval\`? Get started [here](https://deepeval.com/docs/introduction)."
-            echo
-            echo "$BODY"
-            echo
-            echo "A huge thank you to everyone who contributed to this release ❤️"
-          } > notes.md
+            PREV=$(
+              { echo "$TAG"; git tag --list "${PREFIX}*"; } \
+                | grep -v '^$' | sort -u -V -r \
+                | awk -v cur="$TAG" 'found{print; exit} $0==cur{found=1}'
+            )
 
-          gh release create "$TAG" --title "$TITLE" --draft --notes-file notes.md
+            API_ARGS=(-f tag_name="$TAG")
+            if [ -n "$PREV" ]; then
+              API_ARGS+=(-f previous_tag_name="$PREV")
+            fi
+            BODY=$(gh api "repos/$REPO/releases/generate-notes" "${API_ARGS[@]}" --jq .body)
+
+            {
+              echo "New to \`deepeval\`? Get started [here](https://deepeval.com/docs/introduction)."
+              echo
+              echo "$BODY"
+              echo
+              echo "A huge thank you to everyone who contributed to this release ❤️"
+            } > notes.md
+
+            gh release create "$TAG" --title "$SDK ${TAG#$PREFIX}" --draft --notes-file notes.md
+          done
