@@ -1,7 +1,19 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional, List, Union
+from typing import (
+    Any,
+    AsyncGenerator,
+    AsyncIterable,
+    Optional,
+    List,
+    Tuple,
+    Union,
+    TYPE_CHECKING,
+)
 from deepeval.models.utils import parse_model_name
 from dataclasses import dataclass
+
+if TYPE_CHECKING:
+    from deepeval.test_case.audio import Audio, AudioChunk
 
 
 @dataclass
@@ -137,6 +149,80 @@ class DeepEvalBaseLLM(ABC):
             except TypeError:
                 pass
         return await self.a_generate(*args, **kwargs)
+
+
+class DeepEvalBaseTTS(ABC):
+    def __init__(self, model: Optional[str] = None, *args, **kwargs):
+        self.name = parse_model_name(model)
+        self.model = self.load_model()
+
+    @abstractmethod
+    def load_model(self, *args, **kwargs) -> "DeepEvalBaseTTS":
+        pass
+
+    @abstractmethod
+    def synthesize(
+        self, text: str, *args, voice: Optional[str] = None, **kwargs
+    ) -> Tuple["Audio", Optional[float]]:
+        pass
+
+    @abstractmethod
+    async def a_synthesize(
+        self, text: str, *args, voice: Optional[str] = None, **kwargs
+    ) -> Tuple["Audio", Optional[float]]:
+        pass
+
+    async def a_synthesize_stream(
+        self, text: str, *args, voice: Optional[str] = None, **kwargs
+    ) -> AsyncGenerator["AudioChunk", None]:
+        raise NotImplementedError(
+            f"{type(self).__name__} does not support streaming synthesis."
+        )
+        yield  # unreachable; makes this a valid async generator
+
+    def supports_streaming(self) -> bool:
+        return False
+
+    @abstractmethod
+    def get_model_name(self, *args, **kwargs) -> str:
+        return self.name
+
+
+class DeepEvalBaseSTT(ABC):
+    def __init__(self, model: Optional[str] = None, *args, **kwargs):
+        self.name = parse_model_name(model)
+        self.model = self.load_model()
+
+    @abstractmethod
+    def load_model(self, *args, **kwargs) -> "DeepEvalBaseSTT":
+        pass
+
+    @abstractmethod
+    def transcribe(
+        self, audio: "Audio", *args, **kwargs
+    ) -> Tuple[str, Optional[float]]:
+        pass
+
+    @abstractmethod
+    async def a_transcribe(
+        self, audio: "Audio", *args, **kwargs
+    ) -> Tuple[str, Optional[float]]:
+        pass
+
+    async def a_transcribe_stream(
+        self, audio_stream: AsyncIterable["AudioChunk"], *args, **kwargs
+    ) -> AsyncGenerator[str, None]:
+        raise NotImplementedError(
+            f"{type(self).__name__} does not support streaming transcription."
+        )
+        yield  # unreachable; makes this a valid async generator
+
+    def supports_streaming(self) -> bool:
+        return False
+
+    @abstractmethod
+    def get_model_name(self, *args, **kwargs) -> str:
+        return self.name
 
 
 class DeepEvalBaseEmbeddingModel(ABC):

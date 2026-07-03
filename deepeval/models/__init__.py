@@ -2,6 +2,8 @@ from deepeval.models.base_model import (
     DeepEvalBaseModel,
     DeepEvalBaseLLM,
     DeepEvalBaseEmbeddingModel,
+    DeepEvalBaseTTS,
+    DeepEvalBaseSTT,
 )
 from deepeval.models.llms import (
     GPTModel,
@@ -24,11 +26,15 @@ from deepeval.models.embedding_models import (
     LocalEmbeddingModel,
     OllamaEmbeddingModel,
 )
+from deepeval.models.tts import OpenAITTS
+from deepeval.models.stt import OpenAISTT
 
 __all__ = [
     "DeepEvalBaseModel",
     "DeepEvalBaseLLM",
     "DeepEvalBaseEmbeddingModel",
+    "DeepEvalBaseTTS",
+    "DeepEvalBaseSTT",
     "GPTModel",
     "AzureOpenAIModel",
     "LocalModel",
@@ -46,4 +52,6 @@ __all__ = [
     "OllamaEmbeddingModel",
     "PortkeyModel",
     "OpenRouterModel",
+    "OpenAITTS",
+    "OpenAISTT",
 ]
