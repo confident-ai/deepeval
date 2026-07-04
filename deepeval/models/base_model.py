@@ -13,7 +13,7 @@ from deepeval.models.utils import parse_model_name
 from dataclasses import dataclass
 
 if TYPE_CHECKING:
-    from deepeval.test_case.audio import Audio, AudioChunk
+    from deepeval.test_case import Audio, AudioChunk
 
 
 @dataclass

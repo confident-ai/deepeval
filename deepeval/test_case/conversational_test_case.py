@@ -12,7 +12,7 @@ from copy import deepcopy
 from enum import Enum
 
 from deepeval.test_case import ToolCall, MLLMImage, RetrievedContextData
-from deepeval.test_case.audio import Audio
+from deepeval.test_case import Audio
 from deepeval.test_case.mcp import (
     MCPServer,
     MCPPromptCall,

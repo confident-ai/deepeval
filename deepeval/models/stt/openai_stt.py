@@ -4,7 +4,7 @@ from typing import Optional, Dict, Tuple
 from pydantic import SecretStr
 from openai import OpenAI, AsyncOpenAI
 
-from deepeval.test_case.audio import Audio
+from deepeval.test_case import Audio
 from deepeval.models import DeepEvalBaseSTT
 from deepeval.models.utils import parse_model_name, require_secret_api_key
 from deepeval.models.retry_policy import create_retry_decorator
