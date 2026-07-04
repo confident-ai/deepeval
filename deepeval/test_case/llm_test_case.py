@@ -619,3 +619,175 @@ class LLMTestCase(BaseModel):
                 images_mapping[img_id] = _MLLM_IMAGE_REGISTRY[img_id]
 
         return images_mapping if len(images_mapping) > 0 else None
+
+@dataclass
+class Audio:
+    dataBase64: Optional[str] = None
+    mimeType: Optional[str] = None
+    url: Optional[str] = None
+    local: Optional[bool] = None
+    filename: Optional[str] = None
+    sampleRate: Optional[int] = None 
+    encoding: Optional[str] = None
+    duration: Optional[float] = None
+    _id: str = field(default_factory=lambda: uuid.uuid4().hex)
+
+    def __post_init__(self):
+        if not self.url and not self.dataBase64:
+            raise ValueError(
+                "You must provide either a 'url' or both 'dataBase64' and "
+                "'mimeType' to create an Audio."
+            )
+
+        if self.dataBase64 is not None:
+            if self.mimeType is None:
+                raise ValueError(
+                    "mimeType must be provided when initializing from Base64 data."
+                )
+            return
+
+        is_local = self.is_local_path(self.url)
+        if self.local is not None:
+            assert self.local == is_local, "Local path mismatch"
+        else:
+            self.local = is_local
+
+        if self.local:
+            path = self.process_url(self.url)
+            if not os.path.exists(path):
+                raise FileNotFoundError(f"Audio file not found: {path}")
+            self.filename = os.path.basename(path)
+            self.mimeType = (
+                self.mimeType
+                or mimetypes.guess_type(path)[0]
+                or "audio/wav"
+            )
+            self._load_base64(path)
+        else:
+            if not self.url.startswith(("http://", "https://")):
+                raise ValueError(
+                    f"Invalid remote URL format: {self.url}. URL must start "
+                    "with http:// or https://"
+                )
+            parsed_url = urlparse(self.url)
+            self.filename = os.path.basename(parsed_url.path)
+            self.mimeType = (
+                self.mimeType
+                or mimetypes.guess_type(self.filename)[0]
+                or "audio/wav"
+            )
+            self.dataBase64 = None
+
+    def _load_base64(self, path: str):
+        with open(path, "rb") as f:
+            raw = f.read()
+        self.dataBase64 = base64.b64encode(raw).decode("ascii")
+
+    def get_bytes(self) -> bytes:
+        """Return the raw audio bytes (local files are loaded in __post_init__)."""
+        if self.dataBase64 is None:
+            raise ValueError(
+                "No audio bytes available; this Audio is a remote URL. "
+                "Fetch it before calling get_bytes()."
+            )
+        return base64.b64decode(self.dataBase64)
+
+    @classmethod
+    def from_bytes(
+        cls,
+        data: bytes,
+        mimeType: str,
+        *,
+        sampleRate: Optional[int] = None,
+        encoding: Optional[str] = None,
+        duration: Optional[float] = None,
+    ) -> "Audio":
+        """Convenience constructor for in-memory audio (e.g. TTS/connector output)."""
+        return cls(
+            dataBase64=base64.b64encode(data).decode("ascii"),
+            mimeType=mimeType,
+            sampleRate=sampleRate,
+            encoding=encoding,
+            duration=duration,
+        )
+
+    @staticmethod
+    def process_url(url: str) -> str:
+        if os.path.exists(url):
+            return url
+        parsed = urlparse(url)
+        if parsed.scheme == "file":
+            raw_path = (
+                f"//{parsed.netloc}{parsed.path}"
+                if parsed.netloc
+                else parsed.path
+            )
+            return unquote(raw_path)
+        return url
+
+    @staticmethod
+    def is_local_path(url: str) -> bool:
+        if os.path.exists(url):
+            return True
+        parsed = urlparse(url)
+        if parsed.scheme == "file":
+            raw_path = (
+                f"//{parsed.netloc}{parsed.path}"
+                if parsed.netloc
+                else parsed.path
+            )
+            return os.path.exists(unquote(raw_path))
+        return False
+
+    def __repr__(self) -> str:
+        source = self.filename or self.url or "bytes"
+        rate = f", {self.sampleRate}Hz" if self.sampleRate else ""
+        return f"Audio({source}, {self.mimeType}{rate})"
+
+@dataclass
+class AudioChunk:
+    dataBase64: str
+    mimeType: str
+    sampleRate: Optional[int] = None
+    encoding: Optional[str] = None
+    timestamp: Optional[float] = None
+    duration: Optional[float] = None 
+    is_final: bool = False 
+    _id: str = field(default_factory=lambda: uuid.uuid4().hex)
+
+    def __post_init__(self):
+        if not self.dataBase64 or not self.mimeType:
+            raise ValueError(
+                "Both 'dataBase64' and 'mimeType' must be provided to create an AudioChunk."
+            )
+
+    def get_bytes(self) -> bytes:
+        """Return the raw audio bytes by decoding the base64 string."""
+        return base64.b64decode(self.dataBase64)
+
+    @classmethod
+    def from_bytes(
+        cls,
+        data: bytes,
+        mimeType: str,
+        *,
+        sampleRate: Optional[int] = None,
+        encoding: Optional[str] = None,
+        timestamp: Optional[float] = None,
+        duration: Optional[float] = None,
+        is_final: bool = False,
+    ) -> "AudioChunk":
+        """Convenience constructor for wrapping raw byte buffers from a stream."""
+        return cls(
+            dataBase64=base64.b64encode(data).decode("ascii"),
+            mimeType=mimeType,
+            sampleRate=sampleRate,
+            encoding=encoding,
+            timestamp=timestamp,
+            duration=duration,
+            is_final=is_final,
+        )
+
+    def __repr__(self) -> str:
+        rate = f", {self.sampleRate}Hz" if self.sampleRate else ""
+        return f"AudioChunk({self.mimeType}{rate}, is_final={self.is_final})"

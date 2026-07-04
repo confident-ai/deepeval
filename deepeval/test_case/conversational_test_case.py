@@ -12,6 +12,7 @@ from copy import deepcopy
 from enum import Enum
 
 from deepeval.test_case import ToolCall, MLLMImage, RetrievedContextData
+from deepeval.test_case.audio import Audio
 from deepeval.test_case.mcp import (
     MCPServer,
     MCPPromptCall,
@@ -25,6 +26,7 @@ from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 class MultiTurnParams(Enum):
     ROLE = "role"
     CONTENT = "content"
+    AUDIO = "audio"
     METADATA = "metadata"
     TAGS = "tags"
     SCENARIO = "scenario"
@@ -54,6 +56,7 @@ def __getattr__(name: str):
 class Turn(BaseModel):
     role: Literal["user", "assistant"]
     content: str
+    audio: Optional[Audio] = Field(default=None)
     user_id: Optional[str] = Field(
         default=None, validation_alias=AliasChoices("userId", "user_id")
     )
@@ -104,6 +107,8 @@ class Turn(BaseModel):
 
     def __repr__(self):
         attrs = [f"role={self.role!r}", f"content={self.content!r}"]
+        if self.audio is not None:
+            attrs.append(f"audio={self.audio!r}")
         if self.user_id is not None:
             attrs.append(f"user_id={self.user_id!r}")
         if self.retrieval_context is not None:
@@ -200,6 +205,7 @@ class ConversationalTestCase(BaseModel):
     tags: Optional[List[str]] = Field(default=None)
     mcp_servers: Optional[List[MCPServer]] = Field(default=None)
     multimodal: bool = False
+    voice: bool = False
 
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
@@ -222,6 +228,17 @@ class ConversationalTestCase(BaseModel):
             stacklevel=2,
         )
         self.metadata = value
+
+    @model_validator(mode="after")
+    def set_is_voice(self):
+        if self.voice is True:
+            return self
+        if self.turns:
+            for turn in self.turns:
+                if turn.audio is not None:
+                    self.voice = True
+                    break
+        return self
 
     @model_validator(mode="after")
     def set_is_multimodal(self):
