@@ -149,6 +149,7 @@ class Endpoints(Enum):
     METRIC_ENDPOINT = "/v1/metric/:name"
 
     COMPARE_TEST_RUNS_ENDPOINT = "/v1/test-runs/compare"
+    GOVERNANCE_ASSESS_ENDPOINT = "/v1/governance/assess"
 
 
 def _sanitize_body(obj):

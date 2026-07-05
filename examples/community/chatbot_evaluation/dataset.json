@@ -1,0 +1,14 @@
+[
+  {
+    "input": "What is Dubai?",
+    "expected": "Dubai is a city in the UAE"
+  },
+  {
+    "input": "Capital of UAE?",
+    "expected": "Abu Dhabi is the capital of UAE"
+  },
+  {
+    "input": "What is 2+2?",
+    "expected": "2+2 equals 4"
+  }
+]

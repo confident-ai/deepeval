@@ -20,7 +20,12 @@ PY_TEMPLATES_JSON = (
     REPO_ROOT / "deepeval" / "templates" / "metrics" / "templates.json"
 )
 TS_TEMPLATES_JSON = (
-    REPO_ROOT / "typescript" / "src" / "templates" / "metrics" / "templates.json"
+    REPO_ROOT
+    / "typescript"
+    / "src"
+    / "templates"
+    / "metrics"
+    / "templates.json"
 )
 
 

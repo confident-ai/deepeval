@@ -35,7 +35,6 @@ from deepeval.metrics.utils import (
     accrue_token_usage,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 import deepeval.metrics.conversational_g_eval.schema as cgschema
 from deepeval.confident.api import Api, Endpoints, HttpMethods
@@ -208,8 +207,7 @@ class ConversationalGEval(BaseConversationalMetric):
         g_eval_params_str = construct_conversational_g_eval_turn_params_string(
             self.evaluation_params
         )
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_evaluation_steps",
             criteria=self.criteria,
             parameters=g_eval_params_str,
@@ -229,8 +227,7 @@ class ConversationalGEval(BaseConversationalMetric):
         g_eval_params_str = construct_conversational_g_eval_turn_params_string(
             self.evaluation_params
         )
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_evaluation_steps",
             criteria=self.criteria,
             parameters=g_eval_params_str,
@@ -253,8 +250,7 @@ class ConversationalGEval(BaseConversationalMetric):
             self.evaluation_params
         )
         rubric_str = format_rubrics(self.rubric) if self.rubric else None
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_evaluation_results",
             evaluation_steps=self.number_evaluation_steps(),
             test_case_content=test_case_content,
@@ -310,8 +306,7 @@ class ConversationalGEval(BaseConversationalMetric):
             self.evaluation_params
         )
         rubric_str = format_rubrics(self.rubric) if self.rubric else None
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_evaluation_results",
             evaluation_steps=self.number_evaluation_steps(),
             test_case_content=test_case_content,

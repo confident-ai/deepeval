@@ -18,7 +18,6 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from .schema import MCPPrimitivesScore, MCPArgsScore
 
@@ -191,9 +190,9 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPPrimitivesScore:
-        prompt = resolve_template("metrics", 
-            "MCPUseMetric",
+        prompt = self._get_prompt(
             "get_primitive_correctness_prompt",
+            template_class="MCPUseMetric",
             test_case=test_case,
             available_primitives=available_primitives,
             primitives_used=primitives_used,
@@ -213,9 +212,9 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPPrimitivesScore:
-        prompt = resolve_template("metrics", 
-            "MCPUseMetric",
+        prompt = self._get_prompt(
             "get_primitive_correctness_prompt",
+            template_class="MCPUseMetric",
             test_case=test_case,
             available_primitives=available_primitives,
             primitives_used=primitives_used,
@@ -235,9 +234,9 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPArgsScore:
-        prompt = resolve_template("metrics", 
-            "MCPUseMetric",
+        prompt = self._get_prompt(
             "get_mcp_argument_correctness_prompt",
+            template_class="MCPUseMetric",
             test_case=test_case,
             available_primitives=available_primitives,
             primitives_used=primitives_used,
@@ -257,9 +256,9 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPArgsScore:
-        prompt = resolve_template("metrics", 
-            "MCPUseMetric",
+        prompt = self._get_prompt(
             "get_mcp_argument_correctness_prompt",
+            template_class="MCPUseMetric",
             test_case=test_case,
             available_primitives=available_primitives,
             primitives_used=primitives_used,

@@ -14,7 +14,6 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import Turn, ConversationalTestCase, MultiTurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
@@ -142,10 +141,7 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         if self.include_reason is False:
             return None
 
-        prompt = resolve_template("metrics", 
-
-            self.__class__.__name__,
-
+        prompt = self._get_prompt(
             "generate_reason",
             score=self.score,
             role=role,
@@ -165,8 +161,7 @@ class RoleAdherenceMetric(BaseConversationalMetric):
     def _generate_reason(self, role: str) -> Optional[str]:
         if self.include_reason is False:
             return None
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_reason",
             score=self.score,
             role=role,
@@ -186,13 +181,10 @@ class RoleAdherenceMetric(BaseConversationalMetric):
     async def _a_extract_out_of_character_verdicts(
         self, turns: List[Turn], role: str
     ) -> OutOfCharacterResponseVerdicts:
-        prompt = (
-            resolve_template("metrics", 
-                self.__class__.__name__,
-                "extract_out_of_character_response_verdicts",
-                turns=[convert_turn_to_dict(turn) for turn in turns],
-                role=role,
-            )
+        prompt = self._get_prompt(
+            "extract_out_of_character_response_verdicts",
+            turns=[convert_turn_to_dict(turn) for turn in turns],
+            role=role,
         )
         res: OutOfCharacterResponseVerdicts = (
             await a_generate_with_schema_and_extract(
@@ -217,13 +209,10 @@ class RoleAdherenceMetric(BaseConversationalMetric):
     def _extract_out_of_character_verdicts(
         self, turns: List[Turn], role: str
     ) -> OutOfCharacterResponseVerdicts:
-        prompt = (
-            resolve_template("metrics", 
-                self.__class__.__name__,
-                "extract_out_of_character_response_verdicts",
-                turns=[convert_turn_to_dict(turn) for turn in turns],
-                role=role,
-            )
+        prompt = self._get_prompt(
+            "extract_out_of_character_response_verdicts",
+            turns=[convert_turn_to_dict(turn) for turn in turns],
+            role=role,
         )
         res: OutOfCharacterResponseVerdicts = generate_with_schema_and_extract(
             metric=self,

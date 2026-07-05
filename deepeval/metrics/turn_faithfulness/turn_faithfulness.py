@@ -17,7 +17,6 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.turn_faithfulness.schema import (
     FaithfulnessVerdict,
@@ -29,7 +28,9 @@ from deepeval.metrics.turn_faithfulness.schema import (
 )
 
 
-def _turn_faithfulness_limit_description(extraction_limit: Optional[int]) -> str:
+def _turn_faithfulness_limit_description(
+    extraction_limit: Optional[int],
+) -> str:
     if extraction_limit is None:
         return "factual, explicit truths"
     if extraction_limit == 1:
@@ -266,8 +267,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
     async def _a_generate_truths(
         self, retrieval_context: str, multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_truths",
             reference_context="\n\n".join(retrieval_context),
             limit_description=_turn_faithfulness_limit_description(
@@ -287,8 +287,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
     def _generate_truths(
         self, retrieval_context: str, multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_truths",
             reference_context="\n\n".join(retrieval_context),
             limit_description=_turn_faithfulness_limit_description(
@@ -308,8 +307,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
     async def _a_generate_claims(
         self, user_content: str, assistant_content: str, multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_claims",
             input=user_content,
             assistant_output=assistant_content,
@@ -327,8 +325,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
     def _generate_claims(
         self, user_content: str, assistant_content: str, multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_claims",
             input=user_content,
             assistant_output=assistant_content,
@@ -351,10 +348,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
 
         verdicts: List[FaithfulnessVerdict] = []
 
-        prompt = resolve_template("metrics", 
-
-            self.__class__.__name__,
-
+        prompt = self._get_prompt(
             "generate_verdicts",
             claims=claims,
             reference_context="\n\n".join(truths),
@@ -377,10 +371,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
 
         verdicts: List[FaithfulnessVerdict] = []
 
-        prompt = resolve_template("metrics", 
-
-            self.__class__.__name__,
-
+        prompt = self._get_prompt(
             "generate_verdicts",
             claims=claims,
             reference_context="\n\n".join(truths),
@@ -462,10 +453,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
             if verdict.verdict.strip().lower() == "no":
                 contradictions.append(verdict.reason)
 
-        prompt = resolve_template("metrics", 
-
-            self.__class__.__name__,
-
+        prompt = self._get_prompt(
             "generate_reason",
             contradictions=contradictions,
             score=format(score, ".2f"),
@@ -489,10 +477,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
             if verdict.verdict.strip().lower() == "no":
                 contradictions.append(verdict.reason)
 
-        prompt = resolve_template("metrics", 
-
-            self.__class__.__name__,
-
+        prompt = self._get_prompt(
             "generate_reason",
             contradictions=contradictions,
             score=format(score, ".2f"),
@@ -536,8 +521,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         for score in scores:
             reasons.append(score.reason)
 
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_final_reason",
             final_score=self.score,
             success=self.success,
@@ -565,8 +549,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         for score in scores:
             reasons.append(score.reason)
 
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_final_reason",
             final_score=self.score,
             success=self.success,

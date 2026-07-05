@@ -270,6 +270,7 @@ export interface Trace {
   threadId?: string;
   userId?: string;
   testCaseId?: string;
+  testRunId?: string;
   turnId?: string;
   input?: any;
   output?: any;
@@ -797,6 +798,7 @@ export class TraceManager {
       threadId: trace.threadId,
       userId: trace.userId,
       testCaseId: trace.testCaseId,
+      testRunId: trace.testRunId,
       turnId: trace.turnId,
       input: trace.input,
       output: trace.output,
@@ -1447,6 +1449,7 @@ export interface UpdateCurrentTraceParams {
   threadId?: string;
   userId?: string;
   testCaseId?: string;
+  testRunId?: string;
   turnId?: string;
   input?: any;
   output?: any;
@@ -1469,6 +1472,7 @@ export const updateCurrentTrace = ({
   threadId,
   userId,
   testCaseId,
+  testRunId,
   turnId,
   input,
   output,
@@ -1515,6 +1519,9 @@ export const updateCurrentTrace = ({
   }
   if (testCaseId !== undefined) {
     currentTrace.testCaseId = testCaseId;
+  }
+  if (testRunId !== undefined) {
+    currentTrace.testRunId = testRunId;
   }
   if (turnId !== undefined) {
     currentTrace.turnId = turnId;

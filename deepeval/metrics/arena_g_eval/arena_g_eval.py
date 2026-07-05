@@ -18,7 +18,6 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.arena_g_eval.schema import (
     RewrittenReason,
@@ -175,8 +174,7 @@ class ArenaGEval(BaseArenaMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_evaluation_steps",
             criteria=self.criteria,
             parameters=g_eval_params_str,
@@ -198,8 +196,7 @@ class ArenaGEval(BaseArenaMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_evaluation_steps",
             criteria=self.criteria,
             parameters=g_eval_params_str,
@@ -222,8 +219,7 @@ class ArenaGEval(BaseArenaMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_arena_winner",
             evaluation_steps=number_evaluation_steps(self.evaluation_steps),
             test_case_contents=formatted_test_case,
@@ -256,8 +252,7 @@ class ArenaGEval(BaseArenaMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_arena_winner",
             evaluation_steps=number_evaluation_steps(self.evaluation_steps),
             test_case_contents=formatted_test_case,
@@ -285,8 +280,7 @@ class ArenaGEval(BaseArenaMetric):
         reason: str,
         dummy_to_real_names: Dict[str, str],
     ) -> str:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "rewrite_reason",
             reason=reason,
             dummy_to_real_names=dummy_to_real_names,
@@ -305,8 +299,7 @@ class ArenaGEval(BaseArenaMetric):
         reason: str,
         dummy_to_real_names: Dict[str, str],
     ) -> str:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "rewrite_reason",
             reason=reason,
             dummy_to_real_names=dummy_to_real_names,

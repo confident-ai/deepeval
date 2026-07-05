@@ -11,7 +11,6 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.knowledge_retention.schema import (
     Knowledge,
@@ -147,10 +146,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             if verdict.verdict.strip().lower() == "yes":
                 attritions.append(verdict.reason)
 
-        prompt: dict = resolve_template("metrics", 
-
-            self.__class__.__name__,
-
+        prompt: dict = self._get_prompt(
             "generate_reason",
             attritions=attritions,
             score=format(self.score, ".2f"),
@@ -172,10 +168,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             if verdict.verdict.strip().lower() == "yes":
                 attritions.append(verdict.reason)
 
-        prompt: dict = resolve_template("metrics", 
-
-            self.__class__.__name__,
-
+        prompt: dict = self._get_prompt(
             "generate_reason",
             attritions=attritions,
             score=format(self.score, ".2f"),
@@ -204,10 +197,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             if len(accumulated_knowledge) == 0:
                 continue
 
-            prompt = resolve_template("metrics", 
-
-                self.__class__.__name__,
-
+            prompt = self._get_prompt(
                 "generate_verdict",
                 llm_message=turns[i].content,
                 accumulated_knowledge=accumulated_knowledge,
@@ -238,10 +228,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             if len(accumulated_knowledge) == 0:
                 continue
 
-            prompt = resolve_template("metrics", 
-
-                self.__class__.__name__,
-
+            prompt = self._get_prompt(
                 "generate_verdict",
                 llm_message=turns[i].content,
                 accumulated_knowledge=accumulated_knowledge,
@@ -269,10 +256,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             previous_turns = turns[:i]
             user_message = turns[i].content
 
-            prompt = resolve_template("metrics", 
-
-                self.__class__.__name__,
-
+            prompt = self._get_prompt(
                 "extract_data",
                 user_message=user_message,
                 previous_turns=[
@@ -301,10 +285,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             previous_turns = turns[:i]
             user_message = turns[i].content
 
-            prompt = resolve_template("metrics", 
-
-                self.__class__.__name__,
-
+            prompt = self._get_prompt(
                 "extract_data",
                 user_message=user_message,
                 previous_turns=[

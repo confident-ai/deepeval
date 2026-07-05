@@ -1,7 +1,6 @@
-import json
 from typing import Optional, List, Tuple, Union, Dict
 
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import get_or_create_event_loop, serialize_to_json
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_llm_test_case_params,
@@ -15,7 +14,6 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.task_completion.schema import (
     TaskAndOutcome,
@@ -152,8 +150,7 @@ class TaskCompletionMetric(BaseMetric):
             return self.score
 
     async def _a_generate_verdicts(self) -> Tuple:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_verdict",
             task=self.task,
             actual_outcome=self.outcome,
@@ -167,8 +164,7 @@ class TaskCompletionMetric(BaseMetric):
         )
 
     def _generate_verdicts(self) -> Tuple:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_verdict",
             task=self.task,
             actual_outcome=self.outcome,
@@ -187,15 +183,13 @@ class TaskCompletionMetric(BaseMetric):
     ) -> Tuple:
         has_trace: bool = isinstance(test_case._trace_dict, Dict)
         if has_trace:
-            prompt = resolve_template("metrics", 
-                self.__class__.__name__,
+            prompt = self._get_prompt(
                 "extract_task_and_outcome_from_trace",
-                trace_json=json.dumps(test_case._trace_dict, default=str),
+                trace_json=serialize_to_json(test_case._trace_dict, indent=2),
             )
         else:
             # TODO: Deprecate this soon
-            prompt = resolve_template("metrics", 
-                self.__class__.__name__,
+            prompt = self._get_prompt(
                 "extract_goal_and_outcome",
                 input=test_case.input,
                 actual_output=test_case.actual_output,
@@ -215,15 +209,13 @@ class TaskCompletionMetric(BaseMetric):
     ) -> Tuple:
         has_trace: bool = isinstance(test_case._trace_dict, Dict)
         if has_trace:
-            prompt = resolve_template("metrics", 
-                self.__class__.__name__,
+            prompt = self._get_prompt(
                 "extract_task_and_outcome_from_trace",
-                trace_json=json.dumps(test_case._trace_dict, default=str),
+                trace_json=serialize_to_json(test_case._trace_dict, indent=2),
             )
         else:
             # TODO: Deprecate this soon
-            prompt = resolve_template("metrics", 
-                self.__class__.__name__,
+            prompt = self._get_prompt(
                 "extract_goal_and_outcome",
                 input=test_case.input,
                 actual_output=test_case.actual_output,

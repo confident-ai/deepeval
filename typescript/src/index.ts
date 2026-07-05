@@ -6,6 +6,7 @@ export * as testCase from "./test-case";
 export * as tracing from "./tracing";
 export * as openai from "./openai";
 export * as metrics from "./metrics";
+export * as governance from "./governance";
 
 // Export common utilities
 export * from "./utils";
@@ -32,3 +33,8 @@ export {
 } from "./evaluate";
 export { Prompt } from "./prompt";
 export { ConversationSimulator } from "./simulate";
+export {
+  assessGovernance,
+  type GovernanceAssessment,
+  type GovernancePolicyReference,
+} from "./governance";

@@ -52,14 +52,18 @@ def _collect_from_disk() -> tuple[dict[str, dict[str, str]], dict[str, str]]:
             for path in templates_dir.glob("*.txt"):
                 if path.name == "class.txt":
                     continue
-                classes[class_name][path.stem] = path.read_text(encoding="utf-8")
+                classes[class_name][path.stem] = path.read_text(
+                    encoding="utf-8"
+                )
         else:
             # Nested layout: one subfolder per class (multi-class metrics).
             for sub in templates_dir.iterdir():
                 if not sub.is_dir():
                     continue
                 for path in sub.glob("*.txt"):
-                    classes[sub.name][path.stem] = path.read_text(encoding="utf-8")
+                    classes[sub.name][path.stem] = path.read_text(
+                        encoding="utf-8"
+                    )
 
     fragments = {
         path.stem: path.read_text(encoding="utf-8")
@@ -103,7 +107,9 @@ def build_bundle() -> dict:
             methods = classes[key]
             if isinstance(existing.get(key), dict):
                 method_order = [m for m in existing[key] if m in methods]
-                method_order += sorted(m for m in methods if m not in method_order)
+                method_order += sorted(
+                    m for m in methods if m not in method_order
+                )
             else:
                 method_order = sorted(methods)
             bundle[key] = {m: methods[m] for m in method_order}

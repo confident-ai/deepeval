@@ -3,9 +3,69 @@ from __future__ import annotations
 import json
 from importlib import resources
 from pathlib import Path
-from typing import Any, Dict, Optional, Set, Tuple
+from typing import Any, Dict, Literal, Optional, Set, Tuple
 
 import jinja2
+
+Feature = Literal["metrics"]
+
+# Keep in sync with the method keys in `templates/metrics/templates.json`.
+# `class_name` stays `str` on purpose: callers pass `self.__class__.__name__`,
+# which a type checker can't narrow to a Literal anyway.
+MetricTemplateMethod = Literal[
+    "detect_role_violations",
+    "evaluate_adherence",
+    "evaluate_image_coherence",
+    "evaluate_image_helpfulness",
+    "evaluate_image_reference",
+    "evaluate_plan_quality",
+    "extract_data",
+    "extract_goal_and_outcome",
+    "extract_out_of_character_response_verdicts",
+    "extract_pii",
+    "extract_plan_from_trace",
+    "extract_task_and_outcome_from_trace",
+    "extract_task_from_trace",
+    "extract_user_intentions",
+    "generate_advices",
+    "generate_alignment_verdicts",
+    "generate_answers",
+    "generate_arena_winner",
+    "generate_binary_verdict",
+    "generate_claims",
+    "generate_evaluation_results",
+    "generate_evaluation_steps",
+    "generate_final_reason",
+    "generate_misuses",
+    "generate_non_binary_verdict",
+    "generate_opinions",
+    "generate_perceptual_quality_evaluation_results",
+    "generate_questions",
+    "generate_reason",
+    "generate_semantic_consistency_evaluation_results",
+    "generate_statements",
+    "generate_strict_evaluation_results",
+    "generate_task_output",
+    "generate_truths",
+    "generate_verdict",
+    "generate_verdicts",
+    "get_accuracy_score",
+    "get_args_correctness_score",
+    "get_argument_correctness_score",
+    "get_execution_efficiency",
+    "get_final_reason",
+    "get_mcp_argument_correctness_prompt",
+    "get_plan_evaluation_score",
+    "get_primitive_correctness_prompt",
+    "get_qa_pair_verdict",
+    "get_qa_pairs",
+    "get_task_completion_score",
+    "get_tool_argument_final_reason",
+    "get_tool_correctness_score",
+    "get_tool_selection_final_reason",
+    "get_tool_selection_score",
+    "rewrite_reason",
+]
 
 
 class MetricTemplateNotFoundError(KeyError):
@@ -81,7 +141,9 @@ def clear_metric_template_cache() -> None:
     _registry.clear()
 
 
-def get_raw_template(feature: str, class_name: str, method: str) -> str:
+def get_raw_template(
+    feature: Feature, class_name: str, method: MetricTemplateMethod
+) -> str:
     """Return the raw (un-rendered) base template string for a class/method."""
     base = _registry.get_base_templates(feature)
     entry = base.get(class_name, {})
@@ -96,7 +158,7 @@ def get_raw_template(feature: str, class_name: str, method: str) -> str:
 
 
 def iter_base_template_methods(
-    feature: str, class_name: str
+    feature: Feature, class_name: str
 ) -> list[tuple[str, str]]:
     """Iterate over all `(method, template)` pairs for a class in the bundle."""
     base = _registry.get_base_templates(feature)
@@ -120,9 +182,9 @@ def iter_base_template_methods(
 
 
 def resolve_template(
-    feature: str,
+    feature: Feature,
     class_name: str,
-    method: str,
+    method: MetricTemplateMethod,
     *,
     multimodal: bool = False,
     strict: bool = True,

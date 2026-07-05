@@ -9,12 +9,39 @@ from deepeval.test_case import (
     SingleTurnParams,
     ArenaTestCase,
 )
+from deepeval.templates.resolver import (
+    MetricTemplateMethod,
+    resolve_template,
+)
 
 if TYPE_CHECKING:
     from deepeval.models import DeepEvalBaseLLM
 
 
-class BaseMetric:
+class PromptMixin:
+    """Renders a metric prompt template. `template_class` overrides the default
+    `self.__class__.__name__` when borrowing another class's templates."""
+
+    def _get_prompt(
+        self,
+        method: MetricTemplateMethod,
+        *,
+        template_class: Optional[str] = None,
+        multimodal: bool = False,
+        strict: bool = True,
+        **kwargs,
+    ) -> str:
+        return resolve_template(
+            "metrics",
+            template_class or self.__class__.__name__,
+            method,
+            multimodal=multimodal,
+            strict=strict,
+            **kwargs,
+        )
+
+
+class BaseMetric(PromptMixin):
     _required_params = List[SingleTurnParams]
     threshold: float
     score: Optional[float] = None
@@ -78,7 +105,7 @@ class BaseMetric:
             self.output_tokens = (self.output_tokens or 0) + output_tokens
 
 
-class BaseConversationalMetric:
+class BaseConversationalMetric(PromptMixin):
     threshold: float
     score: Optional[float] = None
     score_breakdown: Dict = None
@@ -144,7 +171,7 @@ class BaseConversationalMetric:
             self.output_tokens = (self.output_tokens or 0) + output_tokens
 
 
-class BaseArenaMetric:
+class BaseArenaMetric(PromptMixin):
     reason: Optional[str] = None
     evaluation_model: Optional[str] = None
     async_mode: bool = True

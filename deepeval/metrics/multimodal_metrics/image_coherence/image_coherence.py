@@ -11,7 +11,6 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.metrics.multimodal_metrics.image_coherence.schema import (
     ReasonScore,
 )
@@ -281,8 +280,7 @@ class ImageCoherenceMetric(BaseMetric):
         context_above: Optional[str] = None,
         context_below: Optional[str] = None,
     ) -> Tuple[float, str]:
-        instructions = resolve_template("metrics", 
-            self.__class__.__name__,
+        instructions = self._get_prompt(
             "evaluate_image_coherence",
             context_above=context_above,
             context_below=context_below,
@@ -302,8 +300,7 @@ class ImageCoherenceMetric(BaseMetric):
         context_above: Optional[str] = None,
         context_below: Optional[str] = None,
     ) -> Tuple[float, str]:
-        instructions = resolve_template("metrics", 
-            self.__class__.__name__,
+        instructions = self._get_prompt(
             "evaluate_image_coherence",
             context_above=context_above,
             context_below=context_below,

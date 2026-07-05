@@ -17,7 +17,6 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.metrics.multimodal_metrics.image_editing.schema import ReasonScore
 from deepeval.metrics.indicator import metric_progress_indicator
 
@@ -201,10 +200,9 @@ class ImageEditingMetric(BaseMetric):
         images: List[MLLMImage] = []
         images.extend([image_input, actual_image_output])
         prompt = [
-            resolve_template("metrics", 
-                self.__class__.__name__,
+            self._get_prompt(
                 "generate_semantic_consistency_evaluation_results",
-                text_prompt=text_prompt
+                text_prompt=text_prompt,
             )
         ]
         return await a_generate_with_schema_and_extract(
@@ -224,10 +222,9 @@ class ImageEditingMetric(BaseMetric):
         images: List[MLLMImage] = []
         images.extend([image_input, actual_image_output])
         prompt = [
-            resolve_template("metrics", 
-                self.__class__.__name__,
+            self._get_prompt(
                 "generate_semantic_consistency_evaluation_results",
-                text_prompt=text_prompt
+                text_prompt=text_prompt,
             )
         ]
         return generate_with_schema_and_extract(
@@ -243,9 +240,9 @@ class ImageEditingMetric(BaseMetric):
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = [actual_image_output]
         prompt = [
-            resolve_template("metrics", 
-                self.__class__.__name__,
-                "generate_perceptual_quality_evaluation_results",)
+            self._get_prompt(
+                "generate_perceptual_quality_evaluation_results",
+            )
         ]
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -260,9 +257,9 @@ class ImageEditingMetric(BaseMetric):
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = [actual_image_output]
         prompt = [
-            resolve_template("metrics", 
-                self.__class__.__name__,
-                "generate_perceptual_quality_evaluation_results",)
+            self._get_prompt(
+                "generate_perceptual_quality_evaluation_results",
+            )
         ]
         return generate_with_schema_and_extract(
             metric=self,

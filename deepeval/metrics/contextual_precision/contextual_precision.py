@@ -19,7 +19,6 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.metrics.retrieval_context_display import id_retrieval_context
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import MLLMImage
@@ -35,7 +34,9 @@ def _contextual_precision_verdict_fields(
         f"{'s' if len(retrieval_context) > 1 else ''})"
     )
     context_to_display = (
-        id_retrieval_context(retrieval_context) if multimodal else retrieval_context
+        id_retrieval_context(retrieval_context)
+        if multimodal
+        else retrieval_context
     )
     multimodal_note = " (which can be text or an image)" if multimodal else ""
     return document_count_str, context_to_display, multimodal_note
@@ -191,8 +192,7 @@ class ContextualPrecisionMetric(BaseMetric):
             {"verdict": verdict.verdict, "reason": verdict.reason}
             for verdict in self.verdicts
         ]
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_reason",
             multimodal=multimodal,
             input=input,
@@ -216,8 +216,7 @@ class ContextualPrecisionMetric(BaseMetric):
             {"verdict": verdict.verdict, "reason": verdict.reason}
             for verdict in self.verdicts
         ]
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_reason",
             multimodal=multimodal,
             input=input,
@@ -243,8 +242,7 @@ class ContextualPrecisionMetric(BaseMetric):
         doc_str, ctx_disp, mm_note = _contextual_precision_verdict_fields(
             retrieval_context, multimodal
         )
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_verdicts",
             multimodal=multimodal,
             input=input,
@@ -275,8 +273,7 @@ class ContextualPrecisionMetric(BaseMetric):
         doc_str, ctx_disp, mm_note = _contextual_precision_verdict_fields(
             retrieval_context, multimodal
         )
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_verdicts",
             multimodal=multimodal,
             input=input,

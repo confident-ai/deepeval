@@ -1,15 +1,15 @@
 {
   "name": "langchain-simple-test",
-  "uuid": "9c709e9b-2a30-4b58-879c-f6e2cb4ae91b",
+  "uuid": "01a731b6-7a78-44ef-813c-696286fa2d9c",
   "baseSpans": [
     {
-      "uuid": "019c8b75-6cb8-7ccb-aba1-bc1b115819e5",
+      "uuid": "019ed9d8-931e-70e9-8e90-f6974f199652",
       "name": "simple_chain",
       "status": "SUCCESS",
       "type": "base",
-      "traceUuid": "9c709e9b-2a30-4b58-879c-f6e2cb4ae91b",
-      "startTime": "2026-02-23T17:04:14.520Z",
-      "endTime": "2026-02-23T17:04:15.460Z",
+      "traceUuid": "01a731b6-7a78-44ef-813c-696286fa2d9c",
+      "startTime": "2026-06-18T08:28:29.855Z",
+      "endTime": "2026-06-18T08:28:31.938Z",
       "input": {
         "messages": [
           {
@@ -33,7 +33,7 @@
               "AIMessage"
             ],
             "kwargs": {
-              "id": "chatcmpl-DCTduL6x5rEWFJUFBa3xWr57aH8s3",
+              "id": "chatcmpl-Ds2OtdEs0j7iMnrhzFZhWTC3VoPdF",
               "content": "Hello!",
               "additional_kwargs": {},
               "response_metadata": {
@@ -60,7 +60,7 @@
                     "rejected_prediction_tokens": 0
                   }
                 },
-                "system_fingerprint": "fp_fc706eab22"
+                "system_fingerprint": "fp_997b5b4ee9"
               },
               "type": "ai",
               "tool_calls": [],
@@ -87,14 +87,14 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019c8b75-6cbb-7000-8000-0d394b898e9f",
+      "uuid": "019ed9d8-9323-734c-aec2-43243240f84b",
       "name": "Langchain LLM Run",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "9c709e9b-2a30-4b58-879c-f6e2cb4ae91b",
-      "parentUuid": "019c8b75-6cb8-7ccb-aba1-bc1b115819e5",
-      "startTime": "2026-02-23T17:04:14.523Z",
-      "endTime": "2026-02-23T17:04:15.460Z",
+      "traceUuid": "01a731b6-7a78-44ef-813c-696286fa2d9c",
+      "parentUuid": "019ed9d8-931e-70e9-8e90-f6974f199652",
+      "startTime": "2026-06-18T08:28:29.859Z",
+      "endTime": "2026-06-18T08:28:31.937Z",
       "input": [
         {
           "role": "human",
@@ -115,8 +115,8 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-23T17:04:14.505Z",
-  "endTime": "2026-02-23T17:04:15.460Z",
+  "startTime": "2026-06-18T08:28:29.854Z",
+  "endTime": "2026-06-18T08:28:31.938Z",
   "environment": "testing",
   "metadata": {
     "test_type": "simple"
@@ -150,7 +150,7 @@
           "AIMessage"
         ],
         "kwargs": {
-          "id": "chatcmpl-DCTduL6x5rEWFJUFBa3xWr57aH8s3",
+          "id": "chatcmpl-Ds2OtdEs0j7iMnrhzFZhWTC3VoPdF",
           "content": "Hello!",
           "additional_kwargs": {},
           "response_metadata": {
@@ -177,7 +177,7 @@
                 "rejected_prediction_tokens": 0
               }
             },
-            "system_fingerprint": "fp_fc706eab22"
+            "system_fingerprint": "fp_997b5b4ee9"
           },
           "type": "ai",
           "tool_calls": [],
@@ -198,5 +198,6 @@
         }
       }
     ]
-  }
+  },
+  "status": "SUCCESS"
 }

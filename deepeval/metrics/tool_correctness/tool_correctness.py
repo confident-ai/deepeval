@@ -11,7 +11,6 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.test_case import (
     LLMTestCase,
     SingleTurnParams,
@@ -333,8 +332,7 @@ class ToolCorrectnessMetric(BaseMetric):
     ):
         tools_called_formatted = print_tools_called(tools_called)
         available_tools_formatted = print_tools_called(available_tools)
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "get_tool_selection_score",
             user_input=user_input,
             tools_called=tools_called_formatted,
@@ -354,8 +352,7 @@ class ToolCorrectnessMetric(BaseMetric):
     ):
         tools_called_formatted = print_tools_called(tools_called)
         available_tools_formatted = print_tools_called(available_tools)
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "get_tool_selection_score",
             user_input=user_input,
             tools_called=tools_called_formatted,

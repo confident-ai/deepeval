@@ -1,7 +1,10 @@
 from typing import Optional, List, Union
-import json
 
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import (
+    get_or_create_event_loop,
+    prettify_list,
+    serialize_to_json,
+)
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_llm_test_case_params,
@@ -12,7 +15,6 @@ from deepeval.metrics.utils import (
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.step_efficiency.schema import Task
 from deepeval.metrics.plan_adherence.schema import (
@@ -167,14 +169,12 @@ class PlanAdherenceMetric(BaseMetric):
             return self.score
 
     def _get_plan_adherence_score(self, task, plan, test_case):
-        execution_trace_json = (
-            json.dumps(test_case._trace_dict, indent=2)
-            if isinstance(test_case._trace_dict, dict)
-            else str(test_case._trace_dict or {})
+        execution_trace_json = serialize_to_json(
+            test_case._trace_dict, indent=2
         )
-        prompt = resolve_template("metrics", 
-            "PlanAdherenceMetric",
+        prompt = self._get_prompt(
             "evaluate_adherence",
+            template_class="PlanAdherenceMetric",
             user_task=task,
             agent_plan="\n".join(plan),
             execution_trace_json=execution_trace_json,
@@ -189,14 +189,12 @@ class PlanAdherenceMetric(BaseMetric):
         )
 
     async def _a_get_plan_adherence_score(self, task, plan, test_case):
-        execution_trace_json = (
-            json.dumps(test_case._trace_dict, indent=2)
-            if isinstance(test_case._trace_dict, dict)
-            else str(test_case._trace_dict or {})
+        execution_trace_json = serialize_to_json(
+            test_case._trace_dict, indent=2
         )
-        prompt = resolve_template("metrics", 
-            "PlanAdherenceMetric",
+        prompt = self._get_prompt(
             "evaluate_adherence",
+            template_class="PlanAdherenceMetric",
             user_task=task,
             agent_plan="\n".join(plan),
             execution_trace_json=execution_trace_json,
@@ -211,14 +209,10 @@ class PlanAdherenceMetric(BaseMetric):
         )
 
     def _extract_plan_from_trace(self, test_case: LLMTestCase) -> AgentPlan:
-        trace_json_str = (
-            json.dumps(test_case._trace_dict, indent=2)
-            if isinstance(test_case._trace_dict, dict)
-            else str(test_case._trace_dict or {})
-        )
-        prompt = resolve_template("metrics", 
-            "PlanAdherenceMetric",
+        trace_json_str = serialize_to_json(test_case._trace_dict, indent=2)
+        prompt = self._get_prompt(
             "extract_plan_from_trace",
+            template_class="PlanAdherenceMetric",
             trace_json_str=trace_json_str,
             multimodal=test_case.multimodal,
         )
@@ -233,14 +227,10 @@ class PlanAdherenceMetric(BaseMetric):
     async def _a_extract_plan_from_trace(
         self, test_case: LLMTestCase
     ) -> AgentPlan:
-        trace_json_str = (
-            json.dumps(test_case._trace_dict, indent=2)
-            if isinstance(test_case._trace_dict, dict)
-            else str(test_case._trace_dict or {})
-        )
-        prompt = resolve_template("metrics", 
-            "PlanAdherenceMetric",
+        trace_json_str = serialize_to_json(test_case._trace_dict, indent=2)
+        prompt = self._get_prompt(
             "extract_plan_from_trace",
+            template_class="PlanAdherenceMetric",
             trace_json_str=trace_json_str,
             multimodal=test_case.multimodal,
         )
@@ -253,14 +243,10 @@ class PlanAdherenceMetric(BaseMetric):
         )
 
     def _extract_task_from_trace(self, test_case: LLMTestCase) -> str:
-        trace_json = (
-            json.dumps(test_case._trace_dict, indent=2)
-            if isinstance(test_case._trace_dict, dict)
-            else str(test_case._trace_dict or {})
-        )
-        prompt = resolve_template("metrics", 
-            "StepEfficiencyMetric",
+        trace_json = serialize_to_json(test_case._trace_dict, indent=2)
+        prompt = self._get_prompt(
             "extract_task_from_trace",
+            template_class="StepEfficiencyMetric",
             trace_json=trace_json,
             multimodal=test_case.multimodal,
         )
@@ -273,14 +259,10 @@ class PlanAdherenceMetric(BaseMetric):
         )
 
     async def _a_extract_task_from_trace(self, test_case: LLMTestCase) -> str:
-        trace_json = (
-            json.dumps(test_case._trace_dict, indent=2)
-            if isinstance(test_case._trace_dict, dict)
-            else str(test_case._trace_dict or {})
-        )
-        prompt = resolve_template("metrics", 
-            "StepEfficiencyMetric",
+        trace_json = serialize_to_json(test_case._trace_dict, indent=2)
+        prompt = self._get_prompt(
             "extract_task_from_trace",
+            template_class="StepEfficiencyMetric",
             trace_json=trace_json,
             multimodal=test_case.multimodal,
         )

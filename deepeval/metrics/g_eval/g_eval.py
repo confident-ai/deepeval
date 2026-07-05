@@ -19,7 +19,6 @@ from deepeval.metrics.utils import (
     accrue_token_usage,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.g_eval import schema as gschema
 from deepeval.metrics.g_eval.utils import (
@@ -84,6 +83,7 @@ class GEval(BaseMetric):
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self._include_g_eval_suffix = _include_g_eval_suffix
+
     def measure(
         self,
         test_case: LLMTestCase,
@@ -233,8 +233,7 @@ class GEval(BaseMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_evaluation_steps",
             criteria=self.criteria,
             parameters=g_eval_params_str,
@@ -255,8 +254,7 @@ class GEval(BaseMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_evaluation_steps",
             criteria=self.criteria,
             parameters=g_eval_params_str,
@@ -284,8 +282,7 @@ class GEval(BaseMetric):
         )
         if not self.strict_mode:
             rubric_str = format_rubrics(self.rubric) if self.rubric else None
-            prompt = resolve_template("metrics", 
-                self.__class__.__name__,
+            prompt = self._get_prompt(
                 "generate_evaluation_results",
                 evaluation_steps=number_evaluation_steps(self.evaluation_steps),
                 test_case_content=test_case_content,
@@ -296,18 +293,13 @@ class GEval(BaseMetric):
                 multimodal=multimodal,
             )
         else:
-            prompt = (
-                resolve_template("metrics", 
-                    self.__class__.__name__,
-                    "generate_strict_evaluation_results",
-                    evaluation_steps=number_evaluation_steps(
-                        self.evaluation_steps
-                    ),
-                    test_case_content=test_case_content,
-                    parameters=g_eval_params_str,
-                    _additional_context=_additional_context,
-                    multimodal=multimodal,
-                )
+            prompt = self._get_prompt(
+                "generate_strict_evaluation_results",
+                evaluation_steps=number_evaluation_steps(self.evaluation_steps),
+                test_case_content=test_case_content,
+                parameters=g_eval_params_str,
+                _additional_context=_additional_context,
+                multimodal=multimodal,
             )
         try:
             # don't use log probabilities for unsupported gpt models
@@ -362,8 +354,7 @@ class GEval(BaseMetric):
 
         if not self.strict_mode:
             rubric_str = format_rubrics(self.rubric) if self.rubric else None
-            prompt = resolve_template("metrics", 
-                self.__class__.__name__,
+            prompt = self._get_prompt(
                 "generate_evaluation_results",
                 evaluation_steps=number_evaluation_steps(self.evaluation_steps),
                 test_case_content=test_case_content,
@@ -374,18 +365,13 @@ class GEval(BaseMetric):
                 multimodal=multimodal,
             )
         else:
-            prompt = (
-                resolve_template("metrics", 
-                    self.__class__.__name__,
-                    "generate_strict_evaluation_results",
-                    evaluation_steps=number_evaluation_steps(
-                        self.evaluation_steps
-                    ),
-                    test_case_content=test_case_content,
-                    parameters=g_eval_params_str,
-                    _additional_context=_additional_context,
-                    multimodal=multimodal,
-                )
+            prompt = self._get_prompt(
+                "generate_strict_evaluation_results",
+                evaluation_steps=number_evaluation_steps(self.evaluation_steps),
+                test_case_content=test_case_content,
+                parameters=g_eval_params_str,
+                _additional_context=_additional_context,
+                multimodal=multimodal,
             )
 
         try:

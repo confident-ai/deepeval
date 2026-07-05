@@ -10,6 +10,7 @@ from rich.tree import Tree
 from rich.terminal_theme import TerminalTheme
 
 from deepeval.evaluate.types import TestResult
+from deepeval.test_run.test_run import TestRunResultDisplay
 
 LIGHT_THEME = TerminalTheme(
     background=(0, 0, 0),
@@ -61,7 +62,22 @@ class EvaluationConsoleReport:
         )
         self.console = Console()
 
-    def _build_display_elements(self, truncate: bool = True) -> Group:
+    @staticmethod
+    def _should_skip_case(
+        case: TestResult, display_option: TestRunResultDisplay
+    ) -> bool:
+        """Mirrors ``TestRunManager._should_skip_test_case``."""
+        if display_option == TestRunResultDisplay.PASSING and not case.success:
+            return True
+        elif display_option == TestRunResultDisplay.FAILING and case.success:
+            return True
+        return False
+
+    def _build_display_elements(
+        self,
+        truncate: bool = True,
+        display_option: TestRunResultDisplay = TestRunResultDisplay.ALL,
+    ) -> Group:
 
         renderables = [
             Panel(
@@ -70,7 +86,11 @@ class EvaluationConsoleReport:
             )
         ]
 
+        displayed_any = False
         for case in self.test_results:
+            if self._should_skip_case(case, display_option):
+                continue
+            displayed_any = True
             status_color = DEEPEVAL_GREEN if case.success else FAIL_RED
             status_icon = "✅" if case.success else "❌"
 
@@ -150,6 +170,27 @@ class EvaluationConsoleReport:
                 )
             )
 
+        # Only FAILING/PASSING can hide every case.
+        if not displayed_any and self.test_results:
+            total = len(self.test_results)
+            plural = "s" if total != 1 else ""
+            if display_option == TestRunResultDisplay.FAILING:
+                renderables.append(
+                    Panel(
+                        f"[{DEEPEVAL_GREEN} bold]✅ All {total} test case{plural} passed — no failing test cases to display.[/{DEEPEVAL_GREEN} bold]",
+                        border_style=DEEPEVAL_GREEN,
+                        expand=True,
+                    )
+                )
+            elif display_option == TestRunResultDisplay.PASSING:
+                renderables.append(
+                    Panel(
+                        f"[{FAIL_RED} bold]❌ All {total} test case{plural} failed — no passing test cases to display.[/{FAIL_RED} bold]",
+                        border_style=FAIL_RED,
+                        expand=True,
+                    )
+                )
+
         # Calculate aggregate metrics
         metric_aggregates = {}
         for case in self.test_results:
@@ -205,10 +246,17 @@ class EvaluationConsoleReport:
 
         return Group(*renderables)
 
-    def render_to_terminal(self, truncate_passing_cases: bool = True):
+    def render_to_terminal(
+        self,
+        truncate_passing_cases: bool = True,
+        display_option: TestRunResultDisplay = TestRunResultDisplay.ALL,
+    ):
         self.console.print()
         self.console.print(
-            self._build_display_elements(truncate=truncate_passing_cases)
+            self._build_display_elements(
+                truncate=truncate_passing_cases,
+                display_option=display_option,
+            )
         )
         self.console.print()
 

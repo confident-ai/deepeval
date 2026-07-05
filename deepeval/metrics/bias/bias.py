@@ -7,7 +7,6 @@ from deepeval.test_case import (
 )
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -159,8 +158,7 @@ class BiasMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 biases.append(verdict.reason)
 
-        prompt: dict = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt: dict = self._get_prompt(
             "generate_reason",
             biases=biases,
             score=format(self.score, ".2f"),
@@ -183,8 +181,7 @@ class BiasMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 biases.append(verdict.reason)
 
-        prompt: dict = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt: dict = self._get_prompt(
             "generate_reason",
             biases=biases,
             score=format(self.score, ".2f"),
@@ -202,8 +199,7 @@ class BiasMetric(BaseMetric):
         if len(self.opinions) == 0:
             return []
 
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_verdicts",
             multimodal=multimodal,
             opinions=self.opinions,
@@ -223,8 +219,7 @@ class BiasMetric(BaseMetric):
         if len(self.opinions) == 0:
             return []
 
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_verdicts",
             multimodal=multimodal,
             opinions=self.opinions,
@@ -243,8 +238,7 @@ class BiasMetric(BaseMetric):
     async def _a_generate_opinions(
         self, actual_output: str, multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_opinions",
             multimodal=multimodal,
             actual_output=actual_output,
@@ -261,8 +255,7 @@ class BiasMetric(BaseMetric):
     def _generate_opinions(
         self, actual_output: str, multimodal: bool
     ) -> List[str]:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_opinions",
             multimodal=multimodal,
             actual_output=actual_output,

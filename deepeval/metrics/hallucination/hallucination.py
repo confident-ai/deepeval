@@ -14,7 +14,6 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.hallucination.schema import (
     HallucinationVerdict,
@@ -46,6 +45,7 @@ class HallucinationMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+
     def measure(
         self,
         test_case: LLMTestCase,
@@ -157,10 +157,7 @@ class HallucinationMetric(BaseMetric):
             else:
                 contradictions.append(verdict.reason)
 
-        prompt: dict = resolve_template("metrics", 
-
-            self.__class__.__name__,
-
+        prompt: dict = self._get_prompt(
             "generate_reason",
             factual_alignments=factual_alignments,
             contradictions=contradictions,
@@ -187,10 +184,7 @@ class HallucinationMetric(BaseMetric):
             else:
                 contradictions.append(verdict.reason)
 
-        prompt: dict = resolve_template("metrics", 
-
-            self.__class__.__name__,
-
+        prompt: dict = self._get_prompt(
             "generate_reason",
             factual_alignments=factual_alignments,
             contradictions=contradictions,
@@ -208,8 +202,7 @@ class HallucinationMetric(BaseMetric):
     async def _a_generate_verdicts(
         self, actual_output: str, contexts: List[str]
     ) -> List[HallucinationVerdict]:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_verdicts",
             actual_output=actual_output,
             contexts=contexts,
@@ -228,8 +221,7 @@ class HallucinationMetric(BaseMetric):
     def _generate_verdicts(
         self, actual_output: str, contexts: List[str]
     ) -> List[HallucinationVerdict]:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_verdicts",
             actual_output=actual_output,
             contexts=contexts,

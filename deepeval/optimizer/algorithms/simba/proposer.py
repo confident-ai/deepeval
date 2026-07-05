@@ -1,7 +1,7 @@
 from __future__ import annotations
-import json
 from typing import Optional
 
+from deepeval.utils import serialize_to_json
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.prompt.prompt import Prompt
 from deepeval.prompt.api import PromptMessage, PromptType
@@ -80,7 +80,7 @@ class SIMBAProposer:
             return original_prompt
 
         if isinstance(rewritten_data, list):
-            rewritten_data = json.dumps(rewritten_data)
+            rewritten_data = serialize_to_json(rewritten_data)
 
         return _create_prompt(original_prompt, rewritten_data)
 
@@ -128,7 +128,7 @@ class SIMBAProposer:
             return original_prompt
 
         if isinstance(rewritten_data, list):
-            rewritten_data = json.dumps(rewritten_data)
+            rewritten_data = serialize_to_json(rewritten_data)
 
         return _create_prompt(original_prompt, rewritten_data)
 

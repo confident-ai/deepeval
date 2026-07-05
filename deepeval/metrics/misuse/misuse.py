@@ -7,7 +7,6 @@ from deepeval.test_case import (
 )
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -51,6 +50,7 @@ class MisuseMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+
     def measure(
         self,
         test_case: LLMTestCase,
@@ -161,10 +161,7 @@ class MisuseMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 misuses.append(verdict.reason)
 
-        prompt: dict = resolve_template("metrics", 
-
-            self.__class__.__name__,
-
+        prompt: dict = self._get_prompt(
             "generate_reason",
             misuse_violations=misuses,
             score=format(self.score, ".2f"),
@@ -187,10 +184,7 @@ class MisuseMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 misuses.append(verdict.reason)
 
-        prompt: dict = resolve_template("metrics", 
-
-            self.__class__.__name__,
-
+        prompt: dict = self._get_prompt(
             "generate_reason",
             misuse_violations=misuses,
             score=format(self.score, ".2f"),
@@ -208,12 +202,10 @@ class MisuseMetric(BaseMetric):
         if len(self.misuses) == 0:
             return []
 
-        prompt = resolve_template("metrics", 
-
-            self.__class__.__name__,
-
+        prompt = self._get_prompt(
             "generate_verdicts",
-            misuses=self.misuses, domain=self.domain
+            misuses=self.misuses,
+            domain=self.domain,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -229,12 +221,10 @@ class MisuseMetric(BaseMetric):
         if len(self.misuses) == 0:
             return []
 
-        prompt = resolve_template("metrics", 
-
-            self.__class__.__name__,
-
+        prompt = self._get_prompt(
             "generate_verdicts",
-            misuses=self.misuses, domain=self.domain
+            misuses=self.misuses,
+            domain=self.domain,
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -247,10 +237,10 @@ class MisuseMetric(BaseMetric):
         )
 
     async def _a_generate_misuses(self, actual_output: str) -> List[str]:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_misuses",
-            actual_output=actual_output, domain=self.domain
+            actual_output=actual_output,
+            domain=self.domain,
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -261,10 +251,10 @@ class MisuseMetric(BaseMetric):
         )
 
     def _generate_misuses(self, actual_output: str) -> List[str]:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_misuses",
-            actual_output=actual_output, domain=self.domain
+            actual_output=actual_output,
+            domain=self.domain,
         )
         return generate_with_schema_and_extract(
             metric=self,

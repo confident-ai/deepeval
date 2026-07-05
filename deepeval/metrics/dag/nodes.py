@@ -9,7 +9,7 @@ from deepeval.metrics.dag.schema import (
     NonBinaryJudgementVerdict,
     TaskNodeOutput,
 )
-from deepeval.metrics.base_metric import BaseMetric
+from deepeval.metrics.base_metric import BaseMetric, PromptMixin
 from deepeval.metrics.g_eval.g_eval import GEval
 from deepeval.metrics.g_eval.utils import G_EVAL_PARAMS
 from deepeval.metrics.utils import (
@@ -18,11 +18,10 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.test_case import LLMTestCase, SingleTurnParams, ToolCall
-from deepeval.templates import resolve_template
 from deepeval.utils import prettify_list
 
 
-class BaseNode:
+class BaseNode(PromptMixin):
     _indegree: int = 0
     _depth: int = 0
 
@@ -232,9 +231,9 @@ class VerdictNode(BaseNode):
                 metric.reason = await self._a_generate_reason(metric=metric)
 
     def _generate_reason(self, metric: BaseMetric):
-        prompt = resolve_template("metrics", 
-            "VerdictNode",
+        prompt = self._get_prompt(
             "generate_reason",
+            template_class="VerdictNode",
             verbose_steps=metric._verbose_steps,
             score=metric.score,
             name=metric.__name__,
@@ -248,9 +247,9 @@ class VerdictNode(BaseNode):
         )
 
     async def _a_generate_reason(self, metric: BaseMetric):
-        prompt = resolve_template("metrics", 
-            "VerdictNode",
+        prompt = self._get_prompt(
             "generate_reason",
+            template_class="VerdictNode",
             verbose_steps=metric._verbose_steps,
             score=metric.score,
             name=metric.__name__,
@@ -316,11 +315,9 @@ class TaskNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template("metrics", 
-
-            "TaskNode",
-
+        prompt = self._get_prompt(
             "generate_task_output",
+            template_class="TaskNode",
             instructions=self.instructions,
             text=text,
         )
@@ -366,11 +363,9 @@ class TaskNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template("metrics", 
-
-            "TaskNode",
-
+        prompt = self._get_prompt(
             "generate_task_output",
+            template_class="TaskNode",
             instructions=self.instructions,
             text=text,
         )
@@ -461,11 +456,9 @@ class BinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template("metrics", 
-
-            "BinaryJudgement",
-
+        prompt = self._get_prompt(
             "generate_binary_verdict",
+            template_class="BinaryJudgement",
             criteria=self.criteria,
             text=text,
         )
@@ -505,11 +498,9 @@ class BinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template("metrics", 
-
-            "BinaryJudgement",
-
+        prompt = self._get_prompt(
             "generate_binary_verdict",
+            template_class="BinaryJudgement",
             criteria=self.criteria,
             text=text,
         )
@@ -610,12 +601,12 @@ class NonBinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template("metrics", 
-
-            "BinaryJudgement",
-
+        prompt = self._get_prompt(
             "generate_non_binary_verdict",
-            criteria=self.criteria, text=text, options=self._verdict_options
+            template_class="BinaryJudgement",
+            criteria=self.criteria,
+            text=text,
+            options=self._verdict_options,
         )
 
         self._verdict = generate_with_schema_and_extract(
@@ -655,12 +646,12 @@ class NonBinaryJudgementNode(BaseNode):
                     value = repr(value)
                 text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
-        prompt = resolve_template("metrics", 
-
-            "BinaryJudgement",
-
+        prompt = self._get_prompt(
             "generate_non_binary_verdict",
-            criteria=self.criteria, text=text, options=self._verdict_options
+            template_class="BinaryJudgement",
+            criteria=self.criteria,
+            text=text,
+            options=self._verdict_options,
         )
 
         self._verdict = await a_generate_with_schema_and_extract(

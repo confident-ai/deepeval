@@ -1,7 +1,6 @@
 import asyncio
 from typing import Optional, Union, List
 
-from deepeval.templates import resolve_template
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import (
@@ -138,7 +137,9 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
             self.tasks = self._get_tasks(self.unit_interactions)
             self.task_scores = await asyncio.gather(
                 *[
-                    self._a_get_task_score(task, multimodal=test_case.multimodal)
+                    self._a_get_task_score(
+                        task, multimodal=test_case.multimodal
+                    )
                     for task in self.tasks
                 ]
             )
@@ -168,8 +169,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         for task_score in task_scores:
             reasons.append(task_score.reason)
 
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_final_reason",
             final_score=self.score,
             success=self.success,
@@ -193,8 +193,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         for task_score in task_scores:
             reasons.append(task_score.reason)
 
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_final_reason",
             final_score=self.score,
             success=self.success,
@@ -210,8 +209,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         )
 
     def _get_task_score(self, task: Task, *, multimodal: bool) -> TaskScore:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "get_task_completion_score",
             task=task,
             steps_taken=task_steps_taken_text(task),
@@ -225,9 +223,10 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
             extract_json=lambda data: TaskScore(**data),
         )
 
-    async def _a_get_task_score(self, task: Task, *, multimodal: bool) -> TaskScore:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+    async def _a_get_task_score(
+        self, task: Task, *, multimodal: bool
+    ) -> TaskScore:
+        prompt = self._get_prompt(
             "get_task_completion_score",
             task=task,
             steps_taken=task_steps_taken_text(task),

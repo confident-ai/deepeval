@@ -7,7 +7,6 @@ from deepeval.test_case import (
 )
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.templates import resolve_template
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -160,8 +159,7 @@ class ToxicityMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 toxics.append(verdict.reason)
 
-        prompt: dict = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt: dict = self._get_prompt(
             "generate_reason",
             toxics=toxics,
             score=format(self.score, ".2f"),
@@ -184,8 +182,7 @@ class ToxicityMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 toxics.append(verdict.reason)
 
-        prompt: dict = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt: dict = self._get_prompt(
             "generate_reason",
             toxics=toxics,
             score=format(self.score, ".2f"),
@@ -203,8 +200,7 @@ class ToxicityMetric(BaseMetric):
         if len(self.opinions) == 0:
             return []
 
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_verdicts",
             opinions=self.opinions,
         )
@@ -226,8 +222,7 @@ class ToxicityMetric(BaseMetric):
         if len(self.opinions) == 0:
             return []
 
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_verdicts",
             opinions=self.opinions,
         )
@@ -244,8 +239,7 @@ class ToxicityMetric(BaseMetric):
         return verdicts
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_opinions",
             actual_output=actual_output,
         )
@@ -259,8 +253,7 @@ class ToxicityMetric(BaseMetric):
         )
 
     def _generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = resolve_template("metrics", 
-            self.__class__.__name__,
+        prompt = self._get_prompt(
             "generate_opinions",
             actual_output=actual_output,
         )

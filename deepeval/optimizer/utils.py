@@ -14,6 +14,7 @@ from typing import (
     Union,
     Dict,
 )
+from deepeval.utils import serialize_to_json
 from deepeval.errors import DeepEvalError
 from deepeval.prompt.api import PromptType, PromptMessage
 from deepeval.prompt.prompt import Prompt
@@ -424,7 +425,7 @@ def _parse_prompt(prompt: Prompt) -> str:
             {"role": msg.role, "content": msg.content}
             for msg in prompt.messages_template
         ]
-        return json.dumps(messages, indent=4)
+        return serialize_to_json(messages, indent=4)
     else:
         raise DeepEvalError(f"Invalid prompt type: {prompt.type}")
 

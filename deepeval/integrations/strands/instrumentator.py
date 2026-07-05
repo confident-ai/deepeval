@@ -55,6 +55,7 @@ from deepeval.tracing.utils import (
     infer_provider_from_model,
     normalize_span_provider_for_platform,
 )
+from deepeval.utils import serialize_to_json
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -743,19 +744,19 @@ class StrandsSpanInterceptor(SpanProcessor):
             cls._set_attr_post_end(
                 span,
                 "confident.span.metadata",
-                json.dumps(placeholder.metadata, default=str),
+                serialize_to_json(placeholder.metadata),
             )
         if placeholder.input is not None:
             cls._set_attr_post_end(
                 span,
                 "confident.span.input",
-                json.dumps(placeholder.input, default=str),
+                serialize_to_json(placeholder.input),
             )
         if placeholder.output is not None:
             cls._set_attr_post_end(
                 span,
                 "confident.span.output",
-                json.dumps(placeholder.output, default=str),
+                serialize_to_json(placeholder.output),
             )
         if placeholder.metric_collection:
             cls._set_attr_post_end(
@@ -767,13 +768,13 @@ class StrandsSpanInterceptor(SpanProcessor):
             cls._set_attr_post_end(
                 span,
                 "confident.span.retrieval_context",
-                json.dumps(placeholder.retrieval_context),
+                serialize_to_json(placeholder.retrieval_context),
             )
         if placeholder.context:
             cls._set_attr_post_end(
                 span,
                 "confident.span.context",
-                json.dumps(placeholder.context),
+                serialize_to_json(placeholder.context),
             )
         if placeholder.expected_output:
             cls._set_attr_post_end(
@@ -830,7 +831,9 @@ class StrandsSpanInterceptor(SpanProcessor):
             self._set_attr_post_end(span, "confident.trace.tags", _tags)
         if _metadata:
             self._set_attr_post_end(
-                span, "confident.trace.metadata", json.dumps(_metadata)
+                span,
+                "confident.trace.metadata",
+                serialize_to_json(_metadata),
             )
         if _trace_metric_collection:
             self._set_attr_post_end(
@@ -948,7 +951,7 @@ class StrandsSpanInterceptor(SpanProcessor):
                     self._set_attr_post_end(
                         span,
                         "confident.span.input",
-                        json.dumps(tc.input_parameters),
+                        serialize_to_json(tc.input_parameters),
                     )
 
             if "confident.span.output" not in attrs:
