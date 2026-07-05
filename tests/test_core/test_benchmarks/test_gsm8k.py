@@ -1,6 +1,12 @@
+import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+try:
+    import datasets  # noqa: F401
+except ImportError:
+    sys.modules["datasets"] = MagicMock()
 
 from deepeval.benchmarks.gsm8k.gsm8k import GSM8K
 from deepeval.benchmarks.schema import NumberSchema
