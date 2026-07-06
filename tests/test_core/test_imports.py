@@ -375,3 +375,19 @@ def test_tracing_imports():
     assert evaluate_thread is not None
     assert evaluate_trace is not None
     assert evaluate_span is not None
+
+
+def test_evaluate_configs_submodule_accessible_via_dotted_import():
+    """`deepeval.evaluate` is reassigned to the `evaluate` callable, so
+    `deepeval.evaluate.configs` must still resolve to the configs submodule
+    for `import deepeval.evaluate.configs` to keep working (see #2216)."""
+    import deepeval
+    import deepeval.evaluate.configs
+
+    assert deepeval.evaluate.configs.AsyncConfig() is not None
+    assert deepeval.evaluate.configs.DisplayConfig() is not None
+    assert deepeval.evaluate.configs.CacheConfig() is not None
+    assert deepeval.evaluate.configs.ErrorConfig() is not None
+
+    # The primary calling convention must keep working too.
+    assert callable(deepeval.evaluate)
