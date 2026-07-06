@@ -17,7 +17,10 @@ from deepeval.test_run import (
     invoke_test_run_end_hook,
 )
 from deepeval.config.settings import get_settings
-from deepeval.cli.utils import _post_github_pr_comment
+from deepeval.cli.github_comment import (
+    oidc_request_available,
+    post_pr_comment_via_bot,
+)
 from deepeval.test_run.cache import TEMP_CACHE_FILE_NAME
 from deepeval.test_run.comparison import ComparisonReason
 from deepeval.test_run.test_run import TestRunResultDisplay
@@ -290,7 +293,19 @@ def _post_pr_comment(test_regression: bool, comparison_result) -> None:
     else:
         markdown_summary += "\nSet CONFIDENT_API_KEY to view these results on the Confident AI platform"
 
-    _post_github_pr_comment(markdown_summary)
+    if not oidc_request_available():
+        print(
+            "Skipping PR comment: no GitHub OIDC token available. Install the "
+            "DeepEval GitHub App on this repository and add "
+            "`permissions: id-token: write` to your workflow to get results in your PR as a comment."
+        )
+        return
+
+    try:
+        post_pr_comment_via_bot(markdown_summary)
+        print("✅ Posted DeepEval results to the PR as deepeval[bot].")
+    except Exception as e:
+        print(f"⚠️ Failed to post PR comment via the DeepEval bot: {e}")
 
 
 def _print_comparison_table(result) -> None:
