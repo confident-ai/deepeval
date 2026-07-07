@@ -126,6 +126,7 @@ export const PullOptionsSchema = z
     label: z.string().optional(),
     hash: z.string().optional(),
     branch: z.string().optional(),
+    projectId: z.string().optional(),
   })
   .optional();
 
@@ -134,6 +135,7 @@ export type PullOptions = z.infer<typeof PullOptionsSchema>;
 export const CreateVersionOptionsSchema = z
   .object({
     commit: z.string().optional(),
+    projectId: z.string().optional(),
   })
   .optional();
 
@@ -184,6 +186,7 @@ export const PushOptionsSchema = z
       .optional(),
     tools: z.array(ToolDataSchema).optional(),
     branch: z.string().optional(),
+    projectId: z.string().optional(),
   })
   .optional();
 

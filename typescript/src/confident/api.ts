@@ -192,6 +192,7 @@ export class Api {
     params?: Record<string, any>,
     endpointString?: string,
     urlParams?: Record<string, string>,
+    projectId?: string,
   ): Promise<any> {
     let endpointPath = endpointString || endpoint;
 
@@ -201,15 +202,13 @@ export class Api {
       }
     }
 
+    const headers = projectId
+      ? { ...this.headers, CONFIDENT_PROJECT_ID: projectId }
+      : this.headers;
+
     const url = `${this.baseApiUrl}${endpointPath}`;
     try {
-      const res = await Api.httpRequest(
-        method,
-        url,
-        this.headers,
-        body,
-        params,
-      );
+      const res = await Api.httpRequest(method, url, headers, body, params);
 
       if (res.status === 200) {
         return res.data;
@@ -232,14 +231,34 @@ export class Api {
 
                 if (userInput === "y") {
                   body.overwrite = true;
-                  resolve(this.sendRequest(method, endpoint, body));
+                  resolve(
+                    this.sendRequest(
+                      method,
+                      endpoint,
+                      body,
+                      params,
+                      endpointString,
+                      urlParams,
+                      projectId,
+                    ),
+                  );
                 } else if (userInput === "c") {
                   readline.question(
                     "Enter a new alias: ",
                     (newAlias: string) => {
                       readline.close();
                       body.alias = newAlias.trim();
-                      resolve(this.sendRequest(method, endpoint, body));
+                      resolve(
+                        this.sendRequest(
+                          method,
+                          endpoint,
+                          body,
+                          params,
+                          endpointString,
+                          urlParams,
+                          projectId,
+                        ),
+                      );
                     },
                   );
                 } else {

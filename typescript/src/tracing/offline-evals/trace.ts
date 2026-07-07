@@ -14,7 +14,11 @@ export function evaluateTrace({
   traceUuid,
   metricCollection,
   overwriteMetrics = false,
-}: EvaluateTraceRequestBody & { traceUuid: string }): Promise<any> {
+  projectId,
+}: EvaluateTraceRequestBody & {
+  traceUuid: string;
+  projectId?: string;
+}): Promise<any> {
   const api = getApi();
 
   const body = EvaluateTraceRequestBodySchema.parse({
@@ -29,5 +33,6 @@ export function evaluateTrace({
     undefined,
     undefined,
     { traceUuid },
+    projectId,
   );
 }

@@ -26,6 +26,7 @@ export class ConversationSimulator {
     conversationalGoldens: ConversationalGolden[];
     maxUserSimulations?: number;
     showProgress?: boolean;
+    projectId?: string;
   }): Promise<ConversationalTestCase[]> {
     const maxUserSimulations = args.maxUserSimulations || 10;
     const showProgress = args.showProgress !== false;
@@ -54,6 +55,7 @@ export class ConversationSimulator {
         multibar || undefined,
         i + 1,
         overallProgressBar || undefined,
+        args.projectId,
       );
     });
 
@@ -76,6 +78,7 @@ export class ConversationSimulator {
     multibar?: cliProgress.MultiBar,
     conversationNumber?: number,
     overallProgressBar?: cliProgress.SingleBar,
+    projectId?: string,
   ): Promise<ConversationalTestCase> {
     if (maxUserSimulations <= 0) {
       throw new Error("maxUserSimulations must be greater than 0");
@@ -106,7 +109,7 @@ export class ConversationSimulator {
       : null;
 
     while (true) {
-      const shouldStop = await this.stopConversation(turns, golden);
+      const shouldStop = await this.stopConversation(turns, golden, projectId);
       if (shouldStop) {
         break;
       }
@@ -115,7 +118,11 @@ export class ConversationSimulator {
       }
 
       if (turns.length === 0 || turns[turns.length - 1].role !== "user") {
-        const userInput = await this.generateNextUserInput(golden, turns);
+        const userInput = await this.generateNextUserInput(
+          golden,
+          turns,
+          projectId,
+        );
         turns.push(new Turn({ role: "user", content: userInput }));
         simulationCounter++;
 
@@ -161,18 +168,20 @@ export class ConversationSimulator {
   private async generateNextUserInput(
     golden: ConversationalGolden,
     turns: Turn[],
+    projectId?: string,
   ): Promise<string> {
     const payload = this.dumpConversationalGolden({ ...golden, turns });
-    const res = await this.callApi<SimulateHttpResponse>(payload);
+    const res = await this.callApi<SimulateHttpResponse>(payload, projectId);
     return res.data.userResponse;
   }
 
   private async stopConversation(
     turns: Turn[],
     golden: ConversationalGolden,
+    projectId?: string,
   ): Promise<boolean> {
     const payload = this.dumpConversationalGolden({ ...golden, turns });
-    const res = await this.callApi<SimulateHttpResponse>(payload);
+    const res = await this.callApi<SimulateHttpResponse>(payload, projectId);
     return res.data.completed;
   }
 
@@ -196,12 +205,16 @@ export class ConversationSimulator {
     return body;
   }
 
-  private async callApi<T>(body: any): Promise<T> {
+  private async callApi<T>(body: any, projectId?: string): Promise<T> {
     const api = new Api();
     const response = await api.sendRequest(
       HttpMethods.POST,
       Endpoints.SIMULATE_ENDPOINT,
       body,
+      undefined,
+      undefined,
+      undefined,
+      projectId,
     );
     return response as T;
   }
