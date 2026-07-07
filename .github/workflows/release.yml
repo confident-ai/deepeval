@@ -15,6 +15,7 @@ on:
 permissions:
   contents: write
   actions: write
+  pull-requests: read
 
 concurrency:
   group: release-${{ github.event.inputs.tag_name || github.ref_name }}
@@ -64,26 +65,30 @@ jobs:
 
           echo "list=${TAGS[*]:-}" >> "$GITHUB_OUTPUT"
 
+      - name: Set up Python
+        if: steps.tags.outputs.list != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        if: steps.tags.outputs.list != ''
+        run: pip install rich pydantic deepeval
+
       - name: Create draft releases
         if: steps.tags.outputs.list != ''
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           REPO: ${{ github.repository }}
           TAGS: ${{ steps.tags.outputs.list }}
         run: |
           set -euo pipefail
 
-          # PR numbers whose squash-merge commit touched the given pathspecs.
-          pr_by_sdk() {
-            local range="$1"; shift
-            git log --no-merges --format='%s' $range -- "$@" \
-              | sed -nE 's/.*\(#([0-9]+)\).*/\1/p' | sort -u
-          }
-
           for TAG in $TAGS; do
             case "$TAG" in
-              python-v*)     SDK="Python";     PREFIX="python-v" ;;
-              typescript-v*) SDK="TypeScript"; PREFIX="typescript-v" ;;
+              python-v*)     SDK="Python";     PREFIX="python-v";     SDK_SLUG="python" ;;
+              typescript-v*) SDK="TypeScript"; PREFIX="typescript-v"; SDK_SLUG="typescript" ;;
             esac
 
             PREV=$(
@@ -95,38 +100,12 @@ jobs:
             API_ARGS=(-f tag_name="$TAG")
             if [ -n "$PREV" ]; then
               API_ARGS+=(-f previous_tag_name="$PREV")
-              RANGE="$PREV..$TAG"
-            else
-              RANGE="$TAG"
             fi
             BODY=$(gh api "repos/$REPO/releases/generate-notes" "${API_ARGS[@]}" --jq .body)
 
-            ALL_PRS=$(printf '%s\n' "$BODY" | grep -oE '/pull/[0-9]+' | grep -oE '[0-9]+' | sort -u || true)
-            TS_PRS=$(pr_by_sdk "$RANGE" typescript/)
-            PY_PRS=$(pr_by_sdk "$RANGE" deepeval/ pyproject.toml poetry.lock)
-            OWNED=$(printf '%s\n%s\n' "$TS_PRS" "$PY_PRS" | grep -v '^$' | sort -u)
-            SHARED_PRS=$(comm -23 <(printf '%s\n' "$ALL_PRS") <(printf '%s\n' "$OWNED"))
-
-            case "$SDK" in
-              TypeScript) SELECTED=$(printf '%s\n%s\n' "$TS_PRS" "$SHARED_PRS" | grep -v '^$' | sort -u) ;;
-              Python)     SELECTED=$(printf '%s\n%s\n' "$PY_PRS" "$SHARED_PRS" | grep -v '^$' | sort -u) ;;
-            esac
-
-            # Keep every non-PR line (headers, blanks, Full Changelog); drop PR lines out of scope.
-            FILTERED=$(printf '%s\n' "$BODY" | while IFS= read -r line; do
-              num=$(printf '%s' "$line" | grep -oE '/pull/[0-9]+' | grep -oE '[0-9]+' | head -1 || true)
-              if [ -z "$num" ] || printf '%s\n' "$SELECTED" | grep -qx "$num"; then
-                printf '%s\n' "$line"
-              fi
-            done)
-
-            {
-              echo "New to \`deepeval\`? Get started [here](https://deepeval.com/docs/introduction)."
-              echo
-              echo "$FILTERED"
-              echo
-              echo "A huge thank you to everyone who contributed to this release ❤️"
-            } > notes.md
+            printf '%s' "$BODY" \
+              | python .scripts/changelog/release_notes.py --sdk "$SDK_SLUG" \
+                > notes.md
 
             gh release create "$TAG" --title "$SDK ${TAG#$PREFIX}" --draft --notes-file notes.md
 
