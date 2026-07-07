@@ -26,8 +26,8 @@ from deepeval.models.embedding_models import (
     LocalEmbeddingModel,
     OllamaEmbeddingModel,
 )
-from deepeval.models.tts import OpenAITTS
-from deepeval.models.stt import OpenAISTT
+from deepeval.models.tts_models import OpenAITTSModel
+from deepeval.models.stt_models import OpenAISTTModel
 
 __all__ = [
     "DeepEvalBaseModel",
@@ -52,6 +52,6 @@ __all__ = [
     "OllamaEmbeddingModel",
     "PortkeyModel",
     "OpenRouterModel",
-    "OpenAITTS",
-    "OpenAISTT",
+    "OpenAITTSModel",
+    "OpenAISTTModel",
 ]

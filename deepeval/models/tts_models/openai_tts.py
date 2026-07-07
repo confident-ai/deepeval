@@ -30,7 +30,7 @@ _TTS_PRICE_PER_1M_CHARS = {
 }
 
 
-class OpenAITTS(DeepEvalBaseTTS):
+class OpenAITTSModel(DeepEvalBaseTTS):
     def __init__(
         self,
         model: Optional[str] = None,
@@ -72,7 +72,7 @@ class OpenAITTS(DeepEvalBaseTTS):
             self.api_key,
             provider_label="OpenAI",
             env_var_name="OPENAI_API_KEY",
-            param_hint="`api_key` to OpenAITTS(...)",
+            param_hint="`api_key` to OpenAITTSModel(...)",
         )
         return cls(api_key=api_key, base_url=self.base_url, **self.kwargs)
 

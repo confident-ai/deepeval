@@ -25,7 +25,7 @@ _STT_PRICE_PER_MINUTE = {
 }
 
 
-class OpenAISTT(DeepEvalBaseSTT):
+class OpenAISTTModel(DeepEvalBaseSTT):
     def __init__(
         self,
         model: Optional[str] = None,
@@ -78,7 +78,7 @@ class OpenAISTT(DeepEvalBaseSTT):
             self.api_key,
             provider_label="OpenAI",
             env_var_name="OPENAI_API_KEY",
-            param_hint="`api_key` to OpenAISTT(...)",
+            param_hint="`api_key` to OpenAISTTModel(...)",
         )
         return cls(api_key=api_key, base_url=self.base_url, **self.kwargs)
 
