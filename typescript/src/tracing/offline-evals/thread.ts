@@ -15,7 +15,11 @@ export function evaluateThread({
   chatbotRole,
   metricCollection,
   overwriteMetrics = false,
-}: EvaluateThreadRequestBody & { threadId: string }): Promise<any> {
+  projectId,
+}: EvaluateThreadRequestBody & {
+  threadId: string;
+  projectId?: string;
+}): Promise<any> {
   const api = getApi();
 
   const body = EvaluateThreadRequestBodySchema.parse({
@@ -31,5 +35,6 @@ export function evaluateThread({
     undefined,
     undefined,
     { threadId },
+    projectId,
   );
 }

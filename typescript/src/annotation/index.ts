@@ -14,7 +14,8 @@ export const sendAnnotation = async ({
   explanation,
   type,
   userId,
-}: APIAnnotation) => {
+  projectId,
+}: APIAnnotation & { projectId?: string }) => {
   const apiAnnotation = validateAPIAnnotation({
     rating,
     traceUuid,
@@ -32,5 +33,9 @@ export const sendAnnotation = async ({
     HttpMethods.POST,
     Endpoints.ANNOTATION_ENDPOINT,
     apiAnnotation,
+    undefined,
+    undefined,
+    undefined,
+    projectId,
   );
 };

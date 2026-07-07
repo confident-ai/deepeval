@@ -209,12 +209,14 @@ export class EvaluationDataset {
     finalized?: boolean;
     autoConvertGoldensToTestCases?: boolean;
     version?: string;
+    projectId?: string;
   }): Promise<void> {
     const {
       alias,
       finalized = true,
       autoConvertGoldensToTestCases = false,
       version,
+      projectId,
     } = params;
     if (!isConfident()) {
       throw new Error("Set CONFIDENT_API_KEY to pull dataset.");
@@ -236,6 +238,7 @@ export class EvaluationDataset {
       queryParams,
       undefined,
       { alias },
+      projectId,
     );
 
     const datasetData = result.data || result;
@@ -325,8 +328,9 @@ export class EvaluationDataset {
     alias: string;
     finalized?: boolean;
     version?: string;
+    projectId?: string;
   }): Promise<void> {
-    const { alias, finalized = true, version } = params;
+    const { alias, finalized = true, version, projectId } = params;
     if (this.goldens.length === 0) {
       throw new Error(
         "Unable to push empty dataset to Confident AI, there must be at least one golden in dataset.",
@@ -350,6 +354,7 @@ export class EvaluationDataset {
       undefined,
       undefined,
       { alias },
+      projectId,
     );
     const link = result?.link;
     if (link) {
@@ -365,8 +370,9 @@ export class EvaluationDataset {
 
   async createVersion(params: {
     alias: string;
+    projectId?: string;
   }): Promise<CreateDatasetVersionResponse> {
-    const { alias } = params;
+    const { alias, projectId } = params;
     const api = new Api();
     const result = await api.sendRequest(
       HttpMethods.POST,
@@ -375,6 +381,7 @@ export class EvaluationDataset {
       undefined,
       undefined,
       { alias },
+      projectId,
     );
     const data = (result?.data ?? result) as CreateDatasetVersionResponse;
     this._alias = alias;
@@ -384,8 +391,11 @@ export class EvaluationDataset {
     return data;
   }
 
-  async getVersions(params: { alias: string }): Promise<DatasetVersion[]> {
-    const { alias } = params;
+  async getVersions(params: {
+    alias: string;
+    projectId?: string;
+  }): Promise<DatasetVersion[]> {
+    const { alias, projectId } = params;
     const api = new Api();
     const result = await api.sendRequest(
       HttpMethods.GET,
@@ -394,6 +404,7 @@ export class EvaluationDataset {
       undefined,
       undefined,
       { alias },
+      projectId,
     );
     const data = (result?.data ?? result) as GetDatasetVersionsResponse;
     return data.versions ?? [];
@@ -407,8 +418,9 @@ export class EvaluationDataset {
     alias: string;
     goldens: Array<Golden | ConversationalGolden>;
     printResponse?: boolean;
+    projectId?: string;
   }): Promise<void> {
-    const { alias, goldens, printResponse = true } = params;
+    const { alias, goldens, printResponse = true, projectId } = params;
     if (!goldens || goldens.length === 0) {
       throw new Error(
         `Can't queue empty list of goldens to dataset with alias: ${alias} on Confident AI.`,
@@ -434,6 +446,7 @@ export class EvaluationDataset {
       undefined,
       undefined,
       { alias },
+      projectId,
     );
 
     const link = result?.link;
@@ -444,7 +457,7 @@ export class EvaluationDataset {
     }
   }
 
-  async delete(alias: string): Promise<void> {
+  async delete(alias: string, projectId?: string): Promise<void> {
     const api = new Api();
     await api.sendRequest(
       HttpMethods.DELETE,
@@ -453,6 +466,7 @@ export class EvaluationDataset {
       undefined,
       undefined,
       { alias },
+      projectId,
     );
     console.log("✅ Dataset successfully deleted from Confident AI!");
   }
