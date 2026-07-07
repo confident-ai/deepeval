@@ -6,8 +6,9 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
+  { ignores: ["dist/**"] },
   {
-    ignores: ["dist/**", "test/**"],
+    ignores: ["test/**"],
     files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
     languageOptions: {
       globals: globals.node,
