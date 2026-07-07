@@ -3,6 +3,9 @@ name: Generate Changelog
 on:
   workflow_dispatch:
     inputs:
+      tag:
+        description: "Release tag to generate for (e.g. python-v4.0.8). Overrides mode/year/range."
+        required: false
       mode:
         description: "Mode: year or range"
         required: true
@@ -48,7 +51,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          if [ "${{ github.event.inputs.mode }}" = "year" ]; then
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            python .scripts/changelog/generate.py \
+              --tag "${{ github.event.inputs.tag }}" \
+              --github --ai
+          elif [ "${{ github.event.inputs.mode }}" = "year" ]; then
             python .scripts/changelog/generate.py \
               --year ${{ github.event.inputs.year }} \
               --github --ai
@@ -61,7 +68,9 @@ jobs:
       - name: Create PR
         uses: peter-evans/create-pull-request@v6
         with:
-          branch: chore/changelog-update
-          title: "chore: update changelog"
-          commit-message: "chore: update changelog"
+          add-paths: docs/content/changelog
+          branch: chore/changelog-${{ github.event.inputs.tag || 'update' }}
+          delete-branch: true
+          title: "chore: update changelog${{ github.event.inputs.tag && format(' for {0}', github.event.inputs.tag) || '' }}"
+          commit-message: "chore: update changelog${{ github.event.inputs.tag && format(' for {0}', github.event.inputs.tag) || '' }}"
           body: "Auto-generated changelog updates"

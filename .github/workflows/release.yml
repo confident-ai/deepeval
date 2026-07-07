@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: release-${{ github.event.inputs.tag_name || github.ref_name }}
@@ -128,4 +129,8 @@ jobs:
             } > notes.md
 
             gh release create "$TAG" --title "$SDK ${TAG#$PREFIX}" --draft --notes-file notes.md
+
+            if [ "$SDK" = "Python" ]; then
+              gh workflow run changelog.yml -f tag="$TAG"
+            fi
           done
