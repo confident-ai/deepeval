@@ -4,6 +4,7 @@ import {
   LLMTestCase,
   ConversationalTestCase,
   ArenaTestCase,
+  ToolCallType,
 } from "../test-case";
 
 // Mirrors deepeval/evaluate/types.py (+ test_run MetricData), trimmed to what
@@ -52,6 +53,7 @@ export interface EvaluationResult {
 
 export const ApiToolCallSchema = z.object({
   name: z.string(),
+  type: z.enum(ToolCallType).nullish(),
   description: z.string().nullish(),
   reasoning: z.string().nullish(),
   output: z.unknown(),
