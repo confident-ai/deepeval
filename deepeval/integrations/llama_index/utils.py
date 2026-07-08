@@ -17,7 +17,7 @@ except:
 def is_llama_index_agent_installed():
     if not llama_index_agent_installed:
         raise ImportError(
-            "llama-index is neccesary for this functionality. Please install it with `pip install llama-index` or with package manager of choice."
+            "llama-index is necessary for this functionality. Please install it with `pip install llama-index` or with package manager of choice."
         )
 
 

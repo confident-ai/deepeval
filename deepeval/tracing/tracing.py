@@ -1452,7 +1452,7 @@ def observe(
                             current_trace_context.set(_trace)
                         observer.__exit__(e.__class__, e, e.__traceback__)
                         raise
-                    finally:  # GeneratorExit execption directly brings us to final block
+                    finally:  # GeneratorExit exception directly brings us to final block
                         observer.__exit__(None, None, None)
 
                 return gen()

@@ -560,7 +560,7 @@ def check_pydantic_ai_agent_input_output(
 def check_pydantic_ai_tools_called(
     span: ReadableSpan,
 ) -> Optional[List[ToolCall]]:
-    """Extract tool calls (and their resuls) from pydantic-ai message history
+    """Extract tool calls (and their results) from pydantic-ai message history
 
     Tool call live inside `pydantic_ai.all_messages` as parts of type
     `̀tool_call` ({id, name, arguments}) paired with `tool_call_response`
