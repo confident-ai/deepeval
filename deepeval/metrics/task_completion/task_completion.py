@@ -194,7 +194,9 @@ class TaskCompletionMetric(BaseMetric):
                 "extract_goal_and_outcome",
                 input=test_case.input,
                 actual_output=test_case.actual_output,
-                tools_called_formatted=print_tools_called(test_case.tools_called),
+                tools_called_formatted=print_tools_called(
+                    test_case.tools_called
+                ),
             )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -220,8 +222,9 @@ class TaskCompletionMetric(BaseMetric):
                 "extract_goal_and_outcome",
                 input=test_case.input,
                 actual_output=test_case.actual_output,
-                # tools_called=test_case.tools_called,
-                tools_called_formatted=print_tools_called(test_case.tools_called),
+                tools_called_formatted=print_tools_called(
+                    test_case.tools_called
+                ),
             )
         return generate_with_schema_and_extract(
             metric=self,
