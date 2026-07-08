@@ -48,6 +48,7 @@ class VoiceConversationSimulator(ConversationSimulator):
         self.output_dir = output_dir
         self.combine_audio = combine_audio
         self._audio_buffer: dict = {}
+        self._timing_buffer: dict = {}
         self._run_timestamp: Optional[str] = None
         self._num_goldens: Optional[int] = None
         self.tts_cost: float = 0.0
@@ -122,6 +123,14 @@ class VoiceConversationSimulator(ConversationSimulator):
 
         self._audio_buffer[user_index] = user_audio
         self._audio_buffer[assistant_index] = conn_turn.audio
+        # Only latency is persisted. `interrupted` (barge-in) is a real-time
+        # duplex signal that a turn-based simulation can't measure honestly —
+        # providers fire spurious interruption events when the next user turn
+        # arrives while the previous reply is still "playing" server-side. So
+        # we leave Turn.interrupted unset (None), which makes InterruptionMetric
+        # skip rather than report a misleading result. Revisit for a duplex
+        # connector.
+        self._timing_buffer[assistant_index] = conn_turn.latency_ms
         return Turn(role="assistant", content=agent_text)
 
     async def _a_simulate_single_conversation(
@@ -134,6 +143,7 @@ class VoiceConversationSimulator(ConversationSimulator):
         on_simulation_complete=None,
     ) -> ConversationalTestCase:
         self._audio_buffer = {}
+        self._timing_buffer = {}
         async with self.connection:
             test_case = await super()._a_simulate_single_conversation(
                 golden,
@@ -147,6 +157,8 @@ class VoiceConversationSimulator(ConversationSimulator):
         for position, turn in enumerate(test_case.turns):
             if position in self._audio_buffer:
                 turn.audio = self._audio_buffer[position]
+            if position in self._timing_buffer:
+                turn.latency_ms = self._timing_buffer[position]
         test_case.voice = any(t.audio is not None for t in test_case.turns)
 
         if self.output_dir:

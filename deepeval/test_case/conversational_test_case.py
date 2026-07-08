@@ -32,6 +32,8 @@ class MultiTurnParams(Enum):
     ROLE = "role"
     CONTENT = "content"
     AUDIO = "audio"
+    LATENCY_MS = "latency_ms"
+    INTERRUPTED = "interrupted"
     METADATA = "metadata"
     TAGS = "tags"
     SCENARIO = "scenario"
@@ -62,6 +64,10 @@ class Turn(BaseModel):
     role: Literal["user", "assistant"]
     content: str
     audio: Optional[Audio] = Field(default=None)
+    latency_ms: Optional[float] = Field(
+        default=None, validation_alias=AliasChoices("latencyMs", "latency_ms")
+    )
+    interrupted: Optional[bool] = Field(default=None)
     user_id: Optional[str] = Field(
         default=None, validation_alias=AliasChoices("userId", "user_id")
     )
@@ -126,6 +132,10 @@ class Turn(BaseModel):
         attrs = [f"role={self.role!r}", f"content={self.content!r}"]
         if self.audio is not None:
             attrs.append(f"audio={self.audio!r}")
+        if self.latency_ms is not None:
+            attrs.append(f"latency_ms={self.latency_ms!r}")
+        if self.interrupted is not None:
+            attrs.append(f"interrupted={self.interrupted!r}")
         if self.user_id is not None:
             attrs.append(f"user_id={self.user_id!r}")
         if self.retrieval_context is not None:
