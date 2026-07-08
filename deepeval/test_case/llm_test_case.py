@@ -249,6 +249,11 @@ class ToolCall(BaseModel):
         serialization_alias="inputParameters",
         validation_alias=AliasChoices("inputParameters", "input_parameters"),
     )
+    is_mcp_tool_call: Optional[bool] = Field(
+        default=False,
+        serialization_alias="isMcpToolCall",
+        validation_alias=AliasChoices("isMcpToolCall", "is_mcp_tool_call"),
+    )
 
     def __eq__(self, other):
         if not isinstance(other, ToolCall):

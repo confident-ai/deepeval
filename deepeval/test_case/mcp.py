@@ -29,31 +29,31 @@ class MCPServer:
 
 
 def validate_mcp_servers(mcp_servers: List[MCPServer]):
-    from mcp.types import Tool, Resource, Prompt
+    # ``mcp`` may not be installed when data is sourced from a database/JSON
+    # payload rather than the MCP SDK, so the import is best-effort.
+    try:
+        from mcp.types import Tool, Resource, Prompt
+    except ImportError:
+        Tool = Resource = Prompt = None
+
+    def _validate(items, field_name: str, mcp_type) -> None:
+        if items is None:
+            return
+        if not isinstance(items, list):
+            raise TypeError(f"'{field_name}' must be a list")
+        for item in items:
+            if isinstance(item, dict):
+                continue
+            if mcp_type is not None and isinstance(item, mcp_type):
+                continue
+            expected = "a list of dicts"
+            if mcp_type is not None:
+                expected += f" or '{mcp_type.__name__}' from mcp.types"
+            raise TypeError(f"'{field_name}' must be {expected}")
 
     for mcp_server in mcp_servers:
-        if mcp_server.available_tools is not None:
-            if not isinstance(mcp_server.available_tools, list) or not all(
-                isinstance(tool, Tool) for tool in mcp_server.available_tools
-            ):
-                raise TypeError(
-                    "'available_tools' must be a list of 'Tool' from mcp.types"
-                )
-
-        if mcp_server.available_resources is not None:
-            if not isinstance(mcp_server.available_resources, list) or not all(
-                isinstance(resource, Resource)
-                for resource in mcp_server.available_resources
-            ):
-                raise TypeError(
-                    "'available_resources' must be a list of 'Resource' from mcp.types"
-                )
-
-        if mcp_server.available_prompts is not None:
-            if not isinstance(mcp_server.available_prompts, list) or not all(
-                isinstance(prompt, Prompt)
-                for prompt in mcp_server.available_prompts
-            ):
-                raise TypeError(
-                    "'available_prompts' must be a list of 'Prompt' from mcp.types"
-                )
+        _validate(mcp_server.available_tools, "available_tools", Tool)
+        _validate(
+            mcp_server.available_resources, "available_resources", Resource
+        )
+        _validate(mcp_server.available_prompts, "available_prompts", Prompt)

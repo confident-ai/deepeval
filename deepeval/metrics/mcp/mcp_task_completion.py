@@ -14,7 +14,10 @@ from deepeval.metrics.utils import (
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
-from deepeval.metrics.mcp.utils import task_steps_taken_text
+from deepeval.metrics.mcp.utils import (
+    task_steps_taken_text,
+    turn_mcp_interaction_text,
+)
 from deepeval.metrics.mcp.schema import Task, TaskScore, Reason
 from deepeval.errors import MissingTestCaseParamsError
 
@@ -253,37 +256,10 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                     break
             new_task = Task(task=user_messages, steps_taken=[])
             for turn in unit_interaction[1:]:
-                if turn._mcp_interaction:
-                    mcp_interaction = "Tools called by agent: \n"
-                    if turn.mcp_tools_called is not None:
-                        for tool in turn.mcp_tools_called:
-                            mcp_interaction += (
-                                f"\n<Tool Called>\n"
-                                f"\n**This does not appear to user**\n"
-                                f"Name: {tool.name}\n"
-                                f"Args: {tool.args}\n"
-                                f"Result: \n{tool.result.structuredContent['result']}\n"
-                                f"</Tool Called>\n"
-                            )
-                    if turn.mcp_resources_called is not None:
-                        for resource in turn.mcp_resources_called:
-                            mcp_interaction += (
-                                f"\n<Resource Called>\n"
-                                f"\n**This does not appear to user**\n"
-                                f"URI: {resource.uri}\n"
-                                f"Result: {str(resource.result)}\n"
-                                f"</Resource Called>\n"
-                            )
-                    if turn.mcp_prompts_called is not None:
-                        for prompt in turn.mcp_prompts_called:
-                            mcp_interaction += (
-                                f"\n<Prompt Called>\n"
-                                f"\n**This does not appear to user**\n"
-                                f"Name: {prompt.name}\n"
-                                f"Result: {str(prompt.result)}\n"
-                                f"</Prompt Called>\n"
-                            )
-                    new_task.steps_taken.append(mcp_interaction)
+                if turn._mcp_interaction or turn.tools_called:
+                    new_task.steps_taken.append(
+                        turn_mcp_interaction_text(turn)
+                    )
                 else:
                     new_task.steps_taken.append(
                         "Agent's response to user: \n" + turn.content
