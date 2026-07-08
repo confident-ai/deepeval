@@ -1,6 +1,7 @@
 from __future__ import annotations
 import json
 import os
+import shutil
 import pyfiglet
 import typer
 import webbrowser
@@ -103,7 +104,10 @@ def render_login_message():
         "🥳 Welcome to [rgb(106,0,255)]Confident AI[/rgb(106,0,255)], the evals cloud platform 🏡❤️"
     )
     print("")
-    print(pyfiglet.Figlet(font="big_money-ne").renderText("Confident AI"))
+    # pyfiglet defaults to width=80, which wraps the banner mid-word; render
+    # at the real terminal width so it stays on one line whenever it fits.
+    width = shutil.get_terminal_size(fallback=(120, 24)).columns
+    print(pyfiglet.Figlet(font="big_money-ne", width=width).renderText("Confident AI"))
 
 
 def upload_and_open_link(_span: Optional[Span] = None):

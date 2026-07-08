@@ -16,11 +16,6 @@ General behavior for all `set-*` / `unset-*` commands:
 """
 
 import os
-import webbrowser
-import threading
-import random
-import string
-import socket
 import typer
 import importlib.metadata
 from typing import List, Optional
@@ -49,7 +44,7 @@ from deepeval.cli.dotenv_handler import DotenvHandler
 from deepeval.cli.generate.command import generate_command
 from deepeval.cli.inspect import inspect_command
 from deepeval.cli.test.command import app as test_app
-from deepeval.cli.server import start_server
+from deepeval.cli.auth_flow import browser_pairing_login, prompt_select
 from deepeval.cli.utils import (
     coerce_blank_to_none,
     is_optional,
@@ -91,17 +86,6 @@ def version_callback(value: Optional[bool] = None) -> None:
         from deepeval import __version__ as version  # type: ignore
     typer.echo(version)  # or: typer.echo(f"deepeval {v}")
     raise typer.Exit()
-
-
-def generate_pairing_code():
-    """Generate a random pairing code."""
-    return "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
-
-
-def find_available_port():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(("localhost", 0))  # Bind to port 0 to get an available port
-        return s.getsockname()[1]
 
 
 def is_openai_configured() -> bool:
@@ -213,12 +197,47 @@ def set_confident_region_command(
     )
 
 
+def _prompt_paste_api_key() -> str:
+    while True:
+        api_key = coerce_blank_to_none(
+            typer.prompt("🔐 Enter your project API key", hide_input=True)
+        )
+        if api_key:
+            return api_key
+        print("❌ Project API key cannot be empty. Please try again.\n")
+
+
+def _resolve_login_key() -> str:
+    render_login_message()
+
+    method = prompt_select(
+        "How would you like to log in?",
+        [
+            ("Log in via your browser", "browser"),
+            ("Paste a project API key", "paste"),
+        ],
+    )
+
+    if method == "paste":
+        return _prompt_paste_api_key()
+
+    key = browser_pairing_login()
+    if key:
+        return key
+    print(
+        "\nNo problem — paste a project API key from the platform instead."
+    )
+    return _prompt_paste_api_key()
+
+
 @app.command(
     help=(
-        "Login will prompt you for your Confident AI API key (input hidden). "
-        f"Get it from {with_utm(PROD, medium='cli', content='login_help_text')}. "
-        "Required to log events to the server. "
-        "The API key will be saved in your environment variables, typically in .env.local, unless a different path is provided with --save."
+        "Log in to Confident AI. Opens the platform in your browser to sign in "
+        "(or create an account) and pick a project; the project API key is "
+        "paired back automatically. "
+        f"Get a project API key from {with_utm(PROD, medium='cli', content='login_help_text')}. "
+        "The key is saved to your environment variables, typically .env.local, "
+        "unless a different path is provided with --save."
     )
 )
 def login(
@@ -228,53 +247,22 @@ def login(
         "--save",
         help="Where to persist settings. Format: dotenv[:path]. Defaults to .env.local. If omitted, login still writes to .env.local.",
     ),
+    api_key: Optional[str] = typer.Option(
+        None,
+        "--api-key",
+        help="Log in non-interactively with a project API key instead of the prompts.",
+    ),
 ):
-    api_key = coerce_blank_to_none(
-        typer.prompt("🔐 Enter your API Key", hide_input=True)
-    )
+    api_key = coerce_blank_to_none(api_key)
 
     with capture_login_event() as span:
         completed = False
         try:
-            # Resolve the key from CLI flag or interactive flow
+            # Resolve the key from the CLI flag or the browser pairing flow.
             if api_key is not None:
                 key = api_key
             else:
-                render_login_message()
-
-                # Start the pairing server
-                port = find_available_port()
-                pairing_code = generate_pairing_code()
-                pairing_thread = threading.Thread(
-                    target=start_server,
-                    args=(pairing_code, port, PROD),
-                    daemon=True,
-                )
-                pairing_thread.start()
-
-                login_url = with_utm(
-                    f"{PROD}/pair?code={pairing_code}&port={port}",
-                    medium="cli",
-                    content="login_pair_browser_open",
-                )
-                webbrowser.open(login_url)
-                fallback_url = with_utm(
-                    PROD, medium="cli", content="login_pair_fallback_link"
-                )
-                print(
-                    f"(open this link if your browser did not open: [link={fallback_url}]{fallback_url}[/link])"
-                )
-
-                # Manual fallback if still empty
-                while True:
-                    api_key = coerce_blank_to_none(
-                        typer.prompt("🔐 Enter your API Key", hide_input=True)
-                    )
-                    if api_key:
-                        break
-                    else:
-                        print("❌ API Key cannot be empty. Please try again.\n")
-                key = api_key
+                key = _resolve_login_key()
 
             settings = get_settings()
             save = save or settings.DEEPEVAL_DEFAULT_SAVE or "dotenv:.env.local"
