@@ -16,11 +16,6 @@ General behavior for all `set-*` / `unset-*` commands:
 """
 
 import os
-import webbrowser
-import threading
-import random
-import string
-import socket
 import typer
 import importlib.metadata
 from typing import List, Optional
@@ -36,28 +31,25 @@ from deepeval.key_handler import (
     EmbeddingKeyValues,
     ModelKeyValues,
 )
-from deepeval.telemetry import capture_login_event, capture_view_event
+from deepeval.telemetry import capture_view_event
 from deepeval.config.settings import get_settings
-from deepeval.utils import delete_file_if_exists, open_browser
+from deepeval.utils import open_browser
 from deepeval.test_run.test_run import (
-    LATEST_TEST_RUN_FILE_PATH,
     global_test_run_manager,
 )
+from deepeval.cli.auth import LOGIN_HELP, login_command, logout_command
+from deepeval.cli.diagnose import diagnose_command
 from deepeval.cli.generate.command import generate_command
 from deepeval.cli.inspect import inspect_command
 from deepeval.cli.test.command import app as test_app
-from deepeval.cli.server import start_server
 from deepeval.cli.utils import (
     coerce_blank_to_none,
+    handle_save_result,
     is_optional,
     load_service_account_key_file,
     parse_and_validate,
-    render_login_message,
     resolve_field_names,
     upload_and_open_link,
-    with_utm,
-    PROD,
-    WWW,
 )
 from deepeval.confident.api import (
     is_confident,
@@ -70,6 +62,9 @@ app = typer.Typer(name="deepeval", no_args_is_help=True)
 app.add_typer(test_app, name="test")
 app.command(name="generate")(generate_command)
 app.command(name="inspect")(inspect_command)
+app.command(name="diagnose")(diagnose_command)
+app.command(name="login", help=LOGIN_HELP)(login_command)
+app.command(name="logout")(logout_command)
 
 
 class Regions(Enum):
@@ -89,17 +84,6 @@ def version_callback(value: Optional[bool] = None) -> None:
     raise typer.Exit()
 
 
-def generate_pairing_code():
-    """Generate a random pairing code."""
-    return "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
-
-
-def find_available_port():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(("localhost", 0))  # Bind to port 0 to get an available port
-        return s.getsockname()[1]
-
-
 def is_openai_configured() -> bool:
     s = get_settings()
     v = s.OPENAI_API_KEY
@@ -115,38 +99,7 @@ def is_openai_configured() -> bool:
     return bool(env and env.strip())
 
 
-def _handle_save_result(
-    *,
-    handled: bool,
-    path: Optional[str],
-    updates: dict,
-    save: Optional[str],
-    quiet: bool,
-    success_msg: Optional[str] = None,
-    updated_msg: str = "Saved environment variables to {path} (ensure it's git-ignored).",
-    no_changes_msg: str = "No changes to save in {path}.",
-    tip_msg: Optional[str] = None,
-) -> bool:
-    if not handled and save is not None:
-        raise typer.BadParameter(
-            "Unsupported --save option. Use --save=dotenv[:path].",
-            param_hint="--save",
-        )
-
-    if quiet:
-        return False
-
-    if path and updates:
-        print(updated_msg.format(path=path))
-    elif path:
-        print(no_changes_msg.format(path=path))
-    elif tip_msg:
-        print(tip_msg)
-
-    if success_msg:
-        print(success_msg)
-
-    return True
+_handle_save_result = handle_save_result
 
 
 @app.callback()
@@ -207,154 +160,6 @@ def set_confident_region_command(
             f":raising_hands: Congratulations! You're now using the {flag}  {region.value} data region for Confident AI."
         ),
     )
-
-
-@app.command(
-    help=(
-        "Login will prompt you for your Confident AI API key (input hidden). "
-        f"Get it from {with_utm(PROD, medium='cli', content='login_help_text')}. "
-        "Required to log events to the server. "
-        "The API key will be saved in your environment variables, typically in .env.local, unless a different path is provided with --save."
-    )
-)
-def login(
-    save: Optional[str] = typer.Option(
-        None,
-        "-s",
-        "--save",
-        help="Where to persist settings. Format: dotenv[:path]. Defaults to .env.local. If omitted, login still writes to .env.local.",
-    ),
-):
-    api_key = coerce_blank_to_none(
-        typer.prompt("🔐 Enter your API Key", hide_input=True)
-    )
-
-    with capture_login_event() as span:
-        completed = False
-        try:
-            # Resolve the key from CLI flag or interactive flow
-            if api_key is not None:
-                key = api_key
-            else:
-                render_login_message()
-
-                # Start the pairing server
-                port = find_available_port()
-                pairing_code = generate_pairing_code()
-                pairing_thread = threading.Thread(
-                    target=start_server,
-                    args=(pairing_code, port, PROD),
-                    daemon=True,
-                )
-                pairing_thread.start()
-
-                login_url = with_utm(
-                    f"{PROD}/pair?code={pairing_code}&port={port}",
-                    medium="cli",
-                    content="login_pair_browser_open",
-                )
-                webbrowser.open(login_url)
-                fallback_url = with_utm(
-                    PROD, medium="cli", content="login_pair_fallback_link"
-                )
-                print(
-                    f"(open this link if your browser did not open: [link={fallback_url}]{fallback_url}[/link])"
-                )
-
-                # Manual fallback if still empty
-                while True:
-                    api_key = coerce_blank_to_none(
-                        typer.prompt("🔐 Enter your API Key", hide_input=True)
-                    )
-                    if api_key:
-                        break
-                    else:
-                        print("❌ API Key cannot be empty. Please try again.\n")
-                key = api_key
-
-            settings = get_settings()
-            save = save or settings.DEEPEVAL_DEFAULT_SAVE or "dotenv:.env.local"
-            with settings.edit(save=save) as edit_ctx:
-                settings.CONFIDENT_API_KEY = key
-
-            handled, path, updated = edit_ctx.result
-
-            if updated:
-                if not handled and save is not None:
-                    # invalid --save format (unsupported)
-                    print(
-                        "Unsupported --save option. Use --save=dotenv[:path]."
-                    )
-                elif path:
-                    # persisted to a file
-                    print(
-                        f"Saved environment variables to {path} (ensure it's git-ignored)."
-                    )
-
-            completed = True
-            print(
-                "\n🎉🥳 Congratulations! You've successfully logged in! :raising_hands:"
-            )
-            quickstart_url = with_utm(
-                f"{WWW}/docs/llm-evaluation/quickstart",
-                medium="cli",
-                content="login_success_quickstart",
-            )
-            print(
-                "You're now using DeepEval with [rgb(106,0,255)]Confident AI[/rgb(106,0,255)]. "
-                "Follow our quickstart tutorial here: "
-                f"[bold][link={quickstart_url}]{quickstart_url}[/link][/bold]"
-            )
-        except Exception as e:
-            completed = False
-            print(f"Login failed: {e}")
-        finally:
-            if getattr(span, "set_attribute", None):
-                span.set_attribute("completed", completed)
-
-
-@app.command()
-def logout(
-    save: Optional[str] = typer.Option(
-        None,
-        "-s",
-        "--save",
-        help="Where to remove the saved key from. Use format dotenv[:path]. If omitted, uses DEEPEVAL_DEFAULT_SAVE or .env.local. The JSON keystore is always cleared.",
-    ),
-    quiet: bool = typer.Option(
-        False,
-        "-q",
-        "--quiet",
-        help="Suppress printing to the terminal (useful for CI).",
-    ),
-):
-    """
-    Log out of Confident AI.
-
-    Behavior:
-    - Always clears the Confident API key from the JSON keystore and process env.
-    - Also removes credentials from a dotenv file; defaults to DEEPEVAL_DEFAULT_SAVE if set, otherwise.env.local.
-      Override the target with --save=dotenv[:path].
-    """
-    settings = get_settings()
-    save = save or settings.DEEPEVAL_DEFAULT_SAVE or "dotenv:.env.local"
-    with settings.edit(save=save) as edit_ctx:
-        settings.CONFIDENT_API_KEY = None
-
-    handled, path, updated = edit_ctx.result
-
-    if _handle_save_result(
-        handled=handled,
-        path=path,
-        updates=updated,
-        save=save,
-        quiet=quiet,
-        updated_msg="Removed Confident AI key(s) from {path}.",
-        tip_msg=None,
-    ):
-        print("\n🎉🥳 You've successfully logged out! :raising_hands: ")
-
-    delete_file_if_exists(LATEST_TEST_RUN_FILE_PATH)
 
 
 @app.command()
