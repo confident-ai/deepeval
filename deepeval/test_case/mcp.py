@@ -29,8 +29,6 @@ class MCPServer:
 
 
 def validate_mcp_servers(mcp_servers: List[MCPServer]):
-    # ``mcp`` may not be installed when data is sourced from a database/JSON
-    # payload rather than the MCP SDK, so the import is best-effort.
     try:
         from mcp.types import Tool, Resource, Prompt
     except ImportError:
