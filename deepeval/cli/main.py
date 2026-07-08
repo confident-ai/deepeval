@@ -224,9 +224,7 @@ def _resolve_login_key() -> str:
     key = browser_pairing_login()
     if key:
         return key
-    print(
-        "\nNo problem — paste a project API key from the platform instead."
-    )
+    print("\nNo problem — paste a project API key from the platform instead.")
     return _prompt_paste_api_key()
 
 
