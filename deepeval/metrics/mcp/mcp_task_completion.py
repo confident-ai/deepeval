@@ -256,7 +256,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                     break
             new_task = Task(task=user_messages, steps_taken=[])
             for turn in unit_interaction[1:]:
-                if turn._mcp_interaction or turn.tools_called:
+                if turn._mcp_interaction:
                     new_task.steps_taken.append(
                         turn_mcp_interaction_text(turn)
                     )

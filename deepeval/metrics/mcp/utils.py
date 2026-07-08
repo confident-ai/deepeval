@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import List
 
 from deepeval.metrics.mcp.schema import Task
-from deepeval.test_case import MCPServer, MCPToolCall, ToolCall
+from deepeval.test_case import MCPServer, MCPToolCall
 
 
 def indent_multiline_string(s: object, indent_level: int = 4) -> str:
@@ -58,23 +58,21 @@ def available_mcp_servers_block(
 def turn_mcp_interaction_text(turn) -> str:
     mcp_interaction = "Tools called by agent: \n"
 
-    tools_called = turn.mcp_tools_called or turn.tools_called
-    if tools_called:
-        for tool in tools_called:
-            if isinstance(tool, MCPToolCall):
-                args = tool.args
-                result = tool.result.structuredContent["result"]
-            else:
-                args = tool.input_parameters
-                result = tool.output
-            mcp_interaction += (
-                f"\n<Tool Called>\n"
-                f"\n**This does not appear to user**\n"
-                f"Name: {tool.name}\n"
-                f"Args: {args}\n"
-                f"Result: \n{result}\n"
-                f"</Tool Called>\n"
-            )
+    for tool in turn._mcp_tool_calls:
+        if isinstance(tool, MCPToolCall):
+            args = tool.args
+            result = tool.result.structuredContent["result"]
+        else:  # MCP-typed `ToolCall` fallback
+            args = tool.input_parameters
+            result = tool.output
+        mcp_interaction += (
+            f"\n<Tool Called>\n"
+            f"\n**This does not appear to user**\n"
+            f"Name: {tool.name}\n"
+            f"Args: {args}\n"
+            f"Result: \n{result}\n"
+            f"</Tool Called>\n"
+        )
     if turn.mcp_resources_called is not None:
         for resource in turn.mcp_resources_called:
             mcp_interaction += (
