@@ -131,7 +131,9 @@ class TaskCompletionMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            task, self.outcome = await self._a_extract_task_and_outcome(test_case)
+            task, self.outcome = await self._a_extract_task_and_outcome(
+                test_case
+            )
             if self.task is None or not self._is_task_provided:
                 self.task = task
             self.verdict, self.reason = await self._a_generate_verdicts()
@@ -192,7 +194,9 @@ class TaskCompletionMetric(BaseMetric):
                 "extract_goal_and_outcome",
                 input=test_case.input,
                 actual_output=test_case.actual_output,
-                tools_called_formatted=print_tools_called(test_case.tools_called),
+                tools_called_formatted=print_tools_called(
+                    test_case.tools_called
+                ),
             )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -218,7 +222,9 @@ class TaskCompletionMetric(BaseMetric):
                 "extract_goal_and_outcome",
                 input=test_case.input,
                 actual_output=test_case.actual_output,
-                tools_called_formatted=print_tools_called(test_case.tools_called),
+                tools_called_formatted=print_tools_called(
+                    test_case.tools_called
+                ),
             )
         return generate_with_schema_and_extract(
             metric=self,
@@ -229,7 +235,11 @@ class TaskCompletionMetric(BaseMetric):
         )
 
     def _calculate_score(self):
-        return 0 if self.strict_mode and self.verdict < self.threshold else self.verdict
+        return (
+            0
+            if self.strict_mode and self.verdict < self.threshold
+            else self.verdict
+        )
 
     def is_successful(self) -> bool:
         if self.error is not None:
