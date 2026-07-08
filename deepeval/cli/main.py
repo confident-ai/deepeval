@@ -37,12 +37,15 @@ from deepeval.key_handler import (
     ModelKeyValues,
 )
 from deepeval.telemetry import capture_login_event, capture_view_event
-from deepeval.config.settings import get_settings
+from deepeval.config.settings import get_settings, dotenv_search_paths
+from deepeval.config.utils import read_dotenv_file
 from deepeval.utils import delete_file_if_exists, open_browser
 from deepeval.test_run.test_run import (
     LATEST_TEST_RUN_FILE_PATH,
     global_test_run_manager,
 )
+from deepeval.cli.diagnose import diagnose_command, resolve_setting_source
+from deepeval.cli.dotenv_handler import DotenvHandler
 from deepeval.cli.generate.command import generate_command
 from deepeval.cli.inspect import inspect_command
 from deepeval.cli.test.command import app as test_app
@@ -70,6 +73,7 @@ app = typer.Typer(name="deepeval", no_args_is_help=True)
 app.add_typer(test_app, name="test")
 app.command(name="generate")(generate_command)
 app.command(name="inspect")(inspect_command)
+app.command(name="diagnose")(diagnose_command)
 
 
 class Regions(Enum):
@@ -333,26 +337,62 @@ def logout(
 
     Behavior:
     - Always clears the Confident API key from the JSON keystore and process env.
-    - Also removes credentials from a dotenv file; defaults to DEEPEVAL_DEFAULT_SAVE if set, otherwise.env.local.
-      Override the target with --save=dotenv[:path].
+    - Removes the key from every dotenv file deepeval auto-loads (.env,
+      .env.{APP_ENV}, .env.local), plus the --save target if one is given.
+    - If the key is exported by the shell itself, deepeval cannot unset it;
+      a warning with the fix is printed instead of a success message.
     """
     settings = get_settings()
+
+    # Capture provenance before clearing anything: once files are wiped we
+    # can no longer tell a shell export apart from a file-loaded value.
+    key_source = resolve_setting_source("CONFIDENT_API_KEY")
+
     save = save or settings.DEEPEVAL_DEFAULT_SAVE or "dotenv:.env.local"
     with settings.edit(save=save) as edit_ctx:
         settings.CONFIDENT_API_KEY = None
 
     handled, path, updated = edit_ctx.result
 
-    if _handle_save_result(
-        handled=handled,
-        path=path,
-        updates=updated,
-        save=save,
-        quiet=quiet,
-        updated_msg="Removed Confident AI key(s) from {path}.",
-        tip_msg=None,
+    # The --save target is a single file; also sweep the rest of the dotenv
+    # search path so a lower-precedence file (e.g. .env) can't silently log
+    # the user back in on the next run.
+    for dotenv_path in dotenv_search_paths():
+        if dotenv_path.is_file() and "CONFIDENT_API_KEY" in read_dotenv_file(
+            dotenv_path
+        ):
+            DotenvHandler(dotenv_path).unset(["CONFIDENT_API_KEY"])
+            if not quiet:
+                print(f"Removed Confident AI key(s) from {dotenv_path}.")
+
+    shell_export = key_source == "process environment"
+
+    if (
+        _handle_save_result(
+            handled=handled,
+            path=path,
+            updates=updated,
+            save=save,
+            quiet=quiet,
+            updated_msg="Removed Confident AI key(s) from {path}.",
+            tip_msg=None,
+        )
+        and not shell_export
     ):
         print("\n🎉🥳 You've successfully logged out! :raising_hands: ")
+
+    if shell_export and not quiet:
+        print(
+            "\n[yellow]⚠  CONFIDENT_API_KEY is exported by your shell, which "
+            "deepeval cannot unset — this terminal will still be logged "
+            "in.[/yellow]"
+        )
+        print(
+            "   Finish logging out with: "
+            "[bold cyan]unset CONFIDENT_API_KEY[/bold cyan] "
+            "[dim](and remove it from your shell profile if it's set "
+            "there)[/dim]"
+        )
 
     delete_file_if_exists(LATEST_TEST_RUN_FILE_PATH)
 

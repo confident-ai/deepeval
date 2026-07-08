@@ -188,6 +188,43 @@ def _discover_app_env_from_files(env_dir: Path) -> Optional[str]:
     return None
 
 
+def resolve_env_dir() -> Path:
+    """Directory containing .env files: ENV_DIR_PATH env var, else CWD."""
+    raw_dir = os.getenv("ENV_DIR_PATH")
+    if raw_dir:
+        return Path(os.path.expanduser(os.path.expandvars(raw_dir)))
+    return Path(os.getcwd())
+
+
+def _resolve_app_env(env_dir: Path) -> Optional[str]:
+    # Pick APP_ENV (process -> .env.local -> .env -> none)
+    app_env = os.getenv("APP_ENV") or _discover_app_env_from_files(env_dir)
+    if app_env is None:
+        return None
+    app_env = str(app_env).strip()
+    return app_env or None
+
+
+def dotenv_search_paths(
+    env_dir: Optional[Path] = None, app_env: Optional[str] = None
+) -> List[Path]:
+    """Dotenv files in load order (lowest -> highest precedence):
+    .env -> .env.{APP_ENV} -> .env.local.
+
+    Single source of truth for which files `autoload_dotenv()` reads;
+    `deepeval diagnose` uses it too so the display cannot drift from the
+    loader.
+    """
+    env_dir = env_dir if env_dir is not None else resolve_env_dir()
+    app_env = app_env if app_env is not None else _resolve_app_env(env_dir)
+
+    paths = [env_dir / ".env"]
+    if app_env:
+        paths.append(env_dir / f".env.{app_env}")
+    paths.append(env_dir / ".env.local")
+    return paths
+
+
 def autoload_dotenv() -> None:
     """
     Load env vars from .env files without overriding existing process env.
@@ -202,31 +239,17 @@ def autoload_dotenv() -> None:
     if parse_bool(os.getenv("DEEPEVAL_DISABLE_DOTENV"), default=False):
         return
 
-    raw_dir = os.getenv("ENV_DIR_PATH")
-    if raw_dir:
-        env_dir = Path(os.path.expanduser(os.path.expandvars(raw_dir)))
-    else:
-        env_dir = Path(os.getcwd())
+    env_dir = resolve_env_dir()
+    app_env = _resolve_app_env(env_dir)
 
-    # merge files in precedence order
-    base = read_dotenv_file(env_dir / ".env")
-    local = read_dotenv_file(env_dir / ".env.local")
-
-    # Pick APP_ENV (process -> .env.local -> .env -> default)
-    app_env = (
-        os.getenv("APP_ENV") or _discover_app_env_from_files(env_dir) or None
-    )
     merged: Dict[str, str] = {}
-    env_specific: Dict[str, str] = {}
-    if app_env is not None:
-        app_env = app_env.strip()
-        if app_env:
-            env_specific = read_dotenv_file(env_dir / f".env.{app_env}")
-            merged.setdefault("APP_ENV", app_env)
+    if app_env:
+        # Seed the discovered APP_ENV; file values below may override it.
+        merged["APP_ENV"] = app_env
 
-    merged.update(base)
-    merged.update(env_specific)
-    merged.update(local)
+    # merge files in precedence order (later wins)
+    for path in dotenv_search_paths(env_dir, app_env):
+        merged.update(read_dotenv_file(path))
 
     # Write only keys that aren’t already in process env
     for k, v in merged.items():
@@ -1482,14 +1505,19 @@ class Settings(BaseSettings):
 
             for field in use_fields:
                 on = field == target_key
-                setattr(self._s, field, on)
+                # Non-targets are *unset* (None) rather than written as an
+                # explicit False/"NO": keeps the keystore and dotenv clean
+                # and preserves Optional[bool] unset-vs-false semantics.
+                # `should_use_*()` treats a missing flag as off.
+                setattr(self._s, field, True if on else None)
 
                 if self._persist is not False:
                     legacy_member = _find_legacy_enum(field)
                     if legacy_member is not None:
-                        KEY_FILE_HANDLER.write_key(
-                            legacy_member, "YES" if on else "NO"
-                        )
+                        if on:
+                            KEY_FILE_HANDLER.write_key(legacy_member, "YES")
+                        else:
+                            KEY_FILE_HANDLER.remove_key(legacy_member)
 
     def edit(
         self, *, save: Optional[str] = None, persist: Optional[bool] = None
