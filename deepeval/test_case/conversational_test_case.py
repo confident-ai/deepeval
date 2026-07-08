@@ -11,7 +11,12 @@ from typing import List, Optional, Dict, Literal, Union
 from copy import deepcopy
 from enum import Enum
 
-from deepeval.test_case import ToolCall, MLLMImage, RetrievedContextData
+from deepeval.test_case import (
+    ToolCall,
+    ToolCallType,
+    MLLMImage,
+    RetrievedContextData,
+)
 from deepeval.test_case.mcp import (
     MCPServer,
     MCPPromptCall,
@@ -94,10 +99,22 @@ class Turn(BaseModel):
         self.metadata = value
 
     @property
+    def _mcp_tool_calls(self) -> List:
+        if self.mcp_tools_called is not None:
+            return self.mcp_tools_called
+        return [
+            tool
+            for tool in (self.tools_called or [])
+            if tool.type == ToolCallType.MCP
+        ]
+
+    @property
     def _mcp_interaction(self) -> bool:
-        """Whether this turn involves any MCP interactions."""
+        has_mcp_tools = self.mcp_tools_called is not None or any(
+            tool.type == ToolCallType.MCP for tool in (self.tools_called or [])
+        )
         return (
-            self.mcp_tools_called is not None
+            has_mcp_tools
             or self.mcp_resources_called is not None
             or self.mcp_prompts_called is not None
         )
