@@ -99,6 +99,40 @@ USE_EMBED_KEYS = [
 ]
 
 
+def handle_save_result(
+    *,
+    handled: bool,
+    path: Optional[str],
+    updates: dict,
+    save: Optional[str],
+    quiet: bool,
+    success_msg: Optional[str] = None,
+    updated_msg: str = "Saved environment variables to {path} (ensure it's git-ignored).",
+    no_changes_msg: str = "No changes to save in {path}.",
+    tip_msg: Optional[str] = None,
+) -> bool:
+    if not handled and save is not None:
+        raise typer.BadParameter(
+            "Unsupported --save option. Use --save=dotenv[:path].",
+            param_hint="--save",
+        )
+
+    if quiet:
+        return False
+
+    if path and updates:
+        print(updated_msg.format(path=path))
+    elif path:
+        print(no_changes_msg.format(path=path))
+    elif tip_msg:
+        print(tip_msg)
+
+    if success_msg:
+        print(success_msg)
+
+    return True
+
+
 def render_login_message():
     print(
         "🥳 Welcome to [rgb(106,0,255)]Confident AI[/rgb(106,0,255)], the evals cloud platform 🏡❤️"
