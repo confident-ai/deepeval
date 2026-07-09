@@ -15,6 +15,7 @@ from deepeval.test_case import (
     MCPToolCall,
     MCPResourceCall,
     MCPPromptCall,
+    ToolCall,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
@@ -84,7 +85,9 @@ class MCPUseMetric(BaseMetric):
                 available_primitives, primitives_used = (
                     self._get_mcp_interaction_text(
                         mcp_servers=test_case.mcp_servers,
-                        mcp_tools_called=test_case.mcp_tools_called or [],
+                        mcp_tools_called=test_case.mcp_tools_called
+                        or test_case.tools_called
+                        or [],
                         mcp_resources_called=test_case.mcp_resources_called
                         or [],
                         mcp_prompts_called=test_case.mcp_prompts_called or [],
@@ -150,7 +153,9 @@ class MCPUseMetric(BaseMetric):
             available_primitives, primitives_used = (
                 self._get_mcp_interaction_text(
                     mcp_servers=test_case.mcp_servers,
-                    mcp_tools_called=test_case.mcp_tools_called or [],
+                    mcp_tools_called=test_case.mcp_tools_called
+                    or test_case.tools_called
+                    or [],
                     mcp_resources_called=test_case.mcp_resources_called or [],
                     mcp_prompts_called=test_case.mcp_prompts_called or [],
                 )
@@ -299,7 +304,7 @@ class MCPUseMetric(BaseMetric):
     def _get_mcp_interaction_text(
         self,
         mcp_servers: List[MCPServer],
-        mcp_tools_called: List[MCPToolCall],
+        mcp_tools_called: List[Union[MCPToolCall, ToolCall]],
         mcp_resources_called: List[MCPResourceCall],
         mcp_prompts_called: List[MCPPromptCall],
     ) -> tuple[str, str]:

@@ -228,7 +228,8 @@ def evaluate(
         if display_config.print_results:
             console_report = EvaluationConsoleReport(test_results)
             console_report.render_to_terminal(
-                truncate_passing_cases=display_config.truncate_passing_cases
+                truncate_passing_cases=display_config.truncate_passing_cases,
+                display_option=display_config.display_option,
             )
 
             # Handle full, un-truncated file exports

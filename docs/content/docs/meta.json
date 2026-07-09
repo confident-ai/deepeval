@@ -30,6 +30,7 @@
     "(non-llm)",
     "(images)",
     "(metrics-others)",
+    "(community)",
 
     "---[Sparkles]Prompt Optimization---",
     "prompt-optimization-introduction",

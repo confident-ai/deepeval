@@ -27,6 +27,20 @@ To contribute, all we ask for is to follow existing patterns within the codebase
 
 Other than that, there are no strict rules to follow, except for optionally running `black` to ensure good formatting. Also, there's no need to worry about failing test cases in GitHub Actions, as these are mostly for internal use and will only pass if triggered by a user with the correct permissions within Confident AI.
 
+## Contributing new metrics
+
+Metrics contributed by the community go through a staged process:
+
+1. **Start in the community section.** New metrics land under `deepeval/metrics/community/` in the codebase and under the "Community" section of the metrics docs. Community metrics are **not** exported from `deepeval.metrics` — users import them explicitly:
+
+```python
+from deepeval.metrics.community import YourNewMetric
+```
+
+2. **Promotion over time.** Metrics that prove useful — through adoption, feedback, and stability — will be promoted out of the community section and into `deepeval.metrics` proper, alongside the built-in metrics.
+
+When adding a community metric, mirror the structure of existing metrics (a folder containing the metric class, `schema.py`, and `template.py`), export it from `deepeval/metrics/community/__init__.py`, add a docs page under the community section, and include tests.
+
 Thank you and come ask any questions or discuss any new PRs you have in mind on our [Discord](https://discord.com/invite/a3K9c8GRGt)!
 
 

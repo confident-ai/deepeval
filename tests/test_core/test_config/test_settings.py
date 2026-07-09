@@ -150,7 +150,8 @@ def test_switch_model_provider_flips_only_target():
         ctx.switch_model_provider("USE_OPENAI_MODEL")
 
     assert s.USE_OPENAI_MODEL is True
-    assert s.USE_LOCAL_MODEL is False
+    # non-targets are unset (None), not written as explicit False
+    assert s.USE_LOCAL_MODEL is None
 
 
 @pytest.mark.enable_dotenv
@@ -333,7 +334,8 @@ def test_switch_model_provider_flips_use_flags_within_family_only(settings):
         ctx.switch_model_provider(target_llm)
 
         for field in llm_flags:
-            assert getattr(settings, field) is (field == target_llm)
+            expected = True if field == target_llm else None
+            assert getattr(settings, field) is expected
         for field in emb_flags:
             # Embeddings should be untouched by LLM switch (remain True)
             assert getattr(settings, field) is True
@@ -346,7 +348,8 @@ def test_switch_model_provider_flips_use_flags_within_family_only(settings):
         ctx.switch_model_provider(target_emb)
 
         for field in emb_flags:
-            assert getattr(settings, field) is (field == target_emb)
+            expected = True if field == target_emb else None
+            assert getattr(settings, field) is expected
         for field in llm_flags:
             # LLMs should be untouched by embedding switch (remain True)
             assert getattr(settings, field) is True

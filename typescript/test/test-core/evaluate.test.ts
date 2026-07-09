@@ -1,10 +1,10 @@
-import { config } from "dotenv";
+// import { config } from "dotenv";
 
 import { evaluate, assertTest, AssertTestError, testRunManager } from "../../src/evaluate";
 import { LLMTestCase, ConversationalTestCase, Turn } from "../../src/test-case";
 import { BaseMetric, BaseConversationalMetric } from "../../src/metrics";
 
-config();
+// config();
 
 // Create mock regular metric
 class MockRegularMetric extends BaseMetric {
@@ -62,13 +62,13 @@ describe("evaluate function", () => {
       name: "Test Case 1",
     });
 
-    // Define hyperparameters and identifier
-    const hyperparameters = {
-      model: "deepseek-chat",
-      promptVersion: "v1.0",
-    };
+//     // Define hyperparameters and identifier
+//     const hyperparameters = {
+//       model: "deepseek-chat",
+//       promptVersion: "v1.0",
+//     };
 
-    const identifier = "test-evaluation-123";
+//     const identifier = "test-evaluation-123";
 
     // Call the evaluate function with the new local runner signature
     const metric = new MockRegularMetric();

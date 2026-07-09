@@ -450,6 +450,41 @@ class TestToolCallFunctionality:
         hash_value = hash(tool_call)
         assert isinstance(hash_value, int)
 
+    def test_tool_call_hashing_with_unhashable_types(self):
+        """ToolCall stays hashable when output or input_parameters contain
+        unhashable objects, e.g. pydantic models with __eq__ but no __hash__
+        (#2815)."""
+
+        class _Unhashable:
+            __hash__ = None
+
+            def __init__(self, value):
+                self.value = value
+
+            def __eq__(self, other):
+                return (
+                    isinstance(other, _Unhashable) and self.value == other.value
+                )
+
+        with pytest.raises(TypeError):
+            hash(_Unhashable("x"))
+
+        tool_output = ToolCall(name="tool", output=_Unhashable("x"))
+        assert isinstance(hash(tool_output), int)
+        assert len({tool_output}) == 1
+
+        tool_input = ToolCall(
+            name="tool", input_parameters={"arg": _Unhashable("y")}
+        )
+        assert isinstance(hash(tool_input), int)
+        assert len({tool_input}) == 1
+
+        # hash must stay consistent with __eq__: equal ToolCalls collapse in a set
+        duplicate = ToolCall(name="tool", output=_Unhashable("x"))
+        assert tool_output == duplicate
+        assert hash(tool_output) == hash(duplicate)
+        assert len({tool_output, duplicate}) == 1
+
     def test_tool_call_repr(self):
         tool_call = ToolCall(
             name="test_tool",

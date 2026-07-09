@@ -80,9 +80,12 @@ def _assert_use_flags_exclusive_store(
                 stored_value == "YES"
             ), f"Expected {use_key}=YES in .deepeval store, got {stored_value!r}"
         else:
-            assert (
-                stored_value == "NO"
-            ), f"Expected {use_key}=NO in .deepeval store, got {stored_value!r}"
+            # Non-target flags are unset (removed from the store), not
+            # written as explicit "NO". A missing flag reads as off.
+            assert stored_value is None, (
+                f"Expected {use_key} to be absent from .deepeval store, "
+                f"got {stored_value!r}"
+            )
 
 
 def _unquote_dotenv_value(value: str) -> str:

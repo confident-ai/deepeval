@@ -1,6 +1,6 @@
 import logging
 import math
-from typing import Optional, Any, Union, Tuple
+from typing import Optional, Any, NamedTuple, Union, Tuple
 import aiohttp
 import requests
 from enum import Enum
@@ -51,30 +51,55 @@ def _infer_region_from_api_key(api_key: Optional[str]) -> Optional[str]:
     return None
 
 
-def get_base_api_url():
+class BackendResolution(NamedTuple):
+    base_url: str
+    region: Optional[str]
+    # "custom_base_url" | "explicit_region" | "api_key_prefix" | "default"
+    source: str
+
+
+def _api_url_for_region(region: Optional[str]) -> str:
+    if region == "EU":
+        return API_BASE_URL_EU
+    if region == "AU":
+        return API_BASE_URL_AU
+    return API_BASE_URL
+
+
+def resolve_backend() -> BackendResolution:
+    """Resolve the Confident AI API base URL, along with the region and how
+    it was decided.
+
+    Single source of truth for backend routing: `get_base_api_url()` (used
+    by all API calls) and `deepeval diagnose` (which displays the region and
+    its provenance) both go through here, so the two cannot drift.
+    """
     s = get_settings()
     if s.CONFIDENT_BASE_URL:
-        base_url = s.CONFIDENT_BASE_URL.rstrip("/")
-        return base_url
+        return BackendResolution(
+            s.CONFIDENT_BASE_URL.rstrip("/"), None, "custom_base_url"
+        )
+
     # If the user has explicitly set a region, respect it.
     region = KEY_FILE_HANDLER.fetch_data(KeyValues.CONFIDENT_REGION)
     if region:
-        if region == "EU":
-            return API_BASE_URL_EU
-        elif region == "AU":
-            return API_BASE_URL_AU
-        return API_BASE_URL
+        return BackendResolution(
+            _api_url_for_region(region), region, "explicit_region"
+        )
 
     # Otherwise, infer region from the API key prefix.
-    api_key = get_confident_api_key()
-    inferred = _infer_region_from_api_key(api_key)
-    if inferred == "EU":
-        return API_BASE_URL_EU
-    elif inferred == "AU":
-        return API_BASE_URL_AU
+    inferred = _infer_region_from_api_key(get_confident_api_key())
+    if inferred:
+        return BackendResolution(
+            _api_url_for_region(inferred), inferred, "api_key_prefix"
+        )
 
     # Default to US (backwards compatible)
-    return API_BASE_URL
+    return BackendResolution(API_BASE_URL, "US", "default")
+
+
+def get_base_api_url():
+    return resolve_backend().base_url
 
 
 def get_confident_api_key() -> Optional[str]:
