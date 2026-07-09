@@ -118,6 +118,10 @@
   "scripts": {
     "build": "tsc",
     "test": "jest",
+    "test:e2e": "node dist/cli/index.js test run tests/deepeval-test-run-test/suites --identifier ts-e2e",
+    "test:e2e:conversational": "node dist/cli/index.js test run tests/deepeval-test-run-test/conversational --identifier ts-e2e-conversational",
+    "test:e2e:negative": "node dist/cli/index.js test run tests/deepeval-test-run-test/negative",
+    "typecheck:test": "tsc -p tsconfig.test.json",
     "lint": "eslint",
     "lint:fix": "eslint --fix"
   },
