@@ -250,6 +250,25 @@ def test_evaluate_imports():
     assert ErrorConfig is not None
 
 
+def test_evaluate_submodule_attribute_access():
+    """Regression test for issue #2216.
+
+    ``deepeval/__init__.py`` used to shadow the ``deepeval.evaluate`` subpackage
+    with the bare function, so dotted attribute access like
+    ``deepeval.evaluate.configs.AsyncConfig()`` raised
+    ``AttributeError: 'function' object has no attribute 'configs'``.
+    """
+    import deepeval
+    import deepeval.evaluate.configs
+
+    # Dotted submodule access must resolve to the module, not a bare function.
+    config = deepeval.evaluate.configs.AsyncConfig()
+    assert config is not None
+
+    # deepeval.evaluate must remain callable (so deepeval.evaluate(...) still works).
+    assert callable(deepeval.evaluate)
+
+
 def test_dataset_imports():
     """Test that dataset classes can be imported."""
     from deepeval.dataset import (
