@@ -130,3 +130,4 @@ __all__ = [
     "ImageHelpfulnessMetric",
     "ImageReferenceMetric",
 ]
+from deepeval.metrics.agent_loop_detection import AgentLoopDetectionMetric
