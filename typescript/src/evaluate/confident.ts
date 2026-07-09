@@ -40,7 +40,7 @@ function caseCost(metricsData: MetricData[]): number | undefined {
   return costs.length ? costs.reduce((s, c) => s + c, 0) : undefined;
 }
 
-function buildMetricsScores(cases: EvaluatedCase[]) {
+function buildMetricsScores(cases: { metricsData: MetricData[] }[]) {
   const map = new Map<
     string,
     { scores: number[]; passes: number; fails: number; errors: number }
@@ -62,15 +62,73 @@ function buildMetricsScores(cases: EvaluatedCase[]) {
   return [...map.entries()].map(([metric, e]) => ({ metric, ...e }));
 }
 
-export async function postTestRun(
-  cases: EvaluatedCase[],
+export interface PersistedCase {
+  conversational: boolean;
+  entry: Record<string, unknown>;
+  metricsData: MetricData[];
+}
+
+export function buildTestCaseEntry(
+  { testCase, metricsData, runDuration, trace }: EvaluatedCase,
+  order: number,
+): PersistedCase {
+  const success = metricsData.every((m) => m.skipped || m.success);
+  const evaluationCost = caseCost(metricsData);
+  const metricsDataApi = metricsData.map(convertMetricData);
+
+  if (testCase instanceof ConversationalTestCase) {
+    return {
+      conversational: true,
+      metricsData,
+      entry: {
+        name: testCase.name ?? `test_case_${order}`,
+        success,
+        metricsData: metricsDataApi,
+        runDuration,
+        evaluationCost,
+        order,
+        turns: testCase.turns.map((t, i) => convertTurn(t, i)),
+        scenario: testCase.scenario,
+        expectedOutcome: testCase.expectedOutcome,
+        userDescription: testCase.userDescription,
+        chatbotRole: testCase.chatbotRole,
+        imagesMapping: testCase.getImagesMapping(),
+      },
+    };
+  }
+
+  return {
+    conversational: false,
+    metricsData,
+    entry: {
+      name: testCase.name ?? `test_case_${order}`,
+      input: testCase.input,
+      actualOutput: testCase.actualOutput,
+      expectedOutput: testCase.expectedOutput,
+      context: testCase.context,
+      retrievalContext: resolveRetrievalContext(testCase.retrievalContext),
+      toolsCalled: testCase.toolsCalled?.map(convertTool),
+      expectedTools: testCase.expectedTools?.map(convertTool),
+      success,
+      metricsData: metricsDataApi,
+      runDuration,
+      evaluationCost,
+      order,
+      imagesMapping: testCase.getImagesMapping(),
+      trace,
+    },
+  };
+}
+
+async function sendTestRun(
+  persisted: PersistedCase[],
   runDuration: number,
-  official = false,
-  silent = false,
+  official: boolean,
+  silent: boolean,
+  identifier?: string,
 ): Promise<{ link: string | null; testRunId: string | null }> {
-  // Silent check (isConfident() logs a warning — not wanted on the no-op path).
   const apiKey = process.env.CONFIDENT_API_KEY;
-  if (!apiKey || apiKey.trim() === "" || cases.length === 0) {
+  if (!apiKey || apiKey.trim() === "" || persisted.length === 0) {
     return { link: null, testRunId: null };
   }
 
@@ -81,63 +139,29 @@ export async function postTestRun(
   let totalCost = 0;
   let hasCost = false;
 
-  cases.forEach(({ testCase, metricsData, runDuration: caseDuration, trace }, order) => {
-    const success = metricsData.every((m) => m.skipped || m.success);
-    if (success) testPassed += 1;
+  persisted.forEach(({ conversational, entry }, order) => {
+    entry.order = order;
+    if (entry.success) testPassed += 1;
     else testFailed += 1;
-
-    const evaluationCost = caseCost(metricsData);
-    if (evaluationCost != null) {
-      totalCost += evaluationCost;
+    const cost = entry.evaluationCost as number | undefined;
+    if (cost != null) {
+      totalCost += cost;
       hasCost = true;
     }
-    const metricsDataApi = metricsData.map(convertMetricData);
-
-    if (testCase instanceof ConversationalTestCase) {
-      conversationalTestCases.push({
-        name: testCase.name ?? `test_case_${order}`,
-        success,
-        metricsData: metricsDataApi,
-        runDuration: caseDuration,
-        evaluationCost,
-        order,
-        turns: testCase.turns.map((t, i) => convertTurn(t, i)),
-        scenario: testCase.scenario,
-        expectedOutcome: testCase.expectedOutcome,
-        userDescription: testCase.userDescription,
-        chatbotRole: testCase.chatbotRole,
-        imagesMapping: testCase.getImagesMapping(),
-      });
-    } else {
-      testCases.push({
-        name: testCase.name ?? `test_case_${order}`,
-        input: testCase.input,
-        actualOutput: testCase.actualOutput,
-        expectedOutput: testCase.expectedOutput,
-        context: testCase.context,
-        retrievalContext: resolveRetrievalContext(testCase.retrievalContext),
-        toolsCalled: testCase.toolsCalled?.map(convertTool),
-        expectedTools: testCase.expectedTools?.map(convertTool),
-        success,
-        metricsData: metricsDataApi,
-        runDuration: caseDuration,
-        evaluationCost,
-        order,
-        imagesMapping: testCase.getImagesMapping(),
-        trace,
-      });
-    }
+    if (conversational) conversationalTestCases.push(entry);
+    else testCases.push(entry);
   });
 
   const payload = {
     testCases,
     conversationalTestCases,
-    metricsScores: buildMetricsScores(cases),
+    metricsScores: buildMetricsScores(persisted),
     testPassed,
     testFailed,
     runDuration,
     evaluationCost: hasCost ? totalCost : undefined,
     official: official || undefined,
+    identifier: identifier || undefined,
   };
 
   try {
@@ -159,6 +183,30 @@ export async function postTestRun(
     );
     return { link: null, testRunId: null };
   }
+}
+
+export async function postTestRun(
+  cases: EvaluatedCase[],
+  runDuration: number,
+  official = false,
+  silent = false,
+): Promise<{ link: string | null; testRunId: string | null }> {
+  return sendTestRun(
+    cases.map((c, i) => buildTestCaseEntry(c, i)),
+    runDuration,
+    official,
+    silent,
+  );
+}
+
+export async function postPersistedTestRun(
+  persisted: PersistedCase[],
+  runDuration: number,
+  official = false,
+  silent = false,
+  identifier?: string,
+): Promise<{ link: string | null; testRunId: string | null }> {
+  return sendTestRun(persisted, runDuration, official, silent, identifier);
 }
 
 function arenaMetricData(
