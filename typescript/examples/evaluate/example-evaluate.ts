@@ -1,5 +1,6 @@
 import { LLMTestCase, ToolCall } from "../../src/test-case";
-import { evaluate } from "../../src/confident/evaluate";
+import { evaluate } from "../../src/evaluate";
+import { ExactMatchMetric } from "../../src/metrics";
 
 async function main() {
   const testCase1 = new LLMTestCase({
@@ -38,11 +39,8 @@ async function main() {
   const testCases = [testCase1, testCase2, testCase3];
 
   try {
-    const metricCollection = "New Collection";
-    await evaluate({
-      metricCollection,
-      llmTestCases: testCases,
-    });
+    const metric = new ExactMatchMetric({ threshold: 0.5 });
+    await evaluate(testCases, [metric]);
   } catch (error: any) {
     console.error("Error evaluating test cases:", error);
   }

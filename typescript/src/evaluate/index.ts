@@ -1,4 +1,6 @@
-export { evaluate, type EvaluateOptions } from "./evaluate";
+export { evaluate, type EvaluateOptions } from "./evaluate.js";
+export { assertTest, AssertTestError, type AssertTestOptions } from "./assert-test.js";
+export { TestRunManager, testRunManager, type TestRunSummary } from "./test-run-manager.js";
 export { compare, type CompareOptions } from "./compare";
 export {
   type TestResult,
@@ -12,13 +14,3 @@ export {
   type CacheConfig,
 } from "./configs";
 export { printResultsTable } from "./console-report";
-export {
-  assertTest,
-  type AssertTestOptions,
-  AssertTestError,
-} from "./assert-test";
-export {
-  testRunManager,
-  TestRunManager,
-  type TestRunSummary,
-} from "./test-run-manager";

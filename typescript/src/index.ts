@@ -25,17 +25,17 @@ export {
 } from "./test-case";
 export {
   evaluate,
-  compare,
   assertTest,
-  testRunManager,
-  TestRunManager,
   AssertTestError,
+  type AssertTestOptions,
+  TestRunManager,
+  testRunManager,
+  type TestRunSummary,
+  compare,
   type EvaluationResult,
   type TestResult,
   type EvaluateOptions,
   type CompareOptions,
-  type AssertTestOptions,
-  type TestRunSummary,
 } from "./evaluate";
 export { Prompt } from "./prompt";
 export { ConversationSimulator } from "./simulate";

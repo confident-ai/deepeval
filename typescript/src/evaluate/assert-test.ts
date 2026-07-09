@@ -28,7 +28,7 @@ import { BaseMetric } from "../metrics/base-metrics";
 import { BaseConversationalMetric } from "../metrics/base-conversational-metric";
 import { LLMTestCase } from "../test-case/llm-test-case";
 import { ConversationalTestCase } from "../test-case/conversational-test-case";
-import { runMetric, buildTestResult } from "./evaluate";
+import { runMetric, buildTestResult, metricMatchesCase } from "./evaluate";
 import { testRunManager } from "./test-run-manager";
 import { MetricData } from "./types";
 import { ErrorConfig, DEFAULT_ERROR_CONFIG } from "./configs";
@@ -131,6 +131,23 @@ export async function assertTest(
     ...DEFAULT_ERROR_CONFIG,
     ...options.errorConfig,
   };
+
+  // Early compatibility validation: ensure metrics match the test case type.
+  for (const m of metrics) {
+    if (!metricMatchesCase(m, testCase)) {
+      if (testCase instanceof ConversationalTestCase) {
+        throw new Error(
+          `All metrics for a ConversationalTestCase must be instances of BaseConversationalMetric. Received metric: ${m.name}`,
+        );
+      } else if (testCase instanceof LLMTestCase) {
+        throw new Error(
+          `All metrics for an LLMTestCase must be instances of BaseMetric. Received metric: ${m.name}`,
+        );
+      } else {
+        throw new Error(`Incompatible test case and metric combination.`);
+      }
+    }
+  }
 
   // Honour the showIndicator option per metric (Python: show_indicator=True).
   const showIndicator = options.showIndicator ?? true;

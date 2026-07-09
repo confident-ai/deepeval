@@ -30,8 +30,8 @@ import {
 import { postTestRun } from "./confident";
 import { type EvaluatedCase } from "./types";
 
-type AnyTestCase = LLMTestCase | ConversationalTestCase;
-type AnyMetric = BaseMetric | BaseConversationalMetric;
+export type AnyTestCase = LLMTestCase | ConversationalTestCase;
+export type AnyMetric = BaseMetric | BaseConversationalMetric;
 
 export interface EvaluateOptions {
   asyncConfig?: AsyncConfig;
@@ -43,7 +43,7 @@ export interface EvaluateOptions {
 }
 
 /** A conversational metric runs on a `ConversationalTestCase`; otherwise single-turn. */
-function metricMatchesCase(metric: AnyMetric, testCase: AnyTestCase): boolean {
+export function metricMatchesCase(metric: AnyMetric, testCase: AnyTestCase): boolean {
   const caseIsConversational = testCase instanceof ConversationalTestCase;
   const metricIsConversational = metric instanceof BaseConversationalMetric;
   return caseIsConversational === metricIsConversational;
@@ -289,3 +289,5 @@ export function buildTestResult(
     retrievalContext: resolveRetrievalContext(testCase.retrievalContext),
   };
 }
+
+
