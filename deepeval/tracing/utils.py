@@ -148,6 +148,13 @@ def make_json_serializable(obj):
         if isinstance(o, (int, bool)) or o is None:
             return o
 
+        # Enums -> their underlying value. Must run BEFORE circular detection:
+        # enum members are shared singletons, so the same member reused across
+        # spans (e.g. ToolCallType.FUNCTION on every tool call) would otherwise
+        # be flagged "<circular>" on the second encounter.
+        if isinstance(o, Enum):
+            return _serialize(o.value)
+
         # Detect circular reference
         if oid in seen:
             return "<circular>"
@@ -213,6 +220,13 @@ def make_json_serializable_for_metadata(obj):
         # Primitive types are already serializable
         if isinstance(o, (int, bool)) or o is None:
             return o
+
+        # Enums -> their underlying value. Must run BEFORE circular detection:
+        # enum members are shared singletons, so the same member reused across
+        # spans (e.g. ToolCallType.FUNCTION on every tool call) would otherwise
+        # be flagged "<circular>" on the second encounter.
+        if isinstance(o, Enum):
+            return _serialize(o.value)
 
         # Detect circular reference
         if oid in seen:
