@@ -91,7 +91,6 @@ export function buildTestCaseEntry(
         scenario: testCase.scenario,
         expectedOutcome: testCase.expectedOutcome,
         userDescription: testCase.userDescription,
-        chatbotRole: testCase.chatbotRole,
         imagesMapping: testCase.getImagesMapping(),
       },
     };

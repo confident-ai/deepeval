@@ -40,6 +40,8 @@ export async function runTest(opts: TestRunOptions): Promise<number> {
         setupFiles: [setupFile],
         globalSetup: [globalSetupFile],
         env,
+        testTimeout: 120_000,
+        hookTimeout: 120_000,
       },
     },
   );
