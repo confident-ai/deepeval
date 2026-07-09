@@ -1,7 +1,3 @@
-// Validates `deepeval test run` end-to-end: imports via the package name
-// ("deepeval") like a real project, and does NOT import the setup or set env —
-// the CLI injects the matchers, trace capture, env, and wrap-up. Uses
-// `assertTest` (both shapes), so it needs no matcher-type augmentation.
 import { it } from "vitest";
 import { assertTest, Golden, LLMTestCase, metrics } from "deepeval";
 import { observe } from "deepeval/tracing";
