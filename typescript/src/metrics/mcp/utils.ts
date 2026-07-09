@@ -1,4 +1,10 @@
-import { Turn, MCPServer } from "../../test-case";
+import {
+  Turn,
+  MCPServer,
+  MCPToolCall,
+  ToolCall,
+  ToolCallType,
+} from "../../test-case";
 import { Task } from "./schema";
 
 /** Stringify a value the way the prompts expect (plain strings pass through). */
@@ -19,12 +25,22 @@ export function indentMultilineString(s: string, indentLevel = 4): string {
     .join("\n");
 }
 
-/** A turn involves MCP if any of its mcp_*_called lists are present (mirrors Turn._mcp_interaction). */
+/**
+ * MCP tool calls for a turn: the native `mcpToolsCalled` when present, otherwise
+ * the `toolsCalled` entries explicitly typed as MCP. Mirrors Turn._mcp_tool_calls.
+ */
+export function mcpToolCalls(turn: Turn): (MCPToolCall | ToolCall)[] {
+  if (turn.mcpToolsCalled != null) return turn.mcpToolsCalled;
+  return (turn.toolsCalled ?? []).filter((t) => t.type === ToolCallType.MCP);
+}
+
+/** A turn involves MCP if any mcp_*_called list is present, or a toolsCalled entry is MCP-typed (mirrors Turn._mcp_interaction). */
 export function mcpInteraction(turn: Turn): boolean {
   return (
     turn.mcpToolsCalled != null ||
     turn.mcpResourcesCalled != null ||
-    turn.mcpPromptsCalled != null
+    turn.mcpPromptsCalled != null ||
+    (turn.toolsCalled?.some((t) => t.type === ToolCallType.MCP) ?? false)
   );
 }
 
@@ -100,16 +116,23 @@ export function getTasks(unitInteractions: Turn[][]): Task[] {
     for (const turn of interaction.slice(1)) {
       if (mcpInteraction(turn)) {
         let step = "Tools called by agent: \n";
-        if (turn.mcpToolsCalled != null) {
-          for (const tool of turn.mcpToolsCalled) {
-            step +=
-              `\n<Tool Called>\n` +
-              `\n**This does not appear to user**\n` +
-              `Name: ${tool.name}\n` +
-              `Args: ${toText(tool.args)}\n` +
-              `Result: \n${toText(structuredResult(tool.result))}\n` +
-              `</Tool Called>\n`;
+        for (const tool of mcpToolCalls(turn)) {
+          let args: unknown;
+          let result: unknown;
+          if (tool instanceof MCPToolCall) {
+            args = tool.args;
+            result = structuredResult(tool.result);
+          } else {
+            args = tool.inputParameters;
+            result = tool.output;
           }
+          step +=
+            `\n<Tool Called>\n` +
+            `\n**This does not appear to user**\n` +
+            `Name: ${tool.name}\n` +
+            `Args: ${toText(args)}\n` +
+            `Result: \n${toText(result)}\n` +
+            `</Tool Called>\n`;
         }
         if (turn.mcpResourcesCalled != null) {
           for (const resource of turn.mcpResourcesCalled) {
