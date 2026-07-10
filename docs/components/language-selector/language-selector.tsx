@@ -42,7 +42,7 @@ const OPTIONS: LanguageOption[] = [
     id: "typescript",
     label: "TypeScript",
     icon: badge("typescript", "/icons/typescript.svg", "TypeScript"),
-    description: "Coming soon on July 1st",
+    description: "Coming soon on July 20th",
     disabled: true,
   },
 ];
