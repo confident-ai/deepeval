@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { Check, ChevronsUpDown } from "lucide-react";
 import {
   Popover,
@@ -49,7 +50,18 @@ const OPTIONS: LanguageOption[] = [
 
 export default function LanguageSelector() {
   const { language, setLanguage } = useLanguage();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  const showSelector =
+    pathname === "/docs" ||
+    pathname.startsWith("/docs/") ||
+    pathname === "/integrations" ||
+    pathname.startsWith("/integrations/");
+
+  if (!showSelector) {
+    return null;
+  }
 
   const active = OPTIONS.find((o) => o.id === language) ?? OPTIONS[0];
 
