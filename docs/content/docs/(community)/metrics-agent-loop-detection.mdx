@@ -4,13 +4,13 @@ title: Agent Loop Detection
 sidebar_label: Agent Loop Detection
 ---
 
-<MetricTagsDisplayer singleTurn={true} agent={true} referenceless={true} />
+<MetricTagsDisplayer community={true} singleTurn={true} agent={true} referenceless={true} />
 
 The Agent Loop Detection metric is a **fully deterministic** (no LLM required) agentic metric that detects whether an LLM agent is stuck in an infinite loop or cyclical execution pattern. It analyzes the agent's full execution trace across three independent sub-signals and returns a score from **0.0** (severe looping detected) to **1.0** (clean execution).
 
-:::info
+::::info
 Agent Loop Detection analyzes your **agent's full execution trace**, which requires [setting up tracing](/docs/evaluation-llm-tracing). Because it is fully deterministic, it runs in production without any API key or LLM call.
-:::
+::::
 
 ## Required Arguments
 
@@ -64,9 +64,9 @@ There are **EIGHT** optional parameters when creating an `AgentLoopDetectionMetr
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 
-:::info
+::::info
 The `AgentLoopDetectionMetric` does **not** accept a `model` parameter. All three sub-signals are computed deterministically (hashing, n-gram set operations, DFS) — no LLM is involved. See [Why no `model` parameter?](#why-no-model-parameter) for the design rationale.
-:::
+::::
 
 To learn more about how the `evals_iterator` works, [click here.](/docs/evaluation-end-to-end-llm-evals#e2e-evals-for-tracing)
 
@@ -115,9 +115,9 @@ print(metric.score_breakdown)
 # }
 ```
 
-:::caution
+::::caution
 Running as a standalone is useful for debugging or building a custom pipeline, but you will **NOT** get the benefits of testing reports, Confident AI platform integration, or the optimizations (speed, caching, computation) that `evaluate()` or `deepeval test run` offer.
-:::
+::::
 
 ## How Is It Calculated?
 
@@ -162,9 +162,9 @@ Taking the maximum ensures stagnation is flagged whether the agent repeats itsel
 
 This sub-signal traverses the parent→child span tree from the agent trace and runs a depth-first search (DFS). A **cycle** is detected when a span's `type:name` label appears a second time on the **same root-to-leaf ancestry path** — meaning the agent genuinely called a function that is its own ancestor (true recursion).
 
-:::note
+::::note
 Sequential repetition (the same tool appearing at sibling positions) is intentionally **not** flagged here — that is the responsibility of the Tool Call Repetition sub-signal above.
-:::
+::::
 
 | Condition | Score |
 |---|---|
@@ -272,6 +272,6 @@ This is strictly better than either signal alone, but it will still miss outputs
 
 ---
 
-:::note Community Metric
+::::note Community Metric
 `AgentLoopDetectionMetric` was contributed by [Jeel Thummar](https://github.com/Jeel3011), author of [AGeval](https://pypi.org/project/ageval/) — an episodic evaluation framework for LangGraph agents. The loop detection patterns here are drawn directly from production experience with ReAct and LangGraph agents. See [issue #2643](https://github.com/confident-ai/deepeval/issues/2643) for the original proposal and design discussion.
-:::
+::::
