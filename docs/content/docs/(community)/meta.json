@@ -1,4 +1,8 @@
 {
   "title": "Community",
-  "pages": ["metrics-citation-faithfulness", "metrics-agent-loop-detection"]
+  "pages": [
+    "metrics-citation-faithfulness",
+    "metrics-agent-loop-detection",
+    "metrics-tool-permission"
+  ]
 }

@@ -3,13 +3,13 @@ id: metrics-tool-permission
 title: Tool Permission
 sidebar_label: Tool Permission
 ---
-<MetricTagsDisplayer singleTurn={true} usesLLMs={false} referenceless={true} />
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={true} />
 
 The Tool Permission metric measures whether your agent only called tools it was **authorized** to, against a permission policy. Unlike the `ToolCorrectnessMetric`, which compares the tools that were called against the tools that were *expected*, this metric enforces **least privilege**: it flags any tool call outside the granted policy, regardless of whether the task was completed.
 
-:::note
+::::note
 The `ToolPermissionMetric` does **not** rely on an LLM for evaluation. It checks the tools your agent called against an allowlist and/or a denylist, so it is deterministic, requires no API key, and has zero token cost — making it well suited as a CI gate.
-:::
+::::
 
 ## Required Arguments
 
