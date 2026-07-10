@@ -1,0 +1,277 @@
+---
+id: metrics-agent-loop-detection
+title: Agent Loop Detection
+sidebar_label: Agent Loop Detection
+---
+
+<MetricTagsDisplayer singleTurn={true} agent={true} referenceless={true} />
+
+The Agent Loop Detection metric is a **fully deterministic** (no LLM required) agentic metric that detects whether an LLM agent is stuck in an infinite loop or cyclical execution pattern. It analyzes the agent's full execution trace across three independent sub-signals and returns a score from **0.0** (severe looping detected) to **1.0** (clean execution).
+
+:::info
+Agent Loop Detection analyzes your **agent's full execution trace**, which requires [setting up tracing](/docs/evaluation-llm-tracing). Because it is fully deterministic, it runs in production without any API key or LLM call.
+:::
+
+## Required Arguments
+
+The `AgentLoopDetectionMetric` is a **trace-only** metric. It reads from the agent trace set via `update_current_trace` and does **not** require `tools_called` or `expected_tools`. It only requires the standard trace-based fields:
+
+- `input`
+- `actual_output`
+
+## Usage
+
+To begin, [set up tracing](/docs/evaluation-llm-tracing) and supply the `AgentLoopDetectionMetric()` to your `evals_iterator`.
+
+```python
+from deepeval.tracing import observe, update_current_trace
+from deepeval.dataset import Golden, EvaluationDataset
+from deepeval.metrics import AgentLoopDetectionMetric
+
+
+@observe()
+def search_web(query: str) -> str:
+    # Your tool implementation
+    return f"Results for: {query}"
+
+
+@observe()
+def my_agent(input: str) -> str:
+    result = search_web(input)
+    update_current_trace(input=input, output=result)
+    return result
+
+
+# Create dataset
+dataset = EvaluationDataset(goldens=[Golden(input="What is the weather in Paris?")])
+
+# Initialize metric — no model or API key needed
+loop_metric = AgentLoopDetectionMetric(threshold=0.5)
+
+# Evaluate
+for golden in dataset.evals_iterator(metrics=[loop_metric]):
+    my_agent(golden.input)
+```
+
+There are **EIGHT** optional parameters when creating an `AgentLoopDetectionMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to `0.5`.
+- [Optional] `repetition_threshold`: an integer representing how many identical tool calls (same name + same arguments) must occur before flagging repetition. Defaulted to `3`.
+- [Optional] `similarity_threshold`: a float representing the minimum similarity score between consecutive LLM outputs to flag as stagnating. The metric uses the maximum of bigram Jaccard similarity and `SequenceMatcher` ratio. Defaulted to `0.85`.
+- [Optional] `check_tool_repetition`: a boolean — when `True`, enables the tool repetition sub-signal. Defaulted to `True`.
+- [Optional] `check_reasoning_stagnation`: a boolean — when `True`, enables the reasoning stagnation sub-signal. Defaulted to `True`.
+- [Optional] `check_call_graph_cycles`: a boolean — when `True`, enables the call graph cycle sub-signal. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+:::info
+The `AgentLoopDetectionMetric` does **not** accept a `model` parameter. All three sub-signals are computed deterministically (hashing, n-gram set operations, DFS) — no LLM is involved. See [Why no `model` parameter?](#why-no-model-parameter) for the design rationale.
+:::
+
+To learn more about how the `evals_iterator` works, [click here.](/docs/evaluation-end-to-end-llm-evals#e2e-evals-for-tracing)
+
+### Within components
+
+You can also run `AgentLoopDetectionMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation:
+
+```python
+from deepeval.tracing import observe, update_current_span
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AgentLoopDetectionMetric
+
+loop_metric = AgentLoopDetectionMetric(threshold=0.5)
+
+@observe(metrics=[loop_metric])
+def inner_agent_component(input: str) -> str:
+    output = "..."  # Your agent logic here
+    test_case = LLMTestCase(input=input, actual_output=output)
+    update_current_span(test_case=test_case)
+    return output
+
+@observe()
+def outer_agent(input: str) -> str:
+    return inner_agent_component(input)
+```
+
+### As a standalone
+
+You can also run `AgentLoopDetectionMetric` on a single test case as a standalone, one-off execution:
+
+```python
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AgentLoopDetectionMetric
+
+# test_case._trace_dict must be populated from @observe tracing
+metric = AgentLoopDetectionMetric(threshold=0.5)
+metric.measure(test_case)
+
+print(metric.score)         # e.g. 0.25
+print(metric.reason)        # e.g. "Tool 'search_web' called 6 times with identical arguments."
+print(metric.score_breakdown)
+# {
+#     "tool_repetition": 0.0,
+#     "reasoning_stagnation": 1.0,
+#     "call_graph_cycles": 1.0,
+# }
+```
+
+:::caution
+Running as a standalone is useful for debugging or building a custom pipeline, but you will **NOT** get the benefits of testing reports, Confident AI platform integration, or the optimizations (speed, caching, computation) that `evaluate()` or `deepeval test run` offer.
+:::
+
+## How Is It Calculated?
+
+The `AgentLoopDetectionMetric` score is a **weighted combination** of three independent sub-signals:
+
+<Equation formula="\text{Loop Score} = \frac{0.40 \cdot S_{\text{rep}} + 0.35 \cdot S_{\text{stag}} + 0.25 \cdot S_{\text{cycle}}}{W_{\text{enabled}}}" />
+
+Where each sub-score is **1.0** (no issue), **0.5** (mild issue), or **0.0** (severe issue), and $W_{\text{enabled}}$ is the sum of weights for all enabled checks. Disabling a sub-signal removes its weight from the denominator so it never penalizes the overall score.
+
+| Sub-signal | Weight | What it detects |
+|---|---|---|
+| Tool Call Repetition | 40% | Same tool called with identical arguments ≥ `repetition_threshold` times |
+| Reasoning Stagnation | 35% | Consecutive LLM outputs share ≥ `similarity_threshold` similarity |
+| Call Graph Cycles | 25% | A span appears twice on the same root-to-leaf ancestry path (true recursion) |
+
+### Tool Call Repetition
+
+This sub-signal hashes each tool call as `(tool_name, sorted_args)` and counts how many times each unique call appears in the trace. Only calls with **identical** name and arguments are counted as repeats — calls with different arguments (e.g. a refined search query) are treated as distinct and are never penalized.
+
+| Condition | Score |
+|---|---|
+| Max repeats < `repetition_threshold` | **1.0** — within acceptable limits |
+| Max repeats ≥ `repetition_threshold` | **0.5** — mild repetition loop |
+| Max repeats ≥ `repetition_threshold × 2` | **0.0** — severe repetition loop |
+
+### Reasoning Stagnation
+
+This sub-signal compares **consecutive LLM span outputs** using two complementary similarity measures and takes the **maximum** of both:
+
+1. **Bigram Jaccard similarity** — bag-of-bigrams overlap after stripping common stop words and agent boilerplate phrases. Catches literal repetition. Outputs with fewer than 20 meaningful words are skipped (Jaccard is unreliable at small scale).
+2. **`SequenceMatcher` ratio** (Python `difflib`) — sequence-aware comparison that catches reordered but semantically identical text (e.g. `"I will now search"` ≈ `"Let me search now"`).
+
+Taking the maximum ensures stagnation is flagged whether the agent repeats itself verbatim or merely shuffles its phrasing.
+
+| Condition | Score |
+|---|---|
+| Max similarity < `similarity_threshold` | **1.0** — no stagnation |
+| Max similarity ≥ `similarity_threshold` | **0.5** — high overlap, likely stagnating |
+| Max similarity > 0.95 | **0.0** — outputs are essentially identical |
+
+### Call Graph Cycles
+
+This sub-signal traverses the parent→child span tree from the agent trace and runs a depth-first search (DFS). A **cycle** is detected when a span's `type:name` label appears a second time on the **same root-to-leaf ancestry path** — meaning the agent genuinely called a function that is its own ancestor (true recursion).
+
+:::note
+Sequential repetition (the same tool appearing at sibling positions) is intentionally **not** flagged here — that is the responsibility of the Tool Call Repetition sub-signal above.
+:::
+
+| Condition | Score |
+|---|---|
+| No back-edges in the call tree | **1.0** — clean execution graph |
+| At least one back-edge found | **0.0** — cycle detected; reason includes the full cycle path |
+
+## Score Interpretation
+
+| Score range | Interpretation |
+|---|---|
+| `1.0` | Clean execution — no loop patterns detected |
+| `0.5–1.0` | Mild issues — some repetition or overlap; agent likely recovers |
+| `0.0–0.5` | Severe looping — agent is likely stuck; human review recommended |
+| `0.0` | Critical loop — identical repeated calls or true call graph cycle |
+
+**Example: clean agent**
+```
+Agent Loop Detection
+Score:  1.0
+Reason: No loop patterns detected.
+```
+
+**Example: looping agent**
+```
+Agent Loop Detection
+Score:  0.25
+Reason: Tool 'search_web' called 6 times with identical arguments.
+        Identical reasoning outputs at steps 2 and 3.
+```
+
+## Score Breakdown
+
+The `score_breakdown` attribute exposes each sub-signal score independently after evaluation:
+
+```python
+metric = AgentLoopDetectionMetric(threshold=0.5)
+
+# After measure() runs:
+print(metric.score_breakdown)
+# {
+#     "tool_repetition": 0.0,
+#     "reasoning_stagnation": 1.0,
+#     "call_graph_cycles": 1.0,
+# }
+
+print(metric.score)   # 0.4 (weighted: 0.0×0.40 + 1.0×0.35 + 1.0×0.25 = 0.60, but tool weight 0.40 dominates)
+print(metric.reason)  # "Tool 'search_web' called 6 times with identical arguments."
+```
+
+A value of `1.0` means no issue was detected for that sub-signal. Lower values indicate degradation proportional to the severity of the loop pattern.
+
+## Configuring Sub-signals
+
+Each of the three sub-signals can be toggled independently. When a sub-signal is disabled, its weight is excluded from the denominator so the score is not penalized:
+
+```python
+# Only check for tool repetition — ignore stagnation and graph cycles
+metric = AgentLoopDetectionMetric(
+    check_tool_repetition=True,
+    check_reasoning_stagnation=False,
+    check_call_graph_cycles=False,
+    repetition_threshold=2,  # flag after 2 identical calls (stricter)
+)
+
+# Only check for true recursive cycles in the call graph
+metric = AgentLoopDetectionMetric(
+    check_tool_repetition=False,
+    check_reasoning_stagnation=False,
+    check_call_graph_cycles=True,
+)
+```
+
+## Limitations & Design Decisions
+
+### Why no `model` parameter?
+
+This metric is **fully deterministic by design**. Every sub-signal is computed with hashing, set operations, and sequence comparison algorithms — no LLM is needed. This means:
+
+- **Zero cost** — runs in production without API keys or network calls.
+- **Deterministic** — identical traces always produce identical scores (critical for CI/CD gates).
+- **Zero latency** — no LLM round-trip; the metric completes in milliseconds.
+
+A future `model` parameter could enable an LLM-as-judge mode for the reasoning stagnation sub-signal, which would catch semantically identical outputs that differ greatly in wording. This is tracked as a potential future enhancement.
+
+### Cycle detection uses `type:name:input_hash` labels
+
+The call graph cycle detector identifies spans by a `type:name:input_hash` label (where `input_hash` is a 64-character truncated serialization of the span's input). This is a **heuristic** — the trace dict does not expose span UUIDs (they are stripped internally), so exact span identity is unavailable.
+
+**Trade-offs:**
+
+- Including the input hash reduces false positives when two genuinely different spans share the same `type:name` (e.g. an outer `"planner"` agent delegating to an inner `"planner"` with different input).
+- A true recursive loop passes the same or similar input back to itself, so the input hash matches and the cycle is correctly detected.
+- In the rare edge case where two unrelated same-name spans happen to receive identical truncated inputs, a false positive could theoretically occur. In practice this is extremely unlikely.
+
+### Stagnation detection: dual-signal approach
+
+Reasoning stagnation deliberately uses **two** complementary signals and takes the maximum:
+
+| Signal | Catches | Misses |
+|---|---|---|
+| Bigram Jaccard | Literal repetition, shared phrase patterns | Word reordering |
+| `SequenceMatcher` ratio | Reordered-but-similar text, insertions/deletions | Semantically identical text with different vocabulary |
+
+This is strictly better than either signal alone, but it will still miss outputs that are **semantically identical but lexically different** (e.g. `"Search for Paris weather"` vs `"Look up the forecast in Paris"`). Catching that class of stagnation would require an LLM-as-judge, which would sacrifice the deterministic and zero-cost properties of this metric.
+
+---
+
+:::note Community Metric
+`AgentLoopDetectionMetric` was contributed by [Jeel Thummar](https://github.com/Jeel3011), author of [AGeval](https://pypi.org/project/ageval/) — an episodic evaluation framework for LangGraph agents. The loop detection patterns here are drawn directly from production experience with ReAct and LangGraph agents. See [issue #2643](https://github.com/confident-ai/deepeval/issues/2643) for the original proposal and design discussion.
+:::
