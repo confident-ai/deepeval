@@ -412,9 +412,11 @@ def test_validate_chunk_size_zero_chunks_raises_value_error():
 
 def test_validate_chunk_size_zero_chunks_with_overlap_raises_value_error():
     """
-    The other 0-chunk branch: with min_contexts > 1 and a non-zero overlap the
-    overlap suggestion is produced, but `adjust_chunk_size` is still unset.
-    This also previously raised UnboundLocalError.
+    A 0-chunk document offers no actionable suggestions even when a non-zero
+    overlap is set, because no chunk_size/overlap adjustment can produce chunks
+    from a document that yielded none. It must still raise the informative
+    ValueError without a dangling options list. (This branch also previously
+    raised UnboundLocalError.)
     """
     generator = _make_generator_for_validation(chunk_size=1024, chunk_overlap=5)
 
@@ -426,8 +428,7 @@ def test_validate_chunk_size_zero_chunks_with_overlap_raises_value_error():
 
     message = str(exc_info.value)
     assert "0 chunks" in message
-    assert "You have the following options:" in message
-    assert "chunk_overlap" in message
+    assert "You have the following options:" not in message
 
 
 def test_validate_chunk_size_insufficient_chunks_still_lists_options():

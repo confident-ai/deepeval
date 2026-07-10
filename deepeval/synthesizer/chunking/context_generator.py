@@ -964,8 +964,15 @@ class ContextGenerator:
                     suggestion_num += 1
 
             # 3. Determine whether to suggest adjustments for chunk_overlap.
-            # Reducing overlap can help generate more chunks, but this is less impactful
-            if min_contexts_per_source_file > 1 and self.chunk_overlap > 0:
+            # Reducing overlap can help generate more chunks, but this is less
+            # impactful. Skip it entirely when the document produced 0 chunks,
+            # since no chunk_size/overlap tweak can create chunks from a
+            # document that yielded none.
+            if (
+                num_chunks > 0
+                and min_contexts_per_source_file > 1
+                and self.chunk_overlap > 0
+            ):
                 suggested_overlap = max(0, self.chunk_overlap - 1)
                 adjust_overlap = suggested_overlap >= 0
                 if adjust_overlap:
