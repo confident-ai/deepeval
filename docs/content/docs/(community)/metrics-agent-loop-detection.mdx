@@ -26,7 +26,7 @@ To begin, [set up tracing](/docs/evaluation-llm-tracing) and supply the `AgentLo
 ```python
 from deepeval.tracing import observe, update_current_trace
 from deepeval.dataset import Golden, EvaluationDataset
-from deepeval.metrics import AgentLoopDetectionMetric
+from deepeval.metrics.community import AgentLoopDetectionMetric
 
 
 @observe()
@@ -77,7 +77,7 @@ You can also run `AgentLoopDetectionMetric` within nested components for [compon
 ```python
 from deepeval.tracing import observe, update_current_span
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import AgentLoopDetectionMetric
+from deepeval.metrics.community import AgentLoopDetectionMetric
 
 loop_metric = AgentLoopDetectionMetric(threshold=0.5)
 
@@ -99,7 +99,7 @@ You can also run `AgentLoopDetectionMetric` on a single test case as a standalon
 
 ```python
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import AgentLoopDetectionMetric
+from deepeval.metrics.community import AgentLoopDetectionMetric
 
 # test_case._trace_dict must be populated from @observe tracing
 metric = AgentLoopDetectionMetric(threshold=0.5)
