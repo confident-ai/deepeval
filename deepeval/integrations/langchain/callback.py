@@ -66,6 +66,18 @@ try:
 except ImportError:
     langchain_installed = False
 
+    # Import-time fallbacks so this module can still be imported when LangChain
+    # is not installed. Without them, `class CallbackHandler(BaseCallbackHandler)`
+    # (and the `LLMResult` method annotation / the `tool` re-export) reference
+    # undefined names and raise a cryptic `NameError` at import time — which makes
+    # the `is_langchain_installed()` guard below unreachable dead code. With the
+    # fallbacks, importing succeeds and any real use raises the helpful ImportError.
+    BaseCallbackHandler = object
+    LLMResult = object
+
+    def tool(*args, **kwargs):
+        is_langchain_installed()
+
 
 def is_langchain_installed():
     if not langchain_installed:
