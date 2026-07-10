@@ -18,7 +18,7 @@ from deepeval.metrics import BaseMetric, BaseConversationalMetric
 def validate_root_nodes(
     root_nodes: Union[List[BaseNode], List[ConversationalBaseNode]],
 ):
-    # see if all root nodes are of the same type, more verbose error message, actualy we should say we cannot mix multi and single turn nodes
+    # see if all root nodes are of the same type, more verbose error message, actually we should say we cannot mix multi and single turn nodes
     if not all(isinstance(node, type(root_nodes[0])) for node in root_nodes):
         raise ValueError("You cannot mix multi and single turn nodes")
     return True
