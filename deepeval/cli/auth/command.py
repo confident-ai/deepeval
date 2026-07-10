@@ -1,5 +1,6 @@
 """`deepeval login` / `deepeval logout` Typer commands."""
 
+import webbrowser
 from typing import Optional
 
 import typer
@@ -23,13 +24,16 @@ from deepeval.test_run.test_run import LATEST_TEST_RUN_FILE_PATH
 from deepeval.utils import delete_file_if_exists
 
 LOGIN_HELP = (
-    "Log in to Confident AI. Opens the platform in your browser to sign in "
-    "(or create an account) and pick a project; the project API key is "
-    "paired back automatically. "
+    "Log in to Confident AI. Opens the platform in your browser, where you "
+    "can sign in (or create an account) and copy a project API key. "
     f"Get a project API key from {with_utm(PROD, medium='cli', content='login_help_text')}. "
     "The key is saved to your environment variables, typically .env.local, "
     "unless a different path is provided with --save."
 )
+
+# The backend endpoints required by the automatic browser pairing flow are not
+# available yet. Flip this to True once they are ready.
+USE_BROWSER_PAIRING_LOGIN = False
 
 
 def _prompt_paste_api_key() -> str:
@@ -42,8 +46,24 @@ def _prompt_paste_api_key() -> str:
         print("❌ Project API key cannot be empty. Please try again.\n")
 
 
+def _open_platform_and_prompt_api_key() -> str:
+    platform_url = with_utm(
+        PROD, medium="cli", content="login_api_key_browser_open"
+    )
+    print("\n🌐 Opening Confident AI in your browser...")
+    webbrowser.open(platform_url)
+    print(
+        "(open this link if your browser did not open: "
+        f"[link={platform_url}]{platform_url}[/link])"
+    )
+    return _prompt_paste_api_key()
+
+
 def _resolve_login_key() -> str:
     render_login_message()
+
+    if not USE_BROWSER_PAIRING_LOGIN:
+        return _open_platform_and_prompt_api_key()
 
     method = prompt_select(
         "How would you like to log in?",
@@ -81,7 +101,7 @@ def login_command(
     with capture_login_event() as span:
         completed = False
         try:
-            # Resolve the key from the CLI flag or the browser pairing flow.
+            # Resolve the key from the CLI flag or the active interactive flow.
             if api_key is not None:
                 key = api_key
             else:
