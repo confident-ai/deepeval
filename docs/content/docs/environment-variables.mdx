@@ -30,6 +30,8 @@ These are the core settings for controlling `deepeval`'s behavior, file paths, a
 | Variable                          | Values                  | Effect                                                                                                                             |
 | --------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `CONFIDENT_API_KEY`               | `string` / unset        | Logs in to Confident AI. Enables tracing observability, and automatically upload test results to the cloud on evaluation complete. |
+| `CONFIDENT_BASE_URL`              | `string` / unset        | Base URL for the Confident AI API server (set only when using a custom/self-hosted endpoint).                                      |
+| `CONFIDENT_DISABLE_SSL`           | `1` / `0` / `unset`             | Disable SSL/TLS certificate verification for requests to the Confident AI API server. Only use with self-hosted endpoints that have self-signed certificates. |
 | `DEEPEVAL_DISABLE_DOTENV`         | `1` / `0` / `unset`             | Disable dotenv autoload at import.                                                                                                 |
 | `ENV_DIR_PATH`                    | `path` / unset          | Directory containing `.env` files (defaults to CWD when unset).                                                                    |
 | `APP_ENV`                         | `string` / unset        | When set, loads `.env.{APP_ENV}` between `.env` and `.env.local`.                                                                  |
