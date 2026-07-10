@@ -20,6 +20,7 @@
     // Layout: inline chip tight to the text it contains.
     display: inline-flex;
     align-items: center;
+    gap: 0.3rem;
     padding: 2px 10px;
     font-size: 12px;
     font-weight: 500;
@@ -40,6 +41,7 @@
     // ----- variants -----
     &.usesLLM       { --pill-hue: oklch(0.58 0.19 280); } // violet
     &.custom        { --pill-hue: oklch(0.60 0.16 60);  } // amber
+    &.community     { --pill-hue: oklch(0.58 0.22 35);  } // warning orange
     &.singleTurn    { --pill-hue: oklch(0.55 0.18 245); } // blue
     &.multiTurn     { --pill-hue: oklch(0.58 0.13 195); } // teal
     &.referenceless { --pill-hue: oklch(0.58 0.18 15);  } // rose
@@ -49,6 +51,12 @@
     &.chatbot       { --pill-hue: oklch(0.60 0.22 330); } // fuchsia
     &.safety        { --pill-hue: oklch(0.58 0.22 25);  } // red
     &.multimodal    { --pill-hue: oklch(0.62 0.16 50);  } // orange
+
+    svg {
+      width: 0.85rem;
+      height: 0.85rem;
+      stroke-width: 2;
+    }
   }
 }
 
