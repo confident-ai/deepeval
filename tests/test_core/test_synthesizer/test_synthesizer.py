@@ -2,8 +2,10 @@ import asyncio
 import pytest
 import os
 
+from contextlib import contextmanager
 from typing import List
 
+from deepeval.progress_context import synthesizer_progress_context
 from deepeval.synthesizer.synthesizer import Synthesizer
 from deepeval.synthesizer.config import (
     EvolutionConfig,
@@ -398,6 +400,7 @@ async def test_a_generate_goldens_from_contexts_no_deadlock_when_max_concurrent_
     s.synthesis_cost = 0
     s.cost_tracking = False
     s.using_native_model = False
+    s.show_progress_bar = True
 
     # Avoid Rich Progress setup in the test
     monkeypatch.setattr(
@@ -446,6 +449,7 @@ async def test_a_generate_conversational_goldens_from_contexts_no_deadlock_when_
     s.synthesis_cost = 0
     s.cost_tracking = False
     s.using_native_model = False
+    s.show_progress_bar = True
 
     monkeypatch.setattr(
         synth_mod,
@@ -477,3 +481,61 @@ async def test_a_generate_conversational_goldens_from_contexts_no_deadlock_when_
         ),
         timeout=0.5,
     )
+
+
+@pytest.mark.parametrize("show_progress_bar", [True, False])
+def test_synthesizer_progress_context_respects_show_progress_bar(
+    show_progress_bar,
+):
+    with synthesizer_progress_context(
+        method="default",
+        evaluation_model="dummy",
+        num_evolutions=1,
+        evolutions={},
+        max_generations=2,
+        show_progress_bar=show_progress_bar,
+    ) as (progress, pbar_id):
+        assert progress.disable is (not show_progress_bar)
+
+
+@pytest.mark.asyncio
+async def test_synthesizer_threads_show_progress_bar_to_progress_context(
+    monkeypatch,
+):
+    s = Synthesizer.__new__(Synthesizer)
+    s.max_concurrent = 1
+    s.model = DummyModel()
+    s.evolution_config = DummyEvolutionConfig()
+    s.synthetic_goldens = []
+    s.synthesis_cost = 0
+    s.cost_tracking = False
+    s.using_native_model = False
+    s.show_progress_bar = False
+
+    received_kwargs = {}
+
+    @contextmanager
+    def recording_progress_context(**kwargs):
+        received_kwargs.update(kwargs)
+        yield (DummyProgress(), None)
+
+    monkeypatch.setattr(
+        synth_mod,
+        "synthesizer_progress_context",
+        recording_progress_context,
+    )
+
+    async def fake_generate_from_context(*, semaphore, **kwargs):
+        pass
+
+    monkeypatch.setattr(
+        s, "_a_generate_from_context", fake_generate_from_context
+    )
+
+    await s.a_generate_goldens_from_contexts(
+        contexts=[["ctx1"]],
+        _progress=DummyProgress(),
+        _reset_cost=False,
+    )
+
+    assert received_kwargs["show_progress_bar"] is False

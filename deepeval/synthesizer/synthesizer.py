@@ -127,9 +127,11 @@ class Synthesizer:
             ConversationalStylingConfig
         ] = None,
         cost_tracking: bool = False,
+        show_progress_bar: bool = True,
     ):
         self.model, self.using_native_model = initialize_model(model)
         self.async_mode = async_mode
+        self.show_progress_bar = show_progress_bar
         self.max_concurrent = max_concurrent
         self.synthetic_goldens: List[Golden] = []
         self.synthetic_conversational_goldens: List[ConversationalGolden] = []
@@ -473,6 +475,7 @@ class Synthesizer:
                 embedder=context_construction_config.embedder.get_model_name(),
                 max_generations=total_goldens,
                 pbar_total=3 + num_contexts,
+                show_progress_bar=self.show_progress_bar,
             ) as (progress, pbar_id), progress:
 
                 # Generate contexts
@@ -592,6 +595,7 @@ class Synthesizer:
             embedder=context_construction_config.embedder.get_model_name(),
             max_generations=total_goldens,
             pbar_total=3 + num_contexts,
+            show_progress_bar=self.show_progress_bar,
         ) as (progress, pbar_id), progress:
 
             # Generate contexts
@@ -714,6 +718,7 @@ class Synthesizer:
                 progress=_progress,
                 pbar_id=_pbar_id,
                 pbar_total=len(contexts),
+                show_progress_bar=self.show_progress_bar,
             ) as (progress, pbar_id), (
                 progress if _progress is None else nullcontext()
             ):
@@ -933,6 +938,7 @@ class Synthesizer:
             pbar_id=_pbar_id,
             pbar_total=len(contexts),
             progress=_progress,
+            show_progress_bar=self.show_progress_bar,
         ) as (progress, pbar_id), (
             progress if _progress is None else nullcontext()
         ):
@@ -1221,6 +1227,7 @@ class Synthesizer:
             max_generations=num_goldens,
             async_mode=True,
             pbar_total=num_goldens + 1,
+            show_progress_bar=self.show_progress_bar,
         ) as (progress, pbar_id), progress:
             # Generate inputs
             prompt = PromptSynthesizerTemplate.generate_synthetic_prompts(
@@ -1307,6 +1314,7 @@ class Synthesizer:
                 max_generations=num_goldens,
                 async_mode=False,
                 pbar_total=num_goldens + 1,
+                show_progress_bar=self.show_progress_bar,
             ) as (progress, pbar_id), progress:
 
                 # Generate inputs
@@ -2106,6 +2114,7 @@ class Synthesizer:
                 embedder=context_construction_config.embedder.get_model_name(),
                 max_generations=total_goldens,
                 pbar_total=3 + num_contexts,
+                show_progress_bar=self.show_progress_bar,
             ) as (progress, pbar_id), progress:
 
                 # Generate contexts
@@ -2223,6 +2232,7 @@ class Synthesizer:
             embedder=context_construction_config.embedder.get_model_name(),
             max_generations=total_goldens,
             pbar_total=3 + num_contexts,
+            show_progress_bar=self.show_progress_bar,
         ) as (progress, pbar_id), progress:
 
             # Generate contexts
@@ -2344,6 +2354,7 @@ class Synthesizer:
                 progress=_progress,
                 pbar_id=_pbar_id,
                 pbar_total=len(contexts),
+                show_progress_bar=self.show_progress_bar,
             ) as (progress, pbar_id), (
                 progress if _progress is None else nullcontext()
             ):
@@ -2576,6 +2587,7 @@ class Synthesizer:
             pbar_id=_pbar_id,
             pbar_total=len(contexts),
             progress=_progress,
+            show_progress_bar=self.show_progress_bar,
         ) as (progress, pbar_id), (
             progress if _progress is None else nullcontext()
         ):
@@ -2831,6 +2843,7 @@ class Synthesizer:
             max_generations=num_goldens,
             async_mode=True,
             pbar_total=num_goldens + 1,
+            show_progress_bar=self.show_progress_bar,
         ) as (progress, pbar_id), progress:
             # Generate scenarios
             prompt = PromptSynthesizerTemplate.generate_synthetic_conversational_scenarios(
@@ -2918,6 +2931,7 @@ class Synthesizer:
                 max_generations=num_goldens,
                 async_mode=False,
                 pbar_total=num_goldens + 1,
+                show_progress_bar=self.show_progress_bar,
             ) as (progress, pbar_id), progress:
 
                 # Generate scenarios
