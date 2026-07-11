@@ -31,6 +31,11 @@ from deepeval.test_case.mcp import (
 _MLLM_IMAGE_REGISTRY: Dict[str, "MLLMImage"] = {}
 
 
+class ToolCallType(Enum):
+    FUNCTION = "FUNCTION"
+    MCP = "MCP"
+
+
 @dataclass
 class MLLMImage:
     dataBase64: Optional[str] = None
@@ -229,12 +234,19 @@ def _make_hashable(obj):
         # Handle frozenset that might contain unhashable elements
         return frozenset(_make_hashable(item) for item in obj)
     else:
-        # For primitive hashable types (str, int, float, bool, etc.)
+        try:
+            hash(obj)
+        except TypeError:
+            # Unhashable leaf (e.g. a pydantic model with __eq__ but no
+            # __hash__): use a type-based token so equal objects hash
+            # identically, keeping ToolCall.__hash__ consistent with __eq__.
+            return ("__unhashable__", type(obj).__qualname__)
         return obj
 
 
 class ToolCall(BaseModel):
     name: str
+    type: ToolCallType = ToolCallType.FUNCTION
     description: Optional[str] = None
     reasoning: Optional[str] = None
     output: Optional[Any] = None

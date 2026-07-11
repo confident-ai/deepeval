@@ -129,7 +129,7 @@ class DeepEvalTracingProcessor(TracingProcessor):
             current_span
             and isinstance(current_span, LlmSpan)
             and span_type == "llm"
-        ):  # addtional check if the span kind data is llm too
+        ):  # additional check if the span kind data is llm too
             update_span_properties(current_span, span.span_data)
 
         observer = self.span_observers.pop(span.span_id, None)

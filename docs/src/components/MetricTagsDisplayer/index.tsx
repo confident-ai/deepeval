@@ -1,5 +1,6 @@
-import React from 'react';
-import styles from './MetricTagsDisplayer.module.scss';
+import React from "react";
+import { TriangleAlert } from "lucide-react";
+import styles from "./MetricTagsDisplayer.module.scss";
 
 interface MetricTagsDisplayerProps {
   usesLLMs?: boolean;
@@ -13,6 +14,7 @@ interface MetricTagsDisplayerProps {
   custom?: boolean;
   safety?: boolean;
   multimodal?: boolean;
+  community?: boolean;
 }
 
 const MetricTagsDisplayer = ({
@@ -27,11 +29,18 @@ const MetricTagsDisplayer = ({
   custom = false,
   safety = false,
   multimodal = true,
+  community = false,
 }) => {
   if (!usesLLMs) multimodal = false;
 
   return (
     <div className={styles.metricTagsDisplayer}>
+      {community && (
+        <div className={`${styles.pill} ${styles.community}`}>
+          <TriangleAlert aria-hidden="true" />
+          <span>Community</span>
+        </div>
+      )}
       {usesLLMs && (
         <div className={`${styles.pill} ${styles.usesLLM}`}>LLM-as-a-judge</div>
       )}

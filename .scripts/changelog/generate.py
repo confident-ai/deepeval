@@ -191,9 +191,30 @@ def git_tag_date_ymd(tag: str) -> str:
     return tag_to_date[tag]
 
 
+def tag_match_pattern(tag: str) -> str:
+    """Return the git ``--match`` glob for a tag's release scheme.
+
+    Monorepo releases are tagged per SDK (``python-v*`` / ``typescript-v*``);
+    legacy releases use ``v*``. This keeps the previous-tag lookup within the
+    same scheme so a Python release diffs against the prior Python release.
+    """
+    for prefix in ("python-v", "typescript-v"):
+        if tag.startswith(prefix):
+            return f"{prefix}*"
+    return "v*"
+
+
 def get_prev_tag(tag: str) -> str:
     return sh(
-        ["git", "describe", "--tags", "--abbrev=0", "--match", "v*", f"{tag}^"]
+        [
+            "git",
+            "describe",
+            "--tags",
+            "--abbrev=0",
+            "--match",
+            tag_match_pattern(tag),
+            f"{tag}^",
+        ]
     )
 
 
@@ -355,8 +376,11 @@ def stitch_truncated_title(title: str, body: str) -> str:
 
 
 def sanitize_for_multimodal_sentinel(prompt: str) -> str:
-    # Avoid DeepEval multimodal marker from being interpreted inside plain text prompts.
-    return prompt.replace("[DEEPEVAL:IMAGE:", "[DEEPEVAL:IMG:")
+    # DeepEval's GPTModel treats [DEEPEVAL:IMAGE:...] and [DEEPEVAL:PDF:...] tokens in a
+    # plain-text prompt as real image/PDF inputs (see check_if_multimodal). PR titles,
+    # bodies, and diffs can contain these tokens literally, which makes the model try to
+    # load a bogus URL. Break the sentinel so it can never be parsed as multimodal.
+    return re.sub(r"\[DEEPEVAL:(IMAGE|PDF):", r"[DEEPEVAL:\1_:", prompt)
 
 
 ######################

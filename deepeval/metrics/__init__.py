@@ -28,6 +28,7 @@ from .contextual_relevancy.contextual_relevancy import ContextualRelevancyMetric
 from .contextual_precision.contextual_precision import ContextualPrecisionMetric
 from .knowledge_retention.knowledge_retention import KnowledgeRetentionMetric
 from .tool_correctness.tool_correctness import ToolCorrectnessMetric
+from .tool_permission.tool_permission import ToolPermissionMetric
 from .json_correctness.json_correctness import JsonCorrectnessMetric
 from .prompt_alignment.prompt_alignment import PromptAlignmentMetric
 from .task_completion.task_completion import TaskCompletionMetric
@@ -38,6 +39,7 @@ from .plan_quality.plan_quality import PlanQualityMetric
 from .tool_use.tool_use import ToolUseMetric
 from .goal_accuracy.goal_accuracy import GoalAccuracyMetric
 from .argument_correctness.argument_correctness import ArgumentCorrectnessMetric
+from .agent_loop_detection.agent_loop_detection import AgentLoopDetectionMetric
 from .mcp.mcp_task_completion import MCPTaskCompletionMetric
 from .mcp.multi_turn_mcp_use_metric import MultiTurnMCPUseMetric
 from .mcp_use_metric.mcp_use_metric import MCPUseMetric
@@ -104,6 +106,7 @@ __all__ = [
     "NonAdviceMetric",
     "MisuseMetric",
     "RoleViolationMetric",
+    "ToolPermissionMetric",
     "RoleAdherenceMetric",
     "AdversarialRobustnessMetric",
     # Task-specific metrics
@@ -120,6 +123,7 @@ __all__ = [
     "PlanQualityMetric",
     "ToolUseMetric",
     "GoalAccuracyMetric",
+    "AgentLoopDetectionMetric",
     # Conversational metrics
     "TurnRelevancyMetric",
     "ConversationCompletenessMetric",

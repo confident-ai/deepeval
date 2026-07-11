@@ -1,4 +1,5 @@
 import { Prompt } from "../prompt";
+import { ToolCallType } from "../test-case";
 
 export enum SpanApiType {
   BASE = "base",
@@ -15,6 +16,7 @@ export enum TraceSpanApiStatus {
 
 export interface ToolCall {
   name: string;
+  type?: ToolCallType;
   description?: string;
   inputParameters?: Record<string, any>;
   output?: any;
@@ -101,6 +103,7 @@ export interface TraceApi {
   threadId?: string;
   userId?: string;
   testCaseId?: string;
+  testRunId?: string;
   turnId?: string;
   input?: any;
   output?: any;

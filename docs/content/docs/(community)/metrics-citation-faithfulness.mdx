@@ -1,0 +1,79 @@
+---
+id: metrics-citation-faithfulness
+title: Citation Faithfulness
+sidebar_label: Citation Faithfulness
+---
+<MetricTagsDisplayer community={true} singleTurn={true} rag={true} referenceless={true} />
+
+The citation faithfulness metric uses LLM-as-a-judge to check whether every `[N]` citation marker in your RAG pipeline's `actual_output` points to the passage in `retrieval_context` that actually supports the specific claim the marker is attached to. `deepeval`'s citation faithfulness metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+
+:::info
+The `CitationFaithfulnessMetric` is a **community metric**, contributed and maintained by the `deepeval` community. Community metrics are not exported from `deepeval.metrics` — import them explicitly from `deepeval.metrics.community` instead.
+:::
+
+:::note
+This metric is stricter than the [`FaithfulnessMetric`](/docs/metrics-faithfulness). Faithfulness asks whether a claim is supported by the retrieval context _somewhere_. Citation faithfulness additionally checks that the cited passage is the one that supports the claim, so it catches misattribution: a claim cited to passage `[1]` that does not support it, even when another passage `[2]` in the context would.
+:::
+
+## Required Arguments
+
+To use the `CitationFaithfulnessMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+- `retrieval_context`
+
+The `retrieval_context` passages are numbered (`[1]`, `[2]`, ...) before being shown to the judge, and the `[N]` markers in `actual_output` refer to those passage numbers.
+
+## Usage
+
+The `CitationFaithfulnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation of text-based test cases:
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics.community import CitationFaithfulnessMetric
+
+# Replace this with the actual output from your LLM application.
+# The completion-year claim is cited to passage [1], which only covers height.
+actual_output = "The Eiffel Tower was completed in 1889 [1]."
+
+# Replace this with the actual retrieved context from your RAG pipeline
+retrieval_context = [
+    "The Eiffel Tower stands 330 metres tall in Paris.",
+    "The Eiffel Tower was completed in 1889 for the World Fair.",
+]
+
+metric = CitationFaithfulnessMetric()
+test_case = LLMTestCase(
+    input="How tall is the Eiffel Tower and when was it completed?",
+    actual_output=actual_output,
+    retrieval_context=retrieval_context,
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+In the example above the `FaithfulnessMetric` would pass the answer, because the completion-year claim is supported by passage `[2]`. The `CitationFaithfulnessMetric` fails it, because the `[1]` citation points to the height passage rather than the passage that supports the claim.
+
+There are seven optional parameters when creating a `CitationFaithfulnessMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing score, defaulted to `1.0`. The score is `1.0` for a faithful answer and `0.0` for an unfaithful one, so the default requires a faithful verdict to pass.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, OR [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4.1`.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: `0` for perfection, `1` otherwise. It also overrides the current threshold and sets it to `1`. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method](/docs/metrics-introduction#measuring-metrics-in-async). Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console. Defaulted to `False`.
+
+## How Is It Calculated?
+
+The `CitationFaithfulnessMetric` score is calculated according to the following equation:
+
+A single LLM judge reads the question, the numbered passages, and the answer, then returns a binary verdict:
+
+- `faithful` (score `1.0`): every factual claim is supported by the passages, and every `[N]` citation marker points to a passage that supports the claim it is attached to.
+- `unfaithful` (score `0.0`): at least one claim is unsupported, contradicts a passage, or carries a citation `[N]` where passage `N` does not support that claim, even if some other passage would.

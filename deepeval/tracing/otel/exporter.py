@@ -89,6 +89,7 @@ class BaseSpanWrapper:
     trace_tools_called: Optional[List[ToolCall]] = None
     trace_expected_tools: Optional[List[ToolCall]] = None
     trace_test_case_id: Optional[str] = None
+    trace_test_run_id: Optional[str] = None
     trace_turn_id: Optional[str] = None
     trace_metric_collection: Optional[str] = None
     trace_environment: Optional[str] = None
@@ -325,6 +326,10 @@ class ConfidentSpanExporter(SpanExporter):
             base_span_wrapper.trace_test_case_id, str
         ):
             current_trace.test_case_id = base_span_wrapper.trace_test_case_id
+        if base_span_wrapper.trace_test_run_id and isinstance(
+            base_span_wrapper.trace_test_run_id, str
+        ):
+            current_trace.test_run_id = base_span_wrapper.trace_test_run_id
         if base_span_wrapper.trace_turn_id and isinstance(
             base_span_wrapper.trace_turn_id, str
         ):
@@ -366,7 +371,7 @@ class ConfidentSpanExporter(SpanExporter):
                 end_time=peb.epoch_nanos_to_perf_seconds(span.end_time),
             )
 
-        # NOTE: Confident Span is reffered as base span in this codebase
+        # NOTE: Confident Span is referred to as base span in this codebase
         self.__set_base_span_attributes(
             base_span, span, base_span_status, base_span_error
         )
@@ -427,6 +432,7 @@ class ConfidentSpanExporter(SpanExporter):
             raw_trace_expected_tools = list(raw_trace_expected_tools)
 
         trace_test_case_id = span.attributes.get("confident.trace.test_case_id")
+        trace_test_run_id = span.attributes.get("confident.trace.test_run_id")
         trace_turn_id = span.attributes.get("confident.trace.turn_id")
 
         raw_trace_metric_collection = span.attributes.get(
@@ -460,6 +466,7 @@ class ConfidentSpanExporter(SpanExporter):
         base_span_wrapper.trace_tools_called = trace_tools_called
         base_span_wrapper.trace_expected_tools = trace_expected_tools
         base_span_wrapper.trace_test_case_id = trace_test_case_id
+        base_span_wrapper.trace_test_run_id = trace_test_run_id
         base_span_wrapper.trace_turn_id = trace_turn_id
         base_span_wrapper.trace_metric_collection = trace_metric_collection
         base_span_wrapper.trace_environment = trace_environment

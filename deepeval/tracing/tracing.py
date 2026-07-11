@@ -877,6 +877,7 @@ class TraceManager:
             toolsCalled=trace.tools_called,
             expectedTools=trace.expected_tools,
             testCaseId=trace.test_case_id,
+            testRunId=trace.test_run_id,
             turnId=trace.turn_id,
             confident_api_key=trace.confident_api_key,
             environment=(
@@ -1451,7 +1452,7 @@ def observe(
                             current_trace_context.set(_trace)
                         observer.__exit__(e.__class__, e, e.__traceback__)
                         raise
-                    finally:  # GeneratorExit execption directly brings us to final block
+                    finally:  # GeneratorExit exception directly brings us to final block
                         observer.__exit__(None, None, None)
 
                 return gen()

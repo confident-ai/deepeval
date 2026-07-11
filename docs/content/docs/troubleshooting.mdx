@@ -45,6 +45,27 @@ If this fails with a certificate error, copy the full output.
 
 If the Python snippet succeeds, re-run your `deepeval` evaluation from the same terminal session and see whether the upload still fails. If you still get the TLS error, please include the full traceback and the output of the two checks above when reporting the issue.
 
+### When to disable SSL verification
+
+`CONFIDENT_DISABLE_SSL=1` turns off certificate verification for requests from `deepeval` to the Confident AI API.
+
+::::warning
+Disabling SSL verification should only be a temporary workaround while you fix the trusted certificate chain. Do not use this as a permanent setting, especially outside internal/self-hosted environments.
+::::
+
+You may need to turn it on when:
+
+- You are using `CONFIDENT_BASE_URL` to point `deepeval` at an internal or self-hosted Confident AI API.
+- That endpoint uses a self-signed certificate, private CA, or certificate chain that is not trusted by your Python environment.
+- You have confirmed the failure is certificate verification related, for example with `SSLCertVerificationError` or `CERTIFICATE_VERIFY_FAILED`.
+
+Prefer fixing the trusted certificate chain instead of disabling verification. For public Confident AI endpoints (`https://api.confident-ai.com`, `https://eu.api.confident-ai.com`, or `https://au.api.confident-ai.com`), leave SSL verification enabled and report the full TLS diagnostics if errors persist.
+
+```bash
+export CONFIDENT_BASE_URL=https://your-self-hosted-confident-api.example.com
+export CONFIDENT_DISABLE_SSL=1
+```
+
 ## Configure Logging
 
 `deepeval` uses the standard Python `logging` module. To see logs, your application (or test runner) needs to configure logging output.
