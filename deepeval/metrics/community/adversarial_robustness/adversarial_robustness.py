@@ -17,7 +17,7 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
-from deepeval.metrics.adversarial_robustness.schema import (
+from deepeval.metrics.community.adversarial_robustness.schema import (
     Perturbation,
     Perturbations,
     RobustnessVerdict,

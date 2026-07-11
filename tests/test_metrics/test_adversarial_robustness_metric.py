@@ -10,8 +10,8 @@ import asyncio
 import pytest
 from unittest.mock import patch
 
-from deepeval.metrics import AdversarialRobustnessMetric
-from deepeval.metrics.adversarial_robustness.schema import (
+from deepeval.metrics.community import AdversarialRobustnessMetric
+from deepeval.metrics.community.adversarial_robustness.schema import (
     Perturbation,
     Perturbations,
     RobustnessVerdict,
@@ -103,7 +103,7 @@ def make_metric(
     threshold: float = 0.5,
 ) -> AdversarialRobustnessMetric:
     with patch(
-        "deepeval.metrics.adversarial_robustness.adversarial_robustness.initialize_model"
+        "deepeval.metrics.community.adversarial_robustness.adversarial_robustness.initialize_model"
     ) as mock_init:
         mock_init.return_value = (
             FakeJudgeModel(num_perturbations, num_fragile),
@@ -216,7 +216,7 @@ def test_strict_mode_zeroes_out_imperfect_score():
 def test_invalid_model_callback_raises():
     with pytest.raises(ValueError):
         with patch(
-            "deepeval.metrics.adversarial_robustness.adversarial_robustness.initialize_model"
+            "deepeval.metrics.community.adversarial_robustness.adversarial_robustness.initialize_model"
         ) as mock_init:
             mock_init.return_value = (FakeJudgeModel(), False)
             AdversarialRobustnessMetric(model_callback="not-callable")
@@ -225,7 +225,7 @@ def test_invalid_model_callback_raises():
 def test_invalid_perturbation_types_raises():
     with pytest.raises(ValueError):
         with patch(
-            "deepeval.metrics.adversarial_robustness.adversarial_robustness.initialize_model"
+            "deepeval.metrics.community.adversarial_robustness.adversarial_robustness.initialize_model"
         ) as mock_init:
             mock_init.return_value = (FakeJudgeModel(), False)
             AdversarialRobustnessMetric(

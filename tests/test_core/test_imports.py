@@ -36,7 +36,6 @@ def test_metrics_imports():
         NonAdviceMetric,
         MisuseMetric,
         RoleViolationMetric,
-        AdversarialRobustnessMetric,
         # Agentic metrics
         ToolCorrectnessMetric,
         TaskCompletionMetric,
@@ -116,6 +115,22 @@ def test_metrics_imports():
         ImageCoherenceMetric,
         ImageHelpfulnessMetric,
         ImageReferenceMetric,
+    ]
+
+    for metric in all_metrics:
+        assert metric is not None
+
+
+def test_community_metrics_imports():
+    """Test that all community metrics can be imported."""
+    from deepeval.metrics.community import (
+        AdversarialRobustnessMetric,
+        CitationFaithfulnessMetric,
+    )
+
+    all_metrics = [
+        AdversarialRobustnessMetric,
+        CitationFaithfulnessMetric,
     ]
 
     for metric in all_metrics:
