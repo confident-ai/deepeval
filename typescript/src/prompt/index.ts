@@ -185,6 +185,9 @@ export class Prompt {
       endpoint,
       undefined,
       queryParams,
+      undefined,
+      undefined,
+      validatedOptions?.projectId,
     );
 
     // Validate response
@@ -248,6 +251,9 @@ export class Prompt {
       endpoint,
       body,
       undefined,
+      undefined,
+      undefined,
+      validatedOptions?.projectId,
     );
 
     const validatedResponse = CreateVersionResponseSchema.parse(response);
@@ -262,7 +268,7 @@ export class Prompt {
     return validatedResponse;
   }
 
-  public async getCommits(branch?: string): Promise<any[]> {
+  public async getCommits(branch?: string, projectId?: string): Promise<any[]> {
     const params = branch ? { branch } : undefined;
     const response = await this.api.sendRequest(
       HttpMethods.GET,
@@ -271,6 +277,7 @@ export class Prompt {
       params,
       undefined,
       { alias: this.alias },
+      projectId,
     );
 
     const validatedResponse = GetCommitsResponseSchema.parse(response);
@@ -278,7 +285,7 @@ export class Prompt {
     return validatedResponse.data.commits || [];
   }
 
-  public async getVersions(): Promise<any> {
+  public async getVersions(projectId?: string): Promise<any> {
     const response = await this.api.sendRequest(
       HttpMethods.GET,
       Endpoints.PROMPTS_VERSIONS_ENDPOINT,
@@ -286,6 +293,7 @@ export class Prompt {
       undefined,
       undefined,
       { alias: this.alias },
+      projectId,
     );
 
     const validatedResponse = GetVersionsResponseSchema.parse(response);
@@ -365,6 +373,9 @@ export class Prompt {
       Endpoints.PROMPTS_ENDPOINT,
       body,
       undefined,
+      undefined,
+      undefined,
+      validatedOptions?.projectId,
     );
 
     const validatedResponse = PromptResponseSchema.parse(response);
@@ -395,7 +406,9 @@ export class Prompt {
   // Branching Methods
   // ==========================================
 
-  public async getBranches(): Promise<{ id: string; name: string }[]> {
+  public async getBranches(
+    projectId?: string,
+  ): Promise<{ id: string; name: string }[]> {
     if (!this.alias) {
       throw new Error(
         "Prompt alias is not set. Please set an alias to continue.",
@@ -409,12 +422,13 @@ export class Prompt {
       undefined,
       undefined,
       { alias: this.alias },
+      projectId,
     );
 
     return response?.data?.branches || [];
   }
 
-  public async createBranch(branch: string): Promise<void> {
+  public async createBranch(branch: string, projectId?: string): Promise<void> {
     if (!this.alias) {
       throw new Error(
         "Prompt alias is not set. Please set an alias to continue.",
@@ -430,6 +444,7 @@ export class Prompt {
       undefined,
       undefined,
       { alias: this.alias },
+      projectId,
     );
 
     this.branch = branch;
@@ -437,7 +452,11 @@ export class Prompt {
     console.log(`✅ Prompt branch '${branch}' successfully created!`);
   }
 
-  public async updateBranch(name: string, branch?: string): Promise<void> {
+  public async updateBranch(
+    name: string,
+    branch?: string,
+    projectId?: string,
+  ): Promise<void> {
     if (!this.alias) {
       throw new Error(
         "Prompt alias is not set. Please set an alias to continue.",
@@ -460,6 +479,7 @@ export class Prompt {
       undefined,
       undefined,
       { alias: this.alias, name: branchToUpdate },
+      projectId,
     );
 
     if (branchToUpdate === this.branch) {
@@ -471,7 +491,10 @@ export class Prompt {
     );
   }
 
-  public async deleteBranch(branch?: string): Promise<void> {
+  public async deleteBranch(
+    branch?: string,
+    projectId?: string,
+  ): Promise<void> {
     if (!this.alias) {
       throw new Error(
         "Prompt alias is not set. Please set an alias to continue.",
@@ -492,6 +515,7 @@ export class Prompt {
       undefined,
       undefined,
       { alias: this.alias, name: branchToDelete },
+      projectId,
     );
 
     if (branchToDelete === this.branch) {

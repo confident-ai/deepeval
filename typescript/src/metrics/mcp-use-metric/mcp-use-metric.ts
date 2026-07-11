@@ -6,6 +6,7 @@ import {
   MCPToolCall,
   MCPResourceCall,
   MCPPromptCall,
+  ToolCall,
 } from "../../test-case";
 import { DeepEvalBaseLLM } from "../../models";
 import { resolveTemplate } from "../../templates";
@@ -73,7 +74,7 @@ export class MCPUseMetric extends BaseMetric {
       const { availablePrimitives, primitivesUsed } =
         this.getMcpInteractionText(
           testCase.mcpServers ?? [],
-          testCase.mcpToolsCalled ?? [],
+          testCase.mcpToolsCalled ?? testCase.toolsCalled ?? [],
           testCase.mcpResourcesCalled ?? [],
           testCase.mcpPromptsCalled ?? [],
         );
@@ -122,7 +123,7 @@ export class MCPUseMetric extends BaseMetric {
 
   private getMcpInteractionText(
     mcpServers: MCPServer[],
-    mcpToolsCalled: MCPToolCall[],
+    mcpToolsCalled: (MCPToolCall | ToolCall)[],
     mcpResourcesCalled: MCPResourceCall[],
     mcpPromptsCalled: MCPPromptCall[],
   ): { availablePrimitives: string; primitivesUsed: string } {

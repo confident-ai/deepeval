@@ -142,6 +142,13 @@
       "avatarUrl": "https://avatars.githubusercontent.com/u/21273221?v=4",
       "url": "https://github.com/ftnext",
       "commits": 1
+    },
+    {
+      "login": "minh2416294",
+      "name": "Tran Binh Minh",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/246244354?v=4",
+      "url": "https://github.com/minh2416294",
+      "commits": 1
     }
   ],
   "content/docs/(algorithms)/prompt-optimization-copro.mdx": [
@@ -499,6 +506,22 @@
       "commits": 2
     }
   ],
+  "content/docs/(community)/metrics-citation-faithfulness.mdx": [
+    {
+      "login": "penguine-ip",
+      "name": "Jeffrey Ip",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
+      "url": "https://github.com/penguine-ip",
+      "commits": 1
+    },
+    {
+      "login": "rsrijith",
+      "name": "Srijith Ravikumar",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/685467?v=4",
+      "url": "https://github.com/rsrijith",
+      "commits": 1
+    }
+  ],
   "content/docs/(concepts)/(test-cases)/evaluation-arena-test-cases.mdx": [
     {
       "login": "penguine-ip",
@@ -586,6 +609,13 @@
       "name": "João Matias",
       "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
       "url": "https://github.com/joaopmatias",
+      "commits": 1
+    },
+    {
+      "login": "lehmannro",
+      "name": "Robert Lehmann",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/33013?v=4",
+      "url": "https://github.com/lehmannro",
       "commits": 1
     }
   ],
@@ -1810,7 +1840,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 13
+      "commits": 14
     },
     {
       "login": "BloggerBust",
@@ -2211,7 +2241,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 24
+      "commits": 25
     },
     {
       "login": "A-Vamshi",
@@ -2252,7 +2282,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 6
+      "commits": 7
     }
   ],
   "content/docs/evaluation-flags-and-configs.mdx": [
@@ -2310,17 +2340,17 @@
   ],
   "content/docs/evaluation-unit-testing-in-ci-cd.mdx": [
     {
-      "login": "A-Vamshi",
-      "name": "A-Vamshi",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/123094948?v=4",
-      "url": "https://github.com/A-Vamshi",
-      "commits": 10
-    },
-    {
       "login": "penguine-ip",
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
+      "commits": 11
+    },
+    {
+      "login": "A-Vamshi",
+      "name": "A-Vamshi",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/123094948?v=4",
+      "url": "https://github.com/A-Vamshi",
       "commits": 10
     }
   ],
@@ -2339,7 +2369,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 139
+      "commits": 140
     },
     {
       "login": "kritinv",
@@ -2543,7 +2573,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 139
+      "commits": 140
     },
     {
       "login": "kritinv",
@@ -2671,7 +2701,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 82
+      "commits": 83
     },
     {
       "login": "kritinv",
@@ -2855,7 +2885,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 13
+      "commits": 15
     }
   ],
   "content/guides/guides-answer-correctness-metric.mdx": [
@@ -3265,6 +3295,13 @@
       "commits": 4
     },
     {
+      "login": "jungsterh",
+      "name": "Han S. Jung",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/26517257?v=4",
+      "url": "https://github.com/jungsterh",
+      "commits": 1
+    },
+    {
       "login": "vincere-mori",
       "name": "whoami",
       "avatarUrl": "https://avatars.githubusercontent.com/u/57835745?v=4",
@@ -3309,6 +3346,13 @@
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
       "commits": 4
+    },
+    {
+      "login": "jungsterh",
+      "name": "Han S. Jung",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/26517257?v=4",
+      "url": "https://github.com/jungsterh",
+      "commits": 1
     }
   ],
   "content/tutorials/medical-chatbot/improvement.mdx": [
@@ -4315,6 +4359,13 @@
       "name": "João Matias",
       "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
       "url": "https://github.com/joaopmatias",
+      "commits": 1
+    },
+    {
+      "login": "minh2416294",
+      "name": "Tran Binh Minh",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/246244354?v=4",
+      "url": "https://github.com/minh2416294",
       "commits": 1
     },
     {

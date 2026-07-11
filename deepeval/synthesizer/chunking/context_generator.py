@@ -923,9 +923,15 @@ class ContextGenerator:
             # Build the error message with suggestions.
             error_lines = [
                 f"Impossible to generate {min_contexts_per_source_file} contexts from a document with {num_chunks} chunks.",
-                "You have the following options:",
             ]
             suggestion_num = 1
+            # Initialize both flags so the combined-suggestion check below is
+            # always safe. When a document produces 0 chunks none of the
+            # suggestion branches run, and without these defaults the final
+            # `adjust_chunk_size or adjust_overlap` check raised an
+            # UnboundLocalError instead of the intended ValueError.
+            adjust_chunk_size = False
+            adjust_overlap = False
 
             # 1. Suggest adjusting the number of contexts if applicable.
             if num_chunks > 0:
@@ -958,8 +964,15 @@ class ContextGenerator:
                     suggestion_num += 1
 
             # 3. Determine whether to suggest adjustments for chunk_overlap.
-            # Reducing overlap can help generate more chunks, but this is less impactful
-            if min_contexts_per_source_file > 1 and self.chunk_overlap > 0:
+            # Reducing overlap can help generate more chunks, but this is less
+            # impactful. Skip it entirely when the document produced 0 chunks,
+            # since no chunk_size/overlap tweak can create chunks from a
+            # document that yielded none.
+            if (
+                num_chunks > 0
+                and min_contexts_per_source_file > 1
+                and self.chunk_overlap > 0
+            ):
                 suggested_overlap = max(0, self.chunk_overlap - 1)
                 adjust_overlap = suggested_overlap >= 0
                 if adjust_overlap:
@@ -973,6 +986,11 @@ class ContextGenerator:
                 error_lines.append(
                     f"{suggestion_num}. Adjust both the `chunk_size` and `chunk_overlap` to generate more chunks."
                 )
+            # Only surface the "options" header when we actually have at least
+            # one suggestion (e.g. a 0-chunk document has none), so the message
+            # never dangles.
+            if len(error_lines) > 1:
+                error_lines.insert(1, "You have the following options:")
             error_message = "\n".join(error_lines)
             raise ValueError(error_message)
 

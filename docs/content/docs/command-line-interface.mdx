@@ -13,6 +13,7 @@ import { ASSETS } from "@site/src/assets";
 - Logging in/out and viewing test runs
 - Running evaluations from test files
 - Inspecting saved test runs in a terminal TUI (`deepeval inspect`)
+- Diagnosing your environment (`deepeval diagnose`): default models, effective settings, and where each value comes from
 - Generating synthetic goldens from docs, contexts, scratch, or existing goldens
 - Enabling/disabling debug
 - Selecting an LLM/embeddings provider (OpenAI, Azure OpenAI, Gemini, Grok, DeepSeek, LiteLLM, local/Ollama)
@@ -195,6 +196,32 @@ pip install 'deepeval[inspect]'
 When an `evals_iterator()` run finishes in an interactive terminal and at least one test case captured a trace, deepeval offers to open it in the TUI for you. Disable per-call with `DisplayConfig(inspect_after_run=False)` or globally with `DEEPEVAL_NO_INSPECT_PROMPT=1` (e.g. in CI). See [display configs](/docs/evaluation-flags-and-configs#display-configs).
 :::
 
+### `diagnose`
+
+Use `deepeval diagnose` to print the configuration your environment actually resolves to — and where each value comes from. Reach for it when evals are using the wrong model, credentials, or data region, or when you're not sure which `.env` file is winning.
+
+```bash
+deepeval diagnose
+```
+
+The report shows:
+
+- **Versions**: deepeval and Python.
+- **Default models**: the LLM and embedding model deepeval will use when a class (metric, synthesizer, simulator, etc.) is constructed without an explicit `model=...`, and what each is used by.
+- **Configured settings**: every deepeval setting that is explicitly set, with secrets masked (only the last 6 characters shown) and the **winning source** for each — the report uses the same resolvers as the runtime, so what you see is what your evals get.
+- **Setting sources**: the precedence order (process environment → `.env.local` → `.env.<APP_ENV>` → `.env` → JSON keystore → built-in defaults) and which of those exist on disk. Each variable is resolved independently against this order.
+- **Confident AI**: login status, masked API key, data region, and the API and OTEL endpoints — with warnings if the endpoints look like they belong to a different region than your API key.
+
+Options:
+
+| Option   | Description                                                              |
+| -------- | ------------------------------------------------------------------------ |
+| `--json` | Output the full report as JSON (machine-readable, secrets stay masked). |
+
+:::tip
+`deepeval diagnose --json` is handy in CI or bug reports — it's safe to share since all secrets are masked.
+:::
+
 ## Confident AI Commands
 
 Use these commands to connect `deepeval` to **Confident AI** (`deepeval` Cloud) so your local evaluations can be uploaded, organized, and viewed as rich test run reports on the cloud. If you don’t have an account yet, [sign up here](https://app.confident-ai.com).
@@ -202,7 +229,7 @@ Use these commands to connect `deepeval` to **Confident AI** (`deepeval` Cloud) 
 ### `login` & `logout`
 
 - `deepeval login [--confident-api-key ...] [--save=dotenv[:path]]`: Log in to Confident AI by saving your `CONFIDENT_API_KEY`. Once logged in, `deepeval` can automatically upload test runs so you can browse results, share reports, and track evaluation performance over time on Confident AI.
-- `deepeval logout [--save=dotenv[:path]]`: Remove your Confident AI credentials from local persistence (JSON keystore and the chosen dotenv file).
+- `deepeval logout [--save=dotenv[:path]]`: Remove your Confident AI credentials from local persistence — the JSON keystore and every dotenv file deepeval auto-loads (`.env`, `.env.<APP_ENV>`, `.env.local`). If `CONFIDENT_API_KEY` is exported by your shell itself, deepeval cannot unset it and will tell you to run `unset CONFIDENT_API_KEY`.
 
 ### `view`
 

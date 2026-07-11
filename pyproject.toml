@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deepeval"
-version = "4.0.7"
+version = "4.0.9"
 description = "The LLM Evaluation Framework"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
@@ -53,6 +53,7 @@ jinja2 = "*"
 
 textual = { version = ">=0.80,<2.0", optional = true }
 pyperclip = { version = "^1.8", optional = true }
+questionary = ">=2.0.0,<3.0.0"
 
 [tool.poetry.extras]
 inspect = ["textual", "pyperclip"]
@@ -95,6 +96,7 @@ markers = [
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
+
 [tool.poetry.group.integrations]
 optional = true
 
@@ -115,6 +117,7 @@ llama-index = "^0.14.4"
 openai-agents = "^0.3.3"
 google-adk = { version = "*", python = ">=3.10,<3.15" }
 openinference-instrumentation-google-adk = { version = "*", python = ">=3.10,<3.15" }
+
 
 [tool.poetry.group.langchain]
 optional = true

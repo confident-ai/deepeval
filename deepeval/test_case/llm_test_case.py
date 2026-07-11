@@ -31,6 +31,11 @@ from deepeval.test_case.mcp import (
 _MLLM_IMAGE_REGISTRY: Dict[str, "MLLMImage"] = {}
 
 
+class ToolCallType(Enum):
+    FUNCTION = "FUNCTION"
+    MCP = "MCP"
+
+
 @dataclass
 class MLLMImage:
     dataBase64: Optional[str] = None
@@ -241,6 +246,7 @@ def _make_hashable(obj):
 
 class ToolCall(BaseModel):
     name: str
+    type: ToolCallType = ToolCallType.FUNCTION
     description: Optional[str] = None
     reasoning: Optional[str] = None
     output: Optional[Any] = None

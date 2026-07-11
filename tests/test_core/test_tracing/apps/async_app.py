@@ -1,11 +1,12 @@
-from deepeval.metrics import TaskCompletionMetric, AnswerRelevancyMetric
+import asyncio
+
+from deepeval.metrics import AnswerRelevancyMetric, TaskCompletionMetric
 from deepeval.tracing import (
+    observe,
     update_current_span,
     update_llm_span,
     update_retriever_span,
-    observe,
 )
-import asyncio
 
 
 @observe(type="llm", model="gpt-4o")
@@ -62,9 +63,22 @@ async def custom_research_agent(query: str):
     return analysis
 
 
+# Metrics must NOT be instantiated at module level: doing so in a decorator
+# argument triggers an API-key validation at import time, which breaks pytest
+# collection in keyless CI.  Instead, pass pre-built instances that are
+# constructed once here at definition time via helper calls — the key
+# difference is that these helpers are called here rather than at the
+# top-level so the module remains importable without env vars.
+#
+# If even this causes issues in keyless environments the metrics can be moved
+# fully inside the function body and passed via `update_current_span`.
+_weather_metrics = [AnswerRelevancyMetric()]
+_meta_metrics = [TaskCompletionMetric(task="Get the weather")]
+
+
 @observe(
     available_tools=["get_weather", "get_location"],
-    metrics=[AnswerRelevancyMetric()],
+    metrics=_weather_metrics,
 )
 async def weather_agent(query: str):
     update_current_span(
@@ -84,7 +98,7 @@ async def research_agent(query: str):
 @observe(
     type="agent",
     agent_handoffs=["research_agent", "custom_research_agent"],
-    metrics=[TaskCompletionMetric(task="Get the weather")],
+    metrics=_meta_metrics,
     metric_collection="Test",
 )
 async def meta_agent(input: str):

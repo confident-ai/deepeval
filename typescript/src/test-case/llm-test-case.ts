@@ -26,9 +26,15 @@ export enum ToolCallParams {
   OUTPUT = "output",
 }
 
+export enum ToolCallType {
+  FUNCTION = "FUNCTION",
+  MCP = "MCP",
+}
+
 export class ToolCall {
   name: string;
   description?: string;
+  type?: ToolCallType;
   reasoning?: string;
   output?: any;
   inputParameters?: Record<string, any>;
@@ -36,12 +42,14 @@ export class ToolCall {
   constructor(params: {
     name: string;
     description?: string;
+    type?: ToolCallType;
     reasoning?: string;
     output?: any;
     inputParameters?: Record<string, any>;
   }) {
     this.name = params.name;
     this.description = params.description;
+    this.type = params.type;
     this.reasoning = params.reasoning;
     this.output = params.output;
     this.inputParameters = params.inputParameters;

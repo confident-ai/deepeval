@@ -11,7 +11,11 @@ export function evaluateSpan({
   spanUuid,
   metricCollection,
   overwriteMetrics = false,
-}: EvaluateSpanRequestBody & { spanUuid: string }): Promise<any> {
+  projectId,
+}: EvaluateSpanRequestBody & {
+  spanUuid: string;
+  projectId?: string;
+}): Promise<any> {
   const api = getApi();
 
   const body = EvaluateSpanRequestBodySchema.parse({
@@ -26,5 +30,6 @@ export function evaluateSpan({
     undefined,
     undefined,
     { spanUuid },
+    projectId,
   );
 }

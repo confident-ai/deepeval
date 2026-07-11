@@ -5,6 +5,7 @@ export {
   SingleTurnParams,
   ToolCall,
   ToolCallParams,
+  ToolCallType,
 } from "./llm-test-case";
 export {
   ConversationalTestCase,

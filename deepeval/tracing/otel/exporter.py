@@ -371,7 +371,7 @@ class ConfidentSpanExporter(SpanExporter):
                 end_time=peb.epoch_nanos_to_perf_seconds(span.end_time),
             )
 
-        # NOTE: Confident Span is reffered as base span in this codebase
+        # NOTE: Confident Span is referred to as base span in this codebase
         self.__set_base_span_attributes(
             base_span, span, base_span_status, base_span_error
         )
