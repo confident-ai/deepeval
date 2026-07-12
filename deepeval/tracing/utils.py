@@ -148,6 +148,11 @@ def make_json_serializable(obj):
         if isinstance(o, (int, bool)) or o is None:
             return o
 
+        # Enums (including those used as pydantic model fields) serialize to
+        # their underlying value; recurse so str/int values are handled too.
+        if isinstance(o, Enum):
+            return _serialize(o.value)
+
         # Detect circular reference
         if oid in seen:
             return "<circular>"
@@ -213,6 +218,11 @@ def make_json_serializable_for_metadata(obj):
         # Primitive types are already serializable
         if isinstance(o, (int, bool)) or o is None:
             return o
+
+        # Enums (including those used as pydantic model fields) serialize to
+        # their underlying value; recurse so str/int values are handled too.
+        if isinstance(o, Enum):
+            return _serialize(o.value)
 
         # Detect circular reference
         if oid in seen:

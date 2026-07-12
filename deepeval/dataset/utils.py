@@ -8,6 +8,7 @@ from opentelemetry.trace import Tracer
 
 from deepeval.dataset.api import Golden
 from deepeval.dataset.golden import ConversationalGolden
+from deepeval.utils import serialize_to_json
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
@@ -210,7 +211,7 @@ def format_turns(turns: List[Turn]) -> str:
         }
         res.append(cur_turn)
     try:
-        return json.dumps(res, ensure_ascii=False)
+        return serialize_to_json(res, ensure_ascii=False)
     except Exception as e:
         raise ValueError(f"Error serializing turns: {e}")
 
