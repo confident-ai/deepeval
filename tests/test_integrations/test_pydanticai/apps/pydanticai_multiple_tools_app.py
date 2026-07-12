@@ -32,7 +32,8 @@ def create_multiple_tools_agent(
             "When asked about weather, use the get_weather tool. "
             "When asked about time, use the get_time tool. "
             "Be concise in your responses."
-        ),        name="multiple_tools_agent",
+        ),
+        name="multiple_tools_agent",
     )
 
     @agent.tool_plain

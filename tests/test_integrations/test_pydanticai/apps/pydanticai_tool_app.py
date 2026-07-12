@@ -30,7 +30,8 @@ def create_tool_agent(
         system_prompt=(
             "You are a calculator assistant. Use the calculate tool "
             "for math operations. Be concise."
-        ),        name="tool_agent",
+        ),
+        name="tool_agent",
     )
 
     @agent.tool_plain

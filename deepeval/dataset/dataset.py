@@ -1405,9 +1405,7 @@ class EvaluationDataset:
                                     dumped.append(t.dict(exclude_none=True))
                                 else:
                                     dumped.append(t)
-                            return serialize_to_json(
-                                dumped, ensure_ascii=False
-                            )
+                            return serialize_to_json(dumped, ensure_ascii=False)
 
                         tools_called = _dump_tools_csv(golden.tools_called)
                         expected_tools = _dump_tools_csv(golden.expected_tools)
