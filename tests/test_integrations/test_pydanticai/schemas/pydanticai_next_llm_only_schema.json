@@ -1,21 +1,21 @@
 {
-  "uuid": "7fcb40d046430b814aedb0e608273264",
+  "uuid": "52fbc53e6e923a44626a9d1c76fe5dfd",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "0bd69b150a5c00ff",
+      "uuid": "c17a183cfaed94bd",
       "name": "next_span_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:39.072Z",
-      "endTime": "2026-06-01T16:36:39.885Z",
+      "startTime": "2026-07-12T14:34:21.380Z",
+      "endTime": "2026-07-12T14:34:22.504Z",
       "input": [
         {
           "role": "user",
           "content": "Say hello in exactly three words."
         }
       ],
-      "output": "Hello, how are you?",
+      "output": "Hello there, friend!",
       "integration": "PydanticAI",
       "availableTools": [],
       "agentHandoffs": []
@@ -23,13 +23,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "36301fd9f4e54904",
+      "uuid": "876889e60532f8ed",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "0bd69b150a5c00ff",
-      "startTime": "2026-06-01T16:36:39.073Z",
-      "endTime": "2026-06-01T16:36:39.884Z",
+      "parentUuid": "c17a183cfaed94bd",
+      "startTime": "2026-07-12T14:34:21.382Z",
+      "endTime": "2026-07-12T14:34:22.500Z",
       "metadata": {
         "prompt_variant": "B",
         "purpose": "next_llm_only"
@@ -62,7 +62,7 @@
       "output": [
         {
           "role": "assistant",
-          "content": "Hello, how are you?"
+          "content": "Hello there, friend!"
         }
       ],
       "integration": "PydanticAI",
@@ -75,8 +75,8 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-06-01T16:36:39.072Z",
-  "endTime": "2026-06-01T16:36:39.885Z",
+  "startTime": "2026-07-12T14:34:21.380Z",
+  "endTime": "2026-07-12T14:34:22.504Z",
   "name": "pydanticai-next-llm-only-test",
   "metadata": {
     "test_type": "next_llm_only"
@@ -94,6 +94,6 @@
       "content": "Say hello in exactly three words."
     }
   ],
-  "output": "Hello, how are you?",
+  "output": "Hello there, friend!",
   "status": "SUCCESS"
 }

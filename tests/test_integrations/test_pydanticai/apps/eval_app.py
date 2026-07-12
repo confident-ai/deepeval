@@ -41,9 +41,7 @@ def create_evals_agent(
 
     agent = Agent(
         "openai:gpt-4o-mini",
-        system_prompt="You are a helpful assistant. Be concise.",
-        instrument=settings,
-        name="evals_agent",
+        system_prompt="You are a helpful assistant. Be concise.",        name="evals_agent",
     )
 
     @agent.tool_plain

@@ -52,9 +52,7 @@ def create_modes_agent(
 
     return Agent(
         "openai:gpt-4o-mini",
-        system_prompt="Be concise, reply with one short sentence only.",
-        instrument=settings,
-        name="modes_agent",
+        system_prompt="Be concise, reply with one short sentence only.",        name="modes_agent",
     )
 
 
@@ -148,9 +146,7 @@ def create_enrichment_agent(
         system_prompt=(
             "You are an assistant. Use the lookup tool whenever the user "
             "mentions a key. Be concise."
-        ),
-        instrument=settings,
-        name="enrichment_agent",
+        ),        name="enrichment_agent",
     )
 
     @agent.tool_plain
