@@ -1,14 +1,14 @@
 {
-  "uuid": "trace_9a381331d9cf49e18fea0d0f54d49fcf",
+  "uuid": "trace_bb9740fba33b4d2d9b1272c8bfa22c25",
   "baseSpans": [
     {
-      "uuid": "a7cd61a3-09e0-4dca-8945-d0e2339e9abf",
-      "name": "Handoff → SpanishAgent",
+      "uuid": "0cfbf308-10e1-4380-acc0-4b39a1924dfb",
+      "name": "Handoff \u2192 SpanishAgent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "369ae427-d645-413c-837e-cd38591f7337",
-      "startTime": "2026-01-29T14:38:40.225Z",
-      "endTime": "2026-01-29T14:38:40.225Z",
+      "parentUuid": "64e8a312-229d-45d4-97dd-c188e4d73864",
+      "startTime": "2026-07-12T14:00:57.754Z",
+      "endTime": "2026-07-12T14:00:57.754Z",
       "metadata": {
         "from_agent": "TriageAgent",
         "to_agent": "SpanishAgent"
@@ -19,69 +19,70 @@
   ],
   "agentSpans": [
     {
-      "uuid": "26cdb0b3-f1e5-42c5-977c-d081b811bfa1",
+      "uuid": "b15c677d-579e-47e3-93a7-253884199332",
       "name": "SpanishAgent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T14:38:40.226Z",
-      "endTime": "2026-01-29T14:38:41.929Z",
+      "startTime": "2026-07-12T14:00:57.755Z",
+      "endTime": "2026-07-12T14:00:58.809Z",
       "metadata": {
         "output_type": "str"
       },
       "input": [
         {
           "arguments": "{}",
-          "call_id": "call_mPmlPbHjEYwuzs4zc4Fq6PnJ",
+          "call_id": "call_P6t8Sj42vhAiXjyhH350Amo1",
           "name": "transfer_to_spanishagent",
           "type": "function_call",
+          "id": "fc_00f89dc5d5a5e6a6006a539e1993d0819c9514ba9ccf09a535",
+          "caller": null,
           "namespace": null,
-          "id": "fc_0b46f205cab8e99100697b70eff4bc819591f4df0d8ef51e39",
           "status": "completed"
         },
         {
-          "call_id": "call_mPmlPbHjEYwuzs4zc4Fq6PnJ",
+          "call_id": "call_P6t8Sj42vhAiXjyhH350Amo1",
           "output": "{\"assistant\": \"SpanishAgent\"}",
           "type": "function_call_output"
         }
       ],
       "output": "Hola",
+      "integration": "OpenAI Agents",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "OpenAI Agents"
+      "agentHandoffs": []
     },
     {
-      "uuid": "369ae427-d645-413c-837e-cd38591f7337",
+      "uuid": "64e8a312-229d-45d4-97dd-c188e4d73864",
       "name": "TriageAgent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T14:38:39.297Z",
-      "endTime": "2026-01-29T14:38:40.226Z",
+      "startTime": "2026-07-12T14:00:56.207Z",
+      "endTime": "2026-07-12T14:00:57.754Z",
       "metadata": {
         "output_type": "str"
       },
       "input": "Hola",
       "output": {
-        "call_id": "call_mPmlPbHjEYwuzs4zc4Fq6PnJ",
+        "call_id": "call_P6t8Sj42vhAiXjyhH350Amo1",
         "name": "transfer_to_spanishagent",
         "arguments": "{}"
       },
+      "integration": "OpenAI Agents",
       "availableTools": [],
       "agentHandoffs": [
         "SpanishAgent",
         "EnglishAgent"
-      ],
-      "integration": "OpenAI Agents"
+      ]
     }
   ],
   "llmSpans": [
     {
-      "uuid": "b439a660-b4d3-42b2-a2a1-079196786d73",
+      "uuid": "e1bdc65c-817d-4d41-b0fe-0a49b57b55b5",
       "name": "LLM Generation",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "26cdb0b3-f1e5-42c5-977c-d081b811bfa1",
-      "startTime": "2026-01-29T14:38:40.226Z",
-      "endTime": "2026-01-29T14:38:41.928Z",
+      "parentUuid": "b15c677d-579e-47e3-93a7-253884199332",
+      "startTime": "2026-07-12T14:00:57.755Z",
+      "endTime": "2026-07-12T14:00:58.808Z",
       "metadata": {
         "cached_input_tokens": 0,
         "ouptut_reasoning_tokens": 0,
@@ -113,31 +114,31 @@
           "content": "Hola"
         },
         {
-          "call_id": "call_mPmlPbHjEYwuzs4zc4Fq6PnJ",
+          "call_id": "call_P6t8Sj42vhAiXjyhH350Amo1",
           "name": "transfer_to_spanishagent",
           "arguments": "{}"
         },
         {
           "role": "tool",
-          "call_id": "call_mPmlPbHjEYwuzs4zc4Fq6PnJ",
+          "call_id": "call_P6t8Sj42vhAiXjyhH350Amo1",
           "output": "{\"assistant\": \"SpanishAgent\"}"
         }
       ],
       "output": "Hola",
-      "model": "gpt-4o-2024-08-06",
-      "inputTokenCount": 55.0,
-      "outputTokenCount": 2.0,
       "integration": "OpenAI Agents",
-      "provider": "OpenAI"
+      "model": "gpt-4o-2024-08-06",
+      "provider": "OpenAI",
+      "inputTokenCount": 55.0,
+      "outputTokenCount": 2.0
     },
     {
-      "uuid": "15bb9c54-4a6b-4cb8-8bb3-d7ae80d96e49",
+      "uuid": "27cd53c5-8878-4b70-9e72-faf9c067c2ee",
       "name": "LLM Generation",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "369ae427-d645-413c-837e-cd38591f7337",
-      "startTime": "2026-01-29T14:38:39.298Z",
-      "endTime": "2026-01-29T14:38:40.224Z",
+      "parentUuid": "64e8a312-229d-45d4-97dd-c188e4d73864",
+      "startTime": "2026-07-12T14:00:56.207Z",
+      "endTime": "2026-07-12T14:00:57.753Z",
       "metadata": {
         "cached_input_tokens": 0,
         "ouptut_reasoning_tokens": 0,
@@ -194,18 +195,18 @@
           "content": "Hola"
         }
       ],
-      "output": "{\"call_id\": \"call_mPmlPbHjEYwuzs4zc4Fq6PnJ\", \"name\": \"transfer_to_spanishagent\", \"arguments\": \"{}\"}",
-      "model": "gpt-4o-2024-08-06",
-      "inputTokenCount": 83.0,
-      "outputTokenCount": 14.0,
+      "output": "{\"call_id\": \"call_P6t8Sj42vhAiXjyhH350Amo1\", \"name\": \"transfer_to_spanishagent\", \"arguments\": \"{}\"}",
       "integration": "OpenAI Agents",
-      "provider": "OpenAI"
+      "model": "gpt-4o-2024-08-06",
+      "provider": "OpenAI",
+      "inputTokenCount": 83.0,
+      "outputTokenCount": 14.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T14:38:39.296Z",
-  "endTime": "2026-01-29T14:38:41.929Z",
+  "startTime": "2026-07-12T14:00:56.205Z",
+  "endTime": "2026-07-12T14:00:58.809Z",
   "name": "openai_agents_handoff",
   "metadata": {
     "tags": [

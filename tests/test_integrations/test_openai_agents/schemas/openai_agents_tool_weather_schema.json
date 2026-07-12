@@ -21,7 +21,8 @@
           "output": "Rainy, 55°F",
           "inputParameters": {
             "city": "London"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "availableTools": [
