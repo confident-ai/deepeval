@@ -693,7 +693,8 @@
           },
           "inputParameters": {
             "city": "Tokyo"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LlamaIndex"
