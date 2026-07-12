@@ -45,7 +45,8 @@
           "output": "Weather in Tokyo: Clear, 70\u00b0F",
           "inputParameters": {
             "city": "Tokyo"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "availableTools": [],

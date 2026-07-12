@@ -33,7 +33,8 @@
           "output": "Weather in London: 60\u00b0F, Rainy, Humidity: 80%",
           "inputParameters": {
             "city": "London"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "availableTools": [],

@@ -31,7 +31,8 @@
           "output": "Additional Information: The secret launch code is ALPHA-ZULU-99.\nUsers name is John. He is 30 years old and lives in San Francisco.",
           "inputParameters": {
             "output": "Retrieve the exact launch code from the knowledge base using the term 'launch code'."
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "availableTools": [],
