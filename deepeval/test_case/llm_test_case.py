@@ -34,6 +34,7 @@ class ToolCallType(str, Enum):
     FUNCTION = "FUNCTION"
     MCP = "MCP"
 
+
 @dataclass
 class MLLMImage:
     dataBase64: Optional[str] = None

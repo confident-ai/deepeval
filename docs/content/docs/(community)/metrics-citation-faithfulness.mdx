@@ -3,7 +3,7 @@ id: metrics-citation-faithfulness
 title: Citation Faithfulness
 sidebar_label: Citation Faithfulness
 ---
-<MetricTagsDisplayer singleTurn={true} rag={true} referenceless={true} />
+<MetricTagsDisplayer community={true} singleTurn={true} rag={true} referenceless={true} />
 
 The citation faithfulness metric uses LLM-as-a-judge to check whether every `[N]` citation marker in your RAG pipeline's `actual_output` points to the passage in `retrieval_context` that actually supports the specific claim the marker is attached to. `deepeval`'s citation faithfulness metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 

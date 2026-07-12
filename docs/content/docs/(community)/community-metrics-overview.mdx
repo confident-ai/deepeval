@@ -1,0 +1,24 @@
+---
+id: community-metrics-overview
+title: Community Metrics
+sidebar_label: Overview
+---
+
+Community metrics are contributed by `deepeval` users for evaluation needs that are useful, emerging, or domain-specific. The "community" label does **not** mean the metric is bad or unsupported; it means we want to support what contributors are building while being transparent that the metric is still in a beta testing phase.
+
+::::note
+Community metrics may receive breaking changes as their APIs, scoring behavior, and documentation mature. They are not exported from `deepeval.metrics`; import them explicitly from `deepeval.metrics.community`.
+::::
+
+Confident AI support is one part of that maturity path: before a metric graduates, we make sure users can inspect, debug, and monitor its results cleanly in production workflows.
+
+## Path to Core Support
+
+A community metric can become a fully supported `deepeval` metric when it proves useful beyond its original use case. In practice, that means:
+
+- Clear docs and examples that match the rest of the metric pages.
+- Focused tests that cover passing, failing, and edge-case behavior.
+- A stable API that follows existing metric conventions.
+- Evidence that the metric is broadly useful, not just specific to one app or dataset.
+
+Until then, community metrics are still reviewed and documented, but they should be treated as contributed extensions with a faster iteration cycle.

@@ -195,7 +195,11 @@ def _sanitize_body(obj):
 
 
 class Api:
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        verify_ssl: Optional[bool] = None,
+    ):
         if api_key is None:
             api_key = get_confident_api_key()
 
@@ -212,14 +216,19 @@ class Api:
         }
         self.base_api_url = get_base_api_url()
 
-    @staticmethod
+        # Resolve SSL verification. Explicit constructor argument wins;
+        # otherwise fall back to the CONFIDENT_DISABLE_SSL setting.
+        if verify_ssl is None:
+            verify_ssl = not bool(get_settings().CONFIDENT_DISABLE_SSL)
+        self.verify_ssl = verify_ssl
+
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
         retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
     )
     def _http_request(
-        method: str, url: str, headers=None, json=None, params=None
+        self, method: str, url: str, headers=None, json=None, params=None
     ):
         session = requests.Session()
         return session.request(
@@ -228,7 +237,7 @@ class Api:
             headers=headers,
             json=json,
             params=params,
-            verify=True,  # SSL verification is always enabled
+            verify=self.verify_ssl,
         )
 
     def _handle_response(
@@ -328,7 +337,7 @@ class Api:
                 headers=self._headers,
                 json=body,
                 params=params,
-                ssl=True,  # SSL verification enabled
+                ssl=self.verify_ssl,
             ) as res:
                 if res.status == 200:
                     try:

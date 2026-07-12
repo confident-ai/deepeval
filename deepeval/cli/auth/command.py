@@ -1,11 +1,25 @@
 """`deepeval login` / `deepeval logout` Typer commands."""
 
-from typing import Optional
+import re
+import webbrowser
+from typing import List, Optional, Union
+from uuid import uuid4
 
 import typer
 from rich import print
 
-from deepeval.cli.auth.flow import browser_pairing_login, prompt_select
+from deepeval.cli.auth.api import (
+    ExistingProjectKeyRequest,
+    NewUserOnboardingRequest,
+)
+from deepeval.cli.auth.flow import (
+    AuthFlowError,
+    browser_pairing_login,
+    complete_cli_onboarding,
+    get_cli_onboarding_context,
+    prompt_select,
+    prompt_text,
+)
 from deepeval.cli.diagnose import resolve_setting_source
 from deepeval.cli.dotenv_handler import DotenvHandler
 from deepeval.cli.utils import (
@@ -13,7 +27,7 @@ from deepeval.cli.utils import (
     WWW,
     coerce_blank_to_none,
     handle_save_result,
-    render_login_message,
+    render_confident_banner,
     with_utm,
 )
 from deepeval.config.settings import dotenv_search_paths, get_settings
@@ -23,13 +37,84 @@ from deepeval.test_run.test_run import LATEST_TEST_RUN_FILE_PATH
 from deepeval.utils import delete_file_if_exists
 
 LOGIN_HELP = (
-    "Log in to Confident AI. Opens the platform in your browser to sign in "
-    "(or create an account) and pick a project; the project API key is "
-    "paired back automatically. "
-    f"Get a project API key from {with_utm(PROD, medium='cli', content='login_help_text')}. "
+    "Log in to Confident AI. Opens the platform for authentication, then "
+    "completes organization and project setup in the terminal. "
+    f"You can still manage project API keys at {with_utm(PROD, medium='cli', content='login_help_text')}. "
     "The key is saved to your environment variables, typically .env.local, "
     "unless a different path is provided with --save."
 )
+
+# Keep the manual browser-and-paste flow available as an emergency rollback.
+USE_BROWSER_PAIRING_LOGIN = True
+
+REGION_CHOICES = [
+    ("🇺🇸 United States (US)", "US"),
+    ("🇪🇺 European Union (EU)", "EU"),
+]
+
+API_KEY_PATTERN = re.compile(
+    r"^confident_(?P<region>us|eu)_(?P<scope>org|proj|global)_"
+    r"[A-Za-z0-9+/]+={0,2}$",
+    re.IGNORECASE,
+)
+
+
+def _prompt_and_persist_region(save: Optional[str]) -> None:
+    """Pick the data region before the pairing session is created, so the
+    session, the browser page, and all subsequent polling hit the same
+    regional backend. Persisted like `deepeval set-confident-region`."""
+    settings = get_settings()
+    current = (settings.CONFIDENT_REGION or "US").upper()
+    choices = sorted(REGION_CHOICES, key=lambda choice: choice[1] != current)
+    region = prompt_select("Select your Confident AI data region:", choices)
+    if region == settings.CONFIDENT_REGION:
+        return
+    with settings.edit(save=save):
+        settings.CONFIDENT_REGION = region
+
+
+def _print_api_key_location() -> None:
+    settings_url = PROD
+    print(
+        "Find your project API key at "
+        f"[link={settings_url}]{settings_url}[/link] under "
+        "[bold]Project Settings > API Keys[/bold]."
+    )
+
+
+def _get_pasted_api_key_warnings(
+    api_key: str, configured_region: Optional[str]
+) -> List[str]:
+    match = API_KEY_PATTERN.fullmatch(api_key.strip())
+    if match is None:
+        return []
+
+    key_region = match.group("region").upper()
+    key_scope = match.group("scope").lower()
+    warnings: List[str] = []
+
+    if configured_region and key_region != configured_region.upper():
+        warnings.append(
+            f"This API key is for the {key_region} region, but DeepEval is "
+            f"configured to use {configured_region.upper()}. The region "
+            "configured in DeepEval must match the key's region in "
+            "Confident AI."
+        )
+
+    if key_scope == "org":
+        warnings.append(
+            "This is an organization API key, which cannot be used to log in "
+            "to DeepEval. Use a project API key from Project Settings > API "
+            "Keys instead."
+        )
+
+    return warnings
+
+
+def _warn_for_pasted_api_key(api_key: str) -> None:
+    configured_region = get_settings().CONFIDENT_REGION
+    for warning in _get_pasted_api_key_warnings(api_key, configured_region):
+        print(f"⚠️  {warning}")
 
 
 def _prompt_paste_api_key() -> str:
@@ -38,15 +123,99 @@ def _prompt_paste_api_key() -> str:
             typer.prompt("🔐 Enter your project API key", hide_input=True)
         )
         if api_key:
+            _warn_for_pasted_api_key(api_key)
             return api_key
         print("❌ Project API key cannot be empty. Please try again.\n")
 
 
-def _resolve_login_key() -> str:
-    render_login_message()
+def _open_platform_and_prompt_api_key() -> str:
+    platform_url = with_utm(
+        PROD, medium="cli", content="login_api_key_browser_open"
+    )
+    print("\n🌐 Opening Confident AI in your browser...")
+    webbrowser.open(platform_url)
+    print(
+        "(open this link if your browser did not open: "
+        f"[link={platform_url}]{platform_url}[/link])"
+    )
+    return _prompt_paste_api_key()
+
+
+def _prompt_required(message: str, default: Optional[str] = None) -> str:
+    while True:
+        value = coerce_blank_to_none(prompt_text(message, default=default))
+        if value:
+            return value
+        print(f"❌ {message} cannot be empty. Please try again.\n")
+
+
+def _complete_browser_cli_login() -> Optional[str]:
+    authorization = browser_pairing_login()
+    if authorization is None:
+        return None
+
+    try:
+        context = get_cli_onboarding_context(authorization.setup_token)
+        request: Union[NewUserOnboardingRequest, ExistingProjectKeyRequest]
+
+        if context.state == "new_user":
+            existing_name = context.user.name if context.user else None
+            name_default = (
+                existing_name
+                if existing_name and existing_name != "New User"
+                else None
+            )
+            print("\n[bold]Let's set up your workspace.[/bold]")
+            user_name = _prompt_required("Your name", default=name_default)
+            organization_name = _prompt_required("Organization name")
+            project_name = _prompt_required(
+                "Project name", default="My First Project"
+            )
+            print(
+                "\nYour organization and project will be created as "
+                f"[bold]{organization_name}[/bold] / "
+                f"[bold]{project_name}[/bold]."
+            )
+            if not typer.confirm("Continue?", default=True):
+                raise AuthFlowError("Setup cancelled.")
+            request = NewUserOnboardingRequest(
+                user_name=user_name,
+                organization_name=organization_name,
+                project_name=project_name,
+            )
+        else:
+            projects = [
+                project
+                for project in context.projects
+                if project.can_create_api_key
+            ]
+            if not projects:
+                raise AuthFlowError(
+                    "You do not have permission to create an API key for any "
+                    "project in this organization."
+                )
+            project_id = prompt_select(
+                "Select a project:",
+                [(project.name, project.id) for project in projects],
+            )
+            request = ExistingProjectKeyRequest(project_id=project_id)
+
+        return complete_cli_onboarding(
+            authorization.setup_token,
+            request,
+            idempotency_key=str(uuid4()),
+        )
+    except AuthFlowError as error:
+        print(f"\n⚠️  CLI onboarding could not be completed: {error}")
+        return None
+
+
+def _resolve_login_key(save: Optional[str]) -> str:
+    if not USE_BROWSER_PAIRING_LOGIN:
+        return _open_platform_and_prompt_api_key()
 
     method = prompt_select(
-        "How would you like to log in?",
+        "How would you like to log in to Confident AI?",
         [
             ("Log in via your browser", "browser"),
             ("Paste a project API key", "paste"),
@@ -54,12 +223,15 @@ def _resolve_login_key() -> str:
     )
 
     if method == "paste":
+        _print_api_key_location()
         return _prompt_paste_api_key()
 
-    key = browser_pairing_login()
+    _prompt_and_persist_region(save)
+    key = _complete_browser_cli_login()
     if key:
         return key
     print("\nNo problem — paste a project API key from the platform instead.")
+    _print_api_key_location()
     return _prompt_paste_api_key()
 
 
@@ -81,14 +253,16 @@ def login_command(
     with capture_login_event() as span:
         completed = False
         try:
-            # Resolve the key from the CLI flag or the browser pairing flow.
-            if api_key is not None:
-                key = api_key
-            else:
-                key = _resolve_login_key()
-
             settings = get_settings()
             save = save or settings.DEEPEVAL_DEFAULT_SAVE or "dotenv:.env.local"
+
+            # Resolve the key from the CLI flag or the active interactive flow.
+            if api_key is not None:
+                key = api_key
+                _warn_for_pasted_api_key(key)
+            else:
+                key = _resolve_login_key(save)
+
             with settings.edit(save=save) as edit_ctx:
                 settings.CONFIDENT_API_KEY = key
 
@@ -107,8 +281,10 @@ def login_command(
                     )
 
             completed = True
+            print("\n[bold]Welcome to[/bold]")
+            render_confident_banner()
             print(
-                "\n🎉🥳 Congratulations! You've successfully logged in! :raising_hands:"
+                "🎉🥳 Congratulations! You've successfully logged in! :raising_hands:"
             )
             quickstart_url = with_utm(
                 f"{WWW}/docs/llm-evaluation/quickstart",
