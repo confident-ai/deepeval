@@ -154,7 +154,8 @@
           },
           "inputParameters": {
             "query": "weather san francisco"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -421,7 +422,8 @@
       },
       "inputParameters": {
         "query": "weather san francisco"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

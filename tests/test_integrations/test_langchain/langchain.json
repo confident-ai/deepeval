@@ -342,7 +342,8 @@
           "inputParameters": {
             "a": 8,
             "b": 6
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -717,7 +718,8 @@
       "inputParameters": {
         "a": 8,
         "b": 6
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

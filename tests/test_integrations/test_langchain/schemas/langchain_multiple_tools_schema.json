@@ -154,7 +154,8 @@
           },
           "inputParameters": {
             "city": "Tokyo"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -438,7 +439,8 @@
       },
       "inputParameters": {
         "city": "Tokyo"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

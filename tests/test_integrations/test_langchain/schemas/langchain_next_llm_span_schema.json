@@ -338,7 +338,8 @@
           },
           "inputParameters": {
             "n": 7
-          }
+          },
+          "type": "FUNCTION"
         }
       ]
     },
@@ -711,7 +712,8 @@
       },
       "inputParameters": {
         "n": 7
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

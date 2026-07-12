@@ -154,7 +154,8 @@
           },
           "inputParameters": {
             "query": "stock price apple"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -427,7 +428,8 @@
       },
       "inputParameters": {
         "query": "stock price apple"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

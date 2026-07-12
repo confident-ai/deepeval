@@ -338,7 +338,8 @@
           },
           "inputParameters": {
             "expression": "15 * 3"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -716,7 +717,8 @@
       },
       "inputParameters": {
         "expression": "15 * 3"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

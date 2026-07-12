@@ -154,7 +154,8 @@
           },
           "inputParameters": {
             "city": "San Francisco"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -423,7 +424,8 @@
       },
       "inputParameters": {
         "city": "San Francisco"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

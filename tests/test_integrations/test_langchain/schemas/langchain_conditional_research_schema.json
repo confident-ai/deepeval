@@ -154,7 +154,8 @@
           },
           "inputParameters": {
             "topic": "quantum computing"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -421,7 +422,8 @@
       },
       "inputParameters": {
         "topic": "quantum computing"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

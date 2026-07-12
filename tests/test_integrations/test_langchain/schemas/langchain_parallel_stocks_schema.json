@@ -154,7 +154,8 @@
           },
           "inputParameters": {
             "symbol": "AAPL"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -418,7 +419,8 @@
       },
       "inputParameters": {
         "symbol": "AAPL"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

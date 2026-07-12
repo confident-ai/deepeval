@@ -188,7 +188,8 @@
           },
           "inputParameters": {
             "city": "Tokyo"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "get_weather",
@@ -203,7 +204,8 @@
           },
           "inputParameters": {
             "city": "New York"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "get_weather",
@@ -218,7 +220,8 @@
           },
           "inputParameters": {
             "city": "London"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -585,7 +588,8 @@
       },
       "inputParameters": {
         "city": "Tokyo"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "get_weather",
@@ -600,7 +604,8 @@
       },
       "inputParameters": {
         "city": "New York"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "get_weather",
@@ -615,7 +620,8 @@
       },
       "inputParameters": {
         "city": "London"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

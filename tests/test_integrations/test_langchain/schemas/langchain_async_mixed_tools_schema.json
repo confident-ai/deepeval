@@ -154,7 +154,8 @@
           },
           "inputParameters": {
             "city": "Paris"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -426,7 +427,8 @@
       },
       "inputParameters": {
         "city": "Paris"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

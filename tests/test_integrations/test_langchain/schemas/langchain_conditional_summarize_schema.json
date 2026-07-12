@@ -154,7 +154,8 @@
           },
           "inputParameters": {
             "text": "AI is transforming industries worldwide."
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -418,7 +419,8 @@
       },
       "inputParameters": {
         "text": "AI is transforming industries worldwide."
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }
