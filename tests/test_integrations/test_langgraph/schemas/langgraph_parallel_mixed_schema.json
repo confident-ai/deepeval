@@ -46,7 +46,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -167,7 +168,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -235,7 +237,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -360,7 +363,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -428,7 +432,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -549,7 +554,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -618,7 +624,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -742,7 +749,8 @@
           },
           "inputParameters": {
             "city": "Paris"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "get_stock_price",
@@ -758,7 +766,8 @@
           },
           "inputParameters": {
             "symbol": "TSLA"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "get_exchange_rate",
@@ -775,7 +784,8 @@
           "inputParameters": {
             "from_currency": "USD",
             "to_currency": "EUR"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "calculate",
@@ -791,7 +801,8 @@
           },
           "inputParameters": {
             "expression": "100 * 1.5"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -835,7 +846,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -937,7 +949,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -1300,7 +1313,8 @@
             },
             "prompt_tokens_details": {
               "audio_tokens": 0,
-              "cached_tokens": 0
+              "cached_tokens": 0,
+              "cache_write_tokens": null
             }
           },
           "model_provider": "openai",
@@ -1421,7 +1435,8 @@
             },
             "prompt_tokens_details": {
               "audio_tokens": 0,
-              "cached_tokens": 0
+              "cached_tokens": 0,
+              "cache_write_tokens": null
             }
           },
           "model_provider": "openai",
@@ -1468,7 +1483,8 @@
       },
       "inputParameters": {
         "city": "Paris"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "get_stock_price",
@@ -1484,7 +1500,8 @@
       },
       "inputParameters": {
         "symbol": "TSLA"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "get_exchange_rate",
@@ -1501,7 +1518,8 @@
       "inputParameters": {
         "from_currency": "USD",
         "to_currency": "EUR"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "calculate",
@@ -1517,7 +1535,8 @@
       },
       "inputParameters": {
         "expression": "100 * 1.5"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

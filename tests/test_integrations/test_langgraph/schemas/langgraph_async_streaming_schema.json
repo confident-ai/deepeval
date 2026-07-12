@@ -382,7 +382,8 @@
           },
           "inputParameters": {
             "symbol": "GOOGL"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -780,7 +781,8 @@
       },
       "inputParameters": {
         "symbol": "GOOGL"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }
