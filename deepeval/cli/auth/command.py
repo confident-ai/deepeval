@@ -1,7 +1,8 @@
 """`deepeval login` / `deepeval logout` Typer commands."""
 
+import re
 import webbrowser
-from typing import Optional, Union
+from typing import List, Optional, Union
 from uuid import uuid4
 
 import typer
@@ -51,6 +52,12 @@ REGION_CHOICES = [
     ("🇪🇺 European Union (EU)", "EU"),
 ]
 
+API_KEY_PATTERN = re.compile(
+    r"^confident_(?P<region>us|eu)_(?P<scope>org|proj|global)_"
+    r"[A-Za-z0-9+/]+={0,2}$",
+    re.IGNORECASE,
+)
+
 
 def _prompt_and_persist_region(save: Optional[str]) -> None:
     """Pick the data region before the pairing session is created, so the
@@ -75,12 +82,48 @@ def _print_api_key_location() -> None:
     )
 
 
+def _get_pasted_api_key_warnings(
+    api_key: str, configured_region: Optional[str]
+) -> List[str]:
+    match = API_KEY_PATTERN.fullmatch(api_key.strip())
+    if match is None:
+        return []
+
+    key_region = match.group("region").upper()
+    key_scope = match.group("scope").lower()
+    warnings: List[str] = []
+
+    if configured_region and key_region != configured_region.upper():
+        warnings.append(
+            f"This API key is for the {key_region} region, but DeepEval is "
+            f"configured to use {configured_region.upper()}. The region "
+            "configured in DeepEval must match the key's region in "
+            "Confident AI."
+        )
+
+    if key_scope == "org":
+        warnings.append(
+            "This is an organization API key, which cannot be used to log in "
+            "to DeepEval. Use a project API key from Project Settings > API "
+            "Keys instead."
+        )
+
+    return warnings
+
+
+def _warn_for_pasted_api_key(api_key: str) -> None:
+    configured_region = get_settings().CONFIDENT_REGION
+    for warning in _get_pasted_api_key_warnings(api_key, configured_region):
+        print(f"⚠️  {warning}")
+
+
 def _prompt_paste_api_key() -> str:
     while True:
         api_key = coerce_blank_to_none(
             typer.prompt("🔐 Enter your project API key", hide_input=True)
         )
         if api_key:
+            _warn_for_pasted_api_key(api_key)
             return api_key
         print("❌ Project API key cannot be empty. Please try again.\n")
 
@@ -216,6 +259,7 @@ def login_command(
             # Resolve the key from the CLI flag or the active interactive flow.
             if api_key is not None:
                 key = api_key
+                _warn_for_pasted_api_key(key)
             else:
                 key = _resolve_login_key(save)
 
