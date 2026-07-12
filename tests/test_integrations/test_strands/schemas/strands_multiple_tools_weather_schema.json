@@ -89,7 +89,8 @@
       "toolsCalled": [
         {
           "name": "get_weather",
-          "inputParameters": {}
+          "inputParameters": {},
+          "type": "FUNCTION"
         }
       ],
       "integration": "Strands"

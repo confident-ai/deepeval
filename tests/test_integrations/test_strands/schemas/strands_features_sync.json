@@ -91,7 +91,8 @@
       "toolsCalled": [
         {
           "name": "special_tool",
-          "inputParameters": {}
+          "inputParameters": {},
+          "type": "FUNCTION"
         }
       ],
       "metricCollection": "special_tool_v1",
