@@ -79,7 +79,13 @@ class Mistral7B(DeepEvalBaseLLM):
         model.to(device)
 
         generated_ids = model.generate(**model_inputs, max_new_tokens=100, do_sample=True)
-        return self.tokenizer.batch_decode(generated_ids)[0]
+        input_width = model_inputs["input_ids"].shape[1]
+        completion_ids = generated_ids[:, input_width:]
+
+        return self.tokenizer.batch_decode(
+            completion_ids,
+            skip_special_token=True,
+        )[0].strip()
 
     async def a_generate(self, prompt: str) -> str:
         return self.generate(prompt)
@@ -93,7 +99,15 @@ class Mistral7B(DeepEvalBaseLLM):
         model.to(device)
 
         generated_ids = model.generate(**model_inputs, max_new_tokens=100, do_sample=True)
-        return self.tokenizer.batch_decode(generated_ids)
+        input_width = model_inputs["input_ids"].shape[1]
+        completion_ids = generated_ids[:, input_width:]
+
+        return [
+            response.strip()
+            for response in self.tokenizer.batch_decode(
+                completion_ids, skip_special_tokens=True
+            )
+        ]
 
     def get_model_name(self):
         return "Mistral 7B"
