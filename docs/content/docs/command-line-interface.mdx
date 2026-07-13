@@ -228,7 +228,7 @@ Use these commands to connect `deepeval` to **Confident AI** (`deepeval` Cloud) 
 
 ### `login` & `logout`
 
-- `deepeval login [--confident-api-key ...] [--save=dotenv[:path]]`: Log in to Confident AI by saving your `CONFIDENT_API_KEY`. Once logged in, `deepeval` can automatically upload test runs so you can browse results, share reports, and track evaluation performance over time on Confident AI.
+- `deepeval login [--api-key ...] [--save=dotenv[:path]]`: Log in to Confident AI. The interactive flow opens a browser for authentication, then returns to the terminal to create an organization and first project or select an existing project. DeepEval creates a dedicated project API key and saves it as `CONFIDENT_API_KEY`. Use `--api-key` for CI, headless automation, or manual fallback.
 - `deepeval logout [--save=dotenv[:path]]`: Remove your Confident AI credentials from local persistence — the JSON keystore and every dotenv file deepeval auto-loads (`.env`, `.env.<APP_ENV>`, `.env.local`). If `CONFIDENT_API_KEY` is exported by your shell itself, deepeval cannot unset it and will tell you to run `unset CONFIDENT_API_KEY`.
 
 ### `view`

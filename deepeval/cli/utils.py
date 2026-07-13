@@ -133,11 +133,7 @@ def handle_save_result(
     return True
 
 
-def render_login_message():
-    print(
-        "🥳 Welcome to [rgb(106,0,255)]Confident AI[/rgb(106,0,255)], the evals cloud platform 🏡❤️"
-    )
-    print("")
+def render_confident_banner():
     # pyfiglet defaults to width=80, which wraps the banner mid-word; render
     # at the real terminal width so it stays on one line whenever it fits.
     width = shutil.get_terminal_size(fallback=(120, 24)).columns
@@ -146,6 +142,14 @@ def render_login_message():
             "Confident AI"
         )
     )
+
+
+def render_login_message():
+    print(
+        "🥳 Welcome to [rgb(106,0,255)]Confident AI[/rgb(106,0,255)], the evals cloud platform 🏡❤️"
+    )
+    print("")
+    render_confident_banner()
 
 
 def upload_and_open_link(_span: Optional[Span] = None):

@@ -1,4 +1,4 @@
-"""Browser-based login flow for `deepeval login`.
+"""Browser authentication and CLI-native onboarding for `deepeval login`.
 
 Device-code style pairing (RFC 8628 shaped), with no localhost callback
 server. The CLI never handles credentials and no secrets ever transit
@@ -7,9 +7,9 @@ by Chrome's Local Network Access permission prompt.
 
 Flow:
 
-1. The CLI asks the backend to create a pairing:
+1. The CLI asks the backend to create a short-lived login session:
 
-       POST {api_base}/v1/cli/login/pairings
+       POST {api_base}/cli/auth/sessions
        -> 200 {"success": true,
                "data": {"userCode": "ABCD-1234",
                         "deviceCode": "<opaque high-entropy token>",
@@ -21,61 +21,64 @@ Flow:
    `deviceCode` is a secret with >= 128 bits of entropy; it never leaves the
    CLI and is the only thing that can claim the API key.
 
-2. The CLI opens the browser at `{PROD}/auth/login?code=<userCode>`. The web
-   app carries the code through login / signup / onboarding, lets the user
-   pick a project, then attaches a project API key to the pairing
-   server-side (e.g. an authenticated
-   `POST /cli/login/pairings/:userCode/attach {projectId}` from the web app).
+2. The CLI opens the browser at the returned verification URL. The browser
+   handles authentication and explicit authorization only; onboarding remains
+   in the terminal.
 
 3. The CLI polls the token endpoint with the secret device code:
 
-       POST {api_base}/v1/cli/login/pairings/token
+       POST {api_base}/cli/auth/sessions/token
             {"deviceCode": "<token>"}
        -> pending:   {"success": true, "data": {"status": "pending"}}
-       -> completed: {"success": true,
-                      "data": {"status": "completed",
-                               "apiKey": "confident_us_...",
+       -> authenticated: {"success": true,
+                      "data": {"status": "authenticated",
+                               "setupToken": "<short-lived token>",
                                "email": "user@example.com"}}
        -> expired / consumed / unknown: 404, or
                      {"success": false, "error": "..."}
 
-   The completed response must be one-time: the first successful claim
-   consumes the pairing.
+4. The CLI fetches onboarding context and completes setup using the short-lived
+   setup token. The completion response contains a newly minted project API
+   key, and consumes the login session.
 """
 
 import sys
 import time
 import webbrowser
-from dataclasses import dataclass
-from typing import Any, Dict, Optional, Sequence, Tuple
+from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
 import requests
 import typer
+from pydantic import ValidationError
 from rich import print
 
 import deepeval
-from deepeval.cli.utils import PROD, with_utm
+from deepeval.cli.auth.api import (
+    CliAuthorization,
+    CliOnboardingContext,
+    NewUserOnboardingRequest,
+    ExistingProjectKeyRequest,
+    DevicePairing,
+)
+from deepeval.cli.utils import with_utm
 from deepeval.confident.api import get_base_api_url
 from deepeval.telemetry import set_logged_in_with
 
-CREATE_PAIRING_ENDPOINT = "/v1/cli/login/pairings"
-PAIRING_TOKEN_ENDPOINT = "/v1/cli/login/pairings/token"
+CREATE_PAIRING_ENDPOINT = "/cli/auth/sessions"
+PAIRING_TOKEN_ENDPOINT = "/cli/auth/sessions/token"
+ONBOARDING_ENDPOINT = "/cli/onboarding"
+ONBOARDING_COMPLETE_ENDPOINT = "/cli/onboarding/complete"
 
-DEFAULT_EXPIRES_IN_SECONDS = 600
-DEFAULT_POLL_INTERVAL_SECONDS = 3
 REQUEST_TIMEOUT_SECONDS = 10
+# Completion creates the organization/project in one backend transaction,
+# which can take longer than a normal request. Retries are safe because the
+# request carries an idempotency key.
+COMPLETE_TIMEOUT_SECONDS = 30
+COMPLETE_MAX_ATTEMPTS = 3
 
 
 class AuthFlowError(Exception):
     """Raised when the browser login flow cannot complete."""
-
-
-@dataclass
-class DevicePairing:
-    user_code: str
-    device_code: str
-    expires_in: int
-    interval: int
 
 
 def _is_interactive() -> bool:
@@ -112,6 +115,49 @@ def _fill_radio_indicator(question: Any) -> None:
             return
 
 
+def _questionary_style():
+    import questionary
+
+    return questionary.Style(
+        [
+            ("qmark", f"fg:{CONFIDENT_PURPLE} bold"),
+            ("question", "bold"),
+            ("instruction", "fg:#767676"),
+            ("pointer", f"fg:{CONFIDENT_PURPLE} bold"),
+            ("highlighted", f"fg:{CONFIDENT_PURPLE} bold"),
+            # prompt_toolkit's built-in style renders "selected" in
+            # reverse video (fg/bg swapped); noreverse disables that.
+            ("selected", f"fg:{CONFIDENT_PURPLE} bold noreverse"),
+            ("answer", f"fg:{CONFIDENT_PURPLE} bold"),
+        ]
+    )
+
+
+def prompt_text(message: str, default: Optional[str] = None) -> str:
+    """Styled text input matching `prompt_select`, with a plain fallback."""
+    if _is_interactive():
+        try:
+            import questionary
+
+            answer = questionary.text(
+                message,
+                default=default or "",
+                qmark="?",
+                style=_questionary_style(),
+            ).ask()
+            # `ask()` returns None when the user aborts (e.g. Ctrl-C).
+            if answer is None:
+                raise AuthFlowError("Input cancelled.")
+            return answer
+        except AuthFlowError:
+            raise
+        except Exception:
+            # Any questionary/terminal issue: degrade to the plain prompt.
+            pass
+
+    return typer.prompt(message, default=default)
+
+
 def prompt_select(message: str, choices: Sequence[Tuple[str, Any]]) -> Any:
     """Arrow-key selection when the terminal supports it, numbered fallback
     otherwise."""
@@ -119,19 +165,7 @@ def prompt_select(message: str, choices: Sequence[Tuple[str, Any]]) -> Any:
         try:
             import questionary
 
-            style = questionary.Style(
-                [
-                    ("qmark", f"fg:{CONFIDENT_PURPLE} bold"),
-                    ("question", "bold"),
-                    ("instruction", "fg:#767676"),
-                    ("pointer", f"fg:{CONFIDENT_PURPLE} bold"),
-                    ("highlighted", f"fg:{CONFIDENT_PURPLE} bold"),
-                    # prompt_toolkit's built-in style renders "selected" in
-                    # reverse video (fg/bg swapped); noreverse disables that.
-                    ("selected", f"fg:{CONFIDENT_PURPLE} bold noreverse"),
-                    ("answer", f"fg:{CONFIDENT_PURPLE} bold"),
-                ]
-            )
+            style = _questionary_style()
             question = questionary.select(
                 message,
                 choices=[
@@ -226,26 +260,21 @@ def create_pairing() -> DevicePairing:
         )
 
     data = _unwrap(res)
-    user_code = data.get("userCode")
-    device_code = data.get("deviceCode")
-    if not user_code or not device_code:
+    try:
+        return DevicePairing.model_validate(data)
+    except ValidationError:
         raise AuthFlowError(
-            f"POST {url} did not return userCode/deviceCode: {res.text[:200]!r}"
+            f"POST {url} did not return the required login session fields: "
+            f"{res.text[:200]!r}"
         )
-    return DevicePairing(
-        user_code=str(user_code),
-        device_code=str(device_code),
-        expires_in=int(data.get("expiresIn") or DEFAULT_EXPIRES_IN_SECONDS),
-        interval=int(data.get("interval") or DEFAULT_POLL_INTERVAL_SECONDS),
-    )
 
 
 def _poll_once(
     device_code: str,
-) -> Optional[Tuple[str, Optional[str]]]:
+) -> Optional[CliAuthorization]:
     """One poll of the token endpoint.
 
-    Returns (api_key, email) when the pairing completes, None while pending
+    Returns setup authorization when browser auth completes, None while pending
     (or on a transient network error), and raises AuthFlowError on terminal
     failures (expired, consumed, backend missing).
     """
@@ -274,52 +303,56 @@ def _poll_once(
     status = data.get("status")
     if status == "pending":
         return None
-    if status == "completed":
-        api_key = data.get("apiKey")
-        if not api_key:
+    if status == "authenticated":
+        try:
+            return CliAuthorization.model_validate(data)
+        except ValidationError:
             raise AuthFlowError(
-                "The pairing completed but the server did not return an "
-                "API key."
+                "Browser authentication completed but the server did not "
+                "return a setup token."
             )
-        return str(api_key), data.get("email")
     raise AuthFlowError(
         f"The pairing is no longer valid (status: {status or 'unknown'}). "
         "Run `deepeval login` again."
     )
 
 
-def browser_pairing_login() -> Optional[str]:
-    """Run the full browser login flow.
+def browser_pairing_login() -> Optional[CliAuthorization]:
+    """Authenticate the user in the browser and return CLI setup access.
 
-    Returns the project API key, or None if the flow was aborted / timed out /
-    unavailable (callers should fall back to manual key entry).
+    Returns a short-lived setup authorization, or None if the flow was aborted
+    / timed out / unavailable.
     """
     try:
         pairing = create_pairing()
-    except AuthFlowError as e:
-        print(f"\n⚠️  Browser login isn't available right now: {e}")
+    except AuthFlowError:
+        print(
+            "\n⚠️  Unexpected error — seems like browser login isn't "
+            "available right now."
+        )
         return None
 
-    pair_path = f"{PROD}/auth/login?code={pairing.user_code}"
     login_url = with_utm(
-        pair_path, medium="cli", content="login_pair_browser_open"
+        pairing.verification_url,
+        medium="cli",
+        content="login_pair_browser_open",
     )
     fallback_url = with_utm(
-        pair_path, medium="cli", content="login_pair_fallback_link"
+        pairing.verification_url,
+        medium="cli",
+        content="login_pair_fallback_link",
     )
 
-    print("\n🌐 Opening your browser to finish signing in...")
-    print(
-        f"Your pairing code is [bold]{pairing.user_code}[/bold] — "
-        "confirm it matches what the browser shows."
-    )
+    print("\n🌐 Opening your browser — confirm this pairing code there:")
+    print(f"\n    [bold green]{pairing.user_code}[/bold green]\n")
     webbrowser.open(login_url)
     print(
-        "(open this link if your browser did not open: "
-        f"[link={fallback_url}]{fallback_url}[/link])"
+        f"[dim]Browser didn't open? Use [link={fallback_url}]{fallback_url}[/link][/dim]"
     )
-    print("Waiting for you to finish signing in in the browser...")
-    print("(press Ctrl+C to paste a project API key manually instead)")
+    print(
+        "[dim]Waiting for the browser... "
+        "press Ctrl+C to paste an API key instead.[/dim]"
+    )
 
     deadline = time.monotonic() + pairing.expires_in
     try:
@@ -332,12 +365,91 @@ def browser_pairing_login() -> Optional[str]:
                 return None
             if completed is None:
                 continue
-            api_key, email = completed
-            if email:
-                set_logged_in_with(email)
-            return api_key
+            if completed.email:
+                set_logged_in_with(completed.email)
+            return completed
         print("\n⌛ Timed out waiting for the browser.")
         return None
     except KeyboardInterrupt:
         print()
         return None
+
+
+def get_cli_onboarding_context(setup_token: str) -> CliOnboardingContext:
+    url = f"{get_base_api_url()}{ONBOARDING_ENDPOINT}"
+    try:
+        res = requests.get(
+            url,
+            headers={
+                **_request_headers(),
+                "Authorization": f"Bearer {setup_token}",
+            },
+            timeout=REQUEST_TIMEOUT_SECONDS,
+        )
+    except requests.RequestException as e:
+        raise AuthFlowError(f"Could not reach GET {url} ({e}).")
+    if res.status_code != 200:
+        raise AuthFlowError(
+            f"GET {url} failed with HTTP {res.status_code}: {res.text[:200]!r}"
+        )
+    try:
+        data = res.json()
+    except ValueError:
+        raise AuthFlowError(f"GET {url} did not return JSON.")
+    try:
+        return CliOnboardingContext.model_validate(data)
+    except ValidationError:
+        raise AuthFlowError(
+            f"GET {url} returned an unexpected onboarding payload."
+        )
+
+
+def complete_cli_onboarding(
+    setup_token: str,
+    request: Union[NewUserOnboardingRequest, ExistingProjectKeyRequest],
+    idempotency_key: str,
+) -> str:
+    url = f"{get_base_api_url()}{ONBOARDING_COMPLETE_ENDPOINT}"
+    res = None
+    last_error: Optional[requests.RequestException] = None
+    for attempt in range(COMPLETE_MAX_ATTEMPTS):
+        retryable = attempt < COMPLETE_MAX_ATTEMPTS - 1
+        try:
+            res = requests.post(
+                url,
+                headers={
+                    **_request_headers(),
+                    "Authorization": f"Bearer {setup_token}",
+                    "Idempotency-Key": idempotency_key,
+                },
+                json=request.to_payload(),
+                timeout=COMPLETE_TIMEOUT_SECONDS,
+            )
+        except requests.RequestException as e:
+            last_error = e
+            if retryable:
+                print("Still working — retrying...")
+                time.sleep(2)
+            continue
+        # A previous (timed-out) attempt may still hold the completion lock
+        # server-side; give it a moment and retry with the same key.
+        if res.status_code == 409 and "in progress" in res.text and retryable:
+            time.sleep(3)
+            continue
+        break
+    if res is None:
+        raise AuthFlowError(f"Could not reach POST {url} ({last_error}).")
+    if res.status_code != 200:
+        raise AuthFlowError(
+            f"POST {url} failed with HTTP {res.status_code}: "
+            f"{res.text[:200]!r}"
+        )
+    try:
+        data = res.json()
+    except ValueError:
+        raise AuthFlowError(f"POST {url} did not return JSON.")
+    if not isinstance(data, dict) or not data.get("apiKey"):
+        raise AuthFlowError(
+            "CLI onboarding completed without returning an API key."
+        )
+    return str(data["apiKey"])

@@ -38,6 +38,13 @@ pip install -U deepeval
 deepeval login
 ```
 
+Your browser handles authentication only. After you sign in or create an
+account, return to the terminal to enter your name and organization, confirm
+the prefilled first-project name, or select one of your existing projects.
+DeepEval creates and saves a dedicated project API key automatically. For CI
+or other non-interactive environments, pass an existing key with
+`deepeval login --api-key ...`.
+
 <details>
 
 <summary>Configure Environment Variables</summary>
@@ -206,7 +213,7 @@ The `deepeval view` command requires that the test run that you ran above has be
 deepeval login
 ```
 
-After you've pasted in your API key, Confident AI will **generate testing reports and automate regression testing** whenever you run a test run to evaluate your LLM application inside any environment, at any scale, anywhere.
+After you've logged in, Confident AI will **generate testing reports and automate regression testing** whenever you run a test run to evaluate your LLM application inside any environment, at any scale, anywhere.
 
 <VideoDisplayer
   src={ASSETS.evaluationOverview}
