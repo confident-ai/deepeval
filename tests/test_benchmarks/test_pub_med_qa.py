@@ -11,7 +11,12 @@ class StructuredModel:
 
     def generate(self, prompt, schema):
         assert "JSON object" in prompt
-        answer = "yes" if "treatment" in prompt else "maybe"
+        if "treatment" in prompt:
+            answer = "yes"
+        elif "no benefit" in prompt:
+            answer = "no"
+        else:
+            answer = "maybe"
         response = schema(answer=answer)
         return (response, 0.0) if self.return_cost else response
 
@@ -101,12 +106,25 @@ def test_evaluate_runs_end_to_end_with_in_memory_dataset():
                 },
                 "final_decision": "maybe",
             },
+            {
+                "question": "Was there no benefit?",
+                "context": {
+                    "contexts": ["The intervention did not improve outcomes."],
+                    "labels": ["RESULTS"],
+                },
+                "final_decision": "no",
+            },
         ]
     }
-    benchmark = PubMedQA(n_problems=2, dataset=dataset)
+    benchmark = PubMedQA(n_problems=3, dataset=dataset)
 
     result = benchmark.evaluate(StructuredModel())
 
     assert result.overall_accuracy == pytest.approx(1.0)
     assert benchmark.overall_score == pytest.approx(1.0)
-    assert benchmark.predictions["Correct"].tolist() == [1, 1]
+    assert benchmark.predictions["Expected Output"].tolist() == [
+        "yes",
+        "maybe",
+        "no",
+    ]
+    assert benchmark.predictions["Correct"].tolist() == [1, 1, 1]
