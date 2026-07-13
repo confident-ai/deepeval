@@ -5,7 +5,7 @@ from typing import Optional
 import requests
 from deepeval.confident.api import get_base_api_url
 
-PR_COMMENTS_ENDPOINT = "/v1/github-app/testrun/comments"
+PR_COMMENTS_ENDPOINT = "/v1/github-app/test-run/comments"
 _OIDC_AUDIENCE = "confident-deepeval"
 _APP = "deepeval"
 
