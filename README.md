@@ -609,3 +609,7 @@ Built by the founders of Confident AI. Contact jeffreyip@confident-ai.com for al
 # License
 
 DeepEval is licensed under Apache 2.0 - see the [LICENSE.md](https://github.com/confident-ai/deepeval/blob/main/LICENSE.md) file for details.
+
+---
+
+*[Mukller](https://github.com/Mukller)*
