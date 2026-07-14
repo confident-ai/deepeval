@@ -148,35 +148,46 @@ def make_json_serializable(obj):
         if isinstance(o, (int, bool)) or o is None:
             return o
 
+        # Enum members are shared singletons. Serialize their values before
+        # circular-reference detection so repeated members are not mistaken
+        # for cycles.
+        if isinstance(o, Enum):
+            return _serialize(o.value)
+
         # Detect circular reference
         if oid in seen:
             return "<circular>"
 
-        # Mark current object as seen
-        seen.add(oid)
-
         # Handle containers
         if isinstance(o, (list, tuple, set, deque)):  # TODO: check if more
-            serialized = []
-            for item in o:
-                serialized.append(_serialize(item))
-
-            return serialized
+            seen.add(oid)
+            try:
+                return [_serialize(item) for item in o]
+            finally:
+                seen.remove(oid)
 
         if isinstance(o, dict):
-            result = {}
-            for key, value in o.items():
-                # Convert key to string (JSON only allows string keys)
-                result[str(key)] = _serialize(value)
-            return result
+            seen.add(oid)
+            try:
+                result = {}
+                for key, value in o.items():
+                    # Convert key to string (JSON only allows string keys)
+                    result[str(key)] = _serialize(value)
+                return result
+            finally:
+                seen.remove(oid)
 
         # Handle objects with __dict__
         if hasattr(o, "__dict__"):
-            result = {}
-            for key, value in vars(o).items():
-                if not key.startswith("_"):
-                    result[key] = _serialize(value)
-            return result
+            seen.add(oid)
+            try:
+                result = {}
+                for key, value in vars(o).items():
+                    if not key.startswith("_"):
+                        result[key] = _serialize(value)
+                return result
+            finally:
+                seen.remove(oid)
 
         # Fallback: convert to string
         return _strip_nul(str(o))
@@ -214,35 +225,46 @@ def make_json_serializable_for_metadata(obj):
         if isinstance(o, (int, bool)) or o is None:
             return o
 
+        # Enum members are shared singletons. Serialize their values before
+        # circular-reference detection so repeated members are not mistaken
+        # for cycles.
+        if isinstance(o, Enum):
+            return _serialize(o.value)
+
         # Detect circular reference
         if oid in seen:
             return "<circular>"
 
-        # Mark current object as seen
-        seen.add(oid)
-
         # Handle containers
         if isinstance(o, (list, tuple, set, deque)):  # TODO: check if more
-            serialized = []
-            for item in o:
-                serialized.append(_serialize(item))
-
-            return serialized
+            seen.add(oid)
+            try:
+                return [_serialize(item) for item in o]
+            finally:
+                seen.remove(oid)
 
         if isinstance(o, dict):
-            result = {}
-            for key, value in o.items():
-                # Convert key to string (JSON only allows string keys)
-                result[str(key)] = _serialize(value)
-            return result
+            seen.add(oid)
+            try:
+                result = {}
+                for key, value in o.items():
+                    # Convert key to string (JSON only allows string keys)
+                    result[str(key)] = _serialize(value)
+                return result
+            finally:
+                seen.remove(oid)
 
         # Handle objects with __dict__
         if hasattr(o, "__dict__"):
-            result = {}
-            for key, value in vars(o).items():
-                if not key.startswith("_"):
-                    result[key] = _serialize(value)
-            return result
+            seen.add(oid)
+            try:
+                result = {}
+                for key, value in vars(o).items():
+                    if not key.startswith("_"):
+                        result[key] = _serialize(value)
+                return result
+            finally:
+                seen.remove(oid)
 
         # Fallback: convert to string
         return _strip_nul(str(o))
