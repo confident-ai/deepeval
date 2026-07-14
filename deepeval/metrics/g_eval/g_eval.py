@@ -208,9 +208,9 @@ class GEval(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            self.evaluation_steps: List[
-                str
-            ] = await self._a_generate_evaluation_steps(multimodal)
+            self.evaluation_steps: List[str] = (
+                await self._a_generate_evaluation_steps(multimodal)
+            )
             g_score, reason = await self._a_evaluate(
                 test_case,
                 _additional_context=_additional_context,
