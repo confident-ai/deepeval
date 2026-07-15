@@ -83,30 +83,20 @@ export class MisuseMetric extends BaseMetric {
   }
 
   private async generateMisuses(actualOutput: string): Promise<string[]> {
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_misuses",
-      {
-        actual_output: actualOutput,
-        domain: this.domain,
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_misuses", {
+      actual_output: actualOutput,
+      domain: this.domain,
+    });
     const { misuses } = await generateWithSchema(this, prompt, MisusesSchema);
     return misuses;
   }
 
   private async generateVerdicts(): Promise<MisuseVerdict[]> {
     if (this.misuses.length === 0) return [];
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_verdicts",
-      {
-        misuses: this.misuses,
-        domain: this.domain,
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+      misuses: this.misuses,
+      domain: this.domain,
+    });
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
   }
@@ -116,15 +106,10 @@ export class MisuseMetric extends BaseMetric {
     const misuseViolations = this.verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "yes")
       .map((v) => v.reason);
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_reason",
-      {
-        misuse_violations: misuseViolations,
-        score: (this.score ?? 0).toFixed(2),
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+      misuse_violations: misuseViolations,
+      score: (this.score ?? 0).toFixed(2),
+    });
     const { reason } = await generateWithSchema(
       this,
       prompt,

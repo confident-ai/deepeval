@@ -75,14 +75,9 @@ export class AnswerRelevancyMetric extends BaseMetric {
   }
 
   private async generateStatements(actualOutput: string): Promise<string[]> {
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_statements",
-      {
-        actual_output: actualOutput,
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_statements", {
+      actual_output: actualOutput,
+    });
     const { statements } = await generateWithSchema(
       this,
       prompt,
@@ -95,15 +90,10 @@ export class AnswerRelevancyMetric extends BaseMetric {
     input: string,
   ): Promise<AnswerRelevancyVerdict[]> {
     if (this.statements.length === 0) return [];
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_verdicts",
-      {
-        input,
-        statements: this.statements,
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+      input,
+      statements: this.statements,
+    });
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
   }
@@ -113,16 +103,11 @@ export class AnswerRelevancyMetric extends BaseMetric {
     const irrelevantStatements = this.verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "no")
       .map((v) => v.reason);
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_reason",
-      {
-        irrelevant_statements: irrelevantStatements,
-        input,
-        score: (this.score ?? 0).toFixed(2),
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+      irrelevant_statements: irrelevantStatements,
+      input,
+      score: (this.score ?? 0).toFixed(2),
+    });
     const { reason } = await generateWithSchema(
       this,
       prompt,

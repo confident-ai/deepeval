@@ -1,4 +1,1 @@
-export {
-  ImageEditingMetric,
-  type ImageEditingMetricOptions,
-} from "./image-editing";
+export { ImageEditingMetric, type ImageEditingMetricOptions } from "./image-editing";

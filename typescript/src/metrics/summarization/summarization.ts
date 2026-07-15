@@ -24,8 +24,7 @@ const TEMPLATE_CLASS = "SummarizationMetric";
 // Borrowed from faithfulness (Python imports `_faithfulness_truths_limit_phrase`).
 function truthsLimitPhrase(limit?: number): string {
   if (limit == null) return " FACTUAL, undisputed truths";
-  if (limit === 1)
-    return " the single most important FACTUAL, undisputed truth";
+  if (limit === 1) return " the single most important FACTUAL, undisputed truth";
   return ` the ${limit} most important FACTUAL, undisputed truths per document`;
 }
 
@@ -139,30 +138,20 @@ export class SummarizationMetric extends BaseMetric {
   // --- truths/claims (borrow Faithfulness templates) ---
 
   private async generateTruths(text: string): Promise<string[]> {
-    const prompt = resolveTemplate(
-      "metrics",
-      "FaithfulnessMetric",
-      "generate_truths",
-      {
-        retrieval_context: text,
-        limit: truthsLimitPhrase(this.truthsExtractionLimit),
-        multimodal_instruction: "",
-      },
-    );
+    const prompt = resolveTemplate("metrics", "FaithfulnessMetric", "generate_truths", {
+      retrieval_context: text,
+      limit: truthsLimitPhrase(this.truthsExtractionLimit),
+      multimodal_instruction: "",
+    });
     const { truths } = await generateWithSchema(this, prompt, TruthsSchema);
     return truths;
   }
 
   private async generateClaims(text: string): Promise<string[]> {
-    const prompt = resolveTemplate(
-      "metrics",
-      "FaithfulnessMetric",
-      "generate_claims",
-      {
-        actual_output: text,
-        multimodal_instruction: "",
-      },
-    );
+    const prompt = resolveTemplate("metrics", "FaithfulnessMetric", "generate_claims", {
+      actual_output: text,
+      multimodal_instruction: "",
+    });
     const { claims } = await generateWithSchema(this, prompt, ClaimsSchema);
     return claims;
   }
@@ -173,8 +162,7 @@ export class SummarizationMetric extends BaseMetric {
     SummarizationAlignmentVerdict[]
   > {
     if (this.claims.length === 0) return [];
-    const prompt = resolveTemplate(
-      "metrics",
+    const prompt = resolveTemplate("metrics", 
       TEMPLATE_CLASS,
       "generate_alignment_verdicts",
       {
@@ -215,15 +203,10 @@ export class SummarizationMetric extends BaseMetric {
   }
 
   private async generateAssessmentQuestions(text: string): Promise<string[]> {
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_questions",
-      {
-        text,
-        n: this.n,
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_questions", {
+      text,
+      n: this.n,
+    });
     const { questions } = await generateWithSchema(
       this,
       prompt,
@@ -233,15 +216,10 @@ export class SummarizationMetric extends BaseMetric {
   }
 
   private async generateAnswers(text: string): Promise<string[]> {
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_answers",
-      {
-        questions: this.assessmentQuestions,
-        text,
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_answers", {
+      questions: this.assessmentQuestions,
+      text,
+    });
     const { answers } = await generateWithSchema(this, prompt, AnswersSchema);
     return answers;
   }

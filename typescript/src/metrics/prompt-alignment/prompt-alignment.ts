@@ -38,10 +38,7 @@ export class PromptAlignmentMetric extends BaseMetric {
   verdicts: PromptAlignmentVerdict[] = [];
 
   constructor(options: PromptAlignmentMetricOptions) {
-    if (
-      !options.promptInstructions ||
-      options.promptInstructions.length === 0
-    ) {
+    if (!options.promptInstructions || options.promptInstructions.length === 0) {
       throw new Error("'promptInstructions' must not be empty.");
     }
     const strictMode = options.strictMode ?? false;
@@ -95,16 +92,11 @@ export class PromptAlignmentMetric extends BaseMetric {
     input: string,
     actualOutput: string,
   ): Promise<PromptAlignmentVerdict[]> {
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_verdicts",
-      {
-        prompt_instructions: this.promptInstructions,
-        input,
-        actual_output: actualOutput,
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+      prompt_instructions: this.promptInstructions,
+      input,
+      actual_output: actualOutput,
+    });
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
   }
@@ -117,17 +109,12 @@ export class PromptAlignmentMetric extends BaseMetric {
     const unalignmentReasons = this.verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "no")
       .map((v) => v.reason);
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_reason",
-      {
-        unalignment_reasons: unalignmentReasons,
-        input,
-        actual_output: actualOutput,
-        score: (this.score ?? 0).toFixed(2),
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+      unalignment_reasons: unalignmentReasons,
+      input,
+      actual_output: actualOutput,
+      score: (this.score ?? 0).toFixed(2),
+    });
     const { reason } = await generateWithSchema(
       this,
       prompt,

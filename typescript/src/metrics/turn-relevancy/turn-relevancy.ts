@@ -1,13 +1,12 @@
 import { BaseConversationalMetric } from "../base-conversational-metric";
-import { ConversationalTestCase, MultiTurnParams, Turn } from "../../test-case";
+import {
+  ConversationalTestCase,
+  MultiTurnParams,
+  Turn,
+} from "../../test-case";
 import { DeepEvalBaseLLM } from "../../models";
 import { resolveTemplate } from "../../templates";
-import {
-  initializeModel,
-  generateWithSchema,
-  constructVerboseLogs,
-  prettifyList,
-} from "../utils";
+import { initializeModel, generateWithSchema, constructVerboseLogs, prettifyList } from "../utils";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
@@ -90,14 +89,9 @@ export class TurnRelevancyMetric extends BaseConversationalMetric {
   }
 
   private async generateVerdict(window: Turn[]): Promise<TurnRelevancyVerdict> {
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_verdicts",
-      {
-        sliding_window: window.map((turn) => convertTurnToDict(turn)),
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+      sliding_window: window.map((turn) => convertTurnToDict(turn)),
+    });
     return generateWithSchema(this, prompt, TurnRelevancyVerdictSchema);
   }
 
@@ -114,15 +108,10 @@ export class TurnRelevancyMetric extends BaseConversationalMetric {
         "message number": `${index + 1}`,
         reason: verdict.reason,
       }));
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_reason",
-      {
-        score: this.score,
-        irrelevancies,
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+      score: this.score,
+      irrelevancies,
+    });
     const { reason } = await generateWithSchema(
       this,
       prompt,

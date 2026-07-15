@@ -419,10 +419,7 @@ export class TraceManager {
     put("expectedTools", span.expectedTools);
     // Span-type extras (model / tools) when present, like Python's api span.
     put("model", (span as { model?: unknown }).model);
-    put(
-      "availableTools",
-      (span as { availableTools?: unknown }).availableTools,
-    );
+    put("availableTools", (span as { availableTools?: unknown }).availableTools);
     dict.children = (span.children ?? []).map((child) =>
       this.createNestedSpansDict(child),
     );

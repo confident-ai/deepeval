@@ -1,4 +1,1 @@
-export {
-  ImageCoherenceMetric,
-  type ImageCoherenceMetricOptions,
-} from "./image-coherence";
+export { ImageCoherenceMetric, type ImageCoherenceMetricOptions } from "./image-coherence";

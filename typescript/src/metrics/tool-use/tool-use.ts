@@ -142,25 +142,19 @@ export class ToolUseMetric extends BaseConversationalMetric {
   private async getToolSelectionScore(
     u: UserInputAndTools,
   ): Promise<ToolSelectionScore> {
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "get_tool_selection_score",
-      {
-        user_input: u.user_messages,
-        assistant_messages: u.assistant_messages,
-        tools_called: u.tools_called,
-        available_tools: u.available_tools,
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "get_tool_selection_score", {
+      user_input: u.user_messages,
+      assistant_messages: u.assistant_messages,
+      tools_called: u.tools_called,
+      available_tools: u.available_tools,
+    });
     return generateWithSchema(this, prompt, ToolSelectionScoreSchema);
   }
 
   private async getArgumentCorrectnessScore(
     u: UserInputAndTools,
   ): Promise<ArgumentCorrectnessScore> {
-    const prompt = resolveTemplate(
-      "metrics",
+    const prompt = resolveTemplate("metrics", 
       TEMPLATE_CLASS,
       "get_argument_correctness_score",
       {
@@ -190,8 +184,7 @@ export class ToolUseMetric extends BaseConversationalMetric {
     const allScoresAndReasons = scores
       .map((s) => `\nScore: ${s.score} \nReason: ${s.reason} \n`)
       .join("");
-    const prompt = resolveTemplate(
-      "metrics",
+    const prompt = resolveTemplate("metrics", 
       TEMPLATE_CLASS,
       "get_tool_selection_final_reason",
       {

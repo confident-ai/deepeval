@@ -1,5 +1,2 @@
-export {
-  PlanAdherenceMetric,
-  type PlanAdherenceMetricOptions,
-} from "./plan-adherence";
+export { PlanAdherenceMetric, type PlanAdherenceMetricOptions } from "./plan-adherence";
 export * from "./schema";

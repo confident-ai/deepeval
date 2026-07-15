@@ -26,9 +26,7 @@ export class OpenRouterModel extends DeepEvalOpenAICompatibleModel {
         DEFAULT_OPENROUTER_MODEL,
       apiKey: options.apiKey ?? process.env.OPENROUTER_API_KEY,
       baseURL:
-        options.baseURL ??
-        process.env.OPENROUTER_BASE_URL ??
-        OPENROUTER_BASE_URL,
+        options.baseURL ?? process.env.OPENROUTER_BASE_URL ?? OPENROUTER_BASE_URL,
     });
   }
 }

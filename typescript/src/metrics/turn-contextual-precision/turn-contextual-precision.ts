@@ -1,5 +1,9 @@
 import { BaseConversationalMetric } from "../base-conversational-metric";
-import { ConversationalTestCase, MultiTurnParams, Turn } from "../../test-case";
+import {
+  ConversationalTestCase,
+  MultiTurnParams,
+  Turn,
+} from "../../test-case";
 import { DeepEvalBaseLLM } from "../../models";
 import { resolveTemplate } from "../../templates";
 import {
@@ -103,9 +107,7 @@ export class TurnContextualPrecisionMetric extends BaseConversationalMetric {
     for (const turn of window) {
       if (turn.role === "user") userContent += `\n${turn.content} `;
       else if (turn.retrievalContext != null)
-        retrievalContext.push(
-          ...resolveRetrievalContext(turn.retrievalContext),
-        );
+        retrievalContext.push(...resolveRetrievalContext(turn.retrievalContext));
     }
 
     const verdicts = await this.generateVerdicts(
@@ -122,11 +124,7 @@ export class TurnContextualPrecisionMetric extends BaseConversationalMetric {
       };
     }
     const score = this.calculateInteractionScore(verdicts);
-    const reason = await this.getInteractionReason(
-      userContent,
-      score,
-      verdicts,
-    );
+    const reason = await this.getInteractionReason(userContent, score, verdicts);
     return {
       score: this.strictMode && score < this.threshold ? 0 : score,
       reason,
@@ -141,18 +139,13 @@ export class TurnContextualPrecisionMetric extends BaseConversationalMetric {
   ): Promise<ContextualPrecisionVerdict[]> {
     if (retrievalContext.length === 0) return [];
     const n = retrievalContext.length;
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_verdicts",
-      {
-        input,
-        expected_outcome: expectedOutcome,
-        document_count_str: ` (${n} document${n > 1 ? "s" : ""})`,
-        context_to_display: retrievalContext,
-        multimodal_note: "",
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+      input,
+      expected_outcome: expectedOutcome,
+      document_count_str: ` (${n} document${n > 1 ? "s" : ""})`,
+      context_to_display: retrievalContext,
+      multimodal_note: "",
+    });
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
   }
@@ -163,19 +156,11 @@ export class TurnContextualPrecisionMetric extends BaseConversationalMetric {
     verdicts: ContextualPrecisionVerdict[],
   ): Promise<string | undefined> {
     if (!this.includeReason) return undefined;
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_reason",
-      {
-        input,
-        verdicts: verdicts.map((v) => ({
-          verdict: v.verdict,
-          reason: v.reason,
-        })),
-        score: score.toFixed(2),
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+      input,
+      verdicts: verdicts.map((v) => ({ verdict: v.verdict, reason: v.reason })),
+      score: score.toFixed(2),
+    });
     const { reason } = await generateWithSchema(
       this,
       prompt,
@@ -212,16 +197,11 @@ export class TurnContextualPrecisionMetric extends BaseConversationalMetric {
     if (this.scores.length === 0) {
       return "There were no interactions with retrieval context to evaluate, hence the score is 1";
     }
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_final_reason",
-      {
-        final_score: this.score,
-        success: this.success,
-        reasons: this.scores.map((s) => s.reason),
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_final_reason", {
+      final_score: this.score,
+      success: this.success,
+      reasons: this.scores.map((s) => s.reason),
+    });
     const { reason } = await generateWithSchema(
       this,
       prompt,

@@ -127,17 +127,12 @@ export class ConversationalGEval extends BaseConversationalMetric {
 
   private async generateEvaluationSteps(): Promise<string[]> {
     if (this.evaluationSteps) return this.evaluationSteps;
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_evaluation_steps",
-      {
-        criteria: this.criteria,
-        parameters: constructConversationalGEvalTurnParamsString(
-          this.evaluationParams,
-        ),
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_evaluation_steps", {
+      criteria: this.criteria,
+      parameters: constructConversationalGEvalTurnParamsString(
+        this.evaluationParams,
+      ),
+    });
     const { steps } = await generateWithSchema(this, prompt, StepsSchema);
     return steps;
   }
@@ -145,25 +140,20 @@ export class ConversationalGEval extends BaseConversationalMetric {
   private async evaluate(
     testCase: ConversationalTestCase,
   ): Promise<[number, string]> {
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_evaluation_results",
-      {
-        evaluation_steps: numberEvaluationSteps(this.evaluationSteps ?? []),
-        test_case_content: constructNonTurnsTestCaseString(
-          this.evaluationParams,
-          testCase,
-        ),
-        turns: testCase.turns.map((t) =>
-          convertTurnToDict(t, this.evaluationParams),
-        ),
-        parameters: constructConversationalGEvalTurnParamsString(
-          this.evaluationParams,
-        ),
-        rubric: this.rubric ? formatRubrics(this.rubric) : null,
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_evaluation_results", {
+      evaluation_steps: numberEvaluationSteps(this.evaluationSteps ?? []),
+      test_case_content: constructNonTurnsTestCaseString(
+        this.evaluationParams,
+        testCase,
+      ),
+      turns: testCase.turns.map((t) =>
+        convertTurnToDict(t, this.evaluationParams),
+      ),
+      parameters: constructConversationalGEvalTurnParamsString(
+        this.evaluationParams,
+      ),
+      rubric: this.rubric ? formatRubrics(this.rubric) : null,
+    });
     const { score, reason } = await generateWithSchema(
       this,
       prompt,

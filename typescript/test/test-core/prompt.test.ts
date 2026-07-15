@@ -4,6 +4,9 @@ import { Prompt } from "../../src";
 
 config();
 
+const hasApiKey = !!process.env.CONFIDENT_API_KEY;
+const describeIfHasApiKey = hasApiKey ? describe : describe.skip;
+
 interface PromptMessage {
   role: string;
   content: string;
@@ -75,7 +78,7 @@ export const runSharedBranchingTests = (alias: string) => {
   });
 };
 
-describe("Prompt Module", () => {
+describeIfHasApiKey("Prompt Module", () => {
   test("Should pull a prompt from Confident AI", async () => {
     const alias = "asd";
     const prompt = new Prompt({ alias: alias });

@@ -17,6 +17,4 @@ export const AnswerRelevancyScoreReasonSchema = z.object({
   reason: z.string(),
 });
 
-export type AnswerRelevancyVerdict = z.infer<
-  typeof AnswerRelevancyVerdictSchema
->;
+export type AnswerRelevancyVerdict = z.infer<typeof AnswerRelevancyVerdictSchema>;

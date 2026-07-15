@@ -1,5 +1,9 @@
 import { BaseConversationalMetric } from "../base-conversational-metric";
-import { ConversationalTestCase, MultiTurnParams, Turn } from "../../test-case";
+import {
+  ConversationalTestCase,
+  MultiTurnParams,
+  Turn,
+} from "../../test-case";
 import { DeepEvalBaseLLM } from "../../models";
 import { resolveTemplate } from "../../templates";
 import {
@@ -73,12 +77,7 @@ export class TopicAdherenceMetric extends BaseConversationalMetric {
       const verdicts = await Promise.all(
         qaPairs.map((qa) => this.getQaVerdict(qa)),
       );
-      const tally: Record<Verdict, string[]> = {
-        TP: [],
-        TN: [],
-        FP: [],
-        FN: [],
-      };
+      const tally: Record<Verdict, string[]> = { TP: [], TN: [], FP: [], FN: [] };
       for (const v of verdicts) tally[v.verdict].push(v.reason);
 
       this.score = this.calculateScore(tally);
@@ -110,16 +109,11 @@ export class TopicAdherenceMetric extends BaseConversationalMetric {
   }
 
   private async getQaVerdict(qaPair: QAPair): Promise<RelevancyVerdict> {
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "get_qa_pair_verdict",
-      {
-        relevant_topics: this.relevantTopics,
-        question: qaPair.question,
-        response: qaPair.response,
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "get_qa_pair_verdict", {
+      relevant_topics: this.relevantTopics,
+      question: qaPair.question,
+      response: qaPair.response,
+    });
     return generateWithSchema(this, prompt, RelevancyVerdictSchema);
   }
 
@@ -141,20 +135,15 @@ export class TopicAdherenceMetric extends BaseConversationalMetric {
     }
     const line = (reasons: string[]) =>
       reasons.length ? prettifyList(reasons) : "(none)";
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_reason",
-      {
-        success: this.success,
-        score: this.score,
-        threshold: this.threshold,
-        true_positives_reason_line: line(tally.TP),
-        true_negatives_reason_line: line(tally.TN),
-        false_positives_reason_line: line(tally.FP),
-        false_negatives_reason_line: line(tally.FN),
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+      success: this.success,
+      score: this.score,
+      threshold: this.threshold,
+      true_positives_reason_line: line(tally.TP),
+      true_negatives_reason_line: line(tally.TN),
+      false_positives_reason_line: line(tally.FP),
+      false_negatives_reason_line: line(tally.FN),
+    });
     const { reason } = await generateWithSchema(
       this,
       prompt,

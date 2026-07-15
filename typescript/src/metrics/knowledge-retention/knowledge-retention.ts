@@ -1,5 +1,9 @@
 import { BaseConversationalMetric } from "../base-conversational-metric";
-import { ConversationalTestCase, MultiTurnParams, Turn } from "../../test-case";
+import {
+  ConversationalTestCase,
+  MultiTurnParams,
+  Turn,
+} from "../../test-case";
 import { DeepEvalBaseLLM } from "../../models";
 import { resolveTemplate } from "../../templates";
 import {
@@ -81,22 +85,15 @@ export class KnowledgeRetentionMetric extends BaseConversationalMetric {
   }
 
   /** Extract knowledge from each user turn (assistant turns get `null`). */
-  private async generateKnowledges(
-    turns: Turn[],
-  ): Promise<(Knowledge | null)[]> {
+  private async generateKnowledges(turns: Turn[]): Promise<(Knowledge | null)[]> {
     const knowledges: (Knowledge | null)[] = new Array(turns.length).fill(null);
     const extracted = await Promise.all(
       turns.map(async (turn, i) => {
         if (turn.role === "assistant") return null;
-        const prompt = resolveTemplate(
-          "metrics",
-          TEMPLATE_CLASS,
-          "extract_data",
-          {
-            user_message: turn.content,
-            previous_turns: turns.slice(0, i).map((t) => convertTurnToDict(t)),
-          },
-        );
+        const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "extract_data", {
+          user_message: turn.content,
+          previous_turns: turns.slice(0, i).map((t) => convertTurnToDict(t)),
+        });
         return generateWithSchema(this, prompt, KnowledgeSchema);
       }),
     );
@@ -118,20 +115,11 @@ export class KnowledgeRetentionMetric extends BaseConversationalMetric {
           .filter((k): k is Knowledge => k != null && k.data != null)
           .map((k) => k.data);
         if (accumulatedKnowledge.length === 0) return null;
-        const prompt = resolveTemplate(
-          "metrics",
-          TEMPLATE_CLASS,
-          "generate_verdict",
-          {
-            llm_message: turn.content,
-            accumulated_knowledge: accumulatedKnowledge,
-          },
-        );
-        return generateWithSchema(
-          this,
-          prompt,
-          KnowledgeRetentionVerdictSchema,
-        );
+        const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdict", {
+          llm_message: turn.content,
+          accumulated_knowledge: accumulatedKnowledge,
+        });
+        return generateWithSchema(this, prompt, KnowledgeRetentionVerdictSchema);
       }),
     );
     return results.filter((v): v is KnowledgeRetentionVerdict => v != null);
@@ -142,15 +130,10 @@ export class KnowledgeRetentionMetric extends BaseConversationalMetric {
     const attritions = this.verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "yes")
       .map((v) => v.reason);
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_reason",
-      {
-        attritions,
-        score: (this.score ?? 0).toFixed(2),
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+      attritions,
+      score: (this.score ?? 0).toFixed(2),
+    });
     const { reason } = await generateWithSchema(
       this,
       prompt,

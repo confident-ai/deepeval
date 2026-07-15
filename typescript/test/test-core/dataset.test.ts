@@ -9,7 +9,10 @@ import { LLMTestCase } from "../../src/test-case";
 // process.env.CONFIDENT_API_KEY = "YOUR API KEY";
 config();
 
-describe("Dataset Module", () => {
+const hasApiKey = !!process.env.CONFIDENT_API_KEY;
+const describeIfHasApiKey = hasApiKey ? describe : describe.skip;
+
+describeIfHasApiKey("Dataset Module", () => {
   // Create a temp CSV file for testing
   const createTempCsvFile = async () => {
     const tempDir = path.join(__dirname, "temp");

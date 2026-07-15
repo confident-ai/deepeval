@@ -1,5 +1,9 @@
 import { BaseConversationalMetric } from "../base-conversational-metric";
-import { ConversationalTestCase, MultiTurnParams, Turn } from "../../test-case";
+import {
+  ConversationalTestCase,
+  MultiTurnParams,
+  Turn,
+} from "../../test-case";
 import { DeepEvalBaseLLM } from "../../models";
 import { resolveTemplate } from "../../templates";
 import {
@@ -83,14 +87,9 @@ export class ConversationCompletenessMetric extends BaseConversationalMetric {
   }
 
   private async extractUserIntentions(turns: Turn[]): Promise<string[]> {
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "extract_user_intentions",
-      {
-        turns: turns.map((turn) => convertTurnToDict(turn)),
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "extract_user_intentions", {
+      turns: turns.map((turn) => convertTurnToDict(turn)),
+    });
     const { intentions } = await generateWithSchema(
       this,
       prompt,
@@ -103,39 +102,23 @@ export class ConversationCompletenessMetric extends BaseConversationalMetric {
     turns: Turn[],
     intention: string,
   ): Promise<ConversationCompletenessVerdict> {
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_verdicts",
-      {
-        turns: turns.map((turn) => convertTurnToDict(turn)),
-        intention,
-      },
-    );
-    return generateWithSchema(
-      this,
-      prompt,
-      ConversationCompletenessVerdictSchema,
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+      turns: turns.map((turn) => convertTurnToDict(turn)),
+      intention,
+    });
+    return generateWithSchema(this, prompt, ConversationCompletenessVerdictSchema);
   }
 
   private async generateReason(): Promise<string | undefined> {
     if (!this.includeReason) return undefined;
     const incompletenesses = this.verdicts
-      .filter(
-        (v) => v?.verdict != null && v.verdict.trim().toLowerCase() === "no",
-      )
+      .filter((v) => v?.verdict != null && v.verdict.trim().toLowerCase() === "no")
       .map((v) => v.reason);
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_reason",
-      {
-        score: this.score,
-        incompletenesses,
-        intentions: this.userIntentions,
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+      score: this.score,
+      incompletenesses,
+      intentions: this.userIntentions,
+    });
     const { reason } = await generateWithSchema(
       this,
       prompt,

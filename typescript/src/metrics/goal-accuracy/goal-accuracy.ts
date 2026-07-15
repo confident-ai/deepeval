@@ -1,5 +1,9 @@
 import { BaseConversationalMetric } from "../base-conversational-metric";
-import { ConversationalTestCase, MultiTurnParams, Turn } from "../../test-case";
+import {
+  ConversationalTestCase,
+  MultiTurnParams,
+  Turn,
+} from "../../test-case";
 import { DeepEvalBaseLLM } from "../../models";
 import { resolveTemplate } from "../../templates";
 import {
@@ -62,7 +66,9 @@ export class GoalAccuracyMetric extends BaseConversationalMetric {
       checkConversationalTestCaseParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
 
-      const tasks = this.goalAndStepsTaken(getUnitInteractions(testCase.turns));
+      const tasks = this.goalAndStepsTaken(
+        getUnitInteractions(testCase.turns),
+      );
       [this.goalScores, this.planScores] = await Promise.all([
         Promise.all(
           tasks.map((t) =>
@@ -144,18 +150,13 @@ export class GoalAccuracyMetric extends BaseConversationalMetric {
     const planEvaluations = this.planScores
       .map((p) => `Score: ${p.score}, Reason: ${p.reason} \n`)
       .join("");
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "get_final_reason",
-      {
-        final_score: this.score,
-        threshold: this.threshold,
-        goal_evaluations: goalEvaluations,
-        // NOTE: matches Python's misspelled template variable.
-        plan_evalautions: planEvaluations,
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "get_final_reason", {
+      final_score: this.score,
+      threshold: this.threshold,
+      goal_evaluations: goalEvaluations,
+      // NOTE: matches Python's misspelled template variable.
+      plan_evalautions: planEvaluations,
+    });
     // Free-text reason (no schema), mirroring Python's raw `model.generate`.
     const { output, cost } = await this.model!.generate(prompt);
     this.accrueCost(cost);

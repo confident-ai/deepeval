@@ -127,7 +127,8 @@ export class ToolCorrectnessMetric extends BaseMetric {
             };
 
       const combined = Math.min(toolCallingScore, toolSelectionScore.score);
-      this.score = this.strictMode && combined < this.threshold ? 0 : combined;
+      this.score =
+        this.strictMode && combined < this.threshold ? 0 : combined;
       this.reason = this.constructFinalReason(
         this.generateReason(),
         toolSelectionScore.reason,
@@ -151,16 +152,11 @@ export class ToolCorrectnessMetric extends BaseMetric {
   private async getToolSelectionScore(
     userInput: string,
   ): Promise<ToolSelectionScore> {
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "get_tool_selection_score",
-      {
-        user_input: userInput,
-        tools_called: printToolsCalled(this.toolsCalled),
-        available_tools: printToolsCalled(this.availableTools ?? []),
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "get_tool_selection_score", {
+      user_input: userInput,
+      tools_called: printToolsCalled(this.toolsCalled),
+      available_tools: printToolsCalled(this.availableTools ?? []),
+    });
     return generateWithSchema(this, prompt, ToolSelectionScoreSchema);
   }
 
@@ -364,8 +360,7 @@ export class ToolCorrectnessMetric extends BaseMetric {
         lcs.map((t) => t.name),
       );
       const issues: string[] = [];
-      if (missing.length)
-        issues.push(`missing tools ${JSON.stringify(missing)}`);
+      if (missing.length) issues.push(`missing tools ${JSON.stringify(missing)}`);
       if (outOfOrder.length)
         issues.push(`out-of-order tools ${JSON.stringify(outOfOrder)}`);
       return `Incorrect tool usage: ${issues.join(" and ")}; expected ${JSON.stringify(expectedNames)}, called ${JSON.stringify(calledNames)}. See more details above.`;

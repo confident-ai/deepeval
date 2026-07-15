@@ -85,15 +85,10 @@ export class RoleViolationMetric extends BaseMetric {
   }
 
   private async detectRoleViolations(actualOutput: string): Promise<string[]> {
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "detect_role_violations",
-      {
-        actual_output: actualOutput,
-        expected_role: this.role,
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "detect_role_violations", {
+      actual_output: actualOutput,
+      expected_role: this.role,
+    });
     const { role_violations } = await generateWithSchema(
       this,
       prompt,
@@ -104,14 +99,9 @@ export class RoleViolationMetric extends BaseMetric {
 
   private async generateVerdicts(): Promise<RoleViolationVerdict[]> {
     if (this.roleViolations.length === 0) return [];
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_verdicts",
-      {
-        role_violations: this.roleViolations,
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+      role_violations: this.roleViolations,
+    });
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
   }
@@ -121,15 +111,10 @@ export class RoleViolationMetric extends BaseMetric {
     const violationReasons = this.verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "yes")
       .map((v) => v.reason);
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_reason",
-      {
-        role_violations: violationReasons,
-        score: (this.score ?? 0).toFixed(2),
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+      role_violations: violationReasons,
+      score: (this.score ?? 0).toFixed(2),
+    });
     const { reason } = await generateWithSchema(
       this,
       prompt,

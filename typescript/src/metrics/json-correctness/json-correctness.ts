@@ -92,20 +92,11 @@ export class JsonCorrectnessMetric extends BaseMetric {
     if (!this.includeReason) return undefined;
     if (this.score === 1) return DEFAULT_CORRECT_REASON;
 
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_reason",
-      {
-        actual_output: actualOutput,
-        expected_schema: JSON.stringify(
-          toJsonSchema(this.expectedSchema),
-          null,
-          4,
-        ),
-        is_valid_json: false,
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+      actual_output: actualOutput,
+      expected_schema: JSON.stringify(toJsonSchema(this.expectedSchema), null, 4),
+      is_valid_json: false,
+    });
     const { reason } = await generateWithSchema(
       this,
       prompt,

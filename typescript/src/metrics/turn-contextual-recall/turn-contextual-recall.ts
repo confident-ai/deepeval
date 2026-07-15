@@ -1,5 +1,9 @@
 import { BaseConversationalMetric } from "../base-conversational-metric";
-import { ConversationalTestCase, MultiTurnParams, Turn } from "../../test-case";
+import {
+  ConversationalTestCase,
+  MultiTurnParams,
+  Turn,
+} from "../../test-case";
 import { DeepEvalBaseLLM } from "../../models";
 import { resolveTemplate } from "../../templates";
 import {
@@ -101,9 +105,7 @@ export class TurnContextualRecallMetric extends BaseConversationalMetric {
     const retrievalContext: string[] = [];
     for (const turn of window) {
       if (turn.role !== "user" && turn.retrievalContext != null)
-        retrievalContext.push(
-          ...resolveRetrievalContext(turn.retrievalContext),
-        );
+        retrievalContext.push(...resolveRetrievalContext(turn.retrievalContext));
     }
 
     const verdicts = await this.generateVerdicts(
@@ -136,19 +138,14 @@ export class TurnContextualRecallMetric extends BaseConversationalMetric {
     retrievalContext: string[],
   ): Promise<ContextualRecallVerdict[]> {
     if (retrievalContext.length === 0) return [];
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_verdicts",
-      {
-        expected_outcome: expectedOutcome,
-        content_type: "sentence",
-        content_type_plural: "sentences",
-        content_or: "sentence",
-        context_to_display: retrievalContext,
-        node_instruction: "",
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+      expected_outcome: expectedOutcome,
+      content_type: "sentence",
+      content_type_plural: "sentences",
+      content_or: "sentence",
+      context_to_display: retrievalContext,
+      node_instruction: "",
+    });
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
   }
@@ -165,18 +162,13 @@ export class TurnContextualRecallMetric extends BaseConversationalMetric {
       if (v.verdict.toLowerCase() === "yes") supportive.push(v.reason);
       else unsupportive.push(v.reason);
     }
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_reason",
-      {
-        expected_outcome: expectedOutcome,
-        supportive_reasons: supportive,
-        unsupportive_reasons: unsupportive,
-        score: score.toFixed(2),
-        content_type: "sentence",
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+      expected_outcome: expectedOutcome,
+      supportive_reasons: supportive,
+      unsupportive_reasons: unsupportive,
+      score: score.toFixed(2),
+      content_type: "sentence",
+    });
     const { reason } = await generateWithSchema(
       this,
       prompt,
@@ -204,16 +196,11 @@ export class TurnContextualRecallMetric extends BaseConversationalMetric {
     if (this.scores.length === 0) {
       return "There were no interactions with retrieval context to evaluate, hence the score is 1";
     }
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_final_reason",
-      {
-        final_score: this.score,
-        success: this.success,
-        reasons: this.scores.map((s) => s.reason),
-      },
-    );
+    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_final_reason", {
+      final_score: this.score,
+      success: this.success,
+      reasons: this.scores.map((s) => s.reason),
+    });
     const { reason } = await generateWithSchema(
       this,
       prompt,

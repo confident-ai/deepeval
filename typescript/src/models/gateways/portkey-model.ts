@@ -27,8 +27,7 @@ export class PortkeyModel extends DeepEvalOpenAICompatibleModel {
       ...options,
       model: options.model ?? process.env.PORTKEY_MODEL_NAME,
       apiKey,
-      baseURL:
-        options.baseURL ?? process.env.PORTKEY_BASE_URL ?? PORTKEY_BASE_URL,
+      baseURL: options.baseURL ?? process.env.PORTKEY_BASE_URL ?? PORTKEY_BASE_URL,
       defaultHeaders: {
         ...(options.defaultHeaders ?? {}),
         ...(apiKey ? { "x-portkey-api-key": apiKey } : {}),
