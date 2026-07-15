@@ -87,7 +87,7 @@ def test_predict_handles_native_model_cost_tuple():
     assert result == {"prediction": "yes", "score": 1}
 
 
-def test_evaluate_runs_end_to_end_with_in_memory_dataset():
+def test_evaluate_uses_available_goldens_for_accuracy():
     dataset = {
         "train": [
             {
@@ -116,7 +116,7 @@ def test_evaluate_runs_end_to_end_with_in_memory_dataset():
             },
         ]
     }
-    benchmark = PubMedQA(n_problems=3, dataset=dataset)
+    benchmark = PubMedQA(n_problems=10, dataset=dataset)
 
     result = benchmark.evaluate(StructuredModel())
 
@@ -128,3 +128,10 @@ def test_evaluate_runs_end_to_end_with_in_memory_dataset():
         "no",
     ]
     assert benchmark.predictions["Correct"].tolist() == [1, 1, 1]
+
+
+def test_evaluate_rejects_empty_dataset():
+    benchmark = PubMedQA(n_problems=10, dataset={"train": []})
+
+    with pytest.raises(ValueError, match="at least one problem"):
+        benchmark.evaluate(StructuredModel())

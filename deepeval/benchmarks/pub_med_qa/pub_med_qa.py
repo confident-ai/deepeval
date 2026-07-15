@@ -46,9 +46,13 @@ class PubMedQA(DeepEvalBaseBenchmark):
             correct_predictions = 0
             predictions_row = []
             goldens = self.load_benchmark_dataset()[: self.n_problems]
+            if not goldens:
+                raise ValueError(
+                    "PubMedQA dataset must contain at least one problem."
+                )
 
             for idx, golden in enumerate(
-                tqdm(goldens, desc=f"Processing {self.n_problems} problems")
+                tqdm(goldens, desc=f"Processing {len(goldens)} problems")
             ):
                 result = self.predict(model, golden)
                 prediction = result["prediction"]
@@ -66,7 +70,7 @@ class PubMedQA(DeepEvalBaseBenchmark):
                         score,
                     )
 
-            overall_accuracy = correct_predictions / self.n_problems
+            overall_accuracy = correct_predictions / len(goldens)
             print(f"Overall PubMedQA Accuracy: {overall_accuracy}")
 
             self.predictions = pd.DataFrame(
