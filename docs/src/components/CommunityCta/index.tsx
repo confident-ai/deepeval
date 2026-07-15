@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { discordUrl, redditUrl } from "@/lib/shared";
+import { discordUrl } from "@/lib/shared";
 import { DiscordMark } from "@/src/components/DiscordButton";
-import { RedditMark } from "@/src/components/RedditButton";
+// import { RedditMark } from "@/src/components/RedditButton";
 import styles from "./CommunityCta.module.scss";
 
 type CommunityCtaProps = {
@@ -10,7 +10,7 @@ type CommunityCtaProps = {
 };
 
 const CommunityCta: React.FC<CommunityCtaProps> = ({
-  label = "Join",
+  label = "Join Community",
   layout = "full",
 }) => {
   return (
@@ -29,7 +29,7 @@ const CommunityCta: React.FC<CommunityCtaProps> = ({
           <DiscordMark />
           <span>Discord</span>
         </Link>
-        <Link
+        {/* <Link
           href={redditUrl}
           target="_blank"
           rel="noopener noreferrer"
@@ -40,7 +40,7 @@ const CommunityCta: React.FC<CommunityCtaProps> = ({
         >
           <RedditMark />
           <span>r/deepeval</span>
-        </Link>
+        </Link> */}
       </div>
     </div>
   );

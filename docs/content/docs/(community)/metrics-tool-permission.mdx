@@ -1,0 +1,115 @@
+---
+id: metrics-tool-permission
+title: Tool Permission
+sidebar_label: Tool Permission
+---
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={true} />
+
+The Tool Permission metric measures whether your agent only called tools it was **authorized** to, against a permission policy. Unlike the `ToolCorrectnessMetric`, which compares the tools that were called against the tools that were *expected*, this metric enforces **least privilege**: it flags any tool call outside the granted policy, regardless of whether the task was completed.
+
+::::note
+The `ToolPermissionMetric` does **not** rely on an LLM for evaluation. It checks the tools your agent called against an allowlist and/or a denylist, so it is deterministic, requires no API key, and has zero token cost — making it well suited as a CI gate.
+::::
+
+## Required Arguments
+
+To use the `ToolPermissionMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `tools_called`
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how the tools called are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import ToolPermissionMetric
+from deepeval.test_case import LLMTestCase, ToolCall
+
+metric = ToolPermissionMetric(
+    allowed_tools=["search_kb", "reply_to_customer"],  # allowlist (least privilege)
+    denied_tools=["issue_refund"],                     # optional denylist
+    threshold=1.0,
+    verbose_mode=True,
+)
+
+test_case = LLMTestCase(
+    input="What is my refund status?",
+    actual_output="Your refund is being processed.",
+    tools_called=[ToolCall(name="search_kb")],
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There is at least **ONE** required and **FOUR** optional parameters when creating a `ToolPermissionMetric`:
+
+- `allowed_tools`: a list of permitted tool names (an allowlist). If provided, any called tool not in this list is unauthorized.
+- `denied_tools`: a list of forbidden tool names (a denylist). Any called tool in this list is unauthorized, and a denial always takes precedence over an allow.
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 1.0 (any unauthorized call fails).
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason listing the unauthorized tools. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric to the console. Defaulted to `False`.
+
+At least one of `allowed_tools` or `denied_tools` must be provided.
+
+### As a Standalone
+
+You can also run the `ToolPermissionMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+The `ToolPermissionMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Tool Permission Score} = \frac{\text{Number of Authorized Tool Calls}}{\text{Total Number of Tool Calls}}" />
+
+A tool call is **unauthorized** if the tool is in `denied_tools`, or if `allowed_tools` is provided and the tool is not in it. When no tools were called, the score is `1`. The metric is successful when the score is greater than or equal to the `threshold`.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from the Tool Correctness metric?",
+      answer: (
+        <>
+          <code>ToolCorrectnessMetric</code> checks whether the agent called the{" "}
+          <em>expected</em> tools for a task. <code>ToolPermissionMetric</code>{" "}
+          checks whether the agent stayed within the tools it was{" "}
+          <em>allowed</em> to call — an authorization check, not a
+          task-correctness check.
+        </>
+      ),
+    },
+    {
+      question: "Does the Tool Permission metric call an LLM or cost money?",
+      answer: (
+        <>
+          No. The <code>ToolPermissionMetric</code> compares called tool names
+          against your allowlist/denylist — no model, no API key, zero token
+          cost, fully deterministic.
+        </>
+      ),
+    },
+    {
+      question: "What score do I get if the agent called no tools?",
+      answer: (
+        <>
+          <code>1</code>. If no tools were called, no permission boundary could
+          be violated, so the metric passes.
+        </>
+      ),
+    },
+  ]}
+/>

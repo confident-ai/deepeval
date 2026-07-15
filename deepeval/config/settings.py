@@ -413,6 +413,11 @@ class Settings(BaseSettings):
         description="Base URL for Confident AI API server (set only if using a custom/hosted endpoint).",
     )
 
+    CONFIDENT_DISABLE_SSL: Optional[bool] = Field(
+        None,
+        description="Disable SSL/TLS certificate verification for requests to the Confident AI API server (only use for self-hosted endpoints with self-signed certificates).",
+    )
+
     # General
     TEMPERATURE: Optional[confloat(ge=0, le=2)] = Field(
         None,
@@ -999,6 +1004,7 @@ class Settings(BaseSettings):
 
     @field_validator(
         "CONFIDENT_OPEN_BROWSER",
+        "CONFIDENT_DISABLE_SSL",
         "CONFIDENT_TRACE_FLUSH",
         "CONFIDENT_TRACE_INTERNAL",
         "CONFIDENT_TRACE_VERBOSE",

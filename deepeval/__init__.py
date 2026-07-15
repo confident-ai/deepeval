@@ -20,6 +20,7 @@ def _expose_public_api() -> None:
     global instrument
 
     from ._version import __version__ as _version
+    import deepeval.evaluate as _evaluate_module
     from deepeval.evaluate import (
         evaluate as _evaluate,
         assert_test as _assert_test,
@@ -34,6 +35,12 @@ def _expose_public_api() -> None:
 
     __version__ = _version
     evaluate = _evaluate
+    # `evaluate` is reassigned above from the `deepeval.evaluate` subpackage to
+    # the `evaluate` function it exports, so `deepeval.evaluate` no longer
+    # resolves to that subpackage. Re-attach its `configs` submodule to the
+    # function so `deepeval.evaluate.configs` keeps working after this module
+    # has finished importing (see issue #2216).
+    evaluate.configs = _evaluate_module.configs
     assert_test = _assert_test
     compare = _compare
     on_test_run_end = _on_end

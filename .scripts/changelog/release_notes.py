@@ -127,7 +127,9 @@ def parse_release_body(body: str) -> ParsedNotes:
         elif section == SECTION_NEW_CONTRIB:
             match = NEW_CONTRIB_RE.match(stripped)
             if match:
-                parsed.new_contributors[int(match.group("num"))] = match.group("login")
+                parsed.new_contributors[int(match.group("num"))] = match.group(
+                    "login"
+                )
 
     return parsed
 
@@ -168,7 +170,9 @@ def pr_scope(number: int) -> str:
                 break
             page += 1
     except urllib.error.HTTPError as exc:
-        log(f"warning: could not fetch files for #{number} ({exc}); treating as shared")
+        log(
+            f"warning: could not fetch files for #{number} ({exc}); treating as shared"
+        )
         return "shared"
 
     if ts and not py:
@@ -184,7 +188,9 @@ def select_in_scope(prs: List[PrLine], sdk: str) -> List[PrLine]:
         scope = pr_scope(pr.number)
         if scope in (sdk, "shared"):
             kept.append(pr)
-        log(f"#{pr.number}: {scope} -> {'keep' if scope in (sdk, 'shared') else 'drop'}")
+        log(
+            f"#{pr.number}: {scope} -> {'keep' if scope in (sdk, 'shared') else 'drop'}"
+        )
     return kept
 
 
@@ -314,7 +320,9 @@ def main() -> int:
         try:
             cleaned = ai_cleanup(get_ai_model(args.ai_model), in_scope)
         except Exception as exc:
-            log(f"warning: AI cleanup failed ({exc}); using deterministic titles.")
+            log(
+                f"warning: AI cleanup failed ({exc}); using deterministic titles."
+            )
             cleaned = {}
 
     sys.stdout.write(render_markdown(in_scope, cleaned, new_contributors))

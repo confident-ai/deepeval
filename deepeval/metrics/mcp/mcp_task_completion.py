@@ -257,9 +257,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
             new_task = Task(task=user_messages, steps_taken=[])
             for turn in unit_interaction[1:]:
                 if turn._mcp_interaction:
-                    new_task.steps_taken.append(
-                        turn_mcp_interaction_text(turn)
-                    )
+                    new_task.steps_taken.append(turn_mcp_interaction_text(turn))
                 else:
                     new_task.steps_taken.append(
                         "Agent's response to user: \n" + turn.content
