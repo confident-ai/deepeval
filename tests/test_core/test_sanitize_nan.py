@@ -13,6 +13,7 @@ from deepeval.tracing.utils import (
     make_json_serializable_for_metadata,
 )
 from deepeval.confident.api import _sanitize_body
+from deepeval.test_case.llm_test_case import ToolCall, ToolCallType
 
 # ---------------------------------------------------------------------------
 # make_json_serializable
@@ -80,6 +81,40 @@ class TestMakeJsonSerializable:
         )
         assert result == {"s": "hello", "i": 42, "b": True, "n": None}
 
+    def test_repeated_enum_members_serialize_to_values(self):
+        result = make_json_serializable(
+            [ToolCallType.FUNCTION, ToolCallType.FUNCTION]
+        )
+        assert result == ["FUNCTION", "FUNCTION"]
+
+    def test_repeated_shared_object_is_not_circular(self):
+        shared = {"name": "lookup_fund"}
+        result = make_json_serializable([shared, shared])
+        assert result == [shared, shared]
+
+    def test_genuine_cycle_is_replaced(self):
+        circular = []
+        circular.append(circular)
+        assert make_json_serializable(circular) == ["<circular>"]
+
+    def test_trace_tools_called_types_serialize_as_function(self):
+        tools_called = [
+            ToolCall(name="lookup_fund"),
+            ToolCall(name="lookup_portfolio"),
+        ]
+        payload = {
+            "toolsCalled": [
+                tool.model_dump(by_alias=True) for tool in tools_called
+            ]
+        }
+
+        result = make_json_serializable(payload)
+
+        assert [tool["type"] for tool in result["toolsCalled"]] == [
+            "FUNCTION",
+            "FUNCTION",
+        ]
+
 
 # ---------------------------------------------------------------------------
 # make_json_serializable_for_metadata
@@ -143,6 +178,22 @@ class TestMakeJsonSerializableForMetadata:
             "missing": None,
             "label": "ok",
         }
+
+    def test_repeated_enum_members_serialize_to_values(self):
+        result = make_json_serializable_for_metadata(
+            [ToolCallType.FUNCTION, ToolCallType.FUNCTION]
+        )
+        assert result == ["FUNCTION", "FUNCTION"]
+
+    def test_repeated_shared_object_is_not_circular(self):
+        shared = {"name": "lookup_fund"}
+        result = make_json_serializable_for_metadata([shared, shared])
+        assert result == [shared, shared]
+
+    def test_genuine_cycle_is_replaced(self):
+        circular = []
+        circular.append(circular)
+        assert make_json_serializable_for_metadata(circular) == ["<circular>"]
 
 
 # ---------------------------------------------------------------------------
