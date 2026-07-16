@@ -72,6 +72,10 @@ class DAGMetric(BaseMetric):
             multimodal,
         )
 
+        # Reset accumulated verbose log so this metric can be reused across
+        # calls without leaking entries from prior traversals.
+        self._verbose_steps = []
+
         self.evaluation_cost = 0 if self.using_native_model else None
         self.input_tokens = 0 if self.using_native_model else None
         self.output_tokens = 0 if self.using_native_model else None
@@ -117,6 +121,8 @@ class DAGMetric(BaseMetric):
             self.model,
             multimodal,
         )
+
+        self._verbose_steps = []
 
         self.evaluation_cost = 0 if self.using_native_model else None
         self.input_tokens = 0 if self.using_native_model else None
