@@ -5,6 +5,11 @@ import {
   AgentSpan,
   Trace,
 } from "../../tracing/tracing";
+import {
+  inferProviderFromModel,
+  normalizeSpanProviderForPlatform,
+} from "../../tracing/utils";
+import { Integration } from "../../tracing/integrations";
 
 import {
   SpanData,
@@ -102,6 +107,8 @@ export function updateTracePropertiesFromSpanData(
 }
 
 export function updateSpanProperties(span: BaseSpan, spanData: SpanData): void {
+  span.integration = Integration.OPENAI_AGENTS;
+
   // 1. LLM Spans (Response & Generation)
   if (spanData.type === "response") {
     updateSpanPropertiesFromResponseSpanData(span as LlmSpan, spanData);
@@ -177,6 +184,9 @@ function updateSpanPropertiesFromResponseSpanData(
   span.input = input;
   span.output = output;
   span.model = response.model || "NA";
+  span.provider = normalizeSpanProviderForPlatform(
+    inferProviderFromModel(span.model),
+  );
   span.name = "LLM Generation";
 
   span.metadata = {
@@ -229,6 +239,9 @@ function updateSpanPropertiesFromGenerationSpanData(
       : undefined;
 
   span.model = spanData.model || "NA";
+  span.provider = normalizeSpanProviderForPlatform(
+    inferProviderFromModel(span.model),
+  );
   span.input = input;
   span.output = output;
   span.name = "LLM Generation";
