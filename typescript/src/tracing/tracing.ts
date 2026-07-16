@@ -70,6 +70,7 @@ export class BaseSpan {
   toolsCalled?: ToolCall[];
   expectedTools?: ToolCall[];
   expectedOutput?: string;
+  integration?: string;
 
   constructor(params: {
     uuid: string;
@@ -90,6 +91,7 @@ export class BaseSpan {
     toolsCalled?: ToolCall[];
     expectedTools?: ToolCall[];
     expectedOutput?: string;
+    integration?: string;
   }) {
     this.uuid = params.uuid;
     this.status = params.status;
@@ -109,6 +111,7 @@ export class BaseSpan {
     this.toolsCalled = params.toolsCalled;
     this.expectedTools = params.expectedTools;
     this.expectedOutput = params.expectedOutput;
+    this.integration = params.integration;
   }
 }
 
@@ -149,6 +152,7 @@ export class AgentSpan extends BaseSpan {
 // LlmSpan
 export class LlmSpan extends BaseSpan {
   model: string;
+  provider?: string;
   prompt?: Prompt;
   promptCommitHash?: string;
   promptAlias?: string;
@@ -183,9 +187,11 @@ export class LlmSpan extends BaseSpan {
     toolsCalled?: ToolCall[];
     expectedTools?: ToolCall[];
     expectedOutput?: string;
+    provider?: string;
   }) {
     super(params);
     this.model = params.model;
+    this.provider = params.provider;
     this.costPerInputToken = params.costPerInputToken;
     this.costPerOutputToken = params.costPerOutputToken;
     this.inputTokenCount = params.inputTokenCount;
@@ -553,10 +559,17 @@ export class TraceManager {
       expectedTools: span.expectedTools,
     });
 
+    if (span.integration) {
+      existing.integration = span.integration;
+    }
+
     if (span.type === SpanType.LLM) {
       const llmSpan = span as LlmSpan;
       const existingLlmSpan = existing as LlmSpan;
       existingLlmSpan.model = llmSpan.model;
+      if (llmSpan.provider) {
+        existingLlmSpan.provider = llmSpan.provider;
+      }
       existingLlmSpan.costPerInputToken = llmSpan.costPerInputToken;
       existingLlmSpan.costPerOutputToken = llmSpan.costPerOutputToken;
       existingLlmSpan.inputTokenCount = llmSpan.inputTokenCount;
@@ -858,6 +871,10 @@ export class TraceManager {
       expectedTools: span.expectedTools,
     };
 
+    if (span.integration) {
+      apiSpan.integration = span.integration;
+    }
+
     // Add type-specific fields
     if (span.type === SpanType.AGENT) {
       const agentSpan = span as AgentSpan;
@@ -866,6 +883,9 @@ export class TraceManager {
     } else if (span.type === SpanType.LLM) {
       const llmSpan = span as LlmSpan;
       apiSpan.model = llmSpan.model;
+      if (llmSpan.provider) {
+        apiSpan.provider = llmSpan.provider;
+      }
       apiSpan.costPerInputToken = llmSpan.costPerInputToken;
       apiSpan.costPerOutputToken = llmSpan.costPerOutputToken;
       apiSpan.inputTokenCount = llmSpan.inputTokenCount;
@@ -974,6 +994,12 @@ export class Tracer {
     this.parentUuid = currentSpan.parentUuid || null;
     this.traceUuid = currentTrace.uuid;
     const spanInstance = this.createSpanInstance();
+    if (this.parentUuid && !spanInstance.integration) {
+      const parentSpan = traceManager.getSpanByUuid(this.parentUuid);
+      if (parentSpan?.integration) {
+        spanInstance.integration = parentSpan.integration;
+      }
+    }
     traceManager.addSpan(spanInstance);
     traceManager.addSpanToTrace(spanInstance);
     return this;
@@ -1375,6 +1401,8 @@ export interface UpdateCurrentSpanParams {
   context?: string[];
   metricCollection?: string;
   metrics?: BaseMetric[];
+  integration?: string;
+  provider?: string;
 }
 
 export const updateCurrentSpan = ({
@@ -1390,6 +1418,8 @@ export const updateCurrentSpan = ({
   context,
   metricCollection,
   metrics,
+  integration,
+  provider,
 }: UpdateCurrentSpanParams) => {
   const currentSpan = getCurrentSpan();
 
@@ -1440,6 +1470,12 @@ export const updateCurrentSpan = ({
   }
   if (metrics) {
     currentSpan.metrics = metrics;
+  }
+  if (integration !== undefined) {
+    currentSpan.integration = integration;
+  }
+  if (provider !== undefined && "provider" in currentSpan) {
+    (currentSpan as LlmSpan).provider = provider;
   }
 };
 
