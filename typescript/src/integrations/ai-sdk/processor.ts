@@ -13,6 +13,11 @@ import {
 } from "../../tracing/tracing";
 import { AiSdkInstrumentationOptions } from "./index";
 import { ToolCall } from "../../test-case";
+import { Integration } from "../../tracing/integrations";
+import {
+  inferProviderFromModel,
+  normalizeSpanProviderForPlatform,
+} from "../../tracing/utils";
 
 export const ROOT_VERCEL_SPANS = new Set([
   "ai.generateText",
@@ -290,6 +295,7 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
     const type = this.determineSpanType(spanName);
 
     span.setAttribute("confident.span.type", type);
+    span.setAttribute("confident.span.integration", Integration.AI_SDK);
 
     const llmContext = getLlmContext();
 
@@ -433,6 +439,13 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
         attributes["gen_ai.request.model"] ||
         attributes["gen_ai.response.model"];
       if (model) attributes["confident.llm.model"] = String(model);
+      const rawProvider =
+        attributes["ai.model.provider"] ||
+        (model ? inferProviderFromModel(String(model)) : undefined);
+      const provider = normalizeSpanProviderForPlatform(rawProvider);
+      if (provider) {
+        attributes["confident.span.provider"] = provider;
+      }
 
       let input = attributes["ai.prompt"];
       if (!input && attributes["ai.prompt.messages"]) {
@@ -711,9 +724,23 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
       attributes["confident.span.metric_collection"];
     deepEvalSpan.metadata = metadataObj;
 
+    const integration = attributes["confident.span.integration"];
+    if (integration) {
+      deepEvalSpan.integration = String(integration);
+      if (deepEvalSpan.parentUuid) {
+        const parentSpan = traceManager.getSpanByUuid(deepEvalSpan.parentUuid);
+        if (parentSpan && !parentSpan.integration) {
+          parentSpan.integration = String(integration);
+        }
+      }
+    }
+
     if (deepEvalSpan.type === SpanType.LLM) {
       const llmSpan = deepEvalSpan as LlmSpan;
       llmSpan.model = attributes["confident.llm.model"] || "unknown";
+      if (attributes["confident.span.provider"]) {
+        llmSpan.provider = String(attributes["confident.span.provider"]);
+      }
       llmSpan.inputTokenCount = attributes["confident.llm.input_token_count"];
       llmSpan.outputTokenCount = attributes["confident.llm.output_token_count"];
       if (attributes["confident.span.prompt_alias"])
