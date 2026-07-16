@@ -344,7 +344,7 @@ class Prompt:
                         )
                 elif branch:
                     if (
-                        HASH_CACHE_KEY in cache_data[alias]
+                        BRANCH_CACHE_KEY in cache_data[alias]
                         and branch in cache_data[alias][BRANCH_CACHE_KEY]
                     ):
                         return CachedPrompt(
