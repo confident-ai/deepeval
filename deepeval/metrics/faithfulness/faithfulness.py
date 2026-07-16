@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Type, Union
 import asyncio
 
 from deepeval.test_case import LLMTestCase, SingleTurnParams
@@ -23,6 +23,8 @@ from deepeval.metrics.faithfulness.schema import (
     Truths,
     Claims,
 )
+from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
+from deepeval.metrics.prompt_template import BasePromptTemplate
 
 
 def _faithfulness_truths_limit_phrase(extraction_limit: Optional[int]) -> str:
@@ -65,6 +67,7 @@ class FaithfulnessMetric(BaseMetric):
         verbose_mode: bool = False,
         truths_extraction_limit: Optional[int] = None,
         penalize_ambiguous_claims: bool = False,
+        evaluation_template: Type[BasePromptTemplate] = FaithfulnessTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -74,6 +77,7 @@ class FaithfulnessMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.penalize_ambiguous_claims = penalize_ambiguous_claims
+        self.evaluation_template = evaluation_template
 
         self.truths_extraction_limit = truths_extraction_limit
         if self.truths_extraction_limit is not None:
