@@ -60,6 +60,7 @@ from .role_adherence.role_adherence import (
     RoleAdherenceMetric,
 )
 from .conversational_g_eval.conversational_g_eval import ConversationalGEval
+from .trust_score.trust_score import TrustScoreMetric
 from .multimodal_metrics import (
     TextToImageMetric,
     ImageEditingMetric,
@@ -133,4 +134,5 @@ __all__ = [
     "ImageCoherenceMetric",
     "ImageHelpfulnessMetric",
     "ImageReferenceMetric",
+    "TrustScoreMetric",
 ]
