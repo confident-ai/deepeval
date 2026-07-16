@@ -413,3 +413,30 @@ export function isAIMessage(message: any): message is AIMessage {
     "invalid_tool_calls" in message;
   return result;
 }
+
+/** LangChain / LS metadata and invocation params that carry vendor hints. */
+export function safeExtractProvider(
+  metadata?: Record<string, unknown>,
+  extraParams?: Record<string, unknown>,
+): string | undefined {
+  const invocationParams = (extraParams?.["invocationParams"] ??
+    extraParams?.["invocation_params"]) as Record<string, unknown> | undefined;
+
+  if (invocationParams && typeof invocationParams === "object") {
+    const mp = invocationParams["model_provider"];
+    if (mp != null && String(mp).trim() !== "") {
+      return String(mp);
+    }
+  }
+
+  if (metadata && typeof metadata === "object") {
+    for (const key of ["ls_provider", "model_provider"] as const) {
+      const v = metadata[key];
+      if (v != null && String(v).trim() !== "") {
+        return String(v);
+      }
+    }
+  }
+
+  return undefined;
+}
