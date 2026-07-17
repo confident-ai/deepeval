@@ -145,7 +145,7 @@ Some might be skeptical if this complexity is necessary but in reality, you'll q
 
 ### Implement DAG In Code
 
-Here's how this decision tree would look like in code:
+You build a DAG **top-down**: first define your nodes, then wire the edges with `add_node` and `add_verdict`. This reads in the same order as the decision tree above — extract the headings, check they're all present, then check their order:
 
 ```python
 from deepeval.test_case import SingleTurnParams
@@ -154,36 +154,40 @@ from deepeval.metrics.dag import (
     TaskNode,
     BinaryJudgementNode,
     NonBinaryJudgementNode,
-    VerdictNode,
 )
 
-correct_order_node = NonBinaryJudgementNode(
-    criteria="Are the summary headings in the correct order: 'intro' => 'body' => 'conclusion'?",
-    children=[
-        VerdictNode(verdict="Yes", score=10),
-        VerdictNode(verdict="Two are out of order", score=4),
-        VerdictNode(verdict="All out of order", score=2),
-    ],
-)
-
-correct_headings_node = BinaryJudgementNode(
-    criteria="Does the summary headings contain all three: 'intro', 'body', and 'conclusion'?",
-    children=[
-        VerdictNode(verdict=False, score=0),
-        VerdictNode(verdict=True, child=correct_order_node),
-    ],
-)
-
+# 1. Define your nodes
 extract_headings_node = TaskNode(
     instructions="Extract all headings in `actual_output`",
     evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
     output_label="Summary headings",
-    children=[correct_headings_node, correct_order_node],
+)
+correct_headings_node = BinaryJudgementNode(
+    criteria="Does the summary headings contain all three: 'intro', 'body', and 'conclusion'?",
+)
+correct_order_node = NonBinaryJudgementNode(
+    criteria="Are the summary headings in the correct order: 'intro' => 'body' => 'conclusion'?",
 )
 
-# create the DAG
+# 2. Wire the graph top-down
+extract_headings_node.add_node(correct_headings_node)
+extract_headings_node.add_node(correct_order_node)
+
+correct_headings_node.add_verdict(verdict=False, score=0)
+correct_headings_node.add_verdict(verdict=True, then=correct_order_node)
+
+correct_order_node.add_verdict(verdict="Yes", score=10)
+correct_order_node.add_verdict(verdict="Two are out of order", score=4)
+correct_order_node.add_verdict(verdict="All out of order", score=2)
+
+# 3. Create the DAG
 dag = DeepAcyclicGraph(root_nodes=[extract_headings_node])
 ```
+
+Each node type exposes exactly one wiring method:
+
+- **`TaskNode.add_node(child)`** — attaches a downstream node (another `TaskNode`, `BinaryJudgementNode`, or `NonBinaryJudgementNode` — never a `VerdictNode`). Returns the child. Only `TaskNode`s have `add_node`, since only they fan out to plain downstream nodes.
+- **`BinaryJudgementNode.add_verdict(...)` / `NonBinaryJudgementNode.add_verdict(verdict, *, score=None, then=None)`** — attaches one outcome to a judgement node (their children are always verdicts). Provide **either** a `score` (0–10, making it a leaf) **or** `then` (continue evaluation with another node, or a [`GEval`](/docs/metrics-llm-evals)/[`BaseMetric`](/docs/metrics-introduction) to run). Returns the created `VerdictNode`.
 
 When creating your DAG, there are three important points to remember:
 
@@ -191,7 +195,7 @@ When creating your DAG, there are three important points to remember:
 2. All nodes, except for `VerdictNode`s, can have access to an `LLMTestCase` at any point in time.
 3. All leaf nodes are `VerdictNode`s, but not all `VerdictNode`s are leaf nodes.
 
-**IMPORTANT:** You'll see that in our example, `extract_headings_node` has `correct_order_node` as a child because `correct_order_node`'s `criteria` depends on the extracted summary headings from the `actual_output` of the `LLMTestCase`.
+**IMPORTANT:** You'll see that in our example, `extract_headings_node` also points to `correct_order_node` because `correct_order_node`'s `criteria` depends on the extracted summary headings — and `correct_order_node` is reused by both `extract_headings_node` and the `True` verdict of `correct_headings_node` (a shared node, reached only after both parents run).
 
 :::tip
 To make creating a `DAGMetric` easier, you should aim to start by sketching out all the criteria and different paths your evaluation can take.
@@ -250,13 +254,20 @@ class TaskNode(BaseNode):
     label: Optional[str] = None
 ```
 
-There are **THREE** mandatory and **TWO** optional parameter when creating a `TaskNode`:
+There are **TWO** mandatory and **THREE** optional parameters when creating a `TaskNode`:
 
 - `instructions`: a string specifying how to process parameters of an `LLMTestCase`, and/or outputs from a previous parent `TaskNode`.
-- `output_label`: a string representing the final output. The `children` `BaseNode`s will use the `output_label` to reference the output from the current `TaskNode`.
-- `children`: a list of `BaseNode`s. There **must not** be a `VerdictNode` in the list of children.
+- `output_label`: a string representing the final output. Child nodes will use the `output_label` to reference the output from the current `TaskNode`.
+- [Optional] `children`: downstream nodes. Prefer wiring these with `add_node(child)` after construction. There **must not** be a `VerdictNode` among them.
 - [Optional] `evaluation_params`: a list of type `SingleTurnParams`. Include only the parameters that are relevant for processing.
 - [Optional] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
+
+Attach downstream nodes with **`add_node(child)`**, which returns the child so you can keep a reference:
+
+```python
+task = TaskNode(instructions="...", output_label="Sentences", evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT])
+judgement = task.add_node(BinaryJudgementNode(criteria="Are there more than 3 sentences?"))
+```
 
 :::info
 For example, if you intend to breakdown the `actual_output` of an `LLMTestCase` into distinct sentences, the `output_label` would be something like "Extracted Sentences", which children `BaseNode`s can reference for subsequent judgement in your decision tree.
@@ -273,22 +284,28 @@ from deepeval.test_case import SingleTurnParams
 
 class BinaryJudgementNode(BaseNode):
     criteria: str
-    children: List[VerdictNode]
+    children: List[VerdictNode] = []
     evaluation_params: Optional[List[SingleTurnParams]] = None
     label: Optional[str] = None
 ```
 
-There are **TWO** mandatory and **TWO** optional parameter when creating a `BinaryJudgementNode`:
+There is **ONE** mandatory and **THREE** optional parameters when creating a `BinaryJudgementNode`:
 
 - `criteria`: a yes/no question based on output from parent node(s) and optionally parameters from the `LLMTestCase`. You **DON'T HAVE TO TELL IT** to output `True` or `False`.
-- `children`: a list of exactly two `VerdictNode`s, one with a `verdict` value of `True`, and the other with a value of `False`.
+- [Optional] `children`: exactly two `VerdictNode`s, one with `verdict=True` and one with `verdict=False`. Prefer adding these with `add_verdict(...)`.
 - [Optional] `evaluation_params`: a list of type `SingleTurnParams`. Include only the parameters that are relevant for evaluation.
 - [Optional] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
 
-:::tip
-If you have a `TaskNode` as a parent node (which by the way is automatically set by `deepeval` when you supply the list of `children`), you can base your `criteria` on the output of the parent `TaskNode` by referencing the `output_label`.
+Add its two outcomes with **`add_verdict(verdict, *, score=None, then=None)`** — one `True` and one `False`:
 
-For example, if the parent `TaskNode`'s `output_label` is "Extracted Sentences", you can simply set the `criteria` as: "Is the number of extracted sentences greater than 3?".
+```python
+node = BinaryJudgementNode(criteria="Does the summary contain all three headings?")
+node.add_verdict(verdict=False, score=0)               # leaf: score
+node.add_verdict(verdict=True, then=correct_order_node)  # continue evaluating or have a score
+```
+
+:::tip
+If you have a `TaskNode` as a parent node, you can base your `criteria` on its output by referencing the parent's `output_label`. For example, if the parent `TaskNode`'s `output_label` is "Extracted Sentences", you can set the `criteria` as: "Is the number of extracted sentences greater than 3?".
 :::
 
 ### `NonBinaryJudgementNode`
@@ -307,36 +324,45 @@ class NonBinaryJudgementNode(BaseNode):
     label: Optional[str] = None
 ```
 
-There are **TWO** mandatory and **TWO** optional parameter when creating a `NonBinaryJudgementNode`:
+There is **ONE** mandatory and **THREE** optional parameters when creating a `NonBinaryJudgementNode`:
 
 - `criteria`: an open-ended question based on output from parent node(s) and optionally parameters from the `LLMTestCase`. You **DON'T HAVE TO TELL IT** what to output.
-- `children`: a list of `VerdictNode`s, where the `verdict` values determine the possible verdict of the current `NonBinaryJudgementNode`.
+- [Optional] `children`: `VerdictNode`s whose `verdict` values (unique strings) are the possible outcomes. Prefer adding these with `add_verdict(...)`.
 - [Optional] `evaluation_params`: a list of type `SingleTurnParams`. Include only the parameters that are relevant for evaluation.
 - [Optional] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
 
-### `VerdictNode`
-
-The `VerdictNode` **is always a leaf node** and must not be the root node of your DAG. The verdict node contains no additional logic, and simply returns the determined score based on the specified verdict.
+Add each possible outcome with **`add_verdict(verdict, *, score=None, then=None)`**, where `verdict` is one of the string options:
 
 ```python
-from typing import Union
+node = NonBinaryJudgementNode(criteria="Are the headings in the correct order?")
+node.add_verdict(verdict="Yes", score=10)
+node.add_verdict(verdict="Two are out of order", score=4)
+node.add_verdict(verdict="All out of order", score=2)
+```
+
+### `VerdictNode`
+
+A `VerdictNode` represents one outcome of a judgement node. You rarely construct it directly — `add_verdict(...)` creates it for you. A `VerdictNode` with a `score` is a leaf that sets the final score; one with a `child` continues evaluation down the graph, so **not all `VerdictNode`s are leaves.**
+
+```python
+from typing import Optional, Union
 from deepeval.metrics.dag import BaseNode
-from deepeval.metrics import GEval
+from deepeval.metrics import BaseMetric, GEval
 
 class VerdictNode(BaseNode):
     verdict: Union[str, bool]
-    score: int
-    child: Union[GEval, BaseNode]
+    score: Optional[int] = None
+    child: Optional[Union[BaseNode, GEval, BaseMetric]] = None
 ```
 
-There are **ONE** mandatory **TWO** optional parameters when creating a `VerdictNode`:
+The recommended way to create one is `add_verdict(verdict, *, score=None, then=None)` on the parent judgement node — where the `then` argument maps to `child`:
 
-- `verdict`: a string **OR** boolean representing the possible outcomes of the previous parent node. It must be a string if the parent is a `NonBinaryJudgementNode`, else boolean if the parent is a `BinaryJudgementNode`.
-- [Optional] `score`: a integer between 0 - 10 that determines the final score of your `DAGMetric` based on the specified `verdict` value. You must provide a score if `g_eval` is `None`.
-- [Optional] `child`: a `BaseNode` **OR** any [`BaseMetric`](/docs/metrics-introduction), including [`GEval`](/docs/metrics-llm-evals) metric instances. If the `score` is not provided, the `DAGMetric` will use this provided `child` to run the provided `BaseMetric` instance to calculate a score, **OR** propagate the DAG execution to the `BaseNode` `child`.
+- `verdict`: a string **OR** boolean matching an outcome of the parent judgement node. String if the parent is a `NonBinaryJudgementNode`, boolean if a `BinaryJudgementNode`.
+- [Optional] `score`: an integer between 0 - 10 that sets the final `DAGMetric` score when this verdict is taken. Provide this to make the verdict a leaf.
+- [Optional] `then` (`child` of this node): a `BaseNode` **OR** any [`BaseMetric`](/docs/metrics-introduction), including [`GEval`](/docs/metrics-llm-evals) metric instances. If the `score` is not provided, the `DAGMetric` will use this provided `child` to run the provided `BaseMetric` instance to calculate a score, **OR** propagate the DAG execution to the `BaseNode` `child`.
 
 :::caution
-You must provide `score` or `child`, but not both.
+You must provide `score` **or** a child using `then`, but not both.
 :::
 
 ## How Is It Calculated?
