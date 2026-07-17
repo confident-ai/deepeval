@@ -1,7 +1,8 @@
-from typing import Optional, List, Union, Literal, Tuple
-from dataclasses import dataclass
+from __future__ import annotations
+
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from dataclasses import dataclass, field
 from pydantic import create_model
-import asyncio
 
 from deepeval.metrics.base_metric import (
     BaseConversationalMetric,
@@ -27,50 +28,42 @@ from deepeval.utils import prettify_list
 from deepeval.metrics.dag.schema import (
     BinaryJudgementVerdict,
     MetricScoreReason,
-    NonBinaryJudgementVerdict,
     TaskNodeOutput,
 )
 
 
 class ConversationalBaseNode(PromptMixin):
-    _indegree: int = 0
-    _depth: int = 0
+    def _validate(self) -> None:
+        pass
 
-    def set_parent(self, parent: "ConversationalBaseNode"):
-        if hasattr(self, "_parent"):
-            self._parent = parent
-        elif hasattr(self, "_parents"):
-            if self._parents is None:
-                self._parents = []
-            self._parents.append(parent)
-
-    def _execute(
+    def _resolve_text(
         self,
-        metric: BaseConversationalMetric,
         test_case: ConversationalTestCase,
-        depth: int,
-    ):
-        raise NotImplementedError(
-            "This node type must implement the _execute method."
-        )
-
-    async def _a_execute(
-        self,
-        metric: BaseConversationalMetric,
-        test_case: ConversationalTestCase,
-        depth: int,
-    ):
-        raise NotImplementedError(
-            "This node type must implement the _a_execute method."
-        )
-
-
-def increment_indegree(node: ConversationalBaseNode):
-    node._indegree += 1
-
-
-def decrement_indegree(node: ConversationalBaseNode):
-    node._indegree -= 1
+        parents: Optional[List[ConversationalBaseNode]],
+        outputs: Dict[ConversationalBaseNode, Any],
+        sep: str = "\n\n",
+    ) -> str:
+        text = ""
+        if parents is not None:
+            for parent in parents:
+                if isinstance(parent, ConversationalTaskNode):
+                    text += f"{parent.output_label}:\n{outputs[parent]}{sep}"
+        if self.evaluation_params is not None:
+            if self.turn_window is not None:
+                is_valid_turn_window(self.turn_window, test_case.turns)
+                start, end = self.turn_window
+            else:
+                start, end = 0, len(test_case.turns) - 1
+            text += "Full Conversation: \n"
+            for index in range(start, end + 1):
+                turn = test_case.turns[index]
+                for param in self.evaluation_params:
+                    value = getattr(turn, param.value)
+                    if isinstance(value, ToolCall):
+                        value = repr(value)
+                    text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
+                    text += "\n"
+        return text
 
 
 @dataclass
@@ -84,13 +77,11 @@ class ConversationalVerdictNode(ConversationalBaseNode):
             BaseConversationalMetric,
         ]
     ] = None
-    _parent: Optional[ConversationalBaseNode] = None
 
     def __hash__(self):
         return id(self)
 
     def __post_init__(self):
-        # Ensure either `score` or `child` is set, but not both
         if self.score is not None and self.child is not None:
             raise ValueError(
                 "A ConversationalVerdictNode can have either a 'score' or a 'child', but not both."
@@ -99,184 +90,10 @@ class ConversationalVerdictNode(ConversationalBaseNode):
             raise ValueError(
                 "A ConversationalVerdictNode must have either a 'score' or a 'child'."
             )
+        if self.score is not None and not (0 <= self.score <= 10):
+            raise ValueError("The score must be between 0 and 10, inclusive.")
 
-        if self.score is not None:
-            if not (0 <= self.score <= 10):
-                raise ValueError(
-                    "The score must be between 0 and 10, inclusive."
-                )
-
-    def _execute(
-        self,
-        metric: BaseConversationalMetric,
-        test_case: ConversationalTestCase,
-        depth: int,
-    ):
-        decrement_indegree(self)
-        if self._indegree > 0:
-            return
-
-        if isinstance(
-            self._parent, ConversationalNonBinaryJudgementNode
-        ) or isinstance(self._parent, ConversationalBinaryJudgementNode):
-            if self._parent._verdict.verdict != self.verdict:
-                return
-
-        if self.child is not None:
-            if isinstance(self.child, ConversationalGEval):
-                convo_g_eval_args = {
-                    "name": self.child.name,
-                    "model": metric.model,
-                    "verbose_mode": False,
-                }
-                if self.child.criteria:
-                    convo_g_eval_args["criteria"] = self.child.criteria
-                else:
-                    convo_g_eval_args["evaluation_steps"] = (
-                        self.child.evaluation_steps
-                    )
-                if self.child.evaluation_params:
-                    convo_g_eval_args["evaluation_params"] = (
-                        self.child.evaluation_params
-                    )
-                copied_convo_g_eval = ConversationalGEval(**convo_g_eval_args)
-
-                copied_convo_g_eval.measure(
-                    test_case=test_case,
-                    _show_indicator=False,
-                    _log_metric_to_confident=False,
-                )
-                metric._verbose_steps.append(
-                    construct_node_verbose_log(self, depth, copied_convo_g_eval)
-                )
-                metric.score = copied_convo_g_eval.score
-                if metric.include_reason:
-                    metric.reason = copied_convo_g_eval.reason
-                metric._accrue_cost(copied_convo_g_eval.evaluation_cost)
-                metric._accrue_tokens(
-                    copied_convo_g_eval.input_tokens,
-                    copied_convo_g_eval.output_tokens,
-                )
-
-            elif isinstance(self.child, BaseConversationalMetric):
-                copied_metric: BaseConversationalMetric = copy_metrics(
-                    [self.child]
-                )[0]
-                copied_metric.verbose_mode = False
-
-                copied_metric.measure(
-                    test_case=test_case,
-                    _show_indicator=False,
-                    _log_metric_to_confident=False,
-                )
-                metric._verbose_steps.append(
-                    construct_node_verbose_log(self, depth, copied_metric)
-                )
-                metric.score = copied_metric.score
-                if metric.include_reason:
-                    metric.reason = copied_metric.reason
-                metric._accrue_cost(copied_metric.evaluation_cost)
-                metric._accrue_tokens(
-                    copied_metric.input_tokens, copied_metric.output_tokens
-                )
-            else:
-                self.child._execute(
-                    metric=metric, test_case=test_case, depth=depth
-                )
-        else:
-            metric._verbose_steps.append(
-                construct_node_verbose_log(self, depth)
-            )
-            metric.score = self.score / 10
-            if metric.include_reason:
-                metric.reason = self._generate_reason(metric=metric)
-
-    async def _a_execute(
-        self,
-        metric: BaseConversationalMetric,
-        test_case: ConversationalTestCase,
-        depth: int,
-    ):
-        decrement_indegree(self)
-        if self._indegree > 0:
-            return
-
-        if isinstance(
-            self._parent, ConversationalNonBinaryJudgementNode
-        ) or isinstance(self._parent, ConversationalBinaryJudgementNode):
-            if self._parent._verdict.verdict != self.verdict:
-                return
-
-        if self.child is not None:
-            if isinstance(self.child, ConversationalGEval):
-                convo_g_eval_args = {
-                    "name": self.child.name,
-                    "model": metric.model,
-                    "verbose_mode": False,
-                }
-                if self.child.criteria:
-                    convo_g_eval_args["criteria"] = self.child.criteria
-                else:
-                    convo_g_eval_args["evaluation_steps"] = (
-                        self.child.evaluation_steps
-                    )
-                if self.child.evaluation_params:
-                    convo_g_eval_args["evaluation_params"] = (
-                        self.child.evaluation_params
-                    )
-                copied_convo_g_eval = ConversationalGEval(**convo_g_eval_args)
-
-                await copied_convo_g_eval.a_measure(
-                    test_case=test_case,
-                    _show_indicator=False,
-                    _log_metric_to_confident=False,
-                )
-                metric._verbose_steps.append(
-                    construct_node_verbose_log(self, depth, copied_convo_g_eval)
-                )
-                metric.score = copied_convo_g_eval.score
-                if metric.include_reason:
-                    metric.reason = copied_convo_g_eval.reason
-                metric._accrue_cost(copied_convo_g_eval.evaluation_cost)
-                metric._accrue_tokens(
-                    copied_convo_g_eval.input_tokens,
-                    copied_convo_g_eval.output_tokens,
-                )
-
-            elif isinstance(self.child, BaseConversationalMetric):
-                copied_metric: BaseConversationalMetric = copy_metrics(
-                    [self.child]
-                )[0]
-                copied_metric.verbose_mode = False
-
-                await copied_metric.a_measure(
-                    test_case=test_case,
-                    _show_indicator=False,
-                    _log_metric_to_confident=False,
-                )
-                metric._verbose_steps.append(
-                    construct_node_verbose_log(self, depth, copied_metric)
-                )
-                metric.score = copied_metric.score
-                if metric.include_reason:
-                    metric.reason = copied_metric.reason
-                metric._accrue_cost(copied_metric.evaluation_cost)
-                metric._accrue_tokens(
-                    copied_metric.input_tokens, copied_metric.output_tokens
-                )
-            else:
-                await self.child._a_execute(
-                    metric=metric, test_case=test_case, depth=depth
-                )
-        else:
-            metric._verbose_steps.append(
-                construct_node_verbose_log(self, depth)
-            )
-            metric.score = self.score / 10
-            if metric.include_reason:
-                metric.reason = await self._a_generate_reason(metric=metric)
-
-    def _generate_reason(self, metric: BaseConversationalMetric):
+    def _generate_reason(self, metric: BaseConversationalMetric) -> str:
         prompt = self._get_prompt(
             "generate_reason",
             template_class="VerdictNode",
@@ -284,16 +101,17 @@ class ConversationalVerdictNode(ConversationalBaseNode):
             score=metric.score,
             name=metric.__name__,
         )
-
         return generate_with_schema_and_extract(
             metric=metric,
             prompt=prompt,
             schema_cls=MetricScoreReason,
-            extract_schema=lambda score_reason: score_reason.reason,
+            extract_schema=lambda s: s.reason,
             extract_json=lambda data: data["reason"],
         )
 
-    async def _a_generate_reason(self, metric: BaseConversationalMetric):
+    async def _a_generate_reason(
+        self, metric: BaseConversationalMetric
+    ) -> str:
         prompt = self._get_prompt(
             "generate_reason",
             template_class="VerdictNode",
@@ -301,379 +119,285 @@ class ConversationalVerdictNode(ConversationalBaseNode):
             score=metric.score,
             name=metric.__name__,
         )
-
         return await a_generate_with_schema_and_extract(
             metric=metric,
             prompt=prompt,
             schema_cls=MetricScoreReason,
-            extract_schema=lambda score_reason: score_reason.reason,
+            extract_schema=lambda s: s.reason,
             extract_json=lambda data: data["reason"],
         )
+
+    def _build_child_metric(self, metric: BaseConversationalMetric):
+        if isinstance(self.child, ConversationalGEval):
+            args = {
+                "name": self.child.name,
+                "model": metric.model,
+                "verbose_mode": False,
+            }
+            if self.child.criteria:
+                args["criteria"] = self.child.criteria
+            else:
+                args["evaluation_steps"] = self.child.evaluation_steps
+            if self.child.evaluation_params:
+                args["evaluation_params"] = self.child.evaluation_params
+            return ConversationalGEval(**args)
+        copied = copy_metrics([self.child])[0]
+        copied.verbose_mode = False
+        return copied
+
+    def _run_child_metric(
+        self, metric: BaseConversationalMetric, test_case: ConversationalTestCase
+    ):
+        copied = self._build_child_metric(metric)
+        copied.measure(
+            test_case=test_case,
+            _show_indicator=False,
+            _log_metric_to_confident=False,
+        )
+        return copied
+
+    async def _a_run_child_metric(
+        self, metric: BaseConversationalMetric, test_case: ConversationalTestCase
+    ):
+        copied = self._build_child_metric(metric)
+        await copied.a_measure(
+            test_case=test_case,
+            _show_indicator=False,
+            _log_metric_to_confident=False,
+        )
+        return copied
 
 
 @dataclass
 class ConversationalTaskNode(ConversationalBaseNode):
     instructions: str
     output_label: str
-    children: List[ConversationalBaseNode]
-    evaluation_params: List[MultiTurnParams] = None
-    turn_window: Tuple[int, int] = None
+    children: List[ConversationalBaseNode] = field(default_factory=list)
+    evaluation_params: Optional[List[MultiTurnParams]] = None
+    turn_window: Optional[Tuple[int, int]] = None
     label: Optional[str] = None
-    _verbose_logs: Optional[str] = None
-    _output: Optional[str] = None
-    _parents: Optional[List[ConversationalBaseNode]] = None
 
     def __hash__(self):
         return id(self)
 
     def __post_init__(self):
+        if self.children:
+            self._validate()
+
+    def add_node(
+        self, child: ConversationalBaseNode
+    ) -> ConversationalBaseNode:
+        self.children.append(child)
+        return child
+
+    def _validate(self) -> None:
         for child in self.children:
+            if not isinstance(child, ConversationalBaseNode):
+                raise TypeError(
+                    "A ConversationalTaskNode's children must be ConversationalBaseNode instances."
+                )
             if isinstance(child, ConversationalVerdictNode):
                 raise ValueError(
                     "A ConversationalTaskNode must not have a ConversationalVerdictNode as one of their 'children'."
                 )
 
-        for child in self.children:
-            child.set_parent(self)
-            increment_indegree(child)
-
     def _execute(
         self,
         metric: BaseConversationalMetric,
         test_case: ConversationalTestCase,
-        depth: int,
-    ):
-        self._depth = max(0, self._depth, depth)
-        decrement_indegree(self)
-        if self._indegree > 0:
-            return
-
-        if self.evaluation_params is None and self._parents is None:
+        parents: Optional[List[ConversationalBaseNode]],
+        outputs: Dict[ConversationalBaseNode, Any],
+    ) -> Any:
+        if self.evaluation_params is None and parents is None:
             raise ValueError(
                 "A ConversationalTaskNode must have either a 'evaluation_params' or parent node(s)."
             )
-
-        if self.turn_window is not None:
-            is_valid_turn_window(self.turn_window, test_case.turns)
-
-        if not self.turn_window:
-            self.turn_window = 0, len(test_case.turns) - 1
-
-        text = """"""
-        start, end = self.turn_window
-        if self._parents is not None:
-            for parent in self._parents:
-                if isinstance(parent, ConversationalTaskNode):
-                    text += f"{parent.output_label}:\n{parent._output}\n\n"
-
-        if self.evaluation_params is not None:
-            text += "Full Conversation: \n"
-            for index in range(start, end + 1):
-                turn = test_case.turns[index]
-                for param in self.evaluation_params:
-                    value = getattr(turn, param.value)
-                    if isinstance(value, ToolCall):
-                        value = repr(value)
-                    text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
-                    text += "\n"
-
         prompt = self._get_prompt(
             "generate_task_output",
             template_class="TaskNode",
             instructions=self.instructions,
-            text=text,
+            text=self._resolve_text(test_case, parents, outputs),
         )
-
-        self._output = generate_with_schema_and_extract(
+        return generate_with_schema_and_extract(
             metric=metric,
             prompt=prompt,
             schema_cls=TaskNodeOutput,
             extract_schema=lambda s: s.output,
             extract_json=lambda data: data["output"],
         )
-
-        metric._verbose_steps.append(
-            construct_node_verbose_log(self, self._depth)
-        )
-        for children in self.children:
-            children._execute(
-                metric=metric, test_case=test_case, depth=self._depth + 1
-            )
 
     async def _a_execute(
         self,
         metric: BaseConversationalMetric,
         test_case: ConversationalTestCase,
-        depth: int,
-    ):
-        self._depth = max(0, self._depth, depth)
-        decrement_indegree(self)
-        if self._indegree > 0:
-            return
-
-        if self.evaluation_params is None and self._parents is None:
+        parents: Optional[List[ConversationalBaseNode]],
+        outputs: Dict[ConversationalBaseNode, Any],
+    ) -> Any:
+        if self.evaluation_params is None and parents is None:
             raise ValueError(
                 "A ConversationalTaskNode must have either a 'evaluation_params' or parent node(s)."
             )
-
-        if self.turn_window is not None:
-            is_valid_turn_window(self.turn_window, test_case.turns)
-
-        if not self.turn_window:
-            self.turn_window = 0, len(test_case.turns) - 1
-
-        text = """"""
-        start, end = self.turn_window
-        if self._parents is not None:
-            for parent in self._parents:
-                if isinstance(parent, ConversationalTaskNode):
-                    text += f"{parent.output_label}:\n{parent._output}\n\n"
-
-        if self.evaluation_params is not None:
-            text += "Full Conversation: \n"
-            for index in range(start, end + 1):
-                turn = test_case.turns[index]
-                for param in self.evaluation_params:
-                    value = getattr(turn, param.value)
-                    if isinstance(value, ToolCall):
-                        value = repr(value)
-                    text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
-                    text += "\n"
-
         prompt = self._get_prompt(
             "generate_task_output",
             template_class="TaskNode",
             instructions=self.instructions,
-            text=text,
+            text=self._resolve_text(test_case, parents, outputs),
         )
-
-        self._output = await a_generate_with_schema_and_extract(
+        return await a_generate_with_schema_and_extract(
             metric=metric,
             prompt=prompt,
             schema_cls=TaskNodeOutput,
             extract_schema=lambda s: s.output,
             extract_json=lambda data: data["output"],
-        )
-        metric._verbose_steps.append(
-            construct_node_verbose_log(self, self._depth)
-        )
-        await asyncio.gather(
-            *(
-                child._a_execute(
-                    metric=metric, test_case=test_case, depth=self._depth + 1
-                )
-                for child in self.children
-            )
         )
 
 
 @dataclass
 class ConversationalBinaryJudgementNode(ConversationalBaseNode):
     criteria: str
-    children: List[ConversationalVerdictNode]
+    children: List[ConversationalVerdictNode] = field(default_factory=list)
     evaluation_params: Optional[List[MultiTurnParams]] = None
-    turn_window: Tuple[int, int] = None
+    turn_window: Optional[Tuple[int, int]] = None
     label: Optional[str] = None
-    _verbose_logs: Optional[str] = None
-    _verdict: Optional[BinaryJudgementVerdict] = None
-    _parents: Optional[List[ConversationalBaseNode]] = None
 
     def __hash__(self):
         return id(self)
 
     def __post_init__(self):
+        if self.children:
+            self._validate()
+
+    def add_verdict(
+        self,
+        verdict: bool,
+        *,
+        score: Optional[int] = None,
+        then: Optional[
+            Union[
+                ConversationalBaseNode,
+                ConversationalGEval,
+                BaseConversationalMetric,
+            ]
+        ] = None,
+    ) -> ConversationalVerdictNode:
+        node = ConversationalVerdictNode(
+            verdict=verdict, score=score, child=then
+        )
+        self.children.append(node)
+        return node
+
+    def _validate(self) -> None:
         if len(self.children) != 2:
             raise ValueError(
                 "ConversationalBinaryJudgementNode must have exactly 2 children."
             )
-
-        # Check if all children are ClassificationResultNode and their classifications are boolean
         for child in self.children:
             if not isinstance(child, ConversationalVerdictNode):
                 raise TypeError(
                     "All children of ConversationalBinaryJudgementNode must be of type ConversationalVerdictNode."
                 )
-
             if not isinstance(child.verdict, bool):
                 raise ValueError(
                     "All children of ConversationalBinaryJudgementNode must have a boolean verdict."
                 )
-
-        # Check if there is one True and one False classification
         verdicts = [child.verdict for child in self.children]
         if verdicts.count(True) != 1 or verdicts.count(False) != 1:
             raise ValueError(
                 "ConversationalBinaryJudgementNode must have one True and one False ConversationalVerdictNode child."
             )
 
-        # print("-------")
-        for child in self.children:
-            child.set_parent(self)
-            increment_indegree(child)
-            if child.child is not None and isinstance(
-                child.child, ConversationalBaseNode
-            ):
-                increment_indegree(child.child)
-        #         print("binary node nested", child.child.__class__.__name__, id(child.child), child.child._indegree)
-        #     print("binary node", child.__class__.__name__, id(child), child._indegree)
-        # print("-------")
-
     def _execute(
         self,
         metric: BaseConversationalMetric,
         test_case: ConversationalTestCase,
-        depth: int,
-    ):
-        self._depth = max(0, self._depth, depth)
-        decrement_indegree(self)
-        if self._indegree > 0:
-            return
-
-        if self.turn_window is not None:
-            is_valid_turn_window(self.turn_window, test_case.turns)
-
-        if not self.turn_window:
-            self.turn_window = 0, len(test_case.turns) - 1
-
-        text = """"""
-        start, end = self.turn_window
-        if self._parents is not None:
-            for parent in self._parents:
-                if isinstance(parent, ConversationalTaskNode):
-                    text += f"{parent.output_label}:\n{parent._output}\n\n"
-
-        if self.evaluation_params is not None:
-            text += "Full Conversation: \n"
-            for index in range(start, end + 1):
-                turn = test_case.turns[index]
-                for param in self.evaluation_params:
-                    value = getattr(turn, param.value)
-                    if isinstance(value, ToolCall):
-                        value = repr(value)
-                    text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
-                    text += "\n"
-
+        parents: Optional[List[ConversationalBaseNode]],
+        outputs: Dict[ConversationalBaseNode, Any],
+    ) -> BinaryJudgementVerdict:
         prompt = self._get_prompt(
             "generate_binary_verdict",
             template_class="BinaryJudgement",
             criteria=self.criteria,
-            text=text,
+            text=self._resolve_text(test_case, parents, outputs),
         )
-
-        self._verdict = generate_with_schema_and_extract(
+        return generate_with_schema_and_extract(
             metric=metric,
             prompt=prompt,
             schema_cls=BinaryJudgementVerdict,
             extract_schema=lambda s: s,
             extract_json=lambda data: BinaryJudgementVerdict(**data),
         )
-
-        metric._verbose_steps.append(
-            construct_node_verbose_log(self, self._depth)
-        )
-        for children in self.children:
-            children._execute(
-                metric=metric, test_case=test_case, depth=self._depth + 1
-            )
 
     async def _a_execute(
         self,
         metric: BaseConversationalMetric,
         test_case: ConversationalTestCase,
-        depth: int,
-    ):
-        self._depth = max(0, self._depth, depth)
-        decrement_indegree(self)
-        if self._indegree > 0:
-            return
-
-        if self.turn_window is not None:
-            is_valid_turn_window(self.turn_window, test_case.turns)
-
-        if not self.turn_window:
-            self.turn_window = 0, len(test_case.turns) - 1
-
-        text = """"""
-        start, end = self.turn_window
-        if self._parents is not None:
-            for parent in self._parents:
-                if isinstance(parent, ConversationalTaskNode):
-                    text += f"{parent.output_label}:\n{parent._output}\n\n"
-
-        if self.evaluation_params is not None:
-            text += "Full Conversation: \n"
-            for index in range(start, end + 1):
-                turn = test_case.turns[index]
-                for param in self.evaluation_params:
-                    value = getattr(turn, param.value)
-                    if isinstance(value, ToolCall):
-                        value = repr(value)
-                    text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
-                    text += "\n"
-
+        parents: Optional[List[ConversationalBaseNode]],
+        outputs: Dict[ConversationalBaseNode, Any],
+    ) -> BinaryJudgementVerdict:
         prompt = self._get_prompt(
             "generate_binary_verdict",
             template_class="BinaryJudgement",
             criteria=self.criteria,
-            text=text,
+            text=self._resolve_text(test_case, parents, outputs),
         )
-
-        self._verdict = await a_generate_with_schema_and_extract(
+        return await a_generate_with_schema_and_extract(
             metric=metric,
             prompt=prompt,
             schema_cls=BinaryJudgementVerdict,
             extract_schema=lambda s: s,
             extract_json=lambda data: BinaryJudgementVerdict(**data),
-        )
-
-        metric._verbose_steps.append(
-            construct_node_verbose_log(self, self._depth)
-        )
-        await asyncio.gather(
-            *(
-                child._a_execute(
-                    metric=metric, test_case=test_case, depth=self._depth + 1
-                )
-                for child in self.children
-            )
         )
 
 
 @dataclass
 class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
     criteria: str
-    children: List[ConversationalVerdictNode]
+    children: List[ConversationalVerdictNode] = field(default_factory=list)
     evaluation_params: Optional[List[MultiTurnParams]] = None
-    turn_window: Tuple[int, int] = None
+    turn_window: Optional[Tuple[int, int]] = None
     label: Optional[str] = None
-    _verbose_logs: Optional[str] = None
-    _verdict: Optional[NonBinaryJudgementVerdict] = None
-    _parents: Optional[List[ConversationalBaseNode]] = None
 
     def __hash__(self):
         return id(self)
 
     def __post_init__(self):
-        # Check if children is not empty
+        if self.children:
+            self._validate()
+
+    def add_verdict(
+        self,
+        verdict: str,
+        *,
+        score: Optional[int] = None,
+        then: Optional[
+            Union[
+                ConversationalBaseNode,
+                ConversationalGEval,
+                BaseConversationalMetric,
+            ]
+        ] = None,
+    ) -> ConversationalVerdictNode:
+        node = ConversationalVerdictNode(
+            verdict=verdict, score=score, child=then
+        )
+        self.children.append(node)
+        return node
+
+    def _validate(self) -> None:
         if not self.children:
             raise ValueError(
                 "ConversationalNonBinaryJudgementNode must have at least one child."
             )
-
         verdicts_set = set()
         for child in self.children:
             if not isinstance(child, ConversationalVerdictNode):
                 raise TypeError(
                     "All children must be of type ConversationalVerdictNode."
                 )
-
-            # Check if the verdict attribute of each child is a string
             if not isinstance(child.verdict, str):
                 raise ValueError(
                     "The verdict attribute of all children must be a string."
                 )
-
-            # Check for duplicate verdicts
             if child.verdict in verdicts_set:
                 raise ValueError(
                     f"Duplicate verdict found: {child.verdict} in children of ConversationalNonBinaryJudgementNode."
@@ -681,146 +405,54 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
             verdicts_set.add(child.verdict)
 
         self._verdict_options = list(verdicts_set)
-
-        # Dynamically create ConversationalNonBinaryJudgementNode class
         self._verdict_schema = create_model(
-            "ConversationalNonBinaryJudgementNode",
+            "NonBinaryJudgementVerdict",
             verdict=(Literal[tuple(self._verdict_options)], ...),
             reason=(str, ...),
         )
-
-        # print("-------")
-        for child in self.children:
-            child.set_parent(self)
-            increment_indegree(child)
-            if child.child is not None and isinstance(
-                child.child, ConversationalBaseNode
-            ):
-                increment_indegree(child.child)
-        #         print("non binary node nested", child.child.__class__.__name__, id(child.child), child.child._indegree)
-        #     print("non binary node", child.__class__.__name__, id(child), child._indegree)
-        # print("-------")
 
     def _execute(
         self,
         metric: BaseConversationalMetric,
         test_case: ConversationalTestCase,
-        depth: int,
-    ):
-        self._depth = max(0, self._depth, depth)
-        decrement_indegree(self)
-        if self._indegree > 0:
-            return
-
-        if self.turn_window is not None:
-            is_valid_turn_window(self.turn_window, test_case.turns)
-
-        if not self.turn_window:
-            self.turn_window = 0, len(test_case.turns) - 1
-
-        text = """"""
-        start, end = self.turn_window
-        if self._parents is not None:
-            for parent in self._parents:
-                if isinstance(parent, ConversationalTaskNode):
-                    text += f"{parent.output_label}:\n{parent._output}\n\n"
-
-        if self.evaluation_params is not None:
-            text += "Full Conversation: \n"
-            for index in range(start, end + 1):
-                turn = test_case.turns[index]
-                for param in self.evaluation_params:
-                    value = getattr(turn, param.value)
-                    if isinstance(value, ToolCall):
-                        value = repr(value)
-                    text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
-                    text += "\n"
-
+        parents: Optional[List[ConversationalBaseNode]],
+        outputs: Dict[ConversationalBaseNode, Any],
+    ) -> Any:
         prompt = self._get_prompt(
             "generate_non_binary_verdict",
-            template_class="BinaryJudgement",
+            template_class="NonBinaryJudgement",
             criteria=self.criteria,
-            text=text,
+            text=self._resolve_text(test_case, parents, outputs),
             options=self._verdict_options,
         )
-
-        self._verdict = generate_with_schema_and_extract(
+        return generate_with_schema_and_extract(
             metric=metric,
             prompt=prompt,
             schema_cls=self._verdict_schema,
             extract_schema=lambda s: s,
             extract_json=lambda data: self._verdict_schema(**data),
         )
-
-        metric._verbose_steps.append(
-            construct_node_verbose_log(self, self._depth)
-        )
-        for children in self.children:
-            children._execute(
-                metric=metric, test_case=test_case, depth=self._depth + 1
-            )
 
     async def _a_execute(
         self,
         metric: BaseConversationalMetric,
         test_case: ConversationalTestCase,
-        depth: int,
-    ):
-        self._depth = max(0, self._depth, depth)
-        decrement_indegree(self)
-        if self._indegree > 0:
-            return
-
-        if self.turn_window is not None:
-            is_valid_turn_window(self.turn_window, test_case.turns)
-
-        if not self.turn_window:
-            self.turn_window = 0, len(test_case.turns) - 1
-
-        text = """"""
-        start, end = self.turn_window
-        if self._parents is not None:
-            for parent in self._parents:
-                if isinstance(parent, ConversationalTaskNode):
-                    text += f"{parent.output_label}:\n{parent._output}\n\n"
-
-        if self.evaluation_params is not None:
-            text += "Full Conversation: \n"
-            for index in range(start, end + 1):
-                turn = test_case.turns[index]
-                for param in self.evaluation_params:
-                    value = getattr(turn, param.value)
-                    if isinstance(value, ToolCall):
-                        value = repr(value)
-                    text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
-                    text += "\n"
-
+        parents: Optional[List[ConversationalBaseNode]],
+        outputs: Dict[ConversationalBaseNode, Any],
+    ) -> Any:
         prompt = self._get_prompt(
             "generate_non_binary_verdict",
-            template_class="BinaryJudgement",
+            template_class="NonBinaryJudgement",
             criteria=self.criteria,
-            text=text,
+            text=self._resolve_text(test_case, parents, outputs),
             options=self._verdict_options,
         )
-
-        self._verdict = await a_generate_with_schema_and_extract(
+        return await a_generate_with_schema_and_extract(
             metric=metric,
             prompt=prompt,
             schema_cls=self._verdict_schema,
             extract_schema=lambda s: s,
             extract_json=lambda data: self._verdict_schema(**data),
-        )
-
-        metric._verbose_steps.append(
-            construct_node_verbose_log(self, self._depth)
-        )
-        await asyncio.gather(
-            *(
-                child._a_execute(
-                    metric=metric, test_case=test_case, depth=self._depth + 1
-                )
-                for child in self.children
-            )
         )
 
 
@@ -830,16 +462,26 @@ def construct_node_verbose_log(
     node_metric: Optional[
         Union[ConversationalGEval, BaseConversationalMetric]
     ] = None,
+    *,
+    output: Optional[Any] = None,
+    verdict: Optional[Any] = None,
 ) -> str:
-    if (
-        isinstance(node, ConversationalBinaryJudgementNode)
-        or isinstance(node, ConversationalNonBinaryJudgementNode)
-        or isinstance(node, ConversationalTaskNode)
+    if isinstance(
+        node,
+        (
+            ConversationalBinaryJudgementNode,
+            ConversationalNonBinaryJudgementNode,
+            ConversationalTaskNode,
+        ),
     ):
         label = node.label if node.label else "None"
 
-    if isinstance(node, ConversationalBinaryJudgementNode) or isinstance(
-        node, ConversationalNonBinaryJudgementNode
+    if isinstance(
+        node,
+        (
+            ConversationalBinaryJudgementNode,
+            ConversationalNonBinaryJudgementNode,
+        ),
     ):
         is_binary_node = isinstance(node, ConversationalBinaryJudgementNode)
         node_type = (
@@ -856,8 +498,8 @@ def construct_node_verbose_log(
             f"Label: {label}\n\n"
             "Criteria:\n"
             f"{node.criteria}\n\n"
-            f"Verdict: {node._verdict.verdict}\n"
-            f"Reason: {node._verdict.reason}\n"
+            f"Verdict: {verdict.verdict}\n"
+            f"Reason: {verdict.reason}\n"
         )
     elif isinstance(node, ConversationalTaskNode):
         return (
@@ -867,13 +509,13 @@ def construct_node_verbose_log(
             f"Label: {label}\n\n"
             "Instructions:\n"
             f"{node.instructions}\n\n"
-            f"{node.output_label}:\n{node._output}\n"
+            f"{node.output_label}:\n{output}\n"
         )
     elif isinstance(node, ConversationalVerdictNode):
         type = None
         if node_metric:
-            if isinstance(node_metric, ConversationalGEval) or isinstance(
-                node_metric, BaseConversationalMetric
+            if isinstance(
+                node_metric, (ConversationalGEval, BaseConversationalMetric)
             ):
                 type = f"{node_metric.__name__} Metric"
         else:
