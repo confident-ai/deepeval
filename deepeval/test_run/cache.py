@@ -109,11 +109,19 @@ class TestRunCacheManager:
         self.cache_file_name: str = CACHE_FILE_NAME
         self.temp_cached_test_run: Optional[CachedTestRun] = None
         self.temp_cache_file_name: str = TEMP_CACHE_FILE_NAME
+        self._temp_cache_session_started: bool = False
+
+    def _disk_cache_disabled(self) -> bool:
+        return (
+            self.disable_write_cache
+            or portalocker is None
+            or is_read_only_env()
+        )
 
     def get_cached_test_case(
         self, test_case: LLMTestCase, hyperparameters: Union[Dict, None]
     ) -> Union[CachedTestCase, None]:
-        if self.disable_write_cache or portalocker is None:
+        if self._disk_cache_disabled():
             return None
 
         cached_test_run = self.get_cached_test_run()
@@ -145,8 +153,10 @@ class TestRunCacheManager:
         hyperparameters: Union[Dict, None],
         to_temp: bool = False,
     ):
-        if self.disable_write_cache or portalocker is None:
+        if self._disk_cache_disabled():
             return
+        if to_temp and not self._temp_cache_session_started:
+            self._temp_cache_session_started = True
         cache_dict = {
             SingleTurnParams.INPUT.value: test_case.input,
             SingleTurnParams.ACTUAL_OUTPUT.value: test_case.actual_output,
@@ -172,7 +182,7 @@ class TestRunCacheManager:
     def set_cached_test_run(
         self, cached_test_run: CachedTestRun, temp: bool = False
     ):
-        if self.disable_write_cache or portalocker is None:
+        if self._disk_cache_disabled():
             return
 
         if temp:
@@ -181,7 +191,7 @@ class TestRunCacheManager:
             self.cached_test_run = cached_test_run
 
     def save_cached_test_run(self, to_temp: bool = False):
-        if self.disable_write_cache or portalocker is None:
+        if self._disk_cache_disabled():
             return
 
         if to_temp:
@@ -208,7 +218,7 @@ class TestRunCacheManager:
                 )
 
     def create_cached_test_run(self, temp: bool = False):
-        if self.disable_write_cache or portalocker is None:
+        if self._disk_cache_disabled():
             return
 
         cached_test_run = CachedTestRun()
@@ -218,7 +228,7 @@ class TestRunCacheManager:
     def get_cached_test_run(
         self, from_temp: bool = False
     ) -> Union[CachedTestRun, None]:
-        if self.disable_write_cache or portalocker is None:
+        if self._disk_cache_disabled():
             return
 
         should_create_cached_test_run = False
@@ -283,16 +293,34 @@ class TestRunCacheManager:
             return self.cached_test_run
 
     def wrap_up_cached_test_run(self):
-        if portalocker is None:
+        if self._disk_cache_disabled():
+            self.cached_test_run = None
+            self.temp_cached_test_run = None
+            self._temp_cache_session_started = False
             return
 
-        if self.disable_write_cache:
-            # Clear cache if write cache is disabled
-            delete_file_if_exists(self.cache_file_name)
-            delete_file_if_exists(self.temp_cache_file_name)
+        if not self._temp_cache_session_started:
+            self.temp_cached_test_run = None
             return
 
+        if self.temp_cached_test_run is None and not os.path.exists(
+            self.temp_cache_file_name
+        ):
+            self._temp_cache_session_started = False
+            return
+
+        if os.path.exists(self.temp_cache_file_name):
+            self.temp_cached_test_run = None
         self.get_cached_test_run(from_temp=True)
+        if not (
+            self.temp_cached_test_run
+            and self.temp_cached_test_run.test_cases_lookup_map
+        ):
+            self.temp_cached_test_run = None
+            delete_file_if_exists(self.temp_cache_file_name)
+            self._temp_cache_session_started = False
+            return
+
         try:
             with portalocker.Lock(self.cache_file_name, mode="w") as file:
                 self.temp_cached_test_run = self.temp_cached_test_run.save(file)
@@ -303,6 +331,7 @@ class TestRunCacheManager:
             )
         finally:
             delete_file_if_exists(self.temp_cache_file_name)
+            self._temp_cache_session_started = False
 
 
 global_test_run_cache_manager = TestRunCacheManager()

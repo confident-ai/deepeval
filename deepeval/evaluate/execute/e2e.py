@@ -67,15 +67,14 @@ from deepeval.utils import add_pbar, update_pbar, custom_console
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.config.settings import get_settings
 
-logger = logging.getLogger(__name__)
-
-
 from deepeval.evaluate.execute._common import (
     _await_with_outer_deadline,
     _execute_metric,
     _log_gather_timeout,
     _timeout_msg,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def execute_test_cases(
@@ -92,37 +91,61 @@ def execute_test_cases(
     _use_bar_indicator: bool = True,
     _is_assert_test: bool = False,
 ) -> List[TestResult]:
-    global_test_run_cache_manager.disable_write_cache = (
-        cache_config.write_cache is False
-    )
-
     if test_run_manager is None:
         test_run_manager = global_test_run_manager
 
-    test_run_manager.save_to_disk = cache_config.write_cache
-    test_run = test_run_manager.get_test_run(identifier=identifier)
-    if test_run is None:
-        # ensure we have a test_run ( in case it couldn't be loaded from disk )
-        test_run_manager.create_test_run(identifier=identifier)
+    previous_disable_write_cache = (
+        global_test_run_cache_manager.disable_write_cache
+    )
+    previous_write_cache_state = test_run_manager._write_cache_state()
+
+    def restore_cache_policy(preserve_latest_invalidation: bool = False):
+        if preserve_latest_invalidation:
+            test_run_manager._invalidate_latest_test_run_cache(
+                delete_owned_disk_state=True
+            )
+        global_test_run_cache_manager.disable_write_cache = (
+            previous_disable_write_cache
+        )
+        test_run_manager._restore_write_cache_state(
+            previous_write_cache_state,
+            preserve_latest_invalidation=preserve_latest_invalidation,
+        )
+
+    global_test_run_cache_manager.disable_write_cache = (
+        cache_config.write_cache is False
+    )
+    test_run_manager.configure_write_cache(cache_config.write_cache)
+
+    try:
         test_run = test_run_manager.get_test_run(identifier=identifier)
+        if test_run is None:
+            # ensure we have a test_run ( in case it couldn't be loaded from disk )
+            test_run_manager.create_test_run(identifier=identifier)
+            test_run = test_run_manager.get_test_run(identifier=identifier)
 
-    # capture once for inner closures
-    hyperparameters = test_run.hyperparameters if test_run is not None else None
+        # capture once for inner closures
+        hyperparameters = (
+            test_run.hyperparameters if test_run is not None else None
+        )
 
-    if display_config.verbose_mode is not None:
+        if display_config.verbose_mode is not None:
+            for metric in metrics:
+                metric.verbose_mode = display_config.verbose_mode
+
+        conversational_metrics: List[BaseConversationalMetric] = []
+        llm_metrics: List[BaseMetric] = []
         for metric in metrics:
-            metric.verbose_mode = display_config.verbose_mode
+            metric.async_mode = False
+            if isinstance(metric, BaseMetric):
+                llm_metrics.append(metric)
+            elif isinstance(metric, BaseConversationalMetric):
+                conversational_metrics.append(metric)
 
-    conversational_metrics: List[BaseConversationalMetric] = []
-    llm_metrics: List[BaseMetric] = []
-    for metric in metrics:
-        metric.async_mode = False
-        if isinstance(metric, BaseMetric):
-            llm_metrics.append(metric)
-        elif isinstance(metric, BaseConversationalMetric):
-            conversational_metrics.append(metric)
-
-    test_results: List[TestResult] = []
+        test_results: List[TestResult] = []
+    except BaseException:
+        restore_cache_policy(cache_config.write_cache is False)
+        raise
 
     def evaluate_test_cases(
         progress: Optional[Progress] = None, pbar_id: Optional[int] = None
@@ -309,25 +332,29 @@ def execute_test_cases(
                 finally:
                     reset_outer_deadline(deadline_token)
 
-    if display_config.show_indicator and _use_bar_indicator:
-        progress = Progress(
-            TextColumn("{task.description}"),
-            BarColumn(bar_width=60),
-            TaskProgressColumn(),
-            TimeElapsedColumn(),
-            console=custom_console,
-        )
-        with progress:
-            pbar_id = add_pbar(
-                progress,
-                f"Evaluating {len(test_cases)} test case(s) sequentially",
-                total=len(test_cases),
+    try:
+        if display_config.show_indicator and _use_bar_indicator:
+            progress = Progress(
+                TextColumn("{task.description}"),
+                BarColumn(bar_width=60),
+                TaskProgressColumn(),
+                TimeElapsedColumn(),
+                console=custom_console,
             )
-            evaluate_test_cases(progress=progress, pbar_id=pbar_id)
-    else:
-        evaluate_test_cases()
+            with progress:
+                pbar_id = add_pbar(
+                    progress,
+                    f"Evaluating {len(test_cases)} test case(s) sequentially",
+                    total=len(test_cases),
+                )
+                evaluate_test_cases(progress=progress, pbar_id=pbar_id)
+        else:
+            evaluate_test_cases()
 
-    return test_results
+        return test_results
+    except BaseException:
+        restore_cache_policy(cache_config.write_cache is False)
+        raise
 
 
 async def a_execute_test_cases(
@@ -353,54 +380,146 @@ async def a_execute_test_cases(
                 func, *args, timeout=get_per_task_timeout_seconds(), **kwargs
             )
 
-    global_test_run_cache_manager.disable_write_cache = (
-        cache_config.write_cache is False
-    )
     if test_run_manager is None:
         test_run_manager = global_test_run_manager
 
-    test_run_manager.save_to_disk = cache_config.write_cache
-    test_run = test_run_manager.get_test_run(identifier=identifier)
+    previous_disable_write_cache = (
+        global_test_run_cache_manager.disable_write_cache
+    )
+    previous_write_cache_state = test_run_manager._write_cache_state()
 
-    if display_config.verbose_mode is not None:
+    def restore_cache_policy(preserve_latest_invalidation: bool = False):
+        if preserve_latest_invalidation:
+            test_run_manager._invalidate_latest_test_run_cache(
+                delete_owned_disk_state=True
+            )
+        global_test_run_cache_manager.disable_write_cache = (
+            previous_disable_write_cache
+        )
+        test_run_manager._restore_write_cache_state(
+            previous_write_cache_state,
+            preserve_latest_invalidation=preserve_latest_invalidation,
+        )
+
+    global_test_run_cache_manager.disable_write_cache = (
+        cache_config.write_cache is False
+    )
+    test_run_manager.configure_write_cache(cache_config.write_cache)
+
+    try:
+        test_run = test_run_manager.get_test_run(identifier=identifier)
+
+        if display_config.verbose_mode is not None:
+            for metric in metrics:
+                metric.verbose_mode = display_config.verbose_mode
+
+        llm_metrics: List[BaseMetric] = []
+        conversational_metrics: List[BaseConversationalMetric] = []
         for metric in metrics:
-            metric.verbose_mode = display_config.verbose_mode
+            if isinstance(metric, BaseMetric):
+                llm_metrics.append(metric)
+            elif isinstance(metric, BaseConversationalMetric):
+                conversational_metrics.append(metric)
 
-    llm_metrics: List[BaseMetric] = []
-    conversational_metrics: List[BaseConversationalMetric] = []
-    for metric in metrics:
-        if isinstance(metric, BaseMetric):
-            llm_metrics.append(metric)
-        elif isinstance(metric, BaseConversationalMetric):
-            conversational_metrics.append(metric)
+        llm_test_case_counter = -1
+        conversational_test_case_counter = -1
+        test_results: List[Union[TestResult, LLMTestCase]] = []
+        tasks = []
+    except BaseException:
+        restore_cache_policy(cache_config.write_cache is False)
+        raise
 
-    llm_test_case_counter = -1
-    conversational_test_case_counter = -1
-    test_results: List[Union[TestResult, LLMTestCase]] = []
-    tasks = []
+    try:
+        if display_config.show_indicator and _use_bar_indicator:
+            progress = Progress(
+                TextColumn("{task.description}"),
+                BarColumn(bar_width=60),
+                TaskProgressColumn(),
+                TimeElapsedColumn(),
+                console=custom_console,
+            )
+            pbar_id = add_pbar(
+                progress,
+                f"Evaluating {len(test_cases)} test case(s) in parallel",
+                total=len(test_cases),
+            )
+            with progress:
+                for test_case in test_cases:
+                    with capture_evaluation_run("test case"):
+                        if isinstance(test_case, LLMTestCase):
+                            if len(llm_metrics) == 0:
+                                update_pbar(progress, pbar_id)
+                                continue
 
-    if display_config.show_indicator and _use_bar_indicator:
-        progress = Progress(
-            TextColumn("{task.description}"),
-            BarColumn(bar_width=60),
-            TaskProgressColumn(),
-            TimeElapsedColumn(),
-            console=custom_console,
-        )
-        pbar_id = add_pbar(
-            progress,
-            f"Evaluating {len(test_cases)} test case(s) in parallel",
-            total=len(test_cases),
-        )
-        with progress:
+                            llm_test_case_counter += 1
+                            copied_llm_metrics: List[BaseMetric] = copy_metrics(
+                                llm_metrics
+                            )
+                            task = execute_with_semaphore(
+                                func=_a_execute_llm_test_cases,
+                                metrics=copied_llm_metrics,
+                                test_case=test_case,
+                                test_run_manager=test_run_manager,
+                                test_results=test_results,
+                                count=llm_test_case_counter,
+                                test_run=test_run,
+                                ignore_errors=error_config.ignore_errors,
+                                skip_on_missing_params=error_config.skip_on_missing_params,
+                                use_cache=cache_config.use_cache,
+                                show_indicator=display_config.show_indicator,
+                                _use_bar_indicator=_use_bar_indicator,
+                                _is_assert_test=_is_assert_test,
+                                progress=progress,
+                                pbar_id=pbar_id,
+                            )
+                            tasks.append(asyncio.create_task(task))
+
+                        elif isinstance(test_case, ConversationalTestCase):
+                            conversational_test_case_counter += 1
+
+                            task = execute_with_semaphore(
+                                func=_a_execute_conversational_test_cases,
+                                metrics=copy_metrics(conversational_metrics),
+                                test_case=test_case,
+                                test_run_manager=test_run_manager,
+                                test_results=test_results,
+                                count=conversational_test_case_counter,
+                                ignore_errors=error_config.ignore_errors,
+                                skip_on_missing_params=error_config.skip_on_missing_params,
+                                show_indicator=display_config.show_indicator,
+                                _use_bar_indicator=_use_bar_indicator,
+                                _is_assert_test=_is_assert_test,
+                                progress=progress,
+                                pbar_id=pbar_id,
+                            )
+                            tasks.append(asyncio.create_task(task))
+
+                        await asyncio.sleep(async_config.throttle_value)
+
+                try:
+                    await asyncio.wait_for(
+                        asyncio.gather(*tasks),
+                        timeout=get_gather_timeout(),
+                    )
+                except (asyncio.TimeoutError, TimeoutError) as e:
+                    for t in tasks:
+                        if not t.done():
+                            t.cancel()
+                    await asyncio.gather(*tasks, return_exceptions=True)
+
+                    _log_gather_timeout(logger, exc=e)
+
+                    if not error_config.ignore_errors:
+                        raise
+
+        else:
             for test_case in test_cases:
                 with capture_evaluation_run("test case"):
                     if isinstance(test_case, LLMTestCase):
                         if len(llm_metrics) == 0:
-                            update_pbar(progress, pbar_id)
                             continue
-
                         llm_test_case_counter += 1
+
                         copied_llm_metrics: List[BaseMetric] = copy_metrics(
                             llm_metrics
                         )
@@ -415,33 +534,34 @@ async def a_execute_test_cases(
                             ignore_errors=error_config.ignore_errors,
                             skip_on_missing_params=error_config.skip_on_missing_params,
                             use_cache=cache_config.use_cache,
-                            show_indicator=display_config.show_indicator,
                             _use_bar_indicator=_use_bar_indicator,
                             _is_assert_test=_is_assert_test,
-                            progress=progress,
-                            pbar_id=pbar_id,
+                            show_indicator=display_config.show_indicator,
                         )
-                        tasks.append(asyncio.create_task(task))
+                        tasks.append(asyncio.create_task((task)))
 
                     elif isinstance(test_case, ConversationalTestCase):
                         conversational_test_case_counter += 1
-
+                        copied_conversational_metrics: List[
+                            BaseConversationalMetric
+                        ] = []
+                        copied_conversational_metrics = copy_metrics(
+                            conversational_metrics
+                        )
                         task = execute_with_semaphore(
                             func=_a_execute_conversational_test_cases,
-                            metrics=copy_metrics(conversational_metrics),
+                            metrics=copied_conversational_metrics,
                             test_case=test_case,
                             test_run_manager=test_run_manager,
                             test_results=test_results,
                             count=conversational_test_case_counter,
                             ignore_errors=error_config.ignore_errors,
                             skip_on_missing_params=error_config.skip_on_missing_params,
-                            show_indicator=display_config.show_indicator,
                             _use_bar_indicator=_use_bar_indicator,
                             _is_assert_test=_is_assert_test,
-                            progress=progress,
-                            pbar_id=pbar_id,
+                            show_indicator=display_config.show_indicator,
                         )
-                        tasks.append(asyncio.create_task(task))
+                        tasks.append(asyncio.create_task((task)))
 
                     await asyncio.sleep(async_config.throttle_value)
 
@@ -451,84 +571,24 @@ async def a_execute_test_cases(
                     timeout=get_gather_timeout(),
                 )
             except (asyncio.TimeoutError, TimeoutError) as e:
+                # Cancel any still-pending tasks and drain them
                 for t in tasks:
                     if not t.done():
                         t.cancel()
                 await asyncio.gather(*tasks, return_exceptions=True)
-
                 _log_gather_timeout(logger, exc=e)
-
                 if not error_config.ignore_errors:
                     raise
 
-    else:
-        for test_case in test_cases:
-            with capture_evaluation_run("test case"):
-                if isinstance(test_case, LLMTestCase):
-                    if len(llm_metrics) == 0:
-                        continue
-                    llm_test_case_counter += 1
-
-                    copied_llm_metrics: List[BaseMetric] = copy_metrics(
-                        llm_metrics
-                    )
-                    task = execute_with_semaphore(
-                        func=_a_execute_llm_test_cases,
-                        metrics=copied_llm_metrics,
-                        test_case=test_case,
-                        test_run_manager=test_run_manager,
-                        test_results=test_results,
-                        count=llm_test_case_counter,
-                        test_run=test_run,
-                        ignore_errors=error_config.ignore_errors,
-                        skip_on_missing_params=error_config.skip_on_missing_params,
-                        use_cache=cache_config.use_cache,
-                        _use_bar_indicator=_use_bar_indicator,
-                        _is_assert_test=_is_assert_test,
-                        show_indicator=display_config.show_indicator,
-                    )
-                    tasks.append(asyncio.create_task((task)))
-
-                elif isinstance(test_case, ConversationalTestCase):
-                    conversational_test_case_counter += 1
-                    copied_conversational_metrics: List[
-                        BaseConversationalMetric
-                    ] = []
-                    copied_conversational_metrics = copy_metrics(
-                        conversational_metrics
-                    )
-                    task = execute_with_semaphore(
-                        func=_a_execute_conversational_test_cases,
-                        metrics=copied_conversational_metrics,
-                        test_case=test_case,
-                        test_run_manager=test_run_manager,
-                        test_results=test_results,
-                        count=conversational_test_case_counter,
-                        ignore_errors=error_config.ignore_errors,
-                        skip_on_missing_params=error_config.skip_on_missing_params,
-                        _use_bar_indicator=_use_bar_indicator,
-                        _is_assert_test=_is_assert_test,
-                        show_indicator=display_config.show_indicator,
-                    )
-                    tasks.append(asyncio.create_task((task)))
-
-                await asyncio.sleep(async_config.throttle_value)
-
-        try:
-            await asyncio.wait_for(
-                asyncio.gather(*tasks),
-                timeout=get_gather_timeout(),
-            )
-        except (asyncio.TimeoutError, TimeoutError):
-            # Cancel any still-pending tasks and drain them
-            for t in tasks:
-                if not t.done():
-                    t.cancel()
+        return test_results
+    except BaseException:
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
-            if not error_config.ignore_errors:
-                raise
-
-    return test_results
+        restore_cache_policy(cache_config.write_cache is False)
+        raise
 
 
 async def _a_execute_llm_test_cases(

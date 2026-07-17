@@ -60,6 +60,7 @@ from deepeval.test_run import (
     global_test_run_manager,
     TestRunManager,
 )
+from deepeval.test_run.cache import global_test_run_cache_manager
 from deepeval.evaluate.types import TestResult
 from deepeval.evaluate.utils import (
     create_api_trace,
@@ -80,9 +81,6 @@ from deepeval.tracing.types import (
 from deepeval.tracing.api import TraceSpanApiStatus
 from deepeval.config.settings import get_settings
 
-logger = logging.getLogger(__name__)
-
-
 from deepeval.evaluate.execute._common import (
     _await_with_outer_deadline,
     _execute_metric,
@@ -99,6 +97,8 @@ from deepeval.evaluate.execute.agentic import (
     _a_execute_agentic_test_case,
 )
 from deepeval.evaluate.execute.e2e import _evaluate_test_case_pairs
+
+logger = logging.getLogger(__name__)
 
 
 def _span_subtree_has_metrics(span: BaseSpan) -> bool:
@@ -158,11 +158,38 @@ def execute_agentic_test_cases_from_loop(
 ) -> Iterator[TestResult]:
 
     test_run_manager = global_test_run_manager
-    test_run_manager.save_to_disk = cache_config.write_cache
-    test_run_manager.get_test_run(identifier=identifier)
+    previous_disable_write_cache = (
+        global_test_run_cache_manager.disable_write_cache
+    )
+    previous_write_cache_state = test_run_manager._write_cache_state()
 
-    local_trace_manager = trace_manager
-    local_trace_manager.eval_session = EvalSession(mode=EvalMode.ITERATOR_SYNC)
+    def restore_cache_policy(preserve_latest_invalidation: bool = False):
+        if preserve_latest_invalidation:
+            test_run_manager._invalidate_latest_test_run_cache(
+                delete_owned_disk_state=True
+            )
+        global_test_run_cache_manager.disable_write_cache = (
+            previous_disable_write_cache
+        )
+        test_run_manager._restore_write_cache_state(
+            previous_write_cache_state,
+            preserve_latest_invalidation=preserve_latest_invalidation,
+        )
+
+    global_test_run_cache_manager.disable_write_cache = (
+        cache_config.write_cache is False
+    )
+    test_run_manager.configure_write_cache(cache_config.write_cache)
+    try:
+        test_run_manager.get_test_run(identifier=identifier)
+
+        local_trace_manager = trace_manager
+        local_trace_manager.eval_session = EvalSession(
+            mode=EvalMode.ITERATOR_SYNC
+        )
+    except BaseException:
+        restore_cache_policy(cache_config.write_cache is False)
+        raise
 
     def evaluate_test_cases(
         progress: Optional[Progress] = None,
@@ -469,6 +496,7 @@ def execute_agentic_test_cases_from_loop(
         ):
             _raise_no_metrics_error()
 
+    completed_normally = False
     try:
         if display_config.show_indicator and _use_bar_indicator:
             progress = Progress(
@@ -489,6 +517,7 @@ def execute_agentic_test_cases_from_loop(
                 )
         else:
             yield from evaluate_test_cases()
+        completed_normally = True
     except Exception:
         raise
     finally:
@@ -496,6 +525,8 @@ def execute_agentic_test_cases_from_loop(
         # per-run collection in a single assignment, so state can't leak
         # into the next run.
         local_trace_manager.eval_session = EvalSession()
+        if not completed_normally:
+            restore_cache_policy(cache_config.write_cache is False)
 
 
 def a_execute_agentic_test_cases_from_loop(
@@ -516,11 +547,38 @@ def a_execute_agentic_test_cases_from_loop(
     original_create_task = asyncio.create_task
 
     test_run_manager = global_test_run_manager
-    test_run_manager.save_to_disk = cache_config.write_cache
-    test_run = test_run_manager.get_test_run(identifier=identifier)
+    previous_disable_write_cache = (
+        global_test_run_cache_manager.disable_write_cache
+    )
+    previous_write_cache_state = test_run_manager._write_cache_state()
 
-    local_trace_manager = trace_manager
-    local_trace_manager.eval_session = EvalSession(mode=EvalMode.ITERATOR_ASYNC)
+    def restore_cache_policy(preserve_latest_invalidation: bool = False):
+        if preserve_latest_invalidation:
+            test_run_manager._invalidate_latest_test_run_cache(
+                delete_owned_disk_state=True
+            )
+        global_test_run_cache_manager.disable_write_cache = (
+            previous_disable_write_cache
+        )
+        test_run_manager._restore_write_cache_state(
+            previous_write_cache_state,
+            preserve_latest_invalidation=preserve_latest_invalidation,
+        )
+
+    global_test_run_cache_manager.disable_write_cache = (
+        cache_config.write_cache is False
+    )
+    test_run_manager.configure_write_cache(cache_config.write_cache)
+    try:
+        test_run = test_run_manager.get_test_run(identifier=identifier)
+
+        local_trace_manager = trace_manager
+        local_trace_manager.eval_session = EvalSession(
+            mode=EvalMode.ITERATOR_ASYNC
+        )
+    except BaseException:
+        restore_cache_policy(cache_config.write_cache is False)
+        raise
 
     async def execute_callback_with_semaphore(coroutine: Awaitable):
         async with semaphore:
@@ -719,6 +777,7 @@ def a_execute_agentic_test_cases_from_loop(
         # Snapshot tasks that already exist on this loop so we can detect strays
         baseline_tasks = loop.run_until_complete(_snapshot_tasks())
 
+        callbacks_completed = False
         try:
             for index, golden in enumerate(goldens):
                 token = set_current_golden(golden)
@@ -738,8 +797,19 @@ def a_execute_agentic_test_cases_from_loop(
                 if len(created_tasks) == prev_task_length:
                     update_pbar(progress, pbar_callback_id)
                     update_pbar(progress, pbar_id)
+            callbacks_completed = True
         finally:
             asyncio.create_task = original_create_task
+            if not callbacks_completed and created_tasks:
+                for task in created_tasks:
+                    if not task.done():
+                        task.cancel()
+                try:
+                    loop.run_until_complete(
+                        asyncio.gather(*created_tasks, return_exceptions=True)
+                    )
+                except RuntimeError:
+                    pass
 
         if created_tasks:
             # Only await tasks we created on this loop in this run.
@@ -803,53 +873,53 @@ def a_execute_agentic_test_cases_from_loop(
                     asyncio.gather(*created_tasks, return_exceptions=True)
                 )
             finally:
-
-                # if it is already closed, we are done
-                if loop.is_closed():
-                    return
-
-                try:
-                    current_tasks = set()
-                    # Find tasks that were created during this run but we didn’t track
-                    current_tasks = loop.run_until_complete(_snapshot_tasks())
-                except RuntimeError:
-                    # this might happen if the loop is already closing
-                    pass
-
-                leftovers = [
-                    t
-                    for t in current_tasks
-                    if t not in baseline_tasks
-                    and t not in created_tasks
-                    and not t.done()
-                ]
-
-                if get_settings().DEEPEVAL_DEBUG_ASYNC:
-                    if len(leftovers) > 0:
-                        logger.warning(
-                            "[deepeval] %d stray task(s) not tracked; cancelling...",
-                            len(leftovers),
-                        )
-                    for t in leftovers:
-                        meta = task_meta.get(t, {})
-                        name = t.get_name()
-                        logger.warning("  - STRAY %s meta=%s", name, meta)
-
-                if leftovers:
-                    for t in leftovers:
-                        t.cancel()
-
-                    # Drain strays so they don’t leak into the next iteration
+                if not loop.is_closed():
                     try:
-                        loop.run_until_complete(
-                            asyncio.gather(*leftovers, return_exceptions=True)
+                        current_tasks = set()
+                        # Find tasks that were created during this run but we didn’t track
+                        current_tasks = loop.run_until_complete(
+                            _snapshot_tasks()
                         )
                     except RuntimeError:
-                        # If the loop is closing here, just continue
-                        if get_settings().DEEPEVAL_DEBUG_ASYNC:
+                        # this might happen if the loop is already closing
+                        pass
+
+                    leftovers = [
+                        t
+                        for t in current_tasks
+                        if t not in baseline_tasks
+                        and t not in created_tasks
+                        and not t.done()
+                    ]
+
+                    if get_settings().DEEPEVAL_DEBUG_ASYNC:
+                        if len(leftovers) > 0:
                             logger.warning(
-                                "[deepeval] failed to drain stray tasks because loop is closing"
+                                "[deepeval] %d stray task(s) not tracked; cancelling...",
+                                len(leftovers),
                             )
+                        for t in leftovers:
+                            meta = task_meta.get(t, {})
+                            name = t.get_name()
+                            logger.warning("  - STRAY %s meta=%s", name, meta)
+
+                    if leftovers:
+                        for t in leftovers:
+                            t.cancel()
+
+                        # Drain strays so they don’t leak into the next iteration
+                        try:
+                            loop.run_until_complete(
+                                asyncio.gather(
+                                    *leftovers, return_exceptions=True
+                                )
+                            )
+                        except RuntimeError:
+                            # If the loop is closing here, just continue
+                            if get_settings().DEEPEVAL_DEBUG_ASYNC:
+                                logger.warning(
+                                    "[deepeval] failed to drain stray tasks because loop is closing"
+                                )
 
         # Pre-evaluation guard: refuse a run that has no metric source.
         # Lazy check is the only correct option because span-level metrics
@@ -904,6 +974,7 @@ def a_execute_agentic_test_cases_from_loop(
                 )
             )
 
+    completed_normally = False
     try:
         if display_config.show_indicator and _use_bar_indicator:
             progress = Progress(
@@ -931,12 +1002,15 @@ def a_execute_agentic_test_cases_from_loop(
                 )
         else:
             yield from evaluate_test_cases()
+        completed_normally = True
     except Exception:
         raise
     finally:
         # Atomic exit cleanup: replacing the session resets mode + every
         # per-run collection in a single assignment.
         local_trace_manager.eval_session = EvalSession()
+        if not completed_normally:
+            restore_cache_policy(cache_config.write_cache is False)
 
 
 async def _a_evaluate_traces(

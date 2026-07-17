@@ -185,6 +185,8 @@ This allows you to inspect traces and spans locally on your machine:
 
 Resolution order when no path is passed: `--folder` → `DEEPEVAL_RESULTS_FOLDER` → `.deepeval/.latest_run_full.json` → `./experiments` (legacy fallback).
 
+For safety, the zero-arg hidden rolling fallback only opens latest-run snapshots written by versions that mark the file as deepeval-owned. If you need to inspect an older tokenless snapshot, pass the file path explicitly.
+
 The TUI needs an optional extras bundle (Textual + clipboard support):
 
 ```bash

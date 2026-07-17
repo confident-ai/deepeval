@@ -56,12 +56,13 @@ from deepeval.utils import (
     convert_keys_to_snake_case,
     get_or_create_event_loop,
     open_browser,
+    get_is_running_deepeval,
 )
 from deepeval.test_run import (
     global_test_run_manager,
 )
+from deepeval.test_run.cache import global_test_run_cache_manager
 
-from deepeval.tracing import trace_manager
 from deepeval.tracing.tracing import EVAL_DUMMY_SPAN_NAME
 
 if TYPE_CHECKING:
@@ -1517,11 +1518,6 @@ class EvaluationDataset:
         async_config: Optional["AsyncConfig"] = None,
         run_otel: Optional[bool] = False,
     ) -> Iterator[Golden]:
-        from deepeval.evaluate.utils import (
-            aggregate_metric_pass_rates,
-            print_test_result,
-            write_test_result_to_file,
-        )
         from deepeval.evaluate.types import EvaluationResult, TestResult
         from deepeval.evaluate.execute import (
             a_execute_agentic_test_cases_from_loop,
@@ -1546,127 +1542,168 @@ class EvaluationDataset:
         if not self.goldens or len(self.goldens) == 0:
             raise ValueError("Unable to evaluate dataset with no goldens.")
         goldens = self.goldens
-        with capture_evaluation_run("traceable evaluate()"):
-            global_test_run_manager.reset()
-            start_time = time.perf_counter()
-            test_results: List[TestResult] = []
+        should_restore_cache_policy = not get_is_running_deepeval()
+        previous_disable_write_cache = (
+            global_test_run_cache_manager.disable_write_cache
+        )
+        previous_write_cache_state = (
+            global_test_run_manager._write_cache_state()
+        )
 
-            # sandwich start trace for OTEL
-            if run_otel:
-                ctx = self._start_otel_test_run()  # ignored span
-                ctx_token = attach(ctx)
-
-            if async_config.run_async:
-                loop = get_or_create_event_loop()
-                for golden in a_execute_agentic_test_cases_from_loop(
-                    goldens=goldens,
-                    identifier=identifier,
-                    loop=loop,
-                    trace_metrics=metrics,
-                    test_results=test_results,
-                    display_config=display_config,
-                    cache_config=cache_config,
-                    error_config=error_config,
-                    async_config=async_config,
-                ):
-                    if run_otel:
-                        _tracer = check_tracer()
-                        with _tracer.start_as_current_span(
-                            name=EVAL_DUMMY_SPAN_NAME,
-                            context=ctx,
-                        ):
-                            yield golden
-                    else:
-                        yield golden
-
-            else:
-                for golden in execute_agentic_test_cases_from_loop(
-                    goldens=goldens,
-                    trace_metrics=metrics,
-                    display_config=display_config,
-                    cache_config=cache_config,
-                    error_config=error_config,
-                    test_results=test_results,
-                    identifier=identifier,
-                ):
-                    if run_otel:
-                        _tracer = check_tracer()
-                        with _tracer.start_as_current_span(
-                            name=EVAL_DUMMY_SPAN_NAME,
-                            context=ctx,
-                        ):
-                            yield golden
-                    else:
-                        yield golden
-
-            end_time = time.perf_counter()
-            run_duration = end_time - start_time
-            if display_config.print_results:
-                console_report = EvaluationConsoleReport(test_results)
-                console_report.render_to_terminal(
-                    truncate_passing_cases=display_config.truncate_passing_cases
+        def restore_cache_policy(preserve_latest_invalidation: bool = False):
+            if preserve_latest_invalidation:
+                global_test_run_manager._invalidate_latest_test_run_cache(
+                    delete_owned_disk_state=True
                 )
-
-                # Handle full, un-truncated file exports
-                if display_config.file_output_dir is not None:
-                    if display_config.file_type == "html":
-                        console_report.export_to_html(
-                            output_dir=display_config.file_output_dir,
-                            evaluation_name=identifier,
-                            theme_mode="dark",
-                        )
-                    elif display_config.file_type == "md":
-                        console_report.export_to_markdown(
-                            output_dir=display_config.file_output_dir,
-                            evaluation_name=identifier,
-                        )
-                    else:
-                        raise ValueError(
-                            f"Invalid file type: {display_config.file_type}"
-                        )
-
-            test_run = global_test_run_manager.get_test_run()
-            if hyperparameters is not None or test_run.hyperparameters is None:
-                test_run.hyperparameters = process_hyperparameters(
-                    hyperparameters
-                )
-                test_run.prompts = process_prompts(hyperparameters)
-
-            global_test_run_manager.configure_local_store(
-                results_folder=display_config.results_folder,
-                results_subfolder=display_config.results_subfolder,
+            global_test_run_cache_manager.disable_write_cache = (
+                previous_disable_write_cache
             )
-            # save test run
-            global_test_run_manager.save_test_run(TEMP_FILE_PATH)
+            global_test_run_manager._restore_write_cache_state(
+                previous_write_cache_state,
+                preserve_latest_invalidation=preserve_latest_invalidation,
+            )
 
-            # sandwich end trace for OTEL
-            if run_otel:
-                self._end_otel_test_run(ctx)
-                detach(ctx_token)
+        completed_normally = False
+        try:
+            with capture_evaluation_run("traceable evaluate()"):
+                global_test_run_manager.reset()
+                start_time = time.perf_counter()
+                test_results: List[TestResult] = []
 
-            else:
-                res = global_test_run_manager.wrap_up_test_run(
-                    run_duration, display_table=False
-                )
-                if isinstance(res, tuple):
-                    confident_link, test_run_id = res
+                # sandwich start trace for OTEL
+                if run_otel:
+                    ctx = self._start_otel_test_run()  # ignored span
+                    ctx_token = attach(ctx)
+
+                if async_config.run_async:
+                    loop = get_or_create_event_loop()
+                    for golden in a_execute_agentic_test_cases_from_loop(
+                        goldens=goldens,
+                        identifier=identifier,
+                        loop=loop,
+                        trace_metrics=metrics,
+                        test_results=test_results,
+                        display_config=display_config,
+                        cache_config=cache_config,
+                        error_config=error_config,
+                        async_config=async_config,
+                    ):
+                        if run_otel:
+                            _tracer = check_tracer()
+                            with _tracer.start_as_current_span(
+                                name=EVAL_DUMMY_SPAN_NAME,
+                                context=ctx,
+                            ):
+                                yield golden
+                        else:
+                            yield golden
+
                 else:
-                    confident_link = test_run_id = None
+                    for golden in execute_agentic_test_cases_from_loop(
+                        goldens=goldens,
+                        trace_metrics=metrics,
+                        display_config=display_config,
+                        cache_config=cache_config,
+                        error_config=error_config,
+                        test_results=test_results,
+                        identifier=identifier,
+                    ):
+                        if run_otel:
+                            _tracer = check_tracer()
+                            with _tracer.start_as_current_span(
+                                name=EVAL_DUMMY_SPAN_NAME,
+                                context=ctx,
+                            ):
+                                yield golden
+                        else:
+                            yield golden
 
-                # Offer the inspect TUI after all other run output has
-                # flushed — mirrors the placement in
-                # ``deepeval/evaluate/evaluate.py``.
-                from deepeval.evaluate.inspect_prompt import (
-                    maybe_offer_inspect_tui,
+                end_time = time.perf_counter()
+                run_duration = end_time - start_time
+                if display_config.print_results:
+                    console_report = EvaluationConsoleReport(test_results)
+                    console_report.render_to_terminal(
+                        truncate_passing_cases=display_config.truncate_passing_cases
+                    )
+
+                    # Handle full, un-truncated file exports
+                    if display_config.file_output_dir is not None:
+                        if display_config.file_type == "html":
+                            console_report.export_to_html(
+                                output_dir=display_config.file_output_dir,
+                                evaluation_name=identifier,
+                                theme_mode="dark",
+                            )
+                        elif display_config.file_type == "md":
+                            console_report.export_to_markdown(
+                                output_dir=display_config.file_output_dir,
+                                evaluation_name=identifier,
+                            )
+                        else:
+                            raise ValueError(
+                                f"Invalid file type: {display_config.file_type}"
+                            )
+
+                test_run = global_test_run_manager.get_test_run()
+                if (
+                    hyperparameters is not None
+                    or test_run.hyperparameters is None
+                ):
+                    test_run.hyperparameters = process_hyperparameters(
+                        hyperparameters
+                    )
+                    test_run.prompts = process_prompts(hyperparameters)
+
+                global_test_run_manager.configure_local_store(
+                    results_folder=display_config.results_folder,
+                    results_subfolder=display_config.results_subfolder,
                 )
+                # save test run
+                global_test_run_manager.save_test_run(TEMP_FILE_PATH)
 
-                maybe_offer_inspect_tui(global_test_run_manager, display_config)
+                # sandwich end trace for OTEL
+                if run_otel:
+                    self._end_otel_test_run(ctx)
+                    detach(ctx_token)
+                    completed_normally = True
 
-                return EvaluationResult(
-                    test_results=test_results,
-                    confident_link=confident_link,
-                    test_run_id=test_run_id,
-                )
+                else:
+                    res = global_test_run_manager.wrap_up_test_run(
+                        run_duration, display_table=False
+                    )
+                    if isinstance(res, tuple):
+                        confident_link, test_run_id = res
+                    else:
+                        confident_link = test_run_id = None
+
+                    # Offer the inspect TUI after all other run output has
+                    # flushed — mirrors the placement in
+                    # ``deepeval/evaluate/evaluate.py``.
+                    from deepeval.evaluate.inspect_prompt import (
+                        maybe_offer_inspect_tui,
+                    )
+
+                    maybe_offer_inspect_tui(
+                        global_test_run_manager, display_config
+                    )
+
+                    completed_normally = True
+                    return EvaluationResult(
+                        test_results=test_results,
+                        confident_link=confident_link,
+                        test_run_id=test_run_id,
+                    )
+        finally:
+            if should_restore_cache_policy:
+                if completed_normally:
+                    global_test_run_cache_manager.disable_write_cache = (
+                        previous_disable_write_cache
+                    )
+                    global_test_run_manager.save_to_disk = (
+                        previous_write_cache_state[0]
+                    )
+                else:
+                    restore_cache_policy(cache_config.write_cache is False)
 
     def evaluate(self, task: Task):
         coerce_to_task(task)
