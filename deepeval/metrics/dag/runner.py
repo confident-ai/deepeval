@@ -131,7 +131,6 @@ class _DeepAcyclicGraphRunner:
             copied = node._run_child_metric(metric, test_case)
             self._apply_child_metric(node, copied, metric, depth)
 
-    # ----------------------------------------------------------------- async
     async def a_run(self, metric: Metric, test_case: TestCase) -> None:
         await asyncio.gather(
             *(
