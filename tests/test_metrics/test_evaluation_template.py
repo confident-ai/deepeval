@@ -11,10 +11,20 @@ import pytest
 
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.templates.resolver import resolve_template
-from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric, GEval
+from deepeval.metrics import (
+    AnswerRelevancyMetric,
+    FaithfulnessMetric,
+    GEval,
+    ContextualPrecisionMetric,
+    ContextualRecallMetric,
+    ContextualRelevancyMetric,
+)
 from deepeval.metrics.answer_relevancy import AnswerRelevancyTemplate
 from deepeval.metrics.faithfulness import FaithfulnessTemplate
 from deepeval.metrics.g_eval import GEvalTemplate
+from deepeval.metrics.contextual_precision import ContextualPrecisionTemplate
+from deepeval.metrics.contextual_recall import ContextualRecallTemplate
+from deepeval.metrics.contextual_relevancy import ContextualRelevancyTemplate
 from deepeval.metrics.prompt_template import BasePromptTemplate
 
 
@@ -44,7 +54,14 @@ class _StubLLM(DeepEvalBaseLLM):
 
 @pytest.mark.parametrize(
     "template_cls",
-    [AnswerRelevancyTemplate, FaithfulnessTemplate, GEvalTemplate],
+    [
+        AnswerRelevancyTemplate,
+        FaithfulnessTemplate,
+        GEvalTemplate,
+        ContextualPrecisionTemplate,
+        ContextualRecallTemplate,
+        ContextualRelevancyTemplate,
+    ],
 )
 def test_template_classes_are_subclassable_base_templates(template_cls):
     assert issubclass(template_cls, BasePromptTemplate)
@@ -208,5 +225,51 @@ def test_geval_default_falls_back_to_resolver():
         multimodal=False,
         criteria="c",
         parameters="Input",
+    )
+    assert got == expected
+
+
+# --------------------------------------------------------------------------- #
+# Contextual metrics (RAG retriever suite)
+# --------------------------------------------------------------------------- #
+
+
+_CONTEXTUAL_CASES = [
+    (ContextualPrecisionMetric, ContextualPrecisionTemplate),
+    (ContextualRecallMetric, ContextualRecallTemplate),
+    (ContextualRelevancyMetric, ContextualRelevancyTemplate),
+]
+
+
+@pytest.mark.parametrize("metric_cls,template_cls", _CONTEXTUAL_CASES)
+def test_contextual_metric_override_is_used(metric_cls, template_cls):
+    class CustomTemplate(template_cls):
+        @staticmethod
+        def generate_verdicts(**kwargs):
+            return "CUSTOM_VERDICTS"
+
+    metric = metric_cls(model=_StubLLM(), evaluation_template=CustomTemplate)
+    assert (
+        metric._get_prompt("generate_verdicts", multimodal=False)
+        == "CUSTOM_VERDICTS"
+    )
+
+
+def test_contextual_precision_default_matches_resolver():
+    metric = ContextualPrecisionMetric(model=_StubLLM())
+    kwargs = dict(
+        input="q",
+        expected_output="e",
+        document_count_str="1",
+        context_to_display="ctx",
+        multimodal_note="",
+    )
+    got = metric._get_prompt("generate_verdicts", multimodal=False, **kwargs)
+    expected = resolve_template(
+        "metrics",
+        "ContextualPrecisionMetric",
+        "generate_verdicts",
+        multimodal=False,
+        **kwargs,
     )
     assert got == expected
