@@ -187,7 +187,9 @@ def format_turns(turns: List[Turn]) -> str:
             for m in models:
                 if hasattr(m, "model_dump"):
                     dumped.append(
-                        m.model_dump(by_alias=True, exclude_none=True)
+                        m.model_dump(
+                            mode="json", by_alias=True, exclude_none=True
+                        )
                     )
                 elif hasattr(m, "dict"):
                     dumped.append(m.dict(exclude_none=True))
