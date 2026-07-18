@@ -30,6 +30,7 @@ from deepeval.models import (
     AzureOpenAIEmbeddingModel,
     OllamaEmbeddingModel,
     LocalEmbeddingModel,
+    GeminiEmbeddingModel,
     GeminiModel,
     AmazonBedrockModel,
     LiteLLMModel,
@@ -748,6 +749,11 @@ def should_use_local_embedding():
     return value.lower() == "yes" if value is not None else False
 
 
+def should_use_gemini_embedding():
+    value = KEY_FILE_HANDLER.fetch_data(EmbeddingKeyValues.USE_GEMINI_EMBEDDING)
+    return value.lower() == "yes" if value is not None else False
+
+
 def should_use_ollama_embedding():
     api_key = KEY_FILE_HANDLER.fetch_data(
         EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY
@@ -766,10 +772,14 @@ def initialize_embedding_model(
         return LocalEmbeddingModel()
     elif should_use_azure_openai_embedding():
         return AzureOpenAIEmbeddingModel()
+    elif should_use_gemini_embedding():
+        return GeminiEmbeddingModel()
     elif isinstance(model, str) or model is None:
         return OpenAIEmbeddingModel(model=model)
 
     # Otherwise (the model is a wrong type), we raise an error
     raise TypeError(
-        f"Unsupported type for embedding model: {type(model)}. Expected None, str, DeepEvalBaseEmbeddingModel, OpenAIEmbeddingModel, AzureOpenAIEmbeddingModel, OllamaEmbeddingModel, LocalEmbeddingModel."
+        f"Unsupported type for embedding model: {type(model)}. Expected None, str, "
+        "DeepEvalBaseEmbeddingModel, OpenAIEmbeddingModel, AzureOpenAIEmbeddingModel, "
+        "GeminiEmbeddingModel, OllamaEmbeddingModel, LocalEmbeddingModel."
     )

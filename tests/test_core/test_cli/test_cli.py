@@ -584,6 +584,21 @@ EMBED_PROVIDER_CASES: List[_ProviderCase] = [
             "LOCAL_EMBEDDING_BASE_URL": "http://localhost:11434/",
         },
     ),
+    _ProviderCase(
+        set_cmd="set-gemini-embedding",
+        unset_cmd="unset-gemini-embedding",
+        use_key="USE_GEMINI_EMBEDDING",
+        set_flags=(
+            "--model",
+            "gemini-embedding-001",
+        ),
+        expected_env={
+            "GEMINI_EMBEDDING_MODEL_NAME": "gemini-embedding-001",
+        },
+        expected_store={
+            "GEMINI_EMBEDDING_MODEL_NAME": "gemini-embedding-001",
+        },
+    ),
 ]
 
 
@@ -638,6 +653,61 @@ def test_set_unset_embedding_provider_roundtrip(
     assert "YES" not in [
         store2.get(k) for k in USE_EMBED_KEYS
     ], "Expected no embedding USE_* key to remain YES after unset"
+
+
+def test_set_gemini_embedding_without_model_persists_default(
+    hidden_store_dir: Path,
+    env_path: Path,
+) -> None:
+    """set-gemini-embedding with no --model must persist the default model
+    name (not merely flip USE_GEMINI_EMBEDDING on) so the CLI roundtrip is
+    deterministic."""
+    runner = CliRunner()
+    save = f"dotenv:{env_path}"
+
+    # unset first to deal with default provider
+    runner.invoke(cli_app, ["unset-gemini-embedding", "--save", save])
+
+    result = runner.invoke(cli_app, ["set-gemini-embedding", "--save", save])
+    assert result.exit_code == 0, result.output
+
+    env = _read_dotenv(env_path)
+    store = _read_hidden_store_json(hidden_store_dir)
+    assert env.get("GEMINI_EMBEDDING_MODEL_NAME") == "gemini-embedding-001"
+    assert store.get("GEMINI_EMBEDDING_MODEL_NAME") == "gemini-embedding-001"
+    assert parse_bool(env.get("USE_GEMINI_EMBEDDING"))
+
+
+def test_set_gemini_embedding_without_model_preserves_existing(
+    hidden_store_dir: Path,
+    env_path: Path,
+) -> None:
+    """A subsequent set-gemini-embedding without --model must not clobber a
+    previously persisted model name with the default."""
+    runner = CliRunner()
+    save = f"dotenv:{env_path}"
+
+    runner.invoke(cli_app, ["unset-gemini-embedding", "--save", save])
+    result = runner.invoke(
+        cli_app,
+        [
+            "set-gemini-embedding",
+            "--model",
+            "text-embedding-004",
+            "--save",
+            save,
+        ],
+    )
+    assert result.exit_code == 0, result.output
+
+    # re-run without --model; existing value must survive
+    result = runner.invoke(cli_app, ["set-gemini-embedding", "--save", save])
+    assert result.exit_code == 0, result.output
+
+    env = _read_dotenv(env_path)
+    store = _read_hidden_store_json(hidden_store_dir)
+    assert env.get("GEMINI_EMBEDDING_MODEL_NAME") == "text-embedding-004"
+    assert store.get("GEMINI_EMBEDDING_MODEL_NAME") == "text-embedding-004"
 
 
 def test_set_unset_gemini_service_account_file_roundtrip_dotenv_only(

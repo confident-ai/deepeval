@@ -23,6 +23,7 @@ from deepeval.models.embedding_models import (
     AzureOpenAIEmbeddingModel,
     LocalEmbeddingModel,
     OllamaEmbeddingModel,
+    GeminiEmbeddingModel,
 )
 
 __all__ = [
@@ -44,6 +45,7 @@ __all__ = [
     "AzureOpenAIEmbeddingModel",
     "LocalEmbeddingModel",
     "OllamaEmbeddingModel",
+    "GeminiEmbeddingModel",
     "PortkeyModel",
     "OpenRouterModel",
 ]

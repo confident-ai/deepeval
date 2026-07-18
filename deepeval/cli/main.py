@@ -1074,6 +1074,104 @@ def unset_azure_openai_embedding_env(
             )
 
 
+@app.command(name="set-gemini-embedding")
+def set_gemini_embedding_env(
+    model: Optional[str] = typer.Option(
+        None,
+        "-m",
+        "--model",
+        help="Gemini embedding model identifier (e.g., `gemini-embedding-001`).",
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "-s",
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
+):
+    from deepeval.models.embedding_models.gemini_embedding_model import (
+        default_gemini_embedding_model,
+    )
+
+    model = coerce_blank_to_none(model)
+
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        edit_ctx.switch_model_provider(EmbeddingKeyValues.USE_GEMINI_EMBEDDING)
+        if model is not None:
+            settings.GEMINI_EMBEDDING_MODEL_NAME = model
+        elif not settings.GEMINI_EMBEDDING_MODEL_NAME:
+            settings.GEMINI_EMBEDDING_MODEL_NAME = (
+                default_gemini_embedding_model
+            )
+
+    handled, path, updates = edit_ctx.result
+
+    effective_model = settings.GEMINI_EMBEDDING_MODEL_NAME
+
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using Gemini embedding model "
+            f"`{escape(effective_model)}` for all evals that require text embeddings."
+        ),
+    )
+
+
+@app.command(name="unset-gemini-embedding")
+def unset_gemini_embedding_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "-s",
+        "--save",
+        help="Remove only the Gemini embedding related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
+):
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        settings.GEMINI_EMBEDDING_MODEL_NAME = None
+        settings.USE_GEMINI_EMBEDDING = None
+
+    handled, path, updates = edit_ctx.result
+
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed Gemini embedding environment variables from {path}.",
+        tip_msg=None,
+    ):
+        if is_openai_configured():
+            print(
+                ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+            )
+        else:
+            print(
+                "Gemini embedding has been unset. No active provider is configured. "
+                "Set one with the CLI, or add credentials to .env[.local]."
+            )
+
+
 #############################################
 # Anthropic Model Integration ###############
 #############################################
