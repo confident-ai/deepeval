@@ -19,7 +19,8 @@ from deepeval.test_case import (
 # flattens it and a save/load round-trip loses the source. Serialize each item
 # to a namespaced, parseable marker instead, and reconstruct it on load.
 _RETRIEVED_CONTEXT_MARKER = re.compile(
-    r"^deepeval_source=(?P<source>.*?),deepeval_context=(?P<context>.*)$"
+    r"^deepeval_source=(?P<source>.*?),deepeval_context=(?P<context>.*)$",
+    re.DOTALL,
 )
 
 
