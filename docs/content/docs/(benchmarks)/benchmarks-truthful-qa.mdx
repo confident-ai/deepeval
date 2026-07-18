@@ -40,7 +40,7 @@ print(benchmark.overall_score)
 
 The `overall_score` ranges from 0 to 1, signifying the fraction of accurate predictions across tasks. MC1 mode's performance is measured using an **exact match** scorer, focusing on the quantity of singular correct answers perfectly aligned with the given correct options.
 
-Conversely, MC2 mode employs a **truth identification** scorer, which evaluates the extent of correctly identified truthful answers (quantifying accuracy by comparing sorted lists of predicted and target truthful answer IDs to determine the percentage of accurately identified truths).
+Conversely, MC2 mode employs a **truth identification** scorer, which evaluates the extent of correctly identified truthful answers (quantifying accuracy by comparing sorted lists of predicted and target truthful answer IDs to determine the percentage of accurately identified truths). For MC2, each row's `Correct` column in `benchmark.predictions` is the per-question recall fraction in `[0, 1]` (not a boolean), and `overall_score` is the mean of those fractions.
 
 :::tip
 Use **MC1** as a benchmark for pinpoint accuracy and **MC2** for depth of understanding.
