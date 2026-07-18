@@ -320,6 +320,43 @@ export function setCurrentTrace(trace: Trace | null): void {
   });
 }
 
+const traceTestRunContext = new AsyncLocalStorage<{
+  testRunId: string;
+  metricCollection: string;
+}>();
+
+export function getTraceTestRunId(): string | undefined {
+  return traceTestRunContext.getStore()?.testRunId;
+}
+
+export async function traceTestRun<T>(
+  options: { metricCollection: string; identifier?: string },
+  fn: (testRunId: string) => T | Promise<T>,
+): Promise<T> {
+  const body: Record<string, any> = {
+    metricCollection: options.metricCollection,
+  };
+  if (options.identifier !== undefined) {
+    body.identifier = options.identifier;
+  }
+
+  const api = new Api();
+  const result = await api.sendRequest(
+    HttpMethods.POST,
+    Endpoints.TEST_RUNS_ENDPOINT,
+    body,
+  );
+  const testRunId: string | undefined = result?.data?.id ?? result?.id;
+  if (!testRunId) {
+    throw new Error("Failed to create test run: no id returned.");
+  }
+
+  return traceTestRunContext.run(
+    { testRunId, metricCollection: options.metricCollection },
+    () => fn(testRunId),
+  );
+}
+
 export function withTracingContext<T>(
   span: BaseSpan | undefined,
   trace: Trace | undefined,
@@ -466,6 +503,15 @@ export class TraceManager {
       trace.endTime = new Date();
       if (trace.status === TraceSpanStatus.IN_PROGRESS) {
         trace.status = TraceSpanStatus.SUCCESS;
+      }
+      if (!trace.testRunId) {
+        const testRunStore = traceTestRunContext.getStore();
+        if (testRunStore?.testRunId) {
+          trace.testRunId = testRunStore.testRunId;
+          if (testRunStore.metricCollection) {
+            trace.metricCollection = testRunStore.metricCollection;
+          }
+        }
       }
       if (this.traceCaptureSink) {
         this.traceCaptureSink(trace);
