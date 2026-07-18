@@ -65,6 +65,9 @@ def extract_messages_api_output_parameters(
     message_response: Message,
     input_parameters: InputParameters,
 ) -> OutputParameters:
+    # Anthropic responses may lead with a non-text block (a tool_use or
+    # thinking block), so read text from the first TextBlock rather than
+    # assuming content[0] holds it.
     text_blocks = [
         block
         for block in message_response.content
@@ -92,6 +95,8 @@ def extract_messages_api_output_parameters(
                 )
             )
 
+    # A tool-only turn has no TextBlock, so preserve the tool calls as the
+    # structured output instead of returning an empty string.
     if not output and tools_called:
         tool_calls = []
         for tool_call in tools_called:
