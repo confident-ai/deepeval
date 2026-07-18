@@ -202,7 +202,7 @@ Let's pretend your LLM application is a RAG based customer support chatbot; here
 
 ## Installation
 
-Deepeval works with **Python>=3.9+**.
+Deepeval works with **Python 3.9+**.
 
 ```
 pip install -U deepeval
