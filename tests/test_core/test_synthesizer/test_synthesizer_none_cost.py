@@ -222,11 +222,15 @@ class TestContextGenerationErrors:
         generator.model = _NativeModelWithUnknownCost()
 
         def _boom(_chunk):
-            raise TypeError("unsupported operand type(s) for +=: 'float' and 'NoneType'")
+            raise TypeError(
+                "unsupported operand type(s) for +=: 'float' and 'NoneType'"
+            )
 
         monkeypatch.setattr(generator, "evaluate_chunk", _boom)
 
-        with pytest.raises(DeepEvalError, match="Context generation failed for all"):
+        with pytest.raises(
+            DeepEvalError, match="Context generation failed for all"
+        ):
             generator.generate_contexts(
                 max_contexts_per_source_file=1,
                 min_contexts_per_source_file=1,
@@ -270,7 +274,9 @@ class TestSynthesizerEmptyContexts:
 
             from deepeval.synthesizer.config import ContextConstructionConfig
 
-            with pytest.raises(DeepEvalError, match="No contexts were generated"):
+            with pytest.raises(
+                DeepEvalError, match="No contexts were generated"
+            ):
                 synth.generate_goldens_from_docs(
                     document_paths=["doc.txt"],
                     context_construction_config=ContextConstructionConfig(
