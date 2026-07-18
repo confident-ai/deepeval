@@ -22,7 +22,12 @@ from deepeval.benchmarks.schema import (
 from deepeval.telemetry import capture_benchmark_run
 
 logger = logging.getLogger(__name__)
-DELIMITER = ","
+# Internal separator used only to pack/unpack a golden's list of answer spans
+# into its `expected_output` string. It must NOT be a character that can occur
+# inside a DROP answer span — a "," (the previous value) shattered legitimate
+# answers such as "1,000" into ["1", "000"], so the correct prediction could
+# never match. The unit-separator control char cannot appear in DROP answers.
+DELIMITER = "\x1f"
 
 
 class DROP(DeepEvalBaseBenchmark):

@@ -246,7 +246,8 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             responses: List = model.batch_generate(
                 prompts=prompts, schemas=[pydantic_model for i in prompts]
             )
-            predictions = [res.answer for res in responses]
+            predictions = [str(res.answer) for res in responses]
+            used_schema = True
         except TypeError:
             prompts = [
                 prompt + "Make sure to output only the numerical answer."
@@ -254,6 +255,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             ]
             predictions = model.batch_generate(prompts)
             predictions = [str(pred) for pred in predictions]
+            used_schema = False
 
         if len(predictions) is not len(goldens):
             raise ValueError(
@@ -263,8 +265,14 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         res = []
         for i in range(len(predictions)):
             prediction = predictions[i]
-            prediction = prediction.split()[-1]
-            prediction = prediction[:-1] if self.enable_cot else prediction
+            # Schema-constrained answers are already the final answer (e.g.
+            # "(A)"); only free-text generations need last-token extraction and
+            # trailing-punctuation trimming. Applying these to a schema answer
+            # would turn "(A)" into "(A" and silently score it 0 — and diverged
+            # from the non-batch `predict`, which never post-processes.
+            if not used_schema:
+                prediction = prediction.split()[-1]
+                prediction = prediction[:-1] if self.enable_cot else prediction
             golden = goldens[i]
 
             # Define Metric
