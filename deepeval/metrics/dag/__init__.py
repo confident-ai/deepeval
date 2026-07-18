@@ -4,6 +4,7 @@ from .nodes import (
     TaskNode,
     BinaryJudgementNode,
     NonBinaryJudgementNode,
+    LoopNode,
 )
 from .graph import DeepAcyclicGraph
 from .serialization import (
