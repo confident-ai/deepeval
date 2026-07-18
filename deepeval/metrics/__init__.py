@@ -32,6 +32,7 @@ from .task_completion.task_completion import TaskCompletionMetric
 from .topic_adherence.topic_adherence import TopicAdherenceMetric
 from .step_efficiency.step_efficiency import StepEfficiencyMetric
 from .plan_adherence.plan_adherence import PlanAdherenceMetric
+from .process_integrity import ProcessIntegrityMetric
 from .plan_quality.plan_quality import PlanQualityMetric
 from .tool_use.tool_use import ToolUseMetric
 from .goal_accuracy.goal_accuracy import GoalAccuracyMetric

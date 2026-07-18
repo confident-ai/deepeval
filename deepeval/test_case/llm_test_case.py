@@ -413,6 +413,7 @@ class LLMTestCase(BaseModel):
             "customColumnKeyValues", "custom_column_key_values"
         ),
     )
+    steps: Optional[List[str]] = Field(default=None)
     _trace_dict: Optional[Dict] = PrivateAttr(default=None)
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
