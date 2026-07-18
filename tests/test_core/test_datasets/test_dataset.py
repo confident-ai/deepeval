@@ -587,3 +587,16 @@ class TestSaveAndLoad:
 
         assert len(test_cases) == 1
         assert test_cases[0].expected_outcome == "User gets flight options"
+
+
+class TestDatasetRank:
+    def test_constructor_assigns_sequential_rank_to_goldens(self):
+        """Each golden's _dataset_rank must be its position, not the dataset size."""
+        goldens = [Golden(input="a"), Golden(input="b"), Golden(input="c")]
+        dataset = EvaluationDataset(goldens)
+        assert [g._dataset_rank for g in dataset.goldens] == [0, 1, 2]
+
+    def test_goldens_setter_assigns_sequential_rank_to_goldens(self):
+        dataset = EvaluationDataset()
+        dataset.goldens = [Golden(input="a"), Golden(input="b")]
+        assert [g._dataset_rank for g in dataset.goldens] == [0, 1]
