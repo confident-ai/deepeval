@@ -12,6 +12,7 @@ from deepeval.tracing import trace_manager, BaseSpan
 from deepeval.tracing.utils import make_json_serializable
 
 GEN_AI_OPERATION_NAMES = ["chat", "generate_content", "text_completion"]
+GEN_AI_AGENT_OPERATION_NAMES = ["plan"]
 
 # Pending-metrics overlay: in-process side-channel for ``List[BaseMetric]``,
 # which can't fit in OTel attrs (primitives only). Writer is
@@ -285,12 +286,29 @@ def check_span_type_from_gen_ai_attributes(span: ReadableSpan):
         ):
             return "llm"
 
+        elif (
+            gen_ai_operation_name
+            and gen_ai_operation_name in GEN_AI_AGENT_OPERATION_NAMES
+        ):
+            return "agent"
+
         elif gen_ai_tool_name:
             return "tool"
     except Exception:
         pass
 
     return "base"
+
+
+def check_agent_name_from_gen_ai_attributes(span: ReadableSpan):
+    try:
+        gen_ai_agent_name = span.attributes.get("gen_ai.agent.name")
+        if gen_ai_agent_name:
+            return gen_ai_agent_name
+    except Exception:
+        pass
+
+    return None
 
 
 def check_model_from_gen_ai_attributes(span: ReadableSpan):
