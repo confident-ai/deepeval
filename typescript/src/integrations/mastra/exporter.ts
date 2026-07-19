@@ -5,13 +5,14 @@ import { getConfidentApiKey, isConfident } from "../../utils";
 import { withCaptureTracingIntegration } from "../../telemetry";
 import { Prompt } from "../../prompt";
 
-import {
-  MastraExportedSpan,
-  MastraInitExporterOptions,
-  MastraObservabilityExporter,
-  MastraTracingEvent,
-  MastraTracingEventType,
-} from "./mastra-types";
+import { TracingEventType } from "@mastra/core/observability";
+import type {
+  AnyExportedSpan,
+  InitExporterOptions,
+  ObservabilityExporter,
+  TracingEvent,
+} from "@mastra/core/observability";
+
 import {
   buildDeepEvalSpan,
   buildToolCall,
@@ -43,7 +44,7 @@ export interface DeepEvalExporterConfig {
   traceCaptureSink?: (trace: Trace) => void;
 }
 
-export class DeepEvalExporter implements MastraObservabilityExporter {
+export class DeepEvalExporter implements ObservabilityExporter {
   name = "deepeval";
 
   private config: DeepEvalExporterConfig;
@@ -87,30 +88,29 @@ export class DeepEvalExporter implements MastraObservabilityExporter {
     }
   }
 
-  init(options: MastraInitExporterOptions): void {
+  init(options: InitExporterOptions): void {
     if (!this.config.name && options.config?.serviceName) {
       this.config.name = options.config.serviceName;
     }
   }
 
-  async exportTracingEvent(event: MastraTracingEvent): Promise<void> {
+  async exportTracingEvent(event: TracingEvent): Promise<void> {
     if (this.disabled) return;
 
     const span = event.exportedSpan;
     if (!span) return;
 
-    // Skip event spans and per-chunk streaming noise (model_chunk).
     if (shouldDropSpan(span)) return;
 
     try {
       switch (event.type) {
-        case MastraTracingEventType.SPAN_STARTED:
+        case TracingEventType.SPAN_STARTED:
           this.handleStart(span);
           break;
-        case MastraTracingEventType.SPAN_UPDATED:
+        case TracingEventType.SPAN_UPDATED:
           this.handleUpdate(span);
           break;
-        case MastraTracingEventType.SPAN_ENDED:
+        case TracingEventType.SPAN_ENDED:
           this.handleEnd(span);
           break;
       }
@@ -121,7 +121,7 @@ export class DeepEvalExporter implements MastraObservabilityExporter {
     }
   }
 
-  private handleStart(span: MastraExportedSpan): void {
+  private handleStart(span: AnyExportedSpan): void {
     const traceUuid = this.ensureTrace(span.traceId);
 
     if (span.isRootSpan) {
@@ -150,12 +150,12 @@ export class DeepEvalExporter implements MastraObservabilityExporter {
     }
   }
 
-  private handleUpdate(span: MastraExportedSpan): void {
+  private handleUpdate(span: AnyExportedSpan): void {
     const existing = traceManager.getSpanByUuid(span.id);
     if (existing) updateDeepEvalSpan(existing, span);
   }
 
-  private handleEnd(span: MastraExportedSpan): void {
+  private handleEnd(span: AnyExportedSpan): void {
     const existing = traceManager.getSpanByUuid(span.id);
     if (!existing) return;
 
@@ -215,7 +215,7 @@ export class DeepEvalExporter implements MastraObservabilityExporter {
     if (traceMetricCollection) trace.metricCollection = traceMetricCollection;
   }
 
-  private applyPerRequestContext(trace: Trace, span: MastraExportedSpan): void {
+  private applyPerRequestContext(trace: Trace, span: AnyExportedSpan): void {
     const ctx = extractTraceContext(span);
     if (ctx.threadId) trace.threadId = ctx.threadId;
     if (ctx.userId) trace.userId = ctx.userId;
@@ -229,7 +229,7 @@ export class DeepEvalExporter implements MastraObservabilityExporter {
   }
 
   private resolveSpanMetricCollection(
-    span: MastraExportedSpan,
+    span: AnyExportedSpan,
   ): string | undefined {
     switch (mapSpanType(span.type)) {
       case SpanType.LLM:

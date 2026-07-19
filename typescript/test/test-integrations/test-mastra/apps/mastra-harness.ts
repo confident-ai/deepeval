@@ -12,9 +12,9 @@ export function buildMastra(
       configs: {
         deepeval: {
           serviceName: "deepeval-mastra-test",
-          exporters: [exporter as any],
+          exporters: [exporter],
         },
       },
     }),
-  } as any);
+  });
 }

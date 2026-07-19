@@ -8,13 +8,34 @@ import {
   ToolSpan,
 } from "../../tracing/tracing";
 import { ToolCall } from "../../test-case";
-import {
-  MastraSpanType,
-  MastraExportedSpan,
-  MastraUsageStats,
-} from "./mastra-types";
+import { SpanType as MastraSpanType } from "@mastra/core/observability";
+import type {
+  AnyExportedSpan,
+  AgentRunAttributes,
+  ModelGenerationAttributes,
+  ToolCallAttributes,
+  MCPToolCallAttributes,
+  ProviderToolCallAttributes,
+  RagEmbeddingAttributes,
+  RagVectorOperationAttributes,
+  UsageStats,
+} from "@mastra/core/observability";
 
-const SPAN_TYPE_EXCEPTIONS: Record<string, SpanType> = {
+type ReadableAttributes = Partial<
+  AgentRunAttributes &
+    ModelGenerationAttributes &
+    ToolCallAttributes &
+    MCPToolCallAttributes &
+    ProviderToolCallAttributes &
+    RagEmbeddingAttributes &
+    RagVectorOperationAttributes
+>;
+
+function readAttrs(span: AnyExportedSpan): ReadableAttributes {
+  return (span.attributes ?? {}) as ReadableAttributes;
+}
+
+const SPAN_TYPE_EXCEPTIONS: Partial<Record<MastraSpanType, SpanType>> = {
   [MastraSpanType.AGENT_RUN]: SpanType.AGENT,
   [MastraSpanType.WORKFLOW_RUN]: SpanType.AGENT,
   [MastraSpanType.MODEL_GENERATION]: SpanType.LLM,
@@ -26,13 +47,13 @@ const SPAN_TYPE_EXCEPTIONS: Record<string, SpanType> = {
   [MastraSpanType.RAG_VECTOR_OPERATION]: SpanType.RETRIEVER,
 };
 
-export function mapSpanType(mastraType: string): SpanType {
+export function mapSpanType(mastraType: MastraSpanType): SpanType {
   return SPAN_TYPE_EXCEPTIONS[mastraType] ?? SpanType.CUSTOM;
 }
 
-const DROPPED_SPAN_TYPES = new Set<string>([MastraSpanType.MODEL_CHUNK]);
+const DROPPED_SPAN_TYPES = new Set<MastraSpanType>([MastraSpanType.MODEL_CHUNK]);
 
-export function shouldDropSpan(span: MastraExportedSpan): boolean {
+export function shouldDropSpan(span: AnyExportedSpan): boolean {
   return span.isEvent === true || DROPPED_SPAN_TYPES.has(span.type);
 }
 
@@ -41,7 +62,7 @@ function toDate(value: Date | string | undefined): Date | undefined {
   return value instanceof Date ? value : new Date(value);
 }
 
-export function extractUsage(usage?: MastraUsageStats): {
+export function extractUsage(usage?: UsageStats): {
   inputTokenCount?: number;
   outputTokenCount?: number;
 } {
@@ -54,17 +75,17 @@ export function extractUsage(usage?: MastraUsageStats): {
   };
 }
 
-export function getToolName(span: MastraExportedSpan): string {
+export function getToolName(span: AnyExportedSpan): string {
   if (span.entityName) return span.entityName;
   const quoted = span.name?.match(/'([^']+)'/)?.[1];
   return quoted ?? span.name;
 }
 
 function buildMetadata(
-  span: MastraExportedSpan,
+  span: AnyExportedSpan,
   deepevalType: SpanType,
 ): Record<string, any> | undefined {
-  const attrs = span.attributes ?? {};
+  const attrs = readAttrs(span);
   const metadata: Record<string, any> = { ...(span.metadata ?? {}) };
 
   metadata.mastraSpanType = span.type;
@@ -116,12 +137,12 @@ export interface BuildSpanOptions {
 }
 
 export function buildDeepEvalSpan(
-  span: MastraExportedSpan,
+  span: AnyExportedSpan,
   traceUuid: string,
   options: BuildSpanOptions = {},
 ): BaseSpan {
   const deepevalType = mapSpanType(span.type);
-  const attrs = span.attributes ?? {};
+  const attrs = readAttrs(span);
   const name = span.name ?? span.entityName;
 
   const common = {
@@ -182,9 +203,9 @@ export function buildDeepEvalSpan(
 
 export function updateDeepEvalSpan(
   target: BaseSpan,
-  span: MastraExportedSpan,
+  span: AnyExportedSpan,
 ): void {
-  const attrs = span.attributes ?? {};
+  const attrs = readAttrs(span);
   const deepevalType = target.type as SpanType;
 
   if (span.output !== undefined) target.output = span.output;
@@ -213,7 +234,7 @@ export function updateDeepEvalSpan(
 
 export function finalizeDeepEvalSpan(
   target: BaseSpan,
-  span: MastraExportedSpan,
+  span: AnyExportedSpan,
 ): void {
   updateDeepEvalSpan(target, span);
 
@@ -228,7 +249,7 @@ export function finalizeDeepEvalSpan(
   }
 }
 
-export function buildToolCall(span: MastraExportedSpan): ToolCall {
+export function buildToolCall(span: AnyExportedSpan): ToolCall {
   const input = span.input;
   const inputParameters =
     input && typeof input === "object" && !Array.isArray(input)
@@ -239,7 +260,7 @@ export function buildToolCall(span: MastraExportedSpan): ToolCall {
 
   return new ToolCall({
     name: getToolName(span),
-    description: span.attributes?.toolDescription,
+    description: readAttrs(span).toolDescription,
     inputParameters,
     output: span.output,
   });
@@ -266,10 +287,10 @@ export interface PerRequestTraceContext {
 }
 
 export function extractTraceContext(
-  span: MastraExportedSpan,
+  span: AnyExportedSpan,
 ): PerRequestTraceContext {
   const meta = span.metadata ?? {};
-  const attrs = span.attributes ?? {};
+  const attrs = readAttrs(span);
   const ctx: PerRequestTraceContext = {};
 
   const threadId = meta.threadId ?? meta.sessionId ?? attrs.conversationId;

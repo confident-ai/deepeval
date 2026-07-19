@@ -45,7 +45,7 @@ const mastra = new Mastra({
     configs: {
       deepeval: {
         serviceName: "mastra-deepeval-demo",
-        exporters: [exporter as any],
+        exporters: [exporter],
       },
     },
   }),
