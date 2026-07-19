@@ -1,16 +1,16 @@
 {
   "name": "mastra-simple-test",
-  "uuid": "8310ab37-5a7c-472a-88b4-6331eaee4e1b",
+  "uuid": "7d4c61a1-eb16-4cc9-9efe-54de6257b436",
   "baseSpans": [
     {
-      "uuid": "50579e39f1ef8a95",
+      "uuid": "56c3ddf5177db42e",
       "name": "step: 0",
       "status": "SUCCESS",
       "type": "base",
-      "traceUuid": "8310ab37-5a7c-472a-88b4-6331eaee4e1b",
-      "parentUuid": "c6bd52d6d5524b8c",
-      "startTime": "2026-07-19T12:39:44.015Z",
-      "endTime": "2026-07-19T12:39:45.644Z",
+      "traceUuid": "7d4c61a1-eb16-4cc9-9efe-54de6257b436",
+      "parentUuid": "6a372f6c783eb23e",
+      "startTime": "2026-07-19T13:42:51.768Z",
+      "endTime": "2026-07-19T13:42:54.101Z",
       "input": [
         {
           "role": "system",
@@ -22,48 +22,48 @@
         }
       ],
       "output": {
-        "text": "Hello! How can I assist you today?",
+        "text": "Hello!",
         "toolCalls": []
       },
       "metadata": {
-        "runId": "b146579d-2234-4ef8-b159-7cd72089a65e",
+        "runId": "6d69dfd0-a8b6-4693-96c1-6ca38fab7cbf",
         "environment": "test",
         "headers": {
           "access-control-expose-headers": "X-Request-ID, CF-Ray, CF-Ray",
           "alt-svc": "h3=\":443\"; ma=86400",
           "cf-cache-status": "DYNAMIC",
-          "cf-ray": "a1d9ca65ec94869e-NAG",
+          "cf-ray": "a1da26dfbe6070aa-NAG",
           "connection": "keep-alive",
           "content-encoding": "br",
           "content-type": "application/json",
-          "date": "Sun, 19 Jul 2026 12:39:45 GMT",
+          "date": "Sun, 19 Jul 2026 13:42:53 GMT",
           "openai-organization": "confident-ai",
-          "openai-processing-ms": "868",
+          "openai-processing-ms": "910",
           "openai-project": "proj_A9bfPs3IllEZNkmbL6kztWbs",
           "openai-version": "2020-10-01",
           "server": "cloudflare",
-          "set-cookie": "__cf_bm=bKvp6W6f_34OTTSAgMlEcgqWLFE7qVqXSLgxc08_OWQ-1784464784.3096573-1.0.1.1-M.9fUYENyWESjFQNAeQt_GKMHxzIupUKlqnRuwEzmnS_4w88XU332XA.l6oc.vFnc2QUcD37C3vyNaUpzvaoSWzNuIJwgllJYvfomhPYm4pm9oilx9TIaVOC4MPqwTHp; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com; Expires=Sun, 19 Jul 2026 13:09:45 GMT",
+          "set-cookie": "__cf_bm=Sojid0gAyB73EglK0JNCu.spngSvxgdDro_FnYCS99k-1784468572.1145082-1.0.1.1-HX4ZMvJXlO1CRWB_CcAtzYd6mX8cidq6SlAzygXPlOjYsZx_zQwECUkyU7_sjL..j66udFdVLJdXBp7BzY6jD4Mi2gAZ70Tu9pHPZtuK.6goeb7EFXvtyvwvPsqxXEms; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com; Expires=Sun, 19 Jul 2026 14:12:53 GMT",
           "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
           "transfer-encoding": "chunked",
           "x-content-type-options": "nosniff",
           "x-ratelimit-limit-requests": "30000",
           "x-ratelimit-limit-tokens": "150000000",
           "x-ratelimit-remaining-requests": "29999",
-          "x-ratelimit-remaining-tokens": "149999950",
+          "x-ratelimit-remaining-tokens": "149999952",
           "x-ratelimit-reset-requests": "2ms",
           "x-ratelimit-reset-tokens": "0s",
-          "x-request-id": "req_c11bd0b15b3a4a4d9ca894f836afc895"
+          "x-request-id": "req_918712b062ca4167baa5cb8f493597c7"
         },
         "body": {
-          "id": "resp_0a080c2f3eb3abf7006a5cc5907bc48198bce2944f6c502ea4",
+          "id": "resp_0f863ec5b98c97e4006a5cd45cf52c819a9fc6b9c85fa42fc0",
           "object": "response",
-          "created_at": 1784464784,
+          "created_at": 1784468573,
           "status": "completed",
           "background": false,
           "billing": {
             "payer": "developer"
           },
-          "completed_at": 1784464785,
+          "completed_at": 1784468573,
           "error": null,
           "frequency_penalty": 0,
           "incomplete_details": null,
@@ -74,7 +74,7 @@
           "moderation": null,
           "output": [
             {
-              "id": "msg_0a080c2f3eb3abf7006a5cc59105bc8198a03a09b93c753827",
+              "id": "msg_0f863ec5b98c97e4006a5cd45da74c819aa96fb55c601a65ef",
               "type": "message",
               "status": "completed",
               "content": [
@@ -82,7 +82,7 @@
                   "type": "output_text",
                   "annotations": [],
                   "logprobs": [],
-                  "text": "Hello! How can I assist you today?"
+                  "text": "Hello!"
                 }
               ],
               "role": "assistant"
@@ -137,11 +137,11 @@
               "cache_write_tokens": 0,
               "cached_tokens": 0
             },
-            "output_tokens": 10,
+            "output_tokens": 3,
             "output_tokens_details": {
               "reasoning_tokens": 0
             },
-            "total_tokens": 40
+            "total_tokens": 33
           },
           "user": null,
           "metadata": {}
@@ -155,20 +155,20 @@
       }
     },
     {
-      "uuid": "c8c6dd40c5bda805",
+      "uuid": "9319237ade92af22",
       "name": "inference: 0",
       "status": "SUCCESS",
       "type": "base",
-      "traceUuid": "8310ab37-5a7c-472a-88b4-6331eaee4e1b",
-      "parentUuid": "50579e39f1ef8a95",
-      "startTime": "2026-07-19T12:39:44.018Z",
-      "endTime": "2026-07-19T12:39:45.644Z",
+      "traceUuid": "7d4c61a1-eb16-4cc9-9efe-54de6257b436",
+      "parentUuid": "56c3ddf5177db42e",
+      "startTime": "2026-07-19T13:42:51.770Z",
+      "endTime": "2026-07-19T13:42:54.101Z",
       "output": {
-        "text": "Hello! How can I assist you today?",
+        "text": "Hello!",
         "toolCalls": []
       },
       "metadata": {
-        "runId": "b146579d-2234-4ef8-b159-7cd72089a65e",
+        "runId": "6d69dfd0-a8b6-4693-96c1-6ca38fab7cbf",
         "environment": "test",
         "mastraSpanType": "model_inference"
       }
@@ -176,22 +176,22 @@
   ],
   "agentSpans": [
     {
-      "uuid": "aa247f73baca8562",
+      "uuid": "c85d4cf310a31069",
       "name": "agent run: 'simple-agent'",
       "status": "SUCCESS",
       "type": "agent",
-      "traceUuid": "8310ab37-5a7c-472a-88b4-6331eaee4e1b",
-      "startTime": "2026-07-19T12:39:43.997Z",
-      "endTime": "2026-07-19T12:39:45.673Z",
+      "traceUuid": "7d4c61a1-eb16-4cc9-9efe-54de6257b436",
+      "startTime": "2026-07-19T13:42:51.748Z",
+      "endTime": "2026-07-19T13:42:54.156Z",
       "input": "Say hello in one short sentence.",
       "output": {
-        "text": "Hello! How can I assist you today?",
+        "text": "Hello!",
         "files": []
       },
       "availableTools": [],
       "agentHandoffs": [],
       "metadata": {
-        "runId": "b146579d-2234-4ef8-b159-7cd72089a65e",
+        "runId": "6d69dfd0-a8b6-4693-96c1-6ca38fab7cbf",
         "environment": "test",
         "mastraSpanType": "agent_run"
       }
@@ -199,14 +199,14 @@
   ],
   "llmSpans": [
     {
-      "uuid": "c6bd52d6d5524b8c",
+      "uuid": "6a372f6c783eb23e",
       "name": "llm: 'gpt-4o-mini'",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "8310ab37-5a7c-472a-88b4-6331eaee4e1b",
-      "parentUuid": "aa247f73baca8562",
-      "startTime": "2026-07-19T12:39:44.008Z",
-      "endTime": "2026-07-19T12:39:45.646Z",
+      "traceUuid": "7d4c61a1-eb16-4cc9-9efe-54de6257b436",
+      "parentUuid": "c85d4cf310a31069",
+      "startTime": "2026-07-19T13:42:51.760Z",
+      "endTime": "2026-07-19T13:42:54.102Z",
       "input": {
         "messages": [
           {
@@ -221,7 +221,7 @@
                 "text": "Say hello in one short sentence.",
                 "providerOptions": {
                   "mastra": {
-                    "createdAt": 1784464784004
+                    "createdAt": 1784468571756
                   }
                 }
               }
@@ -233,21 +233,21 @@
         "files": [],
         "reasoning": [],
         "sources": [],
-        "text": "Hello! How can I assist you today?",
+        "text": "Hello!",
         "warnings": []
       },
       "model": "gpt-4o-mini-2024-07-18",
       "inputTokenCount": 30,
-      "outputTokenCount": 10,
+      "outputTokenCount": 3,
       "metadata": {
-        "runId": "b146579d-2234-4ef8-b159-7cd72089a65e",
+        "runId": "6d69dfd0-a8b6-4693-96c1-6ca38fab7cbf",
         "environment": "test",
         "mastraSpanType": "model_generation",
         "provider": "openai",
         "finishReason": "stop",
-        "responseId": "resp_0a080c2f3eb3abf7006a5cc5907bc48198bce2944f6c502ea4",
+        "responseId": "resp_0f863ec5b98c97e4006a5cd45cf52c819a9fc6b9c85fa42fc0",
         "streaming": true,
-        "completionStartTime": "2026-07-19T12:39:45.631Z",
+        "completionStartTime": "2026-07-19T13:42:54.094Z",
         "modelParameters": {},
         "cacheReadInputTokens": 0,
         "cacheWriteInputTokens": 0,
@@ -257,11 +257,13 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-07-19T12:39:43.998Z",
-  "endTime": "2026-07-19T12:39:45.673Z",
+  "startTime": "2026-07-19T13:42:51.750Z",
+  "endTime": "2026-07-19T13:42:54.156Z",
   "environment": "testing",
   "metadata": {
-    "test_type": "simple"
+    "test_type": "simple",
+    "runId": "6d69dfd0-a8b6-4693-96c1-6ca38fab7cbf",
+    "environment": "test"
   },
   "tags": [
     "mastra",
@@ -271,7 +273,7 @@
   "userId": "test-user",
   "input": "Say hello in one short sentence.",
   "output": {
-    "text": "Hello! How can I assist you today?",
+    "text": "Hello!",
     "files": []
   },
   "status": "SUCCESS"

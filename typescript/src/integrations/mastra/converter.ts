@@ -82,6 +82,8 @@ function buildMetadata(
           : attrs.completionStartTime;
     if (attrs.parameters !== undefined)
       metadata.modelParameters = attrs.parameters;
+    if (attrs.costContext?.estimatedCost !== undefined)
+      metadata.estimatedCost = attrs.costContext.estimatedCost;
 
     const inDetails = attrs.usage?.inputDetails;
     const outDetails = attrs.usage?.outputDetails;
@@ -241,4 +243,53 @@ export function buildToolCall(span: MastraExportedSpan): ToolCall {
     inputParameters,
     output: span.output,
   });
+}
+
+const RESERVED_TRACE_META_KEYS = new Set<string>([
+  "userId",
+  "threadId",
+  "sessionId",
+  "resourceId",
+  "traceName",
+  "testCaseId",
+  "turnId",
+]);
+
+export interface PerRequestTraceContext {
+  threadId?: string;
+  userId?: string;
+  tags?: string[];
+  name?: string;
+  testCaseId?: string;
+  turnId?: string;
+  metadata?: Record<string, any>;
+}
+
+export function extractTraceContext(
+  span: MastraExportedSpan,
+): PerRequestTraceContext {
+  const meta = span.metadata ?? {};
+  const attrs = span.attributes ?? {};
+  const ctx: PerRequestTraceContext = {};
+
+  const threadId = meta.threadId ?? meta.sessionId ?? attrs.conversationId;
+  if (threadId) ctx.threadId = String(threadId);
+
+  const userId = meta.userId ?? meta.resourceId;
+  if (userId) ctx.userId = String(userId);
+
+  if (span.tags && span.tags.length > 0) ctx.tags = span.tags;
+  if (meta.traceName) ctx.name = String(meta.traceName);
+  if (meta.testCaseId) ctx.testCaseId = String(meta.testCaseId);
+  if (meta.turnId) ctx.turnId = String(meta.turnId);
+
+  const custom: Record<string, any> = {};
+  for (const [key, value] of Object.entries(meta)) {
+    if (!RESERVED_TRACE_META_KEYS.has(key) && value !== undefined) {
+      custom[key] = value;
+    }
+  }
+  if (Object.keys(custom).length > 0) ctx.metadata = custom;
+
+  return ctx;
 }

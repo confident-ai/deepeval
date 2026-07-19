@@ -1,4 +1,5 @@
 import * as path from "path";
+import { expect } from "@jest/globals";
 import { DeepEvalExporter } from "../../../src/integrations/mastra";
 import { traceManager } from "../../../src/tracing/tracing";
 import { Environment } from "../../../src/tracing/utils";
@@ -110,5 +111,45 @@ describe("Mastra Integration Tests", () => {
       );
       await settleTraces();
     });
+  }, 60000);
+
+  // Value assertions (not a fixture): per-request context via tracingOptions
+  // must override the exporter's static config defaults.
+  test("Should apply per-request tracing context over config defaults", async () => {
+    traceManager.clearTraces();
+
+    const exporter = new DeepEvalExporter({
+      // config defaults that per-request values should override
+      threadId: "config-thread",
+      userId: "config-user",
+      tags: ["config-tag"],
+    });
+
+    await runToolApp(
+      exporter,
+      "Use the get_weather tool to get the weather in Tokyo.",
+      {
+        tracingOptions: {
+          metadata: {
+            threadId: "thread-123",
+            userId: "user-xyz",
+            testCaseId: "tc-1",
+            turnId: "turn-1",
+            team: "growth",
+          },
+          tags: ["req-tag"],
+        },
+      },
+    );
+    await settleTraces();
+
+    const trace = traceManager.getAllTraces()[0];
+    expect(trace).toBeDefined();
+    expect(trace.threadId).toBe("thread-123");
+    expect(trace.userId).toBe("user-xyz");
+    expect(trace.tags).toEqual(["req-tag"]);
+    expect(trace.testCaseId).toBe("tc-1");
+    expect(trace.turnId).toBe("turn-1");
+    expect(trace.metadata?.team).toBe("growth");
   }, 60000);
 });

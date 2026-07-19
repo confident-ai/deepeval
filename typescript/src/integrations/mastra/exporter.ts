@@ -15,6 +15,7 @@ import {
 import {
   buildDeepEvalSpan,
   buildToolCall,
+  extractTraceContext,
   finalizeDeepEvalSpan,
   getToolName,
   mapSpanType,
@@ -123,6 +124,11 @@ export class DeepEvalExporter implements MastraObservabilityExporter {
   private handleStart(span: MastraExportedSpan): void {
     const traceUuid = this.ensureTrace(span.traceId);
 
+    if (span.isRootSpan) {
+      const trace = traceManager.getTraceByUuid(traceUuid);
+      if (trace) this.applyPerRequestContext(trace, span);
+    }
+
     const deepEvalSpan = buildDeepEvalSpan(span, traceUuid, {
       metricCollection: this.resolveSpanMetricCollection(span),
       prompt:
@@ -207,6 +213,19 @@ export class DeepEvalExporter implements MastraObservabilityExporter {
     if (c.turnId) trace.turnId = c.turnId;
     const traceMetricCollection = c.traceMetricCollection ?? c.metricCollection;
     if (traceMetricCollection) trace.metricCollection = traceMetricCollection;
+  }
+
+  private applyPerRequestContext(trace: Trace, span: MastraExportedSpan): void {
+    const ctx = extractTraceContext(span);
+    if (ctx.threadId) trace.threadId = ctx.threadId;
+    if (ctx.userId) trace.userId = ctx.userId;
+    if (ctx.tags) trace.tags = ctx.tags;
+    if (ctx.name) trace.name = ctx.name;
+    if (ctx.testCaseId) trace.testCaseId = ctx.testCaseId;
+    if (ctx.turnId) trace.turnId = ctx.turnId;
+    if (ctx.metadata) {
+      trace.metadata = { ...(trace.metadata ?? {}), ...ctx.metadata };
+    }
   }
 
   private resolveSpanMetricCollection(

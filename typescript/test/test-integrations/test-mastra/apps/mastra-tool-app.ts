@@ -31,7 +31,11 @@ const weatherAgent = new Agent({
   tools: { get_weather: getWeather },
 });
 
-export async function runToolApp(exporter: DeepEvalExporter, prompt: string) {
+export async function runToolApp(
+  exporter: DeepEvalExporter,
+  prompt: string,
+  options?: Record<string, any>,
+) {
   const mastra = buildMastra(exporter, { agents: { weatherAgent } });
-  return await mastra.getAgent("weatherAgent").generate(prompt);
+  return await mastra.getAgent("weatherAgent").generate(prompt, options as any);
 }
