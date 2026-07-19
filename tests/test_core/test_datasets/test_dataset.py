@@ -240,6 +240,40 @@ class TestSaveAndLoad:
                     custom_obj = json.loads(vals[custom_idx])
                     assert custom_obj["col"] == "val"
 
+    def test_save_as_jsonl_round_trips_single_turn_metadata_fields(self):
+        """save_as('jsonl') must write name, comments and source_file for
+        single-turn goldens, so a save -> add_goldens_from_jsonl_file cycle
+        preserves them. The JSON path already writes all three and the jsonl
+        loader already reads them; only the jsonl record dict omitted them."""
+        golden = Golden(
+            input="q",
+            expected_output="a",
+            name="case-1",
+            comments="a note",
+            source_file="/data/src.csv",
+        )
+        dataset = EvaluationDataset([golden])
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            jsonl_path = dataset.save_as(
+                "jsonl", directory=tmpdir, file_name="single_jsonl_meta"
+            )
+
+            # The written record carries the three fields.
+            with open(jsonl_path, "r", encoding="utf-8") as f:
+                row = json.loads(f.readline())
+            assert row["name"] == "case-1"
+            assert row["comments"] == "a note"
+            assert row["source_file"] == "/data/src.csv"
+
+            # They also survive a reload (final state, not just at save time).
+            reloaded = EvaluationDataset()
+            reloaded.add_goldens_from_jsonl_file(jsonl_path)
+            loaded = reloaded.goldens[0]
+            assert loaded.name == "case-1"
+            assert loaded.comments == "a note"
+            assert loaded.source_file == "/data/src.csv"
+
     def test_save_as_round_trips_retrieval_context_data(self):
         """save_as serializes a RetrievedContextData (a type-allowed member of
         Golden.retrieval_context that used to crash the save) as a namespaced,
