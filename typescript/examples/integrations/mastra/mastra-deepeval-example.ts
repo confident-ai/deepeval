@@ -56,7 +56,7 @@ async function main() {
     .getAgent("weatherAgent")
     .generate("What's the weather in Tokyo?");
 
-  console.log("\n🤖 Agent:", (result as any).text);
+  console.log("\n🤖 Agent:", result.text);
 
   // Mastra delivers span events asynchronously; give them a moment to land,
   // then flush so the trace is posted to Confident before the process exits.
