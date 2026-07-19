@@ -1,0 +1,278 @@
+{
+  "name": "mastra-simple-test",
+  "uuid": "8310ab37-5a7c-472a-88b4-6331eaee4e1b",
+  "baseSpans": [
+    {
+      "uuid": "50579e39f1ef8a95",
+      "name": "step: 0",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "8310ab37-5a7c-472a-88b4-6331eaee4e1b",
+      "parentUuid": "c6bd52d6d5524b8c",
+      "startTime": "2026-07-19T12:39:44.015Z",
+      "endTime": "2026-07-19T12:39:45.644Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant. Answer in one short sentence."
+        },
+        {
+          "role": "user",
+          "content": "Say hello in one short sentence."
+        }
+      ],
+      "output": {
+        "text": "Hello! How can I assist you today?",
+        "toolCalls": []
+      },
+      "metadata": {
+        "runId": "b146579d-2234-4ef8-b159-7cd72089a65e",
+        "environment": "test",
+        "headers": {
+          "access-control-expose-headers": "X-Request-ID, CF-Ray, CF-Ray",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "cf-cache-status": "DYNAMIC",
+          "cf-ray": "a1d9ca65ec94869e-NAG",
+          "connection": "keep-alive",
+          "content-encoding": "br",
+          "content-type": "application/json",
+          "date": "Sun, 19 Jul 2026 12:39:45 GMT",
+          "openai-organization": "confident-ai",
+          "openai-processing-ms": "868",
+          "openai-project": "proj_A9bfPs3IllEZNkmbL6kztWbs",
+          "openai-version": "2020-10-01",
+          "server": "cloudflare",
+          "set-cookie": "__cf_bm=bKvp6W6f_34OTTSAgMlEcgqWLFE7qVqXSLgxc08_OWQ-1784464784.3096573-1.0.1.1-M.9fUYENyWESjFQNAeQt_GKMHxzIupUKlqnRuwEzmnS_4w88XU332XA.l6oc.vFnc2QUcD37C3vyNaUpzvaoSWzNuIJwgllJYvfomhPYm4pm9oilx9TIaVOC4MPqwTHp; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com; Expires=Sun, 19 Jul 2026 13:09:45 GMT",
+          "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+          "transfer-encoding": "chunked",
+          "x-content-type-options": "nosniff",
+          "x-ratelimit-limit-requests": "30000",
+          "x-ratelimit-limit-tokens": "150000000",
+          "x-ratelimit-remaining-requests": "29999",
+          "x-ratelimit-remaining-tokens": "149999950",
+          "x-ratelimit-reset-requests": "2ms",
+          "x-ratelimit-reset-tokens": "0s",
+          "x-request-id": "req_c11bd0b15b3a4a4d9ca894f836afc895"
+        },
+        "body": {
+          "id": "resp_0a080c2f3eb3abf7006a5cc5907bc48198bce2944f6c502ea4",
+          "object": "response",
+          "created_at": 1784464784,
+          "status": "completed",
+          "background": false,
+          "billing": {
+            "payer": "developer"
+          },
+          "completed_at": 1784464785,
+          "error": null,
+          "frequency_penalty": 0,
+          "incomplete_details": null,
+          "instructions": null,
+          "max_output_tokens": null,
+          "max_tool_calls": null,
+          "model": "gpt-4o-mini-2024-07-18",
+          "moderation": null,
+          "output": [
+            {
+              "id": "msg_0a080c2f3eb3abf7006a5cc59105bc8198a03a09b93c753827",
+              "type": "message",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "annotations": [],
+                  "logprobs": [],
+                  "text": "Hello! How can I assist you today?"
+                }
+              ],
+              "role": "assistant"
+            }
+          ],
+          "parallel_tool_calls": true,
+          "presence_penalty": 0,
+          "previous_response_id": null,
+          "prompt_cache_key": null,
+          "prompt_cache_retention": "in_memory",
+          "reasoning": {
+            "context": null,
+            "effort": null,
+            "summary": null
+          },
+          "safety_identifier": null,
+          "service_tier": "default",
+          "store": true,
+          "temperature": 1,
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "tool_choice": "auto",
+          "tool_usage": {
+            "image_gen": {
+              "input_tokens": 0,
+              "input_tokens_details": {
+                "image_tokens": 0,
+                "text_tokens": 0
+              },
+              "output_tokens": 0,
+              "output_tokens_details": {
+                "image_tokens": 0,
+                "text_tokens": 0
+              },
+              "total_tokens": 0
+            },
+            "web_search": {
+              "num_requests": 0
+            }
+          },
+          "tools": [],
+          "top_logprobs": 0,
+          "top_p": 1,
+          "truncation": "disabled",
+          "usage": {
+            "input_tokens": 30,
+            "input_tokens_details": {
+              "cache_write_tokens": 0,
+              "cached_tokens": 0
+            },
+            "output_tokens": 10,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 40
+          },
+          "user": null,
+          "metadata": {}
+        },
+        "modelMetadata": {
+          "modelId": "gpt-4o-mini",
+          "modelVersion": "v2",
+          "modelProvider": "openai"
+        },
+        "mastraSpanType": "model_step"
+      }
+    },
+    {
+      "uuid": "c8c6dd40c5bda805",
+      "name": "inference: 0",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "8310ab37-5a7c-472a-88b4-6331eaee4e1b",
+      "parentUuid": "50579e39f1ef8a95",
+      "startTime": "2026-07-19T12:39:44.018Z",
+      "endTime": "2026-07-19T12:39:45.644Z",
+      "output": {
+        "text": "Hello! How can I assist you today?",
+        "toolCalls": []
+      },
+      "metadata": {
+        "runId": "b146579d-2234-4ef8-b159-7cd72089a65e",
+        "environment": "test",
+        "mastraSpanType": "model_inference"
+      }
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "aa247f73baca8562",
+      "name": "agent run: 'simple-agent'",
+      "status": "SUCCESS",
+      "type": "agent",
+      "traceUuid": "8310ab37-5a7c-472a-88b4-6331eaee4e1b",
+      "startTime": "2026-07-19T12:39:43.997Z",
+      "endTime": "2026-07-19T12:39:45.673Z",
+      "input": "Say hello in one short sentence.",
+      "output": {
+        "text": "Hello! How can I assist you today?",
+        "files": []
+      },
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metadata": {
+        "runId": "b146579d-2234-4ef8-b159-7cd72089a65e",
+        "environment": "test",
+        "mastraSpanType": "agent_run"
+      }
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "c6bd52d6d5524b8c",
+      "name": "llm: 'gpt-4o-mini'",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "8310ab37-5a7c-472a-88b4-6331eaee4e1b",
+      "parentUuid": "aa247f73baca8562",
+      "startTime": "2026-07-19T12:39:44.008Z",
+      "endTime": "2026-07-19T12:39:45.646Z",
+      "input": {
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a helpful assistant. Answer in one short sentence."
+          },
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "Say hello in one short sentence.",
+                "providerOptions": {
+                  "mastra": {
+                    "createdAt": 1784464784004
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "output": {
+        "files": [],
+        "reasoning": [],
+        "sources": [],
+        "text": "Hello! How can I assist you today?",
+        "warnings": []
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "inputTokenCount": 30,
+      "outputTokenCount": 10,
+      "metadata": {
+        "runId": "b146579d-2234-4ef8-b159-7cd72089a65e",
+        "environment": "test",
+        "mastraSpanType": "model_generation",
+        "provider": "openai",
+        "finishReason": "stop",
+        "responseId": "resp_0a080c2f3eb3abf7006a5cc5907bc48198bce2944f6c502ea4",
+        "streaming": true,
+        "completionStartTime": "2026-07-19T12:39:45.631Z",
+        "modelParameters": {},
+        "cacheReadInputTokens": 0,
+        "cacheWriteInputTokens": 0,
+        "reasoningTokens": 0
+      }
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-07-19T12:39:43.998Z",
+  "endTime": "2026-07-19T12:39:45.673Z",
+  "environment": "testing",
+  "metadata": {
+    "test_type": "simple"
+  },
+  "tags": [
+    "mastra",
+    "simple"
+  ],
+  "threadId": "simple-123",
+  "userId": "test-user",
+  "input": "Say hello in one short sentence.",
+  "output": {
+    "text": "Hello! How can I assist you today?",
+    "files": []
+  },
+  "status": "SUCCESS"
+}
