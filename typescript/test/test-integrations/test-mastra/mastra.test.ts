@@ -6,7 +6,7 @@ import { Environment } from "../../../src/tracing/utils";
 import { generateTraceJson, assertTraceJson } from "../utils";
 
 import { runSimpleApp } from "./apps/mastra-simple-app";
-import { runToolApp } from "./apps/mastra-tool-app";
+import { runToolApp, runToolAppWithTracing } from "./apps/mastra-tool-app";
 import { runMultiToolApp } from "./apps/mastra-multi-tool-app";
 
 const FIXTURES_DIR = path.join(__dirname, "fixtures");
@@ -125,20 +125,18 @@ describe("Mastra Integration Tests", () => {
       tags: ["config-tag"],
     });
 
-    await runToolApp(
+    await runToolAppWithTracing(
       exporter,
       "Use the get_weather tool to get the weather in Tokyo.",
       {
-        tracingOptions: {
-          metadata: {
-            threadId: "thread-123",
-            userId: "user-xyz",
-            testCaseId: "tc-1",
-            turnId: "turn-1",
-            team: "growth",
-          },
-          tags: ["req-tag"],
+        metadata: {
+          threadId: "thread-123",
+          userId: "user-xyz",
+          testCaseId: "tc-1",
+          turnId: "turn-1",
+          team: "growth",
         },
+        tags: ["req-tag"],
       },
     );
     await settleTraces();

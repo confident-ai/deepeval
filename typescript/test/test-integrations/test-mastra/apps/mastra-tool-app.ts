@@ -1,5 +1,6 @@
 import { Agent } from "@mastra/core/agent";
 import { createTool } from "@mastra/core/tools";
+import type { TracingOptions } from "@mastra/core/observability";
 import { z } from "zod";
 import type { DeepEvalExporter } from "../../../../src/integrations/mastra";
 import { buildMastra } from "./mastra-harness";
@@ -31,11 +32,18 @@ const weatherAgent = new Agent({
   tools: { get_weather: getWeather },
 });
 
-export async function runToolApp(
+export async function runToolApp(exporter: DeepEvalExporter, prompt: string) {
+  const mastra = buildMastra(exporter, { agents: { weatherAgent } });
+  return await mastra.getAgent("weatherAgent").generate(prompt);
+}
+
+export async function runToolAppWithTracing(
   exporter: DeepEvalExporter,
   prompt: string,
-  options?: Record<string, any>,
+  tracingOptions: TracingOptions,
 ) {
   const mastra = buildMastra(exporter, { agents: { weatherAgent } });
-  return await mastra.getAgent("weatherAgent").generate(prompt, options as any);
+  return await mastra
+    .getAgent("weatherAgent")
+    .generate(prompt, { tracingOptions });
 }

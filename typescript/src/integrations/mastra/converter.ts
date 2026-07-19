@@ -51,7 +51,9 @@ export function mapSpanType(mastraType: MastraSpanType): SpanType {
   return SPAN_TYPE_EXCEPTIONS[mastraType] ?? SpanType.CUSTOM;
 }
 
-const DROPPED_SPAN_TYPES = new Set<MastraSpanType>([MastraSpanType.MODEL_CHUNK]);
+const DROPPED_SPAN_TYPES = new Set<MastraSpanType>([
+  MastraSpanType.MODEL_CHUNK,
+]);
 
 export function shouldDropSpan(span: AnyExportedSpan): boolean {
   return span.isEvent === true || DROPPED_SPAN_TYPES.has(span.type);
