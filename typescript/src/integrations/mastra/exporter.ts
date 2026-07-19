@@ -1,9 +1,5 @@
 import { traceManager } from "../../tracing";
-import {
-  SpanType,
-  TraceManagerConfig,
-  Trace,
-} from "../../tracing/tracing";
+import { SpanType, TraceManagerConfig, Trace } from "../../tracing/tracing";
 import { Environment } from "../../tracing/utils";
 import { getConfidentApiKey, isConfident } from "../../utils";
 import { withCaptureTracingIntegration } from "../../telemetry";
@@ -78,8 +74,7 @@ export class DeepEvalExporter implements MastraObservabilityExporter {
       traceManager.setTraceCaptureSink(config.traceCaptureSink);
     }
 
-    withCaptureTracingIntegration("mastra", () => {
-    }).catch((err) => {
+    withCaptureTracingIntegration("mastra", () => {}).catch((err) => {
       if (config.debug) console.error("DeepEval telemetry failed:", err);
     });
 
@@ -130,7 +125,10 @@ export class DeepEvalExporter implements MastraObservabilityExporter {
 
     const deepEvalSpan = buildDeepEvalSpan(span, traceUuid, {
       metricCollection: this.resolveSpanMetricCollection(span),
-      prompt: mapSpanType(span.type) === SpanType.LLM ? this.config.prompt : undefined,
+      prompt:
+        mapSpanType(span.type) === SpanType.LLM
+          ? this.config.prompt
+          : undefined,
     });
 
     traceManager.addSpan(deepEvalSpan);

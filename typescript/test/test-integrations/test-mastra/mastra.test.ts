@@ -24,7 +24,10 @@ const settleTraces = async (timeoutMs = 15000): Promise<void> => {
   }
 };
 
-const traceTest = async (schemaName: string, executeFn: () => Promise<void>) => {
+const traceTest = async (
+  schemaName: string,
+  executeFn: () => Promise<void>,
+) => {
   const jsonPath = path.join(FIXTURES_DIR, schemaName);
   if (GENERATE_SCHEMAS) {
     await generateTraceJson(jsonPath, executeFn);
