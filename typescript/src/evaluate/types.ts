@@ -53,7 +53,7 @@ export interface EvaluationResult {
 
 export const ApiToolCallSchema = z.object({
   name: z.string(),
-  type: z.enum(ToolCallType).nullish(),
+  type: z.enum(ToolCallType as any).nullish(),
   description: z.string().nullish(),
   reasoning: z.string().nullish(),
   output: z.unknown(),

@@ -1,4 +1,7 @@
+import * as fs from "fs";
+import * as path from "path";
 import { config } from "dotenv";
+import { DEEPEVAL_RUNNING, HIDDEN_DIR } from "./constants";
 
 /**
  * Utility functions for Confident AI integration
@@ -81,4 +84,18 @@ function camelToSnake(str: string): string {
  */
 export function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function getIsRunningDeepEval(): boolean {
+  return process.env[DEEPEVAL_RUNNING] === "1";
+}
+
+export function setIsRunningDeepEval(flag: boolean): void {
+  process.env[DEEPEVAL_RUNNING] = flag ? "1" : "0";
+}
+
+export function createTestRunResultsDir(): string {
+  const base = path.join(process.cwd(), HIDDEN_DIR);
+  fs.mkdirSync(base, { recursive: true });
+  return fs.mkdtempSync(path.join(base, "test-run-"));
 }

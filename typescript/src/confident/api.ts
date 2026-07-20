@@ -105,7 +105,7 @@ const defaultRetryOptions: RetryOptions = {
 };
 
 export class Api {
-  private apiKey: string;
+  private apiKey?: string;
   private headers: Record<string, string>;
   private baseApiUrl: string;
 
@@ -114,12 +114,8 @@ export class Api {
       apiKey = process.env.CONFIDENT_API_KEY;
     }
 
-    if (!apiKey) {
-      throw new Error("Please provide a valid Confident AI API Key.");
-    }
-
     // if region is set or url is provided, respect that
-    if (!process.env.CONFIDENT_REGION && !baseUrl) {
+    if (!process.env.CONFIDENT_REGION && !baseUrl && apiKey) {
       this.baseApiUrl = inferBaseUrlFromApiKey(apiKey);
     } else {
       this.baseApiUrl = baseUrl || API_BASE_URL;
@@ -128,8 +124,14 @@ export class Api {
     this.apiKey = apiKey;
     this.headers = {
       "Content-Type": "application/json",
-      CONFIDENT_API_KEY: apiKey,
+      ...(apiKey && { CONFIDENT_API_KEY: apiKey }),
     };
+  }
+
+  private validateApiKey(): void {
+    if (!this.apiKey) {
+      throw new Error("Please provide a valid Confident AI API Key.");
+    }
   }
 
   private static async httpRequest(
@@ -194,6 +196,8 @@ export class Api {
     urlParams?: Record<string, string>,
     projectId?: string,
   ): Promise<any> {
+    this.validateApiKey();
+
     let endpointPath = endpointString || endpoint;
 
     if (urlParams) {

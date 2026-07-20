@@ -1,4 +1,4 @@
-export { BaseApiSpan, TraceApi } from "./api";
+export type { BaseApiSpan, TraceApi } from "./api";
 
 export {
   updateCurrentSpan,
@@ -10,6 +10,8 @@ export {
   traceManager,
   getCurrentSpan,
   getCurrentTrace,
+  type Trace,
+  type BaseSpan,
 } from "./tracing";
 
 export { setTracingContext } from "./trace-context";
