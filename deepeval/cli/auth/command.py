@@ -2,7 +2,7 @@
 
 import re
 import webbrowser
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
 import typer
@@ -17,6 +17,7 @@ from deepeval.cli.auth.flow import (
     browser_pairing_login,
     complete_cli_onboarding,
     get_cli_onboarding_context,
+    prompt_checkbox,
     prompt_select,
     prompt_text,
 )
@@ -50,6 +51,39 @@ USE_BROWSER_PAIRING_LOGIN = True
 REGION_CHOICES = [
     ("🇺🇸 United States (US)", "US"),
     ("🇪🇺 European Union (EU)", "EU"),
+]
+
+DEVELOPMENT_STAGE_CHOICES = [
+    ("I'm just exploring an idea", "IDEATION"),
+    ("My AI app's in development", "DEVELOPMENT"),
+    ("My AI app's already in production", "PRODUCTION"),
+]
+INTERACTION_TYPE_CHOICES = [
+    (
+        "Single-Turn — Each request is a standalone interaction",
+        "SINGLE_TURN",
+    ),
+    (
+        "Multi-Turn — Maintains context throughout a conversation",
+        "MULTI_TURN",
+    ),
+]
+MODALITY_CHOICES = [("Text", "TEXT"), ("Image", "IMAGE"), ("Audio", "AUDIO")]
+EXTERNAL_RESOURCE_CHOICES = [
+    ("Tool calls", "TOOL_CALL"),
+    ("MCP", "MCP"),
+    ("RAG", "RAG"),
+    ("None of these", "NONE"),
+]
+USE_CASE_CHOICES = [
+    (
+        "Document extraction / summarization",
+        "Document extraction / summarization",
+    ),
+    ("Chatbot assistant", "Chatbot assistant"),
+    ("Coding agent", "Coding agent"),
+    ("RAG Q&A", "RAG Q&A"),
+    ("Something else", "CUSTOM"),
 ]
 
 API_KEY_PATTERN = re.compile(
@@ -149,6 +183,57 @@ def _prompt_required(message: str, default: Optional[str] = None) -> str:
         print(f"❌ {message} cannot be empty. Please try again.\n")
 
 
+def _prompt_project_profile(project_name: str) -> Dict[str, Any]:
+    print(f"\n[bold]Tell us more about {project_name}.[/bold]")
+    development_stage = prompt_select(
+        "What stage is your AI application in?",
+        DEVELOPMENT_STAGE_CHOICES,
+    )
+    interaction_type = prompt_select(
+        "How does your application interact with users?",
+        INTERACTION_TYPE_CHOICES,
+    )
+    modalities = prompt_checkbox(
+        "Which modalities does your application support?",
+        MODALITY_CHOICES,
+    )
+    user_facing = prompt_select(
+        "Does your application interact directly with end users?",
+        [("Yes", True), ("No", False)],
+    )
+
+    while True:
+        external_resources = prompt_checkbox(
+            "How does your application use external data or tools?",
+            EXTERNAL_RESOURCE_CHOICES,
+        )
+        if "NONE" not in external_resources or len(external_resources) == 1:
+            break
+        print("❌ 'None of these' cannot be combined with another option.")
+    if external_resources == ["NONE"]:
+        external_resources = []
+
+    use_cases = prompt_checkbox(
+        "Which use cases best describe your application?",
+        USE_CASE_CHOICES,
+    )
+    if "CUSTOM" in use_cases:
+        custom_use_case = _prompt_required("Describe your use case")
+        use_cases = [
+            custom_use_case if use_case == "CUSTOM" else use_case
+            for use_case in use_cases
+        ]
+
+    return {
+        "development_stage": development_stage,
+        "interaction_type": interaction_type,
+        "modalities": modalities,
+        "user_facing": user_facing,
+        "external_resources": external_resources,
+        "description": ", ".join(use_cases),
+    }
+
+
 def _complete_browser_cli_login() -> Optional[str]:
     authorization = browser_pairing_login()
     if authorization is None:
@@ -171,6 +256,7 @@ def _complete_browser_cli_login() -> Optional[str]:
             project_name = _prompt_required(
                 "Project name", default="My First Project"
             )
+            project_profile = _prompt_project_profile(project_name)
             print(
                 "\nYour organization and project will be created as "
                 f"[bold]{organization_name}[/bold] / "
@@ -182,6 +268,7 @@ def _complete_browser_cli_login() -> Optional[str]:
                 user_name=user_name,
                 organization_name=organization_name,
                 project_name=project_name,
+                **project_profile,
             )
         else:
             projects = [
