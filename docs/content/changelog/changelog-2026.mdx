@@ -20,6 +20,12 @@ First things first, DeepEval exists because of everyone who opened issues, revie
 
 {/* DeepEval release notes start */}
 
+## Unreleased
+
+### Bug Fix
+
+- Fix test-run cache compatibility so constructor-sensitive metrics miss once against pre-upgrade cache entries and regenerate when rerun instead of reusing stale results. Existing cache files still load, cache identity now includes constructor-level metric settings and normalized free-form metric config compatibility metadata when safe, and unsafe or unrecoverable cache identity state intentionally misses cache instead of risking stale reuse.
+
 ## April
 
 April focused on simplifying core APIs while expanding model, tracing, and simulator capabilities. Testing and golden assertions were streamlined by removing legacy hooks, adding configurable structured run outputs, deprecating per-result logs, and tightening error handling so misconfigured eval runs fail loudly. The release added support for new OpenAI and Anthropic models with improved multimodal/structured output handling, more accurate token/cost reporting, and safer behavior when logprob-dependent metrics aren’t supported. Observability and workflow got a major boost with richer trace correlation fields like `turn_id` and `test_case_id`, optional internal span instrumentation, a more in
