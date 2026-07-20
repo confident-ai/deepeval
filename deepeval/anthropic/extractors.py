@@ -68,6 +68,12 @@ def extract_messages_api_output_parameters(
     output = str(message_response.content[0].text)
     prompt_tokens = message_response.usage.input_tokens
     completion_tokens = message_response.usage.output_tokens
+    cache_creation_input_tokens = getattr(
+        message_response.usage, "cache_creation_input_tokens", None
+    )
+    cache_read_input_tokens = getattr(
+        message_response.usage, "cache_read_input_tokens", None
+    )
 
     tools_called = None
     anthropic_tool_calls = [
@@ -91,4 +97,6 @@ def extract_messages_api_output_parameters(
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
         tools_called=tools_called,
+        cache_creation_input_tokens=cache_creation_input_tokens,
+        cache_read_input_tokens=cache_read_input_tokens,
     )
