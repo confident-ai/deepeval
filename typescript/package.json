@@ -62,6 +62,14 @@
       "import": "./dist/integrations/index.js",
       "require": "./dist/integrations/index.js",
       "types": "./dist/integrations/index.d.ts"
+    },
+    "./vitest": {
+      "import": "./dist/integrations/vitest/index.mjs",
+      "types": "./dist/integrations/vitest/index.d.mts"
+    },
+    "./vitest/global-setup": {
+      "import": "./dist/integrations/vitest/global-setup.mjs",
+      "types": "./dist/integrations/vitest/global-setup.d.mts"
     }
   },
   "typesVersions": {
@@ -96,6 +104,9 @@
       "integrations": [
         "dist/integrations/index.d.ts"
       ],
+      "vitest": [
+        "dist/integrations/vitest/index.d.ts"
+      ],
       "*": [
         "dist/*.d.ts"
       ]
@@ -107,6 +118,10 @@
   "scripts": {
     "build": "tsc",
     "test": "jest",
+    "test:e2e": "node dist/cli/index.js test run tests/deepeval-test-run-test/suites --identifier ts-e2e",
+    "test:e2e:conversational": "node dist/cli/index.js test run tests/deepeval-test-run-test/conversational --identifier ts-e2e-conversational",
+    "test:e2e:negative": "node dist/cli/index.js test run tests/deepeval-test-run-test/negative",
+    "typecheck:test": "tsc -p tsconfig.test.json",
     "lint": "eslint",
     "lint:fix": "eslint --fix"
   },
@@ -162,7 +177,8 @@
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.46.2"
+    "typescript-eslint": "^8.46.2",
+    "vitest": "^2.1.9"
   },
   "lint-staged": {
     "*.js": "eslint --cache --fix",
@@ -175,7 +191,8 @@
     "@langchain/core": "1.1.31",
     "@openai/agents": "^0.5.4",
     "ai": ">=5.0.0",
-    "ollama": ">=0.5.0"
+    "ollama": ">=0.5.0",
+    "vitest": ">=1.0.0"
   },
   "peerDependenciesMeta": {
     "@anthropic-ai/sdk": {
@@ -197,6 +214,9 @@
       "optional": true
     },
     "ollama": {
+      "optional": true
+    },
+    "vitest": {
       "optional": true
     }
   }
