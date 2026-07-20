@@ -27,7 +27,7 @@ Two layers live here:
 
 import inspect
 import warnings
-from typing import Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel, SecretStr
@@ -359,6 +359,29 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
         return content
 
     @staticmethod
+    def _set_additional_properties_false(node: Any) -> Any:
+        """Recursively set `additionalProperties: false` on every object node.
+
+        `strict: true` requires the flag on *every* object in the schema, not
+        just the root. Nested pydantic models are emitted under `$defs`, so
+        setting it only at the root makes the provider reject the request with
+        a 400.
+        """
+        if isinstance(node, dict):
+            if node.get("type") == "object":
+                node.setdefault("additionalProperties", False)
+            for value in node.values():
+                DeepEvalOpenAICompatibleModel._set_additional_properties_false(
+                    value
+                )
+        elif isinstance(node, list):
+            for value in node:
+                DeepEvalOpenAICompatibleModel._set_additional_properties_false(
+                    value
+                )
+        return node
+
+    @staticmethod
     def _schema_response_format(
         schema: Union[Type[BaseModel], BaseModel],
     ) -> Dict:
@@ -368,8 +391,11 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
             if inspect.isclass(schema)
             else schema.__class__.__name__
         )
-        # `strict: true` requires additionalProperties to be set at the root.
-        json_schema.setdefault("additionalProperties", False)
+        json_schema = (
+            DeepEvalOpenAICompatibleModel._set_additional_properties_false(
+                json_schema
+            )
+        )
         return {
             "type": "json_schema",
             "json_schema": {

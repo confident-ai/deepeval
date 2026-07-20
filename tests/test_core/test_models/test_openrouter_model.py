@@ -399,3 +399,51 @@ class TestOpenRouterModel:
         returned_model, using_native = initialize_model(model)
         assert using_native is True
         assert returned_model is model
+
+
+class NestedItem(BaseModel):
+    """Nested model emitted under `$defs` in the generated JSON schema."""
+
+    name: str
+
+
+class SchemaWithNestedModel(BaseModel):
+    items: list[NestedItem]
+
+
+class TestGatewaySchemaResponseFormat:
+    """`strict: true` requires `additionalProperties: false` on every object in
+    the schema, not just the root. Nested pydantic models land under `$defs`,
+    so a root-only flag makes providers reject the request with a 400:
+
+        Invalid schema for response_format 'X': In context=(),
+        'additionalProperties' is required to be supplied and to be false.
+    """
+
+    def test_flat_schema_sets_additional_properties_at_root(self):
+        response_format = OpenRouterModel._schema_response_format(SampleSchema)
+        schema = response_format["json_schema"]["schema"]
+
+        assert response_format["json_schema"]["strict"] is True
+        assert schema["additionalProperties"] is False
+
+    def test_nested_schema_sets_additional_properties_in_defs(self):
+        response_format = OpenRouterModel._schema_response_format(
+            SchemaWithNestedModel
+        )
+        schema = response_format["json_schema"]["schema"]
+
+        assert schema["additionalProperties"] is False
+        assert schema["$defs"]["NestedItem"]["additionalProperties"] is False
+
+    def test_existing_additional_properties_is_not_overwritten(self):
+        class Permissive(BaseModel):
+            model_config = {"extra": "allow"}
+
+            name: str
+
+        schema = OpenRouterModel._schema_response_format(Permissive)[
+            "json_schema"
+        ]["schema"]
+
+        assert schema["additionalProperties"] is True
