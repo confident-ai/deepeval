@@ -13,7 +13,7 @@ import json
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.evaluate.configs import AsyncConfig, DisplayConfig, ErrorConfig
-from deepeval.test_case import ArenaTestCase, Contestant
+from deepeval.test_case import ArenaTestCase, Contestant  # noqa: F401
 from deepeval.test_case.api import create_api_test_case
 from deepeval.metrics import ArenaGEval
 from deepeval.utils import (
@@ -192,7 +192,73 @@ async def a_execute_arena_test_cases(
             run_duration=run_duration,
         )
 
-    # Create tasks for all test cases
+    async def execute_test_cases(
+        progress: Optional[Progress] = None,
+        pbar_id: Optional[int] = None,
+    ):
+        tasks = []
+
+        def raise_first_task_error():
+            for task in tasks:
+                if not task.done():
+                    continue
+                if task.cancelled():
+                    raise asyncio.CancelledError()
+                exception = task.exception()
+                if exception is not None:
+                    raise exception
+
+        async def wait_for_throttle_or_failure():
+            if throttle_value <= 0:
+                await asyncio.sleep(0)
+                raise_first_task_error()
+                return
+
+            raise_first_task_error()
+            active_tasks = [task for task in tasks if not task.done()]
+            if not active_tasks:
+                await asyncio.sleep(throttle_value)
+                raise_first_task_error()
+                return
+
+            start_time = time.perf_counter()
+            await asyncio.wait(
+                active_tasks,
+                timeout=throttle_value,
+                return_when=asyncio.FIRST_EXCEPTION,
+            )
+            raise_first_task_error()
+
+            remaining_throttle = throttle_value - (
+                time.perf_counter() - start_time
+            )
+            if remaining_throttle > 0 and all(
+                task.done() for task in active_tasks
+            ):
+                await asyncio.sleep(remaining_throttle)
+                raise_first_task_error()
+
+        try:
+            for i, test_case in enumerate(test_cases):
+                task = execute_with_semaphore(
+                    func=evaluate_single_test_case,
+                    test_case=test_case,
+                    progress=progress,
+                    pbar_id=pbar_id,
+                    index=i,
+                )
+                tasks.append(asyncio.create_task(task))
+                await wait_for_throttle_or_failure()
+
+            await asyncio.gather(*tasks)
+        except BaseException:
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+            if tasks:
+                await asyncio.gather(*tasks, return_exceptions=True)
+            raise
+
     if show_indicator:
         progress = Progress(
             TextColumn("{task.description}"),
@@ -207,19 +273,9 @@ async def a_execute_arena_test_cases(
                 f"🆚 Comparing {len(test_cases)} contestants concurrently",
                 total=len(test_cases),
             )
-            tasks = []
-            for i, test_case in enumerate(test_cases):
-                task = execute_with_semaphore(
-                    func=evaluate_single_test_case,
-                    test_case=test_case,
-                    progress=progress,
-                    pbar_id=pbar_id,
-                    index=i,
-                )
-                tasks.append(asyncio.create_task(task))
-                await asyncio.sleep(throttle_value)
-
-            await asyncio.gather(*tasks)
+            await execute_test_cases(progress=progress, pbar_id=pbar_id)
+    else:
+        await execute_test_cases()
 
     return winners
 
