@@ -58,6 +58,11 @@
       "require": "./dist/integrations/openai-agents/index.js",
       "types": "./dist/integrations/openai-agents/index.d.ts"
     },
+    "./integrations/mastra": {
+      "import": "./dist/integrations/mastra/index.js",
+      "require": "./dist/integrations/mastra/index.js",
+      "types": "./dist/integrations/mastra/index.d.ts"
+    },
     "./integrations": {
       "import": "./dist/integrations/index.js",
       "require": "./dist/integrations/index.js",
@@ -92,6 +97,9 @@
       ],
       "integrations/openai-agents": [
         "dist/integrations/openai-agents/index.d.ts"
+      ],
+      "integrations/mastra": [
+        "dist/integrations/mastra/index.d.ts"
       ],
       "integrations": [
         "dist/integrations/index.d.ts"
@@ -137,11 +145,16 @@
   },
   "devDependencies": {
     "@ai-sdk/openai": "^3.0.30",
+    "@babel/core": "^7.29.7",
+    "@babel/preset-env": "^7.29.7",
+    "@babel/preset-typescript": "^7.29.7",
     "@eslint/js": "^9.38.0",
     "@google/genai": "^2.8.0",
     "@jest/globals": "^29.5.0",
     "@langchain/core": "1.1.31",
     "@langchain/openai": "^1.2.9",
+    "@mastra/core": "^1.51.0",
+    "@mastra/observability": "^1.16.1",
     "@openai/agents": "^0.5.4",
     "@opentelemetry/core": "^2.6.0",
     "@types/cli-progress": "^3.11.0",
@@ -151,6 +164,7 @@
     "@types/papaparse": "^5.3.16",
     "@types/uuid": "^9.0.0",
     "ai": "^6.0.97",
+    "babel-jest": "^29.7.0",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^16.4.0",
@@ -173,6 +187,8 @@
     "@aws-sdk/client-bedrock-runtime": ">=3.0.0",
     "@google/genai": ">=1.0.0",
     "@langchain/core": "1.1.31",
+    "@mastra/core": ">=1.16.0-0 <2.0.0-0",
+    "@mastra/observability": ">=1.16.0-0 <2.0.0-0",
     "@openai/agents": "^0.5.4",
     "ai": ">=5.0.0",
     "ollama": ">=0.5.0"
@@ -188,6 +204,12 @@
       "optional": true
     },
     "@langchain/core": {
+      "optional": true
+    },
+    "@mastra/core": {
+      "optional": true
+    },
+    "@mastra/observability": {
       "optional": true
     },
     "@openai/agents": {
