@@ -38,26 +38,18 @@ export interface EvaluateOptions {
   displayConfig?: DisplayConfig;
   errorConfig?: ErrorConfig;
   cacheConfig?: CacheConfig;
-  /** Mark this as the official test run for the dataset on Confident AI. */
   official?: boolean;
 }
 
-/** A conversational metric runs on a `ConversationalTestCase`; otherwise single-turn. */
-function metricMatchesCase(metric: AnyMetric, testCase: AnyTestCase): boolean {
+export function metricMatchesCase(
+  metric: AnyMetric,
+  testCase: AnyTestCase,
+): boolean {
   const caseIsConversational = testCase instanceof ConversationalTestCase;
   const metricIsConversational = metric instanceof BaseConversationalMetric;
   return caseIsConversational === metricIsConversational;
 }
 
-/**
- * Run `metrics` over `testCases` and collect the results. Accepts both
- * single-turn (`LLMTestCase` + `BaseMetric`) and conversational
- * (`ConversationalTestCase` + `BaseConversationalMetric`) inputs — each metric
- * only runs on the test-case type it matches.
- *
- * TS port of Python's `evaluate()`. Posts results to Confident AI as a TestRun
- * when logged in. Caching + cross-test-case concurrency are still placeholders.
- */
 export async function evaluate(
   testCases: AnyTestCase[],
   metrics: AnyMetric[],
@@ -71,11 +63,9 @@ export async function evaluate(
     ...DEFAULT_ERROR_CONFIG,
     ...options.errorConfig,
   };
-  // Reserved for when concurrency/caching are wired up.
   void ({ ...DEFAULT_ASYNC_CONFIG, ...options.asyncConfig } as AsyncConfig);
   void ({ ...DEFAULT_CACHE_CONFIG, ...options.cacheConfig } as CacheConfig);
 
-  // Per-case work list: only the metrics that match each case's type.
   const work = testCases.map((testCase, index) => ({
     index,
     testCase,
@@ -83,15 +73,12 @@ export async function evaluate(
   }));
   const total = work.reduce((sum, w) => sum + w.metrics.length, 0);
 
-  // Print each metric's description line once (mirrors Python's evaluate()).
   if (display.showIndicator) {
     for (const metric of metrics) {
       process.stderr.write(metric.describe() + "\n");
     }
   }
 
-  // A nested progress: a top "Evaluating N test case(s)" bar + one
-  // "🎯 Evaluating test case #i" bar per case (mirrors Python's rich progress).
   let multibar: MultiBar | null = null;
   let mainBar: SingleBar | null = null;
   let caseBars: SingleBar[] = [];
@@ -103,8 +90,6 @@ export async function evaluate(
     multibar = new MultiBar(
       {
         format: "{label} {bar} {percentage}% {duration_formatted}",
-        // formatBar's return is used verbatim for {bar} (no string-slicing), so
-        // per-char ANSI is safe here. Filled = bright purple, track = dim purple.
         formatBar: (progress, options) => {
           const size = options.barsize ?? BARSIZE;
           const filled = Math.round(progress * size);
@@ -133,7 +118,6 @@ export async function evaluate(
     );
   }
 
-  // During batch runs we show the batch bars, not each metric's own spinner.
   const originalShowIndicator = metrics.map((m) => m.showIndicator);
   metrics.forEach((m) => {
     m.showIndicator = false;
@@ -146,9 +130,6 @@ export async function evaluate(
   const evaluatedCases: EvaluatedCase[] = [];
   const startTime = Date.now();
   try {
-    // Test cases run sequentially (metric instances are stateful and reused);
-    // matching metrics within a test case run concurrently (distinct instances).
-    // TODO: parallelize across test cases by cloning metrics per case, honoring maxConcurrent.
     for (const { index, testCase, metrics: applicable } of work) {
       const caseBar = caseBars[index];
       const caseStart = Date.now();
@@ -181,12 +162,10 @@ export async function evaluate(
     printHyperparametersWarning();
   }
 
-  // Optionally write the report to a Markdown/MDX file.
   if (display.fileOutputDir) {
     exportToMarkdown(testResults, display.fileOutputDir, display.fileType);
   }
 
-  // Post results to Confident AI (no-op + returns nulls unless logged in).
   const { link, testRunId } = await postTestRun(
     evaluatedCases,
     runDuration,
@@ -215,7 +194,6 @@ export async function runMetric(
   errorCfg: Required<ErrorConfig>,
   onDone: () => void,
 ): Promise<MetricData> {
-  // fresh state per (metric, test case)
   metric.score = undefined;
   metric.success = undefined;
   metric.reason = undefined;
@@ -223,7 +201,6 @@ export async function runMetric(
   metric.skipped = false;
 
   try {
-    // Dispatched in `evaluate`, so the metric matches the test case type.
     await (metric.measure as (tc: AnyTestCase) => Promise<number>)(testCase);
   } catch (e) {
     if (e instanceof MissingTestCaseParamsError && errorCfg.skipOnMissingParams) {
