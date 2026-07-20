@@ -150,6 +150,56 @@ class DAGMetric(BaseMetric):
                 self.success = False
         return self.success
 
+    def upload(self):
+        from rich.console import Console
+        from deepeval.confident.api import Api, Endpoints, HttpMethods
+        from deepeval.metrics.dag.utils import construct_dag_upload_payload
+
+        api = Api()
+        payload = construct_dag_upload_payload(
+            name=self.name, dag=self.dag, multi_turn=False
+        )
+        data, _ = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.METRICS_ENDPOINT,
+            body=payload,
+        )
+        self.metric_id = data.get("id")
+        if self.metric_id:
+            Console().print(
+                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric "
+                f"'{self.name}' [DAG] uploaded successfully "
+                f"(id: [bold]{self.metric_id}[/bold])"
+            )
+        return data
+
+    def pull(self):
+        from rich.console import Console
+        from deepeval.confident.api import Api, Endpoints, HttpMethods
+        from deepeval.metrics.dag.utils import build_dag_from_payload
+
+        api = Api()
+        data, _ = api.send_request(
+            method=HttpMethods.GET,
+            endpoint=Endpoints.METRIC_ENDPOINT,
+            url_params={"name": self.name},
+        )
+        dag_json = data.get("dag")
+        if not dag_json:
+            raise ValueError(
+                f"Metric '{self.name}' has no DAG graph and cannot be pulled "
+                "as a DAGMetric."
+            )
+        self.dag = build_dag_from_payload(
+            dag_json, api=api, multiturn=False
+        )
+        self.metric_id = data.get("id")
+        Console().print(
+            "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric "
+            f"'{self.name}' [DAG] pulled successfully"
+        )
+        return data
+
     @property
     def __name__(self):
         if self._include_dag_suffix:
