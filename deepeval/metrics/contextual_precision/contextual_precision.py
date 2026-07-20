@@ -23,6 +23,10 @@ from deepeval.metrics.retrieval_context_display import id_retrieval_context
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import MLLMImage
 import deepeval.metrics.contextual_precision.schema as cpschema
+from deepeval.metrics.contextual_precision.template import (
+    ContextualPrecisionTemplate,
+)
+from deepeval.metrics.prompt_template import BasePromptTemplate
 
 
 def _contextual_precision_verdict_fields(
@@ -57,6 +61,9 @@ class ContextualPrecisionMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        evaluation_template: Type[
+            BasePromptTemplate
+        ] = ContextualPrecisionTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.include_reason = include_reason
@@ -65,6 +72,7 @@ class ContextualPrecisionMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,

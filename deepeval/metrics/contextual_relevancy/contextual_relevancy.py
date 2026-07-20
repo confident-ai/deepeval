@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List, Union
+from typing import Dict, Optional, List, Type, Union
 import asyncio
 import textwrap
 
@@ -24,18 +24,20 @@ from deepeval.metrics.contextual_relevancy.schema import (
     ContextualRelevancyVerdicts,
     ContextualRelevancyScoreReason,
 )
+from deepeval.metrics.contextual_relevancy.template import (
+    ContextualRelevancyTemplate,
+)
+from deepeval.metrics.prompt_template import BasePromptTemplate
 
 
 def _contextual_relevancy_verdict_kwargs(multimodal: bool) -> Dict[str, str]:
     context_type = "context (image or string)" if multimodal else "context"
     statement_or_image = "statement or image" if multimodal else "statement"
     if multimodal:
-        extraction_instructions = textwrap.dedent(
-            """
+        extraction_instructions = textwrap.dedent("""
             If the context is textual, you should first extract the statements found in the context if the context, which are high level information found in the context, before deciding on a verdict and optionally a reason for each statement.
             If the context is an image, `statement` should be a description of the image. Do not assume any information not visibly available.
-            """
-        ).strip()
+            """).strip()
         empty_context_instruction = ""
     else:
         extraction_instructions = (
@@ -70,6 +72,9 @@ class ContextualRelevancyMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        evaluation_template: Type[
+            BasePromptTemplate
+        ] = ContextualRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -78,6 +83,7 @@ class ContextualRelevancyMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,

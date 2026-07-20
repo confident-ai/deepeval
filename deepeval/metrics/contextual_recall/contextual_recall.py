@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, List, Union
+from typing import Any, Dict, Optional, List, Type, Union
 
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -25,6 +25,10 @@ from deepeval.metrics.contextual_recall.schema import (
     ContextualRecallScoreReason,
     VerdictWithExpectedOutput,
 )
+from deepeval.metrics.contextual_recall.template import (
+    ContextualRecallTemplate,
+)
+from deepeval.metrics.prompt_template import BasePromptTemplate
 
 
 def _contextual_recall_verdict_kwargs(
@@ -70,6 +74,9 @@ class ContextualRecallMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        evaluation_template: Type[
+            BasePromptTemplate
+        ] = ContextualRecallTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -78,6 +85,7 @@ class ContextualRecallMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,

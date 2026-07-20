@@ -20,7 +20,14 @@ if TYPE_CHECKING:
 
 class PromptMixin:
     """Renders a metric prompt template. `template_class` overrides the default
-    `self.__class__.__name__` when borrowing another class's templates."""
+    `self.__class__.__name__` when borrowing another class's templates.
+
+    If the metric has an ``evaluation_template`` (a user-provided subclass of the
+    metric's template class) that defines a method matching ``method``, that
+    override is called with the render ``kwargs`` and its return value is used as
+    the prompt. Methods the user does not override fall through to the default
+    template, so ``multimodal``/``strict`` rendering is preserved for them.
+    """
 
     def _get_prompt(
         self,
@@ -31,6 +38,12 @@ class PromptMixin:
         strict: bool = True,
         **kwargs,
     ) -> str:
+        evaluation_template = getattr(self, "evaluation_template", None)
+        if evaluation_template is not None:
+            override = getattr(evaluation_template, method, None)
+            if callable(override):
+                return override(**kwargs)
+
         return resolve_template(
             "metrics",
             template_class or self.__class__.__name__,
