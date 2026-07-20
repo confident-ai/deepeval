@@ -184,9 +184,7 @@ class ConversationalDAGMetric(BaseConversationalMetric):
                 f"Metric '{self.name}' has no DAG graph and cannot be pulled "
                 "as a ConversationalDAGMetric."
             )
-        self.dag = build_dag_from_payload(
-            dag_json, api=api, multiturn=True
-        )
+        self.dag = build_dag_from_payload(dag_json, multiturn=True)
         self.metric_id = data.get("id")
         Console().print(
             "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric "

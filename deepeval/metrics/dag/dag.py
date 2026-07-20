@@ -190,9 +190,7 @@ class DAGMetric(BaseMetric):
                 f"Metric '{self.name}' has no DAG graph and cannot be pulled "
                 "as a DAGMetric."
             )
-        self.dag = build_dag_from_payload(
-            dag_json, api=api, multiturn=False
-        )
+        self.dag = build_dag_from_payload(dag_json, multiturn=False)
         self.metric_id = data.get("id")
         Console().print(
             "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric "
