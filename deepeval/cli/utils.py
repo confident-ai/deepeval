@@ -5,7 +5,7 @@ import shutil
 import pyfiglet
 import typer
 import webbrowser
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, unquote, urlencode, urlsplit, urlunsplit
 
 from pydantic import ValidationError
 from pydantic.fields import FieldInfo
@@ -46,6 +46,117 @@ _CONFIDENT_UTM_HOSTS = frozenset(
     {"confident-ai.com", "www.confident-ai.com", "app.confident-ai.com"}
 )
 _UTM_SOURCE = "deepeval"
+
+
+def _safe_urlsplit(url: str):
+    if not isinstance(url, str):
+        return None
+    try:
+        return urlsplit(url)
+    except (AttributeError, TypeError, ValueError):
+        return None
+
+
+def _normalize_default_port(scheme: str, port: Optional[int]) -> Optional[int]:
+    if (scheme == "https" and port == 443) or (scheme == "http" and port == 80):
+        return None
+    return port
+
+
+def _origin_tuple(url: str) -> Optional[Tuple[str, str, Optional[int]]]:
+    parts = _safe_urlsplit(url)
+    if parts is None:
+        return None
+    try:
+        hostname = parts.hostname
+        port = parts.port
+    except ValueError:
+        return None
+    if not parts.scheme or not hostname:
+        return None
+    scheme = parts.scheme.lower()
+    return (scheme, hostname.lower(), _normalize_default_port(scheme, port))
+
+
+def _safe_browser_path(path: str) -> Optional[str]:
+    try:
+        decoded_path = unquote(path, errors="strict")
+    except UnicodeDecodeError:
+        return None
+
+    for candidate in (path, decoded_path):
+        if "\\" in candidate:
+            return None
+        if any(segment in {".", ".."} for segment in candidate.split("/")):
+            return None
+
+    return decoded_path
+
+
+def _base_path_prefix(url: str) -> Optional[str]:
+    parts = _safe_urlsplit(url)
+    if parts is None:
+        return None
+    path = _safe_browser_path(parts.path)
+    if path is None:
+        return None
+    path = path.rstrip("/")
+    return "" if path == "/" else path
+
+
+def _allowed_confident_browser_targets() -> (
+    set[Tuple[Tuple[str, str, Optional[int]], str]]
+):
+    targets: set[Tuple[Tuple[str, str, Optional[int]], str]] = set()
+    hosted_origin = _origin_tuple(PROD)
+    if hosted_origin is not None:
+        targets.add((hosted_origin, ""))
+
+    custom_base_url = get_settings().CONFIDENT_BASE_URL
+    if custom_base_url:
+        custom_url = str(custom_base_url).rstrip("/")
+        custom_origin = _origin_tuple(custom_url)
+        custom_path_prefix = _base_path_prefix(custom_url)
+        if custom_origin is not None and custom_path_prefix is not None:
+            targets.add((custom_origin, custom_path_prefix))
+
+    return targets
+
+
+def _is_test_run_path(path: str, base_path_prefix: str) -> bool:
+    safe_path = _safe_browser_path(path)
+    if safe_path is None:
+        return False
+    expected_prefix = (
+        f"{base_path_prefix}/test-runs/" if base_path_prefix else "/test-runs/"
+    )
+    return path.startswith(expected_prefix) and safe_path.startswith(
+        expected_prefix
+    )
+
+
+def is_confident_browser_url(url: str) -> bool:
+    """Return True only for safe Confident AI ``/test-runs/...`` browser links.
+
+    Guards the cached ``deepeval view`` link so a tampered local ``.deepeval``
+    state file cannot redirect the browser to an arbitrary URL. A link is
+    accepted only when its origin matches the configured Confident AI
+    deployment (hosted ``PROD`` or ``CONFIDENT_BASE_URL``) and its path is a
+    ``/test-runs/...`` path, with no userinfo, backslashes, or dot-segments.
+    """
+    if not url:
+        return False
+    parts = _safe_urlsplit(url)
+    if parts is None:
+        return False
+    if parts.username or parts.password:
+        return False
+    origin = _origin_tuple(url)
+    return any(
+        origin == allowed_origin
+        and _is_test_run_path(parts.path, base_path_prefix)
+        for allowed_origin, base_path_prefix in _allowed_confident_browser_targets()
+    )
 
 
 def with_utm(
