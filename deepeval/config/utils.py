@@ -2,6 +2,8 @@ import json
 import os
 import re
 from dotenv import dotenv_values
+from dotenv.main import resolve_variables
+from dotenv.parser import parse_stream
 from pathlib import Path
 from typing import Any, Iterable, List, Optional
 
@@ -148,4 +150,19 @@ def read_dotenv_file(path: Path) -> dict[str, str]:
     if not path.exists():
         return {}
     values = dotenv_values(path)
+    return {key: value for key, value in values.items() if value is not None}
+
+
+def read_dotenv_file_silent(path: Path) -> dict[str, str]:
+    """Read valid dotenv bindings without emitting parser warnings."""
+    if not path.exists():
+        return {}
+
+    raw_values: list[tuple[str, str | None]] = []
+    with path.open(encoding="utf-8") as stream:
+        for binding in parse_stream(stream):
+            if binding.key is not None and binding.value is not None:
+                raw_values.append((binding.key, binding.value))
+
+    values = resolve_variables(raw_values, override=True)
     return {key: value for key, value in values.items() if value is not None}

@@ -25,6 +25,7 @@ from typing import (
 from opentelemetry.trace import Span
 
 from deepeval.config.settings import Settings, get_settings
+from deepeval import key_handler as key_handler_mod
 from deepeval.key_handler import (
     KEY_FILE_HANDLER,
     ModelKeyValues,
@@ -252,7 +253,7 @@ def save_environ_to_store(
     Returns (handled, path).
     """
     ok, path = _parse_save_option(save_opt)
-    if not ok:
+    if not ok or path is None:
         return False, None
     if updates:
         DotenvHandler(path).upsert(_normalize_kv(updates))
@@ -267,11 +268,33 @@ def unset_environ_in_store(
     Returns (handled, path).
     """
     ok, path = _parse_save_option(save_opt)
-    if not ok:
+    if not ok or path is None:
         return False, None
     norm = _normalize_keys(keys)
     if norm:
         DotenvHandler(path).unset(norm)
+    return True, path
+
+
+def update_environ_store(
+    updates: Dict[StrOrEnum, str],
+    keys_to_unset: Iterable[StrOrEnum],
+    save_opt: Optional[str] = None,
+) -> Tuple[bool, Optional[str]]:
+    """
+    Apply dotenv updates and removals as one logical store mutation.
+    Returns (handled, path).
+    """
+    ok, path = _parse_save_option(save_opt)
+    if not ok or path is None:
+        return False, None
+    norm_updates = _normalize_kv(updates)
+    norm_unset = _normalize_keys(keys_to_unset)
+    if norm_updates or norm_unset:
+        DotenvHandler(path).update(
+            updates=norm_updates,
+            removals=norm_unset,
+        )
     return True, path
 
 
@@ -283,6 +306,23 @@ def _as_legacy_use_key(
     if k in EmbeddingKeyValues.__members__:
         return EmbeddingKeyValues[k]
     return None
+
+
+def _snapshot_file(path: Path):
+    if not path.exists():
+        return path, False, None, None
+    return path, True, path.read_bytes(), path.stat().st_mode
+
+
+def _restore_file(snapshot) -> None:
+    path, existed, content, mode = snapshot
+    if existed:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+        if mode is not None:
+            path.chmod(mode)
+    else:
+        path.unlink(missing_ok=True)
 
 
 def switch_model_provider(
@@ -303,21 +343,45 @@ def switch_model_provider(
     if target_key not in keys_to_clear:
         raise ValueError(f"{target} is not a recognized USE_* model key")
 
-    # Clear legacy JSON store entries
-    for k in keys_to_clear:
-        legacy = _as_legacy_use_key(k)
-        if legacy is not None:
-            KEY_FILE_HANDLER.remove_key(legacy)
+    dotenv_result: Tuple[bool, Optional[str]] = (True, None)
+    dotenv_snapshot = None
+    if save:
+        ok, path = _parse_save_option(save)
+        if not ok or path is None:
+            return False, None
+        handler = DotenvHandler(path)
+        write_path = handler.validate_target()
+        dotenv_snapshot = _snapshot_file(write_path)
+        handler.update(
+            updates=_normalize_kv({target: "true"}),
+            removals=_normalize_keys(
+                key for key in keys_to_clear if key != target_key
+            ),
+        )
+        dotenv_result = (True, path)
 
-    KEY_FILE_HANDLER.write_key(target, "YES")
+    legacy_snapshot = _snapshot_file(
+        Path(key_handler_mod.HIDDEN_DIR) / key_handler_mod.KEY_FILE
+    )
+
+    try:
+        # Clear legacy JSON store entries
+        for k in keys_to_clear:
+            legacy = _as_legacy_use_key(k)
+            if legacy is not None:
+                KEY_FILE_HANDLER.remove_key(legacy)
+
+        KEY_FILE_HANDLER.write_key(target, "YES")
+    except BaseException:
+        _restore_file(legacy_snapshot)
+        if dotenv_snapshot is not None:
+            _restore_file(dotenv_snapshot)
+        raise
 
     if not save:
         return True, None
 
-    handled, path = unset_environ_in_store(keys_to_clear, save)
-    if not handled:
-        return False, None
-    return save_environ_to_store({target: "true"}, save)
+    return dotenv_result
 
 
 def coerce_blank_to_none(value: Optional[str]) -> Optional[str]:
