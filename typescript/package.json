@@ -18,15 +18,40 @@
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
+    "./annotation": {
+      "import": "./dist/annotation/index.js",
+      "require": "./dist/annotation/index.js",
+      "types": "./dist/annotation/index.d.ts"
+    },
     "./dataset": {
       "import": "./dist/dataset/index.js",
       "require": "./dist/dataset/index.js",
       "types": "./dist/dataset/index.d.ts"
     },
+    "./metrics": {
+      "import": "./dist/metrics/index.js",
+      "require": "./dist/metrics/index.js",
+      "types": "./dist/metrics/index.d.ts"
+    },
+    "./models": {
+      "import": "./dist/models/index.js",
+      "require": "./dist/models/index.js",
+      "types": "./dist/models/index.d.ts"
+    },
     "./testCase": {
       "import": "./dist/test-case/index.js",
       "require": "./dist/test-case/index.js",
       "types": "./dist/test-case/index.d.ts"
+    },
+    "./test-case": {
+      "import": "./dist/test-case/index.js",
+      "require": "./dist/test-case/index.js",
+      "types": "./dist/test-case/index.d.ts"
+    },
+    "./evaluate": {
+      "import": "./dist/evaluate/index.js",
+      "require": "./dist/evaluate/index.js",
+      "types": "./dist/evaluate/index.d.ts"
     },
     "./tracing": {
       "import": "./dist/tracing/index.js",
@@ -72,8 +97,20 @@
       "dataset": [
         "dist/dataset/index.d.ts"
       ],
+      "metrics": [
+        "dist/metrics/index.d.ts"
+      ],
+      "models": [
+        "dist/models/index.d.ts"
+      ],
       "testCase": [
         "dist/test-case/index.d.ts"
+      ],
+      "test-case": [
+        "dist/test-case/index.d.ts"
+      ],
+      "evaluate": [
+        "dist/evaluate/index.d.ts"
       ],
       "tracing": [
         "dist/tracing/index.d.ts"
@@ -107,6 +144,7 @@
   "scripts": {
     "build": "tsc",
     "test": "jest",
+    "test:package-exports": "npm run build && node test/test-core/package-exports-smoke.cjs",
     "lint": "eslint",
     "lint:fix": "eslint --fix"
   },
