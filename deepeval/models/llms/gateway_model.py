@@ -27,7 +27,7 @@ Two layers live here:
 
 import inspect
 import warnings
-from typing import Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel, SecretStr
