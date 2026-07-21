@@ -92,9 +92,14 @@ export class PIILeakageMetric extends BaseMetric {
 
   private async generateVerdicts(): Promise<PIILeakageVerdict[]> {
     if (this.extractedPii.length === 0) return [];
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
-      extracted_pii: this.extractedPii,
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_verdicts",
+      {
+        extracted_pii: this.extractedPii,
+      },
+    );
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
   }
@@ -104,10 +109,15 @@ export class PIILeakageMetric extends BaseMetric {
     const privacyViolations = this.verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "yes")
       .map((v) => v.reason);
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
-      privacy_violations: privacyViolations,
-      score: (this.score ?? 0).toFixed(2),
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_reason",
+      {
+        privacy_violations: privacyViolations,
+        score: (this.score ?? 0).toFixed(2),
+      },
+    );
     const { reason } = await generateWithSchema(
       this,
       prompt,

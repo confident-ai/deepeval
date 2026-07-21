@@ -95,7 +95,9 @@ export function validateMcpServers(mcpServers: MCPServer[]): void {
     Array.isArray(x) && x.every((i) => typeof i === "object" && i !== null);
   for (const s of mcpServers) {
     if (s.availableTools != null && !isObjList(s.availableTools)) {
-      throw new TypeError("'availableTools' must be a list of MCP Tool objects");
+      throw new TypeError(
+        "'availableTools' must be a list of MCP Tool objects",
+      );
     }
     if (s.availableResources != null && !isObjList(s.availableResources)) {
       throw new TypeError(

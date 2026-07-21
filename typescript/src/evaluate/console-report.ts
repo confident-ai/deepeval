@@ -143,7 +143,11 @@ function wrapCell(c: string, width: number): string[] {
 }
 
 /** A labeled panel line (`Label: value`) wrapped to `inner`, continuations indented. */
-function wrapLabeledLine(prefix: string, value: string, inner: number): string[] {
+function wrapLabeledLine(
+  prefix: string,
+  value: string,
+  inner: number,
+): string[] {
   const indent = visLen(prefix);
   const chunks = wrapText(value, Math.max(10, inner - indent));
   return chunks.map((chunk, i) =>
@@ -222,7 +226,9 @@ function tableLines(
 function metricStatusCell(m: MetricData): string {
   if (m.skipped) return `${YELLOW}${BOLD}SKIP${RESET}`;
   if (m.error) return `${RED}${BOLD}ERROR${RESET}`;
-  return m.success ? `${GREEN}${BOLD}PASS${RESET}` : `${RED}${BOLD}FAIL${RESET}`;
+  return m.success
+    ? `${GREEN}${BOLD}PASS${RESET}`
+    : `${RED}${BOLD}FAIL${RESET}`;
 }
 
 /**
@@ -265,16 +271,32 @@ export function printResultsTable(
       lines.push(`${CYAN}${BOLD}Conversation Turns${RESET}`);
       for (const turn of tc.turns ?? []) {
         const role = turn.role.charAt(0).toUpperCase() + turn.role.slice(1);
-        lines.push(...wrapLabeledLine(`  ${BOLD}${role}:${RESET} `, turn.content, inner));
+        lines.push(
+          ...wrapLabeledLine(`  ${BOLD}${role}:${RESET} `, turn.content, inner),
+        );
       }
     } else {
-      lines.push(...wrapLabeledLine(`${CYAN}${BOLD}Input:${RESET} `, String(tc.input), inner));
       lines.push(
-        ...wrapLabeledLine(`${CYAN}${BOLD}Actual Output:${RESET} `, String(tc.actualOutput), inner),
+        ...wrapLabeledLine(
+          `${CYAN}${BOLD}Input:${RESET} `,
+          String(tc.input),
+          inner,
+        ),
+      );
+      lines.push(
+        ...wrapLabeledLine(
+          `${CYAN}${BOLD}Actual Output:${RESET} `,
+          String(tc.actualOutput),
+          inner,
+        ),
       );
       if (tc.expectedOutput && tc.expectedOutput !== "N/A") {
         lines.push(
-          ...wrapLabeledLine(`${CYAN}${BOLD}Expected Output:${RESET} `, tc.expectedOutput, inner),
+          ...wrapLabeledLine(
+            `${CYAN}${BOLD}Expected Output:${RESET} `,
+            tc.expectedOutput,
+            inner,
+          ),
         );
       }
     }
@@ -408,7 +430,9 @@ export function exportToMarkdown(
   const ts =
     `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}` +
     `_${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
-  const safe = (evaluationName || "evaluation").replace(/\s+/g, "_").toLowerCase();
+  const safe = (evaluationName || "evaluation")
+    .replace(/\s+/g, "_")
+    .toLowerCase();
   const filepath = path.join(outputDir, `${safe}_${ts}.${fileType}`);
 
   const sorted = [...testResults].sort(

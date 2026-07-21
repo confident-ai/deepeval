@@ -66,7 +66,10 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
         this.score = 1;
         this.reason = "No tool calls provided";
       } else {
-        this.verdicts = await this.generateVerdicts(testCase.input, toolsCalled);
+        this.verdicts = await this.generateVerdicts(
+          testCase.input,
+          toolsCalled,
+        );
         this.score = this.calculateScore();
         this.reason = await this.generateReason(testCase.input);
       }
@@ -86,10 +89,15 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
     input: string,
     toolsCalled: ToolCall[],
   ): Promise<ArgumentCorrectnessVerdict[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
-      input,
-      stringified_tools_called: printToolsCalled(toolsCalled),
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_verdicts",
+      {
+        input,
+        stringified_tools_called: printToolsCalled(toolsCalled),
+      },
+    );
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
   }
@@ -99,11 +107,16 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
     const incorrectToolCallsReasons = this.verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "no")
       .map((v) => v.reason);
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
-      incorrect_tool_calls_reasons: incorrectToolCallsReasons,
-      input,
-      score: (this.score ?? 0).toFixed(2),
-    });
+    const prompt = resolveTemplate(
+      "metrics",
+      TEMPLATE_CLASS,
+      "generate_reason",
+      {
+        incorrect_tool_calls_reasons: incorrectToolCallsReasons,
+        input,
+        score: (this.score ?? 0).toFixed(2),
+      },
+    );
     const { reason } = await generateWithSchema(
       this,
       prompt,
