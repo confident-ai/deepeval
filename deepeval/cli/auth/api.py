@@ -46,13 +46,6 @@ class CliAuthorization(BaseModel):
     email: Optional[str] = None
 
 
-class CliOnboardingUser(BaseModel):
-    """`user` in the GET /cli/onboarding response."""
-
-    name: Optional[str] = None
-    email: Optional[str] = None
-
-
 class CliOnboardingProject(BaseModel):
     """One entry of `projects` in the GET /cli/onboarding response."""
 
@@ -61,13 +54,6 @@ class CliOnboardingProject(BaseModel):
     id: str
     name: str
     can_create_api_key: bool = Field(validation_alias="canCreateApiKey")
-
-
-class CliOnboardingOrganization(BaseModel):
-    """`organization` in an existing user's GET /cli/onboarding response."""
-
-    id: str
-    name: str
 
 
 QuestionnaireAnswer = Union[str, bool, List[str]]
@@ -141,38 +127,13 @@ class CliQuestionnaire(BaseModel):
 class CliOnboardingContext(BaseModel):
     """Typed GET /cli/onboarding response.
 
-    `user` is set for new users; `projects` is populated for existing users.
+    `questionnaire` is set for new users; `projects` is populated for existing
+    users.
     """
 
     state: Literal["new_user", "existing_user"]
-    user: Optional[CliOnboardingUser] = None
-    organization: Optional[CliOnboardingOrganization] = None
     projects: List[CliOnboardingProject] = Field(default_factory=list)
     questionnaire: Optional[CliQuestionnaire] = None
-
-
-class NewUserOnboardingRequest(BaseModel):
-    """POST /cli/onboarding/complete body for a first-time user; the backend
-    creates their organization and first project."""
-
-    user_name: str = Field(serialization_alias="userName")
-    organization_name: str = Field(serialization_alias="organizationName")
-    project_name: str = Field(serialization_alias="projectName")
-    development_stage: Literal["IDEATION", "DEVELOPMENT", "PRODUCTION"] = Field(
-        serialization_alias="developmentStage"
-    )
-    interaction_type: Literal["SINGLE_TURN", "MULTI_TURN"] = Field(
-        serialization_alias="interactionType"
-    )
-    modalities: List[Literal["TEXT", "IMAGE", "AUDIO"]]
-    user_facing: bool = Field(serialization_alias="userFacing")
-    external_resources: List[Literal["TOOL_CALL", "MCP", "RAG"]] = Field(
-        serialization_alias="externalResources"
-    )
-    description: str
-
-    def to_payload(self) -> Dict[str, Any]:
-        return self.model_dump(by_alias=True)
 
 
 class DynamicNewUserOnboardingRequest(BaseModel):

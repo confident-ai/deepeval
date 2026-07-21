@@ -2,7 +2,7 @@
 
 import re
 import webbrowser
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
 import typer
@@ -14,7 +14,6 @@ from deepeval.cli.auth.api import (
     CliTextQuestion,
     DynamicNewUserOnboardingRequest,
     ExistingProjectKeyRequest,
-    NewUserOnboardingRequest,
     QuestionnaireAnswer,
 )
 from deepeval.cli.auth.flow import (
@@ -56,39 +55,6 @@ USE_BROWSER_PAIRING_LOGIN = True
 REGION_CHOICES = [
     ("🇺🇸 United States (US)", "US"),
     ("🇪🇺 European Union (EU)", "EU"),
-]
-
-DEVELOPMENT_STAGE_CHOICES = [
-    ("I'm just exploring an idea", "IDEATION"),
-    ("My AI app's in development", "DEVELOPMENT"),
-    ("My AI app's already in production", "PRODUCTION"),
-]
-INTERACTION_TYPE_CHOICES = [
-    (
-        "Single-Turn — Each request is a standalone interaction",
-        "SINGLE_TURN",
-    ),
-    (
-        "Multi-Turn — Maintains context throughout a conversation",
-        "MULTI_TURN",
-    ),
-]
-MODALITY_CHOICES = [("Text", "TEXT"), ("Image", "IMAGE"), ("Audio", "AUDIO")]
-EXTERNAL_RESOURCE_CHOICES = [
-    ("Tool calls", "TOOL_CALL"),
-    ("MCP", "MCP"),
-    ("RAG", "RAG"),
-    ("None of these", "NONE"),
-]
-USE_CASE_CHOICES = [
-    (
-        "Document extraction / summarization",
-        "Document extraction / summarization",
-    ),
-    ("Chatbot assistant", "Chatbot assistant"),
-    ("Coding agent", "Coding agent"),
-    ("RAG Q&A", "RAG Q&A"),
-    ("Something else", "CUSTOM"),
 ]
 
 API_KEY_PATTERN = re.compile(
@@ -266,57 +232,6 @@ def _prompt_dynamic_questionnaire(
     return answers
 
 
-def _prompt_project_profile(project_name: str) -> Dict[str, Any]:
-    print(f"\n[bold]Tell us more about {project_name}.[/bold]")
-    development_stage = prompt_select(
-        "What stage is your AI application in?",
-        DEVELOPMENT_STAGE_CHOICES,
-    )
-    interaction_type = prompt_select(
-        "How does your application interact with users?",
-        INTERACTION_TYPE_CHOICES,
-    )
-    modalities = prompt_checkbox(
-        "Which modalities does your application support?",
-        MODALITY_CHOICES,
-    )
-    user_facing = prompt_select(
-        "Does your application interact directly with end users?",
-        [("Yes", True), ("No", False)],
-    )
-
-    while True:
-        external_resources = prompt_checkbox(
-            "How does your application use external data or tools?",
-            EXTERNAL_RESOURCE_CHOICES,
-        )
-        if "NONE" not in external_resources or len(external_resources) == 1:
-            break
-        print("❌ 'None of these' cannot be combined with another option.")
-    if external_resources == ["NONE"]:
-        external_resources = []
-
-    use_cases = prompt_checkbox(
-        "Which use cases best describe your application?",
-        USE_CASE_CHOICES,
-    )
-    if "CUSTOM" in use_cases:
-        custom_use_case = _prompt_required("Describe your use case")
-        use_cases = [
-            custom_use_case if use_case == "CUSTOM" else use_case
-            for use_case in use_cases
-        ]
-
-    return {
-        "development_stage": development_stage,
-        "interaction_type": interaction_type,
-        "modalities": modalities,
-        "user_facing": user_facing,
-        "external_resources": external_resources,
-        "description": ", ".join(use_cases),
-    }
-
-
 def _complete_browser_cli_login() -> Optional[str]:
     authorization = browser_pairing_login()
     if authorization is None:
@@ -325,51 +240,32 @@ def _complete_browser_cli_login() -> Optional[str]:
     try:
         context = get_cli_onboarding_context(authorization.setup_token)
         request: Union[
-            NewUserOnboardingRequest,
             DynamicNewUserOnboardingRequest,
             ExistingProjectKeyRequest,
         ]
 
         if context.state == "new_user":
             print("\n[bold]Let's set up your workspace.[/bold]")
-            if context.questionnaire is not None:
-                questionnaire_answers = _prompt_dynamic_questionnaire(
-                    context.questionnaire
+            if context.questionnaire is None:
+                raise AuthFlowError(
+                    "The server did not provide a CLI onboarding questionnaire."
                 )
-                organization_name = questionnaire_answers.get(
-                    "organizationName"
+            questionnaire_answers = _prompt_dynamic_questionnaire(
+                context.questionnaire
+            )
+            organization_name = questionnaire_answers.get("organizationName")
+            project_name = questionnaire_answers.get("projectName")
+            if not isinstance(organization_name, str) or not isinstance(
+                project_name, str
+            ):
+                raise AuthFlowError(
+                    "The server questionnaire did not collect the "
+                    "required organization and project names."
                 )
-                project_name = questionnaire_answers.get("projectName")
-                if not isinstance(organization_name, str) or not isinstance(
-                    project_name, str
-                ):
-                    raise AuthFlowError(
-                        "The server questionnaire did not collect the "
-                        "required organization and project names."
-                    )
-                request = DynamicNewUserOnboardingRequest(
-                    questionnaire_version=context.questionnaire.version,
-                    questionnaire_answers=questionnaire_answers,
-                )
-            else:
-                existing_name = context.user.name if context.user else None
-                name_default = (
-                    existing_name
-                    if existing_name and existing_name != "New User"
-                    else None
-                )
-                user_name = _prompt_required("Your name", default=name_default)
-                organization_name = _prompt_required("Organization name")
-                project_name = _prompt_required(
-                    "Project name", default="My First Project"
-                )
-                project_profile = _prompt_project_profile(project_name)
-                request = NewUserOnboardingRequest(
-                    user_name=user_name,
-                    organization_name=organization_name,
-                    project_name=project_name,
-                    **project_profile,
-                )
+            request = DynamicNewUserOnboardingRequest(
+                questionnaire_version=context.questionnaire.version,
+                questionnaire_answers=questionnaire_answers,
+            )
             print(
                 "\nYour organization and project will be created as "
                 f"[bold]{organization_name}[/bold] / "

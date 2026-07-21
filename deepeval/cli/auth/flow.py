@@ -58,7 +58,6 @@ from deepeval.cli.auth.api import (
     CliOnboardingContext,
     DynamicNewUserOnboardingRequest,
     ExistingProjectKeyRequest,
-    NewUserOnboardingRequest,
     DevicePairing,
 )
 from deepeval.cli.utils import with_utm
@@ -471,7 +470,6 @@ def get_cli_onboarding_context(setup_token: str) -> CliOnboardingContext:
 def complete_cli_onboarding(
     setup_token: str,
     request: Union[
-        NewUserOnboardingRequest,
         DynamicNewUserOnboardingRequest,
         ExistingProjectKeyRequest,
     ],

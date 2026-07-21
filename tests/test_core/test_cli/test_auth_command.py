@@ -7,13 +7,11 @@ from deepeval.cli.auth.api import (
     CliOnboardingContext,
     CliQuestionnaire,
     DynamicNewUserOnboardingRequest,
-    NewUserOnboardingRequest,
 )
 from deepeval.cli.auth.command import (
     _complete_browser_cli_login,
     _get_pasted_api_key_warnings,
     _prompt_dynamic_questionnaire,
-    _prompt_project_profile,
 )
 
 
@@ -54,66 +52,6 @@ def test_pasted_api_key_warns_for_scope_and_region_mismatch() -> None:
     assert len(warnings) == 2
     assert "EU region" in warnings[0]
     assert "organization API key" in warnings[1]
-
-
-def test_prompt_project_profile_collects_ui_onboarding_fields(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    selections = iter(["DEVELOPMENT", "MULTI_TURN", True])
-    checkbox_selections = iter(
-        [
-            ["TEXT", "IMAGE"],
-            ["TOOL_CALL", "MCP"],
-            ["Chatbot assistant", "CUSTOM"],
-        ]
-    )
-    monkeypatch.setattr(
-        "deepeval.cli.auth.command.prompt_select",
-        lambda *_args, **_kwargs: next(selections),
-    )
-    monkeypatch.setattr(
-        "deepeval.cli.auth.command.prompt_checkbox",
-        lambda *_args, **_kwargs: next(checkbox_selections),
-    )
-    monkeypatch.setattr(
-        "deepeval.cli.auth.command._prompt_required",
-        lambda *_args, **_kwargs: "Customer support",
-    )
-
-    assert _prompt_project_profile("Support Bot") == {
-        "development_stage": "DEVELOPMENT",
-        "interaction_type": "MULTI_TURN",
-        "modalities": ["TEXT", "IMAGE"],
-        "user_facing": True,
-        "external_resources": ["TOOL_CALL", "MCP"],
-        "description": "Chatbot assistant, Customer support",
-    }
-
-
-def test_new_user_onboarding_serializes_project_profile() -> None:
-    request = NewUserOnboardingRequest(
-        user_name="Ada",
-        organization_name="Acme",
-        project_name="Support Bot",
-        development_stage="PRODUCTION",
-        interaction_type="SINGLE_TURN",
-        modalities=["TEXT"],
-        user_facing=False,
-        external_resources=[],
-        description="RAG Q&A",
-    )
-
-    assert request.to_payload() == {
-        "userName": "Ada",
-        "organizationName": "Acme",
-        "projectName": "Support Bot",
-        "developmentStage": "PRODUCTION",
-        "interactionType": "SINGLE_TURN",
-        "modalities": ["TEXT"],
-        "userFacing": False,
-        "externalResources": [],
-        "description": "RAG Q&A",
-    }
 
 
 def test_dynamic_questionnaire_parses_and_serializes_answers() -> None:
@@ -241,60 +179,26 @@ def test_dynamic_questionnaire_renders_exclusive_and_custom_options(
     }
 
 
-def test_new_client_falls_back_when_server_omits_questionnaire(
+def test_new_client_requires_server_questionnaire(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     context = CliOnboardingContext.model_validate(
         {
             "state": "new_user",
-            "user": {"name": "Ada", "email": "ada@example.com"},
             "projects": [],
         }
     )
-    captured_request = None
 
     monkeypatch.setattr(
         "deepeval.cli.auth.command.browser_pairing_login",
-        lambda: CliAuthorization(
-            setup_token="setup-token", email="ada@example.com"
-        ),
+        lambda: CliAuthorization(setup_token="setup-token"),
     )
     monkeypatch.setattr(
         "deepeval.cli.auth.command.get_cli_onboarding_context",
         lambda _token: context,
     )
-    required_answers = iter(["Ada", "Acme", "Support Bot"])
-    monkeypatch.setattr(
-        "deepeval.cli.auth.command._prompt_required",
-        lambda *_args, **_kwargs: next(required_answers),
-    )
-    monkeypatch.setattr(
-        "deepeval.cli.auth.command._prompt_project_profile",
-        lambda _project_name: {
-            "development_stage": "PRODUCTION",
-            "interaction_type": "SINGLE_TURN",
-            "modalities": ["TEXT"],
-            "user_facing": False,
-            "external_resources": [],
-            "description": "RAG Q&A",
-        },
-    )
-    monkeypatch.setattr(
-        "deepeval.cli.auth.command.typer.confirm",
-        lambda *_args, **_kwargs: True,
-    )
 
-    def complete(_token, request, *, idempotency_key):
-        nonlocal captured_request
-        captured_request = request
-        return "api-key"
-
-    monkeypatch.setattr(
-        "deepeval.cli.auth.command.complete_cli_onboarding", complete
-    )
-
-    assert _complete_browser_cli_login() == "api-key"
-    assert isinstance(captured_request, NewUserOnboardingRequest)
+    assert _complete_browser_cli_login() is None
 
 
 def test_new_client_submits_server_questionnaire_answers(
@@ -303,7 +207,6 @@ def test_new_client_submits_server_questionnaire_answers(
     context = CliOnboardingContext.model_validate(
         {
             "state": "new_user",
-            "user": {"name": "Ada", "email": "ada@example.com"},
             "projects": [],
             "questionnaire": {
                 "version": 1,
