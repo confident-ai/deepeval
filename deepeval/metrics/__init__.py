@@ -37,6 +37,7 @@ from .tool_use.tool_use import ToolUseMetric
 from .goal_accuracy.goal_accuracy import GoalAccuracyMetric
 from .argument_correctness.argument_correctness import ArgumentCorrectnessMetric
 from .agent_loop_detection.agent_loop_detection import AgentLoopDetectionMetric
+from .token_budget.token_budget import TokenBudgetMetric
 from .mcp.mcp_task_completion import MCPTaskCompletionMetric
 from .mcp.multi_turn_mcp_use_metric import MultiTurnMCPUseMetric
 from .mcp_use_metric.mcp_use_metric import MCPUseMetric
@@ -120,6 +121,7 @@ __all__ = [
     "ToolUseMetric",
     "GoalAccuracyMetric",
     "AgentLoopDetectionMetric",
+    "TokenBudgetMetric",
     # Conversational metrics
     "TurnRelevancyMetric",
     "ConversationCompletenessMetric",
