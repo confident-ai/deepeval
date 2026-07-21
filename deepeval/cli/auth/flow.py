@@ -56,7 +56,7 @@ import deepeval
 from deepeval.cli.auth.api import (
     CliAuthorization,
     CliOnboardingContext,
-    NewUserOnboardingRequest,
+    DynamicNewUserOnboardingRequest,
     ExistingProjectKeyRequest,
     DevicePairing,
 )
@@ -206,7 +206,9 @@ def prompt_select(message: str, choices: Sequence[Tuple[str, Any]]) -> Any:
 
 
 def prompt_checkbox(
-    message: str, choices: Sequence[Tuple[str, Any]]
+    message: str,
+    choices: Sequence[Tuple[str, Any]],
+    min_selections: int = 1,
 ) -> List[Any]:
     """Arrow-key multi-selection with a comma-separated numbered fallback."""
     if _is_interactive():
@@ -223,8 +225,8 @@ def prompt_checkbox(
                 pointer="❯",
                 instruction="(space to select, enter to continue)",
                 style=_questionary_style(),
-                validate=lambda values: bool(values)
-                or "Select at least one option.",
+                validate=lambda values: len(values) >= min_selections
+                or f"Select at least {min_selections} option(s).",
             ).ask()
             if answer is None:
                 raise AuthFlowError("Selection cancelled.")
@@ -239,21 +241,30 @@ def prompt_checkbox(
     for index, (label, _) in enumerate(choices, start=1):
         print(f"  {index}. {label}")
     while True:
-        raw = typer.prompt("Enter one or more numbers (comma-separated)")
+        if min_selections == 0:
+            raw = typer.prompt(
+                "Enter numbers (comma-separated), or leave blank",
+                default="",
+                show_default=False,
+            )
+            if not raw.strip():
+                return []
+        else:
+            raw = typer.prompt("Enter one or more numbers (comma-separated)")
         try:
             selected = [int(value.strip()) for value in raw.split(",")]
         except (AttributeError, TypeError, ValueError):
             print("❌ Enter valid numbers separated by commas.")
             continue
         if (
-            selected
+            len(selected) >= min_selections
             and len(selected) == len(set(selected))
             and all(1 <= value <= len(choices) for value in selected)
         ):
             return [choices[value - 1][1] for value in selected]
         print(
-            f"❌ Select unique numbers between 1 and {len(choices)}, "
-            "separated by commas."
+            f"❌ Select at least {min_selections} unique number(s) between "
+            f"1 and {len(choices)}, separated by commas."
         )
 
 
@@ -458,7 +469,10 @@ def get_cli_onboarding_context(setup_token: str) -> CliOnboardingContext:
 
 def complete_cli_onboarding(
     setup_token: str,
-    request: Union[NewUserOnboardingRequest, ExistingProjectKeyRequest],
+    request: Union[
+        DynamicNewUserOnboardingRequest,
+        ExistingProjectKeyRequest,
+    ],
     idempotency_key: str,
 ) -> str:
     url = f"{get_base_api_url()}{ONBOARDING_COMPLETE_ENDPOINT}"

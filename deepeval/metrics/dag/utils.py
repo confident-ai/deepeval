@@ -183,7 +183,7 @@ def copy_graph(original_dag: DeepAcyclicGraph) -> DeepAcyclicGraph:
             ):
                 copied_node = node_class(
                     **valid_args,
-                    children=[copy_node(child) for child in node.children]
+                    children=[copy_node(child) for child in node.children],
                 )
             else:
                 if isinstance(node, VerdictNode) and node.child:
@@ -200,7 +200,7 @@ def copy_graph(original_dag: DeepAcyclicGraph) -> DeepAcyclicGraph:
             ):
                 copied_node = node_class(
                     **valid_args,
-                    children=[copy_node(child) for child in node.children]
+                    children=[copy_node(child) for child in node.children],
                 )
             else:
                 if isinstance(node, ConversationalVerdictNode) and node.child:
@@ -279,7 +279,9 @@ def serialize_dag_to_payload(dag) -> dict:
     }
 
 
-def construct_dag_upload_payload(name: str, dag, multi_turn: bool = False) -> dict:
+def construct_dag_upload_payload(
+    name: str, dag, multi_turn: bool = False
+) -> dict:
     return {
         "name": name,
         "algorithm": "DAG",

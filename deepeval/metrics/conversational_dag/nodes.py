@@ -109,9 +109,7 @@ class ConversationalVerdictNode(ConversationalBaseNode):
             extract_json=lambda data: data["reason"],
         )
 
-    async def _a_generate_reason(
-        self, metric: BaseConversationalMetric
-    ) -> str:
+    async def _a_generate_reason(self, metric: BaseConversationalMetric) -> str:
         prompt = self._get_prompt(
             "generate_reason",
             template_class="VerdictNode",
@@ -146,7 +144,9 @@ class ConversationalVerdictNode(ConversationalBaseNode):
         return copied
 
     def _run_child_metric(
-        self, metric: BaseConversationalMetric, test_case: ConversationalTestCase
+        self,
+        metric: BaseConversationalMetric,
+        test_case: ConversationalTestCase,
     ):
         copied = self._build_child_metric(metric)
         copied.measure(
@@ -157,7 +157,9 @@ class ConversationalVerdictNode(ConversationalBaseNode):
         return copied
 
     async def _a_run_child_metric(
-        self, metric: BaseConversationalMetric, test_case: ConversationalTestCase
+        self,
+        metric: BaseConversationalMetric,
+        test_case: ConversationalTestCase,
     ):
         copied = self._build_child_metric(metric)
         await copied.a_measure(
@@ -187,9 +189,7 @@ class ConversationalTaskNode(ConversationalBaseNode):
             warn_bottom_up_deprecation("ConversationalTaskNode", "add_node")
             self._validate()
 
-    def add_node(
-        self, child: ConversationalBaseNode
-    ) -> ConversationalBaseNode:
+    def add_node(self, child: ConversationalBaseNode) -> ConversationalBaseNode:
         self.children.append(child)
         return child
 

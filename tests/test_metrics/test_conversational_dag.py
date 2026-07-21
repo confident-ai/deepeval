@@ -326,7 +326,9 @@ class TestConversationalDeepAcyclicGraph:
         headings = ConversationalBinaryJudgementNode(criteria="all three?")
         order = ConversationalNonBinaryJudgementNode(criteria="order?")
         extract.add_node(headings)
-        extract.add_node(order)  # diamond: shared by extract and the True verdict
+        extract.add_node(
+            order
+        )  # diamond: shared by extract and the True verdict
         headings.add_verdict(False, score=0)
         headings.add_verdict(True, then=order)
         order.add_verdict("Yes", score=10)

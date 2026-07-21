@@ -28,7 +28,9 @@ def _edges_of(node: Node) -> List[Node]:
     if children:
         edges.extend(children)
     child = getattr(node, "child", None)
-    if child is not None and isinstance(child, (BaseNode, ConversationalBaseNode)):
+    if child is not None and isinstance(
+        child, (BaseNode, ConversationalBaseNode)
+    ):
         edges.append(child)
     return edges
 
