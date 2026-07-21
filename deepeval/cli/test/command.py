@@ -1,6 +1,8 @@
 import os
 import sys
+import glob
 import time
+from enum import Enum
 from typing import Optional
 
 import pytest
@@ -14,8 +16,16 @@ from deepeval.test_run import (
     global_test_run_manager,
     invoke_test_run_end_hook,
 )
+from deepeval.config.settings import get_settings
+from deepeval.cli.github_comment import (
+    oidc_request_available,
+    post_pr_comment_via_bot,
+)
 from deepeval.test_run.cache import TEMP_CACHE_FILE_NAME
+from deepeval.test_run.comparison import ComparisonReason
 from deepeval.test_run.test_run import TestRunResultDisplay
+from deepeval.evaluate.console_report import EvaluationConsoleReport
+from deepeval.evaluate.utils import get_test_results_from_test_run
 from deepeval.utils import (
     delete_file_if_exists,
     set_identifier,
@@ -25,10 +35,16 @@ from deepeval.utils import (
     set_should_use_cache,
     set_test_run_official,
     set_verbose_mode,
+    set_test_regression_mode,
 )
 
 SETTINGS = get_settings()
 app = typer.Typer(name="test")
+
+
+class TestRunMode(str, Enum):
+    DEFAULT = "default"
+    REGRESSION = "regression"
 
 
 def check_if_valid_file(test_file_or_directory: str):
@@ -112,6 +128,12 @@ def run(
         "-m",
         help="List of marks to run the tests with.",
     ),
+    mode: TestRunMode = typer.Option(
+        TestRunMode.DEFAULT,
+        "--mode",
+        help="Test run mode. 'regression' compares this run against the latest official run on Confident AI and exits 1 on regression. Defaults to 'default'.",
+        case_sensitive=False,
+    ),
     official: bool = typer.Option(
         False,
         "--official",
@@ -120,6 +142,14 @@ def run(
     ),
 ):
     """Run a test"""
+    test_regression = mode == TestRunMode.REGRESSION
+
+    if test_regression and not SETTINGS.CONFIDENT_API_KEY:
+        print(
+            "Error: --mode regression requires a CONFIDENT_API_KEY environment variable to be set."
+        )
+        sys.exit(1)
+
     delete_file_if_exists(TEMP_FILE_PATH)
     delete_file_if_exists(TEMP_CACHE_FILE_NAME)
     check_if_valid_file(test_file_or_directory)
@@ -137,6 +167,7 @@ def run(
     set_should_skip_on_missing_params(skip_on_missing_params)
     set_verbose_mode(verbose)
     set_identifier(identifier)
+    set_test_regression_mode(test_regression)
     set_test_run_official(official)
 
     global_test_run_manager.reset()
@@ -184,9 +215,28 @@ def run(
         pytest_retcode = pytest.main(pytest_args)
     end_time = time.perf_counter()
     run_duration = end_time - start_time
-    global_test_run_manager.wrap_up_test_run(run_duration, True, display)
+    upload_result = global_test_run_manager.wrap_up_test_run(run_duration, True, display)
 
     invoke_test_run_end_hook()
+
+    comparison_result = None
+    if test_regression:
+        if upload_result is None:
+            print(
+                "Warning: test run was not uploaded to Confident AI — skipping baseline comparison."
+            )
+            sys.exit(0)
+
+        _, run_id = upload_result
+        test_run = global_test_run_manager.get_test_run()
+        comparison_result = test_run.compare_with_official(run_id)
+        _print_comparison_table(comparison_result)
+
+    _post_pr_comment(test_regression, comparison_result)
+
+    # Regression mode owns the exit code based on the comparison outcome.
+    if test_regression and comparison_result is not None:
+        sys.exit(0 if comparison_result.passed else 1)
 
     # Propagate any non-zero pytest exit code so failures surface in CI.
     # pytest distinguishes: 1=tests failed, 2=interrupted (e.g. -x stop on
@@ -197,3 +247,161 @@ def run(
         sys.exit(int(pytest_retcode))
 
     return pytest_retcode
+
+
+def _post_pr_comment(test_regression: bool, comparison_result) -> None:
+    """Post a DeepEval results comment to the PR when running on GitHub Actions.
+
+    No-ops outside GitHub Actions or when there are no test results. In
+    regression mode the overview section is the regression comparison table;
+    otherwise it's the default Aggregate Metrics table.
+    """
+    if os.environ.get("GITHUB_ACTIONS") != "true":
+        return
+
+    test_results = get_test_results_from_test_run(
+        global_test_run_manager.get_test_run()
+    )
+    if not test_results:
+        return
+
+    print("CI environment detected. Generating PR comment...")
+
+    report = EvaluationConsoleReport(test_results)
+    output_dir = ".deepeval_ci_reports"
+    # In regression mode, swap the Aggregate Metrics overview for the
+    # regression comparison table; per-test-case sections stay the same.
+    overview_md = (
+        _format_regression_table_md(comparison_result)
+        if test_regression and comparison_result is not None
+        else None
+    )
+    report.export_to_cicd_markdown(
+        output_dir=output_dir,
+        evaluation_name="pr_evaluation",
+        overview_section_md=overview_md,
+    )
+
+    list_of_files = glob.glob(f"{output_dir}/*.md")
+    latest_report_path = max(list_of_files, key=os.path.getctime)
+    with open(latest_report_path, "r", encoding="utf-8") as f:
+        markdown_summary = f.read()
+
+    confident_link = global_test_run_manager.get_latest_test_run_link()
+    if confident_link:
+        markdown_summary += f"\n### 🔍 Deep Dive\n[**View the full results on Confident AI**]({confident_link})"
+    else:
+        markdown_summary += "\nSet CONFIDENT_API_KEY to view these results on the Confident AI platform"
+
+    if not oidc_request_available():
+        print(
+            "Skipping PR comment: no GitHub OIDC token available. Install the "
+            "DeepEval GitHub App on this repository and add "
+            "`permissions: id-token: write` to your workflow to get results in your PR as a comment."
+        )
+        return
+
+    try:
+        post_pr_comment_via_bot(markdown_summary)
+        print("✅ Posted DeepEval results to the PR as deepeval[bot].")
+    except Exception as e:
+        print(f"⚠️ Failed to post PR comment via the DeepEval bot: {e}")
+
+
+def _print_comparison_table(result) -> None:
+    from rich.console import Console
+    from rich.table import Table
+    from rich import print as rprint
+
+    console = Console()
+
+    if result.reason == ComparisonReason.NO_OFFICIAL_RUN:
+        rprint("\n[bold yellow]⚠ WARNING:[/bold yellow] No official run found for this project. Mark a run as official on Confident AI to enable regression testing.\n")
+        return
+    if result.reason == ComparisonReason.INCOMPATIBLE_RUNS:
+        rprint("\n[bold red]✗ INCOMPATIBLE RUNS:[/bold red] One or more test cases from the official run were not found in the new run, or their metrics differ. Ensure you are running the same test cases with the same metrics.\n")
+        return
+
+    status_line = "[bold green]✓ NO REGRESSION DETECTED[/bold green]" if result.passed else "[bold red]✗ EVAL REGRESSION DETECTED[/bold red]"
+    rprint(f"\n{status_line}")
+
+    table = Table(show_header=True, header_style="bold")
+    table.add_column("Test Case", style="cyan", no_wrap=True)
+    table.add_column("Metric")
+    table.add_column("Official", justify="right")
+    table.add_column("New", justify="right")
+    table.add_column("Delta", justify="right")
+    table.add_column("", justify="center")
+
+    for tc in result.test_cases:
+        for i, m in enumerate(tc.metrics):
+            status = "[green]✓[/green]" if m.passed else "[red]✗[/red]"
+            table.add_row(
+                tc.name if i == 0 else "",
+                m.metric,
+                f"{m.official_score:.4f}",
+                f"{m.new_score:.4f}",
+                f"{m.delta:+.4f}",
+                status,
+            )
+
+    console.print(table)
+
+    if result.regressed_test_cases:
+        rprint(
+            f"[bold red]{result.regressed_test_cases}/{result.total_test_cases} test case(s) regressed.[/bold red]\n"
+        )
+    else:
+        rprint(
+            f"[bold green]All {result.total_test_cases} test case(s) within threshold.[/bold green]\n"
+        )
+
+
+def _format_regression_table_md(result) -> str:
+    """Render a TestRunComparisonResult as a markdown section.
+
+    Mirrors _print_comparison_table, used as the overview section of the CI/CD
+    markdown report when running in regression mode.
+    """
+    if result.reason == ComparisonReason.NO_OFFICIAL_RUN:
+        return (
+            "## ⚠️ Regression Testing\n\n"
+            "No official run found for this project. Mark a run as official on "
+            "Confident AI to enable regression testing.\n"
+        )
+    if result.reason == ComparisonReason.INCOMPATIBLE_RUNS:
+        return (
+            "## ❌ Incompatible Runs\n\n"
+            "One or more test cases from the official run were not found in the "
+            "new run, or their metrics differ. Ensure you are running the same "
+            "test cases with the same metrics.\n"
+        )
+
+    status = (
+        "✅ No Regression Detected"
+        if result.passed
+        else "❌ Eval Regression Detected"
+    )
+    lines = [f"## {status}\n"]
+    lines.append("| Test Case | Metric | Official | New | Delta | Status |")
+    lines.append("|:---|:---|:---:|:---:|:---:|:---:|")
+
+    for tc in result.test_cases:
+        for i, m in enumerate(tc.metrics):
+            icon = "✅" if m.passed else "❌"
+            lines.append(
+                f"| {tc.name if i == 0 else ''} | {m.metric} | "
+                f"{m.official_score:.4f} | {m.new_score:.4f} | "
+                f"{m.delta:+.4f} | {icon} |"
+            )
+
+    if result.regressed_test_cases:
+        lines.append(
+            f"\n**{result.regressed_test_cases}/{result.total_test_cases} test case(s) regressed.**"
+        )
+    else:
+        lines.append(
+            f"\n**All {result.total_test_cases} test case(s) within threshold.**"
+        )
+
+    return "\n".join(lines)
