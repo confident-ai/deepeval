@@ -69,6 +69,10 @@ class AffirmationLowerSchema(BaseModel):
     answer: Literal["no", "yes"]
 
 
+class PubMedQASchema(BaseModel):
+    answer: Literal["yes", "no", "maybe"]
+
+
 class BooleanSchema(BaseModel):
     answer: Literal["True", "False"]
 
