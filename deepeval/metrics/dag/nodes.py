@@ -324,9 +324,7 @@ class NonBinaryJudgementNode(BaseNode):
         if self.children:
             from deepeval.metrics.dag.utils import warn_bottom_up_deprecation
 
-            warn_bottom_up_deprecation(
-                "NonBinaryJudgementNode", "add_verdict"
-            )
+            warn_bottom_up_deprecation("NonBinaryJudgementNode", "add_verdict")
             self._validate()
 
     def add_verdict(
