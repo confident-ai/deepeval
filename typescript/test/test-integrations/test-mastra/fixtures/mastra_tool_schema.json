@@ -1,0 +1,544 @@
+{
+  "name": "mastra-tool-test",
+  "uuid": "b0ecdacf-f793-4c4a-b0ea-9c7466f93433",
+  "baseSpans": [
+    {
+      "uuid": "bb2299d0e5c7df14",
+      "name": "step: 0",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "b0ecdacf-f793-4c4a-b0ea-9c7466f93433",
+      "parentUuid": "69b7e78d9e4f5526",
+      "startTime": "2026-07-19T13:42:54.171Z",
+      "endTime": "2026-07-19T13:42:55.281Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "Use the get_weather tool to answer weather questions. Do not answer from memory."
+        },
+        {
+          "role": "user",
+          "content": "Use the get_weather tool to get the weather in San Francisco."
+        }
+      ],
+      "output": {
+        "text": "",
+        "toolCalls": [
+          {
+            "toolCallId": "call_5Gr2K6817AL6DCNPg7v2a3eC",
+            "toolName": "get_weather",
+            "args": {
+              "city": "San Francisco"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "runId": "88f0c9c8-9cc9-41c2-80e3-c9dd0fd61744",
+        "environment": "test",
+        "headers": {
+          "access-control-expose-headers": "X-Request-ID, CF-Ray, CF-Ray",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "cf-cache-status": "DYNAMIC",
+          "cf-ray": "a1da26ed6fc470aa-NAG",
+          "connection": "keep-alive",
+          "content-encoding": "br",
+          "content-type": "application/json",
+          "date": "Sun, 19 Jul 2026 13:42:55 GMT",
+          "openai-organization": "confident-ai",
+          "openai-processing-ms": "774",
+          "openai-project": "proj_A9bfPs3IllEZNkmbL6kztWbs",
+          "openai-version": "2020-10-01",
+          "server": "cloudflare",
+          "set-cookie": "__cf_bm=oaV4YKY5HAKyESXBc9aSTMmvPDOAI64IfBGjOLxAEwY-1784468574.3077576-1.0.1.1-kh..esWjOMKbu5qU5GBPtM28YeDuTXUYWgG5gnhvKQix7FW7yBKuNh3Upl4hTS4S1LDd9s8FkNhZi2bsiOzM4YM0mexyg0L7oKlmaMkr3JGPRFwhucOeTEdwtoYTZ_nq; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com; Expires=Sun, 19 Jul 2026 14:12:55 GMT",
+          "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+          "transfer-encoding": "chunked",
+          "x-content-type-options": "nosniff",
+          "x-ratelimit-limit-requests": "30000",
+          "x-ratelimit-limit-tokens": "150000000",
+          "x-ratelimit-remaining-requests": "29999",
+          "x-ratelimit-remaining-tokens": "149999712",
+          "x-ratelimit-reset-requests": "2ms",
+          "x-ratelimit-reset-tokens": "0s",
+          "x-request-id": "req_bc30815726cf471d8d35f8fd97690200"
+        },
+        "body": {
+          "id": "resp_0ad5b0b992723bc4006a5cd45e7608819b9c56070978008b88",
+          "object": "response",
+          "created_at": 1784468574,
+          "status": "completed",
+          "background": false,
+          "billing": {
+            "payer": "developer"
+          },
+          "completed_at": 1784468575,
+          "error": null,
+          "frequency_penalty": 0,
+          "incomplete_details": null,
+          "instructions": null,
+          "max_output_tokens": null,
+          "max_tool_calls": null,
+          "model": "gpt-4o-mini-2024-07-18",
+          "moderation": null,
+          "output": [
+            {
+              "id": "fc_0ad5b0b992723bc4006a5cd45f0c44819b9325d27a881573ff",
+              "type": "function_call",
+              "status": "completed",
+              "arguments": "{\"city\":\"San Francisco\"}",
+              "call_id": "call_5Gr2K6817AL6DCNPg7v2a3eC",
+              "name": "get_weather"
+            }
+          ],
+          "parallel_tool_calls": true,
+          "presence_penalty": 0,
+          "previous_response_id": null,
+          "prompt_cache_key": null,
+          "prompt_cache_retention": "in_memory",
+          "reasoning": {
+            "context": null,
+            "effort": null,
+            "summary": null
+          },
+          "safety_identifier": null,
+          "service_tier": "default",
+          "store": true,
+          "temperature": 1,
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "tool_choice": "auto",
+          "tool_usage": {
+            "image_gen": {
+              "input_tokens": 0,
+              "input_tokens_details": {
+                "image_tokens": 0,
+                "text_tokens": 0
+              },
+              "output_tokens": 0,
+              "output_tokens_details": {
+                "image_tokens": 0,
+                "text_tokens": 0
+              },
+              "total_tokens": 0
+            },
+            "web_search": {
+              "num_requests": 0
+            }
+          },
+          "tools": [
+            {
+              "type": "function",
+              "description": "Returns the current weather in a city.",
+              "name": "get_weather",
+              "output_schema": null,
+              "parameters": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                  "city": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "additionalProperties": false
+              },
+              "strict": true
+            }
+          ],
+          "top_logprobs": 0,
+          "top_p": 1,
+          "truncation": "disabled",
+          "usage": {
+            "input_tokens": 72,
+            "input_tokens_details": {
+              "cache_write_tokens": 0,
+              "cached_tokens": 0
+            },
+            "output_tokens": 16,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 88
+          },
+          "user": null,
+          "metadata": {}
+        },
+        "modelMetadata": {
+          "modelId": "gpt-4o-mini",
+          "modelVersion": "v2",
+          "modelProvider": "openai"
+        },
+        "mastraSpanType": "model_step"
+      }
+    },
+    {
+      "uuid": "c74638a632b7f503",
+      "name": "inference: 0",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "b0ecdacf-f793-4c4a-b0ea-9c7466f93433",
+      "parentUuid": "bb2299d0e5c7df14",
+      "startTime": "2026-07-19T13:42:54.171Z",
+      "endTime": "2026-07-19T13:42:55.281Z",
+      "output": {
+        "text": "",
+        "toolCalls": [
+          {
+            "toolCallId": "call_5Gr2K6817AL6DCNPg7v2a3eC",
+            "toolName": "get_weather",
+            "args": {
+              "city": "San Francisco"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "runId": "88f0c9c8-9cc9-41c2-80e3-c9dd0fd61744",
+        "environment": "test",
+        "mastraSpanType": "model_inference"
+      }
+    },
+    {
+      "uuid": "6039e994a8aa9a80",
+      "name": "step: 1",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "b0ecdacf-f793-4c4a-b0ea-9c7466f93433",
+      "parentUuid": "69b7e78d9e4f5526",
+      "startTime": "2026-07-19T13:42:55.284Z",
+      "endTime": "2026-07-19T13:42:56.510Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "Use the get_weather tool to answer weather questions. Do not answer from memory."
+        },
+        {
+          "role": "user",
+          "content": "Use the get_weather tool to get the weather in San Francisco."
+        },
+        {
+          "role": "assistant",
+          "content": "[tool: get_weather]"
+        },
+        {
+          "role": "tool",
+          "content": "[tool-result: get_weather]"
+        }
+      ],
+      "output": {
+        "text": "The weather in San Francisco is currently foggy with a temperature of 58°F.",
+        "toolCalls": []
+      },
+      "metadata": {
+        "runId": "88f0c9c8-9cc9-41c2-80e3-c9dd0fd61744",
+        "environment": "test",
+        "headers": {
+          "access-control-expose-headers": "X-Request-ID, CF-Ray, CF-Ray",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "cf-cache-status": "DYNAMIC",
+          "cf-ray": "a1da26f4582e70aa-NAG",
+          "connection": "keep-alive",
+          "content-encoding": "br",
+          "content-type": "application/json",
+          "date": "Sun, 19 Jul 2026 13:42:56 GMT",
+          "openai-organization": "confident-ai",
+          "openai-processing-ms": "858",
+          "openai-project": "proj_A9bfPs3IllEZNkmbL6kztWbs",
+          "openai-version": "2020-10-01",
+          "server": "cloudflare",
+          "set-cookie": "__cf_bm=g8gk2THXJ2lZU4nz2p8UW69dXBoLFYuoNu.oT1w9KHU-1784468575.411666-1.0.1.1-Ohlrr8Pe0p8HcQhII_NuDhsjA1sr9mQ_ZjPNDCW_PmfqlVA0Fmnbu_L__OGsDm8nAGtuPjehqiSwj65A3OLxTuMFQSXsM1WiFErTi7BBRME4kqdGAWVuXdXfO2aWFgp8; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com; Expires=Sun, 19 Jul 2026 14:12:56 GMT",
+          "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+          "transfer-encoding": "chunked",
+          "x-content-type-options": "nosniff",
+          "x-ratelimit-limit-requests": "30000",
+          "x-ratelimit-limit-tokens": "150000000",
+          "x-ratelimit-remaining-requests": "29999",
+          "x-ratelimit-remaining-tokens": "149999680",
+          "x-ratelimit-reset-requests": "2ms",
+          "x-ratelimit-reset-tokens": "0s",
+          "x-request-id": "req_4cbb168405484acf9005681f9acc01df"
+        },
+        "body": {
+          "id": "resp_010b4671e04c91f1006a5cd45f9928819bbf1af91d867c2039",
+          "object": "response",
+          "created_at": 1784468575,
+          "status": "completed",
+          "background": false,
+          "billing": {
+            "payer": "developer"
+          },
+          "completed_at": 1784468576,
+          "error": null,
+          "frequency_penalty": 0,
+          "incomplete_details": null,
+          "instructions": null,
+          "max_output_tokens": null,
+          "max_tool_calls": null,
+          "model": "gpt-4o-mini-2024-07-18",
+          "moderation": null,
+          "output": [
+            {
+              "id": "msg_010b4671e04c91f1006a5cd46012d4819b8a812930fadd8b2f",
+              "type": "message",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "annotations": [],
+                  "logprobs": [],
+                  "text": "The weather in San Francisco is currently foggy with a temperature of 58°F."
+                }
+              ],
+              "role": "assistant"
+            }
+          ],
+          "parallel_tool_calls": true,
+          "presence_penalty": 0,
+          "previous_response_id": null,
+          "prompt_cache_key": null,
+          "prompt_cache_retention": "in_memory",
+          "reasoning": {
+            "context": null,
+            "effort": null,
+            "summary": null
+          },
+          "safety_identifier": null,
+          "service_tier": "default",
+          "store": true,
+          "temperature": 1,
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "tool_choice": "auto",
+          "tool_usage": {
+            "image_gen": {
+              "input_tokens": 0,
+              "input_tokens_details": {
+                "image_tokens": 0,
+                "text_tokens": 0
+              },
+              "output_tokens": 0,
+              "output_tokens_details": {
+                "image_tokens": 0,
+                "text_tokens": 0
+              },
+              "total_tokens": 0
+            },
+            "web_search": {
+              "num_requests": 0
+            }
+          },
+          "tools": [
+            {
+              "type": "function",
+              "description": "Returns the current weather in a city.",
+              "name": "get_weather",
+              "output_schema": null,
+              "parameters": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                  "city": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "additionalProperties": false
+              },
+              "strict": true
+            }
+          ],
+          "top_logprobs": 0,
+          "top_p": 1,
+          "truncation": "disabled",
+          "usage": {
+            "input_tokens": 103,
+            "input_tokens_details": {
+              "cache_write_tokens": 0,
+              "cached_tokens": 0
+            },
+            "output_tokens": 19,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 122
+          },
+          "user": null,
+          "metadata": {}
+        },
+        "modelMetadata": {
+          "modelId": "gpt-4o-mini",
+          "modelVersion": "v2",
+          "modelProvider": "openai"
+        },
+        "mastraSpanType": "model_step"
+      }
+    },
+    {
+      "uuid": "a33f638928f63481",
+      "name": "inference: 1",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "b0ecdacf-f793-4c4a-b0ea-9c7466f93433",
+      "parentUuid": "6039e994a8aa9a80",
+      "startTime": "2026-07-19T13:42:55.285Z",
+      "endTime": "2026-07-19T13:42:56.510Z",
+      "output": {
+        "text": "The weather in San Francisco is currently foggy with a temperature of 58°F.",
+        "toolCalls": []
+      },
+      "metadata": {
+        "runId": "88f0c9c8-9cc9-41c2-80e3-c9dd0fd61744",
+        "environment": "test",
+        "mastraSpanType": "model_inference"
+      }
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "bbef90f3c77ff60d",
+      "name": "agent run: 'weather-agent'",
+      "status": "SUCCESS",
+      "type": "agent",
+      "traceUuid": "b0ecdacf-f793-4c4a-b0ea-9c7466f93433",
+      "startTime": "2026-07-19T13:42:54.166Z",
+      "endTime": "2026-07-19T13:42:56.512Z",
+      "input": "Use the get_weather tool to get the weather in San Francisco.",
+      "output": {
+        "text": "The weather in San Francisco is currently foggy with a temperature of 58°F.",
+        "files": []
+      },
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metadata": {
+        "runId": "88f0c9c8-9cc9-41c2-80e3-c9dd0fd61744",
+        "environment": "test",
+        "mastraSpanType": "agent_run"
+      }
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "69b7e78d9e4f5526",
+      "name": "llm: 'gpt-4o-mini'",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "b0ecdacf-f793-4c4a-b0ea-9c7466f93433",
+      "parentUuid": "bbef90f3c77ff60d",
+      "startTime": "2026-07-19T13:42:54.170Z",
+      "endTime": "2026-07-19T13:42:56.511Z",
+      "input": {
+        "messages": [
+          {
+            "role": "system",
+            "content": "Use the get_weather tool to answer weather questions. Do not answer from memory."
+          },
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "Use the get_weather tool to get the weather in San Francisco.",
+                "providerOptions": {
+                  "mastra": {
+                    "createdAt": 1784468574167
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "output": {
+        "files": [],
+        "reasoning": [],
+        "sources": [],
+        "text": "The weather in San Francisco is currently foggy with a temperature of 58°F.",
+        "warnings": []
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "inputTokenCount": 175,
+      "outputTokenCount": 35,
+      "metadata": {
+        "runId": "88f0c9c8-9cc9-41c2-80e3-c9dd0fd61744",
+        "environment": "test",
+        "mastraSpanType": "model_generation",
+        "provider": "openai",
+        "finishReason": "stop",
+        "responseId": "resp_010b4671e04c91f1006a5cd45f9928819bbf1af91d867c2039",
+        "streaming": true,
+        "completionStartTime": "2026-07-19T13:42:55.267Z",
+        "modelParameters": {},
+        "cacheReadInputTokens": 0,
+        "cacheWriteInputTokens": 0,
+        "reasoningTokens": 0
+      }
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "058964c9dc8bb8f6",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "traceUuid": "b0ecdacf-f793-4c4a-b0ea-9c7466f93433",
+      "parentUuid": "bb2299d0e5c7df14",
+      "startTime": "2026-07-19T13:42:55.274Z",
+      "endTime": "2026-07-19T13:42:55.276Z",
+      "input": {
+        "city": "San Francisco"
+      },
+      "output": {
+        "weather": "Foggy, 58F"
+      },
+      "description": "Returns the current weather in a city.",
+      "metadata": {
+        "runId": "88f0c9c8-9cc9-41c2-80e3-c9dd0fd61744",
+        "environment": "test",
+        "mastraSpanType": "tool_call",
+        "success": true
+      }
+    }
+  ],
+  "startTime": "2026-07-19T13:42:54.166Z",
+  "endTime": "2026-07-19T13:42:56.513Z",
+  "environment": "testing",
+  "metadata": {
+    "runId": "88f0c9c8-9cc9-41c2-80e3-c9dd0fd61744",
+    "environment": "test"
+  },
+  "tags": [
+    "mastra",
+    "tool"
+  ],
+  "input": "Use the get_weather tool to get the weather in San Francisco.",
+  "output": {
+    "text": "The weather in San Francisco is currently foggy with a temperature of 58°F.",
+    "files": []
+  },
+  "toolsCalled": [
+    {
+      "name": "get_weather",
+      "description": "Returns the current weather in a city.",
+      "output": {
+        "weather": "Foggy, 58F"
+      },
+      "inputParameters": {
+        "city": "San Francisco"
+      }
+    }
+  ],
+  "status": "SUCCESS"
+}

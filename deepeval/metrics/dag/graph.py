@@ -1,5 +1,4 @@
-import asyncio
-from typing import List, Union
+from typing import Dict, List, Tuple, Union
 
 from deepeval.metrics.dag import (
     BaseNode,
@@ -14,67 +13,94 @@ from deepeval.metrics.conversational_dag import (
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.metrics import BaseMetric, BaseConversationalMetric
 
+Node = Union[BaseNode, ConversationalBaseNode]
 
-def validate_root_nodes(
-    root_nodes: Union[List[BaseNode], List[ConversationalBaseNode]],
-):
-    # see if all root nodes are of the same type, more verbose error message, actually we should say we cannot mix multi and single turn nodes
+
+def validate_root_nodes(root_nodes: List[Node]):
     if not all(isinstance(node, type(root_nodes[0])) for node in root_nodes):
         raise ValueError("You cannot mix multi and single turn nodes")
     return True
 
 
+def _edges_of(node: Node) -> List[Node]:
+    edges: List[Node] = []
+    children = getattr(node, "children", None)
+    if children:
+        edges.extend(children)
+    child = getattr(node, "child", None)
+    if child is not None and isinstance(child, (BaseNode, ConversationalBaseNode)):
+        edges.append(child)
+    return edges
+
+
 class DeepAcyclicGraph:
     multiturn: bool
 
-    def __init__(
-        self,
-        root_nodes: Union[List[BaseNode], List[ConversationalBaseNode]],
-    ):
+    def __init__(self, root_nodes: List[Node]):
         validate_root_nodes(root_nodes)
         self.multiturn = isinstance(root_nodes[0], ConversationalBaseNode)
 
-        if not self.multiturn:
-            for root_node in root_nodes:
-                if isinstance(root_node, NonBinaryJudgementNode) or isinstance(
-                    root_node, BinaryJudgementNode
-                ):
-                    if len(root_nodes) > 1:
-                        raise ValueError(
-                            "You cannot provide more than one root node when using 'BinaryJudgementNode' or 'NonBinaryJudgementNode' in root_nodes."
-                        )
-        else:
-            for root_node in root_nodes:
-                if isinstance(
-                    root_node, ConversationalNonBinaryJudgementNode
-                ) or isinstance(root_node, ConversationalBinaryJudgementNode):
-                    if len(root_nodes) > 1:
-                        raise ValueError(
-                            "You cannot provide more than one root node when using 'ConversationalBinaryJudgementNode' or 'ConversationalNonBinaryJudgementNode' in root_nodes."
-                        )
+        judgement_types = (
+            (
+                ConversationalBinaryJudgementNode,
+                ConversationalNonBinaryJudgementNode,
+            )
+            if self.multiturn
+            else (BinaryJudgementNode, NonBinaryJudgementNode)
+        )
+        if len(root_nodes) > 1 and any(
+            isinstance(n, judgement_types) for n in root_nodes
+        ):
+            raise ValueError(
+                "You cannot provide more than one root node when a "
+                "BinaryJudgementNode or NonBinaryJudgementNode is a root."
+            )
+
         self.root_nodes = root_nodes
+        self.indegree, self.parents = self._build_graph()
+
+    def _build_graph(self) -> Tuple[Dict[Node, int], Dict[Node, List[Node]]]:
+        indegree: Dict[Node, int] = {}
+        parents: Dict[Node, List[Node]] = {}
+        visited: set = set()
+        stack: set = set()
+
+        def visit(node: Node):
+            if node in stack:
+                raise ValueError("Cycle detected in DAG graph.")
+            if node in visited:
+                return
+            visited.add(node)
+            node._validate()
+            stack.add(node)
+            indegree.setdefault(node, 0)
+            for child in _edges_of(node):
+                indegree[child] = indegree.get(child, 0) + 1
+                parents.setdefault(child, []).append(node)
+                visit(child)
+            stack.discard(node)
+
+        for root in self.root_nodes:
+            visit(root)
+        return indegree, parents
 
     def _execute(
         self,
         metric: Union[BaseMetric, BaseConversationalMetric],
         test_case: Union[LLMTestCase, ConversationalTestCase],
     ) -> None:
-        for root_node in self.root_nodes:
-            root_node._execute(metric=metric, test_case=test_case, depth=0)
+        from deepeval.metrics.dag.runner import _DeepAcyclicGraphRunner
+
+        _DeepAcyclicGraphRunner(self).run(metric, test_case)
 
     async def _a_execute(
         self,
         metric: Union[BaseMetric, BaseConversationalMetric],
         test_case: Union[LLMTestCase, ConversationalTestCase],
     ) -> None:
-        await asyncio.gather(
-            *(
-                root_node._a_execute(
-                    metric=metric, test_case=test_case, depth=0
-                )
-                for root_node in self.root_nodes
-            )
-        )
+        from deepeval.metrics.dag.runner import _DeepAcyclicGraphRunner
+
+        await _DeepAcyclicGraphRunner(self).a_run(metric, test_case)
 
     def to_dict(self) -> dict:
         """Serialize this DAG to a JSON-friendly dict (structure only)."""

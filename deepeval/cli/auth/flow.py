@@ -45,7 +45,7 @@ Flow:
 import sys
 import time
 import webbrowser
-from typing import Any, Dict, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import requests
 import typer
@@ -203,6 +203,58 @@ def prompt_select(message: str, choices: Sequence[Tuple[str, Any]]) -> Any:
         if 1 <= selected <= len(choices):
             return choices[selected - 1][1]
         print(f"❌ Please enter a number between 1 and {len(choices)}.")
+
+
+def prompt_checkbox(
+    message: str, choices: Sequence[Tuple[str, Any]]
+) -> List[Any]:
+    """Arrow-key multi-selection with a comma-separated numbered fallback."""
+    if _is_interactive():
+        try:
+            import questionary
+
+            answer = questionary.checkbox(
+                message,
+                choices=[
+                    questionary.Choice(title=label, value=value)
+                    for label, value in choices
+                ],
+                qmark="?",
+                pointer="❯",
+                instruction="(space to select, enter to continue)",
+                style=_questionary_style(),
+                validate=lambda values: bool(values)
+                or "Select at least one option.",
+            ).ask()
+            if answer is None:
+                raise AuthFlowError("Selection cancelled.")
+            return list(answer)
+        except AuthFlowError:
+            raise
+        except Exception:
+            # Any questionary/terminal issue: degrade to the numbered prompt.
+            pass
+
+    print(message)
+    for index, (label, _) in enumerate(choices, start=1):
+        print(f"  {index}. {label}")
+    while True:
+        raw = typer.prompt("Enter one or more numbers (comma-separated)")
+        try:
+            selected = [int(value.strip()) for value in raw.split(",")]
+        except (AttributeError, TypeError, ValueError):
+            print("❌ Enter valid numbers separated by commas.")
+            continue
+        if (
+            selected
+            and len(selected) == len(set(selected))
+            and all(1 <= value <= len(choices) for value in selected)
+        ):
+            return [choices[value - 1][1] for value in selected]
+        print(
+            f"❌ Select unique numbers between 1 and {len(choices)}, "
+            "separated by commas."
+        )
 
 
 def _request_headers() -> Dict[str, str]:

@@ -164,7 +164,10 @@ def dag_from_dict(data: Dict[str, Any], multiturn: bool = False):
         built[node_id] = node
         return node
 
-    root_nodes = [build(rid, set()) for rid in root_ids]
+    from deepeval.metrics.dag.utils import suppress_bottom_up_deprecation
+
+    with suppress_bottom_up_deprecation():
+        root_nodes = [build(rid, set()) for rid in root_ids]
     return DeepAcyclicGraph(root_nodes=root_nodes)
 
 
