@@ -109,29 +109,30 @@ def build_legacy_dag_test_case() -> LLMTestCase:
     )
 
 
-@pytest.mark.parametrize("async_mode", [False, True])
-def test_legacy_dag_remains_executable(async_mode):
-    """Protect the legacy DAG used by existing user codebases."""
-    model = LegacyDAGModel()
-    metric = DAGMetric(
-        name="Format Correctness",
-        dag=build_legacy_dag(),
-        model=model,
-        include_reason=False,
-        async_mode=async_mode,
-    )
+class TestLegacyDAG:
+    @pytest.mark.parametrize("async_mode", [False, True])
+    def test_remains_executable(self, async_mode):
+        """Protect the legacy DAG used by existing user codebases."""
+        model = LegacyDAGModel()
+        metric = DAGMetric(
+            name="Format Correctness",
+            dag=build_legacy_dag(),
+            model=model,
+            include_reason=False,
+            async_mode=async_mode,
+        )
 
-    score = metric.measure(
-        build_legacy_dag_test_case(),
-        _show_indicator=False,
-        _log_metric_to_confident=False,
-    )
+        score = metric.measure(
+            build_legacy_dag_test_case(),
+            _show_indicator=False,
+            _log_metric_to_confident=False,
+        )
 
-    assert score == 1
-    assert metric.success is True
-    assert model.schema_calls.count("TaskNodeOutput") == 1
-    assert model.schema_calls.count("BinaryJudgementVerdict") == 1
-    assert model.schema_calls.count("NonBinaryJudgementVerdict") == 1
+        assert score == 1
+        assert metric.success is True
+        assert model.schema_calls.count("TaskNodeOutput") == 1
+        assert model.schema_calls.count("BinaryJudgementVerdict") == 1
+        assert model.schema_calls.count("NonBinaryJudgementVerdict") == 1
 
 
 class TestDeepAcyclicGraph:
