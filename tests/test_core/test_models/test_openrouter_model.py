@@ -436,6 +436,33 @@ class TestGatewaySchemaResponseFormat:
         assert schema["additionalProperties"] is False
         assert schema["$defs"]["NestedItem"]["additionalProperties"] is False
 
+    def test_recurses_into_inline_nested_objects(self):
+        """Guard the recursive descent directly.
+
+        Pydantic emits every model as a flat `$defs` entry, so a `$defs` model
+        never nests inside another `$defs` model — walking only the root plus
+        top-level `$defs` values would already cover every object a pydantic
+        schema produces. This test exercises the property that actually needs
+        the recursion: an object nested inside another object's `properties`
+        (hand-built or otherwise). A non-recursive implementation sets the flag
+        on the root but leaves the inner object untouched, which OpenAI's strict
+        mode rejects.
+        """
+        schema = {
+            "type": "object",
+            "properties": {
+                "outer": {
+                    "type": "object",
+                    "properties": {"inner": {"type": "string"}},
+                }
+            },
+        }
+
+        OpenRouterModel._set_additional_properties_false(schema)
+
+        assert schema["additionalProperties"] is False
+        assert schema["properties"]["outer"]["additionalProperties"] is False
+
     def test_existing_additional_properties_is_not_overwritten(self):
         class Permissive(BaseModel):
             model_config = {"extra": "allow"}
