@@ -135,7 +135,7 @@ We can see that our decision tree involves **four types of nodes**:
 1. `TaskNode`s: this node simply processes an `LLMTestCase` into the desired format for subsequent judgement.
 2. `BinaryJudgementNode`s: this node will take in a `criteria`, and output a verdict of `True`/`False` based on whether that criteria has been met.
 3. `NonBinaryJudgementNode`s: this node will also take in a `criteria`, but unlike the `BinaryJudgementNode`, the `NonBinaryJudgementNode` node have the ability to output a verdict other than `True`/`False`.
-4. `VerdictNode`s: the `VerdictNode` is **always** a leaf node, and determines the final output score based on the evaluation path that was taken.
+4. `VerdictNode`s: this node represents one outcome of a judgement node — it either assigns a final score (making it a leaf) or continues evaluation down another path, so every path eventually ends at a score or metric-based `VerdictNode`.
 
 Putting everything into context, the `TaskNode` is the node that extracts summary headings from the `actual_output`, the `BinaryJudgementNode` is the node that determines if all headings are present, while the `NonBinaryJudgementNode` determines if they are in the correct order. The final score is determined by the four `VerdictNode`s.
 
@@ -193,7 +193,7 @@ When creating your DAG, there are three important points to remember:
 
 1. There should only be an edge to a parent node **if the current node depends on the output of the parent node.**
 2. All nodes, except for `VerdictNode`s, can have access to an `LLMTestCase` at any point in time.
-3. All leaf nodes are `VerdictNode`s, but not all `VerdictNode`s are leaf nodes.
+3. All leaf nodes are `VerdictNode`s, but not every `VerdictNode` is a leaf — a `VerdictNode` created with `then` continues to another node instead of scoring, and every path eventually terminates at a leaf `VerdictNode` (one created with a `score` or passes onto a metric).
 
 **IMPORTANT:** You'll see that in our example, `extract_headings_node` also points to `correct_order_node` because `correct_order_node`'s `criteria` depends on the extracted summary headings — and `correct_order_node` is reused by both `extract_headings_node` and the `True` verdict of `correct_headings_node` (a shared node, reached only after both parents run).
 
