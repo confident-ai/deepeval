@@ -135,7 +135,7 @@ We can see that our decision tree involves **four types of nodes**:
 1. `TaskNode`s: this node simply processes an `LLMTestCase` into the desired format for subsequent judgement.
 2. `BinaryJudgementNode`s: this node will take in a `criteria`, and output a verdict of `True`/`False` based on whether that criteria has been met.
 3. `NonBinaryJudgementNode`s: this node will also take in a `criteria`, but unlike the `BinaryJudgementNode`, the `NonBinaryJudgementNode` node have the ability to output a verdict other than `True`/`False`.
-4. `VerdictNode`s: this node represents one outcome of a judgement node — it either assigns a final score (making it a leaf) or continues evaluation down another path, so every path eventually ends at a score-assigning `VerdictNode`.
+4. `VerdictNode`s: this node represents one outcome of a judgement node — it either assigns a final score (making it a leaf) or continues evaluation down another path, so every path eventually ends at a score or metric-based `VerdictNode`.
 
 Putting everything into context, the `TaskNode` is the node that extracts summary headings from the `actual_output`, the `BinaryJudgementNode` is the node that determines if all headings are present, while the `NonBinaryJudgementNode` determines if they are in the correct order. The final score is determined by the four `VerdictNode`s.
 
