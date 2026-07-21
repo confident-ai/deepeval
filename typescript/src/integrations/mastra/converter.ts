@@ -8,6 +8,11 @@ import {
   ToolSpan,
 } from "../../tracing/tracing";
 import { ToolCall } from "../../test-case";
+import { Integration } from "../../tracing/integrations";
+import {
+  inferProviderFromModel,
+  normalizeSpanProviderForPlatform,
+} from "../../tracing/utils";
 import { SpanType as MastraSpanType } from "@mastra/core/observability";
 import type {
   AnyExportedSpan,
@@ -156,15 +161,20 @@ export function buildDeepEvalSpan(
     input: span.input,
     metadata: buildMetadata(span, deepevalType),
     metricCollection: options.metricCollection,
+    integration: Integration.MASTRA,
   };
 
   switch (deepevalType) {
     case SpanType.LLM: {
+      const model = attrs.responseModel ?? attrs.model ?? "unknown";
       const llm = new LlmSpan({
         ...common,
         type: SpanType.LLM,
         name,
-        model: attrs.responseModel ?? attrs.model ?? "unknown",
+        model,
+        provider: normalizeSpanProviderForPlatform(
+          attrs.provider ?? inferProviderFromModel(model),
+        ),
         ...extractUsage(attrs.usage),
       });
       if (options.prompt) {
@@ -220,6 +230,10 @@ export function updateDeepEvalSpan(
     const llm = target as LlmSpan;
     const model = attrs.responseModel ?? attrs.model;
     if (model) llm.model = model;
+    const provider = normalizeSpanProviderForPlatform(
+      attrs.provider ?? inferProviderFromModel(model),
+    );
+    if (provider) llm.provider = provider;
     const usage = extractUsage(attrs.usage);
     if (usage.inputTokenCount !== undefined)
       llm.inputTokenCount = usage.inputTokenCount;

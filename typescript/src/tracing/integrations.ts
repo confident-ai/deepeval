@@ -10,6 +10,7 @@ export const Integration = {
   OPEN_INFERENCE: "OpenInference",
   AGENTCORE: "AgentCore",
   AI_SDK: "AI SDK",
+  MASTRA: "Mastra",
 } as const;
 export type Integration = (typeof Integration)[keyof typeof Integration];
 
