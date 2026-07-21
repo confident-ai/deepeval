@@ -363,13 +363,16 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
         schema: Union[Type[BaseModel], BaseModel],
     ) -> Dict:
         json_schema = schema.model_json_schema()
+        DeepEvalOpenAICompatibleModel._set_additional_properties_false(
+            json_schema
+        )
+
         schema_name = (
             schema.__name__
             if inspect.isclass(schema)
             else schema.__class__.__name__
         )
-        # `strict: true` requires additionalProperties to be set at the root.
-        json_schema.setdefault("additionalProperties", False)
+
         return {
             "type": "json_schema",
             "json_schema": {
@@ -420,3 +423,20 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
                 kw.pop("max_retries", None)
                 return cls(**kw)
             raise
+
+    @staticmethod
+    def _set_additional_properties_false(node: Any) -> None:
+        if isinstance(node, dict):
+            if node.get("type") == "object":
+                node.setdefault("additionalProperties", False)
+
+            for value in node.values():
+                DeepEvalOpenAICompatibleModel._set_additional_properties_false(
+                    value
+                )
+
+        elif isinstance(node, list):
+            for value in node:
+                DeepEvalOpenAICompatibleModel._set_additional_properties_false(
+                    value
+                )

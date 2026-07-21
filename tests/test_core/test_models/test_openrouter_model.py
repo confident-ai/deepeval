@@ -5,6 +5,10 @@ from pydantic import BaseModel
 
 from deepeval.models.llms.constants import DEFAULT_OPENROUTER_MODEL
 from deepeval.models.llms.openrouter_model import OpenRouterModel
+from typing import List
+from deepeval.models.llms.gateway_model import (
+    DeepEvalOpenAICompatibleModel,
+)
 
 
 class SampleSchema(BaseModel):
@@ -12,6 +16,14 @@ class SampleSchema(BaseModel):
 
     field1: str
     field2: int
+
+
+class Item(BaseModel):
+    name: str
+
+
+class NestedSchema(BaseModel):
+    items: List[Item]
 
 
 class TestOpenRouterModel:
@@ -399,3 +411,14 @@ class TestOpenRouterModel:
         returned_model, using_native = initialize_model(model)
         assert using_native is True
         assert returned_model is model
+
+    @staticmethod
+    def test_schema_response_format_sets_additional_properties_on_nested_models():
+        response_format = DeepEvalOpenAICompatibleModel._schema_response_format(
+            NestedSchema
+        )
+
+        schema = response_format["json_schema"]["schema"]
+
+        assert schema["additionalProperties"] is False
+        assert schema["$defs"]["Item"]["additionalProperties"] is False
