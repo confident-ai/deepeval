@@ -63,3 +63,21 @@ class TestContextualRecallOverlappingChunks:
         assert len(grouped) == 2
         assert "annual_report.pdf" in grouped[0]
         assert grouped[1] == "Some standalone context string."
+    
+    def test_group_merges_partial_overlap_same_source(self):
+         metric = ContextualRecallMetric(async_mode=False)
+         contexts = [
+             RetrievedContextData(
+                 context="Revenue for FY2023 was $4.2B, up 12% YoY.",
+                 source="annual_report.pdf",
+             ),
+             RetrievedContextData(
+                 context="Operating expenses increased 8% to $2.1B in FY2023.",
+                 source="annual_report.pdf",
+             ),
+         ]
+         grouped = metric._group_retrieval_contexts(contexts)
+         assert len(grouped) == 1
+         assert "4.2B" in grouped[0]
+         assert "2.1B" in grouped[0]
+         assert "annual_report.pdf" in grouped[0]

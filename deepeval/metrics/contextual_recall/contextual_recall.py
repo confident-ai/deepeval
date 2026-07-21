@@ -117,7 +117,7 @@ class ContextualRecallMetric(BaseMetric):
                 )
             else:
                 expected_output = test_case.expected_output
-                retrieval_context = self._group_retrival_contexts(test_case.retrieval_context)
+                retrieval_context = self._group_retrieval_contexts(test_case.retrieval_context)
 
                 self.verdicts: List[VerdictWithExpectedOutput] = (
                     self._generate_verdicts(
@@ -166,7 +166,7 @@ class ContextualRecallMetric(BaseMetric):
             _in_component=_in_component,
         ):
             expected_output = test_case.expected_output
-            retrieval_context = self._group_retrival_contexts(test_case.retrieval_context)
+            retrieval_context = self._group_retrieval_contexts(test_case.retrieval_context)
 
             self.verdicts: List[VerdictWithExpectedOutput] = (
                 await self._a_generate_verdicts(
