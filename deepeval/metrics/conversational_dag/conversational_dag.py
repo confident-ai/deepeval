@@ -70,6 +70,7 @@ class ConversationalDAGMetric(BaseConversationalMetric):
         self.evaluation_cost = 0 if self.using_native_model else None
         self.input_tokens = 0 if self.using_native_model else None
         self.output_tokens = 0 if self.using_native_model else None
+        self._verbose_steps = []
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -115,6 +116,7 @@ class ConversationalDAGMetric(BaseConversationalMetric):
         self.evaluation_cost = 0 if self.using_native_model else None
         self.input_tokens = 0 if self.using_native_model else None
         self.output_tokens = 0 if self.using_native_model else None
+        self._verbose_steps = []
         with metric_progress_indicator(
             self,
             async_mode=True,
@@ -141,6 +143,54 @@ class ConversationalDAGMetric(BaseConversationalMetric):
             except TypeError:
                 self.success = False
         return self.success
+
+    def upload(self):
+        from rich.console import Console
+        from deepeval.confident.api import Api, Endpoints, HttpMethods
+        from deepeval.metrics.dag.utils import construct_dag_upload_payload
+
+        api = Api()
+        payload = construct_dag_upload_payload(
+            name=self.name, dag=self.dag, multi_turn=True
+        )
+        data, _ = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.METRICS_ENDPOINT,
+            body=payload,
+        )
+        self.metric_id = data.get("id")
+        if self.metric_id:
+            Console().print(
+                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric "
+                f"'{self.name}' [ConversationalDAG] uploaded successfully "
+                f"(id: [bold]{self.metric_id}[/bold])"
+            )
+        return data
+
+    def pull(self):
+        from rich.console import Console
+        from deepeval.confident.api import Api, Endpoints, HttpMethods
+        from deepeval.metrics.dag.utils import build_dag_from_payload
+
+        api = Api()
+        data, _ = api.send_request(
+            method=HttpMethods.GET,
+            endpoint=Endpoints.METRIC_ENDPOINT,
+            url_params={"name": self.name},
+        )
+        dag_json = data.get("dag")
+        if not dag_json:
+            raise ValueError(
+                f"Metric '{self.name}' has no DAG graph and cannot be pulled "
+                "as a ConversationalDAGMetric."
+            )
+        self.dag = build_dag_from_payload(dag_json, multiturn=True)
+        self.metric_id = data.get("id")
+        Console().print(
+            "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric "
+            f"'{self.name}' [ConversationalDAG] pulled successfully"
+        )
+        return data
 
     @property
     def __name__(self):

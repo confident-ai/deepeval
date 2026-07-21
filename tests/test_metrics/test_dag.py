@@ -121,7 +121,7 @@ class TestDeepAcyclicGraph:
 
     def test_invalid_child_type(self):
         invalid_child = "string_instead_of_node"  # Invalid child type
-        with pytest.raises(AttributeError):
+        with pytest.raises(TypeError):
             TaskNode(
                 instructions="Invalid task",
                 output_label="X",
@@ -269,3 +269,77 @@ class TestDeepAcyclicGraph:
         task = TaskNode("Check", "result", [], [judge])
         dag = DeepAcyclicGraph(root_nodes=[task])
         assert is_valid_dag_from_roots(dag.root_nodes, multiturn=False)
+
+    def test_add_node_appends_and_returns(self):
+        task = TaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        judge = BinaryJudgementNode(criteria="?")
+        returned = task.add_node(judge)
+        assert returned is judge
+        assert task.children == [judge]
+
+    def test_add_verdict_score_leaf(self):
+        judge = BinaryJudgementNode(criteria="?")
+        verdict = judge.add_verdict(True, score=10)
+        assert isinstance(verdict, VerdictNode)
+        assert verdict.verdict is True
+        assert verdict.score == 10
+        assert verdict.child is None
+        assert judge.children == [verdict]
+
+    def test_add_verdict_then_sets_child(self):
+        order = NonBinaryJudgementNode(criteria="order?")
+        judge = BinaryJudgementNode(criteria="?")
+        verdict = judge.add_verdict(True, then=order)
+        assert verdict.child is order
+        assert verdict.score is None
+
+    def test_add_verdict_rejects_score_and_then(self):
+        order = NonBinaryJudgementNode(criteria="order?")
+        judge = BinaryJudgementNode(criteria="?")
+        with pytest.raises(ValueError):
+            judge.add_verdict(True, score=10, then=order)
+
+    def test_top_down_builds_valid_diamond(self):
+        extract = TaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
+        )
+        headings = BinaryJudgementNode(criteria="all three?")
+        order = NonBinaryJudgementNode(criteria="order?")
+        extract.add_node(headings)
+        extract.add_node(order)  # diamond: shared by extract and the True verdict
+        headings.add_verdict(False, score=0)
+        headings.add_verdict(True, then=order)
+        order.add_verdict("Yes", score=10)
+        order.add_verdict("No", score=0)
+
+        dag = DeepAcyclicGraph(root_nodes=[extract])
+        assert is_valid_dag_from_roots(dag.root_nodes, multiturn=False)
+        assert dag.indegree[extract] == 0
+        assert dag.indegree[order] == 2
+
+    def test_build_time_validation_incomplete_binary(self):
+        extract = TaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        judge = BinaryJudgementNode(criteria="?")
+        extract.add_node(judge)
+        judge.add_verdict(True, score=10)  # only one verdict
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[extract])
+
+    def test_nonbinary_schema_deferred_to_build(self):
+        order = NonBinaryJudgementNode(criteria="order?")
+        order.add_verdict("A", score=10)
+        order.add_verdict("B", score=0)
+        assert not hasattr(order, "_verdict_schema")
+        DeepAcyclicGraph(root_nodes=[order])
+        assert hasattr(order, "_verdict_schema")
+        assert sorted(order._verdict_options) == ["A", "B"]
