@@ -182,6 +182,9 @@ class ConversationalTaskNode(ConversationalBaseNode):
 
     def __post_init__(self):
         if self.children:
+            from deepeval.metrics.dag.utils import warn_bottom_up_deprecation
+
+            warn_bottom_up_deprecation("ConversationalTaskNode", "add_node")
             self._validate()
 
     def add_node(
@@ -265,6 +268,11 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
 
     def __post_init__(self):
         if self.children:
+            from deepeval.metrics.dag.utils import warn_bottom_up_deprecation
+
+            warn_bottom_up_deprecation(
+                "ConversationalBinaryJudgementNode", "add_verdict"
+            )
             self._validate()
 
     def add_verdict(
@@ -362,6 +370,11 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
 
     def __post_init__(self):
         if self.children:
+            from deepeval.metrics.dag.utils import warn_bottom_up_deprecation
+
+            warn_bottom_up_deprecation(
+                "ConversationalNonBinaryJudgementNode", "add_verdict"
+            )
             self._validate()
 
     def add_verdict(

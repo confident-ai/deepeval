@@ -150,6 +150,9 @@ class TaskNode(BaseNode):
 
     def __post_init__(self):
         if self.children:
+            from deepeval.metrics.dag.utils import warn_bottom_up_deprecation
+
+            warn_bottom_up_deprecation("TaskNode", "add_node")
             self._validate()
 
     def add_node(self, child: BaseNode) -> BaseNode:
@@ -230,6 +233,9 @@ class BinaryJudgementNode(BaseNode):
 
     def __post_init__(self):
         if self.children:
+            from deepeval.metrics.dag.utils import warn_bottom_up_deprecation
+
+            warn_bottom_up_deprecation("BinaryJudgementNode", "add_verdict")
             self._validate()
 
     def add_verdict(
@@ -316,6 +322,11 @@ class NonBinaryJudgementNode(BaseNode):
 
     def __post_init__(self):
         if self.children:
+            from deepeval.metrics.dag.utils import warn_bottom_up_deprecation
+
+            warn_bottom_up_deprecation(
+                "NonBinaryJudgementNode", "add_verdict"
+            )
             self._validate()
 
     def add_verdict(

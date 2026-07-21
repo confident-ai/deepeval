@@ -1,3 +1,6 @@
+import warnings
+from contextlib import contextmanager
+from contextvars import ContextVar
 from typing import Set, Dict, Optional, Union
 import inspect
 
@@ -17,6 +20,33 @@ from deepeval.metrics.conversational_dag import (
     ConversationalVerdictNode,
 )
 from deepeval.test_case import SingleTurnParams, MultiTurnParams
+
+
+_suppress_bottom_up_deprecation: ContextVar[bool] = ContextVar(
+    "deepeval_suppress_bottom_up_dag_deprecation", default=False
+)
+
+
+@contextmanager
+def suppress_bottom_up_deprecation():
+    token = _suppress_bottom_up_deprecation.set(True)
+    try:
+        yield
+    finally:
+        _suppress_bottom_up_deprecation.reset(token)
+
+
+def warn_bottom_up_deprecation(class_name: str, builder_method: str) -> None:
+    if _suppress_bottom_up_deprecation.get():
+        return
+    warnings.warn(
+        f"Passing 'children' to '{class_name}' (the bottom-up way of building "
+        "a DAG) is deprecated and will be removed in a future release. "
+        f"Construct '{class_name}' without 'children' and use "
+        f"'{builder_method}()' to build the DAG top-down instead.",
+        DeprecationWarning,
+        stacklevel=4,
+    )
 
 
 def is_valid_dag_from_roots(
@@ -184,7 +214,8 @@ def copy_graph(original_dag: DeepAcyclicGraph) -> DeepAcyclicGraph:
         return copied_node
 
     # Copy all root nodes (the recursion handles the rest).
-    new_root_nodes = [copy_node(root) for root in original_dag.root_nodes]
+    with suppress_bottom_up_deprecation():
+        new_root_nodes = [copy_node(root) for root in original_dag.root_nodes]
     return DeepAcyclicGraph(new_root_nodes)
 
 
@@ -370,7 +401,8 @@ def build_dag_from_payload(payload: dict, *, multiturn: bool):
         built[node_id] = node
         return node
 
-    root_nodes = [build(rid, set()) for rid in root_ids]
+    with suppress_bottom_up_deprecation():
+        root_nodes = [build(rid, set()) for rid in root_ids]
     return DeepAcyclicGraph(root_nodes=root_nodes)
 
 
