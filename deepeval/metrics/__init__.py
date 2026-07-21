@@ -14,6 +14,7 @@ from .pii_leakage.pii_leakage import PIILeakageMetric
 from .non_advice.non_advice import NonAdviceMetric
 from .misuse.misuse import MisuseMetric
 from .role_violation.role_violation import RoleViolationMetric
+from .agent_memory_poison.agent_memory_poison import AgentMemoryPoisonMetric
 from .hallucination.hallucination import HallucinationMetric
 from .answer_relevancy.answer_relevancy import AnswerRelevancyMetric
 from .summarization.summarization import SummarizationMetric
@@ -103,6 +104,7 @@ __all__ = [
     "NonAdviceMetric",
     "MisuseMetric",
     "RoleViolationMetric",
+    "AgentMemoryPoisonMetric",
     "ToolPermissionMetric",
     "RoleAdherenceMetric",
     # Task-specific metrics
