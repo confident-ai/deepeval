@@ -100,11 +100,15 @@ export function appendDeepEvalAttribution(
 
   const { content, medium = DEFAULT_MEDIUM } = opts;
 
-  if (!u.searchParams.has('utm_source')) u.searchParams.set('utm_source', SOURCE);
-  if (!u.searchParams.has('utm_medium')) u.searchParams.set('utm_medium', medium);
+  // utm_content goes FIRST: GA4's link_url dimension truncates at 100 chars,
+  // and with content in third position even a short destination like
+  // /book-a-demo cuts the label mid-value ("enterprise_hero_demo" recorded as
+  // "enterprise_"). Param order carries no meaning to the destination.
   if (content && !u.searchParams.has('utm_content')) {
     u.searchParams.set('utm_content', content);
   }
+  if (!u.searchParams.has('utm_source')) u.searchParams.set('utm_source', SOURCE);
+  if (!u.searchParams.has('utm_medium')) u.searchParams.set('utm_medium', medium);
 
   const last = getLastTouchParams();
   if (last) {

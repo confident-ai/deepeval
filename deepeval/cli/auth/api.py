@@ -14,7 +14,7 @@ them, parsing fails with a `pydantic.ValidationError` instead of silently
 substituting a value.
 """
 
-from typing import Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -81,8 +81,20 @@ class NewUserOnboardingRequest(BaseModel):
     user_name: str = Field(serialization_alias="userName")
     organization_name: str = Field(serialization_alias="organizationName")
     project_name: str = Field(serialization_alias="projectName")
+    development_stage: Literal["IDEATION", "DEVELOPMENT", "PRODUCTION"] = Field(
+        serialization_alias="developmentStage"
+    )
+    interaction_type: Literal["SINGLE_TURN", "MULTI_TURN"] = Field(
+        serialization_alias="interactionType"
+    )
+    modalities: List[Literal["TEXT", "IMAGE", "AUDIO"]]
+    user_facing: bool = Field(serialization_alias="userFacing")
+    external_resources: List[Literal["TOOL_CALL", "MCP", "RAG"]] = Field(
+        serialization_alias="externalResources"
+    )
+    description: str
 
-    def to_payload(self) -> Dict[str, str]:
+    def to_payload(self) -> Dict[str, Any]:
         return self.model_dump(by_alias=True)
 
 
