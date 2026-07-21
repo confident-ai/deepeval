@@ -1,4 +1,5 @@
 import pytest
+from deepeval.metrics import DAGMetric
 from deepeval.metrics.dag import (
     TaskNode,
     BinaryJudgementNode,
@@ -6,13 +7,121 @@ from deepeval.metrics.dag import (
     VerdictNode,
     DeepAcyclicGraph,
 )
-from deepeval.test_case import SingleTurnParams
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics.dag.utils import (
     is_valid_dag_from_roots,
     extract_required_params,
     copy_graph,
     is_valid_dag,
 )
+
+
+class LegacyDAGModel(DeepEvalBaseLLM):
+    """Deterministic judge for the legacy DAG."""
+
+    def __init__(self):
+        self.schema_calls = []
+        super().__init__(model="legacy-dag-model")
+
+    def load_model(self):
+        return self
+
+    def generate(self, prompt, schema=None, **kwargs):
+        assert schema is not None
+        self.schema_calls.append(schema.__name__)
+
+        if schema.__name__ == "TaskNodeOutput":
+            return schema(output=["Intro", "Body", "Conclusion"])
+        if schema.__name__ == "BinaryJudgementVerdict":
+            return schema(verdict=True, reason="All headings are present.")
+        if schema.__name__ == "NonBinaryJudgementVerdict":
+            return schema(verdict="Yes", reason="The headings are in order.")
+
+        raise AssertionError(f"Unexpected schema: {schema.__name__}")
+
+    async def a_generate(self, prompt, schema=None, **kwargs):
+        return self.generate(prompt, schema=schema, **kwargs)
+
+    def get_model_name(self):
+        return "legacy-dag-model"
+
+
+def build_legacy_dag() -> DeepAcyclicGraph:
+    """Build the shared-node legacy DAG."""
+    correct_order_node = NonBinaryJudgementNode(
+        criteria=(
+            "Are the summary headings in the correct order: "
+            "'intro' => 'body' => 'conclusion'?"
+        ),
+        children=[
+            VerdictNode(verdict="Yes", score=10),
+            VerdictNode(verdict="Two are out of order", score=4),
+            VerdictNode(verdict="All out of order", score=2),
+        ],
+    )
+
+    correct_headings_node = BinaryJudgementNode(
+        criteria=(
+            "Does the summary headings contain all three: "
+            "'intro', 'body', and 'conclusion'?"
+        ),
+        children=[
+            VerdictNode(verdict=False, score=0),
+            VerdictNode(verdict=True, child=correct_order_node),
+        ],
+    )
+
+    extract_headings_node = TaskNode(
+        instructions="Extract all headings in `actual_output`",
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
+        output_label="Summary headings",
+        children=[correct_headings_node, correct_order_node],
+    )
+
+    return DeepAcyclicGraph(root_nodes=[extract_headings_node])
+
+
+def build_legacy_dag_test_case() -> LLMTestCase:
+    return LLMTestCase(
+        input=(
+            "Alice: Today's agenda: product update, blockers, and marketing "
+            "timeline. Bob, updates?"
+        ),
+        actual_output=(
+            "Intro:\n"
+            "Alice outlined the agenda.\n\n"
+            "Body:\n"
+            "The team discussed engineering and marketing updates.\n\n"
+            "Conclusion:\n"
+            "The team aligned on next steps."
+        ),
+    )
+
+
+@pytest.mark.parametrize("async_mode", [False, True])
+def test_legacy_dag_remains_executable(async_mode):
+    """Protect the legacy DAG used by existing user codebases."""
+    model = LegacyDAGModel()
+    metric = DAGMetric(
+        name="Format Correctness",
+        dag=build_legacy_dag(),
+        model=model,
+        include_reason=False,
+        async_mode=async_mode,
+    )
+
+    score = metric.measure(
+        build_legacy_dag_test_case(),
+        _show_indicator=False,
+        _log_metric_to_confident=False,
+    )
+
+    assert score == 1
+    assert metric.success is True
+    assert model.schema_calls.count("TaskNodeOutput") == 1
+    assert model.schema_calls.count("BinaryJudgementVerdict") == 1
+    assert model.schema_calls.count("NonBinaryJudgementVerdict") == 1
 
 
 class TestDeepAcyclicGraph:
