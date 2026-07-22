@@ -151,6 +151,7 @@ class Endpoints(Enum):
     DATASET_ALIAS_ENDPOINT = "/v1/datasets/:alias"
     DATASET_ALIAS_QUEUE_ENDPOINT = "/v1/datasets/:alias/queue"
     DATASET_ALIAS_VERSIONS_ENDPOINT = "/v1/datasets/:alias/versions"
+    DATASET_ALIAS_GOLDEN_ENDPOINT = "/v1/datasets/:alias/goldens/:goldenId"
 
     TEST_RUN_ENDPOINT = "/v1/test-run"
     EXPERIMENT_ENDPOINT = "/v1/experiment"

@@ -7,6 +7,7 @@ from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 
 
 class Golden(BaseModel):
+    id: Optional[str] = Field(default=None, exclude=True)
     input: str
     actual_output: Optional[str] = Field(
         default=None, serialization_alias="actualOutput"
@@ -116,8 +117,18 @@ class Golden(BaseModel):
 
         return images_mapping if len(images_mapping) > 0 else None
 
+    def _prepare_for_api(self) -> None:
+        self.name = None
+        self.images_mapping = self._get_images_mapping()
+        if self.retrieval_context:
+            self.retrieval_context = [
+                rc.context if hasattr(rc, "context") else rc
+                for rc in self.retrieval_context
+            ]
+
 
 class ConversationalGolden(BaseModel):
+    id: Optional[str] = Field(default=None, exclude=True)
     scenario: str
     expected_outcome: Optional[str] = Field(
         None, serialization_alias="expectedOutcome"
@@ -226,3 +237,14 @@ class ConversationalGolden(BaseModel):
                 images_mapping[img_id] = _MLLM_IMAGE_REGISTRY[img_id]
 
         return images_mapping if len(images_mapping) > 0 else None
+
+    def _prepare_for_api(self) -> None:
+        self.name = None
+        self.images_mapping = self._get_images_mapping()
+        if self.turns:
+            for turn in self.turns:
+                if turn.retrieval_context:
+                    turn.retrieval_context = [
+                        rc.context if hasattr(rc, "context") else rc
+                        for rc in turn.retrieval_context
+                    ]
