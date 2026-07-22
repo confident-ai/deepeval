@@ -1,0 +1,88 @@
+---
+id: daoxe
+title: DaoXE
+sidebar_label: DaoXE
+---
+
+[DaoXE](https://daoxe.com) is a multi-model API gateway with an OpenAI-compatible Chat Completions endpoint. Use it with `deepeval` through the built-in `LocalModel` (OpenAI SDK + custom `base_url`) so evaluation metrics can call any model ID available on your DaoXE account.
+
+DaoXE is multi-protocol on the platform (including Anthropic Messages). This page covers the **OpenAI-compatible** path only. Model IDs are account-scoped — discover them with authenticated `GET /v1/models` or the dashboard. DaoXE is not available in mainland China.
+
+### Command Line
+
+```bash
+export DAOXE_API_KEY=your_daoxe_api_key
+
+deepeval set-local-model \
+    --model=<your-account-model-id> \
+    --base-url="https://daoxe.com/v1"
+```
+
+When prompted for an API key, paste your DaoXE key (or export `LOCAL_MODEL_API_KEY` / use `--save` as documented in [Flags and Configs](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save)).
+
+:::tip[Persisting settings]
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
+### Python
+
+Alternatively, define `LocalModel` directly:
+
+<Tabs items={["Python", "ENV"]}>
+<Tab value="Python">
+
+```python
+from deepeval.models import LocalModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = LocalModel(
+    model="<your-account-model-id>",
+    base_url="https://daoxe.com/v1",
+    api_key="your_daoxe_api_key",
+    temperature=0,
+)
+
+answer_relevancy = AnswerRelevancyMetric(model=model)
+```
+
+</Tab>
+<Tab value="ENV">
+
+```bash
+export USE_LOCAL_MODEL=1
+export LOCAL_MODEL_NAME=<your-account-model-id>
+export LOCAL_MODEL_BASE_URL=https://daoxe.com/v1
+export LOCAL_MODEL_API_KEY=your_daoxe_api_key
+```
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="<your-account-model-id>",
+)
+```
+
+</Tab>
+</Tabs>
+
+There are **ZERO** mandatory and **SIX** optional parameters when creating a `LocalModel` (same as other OpenAI-compatible local/remote endpoints):
+
+- [Optional] `model`: Model ID string. Defaults to `LOCAL_MODEL_NAME` if not passed.
+- [Optional] `api_key`: DaoXE API key. Defaults to `LOCAL_MODEL_API_KEY` if not passed.
+- [Optional] `base_url`: Use `https://daoxe.com/v1`. Defaults to `LOCAL_MODEL_BASE_URL` if not passed.
+- [Optional] `temperature`: Defaults to `TEMPERATURE` if set; otherwise `0.0`.
+- [Optional] `format`: Structured-output format. Defaults to `LOCAL_MODEL_FORMAT` or `"json"`.
+- [Optional] `generation_kwargs`: Extra kwargs forwarded to `chat.completions.create(...)`.
+
+### Reverting to OpenAI
+
+```bash
+deepeval unset-local-model
+```
+
+:::info
+Client notes and multi-protocol examples: [DaoXE-AI](https://github.com/seven7763/DaoXE-AI).  
+Disclosure: this page was contributed by a DaoXE affiliate.
+:::
