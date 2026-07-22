@@ -15,3 +15,9 @@ export {
 export { setTracingContext } from "./trace-context";
 
 export { evaluateThread, evaluateTrace, evaluateSpan } from "./offline-evals";
+
+export {
+  inferProviderFromModel,
+  normalizeSpanProviderForPlatform,
+} from "./utils";
+export { Integration, Provider } from "./integrations";

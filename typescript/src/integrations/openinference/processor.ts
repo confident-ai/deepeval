@@ -11,6 +11,11 @@ import {
 } from "../../tracing/tracing";
 import { OpenInferenceInstrumentationOptions } from "./index";
 import { ToolCall } from "../../test-case";
+import { Integration } from "../../tracing/integrations";
+import {
+  inferProviderFromModel,
+  normalizeSpanProviderForPlatform,
+} from "../../tracing/utils";
 
 // ---------------------------------------------------------------------------
 // OI span kind -> internal SpanType mapping
@@ -306,6 +311,10 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
 
     // Span-type attribute
     span.setAttribute("confident.span.type", spanType!);
+    span.setAttribute(
+      "confident.span.integration",
+      this.options.integration || Integration.OPEN_INFERENCE,
+    );
 
     // Per-type enrichment
     if (spanType === SpanType.AGENT) {
@@ -417,6 +426,15 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
     const model = attributes["llm.model_name"];
     if (model) {
       attributes["confident.llm.model"] = String(model);
+    }
+    if (spanType === SpanType.LLM && !attributes["confident.span.provider"]) {
+      const rawProvider =
+        attributes["llm.provider"] ??
+        (model ? inferProviderFromModel(String(model)) : undefined);
+      const provider = normalizeSpanProviderForPlatform(rawProvider);
+      if (provider) {
+        attributes["confident.span.provider"] = provider;
+      }
     }
 
     // Tool calls (agent, llm, and tool spans can all carry tool call info)

@@ -8,6 +8,7 @@ import {
   LlmSpan,
   ToolSpan,
 } from "../../tracing/tracing";
+import { Integration } from "../../tracing/integrations";
 import { getAgentContext, getLlmContext } from "../../tracing/trace-context";
 import {
   updateSpanProperties,
@@ -98,6 +99,7 @@ export class DeepEvalTracingProcessor {
       status: TraceSpanStatus.IN_PROGRESS,
       type: spanType,
       metricCollection,
+      integration: Integration.OPENAI_AGENTS,
     };
 
     // Natively instantiate the specific Span classes

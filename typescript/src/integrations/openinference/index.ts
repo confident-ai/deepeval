@@ -123,6 +123,7 @@ export interface OpenInferenceInstrumentationOptions {
   agentMetricCollection?: string;
   toolMetricCollectionMap?: Record<string, string>;
   prompt?: Prompt;
+  integration?: string;
   isTestMode?: boolean;
   debug?: boolean;
 }

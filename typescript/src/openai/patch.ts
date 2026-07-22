@@ -12,6 +12,13 @@ import {
   updateCurrentSpan,
   updateLlmSpan,
 } from "../tracing";
+import { Integration, Provider } from "../tracing/integrations";
+import {
+  getCurrentSpan,
+  LlmSpan,
+  SpanType,
+  traceManager,
+} from "../tracing/tracing";
 import { InputParameters, OutputParameters } from "./types";
 import { ToolCall } from "../test-case";
 
@@ -126,6 +133,22 @@ function patchAsyncOpenAIClientMethod(
           response,
           inputParameters,
         );
+
+        const activeSpan = getCurrentSpan();
+        if (activeSpan) {
+          activeSpan.integration = Integration.OPEN_AI;
+          if (activeSpan.type === SpanType.LLM) {
+            (activeSpan as LlmSpan).provider = Provider.OPEN_AI;
+          }
+          if (activeSpan.parentUuid) {
+            const parentSpan = traceManager.getSpanByUuid(
+              activeSpan.parentUuid,
+            );
+            if (parentSpan && !parentSpan.integration) {
+              parentSpan.integration = Integration.OPEN_AI;
+            }
+          }
+        }
 
         if (llmContext && typeof updateAllAttributes === "function") {
           updateAllAttributes(
