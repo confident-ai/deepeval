@@ -15,6 +15,9 @@
     "guides-rag-triad",
     "guides-using-synthesizer",
 
+    "---[ChartNoAxesCombined]Eval Metrics---",
+    "guides-dag-metric",
+
     "---[Waypoints]Tracing + Evals---",
     "guides-tracing-ai-agents",
     "guides-tracing-multi-turn",
