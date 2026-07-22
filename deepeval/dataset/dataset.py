@@ -594,8 +594,20 @@ class EvaluationDataset:
         comments = get_column_data(df, comments_key_name)
         name = get_column_data(df, name_key_name)
         source_files = get_column_data(df, source_file_col_name)
+
+        def parse_metadata(metadata):
+            if not metadata:
+                return None
+            # save_as("csv") serializes additional_metadata with json.dumps,
+            # so parse it as JSON first. Fall back to ast.literal_eval for
+            # metadata written as a Python literal.
+            try:
+                return json.loads(metadata)
+            except (ValueError, SyntaxError):
+                return ast.literal_eval(metadata)
+
         metadatas = [
-            ast.literal_eval(metadata) if metadata else None
+            parse_metadata(metadata)
             for metadata in get_column_data(
                 df, additional_metadata_col_name, default=""
             )

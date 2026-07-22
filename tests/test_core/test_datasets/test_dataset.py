@@ -288,6 +288,22 @@ class TestSaveAndLoad:
                 assert rc[0].source == "s" and rc[0].context == "c"
                 assert rc[1] == "plain"
 
+    def test_save_as_round_trips_additional_metadata(self):
+        """save_as('csv') serializes additional_metadata with json.dumps, so
+        add_goldens_from_csv_file must parse it as JSON. Booleans and None
+        (JSON true/false/null) used to crash the loader, which parsed the
+        column with ast.literal_eval. They now round-trip losslessly."""
+        meta = {"passed": True, "skipped": False, "note": None, "score": 5}
+        goldens = [Golden(input="q", additional_metadata=meta)]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            csv_path = EvaluationDataset(goldens).save_as(
+                "csv", directory=tmpdir, file_name="meta_csv"
+            )
+            reloaded = EvaluationDataset()
+            reloaded.add_goldens_from_csv_file(csv_path)
+            assert reloaded.goldens[0].additional_metadata == meta
+
     def test_save_as_round_trips_turn_retrieval_context_data(self):
         """Multi-turn goldens serialize through format_turns, which previously
         dropped the source of a Turn's RetrievedContextData. It now round-trips
