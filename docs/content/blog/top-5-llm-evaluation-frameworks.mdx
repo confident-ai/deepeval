@@ -1,0 +1,588 @@
+---
+title: Top 5 LLM Evaluation Frameworks in 2026, Compared
+description: A practical comparison of the top LLM evaluation frameworks in 2026 for evaluating AI agents, RAG pipelines, and multi-turn chatbots.
+date: 2026-07-22
+authors: [penguine]
+category: comparisons
+---
+
+A tale as old as LLM applications: a team builds a promising prototype, tests
+it with a dozen hand-picked prompts, and ships it because the outputs "look
+good."
+
+Three weeks later, a prompt update breaks tool calling. The retriever starts
+returning irrelevant chunks. A model migration changes the chatbot's tone. No
+one notices until users complain because the team never turned those initial
+vibe checks into a repeatable evaluation process.
+
+Do not make the same mistake. This guide compares the best LLM evaluation
+frameworks in 2026 based on what matters when you are actually building AI
+agents, RAG pipelines, and multi-turn applications.
+
+Before comparing the tools, let us get the basics straight.
+
+## What is an LLM evaluation framework?
+
+An **LLM evaluation framework** is the infrastructure used to test the quality
+of an LLM application against a repeatable dataset and a defined set of
+metrics.
+
+For an AI agent, that means evaluating the complete trajectory as well as
+individual tool calls, arguments, retrieval steps, plans, and AI sub-agents.
+For a RAG pipeline, it also means evaluating retrieval quality and grounding.
+For a multi-turn chatbot, it means checking whether answers remain correct,
+relevant, safe, and consistent throughout the conversation.
+
+An evaluation framework is not the same thing as:
+
+- **An academic benchmark**, which compares foundation models on standardized
+  tasks such as MMLU.
+- **An observability platform**, which captures production traces, latency,
+  token usage, and errors.
+- **A guardrail**, which intercepts a live request and blocks, retries, or
+  modifies the response.
+
+There is overlap between these categories, but the primary job of an evaluation
+framework is to tell you whether a version of your LLM application is better
+than another before you ship it.
+
+## What to look for in an LLM evaluation framework
+
+The right choice depends on what you are building today and how you expect it
+to evolve. These are the criteria worth checking before committing to a
+framework:
+
+1. **Metric coverage** – does it evaluate AI agents, RAG, multi-turn
+   conversations, safety, and custom criteria, or only one of those?
+2. **Datasets** – can you create, import, version, and reuse test cases across
+   prompts, models, and application versions?
+3. **AI agent tracing** – can a failed score be traced back to the tool,
+   retriever, LLM call, or AI sub-agent that caused it?
+4. **Developer workflow** – can evals run locally, in code review, and in CI/CD
+   using the tools your engineering team already uses? Can AI coding agents such
+   as Claude Code, Cursor, and Codex use it as an evaluation harness to run
+   tests, inspect failures, make targeted changes, and verify the result?
+5. **Test generation and simulation** – can you generate synthetic cases and
+   simulate realistic multi-turn users when production data is limited?
+6. **Integrations** – does it work with your AI agent framework, model providers,
+   vector databases, and existing tracing stack?
+7. **Path to production** – can the same evals support shared reports,
+   regression analysis, monitoring, and online evaluation as the team grows?
+
+These three coverage axes should be considered together:
+
+- **Interaction modes** – can it evaluate multi-turn voice conversations and
+  image inputs?
+- **System capabilities** – can it evaluate RAG, MCP access, tool calls, and
+  external API interactions within the same run?
+- **Evaluation depth** – can it evaluate both the end-to-end outcome and the
+  internal execution, rather than only the final text output?
+
+Now that we know what a complete evaluation workflow requires, here are the
+frameworks that can help build it.
+
+## Top LLM evaluation frameworks at a glance
+
+This table maps each framework to the seven criteria above.
+
+<span className="comparison-status comparison-status--strong">✓ Strong</span>
+means the capability is native and central to the product,
+<span className="comparison-status comparison-status--partial">~ Partial</span>
+means it is narrower or requires additional setup, and
+<span className="comparison-status comparison-status--unsupported">
+  ✕ Not supported
+</span>
+means the capability is unavailable as a native workflow. When support varies within
+one criterion, the table shows the lowest applicable rating.
+
+<div className="framework-comparison-table">
+
+| Capability                         | DeepEval                                                                                                                    | Promptfoo                                                                                                                    | Ragas                                                                                                                          | Arize Phoenix                                                                                                                 | TruLens                                                                                                                       |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Metric coverage**                | <span className="comparison-status comparison-status--strong">✓ Strong:</span> AI agents, RAG, chat, safety, and multimodal | <span className="comparison-status comparison-status--strong">✓ Strong:</span> prompt testing and AI security                | <span className="comparison-status comparison-status--partial">~ Partial:</span> RAG-first coverage with some AI agent metrics | <span className="comparison-status comparison-status--strong">✓ Strong:</span> RAG and trace-based AI agent evaluation        | <span className="comparison-status comparison-status--strong">✓ Strong:</span> RAG and AI agent feedback                      |
+| **Datasets**                       | <span className="comparison-status comparison-status--strong">✓ Strong:</span> local and cloud datasets                     | <span className="comparison-status comparison-status--partial">~ Partial:</span> reusable YAML test cases                    | <span className="comparison-status comparison-status--partial">~ Partial:</span> datasets and RAG test sets                    | <span className="comparison-status comparison-status--strong">✓ Strong:</span> versioned datasets and runs                    | <span className="comparison-status comparison-status--partial">~ Partial:</span> experiment-oriented tooling                  |
+| **AI agent tracing**               | <span className="comparison-status comparison-status--strong">✓ Strong:</span> native traces and per-span scoring           | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native component-level scoring | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native AI agent tracing          | <span className="comparison-status comparison-status--strong">✓ Strong:</span> OpenTelemetry and OpenInference                | <span className="comparison-status comparison-status--strong">✓ Strong:</span> OpenTelemetry trace evaluation                 |
+| **Developer workflow**             | <span className="comparison-status comparison-status--strong">✓ Strong:</span> Python, Pytest, CLI, CI, Agent Skill         | <span className="comparison-status comparison-status--strong">✓ Strong:</span> YAML, CLI, TypeScript, and CI                 | <span className="comparison-status comparison-status--partial">~ Partial:</span> Python and notebook workflows                 | <span className="comparison-status comparison-status--partial">~ Partial:</span> Python, TypeScript, and a local UI           | <span className="comparison-status comparison-status--partial">~ Partial:</span> Python and a local dashboard                 |
+| **Test generation and simulation** | <span className="comparison-status comparison-status--strong">✓ Strong:</span> synthetic data and multi-turn simulation     | <span className="comparison-status comparison-status--partial">~ Partial:</span> red-team generation; no user simulation     | <span className="comparison-status comparison-status--partial">~ Partial:</span> synthetic RAG tests; no user simulation       | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native generation or simulation | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native generation or simulation |
+| **Integrations**                   | <span className="comparison-status comparison-status--strong">✓ Strong:</span> 30+ frameworks, providers, and databases     | <span className="comparison-status comparison-status--strong">✓ Strong:</span> broad model and provider support              | <span className="comparison-status comparison-status--strong">✓ Strong:</span> common RAG and LLM frameworks                   | <span className="comparison-status comparison-status--strong">✓ Strong:</span> OpenTelemetry and OpenInference                | <span className="comparison-status comparison-status--strong">✓ Strong:</span> model providers, OTel, and Snowflake           |
+| **Path to production**             | <span className="comparison-status comparison-status--strong">✓ Strong:</span> Confident AI                                 | <span className="comparison-status comparison-status--strong">✓ Strong:</span> enterprise reports and hosting                | <span className="comparison-status comparison-status--partial">~ Partial:</span> hosted workflows vary                         | <span className="comparison-status comparison-status--strong">✓ Strong:</span> Arize AX                                       | <span className="comparison-status comparison-status--strong">✓ Strong:</span> Snowflake AI Observability                     |
+
+</div>
+
+## 1. DeepEval
+
+### What is DeepEval and why should AI teams consider it?
+
+[DeepEval](https://github.com/confident-ai/deepeval) is an open-source,
+Python-native LLM evaluation framework. It works like Pytest for LLM
+applications, with test cases, reusable metrics, assertions, thresholds, and a
+runner designed for local development and CI/CD.
+
+Its main advantage is breadth. DeepEval covers AI agents, RAG pipelines,
+multi-turn chatbots, safety, custom criteria, synthetic data generation,
+conversation simulation, and native tracing in one framework.
+
+DeepEval 4 also introduced a local evaluation harness for AI coding agents such
+as Cursor, Claude Code, and Codex. An AI coding agent can generate a dataset,
+run the eval suite, inspect failed traces, modify the relevant prompt or
+component, and rerun until the metrics pass.
+
+For teams that later need collaboration and production monitoring, DeepEval
+connects natively to [Confident AI](https://confident-ai.com). DeepEval and
+Confident AI are separate products: the former is the open-source framework,
+while the latter adds the enterprise platform.
+
+### Key features
+
+- **50+ ready-to-use metrics** for AI agents, RAG, multi-turn conversations,
+  safety, multimodal applications, and custom criteria
+- **G-Eval and DAG** for natural-language evaluation rubrics and controlled,
+  decision-graph-based metrics
+- **End-to-end and component-level AI agent evaluation** using native traces
+- **Pytest integration** through `assert_test()` and `deepeval test run`
+- **Synthetic dataset generation** from documents, contexts, existing goldens,
+  or scratch
+- **Scenario-driven multi-turn conversation simulation**
+- **Local trace inspection** with per-span scores and reasons through
+  `deepeval inspect`
+- **An Agent Skill** for vibe-coding evaluation loops
+- **More than 30 documented integrations** across AI agent frameworks, model
+  providers, and vector databases
+- **Optional enterprise capabilities** for reports, experiments, datasets,
+  observability, and monitoring through [Confident AI](https://confident-ai.com)
+
+### Getting started
+
+**Using an AI coding agent?** Follow the [5-minute Agent Skill
+quickstart](/docs/vibe-coder-quickstart). Install the DeepEval skill:
+
+```bash
+npx skills add confident-ai/deepeval --skill "deepeval"
+```
+
+Then ask your AI coding agent to _"add DeepEval evals to this repo and fix any
+failures."_ The skill guides it through creating a dataset, writing tests,
+running the eval suite, inspecting traces, and iterating on failures.
+
+**Setting DeepEval up yourself?** Follow the [DeepEval quickstart for
+humans](/docs/getting-started) to install the framework, create your first test
+case and metric, and run a passing eval locally.
+
+### Pricing
+
+| Product      | Price                           | Includes                                                                                  |
+| ------------ | ------------------------------- | ----------------------------------------------------------------------------------------- |
+| DeepEval     | Free and open source            | Local metrics, datasets, tracing, synthetic data, simulations, and CI/CD                  |
+| Confident AI | Self-serve and enterprise plans | Shared reports, experiments, cloud datasets, observability, monitoring, and collaboration |
+
+**DeepEval is for you if...**
+
+- You want one framework for AI agents, RAG, and multi-turn applications
+- Your team is Python-first and already uses Pytest or CI/CD
+- You need both end-to-end and component-level AI agent evaluation
+- You do not have enough test data and need synthetic generation or simulated
+  conversations
+- You are using Cursor, Claude Code, or Codex to build your LLM application
+- You want to start locally and add an enterprise platform later without
+  rewriting your evals
+
+**DeepEval is not for you if...**
+
+- You want an entirely YAML-driven workflow
+- Your only requirement is adversarial security scanning
+- You only need a production trace viewer and do not plan to build a repeatable
+  offline evaluation suite
+- Your evaluation stack cannot use Python
+
+## 2. Promptfoo
+
+### What is Promptfoo and why should AI teams consider it?
+
+[Promptfoo](https://github.com/promptfoo/promptfoo) is an open-source CLI and
+library for testing prompts, comparing model providers, and red teaming LLM
+applications. It is configuration-first: prompts, providers, tests, and
+assertions are commonly defined in YAML.
+
+Promptfoo is particularly strong for security testing. It can generate and run
+adversarial cases for prompt injection, jailbreaks, PII leakage, excessive
+agency, harmful content, and unsafe tool use. It joined OpenAI in 2026 and
+remains open source.
+
+Its declarative approach works well when teams want to compare a matrix of
+prompts and models without writing a Python test harness. The trade-off is that
+large or deeply customized evaluation workflows can become configuration-heavy.
+
+### Key features
+
+- YAML-driven prompt, provider, test-case, and assertion configuration
+- Side-by-side model and prompt comparisons
+- Deterministic assertions for strings, JSON, latency, cost, and custom logic
+- LLM-as-a-judge scoring and custom rubrics
+- Automated red teaming and vulnerability scanning
+- AI agent and RAG targets through custom providers and integrations
+- CI/CD support and shareable reports
+- Broad support for commercial and local model providers
+
+### Pricing
+
+| Product               | Price              | Includes                                                           |
+| --------------------- | ------------------ | ------------------------------------------------------------------ |
+| Promptfoo open source | Free               | Local prompt tests, model comparisons, assertions, and red teaming |
+| Enterprise features   | Contact the vendor | Team workflows, deployment options, and enterprise support         |
+
+**Promptfoo is for you if...**
+
+- Security testing and red teaming are your primary requirements
+- You prefer declarative YAML over Python test files
+- You frequently compare the same prompts across many model providers
+- You need deterministic assertions alongside LLM-graded checks
+- Your security team needs reports mapped to common AI risk categories
+
+**Promptfoo is not for you if...**
+
+- You want a Python-native metric framework deeply integrated with Pytest
+- You need a broad catalog of AI agent, RAG, and multi-turn evaluation metrics
+- You need synthetic dataset generation from a knowledge base
+- You need scenario-driven conversation simulation
+- You want local metric failures attached directly to component-level AI agent
+  traces
+
+## 3. Ragas
+
+### What is Ragas and why should AI teams consider it?
+
+[Ragas](https://github.com/vibrantlabsai/ragas) is an open-source Python
+framework best known for evaluating retrieval-augmented generation pipelines.
+It helped popularize reference-free metrics such as faithfulness and answer
+relevancy alongside retrieval metrics such as context precision and recall.
+
+Ragas is appealing when the problem is specifically RAG quality. Its concepts
+map cleanly to the two major failure points in a RAG system: whether the
+retriever found the right information and whether the generator used that
+information faithfully.
+
+The project has expanded into synthetic test generation, custom metrics, and
+AI agent or tool-use metrics, but RAG remains its deepest and most recognizable
+workflow.
+
+### Key features
+
+- Faithfulness, answer relevancy, context precision, context recall, and answer
+  correctness metrics
+- Reference-free and reference-based evaluation options
+- Synthetic RAG test-set generation
+- Custom metrics and LLM-judge configuration
+- AI agent metrics including tool-call accuracy, tool-call F1, topic adherence,
+  and AI agent goal accuracy
+- Integrations with common RAG and LLM frameworks
+- Python APIs that fit notebook and data-science workflows
+
+### Pricing
+
+| Product                  | Price  | Includes                                                |
+| ------------------------ | ------ | ------------------------------------------------------- |
+| Ragas open source        | Free   | Local metrics, evaluation APIs, and test-set generation |
+| Hosted or team workflows | Varies | Additional managed workflows where available            |
+
+**Ragas is for you if...**
+
+- RAG is the main or only LLM application you need to evaluate
+- You want established terminology for retrieval and grounding metrics
+- Your workflow is notebook- or data-science-oriented
+- You need reference-free scoring before you have a complete labeled dataset
+- You want to generate synthetic questions from your knowledge base
+
+**Ragas is not for you if...**
+
+- You need one framework across AI agents, RAG, and multi-turn chatbots
+- You need native tracing and component-level evaluation throughout an AI agent
+- You want a first-class Pytest and CI/CD workflow
+- You need multi-turn user simulation
+- You need a direct path from local evals to broad enterprise evaluation and
+  production monitoring
+
+## 4. Arize Phoenix
+
+### What is Arize Phoenix and why should AI teams consider it?
+
+[Arize Phoenix](https://github.com/Arize-ai/phoenix) is an AI observability and
+evaluation platform built around OpenTelemetry and OpenInference. It captures
+traces from LLM applications and provides a UI for inspecting model calls,
+retrieval steps, tool calls, latency, token usage, and evaluation results.
+
+Phoenix is most compelling when observability is the starting point. Teams can
+collect production traces, identify problematic examples, turn them into
+datasets, and compare application versions through experiments.
+
+It also provides LLM-as-a-judge evaluators and templates for RAG, hallucination,
+relevance, and AI agent trajectories. Its center of gravity remains tracing and
+observability rather than a broad standalone metric library.
+
+### Key features
+
+- OpenTelemetry and OpenInference instrumentation
+- Trace and span visualization for LLM, retrieval, and AI agent workflows
+- Datasets and versioned experiments
+- LLM-as-a-judge evaluators and prompt templates
+- RAG evaluation and retrieval diagnostics
+- AI agent trajectory evaluation
+- Annotation and human-review workflows
+- A local Phoenix application with an upgrade path to Arize AX
+
+### Pricing
+
+| Product  | Price                    | Includes                                                                  |
+| -------- | ------------------------ | ------------------------------------------------------------------------- |
+| Phoenix  | Free to run locally      | Tracing, datasets, experiments, evaluators, and the local UI              |
+| Arize AX | Free and paid plans vary | Managed observability, monitoring, collaboration, and enterprise controls |
+
+**Arize Phoenix is for you if...**
+
+- Production tracing and observability are your primary needs
+- Your stack already uses OpenTelemetry or OpenInference
+- You want a visual workflow for moving trace failures into datasets and
+  experiments
+- You need retrieval diagnostics and embedding analysis
+- You want an open local starting point with a managed Arize upgrade path
+
+**Arize Phoenix is not for you if...**
+
+- You primarily want a large, plug-and-play metric library
+- You need synthetic dataset generation and multi-turn conversation simulation
+  in the same framework
+- You want evaluation logic to live mainly in local test files instead of a
+  platform workflow
+- You need a native loop for AI coding agents to generate, run, inspect, and
+  fix evals
+- You require an Apache 2.0 license for the full application
+
+## 5. TruLens
+
+### What is TruLens and why should AI teams consider it?
+
+[TruLens](https://github.com/truera/trulens) is an open-source Python library
+for instrumenting, evaluating, and comparing LLM applications. It is
+shepherded by Snowflake following Snowflake's acquisition of TruEra.
+
+TruLens first became popular for RAG feedback functions such as groundedness,
+context relevance, and answer relevance. It now has a stronger AI agent focus,
+including metrics for logical consistency, execution efficiency, plan
+adherence, plan quality, tool selection, tool calling, and tool quality.
+
+Its OpenTelemetry support makes it useful for trace-based evaluation, while the
+Snowflake integration is a natural fit for teams already using Snowflake for AI
+data and observability.
+
+### Key features
+
+- OpenTelemetry instrumentation and trace-based evaluation
+- Groundedness, context relevance, answer relevance, and other RAG feedback
+- Agent GPA evaluation across goals, plans, and actions
+- Tool selection, tool calling, plan quality, and execution-efficiency metrics
+- Support for custom feedback functions and model providers
+- Experiment tracking and application comparison
+- A local dashboard
+- Native Snowflake integration for managed evaluation and observability
+
+### Pricing
+
+| Product                    | Price                              | Includes                                                             |
+| -------------------------- | ---------------------------------- | -------------------------------------------------------------------- |
+| TruLens open source        | Free                               | Local instrumentation, feedback functions, evaluation, and dashboard |
+| Snowflake AI Observability | Snowflake usage and plan dependent | Managed traces, evaluation runs, metrics, and enterprise workflows   |
+
+**TruLens is for you if...**
+
+- Your organization already uses Snowflake
+- You want OpenTelemetry-based instrumentation and trace evaluation
+- RAG groundedness and AI agent goal-plan-action analysis are priorities
+- You want to compare instrumented application versions in a local dashboard
+- You prefer a feedback-function abstraction for evaluation
+
+**TruLens is not for you if...**
+
+- You need synthetic dataset generation and multi-turn conversation simulation
+- You want a broad, Pytest-native testing framework
+- You need an Agent Skill or local workflow designed for Cursor, Claude Code,
+  and Codex
+- You want extensive native integrations across AI agent frameworks, model
+  providers, and vector databases
+- You are not using Snowflake and do not need its platform path
+
+## Which LLM evaluation framework should you choose?
+
+### Step 1: Identify what you are evaluating
+
+- **AI agents:** DeepEval provides the strongest combination of dedicated AI
+  agent metrics, local tests, component-level evaluation, tracing, and CI/CD.
+
+- **RAG only:** Ragas provides a focused workflow around retrieval and grounding.
+  DeepEval is a better fit if that RAG pipeline is one component inside a larger
+  AI agent or chatbot.
+
+- **Multi-turn chatbots:** DeepEval has the deepest combination of conversational
+  metrics and scenario-driven conversation simulation.
+
+- **AI security:** Promptfoo is the specialist for automated red teaming and
+  vulnerability scanning.
+
+- **Production observability:** Phoenix is a useful open-source starting point
+  for trace collection and debugging, but it is much more limited than Arize AX
+  from an enterprise perspective. Once a team needs managed monitoring,
+  collaboration, and production evaluation, it should compare Arize AX with
+  [Confident AI](https://confident-ai.com), which also connects those workflows
+  to local DeepEval tests, datasets, and metrics.
+
+### Step 2: Decide whether you need evaluation or observability first
+
+An evaluation-first workflow starts with a dataset and success criteria, runs
+the application against that dataset, and fails changes that fall below the
+quality threshold.
+
+An observability-first workflow starts with traces, dashboards, and production
+traffic, then uses those traces to identify problems and create evaluation
+cases.
+
+Most mature teams eventually need both. The question is which loop should be
+the center of your stack.
+
+### Step 3: Choose code-first or configuration-first
+
+- **Code-first:** DeepEval, Ragas, and TruLens fit naturally into Python
+  applications and support custom evaluation logic.
+- **Configuration-first:** Promptfoo is easier when prompts, providers, and
+  assertions should live in YAML.
+- **Platform-first:** [Confident AI](https://confident-ai.com) is the best fit
+  for organizations already using DeepEval because its native integration
+  standardizes the same evals, datasets, and metrics across local development
+  and production observability. Phoenix is another option when evaluation is
+  centered primarily around a trace and experiment UI.
+
+### Step 4: Decide whether to bundle or assemble
+
+A bundled evaluation framework reduces integration work: one test-case model,
+one metric interface, one trace format, and one route from local development to
+CI and production.
+
+An assembled stack gives each specialist tool a narrower job, but every
+additional tool introduces another dataset format, integration, and place where
+evaluation context can be lost.
+
+## Final comparison
+
+| Tool          | Open source         | Primary interface             | Best for                                            | You may also need                                         |
+| ------------- | ------------------- | ----------------------------- | --------------------------------------------------- | --------------------------------------------------------- |
+| **DeepEval**  | Apache 2.0          | Python + Pytest + CLI         | Comprehensive AI agent, RAG, and chatbot evaluation | Confident AI for enterprise collaboration                 |
+| **Promptfoo** | MIT                 | YAML + CLI + TypeScript       | Prompt comparison and AI security                   | A broader Python metric and dataset framework             |
+| **Ragas**     | Apache 2.0          | Python                        | Focused RAG evaluation                              | AI agent tracing, multi-turn simulation, and CI tooling   |
+| **Phoenix**   | Elastic License 2.0 | Python/TypeScript + UI + OTel | Observability-led evaluation                        | Synthetic data, simulation, and broader metrics           |
+| **TruLens**   | MIT                 | Python + OTel + dashboard     | Snowflake-centric trace evaluation                  | Synthetic data, simulation, and broader testing workflows |
+
+### Recommendations by team type
+
+**For AI agent engineering teams**
+
+- **DeepEval** if you want trace-level and component-level evals in Pytest and
+  CI/CD
+- **TruLens** if your team is centered on Snowflake and Agent GPA-style metrics
+- **Phoenix** if the immediate priority is visual production tracing
+
+**For RAG teams**
+
+- **DeepEval** if RAG is part of a broader application or AI agent
+- **Ragas** if you only need a focused retrieval and grounding evaluation
+  library
+- **Phoenix** if retrieval diagnostics and observability are the primary need
+
+**For security teams**
+
+- **Promptfoo** if automated adversarial testing is the core requirement
+- **DeepEval with DeepTeam** if security is one part of a broader evaluation
+  program
+
+**For teams vibe coding LLM applications**
+
+- **DeepEval** if you want Cursor, Claude Code, or Codex to generate datasets,
+  run evals, inspect failed traces, and iterate locally
+
+**For enterprise teams**
+
+- **DeepEval + Confident AI** for an evaluation-first path from local testing to
+  shared datasets, reports, monitoring, and online evals
+- **Phoenix + Arize AX** for observability-led AI operations
+- **TruLens + Snowflake** for teams already standardized on Snowflake
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is the best overall LLM evaluation framework in 2026?",
+      answer: (
+        <>
+          DeepEval is the strongest general-purpose option for engineering teams
+          because it covers AI agents, RAG, multi-turn conversations, synthetic
+          data, simulation, tracing, Pytest, CI/CD, and AI coding agent
+          workflows in one framework. A specialist may be better when your only
+          requirement is red teaming, RAG scoring, or observability.
+        </>
+      ),
+    },
+    {
+      question: "What is the best framework for evaluating AI agents?",
+      answer: (
+        <>
+          DeepEval is best for developer-first AI agent evaluation with Pytest,
+          native traces, component metrics, CI/CD, and local inspection. TruLens
+          is also strong for goal-plan-action and tool-use evaluation,
+          particularly for Snowflake teams.
+        </>
+      ),
+    },
+    {
+      question: "What is the best LLM evaluation framework for RAG?",
+      answer: (
+        <>
+          Ragas is a focused RAG evaluation library. DeepEval is a better fit
+          when RAG is part of a larger AI agent or chatbot because it combines
+          the core RAG metrics with tracing, component evaluation, multi-turn
+          metrics, synthetic data, and CI/CD.
+        </>
+      ),
+    },
+    {
+      question:
+        "Should I use an evaluation framework or an observability platform?",
+      answer: (
+        <>
+          Use an evaluation framework to test known cases and block regressions
+          before deployment. Use observability to inspect live traces and find
+          new failures after deployment. Mature teams usually use both loops,
+          either in one connected stack or through integrated specialist tools.
+        </>
+      ),
+    },
+    {
+      question: "Can I use more than one LLM evaluation tool?",
+      answer: (
+        <>
+          Yes. For example, a team might use DeepEval for its main regression
+          suite and Promptfoo for dedicated red teaming. The trade-off is
+          fragmentation across datasets, metric APIs, traces, and reports, so
+          keep one framework as the source of truth for release quality.
+        </>
+      ),
+    },
+    {
+      question: "Do I need Confident AI to use DeepEval?",
+      answer: (
+        <>
+          No. DeepEval is a standalone Apache 2.0 open-source framework that
+          runs locally. Confident AI is optional and adds shared reports,
+          experiments, datasets, observability, monitoring, and enterprise
+          collaboration.
+        </>
+      ),
+    },
+  ]}
+/>
