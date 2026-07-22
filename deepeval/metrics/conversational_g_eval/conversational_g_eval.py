@@ -388,6 +388,10 @@ class ConversationalGEval(BaseConversationalMetric):
         for score, prob in token_linear_probability.items():
             sum_of_weighted_scores += score * prob
 
+        # If all tokens were filtered out, fall back to the raw score
+        if sum_linear_probability == 0:
+            return raw_score
+
         # Scale the sum of linear probability to 1
         weighted_summed_score = sum_of_weighted_scores / sum_linear_probability
         return weighted_summed_score
