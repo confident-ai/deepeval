@@ -48,6 +48,7 @@ from deepeval.config.utils import (
     dedupe_preserve_order,
     parse_bool,
     read_dotenv_file,
+    read_dotenv_file_silent,
 )
 from deepeval.constants import SUPPORTED_PROVIDER_SLUGS, slugify
 
@@ -1369,9 +1370,11 @@ class Settings(BaseSettings):
                     _normalize_for_env,
                     _resolve_save_path,
                 )
+                from deepeval.cli.dotenv_handler import DotenvHandler
 
                 # lazy import legacy JSON store deps
                 from deepeval.key_handler import KEY_FILE_HANDLER
+                from deepeval import key_handler as key_handler_mod
 
                 model_fields = type(self._s).model_fields
                 # Exclude computed fields from persistence
@@ -1396,41 +1399,134 @@ class Settings(BaseSettings):
                 persist_dotenv = self._persist is not False
                 ok, resolved_path = _resolve_save_path(self._save)
 
-                existing_dotenv = {}
-                if persist_dotenv and ok and resolved_path is not None:
-                    existing_dotenv = read_dotenv_file(resolved_path)
-
                 candidate_keys_for_dotenv = (
                     changed_keys | touched_keys
                 ) - self.COMPUTED_FIELDS
+                keys_to_restore = changed_keys | candidate_keys_for_dotenv
 
-                keys_for_dotenv: set[str] = set()
-                for key in candidate_keys_for_dotenv:
-                    desired = after_norm.get(key)  # normalized string or None
-                    if desired is None:
-                        # only need to unset if it's actually present in dotenv
-                        # if key in existing_dotenv:
-                        #     keys_for_dotenv.add(key)
-                        keys_for_dotenv.add(key)
+                def restore_settings_snapshot() -> None:
+                    for key in keys_to_restore:
+                        if key in self._before:
+                            setattr(self._s, key, self._before[key])
+                    if "LOG_LEVEL" in keys_to_restore:
+                        from deepeval.config.logging import (
+                            apply_deepeval_log_level,
+                        )
+
+                        apply_deepeval_log_level()
+
+                legacy_snapshot = None
+                if self._persist is not False:
+                    legacy_path = (
+                        Path(key_handler_mod.HIDDEN_DIR)
+                        / key_handler_mod.KEY_FILE
+                    )
+                    legacy_snapshot = (
+                        legacy_path,
+                        legacy_path.exists(),
+                        (
+                            legacy_path.read_bytes()
+                            if legacy_path.exists()
+                            else None
+                        ),
+                    )
+
+                def restore_legacy_snapshot() -> None:
+                    if legacy_snapshot is None:
+                        return
+                    legacy_path, existed, content = legacy_snapshot
+                    if existed:
+                        legacy_path.parent.mkdir(parents=True, exist_ok=True)
+                        legacy_path.write_bytes(content)
                     else:
-                        if existing_dotenv.get(key) != desired:
-                            keys_for_dotenv.add(key)
+                        legacy_path.unlink(missing_ok=True)
 
-                updates_for_dotenv = {
-                    key: after[key] for key in keys_for_dotenv
-                }
-
-                if not changed_keys and not updates_for_dotenv:
-                    if self._persist is False:
-                        # we report handled so that the cli does not mistakenly report invalid save option
-                        self.result = PersistResult(True, None, {})
+                try:
+                    if persist_dotenv and not ok:
+                        restore_settings_snapshot()
+                        self.result = PersistResult(False, None, {})
                         return False
 
-                    ok, resolved_path = _resolve_save_path(self._save)
-                    self.result = PersistResult(ok, resolved_path, {})
-                    return False
+                    existing_dotenv = {}
+                    if persist_dotenv and resolved_path is not None:
+                        DotenvHandler(resolved_path).validate_target()
+                        existing_dotenv = read_dotenv_file_silent(resolved_path)
 
-                updates = {k: after[k] for k in changed_keys}
+                    keys_for_dotenv: set[str] = set()
+                    for key in candidate_keys_for_dotenv:
+                        desired = after_norm.get(
+                            key
+                        )  # normalized string or None
+                        if desired is None:
+                            # only need to unset if it's actually present in dotenv
+                            # if key in existing_dotenv:
+                            #     keys_for_dotenv.add(key)
+                            keys_for_dotenv.add(key)
+                        else:
+                            if existing_dotenv.get(key) != desired:
+                                keys_for_dotenv.add(key)
+
+                    updates_for_dotenv = {
+                        key: after[key] for key in keys_for_dotenv
+                    }
+
+                    if not changed_keys and not updates_for_dotenv:
+                        if self._persist is False:
+                            # we report handled so that the cli does not mistakenly report invalid save option
+                            self.result = PersistResult(True, None, {})
+                            return False
+
+                        ok, resolved_path = _resolve_save_path(self._save)
+                        self.result = PersistResult(ok, resolved_path, {})
+                        return False
+
+                    updates = {k: after[k] for k in changed_keys}
+
+                    #
+                    # .deepeval JSON support
+                    #
+
+                    if self._persist is not False:
+                        for k in changed_keys:
+                            legacy_member = _find_legacy_enum(k)
+                            if legacy_member is None:
+                                continue  # skip if not a defined as legacy field
+
+                            val = updates[k]
+                            # Remove from JSON if unset
+                            if val is None:
+                                KEY_FILE_HANDLER.remove_key(legacy_member)
+                                continue
+
+                            # Never store secrets in the JSON keystore
+                            if _is_secret_key(k):
+                                continue
+
+                            # For booleans, the legacy store expects "YES"/"NO"
+                            if isinstance(val, bool):
+                                KEY_FILE_HANDLER.write_key(
+                                    legacy_member, "YES" if val else "NO"
+                                )
+                            else:
+                                # store as string
+                                KEY_FILE_HANDLER.write_key(
+                                    legacy_member, str(val)
+                                )
+
+                    #
+                    # dotenv store
+                    #
+
+                    # defer import to avoid cyclics
+                    handled, path = update_settings_and_persist(
+                        updates_for_dotenv,
+                        save=self._save,
+                        persist_dotenv=persist_dotenv,
+                    )
+                except BaseException:
+                    restore_settings_snapshot()
+                    restore_legacy_snapshot()
+                    raise
 
                 if "LOG_LEVEL" in updates:
                     from deepeval.config.logging import (
@@ -1439,45 +1535,6 @@ class Settings(BaseSettings):
 
                     apply_deepeval_log_level()
 
-                #
-                # .deepeval JSON support
-                #
-
-                if self._persist is not False:
-                    for k in changed_keys:
-                        legacy_member = _find_legacy_enum(k)
-                        if legacy_member is None:
-                            continue  # skip if not a defined as legacy field
-
-                        val = updates[k]
-                        # Remove from JSON if unset
-                        if val is None:
-                            KEY_FILE_HANDLER.remove_key(legacy_member)
-                            continue
-
-                        # Never store secrets in the JSON keystore
-                        if _is_secret_key(k):
-                            continue
-
-                        # For booleans, the legacy store expects "YES"/"NO"
-                        if isinstance(val, bool):
-                            KEY_FILE_HANDLER.write_key(
-                                legacy_member, "YES" if val else "NO"
-                            )
-                        else:
-                            # store as string
-                            KEY_FILE_HANDLER.write_key(legacy_member, str(val))
-
-                #
-                # dotenv store
-                #
-
-                # defer import to avoid cyclics
-                handled, path = update_settings_and_persist(
-                    updates_for_dotenv,
-                    save=self._save,
-                    persist_dotenv=persist_dotenv,
-                )
                 self.result = PersistResult(handled, path, updates_for_dotenv)
                 return False
             finally:
@@ -1488,8 +1545,6 @@ class Settings(BaseSettings):
             """
             Flip USE_* settings within the target's provider family (LLM vs embeddings).
             """
-            from deepeval.key_handler import KEY_FILE_HANDLER
-
             target_key = getattr(target, "value", str(target))
 
             def _is_embedding_flag(k: str) -> bool:

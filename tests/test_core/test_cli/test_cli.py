@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 import pytest
+from dotenv import dotenv_values
 from pathlib import Path
 from typing import Dict, Iterable, List, Mapping, Tuple
 from typer.testing import CliRunner
@@ -167,6 +168,33 @@ def test_settings_set_coerces_and_persists_dotenv(
     assert "No changes to save" in out2
     assert _count_key_occurrences(env_path, "LOG_LEVEL") == 1
     assert _count_key_occurrences(env_path, "TEMPERATURE") == 1
+
+
+def test_settings_set_symlinked_dotenv_save_reports_guided_error(
+    runner: CliRunner, tmp_path: Path
+) -> None:
+    target_path = tmp_path / "target.env"
+    target_path.write_text("LOG_LEVEL=20\n", encoding="utf-8")
+    link_path = tmp_path / ".env.local"
+    link_path.symlink_to(target_path)
+
+    result = runner.invoke(
+        cli_app,
+        [
+            "settings",
+            "-u",
+            "log-level=error",
+            "--save",
+            f"dotenv:{link_path}",
+        ],
+    )
+
+    assert result.exit_code != 0
+    output = _normalize_cli_output(result.output)
+    assert "Refusing to write to symlinked dotenv path" in output
+    assert "--save / DEEPEVAL_DEFAULT_SAVE" in output
+    assert "real dotenv file" in output
+    assert _read_dotenv(target_path).get("LOG_LEVEL") == "20"
 
 
 def test_settings_unset_removes_key_from_dotenv(
@@ -687,8 +715,10 @@ def test_set_unset_gemini_service_account_file_roundtrip_dotenv_only(
 
     env = _read_dotenv(env_path)
 
-    # Service account key should be persisted to dotenv as a single line.
+    # Service account key should be persisted to dotenv as a single line that
+    # also round-trips through the real python-dotenv parser.
     assert env.get("GOOGLE_SERVICE_ACCOUNT_KEY") == expected_sa
+    assert dotenv_values(env_path)["GOOGLE_SERVICE_ACCOUNT_KEY"] == expected_sa
 
     # Because project/location/service-account-file set and no api_key, Vertex mode should be enabled.
     assert parse_bool(env.get("GOOGLE_GENAI_USE_VERTEXAI")) is True

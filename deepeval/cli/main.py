@@ -19,6 +19,7 @@ import os
 import typer
 import importlib.metadata
 from typing import List, Optional
+from typer.core import TyperGroup
 from rich import print
 from rich.markup import escape
 from rich.console import Console
@@ -51,6 +52,7 @@ from deepeval.cli.utils import (
     resolve_field_names,
     upload_and_open_link,
 )
+from deepeval.cli.dotenv_handler import DotenvTargetError
 from deepeval.confident.api import (
     is_confident,
     Api,
@@ -58,7 +60,23 @@ from deepeval.confident.api import (
     HttpMethods,
 )
 
-app = typer.Typer(name="deepeval", no_args_is_help=True)
+
+class DeepevalTyperGroup(TyperGroup):
+    def invoke(self, ctx):
+        try:
+            return super().invoke(ctx)
+        except DotenvTargetError as exc:
+            raise typer.BadParameter(
+                exc.cli_message(),
+                param_hint="--save",
+            ) from exc
+
+
+app = typer.Typer(
+    name="deepeval",
+    no_args_is_help=True,
+    cls=DeepevalTyperGroup,
+)
 app.add_typer(test_app, name="test")
 app.command(name="generate")(generate_command)
 app.command(name="inspect")(inspect_command)
