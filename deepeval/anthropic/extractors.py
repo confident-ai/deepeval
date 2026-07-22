@@ -1,5 +1,5 @@
 from anthropic.types.message import Message
-from anthropic.types import ToolUseBlock
+from anthropic.types import TextBlock, ToolUseBlock
 from typing import Any, Dict
 
 from deepeval.anthropic.utils import (
@@ -65,7 +65,15 @@ def extract_messages_api_output_parameters(
     message_response: Message,
     input_parameters: InputParameters,
 ) -> OutputParameters:
-    output = str(message_response.content[0].text)
+    # Anthropic responses may lead with a non-text block (a tool_use or
+    # thinking block), so read text from the first TextBlock rather than
+    # assuming content[0] holds it.
+    text_blocks = [
+        block
+        for block in message_response.content
+        if isinstance(block, TextBlock)
+    ]
+    output = str(text_blocks[0].text) if text_blocks else ""
     prompt_tokens = message_response.usage.input_tokens
     completion_tokens = message_response.usage.output_tokens
 
@@ -86,6 +94,15 @@ def extract_messages_api_output_parameters(
                     description=tool_descriptions.get(tool_call.name),
                 )
             )
+
+    # A tool-only turn has no TextBlock, so preserve the tool calls as the
+    # structured output instead of returning an empty string.
+    if not output and tools_called:
+        tool_calls = []
+        for tool_call in tools_called:
+            tool_calls.append(tool_call)
+        output = tool_calls
+
     return OutputParameters(
         output=output,
         prompt_tokens=prompt_tokens,
