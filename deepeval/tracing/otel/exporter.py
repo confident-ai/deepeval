@@ -390,9 +390,14 @@ class ConfidentSpanExporter(SpanExporter):
     ):
 
         # check for pydantic ai trace input and output
-        pydantic_trace_input, pydantic_trace_output = (
-            check_pydantic_ai_trace_input_output(span)
-        )
+        try:
+            pydantic_trace_input, pydantic_trace_output = (
+                check_pydantic_ai_trace_input_output(span)
+            )
+        except Exception:
+            # A single malformed span must never fail the whole export batch
+            # (the OTLP endpoint would 500 and drop every trace in the request).
+            pydantic_trace_input, pydantic_trace_output = None, None
 
         if not base_span_wrapper.trace_input and pydantic_trace_input:
             base_span_wrapper.trace_input = pydantic_trace_input

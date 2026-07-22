@@ -549,8 +549,15 @@ def check_pydantic_ai_agent_input_output(
     system_instructions = []
     system_instruction_raw = span.attributes.get("gen_ai.system_instructions")
     if system_instruction_raw and isinstance(system_instruction_raw, str):
+        try:
+            parsed_system_instructions = json.loads(system_instruction_raw)
+        except (json.JSONDecodeError, ValueError):
+            # Some integrations (e.g. the OpenTelemetry .NET SDK) emit
+            # gen_ai.system_instructions as a plain string rather than JSON.
+            # Preserve it as-is; _flatten_system_instructions handles str.
+            parsed_system_instructions = system_instruction_raw
         system_instructions = _flatten_system_instructions(
-            json.loads(system_instruction_raw)
+            parsed_system_instructions
         )
 
     input_val = _flatten_input(input_val)
