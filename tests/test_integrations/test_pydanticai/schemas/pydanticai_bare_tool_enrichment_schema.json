@@ -1,35 +1,45 @@
 {
-  "uuid": "2abcef47fd29a4002d994d8f6f30af32",
+  "uuid": "3a8354fb4a041c4329a69cdd9016a372",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "6ddcc82eec34d8ba",
+      "uuid": "0ab23bccdfef989e",
       "name": "enrichment_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:42.528Z",
-      "endTime": "2026-06-01T16:36:46.185Z",
+      "startTime": "2026-07-12T14:34:25.955Z",
+      "endTime": "2026-07-12T14:34:28.381Z",
       "input": [
         {
           "role": "user",
           "content": "Use the lookup tool with key 'foobar' and report the result."
         }
       ],
-      "output": "The result for the key 'foobar' is: resolved-value-for-foobar.",
+      "output": "The result for the key 'foobar' is: **resolved-value-for-foobar**.",
       "integration": "PydanticAI",
+      "toolsCalled": [
+        {
+          "name": "lookup",
+          "type": "FUNCTION",
+          "output": "resolved-value-for-foobar",
+          "inputParameters": {
+            "key": "foobar"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "21e229a1fb2b494f",
+      "uuid": "95d2f83140131351",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "6ddcc82eec34d8ba",
-      "startTime": "2026-06-01T16:36:44.384Z",
-      "endTime": "2026-06-01T16:36:46.184Z",
+      "parentUuid": "0ab23bccdfef989e",
+      "startTime": "2026-07-12T14:34:27.262Z",
+      "endTime": "2026-07-12T14:34:28.378Z",
       "input": [
         {
           "role": "system",
@@ -43,7 +53,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_BNGuB0lfAODEPPEPzGpaEOY9",
+            "id": "call_7aDmfXmibObZno3CANYKeH5Y",
             "name": "lookup",
             "arguments": "{\"key\":\"foobar\"}"
           }
@@ -52,7 +62,7 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_BNGuB0lfAODEPPEPzGpaEOY9",
+            "id": "call_7aDmfXmibObZno3CANYKeH5Y",
             "name": "lookup",
             "result": "resolved-value-for-foobar"
           }
@@ -87,7 +97,8 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null
               }
             ],
             "native_tools": [],
@@ -105,23 +116,23 @@
       "output": [
         {
           "role": "assistant",
-          "content": "The result for the key 'foobar' is: resolved-value-for-foobar."
+          "content": "The result for the key 'foobar' is: **resolved-value-for-foobar**."
         }
       ],
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 118.0,
-      "outputTokenCount": 17.0
+      "inputTokenCount": 114.0,
+      "outputTokenCount": 20.0
     },
     {
-      "uuid": "5c98db4c273b8f23",
+      "uuid": "0db7858b29144fcb",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "6ddcc82eec34d8ba",
-      "startTime": "2026-06-01T16:36:42.529Z",
-      "endTime": "2026-06-01T16:36:44.382Z",
+      "parentUuid": "0ab23bccdfef989e",
+      "startTime": "2026-07-12T14:34:25.957Z",
+      "endTime": "2026-07-12T14:34:27.255Z",
       "input": [
         {
           "role": "system",
@@ -161,7 +172,8 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null
               }
             ],
             "native_tools": [],
@@ -181,7 +193,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_BNGuB0lfAODEPPEPzGpaEOY9",
+            "id": "call_7aDmfXmibObZno3CANYKeH5Y",
             "name": "lookup",
             "arguments": "{\"key\":\"foobar\"}"
           }
@@ -190,20 +202,20 @@
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 93.0,
-      "outputTokenCount": 13.0
+      "inputTokenCount": 91.0,
+      "outputTokenCount": 14.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "88fa490bb878d4c9",
+      "uuid": "32394500a6735fba",
       "name": "lookup",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "6ddcc82eec34d8ba",
-      "startTime": "2026-06-01T16:36:44.383Z",
-      "endTime": "2026-06-01T16:36:44.383Z",
+      "parentUuid": "0ab23bccdfef989e",
+      "startTime": "2026-07-12T14:34:27.258Z",
+      "endTime": "2026-07-12T14:34:27.259Z",
       "metadata": {
         "tool_called": true,
         "lookup_key": "foobar"
@@ -215,8 +227,8 @@
       "integration": "PydanticAI"
     }
   ],
-  "startTime": "2026-06-01T16:36:42.528Z",
-  "endTime": "2026-06-01T16:36:46.185Z",
+  "startTime": "2026-07-12T14:34:25.955Z",
+  "endTime": "2026-07-12T14:34:28.381Z",
   "name": "pydanticai-bare-enrichment-test",
   "metadata": {
     "test_type": "bare_tool_enrichment",
@@ -236,6 +248,6 @@
       "content": "Use the lookup tool with key 'foobar' and report the result."
     }
   ],
-  "output": "The result for the key 'foobar' is: resolved-value-for-foobar.",
+  "output": "The result for the key 'foobar' is: **resolved-value-for-foobar**.",
   "status": "SUCCESS"
 }

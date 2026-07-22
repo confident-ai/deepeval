@@ -33,7 +33,8 @@
             "task": "Write the word: 'SUCCESS'.",
             "context": "The task is to simply write the word 'SUCCESS' as it is, without any additional content or context.",
             "coworker": "Writer"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "availableTools": [],

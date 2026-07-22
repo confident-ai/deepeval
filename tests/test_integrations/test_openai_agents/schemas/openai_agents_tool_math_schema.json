@@ -21,7 +21,8 @@
           "output": "10 + 5 = 15",
           "inputParameters": {
             "expression": "10 + 5"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "availableTools": [

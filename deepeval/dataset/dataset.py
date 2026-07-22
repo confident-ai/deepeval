@@ -56,6 +56,7 @@ from deepeval.utils import (
     convert_keys_to_snake_case,
     get_or_create_event_loop,
     open_browser,
+    serialize_to_json,
 )
 from deepeval.test_run import (
     global_test_run_manager,
@@ -1302,7 +1303,9 @@ class EvaluationDataset:
                                 "custom_column_key_values": golden.custom_column_key_values,
                             }
                         )
-                json.dump(json_data, file, indent=4, ensure_ascii=False)
+                file.write(
+                    serialize_to_json(json_data, indent=4, ensure_ascii=False)
+                )
         elif file_type == "csv":
             with open(
                 full_file_path, "w", newline="", encoding="utf-8"
@@ -1406,7 +1409,7 @@ class EvaluationDataset:
                                     dumped.append(t.dict(exclude_none=True))
                                 else:
                                     dumped.append(t)
-                            return json.dumps(dumped, ensure_ascii=False)
+                            return serialize_to_json(dumped, ensure_ascii=False)
 
                         tools_called = _dump_tools_csv(golden.tools_called)
                         expected_tools = _dump_tools_csv(golden.expected_tools)
@@ -1505,7 +1508,9 @@ class EvaluationDataset:
                             "custom_column_key_values": golden.custom_column_key_values,
                         }
 
-                    file.write(json.dumps(record, ensure_ascii=False) + "\n")
+                    file.write(
+                        serialize_to_json(record, ensure_ascii=False) + "\n"
+                    )
 
         print(f"Evaluation dataset saved at {full_file_path}!")
         return full_file_path

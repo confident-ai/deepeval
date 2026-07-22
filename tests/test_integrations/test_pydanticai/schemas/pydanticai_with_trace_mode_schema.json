@@ -1,21 +1,21 @@
 {
-  "uuid": "e5f7653c-7926-4314-9dd0-ccacaeb537bc",
+  "uuid": "17904563-5f99-4922-a606-af093f141cd2",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "56214726a4d6b996",
+      "uuid": "dfeeb8845f9fe2fe",
       "name": "modes_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:41.614Z",
-      "endTime": "2026-06-01T16:36:42.507Z",
+      "startTime": "2026-07-12T14:34:24.861Z",
+      "endTime": "2026-07-12T14:34:25.933Z",
       "input": [
         {
           "role": "user",
           "content": "Say goodbye in exactly three words."
         }
       ],
-      "output": "Farewell, take care.",
+      "output": "Farewell until next.",
       "integration": "PydanticAI",
       "availableTools": [],
       "agentHandoffs": []
@@ -23,13 +23,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "caceaabb080eea89",
+      "uuid": "c780fa69c7226327",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "56214726a4d6b996",
-      "startTime": "2026-06-01T16:36:41.616Z",
-      "endTime": "2026-06-01T16:36:42.507Z",
+      "parentUuid": "dfeeb8845f9fe2fe",
+      "startTime": "2026-07-12T14:34:24.862Z",
+      "endTime": "2026-07-12T14:34:25.932Z",
       "input": [
         {
           "role": "system",
@@ -58,7 +58,7 @@
       "output": [
         {
           "role": "assistant",
-          "content": "Farewell, take care."
+          "content": "Farewell until next."
         }
       ],
       "integration": "PydanticAI",
@@ -70,8 +70,8 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-06-01T16:36:41.612Z",
-  "endTime": "2026-06-01T16:36:42.508Z",
+  "startTime": "2026-07-12T14:34:24.859Z",
+  "endTime": "2026-07-12T14:34:25.934Z",
   "name": "pydanticai-with-trace",
   "metadata": {
     "test_type": "with_trace_mode",
@@ -91,6 +91,6 @@
       "content": "Say goodbye in exactly three words."
     }
   ],
-  "output": "Farewell, take care.",
+  "output": "Farewell until next.",
   "status": "SUCCESS"
 }

@@ -1,14 +1,14 @@
 {
-  "uuid": "553cad75352e5c9ce54747a5ade08835",
+  "uuid": "58a08c163159ecae87121dd2d0c0142e",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "419d6622204b355a",
+      "uuid": "a7b5613b9e10923e",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:33.959Z",
-      "endTime": "2026-06-01T16:36:36.964Z",
+      "startTime": "2026-07-12T14:34:15.594Z",
+      "endTime": "2026-07-12T14:34:18.872Z",
       "input": [
         {
           "role": "user",
@@ -17,19 +17,37 @@
       ],
       "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET.",
       "integration": "PydanticAI",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "output": "Cloudy, 62F",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        },
+        {
+          "name": "get_time",
+          "type": "FUNCTION",
+          "output": "8:00 AM CET",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "1ff7209956c2c5df",
+      "uuid": "784247fd38e4575c",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "419d6622204b355a",
-      "startTime": "2026-06-01T16:36:35.566Z",
-      "endTime": "2026-06-01T16:36:36.961Z",
+      "parentUuid": "a7b5613b9e10923e",
+      "startTime": "2026-07-12T14:34:17.453Z",
+      "endTime": "2026-07-12T14:34:18.870Z",
       "input": [
         {
           "role": "system",
@@ -43,25 +61,25 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_KCo0CJkQKiERmhujOkavOhEA",
+            "id": "call_LUqIl1NFJd8CKlc1dY3j4s05",
             "name": "get_weather",
-            "arguments": "{\"city\": \"Paris\"}"
+            "arguments": "{\"city\":\"Paris\"}"
           }
         },
         {
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_yUkAxOMa9FnCe1p2dAJYwW7o",
+            "id": "call_BQR56rz6gP1Oe0YfUrRhwFfV",
             "name": "get_time",
-            "arguments": "{\"city\": \"Paris\"}"
+            "arguments": "{\"city\":\"Paris\"}"
           }
         },
         {
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_KCo0CJkQKiERmhujOkavOhEA",
+            "id": "call_LUqIl1NFJd8CKlc1dY3j4s05",
             "name": "get_weather",
             "result": "Cloudy, 62F"
           }
@@ -70,7 +88,7 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_yUkAxOMa9FnCe1p2dAJYwW7o",
+            "id": "call_BQR56rz6gP1Oe0YfUrRhwFfV",
             "name": "get_time",
             "result": "8:00 AM CET"
           }
@@ -106,7 +124,8 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null
               },
               {
                 "name": "get_time",
@@ -135,7 +154,8 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null
               }
             ],
             "native_tools": [],
@@ -159,17 +179,17 @@
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 254.0,
-      "outputTokenCount": 26.0
+      "inputTokenCount": 234.0,
+      "outputTokenCount": 27.0
     },
     {
-      "uuid": "355cbdefbce6755c",
+      "uuid": "5dd21ecf4e948013",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "419d6622204b355a",
-      "startTime": "2026-06-01T16:36:33.960Z",
-      "endTime": "2026-06-01T16:36:35.562Z",
+      "parentUuid": "a7b5613b9e10923e",
+      "startTime": "2026-07-12T14:34:15.596Z",
+      "endTime": "2026-07-12T14:34:17.445Z",
       "input": [
         {
           "role": "system",
@@ -210,7 +230,8 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null
               },
               {
                 "name": "get_time",
@@ -239,7 +260,8 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null
               }
             ],
             "native_tools": [],
@@ -259,38 +281,38 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_KCo0CJkQKiERmhujOkavOhEA",
+            "id": "call_LUqIl1NFJd8CKlc1dY3j4s05",
             "name": "get_weather",
-            "arguments": "{\"city\": \"Paris\"}"
+            "arguments": "{\"city\":\"Paris\"}"
           }
         },
         {
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_yUkAxOMa9FnCe1p2dAJYwW7o",
+            "id": "call_BQR56rz6gP1Oe0YfUrRhwFfV",
             "name": "get_time",
-            "arguments": "{\"city\": \"Paris\"}"
+            "arguments": "{\"city\":\"Paris\"}"
           }
         }
       ],
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 185.0,
-      "outputTokenCount": 44.0
+      "inputTokenCount": 183.0,
+      "outputTokenCount": 45.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "e7e6720e6aa0c9c1",
+      "uuid": "d5bb2c1725bc18e6",
       "name": "get_time",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "419d6622204b355a",
-      "startTime": "2026-06-01T16:36:35.563Z",
-      "endTime": "2026-06-01T16:36:35.565Z",
+      "parentUuid": "a7b5613b9e10923e",
+      "startTime": "2026-07-12T14:34:17.449Z",
+      "endTime": "2026-07-12T14:34:17.451Z",
       "input": {
         "city": "Paris"
       },
@@ -298,13 +320,13 @@
       "integration": "PydanticAI"
     },
     {
-      "uuid": "bda2dfe2e6af5a4d",
+      "uuid": "fa68b9fb25d7cc89",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "419d6622204b355a",
-      "startTime": "2026-06-01T16:36:35.563Z",
-      "endTime": "2026-06-01T16:36:35.565Z",
+      "parentUuid": "a7b5613b9e10923e",
+      "startTime": "2026-07-12T14:34:17.449Z",
+      "endTime": "2026-07-12T14:34:17.450Z",
       "input": {
         "city": "Paris"
       },
@@ -312,8 +334,8 @@
       "integration": "PydanticAI"
     }
   ],
-  "startTime": "2026-06-01T16:36:33.959Z",
-  "endTime": "2026-06-01T16:36:36.964Z",
+  "startTime": "2026-07-12T14:34:15.594Z",
+  "endTime": "2026-07-12T14:34:18.872Z",
   "name": "pydanticai-parallel-tools",
   "metadata": {
     "test_type": "parallel_tools"

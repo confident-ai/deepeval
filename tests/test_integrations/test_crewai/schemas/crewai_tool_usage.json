@@ -33,7 +33,8 @@
           "output": "Weather in Paris: Cloudy, 65\u00b0F",
           "inputParameters": {
             "city": "Paris"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "availableTools": [],

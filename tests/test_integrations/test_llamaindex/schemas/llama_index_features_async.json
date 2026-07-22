@@ -218,8 +218,7 @@
               }
             }
           ],
-          "tool_choice": "auto",
-          "parallel_tool_calls": true
+          "tool_choice": "auto"
         }
       },
       "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x11367f6e0>",
@@ -399,8 +398,7 @@
             }
           }
         ],
-        "tool_choice": "auto",
-        "parallel_tool_calls": true
+        "tool_choice": "auto"
       },
       "integration": "LlamaIndex"
     },
@@ -708,8 +706,7 @@
               }
             }
           ],
-          "tool_choice": "auto",
-          "parallel_tool_calls": true
+          "tool_choice": "auto"
         }
       },
       "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x1187949c0>",
@@ -805,8 +802,7 @@
             }
           }
         ],
-        "tool_choice": "auto",
-        "parallel_tool_calls": true
+        "tool_choice": "auto"
       },
       "integration": "LlamaIndex"
     },
@@ -1101,7 +1097,8 @@
           "inputParameters": {
             "a": 4,
             "b": 6
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LlamaIndex"

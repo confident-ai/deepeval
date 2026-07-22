@@ -89,7 +89,8 @@
       "toolsCalled": [
         {
           "name": "get_time",
-          "inputParameters": {}
+          "inputParameters": {},
+          "type": "FUNCTION"
         }
       ],
       "integration": "Strands"
@@ -106,7 +107,8 @@
       "toolsCalled": [
         {
           "name": "get_weather",
-          "inputParameters": {}
+          "inputParameters": {},
+          "type": "FUNCTION"
         }
       ],
       "integration": "Strands"

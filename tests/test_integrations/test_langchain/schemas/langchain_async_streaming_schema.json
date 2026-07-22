@@ -114,7 +114,8 @@
           },
           "inputParameters": {
             "symbol": "MSFT"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -377,7 +378,8 @@
       },
       "inputParameters": {
         "symbol": "MSFT"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

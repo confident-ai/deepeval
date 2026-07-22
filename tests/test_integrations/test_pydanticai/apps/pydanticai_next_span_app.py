@@ -45,7 +45,6 @@ def create_next_span_agent(
     return Agent(
         "openai:gpt-4o-mini",
         system_prompt="Be concise, reply with one short sentence only.",
-        instrument=settings,
         name="next_span_agent",
     )
 

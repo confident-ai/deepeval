@@ -705,7 +705,8 @@
           "inputParameters": {
             "a": 50,
             "b": 2
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LlamaIndex"

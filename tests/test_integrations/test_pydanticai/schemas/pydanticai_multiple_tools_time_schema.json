@@ -1,14 +1,14 @@
 {
-  "uuid": "2499e95b80ee52083b04deb5695b5bd8",
+  "uuid": "171285c503376aabac992968d417dbaf",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "ffba9fa9e11b74ac",
+      "uuid": "1c4df98867c6beff",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:31.754Z",
-      "endTime": "2026-06-01T16:36:33.940Z",
+      "startTime": "2026-07-12T14:34:12.928Z",
+      "endTime": "2026-07-12T14:34:15.566Z",
       "input": [
         {
           "role": "user",
@@ -17,19 +17,29 @@
       ],
       "output": "The current time in London is 7:00 AM GMT.",
       "integration": "PydanticAI",
+      "toolsCalled": [
+        {
+          "name": "get_time",
+          "type": "FUNCTION",
+          "output": "7:00 AM GMT",
+          "inputParameters": {
+            "city": "London"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "22bdd3403b06aabe",
+      "uuid": "7c4b7daa3c05ca6b",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "ffba9fa9e11b74ac",
-      "startTime": "2026-06-01T16:36:32.833Z",
-      "endTime": "2026-06-01T16:36:33.939Z",
+      "parentUuid": "1c4df98867c6beff",
+      "startTime": "2026-07-12T14:34:14.402Z",
+      "endTime": "2026-07-12T14:34:15.563Z",
       "input": [
         {
           "role": "system",
@@ -43,7 +53,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_K1PefOjslkFyiA1r3ErrSr03",
+            "id": "call_b7QJ0toYJ1f7FdtBQ3S2YDSH",
             "name": "get_time",
             "arguments": "{\"city\":\"London\"}"
           }
@@ -52,7 +62,7 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_K1PefOjslkFyiA1r3ErrSr03",
+            "id": "call_b7QJ0toYJ1f7FdtBQ3S2YDSH",
             "name": "get_time",
             "result": "7:00 AM GMT"
           }
@@ -88,7 +98,8 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null
               },
               {
                 "name": "get_time",
@@ -117,7 +128,8 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null
               }
             ],
             "native_tools": [],
@@ -141,17 +153,17 @@
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 206.0,
-      "outputTokenCount": 14.0
+      "inputTokenCount": 202.0,
+      "outputTokenCount": 15.0
     },
     {
-      "uuid": "43617937f0f6af73",
+      "uuid": "179ebdc3de62d2c1",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "ffba9fa9e11b74ac",
-      "startTime": "2026-06-01T16:36:31.756Z",
-      "endTime": "2026-06-01T16:36:32.829Z",
+      "parentUuid": "1c4df98867c6beff",
+      "startTime": "2026-07-12T14:34:12.934Z",
+      "endTime": "2026-07-12T14:34:14.396Z",
       "input": [
         {
           "role": "system",
@@ -192,7 +204,8 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null
               },
               {
                 "name": "get_time",
@@ -221,7 +234,8 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null
               }
             ],
             "native_tools": [],
@@ -241,7 +255,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_K1PefOjslkFyiA1r3ErrSr03",
+            "id": "call_b7QJ0toYJ1f7FdtBQ3S2YDSH",
             "name": "get_time",
             "arguments": "{\"city\":\"London\"}"
           }
@@ -250,20 +264,20 @@
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 179.0,
-      "outputTokenCount": 14.0
+      "inputTokenCount": 177.0,
+      "outputTokenCount": 15.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "c2e3bfd592acafbb",
+      "uuid": "49d41f76dc8c75c5",
       "name": "get_time",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "ffba9fa9e11b74ac",
-      "startTime": "2026-06-01T16:36:32.831Z",
-      "endTime": "2026-06-01T16:36:32.832Z",
+      "parentUuid": "1c4df98867c6beff",
+      "startTime": "2026-07-12T14:34:14.399Z",
+      "endTime": "2026-07-12T14:34:14.399Z",
       "input": {
         "city": "London"
       },
@@ -271,8 +285,8 @@
       "integration": "PydanticAI"
     }
   ],
-  "startTime": "2026-06-01T16:36:31.754Z",
-  "endTime": "2026-06-01T16:36:33.940Z",
+  "startTime": "2026-07-12T14:34:12.928Z",
+  "endTime": "2026-07-12T14:34:15.566Z",
   "name": "pydanticai-multiple-tools-time",
   "metadata": {
     "test_type": "multiple_tools_time"

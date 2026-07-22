@@ -47,7 +47,8 @@
           "output": "Calculated metrics for: deterministic_test_input",
           "inputParameters": {
             "query": "deterministic_test_input"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "availableTools": [],

@@ -21,7 +21,8 @@
           "output": "Cloudy, 68°F",
           "inputParameters": {
             "city": "Tokyo"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "availableTools": [

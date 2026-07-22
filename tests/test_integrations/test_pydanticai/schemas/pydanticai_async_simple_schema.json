@@ -1,21 +1,21 @@
 {
-  "uuid": "c03ddd0aec18870c2143e4f9a1e96e35",
+  "uuid": "88b044f4c5d99c0f7a292931093a2f37",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "c4cc1004cad832d3",
+      "uuid": "743a9c12d066542d",
       "name": "simple_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:35:58.939Z",
-      "endTime": "2026-06-01T16:36:00.259Z",
+      "startTime": "2026-07-12T14:34:31.307Z",
+      "endTime": "2026-07-12T14:34:32.598Z",
       "input": [
         {
           "role": "user",
           "content": "Say goodbye in exactly three words."
         }
       ],
-      "output": "Farewell and take care.",
+      "output": "Farewell, take care.",
       "integration": "PydanticAI",
       "availableTools": [],
       "agentHandoffs": []
@@ -23,13 +23,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "f8a2a4d353d31ed9",
+      "uuid": "c7dfbdf43c97ebdf",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "c4cc1004cad832d3",
-      "startTime": "2026-06-01T16:35:58.940Z",
-      "endTime": "2026-06-01T16:36:00.256Z",
+      "parentUuid": "743a9c12d066542d",
+      "startTime": "2026-07-12T14:34:31.309Z",
+      "endTime": "2026-07-12T14:34:32.596Z",
       "input": [
         {
           "role": "system",
@@ -58,20 +58,20 @@
       "output": [
         {
           "role": "assistant",
-          "content": "Farewell and take care."
+          "content": "Farewell, take care."
         }
       ],
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
       "inputTokenCount": 28.0,
-      "outputTokenCount": 6.0
+      "outputTokenCount": 7.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-06-01T16:35:58.939Z",
-  "endTime": "2026-06-01T16:36:00.259Z",
+  "startTime": "2026-07-12T14:34:31.307Z",
+  "endTime": "2026-07-12T14:34:32.598Z",
   "name": "pydanticai-async-simple-test",
   "metadata": {
     "test_type": "async_simple"
@@ -90,6 +90,6 @@
       "content": "Say goodbye in exactly three words."
     }
   ],
-  "output": "Farewell and take care.",
+  "output": "Farewell, take care.",
   "status": "SUCCESS"
 }

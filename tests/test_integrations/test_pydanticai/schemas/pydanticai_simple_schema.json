@@ -1,21 +1,21 @@
 {
-  "uuid": "3bcec29abee58b2ebd2d12c8df0e1df0",
+  "uuid": "7442cca3c5b20ff5d872dc9432697990",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "8153b6980b2e8515",
+      "uuid": "e20c6236af25ec16",
       "name": "simple_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:25.596Z",
-      "endTime": "2026-06-01T16:36:26.582Z",
+      "startTime": "2026-07-12T14:33:56.966Z",
+      "endTime": "2026-07-12T14:33:58.733Z",
       "input": [
         {
           "role": "user",
           "content": "Say hello in exactly three words."
         }
       ],
-      "output": "Hello there, friend!",
+      "output": "Hello, how are you?",
       "integration": "PydanticAI",
       "availableTools": [],
       "agentHandoffs": []
@@ -23,13 +23,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "2d7a3f5d57dea4b4",
+      "uuid": "32cb744b2617db1a",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "8153b6980b2e8515",
-      "startTime": "2026-06-01T16:36:25.600Z",
-      "endTime": "2026-06-01T16:36:26.580Z",
+      "parentUuid": "e20c6236af25ec16",
+      "startTime": "2026-07-12T14:33:56.967Z",
+      "endTime": "2026-07-12T14:33:58.731Z",
       "input": [
         {
           "role": "system",
@@ -58,20 +58,20 @@
       "output": [
         {
           "role": "assistant",
-          "content": "Hello there, friend!"
+          "content": "Hello, how are you?"
         }
       ],
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
       "inputTokenCount": 28.0,
-      "outputTokenCount": 5.0
+      "outputTokenCount": 7.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-06-01T16:36:25.596Z",
-  "endTime": "2026-06-01T16:36:26.582Z",
+  "startTime": "2026-07-12T14:33:56.966Z",
+  "endTime": "2026-07-12T14:33:58.733Z",
   "name": "pydanticai-simple-test",
   "metadata": {
     "test_type": "simple"
@@ -89,6 +89,6 @@
       "content": "Say hello in exactly three words."
     }
   ],
-  "output": "Hello there, friend!",
+  "output": "Hello, how are you?",
   "status": "SUCCESS"
 }

@@ -56,7 +56,6 @@ def create_isolation_agent(
             "You are an assistant. When the user asks for data with a "
             "specific key, call the get_data tool with that key. Be concise."
         ),
-        instrument=settings,
         name="isolation_agent",
     )
 

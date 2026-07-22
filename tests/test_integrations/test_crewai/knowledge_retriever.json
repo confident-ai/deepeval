@@ -33,7 +33,8 @@
           "output": "Additional Information: Users name is John. He is 30 years old and lives in San Francisco.\nThe secret launch code is ALPHA-ZULU-99.",
           "inputParameters": {
             "output": "Retrieve information about John, specifically his city of residence and age."
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "availableTools": [],
