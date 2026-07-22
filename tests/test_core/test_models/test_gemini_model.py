@@ -248,6 +248,44 @@ def test_gemini_generate_computes_cost_from_tokens_and_registry_prices(
 
 
 @patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_generate_folds_thinking_tokens_into_output_cost(
+    mock_require_dep, settings
+):
+    """
+    Gemini 2.5/3.x thinking models report reasoning tokens in a separate
+    ``thoughts_token_count`` field (``total_token_count`` = prompt + candidates
+    + thoughts), and Google bills them at the output rate. They must be folded
+    into ``output_tokens`` so the reported output count and the derived cost
+    reflect what was billed. Counting only ``candidates_token_count`` (the
+    pre-fix behavior) undercounts every thinking-model call.
+    """
+    fake_response = SimpleNamespace(
+        text="Hello world",
+        usage_metadata=SimpleNamespace(
+            prompt_token_count=1000,
+            candidates_token_count=500,
+            thoughts_token_count=300,
+        ),
+    )
+
+    model = _build_gemini_model_with_fake_client(
+        mock_require_dep, settings, fake_response, model_name="gemini-2.5-flash"
+    )
+
+    output, cost = model.generate("test prompt")
+
+    registry = GEMINI_MODELS_DATA.get("gemini-2.5-flash")
+    # output billed = candidates (500) + thoughts (300)
+    expected = 1000 * registry.input_price + 800 * registry.output_price
+
+    assert output == "Hello world"
+    assert isinstance(cost, EvaluationCost)
+    assert cost.output_tokens == 800
+    assert cost.input_tokens == 1000
+    assert cost == expected
+
+
+@patch("deepeval.models.llms.gemini_model.require_dependency")
 def test_gemini_generate_returns_unknown_cost_when_usage_metadata_missing(
     mock_require_dep, settings
 ):
