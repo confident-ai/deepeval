@@ -27,7 +27,7 @@ Two layers live here:
 
 import inspect
 import warnings
-from typing import Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel, SecretStr
@@ -359,6 +359,35 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
         return content
 
     @staticmethod
+    def _set_additional_properties_false(node: Any) -> Any:
+        """Force `additionalProperties: false` on every object node.
+
+        The response_format is always sent with `strict: true`, and strict mode
+        requires `additionalProperties: false` on *every* object in the schema.
+        Nested pydantic models are emitted under `$defs`, so this must recurse.
+
+        The flag is OVERWRITTEN, not defaulted: a schema that explicitly sets
+        `additionalProperties: true` (e.g. a pydantic model with
+        `extra="allow"`) is rejected under strict mode — the provider requires
+        the value to be false, not merely present. `extra="allow"` cannot be
+        honored in strict structured output, so we force the schema closed to
+        keep it valid rather than emit a request the provider will 400.
+        """
+        if isinstance(node, dict):
+            if node.get("type") == "object":
+                node["additionalProperties"] = False
+            for value in node.values():
+                DeepEvalOpenAICompatibleModel._set_additional_properties_false(
+                    value
+                )
+        elif isinstance(node, list):
+            for value in node:
+                DeepEvalOpenAICompatibleModel._set_additional_properties_false(
+                    value
+                )
+        return node
+
+    @staticmethod
     def _schema_response_format(
         schema: Union[Type[BaseModel], BaseModel],
     ) -> Dict:
@@ -368,8 +397,11 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
             if inspect.isclass(schema)
             else schema.__class__.__name__
         )
-        # `strict: true` requires additionalProperties to be set at the root.
-        json_schema.setdefault("additionalProperties", False)
+        json_schema = (
+            DeepEvalOpenAICompatibleModel._set_additional_properties_false(
+                json_schema
+            )
+        )
         return {
             "type": "json_schema",
             "json_schema": {
