@@ -61,6 +61,7 @@ export enum Endpoints {
   DATASET_ALIAS_ENDPOINT = "/v1/datasets/:alias",
   DATASET_ALIAS_QUEUE_ENDPOINT = "/v1/datasets/:alias/queue",
   DATASET_ALIAS_VERSIONS_ENDPOINT = "/v1/datasets/:alias/versions",
+  DATASET_ALIAS_GOLDEN_ENDPOINT = "/v1/datasets/:alias/goldens/:goldenId",
   TEST_RUN_ENDPOINT = "/v1/test-run",
   TRACING_ENDPOINT = "/v1/tracing",
   TRACES_ENDPOINT = "/v1/traces",

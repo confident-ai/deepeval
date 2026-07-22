@@ -1,6 +1,7 @@
 import { ToolCall, Turn } from "../test-case";
 
 export class Golden {
+  id?: string;
   input: string;
   actualOutput?: string;
   expectedOutput?: string;
@@ -17,6 +18,7 @@ export class Golden {
   _datasetId?: string;
 
   constructor(params: {
+    id?: string;
     input: string;
     actualOutput?: string;
     expectedOutput?: string;
@@ -32,6 +34,7 @@ export class Golden {
     _datasetAlias?: string;
     _datasetId?: string;
   }) {
+    this.id = params.id;
     this.input = params.input;
     this.actualOutput = params.actualOutput;
     this.expectedOutput = params.expectedOutput;
@@ -50,6 +53,7 @@ export class Golden {
 }
 
 export class ConversationalGolden {
+  id?: string;
   scenario: string;
   expectedOutcome?: string;
   userDescription?: string;
@@ -64,6 +68,7 @@ export class ConversationalGolden {
   _datasetId?: string;
 
   constructor(params: {
+    id?: string;
     scenario: string;
     expectedOutcome?: string;
     userDescription?: string;
@@ -77,6 +82,7 @@ export class ConversationalGolden {
     _datasetAlias?: string;
     _datasetId?: string;
   }) {
+    this.id = params.id;
     this.scenario = params.scenario;
     this.expectedOutcome = params.expectedOutcome;
     this.userDescription = params.userDescription;

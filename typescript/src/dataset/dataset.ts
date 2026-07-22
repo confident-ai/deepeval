@@ -248,6 +248,7 @@ export class EvaluationDataset {
         ? datasetData.goldens.map(
             (goldenData: any) =>
               new Golden({
+                id: goldenData.id,
                 input: goldenData.input,
                 actualOutput: goldenData.actualOutput,
                 expectedOutput: goldenData.expectedOutput,
@@ -265,6 +266,7 @@ export class EvaluationDataset {
         ? datasetData.conversationalGoldens.map(
             (goldenData: any) =>
               new ConversationalGolden({
+                id: goldenData.id,
                 scenario: goldenData.scenario,
                 expectedOutcome: goldenData.expectedOutcome,
                 userDescription: goldenData.userDescription,
@@ -346,6 +348,7 @@ export class EvaluationDataset {
       apiDataset.version = version;
     }
     const body = stripPrivateFields(JSON.parse(JSON.stringify(apiDataset)));
+    this.stripGoldenIds(body);
     console.log(`Pushing '${alias}' to Confident AI...`);
     const result = await api.sendRequest(
       HttpMethods.POST,
@@ -434,6 +437,7 @@ export class EvaluationDataset {
       conversationalGoldens: isMultiTurn ? goldens : undefined,
     };
     const body = stripPrivateFields(apiDataset);
+    this.stripGoldenIds(body);
 
     console.log(
       `Queueing ${goldens.length} golden(s) to '${alias}' on Confident AI...`,
@@ -469,6 +473,94 @@ export class EvaluationDataset {
       projectId,
     );
     console.log("✅ Dataset successfully deleted from Confident AI!");
+  }
+
+  ////////////////////////////////////////////////////////
+  // Golden Mutation Methods
+  ////////////////////////////////////////////////////////
+
+  private stripGoldenIds(body: any): void {
+    for (const key of ["goldens", "conversationalGoldens"]) {
+      const goldens = body?.[key];
+      if (Array.isArray(goldens)) {
+        for (const golden of goldens) {
+          if (golden && typeof golden === "object") delete golden.id;
+        }
+      }
+    }
+  }
+
+  async updateGolden(params: {
+    golden: GoldenUnion;
+    alias?: string;
+    finalized?: boolean;
+    projectId?: string;
+  }): Promise<void> {
+    const { golden, alias, finalized = true, projectId } = params;
+    const resolvedAlias = alias ?? this._alias;
+    if (!resolvedAlias) {
+      throw new Error(
+        "No dataset alias available. Pull a dataset first, or pass `alias` explicitly.",
+      );
+    }
+    if (!golden.id) {
+      throw new Error(
+        "Cannot update a golden without an id. Pull the dataset first so its goldens carry the id assigned by Confident AI.",
+      );
+    }
+    const isConversational = golden instanceof ConversationalGolden;
+    if (this._multiTurn !== null && isConversational !== this._multiTurn) {
+      throw new Error(
+        this._multiTurn
+          ? "Cannot update a single-turn golden in a multi-turn dataset."
+          : "Cannot update a multi-turn golden in a single-turn dataset.",
+      );
+    }
+    const api = new Api();
+    const body = stripPrivateFields(JSON.parse(JSON.stringify(golden)));
+    delete body.id;
+    body.finalized = finalized;
+    await api.sendRequest(
+      HttpMethods.PUT,
+      Endpoints.DATASET_ALIAS_GOLDEN_ENDPOINT,
+      body,
+      undefined,
+      undefined,
+      { alias: resolvedAlias, goldenId: golden.id },
+      projectId,
+    );
+    console.log("✅ Golden successfully updated on Confident AI!");
+  }
+
+  async deleteGolden(params: {
+    golden: GoldenUnion | string;
+    alias?: string;
+    projectId?: string;
+  }): Promise<void> {
+    const { golden, alias, projectId } = params;
+    const resolvedAlias = alias ?? this._alias;
+    if (!resolvedAlias) {
+      throw new Error(
+        "No dataset alias available. Pull a dataset first, or pass `alias` explicitly.",
+      );
+    }
+    const goldenId = typeof golden === "string" ? golden : golden.id;
+    if (!goldenId) {
+      throw new Error(
+        "Cannot delete a golden without an id. Pull the dataset first so its goldens carry the id assigned by Confident AI, or pass the golden id directly.",
+      );
+    }
+    const api = new Api();
+    await api.sendRequest(
+      HttpMethods.DELETE,
+      Endpoints.DATASET_ALIAS_GOLDEN_ENDPOINT,
+      undefined,
+      undefined,
+      undefined,
+      { alias: resolvedAlias, goldenId },
+      projectId,
+    );
+    console.log("✅ Golden successfully deleted from Confident AI!");
   }
 
   async addTestCasesFromCSV({
