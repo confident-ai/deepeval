@@ -804,52 +804,57 @@ def a_execute_agentic_test_cases_from_loop(
                 )
             finally:
 
-                # if it is already closed, we are done
-                if loop.is_closed():
-                    return
-
-                try:
-                    current_tasks = set()
-                    # Find tasks that were created during this run but we didn’t track
-                    current_tasks = loop.run_until_complete(_snapshot_tasks())
-                except RuntimeError:
-                    # this might happen if the loop is already closing
-                    pass
-
-                leftovers = [
-                    t
-                    for t in current_tasks
-                    if t not in baseline_tasks
-                    and t not in created_tasks
-                    and not t.done()
-                ]
-
-                if get_settings().DEEPEVAL_DEBUG_ASYNC:
-                    if len(leftovers) > 0:
-                        logger.warning(
-                            "[deepeval] %d stray task(s) not tracked; cancelling...",
-                            len(leftovers),
-                        )
-                    for t in leftovers:
-                        meta = task_meta.get(t, {})
-                        name = t.get_name()
-                        logger.warning("  - STRAY %s meta=%s", name, meta)
-
-                if leftovers:
-                    for t in leftovers:
-                        t.cancel()
-
-                    # Drain strays so they don’t leak into the next iteration
+                # If the loop is already closed there is nothing left to clean
+                # up. Skip the cleanup rather than `return`-ing: a return inside
+                # a finally block silently suppresses any exception propagating
+                # out of the try.
+                if not loop.is_closed():
                     try:
-                        loop.run_until_complete(
-                            asyncio.gather(*leftovers, return_exceptions=True)
+                        current_tasks = set()
+                        # Find tasks that were created during this run but we didn’t track
+                        current_tasks = loop.run_until_complete(
+                            _snapshot_tasks()
                         )
                     except RuntimeError:
-                        # If the loop is closing here, just continue
-                        if get_settings().DEEPEVAL_DEBUG_ASYNC:
+                        # this might happen if the loop is already closing
+                        pass
+
+                    leftovers = [
+                        t
+                        for t in current_tasks
+                        if t not in baseline_tasks
+                        and t not in created_tasks
+                        and not t.done()
+                    ]
+
+                    if get_settings().DEEPEVAL_DEBUG_ASYNC:
+                        if len(leftovers) > 0:
                             logger.warning(
-                                "[deepeval] failed to drain stray tasks because loop is closing"
+                                "[deepeval] %d stray task(s) not tracked; cancelling...",
+                                len(leftovers),
                             )
+                        for t in leftovers:
+                            meta = task_meta.get(t, {})
+                            name = t.get_name()
+                            logger.warning("  - STRAY %s meta=%s", name, meta)
+
+                    if leftovers:
+                        for t in leftovers:
+                            t.cancel()
+
+                        # Drain strays so they don’t leak into the next iteration
+                        try:
+                            loop.run_until_complete(
+                                asyncio.gather(
+                                    *leftovers, return_exceptions=True
+                                )
+                            )
+                        except RuntimeError:
+                            # If the loop is closing here, just continue
+                            if get_settings().DEEPEVAL_DEBUG_ASYNC:
+                                logger.warning(
+                                    "[deepeval] failed to drain stray tasks because loop is closing"
+                                )
 
         # Pre-evaluation guard: refuse a run that has no metric source.
         # Lazy check is the only correct option because span-level metrics
