@@ -362,6 +362,19 @@ def check_llm_test_case_params(
             metric.error = error_str
             raise MissingTestCaseParamsError(error_str)
 
+    for param in test_case_params:
+        value = getattr(test_case, param.value)
+        if (
+            isinstance(value, list)
+            and len(value) > 0
+            and all(
+                isinstance(item, str) and not item.strip() for item in value
+            )
+        ):
+            error_str = f"'{param.value}' cannot contain only empty strings for the '{metric.__name__}' metric"
+            metric.error = error_str
+            raise MissingTestCaseParamsError(error_str)
+
     missing_params = []
     for param in test_case_params:
         if getattr(test_case, param.value) is None:
