@@ -36,8 +36,10 @@ class Scorer:
         """
         try:
             from rouge_score import rouge_scorer
-        except:
-            pass
+        except ModuleNotFoundError as e:
+            raise ModuleNotFoundError(
+                "Please install rouge-score. Command: pip install rouge-score"
+            ) from e
 
         assert score_type in [
             "rouge1",
@@ -72,7 +74,9 @@ class Scorer:
             from nltk.tokenize import word_tokenize
             from nltk.translate.bleu_score import sentence_bleu
         except ModuleNotFoundError as e:
-            print("Please install nltk module. Command: pip install nltk")
+            raise ModuleNotFoundError(
+                "Please install nltk module. Command: pip install nltk"
+            ) from e
 
         assert bleu_type in [
             "bleu1",
