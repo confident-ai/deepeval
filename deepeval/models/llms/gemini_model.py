@@ -352,6 +352,13 @@ class GeminiModel(DeepEvalBaseLLM):
         usage = getattr(response, "usage_metadata", None)
         input_tokens = getattr(usage, "prompt_token_count", None)
         output_tokens = getattr(usage, "candidates_token_count", None)
+        if output_tokens is not None:
+            # Gemini 2.5/3.x thinking models report reasoning tokens separately
+            # in thoughts_token_count (total_token_count = prompt + candidates +
+            # thoughts), and Google bills them at the output rate. Fold them into
+            # output_tokens so cost is not undercounted, matching the OpenAI
+            # adapter whose completion_tokens already includes reasoning tokens.
+            output_tokens += getattr(usage, "thoughts_token_count", 0) or 0
         if input_tokens is not None and output_tokens is not None:
             cost = self.calculate_cost(input_tokens, output_tokens)
             if cost is not None:
