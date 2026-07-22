@@ -216,8 +216,10 @@ assertions are commonly defined in YAML.
 
 Promptfoo is particularly strong for security testing. It can generate and run
 adversarial cases for prompt injection, jailbreaks, PII leakage, excessive
-agency, harmful content, and unsafe tool use. It joined OpenAI in 2026 and
-remains open source.
+agency, harmful content, and unsafe tool use. OpenAI agreed to acquire Promptfoo
+in 2026 and plans to integrate its technology into OpenAI Frontier. The project
+remains open source under the MIT license, but its roadmap is now less
+vendor-neutral for teams evaluating multiple model providers.
 
 Its declarative approach works well when teams want to compare a matrix of
 prompts and models without writing a Python test harness. The trade-off is that
@@ -257,6 +259,8 @@ large or deeply customized evaluation workflows can become configuration-heavy.
 - You need scenario-driven conversation simulation
 - You want local metric failures attached directly to component-level AI agent
   traces
+- You want an independently governed roadmap rather than one increasingly tied
+  to OpenAI Frontier
 
 ## 3. Ragas
 
@@ -371,8 +375,10 @@ observability rather than a broad standalone metric library.
 ### What is TruLens and why should AI teams consider it?
 
 [TruLens](https://github.com/truera/trulens) is an open-source Python library
-for instrumenting, evaluating, and comparing LLM applications. It is
-shepherded by Snowflake following Snowflake's acquisition of TruEra.
+for instrumenting, evaluating, and comparing LLM applications. Snowflake now
+oversees the project following its acquisition of TruEra. TruLens remains open
+source, but its managed roadmap is increasingly centered on Snowflake, making
+it less compelling for teams standardized on another data platform.
 
 TruLens first became popular for RAG feedback functions such as groundedness,
 context relevance, and answer relevance. It now has a stronger AI agent focus,
@@ -417,7 +423,7 @@ data and observability.
   and Codex
 - You want extensive native integrations across AI agent frameworks, model
   providers, and vector databases
-- You are not using Snowflake and do not need its platform path
+- You want a vendor-neutral managed path or are not using Snowflake
 
 ## Which LLM evaluation framework should you choose?
 
