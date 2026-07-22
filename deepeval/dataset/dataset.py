@@ -1497,6 +1497,9 @@ class EvaluationDataset:
                             "expected_output": golden.expected_output,
                             "retrieval_context": retrieval_context,
                             "context": context,
+                            "name": golden.name,
+                            "comments": golden.comments,
+                            "source_file": golden.source_file,
                             "tools_called": _dump_tools(golden.tools_called),
                             "expected_tools": _dump_tools(
                                 golden.expected_tools
