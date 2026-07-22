@@ -83,21 +83,25 @@ class EvaluationDataset:
     _id: Union[str, None] = field(default=None)
     _version: Union[str, None] = field(default=None)
 
-    _goldens: List[Golden] = field(default_factory=[], repr=None)
+    _goldens: List[Golden] = field(default_factory=list, repr=None)
     _conversational_goldens: List[ConversationalGolden] = field(
-        default_factory=[], repr=None
+        default_factory=list, repr=None
     )
 
-    _llm_test_cases: List[LLMTestCase] = field(default_factory=[], repr=None)
+    _llm_test_cases: List[LLMTestCase] = field(default_factory=list, repr=None)
     _conversational_test_cases: List[ConversationalTestCase] = field(
-        default_factory=[], repr=None
+        default_factory=list, repr=None
     )
 
     def __init__(
         self,
-        goldens: Union[List[Golden], List[ConversationalGolden]] = [],
+        goldens: Optional[
+            Union[List[Golden], List[ConversationalGolden]]
+        ] = None,
         confident_api_key: Optional[str] = None,
     ):
+        if goldens is None:
+            goldens = []
         self._alias = None
         self._id = None
         self._version = None
@@ -563,7 +567,7 @@ class EvaluationDataset:
                         for tool in trimAndLoadJson(tools_called_str)
                     ]
                     tools_called.append(parsed_tools)
-                except ValueError or json.JSONDecodeError:
+                except (ValueError, json.JSONDecodeError):
                     # Fallback to simple split on delimiter
                     tools_called.append(
                         tools_called_str.split(tools_called_col_delimiter)
@@ -583,7 +587,7 @@ class EvaluationDataset:
                         for tool in trimAndLoadJson(expected_tools_str)
                     ]
                     expected_tools.append(parsed_tools)
-                except ValueError or json.JSONDecodeError:
+                except (ValueError, json.JSONDecodeError):
                     # Fallback to simple split on delimiter
                     expected_tools.append(
                         expected_tools_str.split(expected_tools_col_delimiter)
