@@ -360,16 +360,22 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
 
     @staticmethod
     def _set_additional_properties_false(node: Any) -> Any:
-        """Recursively set `additionalProperties: false` on every object node.
+        """Force `additionalProperties: false` on every object node.
 
-        `strict: true` requires the flag on *every* object in the schema, not
-        just the root. Nested pydantic models are emitted under `$defs`, so
-        setting it only at the root makes the provider reject the request with
-        a 400.
+        The response_format is always sent with `strict: true`, and strict mode
+        requires `additionalProperties: false` on *every* object in the schema.
+        Nested pydantic models are emitted under `$defs`, so this must recurse.
+
+        The flag is OVERWRITTEN, not defaulted: a schema that explicitly sets
+        `additionalProperties: true` (e.g. a pydantic model with
+        `extra="allow"`) is rejected under strict mode — the provider requires
+        the value to be false, not merely present. `extra="allow"` cannot be
+        honored in strict structured output, so we force the schema closed to
+        keep it valid rather than emit a request the provider will 400.
         """
         if isinstance(node, dict):
             if node.get("type") == "object":
-                node.setdefault("additionalProperties", False)
+                node["additionalProperties"] = False
             for value in node.values():
                 DeepEvalOpenAICompatibleModel._set_additional_properties_false(
                     value

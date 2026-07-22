@@ -463,14 +463,20 @@ class TestGatewaySchemaResponseFormat:
         assert schema["additionalProperties"] is False
         assert schema["properties"]["outer"]["additionalProperties"] is False
 
-    def test_existing_additional_properties_is_not_overwritten(self):
+    def test_permissive_schema_is_forced_closed(self):
+        # A permissive schema (extra="allow" -> additionalProperties: true)
+        # cannot be honored under strict mode: the provider requires the flag
+        # to be false, not merely present, so preserving `true` would 400.
+        # The helper must overwrite it to false.
         class Permissive(BaseModel):
             model_config = {"extra": "allow"}
 
             name: str
 
+        assert Permissive.model_json_schema()["additionalProperties"] is True
+
         schema = OpenRouterModel._schema_response_format(Permissive)[
             "json_schema"
         ]["schema"]
 
-        assert schema["additionalProperties"] is True
+        assert schema["additionalProperties"] is False
