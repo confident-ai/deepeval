@@ -1,6 +1,10 @@
 export { evaluate, type EvaluateOptions } from "./evaluate";
 export { compare, type CompareOptions } from "./compare";
 export {
+  sendTestCaseResponse,
+  type SendTestCaseResponseParams,
+} from "./confident";
+export {
   type TestResult,
   type MetricData,
   type EvaluationResult,

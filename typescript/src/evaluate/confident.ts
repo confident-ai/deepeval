@@ -14,6 +14,7 @@ import {
   EvaluatedCase,
   ArenaCaseResult,
   ContestantRun,
+  SendTestCaseResponseBodySchema,
 } from "./types";
 
 // --- shared leaf conversions (zod parse validates + strips extra fields) ---
@@ -289,4 +290,43 @@ export async function postExperiment(
     );
     return { link: null };
   }
+}
+
+export interface SendTestCaseResponseParams {
+  testCaseId: string;
+  actualOutput?: string;
+  retrievalContext?: string[];
+  toolsCalled?: ToolCall[];
+  expectedTools?: ToolCall[];
+  metadata?: Record<string, any>;
+  projectId?: string;
+}
+
+export async function sendTestCaseResponse({
+  testCaseId,
+  actualOutput,
+  retrievalContext,
+  toolsCalled,
+  expectedTools,
+  metadata,
+  projectId,
+}: SendTestCaseResponseParams): Promise<any> {
+  const body = SendTestCaseResponseBodySchema.parse({
+    actualOutput,
+    retrievalContext,
+    toolsCalled,
+    expectedTools,
+    metadata,
+  });
+
+  const api = new Api();
+  return api.sendRequest(
+    HttpMethods.POST,
+    Endpoints.EVALUATE_TEST_CASE_ENDPOINT,
+    body,
+    undefined,
+    undefined,
+    { testCaseId },
+    projectId,
+  );
 }

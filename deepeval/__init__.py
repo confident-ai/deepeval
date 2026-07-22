@@ -17,13 +17,14 @@ def _expose_public_api() -> None:
     # Do not do this at module level or ruff will complain with E402
     global __version__, evaluate, assert_test, compare
     global on_test_run_end, log_hyperparameters, login, telemetry
-    global instrument
+    global instrument, send_test_case_response
 
     from ._version import __version__ as _version
     import deepeval.evaluate as _evaluate_module
     from deepeval.evaluate import (
         evaluate as _evaluate,
         assert_test as _assert_test,
+        send_test_case_response as _send_test_case_response,
     )
     from deepeval.evaluate.compare import compare as _compare
     from deepeval.test_run import (
@@ -43,6 +44,7 @@ def _expose_public_api() -> None:
     evaluate.configs = _evaluate_module.configs
     assert_test = _assert_test
     compare = _compare
+    send_test_case_response = _send_test_case_response
     on_test_run_end = _on_end
     log_hyperparameters = _log_hparams
     login = _login
@@ -93,6 +95,7 @@ __all__ = [
     "assert_test",
     "on_test_run_end",
     "compare",
+    "send_test_case_response",
     "instrument",
 ]
 

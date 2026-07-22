@@ -26,6 +26,8 @@ export {
 export {
   evaluate,
   compare,
+  sendTestCaseResponse,
+  type SendTestCaseResponseParams,
   type EvaluationResult,
   type TestResult,
   type EvaluateOptions,
