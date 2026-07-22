@@ -2,6 +2,7 @@ import asyncio
 import pytest
 import os
 
+from contextlib import contextmanager
 from typing import List
 
 from deepeval.synthesizer.synthesizer import Synthesizer
@@ -477,3 +478,133 @@ async def test_a_generate_conversational_goldens_from_contexts_no_deadlock_when_
         ),
         timeout=0.5,
     )
+
+
+class _CmDummyProgress(DummyProgress):
+    """DummyProgress that also supports the context-manager protocol, needed
+    for the top-level ``with synthesizer_progress_context(...) as (progress,
+    pbar_id), progress:`` double-with pattern in generate/a_generate_goldens_from_docs.
+    """
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc_info):
+        return False
+
+
+@contextmanager
+def _stub_progress_context_with_cm(**kwargs):
+    yield _CmDummyProgress(), None
+
+
+def test_generate_goldens_from_docs_accrues_context_generation_cost(
+    monkeypatch,
+):
+    """Regression: synthesis_cost starts at 0 (not None) for native models, and
+    ``if self.synthesis_cost:`` treats that initial 0 as falsy, so the very
+    first cost accrual from context generation was silently dropped. Assert
+    the accrued cost survives instead of staying at 0.
+    """
+    s = Synthesizer.__new__(Synthesizer)
+    s.async_mode = False
+    s.max_concurrent = 1
+    s.model = DummyModel()
+    s.evolution_config = DummyEvolutionConfig()
+    s.synthetic_goldens = []
+    s.cost_tracking = False
+    s.using_native_model = True  # triggers synthesis_cost = 0 (not None) below
+
+    # ContextConstructionConfig eagerly resolves a default critic model/embedder
+    # in __post_init__; a fake key satisfies that construction-time check. No
+    # real network call happens: ContextGenerator and golden generation are
+    # both mocked out below.
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test-fake-key-not-real")
+
+    monkeypatch.setattr(
+        synth_mod,
+        "synthesizer_progress_context",
+        _stub_progress_context_with_cm,
+    )
+
+    class FakeContextGenerator:
+        def __init__(self, **kwargs):
+            self.total_cost = 2.5
+            self.total_chunks = 1
+            self.pbar_generate_contexts_id = None
+            self.pbar_chunk_docs_id = None
+            self.pbar_load_docs_id = None
+
+        def generate_contexts(self, **kwargs):
+            return [["chunk1"]], ["doc.txt"], [1.0]
+
+    monkeypatch.setattr(synth_mod, "ContextGenerator", FakeContextGenerator)
+    monkeypatch.setattr(
+        s,
+        "generate_goldens_from_contexts",
+        lambda **kwargs: [Golden(input="q")],
+    )
+
+    s.generate_goldens_from_docs(
+        document_paths=["fake.txt"],
+        context_construction_config=ContextConstructionConfig(
+            allow_cross_file_contexts=False
+        ),
+        _send_data=False,
+    )
+
+    assert s.synthesis_cost == 2.5
+
+
+@pytest.mark.asyncio
+async def test_a_generate_goldens_from_docs_accrues_context_generation_cost(
+    monkeypatch,
+):
+    """Async counterpart of test_generate_goldens_from_docs_accrues_context_generation_cost."""
+    s = Synthesizer.__new__(Synthesizer)
+    s.async_mode = True
+    s.max_concurrent = 1
+    s.model = DummyModel()
+    s.evolution_config = DummyEvolutionConfig()
+    s.synthetic_goldens = []
+    s.cost_tracking = False
+    s.using_native_model = True
+
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test-fake-key-not-real")
+
+    monkeypatch.setattr(
+        synth_mod,
+        "synthesizer_progress_context",
+        _stub_progress_context_with_cm,
+    )
+
+    class FakeContextGenerator:
+        def __init__(self, **kwargs):
+            self.total_cost = 3.5
+            self.total_chunks = 1
+            self.pbar_generate_contexts_id = None
+            self.pbar_chunk_docs_id = None
+            self.pbar_load_docs_id = None
+
+        async def a_generate_contexts(self, **kwargs):
+            return [["chunk1"]], ["doc.txt"], [1.0]
+
+    monkeypatch.setattr(synth_mod, "ContextGenerator", FakeContextGenerator)
+
+    async def fake_a_generate_goldens_from_contexts(**kwargs):
+        return [Golden(input="q")]
+
+    monkeypatch.setattr(
+        s,
+        "a_generate_goldens_from_contexts",
+        fake_a_generate_goldens_from_contexts,
+    )
+
+    await s.a_generate_goldens_from_docs(
+        document_paths=["fake.txt"],
+        context_construction_config=ContextConstructionConfig(
+            allow_cross_file_contexts=False
+        ),
+    )
+
+    assert s.synthesis_cost == 3.5
