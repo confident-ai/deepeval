@@ -136,9 +136,9 @@ evaluate(cache_config=CacheConfig(), ...)
 There are **TWO** optional parameters when creating an `CacheConfig`:
 
 - [Optional] `use_cache`: a boolean which when set to `True`, uses cached test run results instead. Defaulted to `False`.
-- [Optional] `write_cache`: a boolean which when set to `True`, uses writes test run results to **DISK**. Defaulted to `True`.
+- [Optional] `write_cache`: a boolean which when set to `True`, writes DeepEval's hidden local cache and test-run state to **DISK**. Defaulted to `True`.
 
-The `write_cache` parameter writes to disk and so you should disable it if that is causing any errors in your environment.
+Set `write_cache=False` to avoid DeepEval's implicit hidden cache and test-run files. This does not disable explicit exports configured through `DisplayConfig(results_folder=...)`. If your runtime cannot use DeepEval's hidden local state (for example serverless environments with read-only working directories), set `DEEPEVAL_FILE_SYSTEM=READ_ONLY`; explicit exports still require their configured target path to be writable.
 
 ## Flags for `deepeval test run`:
 

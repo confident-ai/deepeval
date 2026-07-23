@@ -14,7 +14,6 @@ from typing import Optional
 import typer
 from rich import print
 
-
 _INSTALL_HINT = (
     "[bold red]deepeval inspect[/bold red] requires extras that are not "
     "installed.\n"
@@ -105,10 +104,18 @@ def _resolve_target(
             return _find_latest(folder_path)
         return None
 
-    from deepeval.test_run.test_run import LATEST_FULL_TEST_RUN_FILE_PATH
+    from deepeval.test_run.test_run import (
+        LATEST_FULL_TEST_RUN_FILE_PATH,
+        _read_latest_file_owner_token,
+    )
+    from deepeval.utils import is_read_only_env
 
     rolling = Path(LATEST_FULL_TEST_RUN_FILE_PATH)
-    if rolling.is_file():
+    if (
+        not is_read_only_env()
+        and rolling.is_file()
+        and _read_latest_file_owner_token(str(rolling)) is not None
+    ):
         return rolling
 
     legacy = Path("experiments")

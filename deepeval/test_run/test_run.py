@@ -1,6 +1,7 @@
 from enum import Enum
 import os
 import json
+import uuid
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import Any, Optional, List, Dict, Union, Tuple
@@ -63,7 +64,75 @@ LATEST_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_test_run.json"
 LATEST_FULL_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_run_full.json"
 LATEST_TEST_RUN_DATA_KEY = "testRunData"
 LATEST_TEST_RUN_LINK_KEY = "testRunLink"
+LATEST_TEST_RUN_OWNER_TOKEN_KEY = "_deepevalOwnerToken"
 console = Console()
+
+
+def _read_latest_file_owner_token(file_path: str) -> Optional[str]:
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            data = json.load(file)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+    if isinstance(data, dict):
+        token = data.get(LATEST_TEST_RUN_OWNER_TOKEN_KEY)
+        if isinstance(token, str):
+            return token
+    return None
+
+
+def _delete_latest_file_if_owned(
+    file_path: str, expected_owner_token: Optional[str]
+):
+    if (
+        expected_owner_token is None
+        or portalocker is None
+        or is_read_only_env()
+    ):
+        return
+
+    try:
+        stat_result = os.lstat(file_path)
+    except FileNotFoundError:
+        return
+    except OSError as e:
+        print(f"An error occurred: {e}")
+        return
+
+    if not os.path.isfile(file_path) or os.path.islink(file_path):
+        return
+
+    try:
+        with portalocker.Lock(file_path, mode="r+") as file:
+            try:
+                data = json.load(file)
+            except json.JSONDecodeError:
+                return
+            if not isinstance(data, dict):
+                return
+            if (
+                data.get(LATEST_TEST_RUN_OWNER_TOKEN_KEY)
+                != expected_owner_token
+            ):
+                return
+            current_stat = os.fstat(file.fileno())
+            if (
+                current_stat.st_dev != stat_result.st_dev
+                or current_stat.st_ino != stat_result.st_ino
+            ):
+                return
+            file.seek(0)
+            json.dump({"_deepevalInvalidated": True}, file)
+            file.truncate()
+            file.flush()
+            os.fsync(file.fileno())
+            try:
+                os.unlink(file_path)
+            except OSError:
+                return
+    except (OSError, portalocker.exceptions.LockException) as e:
+        print(f"An error occurred: {e}")
 
 
 class TestRunResultDisplay(Enum):
@@ -469,6 +538,77 @@ class TestRunManager:
         # Timestamped export if one was written, else rolling snapshot.
         # Consumed by the post-run inspect prompt.
         self.last_saved_path: Optional[Path] = None
+        self._latest_test_run_cache_valid = True
+        self._temp_test_run_cache_valid = True
+        self._latest_test_run_owner_token = uuid.uuid4().hex
+        self._latest_test_run_snapshot_owner_tokens = {}
+
+    def _can_write_local_state(self) -> bool:
+        return portalocker is not None and not is_read_only_env()
+
+    def _can_use_disk(self) -> bool:
+        return self._can_write_local_state() and self.save_to_disk
+
+    def configure_write_cache(self, write_cache: bool):
+        self.save_to_disk = write_cache
+        if write_cache is False:
+            self._latest_test_run_snapshot_owner_tokens = (
+                self._snapshot_latest_test_run_owner_tokens()
+            )
+            self._invalidate_latest_test_run_cache(
+                delete_owned_disk_state=False
+            )
+            self._temp_test_run_cache_valid = False
+        else:
+            self._latest_test_run_snapshot_owner_tokens = {}
+
+    def _snapshot_latest_test_run_owner_tokens(self):
+        if is_read_only_env():
+            return {}
+        return {
+            LATEST_TEST_RUN_FILE_PATH: _read_latest_file_owner_token(
+                LATEST_TEST_RUN_FILE_PATH
+            ),
+            LATEST_FULL_TEST_RUN_FILE_PATH: _read_latest_file_owner_token(
+                LATEST_FULL_TEST_RUN_FILE_PATH
+            ),
+        }
+
+    def _invalidate_latest_test_run_cache(
+        self, delete_owned_disk_state: bool = False
+    ):
+        self._latest_test_run_cache_valid = False
+        if delete_owned_disk_state and self._can_write_local_state():
+            snapshot_tokens = self._latest_test_run_snapshot_owner_tokens
+            _delete_latest_file_if_owned(
+                LATEST_TEST_RUN_FILE_PATH,
+                snapshot_tokens.get(LATEST_TEST_RUN_FILE_PATH),
+            )
+            _delete_latest_file_if_owned(
+                LATEST_FULL_TEST_RUN_FILE_PATH,
+                snapshot_tokens.get(LATEST_FULL_TEST_RUN_FILE_PATH),
+            )
+            self._latest_test_run_snapshot_owner_tokens = {}
+
+    def _write_cache_state(self):
+        return (
+            self.save_to_disk,
+            self._latest_test_run_cache_valid,
+            self._temp_test_run_cache_valid,
+            self._latest_test_run_snapshot_owner_tokens,
+        )
+
+    def _restore_write_cache_state(
+        self, state, preserve_latest_invalidation: bool = False
+    ):
+        (
+            self.save_to_disk,
+            self._latest_test_run_cache_valid,
+            self._temp_test_run_cache_valid,
+            self._latest_test_run_snapshot_owner_tokens,
+        ) = state
+        if preserve_latest_invalidation:
+            self._latest_test_run_cache_valid = False
 
     def reset(self):
         self.test_run = None
@@ -478,6 +618,9 @@ class TestRunManager:
         self.results_folder = None
         self.results_subfolder = None
         self.last_saved_path = None
+        self._latest_test_run_cache_valid = True
+        self._temp_test_run_cache_valid = True
+        self._latest_test_run_snapshot_owner_tokens = {}
 
     def configure_local_store(
         self,
@@ -518,14 +661,17 @@ class TestRunManager:
         )
         self.set_test_run(test_run)
 
-        if self.save_to_disk:
+        if self._can_use_disk():
             self.save_test_run(self.temp_file_path)
+            self._temp_test_run_cache_valid = True
+        else:
+            self._temp_test_run_cache_valid = False
 
     def get_test_run(self, identifier: Optional[str] = None):
         if self.test_run is None:
             self.create_test_run(identifier=identifier)
 
-        if portalocker and self.save_to_disk:
+        if self._can_use_disk() and self._temp_test_run_cache_valid:
             try:
                 with portalocker.Lock(
                     self.temp_file_path,
@@ -548,7 +694,7 @@ class TestRunManager:
         return self.test_run
 
     def save_test_run(self, path: str, save_under_key: Optional[str] = None):
-        if portalocker and self.save_to_disk:
+        if self._can_use_disk():
             try:
                 # ensure parent directory exists
                 parent = os.path.dirname(path)
@@ -567,24 +713,53 @@ class TestRunManager:
                                 by_alias=True, exclude_none=True
                             )
                         wrapper_data = {save_under_key: test_run_data}
+                        if path == LATEST_TEST_RUN_FILE_PATH:
+                            wrapper_data[LATEST_TEST_RUN_OWNER_TOKEN_KEY] = (
+                                uuid.uuid4().hex
+                            )
                         json.dump(wrapper_data, file, cls=TestRunEncoder)
                         file.flush()
                         os.fsync(file.fileno())
                     else:
-                        self.test_run.save(file)
+                        if path == LATEST_TEST_RUN_FILE_PATH:
+                            try:
+                                body = self.test_run.model_dump(
+                                    by_alias=True, exclude_none=True
+                                )
+                            except AttributeError:
+                                body = self.test_run.dict(
+                                    by_alias=True, exclude_none=True
+                                )
+                            body[LATEST_TEST_RUN_OWNER_TOKEN_KEY] = (
+                                uuid.uuid4().hex
+                            )
+                            json.dump(body, file, cls=TestRunEncoder)
+                            file.flush()
+                            os.fsync(file.fileno())
+                        else:
+                            self.test_run.save(file)
+                if path == LATEST_TEST_RUN_FILE_PATH:
+                    self._latest_test_run_cache_valid = True
             except portalocker.exceptions.LockException:
                 pass
 
-    def save_final_test_run_link(self, link: str):
-        if portalocker:
+    def save_final_test_run_link(self, link: str, persist_link: bool = True):
+        if self._can_write_local_state() and persist_link:
             try:
                 with portalocker.Lock(
                     LATEST_TEST_RUN_FILE_PATH, mode="w"
                 ) as file:
-                    json.dump({LATEST_TEST_RUN_LINK_KEY: link}, file)
+                    json.dump(
+                        {
+                            LATEST_TEST_RUN_LINK_KEY: link,
+                            LATEST_TEST_RUN_OWNER_TOKEN_KEY: uuid.uuid4().hex,
+                        },
+                        file,
+                    )
                     file.flush()
                     os.fsync(file.fileno())
-            except portalocker.exceptions.LockException:
+                self._latest_test_run_cache_valid = True
+            except (OSError, portalocker.exceptions.LockException):
                 pass
 
     def update_test_run(
@@ -599,7 +774,10 @@ class TestRunManager:
         ):
             return
 
-        if portalocker and self.save_to_disk:
+        if self._can_use_disk():
+            if not self._temp_test_run_cache_valid:
+                self.save_test_run(self.temp_file_path)
+                self._temp_test_run_cache_valid = True
             try:
                 with portalocker.Lock(
                     self.temp_file_path,
@@ -860,7 +1038,9 @@ class TestRunManager:
         )
         print(table)
 
-    def post_test_run(self, test_run: TestRun) -> Optional[Tuple[str, str]]:
+    def post_test_run(
+        self, test_run: TestRun, persist_link: bool = True
+    ) -> Optional[Tuple[str, str]]:
         if (
             len(test_run.test_cases) == 0
             and len(test_run.conversational_test_cases) == 0
@@ -990,14 +1170,15 @@ class TestRunManager:
             "[rgb(5,245,141)]✓[/rgb(5,245,141)] Done 🎉! View results on "
             f"[link={link}]{link}[/link]"
         )
-        self.save_final_test_run_link(link)
+        self.save_final_test_run_link(link, persist_link=persist_link)
         open_browser(link)
         return link, res.id
 
-    def save_test_run_locally(self):
+    def save_test_run_locally(self, write_rolling_snapshot: bool = True):
         """Persist the current TestRun to disk.
 
-        Always writes a rolling snapshot to `.deepeval/.latest_run_full.json`.
+        Writes a rolling snapshot to `.deepeval/.latest_run_full.json` when
+        implicit cache writes are enabled.
         Additionally writes a timestamped `test_run_<YYYYMMDD_HHMMSS>.json` to
         `results_folder` (or `DEEPEVAL_RESULTS_FOLDER`) when set.
         """
@@ -1010,9 +1191,12 @@ class TestRunManager:
             write_test_run,
         )
 
-        rolling_path = write_rolling_test_run(self.test_run)
-        if rolling_path is not None:
-            self.last_saved_path = rolling_path
+        if write_rolling_snapshot and not is_read_only_env():
+            rolling_path = write_rolling_test_run(
+                self.test_run, owner_token=uuid.uuid4().hex
+            )
+            if rolling_path is not None:
+                self.last_saved_path = rolling_path
 
         target_dir = resolve_target_dir(
             results_folder=self.results_folder,
@@ -1047,14 +1231,16 @@ class TestRunManager:
         test_run = self.get_test_run()
         if test_run is None:
             print("Test Run is empty, please try again.")
-            delete_file_if_exists(self.temp_file_path)
+            if self._can_use_disk():
+                delete_file_if_exists(self.temp_file_path)
             return
         elif (
             len(test_run.test_cases) == 0
             and len(test_run.conversational_test_cases) == 0
         ):
             print("No test cases found, please try again.")
-            delete_file_if_exists(self.temp_file_path)
+            if self._can_use_disk():
+                delete_file_if_exists(self.temp_file_path)
             return
 
         # Mark the run as the official if requested via the `--official` CLI flag or `evaluate(official=True)`.
@@ -1105,35 +1291,66 @@ class TestRunManager:
                 console.print("\n[bold green]✓ Prompts Logged[/bold green]\n")
                 self._render_prompts_panels(prompts=test_run.prompts)
 
-        self.save_test_run_locally()
-        delete_file_if_exists(self.temp_file_path)
+        should_write_to_disk = self._can_use_disk()
+        if not should_write_to_disk:
+            self._invalidate_latest_test_run_cache(delete_owned_disk_state=True)
+            self._temp_test_run_cache_valid = False
+        has_local_export_target = bool(
+            self.results_folder or os.getenv("DEEPEVAL_RESULTS_FOLDER")
+        )
+        if should_write_to_disk or has_local_export_target:
+            self.save_test_run_locally(
+                write_rolling_snapshot=should_write_to_disk
+            )
+        else:
+            self.last_saved_path = None
+        if should_write_to_disk:
+            delete_file_if_exists(self.temp_file_path)
         confident_enabled = is_confident()
         if confident_enabled and self.disable_request is False:
-            return self.post_test_run(test_run)
-        else:
-            self.save_test_run(
-                LATEST_TEST_RUN_FILE_PATH,
-                save_under_key=LATEST_TEST_RUN_DATA_KEY,
+            return self.post_test_run(
+                test_run, persist_link=should_write_to_disk
             )
+        else:
+            if should_write_to_disk:
+                self.save_test_run(
+                    LATEST_TEST_RUN_FILE_PATH,
+                    save_under_key=LATEST_TEST_RUN_DATA_KEY,
+                )
             token_cost = (
                 f"{test_run.evaluation_cost} USD"
                 if test_run.evaluation_cost
                 else "None"
             )
+            if should_write_to_disk:
+                follow_up_message = "  » Run [bold]'deepeval view'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n"
+            elif is_read_only_env():
+                follow_up_message = "  » Local result persistence is disabled because [bold]DEEPEVAL_FILE_SYSTEM=READ_ONLY[/bold]. Upload to Confident AI to inspect this run outside the current process.\n\n"
+            else:
+                follow_up_message = "  » Enable [bold]CacheConfig(write_cache=True)[/bold] or set [bold]DisplayConfig(results_folder=...)[/bold] to save local results for later inspection.\n\n"
             console.print(
                 f"\n\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation completed 🎉! (time taken: {round(runDuration, 2)}s | token cost: {token_cost})\n"
                 f"» Test Results ({test_run.test_passed + test_run.test_failed} total tests):\n",
                 f"  » Pass Rate: {round((test_run.test_passed / (test_run.test_passed + test_run.test_failed)) * 100, 2)}% | Passed: [bold green]{test_run.test_passed}[/bold green] | Failed: [bold red]{test_run.test_failed}[/bold red]\n\n",
                 "=" * 80,
                 "\n\n» Want to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n"
-                "  » Run [bold]'deepeval view'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n",
+                + follow_up_message,
             )
 
     def get_latest_test_run_data(self) -> Optional[TestRun]:
+        if is_read_only_env():
+            return None
+        if not self._latest_test_run_cache_valid:
+            return None
+
         try:
             if os.path.exists(LATEST_TEST_RUN_FILE_PATH):
                 with open(LATEST_TEST_RUN_FILE_PATH, "r") as file:
                     data = json.load(file)
+                    if not isinstance(
+                        data.get(LATEST_TEST_RUN_OWNER_TOKEN_KEY), str
+                    ):
+                        return None
                     return TestRun.model_validate(
                         data[LATEST_TEST_RUN_DATA_KEY]
                     )
@@ -1142,10 +1359,19 @@ class TestRunManager:
         return None
 
     def get_latest_test_run_link(self) -> Optional[str]:
+        if is_read_only_env():
+            return None
+        if not self._latest_test_run_cache_valid:
+            return None
+
         try:
             if os.path.exists(LATEST_TEST_RUN_FILE_PATH):
                 with open(LATEST_TEST_RUN_FILE_PATH, "r") as file:
                     data = json.load(file)
+                    if not isinstance(
+                        data.get(LATEST_TEST_RUN_OWNER_TOKEN_KEY), str
+                    ):
+                        return None
                     return data[LATEST_TEST_RUN_LINK_KEY]
         except (FileNotFoundError, json.JSONDecodeError, Exception):
             pass

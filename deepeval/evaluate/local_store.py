@@ -79,7 +79,9 @@ def resolve_test_run_path(target_dir: Path) -> Path:
         n += 1
 
 
-def write_rolling_test_run(test_run: TestRun) -> Optional[Path]:
+def write_rolling_test_run(
+    test_run: TestRun, owner_token: Optional[str] = None
+) -> Optional[Path]:
     """Overwrite `.deepeval/.latest_run_full.json` with `test_run`.
 
     Returns `None` (silently) on read-only env or write failure so a failed
@@ -93,7 +95,7 @@ def write_rolling_test_run(test_run: TestRun) -> Optional[Path]:
     path = Path(LATEST_FULL_TEST_RUN_FILE_PATH)
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
-        _dump(test_run, path)
+        _dump(test_run, path, owner_token=owner_token)
         return path
     except Exception as e:
         print(
@@ -130,11 +132,17 @@ def write_test_run(
     return path
 
 
-def _dump(test_run: TestRun, path: Path) -> None:
+def _dump(
+    test_run: TestRun, path: Path, owner_token: Optional[str] = None
+) -> None:
     try:
         body = test_run.model_dump(by_alias=True, exclude_none=True)
     except AttributeError:
         body = test_run.dict(by_alias=True, exclude_none=True)
+    if owner_token is not None:
+        from deepeval.test_run.test_run import LATEST_TEST_RUN_OWNER_TOKEN_KEY
+
+        body[LATEST_TEST_RUN_OWNER_TOKEN_KEY] = owner_token
     with open(path, "w", encoding="utf-8") as f:
         json.dump(body, f, cls=TestRunEncoder)
         f.flush()

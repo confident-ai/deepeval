@@ -1,4 +1,3 @@
-import os
 from typing import (
     List,
     Optional,
@@ -55,6 +54,7 @@ from deepeval.test_run import (
     global_test_run_manager,
     MetricData,
 )
+from deepeval.test_run.cache import global_test_run_cache_manager
 from deepeval.utils import get_is_running_deepeval
 from deepeval.evaluate.types import EvaluationResult
 from deepeval.evaluate.execute import (
@@ -185,6 +185,28 @@ def evaluate(
 
     if metrics:
 
+        should_restore_cache_policy = not get_is_running_deepeval()
+        previous_disable_write_cache = (
+            global_test_run_cache_manager.disable_write_cache
+        )
+        previous_write_cache_state = (
+            global_test_run_manager._write_cache_state()
+        )
+
+        def restore_cache_policy(preserve_latest_invalidation: bool = False):
+            if preserve_latest_invalidation:
+                global_test_run_manager._invalidate_latest_test_run_cache(
+                    delete_owned_disk_state=True
+                )
+            global_test_run_cache_manager.disable_write_cache = (
+                previous_disable_write_cache
+            )
+            global_test_run_manager._restore_write_cache_state(
+                previous_write_cache_state,
+                preserve_latest_invalidation=preserve_latest_invalidation,
+            )
+
+        completed_normally = False
         if not _skip_reset and not get_is_running_deepeval():
             global_test_run_manager.reset()
         set_test_run_official(official)
@@ -199,111 +221,128 @@ def evaluate(
                     )
                 )
 
-        with capture_evaluation_run("evaluate()"):
-            if async_config.run_async:
-                loop = get_or_create_event_loop()
-                test_results = loop.run_until_complete(
-                    a_execute_test_cases(
+        try:
+            with capture_evaluation_run("evaluate()"):
+                if async_config.run_async:
+                    loop = get_or_create_event_loop()
+                    test_results = loop.run_until_complete(
+                        a_execute_test_cases(
+                            test_cases,
+                            metrics,
+                            identifier=identifier,
+                            error_config=error_config,
+                            display_config=display_config,
+                            cache_config=cache_config,
+                            async_config=async_config,
+                        )
+                    )
+                else:
+                    test_results = execute_test_cases(
                         test_cases,
                         metrics,
                         identifier=identifier,
                         error_config=error_config,
                         display_config=display_config,
                         cache_config=cache_config,
-                        async_config=async_config,
                     )
-                )
-            else:
-                test_results = execute_test_cases(
-                    test_cases,
-                    metrics,
-                    identifier=identifier,
-                    error_config=error_config,
-                    display_config=display_config,
-                    cache_config=cache_config,
+
+            end_time = time.perf_counter()
+            run_duration = end_time - start_time
+            if display_config.print_results:
+                console_report = EvaluationConsoleReport(test_results)
+                console_report.render_to_terminal(
+                    truncate_passing_cases=display_config.truncate_passing_cases,
+                    display_option=display_config.display_option,
                 )
 
-        end_time = time.perf_counter()
-        run_duration = end_time - start_time
-        if display_config.print_results:
-            console_report = EvaluationConsoleReport(test_results)
-            console_report.render_to_terminal(
-                truncate_passing_cases=display_config.truncate_passing_cases,
-                display_option=display_config.display_option,
+                # Handle full, un-truncated file exports
+                if display_config.file_output_dir is not None:
+                    if display_config.file_type == "html":
+                        console_report.export_to_html(
+                            output_dir=display_config.file_output_dir,
+                            evaluation_name=identifier,
+                            theme_mode="dark",
+                        )
+                    elif display_config.file_type == "md":
+                        console_report.export_to_markdown(
+                            output_dir=display_config.file_output_dir,
+                            evaluation_name=identifier,
+                        )
+                    else:
+                        raise ValueError(
+                            f"Invalid file type: {display_config.file_type}"
+                        )
+
+            test_run = global_test_run_manager.get_test_run()
+            if hyperparameters is not None or test_run.hyperparameters is None:
+                test_run.hyperparameters = process_hyperparameters(
+                    hyperparameters
+                )
+                test_run.prompts = process_prompts(hyperparameters)
+
+            global_test_run_manager.configure_local_store(
+                results_folder=display_config.results_folder,
+                results_subfolder=display_config.results_subfolder,
             )
 
-            # Handle full, un-truncated file exports
-            if display_config.file_output_dir is not None:
-                if display_config.file_type == "html":
-                    console_report.export_to_html(
-                        output_dir=display_config.file_output_dir,
-                        evaluation_name=identifier,
-                        theme_mode="dark",
+            if _skip_reset:
+                test_run.run_duration += run_duration
+                global_test_run_manager.save_test_run(TEMP_FILE_PATH)
+                completed_normally = True
+                return EvaluationResult(
+                    test_results=test_results,
+                    confident_link=None,
+                    test_run_id=None,
+                )
+
+            global_test_run_manager.save_test_run(TEMP_FILE_PATH)
+
+            # In CLI mode (`deepeval test run`), the CLI owns finalization and will
+            # call `wrap_up_test_run()` once after pytest finishes. Finalizing here
+            # as well would double finalize the run and consequently result in
+            # duplicate uploads / local saves and temp file races, so only
+            # do it when we're NOT in CLI mode.
+            if get_is_running_deepeval():
+                completed_normally = True
+                return EvaluationResult(
+                    test_results=test_results,
+                    confident_link=None,
+                    test_run_id=None,
+                )
+
+            res = global_test_run_manager.wrap_up_test_run(
+                run_duration, display_table=False
+            )
+            if isinstance(res, tuple):
+                confident_link, test_run_id = res
+            else:
+                confident_link = test_run_id = None
+
+            # All other side-effects (saving locally, posting to Confident AI,
+            # rendering the table) have already happened inside wrap_up_test_run.
+            # Offer to open the inspect TUI as the very last thing the user sees,
+            # so it never competes with the run output for attention.
+            from deepeval.evaluate.inspect_prompt import maybe_offer_inspect_tui
+
+            maybe_offer_inspect_tui(global_test_run_manager, display_config)
+
+            completed_normally = True
+            return EvaluationResult(
+                test_results=test_results,
+                confident_link=confident_link,
+                test_run_id=test_run_id,
+            )
+        finally:
+            if should_restore_cache_policy:
+                if completed_normally:
+                    global_test_run_cache_manager.disable_write_cache = (
+                        previous_disable_write_cache
                     )
-                elif display_config.file_type == "md":
-                    console_report.export_to_markdown(
-                        output_dir=display_config.file_output_dir,
-                        evaluation_name=identifier,
+                    global_test_run_manager.save_to_disk = (
+                        previous_write_cache_state[0]
                     )
                 else:
-                    raise ValueError(
-                        f"Invalid file type: {display_config.file_type}"
-                    )
-
-        test_run = global_test_run_manager.get_test_run()
-        if hyperparameters is not None or test_run.hyperparameters is None:
-            test_run.hyperparameters = process_hyperparameters(hyperparameters)
-            test_run.prompts = process_prompts(hyperparameters)
-
-        global_test_run_manager.configure_local_store(
-            results_folder=display_config.results_folder,
-            results_subfolder=display_config.results_subfolder,
-        )
-
-        if _skip_reset:
-            test_run.run_duration += run_duration
-            global_test_run_manager.save_test_run(TEMP_FILE_PATH)
-            return EvaluationResult(
-                test_results=test_results,
-                confident_link=None,
-                test_run_id=None,
-            )
-
-        global_test_run_manager.save_test_run(TEMP_FILE_PATH)
-
-        # In CLI mode (`deepeval test run`), the CLI owns finalization and will
-        # call `wrap_up_test_run()` once after pytest finishes. Finalizing here
-        # as well would double finalize the run and consequently result in
-        # duplicate uploads / local saves and temp file races, so only
-        # do it when we're NOT in CLI mode.
-        if get_is_running_deepeval():
-            return EvaluationResult(
-                test_results=test_results,
-                confident_link=None,
-                test_run_id=None,
-            )
-
-        res = global_test_run_manager.wrap_up_test_run(
-            run_duration, display_table=False
-        )
-        if isinstance(res, tuple):
-            confident_link, test_run_id = res
-        else:
-            confident_link = test_run_id = None
-
-        # All other side-effects (saving locally, posting to Confident AI,
-        # rendering the table) have already happened inside wrap_up_test_run.
-        # Offer to open the inspect TUI as the very last thing the user sees,
-        # so it never competes with the run output for attention.
-        from deepeval.evaluate.inspect_prompt import maybe_offer_inspect_tui
-
-        maybe_offer_inspect_tui(global_test_run_manager, display_config)
-
-        return EvaluationResult(
-            test_results=test_results,
-            confident_link=confident_link,
-            test_run_id=test_run_id,
-        )
+                    restore_cache_policy(cache_config.write_cache is False)
     elif metric_collection:
         api = Api()
         api_evaluate = APIEvaluate(

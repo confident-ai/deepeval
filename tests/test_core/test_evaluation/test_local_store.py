@@ -6,8 +6,7 @@ import threading
 from pathlib import Path
 from typing import Optional
 
-import pytest
-
+from deepeval.config.settings import reset_settings
 from deepeval.evaluate.configs import DisplayConfig
 from deepeval.evaluate.local_store import (
     resolve_target_dir,
@@ -18,7 +17,6 @@ from deepeval.test_run.test_run import (
     TestRun as _TestRun,
     TestRunManager as _TestRunManager,
 )
-
 
 FILENAME_RE = re.compile(r"^test_run_\d{8}_\d{6}(?:_(\d+))?\.json$")
 
@@ -161,6 +159,21 @@ class TestWriteTestRun:
             p for p in tmp_path.iterdir() if p.name.startswith("test_run_")
         )
         assert len(files) == n
+
+    def test_read_only_env_allows_explicit_write(
+        self, tmp_path: Path, monkeypatch
+    ):
+        monkeypatch.setenv("DEEPEVAL_FILE_SYSTEM", "READ_ONLY")
+        reset_settings(reload_dotenv=False)
+
+        try:
+            path = write_test_run(tmp_path / "exports", _make_test_run())
+        finally:
+            monkeypatch.delenv("DEEPEVAL_FILE_SYSTEM", raising=False)
+            reset_settings(reload_dotenv=False)
+
+        assert path.exists()
+        assert path.parent == tmp_path / "exports"
 
 
 class TestDisplayConfigFields:
