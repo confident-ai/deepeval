@@ -35,6 +35,80 @@ TS_TEMPLATES_JSON = (
 FRAGMENTS_DIR = PACKAGE_ROOT / "templates" / FEATURE / "fragments"
 
 
+def _display_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(path)
+
+
+def _assert_safe_repo_file(path: Path) -> None:
+    """Reject symlinked or repo-escaping files before reading template content."""
+    root = REPO_ROOT.resolve()
+    try:
+        relative = path.relative_to(REPO_ROOT)
+    except ValueError as exc:
+        raise ValueError(
+            f"Refusing to compile template source outside repository: {path}"
+        ) from exc
+
+    current = REPO_ROOT
+    for part in relative.parts:
+        current = current / part
+        if current.is_symlink():
+            raise ValueError(
+                "Refusing to compile symlinked template source: "
+                f"{_display_path(current)}"
+            )
+
+    try:
+        path.resolve(strict=True).relative_to(root)
+    except ValueError as exc:
+        raise ValueError(
+            "Refusing to compile template source that resolves outside "
+            f"repository: {_display_path(path)}"
+        ) from exc
+
+
+def _read_repo_text(path: Path) -> str:
+    _assert_safe_repo_file(path)
+    return path.read_text(encoding="utf-8")
+
+
+def _assert_safe_repo_output(path: Path) -> None:
+    """Reject symlinked or repo-escaping output paths before writing bundles."""
+    root = REPO_ROOT.resolve()
+    try:
+        relative = path.relative_to(REPO_ROOT)
+    except ValueError as exc:
+        raise ValueError(
+            f"Refusing to write template output outside repository: {path}"
+        ) from exc
+
+    current = REPO_ROOT
+    for part in relative.parts:
+        current = current / part
+        if current.is_symlink():
+            raise ValueError(
+                "Refusing to write symlinked template output: "
+                f"{_display_path(current)}"
+            )
+
+    try:
+        path.parent.resolve(strict=False).relative_to(root)
+    except ValueError as exc:
+        raise ValueError(
+            "Refusing to write template output that resolves outside "
+            f"repository: {_display_path(path)}"
+        ) from exc
+
+
+def _write_repo_text(path: Path, content: str) -> None:
+    _assert_safe_repo_output(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
 def _collect_from_disk() -> tuple[dict[str, dict[str, str]], dict[str, str]]:
     classes: dict[str, dict[str, str]] = defaultdict(dict)
     for templates_dir in PACKAGE_ROOT.rglob("templates"):
@@ -48,25 +122,21 @@ def _collect_from_disk() -> tuple[dict[str, dict[str, str]], dict[str, str]]:
         marker = templates_dir / "class.txt"
         if marker.is_file():
             # Flat layout: class name comes from the marker; siblings are methods.
-            class_name = marker.read_text(encoding="utf-8").strip()
+            class_name = _read_repo_text(marker).strip()
             for path in templates_dir.glob("*.txt"):
                 if path.name == "class.txt":
                     continue
-                classes[class_name][path.stem] = path.read_text(
-                    encoding="utf-8"
-                )
+                classes[class_name][path.stem] = _read_repo_text(path)
         else:
             # Nested layout: one subfolder per class (multi-class metrics).
             for sub in templates_dir.iterdir():
                 if not sub.is_dir():
                     continue
                 for path in sub.glob("*.txt"):
-                    classes[sub.name][path.stem] = path.read_text(
-                        encoding="utf-8"
-                    )
+                    classes[sub.name][path.stem] = _read_repo_text(path)
 
     fragments = {
-        path.stem: path.read_text(encoding="utf-8")
+        path.stem: _read_repo_text(path)
         for path in sorted(FRAGMENTS_DIR.glob("*.txt"))
     }
     return dict(classes), fragments
@@ -82,7 +152,7 @@ def build_bundle() -> dict:
 
     existing: dict = {}
     if TEMPLATES_JSON.is_file():
-        existing = json.loads(TEMPLATES_JSON.read_text(encoding="utf-8"))
+        existing = json.loads(_read_repo_text(TEMPLATES_JSON))
     existing_keys = list(existing.keys())
 
     ordered_keys: list[str] = []
@@ -124,9 +194,11 @@ def render_bundle_json(bundle: dict) -> str:
 
 def main() -> None:
     content = render_bundle_json(build_bundle())
-    for path in (TEMPLATES_JSON, TS_TEMPLATES_JSON):
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content, encoding="utf-8")
+    outputs = (TEMPLATES_JSON, TS_TEMPLATES_JSON)
+    for path in outputs:
+        _assert_safe_repo_output(path)
+    for path in outputs:
+        _write_repo_text(path, content)
         print(f"Updated {path}")
 
 
