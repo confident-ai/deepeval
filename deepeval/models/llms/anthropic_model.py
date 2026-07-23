@@ -160,10 +160,11 @@ class AnthropicModel(DeepEvalBaseLLM):
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens
         )
+        text = self._extract_text(message)
         if schema is None:
-            return message.content[0].text, cost
+            return text, cost
         else:
-            json_output = trim_and_load_json(message.content[0].text)
+            json_output = trim_and_load_json(text)
             return schema.model_validate(json_output), cost
 
     @retry_anthropic
@@ -200,12 +201,24 @@ class AnthropicModel(DeepEvalBaseLLM):
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens
         )
+        text = self._extract_text(message)
         if schema is None:
-            return message.content[0].text, cost
+            return text, cost
         else:
-            json_output = trim_and_load_json(message.content[0].text)
+            json_output = trim_and_load_json(text)
 
             return schema.model_validate(json_output), cost
+
+    def _extract_text(self, message) -> str:
+        # With extended thinking enabled, content starts with thinking blocks;
+        # the text block is not guaranteed to be first.
+        for block in message.content:
+            if getattr(block, "type", None) == "text":
+                return block.text
+        raise DeepEvalError(
+            f"Anthropic response from `{self.name}` contained no text block "
+            f"(content types: {[getattr(b, 'type', '?') for b in message.content]})."
+        )
 
     def generate_content(self, multimodal_input: List[Union[str, MLLMImage]]):
         content = []
