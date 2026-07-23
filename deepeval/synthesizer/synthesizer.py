@@ -15,7 +15,7 @@ import csv
 import os
 from contextlib import nullcontext
 
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import run_async
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 from deepeval.metrics.utils import (
     is_native_model,
@@ -437,8 +437,7 @@ class Synthesizer:
             context_construction_config.critic_model = self.model
 
         if self.async_mode:
-            loop = get_or_create_event_loop()
-            goldens = loop.run_until_complete(
+            goldens = run_async(
                 self.a_generate_goldens_from_docs(
                     document_paths=document_paths,
                     include_expected_output=include_expected_output,
@@ -689,9 +688,8 @@ class Synthesizer:
         goldens: List[Golden] = []
 
         if self.async_mode:
-            loop = get_or_create_event_loop()
             goldens.extend(
-                loop.run_until_complete(
+                run_async(
                     self.a_generate_goldens_from_contexts(
                         contexts=contexts,
                         include_expected_output=include_expected_output,
@@ -1289,9 +1287,8 @@ class Synthesizer:
         )
         goldens: List[Golden] = []
         if self.async_mode:
-            loop = get_or_create_event_loop()
             goldens.extend(
-                loop.run_until_complete(
+                run_async(
                     self.a_generate_goldens_from_scratch(
                         num_goldens=num_goldens,
                     )
@@ -1384,8 +1381,7 @@ class Synthesizer:
     ) -> List[Golden]:
         self.synthetic_goldens = []
         if self.async_mode:
-            loop = get_or_create_event_loop()
-            result = loop.run_until_complete(
+            result = run_async(
                 self.a_generate_goldens_from_goldens(
                     goldens=goldens,
                     max_goldens_per_golden=max_goldens_per_golden,
@@ -2070,8 +2066,7 @@ class Synthesizer:
             context_construction_config.critic_model = self.model
 
         if self.async_mode:
-            loop = get_or_create_event_loop()
-            goldens = loop.run_until_complete(
+            goldens = run_async(
                 self.a_generate_conversational_goldens_from_docs(
                     document_paths=document_paths,
                     include_expected_outcome=include_expected_outcome,
@@ -2318,9 +2313,8 @@ class Synthesizer:
         goldens: List[ConversationalGolden] = []
 
         if self.async_mode:
-            loop = get_or_create_event_loop()
             goldens.extend(
-                loop.run_until_complete(
+                run_async(
                     self.a_generate_conversational_goldens_from_contexts(
                         contexts=contexts,
                         include_expected_outcome=include_expected_outcome,
@@ -2900,9 +2894,8 @@ class Synthesizer:
         )
         goldens: List[ConversationalGolden] = []
         if self.async_mode:
-            loop = get_or_create_event_loop()
             goldens.extend(
-                loop.run_until_complete(
+                run_async(
                     self.a_generate_conversational_goldens_from_scratch(
                         num_goldens=num_goldens,
                     )
@@ -3181,8 +3174,7 @@ class Synthesizer:
     ) -> List[ConversationalGolden]:
         self.synthetic_conversational_goldens = []
         if self.async_mode:
-            loop = get_or_create_event_loop()
-            result = loop.run_until_complete(
+            result = run_async(
                 self.a_generate_conversational_goldens_from_goldens(
                     goldens=goldens,
                     max_goldens_per_golden=max_goldens_per_golden,
