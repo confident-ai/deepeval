@@ -128,8 +128,8 @@ if not telemetry_opt_out():
 
 if (
     get_settings().ERROR_REPORTING
-    and not blocked_by_firewall()
     and not telemetry_opt_out()
+    and not blocked_by_firewall()
 ):
     # Chain to the host's previous excepthook instead of clobbering it.
     _previous_excepthook = sys.excepthook or sys.__excepthook__

@@ -123,77 +123,88 @@ def run(
     delete_file_if_exists(TEMP_FILE_PATH)
     delete_file_if_exists(TEMP_CACHE_FILE_NAME)
     check_if_valid_file(test_file_or_directory)
+    previous_deepeval = os.environ.get("DEEPEVAL")
     set_is_running_deepeval(True)
 
-    if official and not SETTINGS.CONFIDENT_API_KEY:
-        print(
-            "Warning: --official requires a CONFIDENT_API_KEY environment variable to be set. Skipping."
+    try:
+        if official and not SETTINGS.CONFIDENT_API_KEY:
+            print(
+                "Warning: --official requires a CONFIDENT_API_KEY environment variable to be set. Skipping."
+            )
+            official = False
+
+        should_use_cache = use_cache and repeat is None
+        set_should_use_cache(should_use_cache)
+        set_should_ignore_errors(ignore_errors)
+        set_should_skip_on_missing_params(skip_on_missing_params)
+        set_verbose_mode(verbose)
+        set_identifier(identifier)
+        set_test_run_official(official)
+
+        global_test_run_manager.reset()
+
+        pytest_args = [test_file_or_directory]
+
+        if exit_on_first_failure:
+            pytest_args.insert(0, "-x")
+
+        pytest_args.extend(
+            [
+                "--verbose" if verbose else "--quiet",
+                f"--color={color}",
+                f"--durations={durations}",
+                "-s",
+            ]
         )
-        official = False
 
-    should_use_cache = use_cache and repeat is None
-    set_should_use_cache(should_use_cache)
-    set_should_ignore_errors(ignore_errors)
-    set_should_skip_on_missing_params(skip_on_missing_params)
-    set_verbose_mode(verbose)
-    set_identifier(identifier)
-    set_test_run_official(official)
+        if pdb:
+            pytest_args.append("--pdb")
+        if not show_warnings:
+            pytest_args.append("--disable-warnings")
+        if num_processes is not None:
+            pytest_args.extend(["-n", str(num_processes)])
 
-    global_test_run_manager.reset()
+        if repeat is not None:
+            pytest_args.extend(["--count", str(repeat)])
+            if repeat < 1:
+                raise ValueError("The repeat argument must be at least 1.")
 
-    pytest_args = [test_file_or_directory]
+        if mark:
+            pytest_args.extend(["-m", mark])
+        if identifier:
+            pytest_args.extend(["--identifier", identifier])
 
-    if exit_on_first_failure:
-        pytest_args.insert(0, "-x")
+        # Block the installed entry point name before loading the import-safe
+        # module directly; otherwise pytest can register the same module twice
+        # under `deepeval` and `deepeval_pytest_plugin.plugin`.
+        pytest_args.extend(
+            ["-p", "no:deepeval", "-p", "deepeval_pytest_plugin.plugin"]
+        )
+        # Append the extra arguments collected by allow_extra_args=True
+        # Pytest will raise its own error if the arguments are invalid (error:
+        if ctx.args:
+            pytest_args.extend(ctx.args)
 
-    pytest_args.extend(
-        [
-            "--verbose" if verbose else "--quiet",
-            f"--color={color}",
-            f"--durations={durations}",
-            "-s",
-        ]
-    )
+        start_time = time.perf_counter()
+        with capture_evaluation_run("deepeval test run"):
+            pytest_retcode = pytest.main(pytest_args)
+        end_time = time.perf_counter()
+        run_duration = end_time - start_time
+        global_test_run_manager.wrap_up_test_run(run_duration, True, display)
 
-    if pdb:
-        pytest_args.append("--pdb")
-    if not show_warnings:
-        pytest_args.append("--disable-warnings")
-    if num_processes is not None:
-        pytest_args.extend(["-n", str(num_processes)])
+        invoke_test_run_end_hook()
 
-    if repeat is not None:
-        pytest_args.extend(["--count", str(repeat)])
-        if repeat < 1:
-            raise ValueError("The repeat argument must be at least 1.")
+        # Propagate any non-zero pytest exit code so failures surface in CI.
+        # pytest distinguishes: 1=tests failed, 2=interrupted (e.g. -x stop on
+        # first failure, which is how xdist/-n reports a halted run), 3=internal
+        # error, 4=usage error, 5=no tests collected. Typer ignores a command's
+        # return value, so we must sys.exit explicitly to set the process code.
+        if pytest_retcode != 0:
+            sys.exit(int(pytest_retcode))
 
-    if mark:
-        pytest_args.extend(["-m", mark])
-    if identifier:
-        pytest_args.extend(["--identifier", identifier])
-
-    # Add the deepeval plugin file to pytest arguments
-    pytest_args.extend(["-p", "deepeval"])
-    # Append the extra arguments collected by allow_extra_args=True
-    # Pytest will raise its own error if the arguments are invalid (error:
-    if ctx.args:
-        pytest_args.extend(ctx.args)
-
-    start_time = time.perf_counter()
-    with capture_evaluation_run("deepeval test run"):
-        pytest_retcode = pytest.main(pytest_args)
-    end_time = time.perf_counter()
-    run_duration = end_time - start_time
-    global_test_run_manager.wrap_up_test_run(run_duration, True, display)
-
-    invoke_test_run_end_hook()
-
-    # Propagate any non-zero pytest exit code so failures surface in CI.
-    # pytest distinguishes: 1=tests failed, 2=interrupted (e.g. -x stop on
-    # first failure, which is how xdist/-n reports a halted run), 3=internal
-    # error, 4=usage error, 5=no tests collected. Typer ignores a command's
-    # return value, so we must sys.exit explicitly to set the process code.
-    if pytest_retcode != 0:
-        sys.exit(int(pytest_retcode))
-
-    return pytest_retcode
+        return pytest_retcode
+    finally:
+        if previous_deepeval is None:
+            os.environ.pop("DEEPEVAL", None)
+        else:
+            os.environ["DEEPEVAL"] = previous_deepeval
