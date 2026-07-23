@@ -75,13 +75,18 @@ All of the above report `supportsStructuredOutputs() = true` and
 |---|---|---|---|---|
 | `GeminiModel` | `gemini-2.5-flash` | `GOOGLE_API_KEY` / `GEMINI_API_KEY` | `@google/genai` | ✅ (fetches+base64s remote images) |
 | `AnthropicModel` | `claude-sonnet-4-6` | `ANTHROPIC_API_KEY` | `@anthropic-ai/sdk` | ✅ |
-| `AmazonBedrockModel` | `AWS_BEDROCK_MODEL_NAME` (req.) | AWS creds / region | `@aws-sdk/client-bedrock-runtime` | ⚠️ see discrepancy |
+| `AmazonBedrockModel` | `AWS_BEDROCK_MODEL_NAME` (req.) | AWS creds / region | `@aws-sdk/client-bedrock-runtime` | ❌ TS wrapper text-only |
 | `OllamaModel` | `OLLAMA_MODEL_NAME` (req.) | — (local) | `ollama` | ❌ text-only |
 | `AISDKModel` | from the AI SDK model | (per AI SDK provider) | `ai` (+ a provider, e.g. `@ai-sdk/openai`) | ✅ |
 
 - `GeminiModel` also supports **Vertex AI** (`useVertexAI` / `GOOGLE_GENAI_USE_VERTEXAI`,
   with `project` / `location`).
 - `AnthropicModel` sends `max_tokens` (default `4096`, configurable).
+- DeepEval TS `AmazonBedrockModel` does not yet translate image slugs into Bedrock image
+  content blocks, so it returns `supportsMultimodal() = false`.
+- `AmazonBedrockModel` uses a complete explicit credential bundle when provided, rejects
+  partial explicit or environment credential config, and otherwise leaves credential
+  resolution to the AWS SDK default chain.
 - `AISDKModel` wraps any Vercel AI SDK `LanguageModel` (e.g. `openai("gpt-4o")`); uses
   `generateObject` for schemas, `generateText` otherwise.
 
@@ -92,12 +97,11 @@ Image slugs in the prompt are split into provider-specific text+image parts by
 Wired into: **OpenAI-compatible base** (so OpenAI/Azure/Grok/Kimi/Local/OpenRouter/Portkey),
 **Anthropic**, **Gemini**, **AI SDK**. Plain-text prompts pass through unchanged.
 
-## Gaps & discrepancies vs Python
+## Gaps vs Python
 
-- **`AmazonBedrockModel` reports `supportsMultimodal() = true` but its `generate()` only
-  sends text** (`content: [{ text: prompt }]`, no slug→image conversion). The flag is
-  ahead of the implementation — image slugs would be sent as literal text. Treat Bedrock
-  as text-only until the Converse content builder is added.
+- **DeepEval TS `AmazonBedrockModel` is text-only** until the Converse content builder
+  supports image slugs; unlike Python-capable multimodal providers, it reports
+  `supportsMultimodal() = false`.
 - **`OllamaModel` is text-only** and (unlike the others) does **not** override
   `supportsMultimodal()`, so it returns the base `null`.
 - **No log-prob support anywhere** (`supportsLogProbs()` is `null` for all models) — blocks
