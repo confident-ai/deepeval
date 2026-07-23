@@ -121,6 +121,22 @@ def test_metrics_imports():
         assert metric is not None
 
 
+def test_community_metrics_imports():
+    """Test that all community metrics can be imported."""
+    from deepeval.metrics.community import (
+        AdversarialRobustnessMetric,
+        CitationFaithfulnessMetric,
+    )
+
+    all_metrics = [
+        AdversarialRobustnessMetric,
+        CitationFaithfulnessMetric,
+    ]
+
+    for metric in all_metrics:
+        assert metric is not None
+
+
 def test_g_eval_imports():
     from deepeval.metrics.g_eval import Rubric
 

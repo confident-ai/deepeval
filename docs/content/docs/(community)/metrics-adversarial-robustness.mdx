@@ -1,0 +1,83 @@
+---
+id: metrics-adversarial-robustness
+title: Adversarial Robustness
+sidebar_label: Adversarial Robustness
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} safety={true} referenceless={true} />
+
+The adversarial robustness metric uses LLM-as-a-judge to measure how robust your LLM application is to adversarial, meaning-preserving perturbations of its input. It is inspired by the [RoMA (Robustness Measurement and Assessment) framework](https://arxiv.org/abs/2504.17723) and is fully black-box: it only needs to call your LLM application, never inspect its weights. `deepeval`'s adversarial robustness metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+
+:::info
+The `AdversarialRobustnessMetric` is a **community metric**, contributed and maintained by the `deepeval` community. Community metrics are not exported from `deepeval.metrics` — import them explicitly from `deepeval.metrics.community` instead.
+:::
+
+:::note
+Unlike most metrics, the `AdversarialRobustnessMetric` does not just grade a recorded test case — it actively **probes your LLM application** through a `model_callback` you provide, by re-invoking it on perturbed variants of the original `input`. Make sure `model_callback` calls the same system that produced the `actual_output`.
+:::
+
+## Required Arguments
+
+To use the `AdversarialRobustnessMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+
+The `actual_output` should be your LLM application's answer to the original, unperturbed `input` — it serves as the reference that perturbed responses are checked against for semantic consistency.
+
+You'll also have to supply a `model_callback` when creating the metric itself: a callable (sync or async) that maps a perturbed input string to your LLM application's output string.
+
+## Usage
+
+The `AdversarialRobustnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation of text-based test cases:
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics.community import AdversarialRobustnessMetric
+
+
+# Replace this with a callable that invokes your LLM application
+def model_callback(perturbed_input: str) -> str:
+    return your_llm_app(perturbed_input)
+
+
+metric = AdversarialRobustnessMetric(model_callback=model_callback)
+test_case = LLMTestCase(
+    input="What is the boiling point of water at sea level?",
+    # Replace this with the actual output from your LLM application
+    actual_output="Water boils at 100°C (212°F) at sea level.",
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There is one required parameter and eight optional parameters when creating an `AdversarialRobustnessMetric`:
+
+- `model_callback`: a callable that maps a (perturbed) input prompt to your LLM application's output. May be synchronous or asynchronous.
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to `0.5`.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, OR [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4.1`.
+- [Optional] `num_perturbations`: an integer specifying how many adversarial perturbations of the `input` to generate, defaulted to `5`.
+- [Optional] `perturbation_types`: a list containing a non-empty subset of `"semantic"` (synonym swaps and light rephrasing) and `"orthographic"` (typo-style character noise). Defaulted to both.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: `1` for perfect robustness, `0` otherwise. It also overrides the current threshold and sets it to `1`. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method](/docs/metrics-introduction#measuring-metrics-in-async). Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console. Defaulted to `False`.
+
+## How Is It Calculated?
+
+The `AdversarialRobustnessMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Adversarial Robustness} = \frac{\text{Number of Consistent Responses}}{\text{Total Number of Perturbations}}" />
+
+For each test case the metric:
+
+1. Uses the evaluation model to generate `num_perturbations` meaning-preserving adversarial perturbations of the `input`, using the configured `perturbation_types`. A perturbation must preserve the original intent: a human who could answer the original input should give the same answer to the perturbation.
+2. Runs `model_callback` on every perturbation to obtain your LLM application's response to each.
+3. Uses the evaluation model to judge whether each perturbed response is semantically consistent with the reference `actual_output`.
+
+The score is the fraction of perturbations your LLM application stayed consistent on — `1.0` means perfectly robust, while a low score means small, harmless rewordings of the input change your application's answers.
