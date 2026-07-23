@@ -14,6 +14,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.hallucination.schema import (
     HallucinationVerdict,
@@ -64,6 +65,7 @@ class HallucinationMetric(BaseMetric):
             self.model,
             multimodal,
         )
+        self._check_context_not_empty(test_case)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         self.input_tokens = 0 if self.using_native_model else None
@@ -118,6 +120,7 @@ class HallucinationMetric(BaseMetric):
             self.model,
             multimodal,
         )
+        self._check_context_not_empty(test_case)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         self.input_tokens = 0 if self.using_native_model else None
@@ -236,6 +239,20 @@ class HallucinationMetric(BaseMetric):
                 HallucinationVerdict(**item) for item in data["verdicts"]
             ],
         )
+
+    def _check_context_not_empty(self, test_case: LLMTestCase) -> None:
+        # `context` is a required param, but `check_llm_test_case_params` only
+        # rejects `None`. An empty list slips through and produces an empty
+        # verdict list, which `_calculate_score` turns into a passing score of
+        # 0 ("no hallucination") even though there was nothing to check the
+        # output against. Treat an empty context the same as a missing one so
+        # it surfaces as an error / skip instead of a misleading pass.
+        if len(test_case.context) == 0:
+            error_str = (
+                f"'context' cannot be empty for the '{self.__name__}' metric"
+            )
+            self.error = error_str
+            raise MissingTestCaseParamsError(error_str)
 
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)
