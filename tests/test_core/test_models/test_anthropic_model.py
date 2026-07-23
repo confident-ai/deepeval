@@ -311,3 +311,107 @@ def test_anthropic_calculate_cost_with_zero_tokens(mock_require_dep, settings):
     model = AnthropicModel(model="claude-3-7-sonnet-latest")
     cost = model.calculate_cost(input_tokens=0, output_tokens=0)
     assert cost == 0.0
+
+
+#####################################################
+# Extended thinking (thinking-first content blocks) #
+#####################################################
+
+
+def _make_thinking_first_message():
+    from anthropic.types import Message, TextBlock, ThinkingBlock, Usage
+
+    return Message(
+        id="msg_thinking",
+        model="claude-3-7-sonnet-latest",
+        role="assistant",
+        stop_reason="end_turn",
+        type="message",
+        usage=Usage(input_tokens=10, output_tokens=20),
+        content=[
+            ThinkingBlock(
+                type="thinking",
+                thinking="Reasoning about the answer...",
+                signature="sig",
+            ),
+            TextBlock(type="text", text="final answer"),
+        ],
+    )
+
+
+class _ThinkingResponseClient(_RecordingClient):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.messages = SimpleNamespace(create=self._create)
+
+    def _create(self, **kwargs):
+        return _make_thinking_first_message()
+
+
+class _AsyncThinkingResponseClient(_RecordingClient):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.messages = SimpleNamespace(create=self._create)
+
+    async def _create(self, **kwargs):
+        return _make_thinking_first_message()
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_model_generate_returns_text_when_thinking_block_first(
+    mock_require_dep,
+    settings,
+):
+    """
+    With extended thinking enabled (via generation_kwargs), the API returns
+    content=[ThinkingBlock, TextBlock]. generate() must return the text
+    block instead of assuming content[0] is text.
+    """
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "test-key"
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    fake_anthropic_module = SimpleNamespace(
+        Anthropic=_ThinkingResponseClient,
+        AsyncAnthropic=_AsyncThinkingResponseClient,
+    )
+    mock_require_dep.return_value = fake_anthropic_module
+
+    model = AnthropicModel(
+        model="claude-3-7-sonnet-latest",
+        generation_kwargs={
+            "thinking": {"type": "enabled", "budget_tokens": 1024}
+        },
+    )
+
+    output, _ = model.generate("what is the answer?")
+    assert output == "final answer"
+
+
+@pytest.mark.asyncio
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+async def test_anthropic_model_a_generate_returns_text_when_thinking_block_first(
+    mock_require_dep,
+    settings,
+):
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "test-key"
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    fake_anthropic_module = SimpleNamespace(
+        Anthropic=_ThinkingResponseClient,
+        AsyncAnthropic=_AsyncThinkingResponseClient,
+    )
+    mock_require_dep.return_value = fake_anthropic_module
+
+    model = AnthropicModel(
+        model="claude-3-7-sonnet-latest",
+        generation_kwargs={
+            "thinking": {"type": "enabled", "budget_tokens": 1024}
+        },
+    )
+
+    output, _ = await model.a_generate("what is the answer?")
+    assert output == "final answer"
