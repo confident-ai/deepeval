@@ -10,12 +10,12 @@ from deepeval.utils import make_model_config
 
 from deepeval.test_case import SingleTurnParams, LLMTestCase, ToolCallParams
 from deepeval.test_run.api import MetricData
+from deepeval.test_run.cache_identity import CacheIdentity
 from deepeval.utils import (
     delete_file_if_exists,
     is_read_only_env,
     serialize,
 )
-from deepeval.metrics import BaseMetric
 from deepeval.constants import HIDDEN_DIR
 
 logger = logging.getLogger(__name__)
@@ -39,20 +39,24 @@ class MetricConfiguration(BaseModel):
     model_config = make_model_config(arbitrary_types_allowed=True)
 
     ##### Required fields #####
-    threshold: float
+    threshold: Union[float, str]
     evaluation_model: Optional[str] = None
-    strict_mode: bool = False
+    strict_mode: Union[bool, str] = False
     criteria: Optional[str] = None
-    include_reason: Optional[bool] = None
-    n: Optional[int] = None
+    include_reason: Optional[Union[bool, str]] = None
+    n: Optional[Union[int, str]] = None
 
     ##### Optional fields #####
-    evaluation_steps: Optional[List[str]] = None
-    assessment_questions: Optional[List[str]] = None
+    language: Optional[str] = None
+    evaluation_steps: Optional[Union[List[str], str]] = None
+    assessment_questions: Optional[Union[List[str], str]] = None
     embeddings: Optional[str] = None
     evaluation_params: Optional[
-        Union[List[SingleTurnParams], List[ToolCallParams]]
+        Union[List[SingleTurnParams], List[ToolCallParams], str]
     ] = None
+    # Stores constructor-parameter fingerprints/sentinels for cache compatibility.
+    # This field intentionally never contains raw constructor values.
+    custom_parameters: Optional[Dict[str, str]] = None
 
 
 class CachedMetricData(BaseModel):
@@ -310,95 +314,8 @@ global_test_run_cache_manager = TestRunCacheManager()
 ############ Helper Functions #############
 
 
-class Cache:
-    @staticmethod
-    def get_metric_data(
-        metric: BaseMetric, cached_test_case: Optional[CachedTestCase]
-    ) -> Optional[CachedMetricData]:
-        if not cached_test_case:
-            return None
-        for cached_metric_data in cached_test_case.cached_metrics_data:
-            if (
-                cached_metric_data.metric_data.name == metric.__name__
-                and Cache.same_metric_configs(
-                    metric,
-                    cached_metric_data.metric_configuration,
-                )
-            ):
-                return cached_metric_data
-        return None
+CacheIdentity._METRIC_CONFIGURATION_CLASS = MetricConfiguration
 
-    @staticmethod
-    def same_metric_configs(
-        metric: BaseMetric,
-        metric_configuration: MetricConfiguration,
-    ) -> bool:
-        config_fields = [
-            "threshold",
-            "evaluation_model",
-            "strict_mode",
-            "include_reason",
-            "n",
-            "language",
-            "embeddings",
-            "evaluation_params",
-            "assessment_questions",
-            "evaluation_steps",
-        ]
 
-        for field in config_fields:
-            metric_value = getattr(metric, field, None)
-            cached_value = getattr(metric_configuration, field, None)
-
-            # TODO: Refactor. This won't work well with custom metrics
-            if field == "evaluation_steps":
-                if metric_value is not None:
-                    if metric_value == cached_value:
-                        continue
-                else:
-                    try:
-                        # For GEval only
-                        if metric.criteria is not None:
-                            criteria_value = getattr(metric, "criteria", None)
-                            cached_criteria_value = getattr(
-                                metric_configuration, "criteria", None
-                            )
-                            if criteria_value != cached_criteria_value:
-                                return False
-                            continue
-                    except Exception:
-                        # For non-GEval
-                        continue
-
-            if field == "embeddings" and metric_value is not None:
-                metric_value = metric_value.__class__.__name__
-
-            if metric_value != cached_value:
-                return False
-
-        return True
-
-    @staticmethod
-    def create_metric_configuration(metric: BaseMetric) -> MetricConfiguration:
-        config_kwargs = {}
-        config_fields = [
-            "threshold",
-            "evaluation_model",
-            "strict_mode",
-            "include_reason",  # checked
-            "n",  # checked
-            "criteria",  # checked
-            "language",  # can't check
-            "embeddings",  #
-            "strict_mode",  # checked
-            "evaluation_steps",  # checked
-            "evaluation_params",  # checked
-            "assessment_questions",  # checked
-        ]
-        for field in config_fields:
-            value = getattr(metric, field, None)
-            if field == "embeddings" and value is not None:
-                value = value.__class__.__name__
-            config_kwargs[field] = value
-
-        return MetricConfiguration(**config_kwargs)
+class Cache(CacheIdentity):
+    pass
