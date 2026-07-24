@@ -1,4 +1,5 @@
 import os
+import warnings
 from typing import (
     List,
     Optional,
@@ -155,11 +156,11 @@ def assert_test(
             ]
         )
         if test_case is not None and test_case.flaky:
-            # Flaky test cases don't block CI: surface the failure loudly
-            # but don't raise
-            Console().print(
-                f"[bold yellow]⚠ Flaky test case failed (no assertion raised): "
-                f"Metrics: {failed_metrics_str} failed.[/bold yellow]"
+            # Flaky test cases don't block CI: warn (shows up in pytest's
+            # warnings summary) but don't raise
+            warnings.warn(
+                f"Flaky test case failed (no assertion raised): "
+                f"Metrics: {failed_metrics_str} failed."
             )
         else:
             raise AssertionError(f"Metrics: {failed_metrics_str} failed.")
