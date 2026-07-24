@@ -345,6 +345,20 @@ The plain `pytest` command works but is highly not recommended. `deepeval test r
 </Step>
 </Steps>
 
+## Handling Flaky Test Cases
+
+LLM evals are non-deterministic, and some test cases will sit right on a metric's threshold and flip between passing and failing across runs. Instead of removing them from your suite, mark them as flaky:
+
+```python
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(flaky=True, ...)
+```
+
+When a flaky test case fails, `assert_test()` prints a warning instead of raising an `AssertionError`, so your CI pipeline keeps going while the failure is still recorded in your test run results. Both `LLMTestCase` and `ConversationalTestCase` support the `flaky` parameter.
+
+You can also mark individual **metrics** as flaky (`AnswerRelevancyMetric(flaky=True)`) — a flaky metric's score and verdict are still reported, but its failure never fails the test case it ran on.
+
 ## YAML File For CI/CD Evals
 
 Drop `deepeval test run` into a `.yml` to run your unit tests on every push or PR. This example uses `poetry` for installation and `OPENAI_API_KEY` as your LLM judge to run evals locally. Add `CONFIDENT_API_KEY` to send results to Confident AI.

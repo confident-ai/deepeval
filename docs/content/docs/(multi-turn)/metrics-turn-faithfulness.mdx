@@ -44,9 +44,9 @@ metric = TurnFaithfulnessMetric(threshold=0.5)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-There are **NINE** optional parameters when creating a `TurnFaithfulnessMetric`:
+There are **TEN** optional parameters when creating a `TurnFaithfulnessMetric`:
 
-- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
@@ -55,6 +55,7 @@ There are **NINE** optional parameters when creating a `TurnFaithfulnessMetric`:
 - [Optional] `truths_extraction_limit`: an optional integer to limit the number of truths extracted from retrieval context per document. Defaulted to `None`.
 - [Optional] `penalize_ambiguous_claims`: a boolean which when set to `True`, penalizes claims that cannot be verified as true or false. Defaulted to `False`.
 - [Optional] `window_size`: an integer which defines the size of the sliding window of turns used during evaluation. Defaulted to `10`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 ### As a standalone
 

@@ -342,7 +342,9 @@ def execute_agentic_test_cases_from_loop(
 
                         metric_data = create_metric_data(metric)
                         api_span.metrics_data.append(metric_data)
-                        api_test_case.update_status(metric_data.success)
+                        api_test_case.update_status(
+                            metric_data.success, flaky=metric_data.flaky
+                        )
                         update_pbar(progress, pbar_eval_id)
 
                 if trace_metrics:
@@ -432,7 +434,9 @@ def execute_agentic_test_cases_from_loop(
                                 metric_data = create_metric_data(metric)
                                 trace_api.metrics_data.append(metric_data)
                                 api_test_case.update_metric_data(metric_data)
-                                api_test_case.update_status(metric_data.success)
+                                api_test_case.update_status(
+                                    metric_data.success, flaky=metric_data.flaky
+                                )
                                 update_pbar(progress, pbar_eval_id)
 
                 # Always walk spans, even on errored traces — the walker

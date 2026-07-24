@@ -3,6 +3,7 @@ id: metrics-answer-relevancy
 title: Answer Relevancy
 sidebar_label: Answer Relevancy
 ---
+
 <MetricTagsDisplayer singleTurn={true} referenceless={true} rag={true} />
 
 The answer relevancy metric uses LLM-as-a-judge to measure the quality of your RAG pipeline's generator by evaluating how relevant the `actual_output` of your LLM application is compared to the provided `input`. `deepeval`'s answer relevancy metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
@@ -79,15 +80,16 @@ evaluate(test_cases=[test_case], metrics=[metric])
 </Tab>
 </Tabs>
 
-There are **SEVEN** optional parameters when creating an `AnswerRelevancyMetric`:
+There are **EIGHT** optional parameters when creating an `AnswerRelevancyMetric`:
 
-- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 - [Optional] `evaluation_template`: a class of type `AnswerRelevancyTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `AnswerRelevancyMetric` score. Defaulted to `deepeval`'s `AnswerRelevancyTemplate`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 ### Within components
 
@@ -205,9 +207,8 @@ metric.measure(...)
           No. It only checks whether statements in <code>actual_output</code>{" "}
           address the <code>input</code>, not whether they're grounded in
           retrieved context — an answer can be on-topic and still hallucinate.
-          Pair it with{" "}
-          <a href="/docs/metrics-faithfulness">Faithfulness</a> to catch factual
-          errors.
+          Pair it with <a href="/docs/metrics-faithfulness">Faithfulness</a> to
+          catch factual errors.
         </>
       ),
     },
@@ -247,4 +248,3 @@ metric.measure(...)
     },
   ]}
 />
-
