@@ -2,6 +2,7 @@
 
 import deepeval.models.llms.kimi_model as kimi_mod
 
+from unittest.mock import AsyncMock, Mock
 from pydantic import SecretStr
 
 from deepeval.config.settings import get_settings, reset_settings
@@ -174,3 +175,58 @@ def test_kimi_calculate_cost_with_zero_tokens(monkeypatch):
     model.model_data.output_price = 0.008
     cost = model.calculate_cost(input_tokens=0, output_tokens=0)
     assert cost == 0.0
+
+
+##############################
+# temperature forwarding      #
+##############################
+
+
+def _mock_completion(text: str) -> Mock:
+    """Build a completion object shaped the way KimiModel expects."""
+    completion = Mock()
+    choice = Mock()
+    choice.message.content = text
+    completion.choices = [choice]
+    completion.usage.prompt_tokens = 10
+    completion.usage.completion_tokens = 5
+    return completion
+
+
+def test_generate_forwards_temperature_without_schema(monkeypatch):
+    """generate() must send the configured temperature on the no-schema path."""
+    mock_client = Mock()
+    mock_client.chat.completions.create.return_value = _mock_completion("hi")
+    monkeypatch.setattr(
+        kimi_mod, "OpenAI", lambda *a, **k: mock_client, raising=True
+    )
+
+    model = KimiModel(
+        model="moonshot-v1-8k", api_key="test-key", temperature=0.3
+    )
+    model.generate("hello there")
+
+    _, kwargs = mock_client.chat.completions.create.call_args
+    assert kwargs["temperature"] == 0.3
+
+
+async def test_a_generate_forwards_temperature_without_schema(monkeypatch):
+    """a_generate() must send the configured temperature on the no-schema path."""
+    mock_client = Mock()
+    mock_client.chat.completions.create = AsyncMock(
+        return_value=_mock_completion("hi")
+    )
+    monkeypatch.setattr(
+        kimi_mod, "OpenAI", lambda *a, **k: mock_client, raising=True
+    )
+    monkeypatch.setattr(
+        kimi_mod, "AsyncOpenAI", lambda *a, **k: mock_client, raising=True
+    )
+
+    model = KimiModel(
+        model="moonshot-v1-8k", api_key="test-key", temperature=0.3
+    )
+    await model.a_generate("hello there")
+
+    _, kwargs = mock_client.chat.completions.create.call_args
+    assert kwargs["temperature"] == 0.3
