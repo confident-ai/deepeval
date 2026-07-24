@@ -33,6 +33,11 @@ from deepeval.models.llms.constants import (
 retry_openai = create_retry_decorator(PS.OPENAI)
 
 
+def _cached_tokens_from_usage(usage: Any) -> int:
+    details = getattr(usage, "prompt_tokens_details", None)
+    return getattr(details, "cached_tokens", 0) or 0
+
+
 def _request_timeout_seconds() -> float:
     timeout = float(get_settings().DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0)
     return timeout if timeout > 0 else 30.0
@@ -174,6 +179,7 @@ class GPTModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    _cached_tokens_from_usage(completion.usage),
                 )
                 self._update_llm_span_from_completion(completion, messages)
                 return structured_output, cost
@@ -191,6 +197,7 @@ class GPTModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    _cached_tokens_from_usage(completion.usage),
                 )
                 self._update_llm_span_from_completion(completion, messages)
                 return schema.model_validate(json_output), cost
@@ -203,7 +210,9 @@ class GPTModel(DeepEvalBaseLLM):
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
-            completion.usage.prompt_tokens, completion.usage.completion_tokens
+            completion.usage.prompt_tokens,
+            completion.usage.completion_tokens,
+            _cached_tokens_from_usage(completion.usage),
         )
         self._update_llm_span_from_completion(completion, messages)
         if schema:
@@ -241,6 +250,7 @@ class GPTModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    _cached_tokens_from_usage(completion.usage),
                 )
                 self._update_llm_span_from_completion(completion, messages)
                 return structured_output, cost
@@ -258,6 +268,7 @@ class GPTModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    _cached_tokens_from_usage(completion.usage),
                 )
                 self._update_llm_span_from_completion(completion, messages)
                 return schema.model_validate(json_output), cost
@@ -270,7 +281,9 @@ class GPTModel(DeepEvalBaseLLM):
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
-            completion.usage.prompt_tokens, completion.usage.completion_tokens
+            completion.usage.prompt_tokens,
+            completion.usage.completion_tokens,
+            _cached_tokens_from_usage(completion.usage),
         )
         self._update_llm_span_from_completion(completion, messages)
         if schema:
@@ -324,7 +337,8 @@ class GPTModel(DeepEvalBaseLLM):
         )
         input_tokens = completion.usage.prompt_tokens
         output_tokens = completion.usage.completion_tokens
-        cost = self.calculate_cost(input_tokens, output_tokens)
+        cached_tokens = _cached_tokens_from_usage(completion.usage)
+        cost = self.calculate_cost(input_tokens, output_tokens, cached_tokens)
         self._update_llm_span_from_completion(completion, messages)
 
         return completion, cost
@@ -363,7 +377,8 @@ class GPTModel(DeepEvalBaseLLM):
         )
         input_tokens = completion.usage.prompt_tokens
         output_tokens = completion.usage.completion_tokens
-        cost = self.calculate_cost(input_tokens, output_tokens)
+        cached_tokens = _cached_tokens_from_usage(completion.usage)
+        cost = self.calculate_cost(input_tokens, output_tokens, cached_tokens)
         self._update_llm_span_from_completion(completion, messages)
 
         return completion, cost
@@ -395,16 +410,27 @@ class GPTModel(DeepEvalBaseLLM):
     #############
 
     def calculate_cost(
-        self, input_tokens: int, output_tokens: int
+        self,
+        input_tokens: int,
+        output_tokens: int,
+        cached_tokens: int = 0,
     ) -> Optional[float]:
         if self.model_data.input_price and self.model_data.output_price:
-            input_cost = input_tokens * self.model_data.input_price
+            cache_price = self.model_data.cache_read_input_price
+            if cached_tokens and cache_price is not None:
+                uncached_tokens = input_tokens - cached_tokens
+                input_cost = (
+                    uncached_tokens * self.model_data.input_price
+                    + cached_tokens * cache_price
+                )
+            else:
+                input_cost = input_tokens * self.model_data.input_price
             output_cost = output_tokens * self.model_data.output_price
-            # Carry token counts alongside the cost so metric runs can surface
-            # input/output token usage (EvaluationCost subclasses float, so every
-            # existing `output, cost = generate(...)` caller is unaffected).
             return EvaluationCost(
-                input_cost + output_cost, input_tokens, output_tokens
+                input_cost + output_cost,
+                input_tokens,
+                output_tokens,
+                cached_tokens or None,
             )
 
     #########################

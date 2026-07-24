@@ -13,6 +13,7 @@ class DeepEvalModelData:
     supports_json: Optional[bool] = None
     input_price: Optional[float] = None
     output_price: Optional[float] = None
+    cache_read_input_price: Optional[float] = None
     supports_temperature: Optional[bool] = True
 
 
