@@ -18,19 +18,7 @@ class LLMApiTestCase(BaseModel):
     token_cost: Optional[float] = Field(None, alias="tokenCost")
     completion_time: Optional[float] = Field(None, alias="completionTime")
     tags: Optional[List[str]] = Field(None)
-    # multimodal_input: Optional[str] = Field(None, alias="multimodalInput")
-    # multimodal_input_actual_output: Optional[str] = Field(
-    #     None, alias="multimodalActualOutput"
-    # )
-    # multimodal_expected_output: Optional[str] = Field(
-    #     None, alias="multimodalExpectedOutput"
-    # )
-    # multimodal_retrieval_context: Optional[List[str]] = Field(
-    #     None, alias="multimodalRetrievalContext"
-    # )
-    # multimodal_context: Optional[List[str]] = Field(
-    #     None, alias="multimodalContext"
-    # )
+    flaky: bool = False
     images_mapping: Optional[Dict[str, MLLMImage]] = Field(
         None, alias="imagesMapping"
     )
@@ -78,7 +66,7 @@ class LLMApiTestCase(BaseModel):
     def update_run_duration(self, run_duration: float):
         self.run_duration = run_duration
 
-    def update_status(self, success: bool):
+    def update_status(self, success: Optional[bool]):
         if self.success is None:
             self.success = success
         else:
@@ -123,6 +111,7 @@ class ConversationalApiTestCase(BaseModel):
         None, alias="imagesMapping"
     )
     tags: Optional[List[str]] = Field(None)
+    flaky: bool = False
 
     def update_metric_data(self, metrics_data: MetricData):
         if self.metrics_data is None:

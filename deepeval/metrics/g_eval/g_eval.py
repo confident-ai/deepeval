@@ -51,12 +51,13 @@ class GEval(BaseMetric):
         evaluation_steps: Optional[List[str]] = None,
         rubric: Optional[List[Rubric]] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         top_logprobs: int = 20,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
         _include_g_eval_suffix: bool = True,
+        flaky: bool = False,
     ):
         if evaluation_params is not None and len(evaluation_params) == 0:
             raise ValueError("evaluation_params cannot be an empty list.")
@@ -82,6 +83,7 @@ class GEval(BaseMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self._include_g_eval_suffix = _include_g_eval_suffix
 
     def measure(
@@ -149,7 +151,7 @@ class GEval(BaseMetric):
                     if not self.strict_mode
                     else int(g_score)
                 )
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
 
                 self.reason = reason
                 self.verbose_logs = construct_verbose_logs(
@@ -211,7 +213,7 @@ class GEval(BaseMetric):
                 if not self.strict_mode
                 else int(g_score)
             )
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
 
             self.reason = reason
             self.verbose_logs = construct_verbose_logs(
@@ -407,16 +409,6 @@ class GEval(BaseMetric):
                 extract_schema=lambda s: (s.score, s.reason),
                 extract_json=lambda d: (d["score"], d["reason"]),
             )
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     def upload(self):
         ensure_required_params(

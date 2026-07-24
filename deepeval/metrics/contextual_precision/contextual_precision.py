@@ -51,12 +51,13 @@ class ContextualPrecisionMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.include_reason = include_reason
@@ -65,6 +66,7 @@ class ContextualPrecisionMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
 
     def measure(
         self,
@@ -119,7 +121,7 @@ class ContextualPrecisionMetric(BaseMetric):
                 )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason(input, multimodal)
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -174,7 +176,7 @@ class ContextualPrecisionMetric(BaseMetric):
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(input, multimodal)
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -352,16 +354,6 @@ class ContextualPrecisionMetric(BaseMetric):
         # Calculate weighted cumulative precision
         score = sum_weighted_precision_at_k / relevant_nodes_count
         return 0 if self.strict_mode and score < self.threshold else score
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

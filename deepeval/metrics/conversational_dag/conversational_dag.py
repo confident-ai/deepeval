@@ -26,12 +26,13 @@ class ConversationalDAGMetric(BaseConversationalMetric):
         name: str,
         dag: DeepAcyclicGraph,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
         _include_dag_suffix: bool = True,
+        flaky: bool = False,
     ):
         if not is_valid_dag_from_roots(
             root_nodes=dag.root_nodes, multiturn=dag.multiturn
@@ -48,6 +49,7 @@ class ConversationalDAGMetric(BaseConversationalMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self._include_dag_suffix = _include_dag_suffix
 
     def measure(
@@ -133,16 +135,6 @@ class ConversationalDAGMetric(BaseConversationalMetric):
                 ],
             )
             return self.score
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     def upload(self):
         from rich.console import Console

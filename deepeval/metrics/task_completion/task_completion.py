@@ -31,13 +31,14 @@ class TaskCompletionMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         task: Optional[str] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
     ):
         if task is None:
             self._is_task_provided = False
@@ -52,6 +53,7 @@ class TaskCompletionMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self.requires_trace = True
 
     def measure(
@@ -93,7 +95,7 @@ class TaskCompletionMetric(BaseMetric):
                     self.task = task
                 self.verdict, self.reason = self._generate_verdicts()
                 self.score = self._calculate_score()
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -138,7 +140,7 @@ class TaskCompletionMetric(BaseMetric):
                 self.task = task
             self.verdict, self.reason = await self._a_generate_verdicts()
             self.score = self._calculate_score()
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -240,16 +242,6 @@ class TaskCompletionMetric(BaseMetric):
             if self.strict_mode and self.verdict < self.threshold
             else self.verdict
         )
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):
