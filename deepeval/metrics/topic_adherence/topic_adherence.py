@@ -383,7 +383,7 @@ class TopicAdherenceMetric(BaseConversationalMetric):
             self.success = False
         else:
             try:
-                self.score >= self.threshold
+                self.success = self.score >= self.threshold
             except TypeError:
                 self.success = False
         return self.success
