@@ -98,8 +98,8 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                             prediction = prediction_dict["prediction"]
                             score = prediction_dict["score"]
                             if score:
-                                task_correct_predictions += 1
-                                overall_correct_predictions += 1
+                                task_correct_predictions += score
+                                overall_correct_predictions += score
                             predictions_row.append(
                                 (
                                     task.value,
@@ -209,11 +209,20 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                 golden.expected_output, prediction
             )
         elif mode == TruthfulQAMode.MC2:
-            score = self.scorer.truth_identification_score(
-                golden.expected_output, prediction
-            )
+            score = self.mc2_score(golden.expected_output, prediction)
 
         return {"prediction": prediction, "score": score}
+
+    def mc2_score(self, expected_output: str, prediction: str) -> float:
+        # truth_identification_score reports recall as a 0-100 percentage, but
+        # evaluate() averages the per-question scores, so it needs a fraction
+        # on the same 0-1 scale as MC1's exact match. Capped because repeated
+        # indices in a prediction currently count once each, which can push the
+        # percentage above 100 and a single question above full credit.
+        percentage = self.scorer.truth_identification_score(
+            expected_output, prediction
+        )
+        return min(percentage / 100, 1.0)
 
     def batch_predict(
         self,
@@ -273,9 +282,7 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                     golden.expected_output, prediction
                 )
             elif mode == TruthfulQAMode.MC2:
-                score = self.scorer.truth_identification_score(
-                    golden.expected_output, prediction
-                )
+                score = self.mc2_score(golden.expected_output, prediction)
             res.append({"prediction": prediction, "score": score})
 
         return res
