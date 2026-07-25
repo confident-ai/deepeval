@@ -35,7 +35,8 @@ retry_openai = create_retry_decorator(PS.OPENAI)
 
 def _cached_tokens_from_usage(usage: Any) -> int:
     details = getattr(usage, "prompt_tokens_details", None)
-    return getattr(details, "cached_tokens", 0) or 0
+    cached = getattr(details, "cached_tokens", None)
+    return cached if isinstance(cached, int) else 0
 
 
 def _request_timeout_seconds() -> float:

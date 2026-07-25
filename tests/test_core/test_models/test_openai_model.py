@@ -1053,11 +1053,7 @@ class TestGeneratePassesCachedTokens:
         # Cached tokens should be on the cost object
         assert cost.cached_tokens == 400
         # Cost should reflect discount: 600 uncached at $2.50/M + 400 at $1.25/M + 200 output at $10/M
-        expected = (
-            600 * (2.50 / 1e6)
-            + 400 * (1.25 / 1e6)
-            + 200 * (10.00 / 1e6)
-        )
+        expected = 600 * (2.50 / 1e6) + 400 * (1.25 / 1e6) + 200 * (10.00 / 1e6)
         assert abs(float(cost) - expected) < 1e-12
 
     @patch("deepeval.models.llms.openai_model.OpenAI")
