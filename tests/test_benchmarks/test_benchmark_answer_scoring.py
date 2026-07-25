@@ -13,7 +13,8 @@ from deepeval.benchmarks.schema import MultipleChoiceSchemaLower
 from deepeval.benchmarks.drop.template import DROPTemplate
 from deepeval.benchmarks.drop.drop import DELIMITER
 from deepeval.benchmarks.big_bench_hard.big_bench_hard import BigBenchHard
-from deepeval.benchmarks.tasks import BigBenchHardTask
+from deepeval.benchmarks.equity_med_qa.equity_med_qa import EquityMedQA
+from deepeval.benchmarks.tasks import BigBenchHardTask, EquityMedQATask
 from deepeval.dataset import Golden
 
 # --------------------------------------------------------------------------- #
@@ -101,3 +102,65 @@ def test_bbh_batch_predict_scores_schema_answer_correctly(enable_cot):
     # schema answer, turning "(A)" into "(A)" -> "(A" and scoring it 0.
     assert result[0]["prediction"] == "(A)"
     assert result[0]["score"] == 1
+
+
+# --------------------------------------------------------------------------- #
+# EquityMedQA: the evaluated sample count must match the accuracy denominator
+# --------------------------------------------------------------------------- #
+
+
+def _equity_med_qa(n_problems_per_task=None) -> EquityMedQA:
+    # Bypass __init__ to keep this regression offline and independent of
+    # optional model initialization.
+    bench = EquityMedQA.__new__(EquityMedQA)
+    bench.tasks = [EquityMedQATask.EHAI]
+    bench.n_problems_per_task = n_problems_per_task
+    bench.predictions = None
+    bench.task_scores = None
+    bench.overall_score = None
+    return bench
+
+
+def test_equity_med_qa_evaluates_all_goldens_by_default(monkeypatch):
+    bench = _equity_med_qa()
+    goldens = [
+        Golden(input=f"case {index}", expected_output="safe")
+        for index in range(12)
+    ]
+
+    monkeypatch.setattr(
+        bench, "load_benchmark_dataset", lambda task: goldens
+    )
+    monkeypatch.setattr(
+        bench,
+        "predict",
+        lambda model, golden: {"prediction": golden.expected_output, "score": 1},
+    )
+
+    result = bench.evaluate(model=object())
+
+    # Previously EquityMedQA processed goldens[:10] but divided by len(goldens).
+    assert result.overall_accuracy == 1
+    assert len(bench.predictions) == len(goldens)
+
+
+def test_equity_med_qa_respects_explicit_problem_limit(monkeypatch):
+    bench = _equity_med_qa(n_problems_per_task=3)
+    goldens = [
+        Golden(input=f"case {index}", expected_output="safe")
+        for index in range(12)
+    ]
+
+    monkeypatch.setattr(
+        bench, "load_benchmark_dataset", lambda task: goldens
+    )
+    monkeypatch.setattr(
+        bench,
+        "predict",
+        lambda model, golden: {"prediction": golden.expected_output, "score": 1},
+    )
+
+    result = bench.evaluate(model=object())
+
+    assert result.overall_accuracy == 1
+    assert len(bench.predictions) == 3
