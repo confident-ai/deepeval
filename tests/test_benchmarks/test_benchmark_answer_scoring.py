@@ -121,6 +121,10 @@ def _equity_med_qa(n_problems_per_task=None) -> EquityMedQA:
     return bench
 
 
+def _perfect_equity_med_qa_predict(model, golden):
+    return {"prediction": golden.expected_output, "score": 1}
+
+
 def test_equity_med_qa_evaluates_all_goldens_by_default(monkeypatch):
     bench = _equity_med_qa()
     goldens = [
@@ -132,9 +136,7 @@ def test_equity_med_qa_evaluates_all_goldens_by_default(monkeypatch):
         bench, "load_benchmark_dataset", lambda task: goldens
     )
     monkeypatch.setattr(
-        bench,
-        "predict",
-        lambda model, golden: {"prediction": golden.expected_output, "score": 1},
+        bench, "predict", _perfect_equity_med_qa_predict
     )
 
     result = bench.evaluate(model=object())
@@ -155,9 +157,7 @@ def test_equity_med_qa_respects_explicit_problem_limit(monkeypatch):
         bench, "load_benchmark_dataset", lambda task: goldens
     )
     monkeypatch.setattr(
-        bench,
-        "predict",
-        lambda model, golden: {"prediction": golden.expected_output, "score": 1},
+        bench, "predict", _perfect_equity_med_qa_predict
     )
 
     result = bench.evaluate(model=object())
