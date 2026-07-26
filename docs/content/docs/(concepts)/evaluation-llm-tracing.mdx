@@ -454,6 +454,53 @@ Both `update_current_trace` and `update_current_span` accept the same set of `LL
 `tags` and `metadata` aren't just for filtering and visualization — they're real test case fields that custom metrics like [`GEval`](/docs/metrics-llm-evals) can read. If your eval criteria depend on, say, the user tier or the retrieval source, set those on the trace/span via `tags` / `metadata` and reference them in your `GEval` criteria.
 :::
 
+## Group traces into a test run
+
+By default each trace is logged on its own. Wrap your code in `trace_test_run(...)` to collect every trace produced inside the block into a single **test run**, where **each trace becomes one test case** evaluated against the run's metric collection:
+
+```python title="main.py" showLineNumbers {1,4}
+from deepeval.tracing import observe, trace_test_run, trace_test_run_id
+
+with trace_test_run(metric_collection="My Collection", identifier="nightly-run"):
+    for golden in goldens:
+        llm_app(golden.input)   # each trace here becomes one test case in the run
+```
+
+`trace_test_run` creates an in-progress test run on Confident AI and stamps every trace ended inside the block with that test run's id (and metric collection). It yields the test run id if you need it:
+
+```python title="main.py" showLineNumbers {1}
+with trace_test_run(metric_collection="My Collection") as test_run_id:
+    llm_app(query)
+    print(trace_test_run_id) # Same as test_run_id and can be used in any other files
+```
+
+| Parameter           | Type            | Description                                                                          |
+| ------------------- | --------------- | ------------------------------------------------------------------------------------ |
+| `metric_collection` | `str`           | The metric collection each trace's test case is evaluated against. **Required.**     |
+| `identifier`        | `Optional[str]` | A human-readable label for the test run, shown on the Confident AI platform.         |
+
+:::note
+The metric collection passed to `trace_test_run` is authoritative for the test run — it's what every trace's test case is evaluated against, even if a trace inside the block also sets its own `metric_collection`. Span-level metric collections still run as independent [component-level evals](/docs/evaluation-component-level-llm-evals).
+:::
+
+The test run stays in progress while you stream traces into it and is finalized automatically shortly after. To attach a trace to a run **without** the context manager — for example when you already have a test run id — pass it to `update_current_trace`:
+
+```python title="main.py" showLineNumbers {4,5}
+from deepeval.tracing import observe, update_current_trace
+
+@observe()
+def llm_app(query: str) -> str:
+    update_current_trace(test_run_id=test_run_id, metric_collection="My Collection")
+    ...
+```
+
+If you instrument with OpenTelemetry instead of `@observe`, set the test run id as a span attribute and `deepeval`'s exporter will pick it up:
+
+```python
+span.set_attribute("confident.trace.test_run_id", test_run_id)
+span.set_attribute("confident.trace.metric_collection", "My Collection")
+```
+
 ## Prettifying traces for coding agents
 
 Traces aren't only read by humans. When you run evals locally and a metric fails, the failing trace is also what coding agents like **Claude Code, Codex, and Cursor** load into context to figure out which prompt, retriever, or tool actually caused the regression.

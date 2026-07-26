@@ -10,6 +10,8 @@ export {
   traceManager,
   getCurrentSpan,
   getCurrentTrace,
+  traceTestRun,
+  getTraceTestRunId,
 } from "./tracing";
 
 export { setTracingContext } from "./trace-context";
