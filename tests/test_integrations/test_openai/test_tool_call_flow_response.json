@@ -73,6 +73,7 @@
       "output": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "description": "Get the current weather for a city.",
           "inputParameters": {
             "location": "San Francisco",
@@ -128,6 +129,7 @@
   "output": [
     {
       "name": "get_weather",
+      "type": "FUNCTION",
       "description": "Get the current weather for a city.",
       "inputParameters": {
         "location": "San Francisco",

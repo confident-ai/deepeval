@@ -426,7 +426,7 @@
             ]
           },
           "resume": null,
-          "goto": "<circular>"
+          "goto": []
         }
       ],
       "integration": "LangChain"

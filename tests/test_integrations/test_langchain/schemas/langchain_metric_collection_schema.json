@@ -427,7 +427,7 @@
             ]
           },
           "resume": null,
-          "goto": "<circular>"
+          "goto": []
         }
       ],
       "metricCollection": "tool_accuracy",
