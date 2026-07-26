@@ -165,6 +165,23 @@ def create_test_result(
             )
 
 
+def get_test_results_from_test_run(test_run) -> List[TestResult]:
+    """Convert a persisted TestRun's API test cases back into TestResult objects.
+
+    Used by the CLI after a pytest-driven run, where results live on the
+    TestRun (built by the plugin) rather than being returned from evaluate().
+    """
+    if test_run is None:
+        return []
+
+    api_test_cases: List[Union[LLMApiTestCase, ConversationalApiTestCase]] = [
+        *test_run.test_cases,
+        *test_run.conversational_test_cases,
+    ]
+    api_test_cases.sort(key=lambda tc: tc.order if tc.order is not None else 0)
+    return [create_test_result(tc) for tc in api_test_cases]
+
+
 def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
     # Fall back to the golden's input when the trace didn't capture a
     # meaningful one of its own. This concern lives here at the

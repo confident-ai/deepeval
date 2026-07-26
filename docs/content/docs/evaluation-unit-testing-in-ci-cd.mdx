@@ -398,27 +398,26 @@ We highly recommend setting up [Confident AI](https://app.confident-ai.com) with
 />
 :::
 
-## Marking an Official Run
+## Regression Testing Against a Baseline
 
-You can designate a test run as the **official** test run on Confident AI — the marked good run that future runs are compared against for regressions. Add the `--official` flag (or `-o`) to mark the run once it completes:
+`deepeval` can compare test runs against an **official baseline** on Confident AI and fail the build if any metric regresses.
+
+Mark a run as official via:
+- **CLI**: `deepeval test run test_file.py --official`
+- **SDK**: `test_run.mark_official(run_id="<test-run-id>")`
+- **Platform**: mark any run as official from the Confident AI dashboard
+
+Then run with `--mode regression` on pull requests:
 
 ```bash
-deepeval test run test_llm_app.py --official
+deepeval test run test_llm_app.py --mode regression
 ```
-
-If you evaluate with `evaluate()` rather than `deepeval test run`, pass `official=True` instead:
-
-```python
-from deepeval import evaluate
-
-evaluate(test_cases=[...], metrics=[...], official=True)
-```
-
-This is typically done on your main branch so every baseline reflects merged, production-ready code.
 
 :::note
-Marking a run as official requires a `CONFIDENT_API_KEY`, since official runs live on Confident AI.
+Both `--official` and `--mode regression` require a `CONFIDENT_API_KEY`. Add `GITHUB_TOKEN` to your workflow step to get automatic PR comments with the comparison results.
 :::
+
+See the [regression testing guide](/guides/guides-regression-testing-in-cicd) for the full workflow.
 
 ## FAQs
 
@@ -492,6 +491,24 @@ Marking a run as official requires a `CONFIDENT_API_KEY`, since official runs li
           testing reports, a
           UI to inspect failing cases, and trend lines of performance across
           commits. Without the key, the exact same tests still run locally.
+        </>
+      ),
+    },
+    {
+      question: "How do I catch regressions against a previous run?",
+      answer: (
+        <>
+          Mark a run as official via the <code>--official</code> CLI flag,{" "}
+          <code>test_run.mark_official(run_id="...")</code>, or
+          the Confident AI platform. Then run{" "}
+          <code>deepeval test run --mode regression</code> on pull requests —{" "}
+          <code>deepeval</code> compares against the latest official run and
+          fails the build if any metric drops by more than <code>0.1</code>.
+          See the{" "}
+          <a href="/guides/guides-regression-testing-in-cicd">
+            regression testing guide
+          </a>
+          .
         </>
       ),
     },
