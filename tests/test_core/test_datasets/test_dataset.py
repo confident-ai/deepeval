@@ -10,6 +10,7 @@ from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
     ToolCall,
+    ToolCallType,
     RetrievedContextData,
 )
 
@@ -239,6 +240,82 @@ class TestSaveAndLoad:
                 if vals[custom_idx]:
                     custom_obj = json.loads(vals[custom_idx])
                     assert custom_obj["col"] == "val"
+
+    def test_save_as_serializes_tool_call_type_as_json_string(self):
+        """Regression: a Golden carrying a ToolCall must serialize the
+        ToolCallType enum as its string value ("FUNCTION"), not as a bare
+        Enum member. mode="json" is required on the ToolCall.model_dump in
+        save_as; without it, json.dump/json.dumps raise
+        `TypeError: Object of type ToolCallType is not JSON serializable`
+        for every json/jsonl/csv export of a tool-use dataset."""
+        dataset = EvaluationDataset(
+            [
+                Golden(
+                    input="hi",
+                    actual_output="ok",
+                    tools_called=[
+                        ToolCall(
+                            name="search",
+                            input_parameters={"q": "foo"},
+                            output={"ok": True},
+                        )
+                    ],
+                    expected_tools=[ToolCall(name="finalize")],
+                )
+            ]
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # save_as must not raise for any of the three formats
+            json_path = dataset.save_as(
+                "json", directory=tmpdir, file_name="tc_json"
+            )
+            jsonl_path = dataset.save_as(
+                "jsonl", directory=tmpdir, file_name="tc_jsonl"
+            )
+            csv_path = dataset.save_as(
+                "csv", directory=tmpdir, file_name="tc_csv"
+            )
+
+            # Raw JSON: the enum is emitted as the string "FUNCTION", and no
+            # bare Enum repr (e.g. "<ToolCallType.FUNCTION>") leaks to disk.
+            with open(json_path, "r", encoding="utf-8") as f:
+                raw_json = f.read()
+            assert "ToolCallType" not in raw_json
+            row = json.loads(raw_json)[0]
+            assert row["tools_called"][0]["type"] == "FUNCTION"
+            assert row["expected_tools"][0]["type"] == "FUNCTION"
+
+            # Raw JSONL: one JSON object per line, same serialization.
+            with open(jsonl_path, "r", encoding="utf-8") as f:
+                raw_jsonl = f.read()
+            assert "ToolCallType" not in raw_jsonl
+            row = json.loads(raw_jsonl.splitlines()[0])
+            assert row["tools_called"][0]["type"] == "FUNCTION"
+            assert row["expected_tools"][0]["type"] == "FUNCTION"
+
+            # Raw CSV: the tools column holds a JSON string with type
+            # "FUNCTION".
+            with open(csv_path, "r", encoding="utf-8") as f:
+                raw_csv = f.read()
+            assert "ToolCallType" not in raw_csv
+            rows = list(csv.reader(raw_csv.splitlines()))
+            header, vals = rows[0], rows[1]
+            tools = json.loads(vals[header.index("tools_called")])
+            assert tools[0]["type"] == "FUNCTION"
+
+            # Round-trip: each loader rebuilds the ToolCall from the string,
+            # coercing "FUNCTION" back to the ToolCallType enum.
+            for loader, path in (
+                ("add_goldens_from_json_file", json_path),
+                ("add_goldens_from_jsonl_file", jsonl_path),
+                ("add_goldens_from_csv_file", csv_path),
+            ):
+                reloaded = EvaluationDataset()
+                getattr(reloaded, loader)(path)
+                tool = reloaded.goldens[0].tools_called[0]
+                assert tool.name == "search"
+                assert tool.type == ToolCallType.FUNCTION
 
     def test_save_as_round_trips_retrieval_context_data(self):
         """save_as serializes a RetrievedContextData (a type-allowed member of
