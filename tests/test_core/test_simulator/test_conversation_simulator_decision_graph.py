@@ -15,7 +15,6 @@ from tests.test_core.test_simulator.helpers import (
     static_callback,
 )
 
-
 # ---------------------------------------------------------------------------
 # Builder / validation tests
 # ---------------------------------------------------------------------------

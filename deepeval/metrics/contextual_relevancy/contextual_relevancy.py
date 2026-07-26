@@ -30,12 +30,10 @@ def _contextual_relevancy_verdict_kwargs(multimodal: bool) -> Dict[str, str]:
     context_type = "context (image or string)" if multimodal else "context"
     statement_or_image = "statement or image" if multimodal else "statement"
     if multimodal:
-        extraction_instructions = textwrap.dedent(
-            """
+        extraction_instructions = textwrap.dedent("""
             If the context is textual, you should first extract the statements found in the context if the context, which are high level information found in the context, before deciding on a verdict and optionally a reason for each statement.
             If the context is an image, `statement` should be a description of the image. Do not assume any information not visibly available.
-            """
-        ).strip()
+            """).strip()
         empty_context_instruction = ""
     else:
         extraction_instructions = (

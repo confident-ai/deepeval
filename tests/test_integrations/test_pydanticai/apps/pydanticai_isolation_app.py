@@ -32,7 +32,6 @@ from pydantic_ai import Agent
 from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
 from deepeval.tracing import update_current_span, update_current_trace
 
-
 # Per-request ContextVar carrying request data the tool body reads back.
 # In each task / worker thread we ``set`` this BEFORE calling agent.run;
 # inside the tool we ``get`` it. The whole point is to confirm the value

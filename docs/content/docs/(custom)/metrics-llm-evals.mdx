@@ -47,7 +47,7 @@ correctness_metric = GEval(
 )
 ```
 
-There are **THREE** mandatory and **SEVEN** optional parameters required when instantiating an `GEval` class:
+There are **THREE** mandatory and several optional parameters required when instantiating an `GEval` class:
 
 - `name`: name of custom metric.
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
@@ -59,6 +59,7 @@ There are **THREE** mandatory and **SEVEN** optional parameters required when in
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+- [Optional] `max_retrieval_context_tokens`: an integer token budget for `retrieval_context` when it is included in `evaluation_params`. When set, large retrieved chunks are compacted before they are added to the G-Eval prompt. Defaulted to `None`.
 - [Optional] `evaluation_template`: a class of type `GEvalTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `GEval` score. Defaulted to `deepeval`'s `GEvalTemplate`.
 
 :::danger
@@ -117,6 +118,70 @@ correctness_metric = GEval(
     evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
 )
 ```
+
+### Large Retrieval Contexts
+
+When you use `SingleTurnParams.RETRIEVAL_CONTEXT` in a custom G-Eval metric, the retrieved chunks become part of the judge prompt. If your retriever returns very large documents, this can push the prompt toward the model context limit and make the judge focus on irrelevant middle sections.
+
+Use `max_retrieval_context_tokens` to keep the retrieval evidence bounded:
+
+```python
+from deepeval.metrics import GEval
+from deepeval.test_case import SingleTurnParams
+
+faithfulness = GEval(
+    name="RAG Faithfulness",
+    criteria="Check whether the actual output is supported by the retrieval context.",
+    evaluation_params=[
+        SingleTurnParams.ACTUAL_OUTPUT,
+        SingleTurnParams.RETRIEVAL_CONTEXT,
+    ],
+    max_retrieval_context_tokens=4000,
+)
+```
+
+When the retrieval context is over budget, `GEval` keeps the chunks with the strongest lexical overlap against the selected input, actual output, and expected output fields. It then preserves the start and end of each visible chunk, includes source labels for `RetrievedContextData`, and inserts an omission marker so the judge knows the context was compacted.
+
+You can also inspect the bounded prompt before running an evaluation. This is useful in CI or when tuning a RAG evaluator because it does not call the evaluation model:
+
+```python
+from deepeval.metrics import GEval
+from deepeval.test_case import LLMTestCase, SingleTurnParams
+
+metric = GEval(
+    name="RAG Faithfulness",
+    evaluation_steps=[
+        "Check whether the actual output is supported by retrieval context.",
+        "Penalize unsupported claims.",
+    ],
+    evaluation_params=[
+        SingleTurnParams.ACTUAL_OUTPUT,
+        SingleTurnParams.RETRIEVAL_CONTEXT,
+    ],
+    max_retrieval_context_tokens=4000,
+)
+
+test_case = LLMTestCase(
+    input="Can customers get a refund?",
+    actual_output="Customers can request a refund within 30 days.",
+    retrieval_context=[...],
+)
+
+report = metric.get_retrieval_context_budget_report(test_case)
+coverage = metric.get_retrieval_context_evidence_coverage(test_case)
+prompt = metric.preview_evaluation_prompt(test_case)
+
+print(report.original_tokens)
+print(report.rendered_tokens)
+print(report.compression_ratio)
+print(coverage.coverage_ratio)
+print(coverage.missing_terms)
+print(prompt)
+```
+
+`get_retrieval_context_budget_report()` returns the estimated original tokens, rendered tokens, compression ratio, visible chunks, omitted chunks, per-chunk relevance scores, per-chunk source metadata, and an evidence coverage summary. The coverage summary compares terms from the selected input, actual output, and expected output fields against the rendered retrieval context, so you can catch cases where compaction removed evidence the judge still needs.
+
+You can call `get_retrieval_context_evidence_coverage()` directly when you only need the coverage ratio, covered terms, missing terms, and warning message. `preview_evaluation_prompt()` requires explicit `evaluation_steps` so it never triggers a hidden LLM call to generate steps.
 
 ### Rubric
 
@@ -495,4 +560,3 @@ metric.measure(...)
     },
   ]}
 />
-

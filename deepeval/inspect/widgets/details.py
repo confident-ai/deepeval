@@ -30,7 +30,6 @@ from deepeval.inspect.widgets._styling import (
     type_prefix,
 )
 
-
 # Matches the TRACE tag so the eye learns "cyan = structure markers".
 _HEADER_ACCENT = "#8be9fd"
 _CTA_ACCENT = "#bd93f9"

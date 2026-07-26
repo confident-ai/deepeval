@@ -6,8 +6,7 @@ class SimulatorControllerTemplate:
     def check_expected_outcome(
         previous_conversation: str, expected_outcome: str
     ) -> str:
-        prompt = textwrap.dedent(
-            f"""You are a Conversation Completion Checker.
+        prompt = textwrap.dedent(f"""You are a Conversation Completion Checker.
             Your task is to determine whether the conversation has achieved the expected outcome and should be terminated.
 
             Guidelines:
@@ -34,6 +33,5 @@ class SimulatorControllerTemplate:
             Conversation History:
             {previous_conversation}
             JSON Output:
-            """
-        )
+            """)
         return prompt
