@@ -514,6 +514,7 @@
       "toolsCalled": [
         {
           "name": "research_topic",
+          "type": "FUNCTION",
           "output": {
             "content": "Space research reveals new exoplanets in habitable zones.",
             "additional_kwargs": {},
@@ -1114,6 +1115,7 @@
   "toolsCalled": [
     {
       "name": "research_topic",
+      "type": "FUNCTION",
       "output": {
         "content": "Space research reveals new exoplanets in habitable zones.",
         "additional_kwargs": {},

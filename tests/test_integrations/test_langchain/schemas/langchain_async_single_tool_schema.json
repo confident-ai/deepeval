@@ -143,6 +143,7 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": {
             "content": "Foggy, 58F",
             "additional_kwargs": {},
@@ -412,6 +413,7 @@
   "toolsCalled": [
     {
       "name": "get_weather",
+      "type": "FUNCTION",
       "output": {
         "content": "Foggy, 58F",
         "additional_kwargs": {},

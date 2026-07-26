@@ -326,6 +326,7 @@
       "toolsCalled": [
         {
           "name": "calculate",
+          "type": "FUNCTION",
           "output": {
             "content": "45",
             "additional_kwargs": {},
@@ -704,6 +705,7 @@
   "toolsCalled": [
     {
       "name": "calculate",
+      "type": "FUNCTION",
       "output": {
         "content": "45",
         "additional_kwargs": {},

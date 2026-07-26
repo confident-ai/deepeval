@@ -143,6 +143,7 @@
       "toolsCalled": [
         {
           "name": "search_web",
+          "type": "FUNCTION",
           "output": {
             "content": "Apple (AAPL) stock: $178.50, up 1.2%",
             "additional_kwargs": {},
@@ -415,6 +416,7 @@
   "toolsCalled": [
     {
       "name": "search_web",
+      "type": "FUNCTION",
       "output": {
         "content": "Apple (AAPL) stock: $178.50, up 1.2%",
         "additional_kwargs": {},

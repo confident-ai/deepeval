@@ -326,6 +326,7 @@
       "toolsCalled": [
         {
           "name": "square",
+          "type": "FUNCTION",
           "output": {
             "content": "49",
             "additional_kwargs": {},
@@ -699,6 +700,7 @@
   "toolsCalled": [
     {
       "name": "square",
+      "type": "FUNCTION",
       "output": {
         "content": "49",
         "additional_kwargs": {},

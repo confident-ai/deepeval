@@ -89,6 +89,7 @@
       "toolsCalled": [
         {
           "name": "calculate",
+          "type": "FUNCTION",
           "inputParameters": {}
         }
       ],

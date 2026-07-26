@@ -60,6 +60,7 @@
       "toolsCalled": [
         {
           "name": "calculate",
+          "type": "FUNCTION",
           "inputParameters": {
             "operation": "multiply",
             "b": 8,
@@ -89,6 +90,7 @@
       "toolsCalled": [
         {
           "name": "calculate",
+          "type": "FUNCTION",
           "inputParameters": {
             "operation": "multiply",
             "b": 8,

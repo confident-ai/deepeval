@@ -329,6 +329,7 @@
       "toolsCalled": [
         {
           "name": "multiply",
+          "type": "FUNCTION",
           "output": {
             "content": "48",
             "additional_kwargs": {},
@@ -704,6 +705,7 @@
   "toolsCalled": [
     {
       "name": "multiply",
+      "type": "FUNCTION",
       "output": {
         "content": "48",
         "additional_kwargs": {},
