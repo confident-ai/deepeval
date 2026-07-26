@@ -48,11 +48,11 @@ try:
         TracerProvider,
     )
     from opentelemetry.sdk.trace.export import (
-        BatchSpanProcessor,
-        SimpleSpanProcessor,
+        BatchSpanProcessor,  # noqa: F401 - imported to verify dependency availability
+        SimpleSpanProcessor,  # noqa: F401 - imported to verify dependency availability
     )
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
-        OTLPSpanExporter,
+        OTLPSpanExporter,  # noqa: F401 - imported to verify dependency availability
     )
     from opentelemetry.trace import set_tracer_provider
     from pydantic_ai.models.instrumented import (
@@ -341,8 +341,11 @@ class SpanInterceptor(SpanProcessor):
             or span.attributes.get("agent_name")
         )
 
-        if agent_name and self._is_agent_span(operation_name):
-            self._add_agent_span(span, agent_name)
+        if self._is_agent_span(operation_name):
+            self._add_agent_span(
+                span,
+                self._resolve_agent_span_name(span, agent_name, operation_name),
+            )
 
         if operation_name in self.LLM_OPERATION_NAMES:
             # Explicitly classify model request spans as LLM spans so
@@ -424,8 +427,13 @@ class SpanInterceptor(SpanProcessor):
                 or span.attributes.get("pydantic_ai.agent.name")
                 or span.attributes.get("agent_name")
             )
-            if agent_name and self._is_agent_span(operation_name):
-                self._add_agent_span(span, agent_name)
+            if self._is_agent_span(operation_name):
+                self._add_agent_span(
+                    span,
+                    self._resolve_agent_span_name(
+                        span, agent_name, operation_name
+                    ),
+                )
 
         attrs = span.attributes or {}
         if not attrs.get("confident.span.integration"):
@@ -814,4 +822,14 @@ class SpanInterceptor(SpanProcessor):
         self._set_attr_post_end(span, "confident.span.name", name)
 
     def _is_agent_span(self, operation_name: Optional[str]) -> bool:
-        return operation_name == "invoke_agent"
+        return operation_name in {"invoke_agent", "plan"}
+
+    def _resolve_agent_span_name(
+        self, span, agent_name: Optional[str], operation_name: Optional[str]
+    ) -> str:
+        if agent_name:
+            return agent_name
+        span_name = getattr(span, "name", None)
+        if isinstance(span_name, str) and span_name:
+            return span_name
+        return operation_name or "agent"

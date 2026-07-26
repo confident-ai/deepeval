@@ -114,7 +114,7 @@ init_clock_bridge()
 # Strands), Traceloop attrs (kept inert for parity), and span-name
 # heuristics. Settings-independent; inspects raw OTel span only.
 
-_AGENT_OP_NAMES = {"invoke_agent", "create_agent"}
+_AGENT_OP_NAMES = {"invoke_agent", "create_agent", "plan"}
 _LLM_OP_NAMES = {
     "chat",
     "generate_content",

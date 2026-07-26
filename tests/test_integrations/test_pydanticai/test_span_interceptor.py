@@ -44,12 +44,13 @@ from deepeval.tracing.otel.context_aware_processor import (
 )
 from deepeval.tracing.trace_context import trace
 
-
 _span_id_counter = count(start=1)
 _trace_id_counter = count(start=1)
 
 
-def _make_mock_span(operation_name=None, agent_name=None, tool_name=None):
+def _make_mock_span(
+    operation_name=None, agent_name=None, tool_name=None, span_name=""
+):
     """Mock OTel span that records ``set_attribute`` calls.
 
     Mirrors the real OTel SDK's invariant that ``Span.attributes`` is a view
@@ -73,6 +74,7 @@ def _make_mock_span(operation_name=None, agent_name=None, tool_name=None):
         trace_id=next(_trace_id_counter),
         span_id=next(_span_id_counter),
     )
+    span.name = span_name
     span.parent = None
     span.start_time = None  # forces _push_span_context to use perf_counter()
     return span
@@ -1160,6 +1162,28 @@ def _make_agent_span_mock(agent_name="agent_x"):
 
 
 class TestNextSpanInterceptorIntegration:
+    def test_plan_operation_is_classified_as_agent_span(self):
+        settings = _make_settings()
+        interceptor = SpanInterceptor(settings)
+        span = _make_mock_span(operation_name="plan", agent_name="planner")
+
+        interceptor.on_start(span, None)
+        interceptor.on_end(span)
+
+        assert span.attributes.get("confident.span.type") == "agent"
+        assert span.attributes.get("confident.span.name") == "planner"
+
+    def test_plan_operation_without_agent_name_uses_span_name(self):
+        settings = _make_settings()
+        interceptor = SpanInterceptor(settings)
+        span = _make_mock_span(operation_name="plan", span_name="plan")
+
+        interceptor.on_start(span, None)
+        interceptor.on_end(span)
+
+        assert span.attributes.get("confident.span.type") == "agent"
+        assert span.attributes.get("confident.span.name") == "plan"
+
     def test_next_agent_span_metric_collection_lands_on_otel_attrs(self):
         """``with next_agent_span(metric_collection=...)`` is consumed by
         the interceptor's ``_push_span_context`` for the agent span and
