@@ -2,7 +2,7 @@
 
 import asyncio
 from rich.console import Console
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Tuple, Type, Union
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
     LLMTestCase,
@@ -21,6 +21,8 @@ from deepeval.metrics.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.g_eval import schema as gschema
+from deepeval.metrics.g_eval.template import GEvalTemplate
+from deepeval.metrics.prompt_template import BasePromptTemplate
 from deepeval.metrics.g_eval.utils import (
     MetricPullResponse,
     Rubric,
@@ -56,6 +58,7 @@ class GEval(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        evaluation_template: Type[BasePromptTemplate] = GEvalTemplate,
         _include_g_eval_suffix: bool = True,
     ):
         if evaluation_params is not None and len(evaluation_params) == 0:
@@ -82,6 +85,7 @@ class GEval(BaseMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
+        self.evaluation_template = evaluation_template
         self._include_g_eval_suffix = _include_g_eval_suffix
 
     def measure(

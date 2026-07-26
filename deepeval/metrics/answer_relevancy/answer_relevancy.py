@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import Optional, List, Type, Union
 
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -21,6 +21,8 @@ from deepeval.metrics.answer_relevancy.schema import (
     Verdicts,
     AnswerRelevancyScoreReason,
 )
+from deepeval.metrics.answer_relevancy.template import AnswerRelevancyTemplate
+from deepeval.metrics.prompt_template import BasePromptTemplate
 
 
 class AnswerRelevancyMetric(BaseMetric):
@@ -37,6 +39,7 @@ class AnswerRelevancyMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        evaluation_template: Type[BasePromptTemplate] = AnswerRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -45,6 +48,7 @@ class AnswerRelevancyMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
