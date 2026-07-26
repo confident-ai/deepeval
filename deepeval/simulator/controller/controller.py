@@ -1,4 +1,4 @@
-import asyncio
+from deepeval.models.llms.utils import safe_asyncio_run
 import inspect
 from typing import Awaitable, Callable, List, Optional
 
@@ -59,7 +59,7 @@ class SimulationController:
         )
         decision = self._invoke_controller(ctx)
         if inspect.isawaitable(decision):
-            decision = asyncio.run(decision)
+            decision = safe_asyncio_run(decision)
 
         return self._should_end(decision, progress, pbar_turns_id)
 
