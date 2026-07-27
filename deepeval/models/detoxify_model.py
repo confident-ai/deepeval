@@ -1,10 +1,11 @@
 import torch
+from typing import Optional
 from deepeval.models.base_model import DeepEvalBaseModel
 from detoxify import Detoxify
 
 
 class DetoxifyModel(DeepEvalBaseModel):
-    def __init__(self, model_name: str | None = None, *args, **kwargs):
+    def __init__(self, model_name: Optional[str] = None, *args, **kwargs):
         if model_name is not None:
             assert model_name in [
                 "original",
