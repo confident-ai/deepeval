@@ -17,6 +17,7 @@
       "toolsCalled": [
         {
           "name": "Function tool: calculate",
+          "type": "FUNCTION",
           "description": "Function tool",
           "output": "10 + 5 = 15",
           "inputParameters": {

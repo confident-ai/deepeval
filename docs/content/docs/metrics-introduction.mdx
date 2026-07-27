@@ -621,7 +621,8 @@ You can also execute each metric individually. All metrics in `deepeval`, includ
 - can have its score reason accessed via `metric.reason`
 - can have its status accessed via `metric.is_successful()`
 - can be used to evaluate test cases or entire datasets, with or without Pytest
-- has a `threshold` that acts as the threshold for success. `metric.is_successful()` is only true if `metric.score` is above/below `threshold`
+- has a [`threshold`](/docs/metrics-introduction#metric-thresholds) that acts as the threshold for success. `metric.is_successful()` is only true if `metric.score` is above/below `threshold`
+- has a [`flaky`](/docs/metrics-introduction#flaky-metrics) property, which when turned on stops the metric's verdict from deciding a test case's pass/fail status
 - has a `strict_mode` property, which when turned on enforces `metric.score` to a binary one
 - has a `verbose_mode` property, which when turned on prints metric logs whenever a metric is executed
 
@@ -760,6 +761,42 @@ metric.measure(...)
 
 :::tip
 You can find examples of how this can be done in more detail on the **Customize Your Template** section of each individual metric page, which shows code examples, and a link to `deepeval`'s GitHub showing the default templates currently used.
+:::
+
+## Metric Thresholds
+
+Every metric accepts a `threshold` parameter (defaulted to `0.5`) that decides whether it passes or fails: `metric.is_successful()` is only `True` if `metric.score` reaches the `threshold` (or stays below it, for "lower is better" metrics such as `BiasMetric`).
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+metric = AnswerRelevancyMetric(threshold=0.7)
+```
+
+You can also set `threshold=None` to run a metric in **score-only mode**. The score and reason are still computed, recorded, and reported, but the metric has no pass/fail opinion — `metric.is_successful()` returns `None`, and the metric never contributes to its test case's pass/fail status.
+
+```python
+metric = AnswerRelevancyMetric(threshold=None)
+```
+
+:::caution
+Because every test case must be able to pass or fail, each `evaluate()` or `assert_test()` call requires **at least one non-flaky metric with a `threshold`**.
+:::
+
+## Flaky Metrics
+
+Every metric also accepts a `flaky` parameter (defaulted to `False`). A flaky metric behaves exactly like a normal one — its score, reason, and verdict are all computed and reported — but its failure **never decides its test case's pass/fail status**.
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+metric = AnswerRelevancyMetric(threshold=0.7, flaky=True)
+```
+
+This is useful for metrics you know are noisy — for example ones with borderline scores that flip between passing and failing across runs — that you still want to keep measuring and tracking without letting them gate deployments. Flaky pass/fail counts are shown separately in test run results, and the `flaky` status is also logged on Confident AI.
+
+:::info
+Test cases can also be [marked as flaky](/docs/evaluation-test-cases#mark-test-cases-as-flaky) — a failing flaky test case makes `assert_test()` print a warning instead of raising an `AssertionError`.
 :::
 
 ## What About Non-LLM-as-a-judge Metrics?

@@ -36,12 +36,13 @@ class ToolUseMetric(BaseConversationalMetric):
     def __init__(
         self,
         available_tools: List[ToolCall],
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
     ):
         self.available_tools = available_tools
         self.threshold = 1 if strict_mode else threshold
@@ -51,6 +52,7 @@ class ToolUseMetric(BaseConversationalMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
 
     def measure(
         self,
@@ -462,13 +464,6 @@ class ToolUseMetric(BaseConversationalMetric):
             extract_schema=lambda s: s.reason,
             extract_json=lambda data: data["reason"],
         )
-
-    def is_successful(self) -> bool:
-        try:
-            self.success = self.score >= self.threshold
-        except (AttributeError, TypeError):
-            self.success = False
-        return self.success
 
     @property
     def __name__(self):

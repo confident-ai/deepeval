@@ -654,6 +654,7 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": {
             "content": "No weather data for Sydney, Australia",
             "additional_kwargs": {},
@@ -670,6 +671,7 @@
         },
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": {
             "content": "No weather data for Tokyo, Japan",
             "additional_kwargs": {},
@@ -686,6 +688,7 @@
         },
         {
           "name": "search_news",
+          "type": "FUNCTION",
           "output": {
             "content": "Tech stocks rally as AI boom continues",
             "additional_kwargs": {},
@@ -1290,6 +1293,7 @@
   "toolsCalled": [
     {
       "name": "get_weather",
+      "type": "FUNCTION",
       "output": {
         "content": "No weather data for Sydney, Australia",
         "additional_kwargs": {},
@@ -1306,6 +1310,7 @@
     },
     {
       "name": "get_weather",
+      "type": "FUNCTION",
       "output": {
         "content": "No weather data for Tokyo, Japan",
         "additional_kwargs": {},
@@ -1322,6 +1327,7 @@
     },
     {
       "name": "search_news",
+      "type": "FUNCTION",
       "output": {
         "content": "Tech stocks rally as AI boom continues",
         "additional_kwargs": {},

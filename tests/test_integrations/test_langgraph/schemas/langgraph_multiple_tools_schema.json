@@ -654,6 +654,7 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": {
             "content": "Cloudy, 68°F",
             "additional_kwargs": {},
@@ -670,6 +671,7 @@
         },
         {
           "name": "get_timezone",
+          "type": "FUNCTION",
           "output": {
             "content": "JST (UTC+9)",
             "additional_kwargs": {},
@@ -686,6 +688,7 @@
         },
         {
           "name": "get_population",
+          "type": "FUNCTION",
           "output": {
             "content": "13,960,000",
             "additional_kwargs": {},
@@ -1278,6 +1281,7 @@
   "toolsCalled": [
     {
       "name": "get_weather",
+      "type": "FUNCTION",
       "output": {
         "content": "Cloudy, 68°F",
         "additional_kwargs": {},
@@ -1294,6 +1298,7 @@
     },
     {
       "name": "get_timezone",
+      "type": "FUNCTION",
       "output": {
         "content": "JST (UTC+9)",
         "additional_kwargs": {},
@@ -1310,6 +1315,7 @@
     },
     {
       "name": "get_population",
+      "type": "FUNCTION",
       "output": {
         "content": "13,960,000",
         "additional_kwargs": {},

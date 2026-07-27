@@ -118,7 +118,7 @@ class AgentLoopDetectionMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         repetition_threshold: int = 3,
         similarity_threshold: float = 0.85,
         check_tool_repetition: bool = True,
@@ -128,6 +128,7 @@ class AgentLoopDetectionMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.repetition_threshold = repetition_threshold
@@ -142,6 +143,7 @@ class AgentLoopDetectionMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self.requires_trace = True
 
     def measure(
@@ -249,7 +251,7 @@ class AgentLoopDetectionMetric(BaseMetric):
         if self.strict_mode and self.score < self.threshold:
             self.score = 0.0
 
-        self.success = self.score >= self.threshold
+        self.success = self.is_successful()
 
         reasons = []
         if self.check_tool_repetition and rep_score < 1.0:
@@ -548,16 +550,6 @@ class AgentLoopDetectionMetric(BaseMetric):
             return 1.0
 
         return total / weights
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

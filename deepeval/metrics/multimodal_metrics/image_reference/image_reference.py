@@ -31,11 +31,12 @@ class ImageReferenceMetric(BaseMetric):
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
         max_context_size: Optional[int] = None,
+        flaky: bool = False,
     ):
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -43,6 +44,7 @@ class ImageReferenceMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self.max_context_size = max_context_size
 
     def measure(
@@ -350,16 +352,6 @@ class ImageReferenceMetric(BaseMetric):
 
     def calculate_score(self, scores: List[float]) -> float:
         return sum(scores) / len(scores)
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

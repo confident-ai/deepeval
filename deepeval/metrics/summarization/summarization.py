@@ -42,7 +42,7 @@ class SummarizationMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         n: int = 5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         assessment_questions: Optional[List[str]] = None,
@@ -51,6 +51,7 @@ class SummarizationMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         truths_extraction_limit: Optional[int] = None,
+        flaky: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -66,6 +67,7 @@ class SummarizationMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
 
         self.truths_extraction_limit = truths_extraction_limit
         if self.truths_extraction_limit is not None:
@@ -124,7 +126,7 @@ class SummarizationMetric(BaseMetric):
                 }
                 self.score = min(alignment_score, coverage_score)
                 self.reason = self._generate_reason()
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -184,7 +186,7 @@ class SummarizationMetric(BaseMetric):
             }
             self.score = min(alignment_score, coverage_score)
             self.reason = await self._a_generate_reason()
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -558,16 +560,6 @@ class SummarizationMetric(BaseMetric):
             extract_schema=lambda s: s.claims,
             extract_json=lambda data: data["claims"],
         )
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

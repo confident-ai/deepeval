@@ -1,4 +1,5 @@
 import os
+import warnings
 from typing import (
     List,
     Optional,
@@ -44,6 +45,7 @@ from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
 )
+from deepeval.metrics.utils import check_at_least_one_metric_has_threshold
 from deepeval.metrics.indicator import (
     format_metric_description,
 )
@@ -103,6 +105,7 @@ def assert_test(
         )
 
     elif test_case and metrics:
+        check_at_least_one_metric_has_threshold(metrics)
         if run_async:
             loop = get_or_create_event_loop()
             test_result = loop.run_until_complete(
@@ -152,7 +155,15 @@ def assert_test(
                 for metrics_data in failed_metrics_data
             ]
         )
-        raise AssertionError(f"Metrics: {failed_metrics_str} failed.")
+        if test_case is not None and test_case.flaky:
+            # Flaky test cases don't block CI: warn (shows up in pytest's
+            # warnings summary) but don't raise
+            warnings.warn(
+                f"Flaky test case failed (no assertion raised): "
+                f"Metrics: {failed_metrics_str} failed."
+            )
+        else:
+            raise AssertionError(f"Metrics: {failed_metrics_str} failed.")
 
 
 def evaluate(
@@ -184,6 +195,7 @@ def evaluate(
     check_valid_test_cases_type(test_cases)
 
     if metrics:
+        check_at_least_one_metric_has_threshold(metrics)
 
         if not _skip_reset and not get_is_running_deepeval():
             global_test_run_manager.reset()

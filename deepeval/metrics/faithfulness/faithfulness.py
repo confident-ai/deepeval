@@ -57,7 +57,7 @@ class FaithfulnessMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
@@ -65,6 +65,7 @@ class FaithfulnessMetric(BaseMetric):
         verbose_mode: bool = False,
         truths_extraction_limit: Optional[int] = None,
         penalize_ambiguous_claims: bool = False,
+        flaky: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -73,6 +74,7 @@ class FaithfulnessMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self.penalize_ambiguous_claims = penalize_ambiguous_claims
 
         self.truths_extraction_limit = truths_extraction_limit
@@ -125,7 +127,7 @@ class FaithfulnessMetric(BaseMetric):
                 self.verdicts = self._generate_verdicts(multimodal)
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason(multimodal)
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -176,7 +178,7 @@ class FaithfulnessMetric(BaseMetric):
             self.verdicts = await self._a_generate_verdicts(multimodal)
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(multimodal)
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -390,16 +392,6 @@ class FaithfulnessMetric(BaseMetric):
 
         score = faithfulness_count / number_of_verdicts
         return 0 if self.strict_mode and score < self.threshold else score
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

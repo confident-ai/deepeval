@@ -39,7 +39,7 @@ class MetricConfiguration(BaseModel):
     model_config = make_model_config(arbitrary_types_allowed=True)
 
     ##### Required fields #####
-    threshold: float
+    threshold: Optional[float] = None
     evaluation_model: Optional[str] = None
     strict_mode: bool = False
     criteria: Optional[str] = None

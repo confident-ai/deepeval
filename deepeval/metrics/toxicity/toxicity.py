@@ -32,12 +32,13 @@ class ToxicityMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
     ):
         self.threshold = 0 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -46,6 +47,7 @@ class ToxicityMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
 
     def measure(
         self,
@@ -88,7 +90,7 @@ class ToxicityMetric(BaseMetric):
                 self.verdicts: List[ToxicityVerdict] = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
-                self.success = self.score <= self.threshold
+                self.success = self.is_successful()
                 self.score = self.score
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -137,7 +139,7 @@ class ToxicityMetric(BaseMetric):
 
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
-            self.success = self.score <= self.threshold
+            self.success = self.is_successful()
             self.score = self.score
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -279,8 +281,10 @@ class ToxicityMetric(BaseMetric):
         score = toxic_count / total
         return 1 if self.strict_mode and score > self.threshold else score
 
-    def is_successful(self) -> bool:
-        if self.error is not None:
+    def is_successful(self) -> Optional[bool]:
+        if self.threshold is None:
+            self.success = None
+        elif self.error is not None:
             self.success = False
         else:
             try:
