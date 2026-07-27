@@ -456,3 +456,214 @@ def test_gemini_custom_cost_used_in_generate(mock_require_dep, settings):
     assert abs(float(cost) - expected) < 1e-12
     assert cost.input_tokens == 100
     assert cost.output_tokens == 50
+
+
+########################################
+# Context-cache discount tests         #
+########################################
+
+
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_calculate_cost_applies_cache_discount(
+    mock_require_dep, settings
+):
+    """
+    When ``cached_tokens > 0`` and the model has ``cache_read_input_price``,
+    cached tokens must be charged at the cheaper rate, non-cached at full price.
+    """
+    mock_require_dep.return_value = _make_fake_genai_module()
+
+    with settings.edit(persist=False):
+        settings.GOOGLE_API_KEY = "test-key"
+
+    model = GeminiModel(model="gemini-2.5-flash")
+    reg = GEMINI_MODELS_DATA.get("gemini-2.5-flash")
+    assert reg.cache_read_input_price is not None, "model must have cache price"
+
+    input_tokens = 1000
+    output_tokens = 200
+    cached_tokens = 800  # 800 cached, 200 non-cached
+
+    result = model.calculate_cost(input_tokens, output_tokens, cached_tokens)
+
+    expected = (
+        (input_tokens - cached_tokens) * reg.input_price
+        + cached_tokens * reg.cache_read_input_price
+        + output_tokens * reg.output_price
+    )
+    assert isinstance(result, EvaluationCost)
+    assert abs(float(result) - expected) < 1e-15
+    assert result.input_tokens == input_tokens
+    assert result.output_tokens == output_tokens
+
+
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_calculate_cost_zero_cached_tokens_unchanged(
+    mock_require_dep, settings
+):
+    """
+    When ``cached_tokens=0``, cost must equal the plain
+    ``input_tokens × input_price + output_tokens × output_price`` formula
+    (no discount applied).
+    """
+    mock_require_dep.return_value = _make_fake_genai_module()
+
+    with settings.edit(persist=False):
+        settings.GOOGLE_API_KEY = "test-key"
+
+    model = GeminiModel(model="gemini-2.5-flash")
+    reg = GEMINI_MODELS_DATA.get("gemini-2.5-flash")
+
+    result_no_cache = model.calculate_cost(1000, 200, cached_tokens=0)
+    result_baseline = model.calculate_cost(1000, 200)
+
+    assert isinstance(result_no_cache, EvaluationCost)
+    assert float(result_no_cache) == float(result_baseline)
+
+
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_token_cost_reads_cached_content_token_count(
+    mock_require_dep, settings
+):
+    """
+    ``_token_cost`` must read ``usage_metadata.cached_content_token_count``
+    and pass it to ``calculate_cost``, producing a lower cost than a response
+    with identical total tokens but no caching.
+    """
+    fake_genai = _make_fake_genai_module()
+    fake_genai.types.GenerateContentConfig = lambda **kwargs: kwargs
+    fake_client = MagicMock()
+
+    cached_response = SimpleNamespace(
+        text="hi",
+        usage_metadata=SimpleNamespace(
+            prompt_token_count=1000,
+            candidates_token_count=200,
+            cached_content_token_count=800,
+        ),
+    )
+    uncached_response = SimpleNamespace(
+        text="hi",
+        usage_metadata=SimpleNamespace(
+            prompt_token_count=1000,
+            candidates_token_count=200,
+        ),
+    )
+
+    def _fake_require_dependency(name, *args, **kwargs):
+        if name == "google.genai":
+            return fake_genai
+        raise AssertionError(f"Unexpected dependency: {name}")
+
+    mock_require_dep.side_effect = _fake_require_dependency
+
+    with settings.edit(persist=False):
+        settings.GOOGLE_API_KEY = "test-key"
+
+    model = GeminiModel(model="gemini-2.5-flash")
+    model.load_model = lambda *a, **kw: fake_client
+
+    fake_client.models.generate_content.return_value = cached_response
+    _, cost_cached = model.generate("prompt")
+
+    fake_client.models.generate_content.return_value = uncached_response
+    _, cost_uncached = model.generate("prompt")
+
+    assert isinstance(cost_cached, EvaluationCost)
+    assert float(cost_cached) < float(
+        cost_uncached
+    ), "context-cache discount must produce lower cost than full-price input"
+
+
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_no_cache_price_falls_back_to_full_input_price(
+    mock_require_dep, settings
+):
+    """
+    If a model has no ``cache_read_input_price``, even when ``cached_tokens``
+    is non-zero the cost must still equal the plain full-price formula.
+    """
+    mock_require_dep.return_value = _make_fake_genai_module()
+
+    with settings.edit(persist=False):
+        settings.GOOGLE_API_KEY = "test-key"
+
+    # Use a model that has no cache price (e.g. gemini-pro)
+    model = GeminiModel(model="gemini-pro")
+    model.model_data.cache_read_input_price = None
+    # Give it pricing so calculate_cost doesn't return None
+    model.model_data.input_price = 0.5 / 1e6
+    model.model_data.output_price = 1.5 / 1e6
+
+    result = model.calculate_cost(1000, 200, cached_tokens=800)
+    expected = (
+        1000 * model.model_data.input_price
+        + 200 * model.model_data.output_price
+    )
+
+    assert isinstance(result, EvaluationCost)
+    assert abs(float(result) - expected) < 1e-15
+
+
+import pytest
+
+
+@pytest.mark.parametrize(
+    "model_name,expected_cache_price_approx",
+    [
+        ("gemini-1.5-pro", 0.3125e-6),
+        ("gemini-1.5-pro-002", 0.3125e-6),
+        ("gemini-1.5-flash", 0.01875e-6),
+        ("gemini-1.5-flash-002", 0.01875e-6),
+        ("gemini-1.5-flash-8b", 0.01e-6),
+        ("gemini-2.0-flash", 0.0375e-6),
+        ("gemini-2.5-pro", 0.3125e-6),
+        ("gemini-2.5-flash", 0.0375e-6),
+        ("gemini-2.5-flash-lite", 0.01875e-6),
+    ],
+)
+def test_gemini_models_have_cache_read_input_price(
+    model_name, expected_cache_price_approx
+):
+    """
+    Every Gemini model that supports context caching must have a non-None
+    ``cache_read_input_price`` in the registry at the expected rate.
+    """
+    data = GEMINI_MODELS_DATA.get(model_name)
+    assert data is not None, f"{model_name} not in registry"
+    assert (
+        data.cache_read_input_price is not None
+    ), f"{model_name} is missing cache_read_input_price"
+    assert (
+        abs(data.cache_read_input_price - expected_cache_price_approx) < 1e-12
+    ), (
+        f"{model_name}: expected {expected_cache_price_approx}, "
+        f"got {data.cache_read_input_price}"
+    )
+
+
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_cache_discount_cheaper_than_uncached_at_scale(
+    mock_require_dep, settings
+):
+    """
+    Sanity check: with 90% of tokens cached, total cost must be at least 60%
+    cheaper than the no-cache baseline (since cached tokens cost 25%).
+    """
+    mock_require_dep.return_value = _make_fake_genai_module()
+
+    with settings.edit(persist=False):
+        settings.GOOGLE_API_KEY = "test-key"
+
+    model = GeminiModel(model="gemini-2.5-pro")
+
+    total_input = 100_000
+    cached = 90_000  # 90% cached
+    output = 5_000
+
+    cost_with_cache = model.calculate_cost(total_input, output, cached)
+    cost_no_cache = model.calculate_cost(total_input, output, 0)
+
+    assert (
+        float(cost_with_cache) < float(cost_no_cache) * 0.4
+    ), "With 90% cached, total cost should be at least 60% cheaper"

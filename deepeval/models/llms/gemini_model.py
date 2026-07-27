@@ -339,10 +339,20 @@ class GeminiModel(DeepEvalBaseLLM):
     ###############################################
 
     def calculate_cost(
-        self, input_tokens: int, output_tokens: int
+        self,
+        input_tokens: int,
+        output_tokens: int,
+        cached_tokens: int = 0,
     ) -> Optional[EvaluationCost]:
         if self.model_data.input_price and self.model_data.output_price:
-            input_cost = input_tokens * self.model_data.input_price
+            if cached_tokens > 0 and self.model_data.cache_read_input_price:
+                non_cached = input_tokens - cached_tokens
+                input_cost = (
+                    non_cached * self.model_data.input_price
+                    + cached_tokens * self.model_data.cache_read_input_price
+                )
+            else:
+                input_cost = input_tokens * self.model_data.input_price
             output_cost = output_tokens * self.model_data.output_price
             return EvaluationCost(
                 input_cost + output_cost, input_tokens, output_tokens
@@ -352,8 +362,11 @@ class GeminiModel(DeepEvalBaseLLM):
         usage = getattr(response, "usage_metadata", None)
         input_tokens = getattr(usage, "prompt_token_count", None)
         output_tokens = getattr(usage, "candidates_token_count", None)
+        cached_tokens = getattr(usage, "cached_content_token_count", None) or 0
         if input_tokens is not None and output_tokens is not None:
-            cost = self.calculate_cost(input_tokens, output_tokens)
+            cost = self.calculate_cost(
+                input_tokens, output_tokens, cached_tokens
+            )
             if cost is not None:
                 return cost
         return EvaluationCost(None, input_tokens, output_tokens)
