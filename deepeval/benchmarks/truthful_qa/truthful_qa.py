@@ -97,9 +97,12 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                         ):
                             prediction = prediction_dict["prediction"]
                             score = prediction_dict["score"]
-                            if score:
-                                task_correct_predictions += 1
-                                overall_correct_predictions += 1
+                            # Accumulate fractional score: MC1 contributes
+                            # 0 or 1; MC2 contributes a 0-1 fraction
+                            # (partial credit).  Previously any non-zero
+                            # score was treated as 1, inflating accuracy.
+                            task_correct_predictions += score
+                            overall_correct_predictions += score
                             predictions_row.append(
                                 (
                                     task.value,
@@ -209,8 +212,13 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                 golden.expected_output, prediction
             )
         elif mode == TruthfulQAMode.MC2:
-            score = self.scorer.truth_identification_score(
-                golden.expected_output, prediction
+            # Normalize from 0-100 percentage to 0-1 fraction so MC2
+            # sits on the same scale as MC1's exact_match_score (0/1).
+            score = (
+                self.scorer.truth_identification_score(
+                    golden.expected_output, prediction
+                )
+                / 100.0
             )
 
         return {"prediction": prediction, "score": score}
@@ -273,8 +281,13 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                     golden.expected_output, prediction
                 )
             elif mode == TruthfulQAMode.MC2:
-                score = self.scorer.truth_identification_score(
-                    golden.expected_output, prediction
+                # Normalize from 0-100 percentage to 0-1 fraction so MC2
+                # sits on the same scale as MC1's exact_match_score (0/1).
+                score = (
+                    self.scorer.truth_identification_score(
+                        golden.expected_output, prediction
+                    )
+                    / 100.0
                 )
             res.append({"prediction": prediction, "score": score})
 
