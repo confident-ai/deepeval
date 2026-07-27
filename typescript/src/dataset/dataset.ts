@@ -490,30 +490,95 @@ export class EvaluationDataset {
     }
   }
 
+  // async createGolden(params: {
+  //   golden: GoldenUnion;
+  //   alias?: string;
+  //   version?: string;
+  //   finalized?: boolean;
+  //   projectId?: string;
+  // }): Promise<void> {
+  //   const { golden, alias, version, finalized = true, projectId } = params;
+  //   const resolvedAlias = alias ?? this._alias;
+  //   if (!resolvedAlias) {
+  //     throw new Error(
+  //       "No dataset alias available. Pull a dataset first, or pass `alias` explicitly.",
+  //     );
+  //   }
+  //   const api = new Api();
+  //   const goldenBody = stripPrivateFields(JSON.parse(JSON.stringify(golden)));
+  //   delete goldenBody.id;
+  //   goldenBody.finalized = finalized;
+  //   const body: Record<string, unknown> = {
+  //     alias: resolvedAlias,
+  //     golden: goldenBody,
+  //   };
+  //   if (version !== undefined) {
+  //     body.version = version;
+  //   }
+  //   await api.sendRequest(
+  //     HttpMethods.POST,
+  //     Endpoints.GOLDENS_ENDPOINT,
+  //     body,
+  //     undefined,
+  //     undefined,
+  //     undefined,
+  //     projectId,
+  //   );
+  //   console.log("✅ Golden successfully created on Confident AI!");
+  // }
+
+  // async getGolden(params: {
+  //   goldenId: string;
+  //   projectId?: string;
+  // }): Promise<GoldenUnion> {
+  //   const { goldenId, projectId } = params;
+  //   const api = new Api();
+  //   const result = await api.sendRequest(
+  //     HttpMethods.GET,
+  //     Endpoints.GOLDEN_ENDPOINT,
+  //     undefined,
+  //     undefined,
+  //     undefined,
+  //     { goldenId },
+  //     projectId,
+  //   );
+  //   const data = result?.data ?? result;
+  //   if (data.scenario != null) {
+  //     return new ConversationalGolden({
+  //       id: data.id,
+  //       scenario: data.scenario,
+  //       expectedOutcome: data.expectedOutcome,
+  //       userDescription: data.userDescription,
+  //       context: data.context,
+  //       additionalMetadata: data.additionalMetadata,
+  //       comments: data.comments,
+  //       turns: data.turns,
+  //     });
+  //   }
+  //   return new Golden({
+  //     id: data.id,
+  //     input: data.input,
+  //     actualOutput: data.actualOutput,
+  //     expectedOutput: data.expectedOutput,
+  //     context: data.context,
+  //     retrievalContext: data.retrievalContext,
+  //     toolsCalled: data.toolsCalled,
+  //     expectedTools: data.expectedTools,
+  //     additionalMetadata: data.additionalMetadata,
+  //     sourceFile: data.sourceFile,
+  //     comments: data.comments,
+  //   });
+  // }
+
   async updateGolden(params: {
     golden: GoldenUnion;
-    alias?: string;
     finalized?: boolean;
     projectId?: string;
   }): Promise<void> {
-    const { golden, alias, finalized = true, projectId } = params;
-    const resolvedAlias = alias ?? this._alias;
-    if (!resolvedAlias) {
-      throw new Error(
-        "No dataset alias available. Pull a dataset first, or pass `alias` explicitly.",
-      );
-    }
+    const { golden, finalized = true, projectId } = params;
     if (!golden.id) {
       throw new Error(
         "Cannot update a golden without an id. Pull the dataset first so its goldens carry the id assigned by Confident AI.",
-      );
-    }
-    const isConversational = golden instanceof ConversationalGolden;
-    if (this._multiTurn !== null && isConversational !== this._multiTurn) {
-      throw new Error(
-        this._multiTurn
-          ? "Cannot update a single-turn golden in a multi-turn dataset."
-          : "Cannot update a multi-turn golden in a single-turn dataset.",
       );
     }
     const api = new Api();
@@ -522,11 +587,11 @@ export class EvaluationDataset {
     body.finalized = finalized;
     await api.sendRequest(
       HttpMethods.PUT,
-      Endpoints.DATASET_ALIAS_GOLDEN_ENDPOINT,
+      Endpoints.GOLDEN_ENDPOINT,
       body,
       undefined,
       undefined,
-      { alias: resolvedAlias, goldenId: golden.id },
+      { goldenId: golden.id },
       projectId,
     );
     console.log("✅ Golden successfully updated on Confident AI!");
@@ -534,16 +599,9 @@ export class EvaluationDataset {
 
   async deleteGolden(params: {
     golden: GoldenUnion | string;
-    alias?: string;
     projectId?: string;
   }): Promise<void> {
-    const { golden, alias, projectId } = params;
-    const resolvedAlias = alias ?? this._alias;
-    if (!resolvedAlias) {
-      throw new Error(
-        "No dataset alias available. Pull a dataset first, or pass `alias` explicitly.",
-      );
-    }
+    const { golden, projectId } = params;
     const goldenId = typeof golden === "string" ? golden : golden.id;
     if (!goldenId) {
       throw new Error(
@@ -553,11 +611,11 @@ export class EvaluationDataset {
     const api = new Api();
     await api.sendRequest(
       HttpMethods.DELETE,
-      Endpoints.DATASET_ALIAS_GOLDEN_ENDPOINT,
+      Endpoints.GOLDEN_ENDPOINT,
       undefined,
       undefined,
       undefined,
-      { alias: resolvedAlias, goldenId },
+      { goldenId },
       projectId,
     );
     console.log("✅ Golden successfully deleted from Confident AI!");

@@ -1091,32 +1091,65 @@ class EvaluationDataset:
         console = Console()
         console.print("✅ Dataset successfully deleted from Confident AI!")
 
+    # def create_golden(
+    #     self,
+    #     golden: Union[Golden, ConversationalGolden],
+    #     alias: Optional[str] = None,
+    #     version: Optional[str] = None,
+    #     finalized: bool = True,
+    # ):
+    #     resolved_alias = alias or self._alias
+    #     if not resolved_alias:
+    #         raise ValueError(
+    #             "No dataset alias available. Pull a dataset first, or pass "
+    #             "`alias` explicitly."
+    #         )
+    #     api = Api(api_key=self.confident_api_key)
+
+    #     golden._prepare_for_api()
+    #     try:
+    #         golden_body = golden.model_dump(by_alias=True, exclude_none=True)
+    #     except AttributeError:
+    #         # Pydantic version below 2.0
+    #         golden_body = golden.dict(by_alias=True, exclude_none=True)
+    #     golden_body["finalized"] = finalized
+
+    #     body = {"alias": resolved_alias, "golden": golden_body}
+    #     if version is not None:
+    #         body["version"] = version
+
+    #     api.send_request(
+    #         method=HttpMethods.POST,
+    #         endpoint=Endpoints.GOLDENS_ENDPOINT,
+    #         body=body,
+    #     )
+    #     console = Console()
+    #     console.print("✅ Golden successfully created on Confident AI!")
+
+    # def get_golden(
+    #     self, golden_id: str
+    # ) -> Union[Golden, ConversationalGolden]:
+    #     api = Api(api_key=self.confident_api_key)
+    #     data, _ = api.send_request(
+    #         method=HttpMethods.GET,
+    #         endpoint=Endpoints.GOLDEN_ENDPOINT,
+    #         url_params={"goldenId": golden_id},
+    #     )
+    #     golden_data = convert_keys_to_snake_case(data)
+    #     if golden_data.get("scenario") is not None:
+    #         return ConversationalGolden(**golden_data)
+    #     return Golden(**golden_data)
+
     def update_golden(
         self,
         golden: Union[Golden, ConversationalGolden],
-        alias: Optional[str] = None,
         finalized: bool = True,
     ):
-        resolved_alias = alias or self._alias
-        if not resolved_alias:
-            raise ValueError(
-                "No dataset alias available. Pull a dataset first, or pass "
-                "`alias` explicitly."
-            )
         if not golden.id:
             raise ValueError(
                 "Cannot update a golden without an id. Pull the dataset first "
                 "so its goldens carry the id assigned by Confident AI."
             )
-
-        multi_turn = isinstance(golden, ConversationalGolden)
-        if multi_turn != self._multi_turn:
-            raise TypeError(
-                "Cannot update a multi-turn golden in a single-turn dataset."
-                if multi_turn
-                else "Cannot update a single-turn golden in a multi-turn dataset."
-            )
-
         api = Api(api_key=self.confident_api_key)
 
         golden._prepare_for_api()
@@ -1129,9 +1162,9 @@ class EvaluationDataset:
 
         api.send_request(
             method=HttpMethods.PUT,
-            endpoint=Endpoints.DATASET_ALIAS_GOLDEN_ENDPOINT,
+            endpoint=Endpoints.GOLDEN_ENDPOINT,
             body=golden_body,
-            url_params={"alias": resolved_alias, "goldenId": golden.id},
+            url_params={"goldenId": golden.id},
         )
         console = Console()
         console.print("✅ Golden successfully updated on Confident AI!")
@@ -1139,14 +1172,7 @@ class EvaluationDataset:
     def delete_golden(
         self,
         golden: Union[Golden, ConversationalGolden, str],
-        alias: Optional[str] = None,
     ):
-        resolved_alias = alias or self._alias
-        if not resolved_alias:
-            raise ValueError(
-                "No dataset alias available. Pull a dataset first, or pass "
-                "`alias` explicitly."
-            )
         golden_id = golden if isinstance(golden, str) else golden.id
         if not golden_id:
             raise ValueError(
@@ -1157,8 +1183,8 @@ class EvaluationDataset:
         api = Api(api_key=self.confident_api_key)
         api.send_request(
             method=HttpMethods.DELETE,
-            endpoint=Endpoints.DATASET_ALIAS_GOLDEN_ENDPOINT,
-            url_params={"alias": resolved_alias, "goldenId": golden_id},
+            endpoint=Endpoints.GOLDEN_ENDPOINT,
+            url_params={"goldenId": golden_id},
         )
         console = Console()
         console.print("✅ Golden successfully deleted from Confident AI!")
