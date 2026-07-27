@@ -351,16 +351,17 @@ class ToolUseMetric(BaseConversationalMetric):
         tool_selections_scores_divisor = (
             len(tool_use_scores) if len(tool_use_scores) > 0 else 1
         )
-        argument_correctness_score_divisor = (
-            len(argument_correctness_scores)
-            if len(argument_correctness_scores) > 0
-            else 1
-        )
         tools_selction_score = tools_scores_sum / tool_selections_scores_divisor
-        argument_correctness_score = (
-            arguments_scores_sum / argument_correctness_score_divisor
-        )
-        score = min(tools_selction_score, argument_correctness_score)
+        if argument_correctness_scores:
+            argument_correctness_score = arguments_scores_sum / len(
+                argument_correctness_scores
+            )
+            score = min(tools_selction_score, argument_correctness_score)
+        else:
+            # No turn called a tool, so there are no arguments to be correct
+            # about. Scoring that 0 would fail a conversation that correctly
+            # needed no tools; the tool selection score already covers it.
+            score = tools_selction_score
         return 0 if self.strict_mode and score < self.threshold else score
 
     def _generate_reason_for_tool_selection(
