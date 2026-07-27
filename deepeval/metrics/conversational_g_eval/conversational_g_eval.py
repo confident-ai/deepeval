@@ -11,6 +11,7 @@ from deepeval.metrics.g_eval.utils import (
     construct_conversational_g_eval_turn_params_string,
     construct_non_turns_test_case_string,
     format_rubrics,
+    get_score_range,
     no_log_prob_support,
     validate_and_sort_rubrics,
     validate_criteria_and_evaluation_steps,
@@ -80,6 +81,8 @@ class ConversationalGEval(BaseConversationalMetric):
             validate_criteria_and_evaluation_steps(criteria, evaluation_steps)
         self.criteria = criteria
         self.rubric = validate_and_sort_rubrics(rubric)
+        self.score_range = get_score_range(self.rubric)
+        self.score_range_span = self.score_range[1] - self.score_range[0]
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = (
@@ -136,7 +139,9 @@ class ConversationalGEval(BaseConversationalMetric):
                 )
                 g_score, reason = self.evaluate(test_case)
                 self.reason = reason
-                self.score = float(g_score) / 10
+                self.score = (
+                    float(g_score) - self.score_range[0]
+                ) / self.score_range_span
                 self.score = (
                     0
                     if self.strict_mode and self.score < self.threshold
@@ -188,7 +193,9 @@ class ConversationalGEval(BaseConversationalMetric):
             )
             g_score, reason = await self._a_evaluate(test_case)
             self.reason = reason
-            self.score = float(g_score) / 10
+            self.score = (
+                float(g_score) - self.score_range[0]
+            ) / self.score_range_span
             self.score = (
                 0
                 if self.strict_mode and self.score < self.threshold
@@ -267,6 +274,7 @@ class ConversationalGEval(BaseConversationalMetric):
             ],
             parameters=g_eval_params_str,
             rubric=rubric_str,
+            score_range=self.score_range,
         )
         try:
             if no_log_prob_support(self.model):
@@ -323,6 +331,7 @@ class ConversationalGEval(BaseConversationalMetric):
             ],
             parameters=g_eval_params_str,
             rubric=rubric_str,
+            score_range=self.score_range,
         )
         try:
             if no_log_prob_support(self.model):
@@ -470,6 +479,9 @@ class ConversationalGEval(BaseConversationalMetric):
             if data.rubric
             else None
         )
+
+        self.score_range = get_score_range(self.rubric)
+        self.score_range_span = self.score_range[1] - self.score_range[0]
 
         ensure_required_params(
             self.evaluation_params, self.criteria, self.evaluation_steps
