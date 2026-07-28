@@ -5,6 +5,7 @@ from pydantic import (
     PrivateAttr,
     AliasChoices,
     model_serializer,
+    field_serializer,
 )
 from typing import List, Optional, Dict, Any, Union
 from enum import Enum
@@ -255,6 +256,10 @@ class ToolCall(BaseModel):
         serialization_alias="inputParameters",
         validation_alias=AliasChoices("inputParameters", "input_parameters"),
     )
+
+    @field_serializer('type')
+    def serialize_type(self, value: ToolCallType) -> str:
+        return value.value
 
     def __eq__(self, other):
         if not isinstance(other, ToolCall):
