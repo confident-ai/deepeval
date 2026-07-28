@@ -5,6 +5,7 @@
     "anthropic",
     "agentcore",
     "strands",
+    "microsoft-agent-framework",
     "google-adk",
     "langchain",
     "langgraph",
