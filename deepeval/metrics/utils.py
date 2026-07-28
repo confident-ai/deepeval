@@ -83,6 +83,21 @@ MULTIMODAL_SUPPORTED_MODELS = {
 SETTINGS = get_settings()
 
 
+def check_at_least_one_metric_has_threshold(
+    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
+):
+    # Flaky metrics don't count: they must not decide a test case's
+    # pass/fail status, so every test case needs at least one non-flaky
+    # metric with a threshold to guarantee it gets a verdict.
+    if not any(
+        metric.threshold is not None and not metric.flaky for metric in metrics
+    ):
+        raise ValueError(
+            "You must provide at least one non-flaky metric with a "
+            "'threshold', otherwise test cases can never pass or fail."
+        )
+
+
 def copy_metrics(
     metrics: List[Union[BaseMetric, BaseConversationalMetric]],
 ) -> List[Union[BaseMetric, BaseConversationalMetric]]:

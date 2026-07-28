@@ -654,6 +654,7 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": {
             "content": "Sunny, 72°F",
             "additional_kwargs": {},
@@ -670,6 +671,7 @@
         },
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": {
             "content": "Cloudy, 58°F",
             "additional_kwargs": {},
@@ -686,6 +688,7 @@
         },
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": {
             "content": "Rainy, 52°F",
             "additional_kwargs": {},
@@ -1293,6 +1296,7 @@
   "toolsCalled": [
     {
       "name": "get_weather",
+      "type": "FUNCTION",
       "output": {
         "content": "Sunny, 72°F",
         "additional_kwargs": {},
@@ -1309,6 +1313,7 @@
     },
     {
       "name": "get_weather",
+      "type": "FUNCTION",
       "output": {
         "content": "Cloudy, 58°F",
         "additional_kwargs": {},
@@ -1325,6 +1330,7 @@
     },
     {
       "name": "get_weather",
+      "type": "FUNCTION",
       "output": {
         "content": "Rainy, 52°F",
         "additional_kwargs": {},

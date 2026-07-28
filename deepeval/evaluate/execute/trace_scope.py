@@ -242,7 +242,9 @@ def _assert_test_from_current_trace(
                 continue
             metric_data = create_metric_data(metric)
             api_span.metrics_data.append(metric_data)
-            api_test_case.update_status(metric_data.success)
+            api_test_case.update_status(
+                metric_data.success, flaky=metric_data.flaky
+            )
 
     if root_for_dfs is not None:
         dfs(root_for_dfs, is_promoted_root=is_promoted_root)
@@ -302,7 +304,9 @@ def _assert_test_from_current_trace(
                 metric_data = create_metric_data(metric)
                 trace_api.metrics_data.append(metric_data)
                 api_test_case.update_metric_data(metric_data)
-                api_test_case.update_status(metric_data.success)
+                api_test_case.update_status(
+                    metric_data.success, flaky=metric_data.flaky
+                )
 
     test_run_manager.update_test_run(api_test_case, test_case)
     test_run_manager.save_test_run(TEMP_FILE_PATH)

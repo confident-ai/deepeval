@@ -24,12 +24,13 @@ class StepEfficiencyMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -38,6 +39,7 @@ class StepEfficiencyMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self.requires_trace = True
 
     def measure(
@@ -83,7 +85,7 @@ class StepEfficiencyMetric(BaseMetric):
                     else efficiency_verdict.score
                 )
                 self.reason = efficiency_verdict.reason
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -131,7 +133,7 @@ class StepEfficiencyMetric(BaseMetric):
                 else efficiency_verdict.score
             )
             self.reason = efficiency_verdict.reason
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -210,16 +212,6 @@ class StepEfficiencyMetric(BaseMetric):
             extract_schema=lambda s: s.task,
             extract_json=lambda data: data["task"],
         )
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

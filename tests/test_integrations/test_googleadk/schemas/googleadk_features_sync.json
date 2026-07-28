@@ -60,6 +60,7 @@
       "toolsCalled": [
         {
           "name": "special_tool",
+          "type": "FUNCTION",
           "inputParameters": {
             "query": "Sync Data"
           }
@@ -87,6 +88,7 @@
       "toolsCalled": [
         {
           "name": "special_tool",
+          "type": "FUNCTION",
           "inputParameters": {
             "query": "Sync Data"
           }

@@ -103,9 +103,6 @@ class RAGASContextualPrecisionMetric(BaseMetric):
     ):
         return self.measure(test_case)
 
-    def is_successful(self):
-        return self.success
-
     @property
     def __name__(self):
         return format_ragas_metric_name("Contextual Precision")
@@ -175,9 +172,6 @@ class RAGASContextualRecallMetric(BaseMetric):
             self.success = context_recall_score >= self.threshold
             self.score = context_recall_score
             return self.score
-
-    def is_successful(self):
-        return self.success
 
     @property
     def __name__(self):
@@ -253,9 +247,6 @@ class RAGASContextualEntitiesRecall(BaseMetric):
             self.success = contextual_entity_score >= self.threshold
             self.score = contextual_entity_score
             return self.score
-
-    def is_successful(self):
-        return self.success
 
     @property
     def __name__(self):
@@ -408,9 +399,6 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
             self.score = answer_relevancy_score
             return self.score
 
-    def is_successful(self):
-        return self.success
-
     @property
     def __name__(self):
         return format_ragas_metric_name("Answer Relevancy")
@@ -479,9 +467,6 @@ class RAGASFaithfulnessMetric(BaseMetric):
             self.success = faithfulness_score >= self.threshold
             self.score = faithfulness_score
             return self.score
-
-    def is_successful(self):
-        return self.success
 
     @property
     def __name__(self):
@@ -554,9 +539,6 @@ class RagasMetric(BaseMetric):
             self.score = ragas_score
             self.score_breakdown = score_breakdown
             return self.score
-
-    def is_successful(self):
-        return self.success
 
     @property
     def __name__(self):

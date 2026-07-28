@@ -61,6 +61,7 @@
       "toolsCalled": [
         {
           "name": "special_tool",
+          "type": "FUNCTION",
           "inputParameters": {
             "query": "Async Data"
           }
@@ -88,6 +89,7 @@
       "toolsCalled": [
         {
           "name": "special_tool",
+          "type": "FUNCTION",
           "inputParameters": {
             "query": "Async Data"
           }

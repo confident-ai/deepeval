@@ -42,6 +42,7 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": "Weather in Tokyo: Clear, 70\u00b0F",
           "inputParameters": {
             "city": "Tokyo"
