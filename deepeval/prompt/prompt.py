@@ -374,7 +374,7 @@ class Prompt:
         output_schema: Optional[OutputSchema] = None,
         tools: Optional[List[Tool]] = None,
     ):
-        if portalocker is None or not self.alias:
+        if portalocker is None or not self.alias or is_read_only_env():
             return
 
         try:

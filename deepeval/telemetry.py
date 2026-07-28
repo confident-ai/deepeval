@@ -9,7 +9,7 @@ from enum import Enum
 from typing import List, Dict, Set
 import requests
 from deepeval._version import __version__ as DEEPEVAL_VERSION
-from deepeval.config.settings import get_settings
+from deepeval.config.settings import get_settings, is_read_only_env
 from deepeval.constants import LOGIN_PROMPT, HIDDEN_DIR, KEY_FILE
 from posthog import Posthog
 
@@ -84,7 +84,7 @@ def _resolve_public_ip_async():
 #########################################################
 ### Move Folders ########################################
 #########################################################
-if not telemetry_opt_out():
+if not telemetry_opt_out() and not is_read_only_env():
     if os.path.exists(KEY_FILE) and not os.path.isdir(HIDDEN_DIR):
         temp_deepeval_file_name = ".deepeval_temp"
         os.rename(KEY_FILE, temp_deepeval_file_name)
@@ -449,7 +449,7 @@ def read_telemetry_file() -> dict:
 
 def write_telemetry_file(data: dict):
     """Writes the given key-value pairs to the telemetry data file."""
-    if telemetry_opt_out():
+    if telemetry_opt_out() or is_read_only_env():
         return
 
     os.makedirs(HIDDEN_DIR, exist_ok=True)

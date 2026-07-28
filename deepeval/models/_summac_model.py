@@ -272,6 +272,9 @@ class _SummaCImager:
         )
 
     def save_cache(self):
+        if utils_misc.is_read_only_env():
+            return
+
         cache_cp = {"[///]".join(k): v.tolist() for k, v in self.cache.items()}
         with open(self.get_cache_file(), "w") as f:
             json.dump(cache_cp, f)

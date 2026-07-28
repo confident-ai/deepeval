@@ -110,10 +110,17 @@ class TestRunCacheManager:
         self.temp_cached_test_run: Optional[CachedTestRun] = None
         self.temp_cache_file_name: str = TEMP_CACHE_FILE_NAME
 
+    def _disk_cache_disabled(self) -> bool:
+        return (
+            self.disable_write_cache
+            or portalocker is None
+            or is_read_only_env()
+        )
+
     def get_cached_test_case(
         self, test_case: LLMTestCase, hyperparameters: Union[Dict, None]
     ) -> Union[CachedTestCase, None]:
-        if self.disable_write_cache or portalocker is None:
+        if self._disk_cache_disabled():
             return None
 
         cached_test_run = self.get_cached_test_run()
@@ -145,7 +152,7 @@ class TestRunCacheManager:
         hyperparameters: Union[Dict, None],
         to_temp: bool = False,
     ):
-        if self.disable_write_cache or portalocker is None:
+        if self._disk_cache_disabled():
             return
         cache_dict = {
             SingleTurnParams.INPUT.value: test_case.input,
@@ -172,7 +179,7 @@ class TestRunCacheManager:
     def set_cached_test_run(
         self, cached_test_run: CachedTestRun, temp: bool = False
     ):
-        if self.disable_write_cache or portalocker is None:
+        if self._disk_cache_disabled():
             return
 
         if temp:
@@ -181,7 +188,7 @@ class TestRunCacheManager:
             self.cached_test_run = cached_test_run
 
     def save_cached_test_run(self, to_temp: bool = False):
-        if self.disable_write_cache or portalocker is None:
+        if self._disk_cache_disabled():
             return
 
         if to_temp:
@@ -208,7 +215,7 @@ class TestRunCacheManager:
                 )
 
     def create_cached_test_run(self, temp: bool = False):
-        if self.disable_write_cache or portalocker is None:
+        if self._disk_cache_disabled():
             return
 
         cached_test_run = CachedTestRun()
@@ -218,7 +225,7 @@ class TestRunCacheManager:
     def get_cached_test_run(
         self, from_temp: bool = False
     ) -> Union[CachedTestRun, None]:
-        if self.disable_write_cache or portalocker is None:
+        if self._disk_cache_disabled():
             return
 
         should_create_cached_test_run = False
@@ -283,7 +290,7 @@ class TestRunCacheManager:
             return self.cached_test_run
 
     def wrap_up_cached_test_run(self):
-        if portalocker is None:
+        if portalocker is None or is_read_only_env():
             return
 
         if self.disable_write_cache:

@@ -1,9 +1,10 @@
 from __future__ import annotations
 from pathlib import Path
-import os
 import re
 import stat
 from typing import Dict, Iterable
+
+from deepeval.config.settings import is_read_only_env
 
 _LINE_RE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$")
 
@@ -25,6 +26,9 @@ class DotenvHandler:
         Idempotently set/replace keys in a dotenv file. Preserves comments/order.
         Creates file if missing. Sets file mode to 0600 when possible.
         """
+        if is_read_only_env():
+            return
+
         lines = self.path.read_text().splitlines() if self.path.exists() else []
         seen = set()
 
@@ -58,7 +62,7 @@ class DotenvHandler:
 
     def unset(self, keys: Iterable[str]) -> None:
         """Remove keys from dotenv file, but leave comments and other lines untouched."""
-        if not self.path.exists():
+        if is_read_only_env() or not self.path.exists():
             return
         lines = self.path.read_text().splitlines()
         out = []

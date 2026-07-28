@@ -23,7 +23,10 @@ from rich.progress import Progress
 from rich.console import Console, Theme
 
 from deepeval.errors import DeepEvalError
-from deepeval.config.settings import get_settings
+from deepeval.config.settings import (
+    get_settings,
+    is_read_only_env as _is_read_only_env,
+)
 from deepeval.config.utils import (
     get_env_bool,
     set_env_bool,
@@ -478,6 +481,9 @@ def class_to_dict(instance: Any) -> Any:
 
 
 def delete_file_if_exists(file_path):
+    if is_read_only_env():
+        return
+
     try:
         if os.path.exists(file_path):
             os.remove(file_path)
@@ -896,8 +902,9 @@ def format_error_text(
     return text
 
 
-def is_read_only_env():
-    return get_settings().DEEPEVAL_FILE_SYSTEM == "READ_ONLY"
+def is_read_only_env() -> bool:
+    """Backwards-compatible access to the filesystem mode helper."""
+    return _is_read_only_env()
 
 
 ##############

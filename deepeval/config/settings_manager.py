@@ -14,7 +14,11 @@ from typing import Any, Dict, Iterable, Mapping, Optional, Tuple, Union
 from enum import Enum
 
 from pydantic import SecretStr
-from deepeval.config.settings import get_settings, _SAVE_RE
+from deepeval.config.settings import (
+    get_settings,
+    is_read_only_env,
+    _SAVE_RE,
+)
 from deepeval.cli.dotenv_handler import DotenvHandler
 from deepeval.config.utils import bool_to_env_str
 
@@ -120,7 +124,7 @@ def update_settings_and_persist(
     for k in to_unset:
         os.environ.pop(k, None)
 
-    if not persist_dotenv:
+    if not persist_dotenv or is_read_only_env():
         return True, None
 
     # persist to dotenv if save is ok

@@ -10,6 +10,7 @@ from pydantic import SecretStr
 from typing import get_args, get_origin, Union
 
 from .constants import KEY_FILE, HIDDEN_DIR
+from deepeval.config.settings import is_read_only_env
 
 logger = logging.getLogger(__name__)
 
@@ -192,6 +193,12 @@ class KeyFileHandler:
     ):
         """Appends or updates data in the hidden file"""
 
+        if is_read_only_env():
+            logger.warning(
+                "READ_ONLY filesystem: skipping legacy settings persistence."
+            )
+            return
+
         # hard stop on secrets: never write to disk
         if _is_secret_key(key):
             logger.warning(
@@ -260,6 +267,12 @@ class KeyFileHandler:
         self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues]
     ):
         """Removes the specified key from the data."""
+        if is_read_only_env():
+            logger.warning(
+                "READ_ONLY filesystem: skipping legacy settings persistence."
+            )
+            return
+
         try:
             with open(f"{HIDDEN_DIR}/{KEY_FILE}", "r") as f:
                 try:

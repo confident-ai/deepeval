@@ -1606,6 +1606,11 @@ def get_settings() -> Settings:
         return _settings_singleton
 
 
+def is_read_only_env() -> bool:
+    """Return whether DeepEval's internal filesystem writes are disabled."""
+    return get_settings().DEEPEVAL_FILE_SYSTEM == "READ_ONLY"
+
+
 def reset_settings(*, reload_dotenv: bool = False) -> Settings:
     """
     Drop the cached Settings singleton and rebuild it from the current process

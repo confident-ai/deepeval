@@ -548,7 +548,7 @@ class TestRunManager:
         return self.test_run
 
     def save_test_run(self, path: str, save_under_key: Optional[str] = None):
-        if portalocker and self.save_to_disk:
+        if portalocker and self.save_to_disk and not is_read_only_env():
             try:
                 # ensure parent directory exists
                 parent = os.path.dirname(path)
@@ -576,7 +576,7 @@ class TestRunManager:
                 pass
 
     def save_final_test_run_link(self, link: str):
-        if portalocker:
+        if portalocker and not is_read_only_env():
             try:
                 with portalocker.Lock(
                     LATEST_TEST_RUN_FILE_PATH, mode="w"
@@ -599,7 +599,7 @@ class TestRunManager:
         ):
             return
 
-        if portalocker and self.save_to_disk:
+        if portalocker and self.save_to_disk and not is_read_only_env():
             try:
                 with portalocker.Lock(
                     self.temp_file_path,
