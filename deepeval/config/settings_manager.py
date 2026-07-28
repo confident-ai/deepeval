@@ -77,31 +77,53 @@ def update_settings_and_persist(
     """
     settings = get_settings()
 
-    # validate + assign into settings.
-    # validation is handled in Settings as long as validate_assignment=True
-    typed: Dict[str, Any] = {}
-    for key, value in updates.items():
-        k = _env_key(key)
-        if k not in type(settings).model_fields:
-            suggestion = get_close_matches(
-                k, type(settings).model_fields.keys(), n=1
-            )
-            if suggestion:
-                logger.warning(
-                    "Unknown settings field '%s'; did you mean '%s'? Ignoring.",
-                    k,
-                    suggestion[0],
-                    stacklevel=2,
-                )
-            else:
-                logger.warning(
-                    "Unknown settings field '%s'; ignoring.", k, stacklevel=2
-                )
-            continue
+    # Resolve the persistence target before mutating live settings/env so an
+    # invalid save option cannot leave runtime state dirty.
+    dotenv_handler: DotenvHandler | None = None
+    if persist_dotenv:
+        ok, path = _resolve_save_path(save)
+        if not ok:
+            return False, None  # unsupported --save
+        if path:
+            dotenv_handler = DotenvHandler(path)
+    else:
+        path = None
 
-        setattr(settings, k, value)
-        # coercion is handled in Settings
-        typed[k] = getattr(settings, k)
+    settings_snapshot: Dict[str, Any] = {}
+    typed: Dict[str, Any] = {}
+    try:
+        # validate + assign into settings.
+        # validation is handled in Settings as long as validate_assignment=True
+        for key, value in updates.items():
+            k = _env_key(key)
+            if k not in type(settings).model_fields:
+                suggestion = get_close_matches(
+                    k, type(settings).model_fields.keys(), n=1
+                )
+                if suggestion:
+                    logger.warning(
+                        "Unknown settings field '%s'; did you mean '%s'? Ignoring.",
+                        k,
+                        suggestion[0],
+                        stacklevel=2,
+                    )
+                else:
+                    logger.warning(
+                        "Unknown settings field '%s'; ignoring.",
+                        k,
+                        stacklevel=2,
+                    )
+                continue
+
+            if k not in settings_snapshot:
+                settings_snapshot[k] = getattr(settings, k)
+            setattr(settings, k, value)
+            # coercion is handled in Settings
+            typed[k] = getattr(settings, k)
+    except BaseException:
+        for k, v in settings_snapshot.items():
+            setattr(settings, k, v)
+        raise
 
     # build env maps
     to_write: Dict[str, str] = {}
@@ -114,24 +136,43 @@ def update_settings_and_persist(
         else:
             to_write[k] = env_val
 
-    # update process env so that it is effective immediately
-    for k, v in to_write.items():
-        os.environ[k] = v
-    for k in to_unset:
-        os.environ.pop(k, None)
+    env_keys = set(to_write) | to_unset
+    env_snapshot: Dict[str, Optional[str]] = {
+        k: os.environ.get(k) for k in env_keys
+    }
 
-    if not persist_dotenv:
-        return True, None
+    try:
+        if dotenv_handler and (to_write or to_unset):
+            dotenv_handler.validate_target()
 
-    # persist to dotenv if save is ok
-    ok, path = _resolve_save_path(save)
-    if not ok:
-        return False, None  # unsupported --save
-    if path:
-        h = DotenvHandler(path)
-        if to_write:
-            h.upsert(to_write)
-        if to_unset:
-            h.unset(to_unset)
+        # update process env so that it is effective immediately
+        for k, v in to_write.items():
+            os.environ[k] = v
+        for k in to_unset:
+            os.environ.pop(k, None)
+
+        if dotenv_handler and (to_write or to_unset):
+            # Preserve existing "unset wins" behavior if a caller supplies
+            # the same key in both maps, but commit the logical settings
+            # change to dotenv in a single rewrite.
+            dotenv_handler.update(
+                updates={
+                    key: value
+                    for key, value in to_write.items()
+                    if key not in to_unset
+                },
+                removals=to_unset,
+            )
+    except BaseException:
+        for k, v in env_snapshot.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        for k, v in settings_snapshot.items():
+            setattr(settings, k, v)
+        raise
+
+    if persist_dotenv and path:
         return True, path
     return True, None
