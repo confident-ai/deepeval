@@ -96,6 +96,11 @@ answer_relevancy_metric.measure(test_case)
 print(answer_relevancy_metric.score)
 ```
 
+A test case **passes** only if every metric that carries a verdict succeeds. Two flags let you control which verdicts count:
+
+- **Metrics with `threshold=None`** still compute scores and reasons, but have no pass/fail opinion and never decide a test case's status. Because every test case must end up passing or failing, each evaluation requires at least one non-flaky metric with a `threshold`.
+- **Flaky test cases and metrics** (`flaky=True`) have their results recorded and reported as normal, but their failures don't block anything: a flaky metric's failure never fails its test case, and a failing flaky test case makes `assert_test()` print a warning instead of raising.
+
 ## Datasets
 
 Datasets in `deepeval` is a collection of goldens. It provides a centralized interface for you to evaluate a collection of test cases using one or multiple metrics.

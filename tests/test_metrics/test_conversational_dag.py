@@ -1,4 +1,9 @@
+import os
+import warnings
+
 import pytest
+from deepeval import evaluate
+from deepeval.metrics import ConversationalDAGMetric
 from deepeval.metrics.dag import (
     DeepAcyclicGraph,
 )
@@ -8,12 +13,18 @@ from deepeval.metrics.conversational_dag import (
     ConversationalNonBinaryJudgementNode,
     ConversationalVerdictNode,
 )
-from deepeval.test_case import MultiTurnParams
+from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
 from deepeval.metrics.dag.utils import (
     is_valid_dag_from_roots,
     extract_required_params,
     copy_graph,
     is_valid_dag,
+)
+
+requires_openai = pytest.mark.skipif(
+    os.getenv("OPENAI_API_KEY") is None
+    or not os.getenv("OPENAI_API_KEY").strip(),
+    reason="OPENAI_API_KEY is not set",
 )
 
 
@@ -120,7 +131,7 @@ class TestConversationalDeepAcyclicGraph:
 
     def test_invalid_child_type(self):
         invalid_child = "string_instead_of_node"
-        with pytest.raises(AttributeError):
+        with pytest.raises(TypeError):
             ConversationalTaskNode(
                 instructions="Invalid task",
                 output_label="X",
@@ -272,3 +283,256 @@ class TestConversationalDeepAcyclicGraph:
         task = ConversationalTaskNode("Check", "result", [], [judge])
         dag = DeepAcyclicGraph(root_nodes=[task])
         assert is_valid_dag_from_roots(dag.root_nodes, multiturn=True)
+
+    def test_add_node_appends_and_returns(self):
+        task = ConversationalTaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[MultiTurnParams.ROLE],
+        )
+        judge = ConversationalBinaryJudgementNode(criteria="?")
+        returned = task.add_node(judge)
+        assert returned is judge
+        assert task.children == [judge]
+
+    def test_add_verdict_score_leaf(self):
+        judge = ConversationalBinaryJudgementNode(criteria="?")
+        verdict = judge.add_verdict(True, score=10)
+        assert isinstance(verdict, ConversationalVerdictNode)
+        assert verdict.verdict is True
+        assert verdict.score == 10
+        assert verdict.child is None
+        assert judge.children == [verdict]
+
+    def test_add_verdict_then_sets_child(self):
+        order = ConversationalNonBinaryJudgementNode(criteria="order?")
+        judge = ConversationalBinaryJudgementNode(criteria="?")
+        verdict = judge.add_verdict(True, then=order)
+        assert verdict.child is order
+        assert verdict.score is None
+
+    def test_add_verdict_rejects_score_and_then(self):
+        order = ConversationalNonBinaryJudgementNode(criteria="order?")
+        judge = ConversationalBinaryJudgementNode(criteria="?")
+        with pytest.raises(ValueError):
+            judge.add_verdict(True, score=10, then=order)
+
+    def test_top_down_builds_valid_diamond(self):
+        extract = ConversationalTaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[MultiTurnParams.CONTENT],
+        )
+        headings = ConversationalBinaryJudgementNode(criteria="all three?")
+        order = ConversationalNonBinaryJudgementNode(criteria="order?")
+        extract.add_node(headings)
+        extract.add_node(
+            order
+        )  # diamond: shared by extract and the True verdict
+        headings.add_verdict(False, score=0)
+        headings.add_verdict(True, then=order)
+        order.add_verdict("Yes", score=10)
+        order.add_verdict("No", score=0)
+
+        dag = DeepAcyclicGraph(root_nodes=[extract])
+        assert is_valid_dag_from_roots(dag.root_nodes, multiturn=True)
+        assert dag.indegree[extract] == 0
+        assert dag.indegree[order] == 2
+
+    def test_build_time_validation_incomplete_binary(self):
+        extract = ConversationalTaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[MultiTurnParams.ROLE],
+        )
+        judge = ConversationalBinaryJudgementNode(criteria="?")
+        extract.add_node(judge)
+        judge.add_verdict(True, score=10)  # only one verdict
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[extract])
+
+    def test_nonbinary_schema_deferred_to_build(self):
+        order = ConversationalNonBinaryJudgementNode(criteria="order?")
+        order.add_verdict("A", score=10)
+        order.add_verdict("B", score=0)
+        assert not hasattr(order, "_verdict_schema")
+        DeepAcyclicGraph(root_nodes=[order])
+        assert hasattr(order, "_verdict_schema")
+        assert sorted(order._verdict_options) == ["A", "B"]
+
+
+class TestConversationalTopDownBuilder:
+
+    def test_top_down_build_emits_no_deprecation_warning(self):
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            extract = ConversationalTaskNode(
+                instructions="Extract",
+                output_label="X",
+                evaluation_params=[MultiTurnParams.ROLE],
+            )
+            judge = ConversationalBinaryJudgementNode(criteria="?")
+            extract.add_node(judge)
+            judge.add_verdict(True, score=10)
+            judge.add_verdict(False, score=0)
+            DeepAcyclicGraph(root_nodes=[extract])
+        assert not [
+            w for w in caught if issubclass(w.category, DeprecationWarning)
+        ]
+
+    def test_bottom_up_children_emits_deprecation_warning(self):
+        with pytest.warns(DeprecationWarning):
+            ConversationalBinaryJudgementNode(
+                criteria="?",
+                children=[
+                    ConversationalVerdictNode(verdict=False, score=0),
+                    ConversationalVerdictNode(verdict=True, score=10),
+                ],
+            )
+
+    def test_add_verdict_requires_score_or_then(self):
+        judge = ConversationalBinaryJudgementNode(criteria="?")
+        with pytest.raises(ValueError):
+            judge.add_verdict(True)  # neither score nor then
+
+    def test_binary_two_true_verdicts_raises_at_build(self):
+        judge = ConversationalBinaryJudgementNode(criteria="?")
+        judge.add_verdict(True, score=10)
+        judge.add_verdict(True, score=0)
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[judge])
+
+    def test_binary_non_bool_verdict_raises_at_build(self):
+        judge = ConversationalBinaryJudgementNode(criteria="?")
+        judge.add_verdict("yes", score=10)
+        judge.add_verdict("no", score=0)
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[judge])
+
+    def test_nonbinary_empty_raises_at_build(self):
+        order = ConversationalNonBinaryJudgementNode(criteria="order?")
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[order])
+
+    def test_nonbinary_duplicate_verdicts_raises_at_build(self):
+        order = ConversationalNonBinaryJudgementNode(criteria="order?")
+        order.add_verdict("A", score=10)
+        order.add_verdict("A", score=0)
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[order])
+
+    def test_task_node_with_verdict_child_raises_at_build(self):
+        task = ConversationalTaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[MultiTurnParams.ROLE],
+        )
+        task.add_node(ConversationalVerdictNode(verdict=True, score=10))
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[task])
+
+    def test_cycle_via_add_node_raises_at_build(self):
+        a = ConversationalTaskNode(
+            instructions="A",
+            output_label="A",
+            evaluation_params=[MultiTurnParams.ROLE],
+        )
+        b = ConversationalTaskNode(
+            instructions="B",
+            output_label="B",
+            evaluation_params=[MultiTurnParams.ROLE],
+        )
+        a.add_node(b)
+        b.add_node(a)
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[a])
+
+    def test_copy_graph_top_down_is_warning_free_and_isolated(self):
+        task = ConversationalTaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[MultiTurnParams.ROLE],
+        )
+        judge = ConversationalBinaryJudgementNode(criteria="criteria")
+        task.add_node(judge)
+        judge.add_verdict(True, score=10)
+        judge.add_verdict(False, score=0)
+        dag = DeepAcyclicGraph(root_nodes=[task])
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            copied = copy_graph(dag)
+        assert not [
+            w for w in caught if issubclass(w.category, DeprecationWarning)
+        ]
+
+        copied_task = copied.root_nodes[0]
+        copied_judge = copied_task.children[0]
+        assert copied is not dag
+        assert isinstance(copied_task, ConversationalTaskNode)
+        assert isinstance(copied_judge, ConversationalBinaryJudgementNode)
+        assert copied_task is not task
+        assert copied_judge is not judge
+        assert copied_judge.criteria == "criteria"
+        assert len(copied_judge.children) == 2
+        assert {c.verdict for c in copied_judge.children} == {True, False}
+        assert {c.score for c in copied_judge.children} == {10, 0}
+
+
+@requires_openai
+class TestConversationalDAGMetric:
+
+    @staticmethod
+    def _build_dag() -> DeepAcyclicGraph:
+        summary = ConversationalTaskNode(
+            instructions="Summarize the assistant's behaviour in the conversation.",
+            output_label="Summary",
+            evaluation_params=[MultiTurnParams.ROLE, MultiTurnParams.CONTENT],
+        )
+        judge = ConversationalBinaryJudgementNode(
+            criteria="Did the assistant ultimately answer the user's weather question?"
+        )
+        summary.add_node(judge)
+        judge.add_verdict(True, score=10)
+        judge.add_verdict(False, score=0)
+        return DeepAcyclicGraph(root_nodes=[summary])
+
+    @staticmethod
+    def _test_case() -> ConversationalTestCase:
+        return ConversationalTestCase(
+            turns=[
+                Turn(role="user", content="What's the weather like today?"),
+                Turn(role="assistant", content="Where do you live?"),
+                Turn(role="user", content="Just tell me the weather in Paris"),
+                Turn(
+                    role="assistant",
+                    content="The weather in Paris today is sunny and 24°C.",
+                ),
+            ],
+            scenario="User asks about the weather.",
+            expected_outcome="Assistant provides the weather information.",
+        )
+
+    def test_conversational_dag_metric_sync_measure(self):
+        metric = ConversationalDAGMetric(
+            name="Weather Answered", dag=self._build_dag(), async_mode=False
+        )
+        metric.measure(self._test_case())
+        assert metric.score is not None
+        assert 0 <= metric.score <= 1
+        assert metric.reason is not None
+
+    def test_conversational_dag_metric_async_measure(self):
+        metric = ConversationalDAGMetric(
+            name="Weather Answered", dag=self._build_dag(), async_mode=True
+        )
+        metric.measure(self._test_case())
+        assert metric.score is not None
+        assert 0 <= metric.score <= 1
+        assert metric.reason is not None
+
+    def test_conversational_dag_metric_via_evaluate(self):
+        metric = ConversationalDAGMetric(
+            name="Weather Answered", dag=self._build_dag()
+        )
+        evaluate([self._test_case()], [metric])

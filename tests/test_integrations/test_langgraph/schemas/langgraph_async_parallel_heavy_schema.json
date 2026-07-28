@@ -1237,6 +1237,7 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": {
             "content": "Sunny, 72°F",
             "additional_kwargs": {},
@@ -1254,6 +1255,7 @@
         },
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": {
             "content": "Cloudy, 58°F",
             "additional_kwargs": {},
@@ -1271,6 +1273,7 @@
         },
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": {
             "content": "Rainy, 52°F",
             "additional_kwargs": {},
@@ -1288,6 +1291,7 @@
         },
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": {
             "content": "Clear, 78°F",
             "additional_kwargs": {},
@@ -1305,6 +1309,7 @@
         },
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": {
             "content": "Partly cloudy, 65°F",
             "additional_kwargs": {},
@@ -1322,6 +1327,7 @@
         },
         {
           "name": "get_stock_price",
+          "type": "FUNCTION",
           "output": {
             "content": "$142.30",
             "additional_kwargs": {},
@@ -1339,6 +1345,7 @@
         },
         {
           "name": "get_stock_price",
+          "type": "FUNCTION",
           "output": {
             "content": "$178.50",
             "additional_kwargs": {},
@@ -1356,6 +1363,7 @@
         },
         {
           "name": "calculate",
+          "type": "FUNCTION",
           "output": {
             "content": "0.15*378.90 = 56.834999999999994",
             "additional_kwargs": {},
@@ -1373,6 +1381,7 @@
         },
         {
           "name": "get_stock_price",
+          "type": "FUNCTION",
           "output": {
             "content": "$378.90",
             "additional_kwargs": {},
@@ -1390,6 +1399,7 @@
         },
         {
           "name": "calculate",
+          "type": "FUNCTION",
           "output": {
             "content": "1/0.79 = 1.2658227848101264",
             "additional_kwargs": {},
@@ -1407,6 +1417,7 @@
         },
         {
           "name": "calculate",
+          "type": "FUNCTION",
           "output": {
             "content": "1/0.92 = 1.0869565217391304",
             "additional_kwargs": {},
@@ -2561,6 +2572,7 @@
   "toolsCalled": [
     {
       "name": "get_weather",
+      "type": "FUNCTION",
       "output": {
         "content": "Sunny, 72°F",
         "additional_kwargs": {},
@@ -2578,6 +2590,7 @@
     },
     {
       "name": "get_weather",
+      "type": "FUNCTION",
       "output": {
         "content": "Cloudy, 58°F",
         "additional_kwargs": {},
@@ -2595,6 +2608,7 @@
     },
     {
       "name": "get_weather",
+      "type": "FUNCTION",
       "output": {
         "content": "Rainy, 52°F",
         "additional_kwargs": {},
@@ -2612,6 +2626,7 @@
     },
     {
       "name": "get_weather",
+      "type": "FUNCTION",
       "output": {
         "content": "Clear, 78°F",
         "additional_kwargs": {},
@@ -2629,6 +2644,7 @@
     },
     {
       "name": "get_weather",
+      "type": "FUNCTION",
       "output": {
         "content": "Partly cloudy, 65°F",
         "additional_kwargs": {},
@@ -2646,6 +2662,7 @@
     },
     {
       "name": "get_stock_price",
+      "type": "FUNCTION",
       "output": {
         "content": "$142.30",
         "additional_kwargs": {},
@@ -2663,6 +2680,7 @@
     },
     {
       "name": "get_stock_price",
+      "type": "FUNCTION",
       "output": {
         "content": "$178.50",
         "additional_kwargs": {},
@@ -2680,6 +2698,7 @@
     },
     {
       "name": "calculate",
+      "type": "FUNCTION",
       "output": {
         "content": "0.15*378.90 = 56.834999999999994",
         "additional_kwargs": {},
@@ -2697,6 +2716,7 @@
     },
     {
       "name": "get_stock_price",
+      "type": "FUNCTION",
       "output": {
         "content": "$378.90",
         "additional_kwargs": {},
@@ -2714,6 +2734,7 @@
     },
     {
       "name": "calculate",
+      "type": "FUNCTION",
       "output": {
         "content": "1/0.79 = 1.2658227848101264",
         "additional_kwargs": {},
@@ -2731,6 +2752,7 @@
     },
     {
       "name": "calculate",
+      "type": "FUNCTION",
       "output": {
         "content": "1/0.92 = 1.0869565217391304",
         "additional_kwargs": {},

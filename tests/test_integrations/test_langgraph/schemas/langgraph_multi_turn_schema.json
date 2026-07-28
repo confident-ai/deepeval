@@ -1489,6 +1489,7 @@
       "toolsCalled": [
         {
           "name": "apply_coupon",
+          "type": "FUNCTION",
           "output": {
             "content": "10% discount applied",
             "additional_kwargs": {},
@@ -2765,6 +2766,7 @@
   "toolsCalled": [
     {
       "name": "apply_coupon",
+      "type": "FUNCTION",
       "output": {
         "content": "10% discount applied",
         "additional_kwargs": {},

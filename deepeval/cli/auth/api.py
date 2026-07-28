@@ -14,7 +14,7 @@ them, parsing fails with a `pydantic.ValidationError` instead of silently
 substituting a value.
 """
 
-from typing import Dict, List, Literal, Optional
+from typing import Annotated, Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -46,13 +46,6 @@ class CliAuthorization(BaseModel):
     email: Optional[str] = None
 
 
-class CliOnboardingUser(BaseModel):
-    """`user` in the GET /cli/onboarding response."""
-
-    name: Optional[str] = None
-    email: Optional[str] = None
-
-
 class CliOnboardingProject(BaseModel):
     """One entry of `projects` in the GET /cli/onboarding response."""
 
@@ -63,26 +56,97 @@ class CliOnboardingProject(BaseModel):
     can_create_api_key: bool = Field(validation_alias="canCreateApiKey")
 
 
+QuestionnaireAnswer = Union[str, bool, List[str]]
+
+
+class CliQuestionnaireOption(BaseModel):
+    """One selectable answer in a server-provided CLI question."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    label: str
+    value: Union[str, bool]
+    exclusive: bool = False
+    accepts_custom_value: bool = Field(
+        False, validation_alias="acceptsCustomValue"
+    )
+    custom_prompt: Optional[str] = Field(None, validation_alias="customPrompt")
+
+
+class CliQuestionnaireQuestionBase(BaseModel):
+    id: str
+    prompt: str
+    required: bool
+
+
+class CliTextQuestion(CliQuestionnaireQuestionBase):
+    model_config = ConfigDict(populate_by_name=True)
+
+    type: Literal["text"]
+    default_value: Optional[str] = Field(None, validation_alias="defaultValue")
+    max_length: Optional[int] = Field(None, validation_alias="maxLength")
+
+
+class CliSingleSelectQuestion(CliQuestionnaireQuestionBase):
+    model_config = ConfigDict(populate_by_name=True)
+
+    type: Literal["single_select"]
+    options: List[CliQuestionnaireOption]
+    default_value: Optional[Union[str, bool]] = Field(
+        None, validation_alias="defaultValue"
+    )
+
+
+class CliMultiSelectQuestion(CliQuestionnaireQuestionBase):
+    model_config = ConfigDict(populate_by_name=True)
+
+    type: Literal["multi_select"]
+    options: List[CliQuestionnaireOption]
+    min_selections: Optional[int] = Field(
+        None, validation_alias="minSelections", ge=0
+    )
+
+
+CliQuestionnaireQuestion = Annotated[
+    Union[
+        CliTextQuestion,
+        CliSingleSelectQuestion,
+        CliMultiSelectQuestion,
+    ],
+    Field(discriminator="type"),
+]
+
+
+class CliQuestionnaire(BaseModel):
+    """Versioned questions returned for a new user's CLI setup."""
+
+    version: int
+    questions: List[CliQuestionnaireQuestion]
+
+
 class CliOnboardingContext(BaseModel):
     """Typed GET /cli/onboarding response.
 
-    `user` is set for new users; `projects` is populated for existing users.
+    `questionnaire` is set for new users; `projects` is populated for existing
+    users.
     """
 
     state: Literal["new_user", "existing_user"]
-    user: Optional[CliOnboardingUser] = None
     projects: List[CliOnboardingProject] = Field(default_factory=list)
+    questionnaire: Optional[CliQuestionnaire] = None
 
 
-class NewUserOnboardingRequest(BaseModel):
-    """POST /cli/onboarding/complete body for a first-time user; the backend
-    creates their organization and first project."""
+class DynamicNewUserOnboardingRequest(BaseModel):
+    """POST /cli/onboarding/complete body driven by the server questionnaire."""
 
-    user_name: str = Field(serialization_alias="userName")
-    organization_name: str = Field(serialization_alias="organizationName")
-    project_name: str = Field(serialization_alias="projectName")
+    questionnaire_version: int = Field(
+        serialization_alias="questionnaireVersion"
+    )
+    questionnaire_answers: Dict[str, QuestionnaireAnswer] = Field(
+        serialization_alias="questionnaireAnswers"
+    )
 
-    def to_payload(self) -> Dict[str, str]:
+    def to_payload(self) -> Dict[str, Any]:
         return self.model_dump(by_alias=True)
 
 

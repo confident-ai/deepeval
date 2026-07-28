@@ -789,6 +789,7 @@
       "toolsCalled": [
         {
           "name": "translate",
+          "type": "FUNCTION",
           "output": {
             "content": "[Spanish translation of: Python is a high-level programming language.]",
             "additional_kwargs": {},
@@ -1198,6 +1199,7 @@
       "toolsCalled": [
         {
           "name": "search_database",
+          "type": "FUNCTION",
           "output": {
             "content": "Python is a high-level programming language.",
             "additional_kwargs": {},
@@ -1794,6 +1796,7 @@
   "toolsCalled": [
     {
       "name": "search_database",
+      "type": "FUNCTION",
       "output": {
         "content": "Python is a high-level programming language.",
         "additional_kwargs": {},
@@ -1811,6 +1814,7 @@
     },
     {
       "name": "translate",
+      "type": "FUNCTION",
       "output": {
         "content": "[Spanish translation of: Python is a high-level programming language.]",
         "additional_kwargs": {},

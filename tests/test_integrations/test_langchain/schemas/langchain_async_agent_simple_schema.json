@@ -145,6 +145,7 @@
       "toolsCalled": [
         {
           "name": "search_web",
+          "type": "FUNCTION",
           "output": {
             "content": "San Francisco weather: Foggy, 58F, humidity 75%",
             "additional_kwargs": {},
@@ -416,6 +417,7 @@
   "toolsCalled": [
     {
       "name": "search_web",
+      "type": "FUNCTION",
       "output": {
         "content": "San Francisco weather: Foggy, 58F, humidity 75%",
         "additional_kwargs": {},

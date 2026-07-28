@@ -145,6 +145,7 @@
       "toolsCalled": [
         {
           "name": "fact_check",
+          "type": "FUNCTION",
           "output": {
             "content": "Fact check: VERIFIED - This claim appears to be accurate.",
             "additional_kwargs": {},
@@ -413,6 +414,7 @@
   "toolsCalled": [
     {
       "name": "fact_check",
+      "type": "FUNCTION",
       "output": {
         "content": "Fact check: VERIFIED - This claim appears to be accurate.",
         "additional_kwargs": {},

@@ -1270,7 +1270,9 @@ class EvaluationDataset:
                                 if hasattr(t, "model_dump"):
                                     dumped.append(
                                         t.model_dump(
-                                            by_alias=True, exclude_none=True
+                                            by_alias=True,
+                                            exclude_none=True,
+                                            mode="json",
                                         )
                                     )
                                 elif hasattr(t, "dict"):
@@ -1398,7 +1400,9 @@ class EvaluationDataset:
                                 if hasattr(t, "model_dump"):
                                     dumped.append(
                                         t.model_dump(
-                                            by_alias=True, exclude_none=True
+                                            by_alias=True,
+                                            exclude_none=True,
+                                            mode="json",
                                         )
                                     )
                                 elif hasattr(t, "dict"):
@@ -1479,7 +1483,9 @@ class EvaluationDataset:
                                 if hasattr(t, "model_dump"):
                                     dumped.append(
                                         t.model_dump(
-                                            by_alias=True, exclude_none=True
+                                            by_alias=True,
+                                            exclude_none=True,
+                                            mode="json",
                                         )
                                     )
                                 elif hasattr(t, "dict"):

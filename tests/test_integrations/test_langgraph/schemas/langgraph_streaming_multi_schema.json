@@ -442,6 +442,7 @@
       "toolsCalled": [
         {
           "name": "get_stock_price",
+          "type": "FUNCTION",
           "output": {
             "content": "$245.60 (+2.1%)",
             "additional_kwargs": {},
@@ -459,6 +460,7 @@
         },
         {
           "name": "get_company_info",
+          "type": "FUNCTION",
           "output": {
             "content": "Tesla Inc. - Electric vehicles, Market Cap: $780B",
             "additional_kwargs": {},
@@ -972,6 +974,7 @@
   "toolsCalled": [
     {
       "name": "get_stock_price",
+      "type": "FUNCTION",
       "output": {
         "content": "$245.60 (+2.1%)",
         "additional_kwargs": {},
@@ -989,6 +992,7 @@
     },
     {
       "name": "get_company_info",
+      "type": "FUNCTION",
       "output": {
         "content": "Tesla Inc. - Electric vehicles, Market Cap: $780B",
         "additional_kwargs": {},

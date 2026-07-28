@@ -215,6 +215,7 @@ class ConversationalTestCase(BaseModel):
     )
     comments: Optional[str] = Field(default=None)
     tags: Optional[List[str]] = Field(default=None)
+    flaky: bool = Field(default=False)
     mcp_servers: Optional[List[MCPServer]] = Field(default=None)
     multimodal: bool = False
 

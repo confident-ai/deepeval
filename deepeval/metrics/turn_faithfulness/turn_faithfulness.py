@@ -47,7 +47,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
@@ -56,6 +56,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         truths_extraction_limit: Optional[int] = None,
         penalize_ambiguous_claims: bool = False,
         window_size: int = 10,
+        flaky: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -64,6 +65,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self.penalize_ambiguous_claims = penalize_ambiguous_claims
         self.window_size = window_size
 
@@ -119,7 +121,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
                         self._get_faithfulness_scores(window, multimodal)
                     )
                 self.score = self._calculate_score(scores)
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.reason = self._generate_reason(scores)
                 verbose_steps = self._get_verbose_steps(scores)
                 self.verbose_logs = construct_verbose_logs(
@@ -179,7 +181,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
                 tasks.append(get_individual_scores(window))
             await asyncio.gather(*tasks)
             self.score = self._calculate_score(scores)
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.reason = await self._a_generate_reason(scores)
             verbose_steps = self._get_verbose_steps(scores)
             self.verbose_logs = construct_verbose_logs(
@@ -574,16 +576,6 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         for score in scores:
             total_score += score.score
         return total_score / number_of_scores
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

@@ -521,6 +521,7 @@
       "toolsCalled": [
         {
           "name": "fact_check",
+          "type": "FUNCTION",
           "output": {
             "content": "Fact check: UNVERIFIED - Unable to confirm this claim.",
             "additional_kwargs": {},
@@ -1127,6 +1128,7 @@
   "toolsCalled": [
     {
       "name": "fact_check",
+      "type": "FUNCTION",
       "output": {
         "content": "Fact check: UNVERIFIED - Unable to confirm this claim.",
         "additional_kwargs": {},

@@ -91,6 +91,7 @@
       "toolsCalled": [
         {
           "name": "special_tool",
+          "type": "FUNCTION",
           "inputParameters": {}
         }
       ],

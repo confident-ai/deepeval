@@ -333,6 +333,7 @@
       "toolsCalled": [
         {
           "name": "multiply",
+          "type": "FUNCTION",
           "output": {
             "content": "48",
             "additional_kwargs": {},
@@ -437,7 +438,7 @@
             ]
           },
           "resume": null,
-          "goto": "<circular>"
+          "goto": []
         }
       ],
       "metricCollection": "test_collection_1",
@@ -712,6 +713,7 @@
   "toolsCalled": [
     {
       "name": "multiply",
+      "type": "FUNCTION",
       "output": {
         "content": "48",
         "additional_kwargs": {},

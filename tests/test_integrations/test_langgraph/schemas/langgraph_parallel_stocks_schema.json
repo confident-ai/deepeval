@@ -805,6 +805,7 @@
       "toolsCalled": [
         {
           "name": "get_stock_price",
+          "type": "FUNCTION",
           "output": {
             "content": "$178.50",
             "additional_kwargs": {},
@@ -822,6 +823,7 @@
         },
         {
           "name": "get_stock_price",
+          "type": "FUNCTION",
           "output": {
             "content": "$378.90",
             "additional_kwargs": {},
@@ -839,6 +841,7 @@
         },
         {
           "name": "get_stock_price",
+          "type": "FUNCTION",
           "output": {
             "content": "$142.30",
             "additional_kwargs": {},
@@ -856,6 +859,7 @@
         },
         {
           "name": "get_stock_price",
+          "type": "FUNCTION",
           "output": {
             "content": "$245.60",
             "additional_kwargs": {},
@@ -873,6 +877,7 @@
         },
         {
           "name": "get_stock_price",
+          "type": "FUNCTION",
           "output": {
             "content": "$185.20",
             "additional_kwargs": {},
@@ -1618,6 +1623,7 @@
   "toolsCalled": [
     {
       "name": "get_stock_price",
+      "type": "FUNCTION",
       "output": {
         "content": "$178.50",
         "additional_kwargs": {},
@@ -1635,6 +1641,7 @@
     },
     {
       "name": "get_stock_price",
+      "type": "FUNCTION",
       "output": {
         "content": "$378.90",
         "additional_kwargs": {},
@@ -1652,6 +1659,7 @@
     },
     {
       "name": "get_stock_price",
+      "type": "FUNCTION",
       "output": {
         "content": "$142.30",
         "additional_kwargs": {},
@@ -1669,6 +1677,7 @@
     },
     {
       "name": "get_stock_price",
+      "type": "FUNCTION",
       "output": {
         "content": "$245.60",
         "additional_kwargs": {},
@@ -1686,6 +1695,7 @@
     },
     {
       "name": "get_stock_price",
+      "type": "FUNCTION",
       "output": {
         "content": "$185.20",
         "additional_kwargs": {},

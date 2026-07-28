@@ -31,11 +31,12 @@ class JsonCorrectnessMetric(BaseMetric):
         self,
         expected_schema: BaseModel,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         async_mode: bool = True,
         include_reason: bool = True,
         strict_mode: bool = True,
         verbose_mode: bool = False,
+        flaky: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -43,6 +44,7 @@ class JsonCorrectnessMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self.expected_schema = expected_schema
         self.evaluation_model = self.model.get_model_name()
 
@@ -92,7 +94,7 @@ class JsonCorrectnessMetric(BaseMetric):
 
                 self.score = 1 if valid_json else 0
                 self.reason = self.generate_reason(test_case.actual_output)
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -142,7 +144,7 @@ class JsonCorrectnessMetric(BaseMetric):
 
             self.score = 1 if valid_json else 0
             self.reason = await self.a_generate_reason(test_case.actual_output)
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -202,16 +204,6 @@ class JsonCorrectnessMetric(BaseMetric):
             extract_schema=lambda s: s.reason,
             extract_json=lambda data: data["reason"],
         )
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

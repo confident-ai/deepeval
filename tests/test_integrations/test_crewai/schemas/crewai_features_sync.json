@@ -31,6 +31,7 @@
       "toolsCalled": [
         {
           "name": "special_metric_tool",
+          "type": "FUNCTION",
           "output": "Calculated metrics for: deterministic_test_input",
           "inputParameters": {
             "query": "deterministic_test_input"

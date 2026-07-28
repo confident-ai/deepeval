@@ -517,6 +517,7 @@
       "toolsCalled": [
         {
           "name": "search_database",
+          "type": "FUNCTION",
           "output": {
             "content": "Rust is a systems programming language focused on safety.",
             "additional_kwargs": {},
@@ -963,6 +964,7 @@
   "toolsCalled": [
     {
       "name": "search_database",
+      "type": "FUNCTION",
       "output": {
         "content": "Rust is a systems programming language focused on safety.",
         "additional_kwargs": {},

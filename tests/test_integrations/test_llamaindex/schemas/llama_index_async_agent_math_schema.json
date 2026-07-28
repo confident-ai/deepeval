@@ -684,6 +684,7 @@
       "toolsCalled": [
         {
           "name": "multiply",
+          "type": "FUNCTION",
           "output": {
             "blocks": [
               {

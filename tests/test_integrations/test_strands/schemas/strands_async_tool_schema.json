@@ -89,8 +89,8 @@
       "toolsCalled": [
         {
           "name": "calculate",
-          "inputParameters": {},
-          "type": "FUNCTION"
+          "type": "FUNCTION",
+          "inputParameters": {}
         }
       ],
       "integration": "Strands"

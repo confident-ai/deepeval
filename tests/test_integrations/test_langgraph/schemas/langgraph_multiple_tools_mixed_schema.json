@@ -589,6 +589,7 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": {
             "content": "Partly cloudy, 62°F",
             "additional_kwargs": {},
@@ -606,6 +607,7 @@
         },
         {
           "name": "calculate",
+          "type": "FUNCTION",
           "output": {
             "content": "100 * 1.5 + 50 = 200.0",
             "additional_kwargs": {},
@@ -1133,6 +1135,7 @@
   "toolsCalled": [
     {
       "name": "get_weather",
+      "type": "FUNCTION",
       "output": {
         "content": "Partly cloudy, 62°F",
         "additional_kwargs": {},
@@ -1150,6 +1153,7 @@
     },
     {
       "name": "calculate",
+      "type": "FUNCTION",
       "output": {
         "content": "100 * 1.5 + 50 = 200.0",
         "additional_kwargs": {},

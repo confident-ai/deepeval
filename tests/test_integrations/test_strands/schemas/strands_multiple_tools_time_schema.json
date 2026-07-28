@@ -89,8 +89,8 @@
       "toolsCalled": [
         {
           "name": "get_time",
-          "inputParameters": {},
-          "type": "FUNCTION"
+          "type": "FUNCTION",
+          "inputParameters": {}
         }
       ],
       "integration": "Strands"

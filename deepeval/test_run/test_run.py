@@ -655,6 +655,9 @@ class TestRunManager:
         """Get formatted status string for a metric."""
         if metric_data.error:
             return "[red]ERRORED[/red]"
+        elif metric_data.success is None:
+            # No threshold: the metric has no pass/fail verdict
+            return "[dim]NONE[/dim]"
         elif metric_data.success:
             return "[green]PASSED[/green]"
         return "[red]FAILED[/red]"
@@ -691,16 +694,45 @@ class TestRunManager:
     @staticmethod
     def _count_metric_results(
         metrics_data: List[MetricData],
-    ) -> tuple[int, int]:
-        """Count passing and failing metrics."""
+    ) -> tuple[int, int, int, int]:
+        """Count passing and failing metrics, with flaky sub-counts.
+
+        Flaky metrics are included in pass/fail, and additionally counted
+        in the flaky sub-count of their verdict. Metrics without a verdict
+        (success=None, e.g. no threshold) are excluded from all counts.
+        """
         pass_count = 0
         fail_count = 0
+        flaky_pass_count = 0
+        flaky_fail_count = 0
         for metric_data in metrics_data:
+            if metric_data.success is None:
+                continue
             if metric_data.success:
                 pass_count += 1
+                if metric_data.flaky:
+                    flaky_pass_count += 1
             else:
                 fail_count += 1
-        return pass_count, fail_count
+                if metric_data.flaky:
+                    flaky_fail_count += 1
+        return pass_count, fail_count, flaky_pass_count, flaky_fail_count
+
+    @staticmethod
+    def _format_verdict_counts(
+        pass_count: int,
+        fail_count: int,
+        flaky_pass_count: int,
+        flaky_fail_count: int,
+    ) -> str:
+        """Format pass/fail counts, each with its own flaky sub-count."""
+        passed = f"passed={pass_count}"
+        if flaky_pass_count > 0:
+            passed += f" (flaky={flaky_pass_count})"
+        failed = f"failed={fail_count}"
+        if flaky_fail_count > 0:
+            failed += f" (flaky={flaky_fail_count})"
+        return f"{passed} | {failed}"
 
     def _add_test_case_header_row(
         self,
@@ -708,13 +740,18 @@ class TestRunManager:
         test_case_name: str,
         pass_count: int,
         fail_count: int,
+        flaky_pass_count: int = 0,
+        flaky_fail_count: int = 0,
     ):
         """Add test case header row with name and success rate."""
         success_rate = self._calculate_success_rate(pass_count, fail_count)
+        rate_str = f"{success_rate}% | " + self._format_verdict_counts(
+            pass_count, fail_count, flaky_pass_count, flaky_fail_count
+        )
         table.add_row(
             test_case_name,
             *[""] * 3,
-            f"{success_rate}%",
+            rate_str,
         )
 
     def _add_metric_rows(self, table: Table, metrics_data: List[MetricData]):
@@ -759,11 +796,16 @@ class TestRunManager:
                 test_case, display
             ):
                 continue
-            pass_count, fail_count = self._count_metric_results(
-                test_case.metrics_data
+            pass_count, fail_count, flaky_pass_count, flaky_fail_count = (
+                self._count_metric_results(test_case.metrics_data)
             )
             self._add_test_case_header_row(
-                table, test_case.name, pass_count, fail_count
+                table,
+                test_case.name,
+                pass_count,
+                fail_count,
+                flaky_pass_count,
+                flaky_fail_count,
             )
             self._add_metric_rows(table, test_case.metrics_data)
 
@@ -838,11 +880,18 @@ class TestRunManager:
                     f"[dim]No turns recorded for {conversational_test_case_name}.[/dim]"
                 )
             if conversational_test_case.metrics_data is not None:
-                pass_count, fail_count = self._count_metric_results(
-                    conversational_test_case.metrics_data
+                pass_count, fail_count, flaky_pass_count, flaky_fail_count = (
+                    self._count_metric_results(
+                        conversational_test_case.metrics_data
+                    )
                 )
                 self._add_test_case_header_row(
-                    table, conversational_test_case.name, pass_count, fail_count
+                    table,
+                    conversational_test_case.name,
+                    pass_count,
+                    fail_count,
+                    flaky_pass_count,
+                    flaky_fail_count,
                 )
                 self._add_metric_rows(
                     table, conversational_test_case.metrics_data

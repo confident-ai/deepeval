@@ -330,6 +330,7 @@
       "toolsCalled": [
         {
           "name": "square",
+          "type": "FUNCTION",
           "output": {
             "content": "81",
             "additional_kwargs": {},
@@ -431,7 +432,7 @@
             ]
           },
           "resume": null,
-          "goto": "<circular>"
+          "goto": []
         }
       ],
       "integration": "LangChain"
@@ -708,6 +709,7 @@
   "toolsCalled": [
     {
       "name": "square",
+      "type": "FUNCTION",
       "output": {
         "content": "81",
         "additional_kwargs": {},

@@ -330,6 +330,7 @@
       "toolsCalled": [
         {
           "name": "calculate",
+          "type": "FUNCTION",
           "output": {
             "content": "45",
             "additional_kwargs": {},
@@ -432,7 +433,7 @@
             ]
           },
           "resume": null,
-          "goto": "<circular>"
+          "goto": []
         }
       ],
       "metricCollection": "tool_accuracy",
@@ -712,6 +713,7 @@
   "toolsCalled": [
     {
       "name": "calculate",
+      "type": "FUNCTION",
       "output": {
         "content": "45",
         "additional_kwargs": {},

@@ -351,6 +351,7 @@ class TestSaveAndLoad:
                 turns = data["turns"]
                 assert isinstance(turns, list) and turns[0]["user_id"] == "u1"
                 assert isinstance(turns[0]["tools_called"], list)
+                assert turns[0]["tools_called"][0]["type"] == "FUNCTION"
                 assert data["additional_metadata"]["gk"] == "gv"
                 assert data["custom_column_key_values"]["col"] == "val"
 
@@ -362,6 +363,7 @@ class TestSaveAndLoad:
                 turns = rec["turns"]
                 assert isinstance(turns, list) and turns[0]["user_id"] == "u1"
                 assert isinstance(turns[0]["tools_called"], list)
+                assert turns[0]["tools_called"][0]["type"] == "FUNCTION"
 
     def test_add_goldens_from_jsonl_file_loads_single_turn_goldens(self):
         """Load single-turn goldens from JSONL and preserve extra fields."""

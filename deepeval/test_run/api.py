@@ -18,19 +18,7 @@ class LLMApiTestCase(BaseModel):
     token_cost: Optional[float] = Field(None, alias="tokenCost")
     completion_time: Optional[float] = Field(None, alias="completionTime")
     tags: Optional[List[str]] = Field(None)
-    # multimodal_input: Optional[str] = Field(None, alias="multimodalInput")
-    # multimodal_input_actual_output: Optional[str] = Field(
-    #     None, alias="multimodalActualOutput"
-    # )
-    # multimodal_expected_output: Optional[str] = Field(
-    #     None, alias="multimodalExpectedOutput"
-    # )
-    # multimodal_retrieval_context: Optional[List[str]] = Field(
-    #     None, alias="multimodalRetrievalContext"
-    # )
-    # multimodal_context: Optional[List[str]] = Field(
-    #     None, alias="multimodalContext"
-    # )
+    flaky: bool = False
     images_mapping: Optional[Dict[str, MLLMImage]] = Field(
         None, alias="imagesMapping"
     )
@@ -58,13 +46,15 @@ class LLMApiTestCase(BaseModel):
         else:
             self.metrics_data.append(metric_data)
 
-        if self.success is None:
-            # self.success will be None when it is a message
-            # in that case we will be setting success for the first time
-            self.success = metric_data.success
-        else:
-            if metric_data.success is False:
-                self.success = False
+        # Flaky metrics never decide a test case's pass/fail status
+        if not metric_data.flaky:
+            if self.success is None:
+                # self.success will be None when it is a message
+                # in that case we will be setting success for the first time
+                self.success = metric_data.success
+            else:
+                if metric_data.success is False:
+                    self.success = False
 
         evaluationCost = metric_data.evaluation_cost
         if evaluationCost is None:
@@ -78,7 +68,10 @@ class LLMApiTestCase(BaseModel):
     def update_run_duration(self, run_duration: float):
         self.run_duration = run_duration
 
-    def update_status(self, success: bool):
+    def update_status(self, success: Optional[bool], flaky: bool = False):
+        # Flaky metrics never decide a test case's pass/fail status
+        if flaky:
+            return
         if self.success is None:
             self.success = success
         else:
@@ -123,6 +116,7 @@ class ConversationalApiTestCase(BaseModel):
         None, alias="imagesMapping"
     )
     tags: Optional[List[str]] = Field(None)
+    flaky: bool = False
 
     def update_metric_data(self, metrics_data: MetricData):
         if self.metrics_data is None:
@@ -130,7 +124,8 @@ class ConversationalApiTestCase(BaseModel):
         else:
             self.metrics_data.append(metrics_data)
 
-        if metrics_data.success is False:
+        # Flaky metrics never decide a test case's pass/fail status
+        if metrics_data.success is False and not metrics_data.flaky:
             self.success = False
 
         evaluationCost = metrics_data.evaluation_cost

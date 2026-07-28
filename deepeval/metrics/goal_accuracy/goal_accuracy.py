@@ -31,12 +31,13 @@ class GoalAccuracyMetric(BaseConversationalMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -45,6 +46,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
 
     def measure(
         self,
@@ -97,7 +99,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                     for task in goal_and_steps_taken
                 ]
                 self.score = self._calculate_score(goal_scores, plan_scores)
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.reason = self._generate_reason(
                     goal_scores, plan_scores, multimodal
                 )
@@ -161,7 +163,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 ]
             )
             self.score = self._calculate_score(goal_scores, plan_scores)
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.reason = await self._a_generate_reason(
                 goal_scores, plan_scores, multimodal
             )
@@ -355,16 +357,6 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 f"c{prettify_list(goal_step.steps_taken)} \n\n"
             )
         return final_goals_and_steps
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

@@ -521,6 +521,7 @@
       "toolsCalled": [
         {
           "name": "summarize_text",
+          "type": "FUNCTION",
           "output": {
             "content": "Summary: Artificial intelligence is transforming industries worldwide.",
             "additional_kwargs": {},
@@ -1127,6 +1128,7 @@
   "toolsCalled": [
     {
       "name": "summarize_text",
+      "type": "FUNCTION",
       "output": {
         "content": "Summary: Artificial intelligence is transforming industries worldwide.",
         "additional_kwargs": {},

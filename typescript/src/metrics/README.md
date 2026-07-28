@@ -164,6 +164,34 @@ model layer splits them into text+image parts. Require a vision-capable model.
   `get_tool_selection_final_reason` (Python's `get_tool_argument_final_reason` is an
   unused/latent template).
 
+### Catch-up needed: recent Python additions (July 2026)
+
+Python recently shipped three related features that the TS port has **not** caught
+up with yet:
+
+- **Flaky metrics** — every Python metric constructor now takes `flaky: bool = False`
+  (also on `BaseMetric`/`BaseConversationalMetric`). A flaky metric's score and
+  verdict are still computed, recorded, and posted (`MetricData` gained a `flaky`
+  field), but its failure **never decides the test case's pass/fail status**; test
+  run aggregation skips flaky verdicts, and reports show pass/fail counts with
+  `(flaky=N)` sub-counts.
+- **Nullable threshold (score-only mode)** — `threshold` is now `Optional[float]`.
+  With `threshold=None` a metric computes score + reason but has no pass/fail
+  opinion: `is_successful()` returns `None` (so `MetricData.threshold` and
+  `MetricData.success` are both nullable now), and reports render the status as
+  `NONE`. Guard: `evaluate()` / `assert_test()` require **at least one non-flaky
+  metric with a threshold**, so every test case can still pass or fail.
+- **Flaky test cases** — `LLMTestCase` and `ConversationalTestCase` now take
+  `flaky: bool = False`, which propagates to the API test case posted to Confident
+  AI. When a flaky test case fails, Python's `assert_test()` emits a
+  `warnings.warn(...)` instead of raising an `AssertionError`.
+
+To reach parity, TS needs: `flaky` in the metric constructor options + nullable
+`threshold` (with `success` staying `undefined`/`null`), `flaky` on both test case
+classes, propagation of all three onto the metric-data / test-case API payloads,
+the flaky-aware success aggregation and report counts, and the at-least-one-voting-
+metric guard in `evaluate()`.
+
 ## Usage examples
 
 ### Direct `measure()`
