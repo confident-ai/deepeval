@@ -1,0 +1,2 @@
+# telemetry.py is stored with CRLF in main; allow CR at EOL for whitespace checks.
+deepeval/telemetry.py whitespace=cr-at-eol

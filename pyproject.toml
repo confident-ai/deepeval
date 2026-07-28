@@ -7,13 +7,17 @@ license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/confident-ai/deepeval"
 documentation = "https://deepeval.com"
+packages = [
+    { include = "deepeval" },
+    { include = "deepeval_pytest_plugin" },
+]
 exclude = ["tests/*", "scripts/*", "typescript/*"]
 
 [tool.poetry.scripts]
 deepeval = 'deepeval.cli.main:app'
 
 [tool.poetry.plugins."pytest11"]
-deepeval = "deepeval.plugins.plugin"
+deepeval = "deepeval_pytest_plugin.plugin"
 
 [tool.poetry.dependencies]
 python = ">=3.9, <4.0"

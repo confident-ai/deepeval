@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+from contextlib import nullcontext
+import os
 import json
 import re
 import pytest
 from pathlib import Path
-from typing import Dict, Iterable, List, Mapping, Tuple
+from types import SimpleNamespace
+from typing import Dict, Iterable, List, Mapping, Optional, Tuple
 from typer.testing import CliRunner
 from dataclasses import dataclass
 
+import deepeval.cli.test.command as test_cli_command
 import deepeval.cli.generate.command as generate_cli
 from deepeval.cli.main import app as cli_app
 from deepeval.cli.utils import USE_EMBED_KEYS, USE_LLM_KEYS
@@ -167,6 +171,101 @@ def test_settings_set_coerces_and_persists_dotenv(
     assert "No changes to save" in out2
     assert _count_key_occurrences(env_path, "LOG_LEVEL") == 1
     assert _count_key_occurrences(env_path, "TEMPERATURE") == 1
+
+
+@pytest.mark.parametrize(
+    ("previous_deepeval", "pytest_retcode"),
+    [
+        ("preexisting", 0),
+        (None, 1),
+    ],
+)
+def test_test_run_restores_deepeval_env_after_in_process_pytest(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    previous_deepeval: Optional[str],
+    pytest_retcode: int,
+) -> None:
+    test_file = tmp_path / "test_eval.py"
+    test_file.write_text("def test_eval():\n    assert True\n")
+    if previous_deepeval is None:
+        monkeypatch.delenv("DEEPEVAL", raising=False)
+    else:
+        monkeypatch.setenv("DEEPEVAL", previous_deepeval)
+
+    seen_pytest_args: list[list[str]] = []
+
+    def fake_pytest_main(args):
+        seen_pytest_args.append(args)
+        assert os.environ["DEEPEVAL"] == "1"
+        return pytest_retcode
+
+    monkeypatch.setattr(test_cli_command.pytest, "main", fake_pytest_main)
+    monkeypatch.setattr(
+        test_cli_command,
+        "capture_evaluation_run",
+        lambda feature: nullcontext(),
+    )
+    monkeypatch.setattr(
+        test_cli_command.global_test_run_manager, "reset", lambda: None
+    )
+    monkeypatch.setattr(
+        test_cli_command.global_test_run_manager,
+        "wrap_up_test_run",
+        lambda run_duration, save, display: None,
+    )
+    monkeypatch.setattr(
+        test_cli_command, "invoke_test_run_end_hook", lambda: None
+    )
+
+    def run_test_command():
+        return test_cli_command.run(
+            ctx=SimpleNamespace(args=[]),
+            test_file_or_directory=str(test_file),
+            color="yes",
+            durations=10,
+            pdb=False,
+            exit_on_first_failure=False,
+            show_warnings=False,
+            identifier="run-id",
+            num_processes=None,
+            repeat=None,
+            use_cache=False,
+            ignore_errors=False,
+            skip_on_missing_params=False,
+            verbose=False,
+            display=test_cli_command.TestRunResultDisplay.ALL.value,
+            mark=None,
+            official=False,
+        )
+
+    if pytest_retcode == 0:
+        assert run_test_command() == 0
+    else:
+        with pytest.raises(SystemExit) as exc_info:
+            run_test_command()
+        assert exc_info.value.code == pytest_retcode
+
+    if previous_deepeval is None:
+        assert "DEEPEVAL" not in os.environ
+    else:
+        assert os.environ["DEEPEVAL"] == previous_deepeval
+    assert seen_pytest_args == [
+        [
+            str(test_file),
+            "--quiet",
+            "--color=yes",
+            "--durations=10",
+            "-s",
+            "--disable-warnings",
+            "--identifier",
+            "run-id",
+            "-p",
+            "no:deepeval",
+            "-p",
+            "deepeval_pytest_plugin.plugin",
+        ]
+    ]
 
 
 def test_settings_unset_removes_key_from_dotenv(

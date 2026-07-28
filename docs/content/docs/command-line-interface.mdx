@@ -109,6 +109,19 @@ For a deeper walkthrough, see the [Golden Synthesizer](/docs/golden-synthesizer#
 
 Use `deepeval test run` to run evaluation test files through `pytest` with the `deepeval` pytest plugin enabled.
 
+:::tip[Plain pytest suites]
+If DeepEval is installed in the same environment as a plain `pytest` suite, the
+pytest plugin is named `deepeval`. Disable only this plugin with
+`pytest -p no:deepeval`, or disable third-party plugin autoloading with
+`PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` when your suite does not need other third-party
+pytest plugins.
+
+If another import path still loads the main `deepeval` package during a restricted
+plain pytest run, set process-level flags before pytest starts and before any
+code imports `deepeval`, such as `DEEPEVAL_DISABLE_DOTENV=1` to skip DeepEval
+dotenv autoloading and `DEEPEVAL_TELEMETRY_OPT_OUT=1` to opt out of telemetry.
+:::
+
 ```bash
 deepeval test --help
 deepeval test run --help
