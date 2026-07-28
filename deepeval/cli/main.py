@@ -45,6 +45,7 @@ from deepeval.cli.test.command import app as test_app
 from deepeval.cli.utils import (
     coerce_blank_to_none,
     handle_save_result,
+    is_confident_browser_url,
     is_optional,
     load_service_account_key_file,
     parse_and_validate,
@@ -169,9 +170,18 @@ def view():
             last_test_run_link = (
                 global_test_run_manager.get_latest_test_run_link()
             )
-            if last_test_run_link:
+            if last_test_run_link and is_confident_browser_url(
+                last_test_run_link
+            ):
                 print(f"🔗 View test run: {last_test_run_link}")
                 open_browser(last_test_run_link)
+            elif last_test_run_link:
+                print(
+                    "⚠️ Ignoring an invalid cached Confident AI test-run link; "
+                    "only /test-runs/... links from the configured Confident AI "
+                    "deployment are opened automatically. Uploading instead."
+                )
+                upload_and_open_link(_span=span)
             else:
                 upload_and_open_link(_span=span)
         else:
