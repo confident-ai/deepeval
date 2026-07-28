@@ -647,8 +647,11 @@ def test_gemini_cache_discount_cheaper_than_uncached_at_scale(
     mock_require_dep, settings
 ):
     """
-    Sanity check: with 90% of tokens cached, total cost must be at least 60%
-    cheaper than the no-cache baseline (since cached tokens cost 25%).
+    Sanity check: with 90% of tokens cached, total cost must be strictly
+    cheaper than the no-cache baseline. The exact savings depend on the
+    input/output token mix; cached tokens cost 25% of the full input price,
+    so a token mix dominated by input shows larger savings than one dominated
+    by output (output tokens are not discounted).
     """
     mock_require_dep.return_value = _make_fake_genai_module()
 
@@ -664,6 +667,10 @@ def test_gemini_cache_discount_cheaper_than_uncached_at_scale(
     cost_with_cache = model.calculate_cost(total_input, output, cached)
     cost_no_cache = model.calculate_cost(total_input, output, 0)
 
+    # gemini-2.5-pro: input $1.25/M, cache $0.3125/M (25%), output $10/M.
+    # Savings on input = (1.25 - 0.3125) * 90K = $0.084.
+    # cost_no_cache ≈ $0.175; cost_with_cache ≈ $0.091 (~52% of no-cache).
+    # Assert cost is at least 40% cheaper (ratio < 0.6).
     assert (
-        float(cost_with_cache) < float(cost_no_cache) * 0.4
-    ), "With 90% cached, total cost should be at least 60% cheaper"
+        float(cost_with_cache) < float(cost_no_cache) * 0.6
+    ), "With 90% cached, total cost should be at least 40% cheaper"
