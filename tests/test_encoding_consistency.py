@@ -42,9 +42,9 @@ class TestFileEncodingConsistency:
             os.path.dirname(__file__), "..", "deepeval", "prompt", "prompt.py"
         )
         issues = self._get_open_calls_without_encoding(filepath)
-        assert not issues, (
-            f"prompt.py has open() calls without encoding at lines: {issues}"
-        )
+        assert (
+            not issues
+        ), f"prompt.py has open() calls without encoding at lines: {issues}"
 
     def test_summac_model_uses_utf8(self):
         """_summac_model.py cache save/load must use UTF-8."""
@@ -56,9 +56,9 @@ class TestFileEncodingConsistency:
             "_summac_model.py",
         )
         issues = self._get_open_calls_without_encoding(filepath)
-        assert not issues, (
-            f"_summac_model.py has open() calls without encoding at lines: {issues}"
-        )
+        assert (
+            not issues
+        ), f"_summac_model.py has open() calls without encoding at lines: {issues}"
 
     def test_utils_uses_utf8(self):
         """utils.py GPU memory readers must use UTF-8."""
@@ -66,6 +66,6 @@ class TestFileEncodingConsistency:
             os.path.dirname(__file__), "..", "deepeval", "utils.py"
         )
         issues = self._get_open_calls_without_encoding(filepath)
-        assert not issues, (
-            f"utils.py has open() calls without encoding at lines: {issues}"
-        )
+        assert (
+            not issues
+        ), f"utils.py has open() calls without encoding at lines: {issues}"
