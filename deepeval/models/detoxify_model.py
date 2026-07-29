@@ -1,6 +1,4 @@
-import torch
 from deepeval.models.base_model import DeepEvalBaseModel
-from detoxify import Detoxify
 
 
 class DetoxifyModel(DeepEvalBaseModel):
@@ -15,6 +13,13 @@ class DetoxifyModel(DeepEvalBaseModel):
         super().__init__(model_name, *args, **kwargs)
 
     def load_model(self):
+        try:
+            import torch
+            from detoxify import Detoxify
+        except ImportError as e:
+            raise ImportError(
+                "Run `pip install deepeval[toxicity]` to use the neural toxicity scorer."
+            ) from e
         device = "cuda" if torch.cuda.is_available() else "cpu"
         return Detoxify(self.model_name, device=device)
 

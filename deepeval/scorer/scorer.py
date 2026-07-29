@@ -301,10 +301,8 @@ class Scorer:
 
         If the model is 'multilingual', we get a dict same as the unbiased one.
         """
-        try:
-            from deepeval.models.detoxify_model import DetoxifyModel
-        except ImportError as e:
-            print(f"Unable to import.\n {e}")
+        from deepeval.models.detoxify_model import DetoxifyModel
+
         scorer = DetoxifyModel(model_name=model)
         return scorer(prediction)
 
@@ -370,10 +368,8 @@ class Scorer:
 
     @classmethod
     def neural_bias_score(cls, text: str, model: Optional[str] = None) -> float:
-        try:
-            from deepeval.models.unbias_model import UnBiasedModel
-        except Exception as e:
-            print(f"Unable to load UnBiasedModel.\n{e}")
+        from deepeval.models.unbias_model import UnBiasedModel
+
         scorer = UnBiasedModel(model_name=model)
         return scorer(text)
 
