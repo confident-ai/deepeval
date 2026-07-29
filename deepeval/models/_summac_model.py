@@ -273,7 +273,7 @@ class _SummaCImager:
 
     def save_cache(self):
         cache_cp = {"[///]".join(k): v.tolist() for k, v in self.cache.items()}
-        with open(self.get_cache_file(), "w") as f:
+        with open(self.get_cache_file(), "w", encoding="utf-8") as f:
             json.dump(cache_cp, f)
 
     def load_cache(self):
@@ -281,7 +281,7 @@ class _SummaCImager:
 
         cache_file = self.get_cache_file()
         if os.path.isfile(cache_file):
-            with open(cache_file, "r") as f:
+            with open(cache_file, "r", encoding="utf-8") as f:
                 cache_cp = json.load(f)
                 self.cache = {
                     tuple(k.split("[///]")): np.array(v)
