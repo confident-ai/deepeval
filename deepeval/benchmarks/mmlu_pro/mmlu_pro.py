@@ -10,7 +10,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.mmlu_pro.task import MMLUProTask
 from deepeval.benchmarks.mmlu_pro.template import MMLUProTemplate
 from deepeval.benchmarks.utils import should_use_batch
-from deepeval.benchmarks.schema import MultipleChoiceSchema
+from deepeval.benchmarks.schema import MultipleChoiceSchemaTenOptions
 from deepeval.telemetry import capture_benchmark_run
 
 
@@ -175,7 +175,9 @@ class MMLUPro(DeepEvalBaseBenchmark):
         )
 
         try:
-            res = model.generate(prompt=prompt, schema=MultipleChoiceSchema)
+            res = model.generate(
+                prompt=prompt, schema=MultipleChoiceSchemaTenOptions
+            )
             if isinstance(res, (tuple, list)):
                 prediction = res[0].answer
             else:
@@ -213,11 +215,11 @@ class MMLUPro(DeepEvalBaseBenchmark):
         try:
             responses = model.batch_generate(
                 prompts=prompts,
-                schemas=[MultipleChoiceSchema for i in prompts],
+                schemas=[MultipleChoiceSchemaTenOptions for i in prompts],
             )
             if not isinstance(responses, list):
                 raise TypeError(
-                    "batch_generate must return List[MultipleChoiceSchema]"
+                    "batch_generate must return List[MultipleChoiceSchemaTenOptions]"
                 )
             predictions = [res.answer for res in responses]
         except TypeError:
