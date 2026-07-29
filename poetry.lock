@@ -14477,11 +14477,11 @@ markers = {langchain = "python_version >= \"3.10\""}
 cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and python_version < \"3.14\"", "cffi (>=2.0.0b) ; platform_python_implementation != \"PyPy\" and python_version >= \"3.14\""]
 
 [extras]
-bias = ["Dbias"]
+bias = ["dbias"]
 inspect = ["pyperclip", "textual"]
 toxicity = ["detoxify"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9, <4.0"
-content-hash = "d3b4b65cf184ee4a574a3283822bfe86dbac73e6d24c0dfbfac70469082fea1e"
+content-hash = "b760e2ef0c301af2ea24f4e0145dfd34a257052c70fe089305012566fa508849"

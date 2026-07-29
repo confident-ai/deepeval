@@ -55,12 +55,12 @@ textual = { version = ">=0.80,<2.0", optional = true }
 pyperclip = { version = "^1.8", optional = true }
 questionary = ">=2.0.0,<3.0.0"
 
-Dbias = { version = "^0.1.5", optional = true }
+dbias = { version = "^0.1.5", optional = true }
 detoxify = { version = "^0.5.2", optional = true }
 
 [tool.poetry.extras]
 inspect = ["textual", "pyperclip"]
-bias = ["Dbias"]
+bias = ["dbias"]
 toxicity = ["detoxify"]
 
 [tool.poetry.group.dev.dependencies]
