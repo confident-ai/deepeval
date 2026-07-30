@@ -28,6 +28,7 @@ from deepeval.models.base_model import (
 #     base class itself) so subclasses can return a concrete client.
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize(
     "cls",
     [DeepEvalBaseLLM, DeepEvalBaseModel, DeepEvalBaseEmbeddingModel],
@@ -55,8 +56,10 @@ def test_load_model_return_annotation_is_not_self_type(cls):
 #     without forcing the user to suppress pyright rules.
 # ---------------------------------------------------------------------------
 
+
 class _FakeClient:
     """Stand-in for a provider client (OpenAI, Anthropic, …)."""
+
     def invoke(self, prompt: str) -> str:
         return "ok"
 
@@ -85,10 +88,14 @@ class _MyEmbeddingModel(DeepEvalBaseEmbeddingModel):
     async def a_embed_text(self, text: str) -> typing.List[float]:
         return [0.0]
 
-    def embed_texts(self, texts: typing.List[str]) -> typing.List[typing.List[float]]:
+    def embed_texts(
+        self, texts: typing.List[str]
+    ) -> typing.List[typing.List[float]]:
         return [[0.0]]
 
-    async def a_embed_texts(self, texts: typing.List[str]) -> typing.List[typing.List[float]]:
+    async def a_embed_texts(
+        self, texts: typing.List[str]
+    ) -> typing.List[typing.List[float]]:
         return [[0.0]]
 
     def get_model_name(self) -> str:
@@ -111,6 +118,7 @@ def test_embedding_subclass_can_return_arbitrary_client():
 # ---------------------------------------------------------------------------
 # 3.  Verify the annotation is Any specifically (strongest guarantee).
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize(
     "cls",
