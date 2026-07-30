@@ -24,7 +24,7 @@ class PatternMatchMetric(BaseMetric):
         verbose_mode: bool = False,
         flaky: bool = False,
     ):
-        self.pattern = pattern.strip()
+        self.pattern = pattern
         self.ignore_case = ignore_case
         self.verbose_mode = verbose_mode
         self.flaky = flaky
@@ -55,7 +55,7 @@ class PatternMatchMetric(BaseMetric):
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
-            actual = test_case.actual_output.strip()
+            actual = test_case.actual_output
             full_match = self._compiled_pattern.fullmatch(actual)
 
             self.score = 1.0 if full_match else 0.0
