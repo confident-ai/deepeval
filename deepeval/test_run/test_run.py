@@ -32,6 +32,10 @@ from deepeval.utils import (
     len_short,
 )
 from deepeval.test_run.cache import global_test_run_cache_manager
+from deepeval.telemetry import (
+    LoginPromptSurface,
+    capture_login_prompt_shown,
+)
 from deepeval.constants import CONFIDENT_TEST_CASE_BATCH_SIZE, HIDDEN_DIR
 from deepeval.prompt import (
     PromptMessage,
@@ -1169,6 +1173,7 @@ class TestRunManager:
                 if test_run.evaluation_cost
                 else "None"
             )
+            capture_login_prompt_shown(LoginPromptSurface.POST_EVAL)
             console.print(
                 f"\n\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation completed 🎉! (time taken: {round(runDuration, 2)}s | token cost: {token_cost})\n"
                 f"» Test Results ({test_run.test_passed + test_run.test_failed} total tests):\n",

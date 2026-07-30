@@ -8,7 +8,7 @@ import typer
 from typing_extensions import Annotated
 
 from deepeval.config.settings import get_settings
-from deepeval.telemetry import capture_evaluation_run
+from deepeval.telemetry import Entrypoint, capture_evaluation_run
 from deepeval.test_run import (
     TEMP_FILE_PATH,
     global_test_run_manager,
@@ -180,7 +180,7 @@ def run(
         pytest_args.extend(ctx.args)
 
     start_time = time.perf_counter()
-    with capture_evaluation_run("deepeval test run"):
+    with capture_evaluation_run(Entrypoint.PYTEST):
         pytest_retcode = pytest.main(pytest_args)
     end_time = time.perf_counter()
     run_duration = end_time - start_time

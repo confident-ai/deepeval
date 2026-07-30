@@ -41,7 +41,10 @@ from deepeval.dataset.golden import Golden, ConversationalGolden
 from deepeval.prompt import Prompt
 from deepeval.evaluate.console_report import EvaluationConsoleReport
 from deepeval.metrics.base_metric import BaseMetric
-from deepeval.telemetry import capture_evaluation_run, capture_pull_dataset
+from deepeval.telemetry import (
+    Entrypoint,
+    capture_evaluation_run,
+)
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
@@ -931,83 +934,80 @@ class EvaluationDataset:
         version: Optional[str] = None,
     ):
         api = Api(api_key=self.confident_api_key)
-        with capture_pull_dataset():
-            with Progress(
-                SpinnerColumn(style="rgb(106,0,255)"),
-                BarColumn(bar_width=60),
-                TextColumn("[progress.description]{task.description}"),
-                transient=False,
-            ) as progress:
-                task_id = progress.add_task(
-                    f"Pulling [rgb(106,0,255)]'{alias}'[/rgb(106,0,255)] from Confident AI...",
-                    total=100,
-                )
-                start_time = time.perf_counter()
-                params = {
-                    "finalized": str(finalized).lower(),
-                    "public": str(public).lower(),
-                }
-                if version is not None:
-                    params["version"] = version
-                data, _ = api.send_request(
-                    method=HttpMethods.GET,
-                    endpoint=Endpoints.DATASET_ALIAS_ENDPOINT,
-                    url_params={"alias": alias},
-                    params=params,
-                )
+        with Progress(
+            SpinnerColumn(style="rgb(106,0,255)"),
+            BarColumn(bar_width=60),
+            TextColumn("[progress.description]{task.description}"),
+            transient=False,
+        ) as progress:
+            task_id = progress.add_task(
+                f"Pulling [rgb(106,0,255)]'{alias}'[/rgb(106,0,255)] from Confident AI...",
+                total=100,
+            )
+            start_time = time.perf_counter()
+            params = {
+                "finalized": str(finalized).lower(),
+                "public": str(public).lower(),
+            }
+            if version is not None:
+                params["version"] = version
+            data, _ = api.send_request(
+                method=HttpMethods.GET,
+                endpoint=Endpoints.DATASET_ALIAS_ENDPOINT,
+                url_params={"alias": alias},
+                params=params,
+            )
 
-                response = DatasetHttpResponse(
-                    id=data["id"],
-                    version=data.get("version"),
-                    goldens=convert_keys_to_snake_case(
-                        data.get("goldens", None)
-                    ),
-                    conversationalGoldens=convert_keys_to_snake_case(
-                        data.get("conversationalGoldens", None)
-                    ),
-                )
+            response = DatasetHttpResponse(
+                id=data["id"],
+                version=data.get("version"),
+                goldens=convert_keys_to_snake_case(data.get("goldens", None)),
+                conversationalGoldens=convert_keys_to_snake_case(
+                    data.get("conversationalGoldens", None)
+                ),
+            )
 
-                self._alias = alias
-                self._id = response.id
-                self._version = response.version
-                self._multi_turn = response.goldens is None
-                self.goldens = []
-                self.test_cases = []
+            self._alias = alias
+            self._id = response.id
+            self._version = response.version
+            self._multi_turn = response.goldens is None
+            self.goldens = []
+            self.test_cases = []
 
-                if auto_convert_goldens_to_test_cases:
-                    if not self._multi_turn:
-                        llm_test_cases = convert_goldens_to_test_cases(
-                            response.goldens, alias, response.id
-                        )
-                        self._llm_test_cases.extend(llm_test_cases)
-                    else:
-                        conversational_test_cases = (
-                            convert_convo_goldens_to_convo_test_cases(
-                                response.conversational_goldens,
-                                alias,
-                                response.id,
-                            )
-                        )
-                        self._conversational_test_cases.extend(
-                            conversational_test_cases
-                        )
+            if auto_convert_goldens_to_test_cases:
+                if not self._multi_turn:
+                    llm_test_cases = convert_goldens_to_test_cases(
+                        response.goldens, alias, response.id
+                    )
+                    self._llm_test_cases.extend(llm_test_cases)
                 else:
-                    if not self._multi_turn:
-                        self.goldens = response.goldens
-                    else:
-                        self.goldens = response.conversational_goldens
+                    conversational_test_cases = (
+                        convert_convo_goldens_to_convo_test_cases(
+                            response.conversational_goldens,
+                            alias,
+                            response.id,
+                        )
+                    )
+                    self._conversational_test_cases.extend(
+                        conversational_test_cases
+                    )
+            else:
+                if not self._multi_turn:
+                    self.goldens = response.goldens
+                else:
+                    self.goldens = response.conversational_goldens
 
-                    for golden in self.goldens:
-                        golden._dataset_alias = alias
-                        golden._dataset_id = response.id
+                for golden in self.goldens:
+                    golden._dataset_alias = alias
+                    golden._dataset_id = response.id
 
-                end_time = time.perf_counter()
-                time_taken = format(end_time - start_time, ".2f")
-                progress.update(
-                    task_id,
-                    description=f"{progress.tasks[task_id].description} [rgb(25,227,160)]Done! ({time_taken}s)",
-                    completed=100,
-                )
+            end_time = time.perf_counter()
+            time_taken = format(end_time - start_time, ".2f")
+            progress.update(
+                task_id,
+                description=f"{progress.tasks[task_id].description} [rgb(25,227,160)]Done! ({time_taken}s)",
+                completed=100,
+            )
 
     def create_version(
         self, alias: str, _verbose: Optional[bool] = True
@@ -1552,7 +1552,7 @@ class EvaluationDataset:
         if not self.goldens or len(self.goldens) == 0:
             raise ValueError("Unable to evaluate dataset with no goldens.")
         goldens = self.goldens
-        with capture_evaluation_run("traceable evaluate()"):
+        with capture_evaluation_run(Entrypoint.EVALS_ITERATOR):
             global_test_run_manager.reset()
             start_time = time.perf_counter()
             test_results: List[TestResult] = []

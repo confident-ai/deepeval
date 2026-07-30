@@ -450,7 +450,7 @@ def instrument_crewai(api_key: Optional[str] = None):
     global _listener_instance
 
     is_crewai_installed()
-    with capture_tracing_integration("crewai"):
+    with capture_tracing_integration(Integration.CREW_AI):
         if api_key:
             deepeval.login(api_key)
 
