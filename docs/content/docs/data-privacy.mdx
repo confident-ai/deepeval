@@ -15,19 +15,13 @@ If at any point you think you might have accidentally sent us sensitive data, **
 
 By default, `deepeval` uses **PostHog** to track only very basic telemetry data. Specifically, the following is collected:
 
-- Event names (e.g. an evaluation ran, a CLI command was invoked) and whether the run completed, errored, or was interrupted
-- The exception **class name** when a run fails (e.g. `RateLimitError`) — never the exception message
-- Metric names used, and how many test cases and metric runs an evaluation contained
-- The `deepeval` version, and which tracing integrations are installed
-- The judge model's provider, and its model name **only** when that name appears in `deepeval`'s own list of publicly known models. Any other model name, including self-hosted and custom ones, is reported as `other`
-- The kind of environment the run happened in: GitHub Actions, GitLab CI, another CI provider, a container, a notebook, an interactive terminal, or a plain script
-- A randomly generated anonymous UUID, stored in `~/.deepeval/`
+- Event names (e.g. evaluation started/completed)
+- Metric names used
+- Whether the evaluation is running in a Jupyter notebook
+- A randomly generated anonymous UUID (no user or company identity)
+- Public IP address (used only for coarse regional analytics)
 
-If you run `deepeval login` and authenticate through your browser, the email address associated with your Confident AI account is also attached to your anonymous UUID, so that usage can be linked to your account. This is the only personally identifiable information collected, it is only collected once you have chosen to log in, and it is data you have already provided to Confident AI. Logging in by pasting an API key or passing `--api-key` does not send an email address.
-
-No prompts, model inputs or outputs, test case contents, dataset contents, API keys, file paths, or command-line argument values are ever collected.
-
-You can opt out of all telemetry at any time:
+Personally identifiable information is explicitly excluded. You can opt out of all telemetry at any time:
 
 ```bash
 export DEEPEVAL_TELEMETRY_OPT_OUT=1
