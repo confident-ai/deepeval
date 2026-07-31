@@ -25,6 +25,7 @@ class Prop(str, Enum):
     LOGGED_IN_WITH = "user.logged_in_with"
     # evaluation
     ENTRYPOINT = "eval.entrypoint"
+    RUN_ID = "eval.run_id"
     OUTCOME = "eval.outcome"
     ERROR_TYPE = "eval.error_type"
     TEST_CASE_COUNT = "eval.test_case_count"
@@ -181,6 +182,7 @@ class EventProperties:
     logged_in_with: Optional[str] = None
     # evaluation
     entrypoint: Optional[Entrypoint] = None
+    run_id: Optional[str] = None
     outcome: Optional[Outcome] = None
     error_type: Optional[str] = None
     test_case_count: Optional[int] = None
@@ -247,6 +249,7 @@ _FIELD_TO_PROP: Dict[str, Prop] = {
     "user_id": Prop.USER_ID,
     "logged_in_with": Prop.LOGGED_IN_WITH,
     "entrypoint": Prop.ENTRYPOINT,
+    "run_id": Prop.RUN_ID,
     "outcome": Prop.OUTCOME,
     "error_type": Prop.ERROR_TYPE,
     "test_case_count": Prop.TEST_CASE_COUNT,

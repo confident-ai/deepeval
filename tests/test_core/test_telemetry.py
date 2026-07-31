@@ -145,6 +145,64 @@ class TestEvaluationEvent:
         assert [k for k in backend.only() if k.startswith("$")] == []
 
 
+class TestRunId:
+    def test_each_run_gets_its_own_id(self, backend):
+        for _ in range(2):
+            with telemetry.capture_evaluation_run(Entrypoint.EVALUATE):
+                pass
+
+        first, second = (event[2]["eval.run_id"] for event in backend.events)
+        assert first and second and first != second
+
+    def test_processes_sharing_an_id_report_as_one_run(self, backend):
+        """What makes `pytest -n` one run rather than one per worker: the
+        workers cannot share counters, only the id."""
+        shared = "11111111-2222-3333-4444-555555555555"
+
+        for _ in range(4):
+            with telemetry.capture_evaluation_run(
+                Entrypoint.PYTEST, run_id=shared
+            ):
+                telemetry.record_test_case()
+
+        assert len(backend.events) == 4
+        assert {event[2]["eval.run_id"] for event in backend.events} == {shared}
+        assert sum(e[2]["eval.test_case_count"] for e in backend.events) == 4
+
+    def test_an_empty_scope_can_stay_silent(self, backend):
+        """A pytest session with no deepeval tests is not an evaluation, and
+        the plugin loads in every suite on the machine."""
+        with telemetry.capture_evaluation_run(
+            Entrypoint.PYTEST, skip_if_empty=True
+        ):
+            pass
+
+        assert backend.events == []
+
+    def test_a_scope_with_work_still_reports_when_skipping_empties(
+        self, backend
+    ):
+        with telemetry.capture_evaluation_run(
+            Entrypoint.PYTEST, skip_if_empty=True
+        ):
+            telemetry.record_metric(
+                "Bias", async_mode=False, in_component=False
+            )
+
+        assert backend.only()["eval.metric_runs"] == 1
+
+    def test_skipping_empties_never_swallows_an_exception(self, backend):
+        """`skip_if_empty` is evaluated in a `finally`, where an early return
+        would discard the user's exception."""
+        with pytest.raises(ValueError):
+            with telemetry.capture_evaluation_run(
+                Entrypoint.PYTEST, skip_if_empty=True
+            ):
+                raise ValueError("boom")
+
+        assert backend.events == []
+
+
 class TestOutcome:
     def test_a_failed_run_reports_the_exception_class(self, backend):
         with pytest.raises(ValueError):

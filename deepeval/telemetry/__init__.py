@@ -49,6 +49,7 @@ from deepeval.telemetry.context import (
     turn_kind_of,
 )
 from deepeval.telemetry.events import (
+    TELEMETRY_RUN_ID_ENV_VAR,
     TELEMETRY_SCHEMA_VERSION,
     Entrypoint,
     Event,
@@ -111,6 +112,7 @@ _migrate_project_files()
 
 __all__ = [
     "TELEMETRY_DATA_FILE",
+    "TELEMETRY_RUN_ID_ENV_VAR",
     "TELEMETRY_SCHEMA_VERSION",
     "Entrypoint",
     "Event",

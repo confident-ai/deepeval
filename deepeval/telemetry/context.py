@@ -13,6 +13,7 @@ policy.
 import atexit
 import logging
 import threading
+import uuid
 from collections import Counter
 from contextvars import ContextVar
 from dataclasses import dataclass, field, replace
@@ -64,6 +65,7 @@ class RunAccumulator:
     """Counters for one evaluation run. Mutated from many tasks; hold `lock`."""
 
     entrypoint: Entrypoint
+    run_id: str = ""
     test_cases: int = 0
     goldens: int = 0
     metric_runs: int = 0
@@ -113,6 +115,15 @@ class RunAccumulator:
                 self.provider = provider
                 self.model = model_name
 
+    def has_activity(self) -> bool:
+        """Whether this run saw any deepeval work at all.
+
+        Lets a scope that wraps something broader than an evaluation -- a whole
+        pytest session, which may contain no deepeval tests -- stay silent.
+        """
+        with self.lock:
+            return bool(self.test_cases or self.goldens or self.metric_runs)
+
     def snapshot(self) -> EventProperties:
         with self.lock:
             metric_names = sorted(self.metrics)
@@ -120,6 +131,7 @@ class RunAccumulator:
             traced_here = max(trace_total - self.traces_at_entry, 0)
             return EventProperties(
                 entrypoint=self.entrypoint,
+                run_id=self.run_id or None,
                 test_case_count=self.test_cases,
                 golden_count=self.goldens,
                 turn_kind=_resolve_turn_kind(self.turn_kinds),
@@ -157,10 +169,12 @@ def current_run() -> Optional[RunAccumulator]:
     return stack[-1] if stack else None
 
 
-def push_run(entrypoint: Entrypoint) -> Tuple[RunAccumulator, Any]:
+def push_run(
+    entrypoint: Entrypoint, run_id: str
+) -> Tuple[RunAccumulator, Any]:
     _, trace_total = _tracing_state()
     accumulator = RunAccumulator(
-        entrypoint=entrypoint, traces_at_entry=trace_total
+        entrypoint=entrypoint, run_id=run_id, traces_at_entry=trace_total
     )
     stack = _run_stack.get() or ()
     token = _run_stack.set(stack + (accumulator,))
@@ -276,6 +290,7 @@ class StandaloneAccumulator:
             metric_names = sorted(self._metrics)
             properties = EventProperties(
                 entrypoint=Entrypoint.STANDALONE,
+                run_id=str(uuid.uuid4()),
                 metric_runs=self._metric_runs,
                 metrics=metric_names,
                 metrics_count=len(metric_names),

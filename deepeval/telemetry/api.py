@@ -5,6 +5,7 @@ totals and the outcome are known. The trade-off is that a hard crash mid-run
 loses the event, where the old code sent a bare one up front.
 """
 
+import uuid
 from contextlib import contextmanager
 from dataclasses import replace
 from typing import Any, Container, Dict, Iterator, Optional, Set
@@ -45,15 +46,28 @@ _ENTRYPOINT_FEATURE = {
 
 
 @contextmanager
-def capture_evaluation_run(entrypoint: Entrypoint) -> Iterator[RunAccumulator]:
-    """Open a run scope and emit exactly one `Evaluation` on the way out."""
+def capture_evaluation_run(
+    entrypoint: Entrypoint,
+    run_id: Optional[str] = None,
+    skip_if_empty: bool = False,
+) -> Iterator[RunAccumulator]:
+    """Open a run scope and emit exactly one `Evaluation` on the way out.
+
+    `run_id` identifies the logical run. It is generated per scope unless a
+    caller supplies one, which is how the pytest workers of a single
+    `-n` session -- separate processes, each with their own counters -- report
+    as one run rather than as several.
+
+    `skip_if_empty` suppresses the event when the scope saw no deepeval work,
+    for scopes that wrap something broader than an evaluation.
+    """
     if telemetry_opt_out():
         yield RunAccumulator(entrypoint=entrypoint)
         return
 
     feature = _ENTRYPOINT_FEATURE.get(entrypoint, Feature.EVALUATION)
     feature_status = get_feature_status(feature)
-    accumulator, token = push_run(entrypoint)
+    accumulator, token = push_run(entrypoint, run_id or str(uuid.uuid4()))
 
     outcome = Outcome.COMPLETED
     error_type: Optional[str] = None
@@ -70,17 +84,20 @@ def capture_evaluation_run(entrypoint: Entrypoint) -> Iterator[RunAccumulator]:
     finally:
         pop_run(token)
         try:
-            set_last_feature(feature)
-            capture(
-                Event.EVALUATION,
-                replace(
-                    accumulator.snapshot(),
-                    outcome=outcome,
-                    error_type=error_type,
-                    feature_name=feature,
-                    feature_status=feature_status,
-                ),
-            )
+            # Never `return` from this block: that would discard an exception
+            # on its way out of the user's evaluation.
+            if accumulator.has_activity() or not skip_if_empty:
+                set_last_feature(feature)
+                capture(
+                    Event.EVALUATION,
+                    replace(
+                        accumulator.snapshot(),
+                        outcome=outcome,
+                        error_type=error_type,
+                        feature_name=feature,
+                        feature_status=feature_status,
+                    ),
+                )
         except Exception:
             pass
 

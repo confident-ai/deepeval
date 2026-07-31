@@ -11,6 +11,11 @@ from enum import Enum
 # mixed fleet of SDK versions never blends two schemas in one insight.
 TELEMETRY_SCHEMA_VERSION = 2
 
+# Carries one run's id into child processes. The environment is the only
+# channel that reaches an xdist worker, which is a fresh interpreter rather
+# than a fork, so nothing in memory survives the crossing.
+TELEMETRY_RUN_ID_ENV_VAR = "DEEPEVAL_TELEMETRY_RUN_ID"
+
 
 class Event(str, Enum):
     """One member per user action, not per code path."""
