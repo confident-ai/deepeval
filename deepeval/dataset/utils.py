@@ -202,9 +202,7 @@ def trimAndLoadJson(input_string: str) -> Any:
                 return json.loads(jsonStr2)
             except json.JSONDecodeError:
                 try:
-                    return json.loads(
-                        re.sub(r",\s*([\]}])", r"\1", jsonStr2)
-                    )
+                    return json.loads(re.sub(r",\s*([\]}])", r"\1", jsonStr2))
                 except json.JSONDecodeError:
                     pass
 

@@ -48,7 +48,7 @@ def test_invalid_json_still_raises(trim):
 def test_think_block_with_braces_parses_correctly(trim):
     """A <think> block containing braces should not confuse JSON extraction."""
     raw = (
-        '<think>\nLet me reason about this. The expected format is '
+        "<think>\nLet me reason about this. The expected format is "
         '{"score": 7} but I need to evaluate carefully.\n</think>\n'
         '{"score": 9, "reason": "correct answer"}'
     )
