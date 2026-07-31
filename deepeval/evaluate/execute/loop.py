@@ -49,7 +49,7 @@ from deepeval.utils import (
     get_per_task_timeout_seconds,
     get_gather_timeout,
 )
-from deepeval.telemetry import capture_evaluation_run
+from deepeval.telemetry import record_golden
 from deepeval.metrics import BaseMetric
 
 from deepeval.test_case import (
@@ -178,89 +178,136 @@ def execute_agentic_test_cases_from_loop(
 
         for golden in goldens:
             token = set_current_golden(golden)
-            with capture_evaluation_run("golden"):
-                # yield golden
-                count += 1
-                pbar_tags_id = add_pbar(
-                    progress, f"\t⚡ Invoking observed callback (#{count})"
+            record_golden(golden)
+            # yield golden
+            count += 1
+            pbar_tags_id = add_pbar(
+                progress, f"\t⚡ Invoking observed callback (#{count})"
+            )
+            with Observer(
+                "custom",
+                func_name=PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME,
+                _progress=progress,
+                _pbar_callback_id=pbar_tags_id,
+            ):
+                try:
+                    # yield golden to user code
+                    yield golden
+                    # control has returned from user code without error, capture trace now
+                    current_trace: Trace = current_trace_context.get()
+                    processed_traces.append(current_trace)
+                finally:
+                    # after user code returns control, always reset the context
+                    reset_current_golden(token)
+
+            update_pbar(progress, pbar_tags_id)
+            update_pbar(progress, pbar_id)
+
+            # Create empty trace api for llm api test case
+            trace_api = create_api_trace(trace=current_trace, golden=golden)
+
+            # Format golden as test case to create llm api test case
+            test_case = LLMTestCase(
+                input=golden.input,
+                actual_output=(
+                    str(current_trace.output)
+                    if current_trace.output is not None
+                    else None
+                ),
+                expected_output=current_trace.expected_output,
+                context=current_trace.context,
+                retrieval_context=current_trace.retrieval_context,
+                metadata=golden.additional_metadata,
+                tools_called=current_trace.tools_called,
+                expected_tools=current_trace.expected_tools,
+                comments=golden.comments,
+                name=golden.name,
+                _dataset_alias=golden._dataset_alias,
+                _dataset_id=golden._dataset_id,
+            )
+            api_test_case = create_api_test_case(
+                test_case=test_case,
+                trace=trace_api,
+                index=count if not _is_assert_test else None,
+            )
+
+            # Run DFS to calculate metrics synchronously
+            def dfs(
+                span: BaseSpan,
+                progress: Optional[Progress] = None,
+                pbar_eval_id: Optional[int] = None,
+            ):
+                # Create API Span
+                metrics: List[BaseMetric] = list(span.metrics or [])
+
+                api_span: BaseApiSpan = trace_manager._convert_span_to_api_span(
+                    span
                 )
-                with Observer(
-                    "custom",
-                    func_name=PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME,
-                    _progress=progress,
-                    _pbar_callback_id=pbar_tags_id,
-                ):
-                    try:
-                        # yield golden to user code
-                        yield golden
-                        # control has returned from user code without error, capture trace now
-                        current_trace: Trace = current_trace_context.get()
-                        processed_traces.append(current_trace)
-                    finally:
-                        # after user code returns control, always reset the context
-                        reset_current_golden(token)
 
-                update_pbar(progress, pbar_tags_id)
-                update_pbar(progress, pbar_id)
+                if isinstance(span, AgentSpan):
+                    trace_api.agent_spans.append(api_span)
+                elif isinstance(span, LlmSpan):
+                    trace_api.llm_spans.append(api_span)
+                    log_prompt(span, test_run_manager)
+                elif isinstance(span, RetrieverSpan):
+                    trace_api.retriever_spans.append(api_span)
+                elif isinstance(span, ToolSpan):
+                    trace_api.tool_spans.append(api_span)
+                else:
+                    trace_api.base_spans.append(api_span)
 
-                # Create empty trace api for llm api test case
-                trace_api = create_api_trace(trace=current_trace, golden=golden)
+                # Skip errored trace/span
+                if _skip_metrics_for_error(span=span, trace=current_trace):
+                    api_span.status = TraceSpanApiStatus.ERRORED
+                    api_span.error = span.error or _trace_error(current_trace)
+                    if progress and pbar_eval_id is not None:
+                        update_pbar(
+                            progress,
+                            pbar_eval_id,
+                            advance=count_metrics_in_span_subtree(span),
+                        )
+                    return
 
-                # Format golden as test case to create llm api test case
-                test_case = LLMTestCase(
-                    input=golden.input,
-                    actual_output=(
-                        str(current_trace.output)
-                        if current_trace.output is not None
-                        else None
-                    ),
-                    expected_output=current_trace.expected_output,
-                    context=current_trace.context,
-                    retrieval_context=current_trace.retrieval_context,
-                    metadata=golden.additional_metadata,
-                    tools_called=current_trace.tools_called,
-                    expected_tools=current_trace.expected_tools,
-                    comments=golden.comments,
-                    name=golden.name,
-                    _dataset_alias=golden._dataset_alias,
-                    _dataset_id=golden._dataset_id,
-                )
-                api_test_case = create_api_test_case(
-                    test_case=test_case,
-                    trace=trace_api,
-                    index=count if not _is_assert_test else None,
+                for child in span.children:
+                    dfs(child, progress, pbar_eval_id)
+
+                if not span.metrics:
+                    return
+
+                requires_trace = any(
+                    metric.requires_trace for metric in metrics
                 )
 
-                # Run DFS to calculate metrics synchronously
-                def dfs(
-                    span: BaseSpan,
-                    progress: Optional[Progress] = None,
-                    pbar_eval_id: Optional[int] = None,
-                ):
-                    # Create API Span
-                    metrics: List[BaseMetric] = list(span.metrics or [])
-
-                    api_span: BaseApiSpan = (
-                        trace_manager._convert_span_to_api_span(span)
+                llm_test_case = None
+                if span.input is not None:
+                    llm_test_case = LLMTestCase(
+                        input=str(span.input),
+                        actual_output=(
+                            str(span.output)
+                            if span.output is not None
+                            else None
+                        ),
+                        expected_output=span.expected_output,
+                        context=span.context,
+                        retrieval_context=span.retrieval_context,
+                        tools_called=span.tools_called,
+                        expected_tools=span.expected_tools,
                     )
 
-                    if isinstance(span, AgentSpan):
-                        trace_api.agent_spans.append(api_span)
-                    elif isinstance(span, LlmSpan):
-                        trace_api.llm_spans.append(api_span)
-                        log_prompt(span, test_run_manager)
-                    elif isinstance(span, RetrieverSpan):
-                        trace_api.retriever_spans.append(api_span)
-                    elif isinstance(span, ToolSpan):
-                        trace_api.tool_spans.append(api_span)
-                    else:
-                        trace_api.base_spans.append(api_span)
-
-                    # Skip errored trace/span
-                    if _skip_metrics_for_error(span=span, trace=current_trace):
+                if requires_trace:
+                    if llm_test_case is None:
+                        llm_test_case = LLMTestCase(input="None")
+                    llm_test_case._trace_dict = (
+                        trace_manager.create_nested_spans_dict(span)
+                    )
+                else:
+                    if llm_test_case is None:
                         api_span.status = TraceSpanApiStatus.ERRORED
-                        api_span.error = span.error or _trace_error(
-                            current_trace
+                        api_span.error = format_error_text(
+                            DeepEvalError(
+                                "Span has metrics but no LLMTestCase. "
+                                "Are you sure you called `update_current_span()`?"
+                            )
                         )
                         if progress and pbar_eval_id is not None:
                             update_pbar(
@@ -270,66 +317,102 @@ def execute_agentic_test_cases_from_loop(
                             )
                         return
 
-                    for child in span.children:
-                        dfs(child, progress, pbar_eval_id)
+                # Preparing metric calculation
+                api_span.metrics_data = []
+                for metric in metrics:
+                    metric.skipped = False
+                    metric.error = None
+                    if display_config.verbose_mode is not None:
+                        metric.verbose_mode = display_config.verbose_mode
 
-                    if not span.metrics:
-                        return
+                # Metric calculation
+                for metric in metrics:
+                    metric_data = None
+                    res = _execute_metric(
+                        metric=metric,
+                        test_case=llm_test_case,
+                        show_metric_indicator=show_metric_indicator,
+                        in_component=True,
+                        error_config=error_config,
+                    )
+                    if res == "skip":
+                        continue
 
-                    requires_trace = any(
-                        metric.requires_trace for metric in metrics
+                    metric_data = create_metric_data(metric)
+                    api_span.metrics_data.append(metric_data)
+                    api_test_case.update_status(
+                        metric_data.success, flaky=metric_data.flaky
+                    )
+                    update_pbar(progress, pbar_eval_id)
+
+            if trace_metrics:
+                current_trace.metrics = trace_metrics
+
+            trace_level_metrics_count = (
+                len(current_trace.metrics) if current_trace.metrics else 0
+            )
+            pbar_eval_id = add_pbar(
+                progress,
+                f"     🎯 Evaluating component(s) (#{count})",
+                total=count_metrics_in_trace(trace=current_trace)
+                + trace_level_metrics_count,
+            )
+
+            start_time = time.perf_counter()
+
+            # On errored traces, skip trace-level metrics (no test case
+            # to judge) but DO run the span-level DFS walker below —
+            # it's what hydrates ``trace_api.*_spans`` for the dashboard,
+            # and per-span metric skip is handled inside ``dfs``.
+            skip_metrics_for_this_golden = False
+            if _skip_metrics_for_error(trace=current_trace):
+                trace_api.status = TraceSpanApiStatus.ERRORED
+                if progress and pbar_eval_id is not None:
+                    update_pbar(
+                        progress,
+                        pbar_eval_id,
+                        advance=count_total_metrics_for_trace(current_trace),
+                    )
+            elif current_trace.metrics:
+                requires_trace = any(
+                    metric.requires_trace for metric in current_trace.metrics
+                )
+
+                # Build the trace-level LLMTestCase from the golden
+                # directly, the same way the async iterator does
+                # (see ``_a_evaluate_trace``). This makes top-level
+                # ``metrics=[...]`` work out of the box even when the
+                # user never calls ``update_current_trace(input=...)``.
+                llm_test_case = LLMTestCase(
+                    input=golden.input,
+                    actual_output=(
+                        str(current_trace.output)
+                        if current_trace.output is not None
+                        else golden.actual_output
+                    ),
+                    expected_output=current_trace.expected_output,
+                    context=current_trace.context,
+                    retrieval_context=current_trace.retrieval_context,
+                    tools_called=current_trace.tools_called,
+                    expected_tools=current_trace.expected_tools,
+                )
+
+                if requires_trace:
+                    llm_test_case._trace_dict = (
+                        trace_manager.create_nested_spans_dict(
+                            current_trace.root_spans[0]
+                        )
                     )
 
-                    llm_test_case = None
-                    if span.input is not None:
-                        llm_test_case = LLMTestCase(
-                            input=str(span.input),
-                            actual_output=(
-                                str(span.output)
-                                if span.output is not None
-                                else None
-                            ),
-                            expected_output=span.expected_output,
-                            context=span.context,
-                            retrieval_context=span.retrieval_context,
-                            tools_called=span.tools_called,
-                            expected_tools=span.expected_tools,
-                        )
-
-                    if requires_trace:
-                        if llm_test_case is None:
-                            llm_test_case = LLMTestCase(input="None")
-                        llm_test_case._trace_dict = (
-                            trace_manager.create_nested_spans_dict(span)
-                        )
-                    else:
-                        if llm_test_case is None:
-                            api_span.status = TraceSpanApiStatus.ERRORED
-                            api_span.error = format_error_text(
-                                DeepEvalError(
-                                    "Span has metrics but no LLMTestCase. "
-                                    "Are you sure you called `update_current_span()`?"
-                                )
-                            )
-                            if progress and pbar_eval_id is not None:
-                                update_pbar(
-                                    progress,
-                                    pbar_eval_id,
-                                    advance=count_metrics_in_span_subtree(span),
-                                )
-                            return
-
-                    # Preparing metric calculation
-                    api_span.metrics_data = []
-                    for metric in metrics:
+                if not skip_metrics_for_this_golden:
+                    for metric in current_trace.metrics:
                         metric.skipped = False
                         metric.error = None
                         if display_config.verbose_mode is not None:
                             metric.verbose_mode = display_config.verbose_mode
 
-                    # Metric calculation
-                    for metric in metrics:
-                        metric_data = None
+                    trace_api.metrics_data = []
+                    for metric in current_trace.metrics:
                         res = _execute_metric(
                             metric=metric,
                             test_case=llm_test_case,
@@ -340,113 +423,23 @@ def execute_agentic_test_cases_from_loop(
                         if res == "skip":
                             continue
 
-                        metric_data = create_metric_data(metric)
-                        api_span.metrics_data.append(metric_data)
-                        api_test_case.update_status(
-                            metric_data.success, flaky=metric_data.flaky
-                        )
-                        update_pbar(progress, pbar_eval_id)
-
-                if trace_metrics:
-                    current_trace.metrics = trace_metrics
-
-                trace_level_metrics_count = (
-                    len(current_trace.metrics) if current_trace.metrics else 0
-                )
-                pbar_eval_id = add_pbar(
-                    progress,
-                    f"     🎯 Evaluating component(s) (#{count})",
-                    total=count_metrics_in_trace(trace=current_trace)
-                    + trace_level_metrics_count,
-                )
-
-                start_time = time.perf_counter()
-
-                # On errored traces, skip trace-level metrics (no test case
-                # to judge) but DO run the span-level DFS walker below —
-                # it's what hydrates ``trace_api.*_spans`` for the dashboard,
-                # and per-span metric skip is handled inside ``dfs``.
-                skip_metrics_for_this_golden = False
-                if _skip_metrics_for_error(trace=current_trace):
-                    trace_api.status = TraceSpanApiStatus.ERRORED
-                    if progress and pbar_eval_id is not None:
-                        update_pbar(
-                            progress,
-                            pbar_eval_id,
-                            advance=count_total_metrics_for_trace(
-                                current_trace
-                            ),
-                        )
-                elif current_trace.metrics:
-                    requires_trace = any(
-                        metric.requires_trace
-                        for metric in current_trace.metrics
-                    )
-
-                    # Build the trace-level LLMTestCase from the golden
-                    # directly, the same way the async iterator does
-                    # (see ``_a_evaluate_trace``). This makes top-level
-                    # ``metrics=[...]`` work out of the box even when the
-                    # user never calls ``update_current_trace(input=...)``.
-                    llm_test_case = LLMTestCase(
-                        input=golden.input,
-                        actual_output=(
-                            str(current_trace.output)
-                            if current_trace.output is not None
-                            else golden.actual_output
-                        ),
-                        expected_output=current_trace.expected_output,
-                        context=current_trace.context,
-                        retrieval_context=current_trace.retrieval_context,
-                        tools_called=current_trace.tools_called,
-                        expected_tools=current_trace.expected_tools,
-                    )
-
-                    if requires_trace:
-                        llm_test_case._trace_dict = (
-                            trace_manager.create_nested_spans_dict(
-                                current_trace.root_spans[0]
+                        if not metric.skipped:
+                            metric_data = create_metric_data(metric)
+                            trace_api.metrics_data.append(metric_data)
+                            api_test_case.update_metric_data(metric_data)
+                            api_test_case.update_status(
+                                metric_data.success, flaky=metric_data.flaky
                             )
-                        )
+                            update_pbar(progress, pbar_eval_id)
 
-                    if not skip_metrics_for_this_golden:
-                        for metric in current_trace.metrics:
-                            metric.skipped = False
-                            metric.error = None
-                            if display_config.verbose_mode is not None:
-                                metric.verbose_mode = (
-                                    display_config.verbose_mode
-                                )
-
-                        trace_api.metrics_data = []
-                        for metric in current_trace.metrics:
-                            res = _execute_metric(
-                                metric=metric,
-                                test_case=llm_test_case,
-                                show_metric_indicator=show_metric_indicator,
-                                in_component=True,
-                                error_config=error_config,
-                            )
-                            if res == "skip":
-                                continue
-
-                            if not metric.skipped:
-                                metric_data = create_metric_data(metric)
-                                trace_api.metrics_data.append(metric_data)
-                                api_test_case.update_metric_data(metric_data)
-                                api_test_case.update_status(
-                                    metric_data.success, flaky=metric_data.flaky
-                                )
-                                update_pbar(progress, pbar_eval_id)
-
-                # Always walk spans, even on errored traces — the walker
-                # hydrates ``trace_api.*_spans`` and the user needs that
-                # data on the dashboard to diagnose. Walk EVERY root, not
-                # just ``root_spans[0]``: OTel integrations can land
-                # multiple logical roots when a child ends before its
-                # parent. Mirrors the async path in ``agentic.py``.
-                for root in current_trace.root_spans:
-                    dfs(root, progress, pbar_eval_id)
+            # Always walk spans, even on errored traces — the walker
+            # hydrates ``trace_api.*_spans`` and the user needs that
+            # data on the dashboard to diagnose. Walk EVERY root, not
+            # just ``root_spans[0]``: OTel integrations can land
+            # multiple logical roots when a child ends before its
+            # parent. Mirrors the async path in ``agentic.py``.
+            for root in current_trace.root_spans:
+                dfs(root, progress, pbar_eval_id)
 
             end_time = time.perf_counter()
             run_duration = end_time - start_time
@@ -992,26 +985,26 @@ async def _a_evaluate_traces(
         copied_trace_metrics: Optional[List[BaseMetric]] = None
         if trace_metrics:
             copied_trace_metrics = copy_metrics(trace_metrics)
-        with capture_evaluation_run("golden"):
-            task = execute_evals_with_semaphore(
-                func=_a_execute_agentic_test_case,
-                golden=golden,
-                trace=trace,
-                test_run_manager=test_run_manager,
-                test_results=test_results,
-                count=count,
-                verbose_mode=verbose_mode,
-                ignore_errors=ignore_errors,
-                skip_on_missing_params=skip_on_missing_params,
-                show_indicator=show_indicator,
-                _use_bar_indicator=_use_bar_indicator,
-                _is_assert_test=_is_assert_test,
-                progress=progress,
-                pbar_id=pbar_id,
-                trace_metrics=copied_trace_metrics,
-            )
-            eval_tasks.append(asyncio.create_task(task))
-            await asyncio.sleep(throttle_value)
+        record_golden(golden)
+        task = execute_evals_with_semaphore(
+            func=_a_execute_agentic_test_case,
+            golden=golden,
+            trace=trace,
+            test_run_manager=test_run_manager,
+            test_results=test_results,
+            count=count,
+            verbose_mode=verbose_mode,
+            ignore_errors=ignore_errors,
+            skip_on_missing_params=skip_on_missing_params,
+            show_indicator=show_indicator,
+            _use_bar_indicator=_use_bar_indicator,
+            _is_assert_test=_is_assert_test,
+            progress=progress,
+            pbar_id=pbar_id,
+            trace_metrics=copied_trace_metrics,
+        )
+        eval_tasks.append(asyncio.create_task(task))
+        await asyncio.sleep(throttle_value)
 
     try:
         await asyncio.wait_for(

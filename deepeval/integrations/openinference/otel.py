@@ -95,7 +95,7 @@ def instrument_openinference(
             "See deepeval/integrations/README.md."
         )
 
-    with capture_tracing_integration("openinference"):
+    with capture_tracing_integration(Integration.OPEN_INFERENCE):
         _require_opentelemetry()
 
         if not api_key:

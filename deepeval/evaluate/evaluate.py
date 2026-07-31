@@ -40,7 +40,7 @@ from deepeval.utils import (
     should_verbose_print,
     get_identifier,
 )
-from deepeval.telemetry import capture_evaluation_run
+from deepeval.telemetry import Entrypoint, capture_evaluation_run
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
@@ -211,7 +211,7 @@ def evaluate(
                     )
                 )
 
-        with capture_evaluation_run("evaluate()"):
+        with capture_evaluation_run(Entrypoint.EVALUATE):
             if async_config.run_async:
                 loop = get_or_create_event_loop()
                 test_results = loop.run_until_complete(

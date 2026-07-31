@@ -95,7 +95,7 @@ class CallbackHandler(BaseCallbackHandler):
         turn_id: Optional[str] = None,
     ):
         is_langchain_installed()
-        with capture_tracing_integration("langchain.callback.CallbackHandler"):
+        with capture_tracing_integration(Integration.LANGCHAIN):
             # Do not create or set a trace in __init__.
             # CallbackHandler instances are often constructed outside the async Task
             # that actually runs LangGraph/LangChain. Creating a trace here can

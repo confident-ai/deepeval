@@ -14,6 +14,10 @@ from textual.app import ComposeResult
 from textual.containers import VerticalScroll
 from textual.widgets import Collapsible, Markdown, Static
 
+from deepeval.telemetry import (
+    LoginPromptSurface,
+    capture_login_prompt_shown_once,
+)
 from deepeval.utils import serialize_to_json
 from deepeval.inspect.types import (
     BaseSpan,
@@ -251,6 +255,8 @@ def _confident_cta_section(node: TraceOrSpan) -> List[Any]:
     and (b) a typed command works in any terminal, while OSC-8 hyperlinks
     rely on terminal support.
     """
+
+    capture_login_prompt_shown_once(LoginPromptSurface.INSPECT_TUI)
 
     body = Text()
     body.append("Upload traces to Confident AI for free. Run ")
