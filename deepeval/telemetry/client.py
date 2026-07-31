@@ -17,7 +17,7 @@ import sentry_sdk
 from deepeval._version import __version__ as DEEPEVAL_VERSION
 from deepeval.config.settings import get_settings
 from deepeval.telemetry.events import TELEMETRY_SCHEMA_VERSION, Event
-from deepeval.telemetry.identity import get_identity, get_logged_in_with
+from deepeval.telemetry.identity import get_identity, is_logged_in
 from deepeval.telemetry.properties import EventProperties, PropValue
 from deepeval.telemetry.runtime import detect_runtime
 
@@ -50,8 +50,6 @@ class TelemetryBackend(Protocol):
         properties: Dict[str, PropValue],
     ) -> None: ...
 
-    def identify(self, anonymous_id: str, user_id: str) -> None: ...
-
     def flush(self) -> None: ...
 
 
@@ -64,9 +62,6 @@ class NoopBackend:
         event: Event,
         properties: Dict[str, PropValue],
     ) -> None:
-        return None
-
-    def identify(self, anonymous_id: str, user_id: str) -> None:
         return None
 
     def flush(self) -> None:
@@ -98,13 +93,6 @@ class PostHogBackend:
             event=event.value,
             properties=properties,
         )
-
-    def identify(self, anonymous_id: str, user_id: str) -> None:
-        # posthog-python 7.x replaced `identify()` with `set()`.
-        self._client.set(
-            distinct_id=anonymous_id, properties={"email": user_id}
-        )
-        self._client.alias(previous_id=anonymous_id, distinct_id=user_id)
 
     def flush(self) -> None:
         self._client.flush()  # type: ignore[no-untyped-call]
@@ -159,7 +147,7 @@ def base_properties() -> EventProperties:
         runtime=detect_runtime(),
         user_status=identity.status,
         user_id=identity.anonymous_id,
-        logged_in_with=get_logged_in_with(),
+        logged_in=is_logged_in(),
         integrations=active,
         integrations_count=len(active),
         integrations_primary=active[0] if active else "none",

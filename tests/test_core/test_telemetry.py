@@ -15,6 +15,7 @@ from deepeval.telemetry import (
     TelemetryKey,
     UserStatus,
 )
+from deepeval.telemetry import context as context_mod
 from deepeval.telemetry import identity as identity_mod
 
 
@@ -23,13 +24,9 @@ class FakeBackend:
 
     def __init__(self):
         self.events = []
-        self.identified = []
 
     def capture(self, anonymous_id, event, properties):
         self.events.append((anonymous_id, event, properties))
-
-    def identify(self, anonymous_id, user_id):
-        self.identified.append((anonymous_id, user_id))
 
     def flush(self):
         pass
@@ -44,12 +41,14 @@ def backend(tmp_path, monkeypatch):
     monkeypatch.delenv("DEEPEVAL_TELEMETRY_OPT_OUT", raising=False)
     monkeypatch.setenv("DEEPEVAL_HOME", str(tmp_path / "home"))
     identity_mod.reset_cache_for_testing()
+    context_mod.reset_for_testing()
 
     fake = FakeBackend()
     telemetry.set_backend(fake)
     yield fake
 
     identity_mod.reset_cache_for_testing()
+    context_mod.reset_for_testing()
 
 
 class TestIdentity:
@@ -93,12 +92,35 @@ class TestIdentity:
         identity_mod.reset_cache_for_testing()
         assert telemetry.get_identity().status is UserStatus.OLD
 
-    def test_logging_in_identifies_the_user(self, backend):
+    def test_an_email_is_stored_locally_but_never_transmitted(self, backend):
+        """The privacy page says no PII, so only the boolean goes out."""
         telemetry.set_logged_in_with("someone@example.com")
 
-        assert backend.identified == [
-            (telemetry.get_unique_id(), "someone@example.com")
-        ]
+        with telemetry.capture_evaluation_run(Entrypoint.EVALUATE):
+            pass
+
+        props = backend.only()
+        assert props["user.logged_in"] is True
+        assert "someone@example.com" not in json.dumps(props)
+        assert telemetry.get_logged_in_with() == "someone@example.com"
+
+    def test_legacy_per_feature_keys_are_not_reported_as_new(
+        self, backend, tmp_path
+    ):
+        """Pre-v2 wrote one key per feature; reading only the new list made
+        every existing user look like a first-time user of everything."""
+        store = tmp_path / "home" / telemetry.TELEMETRY_DATA_FILE
+        store.parent.mkdir(parents=True, exist_ok=True)
+        store.write_text(
+            f"{TelemetryKey.ID.value}=abc\n" "DEEPEVAL_EVALUATION_STATUS=old\n"
+        )
+        identity_mod.reset_cache_for_testing()
+
+        with telemetry.capture_evaluation_run(Entrypoint.EVALUATE):
+            pass
+
+        assert backend.only()["feature.status"] == UserStatus.OLD.value
+        assert "DEEPEVAL_EVALUATION_STATUS" not in store.read_text()
 
 
 class TestEvaluationEvent:
@@ -319,7 +341,13 @@ class TestStandaloneMetrics:
         props = backend.only()
         assert props["eval.entrypoint"] == Entrypoint.STANDALONE.value
         assert props["eval.metric_runs"] == 10
-        assert props["eval.flush_reason"] == FlushReason.PROCESS_EXIT.value
+        assert props["eval.flush_reason"] == FlushReason.MANUAL.value
+        # Same shape as every other Evaluation event, so the counts can be
+        # summed across entrypoints without special-casing standalone.
+        assert props["eval.test_case_count"] == 0
+        assert props["eval.golden_count"] == 0
+        assert props["tracing.traced"] is False
+        assert props["tracing.trace_count"] == 0
 
     def test_partial_flushes_sum_to_the_true_total(self, backend):
         for _ in range(120):
@@ -484,3 +512,48 @@ class TestRuntime:
             assert detect_runtime() is Runtime.CI_OTHER
         finally:
             detect_runtime.cache_clear()
+
+    def test_a_terminal_alone_does_not_mean_interactive(self, monkeypatch):
+        """`python script.py` from a shell has a tty on stdin but is a script.
+
+        Testing for a tty labelled every laptop run interactive and left
+        `script` meaning little more than "stdin was piped".
+        """
+        import sys as sys_mod
+
+        from deepeval.telemetry import runtime as runtime_mod
+
+        for var in (
+            "GITHUB_ACTIONS",
+            "GITLAB_CI",
+            *runtime_mod._CI_VENDOR_VARS,
+        ):
+            monkeypatch.delenv(var, raising=False)
+        monkeypatch.setattr(runtime_mod, "_in_container", lambda: False)
+        monkeypatch.delattr(sys_mod, "ps1", raising=False)
+
+        runtime_mod.detect_runtime.cache_clear()
+        try:
+            assert runtime_mod.detect_runtime() is Runtime.SCRIPT
+        finally:
+            runtime_mod.detect_runtime.cache_clear()
+
+    def test_a_repl_prompt_is_interactive(self, monkeypatch):
+        import sys as sys_mod
+
+        from deepeval.telemetry import runtime as runtime_mod
+
+        for var in (
+            "GITHUB_ACTIONS",
+            "GITLAB_CI",
+            *runtime_mod._CI_VENDOR_VARS,
+        ):
+            monkeypatch.delenv(var, raising=False)
+        monkeypatch.setattr(runtime_mod, "_in_container", lambda: False)
+        monkeypatch.setattr(sys_mod, "ps1", ">>> ", raising=False)
+
+        runtime_mod.detect_runtime.cache_clear()
+        try:
+            assert runtime_mod.detect_runtime() is Runtime.INTERACTIVE
+        finally:
+            runtime_mod.detect_runtime.cache_clear()

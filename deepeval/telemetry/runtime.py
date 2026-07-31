@@ -45,12 +45,16 @@ def _in_container() -> bool:
         return False
 
 
-def _stdin_is_a_tty() -> bool:
-    try:
-        return bool(sys.stdin) and sys.stdin.isatty()
-    except (AttributeError, ValueError, OSError):
-        # stdin can be closed or replaced with a non-file object.
-        return False
+def _in_repl() -> bool:
+    """Someone typing statements at a `>>>` prompt.
+
+    Deliberately not `sys.stdin.isatty()`: a script launched from a shell also
+    has a terminal on stdin, so that test labelled every laptop run
+    `interactive` and left `script` meaning little more than "stdin was piped".
+    `sys.ps1` exists only in a real interpreter session, and
+    `sys.flags.interactive` covers `python -i`.
+    """
+    return hasattr(sys, "ps1") or bool(sys.flags.interactive)
 
 
 @lru_cache(maxsize=1)
@@ -67,6 +71,6 @@ def detect_runtime() -> Runtime:
         return Runtime.CI_OTHER
     if _in_container():
         return Runtime.CONTAINER
-    if _stdin_is_a_tty():
+    if _in_repl():
         return Runtime.INTERACTIVE
     return Runtime.SCRIPT

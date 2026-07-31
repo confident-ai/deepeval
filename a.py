@@ -1,9 +1,10 @@
 """Telemetry smoke test.
 
-Exercises every entrypoint that emits an `Evaluation` event and sends the
-result to the real PostHog project, printing each payload as it goes.
+Exercises every entrypoint that emits an `Evaluation` event, printing each
+payload and writing it to `telemetry.jsonl` for inspection.
 
-    python a.py
+    python a.py              # local only, nothing leaves the machine
+    python a.py --posthog    # also send to the real PostHog project
 
 See secrets/telemetry.md for what each property means.
 
@@ -13,8 +14,12 @@ built-in metric uses to record telemetry, so the counters are real.
 """
 
 import json
+import os
+import sys
 import time
-from typing import Any, Dict, List
+from collections import Counter
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from deepeval import evaluate
 from deepeval.dataset import EvaluationDataset, Golden
@@ -33,37 +38,81 @@ from deepeval.telemetry import (
 )
 
 
-# --------------------------------------------------------------------------
-# Print every event on its way to PostHog.
-# --------------------------------------------------------------------------
+LOG_PATH = Path(__file__).with_name("telemetry.jsonl")
+
+# Shown inline. Everything else still goes to the file.
+_INTERESTING_PREFIXES = ("eval.", "judge.", "tracing.", "cli.", "login.")
 
 
-class TeeBackend:
-    """Forwards to the real backend and echoes the payload to stdout."""
+class RecordingBackend:
+    """Writes every event to a file, and optionally forwards it upstream.
 
-    def __init__(self, inner: Any) -> None:
-        self.inner = inner
-        self.count = 0
+    Implements the same three methods as `PostHogBackend`, which is all
+    `TelemetryBackend` requires -- the point of the protocol is that the rest
+    of the library cannot tell the difference.
+    """
+
+    def __init__(self, path: Path, forward_to: Optional[Any] = None) -> None:
+        self.path = path
+        self.forward_to = forward_to
+        self.events: List[Dict[str, Any]] = []
+        self.handle = path.open("w")
 
     def capture(self, anonymous_id: str, event: Any, properties: Dict) -> None:
-        self.count += 1
-        interesting = {
+        # The standalone accumulator's atexit hook can fire after close().
+        if self.handle.closed:
+            return
+        record = {
+            "seq": len(self.events) + 1,
+            "at": time.strftime("%H:%M:%S"),
+            "event": event.value,
+            "anonymous_id": anonymous_id,
+            "properties": properties,
+        }
+        self.events.append(record)
+        self.handle.write(json.dumps(record, default=str) + "\n")
+        self.handle.flush()
+
+        shown = {
             key: value
             for key, value in sorted(properties.items())
-            if key.startswith(("eval.", "judge.", "tracing.", "cli.", "login."))
-            and value not in ([], 0, "none")
+            if (
+                key.startswith(_INTERESTING_PREFIXES)
+                and value not in ([], 0, "none")
+            )
             or key == "eval.turn_kind"
         }
-        print(f"\n  [{self.count}] {event.value}")
-        for key, value in interesting.items():
+        print(f"\n  [{record['seq']}] {event.value}")
+        for key, value in shown.items():
             print(f"        {key:28} {json.dumps(value)}")
-        self.inner.capture(anonymous_id, event, properties)
 
-    def identify(self, anonymous_id: str, user_id: str) -> None:
-        self.inner.identify(anonymous_id, user_id)
+        if self.forward_to is not None:
+            self.forward_to.capture(anonymous_id, event, properties)
 
     def flush(self) -> None:
-        self.inner.flush()
+        if not self.handle.closed:
+            self.handle.flush()
+        if self.forward_to is not None:
+            self.forward_to.flush()
+
+    def close(self) -> None:
+        if not self.handle.closed:
+            self.handle.close()
+
+    @property
+    def count(self) -> int:
+        return len(self.events)
+
+    def summary(self) -> str:
+        by_event = Counter(record["event"] for record in self.events)
+        runs = {
+            record["properties"]["eval.run_id"]
+            for record in self.events
+            if "eval.run_id" in record["properties"]
+        }
+        lines = [f"  {count:>2}x {name}" for name, count in by_event.items()]
+        lines.append(f"  {len(runs):>2} distinct eval.run_id")
+        return "\n".join(lines)
 
 
 # --------------------------------------------------------------------------
@@ -76,7 +125,11 @@ class _SmokeBody:
     routes on isinstance, so inheriting both bases would send the multi-turn
     stub down the single-turn path."""
 
-    def __init__(self, threshold: float = 0.5):
+    def __init__(self, threshold: float = 0.5, model: Any = None):
+        # Must be set here, not assigned afterwards: evaluate() rebuilds the
+        # metric per test case, so a later assignment never reaches the
+        # indicator that records the judge.
+        self.model = model
         self.threshold = threshold
         self.async_mode = False
         self.strict_mode = False
@@ -120,6 +173,27 @@ class SmokeConversationalMetric(_SmokeBody, BaseConversationalMetric):
 
 def banner(title: str) -> None:
     print(f"\n{'=' * 72}\n{title}\n{'=' * 72}")
+
+
+# --------------------------------------------------------------------------
+# 0. Install integrations first, so the runs below carry them
+# --------------------------------------------------------------------------
+
+
+def scenario_install_integrations() -> None:
+    """Must run before any evaluation.
+
+    `tracing.integrations` is a snapshot of what is registered at the moment
+    the run finishes, so installing an integration afterwards leaves every
+    Evaluation event reporting no integration at all.
+    """
+    banner("0. install integrations  ->  every later run carries them")
+
+    for integration in (Integration.LANGCHAIN, Integration.OPEN_AI):
+        # Repeats are deduplicated, so this fires once per integration.
+        for _ in range(3):
+            with capture_tracing_integration(integration):
+                pass
 
 
 # --------------------------------------------------------------------------
@@ -216,15 +290,75 @@ def scenario_standalone_metrics() -> None:
 # --------------------------------------------------------------------------
 
 
+def scenario_judge_model() -> None:
+    """judge.provider / judge.model only fill in when a metric carries a model.
+
+    Nothing is sent to the provider: the stub never calls the model, it only
+    needs the object so the judge dimension can be derived from its class.
+    """
+    banner(
+        "4. metric with a judge model  ->  expect judge.provider/judge.model"
+    )
+
+    # Constructing the client needs a key present; nothing is ever sent to it.
+    os.environ.setdefault("OPENAI_API_KEY", "sk-unused-by-this-script")
+    try:
+        from deepeval.models import GPTModel
+
+        model = GPTModel(model="gpt-4.1")
+    except Exception as error:
+        print(f"        skipped, could not construct a model: {error}")
+        return
+
+    evaluate(
+        test_cases=[LLMTestCase(input="judged", actual_output="output")],
+        metrics=[SmokeMetric(model=model)],
+        display_config=_quiet_display(),
+    )
+
+
+def scenario_remaining_entrypoints() -> None:
+    """The two entrypoints this process cannot reach naturally.
+
+    `compare` needs an arena test case and a real arena metric, and `pytest`
+    only exists inside a `deepeval test run` session. Both scopes are opened
+    directly here so every entrypoint appears on the dashboard.
+    """
+    banner("4b. compare + pytest scopes  ->  the remaining two entrypoints")
+
+    for entrypoint in (
+        telemetry.Entrypoint.COMPARE,
+        telemetry.Entrypoint.PYTEST,
+    ):
+        with telemetry.capture_evaluation_run(entrypoint):
+            for index in range(2):
+                telemetry.record_test_case(
+                    LLMTestCase(input=f"case {index}", actual_output="out")
+                )
+                telemetry.record_metric(
+                    "SmokeMetric", async_mode=False, in_component=False
+                )
+
+
 def scenario_other_events() -> None:
-    banner("4. CLI command, integration install, login prompt")
+    banner("5. CLI command, login, other features")
 
     capture_cli_command("view", {"view": None})
-    # Fires once per process no matter how many handlers get constructed.
-    for _ in range(3):
-        with capture_tracing_integration(Integration.LANGCHAIN):
-            pass
     capture_login_prompt_shown(LoginPromptSurface.POST_EVAL)
+
+    # An abandoned login is a distinct outcome from a completed one.
+    with telemetry.capture_login_event() as span:
+        span.set_method(telemetry.LoginMethod.BROWSER)
+        span.set_outcome(telemetry.LoginOutcome.COMPLETED)
+
+    with telemetry.capture_synthesizer_run(
+        method="docs", max_generations=10, num_evolutions=2, evolutions={}
+    ):
+        pass
+    with telemetry.capture_conversation_simulator_run(num_conversations=3):
+        pass
+    with telemetry.capture_benchmark_run(benchmark="MMLU", num_tasks=5):
+        pass
 
 
 def _quiet_display():
@@ -234,37 +368,60 @@ def _quiet_display():
 
 
 def main() -> None:
+    to_posthog = "--posthog" in sys.argv
+
     if telemetry.telemetry_opt_out():
         raise SystemExit(
-            "DEEPEVAL_TELEMETRY_OPT_OUT is set -- unset it or nothing is sent."
+            "DEEPEVAL_TELEMETRY_OPT_OUT is set -- unset it or nothing is "
+            "captured at all."
         )
 
-    real = telemetry.get_backend()
-    if isinstance(real, telemetry.NoopBackend):
-        raise SystemExit(
-            "Telemetry backend is a no-op; the posthog client failed to build."
-        )
+    upstream = None
+    if to_posthog:
+        upstream = telemetry.get_backend()
+        if isinstance(upstream, telemetry.NoopBackend):
+            raise SystemExit(
+                "Telemetry backend is a no-op; the posthog client failed to "
+                "build."
+            )
 
-    tee = TeeBackend(real)
-    telemetry.set_backend(tee)
+    recorder = RecordingBackend(LOG_PATH, forward_to=upstream)
+    telemetry.set_backend(recorder)
 
     anonymous_id = telemetry.get_unique_id()
-    print(f"\nSending as user.unique_id = {anonymous_id}")
-    print("Filter the PostHog dashboard on that id to see only this run.")
+    print(f"\nuser.unique_id = {anonymous_id}")
+    print(f"Writing to {LOG_PATH}")
+    if to_posthog:
+        print("Also sending to PostHog. Filter the dashboard on that id.")
+    else:
+        print(
+            "Local only -- nothing leaves this machine. Use --posthog to send."
+        )
 
+    scenario_install_integrations()
     scenario_evaluate()
     scenario_evaluate_multi_turn()
     scenario_evals_iterator()
     scenario_standalone_metrics()
+    scenario_judge_model()
+    scenario_remaining_entrypoints()
     scenario_other_events()
 
-    banner(f"Flushing {tee.count} events to PostHog")
+    # The standalone accumulator also flushes at process exit, but doing it
+    # here keeps the file complete before the summary is printed.
+    telemetry.flush_standalone_metrics()
     telemetry.flush()
-    # The client ships on a background thread; give it a moment to drain.
-    time.sleep(3)
+    if to_posthog:
+        # The posthog client ships on a background thread.
+        time.sleep(3)
+
+    banner(f"{recorder.count} events")
+    print(recorder.summary())
+    recorder.close()
     print(
-        f"\nDone. {tee.count} events sent as {anonymous_id}.\n"
-        "PostHog ingestion usually lags a few seconds to a minute.\n"
+        f"\nFull payloads: {LOG_PATH}\n"
+        f"  cat {LOG_PATH.name} | jq .\n"
+        f"  cat {LOG_PATH.name} | jq -r '.properties.\"eval.entrypoint\"'\n"
     )
 
 

@@ -169,9 +169,7 @@ def current_run() -> Optional[RunAccumulator]:
     return stack[-1] if stack else None
 
 
-def push_run(
-    entrypoint: Entrypoint, run_id: str
-) -> Tuple[RunAccumulator, Any]:
+def push_run(entrypoint: Entrypoint, run_id: str) -> Tuple[RunAccumulator, Any]:
     _, trace_total = _tracing_state()
     accumulator = RunAccumulator(
         entrypoint=entrypoint, run_id=run_id, traces_at_entry=trace_total
@@ -240,6 +238,9 @@ class StandaloneAccumulator:
         self._in_component = False
         self._provider: Optional[str] = None
         self._model: Optional[str] = None
+        # Set on the first metric of each batch, so `traced` covers the window
+        # this event reports on rather than the whole process.
+        self._traces_at_start: Optional[int] = None
 
     def _ensure_scheduled(self) -> None:
         if not self._registered_atexit:
@@ -265,7 +266,10 @@ class StandaloneAccumulator:
         model: Any = None,
     ) -> None:
         provider, model_name = describe_judge(model)
+        _, trace_total = _tracing_state()
         with self._lock:
+            if self._traces_at_start is None:
+                self._traces_at_start = trace_total
             self._metric_runs += 1
             self._metrics[metric_name] += 1
             if async_mode:
@@ -284,13 +288,19 @@ class StandaloneAccumulator:
             self.flush(FlushReason.THRESHOLD)
 
     def _drain(self) -> Optional[EventProperties]:
+        tracing_enabled, trace_total = _tracing_state()
         with self._lock:
             if self._metric_runs == 0:
                 return None
             metric_names = sorted(self._metrics)
+            traced_here = max(trace_total - (self._traces_at_start or 0), 0)
             properties = EventProperties(
                 entrypoint=Entrypoint.STANDALONE,
                 run_id=str(uuid.uuid4()),
+                # Explicit zeros rather than absent keys, so every Evaluation
+                # event has the same shape whatever the entrypoint.
+                test_case_count=0,
+                golden_count=0,
                 metric_runs=self._metric_runs,
                 metrics=metric_names,
                 metrics_count=len(metric_names),
@@ -298,6 +308,9 @@ class StandaloneAccumulator:
                 in_component=self._in_component,
                 provider=self._provider,
                 model=self._model,
+                tracing_enabled=tracing_enabled,
+                traced=traced_here > 0,
+                trace_count=traced_here,
             )
             self._reset()
             return properties
@@ -306,14 +319,12 @@ class StandaloneAccumulator:
         properties = self._drain()
         if properties is None:
             return
-        tracing_enabled, _ = _tracing_state()
         capture(
             Event.EVALUATION,
             replace(
                 properties,
                 flush_reason=reason,
                 outcome=Outcome.COMPLETED,
-                tracing_enabled=tracing_enabled,
             ),
         )
 
@@ -332,7 +343,20 @@ class StandaloneAccumulator:
 _standalone = StandaloneAccumulator()
 
 
+def reset_for_testing() -> None:
+    """Drop any ambient run scope and buffered standalone metrics.
+
+    A test process is itself inside a run scope -- the pytest plugin opens one
+    for the whole session -- so without this every `record_metric` in a test
+    lands in the session accumulator instead of the path under test.
+    """
+    _run_stack.set(())
+    _standalone._reset()
+
+
 def flush_standalone_metrics(
-    reason: FlushReason = FlushReason.PROCESS_EXIT,
+    reason: FlushReason = FlushReason.MANUAL,
 ) -> None:
+    """Flush now. The default reason reflects the caller, not process exit --
+    `atexit` passes `PROCESS_EXIT` itself."""
     _standalone.flush(reason)

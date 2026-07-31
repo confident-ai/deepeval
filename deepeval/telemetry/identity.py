@@ -62,15 +62,45 @@ def _parse(path: Path) -> Dict[str, str]:
     return data
 
 
+def _legacy_feature_key(feature: Feature) -> str:
+    """The pre-v2 `DEEPEVAL_{FEATURE}_STATUS` key this feature used to use."""
+    return f"DEEPEVAL_{feature.value.upper()}_STATUS"
+
+
+def _adopt_legacy_feature_keys(data: Dict[str, str]) -> bool:
+    """Fold the pre-v2 per-feature keys into the single seen-features list.
+
+    Without this every existing user reports `feature.status = new` once per
+    feature on their first v2 run, which would read as a wave of new adoption
+    at rollout rather than the same people doing the same things.
+    """
+    seen = _seen_features(data)
+    changed = False
+    for feature in Feature:
+        # Presence is the signal, whatever the recorded value: the key only
+        # ever existed because the feature had been used at least once.
+        if data.pop(_legacy_feature_key(feature), None) is None:
+            continue
+        changed = True
+        seen.add(feature.value)
+    if changed:
+        data[TelemetryKey.SEEN_FEATURES.value] = ",".join(sorted(seen))
+    return changed
+
+
 def _load() -> Dict[str, str]:
     """Read the store, migrating a legacy CWD file the first time we see one."""
     path = telemetry_path()
     if path.exists():
-        return _parse(path)
+        data = _parse(path)
+        if _adopt_legacy_feature_keys(data):
+            _persist(data)
+        return data
     for legacy in _legacy_paths():
         if legacy.exists():
             data = _parse(legacy)
             if data.get(TelemetryKey.ID.value):
+                _adopt_legacy_feature_keys(data)
                 _persist(data)
                 return data
     return {}
@@ -185,18 +215,24 @@ def get_last_feature() -> Feature:
 
 
 def set_logged_in_with(logged_in_with: str) -> None:
+    """Record the account locally. The address itself is never transmitted.
+
+    Sending it, and calling `identify`, would attach a real email to every
+    event -- which the published privacy page does not disclose. Only the
+    boolean in `is_logged_in` leaves the machine.
+    """
     data = read_telemetry_file()
     data[TelemetryKey.LOGGED_IN_WITH.value] = logged_in_with
     write_telemetry_file(data)
-
-    from deepeval.telemetry.client import get_backend
-
-    get_backend().identify(get_unique_id(), logged_in_with)
 
 
 def get_logged_in_with() -> str:
     data = read_telemetry_file()
     return data.get(TelemetryKey.LOGGED_IN_WITH.value, "NA")
+
+
+def is_logged_in() -> bool:
+    return get_logged_in_with() != "NA"
 
 
 def reset_cache_for_testing() -> None:

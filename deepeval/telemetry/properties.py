@@ -22,7 +22,7 @@ class Prop(str, Enum):
     # identity
     USER_STATUS = "user.status"
     USER_ID = "user.unique_id"
-    LOGGED_IN_WITH = "user.logged_in_with"
+    LOGGED_IN = "user.logged_in"
     # evaluation
     ENTRYPOINT = "eval.entrypoint"
     RUN_ID = "eval.run_id"
@@ -113,6 +113,7 @@ class FlushReason(str, Enum):
     THRESHOLD = "threshold"
     INTERVAL = "interval"
     PROCESS_EXIT = "process_exit"
+    MANUAL = "manual"
 
 
 # `judge.provider` is the judge model's class name, read off the class itself
@@ -179,7 +180,7 @@ class EventProperties:
     # identity
     user_status: Optional[UserStatus] = None
     user_id: Optional[str] = None
-    logged_in_with: Optional[str] = None
+    logged_in: Optional[bool] = None
     # evaluation
     entrypoint: Optional[Entrypoint] = None
     run_id: Optional[str] = None
@@ -247,7 +248,7 @@ _FIELD_TO_PROP: Dict[str, Prop] = {
     "runtime": Prop.RUNTIME,
     "user_status": Prop.USER_STATUS,
     "user_id": Prop.USER_ID,
-    "logged_in_with": Prop.LOGGED_IN_WITH,
+    "logged_in": Prop.LOGGED_IN,
     "entrypoint": Prop.ENTRYPOINT,
     "run_id": Prop.RUN_ID,
     "outcome": Prop.OUTCOME,
