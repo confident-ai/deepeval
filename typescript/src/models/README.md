@@ -64,6 +64,7 @@ abstract generate<T = string>(
 | `KimiModel` (Moonshot) | `moonshot-v1-8k` | `MOONSHOT_API_KEY` | `https://api.moonshot.cn/v1` | `.ai/v1` for international |
 | `LocalModel` (vLLM / LM Studio) | `LOCAL_MODEL_NAME` (req.) | `LOCAL_MODEL_API_KEY` (placeholder ok) | `LOCAL_MODEL_BASE_URL` (req.) | any OpenAI `/v1` server |
 | `OpenRouterModel` (gateway) | `openai/gpt-4.1` | `OPENROUTER_API_KEY` | `https://openrouter.ai/api/v1` | ranking headers via `defaultHeaders` |
+| `OrcaRouterModel` (gateway) | `openai/gpt-5.4` | `ORCAROUTER_API_KEY` | `https://api.orcarouter.ai/v1` | attribution headers via `defaultHeaders` |
 | `PortkeyModel` (gateway) | `PORTKEY_MODEL_NAME` | `PORTKEY_API_KEY` | `https://api.portkey.ai/v1` | auth via `x-portkey-*` headers; `provider` option |
 
 All of the above report `supportsStructuredOutputs() = true` and
@@ -89,7 +90,7 @@ All of the above report `supportsStructuredOutputs() = true` and
 
 Image slugs in the prompt are split into provider-specific text+image parts by
 `multimodal.ts` (`openAIContent`, `aiSdkContent`, `anthropicContent`, `geminiContents`).
-Wired into: **OpenAI-compatible base** (so OpenAI/Azure/Grok/Kimi/Local/OpenRouter/Portkey),
+Wired into: **OpenAI-compatible base** (so OpenAI/Azure/Grok/Kimi/Local/OpenRouter/OrcaRouter/Portkey),
 **Anthropic**, **Gemini**, **AI SDK**. Plain-text prompts pass through unchanged.
 
 ## Gaps & discrepancies vs Python

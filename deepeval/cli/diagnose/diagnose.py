@@ -58,6 +58,7 @@ _PROVIDER_BY_CLASS = {
     "GrokModel": "Grok",
     "DeepSeekModel": "DeepSeek",
     "OpenRouterModel": "OpenRouter",
+    "OrcaRouterModel": "OrcaRouter",
     "PortkeyModel": "Portkey",
     "OpenAIEmbeddingModel": "OpenAI",
     "AzureOpenAIEmbeddingModel": "Azure OpenAI",

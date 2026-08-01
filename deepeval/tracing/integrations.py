@@ -30,6 +30,7 @@ class Provider(str, Enum):
     VERTEX_AI = "VertexAI"
     AZURE = "Azure"
     OPEN_ROUTER = "OpenRouter"
+    ORCA_ROUTER = "OrcaRouter"
     PORTKEY = "Portkey"
     TRUE_FOUNDRY = "TrueFoundry"
     MOONSHOT = "Moonshot"
