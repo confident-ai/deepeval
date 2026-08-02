@@ -30,6 +30,7 @@ from deepeval.utils import (
     shorten,
     format_turn,
     len_short,
+    should_show_promotion,
 )
 from deepeval.test_run.cache import global_test_run_cache_manager
 from deepeval.telemetry import (
@@ -907,10 +908,11 @@ class TestRunManager:
             if index < len(test_run.test_cases) - 1:
                 self._add_separator_row(table)
 
-        table.add_row(
-            "[bold red]Note: Use Confident AI with DeepEval to analyze failed test cases for more details[/bold red]",
-            *[""] * (len(table.columns) - 1),
-        )
+        if should_show_promotion():
+            table.add_row(
+                "[bold red]Note: Use Confident AI with DeepEval to analyze failed test cases for more details[/bold red]",
+                *[""] * (len(table.columns) - 1),
+            )
         print(table)
 
     def post_test_run(self, test_run: TestRun) -> Optional[Tuple[str, str]]:
@@ -1173,15 +1175,26 @@ class TestRunManager:
                 if test_run.evaluation_cost
                 else "None"
             )
-            capture_login_prompt_shown(LoginPromptSurface.POST_EVAL)
-            console.print(
+            show_promotion = should_show_promotion()
+            if show_promotion:
+                capture_login_prompt_shown(LoginPromptSurface.POST_EVAL)
+            summary = (
                 f"\n\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation completed 🎉! (time taken: {round(runDuration, 2)}s | token cost: {token_cost})\n"
-                f"» Test Results ({test_run.test_passed + test_run.test_failed} total tests):\n",
-                f"  » Pass Rate: {round((test_run.test_passed / (test_run.test_passed + test_run.test_failed)) * 100, 2)}% | Passed: [bold green]{test_run.test_passed}[/bold green] | Failed: [bold red]{test_run.test_failed}[/bold red]\n\n",
-                "=" * 80,
-                "\n\n» Want to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n"
-                "  » Run [bold]'deepeval view'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n",
+                f"» Test Results ({test_run.test_passed + test_run.test_failed} total tests):\n"
             )
+            pass_rate = (
+                f"  » Pass Rate: {round((test_run.test_passed / (test_run.test_passed + test_run.test_failed)) * 100, 2)}% | Passed: [bold green]{test_run.test_passed}[/bold green] | Failed: [bold red]{test_run.test_failed}[/bold red]\n\n"
+            )
+            if show_promotion:
+                console.print(
+                    summary,
+                    pass_rate,
+                    "=" * 80,
+                    "\n\n» Want to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n"
+                    "  » Run [bold]'deepeval view'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n",
+                )
+            else:
+                console.print(summary, pass_rate)
 
     def get_latest_test_run_data(self) -> Optional[TestRun]:
         try:

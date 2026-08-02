@@ -772,6 +772,10 @@ class Settings(BaseSettings):
         None,
         description="Opt in to update warnings in the CLI/runtime when new versions are available.",
     )
+    DEEPEVAL_DISABLE_PROMOTION: Optional[bool] = Field(
+        None,
+        description="Suppress Confident AI promotional console output shown after an evaluation when not logged in (e.g. 'Run deepeval view ...' and related nudges).",
+    )
     DEEPEVAL_GRPC_LOGGING: Optional[bool] = Field(
         None,
         description="Enable extra gRPC logging for Confident transport/debugging.",

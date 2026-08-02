@@ -22,6 +22,7 @@ from deepeval.utils import (
     custom_console,
     get_or_create_event_loop,
     open_browser,
+    should_show_promotion,
 )
 from deepeval.test_run.test_run import (
     TestRun,
@@ -502,12 +503,13 @@ def wrap_up_experiment(
     )
 
     if not is_confident():
-        capture_login_prompt_shown(LoginPromptSurface.POST_ARENA)
-        console.print(
-            f"{'=' * 80}\n"
-            f"\n» Want to share experiments with your team? ❤️ 🏟️\n"
-            f"  » Run [bold]'deepeval login'[/bold] to analyze and save arena results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n"
-        )
+        if should_show_promotion():
+            capture_login_prompt_shown(LoginPromptSurface.POST_ARENA)
+            console.print(
+                f"{'=' * 80}\n"
+                f"\n» Want to share experiments with your team? ❤️ 🏟️\n"
+                f"  » Run [bold]'deepeval login'[/bold] to analyze and save arena results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n"
+            )
         return
 
     try:

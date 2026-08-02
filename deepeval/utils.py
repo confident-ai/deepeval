@@ -256,6 +256,15 @@ def should_verbose_print() -> bool:
     return bool(get_settings().DEEPEVAL_VERBOSE_MODE)
 
 
+def should_show_promotion() -> bool:
+    """Whether Confident AI promotional console output should be shown.
+
+    Users can opt out by setting ``DEEPEVAL_DISABLE_PROMOTION=1`` (or any truthy
+    value). Returns ``True`` by default so existing behavior is unchanged.
+    """
+    return not bool(get_settings().DEEPEVAL_DISABLE_PROMOTION)
+
+
 def set_verbose_mode(yes: Optional[bool]):
     s = get_settings()
     with s.edit(persist=False):

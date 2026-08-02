@@ -70,6 +70,26 @@ def test_env_mutation_after_init_triggers_auto_refresh(monkeypatch):
     assert s2.USE_OPENAI_MODEL is (old is not True)
 
 
+def test_disable_promotion_defaults_to_showing(monkeypatch):
+    # env is cleared by conftest -> promotion shown by default
+    from deepeval.utils import should_show_promotion
+
+    monkeypatch.delenv("DEEPEVAL_DISABLE_PROMOTION", raising=False)
+    assert get_settings().DEEPEVAL_DISABLE_PROMOTION in (None, False)
+    assert should_show_promotion() is True
+
+
+@pytest.mark.parametrize(
+    "value, expected_show",
+    [("1", False), ("true", False), ("yes", False), ("0", True), ("false", True)],
+)
+def test_disable_promotion_opt_out(monkeypatch, value, expected_show):
+    from deepeval.utils import should_show_promotion
+
+    monkeypatch.setenv("DEEPEVAL_DISABLE_PROMOTION", value)
+    assert should_show_promotion() is expected_show
+
+
 def test_invalid_trace_sample_rate_raises(monkeypatch):
     # set env before first construction to trigger the validator
     monkeypatch.setenv("CONFIDENT_TRACE_SAMPLE_RATE", "1.2")
