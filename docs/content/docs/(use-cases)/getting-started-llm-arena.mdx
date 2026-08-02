@@ -153,6 +153,8 @@ task_completion_metric = ArenaGEval(model=model)
 
 Create an `ArenaTestCase` by passing a list of contestants.
 
+<LangSwitch>
+
 ```python title="main.py"
 from deepeval.test_case import ArenaTestCase, LLMTestCase, Contestant
 
@@ -186,6 +188,41 @@ contestant_3 = Contestant(
 test_case = ArenaTestCase(contestants=[contestant_1, contestant_2, contestant_3])
 ```
 
+```typescript title="main.ts"
+import { ArenaTestCase, LLMTestCase, Contestant } from "deepeval";
+
+const contestant1 = new Contestant({
+  name: "Version 1",
+  hyperparameters: { model: "gpt-3.5-turbo" },
+  testCase: new LLMTestCase({
+    input: "What is the capital of France?",
+    actualOutput: "Paris",
+  }),
+});
+
+const contestant2 = new Contestant({
+  name: "Version 2",
+  hyperparameters: { model: "gpt-4o" },
+  testCase: new LLMTestCase({
+    input: "What is the capital of France?",
+    actualOutput: "Paris is the capital of France.",
+  }),
+});
+
+const contestant3 = new Contestant({
+  name: "Version 3",
+  hyperparameters: { model: "gpt-4.1" },
+  testCase: new LLMTestCase({
+    input: "What is the capital of France?",
+    actualOutput: "Absolutely! The capital of France is Paris 😊",
+  }),
+});
+
+const testCase = new ArenaTestCase({ contestants: [contestant1, contestant2, contestant3] });
+```
+
+</LangSwitch>
+
 You can learn more about an `ArenaTestCase` [here](https://deepeval.com/docs/evaluation-arena-test-cases).
 
 </Step>
@@ -195,6 +232,8 @@ You can learn more about an `ArenaTestCase` [here](https://deepeval.com/docs/eva
 
 
 The [`ArenaGEval`](https://deepeval.com/docs/metrics-arena-g-eval) metric is the only metric that is compatible with `ArenaTestCase`. It picks a winner among the contestants based on the criteria defined.
+
+<LangSwitch>
 
 ```python
 from deepeval.metrics import ArenaGEval
@@ -209,6 +248,22 @@ arena_geval = ArenaGEval(
     ]
 )
 ```
+
+```typescript
+import { metrics } from "deepeval";
+import { SingleTurnParams } from "deepeval/testCase";
+
+const arenaGEval = new metrics.ArenaGEval({
+  name: "Friendly",
+  criteria: "Choose the winner of the more friendly contestant based on the input and actual output",
+  evaluationParams: [
+    SingleTurnParams.INPUT,
+    SingleTurnParams.ACTUAL_OUTPUT,
+  ],
+});
+```
+
+</LangSwitch>
 
 </Step>
 
@@ -226,6 +281,8 @@ Now that you have created an arena with contestants and defined a metric, you ca
 
 You can run arena evals by using the `compare()` function.
 
+<LangSwitch>
+
 ```python {3,11} title="main.py"
 from deepeval.test_case import ArenaTestCase, LLMTestCase, SingleTurnParams
 from deepeval.metrics import ArenaGEval
@@ -239,6 +296,20 @@ arena_geval = ArenaGEval(...) # Use the same metric you've created before
 
 compare(test_cases=[test_case], metric=arena_geval)
 ```
+
+```typescript {2,9} title="main.ts"
+import { ArenaTestCase } from "deepeval/testCase";
+import { compare } from "deepeval";
+
+const testCase = new ArenaTestCase({
+  contestants, // Use the same contestants you've created before
+});
+
+// arenaGEval is the same metric you've created before
+await compare([testCase], arenaGEval);
+```
+
+</LangSwitch>
 
 <details>
   <summary>Log prompts and models</summary>
@@ -271,9 +342,17 @@ compare(
 
 You can now run this python file to get your results:
 
+<LangSwitch>
+
 ```bash title="bash"
 python main.py
 ```
+
+```bash title="bash"
+npx tsx main.ts
+```
+
+</LangSwitch>
 
 This should let you see the results of the arena as shown below:
 

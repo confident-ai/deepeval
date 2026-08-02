@@ -21,6 +21,8 @@ If you already have a multi-turn chatbot that you want to evaluate, feel free to
 
 First create a `MedicalChatbot` class and use `langchain`'s chat models to call `OpenAI`:
 
+<LangSwitch>
+
 ```python title="main.py"
 from langchain_openai import ChatOpenAI
 
@@ -31,16 +33,41 @@ class MedicalChatbot:
         # Only certain models support this so ensure your model supports it as well
 ```
 
+```typescript title="main.ts"
+import { ChatOpenAI } from "@langchain/openai";
+
+class MedicalChatbot {
+  model: ChatOpenAI;
+
+  constructor(model: string) {
+    this.model = new ChatOpenAI({ model });
+    // Choose the LLM that will drive the agent
+    // Only certain models support this so ensure your model supports it as well
+  }
+}
+```
+
+</LangSwitch>
+
 :::note
 You can also use other interfaces to call OpenAI, or any other model.
 :::
 
 Try prompting it with a messages array:
 
+<LangSwitch>
+
 ```python title="main.py"
 chatbot = MedicalChatbot(model="gpt-4o-mini")
 chatbot.model.invoke([{"user": "Hi!"}])
 ```
+
+```typescript title="main.ts"
+const chatbot = new MedicalChatbot("gpt-4o-mini");
+await chatbot.model.invoke([{ role: "user", content: "Hi!" }]);
+```
+
+</LangSwitch>
 
 Which should let you see something like this:
 
@@ -73,6 +100,8 @@ We'll be using a text version of [The Gale Encyclopedia of Alternative Medicine]
 
 We'll ingest "The Gale Encyclopedia of Alternative Medicine" to Qdrant, a popular vector database choice for fast and accurate retrievals:
 
+<LangSwitch>
+
 ```python title="main.py"
 from qdrant_client import models, QdrantClient
 from sentence_transformers import SentenceTransformer
@@ -102,12 +131,61 @@ class MedicalChatbot:
         )
 ```
 
+```typescript title="main.ts"
+import { QdrantClient } from "@qdrant/js-client-rest";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { readFileSync } from "node:fs";
+
+class MedicalChatbot {
+  model: ChatOpenAI;
+  encoder: OpenAIEmbeddings;
+  client: QdrantClient;
+
+  constructor(model: string) {
+    this.model = new ChatOpenAI({ model });
+    // For RAG engine
+    this.encoder = new OpenAIEmbeddings({ model: "text-embedding-3-small" });
+    this.client = new QdrantClient({ url: "http://localhost:6333" });
+  }
+
+  async indexKnowledge(documentPath: string) {
+    const documents = readFileSync(documentPath, "utf-8").split("\n");
+
+    // Create namespace in qdrant
+    await this.client.createCollection("gale_encyclopedia", {
+      vectors: { size: 1536, distance: "Cosine" },
+    });
+
+    // Vectorize and index into qdrant
+    const vectors = await this.encoder.embedDocuments(documents);
+    await this.client.upsert("gale_encyclopedia", {
+      points: documents.map((doc, idx) => ({
+        id: idx,
+        vector: vectors[idx],
+        payload: { content: doc },
+      })),
+    });
+  }
+}
+```
+
+</LangSwitch>
+
 Then, simply run your `index_knowledge` method using the encyclopedia you've downloaded as `.txt`:
+
+<LangSwitch>
 
 ```python title="main.py"
 chatbot = MedicalChatbot()
 chatbot.index_knowledge("path-to-your-encyclopedia.txt")
 ```
+
+```typescript title="main.ts"
+const chatbot = new MedicalChatbot("gpt-4o-mini");
+await chatbot.indexKnowledge("path-to-your-encyclopedia.txt");
+```
+
+</LangSwitch>
 
 ✅ Done. Now let's try querying it to sanity check yourself.
 
@@ -118,6 +196,8 @@ You only have the run `index_knowledge` once.
 ### Query your knowledge base
 
 Simply implement a **TOOL** to query from qdrant. in this case `retrieve_knowledge`:
+
+<LangSwitch>
 
 ```python title="main.py" {14}
 from qdrant_client import models, QdrantClient
@@ -145,16 +225,69 @@ class MedicalChatbot:
         pass
 ```
 
+```typescript title="main.ts"
+import { QdrantClient } from "@qdrant/js-client-rest";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
+
+class MedicalChatbot {
+  model: ChatOpenAI;
+  encoder: OpenAIEmbeddings;
+  client: QdrantClient;
+
+  constructor(model: string) {
+    this.model = new ChatOpenAI({ model });
+    // For RAG engine
+    this.encoder = new OpenAIEmbeddings({ model: "text-embedding-3-small" });
+    this.client = new QdrantClient({ url: "http://localhost:6333" });
+  }
+
+  retrieveKnowledge = tool(
+    async ({ query }: { query: string }) => {
+      const { points: hits } = await this.client.query("gale_encyclopedia", {
+        query: await this.encoder.embedQuery(query),
+        limit: 3,
+        with_payload: true,
+      });
+
+      const contexts = hits.map((hit) => hit.payload!.content as string);
+      return contexts.join("\n");
+    },
+    {
+      name: "retrieve_knowledge",
+      description: "A tool to retrieve data on various diagnosis methods from gale encyclopedia",
+      schema: z.object({ query: z.string() }),
+    },
+  );
+
+  async indexKnowledge(documentPath: string) {
+    // Same as above
+  }
+}
+```
+
+</LangSwitch>
+
 :::info
 The `@tool` decorator tells `langchain` that the `retrieve_knowledge` method can be called as a function call and will come in handy in later sections.
 :::
 
 Now try calling it:
 
+<LangSwitch>
+
 ```python title="main.py"
 chatbot = MedicalChatbot()
 chatbot.retrieve_knowledge("Cough, fever, and diarrhea.")
 ```
+
+```typescript title="main.ts"
+const chatbot = new MedicalChatbot("gpt-4o-mini");
+await chatbot.retrieveKnowledge.invoke({ query: "Cough, fever, and diarrhea." });
+```
+
+</LangSwitch>
 
 Great! Now that we have the essentials for making a diagnosis, time to move on to implementing a way to book appointments after a diagnosis.
 
@@ -165,6 +298,8 @@ Since we need a way for our chatbot to book appointments based on the diagnosis 
 - `create_appointment`: Creates a new appointment **in memory** (you can also use something like SQLite for persistent storage)
 
 First, let's create a simple data model for appointments:
+
+<LangSwitch>
 
 ```python title="main.py"
 from pydantic import BaseModel, Field
@@ -180,7 +315,22 @@ class Appointment(BaseModel):
     diagnosis: Optional[str] = Field(default=None)
 ```
 
+```typescript title="main.ts"
+interface Appointment {
+  id: string;
+  name: string;
+  email: string;
+  date: Date;
+  symptoms?: string[];
+  diagnosis?: string;
+}
+```
+
+</LangSwitch>
+
 Now let's implement the `create_appointment` tool:
+
+<LangSwitch>
 
 ```python title="main.py" {14}
 import uuid
@@ -221,11 +371,65 @@ class MedicalChatbot:
         pass
 ```
 
+```typescript title="main.ts"
+import { randomUUID } from "node:crypto";
+
+// ...
+
+class MedicalChatbot {
+  model: ChatOpenAI;
+  encoder: OpenAIEmbeddings;
+  client: QdrantClient;
+  // For managing appointments
+  appointments: Appointment[] = [];
+
+  constructor(model: string) {
+    this.model = new ChatOpenAI({ model });
+    // For RAG engine
+    this.encoder = new OpenAIEmbeddings({ model: "text-embedding-3-small" });
+    this.client = new QdrantClient({ url: "http://localhost:6333" });
+  }
+
+  createAppointment = tool(
+    async ({ name, email, date }: { name: string; email: string; date: string }) => {
+      const parsedDate = new Date(date);
+      if (isNaN(parsedDate.getTime())) {
+        return "Invalid date format. Please use YYYY-MM-DD format.";
+      }
+      const appointment: Appointment = { id: randomUUID(), name, email, date: parsedDate };
+      this.appointments.push(appointment);
+      return `Created new appointment with ID: ${appointment.id} for ${name} on ${date}.`;
+    },
+    {
+      name: "create_appointment",
+      description: "Create a new appointment with the given ID, name, email, and date",
+      schema: z.object({ name: z.string(), email: z.string(), date: z.string() }),
+    },
+  );
+
+  retrieveKnowledge = tool(
+    async ({ query }: { query: string }) => {
+      // Same as above
+      return "";
+    },
+    { name: "retrieve_knowledge", schema: z.object({ query: z.string() }) },
+  );
+
+  async indexKnowledge(documentPath: string) {
+    // Same as above
+  }
+}
+```
+
+</LangSwitch>
+
 Great! Now let's glue everything together using LangChain.
 
 ## Implementing Chat Histories
 
 First create a helper method that retrieves conversation histories, which would be required for our LLM:
+
+<LangSwitch>
 
 ```python title"main.py"
 from langchain_community.chat_message_histories import ChatMessageHistory
@@ -239,7 +443,24 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
     return chat_store[session_id]
 ```
 
+```typescript title="main.ts"
+import { InMemoryChatMessageHistory } from "@langchain/core/chat_history";
+
+// Simple in-memory store for chat histories
+const chatStore: Record<string, InMemoryChatMessageHistory> = {};
+function getSessionHistory(sessionId: string): InMemoryChatMessageHistory {
+  if (!chatStore[sessionId]) {
+    chatStore[sessionId] = new InMemoryChatMessageHistory();
+  }
+  return chatStore[sessionId];
+}
+```
+
+</LangSwitch>
+
 Then we'll combine the agent setup and memory functionality into one clean implementation, including the `retrieve_knowledge` and `create_appointment` tools in our agent:
+
+<LangSwitch>
 
 ```python title="main.py" {20,28-29,33}
 from langchain.agents import create_tool_calling_agent, AgentExecutor
@@ -285,11 +506,68 @@ class MedicalChatbot:
     ...
 ```
 
+```typescript title="main.ts"
+import { createToolCallingAgent, AgentExecutor } from "langchain/agents";
+import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
+import { RunnableWithMessageHistory } from "@langchain/core/runnables/history";
+// ...
+
+class MedicalChatbot {
+  model: ChatOpenAI;
+  systemPrompt: string;
+  encoder: OpenAIEmbeddings;
+  client: QdrantClient;
+  // For managing appointments
+  appointments: Appointment[] = [];
+  agentWithMemory: RunnableWithMessageHistory<Record<string, any>, any>;
+
+  constructor(model: string, systemPrompt: string) {
+    this.model = new ChatOpenAI({ model });
+    this.systemPrompt = systemPrompt;
+    // For RAG engine
+    this.encoder = new OpenAIEmbeddings({ model: "text-embedding-3-small" });
+    this.client = new QdrantClient({ url: "http://localhost:6333" });
+
+    // Setup agent with memory
+    this.setupAgent();
+  }
+
+  setupAgent() {
+    // Setup the agent with tools and memory
+
+    // Create prompt messages
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", this.systemPrompt],
+      new MessagesPlaceholder("chat_history"),
+      ["human", "{input}"],
+    ]);
+
+    // Create agent
+    const tools = [this.retrieveKnowledge, this.createAppointment];
+    const agent = createToolCallingAgent({ llm: this.model, tools, prompt });
+    const agentExecutor = new AgentExecutor({ agent, tools });
+    this.agentWithMemory = new RunnableWithMessageHistory({
+      runnable: agentExecutor,
+      getMessageHistory: getSessionHistory,
+      inputMessagesKey: "input",
+      historyMessagesKey: "chat_history",
+    });
+  }
+
+  // Other methods from above goes here
+  // ...
+}
+```
+
+</LangSwitch>
+
 🎉🥳 Congratulations! You've just created a fully functional medical chatbot with memory, the ability to diagnose users, and book appointments when needed.
 
 ## Eyeball Your First Output
 
 Now that you have your chatbot, its time to query it to see if it lives up to your expectations. Create a method so you can interact with it in the CLI, and **supply your model and choice and system prompt**:
+
+<LangSwitch>
 
 ```python title="main.py" {22,23,28}
 def start_session(session_id: Optional[str] = None):
@@ -322,15 +600,66 @@ chatbot.index_knowledge("path-to-your-encyclopedia.txt")
 start_session()
 ```
 
+```typescript title="main.ts"
+import { randomUUID } from "node:crypto";
+import * as readline from "node:readline/promises";
+
+async function startSession(sessionId?: string) {
+  // Start an interactive session with the chatbot
+  console.log("Hello! I am Baymax, your personal healthcare companion.");
+  console.log("How are you feeling today? (type 'exit' to quit.)");
+
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+
+  while (true) {
+    if (!sessionId) {
+      sessionId = randomUUID();
+    }
+
+    const userInput = await rl.question("Your query: ");
+    if (userInput.toLowerCase() === "exit") {
+      break;
+    }
+
+    const response = await chatbot.agentWithMemory.invoke(
+      { input: userInput },
+      { configurable: { sessionId } },
+    );
+    console.log("Baymax:", response.output);
+  }
+
+  rl.close();
+}
+
+// These parameters will be evaluated later
+const MODEL = "gpt-4o-mini";
+const SYSTEM_PROMPT = "";
+
+// Initialize chatbot and start session
+const chatbot = new MedicalChatbot(MODEL, SYSTEM_PROMPT);
+await chatbot.indexKnowledge("path-to-your-encyclopedia.txt");
+await startSession();
+```
+
+</LangSwitch>
+
 :::tip
 The model and system prompt are the variables you'll want to be improving in the next section.
 :::
 
 Then simply execute the file in the CLI:
 
+<LangSwitch>
+
 ```bash
 python main.py
 ```
+
+```bash
+npx tsx main.ts
+```
+
+</LangSwitch>
 
 Here's an example conversation:
 

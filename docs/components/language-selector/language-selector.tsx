@@ -12,17 +12,15 @@ import { useLanguage } from "@/components/lang/language-provider";
 import type { Language } from "@/lib/lang/terms";
 import styles from "./language-selector.module.scss";
 
-function badge(id: Language, src: string, label: string) {
-  return (
-    <img
-      className={styles.icon}
-      src={src}
-      alt={`${label} logo`}
-      width={20}
-      height={20}
-    />
-  );
-}
+const badge = (src: string, label: string) => (
+  <img
+    className={styles.icon}
+    src={src}
+    alt={`${label} logo`}
+    width={20}
+    height={20}
+  />
+);
 
 interface LanguageOption {
   id: Language;
@@ -36,20 +34,19 @@ const OPTIONS: LanguageOption[] = [
   {
     id: "python",
     label: "Python",
-    icon: badge("python", "/icons/python.svg", "Python"),
+    icon: badge("/icons/python.svg", "Python"),
     description: "First class support",
   },
   {
     id: "typescript",
     label: "TypeScript",
-    icon: badge("typescript", "/icons/typescript.svg", "TypeScript"),
-    description: "Coming soon on July 20th",
-    disabled: true,
+    icon: badge("/icons/typescript.svg", "TypeScript"),
+    description: "Beta release",
   },
 ];
 
-export default function LanguageSelector() {
-  const { language, setLanguage } = useLanguage();
+const LanguageSelector = () => {
+  const { language, setLanguage, pythonOnlyPage } = useLanguage();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -65,9 +62,16 @@ export default function LanguageSelector() {
 
   const active = OPTIONS.find((o) => o.id === language) ?? OPTIONS[0];
 
-  // TypeScript (and any disabled option) is a no-op for now.
+  const isDisabled = (option: LanguageOption) =>
+    option.disabled || (option.id === "typescript" && pythonOnlyPage);
+
+  const description = (option: LanguageOption) =>
+    option.id === "typescript" && pythonOnlyPage
+      ? "Not available for this page"
+      : option.description;
+
   const select = (option: LanguageOption) => {
-    if (option.disabled) return;
+    if (isDisabled(option)) return;
     setLanguage(option.id);
     setOpen(false);
   };
@@ -85,18 +89,18 @@ export default function LanguageSelector() {
             key={option.id}
             type="button"
             onClick={() => select(option)}
-            aria-disabled={option.disabled}
+            aria-disabled={isDisabled(option)}
             className={`${styles.item} ${
-              option.disabled ? styles.disabled : ""
+              isDisabled(option) ? styles.disabled : ""
             }`}
           >
             <div className={styles.itemContent}>
               {option.icon}
               <span className={styles.text}>
                 <span className={styles.label}>{option.label}</span>
-                {option.description ? (
+                {description(option) ? (
                   <span className={styles.description}>
-                    {option.description}
+                    {description(option)}
                   </span>
                 ) : null}
               </span>
@@ -111,4 +115,6 @@ export default function LanguageSelector() {
       </PopoverContent>
     </Popover>
   );
-}
+};
+
+export default LanguageSelector;

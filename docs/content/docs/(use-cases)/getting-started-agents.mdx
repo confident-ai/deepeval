@@ -31,9 +31,17 @@ Test cases are built from traces automatically, and everything in this quickstar
 
 ## Installation
 
+<LangSwitch>
+
 ```bash
 pip install -U deepeval[inspect]
 ```
+
+```bash
+npm install deepeval
+```
+
+</LangSwitch>
 
 <details>
 
@@ -45,9 +53,17 @@ The `[inspect]` sub-module is optional and can bloat up `deepeval`'s package siz
 
 You should also run `deepeval login`:
 
+<LangSwitch>
+
 ```bash
 deepeval login
 ```
+
+```bash
+export CONFIDENT_API_KEY="confident_us_..."
+```
+
+</LangSwitch>
 
 It connects you to [Confident AI](https://www.confident-ai.com/) so you can store results, annotate, and inspect evaluated agent traces on the cloud.
 
@@ -76,6 +92,8 @@ The fastest way to start evaluating your agent is to unit test it. `deepeval` pl
 <Tabs items={["In Code", "Pull from Confident AI", "Load from CSV", "Load from JSON"]}>
 <Tab value="In Code">
 
+<LangSwitch>
+
 ```python
 from deepeval.dataset import Golden, EvaluationDataset
 
@@ -88,8 +106,24 @@ goldens = [
 dataset = EvaluationDataset(goldens=goldens)
 ```
 
+```typescript
+import { Golden, EvaluationDataset } from "deepeval";
+
+const goldens = [
+  new Golden({ input: "What is your name?" }),
+  new Golden({ input: "Choose a number between 1 and 100" }),
+  // ...
+];
+
+const dataset = new EvaluationDataset({ goldens });
+```
+
+</LangSwitch>
+
 </Tab>
 <Tab value="Pull from Confident AI">
+
+<LangSwitch>
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -97,6 +131,15 @@ from deepeval.dataset import EvaluationDataset
 dataset = EvaluationDataset()
 dataset.pull(alias="My Evals Dataset")
 ```
+
+```typescript
+import { EvaluationDataset } from "deepeval";
+
+const dataset = new EvaluationDataset();
+await dataset.pull({ alias: "My Evals Dataset" });
+```
+
+</LangSwitch>
 
 </Tab>
 <Tab value="Load from CSV">
@@ -144,6 +187,8 @@ There are **ONE** mandatory and **ONE** optional parameter for `assert_test()` i
 :::tip[Unit test individual components too]
 Since your agent is already instrumented, you can attach metrics directly to individual spans — tool calls, sub-agents, retrievers — and `assert_test()` only needs the active golden:
 
+<LangSwitch>
+
 ```python title="test_my_ai_agent.py"
 import pytest
 from deepeval import assert_test
@@ -156,6 +201,16 @@ def test_my_ai_agent(golden: Golden):
     assert_test(golden=golden)
 ```
 
+```typescript title="test_my_ai_agent.ts"
+import { myAiAgent } from "./your_app"; // traced; spans carry metrics
+
+for await (const golden of dataset.evalsIterator()) {
+  await myAiAgent(golden.input);
+}
+```
+
+</LangSwitch>
+
 See [component-level evaluation](/docs/evaluation-component-level-llm-evals) for the per-integration metric attachment surface.
 :::
 
@@ -164,9 +219,17 @@ See [component-level evaluation](/docs/evaluation-component-level-llm-evals) for
 
 ### Run with `deepeval test run`
 
+<LangSwitch>
+
 ```bash
 deepeval test run test_llm_app.py
 ```
+
+```bash
+npx tsx test_llm_app.ts
+```
+
+</LangSwitch>
 
 :::caution
 The plain `pytest` command works but is highly not recommended. `deepeval test run` adds a range of functionalities on top of Pytest for unit-testing LLMs, enabled by [8+ optional flags](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) — async behavior, error handling, repeats, identifiers, and more.
@@ -191,6 +254,8 @@ This is what the `[inspect]` sub-module you installed earlier is for — full de
 ### Add it to your CI/CD pipeline
 
 Drop `deepeval test run` into a `.yml` to unit test your agent on every push or PR. This example uses `poetry` for installation and `OPENAI_API_KEY` as your LLM judge to run evals locally. Add `CONFIDENT_API_KEY` to send results to Confident AI.
+
+<LangSwitch>
 
 ```yaml {32-33}
 name: AI Agent `deepeval` Tests
@@ -228,6 +293,39 @@ jobs:
         run: poetry run deepeval test run test_llm_app.py
 ```
 
+```yaml {27-28}
+name: AI Agent `deepeval` Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run `deepeval` Unit Tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+        run: npx tsx test_llm_app.ts
+```
+
+</LangSwitch>
+
 ✅ Done. Failing metrics now fail the build, so agent regressions get caught before they ship.
 
 </Step>
@@ -244,6 +342,8 @@ Unit testing is built for CI/CD, but during development you'll usually iterate o
 
 `evals_iterator()` works off the same `EvaluationDataset` of goldens you created [earlier](#create-a-dataset):
 
+<LangSwitch>
+
 ```python
 from deepeval.dataset import Golden, EvaluationDataset
 
@@ -255,6 +355,20 @@ goldens = [
 
 dataset = EvaluationDataset(goldens=goldens)
 ```
+
+```typescript
+import { Golden, EvaluationDataset } from "deepeval";
+
+const goldens = [
+  new Golden({ input: "What is your name?" }),
+  new Golden({ input: "Choose a number between 1 and 100" }),
+  // ...
+];
+
+const dataset = new EvaluationDataset({ goldens });
+```
+
+</LangSwitch>
 
 </Step>
 <Step>
@@ -294,6 +408,8 @@ Only integrations that emit agent spans are shown below. The OpenAI and Anthropi
 
 Mark your sub-agent with `@observe(type="agent")` and pass `metrics=[...]` to it:
 
+<LangSwitch>
+
 ```python title="main.py" showLineNumbers
 from deepeval.tracing import observe, update_current_trace
 from deepeval.metrics import TaskCompletionMetric
@@ -310,6 +426,31 @@ def supervisor_agent(query: str) -> str:
 def research_agent(query: str) -> str:
     return "..."  # your sub-agent implementation
 ```
+
+```typescript title="main.ts" showLineNumbers
+import { observe, updateCurrentTrace } from "deepeval/tracing";
+import { metrics } from "deepeval";
+// ...
+
+const researchAgent = observe({
+  type: "agent",
+  metrics: [new metrics.TaskCompletionMetric()],
+  fn: async (query: string) => {
+    return "..."; // your sub-agent implementation
+  },
+});
+
+const supervisorAgent = observe({
+  fn: async (query: string) => {
+    const research = await researchAgent(query);
+    const answer = "..."; // synthesize final answer here
+    updateCurrentTrace({ input: query, output: answer });
+    return answer;
+  },
+});
+```
+
+</LangSwitch>
 
 </Tab>
 <Tab value="LangChain">

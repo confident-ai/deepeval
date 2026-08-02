@@ -6,6 +6,8 @@ Wrap the top-level function with `@observe` and call `update_current_trace(...)`
 <Tabs items={["Async", "Sync"]}>
 <Tab value="Async">
 
+<LangSwitch>
+
 ```python title="main.py" showLineNumbers
 import asyncio
 from deepeval.tracing import observe, update_current_trace
@@ -22,6 +24,29 @@ for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     task = asyncio.create_task(my_ai_agent(golden.input))
     dataset.evaluate(task)
 ```
+
+```typescript title="main.ts" showLineNumbers
+import { metrics } from "deepeval";
+import { observe, updateCurrentTrace } from "deepeval/tracing";
+...
+
+const myAiAgent = observe({
+  type: "agent",
+  fn: async (query: string): Promise<string> => {
+    const answer = "..."; // await your LLM call here
+    updateCurrentTrace({ input: query, output: answer });
+    return answer;
+  },
+});
+
+for await (const golden of dataset.evalsIterator({
+  metrics: [new metrics.TaskCompletionMetric()],
+})) {
+  await myAiAgent(golden.input);
+}
+```
+
+</LangSwitch>
 
 </Tab>
 <Tab value="Sync">
@@ -58,6 +83,8 @@ Build your agent with `create_agent`, then pass `deepeval`'s `CallbackHandler` t
 <Tabs items={["Async", "Sync"]}>
 <Tab value="Async">
 
+<LangSwitch>
+
 ```python title="langchain_app.py" showLineNumbers
 import asyncio
 from langchain.agents import create_agent
@@ -85,6 +112,37 @@ for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     task = asyncio.create_task(run_agent(golden.input))
     dataset.evaluate(task)
 ```
+
+```typescript title="langchain_app.ts" showLineNumbers
+import { createAgent, tool } from "langchain";
+import { z } from "zod";
+import { metrics } from "deepeval";
+import { DeepEvalCallbackHandler } from "deepeval/integrations/langchain";
+...
+
+const multiply = tool(({ a, b }) => a * b, {
+  name: "multiply",
+  description: "Multiply two numbers.",
+  schema: z.object({ a: z.number(), b: z.number() }),
+});
+
+const agent = createAgent({
+  model: "openai:gpt-4o-mini",
+  tools: [multiply],
+  systemPrompt: "Be concise.",
+});
+
+for await (const golden of dataset.evalsIterator({
+  metrics: [new metrics.TaskCompletionMetric()],
+})) {
+  await agent.invoke(
+    { messages: [{ role: "user", content: golden.input }] },
+    { callbacks: [new DeepEvalCallbackHandler({})] },
+  );
+}
+```
+
+</LangSwitch>
 
 </Tab>
 <Tab value="Sync">
@@ -208,6 +266,8 @@ Drop-in replace `from openai import OpenAI` with `from deepeval.openai import Op
 <Tabs items={["Async", "Sync"]}>
 <Tab value="Async">
 
+<LangSwitch>
+
 ```python title="openai_app.py" showLineNumbers
 import asyncio
 from deepeval.openai import AsyncOpenAI
@@ -228,6 +288,27 @@ for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     task = asyncio.create_task(call_openai(golden.input))
     dataset.evaluate(task)
 ```
+
+```typescript title="openai_app.ts" showLineNumbers
+import OpenAI from "openai";
+import { metrics } from "deepeval";
+import { instrumentOpenAI } from "deepeval/openai";
+...
+
+const client = new OpenAI();
+instrumentOpenAI(client);
+
+for await (const golden of dataset.evalsIterator({
+  metrics: [new metrics.TaskCompletionMetric()],
+})) {
+  await client.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: golden.input }],
+  });
+}
+```
+
+</LangSwitch>
 
 </Tab>
 <Tab value="Sync">
@@ -555,6 +636,8 @@ Register `DeepEvalTracingProcessor` once, then build your agent with `deepeval`'
 <Tabs items={["Async", "Sync"]}>
 <Tab value="Async">
 
+<LangSwitch>
+
 ```python title="openai_agents_app.py" showLineNumbers
 import asyncio
 from agents import Runner, add_trace_processor
@@ -578,6 +661,37 @@ for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     task = asyncio.create_task(Runner.run(agent, golden.input))
     dataset.evaluate(task)
 ```
+
+```typescript title="openai_agents_app.ts" showLineNumbers
+import { Agent, run, tool, addTraceProcessor } from "@openai/agents";
+import { z } from "zod";
+import { metrics } from "deepeval";
+import { DeepEvalTracingProcessor } from "deepeval/integrations/openai-agents";
+...
+
+addTraceProcessor(new DeepEvalTracingProcessor());
+
+const getWeather = tool({
+  name: "get_weather",
+  description: "Get the weather for a city.",
+  parameters: z.object({ city: z.string() }),
+  execute: async ({ city }) => `It's always sunny in ${city}!`,
+});
+
+const agent = new Agent({
+  name: "weather_agent",
+  instructions: "Answer weather questions concisely.",
+  tools: [getWeather],
+});
+
+for await (const golden of dataset.evalsIterator({
+  metrics: [new metrics.TaskCompletionMetric()],
+})) {
+  await run(agent, golden.input);
+}
+```
+
+</LangSwitch>
 
 </Tab>
 <Tab value="Sync">

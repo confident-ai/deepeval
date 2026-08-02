@@ -15,6 +15,8 @@ Task Completion analyzes your **agent's full trace** to determine task success, 
 
 To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `TaskCompletionMetric()` to your agent's `@observe` tag.
 
+<LangSwitch>
+
 ```python
 from deepeval.tracing import observe
 from deepeval.dataset import Golden, EvaluationDataset
@@ -49,6 +51,47 @@ task_completion = TaskCompletionMetric(threshold=0.7, model="gpt-4o")
 for golden in dataset.evals_iterator(metrics=[task_completion]):
     trip_planner_agent(golden.input)
 ```
+
+```typescript
+import { observe } from "deepeval/tracing";
+import { Golden, EvaluationDataset } from "deepeval/dataset";
+import { metrics } from "deepeval";
+
+const tripPlannerAgent = observe({
+  type: "agent",
+  fn: async (input: string) => {
+    const destination = "Paris";
+    const days = 2;
+
+    const restaurantFinder = observe({
+      fn: async (city: string) => ["Le Jules Verne", "Angelina Paris", "Septime"],
+    });
+
+    const itineraryGenerator = observe({
+      fn: async (destination: string, days: number) =>
+        ["Eiffel Tower", "Louvre Museum", "Montmartre"].slice(0, days),
+    });
+
+    const itinerary = await itineraryGenerator(destination, days);
+    const restaurants = await restaurantFinder(destination);
+
+    return [...itinerary, ...restaurants];
+  },
+});
+
+// Create dataset
+const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "This is a test query" })] });
+
+// Initialize metric
+const taskCompletion = new metrics.TaskCompletionMetric({ threshold: 0.7, model: "gpt-4o" });
+
+// Loop through dataset
+for await (const golden of dataset.evalsIterator({ metrics: [taskCompletion] })) {
+  await tripPlannerAgent(golden.input);
+}
+```
+
+</LangSwitch>
 
 There are **EIGHT** optional parameters when creating a `TaskCompletionMetric`:
 

@@ -41,13 +41,25 @@ You might have noticed we didn't mention the contextual precision and contextual
 
 Using the RAG triad of metrics in `deepeval` is as simple as writing a few lines of code. First, create a test case to represent a user query, retrieved text chunks, and an LLM response:
 
+<LangSwitch>
+
 ```python
 from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(input="...", actual_output="...", retrieval_context=["..."])
 ```
 
+```typescript
+import { LLMTestCase } from "deepeval/testCase";
+
+const testCase = new LLMTestCase({ input: "...", actualOutput: "...", retrievalContext: ["..."] });
+```
+
+</LangSwitch>
+
 Here, `input` is the user query, `actual_output` is the LLM generated response, and `retrieval_context` is a list of strings representing the retrieved text chunks. Then, define the RAG triad metrics:
+
+<LangSwitch>
 
 ```python
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric, ContextualRelevancyMetric
@@ -57,6 +69,17 @@ answer_relevancy = AnswerRelevancyMetric()
 faithfulness = FaithfulnessMetric()
 contextual_relevancy = ContextualRelevancyMetric()
 ```
+
+```typescript
+import { metrics } from "deepeval";
+
+// ...
+const answerRelevancy = new metrics.AnswerRelevancyMetric();
+const faithfulness = new metrics.FaithfulnessMetric();
+const contextualRelevancy = new metrics.ContextualRelevancyMetric();
+```
+
+</LangSwitch>
 
 :::tip
 You can find how these metrics are implemented and calculated on their respective documentation pages:
@@ -69,12 +92,23 @@ You can find how these metrics are implemented and calculated on their respectiv
 
 Lastly, evaluate your test case using these metrics:
 
+<LangSwitch>
+
 ```python
 from deepeval import evaluate
 
 ...
 evaluate(test_cases=[test_case], metrics=[answer_relevancy, faithfulness, contextual_relevancy])
 ```
+
+```typescript
+import { evaluate } from "deepeval";
+
+// ...
+await evaluate([testCase], [answerRelevancy, faithfulness, contextualRelevancy]);
+```
+
+</LangSwitch>
 
 Congratulations 🎉! You've learnt everything you need to know for the RAG triad.
 

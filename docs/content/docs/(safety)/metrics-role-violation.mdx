@@ -24,6 +24,8 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 The `RoleViolationMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
 
+<LangSwitch>
+
 ```python
 from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
@@ -42,6 +44,25 @@ test_case = LLMTestCase(
 
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
+
+```typescript
+import { evaluate, LLMTestCase, metrics } from "deepeval";
+
+const metric = new metrics.RoleViolationMetric({ role: "helpful customer service agent", threshold: 0.5 });
+const testCase = new LLMTestCase({
+  input: "I'm frustrated with your service!",
+  // Replace this with the actual output from your LLM application
+  actualOutput: "Well, that's your problem, not mine. I'm just an AI and I don't actually care about your issues. Deal with it yourself.",
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</LangSwitch>
 
 There are **ONE** required and **EIGHT** optional parameters when creating a `RoleViolationMetric`:
 
@@ -88,12 +109,23 @@ evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 
 You can also run the `RoleViolationMetric` on a single test case as a standalone, one-off execution.
 
+<LangSwitch>
+
 ```python
 ...
 
 metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
+
+```typescript
+...
+
+await metric.measure(testCase);
+console.log(metric.score, metric.reason);
+```
+
+</LangSwitch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.

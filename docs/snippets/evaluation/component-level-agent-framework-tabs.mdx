@@ -6,6 +6,8 @@ Wrap the top-level function with `@observe`, set trace-level fields with `update
 <Tabs items={["Async", "Sync"]}>
 <Tab value="Async">
 
+<LangSwitch>
+
 ```python title="main.py" showLineNumbers
 import asyncio
 from deepeval.tracing import observe, update_current_span, update_current_trace
@@ -36,6 +38,45 @@ for golden in dataset.evals_iterator():
     task = asyncio.create_task(my_ai_agent(golden.input))
     dataset.evaluate(task)
 ```
+
+```typescript title="main.ts" showLineNumbers
+import { LLMTestCase, metrics } from "deepeval";
+import { observe, updateCurrentSpan, updateCurrentTrace } from "deepeval/tracing";
+...
+
+const myAiAgent = observe({
+  type: "agent",
+  fn: async (query: string): Promise<string> => {
+    const chunks = await retrieve(query);
+    const answer = await generate(query, chunks);
+    updateCurrentTrace({ input: query, output: answer });
+    return answer;
+  },
+});
+
+const retrieve = observe({
+  type: "retriever",
+  fn: async (query: string): Promise<string[]> => ["..."],
+});
+
+const generate = observe({
+  type: "llm",
+  metrics: [new metrics.AnswerRelevancyMetric()],
+  fn: async (query: string, chunks: string[]): Promise<string> => {
+    const response = "..."; // await your LLM call here with `query` and `chunks`
+    updateCurrentSpan({
+      testCase: new LLMTestCase({ input: query, actualOutput: response, retrievalContext: chunks }),
+    });
+    return response;
+  },
+});
+
+for await (const golden of dataset.evalsIterator()) {
+  await myAiAgent(golden.input);
+}
+```
+
+</LangSwitch>
 
 </Tab>
 <Tab value="Sync">

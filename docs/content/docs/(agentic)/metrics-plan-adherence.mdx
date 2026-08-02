@@ -15,6 +15,8 @@ Plan Adherence metric analyzes your **agent's full trace** to extract the plan a
 
 To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `PlanAdherenceMetric()` to your agent's `@observe` tag or in the `evals_iterator` method.
 
+<LangSwitch>
+
 ```python
 from somewhere import llm
 from deepeval.tracing import observe, update_current_trace
@@ -50,6 +52,50 @@ metric = PlanAdherenceMetric(threshold=0.7, model="gpt-4o")
 for golden in dataset.evals_iterator(metrics=[metric]):
     agent(golden.input)
 ```
+
+```typescript
+import { llm } from "./somewhere";
+import { observe, updateCurrentTrace } from "deepeval/tracing";
+import { Golden, EvaluationDataset } from "deepeval/dataset";
+import { ToolCall, metrics } from "deepeval";
+
+const toolCall = observe({
+  type: "tool",
+  fn: async (input: string) => {
+    // ...
+    return [new ToolCall({ name: "CheckWhether" })];
+  },
+});
+
+const agent = observe({
+  type: "agent",
+  fn: async (input: string) => {
+    const tools = await toolCall(input);
+    const output = await llm(input, tools);
+    updateCurrentTrace({
+      input,
+      output,
+      toolsCalled: tools,
+    });
+    return output;
+  },
+});
+
+// Create dataset
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What's the weather like in SF?" })],
+});
+
+// Initialize metric
+const metric = new metrics.PlanAdherenceMetric({ threshold: 0.7, model: "gpt-4o" });
+
+// Loop through dataset
+for await (const golden of dataset.evalsIterator({ metrics: [metric] })) {
+  await agent(golden.input);
+}
+```
+
+</LangSwitch>
 
 There are **EIGHT** optional parameters when creating a `PlanAdherenceMetric`:
 

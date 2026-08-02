@@ -115,6 +115,8 @@ Not use case specific, but still useful for some use cases:
 
 Your LLM app can be evaluated **end-to-end** (component-level example further below) by providing a list of metrics and test cases:
 
+<LangSwitch>
+
 ```python title="main.py"
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
@@ -125,6 +127,17 @@ evaluate(
     test_cases=[LLMTestCase(input="What's `deepeval`?", actual_output="Your favorite eval framework's favorite evals framework.")]
 )
 ```
+
+```typescript title="main.ts"
+import { evaluate, LLMTestCase, metrics } from "deepeval";
+
+await evaluate(
+  [new LLMTestCase({ input: "What's `deepeval`?", actualOutput: "Your favorite eval framework's favorite evals framework." })],
+  [new metrics.AnswerRelevancyMetric()]
+);
+```
+
+</LangSwitch>
 
 If you're logged into [Confident AI](https://confident-ai.com) before running an evaluation (`deepeval login` or `deepeval view` in the CLI), you'll also get entire testing reports on the platform:
 
@@ -157,6 +170,8 @@ Apart from the variety of metrics offered, `deepeval`'s metrics are a step up to
 <Tabs items={["G-Eval", "Conversational G-Eval"]}>
 <Tab value="G-Eval">
 
+<LangSwitch>
+
 ```python
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import GEval
@@ -173,8 +188,28 @@ correctness.measure(test_case)
 print(correctness.score, correctness.reason)
 ```
 
+```typescript
+import { LLMTestCase, SingleTurnParams } from "deepeval/testCase";
+import { metrics } from "deepeval";
+
+const testCase = new LLMTestCase({ input: "...", actualOutput: "...", expectedOutput: "..." });
+const correctness = new metrics.GEval({
+  name: "Correctness",
+  criteria: "Correctness - determine if the actual output is correct according to the expected output.",
+  evaluationParams: [SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
+  strictMode: true,
+});
+
+await correctness.measure(testCase);
+console.log(correctness.score, correctness.reason);
+```
+
+</LangSwitch>
+
 </Tab>
 <Tab value="Conversational G-Eval">
+
+<LangSwitch>
 
 ```python
 from deepeval.test_case import Turn, MultiTurnParams, ConversationalTestCase
@@ -191,6 +226,24 @@ professionalism_metric = ConversationalGEval(
 professionalism_metric.measure(convo_test_case)
 print(professionalism_metric.score, professionalism_metric.reason)
 ```
+
+```typescript
+import { Turn, MultiTurnParams, ConversationalTestCase } from "deepeval/testCase";
+import { metrics } from "deepeval";
+
+const convoTestCase = new ConversationalTestCase({ turns: [new Turn({ role: "user", content: "..." }), new Turn({ role: "assistant", content: "..." })] });
+const professionalismMetric = new metrics.ConversationalGEval({
+  name: "Professionalism",
+  criteria: "Determine whether the assistant has acted professionally based on the content.",
+  evaluationParams: [MultiTurnParams.CONTENT],
+  strictMode: true,
+});
+
+await professionalismMetric.measure(convoTestCase);
+console.log(professionalismMetric.score, professionalismMetric.reason);
+```
+
+</LangSwitch>
 
 </Tab>
 </Tabs>
@@ -218,6 +271,8 @@ The most used RAG metrics include:
 
 Which can be simply imported from the `deepeval.metrics` module:
 
+<LangSwitch>
+
 ```python title="main.py"
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
@@ -228,6 +283,18 @@ relevancy = AnswerRelevancyMetric(threshold=0.5)
 relevancy.measure(test_case)
 print(relevancy.score, relevancy.reason)
 ```
+
+```typescript title="main.ts"
+import { LLMTestCase, metrics } from "deepeval";
+
+const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
+const relevancy = new metrics.AnswerRelevancyMetric({ threshold: 0.5 });
+
+await relevancy.measure(testCase);
+console.log(relevancy.score, relevancy.reason);
+```
+
+</LangSwitch>
 
 </Tab>
 <Tab value="Agents">
@@ -271,6 +338,8 @@ Chatbots require "conversational" (or multi-turn) metrics and they include:
 
 You'll need to also use [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases#conversational-test-case)s instead of regular `LLMTestCase` for conversational metrics:
 
+<LangSwitch>
+
 ```python title="main.py"
 from deepeval.test_case import Turn, ConversationalTestCase
 from deepeval.metrics import ConversationalGEval
@@ -282,8 +351,22 @@ role_adherence.measure(convo_test_case)
 print(role_adherence.score, role_adherence.reason)
 ```
 
+```typescript title="main.ts"
+import { Turn, ConversationalTestCase, metrics } from "deepeval";
+
+const convoTestCase = new ConversationalTestCase({ turns: [new Turn({ role: "user", content: "..." }), new Turn({ role: "assistant", content: "..." })] });
+const roleAdherence = new metrics.RoleAdherenceMetric({ threshold: 0.5 });
+
+await roleAdherence.measure(convoTestCase);
+console.log(roleAdherence.score, roleAdherence.reason);
+```
+
+</LangSwitch>
+
 </Tab>
 <Tab value="Images">
+
+<LangSwitch>
 
 ```python
 from deepeval.test_case import LLMTestCase, MLLMImage
@@ -296,8 +379,23 @@ image_coherence.measure(test_case)
 print(image_coherence.score, image_coherence.reason)
 ```
 
+```typescript
+import { LLMTestCase, MLLMImage } from "deepeval/testCase";
+import { metrics } from "deepeval";
+
+const testCase = new LLMTestCase({ input: `What does this image say? ${new MLLMImage({ url: "..." })}`, actualOutput: "No idea!" });
+const imageCoherence = new metrics.ImageCoherenceMetric({ threshold: 0.5 });
+
+await imageCoherence.measure(testCase);
+console.log(imageCoherence.score, imageCoherence.reason);
+```
+
+</LangSwitch>
+
 </Tab>
 <Tab value="Safety">
+
+<LangSwitch>
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -309,6 +407,18 @@ bias = BiasMetric(threshold=0.5)
 bias.measure(test_case)
 print(bias.score, bias.reason)
 ```
+
+```typescript
+import { LLMTestCase, metrics } from "deepeval";
+
+const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
+const bias = new metrics.BiasMetric({ threshold: 0.5 });
+
+await bias.measure(testCase);
+console.log(bias.score, bias.reason);
+```
+
+</LangSwitch>
 
 </Tab>
 </Tabs>
@@ -566,6 +676,8 @@ There are three ways you can use metrics:
 
 To run end-to-end evaluations of your LLM system using any metric of your choice, simply provide a list of [test cases](/docs/evaluation-test-cases) to evaluate your metrics against:
 
+<LangSwitch>
+
 ```python
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
@@ -576,6 +688,16 @@ test_case = LLMTestCase(input="...", actual_output="...")
 evaluate(test_cases=[test_case], metrics=[AnswerRelevancyMetric()])
 ```
 
+```typescript
+import { evaluate, LLMTestCase, metrics } from "deepeval";
+
+const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
+
+await evaluate([testCase], [new metrics.AnswerRelevancyMetric()]);
+```
+
+</LangSwitch>
+
 The [`evaluate()` function](/docs/evaluation-introduction#evaluating-without-pytest) or `deepeval test run` **is the best way to run evaluations**. They offer tons of features out of the box, including caching, parallelization, cost tracking, error handling, and integration with [Confident AI.](https://confident-ai.com)
 
 :::tip
@@ -585,6 +707,8 @@ The [`evaluate()` function](/docs/evaluation-introduction#evaluating-without-pyt
 ### For Component-Level Evals
 
 To run component-level evaluations of your LLM system using any metric of your choice, simply decorate your components with `@observe` and create [test cases](/docs/evaluation-test-cases) at runtime:
+
+<LangSwitch>
 
 ```python
 from deepeval.dataset import EvaluationDataset, Golden
@@ -612,6 +736,39 @@ for goldens in dataset.evals_iterator():
     llm_app(golden.input)
 ```
 
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+import { LLMTestCase, metrics } from "deepeval";
+
+// 2. Supply metric at any component
+const nestedComponent = observe({
+  metrics: [new metrics.AnswerRelevancyMetric()],
+  fn: async () => {
+    // 3. Create test case at runtime
+    updateCurrentSpan({ testCase: new LLMTestCase({ input: "...", actualOutput: "..." }) });
+  },
+});
+
+// 1. observe() traces LLM components
+const llmApp = observe({
+  fn: async (input: string) => {
+    await nestedComponent();
+  },
+});
+
+// 4. Create dataset
+const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Test input" })] });
+
+// 5. Loop through dataset
+for await (const golden of dataset.evalsIterator()) {
+  // Call LLM app
+  await llmApp(golden.input);
+}
+```
+
+</LangSwitch>
+
 ### For One-Off Evals
 
 You can also execute each metric individually. All metrics in `deepeval`, including [custom metrics that you create](/docs/metrics-custom):
@@ -634,6 +791,8 @@ Visit an individual metric page to learn how they are calculated, and what is re
 
 Here's a quick example:
 
+<LangSwitch>
+
 ```python
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
@@ -647,6 +806,21 @@ metric.measure(test_case)
 
 print(metric.score, metric.reason)
 ```
+
+```typescript
+import { LLMTestCase, metrics } from "deepeval";
+
+// Initialize a test case
+const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
+
+// Initialize metric with threshold
+const metric = new metrics.AnswerRelevancyMetric({ threshold: 0.5 });
+await metric.measure(testCase);
+
+console.log(metric.score, metric.reason);
+```
+
+</LangSwitch>
 
 All of `deepeval`'s metrics give a `reason` alongside its score.
 
@@ -678,6 +852,8 @@ In both cases, "Metric finished!" will wait for `metric.measure()` to finish run
 
 To measure multiple metrics at once and **NOT** block the main thread, use the asynchronous `a_measure()` method instead.
 
+<LangSwitch>
+
 ```python
 import asyncio
 
@@ -697,9 +873,26 @@ async def long_running_function():
 asyncio.run(long_running_function())
 ```
 
+```typescript
+// ...
+
+// measure() is already async — these will all run at the same time
+await Promise.all([
+  metric1.measure(testCase),
+  metric2.measure(testCase),
+  metric3.measure(testCase),
+  metric4.measure(testCase),
+]);
+console.log("Metrics finished!");
+```
+
+</LangSwitch>
+
 ## Debug A Metric Judgement
 
 You can turn on `verbose_mode` for **ANY** `deepeval` metric at metric initialization to debug a metric whenever the `measure()` or `a_measure()` method is called:
+
+<LangSwitch>
 
 ```python
 ...
@@ -707,6 +900,15 @@ You can turn on `verbose_mode` for **ANY** `deepeval` metric at metric initializ
 metric = AnswerRelevancyMetric(verbose_mode=True)
 metric.measure(test_case)
 ```
+
+```typescript
+// ...
+
+const metric = new metrics.AnswerRelevancyMetric({ verboseMode: true });
+await metric.measure(testCase);
+```
+
+</LangSwitch>
 
 :::note
 Turning `verbose_mode` on will print the inner workings of a metric whenever `measure()` or `a_measure()` is called.
@@ -767,11 +969,21 @@ You can find examples of how this can be done in more detail on the **Customize 
 
 Every metric accepts a `threshold` parameter (defaulted to `0.5`) that decides whether it passes or fails: `metric.is_successful()` is only `True` if `metric.score` reaches the `threshold` (or stays below it, for "lower is better" metrics such as `BiasMetric`).
 
+<LangSwitch>
+
 ```python
 from deepeval.metrics import AnswerRelevancyMetric
 
 metric = AnswerRelevancyMetric(threshold=0.7)
 ```
+
+```typescript
+import { metrics } from "deepeval";
+
+const metric = new metrics.AnswerRelevancyMetric({ threshold: 0.7 });
+```
+
+</LangSwitch>
 
 You can also set `threshold=None` to run a metric in **score-only mode**. The score and reason are still computed, recorded, and reported, but the metric has no pass/fail opinion — `metric.is_successful()` returns `None`, and the metric never contributes to its test case's pass/fail status.
 

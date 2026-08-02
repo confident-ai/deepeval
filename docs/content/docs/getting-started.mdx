@@ -28,15 +28,31 @@ This page walks you through setting up DeepEval **by hand**. If you'd rather ins
 
 In a newly created virtual environment, run:
 
+<LangSwitch>
+
 ```bash
 pip install -U deepeval
 ```
 
+```bash
+npm install deepeval
+```
+
+</LangSwitch>
+
 `deepeval` runs evaluations locally on your environment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://www.confident-ai.com), an AI quality platform with observability, evals, and monitoring that DeepEval integrates with natively:
+
+<LangSwitch>
 
 ```bash
 deepeval login
 ```
+
+```bash
+export CONFIDENT_API_KEY="confident_us_..."
+```
+
+</LangSwitch>
 
 Your browser handles authentication only. After you sign in or create an
 account, return to the terminal to enter your name and organization, confirm
@@ -81,6 +97,8 @@ An [LLM test case](/docs/evaluation-test-cases#llm-test-case) in `deepeval` repr
 
 Run `touch test_example.py` in your terminal and paste in the following code:
 
+<LangSwitch>
+
 ```python title="test_example.py"
 from deepeval import assert_test
 from deepeval.test_case import LLMTestCase, SingleTurnParams
@@ -102,11 +120,41 @@ def test_correctness():
     assert_test(test_case, [correctness_metric])
 ```
 
+```typescript title="test_example.ts"
+import { evaluate, LLMTestCase, metrics } from "deepeval";
+import { SingleTurnParams } from "deepeval/testCase";
+
+const correctnessMetric = new metrics.GEval({
+  name: "Correctness",
+  criteria: "Determine if the 'actual output' is correct based on the 'expected output'.",
+  evaluationParams: [SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
+  threshold: 0.5,
+});
+const testCase = new LLMTestCase({
+  input: "I have a persistent cough and fever. Should I be worried?",
+  // Replace this with the actual output from your LLM application
+  actualOutput: "A persistent cough and fever could be a viral infection or something more serious. See a doctor if symptoms worsen or don't improve in a few days.",
+  expectedOutput: "A persistent cough and fever could indicate a range of illnesses, from a mild viral infection to more serious conditions like pneumonia or COVID-19. You should seek medical attention if your symptoms worsen, persist for more than a few days, or are accompanied by difficulty breathing, chest pain, or other concerning signs.",
+});
+
+await evaluate([testCase], [correctnessMetric]);
+```
+
+</LangSwitch>
+
 Then, run `deepeval test run` from the root directory of your project to evaluate your LLM app **end-to-end**:
+
+<LangSwitch>
 
 ```bash
 deepeval test run test_example.py
 ```
+
+```bash
+npx tsx test_example.ts
+```
+
+</LangSwitch>
 
 Congratulations! Your test case should have passed ✅ Let's breakdown what happened.
 
@@ -129,6 +177,8 @@ A [conversational test case](/docs/evaluation-multiturn-test-cases#conversationa
 
 Run `touch test_example.py` in your terminal and paste in the following code:
 
+<LangSwitch>
+
 ```python title="test_example.py"
 from deepeval import assert_test
 from deepeval.test_case import Turn, ConversationalTestCase
@@ -149,11 +199,41 @@ def test_professionalism():
     assert_test(test_case, [professionalism_metric])
 ```
 
+```typescript title="test_example.ts"
+import { evaluate, Turn, ConversationalTestCase, metrics } from "deepeval";
+import { MultiTurnParams } from "deepeval/testCase";
+
+const professionalismMetric = new metrics.ConversationalGEval({
+  name: "Professionalism",
+  criteria: "Determine whether the assistant has acted professionally based on the content.",
+  evaluationParams: [MultiTurnParams.CONTENT],
+  threshold: 0.5,
+});
+const testCase = new ConversationalTestCase({
+  turns: [
+    new Turn({ role: "user", content: "What is DeepEval?" }),
+    new Turn({ role: "assistant", content: "DeepEval is an open-source LLM eval package." }),
+  ],
+});
+
+await evaluate([testCase], [professionalismMetric]);
+```
+
+</LangSwitch>
+
 Then, run `deepeval test run` from the root directory of your project to evaluate your LLM app **end-to-end**:
+
+<LangSwitch>
 
 ```bash
 deepeval test run test_example.py
 ```
+
+```bash
+npx tsx test_example.ts
+```
+
+</LangSwitch>
 
 🎉 Congratulations! Your test case should have passed ✅ Let's breakdown what happened.
 
@@ -248,11 +328,21 @@ While end-to-end evals treat your LLM app as a black-box, you also evaluate **in
 
 First, create a small dataset to evaluate against:
 
+<LangSwitch>
+
 ```python
 from deepeval.dataset import EvaluationDataset, Golden
 
 dataset = EvaluationDataset(goldens=[Golden(input="Why is the sky blue?")])
 ```
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Why is the sky blue?" })] });
+```
+
+</LangSwitch>
 
 Pick your stack below, paste the snippet, and run it. Every integration ships an **Async** sample (the default — runs goldens concurrently) and a **Sync** sample (one golden at a time, useful for debugging or rate-limited providers):
 
@@ -297,6 +387,8 @@ CONFIDENT_API_KEY="confident_us..."
 
 Then add a "metric collection" to your trace:
 
+<LangSwitch>
+
 ```python
 from deepeval.tracing import observe, update_current_trace
 
@@ -306,6 +398,21 @@ def ai_agent(input: str) -> str:
     update_current_trace(metric_collection="My Online Evals",)
     return output
 ```
+
+```typescript
+import { observe, updateCurrentTrace } from "deepeval/tracing";
+
+const aiAgent = observe({
+  type: "agent",
+  fn: async (input: string): Promise<string> => {
+    const output = "Your AI agent output";
+    updateCurrentTrace({ metricCollection: "My Online Evals" });
+    return output;
+  },
+});
+```
+
+</LangSwitch>
 
 ✅ Done. All invocations of your AI agent will now have online evals ran on it.
 

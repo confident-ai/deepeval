@@ -30,6 +30,8 @@ To begin, create a class that inherits from `deepeval`'s `BaseMetric` class:
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
 
+<LangSwitch>
+
 ```python
 from deepeval.metrics import BaseMetric
 
@@ -37,10 +39,22 @@ class CustomMetric(BaseMetric):
     ...
 ```
 
+```typescript
+import { metrics } from "deepeval";
+
+class CustomMetric extends metrics.BaseMetric {
+  // ...
+}
+```
+
+</LangSwitch>
+
 This is important because the `BaseMetric` class will help `deepeval` acknowledge your custom metric as a single-turn metric during evaluation.
 
 </Tab>
 <Tab value="Multi-Turn">
+
+<LangSwitch>
 
 ```python
 from deepeval.metrics import BaseConversationalMetric
@@ -48,6 +62,16 @@ from deepeval.metrics import BaseConversationalMetric
 class CustomConversationalMetric(BaseConversationalMetric):
     ...
 ```
+
+```typescript
+import { metrics } from "deepeval";
+
+class CustomConversationalMetric extends metrics.BaseConversationalMetric {
+  // ...
+}
+```
+
+</LangSwitch>
 
 This is important because the `BaseConversationalMetric` class will help `deepeval` acknowledge your custom metric as a multi-turn metric  during evaluation.
 
@@ -74,6 +98,8 @@ The `__init__()` method is a great place to set these properties:
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
 
+<LangSwitch>
+
 ```python
 from deepeval.metrics import BaseMetric
 
@@ -95,8 +121,30 @@ class CustomMetric(BaseMetric):
         self.async_mode = async_mode
 ```
 
+```typescript
+import { metrics } from "deepeval";
+
+class CustomMetric extends metrics.BaseMetric {
+  constructor(
+    threshold: number = 0.5,
+    // Optional
+    evaluationModel?: string,
+    includeReason: boolean = true,
+    strictMode: boolean = true,
+  ) {
+    super(threshold, { includeReason, strictMode });
+    // Optional
+    this.evaluationModel = evaluationModel;
+  }
+}
+```
+
+</LangSwitch>
+
 </Tab>
 <Tab value="Multi-Turn">
+
+<LangSwitch>
 
 ```python
 from deepeval.metrics import BaseConversationalMetric
@@ -118,6 +166,26 @@ class CustomConversationalMetric(BaseConversationalMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
 ```
+
+```typescript
+import { metrics } from "deepeval";
+
+class CustomConversationalMetric extends metrics.BaseConversationalMetric {
+  constructor(
+    threshold: number = 0.5,
+    // Optional
+    evaluationModel?: string,
+    includeReason: boolean = true,
+    strictMode: boolean = true,
+  ) {
+    super(threshold, { includeReason, strictMode });
+    // Optional
+    this.evaluationModel = evaluationModel;
+  }
+}
+```
+
+</LangSwitch>
 
 </Tab>
 </Tabs>
@@ -153,6 +221,8 @@ You can also optionally set `self.reason` in the measure methods (if you're usin
 
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
+
+<LangSwitch>
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -190,8 +260,40 @@ class CustomMetric(BaseMetric):
             raise
 ```
 
+```typescript
+import { metrics } from "deepeval";
+import { LLMTestCase } from "deepeval/testCase";
+
+class CustomMetric extends metrics.BaseMetric {
+  // ...
+
+  // In TypeScript, measure() is async-only, so there is no
+  // separate a_measure() to implement
+  async measure(testCase: LLMTestCase): Promise<number> {
+    // Although not required, we recommend catching errors
+    // in a try block
+    try {
+      this.score = await generateHypotheticalScore(testCase);
+      if (this.includeReason) {
+        this.reason = await generateHypotheticalReason(testCase);
+      }
+      this.success = this.score >= this.threshold;
+      return this.score;
+    } catch (e) {
+      // set metric error and re-throw it
+      this.error = String(e);
+      throw e;
+    }
+  }
+}
+```
+
+</LangSwitch>
+
 </Tab>
 <Tab value="Multi-Turn">
+
+<LangSwitch>
 
 ```python
 from deepeval.metrics import BaseConversationalMetric
@@ -229,6 +331,36 @@ class CustomConversationalMetric(BaseConversationalMetric):
             raise
 ```
 
+```typescript
+import { metrics } from "deepeval";
+import { ConversationalTestCase } from "deepeval/testCase";
+
+class CustomConversationalMetric extends metrics.BaseConversationalMetric {
+  // ...
+
+  // In TypeScript, measure() is async-only, so there is no
+  // separate a_measure() to implement
+  async measure(testCase: ConversationalTestCase): Promise<number> {
+    // Although not required, we recommend catching errors
+    // in a try block
+    try {
+      this.score = await generateHypotheticalScore(testCase);
+      if (this.includeReason) {
+        this.reason = await generateHypotheticalReason(testCase);
+      }
+      this.success = this.score >= this.threshold;
+      return this.score;
+    } catch (e) {
+      // set metric error and re-throw it
+      this.error = String(e);
+      throw e;
+    }
+  }
+}
+```
+
+</LangSwitch>
+
 </Tab>
 </Tabs>
 
@@ -259,6 +391,8 @@ Under the hood, `deepeval` calls the `is_successful()` method to determine the s
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
 
+<LangSwitch>
+
 ```python
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
@@ -277,8 +411,29 @@ class CustomMetric(BaseMetric):
         return self.success
 ```
 
+```typescript
+import { metrics } from "deepeval";
+
+class CustomMetric extends metrics.BaseMetric {
+  // ...
+
+  isSuccessful(): boolean {
+    if (this.error != null) {
+      this.success = false;
+    } else {
+      this.success = (this.score ?? 0) >= this.threshold;
+    }
+    return this.success;
+  }
+}
+```
+
+</LangSwitch>
+
 </Tab>
 <Tab value="Multi-Turn">
+
+<LangSwitch>
 
 ```python
 from deepeval.metrics import BaseConversationalMetric
@@ -297,6 +452,25 @@ class CustomConversationalMetric(BaseConversationalMetric):
                 self.success = False
         return self.success
 ```
+
+```typescript
+import { metrics } from "deepeval";
+
+class CustomConversationalMetric extends metrics.BaseConversationalMetric {
+  // ...
+
+  isSuccessful(): boolean {
+    if (this.error != null) {
+      this.success = false;
+    } else {
+      this.success = (this.score ?? 0) >= this.threshold;
+    }
+    return this.success;
+  }
+}
+```
+
+</LangSwitch>
 
 </Tab>
 </Tabs>
@@ -308,6 +482,8 @@ Probably the easiest step, all that's left is to name your custom metric:
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
 
+<LangSwitch>
+
 ```python
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
@@ -320,8 +496,24 @@ class CustomMetric(BaseMetric):
         return "My Custom Metric"
 ```
 
+```typescript
+import { metrics } from "deepeval";
+
+class CustomMetric extends metrics.BaseMetric {
+  // ...
+
+  get name(): string {
+    return "My Custom Metric";
+  }
+}
+```
+
+</LangSwitch>
+
 </Tab>
 <Tab value="Multi-Turn">
+
+<LangSwitch>
 
 ```python
 from deepeval.metrics import BaseConversationalMetric
@@ -334,6 +526,20 @@ class CustomConversationalMetric(BaseConversationalMetric):
     def __name__(self):
         return "My Custom Metric"
 ```
+
+```typescript
+import { metrics } from "deepeval";
+
+class CustomConversationalMetric extends metrics.BaseConversationalMetric {
+  // ...
+
+  get name(): string {
+    return "My Custom Metric";
+  }
+}
+```
+
+</LangSwitch>
 
 </Tab>
 </Tabs>
@@ -405,6 +611,8 @@ print(metric.is_successful())
 In this example, we'll be combining two default `deepeval` metrics as our custom metric, hence why we're calling it a "composite" metric.
 
 We'll be combining the `AnswerRelevancyMetric` and `FaithfulnessMetric`, since we rarely see a user that cares about one but not the other.
+
+<LangSwitch>
 
 ```python
 from deepeval.metrics import BaseMetric, AnswerRelevancyMetric, FaithfulnessMetric
@@ -508,6 +716,95 @@ class FaithfulRelevancyMetric(BaseMetric):
         # Custom logic to set success
         self.success = self.score >= self.threshold
 ```
+
+```typescript
+import { metrics } from "deepeval";
+import { LLMTestCase } from "deepeval/testCase";
+
+class FaithfulRelevancyMetric extends metrics.BaseMetric {
+  constructor(
+    threshold: number = 0.5,
+    evaluationModel: string = "gpt-4-turbo",
+    includeReason: boolean = true,
+    strictMode: boolean = false,
+  ) {
+    super(strictMode ? 1 : threshold, { includeReason, strictMode });
+    this.evaluationModel = evaluationModel;
+  }
+
+  async measure(testCase: LLMTestCase): Promise<number> {
+    try {
+      const [relevancyMetric, faithfulnessMetric] = this.initializeMetrics();
+      // Remember, deepeval's default metrics follow the same pattern as your custom metric!
+      await relevancyMetric.measure(testCase);
+      await faithfulnessMetric.measure(testCase);
+
+      // Custom logic to set score, reason, and success
+      this.setScoreReasonSuccess(relevancyMetric, faithfulnessMetric);
+      return this.score;
+    } catch (e) {
+      // Set and re-throw error
+      this.error = String(e);
+      throw e;
+    }
+  }
+
+  isSuccessful(): boolean {
+    if (this.error != null) {
+      this.success = false;
+    }
+    return this.success;
+  }
+
+  get name(): string {
+    return "Composite Relevancy Faithfulness Metric";
+  }
+
+  //////////////////////
+  /// Helper methods ///
+  //////////////////////
+  initializeMetrics() {
+    const relevancyMetric = new metrics.AnswerRelevancyMetric({
+      threshold: this.threshold,
+      model: this.evaluationModel,
+      includeReason: this.includeReason,
+      strictMode: this.strictMode,
+    });
+    const faithfulnessMetric = new metrics.FaithfulnessMetric({
+      threshold: this.threshold,
+      model: this.evaluationModel,
+      includeReason: this.includeReason,
+      strictMode: this.strictMode,
+    });
+    return [relevancyMetric, faithfulnessMetric] as const;
+  }
+
+  setScoreReasonSuccess(
+    relevancyMetric: metrics.BaseMetric,
+    faithfulnessMetric: metrics.BaseMetric,
+  ) {
+    // Get scores and reasons for both
+    const relevancyScore = relevancyMetric.score;
+    const relevancyReason = relevancyMetric.reason;
+    const faithfulnessScore = faithfulnessMetric.score;
+    const faithfulnessReason = faithfulnessMetric.reason;
+
+    // Custom logic to set score
+    const compositeScore = Math.min(relevancyScore, faithfulnessScore);
+    this.score = this.strictMode && compositeScore < this.threshold ? 0 : compositeScore;
+
+    // Custom logic to set reason
+    if (this.includeReason) {
+      this.reason = relevancyReason + "\n" + faithfulnessReason;
+    }
+
+    // Custom logic to set success
+    this.success = this.score >= this.threshold;
+  }
+}
+```
+
+</LangSwitch>
 
 Now go ahead and try to use it:
 

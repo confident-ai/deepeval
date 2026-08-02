@@ -23,6 +23,8 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 ## Usage
 
+<LangSwitch>
+
 ```python
 from deepeval import evaluate
 from deepeval.metrics import ExactMatchMetric
@@ -46,6 +48,29 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+```typescript
+import { evaluate, metrics, LLMTestCase } from "deepeval";
+
+const metric = new metrics.ExactMatchMetric({
+  threshold: 1.0,
+  verboseMode: true,
+});
+
+const testCase = new LLMTestCase({
+  input: "Translate 'Hello, how are you?' in french",
+  actualOutput: "Bonjour, comment ça va ?",
+  expectedOutput: "Bonjour, comment allez-vous ?",
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</LangSwitch>
+
 There are **THREE** optional parameters when creating an `ExactMatchMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `1.0`.
@@ -56,12 +81,23 @@ There are **THREE** optional parameters when creating an `ExactMatchMetric`:
 
 You can also run the `ExactMatchMetric` on a single test case as a standalone, one-off execution.
 
+<LangSwitch>
+
 ```python
 ...
 
 metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
+
+```typescript
+// ...
+
+await metric.measure(testCase);
+console.log(metric.score, metric.reason);
+```
+
+</LangSwitch>
 
 ## How Is It Calculated?
 

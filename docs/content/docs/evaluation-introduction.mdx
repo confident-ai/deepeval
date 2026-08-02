@@ -57,17 +57,29 @@ Running an LLM evaluation creates a **test run** — a collection of test cases 
 
 `deepeval` offers 30+ evaluation metrics, most of which are evaluated using LLMs (visit the [metrics section](/docs/metrics-introduction#types-of-metrics) to learn why).
 
+<LangSwitch>
+
 ```
 from deepeval.metrics import AnswerRelevancyMetric
 
 answer_relevancy_metric = AnswerRelevancyMetric()
 ```
 
+```typescript
+import { metrics } from "deepeval";
+
+const answerRelevancyMetric = new metrics.AnswerRelevancyMetric();
+```
+
+</LangSwitch>
+
 You'll need to create a test case to run `deepeval`'s metrics.
 
 ## Test Cases
 
 In `deepeval`, a test case represents an [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) and allows you to use evaluation metrics you have defined to unit test LLM applications.
+
+<LangSwitch>
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -79,7 +91,21 @@ test_case = LLMTestCase(
 )
 ```
 
+```typescript
+import { LLMTestCase } from "deepeval";
+
+const testCase = new LLMTestCase({
+  input: "Who is the current president of the United States of America?",
+  actualOutput: "Joe Biden",
+  retrievalContext: ["Joe Biden serves as the current president of America."],
+});
+```
+
+</LangSwitch>
+
 In this example, `input` mimics an user interaction with a RAG-based LLM application, where `actual_output` is the output of your LLM application and `retrieval_context` is the retrieved nodes in your RAG pipeline. Creating a test case allows you to evaluate using `deepeval`'s default metrics:
+
+<LangSwitch>
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -96,6 +122,22 @@ answer_relevancy_metric.measure(test_case)
 print(answer_relevancy_metric.score)
 ```
 
+```typescript
+import { LLMTestCase, metrics } from "deepeval";
+
+const answerRelevancyMetric = new metrics.AnswerRelevancyMetric();
+const testCase = new LLMTestCase({
+  input: "Who is the current president of the United States of America?",
+  actualOutput: "Joe Biden",
+  retrievalContext: ["Joe Biden serves as the current president of America."],
+});
+
+await answerRelevancyMetric.measure(testCase);
+console.log(answerRelevancyMetric.score);
+```
+
+</LangSwitch>
+
 A test case **passes** only if every metric that carries a verdict succeeds. Two flags let you control which verdicts count:
 
 - **Metrics with `threshold=None`** still compute scores and reasons, but have no pass/fail opinion and never decide a test case's status. Because every test case must end up passing or failing, each evaluation requires at least one non-flaky metric with a `threshold`.
@@ -104,6 +146,8 @@ A test case **passes** only if every metric that carries a verdict succeeds. Two
 ## Datasets
 
 Datasets in `deepeval` is a collection of goldens. It provides a centralized interface for you to evaluate a collection of test cases using one or multiple metrics.
+
+<LangSwitch>
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -124,6 +168,27 @@ for golden in dataset.goldens:
 
 evaluate(test_cases=dataset.test_cases, metrics=[answer_relevancy_metric])
 ```
+
+```typescript
+import { evaluate, LLMTestCase, metrics } from "deepeval";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+
+const answerRelevancyMetric = new metrics.AnswerRelevancyMetric();
+const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Who is the current president of the United States of America?" })] });
+
+for (const golden of dataset.goldens) {
+  dataset.addTestCase(
+    new LLMTestCase({
+      input: golden.input,
+      actualOutput: await yourLlmApp(golden.input),
+    })
+  );
+}
+
+await evaluate(dataset.testCases, [answerRelevancyMetric]);
+```
+
+</LangSwitch>
 
 :::note
 You don't need to create an evaluation dataset to evaluate individual test cases. Visit the [test cases section](/docs/evaluation-test-cases#assert-a-test-case) to learn how to assert individual test cases.
@@ -200,6 +265,8 @@ You can include the `deepeval test run` command as a step in a `.yaml` file in y
 
 Alternately, you can use `deepeval`'s `evaluate` function. This approach avoids the CLI (if you're in a notebook environment), and allows for parallel test execution as well.
 
+<LangSwitch>
+
 ```python
 from deepeval import evaluate
 from deepeval.metrics import AnswerRelevancyMetric
@@ -211,6 +278,24 @@ for golden in dataset.goldens:
 
 evaluate(dataset, [AnswerRelevancyMetric()])
 ```
+
+```typescript
+import { evaluate, metrics, LLMTestCase } from "deepeval";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+
+const goldens = [new Golden({ input: "..." })];
+const dataset = new EvaluationDataset({ goldens });
+for (const golden of goldens) {
+  // convert golden to test case
+  dataset.addTestCase(
+    new LLMTestCase({ input: golden.input, actualOutput: "..." })
+  );
+}
+
+await evaluate(dataset.testCases, [new metrics.AnswerRelevancyMetric()]);
+```
+
+</LangSwitch>
 
 There are **TWO** mandatory and **SIX** optional parameters when calling the `evaluate()` function:
 
@@ -233,6 +318,8 @@ You can also replace `dataset` with a list of test cases, as shown in the [test 
 
 You can also run metrics on nested components by setting up tracing in `deepeval`, and requires under 10 lines of code:
 
+<LangSwitch>
+
 ```python showLineNumbers {8}
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
@@ -250,6 +337,28 @@ def complete(query: str):
   )
   return response
 ```
+
+```typescript showLineNumbers {8}
+import { LLMTestCase, metrics } from "deepeval";
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+import OpenAI from "openai";
+
+const client = new OpenAI();
+
+const complete = observe({
+  metrics: [new metrics.AnswerRelevancyMetric()],
+  fn: async (query: string) => {
+    const response = (await client.chat.completions.create({ model: "gpt-4o", messages: [{ role: "user", content: query }] })).choices[0].message.content;
+
+    updateCurrentSpan({
+      testCase: new LLMTestCase({ input: query, actualOutput: response }),
+    });
+    return response;
+  },
+});
+```
+
+</LangSwitch>
 
 This is very useful especially if you:
 

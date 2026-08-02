@@ -24,6 +24,8 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 Let's take this `input` and `actual_output` as an example:
 
+<LangSwitch>
+
 ```python
 # This is the original text to be summarized
 input = """
@@ -43,7 +45,30 @@ with a higher score indicating greater comprehensiveness.
 """
 ```
 
+```typescript
+// This is the original text to be summarized
+const input = `
+The 'coverage score' is calculated as the percentage of assessment questions
+for which both the summary and the original document provide a 'yes' answer. This
+method ensures that the summary not only includes key information from the original
+text but also accurately represents it. A higher coverage score indicates a
+more comprehensive and faithful summary, signifying that the summary effectively
+encapsulates the crucial points and details from the original content.
+`;
+
+// This is the summary, replace this with the actual output from your LLM application
+const actualOutput = `
+The coverage score quantifies how well a summary captures and
+accurately represents key information from the original text,
+with a higher score indicating greater comprehensiveness.
+`;
+```
+
+</LangSwitch>
+
 You can use the `SummarizationMetric` as follows for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
+
+<LangSwitch>
 
 ```python
 from deepeval import evaluate
@@ -68,6 +93,31 @@ metric = SummarizationMetric(
 
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
+
+```typescript
+import { evaluate, metrics } from "deepeval";
+import { LLMTestCase } from "deepeval/testCase";
+// ...
+
+const testCase = new LLMTestCase({ input, actualOutput });
+const metric = new metrics.SummarizationMetric({
+  threshold: 0.5,
+  model: "gpt-4",
+  assessmentQuestions: [
+    "Is the coverage score based on a percentage of 'yes' answers?",
+    "Does the score ensure the summary's accuracy with the source?",
+    "Does a higher score mean a more comprehensive summary?",
+  ],
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</LangSwitch>
 
 There are **TEN** optional parameters when instantiating an `SummarizationMetric` class:
 
@@ -115,12 +165,23 @@ evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 
 You can also run the `SummarizationMetric` on a single test case as a standalone, one-off execution.
 
+<LangSwitch>
+
 ```python
 ...
 
 metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
+
+```typescript
+// ...
+
+await metric.measure(testCase);
+console.log(metric.score, metric.reason);
+```
+
+</LangSwitch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
@@ -141,6 +202,8 @@ While the `alignment_score` is similar to that of the [`HallucinationMetric`](/d
 
 You can access the `alignment_score` and `coverage_score` from a `SummarizationMetric` as follows:
 
+<LangSwitch>
+
 ```python
 from deepeval.metrics import SummarizationMetric
 from deepeval.test_case import LLMTestCase
@@ -154,6 +217,22 @@ print(metric.score)
 print(metric.reason)
 print(metric.score_breakdown)
 ```
+
+```typescript
+import { metrics } from "deepeval";
+import { LLMTestCase } from "deepeval/testCase";
+// ...
+
+const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
+const metric = new metrics.SummarizationMetric({ threshold: 0.5 });
+
+await metric.measure(testCase);
+console.log(metric.score);
+console.log(metric.reason);
+console.log(metric.scoreBreakdown);
+```
+
+</LangSwitch>
 
 :::note
 Since the summarization score is the minimum of the `alignment_score` and `coverage_score`, a 0 value for either one of these scores will result in a final summarization score of 0.

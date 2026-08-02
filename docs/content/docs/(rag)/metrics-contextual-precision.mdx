@@ -31,6 +31,8 @@ The `ContextualPrecisionMetric()` can be used for [end-to-end](/docs/evaluation-
 <Tabs items={["Text Based", "Multimodal"]}>
 <Tab value="Text Based">
 
+<LangSwitch>
+
 ```python
 from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
@@ -64,8 +66,43 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+```typescript
+import { evaluate, LLMTestCase, metrics } from "deepeval";
+
+// Replace this with the actual output from your LLM application
+const actualOutput = "We offer a 30-day full refund at no extra cost.";
+
+// Replace this with the expected output of your RAG generator
+const expectedOutput = "You are eligible for a 30 day full refund at no extra cost.";
+
+// Replace this with the actual retrieved context from your RAG pipeline
+const retrievalContext = ["All customers are eligible for a 30 day full refund at no extra cost."];
+
+const metric = new metrics.ContextualPrecisionMetric({
+  threshold: 0.7,
+  model: "gpt-4.1",
+  includeReason: true,
+});
+const testCase = new LLMTestCase({
+  input: "What if these shoes don't fit?",
+  actualOutput,
+  expectedOutput,
+  retrievalContext,
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</LangSwitch>
+
 </Tab>
 <Tab value="Multimodal">
+
+<LangSwitch>
 
 ```python
 from deepeval import evaluate
@@ -97,6 +134,37 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+```typescript
+import { evaluate, metrics } from "deepeval";
+import { LLMTestCase, MLLMImage } from "deepeval/testCase";
+
+// Replace this with the actual retrieved context from your RAG pipeline
+const retrievalContext = [
+  `The Eiffel Tower ${new MLLMImage({ url: "..." })} is a wrought-iron lattice tower built in the late 19th century.`,
+  `...`,
+];
+
+const metric = new metrics.ContextualPrecisionMetric({
+  threshold: 0.7,
+  model: "gpt-4.1",
+  includeReason: true,
+});
+const testCase = new LLMTestCase({
+  input: `Tell me about this landmark in France: ${new MLLMImage({ url: "..." })}`,
+  actualOutput: `This appears to be Eiffel Tower, which is a famous landmark in France`,
+  expectedOutput: `The Eiffel Tower is located in Paris, France. ${new MLLMImage({ url: "..." })}`,
+  retrievalContext,
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</LangSwitch>
+
 </Tab>
 </Tabs>
 
@@ -114,6 +182,8 @@ There are **EIGHT** optional parameters when creating a `ContextualPrecisionMetr
 ### Within components
 
 You can also run the `ContextualPrecisionMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
+
+<LangSwitch>
 
 ```python
 from deepeval.dataset import Golden
@@ -136,9 +206,40 @@ def llm_app(input: str):
 evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 ```
 
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+// ...
+
+const innerComponent = observe({
+  metrics: [metric],
+  fn: async () => {
+    // Set test case at runtime
+    const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
+    updateCurrentSpan({ testCase });
+  },
+});
+
+const llmApp = observe({
+  fn: async (input: string) => {
+    // Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    await innerComponent();
+  },
+});
+
+const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Hi!" })] });
+for await (const golden of dataset.evalsIterator()) {
+  await llmApp(golden.input);
+}
+```
+
+</LangSwitch>
+
 ### As a standalone
 
 You can also run the `ContextualPrecisionMetric` on a single test case as a standalone, one-off execution.
+
+<LangSwitch>
 
 ```python
 ...
@@ -146,6 +247,15 @@ You can also run the `ContextualPrecisionMetric` on a single test case as a stan
 metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
+
+```typescript
+// ...
+
+await metric.measure(testCase);
+console.log(metric.score, metric.reason);
+```
+
+</LangSwitch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.

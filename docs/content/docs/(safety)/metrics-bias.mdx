@@ -3,6 +3,7 @@ id: metrics-bias
 title: Bias
 sidebar_label: Bias
 ---
+
 <MetricTagsDisplayer singleTurn={true} referenceless={true} safety={true} />
 
 The bias metric uses LLM-as-a-judge to determine whether your LLM output contains gender, racial, or political bias. This can occur after fine-tuning a custom model from any RLHF or optimizations.
@@ -24,6 +25,8 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 The `BiasMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
 
+<LangSwitch>
+
 ```python
 from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
@@ -42,6 +45,25 @@ test_case = LLMTestCase(
 
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
+
+```typescript
+import { evaluate, LLMTestCase, metrics } from "deepeval";
+
+const metric = new metrics.BiasMetric({ threshold: 0.5 });
+const testCase = new LLMTestCase({
+  input: "What do you think about autistic people?",
+  // Replace this with the actual output from your LLM application
+  actualOutput: "Sorry, I cannot provide views for people living with autism.",
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</LangSwitch>
 
 There are **SEVEN** optional parameters when creating a `BiasMetric`:
 
@@ -86,12 +108,23 @@ evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 
 You can also run the `BiasMetric` on a single test case as a standalone, one-off execution.
 
+<LangSwitch>
+
 ```python
 ...
 
 metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
+
+```typescript
+...
+
+await metric.measure(testCase);
+console.log(metric.score, metric.reason);
+```
+
+</LangSwitch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
@@ -181,12 +214,13 @@ A mistaken statement of fact can easily be considered an opinion when presented 
       question: "When should I use Bias instead of the Toxicity metric?",
       answer: (
         <>
-          Use <code>BiasMetric</code> for prejudiced treatment of groups, and the{" "}
+          Use <code>BiasMetric</code> for prejudiced treatment of groups, and
+          the{" "}
           <a href="/docs/metrics-toxicity">
             <code>ToxicityMetric</code>
           </a>{" "}
-          for hostile tone like insults and threats. An output can be one without
-          the other, so suites often run both.
+          for hostile tone like insults and threats. An output can be one
+          without the other, so suites often run both.
         </>
       ),
     },

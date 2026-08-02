@@ -15,6 +15,8 @@ this provides full visibility for debugging internal components of your LLM appl
 
 To add metrics and spans to your traces, modify your `MedicalChatbot` class like this:
 
+<LangSwitch>
+
 ```python {4,30,43-48,73,87-91}
 from qdrant_client import models, QdrantClient
 from sentence_transformers import SentenceTransformer
@@ -88,6 +90,106 @@ class MedicalChatbot:
             print("Agent Response:", response["output"])
 ```
 
+```typescript
+import { QdrantClient } from "@qdrant/js-client-rest";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { observe, updateCurrentSpan, updateCurrentTrace } from "deepeval/tracing";
+import { metrics } from "deepeval";
+import * as readline from "node:readline/promises";
+
+class MedicalChatbot {
+  model: ChatOpenAI;
+  appointments: Record<string, any>;
+  encoder: OpenAIEmbeddings;
+  client: QdrantClient;
+  systemPrompt: string;
+
+  constructor({
+    documentPath,
+    model = "gpt-4",
+    encoder = "text-embedding-3-small",
+    memory = "http://localhost:6333",
+    systemPrompt = "",
+  }: {
+    documentPath: string;
+    model?: string;
+    encoder?: string;
+    memory?: string;
+    systemPrompt?: string;
+  }) {
+    this.model = new ChatOpenAI({ model });
+    this.appointments = {};
+    this.encoder = new OpenAIEmbeddings({ model: encoder });
+    this.client = new QdrantClient({ url: memory });
+    this.storeData(documentPath);
+    this.systemPrompt =
+      systemPrompt ||
+      "You are a virtual health assistant designed to support users with symptom understanding and appointment management. Start every conversation by actively listening to the user's concerns. Ask clear follow-up questions to gather information like symptom duration, intensity, and relevant health history. Use available tools to fetch diagnostic information or manage medical appointments. Never assume a diagnosis unless there's enough detail, and always recommend professional medical consultation when appropriate.";
+    this.setupAgent(this.systemPrompt);
+  }
+
+  storeData(documentPath: string) {
+    // ...
+  }
+
+  // A tool to retrieve data on various diagnosis methods from gale encyclopedia
+  queryEngine = observe({
+    type: "retriever",
+    metrics: [new metrics.ContextualRelevancyMetric()],
+    fn: async (query: string) => {
+      const { points: hits } = await this.client.query("gale_encyclopedia", {
+        query: await this.encoder.embedQuery(query),
+        limit: 3,
+        with_payload: true,
+      });
+
+      const contexts = hits.map((hit) => hit.payload!.content as string);
+
+      // Here, updateCurrentSpan() will update the Retriever span
+      updateCurrentSpan({
+        input: query,
+        retrievalContext: contexts,
+      });
+      return contexts.join("\n");
+    },
+  });
+
+  // ... Other tools here
+
+  interactiveSession = observe({
+    type: "agent",
+    fn: async (sessionId: string) => {
+      console.log("Hello! I am Baymax, your personal health care companian.");
+      console.log("Please enter your symptoms or ask about appointment details. Type 'exit' to quit.");
+
+      const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+
+      while (true) {
+        const userInput = await rl.question("Your query: ");
+        if (userInput.toLowerCase() === "exit") {
+          break;
+        }
+
+        const response = await this.agentWithChatHistory.invoke(
+          { input: userInput },
+          { configurable: { sessionId } },
+        );
+        updateCurrentTrace({
+          threadId: sessionId,
+          input: userInput,
+          output: response.output,
+        });
+        console.log("Agent Response:", response.output);
+      }
+
+      rl.close();
+    },
+  });
+}
+```
+
+</LangSwitch>
+
 This tracing setup is done for the `interactive_session()` method, for your chatbot in production, you would observe your main callback function. Here's the docs to [learn more about tracing](https://deepeval.com/docs/evaluation-llm-tracing).
 
 :::tip
@@ -97,6 +199,8 @@ Adding `@observe` tag to all your functions is also helpul in evaluating your en
 ## Evaluating Spans
 
 From the previous tracing code we've seen how to setup trace spans, here's how you can evaluate those spans:
+
+<LangSwitch>
 
 ```python {2,5,19-23}
 ...
@@ -125,7 +229,47 @@ def interactive_session(self, session_id):
         print("Agent Response:", response["output"])
 ```
 
+```typescript
+// ...
+import { observe, updateCurrentSpan, updateCurrentTrace } from "deepeval/tracing";
+// ...
+
+const interactiveSession = observe({
+  type: "agent",
+  fn: async (sessionId: string) => {
+    console.log("Hello! I am Baymax, your personal health care companian.");
+    console.log("Please enter your symptoms or ask about appointment details. Type 'exit' to quit.");
+
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+
+    while (true) {
+      const userInput = await rl.question("Your query: ");
+      if (userInput.toLowerCase() === "exit") {
+        break;
+      }
+
+      const response = await agentWithChatHistory.invoke(
+        { input: userInput },
+        { configurable: { sessionId } },
+      );
+      updateCurrentTrace({
+        threadId: sessionId, // Keep your unique <thread id> here
+        input: userInput,
+        output: response.output,
+      });
+      console.log("Agent Response:", response.output);
+    }
+
+    rl.close();
+  },
+});
+```
+
+</LangSwitch>
+
 You can now use this thread id to evaluate this trace with the following code:
+
+<LangSwitch>
 
 ```python
 from deepeval.tracing import evaluate_thread
@@ -133,6 +277,15 @@ from deepeval.tracing import evaluate_thread
 # Use your <thread id> here
 evaluate_thread(thread_id="your-thread-id", metric_collection="Metric Collection")
 ```
+
+```typescript
+import { evaluateThread } from "deepeval/tracing";
+
+// Use your <thread id> here
+await evaluateThread({ threadId: "your-thread-id", metricCollection: "Metric Collection" });
+```
+
+</LangSwitch>
 
 You can create a metric collection on the Confident AI platform to run online evaluations and catch regression or bugs, [learn more here](https://www.confident-ai.com/docs/metrics/metric-collections).
 

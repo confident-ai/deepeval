@@ -33,6 +33,8 @@ beyond the content of the conversation.
 
 We are now going to create a `MeetingSummarizer` class that uses OpenAI's chat completions API to generate summaries and action items using the system prompt mentioned above for any given transcript.
 
+<LangSwitch>
+
 ```python
 import os
 
@@ -67,6 +69,40 @@ class MeetingSummarizer:
         return content
 ```
 
+```typescript
+import "dotenv/config";
+import OpenAI from "openai";
+
+class MeetingSummarizer {
+  model: string;
+  client: OpenAI;
+  systemPrompt: string;
+
+  constructor(model: string = "gpt-4", systemPrompt: string = "") {
+    this.model = model;
+    this.client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    this.systemPrompt = systemPrompt || (
+      "..." // Use the above system prompt here
+    );
+  }
+
+  async summarize(transcript: string): Promise<string> {
+    const response = await this.client.chat.completions.create({
+      model: this.model,
+      messages: [
+        { role: "system", content: this.systemPrompt },
+        { role: "user", content: transcript },
+      ],
+    });
+
+    const content = response.choices[0].message.content?.trim() ?? "";
+    return content;
+  }
+}
+```
+
+</LangSwitch>
+
 :::note
 You need to set your environment variable `OPENAI_API_KEY` in your `.env` file.
 :::
@@ -74,6 +110,8 @@ You need to set your environment variable `OPENAI_API_KEY` in your `.env` file.
 ### Generating summaries
 
 Now that we've defined our summarization agent, we can use the following code to generate the summary
+
+<LangSwitch>
 
 ```python
 with open("meeting_transcript.txt", "r") as file:
@@ -83,6 +121,18 @@ summarizer = MeetingSummarizer()
 summary = summarizer.summarize(transcript)
 print(summary)
 ```
+
+```typescript
+import { readFileSync } from "fs";
+
+const transcript = readFileSync("meeting_transcript.txt", "utf-8").trim();
+
+const summarizer = new MeetingSummarizer();
+const summary = await summarizer.summarize(transcript);
+console.log(summary);
+```
+
+</LangSwitch>
 
 :::note
 I have saved a file named `meeting_transcript.txt` that contains a mock transcript which is provided to the summarizer as shown above. You can provide your own transcript here or use the mock transcript that I've used:
@@ -346,6 +396,8 @@ formatting, or explanations.
 
 Here's how we'll define our helper function to generate summaries:
 
+<LangSwitch>
+
 ```python
 ...
 class MeetingSummarizer:
@@ -366,6 +418,32 @@ class MeetingSummarizer:
             print(f"Error generating summary: {e}")
             return f"Error: Could not generate summary due to API issue: {e}"
 ```
+
+```typescript
+// ...
+class MeetingSummarizer {
+  // ...
+  async getSummary(transcript: string): Promise<string> {
+    try {
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        messages: [
+          { role: "system", content: this.summarySystemPrompt },
+          { role: "user", content: transcript },
+        ],
+      });
+
+      const summary = response.choices[0].message.content?.trim() ?? "";
+      return summary;
+    } catch (e) {
+      console.log(`Error generating summary: ${e}`);
+      return `Error: Could not generate summary due to API issue: ${e}`;
+    }
+  }
+}
+```
+
+</LangSwitch>
 
 ### Generating action items
 
@@ -392,6 +470,8 @@ valid JSON format — no extra text or commentary.
 
 Here's how we'll define our helper function to generate action items:
 
+<LangSwitch>
+
 ```python
 class MeetingSummarizer:
     ...
@@ -415,7 +495,38 @@ class MeetingSummarizer:
             return {"error": f"API call failed: {e}", "raw_output": ""}
 ```
 
+```typescript
+class MeetingSummarizer {
+  // ...
+  async getActionItems(transcript: string): Promise<Record<string, any>> {
+    try {
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        messages: [
+          { role: "system", content: this.actionItemSystemPrompt },
+          { role: "user", content: transcript },
+        ],
+      });
+
+      const actionItems = response.choices[0].message.content?.trim() ?? "";
+      try {
+        return JSON.parse(actionItems);
+      } catch {
+        return { error: "Invalid JSON returned from model", raw_output: actionItems };
+      }
+    } catch (e) {
+      console.log(`Error generating action items: ${e}`);
+      return { error: `API call failed: ${e}`, raw_output: "" };
+    }
+  }
+}
+```
+
+</LangSwitch>
+
 We can now call these helper functions in our `summarize()` function and return their respective responses. Here's how we can do that:
+
+<LangSwitch>
 
 ```python
 class MeetingSummarizer:
@@ -427,7 +538,23 @@ class MeetingSummarizer:
         return summary, action_items
 ```
 
+```typescript
+class MeetingSummarizer {
+  // ...
+  async summarize(transcript: string): Promise<[string, Record<string, any>]> {
+    const summary = await this.getSummary(transcript);
+    const actionItems = await this.getActionItems(transcript);
+
+    return [summary, actionItems];
+  }
+}
+```
+
+</LangSwitch>
+
 You can run the new `MeetingSummarizer` as follows:
+
+<LangSwitch>
 
 ```python
 summarizer = MeetingSummarizer()
@@ -440,6 +567,21 @@ print(summary)
 print("JSON:")
 print(json.dumps(action_items, indent=2))
 ```
+
+```typescript
+import { readFileSync } from "fs";
+
+const summarizer = new MeetingSummarizer();
+
+const transcript = readFileSync("meeting_transcript.txt", "utf-8").trim();
+
+const [summary, actionItems] = await summarizer.summarize(transcript);
+console.log(summary);
+console.log("JSON:");
+console.log(JSON.stringify(actionItems, null, 2));
+```
+
+</LangSwitch>
 
 ✅ Congratulations! 🎉 You've just built a very robust summarization agent that generates a string of text as summary and outputs the action items in a `JSON` object which we can parse and manipulate it in any way we want.
 

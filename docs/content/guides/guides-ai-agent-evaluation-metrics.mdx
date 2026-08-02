@@ -33,6 +33,8 @@ The reasoning layer is where your agent analyzes tasks, formulates plans, and de
 
 The `PlanQualityMetric` evaluates whether the **plan your agent generates is logical, complete, and efficient** for accomplishing the given task. It extracts the task and plan from your agent's trace and uses an LLM judge to assess plan quality.
 
+<LangSwitch>
+
 ```python
 from deepeval.tracing import observe
 from deepeval.dataset import Golden, EvaluationDataset
@@ -58,6 +60,41 @@ for golden in dataset.evals_iterator(metrics=[plan_quality]):
     travel_agent(golden.input)
 ```
 
+```typescript
+import { metrics } from "deepeval";
+import { observe } from "deepeval/tracing";
+import { Golden, EvaluationDataset } from "deepeval/dataset";
+
+const searchFlights = observe({
+  type: "tool",
+  name: "search_flights",
+  fn: async (origin: string, destination: string, date: string) => {
+    return [{ id: "FL123", price: 450 }, { id: "FL456", price: 380 }];
+  },
+});
+
+const travelAgent = observe({
+  type: "agent",
+  fn: async (userInput: string) => {
+    // Agent reasons: "I need to search for flights first, then book the cheapest"
+    const flights = await searchFlights("NYC", "Paris", "2025-03-15");
+    const cheapest = flights.reduce((a, b) => (a.price < b.price ? a : b));
+    return `Found cheapest flight: ${cheapest.id} for $${cheapest.price}`;
+  },
+});
+
+// Initialize metric
+const planQuality = new metrics.PlanQualityMetric({ threshold: 0.7, model: "gpt-4o" });
+
+// Evaluate agent with plan quality metric
+const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Find me the cheapest flight to Paris" })] });
+for await (const golden of dataset.evalsIterator({ metrics: [planQuality] })) {
+  await travelAgent(golden.input);
+}
+```
+
+</LangSwitch>
+
 **When to use it:** Use `PlanQualityMetric` when your agent explicitly reasons about how to approach a task before taking action. This is common in agents that use chain-of-thought prompting or expose their planning process.
 
 **How it's calculated:**
@@ -75,6 +112,8 @@ If no plan is detectable in the trace—meaning the agent doesn't explicitly rea
 ### Plan Adherence Metric
 
 The `PlanAdherenceMetric` evaluates whether your agent **follows its own plan** during execution. Creating a good plan is only half the battle—an agent that deviates from its strategy mid-execution undermines its own reasoning.
+
+<LangSwitch>
 
 ```python
 from deepeval.tracing import observe
@@ -106,6 +145,50 @@ for golden in dataset.evals_iterator(metrics=[plan_adherence]):
     travel_agent(golden.input)
 ```
 
+```typescript
+import { metrics } from "deepeval";
+import { observe } from "deepeval/tracing";
+import { Golden, EvaluationDataset } from "deepeval/dataset";
+
+const searchFlights = observe({
+  type: "tool",
+  name: "search_flights",
+  fn: async (origin: string, destination: string, date: string) => {
+    return [{ id: "FL123", price: 450 }, { id: "FL456", price: 380 }];
+  },
+});
+
+const bookFlight = observe({
+  type: "tool",
+  name: "book_flight",
+  fn: async (flightId: string) => {
+    return { confirmation: "CONF-789", flightId };
+  },
+});
+
+const travelAgent = observe({
+  type: "agent",
+  fn: async (userInput: string) => {
+    // Plan: 1) Search flights, 2) Book the cheapest one
+    const flights = await searchFlights("NYC", "Paris", "2025-03-15");
+    const cheapest = flights.reduce((a, b) => (a.price < b.price ? a : b));
+    const booking = await bookFlight(cheapest.id);
+    return `Booked flight ${cheapest.id}. Confirmation: ${booking.confirmation}`;
+  },
+});
+
+// Initialize metric
+const planAdherence = new metrics.PlanAdherenceMetric({ threshold: 0.7, model: "gpt-4o" });
+
+// Evaluate whether agent followed its plan
+const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Book the cheapest flight to Paris" })] });
+for await (const golden of dataset.evalsIterator({ metrics: [planAdherence] })) {
+  await travelAgent(golden.input);
+}
+```
+
+</LangSwitch>
+
 **When to use it:** Use `PlanAdherenceMetric` alongside `PlanQualityMetric` when evaluating agents with explicit planning phases. If your agent creates multi-step plans, this metric ensures it actually follows through.
 
 **How it's calculated:**
@@ -127,6 +210,8 @@ The action layer is where your agent interacts with external systems through too
 ### Tool Correctness Metric
 
 The `ToolCorrectnessMetric` evaluates whether your agent **selects the right tools** and calls them correctly. It compares the tools your agent actually called against a list of expected tools.
+
+<LangSwitch>
 
 ```python
 from deepeval.tracing import observe, update_current_span
@@ -165,6 +250,59 @@ for golden in dataset.evals_iterator():
     weather_agent(golden.input)
 ```
 
+```typescript
+import { metrics } from "deepeval";
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+import { Golden, EvaluationDataset } from "deepeval/dataset";
+import { ToolCall } from "deepeval/testCase";
+
+// Initialize metric
+const toolCorrectness = new metrics.ToolCorrectnessMetric({ threshold: 0.7 });
+
+const getWeather = observe({
+  type: "tool",
+  name: "get_weather",
+  fn: async (city: string) => {
+    return { temp: "22°C", condition: "sunny" };
+  },
+});
+
+// Attach metric to the LLM component where tool decisions are made
+const callLlm = observe({
+  type: "llm",
+  metrics: [toolCorrectness],
+  fn: async (messages: { role: string; content: string }[]) => {
+    // LLM decides to call get_weather tool
+    const result = await getWeather("Paris");
+
+    // Update span with tool calling information for evaluation
+    updateCurrentSpan({
+      input: messages[messages.length - 1].content,
+      output: `The weather is ${result.condition}, ${result.temp}`,
+      expectedTools: [new ToolCall({ name: "get_weather" })],
+    });
+    return result;
+  },
+});
+
+const weatherAgent = observe({
+  type: "agent",
+  fn: async (userInput: string) => {
+    return callLlm([{ role: "user", content: userInput }]);
+  },
+});
+
+// Evaluate
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What's the weather in Paris?", expectedTools: [new ToolCall({ name: "get_weather" })] })],
+});
+for await (const golden of dataset.evalsIterator()) {
+  await weatherAgent(golden.input);
+}
+```
+
+</LangSwitch>
+
 **When to use it:** Use `ToolCorrectnessMetric` when you have deterministic expectations about which tools should be called for a given task. It's particularly valuable for testing tool selection logic and identifying unnecessary tool calls.
 
 **How it's calculated:**
@@ -188,6 +326,8 @@ When `available_tools` is provided, the metric also uses an LLM to evaluate whet
 ### Argument Correctness Metric
 
 The `ArgumentCorrectnessMetric` evaluates whether your agent **generates correct arguments** for each tool call. Selecting the right tool with wrong arguments is as problematic as selecting the wrong tool entirely.
+
+<LangSwitch>
 
 ```python
 from deepeval.tracing import observe, update_current_span
@@ -228,6 +368,58 @@ for golden in dataset.evals_iterator():
     flight_agent(golden.input)
 ```
 
+```typescript
+import { metrics } from "deepeval";
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+import { Golden, EvaluationDataset } from "deepeval/dataset";
+
+// Initialize metric
+const argumentCorrectness = new metrics.ArgumentCorrectnessMetric({ threshold: 0.7, model: "gpt-4o" });
+
+const searchFlights = observe({
+  type: "tool",
+  name: "search_flights",
+  fn: async (origin: string, destination: string, date: string) => {
+    return [{ id: "FL123", price: 450 }, { id: "FL456", price: 380 }];
+  },
+});
+
+// Attach metric to the LLM component where arguments are generated
+const callLlm = observe({
+  type: "llm",
+  metrics: [argumentCorrectness],
+  fn: async (userInput: string) => {
+    // LLM generates arguments for tool call
+    const [origin, destination, date] = ["NYC", "London", "2025-03-15"];
+    const flights = await searchFlights(origin, destination, date);
+
+    // Update span with tool calling details for evaluation
+    updateCurrentSpan({
+      input: userInput,
+      output: `Found ${flights.length} flights`,
+    });
+    return flights;
+  },
+});
+
+const flightAgent = observe({
+  type: "agent",
+  fn: async (userInput: string) => {
+    return callLlm(userInput);
+  },
+});
+
+// Evaluate - metric checks if arguments match what input requested
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "Search for flights from NYC to London on March 15th" })],
+});
+for await (const golden of dataset.evalsIterator()) {
+  await flightAgent(golden.input);
+}
+```
+
+</LangSwitch>
+
 **When to use it:** Use `ArgumentCorrectnessMetric` when correct argument values are critical for task success. This is especially important for agents that interact with APIs, databases, or external services where incorrect arguments cause failures.
 
 **How it's calculated:**
@@ -249,6 +441,8 @@ The execution layer encompasses the full agent loop—reasoning, acting, observi
 ### Task Completion Metric
 
 The `TaskCompletionMetric` evaluates whether your agent **successfully accomplishes the intended task**. This is the ultimate measure of agent success—did it do what the user asked?
+
+<LangSwitch>
 
 ```python
 from deepeval.tracing import observe
@@ -281,6 +475,51 @@ for golden in dataset.evals_iterator(metrics=[task_completion]):
     travel_agent(golden.input)
 ```
 
+```typescript
+import { metrics } from "deepeval";
+import { observe } from "deepeval/tracing";
+import { Golden, EvaluationDataset } from "deepeval/dataset";
+
+const searchFlights = observe({
+  type: "tool",
+  name: "search_flights",
+  fn: async (origin: string, destination: string, date: string) => {
+    return [{ id: "FL123", price: 450 }, { id: "FL456", price: 380 }];
+  },
+});
+
+const bookFlight = observe({
+  type: "tool",
+  name: "book_flight",
+  fn: async (flightId: string) => {
+    return { confirmation: "CONF-789", flightId };
+  },
+});
+
+const travelAgent = observe({
+  type: "agent",
+  fn: async (userInput: string) => {
+    const flights = await searchFlights("NYC", "LA", "2025-03-15");
+    const cheapest = flights.reduce((a, b) => (a.price < b.price ? a : b));
+    const booking = await bookFlight(cheapest.id);
+    return `Booked flight ${cheapest.id} for $${cheapest.price}. Confirmation: ${booking.confirmation}`;
+  },
+});
+
+// Initialize metric - task can be auto-inferred or explicitly provided
+const taskCompletion = new metrics.TaskCompletionMetric({ threshold: 0.7, model: "gpt-4o" });
+
+// Evaluate whether agent completed the task
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "Book the cheapest flight from NYC to LA for tomorrow" })],
+});
+for await (const golden of dataset.evalsIterator({ metrics: [taskCompletion] })) {
+  await travelAgent(golden.input);
+}
+```
+
+</LangSwitch>
+
 **When to use it:** Use `TaskCompletionMetric` as a top-level success indicator for any agent. It answers the fundamental question: did the agent accomplish its goal?
 
 **How it's calculated:**
@@ -294,6 +533,8 @@ The metric extracts the task (either user-provided or inferred from the trace) a
 ### Step Efficiency Metric
 
 The `StepEfficiencyMetric` evaluates whether your agent **completes tasks without unnecessary steps**. An agent might complete a task but waste tokens, time, and resources on redundant or circuitous actions.
+
+<LangSwitch>
 
 ```python
 from deepeval.tracing import observe
@@ -328,6 +569,53 @@ for golden in dataset.evals_iterator(metrics=[step_efficiency]):
     inefficient_agent(golden.input)
 ```
 
+```typescript
+import { metrics } from "deepeval";
+import { observe } from "deepeval/tracing";
+import { Golden, EvaluationDataset } from "deepeval/dataset";
+
+const searchFlights = observe({
+  type: "tool",
+  name: "search_flights",
+  fn: async (origin: string, destination: string, date: string) => {
+    return [{ id: "FL123", price: 450 }, { id: "FL456", price: 380 }];
+  },
+});
+
+const bookFlight = observe({
+  type: "tool",
+  name: "book_flight",
+  fn: async (flightId: string) => {
+    return { confirmation: "CONF-789" };
+  },
+});
+
+const inefficientAgent = observe({
+  type: "agent",
+  fn: async (userInput: string) => {
+    // Inefficient: searches twice unnecessarily
+    const flights1 = await searchFlights("NYC", "LA", "2025-03-15");
+    const flights2 = await searchFlights("NYC", "LA", "2025-03-15"); // Redundant!
+    const cheapest = flights1.reduce((a, b) => (a.price < b.price ? a : b));
+    const booking = await bookFlight(cheapest.id);
+    return `Booked: ${booking.confirmation}`;
+  },
+});
+
+// Initialize metric
+const stepEfficiency = new metrics.StepEfficiencyMetric({ threshold: 0.7, model: "gpt-4o" });
+
+// Evaluate - metric will penalize the redundant search_flights call
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "Book the cheapest flight from NYC to LA" })],
+});
+for await (const golden of dataset.evalsIterator({ metrics: [stepEfficiency] })) {
+  await inefficientAgent(golden.input);
+}
+```
+
+</LangSwitch>
+
 **When to use it:** Use `StepEfficiencyMetric` alongside `TaskCompletionMetric` to ensure your agent isn't just successful but also efficient. This is critical for production agents where token costs and latency matter.
 
 **How it's calculated:**
@@ -345,6 +633,8 @@ A high `TaskCompletionMetric` score with a low `StepEfficiencyMetric` score indi
 ## Putting It All Together
 
 Here's a complete example showing how to use AI agent evaluation metrics across all three layers:
+
+<LangSwitch>
 
 ```python
 from deepeval.tracing import observe, update_current_span
@@ -411,6 +701,88 @@ for golden in dataset.evals_iterator(
 ):
     travel_agent(golden.input)
 ```
+
+```typescript
+import { metrics } from "deepeval";
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+import { Golden, EvaluationDataset } from "deepeval/dataset";
+import { ToolCall } from "deepeval/testCase";
+
+// End-to-end metrics (analyze full agent trace)
+const taskCompletion = new metrics.TaskCompletionMetric();
+const stepEfficiency = new metrics.StepEfficiencyMetric();
+const planQuality = new metrics.PlanQualityMetric();
+const planAdherence = new metrics.PlanAdherenceMetric();
+
+// Component-level metrics (analyze specific components)
+const toolCorrectness = new metrics.ToolCorrectnessMetric();
+const argumentCorrectness = new metrics.ArgumentCorrectnessMetric();
+
+// Define tools
+const searchFlights = observe({
+  type: "tool",
+  name: "search_flights",
+  fn: async (origin: string, destination: string, date: string) => {
+    return [{ id: "FL123", price: 450 }, { id: "FL456", price: 380 }];
+  },
+});
+
+const bookFlight = observe({
+  type: "tool",
+  name: "book_flight",
+  fn: async (flightId: string) => {
+    return { confirmation: "CONF-789", flightId };
+  },
+});
+
+// Attach component-level metrics to the LLM component
+const callLlm = observe({
+  type: "llm",
+  metrics: [toolCorrectness, argumentCorrectness],
+  fn: async (userInput: string) => {
+    // LLM decides to search flights then book
+    const [origin, destination, date] = ["NYC", "Paris", "2025-03-18"];
+    const flights = await searchFlights(origin, destination, date);
+    const cheapest = flights.reduce((a, b) => (a.price < b.price ? a : b));
+    const booking = await bookFlight(cheapest.id);
+
+    // Update span with tool info for component-level evaluation
+    updateCurrentSpan({
+      input: userInput,
+      output: `Booked ${cheapest.id}`,
+      expectedTools: [new ToolCall({ name: "search_flights" }), new ToolCall({ name: "book_flight" })],
+    });
+    return booking;
+  },
+});
+
+const travelAgent = observe({
+  type: "agent",
+  fn: async (userInput: string) => {
+    const booking = await callLlm(userInput);
+    return `Flight booked! Confirmation: ${booking.confirmation}`;
+  },
+});
+
+// Create evaluation dataset
+const dataset = new EvaluationDataset({
+  goldens: [
+    new Golden({
+      input: "Book a flight from NYC to Paris for next Tuesday",
+      expectedTools: [new ToolCall({ name: "search_flights" }), new ToolCall({ name: "book_flight" })],
+    }),
+  ],
+});
+
+// Run evaluation with end-to-end metrics
+for await (const golden of dataset.evalsIterator({
+  metrics: [taskCompletion, stepEfficiency, planQuality, planAdherence],
+})) {
+  await travelAgent(golden.input);
+}
+```
+
+</LangSwitch>
 
 ## Choosing the Right AI Agent Evaluation Metrics
 

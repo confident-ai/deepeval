@@ -23,6 +23,8 @@ You'll also need to supply any additional arguments such as `expected_output` an
 
 To create a custom metric that chooses the best `LLMTestCase`, simply instantiate a `ArenaGEval` class and define an evaluation criteria in everyday language:
 
+<LangSwitch>
+
 ```python
 from deepeval.test_case import ArenaTestCase, LLMTestCase, SingleTurnParams, Contestant
 from deepeval.metrics import ArenaGEval
@@ -60,6 +62,44 @@ metric = ArenaGEval(
 compare(test_cases=[a_test_case], metric=metric)
 ```
 
+```typescript
+import { compare, ArenaTestCase, Contestant, LLMTestCase, metrics } from "deepeval";
+import { SingleTurnParams } from "deepeval/testCase";
+
+const aTestCase = new ArenaTestCase({
+  contestants: [
+    new Contestant({
+      name: "GPT-4",
+      hyperparameters: { model: "gpt-4" },
+      testCase: new LLMTestCase({
+        input: "What is the capital of France?",
+        actualOutput: "Paris",
+      }),
+    }),
+    new Contestant({
+      name: "Claude-4",
+      hyperparameters: { model: "claude-4" },
+      testCase: new LLMTestCase({
+        input: "What is the capital of France?",
+        actualOutput: "Paris is the capital of France.",
+      }),
+    }),
+  ],
+});
+const metric = new metrics.ArenaGEval({
+  name: "Friendly",
+  criteria: "Choose the winner of the more friendly contestant based on the input and actual output",
+  evaluationParams: [
+    SingleTurnParams.INPUT,
+    SingleTurnParams.ACTUAL_OUTPUT,
+  ],
+});
+
+await compare([aTestCase], metric);
+```
+
+</LangSwitch>
+
 There are **THREE** mandatory and **FOUR** optional parameters required when instantiating an `ArenaGEval` class:
 
 - `name`: name of metric. This will **not** affect the evaluation.
@@ -78,12 +118,23 @@ For accurate and valid results, only evaluation parameters that are mentioned in
 
 You can also run the `ArenaGEval` on a single test case as a standalone, one-off execution.
 
+<LangSwitch>
+
 ```python
 ...
 
 metric.measure(a_test_case)
 print(metric.winner, metric.reason)
 ```
+
+```typescript
+// ...
+
+await metric.measure(aTestCase);
+console.log(metric.winner, metric.reason);
+```
+
+</LangSwitch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, computation) the `compare()` function offers.

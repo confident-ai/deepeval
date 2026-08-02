@@ -70,6 +70,8 @@ Before instrumenting individual functions, you must configure the global trace m
 
 The most powerful feature of the trace manager is auto-patching. By passing your initialized LLM client to the configuration, `deepeval` automatically intercepts calls to `chat.completions.create` (OpenAI) or `messages.create` (Anthropic). This captures the model name, input token count, output token count, and raw messages without any manual instrumentation.
 
+<LangSwitch>
+
 ```python title="main.py"
 from openai import OpenAI
 from deepeval.tracing import trace_manager
@@ -81,6 +83,18 @@ trace_manager.configure(
 )
 ```
 
+```typescript title="main.ts"
+import OpenAI from "openai";
+import { instrumentOpenAI } from "deepeval/openai";
+
+const client = new OpenAI();
+
+// Patches the client in place to auto-capture LLM spans
+instrumentOpenAI(client);
+```
+
+</LangSwitch>
+
 :::note
 For unsupported clients, you can manually log token counts and model names using `update_llm_span()` to capture cost and usage metrics.
 :::
@@ -89,6 +103,8 @@ For unsupported clients, you can manually log token counts and model names using
 
 To export your traces for visualizing execution graphs and running asynchronous evaluations, you must provide a Confident AI API key. Without this, traces are only collected locally. Run `deepeval login` in your terminal to authenticate, or pass the key directly.
 
+<LangSwitch>
+
 ```python title="main.py"
 trace_manager.configure(
     openai_client=client,
@@ -96,9 +112,21 @@ trace_manager.configure(
 )
 ```
 
+```typescript title="main.ts"
+import { traceManager } from "deepeval/tracing";
+
+traceManager.configure({
+  confidentApiKey: "your-confident-api-key",
+});
+```
+
+</LangSwitch>
+
 ### Configuring Environments and Sampling
 
 In high-traffic production environments, tracing every single request can be unnecessary. You can control the volume of traces using the `sampling_rate` parameter (a float between `0.0` and `1.0`) and tag them using the `environment` parameter (`"development"`, `"staging"`, or `"production"`).
+
+<LangSwitch>
 
 ```python title="main.py"
 trace_manager.configure(
@@ -109,6 +137,16 @@ trace_manager.configure(
 )
 ```
 
+```typescript title="main.ts"
+traceManager.configure({
+  confidentApiKey: "your-confident-api-key",
+  environment: "production",
+  samplingRate: 0.1, // Only trace 10% of requests
+});
+```
+
+</LangSwitch>
+
 :::tip
 For development and testing, always leave the `sampling_rate` at `1.0` (the default) so you don't miss any traces while debugging.
 :::
@@ -116,6 +154,8 @@ For development and testing, always leave the `sampling_rate` at `1.0` (the defa
 ### Masking Sensitive Data
 
 By default, all function inputs and outputs are captured verbatim. If your application handles personally identifiable information (PII) — such as user emails, names, or financial data — you should provide a masking function to sanitize data before it is serialized and exported.
+
+<LangSwitch>
 
 ```python title="main.py"
 def redact_pii(data):
@@ -129,6 +169,22 @@ trace_manager.configure(
 )
 ```
 
+```typescript title="main.ts"
+const redactPii = (data: any) => {
+  if (typeof data === "string" && data.includes("@")) {
+    return "[EMAIL REDACTED]";
+  }
+  return data;
+};
+
+traceManager.configure({
+  confidentApiKey: "your-api-key",
+  mask: redactPii,
+});
+```
+
+</LangSwitch>
+
 The mask function is applied to all span inputs and outputs before they leave your application. It receives the raw value and should return the sanitized version.
 
 ## Instrumenting Your LLM Pipeline
@@ -138,6 +194,8 @@ The core of `deepeval`'s tracing system is the `@observe` decorator. When you ap
 More importantly, `deepeval` natively understands the call stack. When one decorated function calls another, they are automatically nested into a parent-child span hierarchy without any manual thread-wiring or global variables.
 
 Here is how you instrument a standard Retrieval-Augmented Generation (RAG) pipeline:
+
+<LangSwitch>
 
 ```python title="rag_pipeline.py"
 from deepeval.tracing import observe
@@ -162,6 +220,40 @@ def answer_user_query(user_query: str) -> str:
     return generate_response(user_query, context)
 ```
 
+```typescript title="rag_pipeline.ts"
+import { observe } from "deepeval/tracing";
+
+const retrieveContext = observe({
+  type: "retriever",
+  fn: async (query: string) => {
+    // Simulated vector database search
+    return ["DeepEval traces parent-child execution automatically."];
+  },
+});
+
+const generateResponse = observe({
+  type: "llm",
+  fn: async (query: string, context: string[]) => {
+    // Simulated LLM generation (auto-patched)
+    const response = await client.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: `Context: ${context} Query: ${query}` }],
+    });
+    return response.choices[0].message.content;
+  },
+});
+
+// Root span (no type required)
+const answerUserQuery = observe({
+  fn: async (userQuery: string) => {
+    const context = await retrieveContext(userQuery);
+    return generateResponse(userQuery, context);
+  },
+});
+```
+
+</LangSwitch>
+
 When `answer_user_query()` is executed, `deepeval` creates a root trace. Inside that trace, the `retriever` span will execute first, followed by the `llm` span.
 
 :::tip
@@ -173,6 +265,8 @@ Always explicitly define the `type` parameter (`llm`, `retriever`, `tool`, or `a
 While `@observe` handles explicit function inputs and outputs, complex applications often generate internal variables that are critical for evaluation but are never formally returned by the function.
 
 For example, your retriever function might fetch documents, but your generation function needs those exact documents to be evaluated for hallucinations. You must track this dynamic context manually using `update_current_span()`.
+
+<LangSwitch>
 
 ```python title="rag_pipeline.py"
 from deepeval.tracing import observe, update_current_span
@@ -190,6 +284,28 @@ def retrieve_context(query: str) -> list:
     
     return documents
 ```
+
+```typescript title="rag_pipeline.ts"
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+
+const retrieveContext = observe({
+  type: "retriever",
+  fn: async (query: string) => {
+    const results = await vectorStore.search(query, { k: 3 });
+    const documents = results.map((res) => res.text);
+
+    // Attach the retrieved documents directly to the current span
+    updateCurrentSpan({
+      retrievalContext: documents,
+      metadata: { chunkSize: 512, embedder: "text-embedding-3-small" },
+    });
+
+    return documents;
+  },
+});
+```
+
+</LangSwitch>
 
 By calling `update_current_span()` from *within* the decorated function, you inject data directly into the active span.
 
@@ -214,6 +330,8 @@ These parameters allow you to set attributes to your spans inside any trace manu
 
 You can also use `update_current_trace()` to append metadata to the entire execution graph, rather than just the active span. This is highly useful for tracking user sessions, application versions, or A/B testing flags.
 
+<LangSwitch>
+
 ```python title="rag_pipeline.py"
 from deepeval.tracing import observe, update_current_trace
 
@@ -226,6 +344,23 @@ def answer_user_query(user_query: str, user_plan: str) -> str:
     context = retrieve_context(user_query)
     return generate_response(user_query, context)
 ```
+
+```typescript title="rag_pipeline.ts"
+import { observe, updateCurrentTrace } from "deepeval/tracing";
+
+const answerUserQuery = observe({
+  fn: async (userQuery: string, userPlan: string) => {
+    updateCurrentTrace({
+      tags: ["rag-v2"],
+      metadata: { userPlan },
+    });
+    const context = await retrieveContext(userQuery);
+    return generateResponse(userQuery, context);
+  },
+});
+```
+
+</LangSwitch>
 
 ### `update_current_trace()` Parameters
 
@@ -259,6 +394,8 @@ What separates `deepeval`'s tracing from other tracing / instrumentation framewo
 
 Instead of only evaluating the final output of your pipeline, you can attach `deepeval` metrics directly to specific spans to evaluate components in isolation. During local development, you pass instantiated metrics to the `metrics` parameter of the `@observe` decorator. When the function finishes executing, `deepeval` intercepts the span data and immediately runs the specified metrics locally — no separate evaluation step required.
 
+<LangSwitch>
+
 ```python title="rag_pipeline.py"
 from deepeval.tracing import observe
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
@@ -275,7 +412,31 @@ def generate_response(query: str, context: list) -> str:
     return response.choices[0].message.content
 ```
 
+```typescript title="rag_pipeline.ts"
+import { metrics } from "deepeval";
+import { observe } from "deepeval/tracing";
+
+const relevancyMetric = new metrics.AnswerRelevancyMetric({ threshold: 0.7 });
+const faithfulnessMetric = new metrics.FaithfulnessMetric({ threshold: 0.8 });
+
+const generateResponse = observe({
+  type: "llm",
+  metrics: [relevancyMetric, faithfulnessMetric],
+  fn: async (query: string, context: string[]) => {
+    const response = await client.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: `Context: ${context} Query: ${query}` }],
+    });
+    return response.choices[0].message.content;
+  },
+});
+```
+
+</LangSwitch>
+
 Now call your function using the `evals_iterator` of `EvaluationDataset` to run component evals on pre-defined inputs
+
+<LangSwitch>
 
 ```python
 from deepeval.dataset import EvaluationDataset, Golden
@@ -289,6 +450,23 @@ for golden in dataset.evals_iterator():
     generate_response(golden.input)
 ```
 
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset({
+  goldens: [
+    new Golden({ input: "..." }),
+    // ...
+  ],
+});
+
+for await (const golden of dataset.evalsIterator()) {
+  await generateResponse(golden.input);
+}
+```
+
+</LangSwitch>
+
 When `generate_response()` runs, `deepeval` automatically extracts the function's `input` (the query), `output` (the response), and any `retrieval_context` attached to the span, and feeds them into both metrics. If a metric fails its threshold, it is highlighted in your local trace output immediately — before you ever push code.
 
 :::note
@@ -299,6 +477,8 @@ Running metrics via the `metrics` parameter is a blocking operation. The metric 
 
 Component-level metrics evaluate individual spans in isolation, but sometimes you need to evaluate the full request from start to finish — whether the final answer was correct given the user's original question. You can do this by attaching metrics to the root span instead.
 
+<LangSwitch>
+
 ```python title="rag_pipeline.py"
 from deepeval.tracing import observe
 
@@ -308,7 +488,22 @@ def answer_user_query(user_query: str) -> str:
     return generate_response(user_query, context)
 ```
 
+```typescript title="rag_pipeline.ts"
+import { observe } from "deepeval/tracing";
+
+const answerUserQuery = observe({
+  fn: async (userQuery: string) => {
+    const context = await retrieveContext(userQuery);
+    return generateResponse(userQuery, context);
+  },
+});
+```
+
+</LangSwitch>
+
 Now call your function using the `evals_iterator` of `EvaluationDataset` with metrics to run end-to-end evals
+
+<LangSwitch>
 
 ```python
 from deepeval.dataset import EvaluationDataset, Golden
@@ -330,6 +525,32 @@ dataset = EvaluationDataset(goldens=[
 for golden in dataset.evals_iterator(metrics=[correctness_metric]):
     generate_response(golden.input)
 ```
+
+```typescript
+import { metrics } from "deepeval";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { SingleTurnParams } from "deepeval/testCase";
+
+const correctnessMetric = new metrics.GEval({
+  name: "Correctness",
+  criteria: "Determine whether the actual output is factually correct based on the expected output.",
+  evaluationParams: [SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
+  threshold: 0.7,
+});
+
+const dataset = new EvaluationDataset({
+  goldens: [
+    new Golden({ input: "..." }),
+    // ...
+  ],
+});
+
+for await (const golden of dataset.evalsIterator({ metrics: [correctnessMetric] })) {
+  await generateResponse(golden.input);
+}
+```
+
+</LangSwitch>
 
 :::tip
 Use component-level metrics (on `retriever` and `llm` spans) to diagnose *where* your pipeline is failing. Use end-to-end metrics to measure whether the pipeline is succeeding for the user. Both are most useful together.
@@ -466,12 +687,27 @@ Log in to Confident AI and create a metric collection containing the component-l
 
 Replace your local `metrics=[...]` list with the `metric_collection` parameter.
 
+<LangSwitch>
+
 ```python
 # Reference your Confident AI metric collection by name
 @observe(type="llm", metric_collection="my-production-metrics")
 def generate_response(query: str, context: list) -> str:
     ...
 ```
+
+```typescript
+// Reference your Confident AI metric collection by name
+const generateResponse = observe({
+  type: "llm",
+  metricCollection: "my-production-metrics",
+  fn: async (query: string, context: string[]) => {
+    // ...
+  },
+});
+```
+
+</LangSwitch>
 
 Whenever your application runs, `deepeval` automatically exports the traces to Confident AI in a background thread—meaning zero latency is added to your application. Confident AI then evaluates these traces asynchronously using your specified metric collection.
 

@@ -6,9 +6,9 @@ import type { MDXComponents } from "mdx/types";
 import { DEFAULT_LLM_MODEL } from "@/lib/defaults";
 import { MdxAnchor } from "@/components/mdx-anchor";
 import { C } from "@/components/lang/code-term";
+import { LangSwitch } from "@/components/lang/lang-switch";
+import { PythonOnly } from "@/components/lang/python-only";
 
-// Site-specific MDX components — globally registered so MDX authors
-// don't have to `import` them in every file.
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 import ImageDisplayer from "@site/src/components/ImageDisplayer";
 import Callout from "@site/src/components/Callout";
@@ -28,22 +28,18 @@ import EnterpriseComparisonTable from "@site/src/sections/enterprise/EnterpriseC
 import EnterprisePlatformMockup from "@site/src/sections/enterprise/EnterprisePlatformMockup";
 import RepoContributors from "@site/src/sections/home/RepoContributors";
 
-function DefaultLLMModel() {
-  return <code>{DEFAULT_LLM_MODEL}</code>;
-}
+const DefaultLLMModel = () => <code>{DEFAULT_LLM_MODEL}</code>;
 
-export function getMDXComponents(components?: MDXComponents) {
-  return {
+export const getMDXComponents = (components?: MDXComponents) =>
+  ({
     ...defaultMdxComponents,
     a: MdxAnchor,
-    // Fumadocs primitives
     Tabs,
     Tab,
     Card,
     Cards,
     Steps,
     Step,
-    // Site components
     VideoDisplayer,
     ImageDisplayer,
     Callout,
@@ -63,11 +59,11 @@ export function getMDXComponents(components?: MDXComponents) {
     EnterprisePlatformMockup,
     RepoContributors,
     DefaultLLMModel,
-    // Inline language-aware code term, e.g. <C id="class::LLMTestCase"/>
     C,
+    LangSwitch,
+    PythonOnly,
     ...components,
-  } satisfies MDXComponents;
-}
+  }) satisfies MDXComponents;
 
 export const useMDXComponents = getMDXComponents;
 

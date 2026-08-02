@@ -4,6 +4,8 @@ title: SIMBA
 sidebar_label: SIMBA
 ---
 
+<PythonOnly />
+
 **SIMBA (Stochastic Introspective Mini-Batch Ascent)** is a prompt optimization algorithm within `deepeval` adapted from the DSPy optimizer of the same name. It improves prompts by hunting for high-variance examples—cases where the model sometimes succeeds and sometimes fails on the exact same input—and using that contrast to either rewrite the prompt's instructions or inject a verified few-shot demonstration.
 
 The core insight is that **uncertainty reveals the most about what a prompt is doing wrong**. When a model consistently passes or consistently fails an input, there is little diagnostic signal. But when outcomes vary run-to-run on the same input, the delta between the good and bad execution traces pinpoints exactly what the prompt needs to say differently.

@@ -118,6 +118,8 @@ But first, you'll have to tell `deepeval` what components are within your AI age
 
 Let's look at the example below to see how we can setup tracing on an example flight booking agent that uses OpenAI as the LLM:
 
+<LangSwitch>
+
 ```python
 import json
 
@@ -168,9 +170,75 @@ def travel_agent(user_input):
     return f"Booked flight {cheapest['id']} for ${cheapest['price']}. Confirmation: {booking['confirmation']}"
 ```
 
+```typescript
+import OpenAI from "openai";
+import { observe } from "deepeval/tracing";
+import { Golden, EvaluationDataset } from "deepeval/dataset";
+
+const client = new OpenAI();
+const tools = []; // See tools schema below
+
+const searchFlights = observe({
+  type: "tool",
+  name: "search_flights",
+  fn: async (origin: string, destination: string, date: string) => {
+    // Simulated flight search
+    return [{ id: "FL123", price: 450 }, { id: "FL456", price: 380 }];
+  },
+});
+
+const bookFlight = observe({
+  type: "tool",
+  name: "book_flight",
+  fn: async (flightId: string) => {
+    // Simulated booking
+    return { confirmation: "CONF-789", flightId };
+  },
+});
+
+const callOpenai = observe({
+  type: "llm",
+  fn: async (messages: any[]) => {
+    const response = await client.chat.completions.create({
+      model: "gpt-4o",
+      messages,
+      tools,
+    });
+    return response;
+  },
+});
+
+const travelAgent = observe({
+  type: "agent",
+  fn: async (userInput: string) => {
+    const messages: any[] = [{ role: "user", content: userInput }];
+
+    // LLM reasons about which tool to call
+    const response = await callOpenai(messages);
+    const toolCall = response.choices[0].message.tool_calls![0];
+    const args = JSON.parse(toolCall.function.arguments);
+
+    // Execute the tool
+    const flights = await searchFlights(args.origin, args.destination, args.date);
+
+    // LLM decides to book the cheapest
+    const cheapest = flights.reduce((a, b) => (a.price < b.price ? a : b));
+    messages.push({ role: "assistant", content: `Found flights. Booking cheapest: ${cheapest.id}` });
+
+    const booking = await bookFlight(cheapest.id);
+
+    return `Booked flight ${cheapest.id} for $${cheapest.price}. Confirmation: ${booking.confirmation}`;
+  },
+});
+```
+
+</LangSwitch>
+
 <details>
 
 <summary>View OpenAI tools schema</summary>
+
+<LangSwitch>
 
 ```python
 tools = [
@@ -207,6 +275,43 @@ tools = [
 ]
 ```
 
+```typescript
+const tools = [
+  {
+    type: "function",
+    function: {
+      name: "search_flights",
+      description: "Search for available flights between two cities",
+      parameters: {
+        type: "object",
+        properties: {
+          origin: { type: "string" },
+          destination: { type: "string" },
+          date: { type: "string" },
+        },
+        required: ["origin", "destination", "date"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "book_flight",
+      description: "Book a specific flight by ID",
+      parameters: {
+        type: "object",
+        properties: {
+          flight_id: { type: "string" },
+        },
+        required: ["flight_id"],
+      },
+    },
+  },
+];
+```
+
+</LangSwitch>
+
 </details>
 
 In this example, we've decorated each component of our agent with `@observe()` to create a full execution trace:
@@ -240,12 +345,23 @@ Another thing that is recommended is logging into Confident AI — an AI quality
 
 A **combination of these two metrics is needed** because you want to make sure the agent creates good plans AND follows them consistently. Evaluating the reasoning layer ensures your agent has a solid foundation before action begins. First create these two metrics in `deepeval`:
 
+<LangSwitch>
+
 ```python
 from deepeval.metrics import PlanQualityMetric, PlanAdherenceMetric
 
 plan_quality = PlanQualityMetric()
 plan_adherence = PlanAdherenceMetric()
 ```
+
+```typescript
+import { metrics } from "deepeval";
+
+const planQuality = new metrics.PlanQualityMetric();
+const planAdherence = new metrics.PlanAdherenceMetric();
+```
+
+</LangSwitch>
 
 :::info
 All metrics in `deepeval` allow you to set passing `threshold`s, turn on `strict_mode` and `include_reason`, and use literally **ANY** LLM for evaluation. You can learn about each metric in detail, including the algorithm used to calculate them, on their individual documentation pages:
@@ -256,6 +372,8 @@ All metrics in `deepeval` allow you to set passing `threshold`s, turn on `strict
 :::
 
 Finally, loop your traced AI agent over a [dataset](/docs/evaluation-datasets) you've prepared while defining the `PlanAdherenceMetric` and `PlanQualityMetric` as an end-to-end metric:
+
+<LangSwitch>
 
 ```python
 from deepeval.dataset import EvaluationDataset, Golden
@@ -269,6 +387,22 @@ dataset = EvaluationDataset(goldens=[
 for golden in dataset.evals_iterator(metrics=[plan_quality, plan_adherence]):
     travel_agent(golden.input)
 ```
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+
+// Create dataset
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "Book a flight from NYC to London for next Monday" })],
+});
+
+// Loop through dataset with metrics
+for await (const golden of dataset.evalsIterator({ metrics: [planQuality, planAdherence] })) {
+  await travelAgent(golden.input);
+}
+```
+
+</LangSwitch>
 
 The `travel_agent` in this example can be any `@observe` decorated agent. Whatever decorated function runs inside `evals_iterator`, `deepeval` will automatically collect the traces and run the specified metrics on them.
 
@@ -290,6 +424,8 @@ Tool selection and argument generation are both critical—calling the right too
 
 To begin, define your metrics:
 
+<LangSwitch>
+
 ```python
 from deepeval.metrics import ToolCorrectnessMetric, ArgumentCorrectnessMetric
 
@@ -297,7 +433,18 @@ tool_correctness = ToolCorrectnessMetric()
 argument_correctness = ArgumentCorrectnessMetric()
 ```
 
+```typescript
+import { metrics } from "deepeval";
+
+const toolCorrectness = new metrics.ToolCorrectnessMetric();
+const argumentCorrectness = new metrics.ArgumentCorrectnessMetric();
+```
+
+</LangSwitch>
+
 Then, add the metrics to the **LLM component** of your AI agent:
+
+<LangSwitch>
 
 ```python
 # Add metrics=[...] to @observe
@@ -311,7 +458,27 @@ def call_openai(messages):
     return response
 ```
 
+```typescript
+// Add metrics: [...] to observe
+const callOpenai = observe({
+  type: "llm",
+  metrics: [toolCorrectness, argumentCorrectness],
+  fn: async (messages: any[]) => {
+    const response = await client.chat.completions.create({
+      model: "gpt-4o",
+      messages,
+      tools,
+    });
+    return response;
+  },
+});
+```
+
+</LangSwitch>
+
 Lastly, run your traced AI agent with the added metrics:
+
+<LangSwitch>
 
 ```python
 from deepeval.dataset import EvaluationDataset, Golden
@@ -325,6 +492,22 @@ dataset = EvaluationDataset(goldens=[
 for golden in dataset.evals_iterator():
     weather_agent(golden.input)
 ```
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+
+// Create dataset
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What's the weather like in San Francisco and should I bring an umbrella?" })],
+});
+
+// Evaluate with action layer metrics
+for await (const golden of dataset.evalsIterator()) {
+  await weatherAgent(golden.input);
+}
+```
+
+</LangSwitch>
 
 The `tools_called` contains the actual tools your agent invoked (with their arguments), and `expected_tools` defines what tools should have been called. Visit their respective metric documentation pages to learn how they're calculated:
 
@@ -351,6 +534,8 @@ An agent might complete a task but do so inefficiently, wasting tokens and time.
 
 These metrics analyze the full agent trace to assess execution quality:
 
+<LangSwitch>
+
 ```python
 from deepeval.metrics import TaskCompletionMetric, StepEfficiencyMetric
 
@@ -358,7 +543,18 @@ task_completion = TaskCompletionMetric()
 step_efficiency = StepEfficiencyMetric()
 ```
 
+```typescript
+import { metrics } from "deepeval";
+
+const taskCompletion = new metrics.TaskCompletionMetric();
+const stepEfficiency = new metrics.StepEfficiencyMetric();
+```
+
+</LangSwitch>
+
 Lastly, same as above, run your AI agent with these metrics:
+
+<LangSwitch>
 
 ```python
 from deepeval.dataset import EvaluationDataset, Golden
@@ -372,6 +568,22 @@ dataset = EvaluationDataset(goldens=[
 for golden in dataset.evals_iterator(metrics=[task_completion, step_efficiency]):
     travel_agent(golden.input)
 ```
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+
+// Create dataset
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "Book the cheapest flight from NYC to LA for tomorrow" })],
+});
+
+// Evaluate with execution metrics
+for await (const golden of dataset.evalsIterator({ metrics: [taskCompletion, stepEfficiency] })) {
+  await travelAgent(golden.input);
+}
+```
+
+</LangSwitch>
 
 The `TaskCompletionMetric` will assess whether the agent actually booked a flight as requested, while `StepEfficiencyMetric` will evaluate whether the agent took the most direct path to completion.
 
@@ -459,12 +671,26 @@ Log in to Confident AI and create a metric collection containing the metrics you
 
 Replace your local `metrics=[...]` with `metric_collection`:
 
+<LangSwitch>
+
 ```python
 # Reference your Confident AI metric collection by name
 @observe(metric_collection="my-agent-metrics")
 def call_openai(messages):
     ...
 ```
+
+```typescript
+// Reference your Confident AI metric collection by name
+const callOpenai = observe({
+  metricCollection: "my-agent-metrics",
+  fn: async (messages: any[]) => {
+    // ...
+  },
+});
+```
+
+</LangSwitch>
 
 That's it. Whenever your agent runs, `deepeval` automatically exports traces to Confident AI in an OpenTelemetry-like fashion—no additional code required. Confident AI then evaluates these traces asynchronously using your metric collection and stores the results for you to analyze.
 

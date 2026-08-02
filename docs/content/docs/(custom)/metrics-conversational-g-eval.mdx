@@ -22,6 +22,8 @@ You'll also want to supply any additional arguments such as `retrieval_context` 
 
 To create a custom metric that evaluates entire LLM conversations, simply instantiate a `ConversationalGEval` class and define an evaluation criteria in everyday language:
 
+<LangSwitch>
+
 ```python
 from deepeval import evaluate
 from deepeval.test_case import Turn, MultiTurnParams, ConversationalTestCase
@@ -41,6 +43,28 @@ metric = ConversationalGEval(
 
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
+
+```typescript
+import { evaluate, metrics } from "deepeval";
+import { Turn, MultiTurnParams, ConversationalTestCase } from "deepeval/testCase";
+
+const convoTestCase = new ConversationalTestCase({
+  turns: [new Turn({ role: "user", content: "..." }), new Turn({ role: "assistant", content: "..." })],
+});
+const metric = new metrics.ConversationalGEval({
+  name: "Professionalism",
+  criteria: "Determine whether the assistant has acted professionally based on the content.",
+  evaluationParams: [MultiTurnParams.CONTENT],
+});
+
+// To run metric as a standalone
+// await metric.measure(convoTestCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([convoTestCase], [metric]);
+```
+
+</LangSwitch>
 
 There are **THREE** mandatory and **SEVEN** optional parameters required when instantiating an `ConversationalGEval` class:
 
@@ -76,12 +100,23 @@ metric.upload()
 
 You can also run the `ConversationalGEval` on a single test case as a standalone, one-off execution.
 
+<LangSwitch>
+
 ```python
 ...
 
 metric.measure(convo_test_case)
 print(metric.score, metric.reason)
 ```
+
+```typescript
+// ...
+
+await metric.measure(convoTestCase);
+console.log(metric.score, metric.reason);
+```
+
+</LangSwitch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.

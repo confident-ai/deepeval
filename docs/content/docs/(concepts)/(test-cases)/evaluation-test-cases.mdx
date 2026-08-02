@@ -29,6 +29,8 @@ An <C id="class::LLMTestCase"/> is the most prominent type of test case in <C id
 
 Here's an example implementation of an <C id="class::LLMTestCase"/>:
 
+<LangSwitch>
+
 ```python title="main.py"
 from deepeval.test_case import LLMTestCase, ToolCall
 
@@ -41,6 +43,21 @@ test_case = LLMTestCase(
     tools_called=[ToolCall(name="WebSearch")]
 )
 ```
+
+```typescript title="main.ts"
+import { LLMTestCase, ToolCall } from "deepeval";
+
+const testCase = new LLMTestCase({
+  input: "What if these shoes don't fit?",
+  expectedOutput: "You're eligible for a 30 day refund at no extra cost.",
+  actualOutput: "We offer a 30-day full refund at no extra cost.",
+  context: ["All customers are eligible for a 30 day full refund at no extra cost."],
+  retrievalContext: ["Only shoes can be refunded."],
+  toolsCalled: [new ToolCall({ name: "WebSearch" })],
+});
+```
+
+</LangSwitch>
 
 :::info
 Since <C id="module::deepeval"/> is an LLM evaluation framework, the **`input` and <C id="field::actual_output"/> are always mandatory.** However, this does not mean they are necessarily used for evaluation, and you can also add additional parameters such as the <C id="field::tools_called"/> for each <C id="class::LLMTestCase"/>.
@@ -182,6 +199,8 @@ Keep reading to learn which parameters in an `LLMTestCase` are required to evalu
 
 The `input` mimics a user interacting with your LLM application. The `input` can contain just text or text with images as well, it is the direct input to your prompt template, and so **SHOULD NOT CONTAIN** your prompt template.
 
+<LangSwitch>
+
 ```python
 from deepeval.test_case import LLMTestCase
 
@@ -191,6 +210,18 @@ test_case = LLMTestCase(
     actual_output="Quite frankly, I don't want to know..."
 )
 ```
+
+```typescript
+import { LLMTestCase } from "deepeval";
+
+const testCase = new LLMTestCase({
+  input: "Why did the chicken cross the road?",
+  // Replace this with your actual LLM application
+  actualOutput: "Quite frankly, I don't want to know...",
+});
+```
+
+</LangSwitch>
 
 :::tip
 
@@ -234,6 +265,8 @@ deepeval test run test_file.py
 
 The `actual_output` is an **optional** parameter and represents what your LLM app outputs for a given input. Typically, you would import your LLM application (or parts of it) into your test file, and invoke it at runtime to get the actual output. The `actual_output` can be text or image or both as well depending on what your LLM application outputs.
 
+<LangSwitch>
+
 ```python
 # A hypothetical LLM application example
 import chatbot
@@ -246,6 +279,20 @@ test_case = LLMTestCase(
 )
 ```
 
+```typescript
+// A hypothetical LLM application example
+import chatbot from "./chatbot";
+
+const input = "Why did the chicken cross the road?";
+
+const testCase = new LLMTestCase({
+  input,
+  actualOutput: await chatbot.run(input),
+});
+```
+
+</LangSwitch>
+
 The `actual_output` is an optional parameter because some systems (such as RAG retrievers) does not require an LLM output to be evaluated.
 
 :::note
@@ -257,6 +304,8 @@ You may also choose to evaluate with precomputed `actual_output`s, instead of ge
 The `expected_output` is an **optional** parameter and represents you would want the ideal output to be. Note that this parameter is **optional** depending on the metric you want to evaluate.
 
 The expected output doesn't have to exactly match the actual output in order for your test case to pass since `deepeval` uses a variety of methods to evaluate non-deterministic LLM outputs. We'll go into more details [in the metrics section.](/docs/metrics-introduction)
+
+<LangSwitch>
 
 ```python
 # A hypothetical LLM application example
@@ -271,11 +320,28 @@ test_case = LLMTestCase(
 )
 ```
 
+```typescript
+// A hypothetical LLM application example
+import chatbot from "./chatbot";
+
+const input = "Why did the chicken cross the road?";
+
+const testCase = new LLMTestCase({
+  input,
+  actualOutput: await chatbot.run(input),
+  expectedOutput: "To get to the other side!",
+});
+```
+
+</LangSwitch>
+
 ### Context
 
 The `context` is an **optional** parameter that represents additional data received by your LLM application as supplementary sources of golden truth. You can view it as the ideal segment of your knowledge base relevant as support information to a specific input. Context is **static** and should not be generated dynamically.
 
 Unlike other parameters, a context accepts a list of strings.
+
+<LangSwitch>
 
 ```python
 # A hypothetical LLM application example
@@ -290,6 +356,22 @@ test_case = LLMTestCase(
     context=["The chicken wanted to cross the road."]
 )
 ```
+
+```typescript
+// A hypothetical LLM application example
+import chatbot from "./chatbot";
+
+const input = "Why did the chicken cross the road?";
+
+const testCase = new LLMTestCase({
+  input,
+  actualOutput: await chatbot.run(input),
+  expectedOutput: "To get to the other side!",
+  context: ["The chicken wanted to cross the road."],
+});
+```
+
+</LangSwitch>
 
 :::note
 Often times people confuse `expected_output` with `context` since due to their similar level of factual accuracy. However, while both are (or should be) factually correct, `expected_output` also takes aspects like tone and linguistic patterns into account, whereas context is strictly factual.
@@ -309,6 +391,8 @@ class RetrievedContextData(BaseModel):
     source: str
 ```
 
+<LangSwitch>
+
 ```python
 # A hypothetical LLM application example
 import chatbot
@@ -323,6 +407,23 @@ test_case = LLMTestCase(
     retrieval_context=["The chicken liked the other side of the road better"]
 )
 ```
+
+```typescript
+// A hypothetical LLM application example
+import chatbot from "./chatbot";
+
+const input = "Why did the chicken cross the road?";
+
+const testCase = new LLMTestCase({
+  input,
+  actualOutput: await chatbot.run(input),
+  expectedOutput: "To get to the other side!",
+  context: ["The chicken wanted to cross the road."],
+  retrievalContext: ["The chicken liked the other side of the road better"],
+});
+```
+
+</LangSwitch>
 
 :::note
 Remember, `context` is the ideal retrieval results for a given input and typically come from your evaluation dataset, whereas `retrieval_context` is your LLM application's actual retrieval results. So, while they might look similar at times, they are not the same.
@@ -353,6 +454,8 @@ A <C id="class::ToolCall"/> object accepts 1 mandatory and 4 optional parameters
 - [Optional] `output`: The tool's **output**, which can be of any data type.
 - [Optional] `input_parameters`: A dictionary with string keys representing the **input parameters** (and respective values) passed into the tool function.
 
+<LangSwitch>
+
 ```python
 # A hypothetical LLM application example
 import chatbot
@@ -378,6 +481,35 @@ test_case = LLMTestCase(
 )
 ```
 
+```typescript
+// A hypothetical LLM application example
+import chatbot from "./chatbot";
+
+const input = "Why did the chicken cross the road?";
+
+const testCase = new LLMTestCase({
+  input,
+  actualOutput: await chatbot.run(input),
+  // Replace this with the tools that were actually used
+  toolsCalled: [
+    new ToolCall({
+      name: "Calculator Tool",
+      description: "A tool that calculates mathematical equations or expressions.",
+      inputParameters: { user_input: "2+3" },
+      output: 5,
+    }),
+    new ToolCall({
+      name: "WebSearch Tool",
+      reasoning: "Knowledge base does not detail why the chicken crossed the road.",
+      inputParameters: { search_query: "Why did the chicken crossed the road?" },
+      output: "Because it wanted to, duh.",
+    }),
+  ],
+});
+```
+
+</LangSwitch>
+
 :::info
 `tools_called` and `expected_tools` are LLM test case parameters that are utilized only in **agentic evaluation metrics**. These parameters allow you to assess the [tool usage correctness](/docs/metrics-tool-correctness) of your LLM application and ensure that it meets the expected tool usage standards.
 :::
@@ -385,6 +517,8 @@ test_case = LLMTestCase(
 ### Expected Tools
 
 The `expected_tools` parameter is an **optional** parameter that represents the tools that ideally should have been used to generate the output. By providing `expected_tools`, you can assess whether your LLM application used the tools you anticipated for optimal performance.
+
+<LangSwitch>
 
 ```python
 # A hypothetical LLM application example
@@ -421,6 +555,43 @@ test_case = LLMTestCase(
 )
 ```
 
+```typescript
+// A hypothetical LLM application example
+import chatbot from "./chatbot";
+
+const input = "Why did the chicken cross the road?";
+
+const testCase = new LLMTestCase({
+  input,
+  actualOutput: await chatbot.run(input),
+  // Replace this with the tools that were actually used
+  toolsCalled: [
+    new ToolCall({
+      name: "Calculator Tool",
+      description: "A tool that calculates mathematical equations or expressions.",
+      inputParameters: { user_input: "2+3" },
+      output: 5,
+    }),
+    new ToolCall({
+      name: "WebSearch Tool",
+      reasoning: "Knowledge base does not detail why the chicken crossed the road.",
+      inputParameters: { search_query: "Why did the chicken crossed the road?" },
+      output: "Because it wanted to, duh.",
+    }),
+  ],
+  expectedTools: [
+    new ToolCall({
+      name: "WebSearch Tool",
+      reasoning: "Knowledge base does not detail why the chicken crossed the road.",
+      inputParameters: { search_query: "Why did the chicken crossed the road?" },
+      output: "Because it needed to escape from the hungry humans.",
+    }),
+  ],
+});
+```
+
+</LangSwitch>
+
 ### Token cost
 
 The `token_cost` is an **optional** parameter and is of type float that allows you to log the cost of a particular LLM interaction for a particular `LLMTestCase`. No metrics use this parameter by default, and it is most useful for either:
@@ -428,11 +599,21 @@ The `token_cost` is an **optional** parameter and is of type float that allows y
 1. Building custom metrics that relies on `token_cost`
 2. Logging `token_cost` on Confident AI
 
+<LangSwitch>
+
 ```python
 from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(token_cost=1.32, ...)
 ```
+
+```typescript
+import { LLMTestCase } from "deepeval";
+
+const testCase = new LLMTestCase({ input: "...", actualOutput: "...", tokenCost: 1.32 });
+```
+
+</LangSwitch>
 
 ### Completion Time
 
@@ -441,15 +622,27 @@ The `completion_time` is an **optional** parameter and is similar to the `token_
 1. Building custom metrics that relies on `completion_time`
 2. Logging `completion_time` on Confident AI
 
+<LangSwitch>
+
 ```python
 from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(completion_time=7.53, ...)
 ```
 
+```typescript
+import { LLMTestCase } from "deepeval";
+
+const testCase = new LLMTestCase({ input: "...", actualOutput: "...", completionTime: 7.53 });
+```
+
+</LangSwitch>
+
 ## Including Images
 
 By default `deepeval` supports passing both text and images inside your test cases using the `MLLMImage` object. The `MLLMImage` class in `deepeval` is used to reference multimodal images in your test cases. It allows you to create test cases using local images, remote URLs and `base64` data.
+
+<LangSwitch>
 
 ```python
 from deepeval.test_case import LLMTestCase, MLLMImage
@@ -463,6 +656,21 @@ test_case = LLMTestCase(
     retrieval_context=[f"Some reference shoes: {MLLMImage(...)}"]
 )
 ```
+
+```typescript
+import { LLMTestCase, MLLMImage } from "deepeval/testCase";
+
+const shoes = new MLLMImage({ url: "./shoes.png", local: true });
+const blueShoes = new MLLMImage({ url: "https://shoe-images.com/edited-shoes", local: false });
+
+const testCase = new LLMTestCase({
+  input: `Change the color of these shoes to blue: ${shoes}`,
+  expectedOutput: `Here's the blue shoes you asked for: ${expectedShoes}`,
+  retrievalContext: [`Some reference shoes: ${new MLLMImage({ url: "./reference-shoes.png", local: true })}`],
+});
+```
+
+</LangSwitch>
 
 :::info
 Multimodal test cases are automatically detected when you include `MLLMImage` objects in your inputs or outputs. You can use them with various multimodal supported metrics like the [RAG metrics](/docs/metrics-answer-relevancy) and [multimodal-specific metrics](/docs/multimodal-metrics-image-coherence).
@@ -487,6 +695,8 @@ You **MUST** either provide `url` or `dataBase64` and `mimeType` parameters when
 
 All the `MLLMImage` instances are converted to a special `deepeval` slug, (e.g `[DEEPEVAL:IMAGE:uuid]`). This is how your `MLLMImage`s look like in your test cases after you embed them in f-strings:
 
+<LangSwitch>
+
 ```python
 from deepeval.test_case import LLMTestCase, MLLMImage
 
@@ -499,6 +709,21 @@ test_case = LLMTestCase(
 
 print(test_case.input)
 ```
+
+```typescript
+import { LLMTestCase, MLLMImage } from "deepeval/testCase";
+
+const shoes = new MLLMImage({ url: "./shoes.png", local: true });
+
+const testCase = new LLMTestCase({
+  input: `Change the color of these shoes to blue: ${shoes}`,
+  expectedOutput: `...`,
+});
+
+console.log(testCase.input);
+```
+
+</LangSwitch>
 
 This outputs the following:
 
@@ -556,11 +781,21 @@ If you're using Confident AI, these are some additional parameters to help manag
 
 The optional `name` parameter allows you to provide a string identifier to label `LLMTestCase`s and `ConversationalTestCase`s for you to easily search and filter for on Confident AI. This is particularly useful if you're importing test cases from an external datasource.
 
+<LangSwitch>
+
 ```python
 from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(name="my-external-unique-id", ...)
 ```
+
+```typescript
+import { LLMTestCase } from "deepeval";
+
+const testCase = new LLMTestCase({ input: "...", actualOutput: "...", name: "my-external-unique-id" });
+```
+
+</LangSwitch>
 
 ### Tags
 

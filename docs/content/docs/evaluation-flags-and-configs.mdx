@@ -35,12 +35,22 @@ The `throttle_value` and `max_concurrent` parameter is only used when `run_async
 
 The `DisplayConfig` controls how results and intermediate execution steps are displayed during `evaluate()`.
 
+<LangSwitch>
+
 ```python
 from deepeval.evaluate import DisplayConfig
 from deepeval import evaluate
 
 evaluate(display_config=DisplayConfig(), ...)
 ```
+
+```typescript
+import { evaluate } from "deepeval";
+
+await evaluate(testCases, metricList, { displayConfig: { verboseMode: true } });
+```
+
+</LangSwitch>
 
 There are **TEN** optional parameters when creating a `DisplayConfig`:
 
@@ -108,12 +118,22 @@ If `results_folder` is unset but the `DEEPEVAL_RESULTS_FOLDER` environment varia
 
 The `ErrorConfig` controls how error is handled in `evaluate()`.
 
+<LangSwitch>
+
 ```python
 from deepeval.evaluate import ErrorConfig
 from deepeval import evaluate
 
 evaluate(error_config=ErrorConfig(), ...)
 ```
+
+```typescript
+import { evaluate } from "deepeval";
+
+await evaluate(testCases, metricList, { errorConfig: { ignoreErrors: true } });
+```
+
+</LangSwitch>
 
 There are **TWO** optional parameters when creating an `ErrorConfig`:
 

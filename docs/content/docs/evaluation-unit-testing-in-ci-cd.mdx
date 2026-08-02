@@ -38,12 +38,23 @@ If you haven't already, we recommend reading the end-to-end and component-level 
 <Tabs items={["Pull from Confident AI", "Load from CSV", "Load from JSON", "In Code"]}>
 <Tab value="Pull from Confident AI">
 
+<LangSwitch>
+
 ```python
 from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset()
 dataset.pull(alias="My Evals Dataset")
 ```
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset();
+await dataset.pull({ alias: "My Evals Dataset" });
+```
+
+</LangSwitch>
 
 </Tab>
 <Tab value="Load from CSV">
@@ -74,6 +85,8 @@ dataset.add_goldens_from_json_file(
 </Tab>
 <Tab value="In Code">
 
+<LangSwitch>
+
 ```python
 from deepeval.dataset import Golden, EvaluationDataset
 
@@ -85,6 +98,20 @@ goldens = [
 
 dataset = EvaluationDataset(goldens=goldens)
 ```
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+
+const goldens = [
+  new Golden({ input: "What is your name?" }),
+  new Golden({ input: "Choose a number between 1 and 100" }),
+  // ...
+];
+
+const dataset = new EvaluationDataset({ goldens });
+```
+
+</LangSwitch>
 
 </Tab>
 </Tabs>
@@ -171,6 +198,8 @@ The `ConversationSimulator` needs a way to ask your chatbot for its next reply, 
 <Tabs items={["Python", "OpenAI", "LangChain", "LlamaIndex", "OpenAI Agents", "Pydantic"]}>
 <Tab value="Python">
 
+<LangSwitch>
+
 ```python title="main.py" showLineNumbers
 from typing import List
 from deepeval.test_case import Turn
@@ -179,6 +208,17 @@ async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
     response = await your_chatbot(input, turns, thread_id)
     return Turn(role="assistant", content=response)
 ```
+
+```typescript title="main.ts" showLineNumbers
+import { Turn } from "deepeval";
+
+const modelCallback = async ({ input, turns, threadId }: { input: string; turns: Turn[]; threadId: string }): Promise<Turn> => {
+  const response = await yourChatbot(input, turns, threadId);
+  return new Turn({ role: "assistant", content: response });
+};
+```
+
+</LangSwitch>
 
 </Tab>
 <Tab value="OpenAI">
@@ -363,6 +403,8 @@ You can also mark individual **metrics** as flaky (`AnswerRelevancyMetric(flaky=
 
 Drop `deepeval test run` into a `.yml` to run your unit tests on every push or PR. This example uses `poetry` for installation and `OPENAI_API_KEY` as your LLM judge to run evals locally. Add `CONFIDENT_API_KEY` to send results to Confident AI.
 
+<LangSwitch>
+
 ```yaml {32-33}
 name: LLM App `deepeval` Tests
 
@@ -398,6 +440,39 @@ jobs:
           CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
         run: poetry run deepeval test run test_llm_app.py
 ```
+
+```yaml {27-28}
+name: LLM App `deepeval` Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run `deepeval` Evals
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+        run: npx tsx test_llm_app.ts
+```
+
+</LangSwitch>
 
 [Click here](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about the optional flags available to `deepeval test run`.
 

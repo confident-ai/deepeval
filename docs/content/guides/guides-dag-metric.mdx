@@ -4,6 +4,8 @@ title: Building a DAG Metric
 sidebar_label: Building a DAG Metric
 ---
 
+<PythonOnly />
+
 import { ASSETS } from "@site/src/assets";
 
 A single LLM judge is convenient, but it can be unpredictable when your rubric contains several conditional rules. A **DAG metric** makes those rules explicit: each node performs one small task or decision, and each path ends at a score you chose. You build the graph top-down, so its code follows the same order as its evaluation flow.

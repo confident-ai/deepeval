@@ -75,9 +75,17 @@ The `deepeval` integration plugs into the agents SDK's tracing pipeline as a `Tr
 
 ### Installation
 
+<LangSwitch>
+
 ```bash
 pip install -U deepeval openai-agents
 ```
+
+```bash
+npm install deepeval @openai/agents zod
+```
+
+</LangSwitch>
 
 The integration registers `DeepEvalTracingProcessor` against the agents SDK's tracing pipeline, then provides `Agent` and `function_tool` shims that accept `deepeval` metrics directly.
 
@@ -88,6 +96,8 @@ The integration registers `DeepEvalTracingProcessor` against the agents SDK's tr
 ### Instrument and evaluate
 
 Register the processor once at startup, then use `deepeval.openai_agents.Agent` and `function_tool` in place of the SDK's classes. Attach metrics to the agent or to specific tools.
+
+<LangSwitch>
 
 ```python title="openai_agents_app.py" showLineNumbers
 from agents import Runner, add_trace_processor
@@ -115,6 +125,42 @@ dataset = EvaluationDataset(goldens=[Golden(input="What's the weather in Paris?"
 for golden in dataset.evals_iterator():
     Runner.run_sync(agent, golden.input)
 ```
+
+```typescript title="openai_agents_app.ts" showLineNumbers
+import { Agent, run, tool, addTraceProcessor } from "@openai/agents";
+import { z } from "zod";
+import { DeepEvalTracingProcessor } from "deepeval/integrations/openai-agents";
+import { EvaluationDataset, Golden, metrics } from "deepeval";
+
+addTraceProcessor(new DeepEvalTracingProcessor());
+
+const getWeather = tool({
+  name: "get_weather",
+  description: "Return the weather in a city.",
+  parameters: z.object({ city: z.string() }),
+  execute: async ({ city }) => `It's always sunny in ${city}!`,
+});
+
+const agent = new Agent({
+  name: "weather_agent",
+  instructions: "Answer weather questions concisely.",
+  tools: [getWeather],
+});
+
+// Goldens are the inputs you want to evaluate.
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What's the weather in Paris?" })],
+});
+
+// The `TaskCompletionMetric` scores the trace of each agent run.
+for await (const golden of dataset.evalsIterator({
+  metrics: [new metrics.TaskCompletionMetric()],
+})) {
+  await run(agent, golden.input);
+}
+```
+
+</LangSwitch>
 
 Done ✅. You've run your first eval with full traceability into OpenAI Agents via `deepeval`.
 
@@ -190,6 +236,8 @@ deepeval test run test_openai_agents_app.py
 
 Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one agent run; metrics score the resulting trace.
 
+<LangSwitch>
+
 ```python title="openai_agents_app.py" showLineNumbers
 import asyncio
 
@@ -210,6 +258,27 @@ for golden in dataset.evals_iterator(
     task = asyncio.create_task(Runner.run(agent, golden.input))
     dataset.evaluate(task)
 ```
+
+```typescript title="openai_agents_app.ts" showLineNumbers
+import { run } from "@openai/agents";
+import { EvaluationDataset, Golden, metrics } from "deepeval";
+// ...
+
+const dataset = new EvaluationDataset({
+  goldens: [
+    new Golden({ input: "What's the weather in Paris?" }),
+    new Golden({ input: "What's the weather in London?" }),
+  ],
+});
+
+for await (const golden of dataset.evalsIterator({
+  metrics: [new metrics.TaskCompletionMetric()],
+})) {
+  await run(agent, golden.input);
+}
+```
+
+</LangSwitch>
 
 Sync (`Runner.run_sync`) and async (`Runner.run`) execution both work; pick whichever matches your code.
 
@@ -364,6 +433,8 @@ for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True)):
 
 When the agent run is part of a larger operation, decorate the outer function with `@observe`. The agents-SDK spans nest under your observed span automatically.
 
+<LangSwitch>
+
 ```python title="openai_agents_app.py" showLineNumbers
 from agents import Runner
 from deepeval.tracing import observe
@@ -374,6 +445,22 @@ async def respond_to_user(prompt: str) -> str:
     result = await Runner.run(agent, prompt)
     return result.final_output.strip()
 ```
+
+```typescript title="openai_agents_app.ts" showLineNumbers
+import { run } from "@openai/agents";
+import { observe } from "deepeval/tracing";
+// ...
+
+const respondToUser = observe({
+  name: "respond_to_user",
+  fn: async (prompt: string) => {
+    const result = await run(agent, prompt);
+    return result.finalOutput?.trim();
+  },
+});
+```
+
+</LangSwitch>
 
 ### Bind a Confident AI prompt to an agent
 

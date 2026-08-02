@@ -8,6 +8,8 @@ The `model_callback` is the bridge between the simulator and your LLM applicatio
 
 Only the `input` argument is required when defining your `model_callback`, but you may also define optional arguments that `deepeval` will pass by name.
 
+<LangSwitch>
+
 ```python title="main.py"
 from deepeval.test_case import Turn
 
@@ -15,6 +17,17 @@ async def model_callback(input: str) -> Turn:
     response = await your_llm_app(input)
     return Turn(role="assistant", content=response)
 ```
+
+```typescript title="main.ts"
+import { Turn } from "deepeval";
+
+const modelCallback = async ({ input }: { input: string }): Promise<Turn> => {
+  const response = await yourLlmApp(input);
+  return new Turn({ role: "assistant", content: response });
+};
+```
+
+</LangSwitch>
 
 ## Supported Arguments
 
@@ -30,6 +43,8 @@ While `turns` captures the conversation history available at the moment your cal
 
 Some chatbot APIs manage conversation state internally or do not need prior turns. Use only `input` for this setup.
 
+<LangSwitch>
+
 ```python
 from deepeval.test_case import Turn
 
@@ -38,9 +53,22 @@ async def model_callback(input: str) -> Turn:
     return Turn(role="assistant", content=response)
 ```
 
+```typescript
+import { Turn } from "deepeval";
+
+const modelCallback = async ({ input }: { input: string }): Promise<Turn> => {
+  const response = await chatbot.chat(input);
+  return new Turn({ role: "assistant", content: response });
+};
+```
+
+</LangSwitch>
+
 ### Message History
 
 If your application expects the message history on every request, use `turns` to pass the simulated conversation transcript up to the current user message.
+
+<LangSwitch>
 
 ```python
 from typing import List
@@ -52,9 +80,23 @@ async def model_callback(input: str, turns: List[Turn]) -> Turn:
     return Turn(role="assistant", content=response)
 ```
 
+```typescript
+import { Turn } from "deepeval";
+
+const modelCallback = async ({ input, turns }: { input: string; turns: Turn[] }): Promise<Turn> => {
+  const messages = turns.map((turn) => ({ role: turn.role, content: turn.content }));
+  const response = await chatbot.chat({ messages });
+  return new Turn({ role: "assistant", content: response });
+};
+```
+
+</LangSwitch>
+
 ### Backend Sessions
 
 For backend memory, tool state, carts, or API session data stored outside the transcript, use `thread_id` to keep each simulation connected to the right session.
+
+<LangSwitch>
 
 ```python title="main.py"
 from typing import List
@@ -64,6 +106,17 @@ async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
     res = await your_llm_app(input=input, turns=turns, thread_id=thread_id)
     return Turn(role="assistant", content=res)
 ```
+
+```typescript title="main.ts"
+import { Turn } from "deepeval";
+
+const modelCallback = async ({ input, turns, threadId }: { input: string; turns: Turn[]; threadId: string }): Promise<Turn> => {
+  const res = await yourLlmApp({ input, turns, threadId });
+  return new Turn({ role: "assistant", content: res });
+};
+```
+
+</LangSwitch>
 
 ## FAQs
 

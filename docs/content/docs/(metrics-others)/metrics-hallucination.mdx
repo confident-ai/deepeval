@@ -25,6 +25,8 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 The `HallucinationMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
 
+<LangSwitch>
+
 ```python
 from deepeval import evaluate
 from deepeval.metrics import HallucinationMetric
@@ -49,6 +51,32 @@ metric = HallucinationMetric(threshold=0.5)
 
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
+
+```typescript
+import { evaluate, metrics } from "deepeval";
+import { LLMTestCase } from "deepeval/testCase";
+
+// Replace this with the actual documents that you are passing as input to your LLM.
+const context = ["A man with blond-hair, and a brown shirt drinking out of a public water fountain."];
+
+// Replace this with the actual output from your LLM application
+const actualOutput = "A blond drinking water in public.";
+
+const testCase = new LLMTestCase({
+  input: "What was the blond doing?",
+  actualOutput,
+  context,
+});
+const metric = new metrics.HallucinationMetric({ threshold: 0.5 });
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</LangSwitch>
 
 There are **SEVEN** optional parameters when creating a `HallucinationMetric`:
 
@@ -89,12 +117,23 @@ evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 
 You can also run the `HallucinationMetric` on a single test case as a standalone, one-off execution.
 
+<LangSwitch>
+
 ```python
 ...
 
 metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
+
+```typescript
+// ...
+
+await metric.measure(testCase);
+console.log(metric.score, metric.reason);
+```
+
+</LangSwitch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.

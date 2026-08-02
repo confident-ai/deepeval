@@ -19,12 +19,23 @@ In the previous section, we've seen [how to create datasets](/tutorials/medical-
 
 Here's how we can pull datasets from the cloud:
 
+<LangSwitch>
+
 ```python
 from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset()
 dataset.pull(alias="Medical Chatbot Dataset")
 ```
+
+```typescript
+import { EvaluationDataset } from "deepeval";
+
+const dataset = new EvaluationDataset();
+await dataset.pull({ alias: "Medical Chatbot Dataset" });
+```
+
+</LangSwitch>
 
 The dataset pulled contains goldens, which can be used to create test cases during run time and run evals. This is how we can use our `ConversationalGolden`s and `ConversationSimulator` to generate `ConversationalTestCase`s:
 
@@ -159,6 +170,8 @@ We'll now see how to update our chatbot to support more hyperparameters.
 
 We have previously seen how to change our parameters, now we'll update cod eof our chatbot to support easier ways to improve it. Here's the new chatbot code:
 
+<LangSwitch>
+
 ```python
 from qdrant_client import models, QdrantClient
 from sentence_transformers import SentenceTransformer
@@ -208,12 +221,85 @@ class MedicalChatbot:
         ...
 ```
 
+```typescript
+import { QdrantClient } from "@qdrant/js-client-rest";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { observe } from "deepeval/tracing";
+
+class MedicalChatbot {
+  model: ChatOpenAI;
+  appointments: Record<string, any>;
+  encoder: OpenAIEmbeddings;
+  client: QdrantClient;
+  systemPrompt: string;
+
+  constructor({
+    documentPath,
+    model = "gpt-4",
+    encoder = "text-embedding-3-small",
+    memory = "http://localhost:6333",
+    systemPrompt = "",
+  }: {
+    documentPath: string;
+    model?: string;
+    encoder?: string;
+    memory?: string;
+    systemPrompt?: string;
+  }) {
+    this.model = new ChatOpenAI({ model });
+    this.appointments = {};
+    this.encoder = new OpenAIEmbeddings({ model: encoder });
+    this.client = new QdrantClient({ url: memory });
+    this.storeData(documentPath);
+    this.systemPrompt =
+      systemPrompt ||
+      "You are a virtual health assistant designed to support users with symptom understanding and appointment management. Start every conversation by actively listening to the user's concerns. Ask clear follow-up questions to gather information like symptom duration, intensity, and relevant health history. Use available tools to fetch diagnostic information or manage medical appointments. Never assume a diagnosis unless there's enough detail, and always recommend professional medical consultation when appropriate.";
+    this.setupAgent(this.systemPrompt);
+  }
+
+  storeData(documentPath: string) {
+    // ...
+  }
+
+  queryEngine = observe({
+    type: "tool",
+    fn: async (query: string) => {
+      // ...
+    },
+  });
+
+  createAppointment = async (appointmentId: string) => {
+    // ...
+  };
+
+  setupTools() {
+    // ...
+  }
+
+  setupAgent = observe({
+    fn: (systemPrompt: string) => {
+      // ...
+    },
+  });
+
+  interactiveSession = observe({
+    fn: async (sessionId: string) => {
+      // ...
+    },
+  });
+}
+```
+
+</LangSwitch>
+
 These were the updates made to our medical chatbot. You can now change the following configurations for your chatbot in the initialization itself
 
 - generation model
 - embedding model
 - memory management
 - system prompt
+
+<LangSwitch>
 
 ```python
 from medical_chatbot import MedicalChatbot
@@ -225,6 +311,19 @@ chatbot = MedicalChatbot(
     system_prompt="..."
 )
 ```
+
+```typescript
+import { MedicalChatbot } from "./medical_chatbot";
+
+const chatbot = new MedicalChatbot({
+  model: "gpt-4",
+  encoder: "text-embedding-3-small",
+  memory: "http://localhost:6333",
+  systemPrompt: "...",
+});
+```
+
+</LangSwitch>
 
 This new updated model now performs as we intended and can be used to create a UI interface, this is what a UI integrated chatbot looks like:
 

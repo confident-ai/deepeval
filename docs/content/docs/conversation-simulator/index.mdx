@@ -6,6 +6,8 @@ sidebar_label: Conversation Simulator
 
 `deepeval`'s `ConversationSimulator` allows you to simulate full conversations between a fake user and your chatbot, unlike the [synthesizer](/docs/golden-synthesizer) which generates regular goldens representing single, atomic LLM interactions.
 
+<LangSwitch>
+
 ```python title="main.py" showLineNumbers
 from deepeval.test_case import Turn
 from deepeval.simulator import ConversationSimulator
@@ -27,6 +29,29 @@ simulator = ConversationSimulator(model_callback=chatbot_callback)
 conversational_test_cases = simulator.simulate(conversational_goldens=[conversation_golden])
 print(conversational_test_cases)
 ```
+
+```typescript title="main.ts" showLineNumbers
+import { Turn, ConversationSimulator, ConversationalGolden } from "deepeval";
+
+// Create ConversationalGolden
+const conversationGolden = new ConversationalGolden({
+  scenario: "Andy Byron wants to purchase a VIP ticket to a cold play concert.",
+  expectedOutcome: "Successful purchase of a ticket.",
+  userDescription: "Andy Byron is the CEO of Astronomer.",
+});
+
+// Define chatbot callback
+const chatbotCallback = async ({ input }: { input: string }) => {
+  return new Turn({ role: "assistant", content: `Chatbot response to: ${input}` });
+};
+
+// Run Simulation
+const simulator = new ConversationSimulator({ modelCallback: chatbotCallback });
+const conversationalTestCases = await simulator.simulate({ conversationalGoldens: [conversationGolden] });
+console.log(conversationalTestCases);
+```
+
+</LangSwitch>
 
 The `ConversationSimulator` uses the scenario and user description from a `ConversationalGolden` to simulate back-and-forth exchanges with your chatbot. The resulting dialogue is used to create `ConversationalTestCase`s for evaluation using `deepeval`'s multi-turn metrics.
 
@@ -64,6 +89,8 @@ sequenceDiagram
 
 To create a `ConversationSimulator`, you'll need to define a callback that wraps around your LLM chatbot. See [Model Callback](/docs/conversation-simulator-model-callback) for supported callback arguments.
 
+<LangSwitch>
+
 ```python
 from deepeval.test_case import Turn
 from deepeval.simulator import ConversationSimulator
@@ -73,6 +100,18 @@ async def model_callback(input: str) -> Turn:
 
 simulator = ConversationSimulator(model_callback=model_callback)
 ```
+
+```typescript
+import { Turn, ConversationSimulator } from "deepeval";
+
+const modelCallback = async ({ input }: { input: string }): Promise<Turn> => {
+  return new Turn({ role: "assistant", content: `I don't know how to answer this: ${input}` });
+};
+
+const simulator = new ConversationSimulator({ modelCallback });
+```
+
+</LangSwitch>
 
 There are **ONE** mandatory and **FOUR** optional parameters when creating a `ConversationSimulator`:
 
@@ -87,6 +126,8 @@ There are **ONE** mandatory and **FOUR** optional parameters when creating a `Co
 
 To simulate your first conversation, simply pass in a list of `ConversationalGolden`s to the `simulate` method:
 
+<LangSwitch>
+
 ```python
 from deepeval.dataset import ConversationalGolden
 ...
@@ -98,6 +139,20 @@ conversation_golden = ConversationalGolden(
 )
 conversational_test_cases = simulator.simulate(conversational_goldens=[conversation_golden])
 ```
+
+```typescript
+import { ConversationalGolden } from "deepeval";
+// ...
+
+const conversationGolden = new ConversationalGolden({
+  scenario: "Andy Byron wants to purchase a VIP ticket to a cold play concert.",
+  expectedOutcome: "Successful purchase of a ticket.",
+  userDescription: "Andy Byron is the CEO of Astronomer.",
+});
+const conversationalTestCases = await simulator.simulate({ conversationalGoldens: [conversationGolden] });
+```
+
+</LangSwitch>
 
 There are **ONE** mandatory and **ONE** optional parameter when calling the `simulate` method:
 
@@ -116,17 +171,29 @@ You can also generate conversations from existing turns. Simply populate your `C
 
 If your multi-turn chatbot has one or more predefined turns (for example, a hardcoded assistant message at the beginning of a conversation), you would simply include this as part of the simulation by providing a list of preexisting `turns` to a `ConversationalGolden`:
 
+<LangSwitch>
+
 ```python
 from deepeval.test_case import ConversationalTestCase, Turn
 
 golden = ConversationalGolden(turns=[Turn(role="assistant", content="Hi! How can I help you today?")])
 ```
 
+```typescript
+import { Turn, ConversationalGolden } from "deepeval";
+
+const golden = new ConversationalGolden({ scenario: "...", turns: [new Turn({ role: "assistant", content: "Hi! How can I help you today?" })] });
+```
+
+</LangSwitch>
+
 By including a list of non-empty `turns`, `deepeval` will run simulations based on the additional context you've provided.
 
 ## Evaluate Simulated Turns
 
 The `simulate` function returns a list of `ConversationalTestCase`s, which can be used to evaluate your LLM chatbot using `deepeval`'s conversational metrics. Use simulated conversations to run [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluations:
+
+<LangSwitch>
 
 ```python
 from deepeval import evaluate
@@ -135,6 +202,15 @@ from deepeval.metrics import TurnRelevancyMetric
 
 evaluate(test_cases=conversational_test_cases, metrics=[TurnRelevancyMetric()])
 ```
+
+```typescript
+import { evaluate, metrics } from "deepeval";
+// ...
+
+await evaluate(conversationalTestCases, [new metrics.TurnRelevancyMetric()]);
+```
+
+</LangSwitch>
 
 ## Advanced Usage
 

@@ -8,31 +8,31 @@ import {
 } from "react";
 import type { Language } from "@/lib/lang/terms";
 
-/**
- * Single shared source of truth for the active code language.
- *
- * Deliberately does NOT read the URL, pathname, or any route param —
- * routing is a separate decision for later. For now it just holds state
- * defaulting to Python; the `setLanguage` setter exists so a future
- * language dropdown can flip it, but nothing toggles it yet.
- */
 const LanguageContext = createContext<{
   language: Language;
+  preference: Language;
   setLanguage: (lang: Language) => void;
+  pythonOnlyPage: boolean;
+  setPythonOnlyPage: (value: boolean) => void;
 }>({
   language: "python",
+  preference: "python",
   setLanguage: () => {},
+  pythonOnlyPage: false,
+  setPythonOnlyPage: () => {},
 });
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>("python");
+export const LanguageProvider = ({ children }: { children: ReactNode }) => {
+  const [preference, setLanguage] = useState<Language>("python");
+  const [pythonOnlyPage, setPythonOnlyPage] = useState(false);
+  const language: Language = pythonOnlyPage ? "python" : preference;
   return (
-    <LanguageContext.Provider value={{ language, setLanguage }}>
+    <LanguageContext.Provider
+      value={{ language, preference, setLanguage, pythonOnlyPage, setPythonOnlyPage }}
+    >
       {children}
     </LanguageContext.Provider>
   );
-}
+};
 
-export function useLanguage() {
-  return useContext(LanguageContext);
-}
+export const useLanguage = () => useContext(LanguageContext);

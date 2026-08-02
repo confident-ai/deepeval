@@ -24,6 +24,8 @@ You must provide the `role`, `content`, and `retrieval_context` for evaluation t
 
 The `TurnFaithfulnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluation:
 
+<LangSwitch>
+
 ```python
 from deepeval import evaluate
 from deepeval.test_case import Turn, ConversationalTestCase
@@ -44,6 +46,26 @@ metric = TurnFaithfulnessMetric(threshold=0.5)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
+```typescript
+import { evaluate, Turn, ConversationalTestCase, metrics } from "deepeval";
+
+const convoTestCase = new ConversationalTestCase({
+  turns: [
+    new Turn({ role: "user", content: "...", retrievalContext: ["..."] }),
+    new Turn({ role: "assistant", content: "...", retrievalContext: ["..."] }),
+  ],
+});
+const metric = new metrics.TurnFaithfulnessMetric({ threshold: 0.5 });
+
+// To run metric as a standalone
+// await metric.measure(convoTestCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([convoTestCase], [metric]);
+```
+
+</LangSwitch>
+
 There are **TEN** optional parameters when creating a `TurnFaithfulnessMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
@@ -61,12 +83,23 @@ There are **TEN** optional parameters when creating a `TurnFaithfulnessMetric`:
 
 You can also run the `TurnFaithfulnessMetric` on a single test case as a standalone, one-off execution.
 
+<LangSwitch>
+
 ```python
 ...
 
 metric.measure(convo_test_case)
 print(metric.score, metric.reason)
 ```
+
+```typescript
+...
+
+await metric.measure(convoTestCase);
+console.log(metric.score, metric.reason);
+```
+
+</LangSwitch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.

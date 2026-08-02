@@ -138,6 +138,8 @@ Based on the metric scores, you can iterate on different prompts to identify the
 
 `deepeval` also supports component-level prompt evaluation to assess specific LLM generations within your application. To enable this, first [set up tracing](/docs/evaluation-llm-tracing), then call `update_llm_span` with the prompts you want to evaluate for each LLM span. Additionally, supply the metrics you want to use in the `@observe` decorator for each span.
 
+<LangSwitch>
+
 ```python title="main.py" showLineNumbers={true} {13,20}
 from openai import OpenAI
 from deepeval.tracing import observe, update_llm_span
@@ -158,11 +160,42 @@ def your_llm_app(input: str):
     return gen1(input)
 ```
 
+```typescript title="main.ts" showLineNumbers={true} {10,17}
+import OpenAI from "openai";
+import { observe, updateLlmSpan } from "deepeval/tracing";
+import { Prompt, metrics } from "deepeval";
+
+const prompt1 = new Prompt({ alias: "First" });
+await prompt1.pull();
+
+const gen1 = observe({
+  type: "llm",
+  metrics: [new metrics.AnswerRelevancyMetric()],
+  fn: async (input: string) => {
+    const promptTemplate = (prompt1.messagesTemplate ?? []).map((msg) => ({ role: msg.role, content: msg.content }));
+    const res = await new OpenAI().chat.completions.create({
+      model: "gpt-4o",
+      messages: [...promptTemplate, { role: "user", content: input }],
+    });
+    updateLlmSpan({ prompt: prompt1 });
+    return res.choices[0].message.content;
+  },
+});
+
+const yourLlmApp = observe({
+  fn: async (input: string) => gen1(input),
+});
+```
+
+</LangSwitch>
+
 :::note
 Since `update_llm_span` can only be called inside an LLM span, prompt evaluation is limited to LLM spans only.
 :::
 
 Then run the `evals_iterator` to evaluate the prompts configured for each LLM span.
+
+<LangSwitch>
 
 ```python title="main.py" showLineNumbers={true} {17,25}
 from deepeval.dataset import EvaluationDataset, Golden
@@ -172,6 +205,18 @@ dataset = EvaluationDataset([Golden(input="Hello")])
 for golden in dataset.evals_iterator():
     your_llm_app(golden.input)
 ```
+
+```typescript title="main.ts" showLineNumbers={true}
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+// ...
+
+const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Hello" })] });
+for await (const golden of dataset.evalsIterator()) {
+  await yourLlmApp(golden.input);
+}
+```
+
+</LangSwitch>
 
 <details>
 <summary>✅ If successful, you should see a confirmation log like the one above in your CLI.</summary>
@@ -249,12 +294,23 @@ compare(test_cases=[test_case], metric=arena_geval)
 <Tabs items={["Confident AI", "From JSON", "From TXT"]}>
 <Tab value="Confident AI">
 
+<LangSwitch>
+
 ```python title="main.py" showLineNumbers={true}
 from deepeval.prompt import Prompt
 
 prompt = Prompt(alias="First Prompt")
 prompt.pull(version="00.00.01")
 ```
+
+```typescript title="main.ts" showLineNumbers={true}
+import { Prompt } from "deepeval";
+
+const prompt = new Prompt({ alias: "First Prompt" });
+await prompt.pull({ version: "00.00.01" });
+```
+
+</LangSwitch>
 
 </Tab>
 <Tab value="From JSON">

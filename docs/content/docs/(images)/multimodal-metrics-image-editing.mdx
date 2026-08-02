@@ -22,6 +22,8 @@ The `input` and `actual_output` are required to create an `LLMTestCase` (and hen
 
 ## Usage
 
+<LangSwitch>
+
 ```python
 from deepeval.test_case import LLMTestCase, MLLMImage
 from deepeval.metrics import ImageEditingMetric
@@ -41,6 +43,25 @@ m_test_case = LLMTestCase(
 evaluate(test_cases=[m_test_case], metrics=[metric])
 ```
 
+```typescript
+import { LLMTestCase, MLLMImage } from "deepeval/testCase";
+import { evaluate, metrics } from "deepeval";
+
+const metric = new metrics.ImageEditingMetric({
+  threshold: 0.7,
+});
+const mTestCase = new LLMTestCase({
+  input: `Change the color of the shoes to blue. ${new MLLMImage({ url: "./shoes.png", local: true })}`,
+  // Replace this with your actual MLLM application output
+  actualOutput: `${new MLLMImage({ url: "https://shoe-images.com/edited-shoes", local: false })}`,
+});
+
+
+await evaluate([mTestCase], [metric]);
+```
+
+</LangSwitch>
+
 There are **SIX** optional parameters when creating a `ImageEditingMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
@@ -54,12 +75,23 @@ There are **SIX** optional parameters when creating a `ImageEditingMetric`:
 
 You can also run the `ImageEditingMetric` on a single test case as a standalone, one-off execution.
 
+<LangSwitch>
+
 ```python
 ...
 
 metric.measure(m_test_case)
 print(metric.score, metric.reason)
 ```
+
+```typescript
+// ...
+
+await metric.measure(mTestCase);
+console.log(metric.score, metric.reason);
+```
+
+</LangSwitch>
 
 ## How Is It Calculated?
 

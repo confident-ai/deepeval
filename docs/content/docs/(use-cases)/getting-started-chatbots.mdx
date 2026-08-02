@@ -54,11 +54,21 @@ In `deepeval`, chatbots are evaluated as multi-turn **interactions**. In code, y
 <Tabs items={["OpenAI", "Anthropic", "Gemini", "Ollama", "Grok", "Azure OpenAI", "Amazon Bedrock", "Vertex AI"]}>
 <Tab value="OpenAI">
 
+<LangSwitch>
+
 ```python
 from deepeval.metrics import TurnRelevancyMetric
 
 task_completion_metric = TurnRelevancyMetric(model="gpt-4.1")
 ```
+
+```typescript
+import { metrics } from "deepeval";
+
+const taskCompletionMetric = new metrics.TurnRelevancyMetric({ model: "gpt-4.1" });
+```
+
+</LangSwitch>
 
 </Tab>
 <Tab value="Anthropic">
@@ -164,6 +174,8 @@ task_completion_metric = TurnRelevancyMetric(model=model)
 
 Create a `ConversationalTestCase` by passing in a list of `Turn`s from an existing conversation, similar to OpenAI's message format.
 
+<LangSwitch>
+
 ```python title="main.py" showLineNumbers={true}
 from deepeval.test_case import ConversationalTestCase, Turn
 
@@ -177,6 +189,21 @@ test_case = ConversationalTestCase(
 )
 ```
 
+```typescript title="main.ts" showLineNumbers={true}
+import { ConversationalTestCase, Turn } from "deepeval";
+
+const testCase = new ConversationalTestCase({
+  turns: [
+    new Turn({ role: "user", content: "Hello, how are you?" }),
+    new Turn({ role: "assistant", content: "I'm doing well, thank you!" }),
+    new Turn({ role: "user", content: "How can I help you today?" }),
+    new Turn({ role: "assistant", content: "I'd like to buy a ticket to a Coldplay concert." }),
+  ],
+});
+```
+
+</LangSwitch>
+
 You can learn about a `Turn`'s data model [here.](/docs/evaluation-multiturn-test-cases#turns)
 
 </Step>
@@ -186,6 +213,8 @@ You can learn about a `Turn`'s data model [here.](/docs/evaluation-multiturn-tes
 
 Run an evaluation on the test case using `deepeval`'s multi-turn metrics, or create your own using [Conversational G-Eval](/docs/metrics-conversational-g-eval).
 
+<LangSwitch>
+
 ```python
 from deepeval.metrics import TurnRelevancyMetric, KnowledgeRetentionMetric
 from deepeval import evaluate
@@ -194,11 +223,28 @@ from deepeval import evaluate
 evaluate(test_cases=[test_case], metrics=[TurnRelevancyMetric(), KnowledgeRetentionMetric()])
 ```
 
+```typescript
+import { evaluate, metrics } from "deepeval";
+// ...
+
+await evaluate([testCase], [new metrics.TurnRelevancyMetric(), new metrics.KnowledgeRetentionMetric()]);
+```
+
+</LangSwitch>
+
 Finally run `main.py`:
+
+<LangSwitch>
 
 ```bash
 python main.py
 ```
+
+```bash
+npx tsx main.ts
+```
+
+</LangSwitch>
 
 🎉🥳 **Congratulations!** You've just ran your first multi-turn eval. Here's what happened:
 
@@ -238,6 +284,8 @@ deepeval view
 
 Although we ran an evaluation in the previous section, it's not very useful because it is far from a standardized benchmark. To create a standardized benchmark for evals, use `deepeval`'s datasets:
 
+<LangSwitch>
+
 ```python title="main.py"
 from deepeval.dataset import EvaluationDataset, ConversationalGolden
 
@@ -248,6 +296,19 @@ dataset = EvaluationDataset(
   ]
 )
 ```
+
+```typescript title="main.ts"
+import { EvaluationDataset, ConversationalGolden } from "deepeval";
+
+const dataset = new EvaluationDataset({
+  goldens: [
+    new ConversationalGolden({ scenario: "Angry user asking for a refund" }),
+    new ConversationalGolden({ scenario: "Couple booking two VIP Coldplay tickets" }),
+  ],
+});
+```
+
+</LangSwitch>
 
 A dataset is a collection of goldens in `deepeval`, and in a multi-turn context this these are represented by `ConversationalGolden`s.
 
@@ -271,6 +332,8 @@ Both of which are solved using `deepeval`'s `ConversationSimulator`.
 
 Create a `ConversationalGolden` by providing your user description, scenario, and expected outcome, for the conversation you wish to simulate.
 
+<LangSwitch>
+
 ```python title="main.py"
 from deepeval.dataset import EvaluationDataset, ConversationalGolden
 
@@ -283,11 +346,33 @@ golden = ConversationalGolden(
 dataset = EvaluationDataset(goldens=[golden])
 ```
 
+```typescript title="main.ts"
+import { EvaluationDataset, ConversationalGolden } from "deepeval";
+
+const golden = new ConversationalGolden({
+  scenario: "Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
+  expectedOutcome: "Successful purchase of a ticket.",
+  userDescription: "Andy Byron is the CEO of Astronomer.",
+});
+
+const dataset = new EvaluationDataset({ goldens: [golden] });
+```
+
+</LangSwitch>
+
 If you've set your `CONFIDENT_API_KEY` correctly, you can save them on the platform to collaborate with your team:
+
+<LangSwitch>
 
 ```python title="main.py"
 dataset.push(alias="A new multi-turn dataset")
 ```
+
+```typescript title="main.ts"
+await dataset.push({ alias: "A new multi-turn dataset" });
+```
+
+</LangSwitch>
 
 <VideoDisplayer
   src={ASSETS.gettingStartedChatbotEvalsMultiturnDataset}
@@ -306,6 +391,8 @@ Define a callback function to generate the **next chatbot response** in a conver
 <Tabs items={["Python", "OpenAI", "LangChain", "LlamaIndex", "OpenAI Agents", "Pydantic"]}>
 <Tab value="Python">
 
+<LangSwitch>
+
 ```python title="main.py" showLineNumbers={true}  "
 from deepeval.test_case import Turn
 
@@ -315,8 +402,22 @@ async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
     return Turn(role="assistant", content=response)
 ```
 
+```typescript title="main.ts" showLineNumbers={true}
+import { Turn } from "deepeval";
+
+const modelCallback = async ({ input, turns, threadId }) => {
+  // Replace with your chatbot
+  const response = await yourChatbot(input, turns, threadId);
+  return new Turn({ role: "assistant", content: response });
+};
+```
+
+</LangSwitch>
+
 </Tab>
 <Tab value="OpenAI">
+
+<LangSwitch>
 
 ```python title=main.py showLineNumbers={true} {6}
 from deepeval.test_case import Turn
@@ -333,6 +434,25 @@ async def model_callback(input: str, turns: List[Turn]) -> str:
     response = await client.chat.completions.create(model="gpt-4.1", messages=messages)
     return Turn(role="assistant", content=response.choices[0].message.content)
 ```
+
+```typescript title=main.ts showLineNumbers={true} {6}
+import { Turn } from "deepeval";
+import OpenAI from "openai";
+
+const client = new OpenAI();
+
+const modelCallback = async ({ input, turns }) => {
+  const messages = [
+    { role: "system", content: "You are a ticket purchasing assistant" },
+    ...turns.map((t) => ({ role: t.role, content: t.content })),
+    { role: "user", content: input },
+  ];
+  const response = await client.chat.completions.create({ model: "gpt-4.1", messages });
+  return new Turn({ role: "assistant", content: response.choices[0].message.content });
+};
+```
+
+</LangSwitch>
 
 </Tab>
 <Tab value="LangChain">
@@ -429,6 +549,8 @@ Your model callback should accept an `input`, and optionally `turns` and `thread
 
 Use `deepeval`'s `ConversationSimulator` to simulate turns using goldens in your dataset:
 
+<LangSwitch>
+
 ```python title="main.py"
 from deepeval.conversation_simulator import ConversationSimulator
 
@@ -436,12 +558,26 @@ simulator = ConversationSimulator(model_callback=chatbot_callback)
 conversational_test_cases = simulator.simulate(goldens=dataset.goldens, max_turns=10)
 ```
 
+```typescript title="main.ts"
+import { ConversationSimulator } from "deepeval";
+
+const simulator = new ConversationSimulator({ modelCallback: chatbotCallback });
+const conversationalTestCases = await simulator.simulate({
+  conversationalGoldens: dataset.goldens,
+  maxUserSimulations: 10,
+});
+```
+
+</LangSwitch>
+
 Here, we only have 1 test case, but in reality you'll want to simulate from at least 20 goldens.
 
 <details>
 <summary>Click to view an example simulated test case</summary>
 
 Your generated test cases should be populated with simulated `Turn`s, along with the `scenario`, `expected_outcome`, and `user_description` from the conversation golden.
+
+<LangSwitch>
 
 ```python
 ConversationalTestCase(
@@ -457,6 +593,22 @@ ConversationalTestCase(
 )
 ```
 
+```typescript
+new ConversationalTestCase({
+  scenario: "Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
+  expectedOutcome: "Successful purchase of a ticket.",
+  userDescription: "Andy Byron is the CEO of Astronomer.",
+  turns: [
+    new Turn({ role: "user", content: "Hello, how are you?" }),
+    new Turn({ role: "assistant", content: "I'm doing well, thank you!" }),
+    new Turn({ role: "user", content: "How can I help you today?" }),
+    new Turn({ role: "assistant", content: "I'd like to buy a ticket to a Coldplay concert." }),
+  ],
+});
+```
+
+</LangSwitch>
+
 </details>
 
 </Step>
@@ -467,6 +619,8 @@ ConversationalTestCase(
 
 Run an evaluation like how you learnt in the previous section:
 
+<LangSwitch>
+
 ```python
 from deepeval.metrics import TurnRelevancyMetric
 from deepeval import evaluate
@@ -474,6 +628,15 @@ from deepeval import evaluate
 
 evaluate(conversational_test_cases, metrics=[TurnRelevancyMetric()])
 ```
+
+```typescript
+import { evaluate, metrics } from "deepeval";
+// ...
+
+await evaluate(conversationalTestCases, [new metrics.TurnRelevancyMetric()]);
+```
+
+</LangSwitch>
 
 ✅ Done. You've successfully learnt how to benchmark your chatbot.
 

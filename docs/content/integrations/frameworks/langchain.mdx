@@ -75,9 +75,17 @@ The `deepeval` integration traces LangChain runs through a `CallbackHandler` tha
 
 ### Installation
 
+<LangSwitch>
+
 ```bash
 pip install -U deepeval langchain langchain-openai
 ```
+
+```bash
+npm install deepeval langchain @langchain/core @langchain/openai
+```
+
+</LangSwitch>
 
 LangChain is instrumented per-call: you decide which runs are traced by passing `CallbackHandler(...)` into LangChain's runtime config.
 
@@ -88,6 +96,8 @@ LangChain is instrumented per-call: you decide which runs are traced by passing 
 ### Instrument and evaluate
 
 Create a `CallbackHandler` and pass it to the agent's `invoke` method.
+
+<LangSwitch>
 
 ```python title="langchain_agent.py" showLineNumbers
 from langchain.agents import create_agent
@@ -115,6 +125,42 @@ for golden in dataset.evals_iterator():
         config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]},
     )
 ```
+
+```typescript title="langchain_agent.ts" showLineNumbers
+import { createAgent, tool } from "langchain";
+import { z } from "zod";
+import { DeepEvalCallbackHandler } from "deepeval/integrations/langchain";
+import { EvaluationDataset, Golden, metrics } from "deepeval";
+
+const multiply = tool(({ a, b }) => a * b, {
+  name: "multiply",
+  description: "Multiply two numbers.",
+  schema: z.object({ a: z.number(), b: z.number() }),
+});
+
+const agent = createAgent({
+  model: "openai:gpt-4o-mini",
+  tools: [multiply],
+  systemPrompt: "Be concise.",
+});
+
+// Goldens are the inputs you want to evaluate.
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What is 8 multiplied by 6?" })],
+});
+
+// The `TaskCompletionMetric` scores the trace produced by the callback.
+for await (const golden of dataset.evalsIterator({
+  metrics: [new metrics.TaskCompletionMetric()],
+})) {
+  await agent.invoke(
+    { messages: [{ role: "user", content: golden.input }] },
+    { callbacks: [new DeepEvalCallbackHandler({})] },
+  );
+}
+```
+
+</LangSwitch>
 
 Done ✅. You've run your first eval with full traceability into LangChain via `deepeval`.
 
@@ -186,6 +232,8 @@ deepeval test run test_langchain_agent.py
 
 Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one LangChain run; metrics score the resulting trace through the callback.
 
+<LangSwitch>
+
 ```python title="langchain_agent.py" showLineNumbers
 dataset = EvaluationDataset(goldens=[
     Golden(input="What is 8 multiplied by 6?"),
@@ -198,6 +246,26 @@ for golden in dataset.evals_iterator():
         config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]},
     )
 ```
+
+```typescript title="langchain_agent.ts" showLineNumbers
+const dataset = new EvaluationDataset({
+  goldens: [
+    new Golden({ input: "What is 8 multiplied by 6?" }),
+    new Golden({ input: "What is 7 multiplied by 9?" }),
+  ],
+});
+
+for await (const golden of dataset.evalsIterator({
+  metrics: [new metrics.TaskCompletionMetric()],
+})) {
+  await agent.invoke(
+    { messages: [{ role: "user", content: golden.input }] },
+    { callbacks: [new DeepEvalCallbackHandler({})] },
+  );
+}
+```
+
+</LangSwitch>
 
 ## Applying metrics to components
 
@@ -280,6 +348,8 @@ LangChain is instrumented per-call through callbacks, so customization happens a
 - Use `next_agent_span(...)` / `next_llm_span(...)` / `next_retriever_span(...)` / `next_tool_span(...)` to stage component-level fields (metrics, metric collections, test cases, custom span metadata) onto the next span the callback opens.
 - Use tool spans for deterministic traceability, inputs, outputs, and metadata.
 
+<LangSwitch>
+
 ```python title="langchain_agent.py" showLineNumbers
 callback = CallbackHandler(
     name="math-agent",
@@ -293,6 +363,22 @@ agent.invoke(
     config={"callbacks": [callback]},
 )
 ```
+
+```typescript title="langchain_agent.ts" showLineNumbers
+const callback = new DeepEvalCallbackHandler({
+  name: "math-agent",
+  tags: ["langchain", "math"],
+  metadata: { team: "support" },
+  userId: "user-123",
+});
+
+await agent.invoke(
+  { messages: [{ role: "user", content: "What is 8 multiplied by 6?" }] },
+  { callbacks: [callback] },
+);
+```
+
+</LangSwitch>
 
 ## Advanced patterns
 
@@ -360,6 +446,8 @@ for golden in dataset.evals_iterator():
 
 When the LangChain call is part of a larger operation, decorate the outer function with `@observe`. LangChain spans nest under your observed span when the callback runs inside it.
 
+<LangSwitch>
+
 ```python title="langchain_agent.py" showLineNumbers
 from deepeval.tracing import observe
 ...
@@ -372,6 +460,24 @@ def respond_to_user(prompt: str) -> str:
     )
     return result["messages"][-1].content
 ```
+
+```typescript title="langchain_agent.ts" showLineNumbers
+import { observe } from "deepeval/tracing";
+// ...
+
+const respondToUser = observe({
+  name: "respond_to_user",
+  fn: async (prompt: string) => {
+    const result = await agent.invoke(
+      { messages: [{ role: "user", content: prompt }] },
+      { callbacks: [new DeepEvalCallbackHandler({})] },
+    );
+    return result.messages[result.messages.length - 1].content;
+  },
+});
+```
+
+</LangSwitch>
 
 ## API reference
 

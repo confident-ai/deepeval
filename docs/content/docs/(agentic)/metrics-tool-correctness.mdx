@@ -34,6 +34,8 @@ The `ToolCorrectnessMetric()` can be used for [end-to-end](/docs/evaluation-end-
 <Tabs items={["Text Based", "Multimodal"]}>
 <Tab value="Text Based">
 
+<LangSwitch>
+
 ```python
 from deepeval import evaluate
 from deepeval.test_case import LLMTestCase, ToolCall
@@ -55,8 +57,31 @@ metric = ToolCorrectnessMetric()
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+```typescript
+import { evaluate, LLMTestCase, ToolCall, metrics } from "deepeval";
+
+const testCase = new LLMTestCase({
+  input: "What if these shoes don't fit?",
+  actualOutput: "We offer a 30-day full refund at no extra cost.",
+  // Replace this with the tools that was actually used by your LLM agent
+  toolsCalled: [new ToolCall({ name: "WebSearch" }), new ToolCall({ name: "ToolQuery" })],
+  expectedTools: [new ToolCall({ name: "WebSearch" })],
+});
+const metric = new metrics.ToolCorrectnessMetric();
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</LangSwitch>
+
 </Tab>
 <Tab value="Multimodal">
+
+<LangSwitch>
 
 ```python
 from deepeval import evaluate
@@ -82,6 +107,31 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+```typescript
+import { evaluate, LLMTestCase, ToolCall, metrics } from "deepeval";
+import { MLLMImage } from "deepeval/testCase";
+
+const metric = new metrics.ToolCorrectnessMetric({
+  threshold: 0.7,
+  model: "gpt-4.1",
+  includeReason: true,
+});
+const testCase = new LLMTestCase({
+  input: `What's in this image? ${new MLLMImage({ url: "https://shoe-images.com/shoes.png" })}`,
+  actualOutput: "The image shows a pair of running shoes.",
+  toolsCalled: [new ToolCall({ name: "ImageAnalysis" }), new ToolCall({ name: "ToolQuery" })],
+  expectedTools: [new ToolCall({ name: "ImageAnalysis" })],
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</LangSwitch>
+
 </Tab>
 </Tabs>
 
@@ -105,6 +155,8 @@ Since `should_exact_match` is a stricter criteria than `should_consider_ordering
 
 You can also run the `ToolCorrectnessMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
 
+<LangSwitch>
+
 ```python
 from deepeval.dataset import Golden
 from deepeval.tracing import observe, update_current_span
@@ -126,9 +178,40 @@ def llm_app(input: str):
 evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 ```
 
+```typescript
+import { EvaluationDataset, Golden } from "deepeval";
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+// ...
+
+const innerComponent = observe({
+  metrics: [metric],
+  fn: async () => {
+    // Set test case at runtime
+    const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
+    updateCurrentSpan({ testCase });
+  },
+});
+
+const llmApp = observe({
+  fn: async (input: string) => {
+    // Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    await innerComponent();
+  },
+});
+
+const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Hi!" })] });
+for await (const golden of dataset.evalsIterator()) {
+  await llmApp(golden.input);
+}
+```
+
+</LangSwitch>
+
 ### As a standalone
 
 You can also run the `ToolCorrectnessMetric` on a single test case as a standalone, one-off execution.
+
+<LangSwitch>
 
 ```python
 ...
@@ -136,6 +219,15 @@ You can also run the `ToolCorrectnessMetric` on a single test case as a standalo
 metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
+
+```typescript
+// ...
+
+await metric.measure(testCase);
+console.log(metric.score, metric.reason);
+```
+
+</LangSwitch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.

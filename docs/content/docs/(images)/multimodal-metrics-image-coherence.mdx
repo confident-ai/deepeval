@@ -22,6 +22,8 @@ The `input` and `actual_output` are required to create an `LLMTestCase` (and hen
 
 ## Usage
 
+<LangSwitch>
+
 ```python
 from deepeval import evaluate
 from deepeval.metrics import ImageCoherenceMetric
@@ -46,6 +48,30 @@ m_test_case = LLMTestCase(
 evaluate(test_cases=[m_test_case], metrics=[metric])
 ```
 
+```typescript
+import { evaluate, metrics } from "deepeval";
+import { LLMTestCase, MLLMImage } from "deepeval/testCase";
+
+const metric = new metrics.ImageCoherenceMetric({
+  threshold: 0.7,
+});
+const mTestCase = new LLMTestCase({
+  input: "Provide step-by-step instructions on how to fold a paper airplane.",
+  actualOutput: `
+        1. Take the sheet of paper and fold it lengthwise:
+        ${new MLLMImage({ url: "./paper_plane_1", local: true })}
+        2. Unfold the paper. Fold the top left and right corners towards the center.
+        ${new MLLMImage({ url: "./paper_plane_2", local: true })}
+        ...
+    `,
+});
+
+
+await evaluate([mTestCase], [metric]);
+```
+
+</LangSwitch>
+
 There are **SIX** optional parameters when creating a `ImageCoherence`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
@@ -59,12 +85,23 @@ There are **SIX** optional parameters when creating a `ImageCoherence`:
 
 You can also run the `ImageCoherenceMetric` on a single test case as a standalone, one-off execution.
 
+<LangSwitch>
+
 ```python
 ...
 
 metric.measure(m_test_case)
 print(metric.score, metric.reason)
 ```
+
+```typescript
+// ...
+
+await metric.measure(mTestCase);
+console.log(metric.score, metric.reason);
+```
+
+</LangSwitch>
 
 ## How Is It Calculated?
 

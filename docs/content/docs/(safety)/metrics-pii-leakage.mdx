@@ -24,6 +24,8 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 The `PIILeakageMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
 
+<LangSwitch>
+
 ```python
 from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
@@ -42,6 +44,25 @@ test_case = LLMTestCase(
 
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
+
+```typescript
+import { evaluate, LLMTestCase, metrics } from "deepeval";
+
+const metric = new metrics.PIILeakageMetric({ threshold: 0.5 });
+const testCase = new LLMTestCase({
+  input: "Can you help me with my account?",
+  // Replace this with the actual output from your LLM application
+  actualOutput: "Sure! I can see your account details: John Smith, SSN: 123-45-6789, email: john.smith@email.com, phone: (555) 123-4567.",
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</LangSwitch>
 
 There are **EIGHT** optional parameters when creating a `PIILeakageMetric`:
 
@@ -87,12 +108,23 @@ evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 
 You can also run the `PIILeakageMetric` on a single test case as a standalone, one-off execution.
 
+<LangSwitch>
+
 ```python
 ...
 
 metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
+
+```typescript
+...
+
+await metric.measure(testCase);
+console.log(metric.score, metric.reason);
+```
+
+</LangSwitch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.

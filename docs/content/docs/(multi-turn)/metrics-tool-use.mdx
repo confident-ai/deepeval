@@ -19,6 +19,8 @@ You can learn more about how it is calculated [here](#how-is-it-calculated).
 
 The `ToolUseMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluations of agents.
 
+<LangSwitch>
+
 ```python
 from deepeval import evaluate
 from deepeval.metrics import ToolUseMetric
@@ -39,6 +41,29 @@ metric = ToolUseMetric(threshold=0.5)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
+```typescript
+import { evaluate, Turn, ConversationalTestCase, ToolCall, metrics } from "deepeval";
+
+const convoTestCase = new ConversationalTestCase({
+  turns: [
+    new Turn({ role: "user", content: "..." }),
+    new Turn({ role: "assistant", content: "...", toolsCalled: [new ToolCall({ name: "..." })] }),
+  ],
+});
+const metric = new metrics.ToolUseMetric({
+  availableTools: [new ToolCall({ name: "...", description: "..." })],
+  threshold: 0.5,
+});
+
+// To run metric as a standalone
+// await metric.measure(convoTestCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([convoTestCase], [metric]);
+```
+
+</LangSwitch>
+
 There is **ONE** mandatory and **SEVEN** optional parameters when creating a `ToolUseMetric`:
 
 - `available_tools`: a list of `ToolCall`s that give context on all the tools that were available to your LLM agent. This list is used to evaluate your agent's tool selection capability.
@@ -54,12 +79,23 @@ There is **ONE** mandatory and **SEVEN** optional parameters when creating a `To
 
 You can also run the `ToolUseMetric` on a single test case as a standalone, one-off execution.
 
+<LangSwitch>
+
 ```python
 ...
 
 metric.measure(convo_test_case)
 print(metric.score, metric.reason)
 ```
+
+```typescript
+...
+
+await metric.measure(convoTestCase);
+console.log(metric.score, metric.reason);
+```
+
+</LangSwitch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
