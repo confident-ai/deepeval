@@ -7,7 +7,6 @@ import { DEFAULT_LLM_MODEL } from "@/lib/defaults";
 import { MdxAnchor } from "@/components/mdx-anchor";
 import { C } from "@/components/lang/code-term";
 import { LangSwitch } from "@/components/lang/lang-switch";
-import { PythonOnly } from "@/components/lang/python-only";
 
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 import ImageDisplayer from "@site/src/components/ImageDisplayer";
@@ -61,7 +60,6 @@ export const getMDXComponents = (components?: MDXComponents) =>
     DefaultLLMModel,
     C,
     LangSwitch,
-    PythonOnly,
     ...components,
   }) satisfies MDXComponents;
 

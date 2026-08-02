@@ -10,6 +10,9 @@ import { loader, type PageTreeTransformer } from 'fumadocs-core/source';
 import { lucideIconsPlugin } from 'fumadocs-core/source/lucide-icons';
 import { contentRouteFor, docsImageRoute, blogImageRoute } from './shared';
 import { getTerm } from './lang/terms';
+import type { Language } from './lang/languages';
+import type { WithLanguages } from './lang/page-tree';
+import { assertPageTreeLanguages } from './lang/validate';
 
 /**
  * Docusaurus-style `sidebar_label` → override the sidebar node's name
@@ -38,7 +41,29 @@ const sidebarLabelTransformer: PageTreeTransformer<any> = {
   },
 };
 
-const pageTree = { transformers: [sidebarLabelTransformer] };
+/**
+ * Carry each page's `languages` frontmatter onto its sidebar node, so the tree
+ * alone is enough to filter and validate against. Typed loosely for the same
+ * reason as `sidebarLabelTransformer` above.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const languagesTransformer: PageTreeTransformer<any> = {
+  file(node) {
+    const ref = node.$ref;
+    if (!ref) return node;
+    const file = this.storage.read(ref);
+    if (!file || file.format !== 'page') return node;
+    const languages = (file.data as { languages?: Language[] }).languages;
+    if (languages) {
+      (node as WithLanguages<typeof node>).languages = languages;
+    }
+    return node;
+  },
+};
+
+const pageTree = {
+  transformers: [sidebarLabelTransformer, languagesTransformer],
+};
 
 export const docsSource = loader({
   baseUrl: '/docs',
@@ -80,6 +105,17 @@ export const blogSource = loader({
   source: blog.toFumadocsSource(),
   plugins: [lucideIconsPlugin()],
   pageTree,
+});
+
+// Every route that renders a sidebar reaches this module, so there is no
+// separate validation command to remember to run.
+assertPageTreeLanguages({
+  docs: docsSource,
+  guides: guidesSource,
+  tutorials: tutorialsSource,
+  integrations: integrationsSource,
+  changelog: changelogSource,
+  blog: blogSource,
 });
 
 // Backwards-compatible alias so scaffold-generated routes that still import

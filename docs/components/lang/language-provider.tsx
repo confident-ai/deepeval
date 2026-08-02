@@ -3,33 +3,25 @@
 import {
   createContext,
   useContext,
+  useMemo,
   useState,
   type ReactNode,
 } from "react";
-import type { Language } from "@/lib/lang/terms";
+import { DEFAULT_LANGUAGE, type Language } from "@/lib/lang/languages";
 
 const LanguageContext = createContext<{
   language: Language;
-  preference: Language;
   setLanguage: (lang: Language) => void;
-  pythonOnlyPage: boolean;
-  setPythonOnlyPage: (value: boolean) => void;
 }>({
-  language: "python",
-  preference: "python",
+  language: DEFAULT_LANGUAGE,
   setLanguage: () => {},
-  pythonOnlyPage: false,
-  setPythonOnlyPage: () => {},
 });
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [preference, setLanguage] = useState<Language>("python");
-  const [pythonOnlyPage, setPythonOnlyPage] = useState(false);
-  const language: Language = pythonOnlyPage ? "python" : preference;
+  const [language, setLanguage] = useState<Language>(DEFAULT_LANGUAGE);
+  const value = useMemo(() => ({ language, setLanguage }), [language]);
   return (
-    <LanguageContext.Provider
-      value={{ language, preference, setLanguage, pythonOnlyPage, setPythonOnlyPage }}
-    >
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );

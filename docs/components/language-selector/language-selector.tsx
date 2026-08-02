@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Check, ChevronsUpDown } from "lucide-react";
 import {
@@ -9,7 +9,12 @@ import {
   PopoverTrigger,
 } from "fumadocs-ui/components/ui/popover";
 import { useLanguage } from "@/components/lang/language-provider";
-import type { Language } from "@/lib/lang/terms";
+import {
+  LANGUAGES,
+  LANGUAGE_IDS,
+  type Language,
+} from "@/lib/lang/languages";
+import { SDK_VERSIONS } from "@/lib/lang/versions";
 import styles from "./language-selector.module.scss";
 
 const badge = (src: string, label: string) => (
@@ -22,39 +27,25 @@ const badge = (src: string, label: string) => (
   />
 );
 
-interface LanguageOption {
-  id: Language;
-  label: string;
-  icon: ReactNode;
-  description?: string;
-  disabled?: boolean;
-}
+type LanguageOption = { id: Language } & (typeof LANGUAGES)[Language];
 
-const OPTIONS: LanguageOption[] = [
-  {
-    id: "python",
-    label: "Python",
-    icon: badge("/icons/python.svg", "Python"),
-    description: "First class support",
-  },
-  {
-    id: "typescript",
-    label: "TypeScript",
-    icon: badge("/icons/typescript.svg", "TypeScript"),
-    description: "Beta release",
-  },
-];
+const OPTIONS: LanguageOption[] = LANGUAGE_IDS.map((id) => ({
+  id,
+  ...LANGUAGES[id],
+}));
+
+// The reference surfaces. Guides and tutorials still honour the selection made
+// here, they just don't offer their own control.
+const SECTIONS = ["/docs", "/integrations"];
 
 const LanguageSelector = () => {
-  const { language, setLanguage, pythonOnlyPage } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  const showSelector =
-    pathname === "/docs" ||
-    pathname.startsWith("/docs/") ||
-    pathname === "/integrations" ||
-    pathname.startsWith("/integrations/");
+  const showSelector = SECTIONS.some(
+    (section) => pathname === section || pathname.startsWith(`${section}/`),
+  );
 
   if (!showSelector) {
     return null;
@@ -62,16 +53,7 @@ const LanguageSelector = () => {
 
   const active = OPTIONS.find((o) => o.id === language) ?? OPTIONS[0];
 
-  const isDisabled = (option: LanguageOption) =>
-    option.disabled || (option.id === "typescript" && pythonOnlyPage);
-
-  const description = (option: LanguageOption) =>
-    option.id === "typescript" && pythonOnlyPage
-      ? "Not available for this page"
-      : option.description;
-
   const select = (option: LanguageOption) => {
-    if (isDisabled(option)) return;
     setLanguage(option.id);
     setOpen(false);
   };
@@ -79,8 +61,9 @@ const LanguageSelector = () => {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger aria-label="Select language" className={styles.trigger}>
-        {active.icon}
+        {badge(active.icon, active.label)}
         <span className={styles.label}>{active.label}</span>
+        <span className={styles.version}>{`v${SDK_VERSIONS[active.id]}`}</span>
         <ChevronsUpDown className={styles.chevron} />
       </PopoverTrigger>
       <PopoverContent align="start" className={styles.content}>
@@ -89,22 +72,16 @@ const LanguageSelector = () => {
             key={option.id}
             type="button"
             onClick={() => select(option)}
-            aria-disabled={isDisabled(option)}
-            className={`${styles.item} ${
-              isDisabled(option) ? styles.disabled : ""
-            }`}
+            className={styles.item}
           >
             <div className={styles.itemContent}>
-              {option.icon}
+              {badge(option.icon, option.label)}
               <span className={styles.text}>
                 <span className={styles.label}>{option.label}</span>
-                {description(option) ? (
-                  <span className={styles.description}>
-                    {description(option)}
-                  </span>
-                ) : null}
+                <span className={styles.description}>{option.description}</span>
               </span>
             </div>
+            <span className={styles.version}>{`v${SDK_VERSIONS[option.id]}`}</span>
             <Check
               className={`${styles.check} ${
                 option.id === active.id ? "" : styles.hidden

@@ -14,16 +14,14 @@
  * as do fenced code blocks, CLI commands, and external contract strings
  * (env vars, headers, URLs) which are identical across languages.
  *
- * TypeScript values are placeholders/best-guess for now — TS does not yet
- * have full parity with Python, so they are not guaranteed correct.
+ * Coverage and the reliability of the TypeScript spellings are tracked in
+ * `docs/LANGUAGES.md` under "Outstanding".
  */
 
-export type Language = "python" | "typescript";
+import type { Language } from "./languages";
 
-export interface Term {
-  python: string;
-  typescript: string;
-}
+/** Every active language must have a spelling — adding one fails loud here. */
+export type Term = Record<Language, string>;
 
 export const TERMS = {
   // modules / import paths

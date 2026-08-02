@@ -2,6 +2,7 @@
 id: environment-variables
 title: Environment Variables
 sidebar_label: Environment Variables
+languages: [python, typescript]
 ---
 
 `deepeval` automatically loads environment variables from dotenv files in this order: `.env` → `.env.{APP_ENV}` → `.env.local` (highest precedence). Existing process environment variables are never overwritten—process env always wins.

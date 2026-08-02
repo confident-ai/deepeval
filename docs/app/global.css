@@ -864,3 +864,14 @@ html > body[data-scroll-locked] {
 [data-paused="true"] * {
   animation-play-state: paused !important;
 }
+
+/* ------------------------------------------------------------------ */
+/* A page that cannot serve the reader's language renders only the     */
+/* <LanguageUnsupported> empty state. The table of contents lives      */
+/* outside that subtree and is built server-side from the page's       */
+/* headings, so it has to be hidden from here — otherwise it lists     */
+/* sections that are not on screen.                                    */
+/* ------------------------------------------------------------------ */
+#nd-page:has([data-language-unsupported]) #nd-toc {
+  display: none;
+}
