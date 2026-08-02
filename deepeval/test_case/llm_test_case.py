@@ -31,6 +31,7 @@ from deepeval.test_case.mcp import (
 
 _MLLM_IMAGE_REGISTRY: Dict[str, "MLLMImage"] = {}
 
+
 class ToolCallType(Enum):
     FUNCTION = "FUNCTION"
     MCP = "MCP"
@@ -242,7 +243,6 @@ def _make_hashable(obj):
             # identically, keeping ToolCall.__hash__ consistent with __eq__.
             return ("__unhashable__", type(obj).__qualname__)
         return obj
-
 
 
 class ToolCall(BaseModel):
