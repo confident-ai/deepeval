@@ -81,7 +81,13 @@ def test_disable_promotion_defaults_to_showing(monkeypatch):
 
 @pytest.mark.parametrize(
     "value, expected_show",
-    [("1", False), ("true", False), ("yes", False), ("0", True), ("false", True)],
+    [
+        ("1", False),
+        ("true", False),
+        ("yes", False),
+        ("0", True),
+        ("false", True),
+    ],
 )
 def test_disable_promotion_opt_out(monkeypatch, value, expected_show):
     from deepeval.utils import should_show_promotion
