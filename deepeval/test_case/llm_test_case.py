@@ -244,6 +244,7 @@ def _make_hashable(obj):
         return obj
 
 
+
 class ToolCall(BaseModel):
     name: str
     type: ToolCallType = ToolCallType.FUNCTION
