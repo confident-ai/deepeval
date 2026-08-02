@@ -273,6 +273,7 @@ await dataset.pull({ alias: "MeetingSummarizer Dataset" });
 const summarizer = new MeetingSummarizer();
 
 for await (const golden of dataset.evalsIterator()) {
+  if (!("input" in golden)) continue;
   await summarizer.summarize(golden.input); // captures trace and evaluates spans
 }
 ```

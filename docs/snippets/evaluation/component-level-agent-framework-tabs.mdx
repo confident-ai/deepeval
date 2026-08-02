@@ -72,6 +72,7 @@ const generate = observe({
 });
 
 for await (const golden of dataset.evalsIterator()) {
+  if (!("input" in golden)) continue;
   await myAiAgent(golden.input);
 }
 ```

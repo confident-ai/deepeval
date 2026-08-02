@@ -87,6 +87,7 @@ const taskCompletion = new metrics.TaskCompletionMetric({ threshold: 0.7, model:
 
 // Loop through dataset
 for await (const golden of dataset.evalsIterator({ metrics: [taskCompletion] })) {
+  if (!("input" in golden)) continue;
   await tripPlannerAgent(golden.input);
 }
 ```

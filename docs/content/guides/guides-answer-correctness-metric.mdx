@@ -4,7 +4,6 @@ title: Answer Correctness Metric
 sidebar_label: Answer Correctness Metric
 ---
 
-
 **Answer Correctness** (or Correctness) is one of the most important and commonly used evaluation metrics for LLM applications. Correctness is typically scored from 0 to 1, with 1 indicating a correct answer and 0 indicating an incorrect one.
 
 :::info
@@ -36,10 +35,16 @@ correctness_metric = GEval(
 
 ```typescript
 import { metrics } from "deepeval";
+import { SingleTurnParams } from "deepeval/testCase";
+
 const correctnessMetric = new metrics.GEval({
   name: "Correctness",
   model: "gpt-4.1",
-  // ...
+  criteria: "Determine whether the actual output is correct.",
+  evaluationParams: [
+    SingleTurnParams.ACTUAL_OUTPUT,
+    SingleTurnParams.EXPECTED_OUTPUT,
+  ],
 });
 ```
 
@@ -115,10 +120,7 @@ import { SingleTurnParams } from "deepeval/testCase";
 const correctnessMetric = new metrics.GEval({
   name: "Correctness",
   model: "gpt-4.1",
-  evaluationParams: [
-    SingleTurnParams.CONTEXT,
-    SingleTurnParams.ACTUAL_OUTPUT,
-  ],
+  evaluationParams: [SingleTurnParams.CONTEXT, SingleTurnParams.ACTUAL_OUTPUT],
   // ...
 });
 ```
@@ -154,10 +156,7 @@ import { SingleTurnParams } from "deepeval/testCase";
 const correctnessMetric = new metrics.GEval({
   name: "Correctness",
   model: "gpt-4.1",
-  evaluationParams: [
-    SingleTurnParams.CONTEXT,
-    SingleTurnParams.ACTUAL_OUTPUT,
-  ],
+  evaluationParams: [SingleTurnParams.CONTEXT, SingleTurnParams.ACTUAL_OUTPUT],
   evaluationSteps: [
     "Determine whether the actual output is factually correct based on the expected output.",
   ],
@@ -189,10 +188,7 @@ correctness_metric = GEval(
 const correctnessMetric = new metrics.GEval({
   name: "Correctness",
   model: "gpt-4.1",
-  evaluationParams: [
-    SingleTurnParams.CONTEXT,
-    SingleTurnParams.ACTUAL_OUTPUT,
-  ],
+  evaluationParams: [SingleTurnParams.CONTEXT, SingleTurnParams.ACTUAL_OUTPUT],
   evaluationSteps: [
     "Compare the actual output directly with the expected output to verify factual accuracy.",
     "Check if all elements mentioned in the expected output are present and correctly represented in the actual output.",
@@ -226,10 +222,7 @@ correctness_metric = GEval(
 const correctnessMetric = new metrics.GEval({
   name: "Correctness",
   model: "gpt-4.1",
-  evaluationParams: [
-    SingleTurnParams.CONTEXT,
-    SingleTurnParams.ACTUAL_OUTPUT,
-  ],
+  evaluationParams: [SingleTurnParams.CONTEXT, SingleTurnParams.ACTUAL_OUTPUT],
   evaluationSteps: [
     "Check whether the facts in 'actual output' contradicts any facts in 'expected output'",
     "You should also lightly penalize omission of detail, and focus on the main idea",
@@ -287,22 +280,26 @@ import { EvaluationDataset } from "deepeval/dataset";
 // Test Case with a correctness score of 1 (complete alignment with expected output)
 const firstTestCase = new LLMTestCase({
   input: "Summarize the benefits of daily exercise.",
-  actualOutput: "Daily exercise improves cardiovascular health, boosts mood, and enhances overall fitness.",
-  expectedOutput: "Daily exercise improves cardiovascular health, boosts mood, and enhances overall fitness.",
+  actualOutput:
+    "Daily exercise improves cardiovascular health, boosts mood, and enhances overall fitness.",
+  expectedOutput:
+    "Daily exercise improves cardiovascular health, boosts mood, and enhances overall fitness.",
 });
 
 // Test Case with a correctness score of 0.5 (partial alignment with expected output)
 const secondTestCase = new LLMTestCase({
   input: "Explain the process of photosynthesis.",
   actualOutput: "Photosynthesis is how plants make their food using sunlight.",
-  expectedOutput: "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize nutrients from carbon dioxide and water. It involves the green pigment chlorophyll and generates oxygen as a byproduct.",
+  expectedOutput:
+    "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize nutrients from carbon dioxide and water. It involves the green pigment chlorophyll and generates oxygen as a byproduct.",
 });
 
 // Test Case with a correctness score of 0 (no meaningful alignment with expected output)
 const thirdTestCase = new LLMTestCase({
   input: "Describe the effects of global warming.",
   actualOutput: "Global warming leads to colder winters.",
-  expectedOutput: "Global warming causes more extreme weather, including hotter summers, rising sea levels, and increased frequency of extreme weather events.",
+  expectedOutput:
+    "Global warming causes more extreme weather, including hotter summers, rising sea levels, and increased frequency of extreme weather events.",
 });
 
 const testCases = [firstTestCase, secondTestCase, thirdTestCase];
@@ -352,10 +349,7 @@ import { evaluate } from "deepeval";
 const correctnessMetric = new metrics.GEval({
   name: "Correctness",
   model: "gpt-4.1",
-  evaluationParams: [
-    SingleTurnParams.CONTEXT,
-    SingleTurnParams.ACTUAL_OUTPUT,
-  ],
+  evaluationParams: [SingleTurnParams.CONTEXT, SingleTurnParams.ACTUAL_OUTPUT],
   evaluationSteps: [
     "Check whether the facts in 'actual output' contradict any facts in 'expected output'",
     "Lightly penalize omissions of detail, focusing on the main idea",

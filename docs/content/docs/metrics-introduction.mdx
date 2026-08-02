@@ -762,6 +762,7 @@ const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Test inpu
 
 // 5. Loop through dataset
 for await (const golden of dataset.evalsIterator()) {
+  if (!("input" in golden)) continue;
   // Call LLM app
   await llmApp(golden.input);
 }

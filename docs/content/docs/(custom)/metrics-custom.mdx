@@ -42,7 +42,7 @@ class CustomMetric(BaseMetric):
 ```typescript
 import { metrics } from "deepeval";
 
-class CustomMetric extends metrics.BaseMetric {
+abstract class CustomMetric extends metrics.BaseMetric {
   // ...
 }
 ```
@@ -66,7 +66,7 @@ class CustomConversationalMetric(BaseConversationalMetric):
 ```typescript
 import { metrics } from "deepeval";
 
-class CustomConversationalMetric extends metrics.BaseConversationalMetric {
+abstract class CustomConversationalMetric extends metrics.BaseConversationalMetric {
   // ...
 }
 ```
@@ -124,7 +124,7 @@ class CustomMetric(BaseMetric):
 ```typescript
 import { metrics } from "deepeval";
 
-class CustomMetric extends metrics.BaseMetric {
+abstract class CustomMetric extends metrics.BaseMetric {
   constructor(
     threshold: number = 0.5,
     // Optional
@@ -170,7 +170,7 @@ class CustomConversationalMetric(BaseConversationalMetric):
 ```typescript
 import { metrics } from "deepeval";
 
-class CustomConversationalMetric extends metrics.BaseConversationalMetric {
+abstract class CustomConversationalMetric extends metrics.BaseConversationalMetric {
   constructor(
     threshold: number = 0.5,
     // Optional
@@ -264,7 +264,7 @@ class CustomMetric(BaseMetric):
 import { metrics } from "deepeval";
 import { LLMTestCase } from "deepeval/testCase";
 
-class CustomMetric extends metrics.BaseMetric {
+abstract class CustomMetric extends metrics.BaseMetric {
   // ...
 
   // In TypeScript, measure() is async-only, so there is no
@@ -335,7 +335,7 @@ class CustomConversationalMetric(BaseConversationalMetric):
 import { metrics } from "deepeval";
 import { ConversationalTestCase } from "deepeval/testCase";
 
-class CustomConversationalMetric extends metrics.BaseConversationalMetric {
+abstract class CustomConversationalMetric extends metrics.BaseConversationalMetric {
   // ...
 
   // In TypeScript, measure() is async-only, so there is no
@@ -414,7 +414,7 @@ class CustomMetric(BaseMetric):
 ```typescript
 import { metrics } from "deepeval";
 
-class CustomMetric extends metrics.BaseMetric {
+abstract class CustomMetric extends metrics.BaseMetric {
   // ...
 
   isSuccessful(): boolean {
@@ -456,7 +456,7 @@ class CustomConversationalMetric(BaseConversationalMetric):
 ```typescript
 import { metrics } from "deepeval";
 
-class CustomConversationalMetric extends metrics.BaseConversationalMetric {
+abstract class CustomConversationalMetric extends metrics.BaseConversationalMetric {
   // ...
 
   isSuccessful(): boolean {
@@ -499,7 +499,7 @@ class CustomMetric(BaseMetric):
 ```typescript
 import { metrics } from "deepeval";
 
-class CustomMetric extends metrics.BaseMetric {
+abstract class CustomMetric extends metrics.BaseMetric {
   // ...
 
   get name(): string {
@@ -530,7 +530,7 @@ class CustomConversationalMetric(BaseConversationalMetric):
 ```typescript
 import { metrics } from "deepeval";
 
-class CustomConversationalMetric extends metrics.BaseConversationalMetric {
+abstract class CustomConversationalMetric extends metrics.BaseConversationalMetric {
   // ...
 
   get name(): string {

@@ -50,6 +50,7 @@ const myAiAgent = observe({
 for await (const golden of dataset.evalsIterator({
   metrics: [new metrics.TaskCompletionMetric()],
 })) {
+  if (!("input" in golden)) continue;
   await myAiAgent(golden.input);
 }
 ```
@@ -112,6 +113,7 @@ const agent = createAgent({
 for await (const golden of dataset.evalsIterator({
   metrics: [new metrics.TaskCompletionMetric()],
 })) {
+  if (!("input" in golden)) continue;
   await agent.invoke(
     { messages: [{ role: "user", content: golden.input }] },
     { callbacks: [new DeepEvalCallbackHandler({})] },
@@ -215,6 +217,7 @@ instrumentOpenAI(client);
 for await (const golden of dataset.evalsIterator({
   metrics: [new metrics.TaskCompletionMetric()],
 })) {
+  if (!("input" in golden)) continue;
   await client.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
@@ -446,6 +449,7 @@ const agent = new Agent({
 for await (const golden of dataset.evalsIterator({
   metrics: [new metrics.TaskCompletionMetric()],
 })) {
+  if (!("input" in golden)) continue;
   await run(agent, golden.input);
 }
 ```

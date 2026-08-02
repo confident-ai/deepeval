@@ -336,6 +336,7 @@ import { LLMTestCase } from "deepeval/testCase";
 // ...
 
 for (const golden of dataset.goldens) {
+  if (!("input" in golden)) continue;
   const { answer, retrievedChunks } = await yourLlmApp(golden.input);
   dataset.addTestCase(
     new LLMTestCase({

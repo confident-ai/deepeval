@@ -39,7 +39,7 @@ class CustomMetric(BaseMetric):
 ```typescript
 import { metrics } from "deepeval";
 
-class CustomMetric extends metrics.BaseMetric {
+abstract class CustomMetric extends metrics.BaseMetric {
   // ...
 }
 ```
@@ -91,7 +91,7 @@ class CustomMetric(BaseMetric):
 ```typescript
 import { metrics } from "deepeval";
 
-class CustomMetric extends metrics.BaseMetric {
+abstract class CustomMetric extends metrics.BaseMetric {
   constructor(
     threshold: number = 0.5,
     // Optional
@@ -178,7 +178,7 @@ class CustomMetric(BaseMetric):
 import { metrics } from "deepeval";
 import { LLMTestCase } from "deepeval/testCase";
 
-class CustomMetric extends metrics.BaseMetric {
+abstract class CustomMetric extends metrics.BaseMetric {
   // ...
 
   // In TypeScript, measure() is async — there is no separate a_measure()
@@ -246,7 +246,7 @@ class CustomMetric(BaseMetric):
 ```typescript
 import { metrics } from "deepeval";
 
-class CustomMetric extends metrics.BaseMetric {
+abstract class CustomMetric extends metrics.BaseMetric {
   // ...
 
   isSuccessful(): boolean {
@@ -281,7 +281,7 @@ class CustomMetric(BaseMetric):
 ```typescript
 import { metrics } from "deepeval";
 
-class CustomMetric extends metrics.BaseMetric {
+abstract class CustomMetric extends metrics.BaseMetric {
   // ...
 
   get name(): string {

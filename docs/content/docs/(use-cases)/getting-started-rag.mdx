@@ -190,17 +190,21 @@ import { ragPipeline } from "./your_app"; // returns [answer, retrievedChunks]
 
 const testCases = [];
 for (const golden of dataset.goldens) {
+  if (!("input" in golden)) continue;
   const [answer, retrievedChunks] = await ragPipeline(golden.input);
   testCases.push(
     new LLMTestCase({
       input: golden.input,
       actualOutput: answer,
       retrievalContext: retrievedChunks,
-    })
+    }),
   );
 }
 
-await evaluate(testCases, [new metrics.AnswerRelevancyMetric(), new metrics.FaithfulnessMetric()]);
+await evaluate(testCases, [
+  new metrics.AnswerRelevancyMetric(),
+  new metrics.FaithfulnessMetric(),
+]);
 ```
 
 </LangSwitch>
@@ -240,14 +244,22 @@ const ragPipeline = observe({
   fn: async (query: string) => {
     const chunks = await retrieve(query); // your retrieval logic, observe optional
     const answer = await generate(query, chunks); // your LLM call, observe optional
-    updateCurrentTrace({ input: query, output: answer, retrievalContext: chunks });
+    updateCurrentTrace({
+      input: query,
+      output: answer,
+      retrievalContext: chunks,
+    });
     return answer;
   },
 });
 
 for await (const golden of dataset.evalsIterator({
-  metrics: [new metrics.AnswerRelevancyMetric(), new metrics.FaithfulnessMetric()],
+  metrics: [
+    new metrics.AnswerRelevancyMetric(),
+    new metrics.FaithfulnessMetric(),
+  ],
 })) {
+  if (!("input" in golden)) continue;
   await ragPipeline(golden.input);
 }
 ```
@@ -316,17 +328,21 @@ import { ragPipeline } from "./your_app"; // returns [answer, retrievedChunks]
 
 const testCases = [];
 for (const golden of dataset.goldens) {
+  if (!("input" in golden)) continue;
   const [answer, retrievedChunks] = await ragPipeline(golden.input);
   testCases.push(
     new LLMTestCase({
       input: golden.input,
       actualOutput: answer,
       retrievalContext: retrievedChunks,
-    })
+    }),
   );
 }
 
-await evaluate(testCases, [new metrics.AnswerRelevancyMetric(), new metrics.FaithfulnessMetric()]);
+await evaluate(testCases, [
+  new metrics.AnswerRelevancyMetric(),
+  new metrics.FaithfulnessMetric(),
+]);
 ```
 
 </LangSwitch>
@@ -394,7 +410,13 @@ const retriever = observe({
   metrics: [new metrics.ContextualRelevancyMetric()],
   fn: async (query: string) => {
     const chunks = ["..."]; // your retrieval logic here
-    updateCurrentSpan({ testCase: new LLMTestCase({ input: query, retrievalContext: chunks }) });
+    updateCurrentSpan({
+      testCase: new LLMTestCase({
+        input: query,
+        actualOutput: chunks.join("\n"),
+        retrievalContext: chunks,
+      }),
+    });
     return chunks;
   },
 });
@@ -403,7 +425,9 @@ const generator = observe({
   metrics: [new metrics.AnswerRelevancyMetric()],
   fn: async (query: string, chunks: string[]) => {
     const answer = "..."; // your LLM call here
-    updateCurrentSpan({ testCase: new LLMTestCase({ input: query, actualOutput: answer }) });
+    updateCurrentSpan({
+      testCase: new LLMTestCase({ input: query, actualOutput: answer }),
+    });
     return answer;
   },
 });
@@ -415,9 +439,12 @@ const ragPipeline = observe({
   },
 });
 
-const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "How do I reset my password?" })] });
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "How do I reset my password?" })],
+});
 
 for await (const golden of dataset.evalsIterator()) {
+  if (!("input" in golden)) continue;
   await ragPipeline(golden.input);
 }
 ```
@@ -558,8 +585,16 @@ import { Turn, ConversationSimulator } from "deepeval";
 
 const modelCallback = async ({ input, turns, threadId }) => {
   // Replace with your RAG chatbot; returns [answer, retrievedChunks]
-  const [answer, retrievedChunks] = await yourRagChatbot(input, turns, threadId);
-  return new Turn({ role: "assistant", content: answer, retrievalContext: retrievedChunks });
+  const [answer, retrievedChunks] = await yourRagChatbot(
+    input,
+    turns,
+    threadId,
+  );
+  return new Turn({
+    role: "assistant",
+    content: answer,
+    retrievalContext: retrievedChunks,
+  });
 };
 
 const simulator = new ConversationSimulator({ modelCallback });
@@ -594,7 +629,10 @@ evaluate(test_cases=test_cases, metrics=[TurnFaithfulnessMetric(), TurnContextua
 import { evaluate, metrics } from "deepeval";
 // ...
 
-await evaluate(testCases, [new metrics.TurnFaithfulnessMetric(), new metrics.TurnContextualRelevancyMetric()]);
+await evaluate(testCases, [
+  new metrics.TurnFaithfulnessMetric(),
+  new metrics.TurnContextualRelevancyMetric(),
+]);
 ```
 
 </LangSwitch>

@@ -205,6 +205,7 @@ def test_my_ai_agent(golden: Golden):
 import { myAiAgent } from "./your_app"; // traced; spans carry metrics
 
 for await (const golden of dataset.evalsIterator()) {
+  if (!("input" in golden)) continue;
   await myAiAgent(golden.input);
 }
 ```

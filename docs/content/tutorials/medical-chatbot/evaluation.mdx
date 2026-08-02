@@ -14,7 +14,10 @@ In the previous section, we built a chatbot that:
 
 To evaluate a multi-turn chatbot that does all the above, we first have to model conversations as [multi-turn interactions](/docs/evaluation-multiturn-test-cases#multi-turn-llm-interaction) in `deepeval`:
 
-<ImageDisplayer src={ASSETS.conversationalTestCase} alt="Conversational Test Case" />
+<ImageDisplayer
+  src={ASSETS.conversationalTestCase}
+  alt="Conversational Test Case"
+/>
 
 A multi-turn "interaction" is composed of `turns`, which is the conversation itself, and any other optional parameters such as scenario, expected outcome, etc. which we will learn about later in this section. In code, a multi-turn interaction is represented by a `ConversationalTestCase`:
 
@@ -91,7 +94,9 @@ const conversations = await fetchConversationsFromDb(); // Your database query h
 
 const testCases = [];
 for (const conv of conversations) {
-  const turns = conv.messages.map((msg) => new Turn({ role: msg.role, content: msg.content }));
+  const turns = conv.messages.map(
+    (msg) => new Turn({ role: msg.role, content: msg.content }),
+  );
   const testCase = new ConversationalTestCase({ turns });
   testCases.push(testCase);
 }
@@ -145,12 +150,17 @@ print(test_cases)
 ```typescript
 import { ConversationalTestCase, Turn } from "deepeval";
 import * as readline from "node:readline/promises";
+import { randomUUID } from "node:crypto";
 
 // Initialize test case list
 const testCases: ConversationalTestCase[] = [];
 
-async function startSession(chatbot: MedicalChatbot) {
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+const startSession = async (chatbot: MedicalChatbot) => {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  const sessionId = randomUUID();
   const turns: Turn[] = [];
   while (true) {
     const userInput = await rl.question("Your query: ");
@@ -160,17 +170,21 @@ async function startSession(chatbot: MedicalChatbot) {
 
     // Call chatbot
     const response = await chatbot.agentWithMemory.invoke(
-      { input: userInput },
-      { configurable: { sessionId } },
+      { messages: [{ role: "user", content: userInput }] },
+      { configurable: { thread_id: sessionId } },
     );
+    const lastMessage = response.messages.at(-1);
+    const output =
+      typeof lastMessage?.content === "string" ? lastMessage.content : "";
     // Add turns to list
     turns.push(new Turn({ role: "user", content: userInput }));
-    turns.push(new Turn({ role: "assistant", content: response.output }));
+    turns.push(new Turn({ role: "assistant", content: output }));
 
-    console.log("Baymax:", response.output);
+    console.log("Baymax:", output);
   }
   rl.close();
-}
+  testCases.push(new ConversationalTestCase({ turns }));
+};
 
 // Initialize chatbot and start session
 const chatbot = new MedicalChatbot("...", "...");
@@ -276,16 +290,27 @@ test_cases = simulator.simulate(goldens=dataset.goldens)
 import { Turn, ConversationSimulator } from "deepeval";
 
 // Wrap your chatbot in a callback func
-const modelCallback = async ({ input, turns, threadId }: { input: string; turns: Turn[]; threadId: string }) => {
+const modelCallback = async ({
+  input,
+  turns,
+  threadId,
+}: {
+  input: string;
+  turns: Turn[];
+  threadId: string;
+}) => {
   // 1. Get latest simulated user input
   const userInput = turns[turns.length - 1].content;
   // 2. Call chatbot
   const response = await chatbot.agentWithMemory.invoke(
-    { input: userInput },
-    { configurable: { sessionId: threadId } },
+    { messages: [{ role: "user", content: userInput }] },
+    { configurable: { thread_id: threadId } },
   );
+  const lastMessage = response.messages.at(-1);
+  const output =
+    typeof lastMessage?.content === "string" ? lastMessage.content : "";
   // 3. Return chatbot turn
-  return new Turn({ role: "assistant", content: response.output });
+  return new Turn({ role: "assistant", content: output });
 };
 
 const simulator = new ConversationSimulator({ modelCallback });

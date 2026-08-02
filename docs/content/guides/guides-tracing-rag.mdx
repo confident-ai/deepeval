@@ -461,6 +461,7 @@ const dataset = new EvaluationDataset({
 });
 
 for await (const golden of dataset.evalsIterator()) {
+  if (!("input" in golden)) continue;
   await generateResponse(golden.input);
 }
 ```
@@ -546,6 +547,7 @@ const dataset = new EvaluationDataset({
 });
 
 for await (const golden of dataset.evalsIterator({ metrics: [correctnessMetric] })) {
+  if (!("input" in golden)) continue;
   await generateResponse(golden.input);
 }
 ```

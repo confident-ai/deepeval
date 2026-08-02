@@ -84,6 +84,7 @@ await retriever.init();
 const retrieverTestCases = [];
 const generatorTestCases = [];
 for (const golden of dataset.goldens) {
+  if (!("input" in golden)) continue;
   const retrievedDocs = await retriever.retrieve(golden.input);
   const generatedAnswer = await retriever.generate(golden.input, retrievedDocs);
   const testCase = new LLMTestCase({

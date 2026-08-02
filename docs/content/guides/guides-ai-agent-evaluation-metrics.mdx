@@ -89,6 +89,7 @@ const planQuality = new metrics.PlanQualityMetric({ threshold: 0.7, model: "gpt-
 // Evaluate agent with plan quality metric
 const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Find me the cheapest flight to Paris" })] });
 for await (const golden of dataset.evalsIterator({ metrics: [planQuality] })) {
+  if (!("input" in golden)) continue;
   await travelAgent(golden.input);
 }
 ```
@@ -183,6 +184,7 @@ const planAdherence = new metrics.PlanAdherenceMetric({ threshold: 0.7, model: "
 // Evaluate whether agent followed its plan
 const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Book the cheapest flight to Paris" })] });
 for await (const golden of dataset.evalsIterator({ metrics: [planAdherence] })) {
+  if (!("input" in golden)) continue;
   await travelAgent(golden.input);
 }
 ```
@@ -297,6 +299,7 @@ const dataset = new EvaluationDataset({
   goldens: [new Golden({ input: "What's the weather in Paris?", expectedTools: [new ToolCall({ name: "get_weather" })] })],
 });
 for await (const golden of dataset.evalsIterator()) {
+  if (!("input" in golden)) continue;
   await weatherAgent(golden.input);
 }
 ```
@@ -414,6 +417,7 @@ const dataset = new EvaluationDataset({
   goldens: [new Golden({ input: "Search for flights from NYC to London on March 15th" })],
 });
 for await (const golden of dataset.evalsIterator()) {
+  if (!("input" in golden)) continue;
   await flightAgent(golden.input);
 }
 ```
@@ -514,6 +518,7 @@ const dataset = new EvaluationDataset({
   goldens: [new Golden({ input: "Book the cheapest flight from NYC to LA for tomorrow" })],
 });
 for await (const golden of dataset.evalsIterator({ metrics: [taskCompletion] })) {
+  if (!("input" in golden)) continue;
   await travelAgent(golden.input);
 }
 ```
@@ -610,6 +615,7 @@ const dataset = new EvaluationDataset({
   goldens: [new Golden({ input: "Book the cheapest flight from NYC to LA" })],
 });
 for await (const golden of dataset.evalsIterator({ metrics: [stepEfficiency] })) {
+  if (!("input" in golden)) continue;
   await inefficientAgent(golden.input);
 }
 ```
@@ -778,6 +784,7 @@ const dataset = new EvaluationDataset({
 for await (const golden of dataset.evalsIterator({
   metrics: [taskCompletion, stepEfficiency, planQuality, planAdherence],
 })) {
+  if (!("input" in golden)) continue;
   await travelAgent(golden.input);
 }
 ```

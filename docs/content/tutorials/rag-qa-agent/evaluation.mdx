@@ -202,6 +202,7 @@ await agent.init();
 
 const testCases = [];
 for (const golden of dataset.goldens) {
+  if (!("input" in golden)) continue;
   const retrievedDocs = await agent.retrieve(golden.input);
   const response = await agent.generate(golden.input, retrievedDocs);
   const testCase = new LLMTestCase({

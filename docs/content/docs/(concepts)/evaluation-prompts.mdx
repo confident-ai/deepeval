@@ -172,10 +172,13 @@ const gen1 = observe({
   type: "llm",
   metrics: [new metrics.AnswerRelevancyMetric()],
   fn: async (input: string) => {
-    const promptTemplate = (prompt1.messagesTemplate ?? []).map((msg) => ({ role: msg.role, content: msg.content }));
+    const promptTemplate = (prompt1.messagesTemplate ?? []).map((msg) => ({
+      role: msg.role as "system" | "user" | "assistant",
+      content: msg.content,
+    }));
     const res = await new OpenAI().chat.completions.create({
       model: "gpt-4o",
-      messages: [...promptTemplate, { role: "user", content: input }],
+      messages: [...promptTemplate, { role: "user" as const, content: input }],
     });
     updateLlmSpan({ prompt: prompt1 });
     return res.choices[0].message.content;
@@ -212,6 +215,7 @@ import { EvaluationDataset, Golden } from "deepeval/dataset";
 
 const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Hello" })] });
 for await (const golden of dataset.evalsIterator()) {
+  if (!("input" in golden)) continue;
   await yourLlmApp(golden.input);
 }
 ```

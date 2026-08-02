@@ -237,6 +237,7 @@ const agent = new RAGAgent({ documentPaths: ["theranos_legacy.txt"] }); // Initi
 await agent.init();
 
 for await (const golden of dataset.evalsIterator()) {
+  if (!("input" in golden)) continue;
   await agent.answer(golden.input); // captures trace and evaluates spans
 }
 ```

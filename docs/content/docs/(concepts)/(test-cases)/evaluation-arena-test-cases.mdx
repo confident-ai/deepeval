@@ -155,7 +155,9 @@ const contestant3 = new Contestant({
   }),
 });
 
-const testCase = new ArenaTestCase({ contestants: [contestant1, contestant2, contestant3] });
+const testCase = new ArenaTestCase({
+  contestants: [contestant1, contestant2, contestant3],
+});
 ```
 
 </LangSwitch>
@@ -180,7 +182,6 @@ contestant_1 = Contestant(
     },
 )
 ```
-
 
 ## Including Images
 
@@ -214,7 +215,12 @@ test_case = ArenaTestCase(contestants=[
 ```
 
 ```typescript
-import { ArenaTestCase, LLMTestCase, Contestant, MLLMImage } from "deepeval/testCase";
+import {
+  ArenaTestCase,
+  LLMTestCase,
+  Contestant,
+  MLLMImage,
+} from "deepeval/testCase";
 
 const shoes = new MLLMImage({ url: "./shoes.png", local: true });
 
@@ -287,6 +293,7 @@ const shoes = new MLLMImage({ url: "./shoes.png", local: true });
 
 const testCase = new LLMTestCase({
   input: `Change the color of these shoes to blue: ${shoes}`,
+  actualOutput: `...`,
   expectedOutput: `...`,
 });
 
@@ -356,11 +363,9 @@ import { SingleTurnParams } from "deepeval/testCase";
 
 const arenaGEval = new metrics.ArenaGEval({
   name: "Friendly",
-  criteria: "Choose the winner of the more friendly contestant based on the input and actual output",
-  evaluationParams: [
-    SingleTurnParams.INPUT,
-    SingleTurnParams.ACTUAL_OUTPUT,
-  ],
+  criteria:
+    "Choose the winner of the more friendly contestant based on the input and actual output",
+  evaluationParams: [SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT],
 });
 
 await compare([testCase], arenaGEval);
@@ -406,7 +411,8 @@ The `ArenaTestCase` streamlines the evaluation by automatically masking contesta
         "The ArenaTestCase automatically masks contestant names and randomizes their order before judging, so the judge can't be influenced by naming or position.",
     },
     {
-      question: "What's the difference between arena and regular single-turn evals?",
+      question:
+        "What's the difference between arena and regular single-turn evals?",
       answer: (
         <>
           A regular <code>LLMTestCase</code> scores one output against a metric
@@ -434,9 +440,8 @@ The `ArenaTestCase` streamlines the evaluation by automatically masking contesta
           shared, cloud-hosted view of which candidate won and why,{" "}
           <a href="https://www.confident-ai.com">Confident AI</a> (built by the{" "}
           <code>deepeval</code> team) can visualize comparison results in a UI
-          for
-          collaborative review — optional, and your <code>compare()</code> runs
-          work the same without it.
+          for collaborative review — optional, and your <code>compare()</code>{" "}
+          runs work the same without it.
         </>
       ),
     },

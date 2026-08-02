@@ -75,6 +75,7 @@ const summarizer = new MeetingSummarizer(); // Initialize with your best config
 const summaryTestCases: LLMTestCase[] = [];
 const actionItemTestCases: LLMTestCase[] = [];
 for (const golden of dataset.goldens) {
+  if (!("input" in golden)) continue;
   const [summary, actionItems] = await summarizer.summarize(golden.input);
   const summaryTestCase = new LLMTestCase({
     input: golden.input,
@@ -266,6 +267,7 @@ for (const model of models) {
   const summaryTestCases: LLMTestCase[] = [];
   const actionItemTestCases: LLMTestCase[] = [];
   for (const golden of dataset.goldens) {
+  if (!("input" in golden)) continue;
     const [summary, actionItems] = await summarizer.summarize(golden.input);
 
     const summaryTestCase = new LLMTestCase({
@@ -409,7 +411,7 @@ class MeetingSummarizer {
           { role: "user", content: transcript },
         ],
       });
-      // ...
+      return response.choices[0].message.content ?? "";
     },
   });
 
@@ -423,7 +425,9 @@ class MeetingSummarizer {
           { role: "user", content: transcript },
         ],
       });
-      // ...
+      return JSON.parse(
+        response.choices[0].message.content ?? "{}",
+      ) as Record<string, any>;
     },
   });
 }

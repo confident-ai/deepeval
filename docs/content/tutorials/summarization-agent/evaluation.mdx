@@ -213,6 +213,7 @@ const summarizer = new MeetingSummarizer(); // Initialize with your best config
 const summaryTestCases: LLMTestCase[] = [];
 const actionItemTestCases: LLMTestCase[] = [];
 for (const golden of dataset.goldens) {
+  if (!("input" in golden)) continue;
   const [summary, actionItems] = await summarizer.summarize(golden.input);
   const summaryTestCase = new LLMTestCase({
     input: golden.input,

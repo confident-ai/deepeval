@@ -235,6 +235,7 @@ import { LLMTestCase } from "deepeval";
 // ...
 
 for (const golden of dataset.goldens) {
+  if (!("input" in golden)) continue;
   const testCase = new LLMTestCase({
     input: golden.input,
     actualOutput: await yourLlmApp(golden.input), // replace with your LLM app

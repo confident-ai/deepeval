@@ -183,7 +183,10 @@ const searchFlights = observe({
   name: "search_flights",
   fn: async (origin: string, destination: string, date: string) => {
     // Simulated flight search
-    return [{ id: "FL123", price: 450 }, { id: "FL456", price: 380 }];
+    return [
+      { id: "FL123", price: 450 },
+      { id: "FL456", price: 380 },
+    ];
   },
 });
 
@@ -216,14 +219,24 @@ const travelAgent = observe({
     // LLM reasons about which tool to call
     const response = await callOpenai(messages);
     const toolCall = response.choices[0].message.tool_calls![0];
+    if (toolCall.type !== "function") {
+      throw new Error("Expected a function tool call");
+    }
     const args = JSON.parse(toolCall.function.arguments);
 
     // Execute the tool
-    const flights = await searchFlights(args.origin, args.destination, args.date);
+    const flights = await searchFlights(
+      args.origin,
+      args.destination,
+      args.date,
+    );
 
     // LLM decides to book the cheapest
     const cheapest = flights.reduce((a, b) => (a.price < b.price ? a : b));
-    messages.push({ role: "assistant", content: `Found flights. Booking cheapest: ${cheapest.id}` });
+    messages.push({
+      role: "assistant",
+      content: `Found flights. Booking cheapest: ${cheapest.id}`,
+    });
 
     const booking = await bookFlight(cheapest.id);
 
@@ -393,11 +406,16 @@ import { EvaluationDataset, Golden } from "deepeval/dataset";
 
 // Create dataset
 const dataset = new EvaluationDataset({
-  goldens: [new Golden({ input: "Book a flight from NYC to London for next Monday" })],
+  goldens: [
+    new Golden({ input: "Book a flight from NYC to London for next Monday" }),
+  ],
 });
 
 // Loop through dataset with metrics
-for await (const golden of dataset.evalsIterator({ metrics: [planQuality, planAdherence] })) {
+for await (const golden of dataset.evalsIterator({
+  metrics: [planQuality, planAdherence],
+})) {
+  if (!("input" in golden)) continue;
   await travelAgent(golden.input);
 }
 ```
@@ -498,11 +516,17 @@ import { EvaluationDataset, Golden } from "deepeval/dataset";
 
 // Create dataset
 const dataset = new EvaluationDataset({
-  goldens: [new Golden({ input: "What's the weather like in San Francisco and should I bring an umbrella?" })],
+  goldens: [
+    new Golden({
+      input:
+        "What's the weather like in San Francisco and should I bring an umbrella?",
+    }),
+  ],
 });
 
 // Evaluate with action layer metrics
 for await (const golden of dataset.evalsIterator()) {
+  if (!("input" in golden)) continue;
   await weatherAgent(golden.input);
 }
 ```
@@ -574,11 +598,18 @@ import { EvaluationDataset, Golden } from "deepeval/dataset";
 
 // Create dataset
 const dataset = new EvaluationDataset({
-  goldens: [new Golden({ input: "Book the cheapest flight from NYC to LA for tomorrow" })],
+  goldens: [
+    new Golden({
+      input: "Book the cheapest flight from NYC to LA for tomorrow",
+    }),
+  ],
 });
 
 // Evaluate with execution metrics
-for await (const golden of dataset.evalsIterator({ metrics: [taskCompletion, stepEfficiency] })) {
+for await (const golden of dataset.evalsIterator({
+  metrics: [taskCompletion, stepEfficiency],
+})) {
+  if (!("input" in golden)) continue;
   await travelAgent(golden.input);
 }
 ```

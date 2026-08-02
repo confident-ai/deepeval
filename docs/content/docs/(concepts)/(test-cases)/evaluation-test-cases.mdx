@@ -665,7 +665,8 @@ const blueShoes = new MLLMImage({ url: "https://shoe-images.com/edited-shoes", l
 
 const testCase = new LLMTestCase({
   input: `Change the color of these shoes to blue: ${shoes}`,
-  expectedOutput: `Here's the blue shoes you asked for: ${expectedShoes}`,
+  actualOutput: `Here's the blue shoes you asked for: ${blueShoes}`,
+  expectedOutput: `Here's the blue shoes you asked for: ${blueShoes}`,
   retrievalContext: [`Some reference shoes: ${new MLLMImage({ url: "./reference-shoes.png", local: true })}`],
 });
 ```
@@ -717,6 +718,7 @@ const shoes = new MLLMImage({ url: "./shoes.png", local: true });
 
 const testCase = new LLMTestCase({
   input: `Change the color of these shoes to blue: ${shoes}`,
+  actualOutput: `...`,
   expectedOutput: `...`,
 });
 

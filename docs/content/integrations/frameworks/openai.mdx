@@ -122,6 +122,7 @@ const dataset = new EvaluationDataset({
 for await (const golden of dataset.evalsIterator({
   metrics: [new metrics.AnswerRelevancyMetric()],
 })) {
+  if (!("input" in golden)) continue;
   await client.chat.completions.create({
     model: "gpt-4o",
     messages: [
@@ -252,6 +253,7 @@ const callOpenAI = async (prompt: string) =>
 for await (const golden of dataset.evalsIterator({
   metrics: [new metrics.AnswerRelevancyMetric()],
 })) {
+  if (!("input" in golden)) continue;
   await callOpenAI(golden.input);
 }
 ```
@@ -439,6 +441,7 @@ for golden in dataset.evals_iterator():
 // ...
 
 for await (const golden of dataset.evalsIterator()) {
+  if (!("input" in golden)) continue;
   await respondToUser(golden.input);
 }
 ```

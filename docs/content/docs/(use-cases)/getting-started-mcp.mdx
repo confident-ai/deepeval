@@ -3,6 +3,7 @@ id: getting-started-mcp
 title: MCP Evaluation Quickstart
 sidebar_label: MCP
 ---
+
 import { ASSETS } from "@site/src/assets";
 
 Learn to evaluate model-context-protocol (MCP) based applications using `deepeval`, for both single-turn and multi-turn use cases.
@@ -172,7 +173,6 @@ task_completion_metric = MCPUseMetric(model=model)
 <Step>
 ### Create an MCP server
 
-
 Connect your application to MCP servers and create the `MCPServer` object for all the MCP servers you're using.
 
 <LangSwitch>
@@ -224,7 +224,7 @@ mcpServers.push(
     serverName: url,
     transport: "streamable-http",
     availableTools: toolList.tools,
-  })
+  }),
 );
 ```
 
@@ -234,10 +234,12 @@ mcpServers.push(
 <Step>
 ### Track your MCP interactions
 
-
 In your MCP application's main file, you need to track all the MCP interactions during run time. This includes adding `tools_called`, `resources_called` and `prompts_called` whenever your host uses them.
 
-<ImageDisplayer src={ASSETS.evaluationMcpTools} alt="MCP Interaction tracking" />
+<ImageDisplayer
+  src={ASSETS.evaluationMcpTools}
+  alt="MCP Interaction tracking"
+/>
 
 <LangSwitch>
 
@@ -287,14 +289,17 @@ for (const content of response.content) {
   if (content.type === "tool_use") {
     const toolName = content.name;
     const toolArgs = content.input;
-    const result = await client.callTool({ name: toolName, arguments: toolArgs });
+    const result = await client.callTool({
+      name: toolName,
+      arguments: toolArgs,
+    });
 
     toolsCalled.push(
       new MCPToolCall({
         name: toolName,
         args: toolArgs,
         result,
-      })
+      }),
     );
   }
 }
@@ -307,7 +312,6 @@ You can also track any [resources](https://www.deepeval.com/docs/evaluation-mcp#
 </Step>
 <Step>
 ### Create a test case
-
 
 You can now create a test case for your MCP application using the above interactions.
 
@@ -349,7 +353,6 @@ You can make your `main()` function return `mcp_servers`, `tools_called`, `resou
 <Step>
 ### Define metrics
 
-
 You can now use the [`MCPUseMetric`](/docs/metrics-mcp-use) to run evals on your single-turn your test case.
 
 <LangSwitch>
@@ -371,7 +374,6 @@ const mcpUseMetric = new metrics.MCPUseMetric();
 </Step>
 <Step>
 ### Run an evaluation
-
 
 Run an evaluation on the test cases you previously created using the metrics defined above.
 
@@ -404,7 +406,6 @@ await evaluate([testCase], [mcpUseMetric]);
 <Step>
 ### View on Confident AI (recommended)
 
-
 If you've set your `CONFIDENT_API_KEY`, test runs will appear automatically on [Confident AI](https://app.confident-ai.com), which `deepeval` integrates with natively.
 
 <VideoDisplayer
@@ -435,10 +436,12 @@ For multi-turn MCP evals, you are required to add the `mcp_tools_called`, `mcp_r
 <Step>
 ### Track your MCP interactions
 
-
 During the interactive session of your application, you need to track all the MCP interactions. This includes adding `tools_called`, `resources_called` and `prompts_called` whenever your host uses them.
 
-<ImageDisplayer src={ASSETS.evaluationMcpTools} alt="MCP Interaction tracking" />
+<ImageDisplayer
+  src={ASSETS.evaluationMcpTools}
+  alt="MCP Interaction tracking"
+/>
 
 <LangSwitch>
 
@@ -463,20 +466,24 @@ async def main():
 ```typescript title="main.ts" {7,13}
 import { MCPToolCall, Turn } from "deepeval/testCase";
 
-async function main() {
+const main = async () => {
   // ...
 
   const result = await client.callTool({ name: toolName, arguments: toolArgs });
-  const toolCalled = new MCPToolCall({ name: toolName, args: toolArgs, result });
+  const toolCalled = new MCPToolCall({
+    name: toolName,
+    args: toolArgs,
+    result,
+  });
 
   turns.push(
     new Turn({
       role: "assistant",
       content: `Tool call: ${toolName} with args ${JSON.stringify(toolArgs)}`,
       mcpToolsCalled: [toolCalled],
-    })
+    }),
   );
-}
+};
 ```
 
 </LangSwitch>
@@ -486,7 +493,6 @@ You can also track any [resources](https://www.deepeval.com/docs/evaluation-mcp#
 </Step>
 <Step>
 ### Create a test case
-
 
 You can now create a test case for your MCP application using the above `turns` and `mcp_servers`.
 
@@ -522,7 +528,6 @@ You can make your `main()` function return `turns` and `mcp_servers`. This helps
 <Step>
 ### Define metrics
 
-
 You can now use the [MCP metrics](/docs/metrics-multi-turn-mcp-use) to run evals on your test cases. There's two metrics for multi-turn test cases that support MCP evals.
 
 <LangSwitch>
@@ -546,7 +551,6 @@ const mcpTaskCompletion = new metrics.MCPTaskCompletionMetric();
 </Step>
 <Step>
 ### Run an evaluation
-
 
 Run an evaluation on the test cases you previously created using the metrics defined above.
 
@@ -577,7 +581,6 @@ await evaluate([convoTestCase], [mcpUseMetric, mcpTaskCompletion]);
 </Step>
 <Step>
 ### View on Confident AI (recommended)
-
 
 If you've set your `CONFIDENT_API_KEY`, test runs will appear automatically on [Confident AI](https://app.confident-ai.com), which `deepeval` integrates with natively.
 

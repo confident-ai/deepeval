@@ -177,6 +177,7 @@ const answerRelevancyMetric = new metrics.AnswerRelevancyMetric();
 const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Who is the current president of the United States of America?" })] });
 
 for (const golden of dataset.goldens) {
+  if (!("input" in golden)) continue;
   dataset.addTestCase(
     new LLMTestCase({
       input: golden.input,

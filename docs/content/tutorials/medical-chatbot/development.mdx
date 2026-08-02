@@ -256,7 +256,8 @@ class MedicalChatbot {
     },
     {
       name: "retrieve_knowledge",
-      description: "A tool to retrieve data on various diagnosis methods from gale encyclopedia",
+      description:
+        "A tool to retrieve data on various diagnosis methods from gale encyclopedia",
       schema: z.object({ query: z.string() }),
     },
   );
@@ -284,7 +285,9 @@ chatbot.retrieve_knowledge("Cough, fever, and diarrhea.")
 
 ```typescript title="main.ts"
 const chatbot = new MedicalChatbot("gpt-4o-mini");
-await chatbot.retrieveKnowledge.invoke({ query: "Cough, fever, and diarrhea." });
+await chatbot.retrieveKnowledge.invoke({
+  query: "Cough, fever, and diarrhea.",
+});
 ```
 
 </LangSwitch>
@@ -391,19 +394,37 @@ class MedicalChatbot {
   }
 
   createAppointment = tool(
-    async ({ name, email, date }: { name: string; email: string; date: string }) => {
+    async ({
+      name,
+      email,
+      date,
+    }: {
+      name: string;
+      email: string;
+      date: string;
+    }) => {
       const parsedDate = new Date(date);
       if (isNaN(parsedDate.getTime())) {
         return "Invalid date format. Please use YYYY-MM-DD format.";
       }
-      const appointment: Appointment = { id: randomUUID(), name, email, date: parsedDate };
+      const appointment: Appointment = {
+        id: randomUUID(),
+        name,
+        email,
+        date: parsedDate,
+      };
       this.appointments.push(appointment);
       return `Created new appointment with ID: ${appointment.id} for ${name} on ${date}.`;
     },
     {
       name: "create_appointment",
-      description: "Create a new appointment with the given ID, name, email, and date",
-      schema: z.object({ name: z.string(), email: z.string(), date: z.string() }),
+      description:
+        "Create a new appointment with the given ID, name, email, and date",
+      schema: z.object({
+        name: z.string(),
+        email: z.string(),
+        date: z.string(),
+      }),
     },
   );
 
@@ -444,16 +465,9 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
 ```
 
 ```typescript title="main.ts"
-import { InMemoryChatMessageHistory } from "@langchain/core/chat_history";
+import { MemorySaver } from "@langchain/langgraph";
 
-// Simple in-memory store for chat histories
-const chatStore: Record<string, InMemoryChatMessageHistory> = {};
-function getSessionHistory(sessionId: string): InMemoryChatMessageHistory {
-  if (!chatStore[sessionId]) {
-    chatStore[sessionId] = new InMemoryChatMessageHistory();
-  }
-  return chatStore[sessionId];
-}
+const checkpointer = new MemorySaver();
 ```
 
 </LangSwitch>
@@ -507,9 +521,8 @@ class MedicalChatbot:
 ```
 
 ```typescript title="main.ts"
-import { createToolCallingAgent, AgentExecutor } from "langchain/agents";
-import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
-import { RunnableWithMessageHistory } from "@langchain/core/runnables/history";
+import { createAgent } from "langchain";
+import { MemorySaver } from "@langchain/langgraph";
 // ...
 
 class MedicalChatbot {
@@ -519,7 +532,7 @@ class MedicalChatbot {
   client: QdrantClient;
   // For managing appointments
   appointments: Appointment[] = [];
-  agentWithMemory: RunnableWithMessageHistory<Record<string, any>, any>;
+  agentWithMemory: ReturnType<typeof createAgent>;
 
   constructor(model: string, systemPrompt: string) {
     this.model = new ChatOpenAI({ model });
@@ -532,27 +545,18 @@ class MedicalChatbot {
     this.setupAgent();
   }
 
-  setupAgent() {
+  setupAgent = () => {
     // Setup the agent with tools and memory
-
-    // Create prompt messages
-    const prompt = ChatPromptTemplate.fromMessages([
-      ["system", this.systemPrompt],
-      new MessagesPlaceholder("chat_history"),
-      ["human", "{input}"],
-    ]);
 
     // Create agent
     const tools = [this.retrieveKnowledge, this.createAppointment];
-    const agent = createToolCallingAgent({ llm: this.model, tools, prompt });
-    const agentExecutor = new AgentExecutor({ agent, tools });
-    this.agentWithMemory = new RunnableWithMessageHistory({
-      runnable: agentExecutor,
-      getMessageHistory: getSessionHistory,
-      inputMessagesKey: "input",
-      historyMessagesKey: "chat_history",
+    this.agentWithMemory = createAgent({
+      model: this.model,
+      tools,
+      systemPrompt: this.systemPrompt,
+      checkpointer: new MemorySaver(),
     });
-  }
+  };
 
   // Other methods from above goes here
   // ...
@@ -604,12 +608,15 @@ start_session()
 import { randomUUID } from "node:crypto";
 import * as readline from "node:readline/promises";
 
-async function startSession(sessionId?: string) {
+const startSession = async (sessionId?: string) => {
   // Start an interactive session with the chatbot
   console.log("Hello! I am Baymax, your personal healthcare companion.");
   console.log("How are you feeling today? (type 'exit' to quit.)");
 
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
 
   while (true) {
     if (!sessionId) {
@@ -622,14 +629,17 @@ async function startSession(sessionId?: string) {
     }
 
     const response = await chatbot.agentWithMemory.invoke(
-      { input: userInput },
-      { configurable: { sessionId } },
+      { messages: [{ role: "user", content: userInput }] },
+      { configurable: { thread_id: sessionId } },
     );
-    console.log("Baymax:", response.output);
+    const lastMessage = response.messages.at(-1);
+    const output =
+      typeof lastMessage?.content === "string" ? lastMessage.content : "";
+    console.log("Baymax:", output);
   }
 
   rl.close();
-}
+};
 
 // These parameters will be evaluated later
 const MODEL = "gpt-4o-mini";

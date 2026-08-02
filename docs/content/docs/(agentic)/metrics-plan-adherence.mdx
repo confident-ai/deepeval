@@ -91,6 +91,7 @@ const metric = new metrics.PlanAdherenceMetric({ threshold: 0.7, model: "gpt-4o"
 
 // Loop through dataset
 for await (const golden of dataset.evalsIterator({ metrics: [metric] })) {
+  if (!("input" in golden)) continue;
   await agent(golden.input);
 }
 ```

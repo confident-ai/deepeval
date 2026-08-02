@@ -229,6 +229,7 @@ const llmApp = observe({
 
 const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Hi!" })] });
 for await (const golden of dataset.evalsIterator()) {
+  if (!("input" in golden)) continue;
   await llmApp(golden.input);
 }
 ```
