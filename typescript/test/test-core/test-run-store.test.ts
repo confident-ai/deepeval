@@ -5,8 +5,8 @@ import {
   persistCase,
   readPersistedCases,
   wrapUpTestRun,
-} from "../../src/evaluate/assert-test/test-run-store";
-import { _resetWorkerCaseCount } from "../../src/evaluate/assert-test/test-run-store";
+} from "../../src/evaluate/assert-test/test-run-utils";
+import { _resetWorkerCaseCount } from "../../src/evaluate/assert-test/test-run-utils";
 import { assertTest } from "../../src/evaluate/assert-test";
 import { LLMTestCase, ConversationalTestCase, Turn } from "../../src/test-case";
 import { BaseMetric } from "../../src/metrics";

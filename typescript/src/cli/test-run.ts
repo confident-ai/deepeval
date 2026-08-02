@@ -31,20 +31,14 @@ export async function runTest(opts: TestRunOptions): Promise<number> {
   );
 
   const { startVitest } = await import("vitest/node");
-  const vitest = await startVitest(
-    "test",
-    opts.paths,
-    { watch: false, run: true },
-    {
-      test: {
-        setupFiles: [setupFile],
-        globalSetup: [globalSetupFile],
-        env,
-        testTimeout: 120_000,
-        hookTimeout: 120_000,
-      },
-    },
-  );
+  const vitest = await startVitest("test", opts.paths, {
+    watch: false,
+    setupFiles: [setupFile],
+    globalSetup: [globalSetupFile],
+    env,
+    testTimeout: 120_000,
+    hookTimeout: 120_000,
+  });
 
   if (!vitest) return 1;
   const failed = vitest.state.getCountOfFailedTests() > 0;
