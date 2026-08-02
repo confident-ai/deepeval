@@ -31,7 +31,7 @@ from deepeval.test_case.mcp import (
 
 _MLLM_IMAGE_REGISTRY: Dict[str, "MLLMImage"] = {}
 
-class ToolCallType(str, Enum):
+class ToolCallType(Enum):
     FUNCTION = "FUNCTION"
     MCP = "MCP"
 
