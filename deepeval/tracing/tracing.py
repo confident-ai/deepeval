@@ -86,8 +86,6 @@ if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden
     from anthropic import Anthropic
 
-EVAL_DUMMY_SPAN_NAME = "evals_iterator"
-
 
 class _ObservedAsyncGenIter:
     """Class-based async iterator that wraps an observed async generator.
@@ -417,16 +415,6 @@ class TraceManager:
             # This is a child span, find its parent and add it to the parent's children
             parent_span = self.get_span_by_uuid(span.parent_uuid)
             if parent_span:
-
-                if (
-                    parent_span.name == EVAL_DUMMY_SPAN_NAME
-                ):  # ignored span for evaluation
-                    span.parent_uuid = None
-                    trace.root_spans.remove(parent_span)
-                    trace.root_spans.append(span)
-                    self._reparent_orphan_roots(trace, span)
-                    return
-
                 parent_span.children.append(span)
             else:
                 trace.root_spans.append(span)

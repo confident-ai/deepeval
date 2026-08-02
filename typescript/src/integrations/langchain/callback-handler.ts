@@ -150,17 +150,19 @@ export class DeepEvalCallbackHandler
         this.hierarchy.recordSpan(uuidStr);
         baseSpan.input = inputs;
 
+        // Trace-level, not span-level: a metric on the root chain span would be
+        // reported per-span rather than as the run's end-to-end score. Skip
+        // undefined so an enclosing `observe` / `updateCurrentTrace` isn't
+        // clobbered.
         const trace = traceManager.getTraceByUuid(traceUuid);
         if (trace) {
           trace.input = inputs;
-        }
-
-        // Handler-level defaults. Conditional so they don't erase what
-        // `enterCurrentContext` already applied from `next*Span(...)` /
-        // `setTracingContext(...)`.
-        if (this.metrics !== undefined) baseSpan.metrics = this.metrics;
-        if (this.metricCollection !== undefined) {
-          baseSpan.metricCollection = this.metricCollection;
+          if (this.metrics !== undefined) {
+            trace.metrics = this.metrics;
+          }
+          if (this.metricCollection !== undefined) {
+            trace.metricCollection = this.metricCollection;
+          }
         }
       }
     }

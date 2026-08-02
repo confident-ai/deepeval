@@ -42,7 +42,7 @@ export class GEval extends BaseMetric {
   criteria?: string;
   evaluationSteps?: string[];
   rubric?: Rubric[];
-  private readonly metricName: string;
+  readonly metricName: string;
   private readonly scoreRange: [number, number];
   private readonly scoreRangeSpan: number;
   private readonly includeGEvalSuffix: boolean;

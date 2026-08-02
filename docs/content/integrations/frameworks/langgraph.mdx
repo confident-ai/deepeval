@@ -120,11 +120,11 @@ graph = (
 # Goldens are the inputs you want to evaluate.
 dataset = EvaluationDataset(goldens=[Golden(input="What is the weather in Paris?")])
 
-# The `TaskCompletionMetric` is passed into the LangGraph callback.
-for golden in dataset.evals_iterator():
+# The `TaskCompletionMetric` is passed into the `evals_iterator`.
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     graph.invoke(
         {"messages": [{"role": "user", "content": golden.input}]},
-        config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]},
+        config={"callbacks": [CallbackHandler()]},
     )
 ```
 
@@ -215,7 +215,7 @@ deepeval test run test_langgraph_agent.py
 
 ### In a script
 
-Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one LangGraph run; metrics score the resulting trace through the callback.
+Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one LangGraph run, and metrics passed to the iterator score the resulting trace end-to-end.
 
 ```python title="langgraph_agent.py" showLineNumbers
 dataset = EvaluationDataset(goldens=[
@@ -223,16 +223,16 @@ dataset = EvaluationDataset(goldens=[
     Golden(input="What is the weather in London?"),
 ])
 
-for golden in dataset.evals_iterator():
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     graph.invoke(
         {"messages": [{"role": "user", "content": golden.input}]},
-        config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]},
+        config={"callbacks": [CallbackHandler()]},
     )
 ```
 
 ## Applying metrics to components
 
-Passing `metrics=[...]` to `CallbackHandler` evaluates the overall LangGraph run. To evaluate a component instead, attach metrics where the graph creates that component.
+Passing `metrics=[...]` to `evals_iterator` evaluates the overall LangGraph run. To evaluate a component instead, attach metrics where the graph creates that component.
 
 ### Agent spans (sub-agents)
 
@@ -273,7 +273,7 @@ for golden in dataset.evals_iterator():
 ```
 
 :::caution[One-shot per run]
-`next_llm_span` stages a metric for the **first** LLM span the graph emits inside the `with` block. Later loop iterations through the `chatbot` node won't pick it up. To score every LLM call, drive the loop yourself (`next_llm_span` per `graph.invoke(...)`) or score the run end-to-end with trace-level metrics on `CallbackHandler(metrics=[...])`.
+`next_llm_span` stages a metric for the **first** LLM span the graph emits inside the `with` block. Later loop iterations through the `chatbot` node won't pick it up. To score every LLM call, drive the loop yourself (`next_llm_span` per `graph.invoke(...)`) or score the run end-to-end with trace-level metrics on `evals_iterator(metrics=[...])`.
 :::
 
 For deterministic tool calls, use tool spans for traceability, inputs, outputs, and metadata. Avoid attaching metrics directly to tool spans.
@@ -448,8 +448,8 @@ Attributes set on a baked-in `CallbackHandler(...)` — `thread_id`, `user_id`, 
 | `metadata`          | `dict`      | Trace metadata applied when the callback starts a trace.          |
 | `thread_id`         | `str`       | Groups related runs into a single trace thread.                   |
 | `user_id`           | `str`       | Actor identifier for the trace.                                   |
-| `metrics`           | `list`      | Metrics applied to the LangGraph run.                             |
-| `metric_collection` | `str`       | Metric collection applied to the LangGraph run.                   |
+| `metrics`           | `list`      | Trace-level metrics for the run. Prefer `evals_iterator(metrics=[...])` in eval scripts. |
+| `metric_collection` | `str`       | Trace-level metric collection, for online evals on live traffic.  |
 | `test_case_id`      | `str`       | Optional test case identifier.                                    |
 | `turn_id`           | `str`       | Optional turn identifier for conversational traces.               |
 

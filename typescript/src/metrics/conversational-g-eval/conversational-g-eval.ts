@@ -53,7 +53,7 @@ export class ConversationalGEval extends BaseConversationalMetric {
   criteria?: string;
   evaluationSteps?: string[];
   rubric?: Rubric[];
-  private readonly metricName: string;
+  readonly metricName: string;
   private readonly includeGEvalSuffix: boolean;
 
   constructor(options: ConversationalGEvalMetricOptions) {

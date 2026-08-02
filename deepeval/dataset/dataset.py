@@ -1,8 +1,6 @@
 from asyncio import Task
 from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Union, Literal
 from dataclasses import dataclass, field
-from opentelemetry.trace import Tracer
-from opentelemetry.context import Context, attach, detach
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 import json
@@ -11,8 +9,6 @@ import os
 import datetime
 import time
 import ast
-import uuid
-from opentelemetry import baggage
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.dataset.utils import (
@@ -22,7 +18,6 @@ from deepeval.dataset.utils import (
     convert_convo_goldens_to_convo_test_cases,
     convert_convo_test_cases_to_convo_goldens,
     format_turns,
-    check_tracer,
     parse_turns,
     serialize_retrieval_context,
     join_retrieval_context,
@@ -65,7 +60,6 @@ from deepeval.test_run import (
 )
 
 from deepeval.tracing import trace_manager
-from deepeval.tracing.tracing import EVAL_DUMMY_SPAN_NAME
 
 if TYPE_CHECKING:
     from deepeval.evaluate.configs import (
@@ -1570,7 +1564,6 @@ class EvaluationDataset:
         cache_config: Optional["CacheConfig"] = None,
         error_config: Optional["ErrorConfig"] = None,
         async_config: Optional["AsyncConfig"] = None,
-        run_otel: Optional[bool] = False,
     ) -> Iterator[Golden]:
         from deepeval.evaluate.utils import (
             aggregate_metric_pass_rates,
@@ -1606,11 +1599,6 @@ class EvaluationDataset:
             start_time = time.perf_counter()
             test_results: List[TestResult] = []
 
-            # sandwich start trace for OTEL
-            if run_otel:
-                ctx = self._start_otel_test_run()  # ignored span
-                ctx_token = attach(ctx)
-
             if async_config.run_async:
                 loop = get_or_create_event_loop()
                 for golden in a_execute_agentic_test_cases_from_loop(
@@ -1624,15 +1612,7 @@ class EvaluationDataset:
                     error_config=error_config,
                     async_config=async_config,
                 ):
-                    if run_otel:
-                        _tracer = check_tracer()
-                        with _tracer.start_as_current_span(
-                            name=EVAL_DUMMY_SPAN_NAME,
-                            context=ctx,
-                        ):
-                            yield golden
-                    else:
-                        yield golden
+                    yield golden
 
             else:
                 for golden in execute_agentic_test_cases_from_loop(
@@ -1644,15 +1624,7 @@ class EvaluationDataset:
                     test_results=test_results,
                     identifier=identifier,
                 ):
-                    if run_otel:
-                        _tracer = check_tracer()
-                        with _tracer.start_as_current_span(
-                            name=EVAL_DUMMY_SPAN_NAME,
-                            context=ctx,
-                        ):
-                            yield golden
-                    else:
-                        yield golden
+                    yield golden
 
             end_time = time.perf_counter()
             run_duration = end_time - start_time
@@ -1694,56 +1666,28 @@ class EvaluationDataset:
             # save test run
             global_test_run_manager.save_test_run(TEMP_FILE_PATH)
 
-            # sandwich end trace for OTEL
-            if run_otel:
-                self._end_otel_test_run(ctx)
-                detach(ctx_token)
-
+            res = global_test_run_manager.wrap_up_test_run(
+                run_duration, display_table=False
+            )
+            if isinstance(res, tuple):
+                confident_link, test_run_id = res
             else:
-                res = global_test_run_manager.wrap_up_test_run(
-                    run_duration, display_table=False
-                )
-                if isinstance(res, tuple):
-                    confident_link, test_run_id = res
-                else:
-                    confident_link = test_run_id = None
+                confident_link = test_run_id = None
 
-                # Offer the inspect TUI after all other run output has
-                # flushed — mirrors the placement in
-                # ``deepeval/evaluate/evaluate.py``.
-                from deepeval.evaluate.inspect_prompt import (
-                    maybe_offer_inspect_tui,
-                )
+            # Offer the inspect TUI after all other run output has
+            # flushed — mirrors the placement in
+            # ``deepeval/evaluate/evaluate.py``.
+            from deepeval.evaluate.inspect_prompt import (
+                maybe_offer_inspect_tui,
+            )
 
-                maybe_offer_inspect_tui(global_test_run_manager, display_config)
+            maybe_offer_inspect_tui(global_test_run_manager, display_config)
 
-                return EvaluationResult(
-                    test_results=test_results,
-                    confident_link=confident_link,
-                    test_run_id=test_run_id,
-                )
+            return EvaluationResult(
+                test_results=test_results,
+                confident_link=confident_link,
+                test_run_id=test_run_id,
+            )
 
     def evaluate(self, task: Task):
         coerce_to_task(task)
-
-    def _start_otel_test_run(self, tracer: Optional[Tracer] = None) -> Context:
-        _tracer = check_tracer(tracer)
-        run_id = str(uuid.uuid4())
-        print("Starting OTLP test run with run_id: ", run_id)
-        ctx = baggage.set_baggage(
-            "confident.test_run.id", run_id, context=Context()
-        )
-        with _tracer.start_as_current_span(
-            "start_otel_test_run", context=ctx
-        ) as span:
-            span.set_attribute("confident.test_run.id", run_id)
-        return ctx
-
-    def _end_otel_test_run(self, ctx: Context, tracer: Optional[Tracer] = None):
-        run_id = baggage.get_baggage("confident.test_run.id", context=ctx)
-        print("Ending OTLP test run with run_id: ", run_id)
-        _tracer = check_tracer(tracer)
-        with _tracer.start_as_current_span(
-            "stop_otel_test_run", context=ctx
-        ) as span:
-            span.set_attribute("confident.test_run.id", run_id)

@@ -331,13 +331,20 @@ class CallbackHandler(BaseCallbackHandler):
 
             base_span.input = inputs
 
-            # Only set trace-level input/metrics for root chain
+            # Only set trace-level input/metrics for root chain. These belong on
+            # the trace, not the root span: the trace-level test case is built
+            # from ``golden.input`` and falls back to ``golden.expected_output``,
+            # whereas the span path would grade LangChain's raw input/output
+            # dicts. Skip ``None`` so an enclosing ``@observe`` /
+            # ``update_current_trace(metrics=...)`` isn't clobbered.
             if parent_run_id is None:
                 trace = trace_manager.get_trace_by_uuid(base_span.trace_uuid)
                 if trace:
                     trace.input = inputs
-                base_span.metrics = self.metrics
-                base_span.metric_collection = self.metric_collection
+                    if self.metrics is not None:
+                        trace.metrics = self.metrics
+                    if self.metric_collection is not None:
+                        trace.metric_collection = self.metric_collection
 
     def on_chain_end(
         self,

@@ -75,6 +75,8 @@ export enum Endpoints {
   PROMPTS_BRANCHES_ENDPOINT = "/v1/prompts/:alias/branches",
   PROMPTS_BRANCH_ENDPOINT = "/v1/prompts/:alias/branches/:name",
   PROMPTS_ENDPOINT = "/v1/prompts",
+  METRICS_ENDPOINT = "/v1/metrics",
+  METRIC_ENDPOINT = "/v1/metric/:name",
   RECOMMEND_ENDPOINT = "/v1/recommend-metrics",
   EVALUATE_ENDPOINT = "/v1/evaluate",
   EVALUATE_THREAD_ENDPOINT = "/v1/evaluate/threads/:threadId",

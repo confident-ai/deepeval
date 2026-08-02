@@ -58,6 +58,23 @@ export const TERMS = {
     typescript: "retrievalContext",
   },
   "field::tools_called": { python: "tools_called", typescript: "toolsCalled" },
+  "field::evaluation_params": {
+    python: "evaluation_params",
+    typescript: "evaluationParams",
+  },
+  "field::root_nodes": { python: "root_nodes", typescript: "rootNodes" },
+  "field::output_label": { python: "output_label", typescript: "outputLabel" },
+  "field::turn_window": { python: "turn_window", typescript: "turnWindow" },
+  "field::include_reason": {
+    python: "include_reason",
+    typescript: "includeReason",
+  },
+  "field::strict_mode": { python: "strict_mode", typescript: "strictMode" },
+  "field::verbose_mode": { python: "verbose_mode", typescript: "verboseMode" },
+
+  // methods (differ by naming convention)
+  "method::add_node": { python: "add_node", typescript: "addNode" },
+  "method::add_verdict": { python: "add_verdict", typescript: "addVerdict" },
 
   // literals
   "literal::True": { python: "True", typescript: "true" },

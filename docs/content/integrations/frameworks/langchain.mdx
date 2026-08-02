@@ -129,11 +129,11 @@ agent = create_agent(
 # Goldens are the inputs you want to evaluate.
 dataset = EvaluationDataset(goldens=[Golden(input="What is 8 multiplied by 6?")])
 
-# The `TaskCompletionMetric` is passed into the LangChain callback.
-for golden in dataset.evals_iterator():
+# The `TaskCompletionMetric` is passed into the `evals_iterator`.
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     agent.invoke(
         {"messages": [{"role": "user", "content": golden.input}]},
-        config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]},
+        config={"callbacks": [CallbackHandler()]},
     )
 ```
 
@@ -248,7 +248,7 @@ deepeval test run test_langchain_agent.py
 
 ### In a script
 
-Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one LangChain run; metrics score the resulting trace through the callback.
+Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one LangChain run, and metrics passed to the iterator score the resulting trace end-to-end.
 
 <Switch>
 
@@ -260,10 +260,10 @@ dataset = EvaluationDataset(goldens=[
     Golden(input="What is 7 multiplied by 9?"),
 ])
 
-for golden in dataset.evals_iterator():
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     agent.invoke(
         {"messages": [{"role": "user", "content": golden.input}]},
-        config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]},
+        config={"callbacks": [CallbackHandler()]},
     )
 ```
 
@@ -296,7 +296,7 @@ for await (const golden of dataset.evalsIterator({
 
 ## Applying metrics to components
 
-Passing `metrics=[...]` to `CallbackHandler` evaluates the overall LangChain run. To evaluate a component instead, attach metrics where LangChain creates that component.
+Passing `metrics=[...]` to `evals_iterator` evaluates the overall LangChain run. To evaluate a component instead, attach metrics where LangChain creates that component.
 
 ### Agent spans (sub-agents)
 
@@ -343,7 +343,7 @@ for golden in dataset.evals_iterator():
 ```
 
 :::caution[One-shot per run]
-`next_llm_span` stages a metric for the **first** LLM span LangChain opens inside the `with` block. Later LLM calls in the same `agent.invoke(...)` — e.g. the tool-choice turn followed by the final-answer turn — won't receive the staged metric. To score every LLM call, drive the loop yourself (`next_llm_span` per call) or score the run end-to-end with trace-level metrics on `CallbackHandler(metrics=[...])`.
+`next_llm_span` stages a metric for the **first** LLM span LangChain opens inside the `with` block. Later LLM calls in the same `agent.invoke(...)` — e.g. the tool-choice turn followed by the final-answer turn — won't receive the staged metric. To score every LLM call, drive the loop yourself (`next_llm_span` per call) or score the run end-to-end with trace-level metrics on `evals_iterator(metrics=[...])`.
 :::
 
 For deterministic tool calls, use tool spans for traceability, inputs, outputs, and metadata. Avoid attaching metrics directly to tool spans.
@@ -533,8 +533,8 @@ const respondToUser = observe({
 | `metadata`          | `dict`      | Trace metadata applied when the callback starts a trace. |
 | `thread_id`         | `str`       | Groups related runs into a single trace thread.          |
 | `user_id`           | `str`       | Actor identifier for the trace.                          |
-| `metrics`           | `list`      | Metrics applied to the LangChain run.                    |
-| `metric_collection` | `str`       | Metric collection applied to the LangChain run.          |
+| `metrics`           | `list`      | Trace-level metrics for the run. Prefer `evals_iterator(metrics=[...])` in eval scripts. |
+| `metric_collection` | `str`       | Trace-level metric collection, for online evals on live traffic. |
 | `test_case_id`      | `str`       | Optional test case identifier.                           |
 | `turn_id`           | `str`       | Optional turn identifier for conversational traces.      |
 
@@ -554,7 +554,7 @@ For native tracing helpers (`@observe`, `with trace(...)`, `update_current_trace
           drains it onto that sub-agent's span — scoring the sub-agent in
           isolation without touching the parent. It's one-shot per run, so to
           score every step you drive the loop yourself or use trace-level
-          metrics on <code>CallbackHandler(metrics=[...])</code>.
+          metrics on <code>evals_iterator(metrics=[...])</code>.
         </>
       ),
     },
