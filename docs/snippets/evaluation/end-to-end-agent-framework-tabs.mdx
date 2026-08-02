@@ -6,7 +6,9 @@ Wrap the top-level function with `@observe` and call `update_current_trace(...)`
 <Tabs items={["Async", "Sync"]}>
 <Tab value="Async">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" showLineNumbers
 import asyncio
@@ -24,6 +26,10 @@ for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     task = asyncio.create_task(my_ai_agent(golden.input))
     dataset.evaluate(task)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="main.ts" showLineNumbers
 import { metrics } from "deepeval";
@@ -47,7 +53,9 @@ for await (const golden of dataset.evalsIterator({
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Sync">
@@ -84,7 +92,9 @@ Build your agent with `create_agent`, then pass `deepeval`'s `CallbackHandler` t
 <Tabs items={["Async", "Sync"]}>
 <Tab value="Async">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="langchain_app.py" showLineNumbers
 import asyncio
@@ -113,6 +123,10 @@ for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     task = asyncio.create_task(run_agent(golden.input))
     dataset.evaluate(task)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="langchain_app.ts" showLineNumbers
 import { createAgent, tool } from "langchain";
@@ -144,7 +158,9 @@ for await (const golden of dataset.evalsIterator({
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Sync">
@@ -268,7 +284,9 @@ Drop-in replace `from openai import OpenAI` with `from deepeval.openai import Op
 <Tabs items={["Async", "Sync"]}>
 <Tab value="Async">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_app.py" showLineNumbers
 import asyncio
@@ -291,6 +309,10 @@ for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     dataset.evaluate(task)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="openai_app.ts" showLineNumbers
 import OpenAI from "openai";
 import { metrics } from "deepeval";
@@ -311,7 +333,9 @@ for await (const golden of dataset.evalsIterator({
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Sync">
@@ -639,7 +663,9 @@ Register `DeepEvalTracingProcessor` once, then build your agent with `deepeval`'
 <Tabs items={["Async", "Sync"]}>
 <Tab value="Async">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_agents_app.py" showLineNumbers
 import asyncio
@@ -664,6 +690,10 @@ for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     task = asyncio.create_task(Runner.run(agent, golden.input))
     dataset.evaluate(task)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="openai_agents_app.ts" showLineNumbers
 import { Agent, run, tool, addTraceProcessor } from "@openai/agents";
@@ -695,7 +725,9 @@ for await (const golden of dataset.evalsIterator({
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Sync">

@@ -23,7 +23,9 @@ The `input` and `actual_output` are required to create an `LLMTestCase` (and hen
 
 ## Usage
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -49,6 +51,10 @@ m_test_case = LLMTestCase(
 evaluate(test_cases=[m_test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate, metrics } from "deepeval";
 import { LLMTestCase, MLLMImage } from "deepeval/testCase";
@@ -71,7 +77,9 @@ const mTestCase = new LLMTestCase({
 await evaluate([mTestCase], [metric]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 There are **SIX** optional parameters when creating a `ImageCoherence`:
 
@@ -86,7 +94,9 @@ There are **SIX** optional parameters when creating a `ImageCoherence`:
 
 You can also run the `ImageCoherenceMetric` on a single test case as a standalone, one-off execution.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -95,6 +105,10 @@ metric.measure(m_test_case)
 print(metric.score, metric.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -102,7 +116,9 @@ await metric.measure(mTestCase);
 console.log(metric.score, metric.reason);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ## How Is It Calculated?
 

@@ -23,7 +23,9 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 ## Usage
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -50,6 +52,10 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate, metrics, LLMTestCase } from "deepeval";
 
@@ -73,7 +79,9 @@ const testCase = new LLMTestCase({
 await evaluate([testCase], [metric]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 There is **ONE** mandatory and **FOUR** optional parameters when creating a `PatternMatchMetric`:
 
@@ -87,7 +95,9 @@ There is **ONE** mandatory and **FOUR** optional parameters when creating a `Pat
 
 You can also run the `PatternMatchMetric` on a single test case as a standalone, one-off execution.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -96,6 +106,10 @@ metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -103,7 +117,9 @@ await metric.measure(testCase);
 console.log(metric.score, metric.reason);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ## How Is It Calculated?
 

@@ -41,13 +41,12 @@ reach the 501 page through direct links, bookmarks and search hits.
 
 **The selector only appears on docs and integrations.** Those are the reference
 surfaces where the choice is meaningful. Guides and tutorials still honour a
-selection made elsewhere — their 187 `<LangSwitch>` blocks render TypeScript for
+selection made elsewhere — their 187 `<Switch>` blocks render TypeScript for
 a reader who picked it — they just don't offer their own control.
 
-**Code blocks are essentially done.** 484 `<LangSwitch>` blocks, 452 of which
-carry a TypeScript fence; the other 32 are `bash` and `yaml` pairs. Across all
-of them there are no reversed pairs, no single-child blocks, and no Python-only
-page leaking a TypeScript fence.
+**Code blocks are essentially done.** 493 `<Switch>` blocks, 461 of which
+carry a TypeScript fence; the other 32 are `bash` and `yaml` pairs. None is
+one-sided, and no Python-only page leaks a TypeScript fence.
 
 **Prose has barely started.** `<C>` is used on exactly one page, against a
 registry of 15 terms, while 2,334 snake_case identifiers across 171 files
@@ -72,7 +71,7 @@ at all.
 ### What blocks wider TypeScript coverage
 
 **Existing pages missing TypeScript examples.** The SDK already supports these,
-so the work is writing the `<LangSwitch>` blocks and then widening `languages`.
+so the work is writing the `<Switch>` blocks and then widening `languages`.
 
 - 14 of the 15 `models/*` pages — everything but `litellm`. Two code blocks
   each. Watch the three non-obvious mappings: `lmstudio` and `vllm` are both
@@ -114,7 +113,7 @@ Roughly in order of how much they hurt a TypeScript reader.
 3. **Partial gaps.** 239 unpaired ` ```python ` fences sit on 52 otherwise
    bilingual pages, mostly framework integration tabs, the pytest and
    `deepeval test run` workflows, Pydantic schemas, and `save_as()`. Each
-   should become a single-child `<LangSwitch>`, which labels the gap without
+   should become a one-case `<Switch>`, which labels the gap without
    anyone writing TypeScript.
 4. **Unverified TypeScript spellings.** The registry's TypeScript values were
    authored by hand and nothing checks them against the shipped SDK
@@ -155,11 +154,21 @@ Replacing the `<PythonOnly />` marker component with `languages` frontmatter:
   rendering. Selecting TypeScript, passing through a Python-only page, and
   landing on a bilingual one keeps the selection intact.
 - The selector is scoped to docs and integrations. Guides and tutorials inherit
-  the choice without offering their own, so the 187 `<LangSwitch>` blocks there
+  the choice without offering their own, so the 187 `<Switch>` blocks there
   are finally reachable — they previously had a TypeScript variant no reader
   could ever display — without implying those sections are language-complete.
 - Clamping became local to the page subtree, so the root `pythonOnlyPage` state
   and its mount/unmount flash are gone.
 
-Unchanged: `<LangSwitch>` and `<C>` behave exactly as before, and neither prose
-coverage nor the partial-gap backlog moved.
+Separately, `<LangSwitch>` became
+[`<Switch>`](components/lang/switch.tsx) with explicit `<Case id="…">`
+children, rewritten across all 493 call sites by
+[`scripts/langswitch-to-switch-case.mjs`](scripts/langswitch-to-switch-case.mjs).
+The old component picked a child by index, which forced Python first and
+TypeScript second with nothing validating the order, limited each side to a
+single element, and could not distinguish the 32 same-language pairs (`bash`,
+`yaml`). Naming the language removes all three constraints, and a one-sided
+block is now the explicit way to mark a gap.
+
+Unchanged: `<C>` behaves exactly as before, and neither prose coverage nor the
+partial-gap backlog moved.

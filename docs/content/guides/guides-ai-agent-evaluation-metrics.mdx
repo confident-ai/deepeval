@@ -33,7 +33,9 @@ The reasoning layer is where your agent analyzes tasks, formulates plans, and de
 
 The `PlanQualityMetric` evaluates whether the **plan your agent generates is logical, complete, and efficient** for accomplishing the given task. It extracts the task and plan from your agent's trace and uses an LLM judge to assess plan quality.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.tracing import observe
@@ -59,6 +61,10 @@ dataset = EvaluationDataset(goldens=[Golden(input="Find me the cheapest flight t
 for golden in dataset.evals_iterator(metrics=[plan_quality]):
     travel_agent(golden.input)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { metrics } from "deepeval";
@@ -94,7 +100,9 @@ for await (const golden of dataset.evalsIterator({ metrics: [planQuality] })) {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 **When to use it:** Use `PlanQualityMetric` when your agent explicitly reasons about how to approach a task before taking action. This is common in agents that use chain-of-thought prompting or expose their planning process.
 
@@ -114,7 +122,9 @@ If no plan is detectable in the trace—meaning the agent doesn't explicitly rea
 
 The `PlanAdherenceMetric` evaluates whether your agent **follows its own plan** during execution. Creating a good plan is only half the battle—an agent that deviates from its strategy mid-execution undermines its own reasoning.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.tracing import observe
@@ -145,6 +155,10 @@ dataset = EvaluationDataset(goldens=[Golden(input="Book the cheapest flight to P
 for golden in dataset.evals_iterator(metrics=[plan_adherence]):
     travel_agent(golden.input)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { metrics } from "deepeval";
@@ -189,7 +203,9 @@ for await (const golden of dataset.evalsIterator({ metrics: [planAdherence] })) 
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 **When to use it:** Use `PlanAdherenceMetric` alongside `PlanQualityMetric` when evaluating agents with explicit planning phases. If your agent creates multi-step plans, this metric ensures it actually follows through.
 
@@ -213,7 +229,9 @@ The action layer is where your agent interacts with external systems through too
 
 The `ToolCorrectnessMetric` evaluates whether your agent **selects the right tools** and calls them correctly. It compares the tools your agent actually called against a list of expected tools.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.tracing import observe, update_current_span
@@ -251,6 +269,10 @@ dataset = EvaluationDataset(goldens=[Golden(input="What's the weather in Paris?"
 for golden in dataset.evals_iterator():
     weather_agent(golden.input)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { metrics } from "deepeval";
@@ -304,7 +326,9 @@ for await (const golden of dataset.evalsIterator()) {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 **When to use it:** Use `ToolCorrectnessMetric` when you have deterministic expectations about which tools should be called for a given task. It's particularly valuable for testing tool selection logic and identifying unnecessary tool calls.
 
@@ -330,7 +354,9 @@ When `available_tools` is provided, the metric also uses an LLM to evaluate whet
 
 The `ArgumentCorrectnessMetric` evaluates whether your agent **generates correct arguments** for each tool call. Selecting the right tool with wrong arguments is as problematic as selecting the wrong tool entirely.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.tracing import observe, update_current_span
@@ -370,6 +396,10 @@ dataset = EvaluationDataset(goldens=[
 for golden in dataset.evals_iterator():
     flight_agent(golden.input)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { metrics } from "deepeval";
@@ -422,7 +452,9 @@ for await (const golden of dataset.evalsIterator()) {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 **When to use it:** Use `ArgumentCorrectnessMetric` when correct argument values are critical for task success. This is especially important for agents that interact with APIs, databases, or external services where incorrect arguments cause failures.
 
@@ -446,7 +478,9 @@ The execution layer encompasses the full agent loop—reasoning, acting, observi
 
 The `TaskCompletionMetric` evaluates whether your agent **successfully accomplishes the intended task**. This is the ultimate measure of agent success—did it do what the user asked?
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.tracing import observe
@@ -478,6 +512,10 @@ dataset = EvaluationDataset(goldens=[
 for golden in dataset.evals_iterator(metrics=[task_completion]):
     travel_agent(golden.input)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { metrics } from "deepeval";
@@ -523,7 +561,9 @@ for await (const golden of dataset.evalsIterator({ metrics: [taskCompletion] }))
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 **When to use it:** Use `TaskCompletionMetric` as a top-level success indicator for any agent. It answers the fundamental question: did the agent accomplish its goal?
 
@@ -539,7 +579,9 @@ The metric extracts the task (either user-provided or inferred from the trace) a
 
 The `StepEfficiencyMetric` evaluates whether your agent **completes tasks without unnecessary steps**. An agent might complete a task but waste tokens, time, and resources on redundant or circuitous actions.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.tracing import observe
@@ -573,6 +615,10 @@ dataset = EvaluationDataset(goldens=[
 for golden in dataset.evals_iterator(metrics=[step_efficiency]):
     inefficient_agent(golden.input)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { metrics } from "deepeval";
@@ -620,7 +666,9 @@ for await (const golden of dataset.evalsIterator({ metrics: [stepEfficiency] }))
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 **When to use it:** Use `StepEfficiencyMetric` alongside `TaskCompletionMetric` to ensure your agent isn't just successful but also efficient. This is critical for production agents where token costs and latency matter.
 
@@ -640,7 +688,9 @@ A high `TaskCompletionMetric` score with a low `StepEfficiencyMetric` score indi
 
 Here's a complete example showing how to use AI agent evaluation metrics across all three layers:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.tracing import observe, update_current_span
@@ -707,6 +757,10 @@ for golden in dataset.evals_iterator(
 ):
     travel_agent(golden.input)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { metrics } from "deepeval";
@@ -789,7 +843,9 @@ for await (const golden of dataset.evalsIterator({
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ## Choosing the Right AI Agent Evaluation Metrics
 

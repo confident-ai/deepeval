@@ -33,7 +33,9 @@ There are three core primitives that MCP servers can expose:
 
 You can get all three primitives from `mcp`'s `ClientSession`:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from mcp import ClientSession
@@ -46,6 +48,10 @@ resource_list = await session.list_resources()
 prompt_list = await session.list_prompts()
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
@@ -57,7 +63,9 @@ const resourceList = await session.listResources();
 const promptList = await session.listPrompts();
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::info
 It is the MCP **server developer's** job to expose these primitives for you to leverage for evaluation. This means that you might not always have control over the MCP server you're interacting with.
@@ -69,7 +77,9 @@ The `MCPServer` class is an abstraction **provided by `deepeval`** to contain in
 
 Here's how how to create a `MCPServer` instance:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from deepeval.test_case import MCPServer
@@ -83,6 +93,10 @@ mcp_server = MCPServer(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 import { MCPServer } from "deepeval/testCase";
 
@@ -95,7 +109,9 @@ const mcpServer = new MCPServer({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 The `MCPServer` accepts **FIVE** parameters:
 
@@ -117,7 +133,9 @@ During runtime, you'll inevitably be calling your MCP server which will then inv
 
 Provide a list of `MCPToolCall` objects for every tool your agent invokes during the interaction. The example below shows invoking a tool and constructing the corresponding `MCPToolCall`:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from mcp import ClientSession
@@ -140,6 +158,10 @@ mcp_tool_called = MCPToolCall(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { MCPToolCall } from "deepeval/testCase";
@@ -161,7 +183,9 @@ const mcpToolCalled = new MCPToolCall({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 The `result` returned by `session.call_tool()` is a `CallToolResult` from `mcp.types`.
 
@@ -169,7 +193,9 @@ The `result` returned by `session.call_tool()` is a `CallToolResult` from `mcp.t
 
 Provide a list of `MCPResourceCall` objects for every resource your agent reads. The example below shows reading a resource and constructing the corresponding `MCPResourceCall`:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from mcp import ClientSession
@@ -190,6 +216,10 @@ mcp_resource_called = MCPResourceCall(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { MCPResourceCall } from "deepeval/testCase";
@@ -209,7 +239,9 @@ const mcpResourceCalled = new MCPResourceCall({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 The `result` returned by `session.read_resource()` is a `ReadResourceResult` from `mcp.types`.
 
@@ -217,7 +249,9 @@ The `result` returned by `session.read_resource()` is a `ReadResourceResult` fro
 
 Provide a list of `MCPPromptCall` objects for every prompt your agent retrieves. The example below shows fetching a prompt and constructing the corresponding `MCPPromptCall`:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from mcp import ClientSession
@@ -238,6 +272,10 @@ mcp_prompt_called = MCPPromptCall(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { MCPPromptCall } from "deepeval/testCase";
@@ -257,7 +295,9 @@ const mcpPromptCalled = new MCPPromptCall({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 The `result` returned by `session.get_prompt()` is a `GetPromptResult` from `mcp.types`.
 
@@ -274,7 +314,9 @@ You can evaluate MCPs for both **single and multi-turn** use cases. Evaluating M
 
 The [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case) is a single-turn test case and accepts the following optional parameters to support MCP evaluations:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from deepeval.test_case.mcp import (
@@ -301,6 +343,10 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[MCPUseMetric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 import {
   MCPServer,
@@ -325,7 +371,9 @@ const testCase = new LLMTestCase({
 await evaluate([testCase], [new metrics.MCPUseMetric()]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Typically all MCP parameters in a test case is optional. However if you wish to use MCP metrics such as the `MCPUseMetric`, you'll have to provide some of the following:
 
@@ -340,7 +388,9 @@ You can learn more about the `MCPUseMetric` [here.](/docs/metrics-mcp-use)
 
 The [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases#conversational-test-case) accepts an optional parameter called `mcp_server` to add your `MCPServer` instances, which tells `deepeval` how your MCP interactions should be evaluated:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from deepeval.test_case import ConversationalTestCase
@@ -356,6 +406,10 @@ test_case = ConversationalTestCase(
 evaluate(test_cases=[test_case], metrics=[MultiTurnMCPMetric()])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 import { ConversationalTestCase, MCPServer } from "deepeval/testCase";
 import { evaluate, metrics } from "deepeval";
@@ -368,7 +422,9 @@ const testCase = new ConversationalTestCase({
 await evaluate([testCase], [new metrics.MultiTurnMCPUseMetric()]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 <details>
 
@@ -378,7 +434,9 @@ await evaluate([testCase], [new metrics.MultiTurnMCPUseMetric()]);
 
 To set primitives at runtime, the `Turn` object accepts optional parameters like `mcp_tools_called`, `mcp_resources_called` and `mcp_prompts_called`, just like in an `LLMTestCase`:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case.mcp import MCPServer
@@ -405,6 +463,10 @@ test_case = ConversationalTestCase(
     mcp_servers=[MCPServer(...)],
 )
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import {
@@ -433,7 +495,9 @@ const testCase = new ConversationalTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </details>
 

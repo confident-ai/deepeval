@@ -31,17 +31,25 @@ No. Think of it like Next.js and Vercel — related, but separate. `deepeval` is
 
 Confident AI is free to get started:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash
 deepeval login
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 export CONFIDENT_API_KEY="confident_us_..."
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### What data does `deepeval` collect?
 
@@ -253,7 +261,9 @@ The command returns a non-zero exit code on failure, so it integrates directly i
 
 Use `ConversationalTestCase` with conversational metrics:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import Turn, ConversationalTestCase
@@ -269,6 +279,10 @@ test_case = ConversationalTestCase(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { Turn, ConversationalTestCase } from "deepeval";
 
@@ -282,7 +296,9 @@ const testCase = new ConversationalTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 You can also use `deepeval`'s `ConversationSimulator` to automatically generate realistic multi-turn conversations from `ConversationalGolden`s. See the [conversation simulator docs](/docs/conversation-simulator).
 
@@ -370,17 +386,25 @@ Confident AI provides:
 
 It's free to get started:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash
 deepeval login
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 export CONFIDENT_API_KEY="confident_us_..."
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Learn more at the [Confident AI docs](https://www.confident-ai.com/docs).
 

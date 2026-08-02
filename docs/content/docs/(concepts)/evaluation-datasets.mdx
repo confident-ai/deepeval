@@ -50,7 +50,9 @@ here.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/creat
 
 An `EvaluationDataset` in `deepeval` is simply a collection of goldens. You can initialize an empty dataset to start with:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -58,20 +60,28 @@ from deepeval.dataset import EvaluationDataset
 dataset = EvaluationDataset()
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset } from "deepeval/dataset";
 
 const dataset = new EvaluationDataset();
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 A dataset can either be a single-turn one, **or** a multi-turn one (but not both). During initialization supplying your dataset with a list of `Golden`s will make it a single-turn one, whereas supplying it with `ConversationalGolden`s will make it multi-turn:
 
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset, Golden
@@ -80,18 +90,26 @@ dataset = EvaluationDataset(goldens=[Golden(input="What is your name?")])
 print(dataset._multi_turn) # prints False
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset, Golden } from "deepeval/dataset";
 
 const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "What is your name?" })] });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Multi-Turn">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset, ConversationalGolden
@@ -107,6 +125,10 @@ dataset = EvaluationDataset(
 print(dataset._multi_turn) # prints True
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset, ConversationalGolden } from "deepeval/dataset";
 
@@ -120,7 +142,9 @@ const dataset = new EvaluationDataset({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 </Tabs>
@@ -130,7 +154,9 @@ To ensure best practices, datasets in `deepeval` are stateful and opinionated. T
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -138,18 +164,26 @@ To ensure best practices, datasets in `deepeval` are stateful and opinionated. T
 dataset.add_golden(Golden(input="Nice."))
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
 dataset.addGolden(new Golden({ input: "Nice." }));
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Multi-Turn">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -162,6 +196,10 @@ dataset.add_golden(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -173,7 +211,9 @@ dataset.addGolden(
 );
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 </Tabs>
@@ -186,7 +226,9 @@ You run evals on test cases in datasets, which you'll create at evaluation time 
 
 First step is to load in the goldens to your dataset. This example will load datasets from Confident AI, but you can also explore [other options below.](#load-dataset)
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from deepeval.dataset import EvaluationDataset
@@ -196,6 +238,10 @@ dataset.pull(alias="My Dataset") # replace with your alias
 print(dataset.goldens) # print to sanity check yourself
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 import { EvaluationDataset } from "deepeval/dataset";
 
@@ -204,7 +250,9 @@ await dataset.pull({ alias: "My Dataset" }); // replace with your alias
 console.log(dataset.goldens); // print to sanity check yourself
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::tip
 Your dataset is either single or multi-turn the moment you pull your dataset.
@@ -215,7 +263,9 @@ Once you have your dataset and can see a non-empty list of goldens, you can star
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" {9}
 from deepeval.test_case import LLMTestCase
@@ -230,6 +280,10 @@ for golden in dataset.goldens:
 
 print(dataset.test_cases) # print to santiy check yourself
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="main.ts" {9}
 import { LLMTestCase } from "deepeval";
@@ -247,7 +301,9 @@ for (const golden of dataset.goldens) {
 console.log(dataset.testCases); // print to santiy check yourself
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Lastly, you can run evaluations on the list of test cases in your dataset:
 
@@ -276,7 +332,9 @@ You can learn more about `assert_test` in [this section.](/docs/evaluation-end-t
 </Tab>
 <Tab value="In Python Scripts">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" {5}
 from deepeval.metrics import AnswerRelevancyMetric
@@ -286,6 +344,10 @@ from deepeval import evaluate
 evaluate(test_cases=dataset.test_cases, metrics=[AnswerRelevancyMetric()])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts" {4}
 import { evaluate, metrics } from "deepeval";
 // ...
@@ -293,21 +355,31 @@ import { evaluate, metrics } from "deepeval";
 await evaluate(dataset.testCases, [new metrics.AnswerRelevancyMetric()]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 And run `main.py`:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash
 python main.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 npx tsx main.ts
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 You can learn more about `evaluate` in [this section.](/docs/evaluation-end-to-end-llm-evals#use-evaluate-in-python-scripts)
 
@@ -317,7 +389,9 @@ You can learn more about `evaluate` in [this section.](/docs/evaluation-end-to-e
 </Tab>
 <Tab value="Multi-Turn">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" {9}
 from deepeval.test_case import ConversationalTestCase
@@ -332,6 +406,10 @@ for golden in dataset.goldens:
 
 print(dataset.test_cases) # print to santiy check yourself
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="main.ts" {9}
 import { ConversationalTestCase } from "deepeval";
@@ -348,7 +426,9 @@ for (const golden of dataset.goldens) {
 console.log(dataset.testCases); // print to santiy check yourself
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Lastly, you can run evaluations on the list of test cases in your dataset:
 
@@ -412,7 +492,9 @@ You can store both single-turn and multi-turn datasets with `deepeval`. The sing
 
 You can save your dataset on the cloud by using the `push` method:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -421,6 +503,10 @@ dataset = EvaluationDataset(goldens)
 dataset.push(alias="My dataset")
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset } from "deepeval/dataset";
 
@@ -428,11 +514,15 @@ const dataset = new EvaluationDataset({ goldens });
 await dataset.push({ alias: "My dataset" });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 This pushes all goldens in your evaluation dataset to Confident AI. If you're unsure whether your goldens are ready for evaluation, you should set `finalized` to `False` instead:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -440,13 +530,19 @@ This pushes all goldens in your evaluation dataset to Confident AI. If you're un
 dataset.push(alias="My dataset", finalized=False)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
 await dataset.push({ alias: "My dataset", finalized: false });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 This means they won't be pulled until you've manually marked them as finalized on the platform. You can learn more on Confident AI's docs [here.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens)
 
@@ -518,7 +614,9 @@ By default the `save_as()` method only saves the `Golden`s within your `Evaluati
 
 You can load entire datasets on Confident AI's cloud in one line of code.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -527,6 +625,10 @@ dataset = EvaluationDataset()
 dataset.pull(alias="My Evals Dataset")
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset } from "deepeval/dataset";
 
@@ -534,7 +636,9 @@ const dataset = new EvaluationDataset();
 await dataset.pull({ alias: "My Evals Dataset" });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Non-technical domain experts can **create, annotate, and comment** on datasets on Confident AI. You can also upload datasets in CSV format, or push synthetic datasets created in `deepeval` to Confident AI in one line of code.
 

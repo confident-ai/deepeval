@@ -85,7 +85,9 @@ A **combination of these three metrics are needed** because, you want to make su
 
 Here's how you easily evaluate your retriever using these three metrics in `deepeval`:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import (
@@ -99,6 +101,10 @@ contextual_recall = ContextualRecallMetric()
 contextual_relevancy = ContextualRelevancyMetric()
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 
@@ -107,7 +113,9 @@ const contextualRecall = new metrics.ContextualRecallMetric();
 const contextualRelevancy = new metrics.ContextualRelevancyMetric();
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::info
 All metrics in `deepeval` allows you to set passing `threshold`s, turn on `strict_mode` and `include_reason`, and use literally **ANY** LLM for evaluation. You can learn about each metric in detail, including the algorithm used to calculate them, on their individual documentation pages:
@@ -120,7 +128,9 @@ All metrics in `deepeval` allows you to set passing `threshold`s, turn on `stric
 
 Then, define a test case. Note that `deepeval` gives you the flexibility to either begin evaluating with complete datasets, or perform the retrieval and generation at evaluation time.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -136,6 +146,10 @@ test_case = LLMTestCase(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { LLMTestCase } from "deepeval/testCase";
 
@@ -150,7 +164,9 @@ const testCase = new LLMTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 The `input` is the user input, `actual_output` is the final generation of your RAG pipeline, `expected_output` is what you expect the ideal `actual_output` to be, and the `retrieval_context` is the retrieved text chunks during the retrieval step. The `expected_output` is needed because it acts as the ground truth for what information the `retrieval_context` should contain.
 
@@ -160,7 +176,9 @@ You should **NOT** include the entire prompt template as the input, but instead 
 
 Lastly, you can evaluate your retriever by measuring `test_case` using each metric as a standalone:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -178,6 +196,10 @@ print("Score: ", contextual_relevancy.score)
 print("Reason: ", contextual_relevancy.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -194,11 +216,15 @@ console.log("Score: ", contextualRelevancy.score);
 console.log("Reason: ", contextualRelevancy.reason);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Or in bulk, which is useful if you have a lot of test cases:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -210,6 +236,10 @@ evaluate(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate } from "deepeval";
 // ...
@@ -220,7 +250,9 @@ await evaluate(
 );
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Using these metrics, you can easily see how changes to different hyperparameters affect different metric scores.
 
@@ -241,7 +273,9 @@ Similar to retrieval metrics, using these scores in conjunction will best align 
 
 To begin, define your metrics:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
@@ -250,6 +284,10 @@ answer_relevancy = AnswerRelevancyMetric()
 faithfulness = FaithfulnessMetric()
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 
@@ -257,11 +295,15 @@ const answerRelevancy = new metrics.AnswerRelevancyMetric();
 const faithfulness = new metrics.FaithfulnessMetric();
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Then, create a test case (we're reusing the same test case in the previous section):
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -277,6 +319,10 @@ test_case = LLMTestCase(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { LLMTestCase } from "deepeval/testCase";
 
@@ -291,11 +337,15 @@ const testCase = new LLMTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Lastly, run individual evaluations:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -309,6 +359,10 @@ print("Score: ", faithfulness.score)
 print("Reason: ", faithfulness.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -321,11 +375,15 @@ console.log("Score: ", faithfulness.score);
 console.log("Reason: ", faithfulness.reason);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Or as part of a larger dataset:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -337,6 +395,10 @@ evaluate(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate } from "deepeval";
 // ...
@@ -344,7 +406,9 @@ import { evaluate } from "deepeval";
 await evaluate([testCase], [answerRelevancy, faithfulness]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 You'll notice that in the example test case, the `actual_output` actually contradicted the information in the `retrieval_context`. Run the evaluations to see what the `FaithfulnessMetric` outputs!
 
@@ -362,7 +426,9 @@ As mentioned above, these RAG metrics are useful but extremely generic. For exam
 
 Here is where you can take advantage of `deepeval`'s `GEval` metric, capable of evaluating LLM outputs on **ANY** criteria.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import GEval
@@ -380,6 +446,10 @@ print("Score: ", dark_humor.score)
 print("Reason: ", dark_humor.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 import { SingleTurnParams } from "deepeval/testCase";
@@ -396,7 +466,9 @@ console.log("Score: ", darkHumor.score);
 console.log("Reason: ", darkHumor.reason);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 You can visit the [`GEval` page](/docs/metrics-llm-evals) to learn more about this metric.
 
@@ -404,7 +476,9 @@ You can visit the [`GEval` page](/docs/metrics-llm-evals) to learn more about th
 
 You can simply combine retrieval and generation metrics to evaluate a RAG pipeline, end-to-end.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -423,6 +497,10 @@ evaluate(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -437,13 +515,17 @@ await evaluate(testCases, [
 ]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ## Unit Testing RAG Systems in CI/CD
 
 With `deepeval`, you can easily unit test RAG applications in CI environments. We'll be using GitHub Actions and GitHub workflow as an example here. First, create a test file:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="test_rag.py"
 from deepeval import assert_test
@@ -465,6 +547,10 @@ def test_rag(test_case: LLMTestCase):
     assert_test(test_case, metrics)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="test_rag.ts"
 import { evaluate, LLMTestCase } from "deepeval";
 import { EvaluationDataset, Golden } from "deepeval/dataset";
@@ -483,21 +569,31 @@ for (const golden of goldens) {
 await evaluate(dataset.testCases, metrics);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Then, simply execute `deepeval test run` in the CLI (or run the script directly for TypeScript):
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash
 deepeval test run test_rag.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 npx tsx test_rag.ts
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::note
 You can learn about everything `deepeval test run` has to offer [here (including parallelization, caching, error handling, etc.).](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run)
@@ -505,7 +601,9 @@ You can learn about everything `deepeval test run` has to offer [here (including
 
 Once you have included all the metrics, include it in your GitHub workflow `.YAML` file:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```yaml title=".github/workflows/rag-testing.yml"
 name: RAG Testing
@@ -525,6 +623,10 @@ jobs:
         run: poetry run deepeval test run test_rag.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```yaml title=".github/workflows/rag-testing.yml"
 name: RAG Testing
 
@@ -543,7 +645,9 @@ jobs:
         run: npx tsx test_rag.ts
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 **And you're done 🎉!** You have now setup a workflow to automatically unit-test RAG application in CI/CD.
 
@@ -578,7 +682,9 @@ In multi-turn RAG, retrieval happens **on every turn**. The user's third questio
 
 Multi-turn RAG evaluation uses `ConversationalTestCase` instead of `LLMTestCase`. The key difference is that `retrieval_context` lives on each individual `Turn`, not on the test case itself—because each turn has its own retrieval step.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -624,6 +730,10 @@ evaluate(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate, metrics } from "deepeval";
 import { Turn, ConversationalTestCase } from "deepeval/testCase";
@@ -662,13 +772,17 @@ await evaluate(
 );
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### Using Simulation for Multi-Turn RAG
 
 For automated benchmarking, use the `ConversationSimulator` and return `retrieval_context` from your model callback so the metrics have the data they need:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import Turn
@@ -685,6 +799,10 @@ async def model_callback(input: str, turns: list, thread_id: str) -> Turn:
 simulator = ConversationSimulator(model_callback=model_callback)
 test_cases = simulator.simulate(conversational_goldens=[...])
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { ConversationSimulator, ConversationalGolden } from "deepeval";
@@ -705,7 +823,9 @@ const testCases = await simulator.simulate({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Because the callback returns a `Turn` with `retrieval_context`, the simulated `ConversationalTestCase`s are immediately ready for multi-turn RAG metrics—no extra wiring needed.
 

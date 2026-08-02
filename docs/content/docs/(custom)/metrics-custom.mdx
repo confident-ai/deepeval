@@ -31,7 +31,9 @@ To begin, create a class that inherits from `deepeval`'s `BaseMetric` class:
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -39,6 +41,10 @@ from deepeval.metrics import BaseMetric
 class CustomMetric(BaseMetric):
     ...
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { metrics } from "deepeval";
@@ -48,14 +54,18 @@ abstract class CustomMetric extends metrics.BaseMetric {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 This is important because the `BaseMetric` class will help `deepeval` acknowledge your custom metric as a single-turn metric during evaluation.
 
 </Tab>
 <Tab value="Multi-Turn">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import BaseConversationalMetric
@@ -63,6 +73,10 @@ from deepeval.metrics import BaseConversationalMetric
 class CustomConversationalMetric(BaseConversationalMetric):
     ...
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { metrics } from "deepeval";
@@ -72,7 +86,9 @@ abstract class CustomConversationalMetric extends metrics.BaseConversationalMetr
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 This is important because the `BaseConversationalMetric` class will help `deepeval` acknowledge your custom metric as a multi-turn metric  during evaluation.
 
@@ -99,7 +115,9 @@ The `__init__()` method is a great place to set these properties:
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -122,6 +140,10 @@ class CustomMetric(BaseMetric):
         self.async_mode = async_mode
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 
@@ -140,12 +162,16 @@ abstract class CustomMetric extends metrics.BaseMetric {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Multi-Turn">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import BaseConversationalMetric
@@ -168,6 +194,10 @@ class CustomConversationalMetric(BaseConversationalMetric):
         self.async_mode = async_mode
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 
@@ -186,7 +216,9 @@ abstract class CustomConversationalMetric extends metrics.BaseConversationalMetr
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 </Tabs>
@@ -223,7 +255,9 @@ You can also optionally set `self.reason` in the measure methods (if you're usin
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -261,6 +295,10 @@ class CustomMetric(BaseMetric):
             raise
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 import { LLMTestCase } from "deepeval/testCase";
@@ -289,12 +327,16 @@ abstract class CustomMetric extends metrics.BaseMetric {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Multi-Turn">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import BaseConversationalMetric
@@ -332,6 +374,10 @@ class CustomConversationalMetric(BaseConversationalMetric):
             raise
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 import { ConversationalTestCase } from "deepeval/testCase";
@@ -360,7 +406,9 @@ abstract class CustomConversationalMetric extends metrics.BaseConversationalMetr
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 </Tabs>
@@ -392,7 +440,9 @@ Under the hood, `deepeval` calls the `is_successful()` method to determine the s
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -412,6 +462,10 @@ class CustomMetric(BaseMetric):
         return self.success
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 
@@ -429,12 +483,16 @@ abstract class CustomMetric extends metrics.BaseMetric {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Multi-Turn">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import BaseConversationalMetric
@@ -454,6 +512,10 @@ class CustomConversationalMetric(BaseConversationalMetric):
         return self.success
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 
@@ -471,7 +533,9 @@ abstract class CustomConversationalMetric extends metrics.BaseConversationalMetr
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 </Tabs>
@@ -483,7 +547,9 @@ Probably the easiest step, all that's left is to name your custom metric:
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -497,6 +563,10 @@ class CustomMetric(BaseMetric):
         return "My Custom Metric"
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 
@@ -509,12 +579,16 @@ abstract class CustomMetric extends metrics.BaseMetric {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Multi-Turn">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import BaseConversationalMetric
@@ -528,6 +602,10 @@ class CustomConversationalMetric(BaseConversationalMetric):
         return "My Custom Metric"
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 
@@ -540,7 +618,9 @@ abstract class CustomConversationalMetric extends metrics.BaseConversationalMetr
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 </Tabs>
@@ -613,7 +693,9 @@ In this example, we'll be combining two default `deepeval` metrics as our custom
 
 We'll be combining the `AnswerRelevancyMetric` and `FaithfulnessMetric`, since we rarely see a user that cares about one but not the other.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import BaseMetric, AnswerRelevancyMetric, FaithfulnessMetric
@@ -718,6 +800,10 @@ class FaithfulRelevancyMetric(BaseMetric):
         self.success = self.score >= self.threshold
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 import { LLMTestCase } from "deepeval/testCase";
@@ -805,7 +891,9 @@ class FaithfulRelevancyMetric extends metrics.BaseMetric {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Now go ahead and try to use it:
 

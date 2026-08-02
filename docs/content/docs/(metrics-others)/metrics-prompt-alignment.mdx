@@ -30,7 +30,9 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 The `PromptAlignmentMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -55,6 +57,10 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate, metrics } from "deepeval";
 import { LLMTestCase } from "deepeval/testCase";
@@ -77,7 +83,9 @@ const testCase = new LLMTestCase({
 await evaluate([testCase], [metric]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 There are **ONE** mandatory and **SEVEN** optional parameters when creating an `PromptAlignmentMetric`:
 
@@ -119,7 +127,9 @@ evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 
 You can also run the `PromptAlignmentMetric` on a single test case as a standalone, one-off execution.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -128,6 +138,10 @@ metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -135,7 +149,9 @@ await metric.measure(testCase);
 console.log(metric.score, metric.reason);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.

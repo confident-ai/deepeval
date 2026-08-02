@@ -22,7 +22,9 @@ You'll also need to supply any `mcp_tools_called`, `mcp_resources_called`, and `
 
 The `MCPUseMetric` can be used on a single-turn `LLMTestCase` case with MCP parameters. Click here to see [how to create an MCP single-turn test case](https://www.deepeval.com/docs/evaluation-mcp#single-turn).
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -45,6 +47,10 @@ metric = MCPUseMetric()
 evaluate([test_case], [metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate, metrics } from "deepeval";
 import { LLMTestCase, MCPServer } from "deepeval/testCase";
@@ -65,7 +71,9 @@ const metric = new metrics.MCPUseMetric();
 await evaluate([testCase], [metric]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 There are **SEVEN** optional parameters when creating a `MCPTaskCompletionMetric`:
 
@@ -81,7 +89,9 @@ There are **SEVEN** optional parameters when creating a `MCPTaskCompletionMetric
 
 You can also run the `MCPUseMetric` on a single test case as a standalone, one-off execution.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -90,6 +100,10 @@ metric.measure(convo_test_case)
 print(metric.score, metric.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -97,7 +111,9 @@ await metric.measure(testCase);
 console.log(metric.score, metric.reason);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.

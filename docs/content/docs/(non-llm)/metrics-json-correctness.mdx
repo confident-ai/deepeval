@@ -27,7 +27,9 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 First define your schema by creating a `pydantic` `BaseModel`:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from pydantic import BaseModel
@@ -35,6 +37,10 @@ from pydantic import BaseModel
 class ExampleSchema(BaseModel):
     name: str
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { z } from "zod";
@@ -44,12 +50,16 @@ const ExampleSchema = z.object({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::tip
 If your `actual_output` is a list of JSON objects, you can simply create a list schema by wrapping your existing schema in a `RootModel`. For example:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from pydantic import RootModel
@@ -61,19 +71,27 @@ class ExampleSchemaList(RootModel[List[ExampleSchema]]):
     pass
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
 const ExampleSchemaList = z.array(ExampleSchema);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::
 
 Then supply it as the `expected_schema` when creating a `JsonCorrectnessMetric`, which can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -99,6 +117,10 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate, metrics, LLMTestCase } from "deepeval";
 
@@ -120,7 +142,9 @@ const testCase = new LLMTestCase({
 await evaluate([testCase], [metric]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 There are **ONE** mandatory and **SEVEN** optional parameters when creating an `PromptAlignmentMetric`:
 
@@ -166,7 +190,9 @@ evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 
 You can also run the `JsonCorrectnessMetric` on a single test case as a standalone, one-off execution.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -175,6 +201,10 @@ metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -182,7 +212,9 @@ await metric.measure(testCase);
 console.log(metric.score, metric.reason);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.

@@ -25,7 +25,9 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 Let's take this `input` and `actual_output` as an example:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 # This is the original text to be summarized
@@ -46,6 +48,10 @@ with a higher score indicating greater comprehensiveness.
 """
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // This is the original text to be summarized
 const input = `
@@ -65,11 +71,15 @@ with a higher score indicating greater comprehensiveness.
 `;
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 You can use the `SummarizationMetric` as follows for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -95,6 +105,10 @@ metric = SummarizationMetric(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate, metrics } from "deepeval";
 import { LLMTestCase } from "deepeval/testCase";
@@ -118,7 +132,9 @@ const metric = new metrics.SummarizationMetric({
 await evaluate([testCase], [metric]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 There are **TEN** optional parameters when instantiating an `SummarizationMetric` class:
 
@@ -166,7 +182,9 @@ evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 
 You can also run the `SummarizationMetric` on a single test case as a standalone, one-off execution.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -175,6 +193,10 @@ metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -182,7 +204,9 @@ await metric.measure(testCase);
 console.log(metric.score, metric.reason);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
@@ -203,7 +227,9 @@ While the `alignment_score` is similar to that of the [`HallucinationMetric`](/d
 
 You can access the `alignment_score` and `coverage_score` from a `SummarizationMetric` as follows:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import SummarizationMetric
@@ -219,6 +245,10 @@ print(metric.reason)
 print(metric.score_breakdown)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 import { LLMTestCase } from "deepeval/testCase";
@@ -233,7 +263,9 @@ console.log(metric.reason);
 console.log(metric.scoreBreakdown);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::note
 Since the summarization score is the minimum of the `alignment_score` and `coverage_score`, a 0 value for either one of these scores will result in a final summarization score of 0.

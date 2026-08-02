@@ -6,7 +6,7 @@ import type { MDXComponents } from "mdx/types";
 import { DEFAULT_LLM_MODEL } from "@/lib/defaults";
 import { MdxAnchor } from "@/components/mdx-anchor";
 import { C } from "@/components/lang/code-term";
-import { LangSwitch } from "@/components/lang/lang-switch";
+import { Switch, Case } from "@/components/lang/switch";
 
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 import ImageDisplayer from "@site/src/components/ImageDisplayer";
@@ -59,7 +59,8 @@ export const getMDXComponents = (components?: MDXComponents) =>
     RepoContributors,
     DefaultLLMModel,
     C,
-    LangSwitch,
+    Switch,
+    Case,
     ...components,
   }) satisfies MDXComponents;
 

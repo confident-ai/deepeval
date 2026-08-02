@@ -19,7 +19,9 @@ In the previous section, we've seen [how to create datasets](/tutorials/medical-
 
 Here's how we can pull datasets from the cloud:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -28,6 +30,10 @@ dataset = EvaluationDataset()
 dataset.pull(alias="Medical Chatbot Dataset")
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset } from "deepeval";
 
@@ -35,7 +41,9 @@ const dataset = new EvaluationDataset();
 await dataset.pull({ alias: "Medical Chatbot Dataset" });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 The dataset pulled contains goldens, which can be used to create test cases during run time and run evals. This is how we can use our `ConversationalGolden`s and `ConversationSimulator` to generate `ConversationalTestCase`s:
 
@@ -170,7 +178,9 @@ We'll now see how to update our chatbot to support more hyperparameters.
 
 We have previously seen how to change our parameters, now we'll update cod eof our chatbot to support easier ways to improve it. Here's the new chatbot code:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from qdrant_client import models, QdrantClient
@@ -220,6 +230,10 @@ class MedicalChatbot:
     def interactive_session(self, session_id):
         ...
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { QdrantClient } from "@qdrant/js-client-rest";
@@ -290,7 +304,9 @@ class MedicalChatbot {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 These were the updates made to our medical chatbot. You can now change the following configurations for your chatbot in the initialization itself
 
@@ -299,7 +315,9 @@ These were the updates made to our medical chatbot. You can now change the follo
 - memory management
 - system prompt
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from medical_chatbot import MedicalChatbot
@@ -312,6 +330,10 @@ chatbot = MedicalChatbot(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { MedicalChatbot } from "./medical_chatbot";
 
@@ -323,7 +345,9 @@ const chatbot = new MedicalChatbot({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 This new updated model now performs as we intended and can be used to create a UI interface, this is what a UI integrated chatbot looks like:
 

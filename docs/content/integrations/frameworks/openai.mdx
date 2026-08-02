@@ -61,17 +61,25 @@ The `deepeval` integration is a drop-in replacement for OpenAI's client. Every `
 
 ### Installation
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash
 pip install -U deepeval openai
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 npm install deepeval openai
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 `deepeval.openai.OpenAI` and `deepeval.openai.AsyncOpenAI` import OpenAI's classes and patch them in place. Existing kwargs, async paths, streaming, and tool-calling behavior all work unchanged.
 
@@ -83,7 +91,9 @@ npm install deepeval openai
 
 Replace `from openai import OpenAI` with `from deepeval.openai import OpenAI`. Wrap each call you want to evaluate in `with trace(llm_span_context=LlmSpanContext(metrics=[...]))`.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_app.py" showLineNumbers
 from deepeval.openai import OpenAI
@@ -106,6 +116,10 @@ for golden in dataset.evals_iterator():
             ],
         )
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="openai_app.ts" showLineNumbers
 import OpenAI from "openai";
@@ -134,7 +148,9 @@ for await (const golden of dataset.evalsIterator({
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Done ✅. You've run your first eval against an OpenAI call with full traceability via `deepeval`.
 
@@ -201,7 +217,9 @@ deepeval test run test_openai_app.py
 
 Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one OpenAI call; metrics score the resulting LLM span.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_app.py" showLineNumbers
 import asyncio
@@ -229,6 +247,10 @@ for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True)):
     task = asyncio.create_task(call_openai(golden.input))
     dataset.evaluate(task)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="openai_app.ts" showLineNumbers
 import OpenAI from "openai";
@@ -259,7 +281,9 @@ for await (const golden of dataset.evalsIterator({
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Sync (`OpenAI`) and async (`AsyncOpenAI`) clients both work; pick whichever matches your code.
 
@@ -296,7 +320,9 @@ The patch captures input messages, output text, and `tools_called` automatically
 - Use `LlmSpanContext` for LLM-span-level fields the metric needs (`expected_output`, `retrieval_context`, etc.).
 - Use `@observe` to wrap retrieval, post-processing, or any other step you want to see as its own span in the trace.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_app.py" showLineNumbers
 from deepeval.openai import OpenAI
@@ -325,6 +351,10 @@ def respond_to_user(prompt: str) -> str:
         )
     return response.choices[0].message.content
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="openai_app.ts" showLineNumbers
 import OpenAI from "openai";
@@ -355,7 +385,9 @@ const respondToUser = observe({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ## Advanced patterns
 
@@ -365,7 +397,9 @@ The primitives above — `deepeval.openai.OpenAI`, `LlmSpanContext`, `@observe`,
 
 When the OpenAI call is part of a larger operation, decorate the outer function with `@observe`. The LLM span nests under your observed span automatically.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_app.py" showLineNumbers
 from deepeval.tracing import observe, trace, LlmSpanContext
@@ -381,6 +415,10 @@ def respond_to_user(prompt: str) -> str:
         )
     return response.choices[0].message.content
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="openai_app.ts" showLineNumbers
 import { observe } from "deepeval/tracing";
@@ -400,7 +438,9 @@ const respondToUser = observe({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 #### No trace-level metrics required
 
@@ -429,7 +469,9 @@ deepeval test run test_openai_app.py
 </Tab>
 <Tab value="Scripts">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_app.py" showLineNumbers
 ...
@@ -437,6 +479,10 @@ deepeval test run test_openai_app.py
 for golden in dataset.evals_iterator():
     respond_to_user(golden.input)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="openai_app.ts" showLineNumbers
 // ...
@@ -447,7 +493,9 @@ for await (const golden of dataset.evalsIterator()) {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 </Tabs>
@@ -456,7 +504,9 @@ for await (const golden of dataset.evalsIterator()) {
 
 When a single logical unit of work makes several OpenAI calls (e.g. a planner call followed by a respond call), bracket them with `with trace(...)` so the LLM spans share a `trace_id` and show up as siblings under one root.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_app.py" showLineNumbers
 from deepeval.tracing import trace
@@ -473,6 +523,10 @@ def plan_then_respond(prompt: str):
             messages=[{"role": "user", "content": plan.choices[0].message.content}],
         )
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="openai_app.ts" showLineNumbers
 import { observe } from "deepeval/tracing";
@@ -493,7 +547,9 @@ const planThenRespond = observe({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### Tool-calling models
 

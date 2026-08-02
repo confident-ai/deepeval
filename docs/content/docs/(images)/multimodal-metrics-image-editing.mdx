@@ -23,7 +23,9 @@ The `input` and `actual_output` are required to create an `LLMTestCase` (and hen
 
 ## Usage
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import LLMTestCase, MLLMImage
@@ -44,6 +46,10 @@ m_test_case = LLMTestCase(
 evaluate(test_cases=[m_test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { LLMTestCase, MLLMImage } from "deepeval/testCase";
 import { evaluate, metrics } from "deepeval";
@@ -61,7 +67,9 @@ const mTestCase = new LLMTestCase({
 await evaluate([mTestCase], [metric]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 There are **SIX** optional parameters when creating a `ImageEditingMetric`:
 
@@ -76,7 +84,9 @@ There are **SIX** optional parameters when creating a `ImageEditingMetric`:
 
 You can also run the `ImageEditingMetric` on a single test case as a standalone, one-off execution.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -85,6 +95,10 @@ metric.measure(m_test_case)
 print(metric.score, metric.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -92,7 +106,9 @@ await metric.measure(mTestCase);
 console.log(metric.score, metric.reason);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ## How Is It Calculated?
 

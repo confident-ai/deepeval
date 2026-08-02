@@ -13,7 +13,9 @@ this provides full visibility for debugging internal components of your LLM appl
 
 Here's how we can add metrics and create spans for our `@observe` decorators in the `MeetingSummarizer` class:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python {6,27,39,51-53,59,73-75}
 import os
@@ -99,6 +101,10 @@ class MeetingSummarizer:
             print(f"Error generating action items: {e}")
             return {"error": f"API call failed: {e}", "raw_output": ""}
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import "dotenv/config";
@@ -207,7 +213,9 @@ class MeetingSummarizer {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ## Why Continuous Evaluation
 
@@ -221,7 +229,9 @@ In the previous section, we created a `deepeval` dataset. You can now reuse this
 
 Here's how you can pull datasets and reuse them to generate test cases:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -230,6 +240,10 @@ dataset = EvaluationDataset()
 dataset.pull(alias="MeetingSummarizer Dataset")
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset } from "deepeval/dataset";
 
@@ -237,13 +251,17 @@ const dataset = new EvaluationDataset();
 await dataset.pull({ alias: "MeetingSummarizer Dataset" });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ## Integrating CI/CD
 
 You can use `pytest` with `assert_test` during your CI/CD to trace and evaluate your summarization agent, here's how you can write the test file to do that:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="test_meeting_summarizer_quality.py" {13}
 import pytest
@@ -263,6 +281,10 @@ def test_meeting_summarizer_components(golden):
     assert_test(golden=golden)  # evaluates spans
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="meeting_summarizer_quality.ts"
 import { EvaluationDataset } from "deepeval/dataset";
 import { MeetingSummarizer } from "./meetingSummarizer"; // import your summarizer here
@@ -278,23 +300,35 @@ for await (const golden of dataset.evalsIterator()) {
 }
 ```
 
-</LangSwitch>
+</Case>
 
-<LangSwitch>
+</Switch>
+
+<Switch>
+
+<Case id="python">
 
 ```bash
 poetry run deepeval test run test_meeting_summarizer_quality.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 npx tsx meeting_summarizer_quality.ts
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Finally, let's integrate this test into GitHub Actions to enable automated quality checks on every push.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```yaml {32-33}
 name: Meeting Summarizer DeepEval Tests
@@ -332,6 +366,10 @@ jobs:
         run: poetry run deepeval test run test_meeting_summarizer_quality.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```yaml
 name: Meeting Summarizer DeepEval Tests
 
@@ -363,7 +401,9 @@ jobs:
         run: npx tsx meeting_summarizer_quality.ts
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 And that's it! You now have a **robust, production-ready summarization agent** with automated evaluation integrated into your development workflow.
 

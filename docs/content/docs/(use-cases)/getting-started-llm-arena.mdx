@@ -154,7 +154,9 @@ task_completion_metric = ArenaGEval(model=model)
 
 Create an `ArenaTestCase` by passing a list of contestants.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from deepeval.test_case import ArenaTestCase, LLMTestCase, Contestant
@@ -189,6 +191,10 @@ contestant_3 = Contestant(
 test_case = ArenaTestCase(contestants=[contestant_1, contestant_2, contestant_3])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 import { ArenaTestCase, LLMTestCase, Contestant } from "deepeval";
 
@@ -222,7 +228,9 @@ const contestant3 = new Contestant({
 const testCase = new ArenaTestCase({ contestants: [contestant1, contestant2, contestant3] });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 You can learn more about an `ArenaTestCase` [here](https://deepeval.com/docs/evaluation-arena-test-cases).
 
@@ -234,7 +242,9 @@ You can learn more about an `ArenaTestCase` [here](https://deepeval.com/docs/eva
 
 The [`ArenaGEval`](https://deepeval.com/docs/metrics-arena-g-eval) metric is the only metric that is compatible with `ArenaTestCase`. It picks a winner among the contestants based on the criteria defined.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import ArenaGEval
@@ -250,6 +260,10 @@ arena_geval = ArenaGEval(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 import { SingleTurnParams } from "deepeval/testCase";
@@ -264,7 +278,9 @@ const arenaGEval = new metrics.ArenaGEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Step>
 
@@ -282,7 +298,9 @@ Now that you have created an arena with contestants and defined a metric, you ca
 
 You can run arena evals by using the `compare()` function.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python {3,11} title="main.py"
 from deepeval.test_case import ArenaTestCase, LLMTestCase, SingleTurnParams
@@ -298,6 +316,10 @@ arena_geval = ArenaGEval(...) # Use the same metric you've created before
 compare(test_cases=[test_case], metric=arena_geval)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript {2,9} title="main.ts"
 import { ArenaTestCase } from "deepeval/testCase";
 import { compare } from "deepeval";
@@ -310,7 +332,9 @@ const testCase = new ArenaTestCase({
 await compare([testCase], arenaGEval);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 <details>
   <summary>Log prompts and models</summary>
@@ -343,17 +367,25 @@ compare(
 
 You can now run this python file to get your results:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash title="bash"
 python main.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash title="bash"
 npx tsx main.ts
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 This should let you see the results of the arena as shown below:
 

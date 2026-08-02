@@ -76,17 +76,25 @@ The `deepeval` integration plugs into the agents SDK's tracing pipeline as a `Tr
 
 ### Installation
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash
 pip install -U deepeval openai-agents
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 npm install deepeval @openai/agents zod
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 The integration registers `DeepEvalTracingProcessor` against the agents SDK's tracing pipeline, then provides `Agent` and `function_tool` shims that accept `deepeval` metrics directly.
 
@@ -98,7 +106,9 @@ The integration registers `DeepEvalTracingProcessor` against the agents SDK's tr
 
 Register the processor once at startup, then use `deepeval.openai_agents.Agent` and `function_tool` in place of the SDK's classes. Attach metrics to the agent or to specific tools.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_agents_app.py" showLineNumbers
 from agents import Runner, add_trace_processor
@@ -126,6 +136,10 @@ dataset = EvaluationDataset(goldens=[Golden(input="What's the weather in Paris?"
 for golden in dataset.evals_iterator():
     Runner.run_sync(agent, golden.input)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="openai_agents_app.ts" showLineNumbers
 import { Agent, run, tool, addTraceProcessor } from "@openai/agents";
@@ -162,7 +176,9 @@ for await (const golden of dataset.evalsIterator({
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Done ✅. You've run your first eval with full traceability into OpenAI Agents via `deepeval`.
 
@@ -238,7 +254,9 @@ deepeval test run test_openai_agents_app.py
 
 Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one agent run; metrics score the resulting trace.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_agents_app.py" showLineNumbers
 import asyncio
@@ -261,6 +279,10 @@ for golden in dataset.evals_iterator(
     dataset.evaluate(task)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="openai_agents_app.ts" showLineNumbers
 import { run } from "@openai/agents";
 import { EvaluationDataset, Golden, metrics } from "deepeval";
@@ -281,7 +303,9 @@ for await (const golden of dataset.evalsIterator({
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Sync (`Runner.run_sync`) and async (`Runner.run`) execution both work; pick whichever matches your code.
 
@@ -436,7 +460,9 @@ for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True)):
 
 When the agent run is part of a larger operation, decorate the outer function with `@observe`. The agents-SDK spans nest under your observed span automatically.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_agents_app.py" showLineNumbers
 from agents import Runner
@@ -448,6 +474,10 @@ async def respond_to_user(prompt: str) -> str:
     result = await Runner.run(agent, prompt)
     return result.final_output.strip()
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="openai_agents_app.ts" showLineNumbers
 import { run } from "@openai/agents";
@@ -463,7 +493,9 @@ const respondToUser = observe({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### Bind a Confident AI prompt to an agent
 

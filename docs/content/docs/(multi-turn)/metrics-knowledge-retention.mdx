@@ -24,7 +24,9 @@ You must provide the `role` and `content` for evaluation to happen. Read the [Ho
 
 The `KnowledgeRetentionMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluation:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -43,6 +45,10 @@ metric = KnowledgeRetentionMetric(threshold=0.5)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate, Turn, ConversationalTestCase, metrics } from "deepeval";
 
@@ -58,7 +64,9 @@ const metric = new metrics.KnowledgeRetentionMetric({ threshold: 0.5 });
 await evaluate([convoTestCase], [metric]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 There are **SIX** optional parameters when creating a `KnowledgeRetentionMetric`:
 
@@ -73,7 +81,9 @@ There are **SIX** optional parameters when creating a `KnowledgeRetentionMetric`
 
 You can also run the `KnowledgeRetentionMetric` on a single test case as a standalone, one-off execution.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -82,6 +92,10 @@ metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 ...
 
@@ -89,7 +103,9 @@ await metric.measure(convoTestCase);
 console.log(metric.score, metric.reason);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.

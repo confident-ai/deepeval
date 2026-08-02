@@ -21,7 +21,9 @@ If you already have a multi-turn chatbot that you want to evaluate, feel free to
 
 First create a `MedicalChatbot` class and use `langchain`'s chat models to call `OpenAI`:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from langchain_openai import ChatOpenAI
@@ -32,6 +34,10 @@ class MedicalChatbot:
         # Choose the LLM that will drive the agent
         # Only certain models support this so ensure your model supports it as well
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="main.ts"
 import { ChatOpenAI } from "@langchain/openai";
@@ -47,7 +53,9 @@ class MedicalChatbot {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::note
 You can also use other interfaces to call OpenAI, or any other model.
@@ -55,19 +63,27 @@ You can also use other interfaces to call OpenAI, or any other model.
 
 Try prompting it with a messages array:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 chatbot = MedicalChatbot(model="gpt-4o-mini")
 chatbot.model.invoke([{"user": "Hi!"}])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 const chatbot = new MedicalChatbot("gpt-4o-mini");
 await chatbot.model.invoke([{ role: "user", content: "Hi!" }]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Which should let you see something like this:
 
@@ -100,7 +116,9 @@ We'll be using a text version of [The Gale Encyclopedia of Alternative Medicine]
 
 We'll ingest "The Gale Encyclopedia of Alternative Medicine" to Qdrant, a popular vector database choice for fast and accurate retrievals:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from qdrant_client import models, QdrantClient
@@ -130,6 +148,10 @@ class MedicalChatbot:
             points=[models.PointStruct(id=idx, vector=self.encoder.encode(doc).tolist(), payload={"content": doc}) for idx, doc in enumerate(documents)],
         )
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="main.ts"
 import { QdrantClient } from "@qdrant/js-client-rest";
@@ -169,23 +191,33 @@ class MedicalChatbot {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Then, simply run your `index_knowledge` method using the encyclopedia you've downloaded as `.txt`:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 chatbot = MedicalChatbot()
 chatbot.index_knowledge("path-to-your-encyclopedia.txt")
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 const chatbot = new MedicalChatbot("gpt-4o-mini");
 await chatbot.indexKnowledge("path-to-your-encyclopedia.txt");
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ✅ Done. Now let's try querying it to sanity check yourself.
 
@@ -197,7 +229,9 @@ You only have the run `index_knowledge` once.
 
 Simply implement a **TOOL** to query from qdrant. in this case `retrieve_knowledge`:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" {14}
 from qdrant_client import models, QdrantClient
@@ -224,6 +258,10 @@ class MedicalChatbot:
         # Same as above
         pass
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="main.ts"
 import { QdrantClient } from "@qdrant/js-client-rest";
@@ -268,7 +306,9 @@ class MedicalChatbot {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::info
 The `@tool` decorator tells `langchain` that the `retrieve_knowledge` method can be called as a function call and will come in handy in later sections.
@@ -276,12 +316,18 @@ The `@tool` decorator tells `langchain` that the `retrieve_knowledge` method can
 
 Now try calling it:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 chatbot = MedicalChatbot()
 chatbot.retrieve_knowledge("Cough, fever, and diarrhea.")
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="main.ts"
 const chatbot = new MedicalChatbot("gpt-4o-mini");
@@ -290,7 +336,9 @@ await chatbot.retrieveKnowledge.invoke({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Great! Now that we have the essentials for making a diagnosis, time to move on to implementing a way to book appointments after a diagnosis.
 
@@ -302,7 +350,9 @@ Since we need a way for our chatbot to book appointments based on the diagnosis 
 
 First, let's create a simple data model for appointments:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from pydantic import BaseModel, Field
@@ -318,6 +368,10 @@ class Appointment(BaseModel):
     diagnosis: Optional[str] = Field(default=None)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 interface Appointment {
   id: string;
@@ -329,11 +383,15 @@ interface Appointment {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Now let's implement the `create_appointment` tool:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" {14}
 import uuid
@@ -373,6 +431,10 @@ class MedicalChatbot:
         # Same as above
         pass
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="main.ts"
 import { randomUUID } from "node:crypto";
@@ -442,7 +504,9 @@ class MedicalChatbot {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Great! Now let's glue everything together using LangChain.
 
@@ -450,7 +514,9 @@ Great! Now let's glue everything together using LangChain.
 
 First create a helper method that retrieves conversation histories, which would be required for our LLM:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title"main.py"
 from langchain_community.chat_message_histories import ChatMessageHistory
@@ -464,17 +530,25 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
     return chat_store[session_id]
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 import { MemorySaver } from "@langchain/langgraph";
 
 const checkpointer = new MemorySaver();
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Then we'll combine the agent setup and memory functionality into one clean implementation, including the `retrieve_knowledge` and `create_appointment` tools in our agent:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" {20,28-29,33}
 from langchain.agents import create_tool_calling_agent, AgentExecutor
@@ -520,6 +594,10 @@ class MedicalChatbot:
     ...
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 import { createAgent } from "langchain";
 import { MemorySaver } from "@langchain/langgraph";
@@ -563,7 +641,9 @@ class MedicalChatbot {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 🎉🥳 Congratulations! You've just created a fully functional medical chatbot with memory, the ability to diagnose users, and book appointments when needed.
 
@@ -571,7 +651,9 @@ class MedicalChatbot {
 
 Now that you have your chatbot, its time to query it to see if it lives up to your expectations. Create a method so you can interact with it in the CLI, and **supply your model and choice and system prompt**:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" {22,23,28}
 def start_session(session_id: Optional[str] = None):
@@ -603,6 +685,10 @@ chatbot = MedicalChatbot(model=MODEL, system_prompt=SYSTEM_PROMPT)
 chatbot.index_knowledge("path-to-your-encyclopedia.txt")
 start_session()
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="main.ts"
 import { randomUUID } from "node:crypto";
@@ -651,7 +737,9 @@ await chatbot.indexKnowledge("path-to-your-encyclopedia.txt");
 await startSession();
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::tip
 The model and system prompt are the variables you'll want to be improving in the next section.
@@ -659,17 +747,25 @@ The model and system prompt are the variables you'll want to be improving in the
 
 Then simply execute the file in the CLI:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash
 python main.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 npx tsx main.ts
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Here's an example conversation:
 

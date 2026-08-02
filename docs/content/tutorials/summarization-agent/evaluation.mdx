@@ -17,7 +17,9 @@ To evaluate an LLM application like a summarization agent, we'll use single-turn
 
 Our summarization agent is a single-turn LLM application. That means we supply a transcript as `input`, the agent generates a summary and a list of action items as output. In code, such unit interactions are represented by an `LLMTestCase`:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -28,6 +30,10 @@ test_case = LLMTestCase(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { LLMTestCase } from "deepeval";
 
@@ -37,7 +43,9 @@ const testCase = new LLMTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::tip
 In our case, the summarization agent creates two separate LLM calls. 
@@ -76,7 +84,9 @@ A dataset can only be created with a list of goldens. `Golden`s represent a more
 
 We can create a dataset that contains numerous goldens each corresponding to different meeting transcripts represented as `input`s which can later be used to create `LLMTestCase`s during runtime by calling and filling `actual_output`s. Here's how you can create those goldens by looping over transcripts in a folder:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python {2,16-18}
 import os
@@ -100,6 +110,10 @@ for transcript in transcripts:
     )
     goldens.append(golden)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { readdirSync, readFileSync } from "fs";
@@ -126,16 +140,24 @@ for (const transcript of transcripts) {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 You can sanity check your goldens as shown below:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 for i, golden in enumerate(goldens):
     print(f"Golden {i}: ", golden.input[:20])
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 goldens.forEach((golden, i) => {
@@ -143,12 +165,16 @@ goldens.forEach((golden, i) => {
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 
 We can use the above created goldens to initialize a dataset and store it in cloud. Here's how you can do that:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -157,6 +183,10 @@ dataset = EvaluationDataset(goldens=goldens)
 dataset.push(alias="MeetingSummarizer Dataset")
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset } from "deepeval/dataset";
 
@@ -164,7 +194,9 @@ const dataset = new EvaluationDataset({ goldens });
 await dataset.push({ alias: "MeetingSummarizer Dataset" });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ✅ Done. We can now move on to creating test cases using this dataset.
 
@@ -174,7 +206,9 @@ We will now call our summarization agent on the dataset `input`s and create our 
 
 Here's how we can pull our dataset and create test cases:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python {1-2,6,13-20}
 from deepeval.test_case import LLMTestCase, SingleTurnParams
@@ -200,6 +234,10 @@ for golden in dataset.goldens:
     summary_test_cases.append(summary_test_case)
     action_item_test_cases.append(action_item_test_case)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { LLMTestCase } from "deepeval";
@@ -228,7 +266,9 @@ for (const golden of dataset.goldens) {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ✅ Done. We now need to create our metrics to run evaluations on these test cases.
 
@@ -252,7 +292,9 @@ From the criterion that we have defined above, both of them are custom criteria 
 
 We will create a custom G-Eval metric with the above defined criteria for summaries generated to be concise. Here's how we can do that:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import GEval
@@ -265,6 +307,10 @@ summary_concision = GEval(
     evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT]
 )
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { metrics } from "deepeval";
@@ -279,13 +325,17 @@ const summaryConcision = new metrics.GEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### Action Items Check
 
 We will create a custom metric to check the action items generated. Here's how we can do that:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import GEval
@@ -298,6 +348,10 @@ action_item_check = GEval(
     evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT]
 )
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { metrics } from "deepeval";
@@ -312,7 +366,9 @@ const actionItemCheck = new metrics.GEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Under-the-hood, the `GEval` metric uses _LLM-as-a-judge_ with chain-of-thoughts (CoT) to evaluate LLM outputs based on ANY custom criteria.
 
@@ -324,7 +380,9 @@ We can now use the test cases and metrics we created to run our evaluations. Her
 
 Since we created separate metrics and separate test cases for our summarizer, we'll first evaluate the summary concision:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -335,19 +393,27 @@ evaluate(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate } from "deepeval";
 
 await evaluate(summaryTestCases, [summaryConcision]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### Action Item Eval
 
 We can run a separate evaluation for action items generated as shown below:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -358,13 +424,19 @@ evaluate(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate } from "deepeval";
 
 await evaluate(actionItemTestCases, [actionItemCheck]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 🎉🥳 Congratulations! You've successfully learnt how to evaluate an LLM application. In this example we've successfully learnt how to:
 

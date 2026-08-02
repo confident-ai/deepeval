@@ -13,7 +13,9 @@ this provides full visibility for debugging internal components of your LLM appl
 
 During our development phase, we've added these `@observe` decorators to our RAG agent for different components, we will now add metrics and create spans. Here's how you can do that:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python {11,22,26-33,36,51-57,60}
 from langchain.vectorstores import FAISS
@@ -86,6 +88,10 @@ class RAGAgent:
         generated_answer = self.generate(query, retrieved_docs, llm_model, prompt_template)
         return generated_answer, retrieved_docs
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { FaissStore } from "@langchain/community/vectorstores/faiss";
@@ -176,7 +182,9 @@ class RAGAgent {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ## Using Datasets
 
@@ -184,7 +192,9 @@ In the previous section, we've seen how to create datasets and store them in the
 
 Here's how we can pull datasets from the cloud:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -193,6 +203,10 @@ dataset = EvaluationDataset()
 dataset.pull(alias="QA Agent Dataset")
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset } from "deepeval";
 
@@ -200,13 +214,17 @@ const dataset = new EvaluationDataset();
 await dataset.pull({ alias: "QA Agent Dataset" });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ## Integrating CI/CD
 
 You can use `pytest` with `assert_test` during your CI/CD to trace and evaluate your RAG agent, here's how you can write the test file to do that:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="test_rag_qa_agent.py"
 import pytest
@@ -226,6 +244,10 @@ def test_meeting_summarizer_components(golden):
     assert_test(golden=golden)  # evaluates spans
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="test_rag_qa_agent.ts"
 import { EvaluationDataset } from "deepeval";
 import { RAGAgent } from "./qa_agent"; // import your RAG agent here
@@ -242,23 +264,35 @@ for await (const golden of dataset.evalsIterator()) {
 }
 ```
 
-</LangSwitch>
+</Case>
 
-<LangSwitch>
+</Switch>
+
+<Switch>
+
+<Case id="python">
 
 ```bash
 poetry run deepeval test run test_rag_qa_agent.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 npx tsx test_rag_qa_agent.ts
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Finally, let's integrate this test into GitHub Actions to enable automated quality checks on every push.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```yaml {32-33}
 name: RAG QA Agent DeepEval Tests
@@ -296,6 +330,10 @@ jobs:
         run: poetry run deepeval test run test_rag_qa_agent.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```yaml {25-26}
 name: RAG QA Agent DeepEval Tests
 
@@ -327,7 +365,9 @@ jobs:
         run: npx tsx test_rag_qa_agent.ts
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 And that's it! You now have a reliable, production-ready RAG QA agent with automated evaluation integrated into your development workflow.
 

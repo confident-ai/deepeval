@@ -76,17 +76,25 @@ The `deepeval` integration traces LangChain runs through a `CallbackHandler` tha
 
 ### Installation
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash
 pip install -U deepeval langchain langchain-openai
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 npm install deepeval langchain @langchain/core @langchain/openai
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 LangChain is instrumented per-call: you decide which runs are traced by passing `CallbackHandler(...)` into LangChain's runtime config.
 
@@ -98,7 +106,9 @@ LangChain is instrumented per-call: you decide which runs are traced by passing 
 
 Create a `CallbackHandler` and pass it to the agent's `invoke` method.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="langchain_agent.py" showLineNumbers
 from langchain.agents import create_agent
@@ -126,6 +136,10 @@ for golden in dataset.evals_iterator():
         config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]},
     )
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="langchain_agent.ts" showLineNumbers
 import { createAgent, tool } from "langchain";
@@ -162,7 +176,9 @@ for await (const golden of dataset.evalsIterator({
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Done ✅. You've run your first eval with full traceability into LangChain via `deepeval`.
 
@@ -234,7 +250,9 @@ deepeval test run test_langchain_agent.py
 
 Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one LangChain run; metrics score the resulting trace through the callback.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="langchain_agent.py" showLineNumbers
 dataset = EvaluationDataset(goldens=[
@@ -248,6 +266,10 @@ for golden in dataset.evals_iterator():
         config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]},
     )
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="langchain_agent.ts" showLineNumbers
 const dataset = new EvaluationDataset({
@@ -268,7 +290,9 @@ for await (const golden of dataset.evalsIterator({
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ## Applying metrics to components
 
@@ -351,7 +375,9 @@ LangChain is instrumented per-call through callbacks, so customization happens a
 - Use `next_agent_span(...)` / `next_llm_span(...)` / `next_retriever_span(...)` / `next_tool_span(...)` to stage component-level fields (metrics, metric collections, test cases, custom span metadata) onto the next span the callback opens.
 - Use tool spans for deterministic traceability, inputs, outputs, and metadata.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="langchain_agent.py" showLineNumbers
 callback = CallbackHandler(
@@ -367,6 +393,10 @@ agent.invoke(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="langchain_agent.ts" showLineNumbers
 const callback = new DeepEvalCallbackHandler({
   name: "math-agent",
@@ -381,7 +411,9 @@ await agent.invoke(
 );
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ## Advanced patterns
 
@@ -449,7 +481,9 @@ for golden in dataset.evals_iterator():
 
 When the LangChain call is part of a larger operation, decorate the outer function with `@observe`. LangChain spans nest under your observed span when the callback runs inside it.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="langchain_agent.py" showLineNumbers
 from deepeval.tracing import observe
@@ -463,6 +497,10 @@ def respond_to_user(prompt: str) -> str:
     )
     return result["messages"][-1].content
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="langchain_agent.ts" showLineNumbers
 import { observe } from "deepeval/tracing";
@@ -480,7 +518,9 @@ const respondToUser = observe({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ## API reference
 

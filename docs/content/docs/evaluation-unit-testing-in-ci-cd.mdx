@@ -39,7 +39,9 @@ If you haven't already, we recommend reading the end-to-end and component-level 
 <Tabs items={["Pull from Confident AI", "Load from CSV", "Load from JSON", "In Code"]}>
 <Tab value="Pull from Confident AI">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -48,6 +50,10 @@ dataset = EvaluationDataset()
 dataset.pull(alias="My Evals Dataset")
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset } from "deepeval/dataset";
 
@@ -55,7 +61,9 @@ const dataset = new EvaluationDataset();
 await dataset.pull({ alias: "My Evals Dataset" });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Load from CSV">
@@ -86,7 +94,9 @@ dataset.add_goldens_from_json_file(
 </Tab>
 <Tab value="In Code">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import Golden, EvaluationDataset
@@ -100,6 +110,10 @@ goldens = [
 dataset = EvaluationDataset(goldens=goldens)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset, Golden } from "deepeval/dataset";
 
@@ -112,7 +126,9 @@ const goldens = [
 const dataset = new EvaluationDataset({ goldens });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 </Tabs>
@@ -199,7 +215,9 @@ The `ConversationSimulator` needs a way to ask your chatbot for its next reply, 
 <Tabs items={["Python", "OpenAI", "LangChain", "LlamaIndex", "OpenAI Agents", "Pydantic"]}>
 <Tab value="Python">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" showLineNumbers
 from typing import List
@@ -210,6 +228,10 @@ async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
     return Turn(role="assistant", content=response)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts" showLineNumbers
 import { Turn } from "deepeval";
 
@@ -219,7 +241,9 @@ const modelCallback = async ({ input, turns, threadId }: { input: string; turns:
 };
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="OpenAI">
@@ -404,7 +428,9 @@ You can also mark individual **metrics** as flaky (`AnswerRelevancyMetric(flaky=
 
 Drop `deepeval test run` into a `.yml` to run your unit tests on every push or PR. This example uses `poetry` for installation and `OPENAI_API_KEY` as your LLM judge to run evals locally. Add `CONFIDENT_API_KEY` to send results to Confident AI.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```yaml {32-33}
 name: LLM App `deepeval` Tests
@@ -442,6 +468,10 @@ jobs:
         run: poetry run deepeval test run test_llm_app.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```yaml {27-28}
 name: LLM App `deepeval` Tests
 
@@ -473,7 +503,9 @@ jobs:
         run: npx tsx test_llm_app.ts
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 [Click here](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about the optional flags available to `deepeval test run`.
 

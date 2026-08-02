@@ -29,31 +29,47 @@ This page walks you through setting up DeepEval **by hand**. If you'd rather ins
 
 In a newly created virtual environment, run:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash
 pip install -U deepeval
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 npm install deepeval
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 `deepeval` runs evaluations locally on your environment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://www.confident-ai.com), an AI quality platform with observability, evals, and monitoring that DeepEval integrates with natively:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash
 deepeval login
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 export CONFIDENT_API_KEY="confident_us_..."
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Your browser handles authentication only. After you sign in or create an
 account, return to the terminal to enter your name and organization, confirm
@@ -98,7 +114,9 @@ An [LLM test case](/docs/evaluation-test-cases#llm-test-case) in `deepeval` repr
 
 Run `touch test_example.py` in your terminal and paste in the following code:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="test_example.py"
 from deepeval import assert_test
@@ -121,6 +139,10 @@ def test_correctness():
     assert_test(test_case, [correctness_metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="test_example.ts"
 import { evaluate, LLMTestCase, metrics } from "deepeval";
 import { SingleTurnParams } from "deepeval/testCase";
@@ -141,21 +163,31 @@ const testCase = new LLMTestCase({
 await evaluate([testCase], [correctnessMetric]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Then, run `deepeval test run` from the root directory of your project to evaluate your LLM app **end-to-end**:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash
 deepeval test run test_example.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 npx tsx test_example.ts
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Congratulations! Your test case should have passed ✅ Let's breakdown what happened.
 
@@ -178,7 +210,9 @@ A [conversational test case](/docs/evaluation-multiturn-test-cases#conversationa
 
 Run `touch test_example.py` in your terminal and paste in the following code:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="test_example.py"
 from deepeval import assert_test
@@ -200,6 +234,10 @@ def test_professionalism():
     assert_test(test_case, [professionalism_metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="test_example.ts"
 import { evaluate, Turn, ConversationalTestCase, metrics } from "deepeval";
 import { MultiTurnParams } from "deepeval/testCase";
@@ -220,21 +258,31 @@ const testCase = new ConversationalTestCase({
 await evaluate([testCase], [professionalismMetric]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Then, run `deepeval test run` from the root directory of your project to evaluate your LLM app **end-to-end**:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash
 deepeval test run test_example.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 npx tsx test_example.ts
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 🎉 Congratulations! Your test case should have passed ✅ Let's breakdown what happened.
 
@@ -329,7 +377,9 @@ While end-to-end evals treat your LLM app as a black-box, you also evaluate **in
 
 First, create a small dataset to evaluate against:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset, Golden
@@ -337,13 +387,19 @@ from deepeval.dataset import EvaluationDataset, Golden
 dataset = EvaluationDataset(goldens=[Golden(input="Why is the sky blue?")])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset, Golden } from "deepeval/dataset";
 
 const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Why is the sky blue?" })] });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Pick your stack below, paste the snippet, and run it. Every integration ships an **Async** sample (the default — runs goldens concurrently) and a **Sync** sample (one golden at a time, useful for debugging or rate-limited providers):
 
@@ -388,7 +444,9 @@ CONFIDENT_API_KEY="confident_us..."
 
 Then add a "metric collection" to your trace:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.tracing import observe, update_current_trace
@@ -399,6 +457,10 @@ def ai_agent(input: str) -> str:
     update_current_trace(metric_collection="My Online Evals",)
     return output
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { observe, updateCurrentTrace } from "deepeval/tracing";
@@ -413,7 +475,9 @@ const aiAgent = observe({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ✅ Done. All invocations of your AI agent will now have online evals ran on it.
 

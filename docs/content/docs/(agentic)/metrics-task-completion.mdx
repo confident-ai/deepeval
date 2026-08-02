@@ -16,7 +16,9 @@ Task Completion analyzes your **agent's full trace** to determine task success, 
 
 To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `TaskCompletionMetric()` to your agent's `@observe` tag.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.tracing import observe
@@ -52,6 +54,10 @@ task_completion = TaskCompletionMetric(threshold=0.7, model="gpt-4o")
 for golden in dataset.evals_iterator(metrics=[task_completion]):
     trip_planner_agent(golden.input)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { observe } from "deepeval/tracing";
@@ -93,7 +99,9 @@ for await (const golden of dataset.evalsIterator({ metrics: [taskCompletion] }))
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 There are **EIGHT** optional parameters when creating a `TaskCompletionMetric`:
 

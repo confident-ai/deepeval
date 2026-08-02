@@ -24,7 +24,9 @@ A **multi-turn test case** is a blueprint provided by `deepeval` to unit test a 
 
 Here's an example implementation of a `ConversationalTestCase`:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import ConversationalTestCase, Turn
@@ -39,6 +41,10 @@ test_case = ConversationalTestCase(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { ConversationalTestCase, Turn } from "deepeval";
 
@@ -52,7 +58,9 @@ const testCase = new ConversationalTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ## Multi-Turn LLM Interaction
 
@@ -68,7 +76,9 @@ While a [single-turn test case](/docs/evaluation-test-cases) represents an indiv
 
 A `ConversationalTestCase` can only be evaluated using **conversational metrics.**
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from deepeval.test_case import Turn, ConversationalTestCase
@@ -81,6 +91,10 @@ turns = [
 test_case = ConversationalTestCase(turns=turns)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 import { Turn, ConversationalTestCase } from "deepeval";
 
@@ -92,7 +106,9 @@ const turns = [
 const testCase = new ConversationalTestCase({ turns });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::note
 Similar to how the term 'test case' refers to an `LLMTestCase` if not explicitly specified, the term 'metrics' also refer to non-conversational metrics throughout `deepeval`.
@@ -131,13 +147,19 @@ The `role` parameter specifies whether a particular turn is by the `"user"` (end
 
 The `scenario` parameter is an **optional** parameter that specifies the circumstances of which a conversation is taking place in.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import Turn, ConversationalTestCase
 
 test_case = ConversationalTestCase(scenario="Frustrated user asking for a refund.", turns=[Turn(...)])
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { Turn, ConversationalTestCase } from "deepeval";
@@ -148,13 +170,17 @@ const testCase = new ConversationalTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### Expected Outcome
 
 The `expected_outcome` parameter is an **optional** parameter that specifies the expected outcome of a given `scenario`.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import Turn, ConversationalTestCase
@@ -166,6 +192,10 @@ test_case = ConversationalTestCase(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { Turn, ConversationalTestCase } from "deepeval";
 
@@ -176,19 +206,27 @@ const testCase = new ConversationalTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### Chatbot Role
 
 The `chatbot_role` parameter is an **optional** parameter that specifies what role the chatbot is supposed to play. This is currently only required for the `RoleAdherenceMetric`, where it is particularly useful for a role-playing evaluation use case.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import Turn, ConversationalTestCase
 
 test_case = ConversationalTestCase(chatbot_role="A happy jolly wizard.", turns=[Turn(...)])
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { Turn, ConversationalTestCase } from "deepeval";
@@ -199,13 +237,17 @@ const testCase = new ConversationalTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### User Description
 
 The `user_description` parameter is an **optional** parameter that specifies the profile of the user for a given conversation.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import Turn, ConversationalTestCase
@@ -216,6 +258,10 @@ test_case = ConversationalTestCase(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { Turn, ConversationalTestCase } from "deepeval";
 
@@ -225,13 +271,17 @@ const testCase = new ConversationalTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### Context
 
 The `context` is an **optional** parameter that represents additional data received by your LLM application as supplementary sources of golden truth. You can view it as the ideal segment of your knowledge base relevant as support information to a specific input. Context is **static** and should not be generated dynamically.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import Turn, ConversationalTestCase
@@ -242,6 +292,10 @@ test_case = ConversationalTestCase(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { Turn, ConversationalTestCase } from "deepeval";
 
@@ -251,7 +305,9 @@ const testCase = new ConversationalTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::info
 A single-turn `LLMTestCase` also contains `context`.
@@ -261,7 +317,9 @@ A single-turn `LLMTestCase` also contains `context`.
 
 By default `deepeval` supports passing both text and images inside your test cases using the `MLLMImage` object. The `MLLMImage` class in `deepeval` is used to reference multimodal images in your test cases. It allows you to create test cases using local images, remote URLs and `base64` data.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import ConversationalTestCase, Turn, MLLMImage
@@ -280,6 +338,10 @@ test_case = ConversationalTestCase(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { ConversationalTestCase, Turn, MLLMImage } from "deepeval/testCase";
 
@@ -297,7 +359,9 @@ const testCase = new ConversationalTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::info
 Multimodal test cases are automatically detected when you include `MLLMImage` objects in your inputs or outputs. You can use them with almost all the `deepeval` metrics.
@@ -322,7 +386,9 @@ You **MUST** either provide `url` or `dataBase64` and `mimeType` parameters when
 
 All the `MLLMImage` instances are converted to a special `deepeval` slug, (e.g `[DEEPEVAL:IMAGE:uuid]`). This is how your `MLLMImage`s look like in your test cases after you embed them in f-strings:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import ConversationalTestCase, Turn, MLLMImage
@@ -339,6 +405,10 @@ test_case = ConversationalTestCase(
 print(test_case.turns[0].content)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { ConversationalTestCase, Turn, MLLMImage } from "deepeval/testCase";
 
@@ -354,7 +424,9 @@ const testCase = new ConversationalTestCase({
 console.log(testCase.turns[0].content);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 This outputs the following:
 
@@ -417,13 +489,19 @@ If you're using Confident AI, these are some additional parameters to help manag
 
 The optional `name` parameter allows you to provide a string identifier to label `LLMTestCase`s and `ConversationalTestCase`s for you to easily search and filter for on Confident AI. This is particularly useful if you're importing test cases from an external datasource.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import ConversationalTestCase
 
 test_case = ConversationalTestCase(name="my-external-unique-id", ...)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { Turn, ConversationalTestCase } from "deepeval";
@@ -434,7 +512,9 @@ const testCase = new ConversationalTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### Tags
 

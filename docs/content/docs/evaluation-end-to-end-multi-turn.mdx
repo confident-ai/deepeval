@@ -62,7 +62,9 @@ The `ConversationSimulator` needs a way to ask your chatbot for its next reply, 
 <Tabs items={["Python", "OpenAI", "LangChain", "LlamaIndex", "OpenAI Agents", "Pydantic"]}>
 <Tab value="Python">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" showLineNumbers={true}
 from typing import List
@@ -73,6 +75,10 @@ async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
     return Turn(role="assistant", content=response)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts" showLineNumbers={true}
 import { Turn } from "deepeval";
 
@@ -82,7 +88,9 @@ const modelCallback = async ({ input, turns, threadId }: { input: string; turns:
 };
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="OpenAI">
@@ -207,7 +215,9 @@ A `ConversationalGolden` describes the situation the simulated user is in, what 
 <Tabs items={["In Code", "Pull from Confident AI", "Load from CSV", "Load from JSON"]}>
 <Tab value="In Code">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import ConversationalGolden, EvaluationDataset
@@ -224,6 +234,10 @@ goldens = [
 dataset = EvaluationDataset(goldens=goldens)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset, ConversationalGolden } from "deepeval/dataset";
 
@@ -239,14 +253,18 @@ const goldens = [
 const dataset = new EvaluationDataset({ goldens });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 The dataset lives only for this run — no push, no save. Perfect for quickstarts and one-off evaluations.
 
 </Tab>
 <Tab value="Pull from Confident AI">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -255,6 +273,10 @@ dataset = EvaluationDataset()
 dataset.pull(alias="My multi-turn dataset")
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset } from "deepeval/dataset";
 
@@ -262,7 +284,9 @@ const dataset = new EvaluationDataset();
 await dataset.pull({ alias: "My multi-turn dataset" });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Load from CSV">
@@ -309,7 +333,9 @@ This page covers **sourcing** goldens for an eval run only. To **persist** a dat
 
 Hand the goldens and the callback to a `ConversationSimulator` to produce a list of `ConversationalTestCase`s:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from deepeval.conversation_simulator import ConversationSimulator
@@ -321,6 +347,10 @@ conversational_test_cases = simulator.simulate(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 import { ConversationSimulator } from "deepeval";
 
@@ -331,7 +361,9 @@ const conversationalTestCases = await simulator.simulate({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 The simulator exposes additional configuration beyond what fits here — see [stopping logic](/docs/conversation-simulator-stopping-logic), [custom templates](/docs/conversation-simulator-custom-templates), and [lifecycle hooks](/docs/conversation-simulator-lifecycle-hooks) for the full surface.
 
@@ -340,7 +372,9 @@ The simulator exposes additional configuration beyond what fits here — see [st
 
 The simulator carries `scenario`, `expected_outcome`, and `user_description` over from the golden, and fills in `turns`:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ConversationalTestCase(
@@ -357,6 +391,10 @@ ConversationalTestCase(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 new ConversationalTestCase({
   scenario: "Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
@@ -372,7 +410,9 @@ new ConversationalTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </details>
 
@@ -388,7 +428,9 @@ Pass the simulated test cases and your multi-turn metrics to `evaluate()`:
 
 Default. Metrics dispatch concurrently across conversations for the fastest run.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from deepeval import evaluate
@@ -400,6 +442,10 @@ evaluate(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 import { evaluate, metrics } from "deepeval";
 
@@ -409,7 +455,9 @@ await evaluate(
 );
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Sync">

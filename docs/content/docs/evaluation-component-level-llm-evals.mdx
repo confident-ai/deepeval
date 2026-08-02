@@ -63,7 +63,9 @@ You can mix component-level and end-to-end in the same loop: pass `metrics=[...]
 <Tabs items={["In Code", "Pull from Confident AI", "Load from CSV", "Load from JSON"]}>
 <Tab value="In Code">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import Golden, EvaluationDataset
@@ -77,6 +79,10 @@ goldens = [
 dataset = EvaluationDataset(goldens=goldens)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset, Golden } from "deepeval/dataset";
 
@@ -89,14 +95,18 @@ const goldens = [
 const dataset = new EvaluationDataset({ goldens });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 The dataset lives only for this run — no push, no save. Perfect for quickstarts and one-off evaluations.
 
 </Tab>
 <Tab value="Pull from Confident AI">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -105,6 +115,10 @@ dataset = EvaluationDataset()
 dataset.pull(alias="My dataset")
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset } from "deepeval/dataset";
 
@@ -112,7 +126,9 @@ const dataset = new EvaluationDataset();
 await dataset.pull({ alias: "My dataset" });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Load from CSV">
@@ -208,7 +224,9 @@ Only integrations that emit agent spans are shown below. The OpenAI and Anthropi
 
 Mark your sub-agent with `@observe(type="agent")` and pass `metrics=[...]` to it:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" showLineNumbers
 from deepeval.tracing import observe, update_current_trace
@@ -226,6 +244,10 @@ def supervisor_agent(query: str) -> str:
 def research_agent(query: str) -> str:
     return "..."  # your sub-agent implementation
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="main.ts" showLineNumbers
 import { observe, updateCurrentTrace } from "deepeval/tracing";
@@ -250,7 +272,9 @@ const supervisorAgent = observe({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="LangChain">

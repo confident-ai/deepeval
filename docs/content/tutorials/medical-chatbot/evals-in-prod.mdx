@@ -15,7 +15,9 @@ this provides full visibility for debugging internal components of your LLM appl
 
 To add metrics and spans to your traces, modify your `MedicalChatbot` class like this:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python {4,30,43-48,73,87-91}
 from qdrant_client import models, QdrantClient
@@ -89,6 +91,10 @@ class MedicalChatbot:
             )
             print("Agent Response:", response["output"])
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { QdrantClient } from "@qdrant/js-client-rest";
@@ -188,7 +194,9 @@ class MedicalChatbot {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 This tracing setup is done for the `interactive_session()` method, for your chatbot in production, you would observe your main callback function. Here's the docs to [learn more about tracing](https://deepeval.com/docs/evaluation-llm-tracing).
 
@@ -200,7 +208,9 @@ Adding `@observe` tag to all your functions is also helpul in evaluating your en
 
 From the previous tracing code we've seen how to setup trace spans, here's how you can evaluate those spans:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python {2,5,19-23}
 ...
@@ -228,6 +238,10 @@ def interactive_session(self, session_id):
         )
         print("Agent Response:", response["output"])
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 // ...
@@ -265,11 +279,15 @@ const interactiveSession = observe({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 You can now use this thread id to evaluate this trace with the following code:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.tracing import evaluate_thread
@@ -278,6 +296,10 @@ from deepeval.tracing import evaluate_thread
 evaluate_thread(thread_id="your-thread-id", metric_collection="Metric Collection")
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluateThread } from "deepeval/tracing";
 
@@ -285,7 +307,9 @@ import { evaluateThread } from "deepeval/tracing";
 await evaluateThread({ threadId: "your-thread-id", metricCollection: "Metric Collection" });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 You can create a metric collection on the Confident AI platform to run online evaluations and catch regression or bugs, [learn more here](https://www.confident-ai.com/docs/metrics/metric-collections).
 

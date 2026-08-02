@@ -148,7 +148,9 @@ The simulation works in three steps:
 
 Instead of pre-defined input-output pairs, multi-turn evaluation starts with **scenarios**—descriptions of the conversational situations you want to test. In `deepeval`, these are represented as [`ConversationalGolden`s](/docs/conversation-simulator#simulate-a-conversation):
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset, ConversationalGolden
@@ -171,6 +173,10 @@ dataset = EvaluationDataset(goldens=[
     ),
 ])
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { EvaluationDataset, ConversationalGolden } from "deepeval/dataset";
@@ -196,7 +202,9 @@ const dataset = new EvaluationDataset({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Each golden defines _what_ the conversation is about and _what success looks like_, without dictating the exact messages. This is the key insight that makes multi-turn benchmarking possible.
 
@@ -210,7 +218,9 @@ Manually chatting with your LLM for every test case is time-consuming and non-re
 
 Here's how to set it up:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import Turn
@@ -225,6 +235,10 @@ async def model_callback(input: str, turns: list, thread_id: str) -> Turn:
 simulator = ConversationSimulator(model_callback=model_callback)
 test_cases = simulator.simulate(goldens=dataset.goldens, max_turns=10)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { ConversationSimulator } from "deepeval";
@@ -241,7 +255,9 @@ const simulator = new ConversationSimulator({ modelCallback });
 const testCases = await simulator.simulate({ conversationalGoldens: dataset.goldens, maxUserSimulations: 10 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 The simulator role-plays as the user from each `ConversationalGolden`, looping until the expected outcome is reached or max turns is hit. The result is a set of [`ConversationalTestCase`s](/docs/evaluation-multiturn-test-cases) ready for evaluation—each containing the full turn history plus the original scenario and expected outcome.
 
@@ -249,7 +265,9 @@ The simulator role-plays as the user from each `ConversationalGolden`, looping u
 
 The `model_callback` returns a `Turn` object, which can carry more than just `content`. If your application uses RAG or calls tools, include `retrieval_context` and `tools_called` on the returned turn—several metrics depend on these fields:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import Turn, ToolCall
@@ -267,6 +285,10 @@ async def model_callback(input: str, turns: list, thread_id: str) -> Turn:
     )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { Turn, ToolCall } from "deepeval/testCase";
 
@@ -283,7 +305,9 @@ const modelCallback = async ({ input, turns, threadId }: { input: string; turns:
 };
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 | `Turn` field        | Required by                                                                                                              |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
@@ -313,7 +337,9 @@ If you only need conversation-level metrics like `ConversationCompletenessMetric
 
 With simulated conversations in hand, run your chosen metrics:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -335,6 +361,10 @@ evaluate(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate, metrics } from "deepeval";
 
@@ -346,7 +376,9 @@ await evaluate(testCases, [
 ]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 This creates a **test run**—a snapshot of your LLM application's conversational performance at a point in time. Each test case is evaluated against all specified metrics, producing scores, reasons, and pass/fail results.
 
@@ -363,7 +395,9 @@ After each test run, analyze which scenarios consistently fail and which metrics
 
 The built-in metrics cover common quality dimensions, but your application likely has specific requirements. Use [`ConversationalGEval`](/docs/metrics-conversational-g-eval) to define custom evaluation criteria in plain English:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import ConversationalGEval
@@ -380,6 +414,10 @@ policy_compliance = ConversationalGEval(
 
 evaluate(test_cases=test_cases, metrics=[empathy, policy_compliance])
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { evaluate, metrics } from "deepeval";
@@ -402,7 +440,9 @@ const policyCompliance = new metrics.ConversationalGEval({
 await evaluate(testCases, [empathy, policyCompliance]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::tip
 `ConversationalGEval` is the multi-turn equivalent of [`GEval`](/docs/metrics-llm-evals). It evaluates the entire conversation against your criteria, not just individual turns.

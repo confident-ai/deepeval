@@ -6,7 +6,9 @@ Wrap the top-level function with `@observe`, set trace-level fields with `update
 <Tabs items={["Async", "Sync"]}>
 <Tab value="Async">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" showLineNumbers
 import asyncio
@@ -38,6 +40,10 @@ for golden in dataset.evals_iterator():
     task = asyncio.create_task(my_ai_agent(golden.input))
     dataset.evaluate(task)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="main.ts" showLineNumbers
 import { LLMTestCase, metrics } from "deepeval";
@@ -77,7 +83,9 @@ for await (const golden of dataset.evalsIterator()) {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Sync">

@@ -17,7 +17,9 @@ To evaluate a RAG QA Agent, we'll use single-turn [`LLMTestCase`](https://deepev
 
 Our RAG agent first retrieves context from our knowledge base and uses the retrieved context to answer the question. All these questions are individual interactions that only depend on the retrieved context. Hence, we'll create our test cases with `input`, `actual_output` and `retrieval_context` as shown below:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -29,6 +31,10 @@ test_case = LLMTestCase(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { LLMTestCase } from "deepeval";
 
@@ -39,7 +45,9 @@ const testCase = new LLMTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 When evaluating RAG based applications, **you don't want to evaluate it on a random set of queries.** You will have to create questions and queries that test the RAG application's abilities on edge cases that are in and outside your knowledge base.
 
@@ -57,7 +65,9 @@ Option 2 is the most recommended approach as it creates a ground truth for you t
 
 If you have queries and inputs stored in your database, you can convert them to `LLMTestCase` objects:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -76,6 +86,10 @@ for query in queries:
 
 print(test_cases)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { LLMTestCase } from "deepeval";
@@ -96,7 +110,9 @@ for (const query of queries) {
 console.log(testCases);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 This method is the quickest because the data already exists, however it might not be feasible becuase you may or may not store the retrieval context in your database. It also provides insights from the pevious knowledge base and does not represent your current RAG agent's capabilities. Hence, this is not recommended.
 
@@ -135,7 +151,9 @@ A dataset can only be created with a list of goldens. `Golden`s represent a more
 
 We can use the above created goldens to initialize a dataset and store it in cloud. Here's how you can do that:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -144,6 +162,10 @@ dataset = EvaluationDataset(goldens=goldens)
 dataset.push(alias="RAG QA Agent Dataset")
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset } from "deepeval";
 
@@ -151,7 +173,9 @@ const dataset = new EvaluationDataset({ goldens });
 await dataset.push({ alias: "RAG QA Agent Dataset" });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ✅ Done. We can now move on to creating test cases using this dataset.
 
@@ -165,7 +189,9 @@ For RAG applications, it is recommended to evaluate your application on a compon
 
 We will now use our RAG QA agent on the dataset to generate some `LLMTestCase`s that we can use to evaluate our agent. We will create them using the `input`s in goldens of our dataset and the agent's responses as `actual_output`s.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -190,6 +216,10 @@ for golden in dataset.goldens:
 
 print(len(test_cases))
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { LLMTestCase, EvaluationDataset } from "deepeval";
@@ -217,7 +247,9 @@ for (const golden of dataset.goldens) {
 console.log(testCases.length);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ✅ Done. We can now move on to creating metrics for evaluating our RAG on a component level and as a whole.
 
@@ -235,7 +267,9 @@ For a **retriever** `deepeval` provides 3 metrics to evaluate the quality of the
 
 Here's how you can create these metrics:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import (
@@ -249,6 +283,10 @@ recall = ContextualRecallMetric()
 precision = ContextualPrecisionMetric()
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 
@@ -257,7 +295,9 @@ const recall = new metrics.ContextualRecallMetric();
 const precision = new metrics.ContextualPrecisionMetric();
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### Generator Metrics
 
@@ -268,7 +308,9 @@ For a **generator**, we will have to define criteria based on the use case, in o
 
 These are custom criteria so we'll be using `GEval` metric to create these metrics. Here's how we will initialize our generator metrics:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import GEval
@@ -285,6 +327,10 @@ citation_accuracy = GEval(
     evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.RETRIEVAL_CONTEXT]
 )
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { metrics } from "deepeval";
@@ -303,7 +349,9 @@ const citationAccuracy = new metrics.GEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 We can now use the test cases and metrics we've created to run evaluations on our RAG agent.
 
@@ -315,7 +363,9 @@ We will do separate evaluations for our retriever and generator. Here's how we c
 
 Now we can use the goldens we just created to evaluate the retriever. Here's how we can evaluate our retriever using the _relevancy, recall and precision_ metrics that we've defined above:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -325,6 +375,10 @@ retriever_metrics = [relevancy, recall, precision]
 evaluate(test_cases, retriever_metrics)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate } from "deepeval";
 
@@ -333,13 +387,17 @@ const retrieverMetrics = [relevancy, recall, precision];
 await evaluate(testCases, retrieverMetrics);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### Generator Evaluation
 
 We can use the exact same goldens to evaluate our generator by using the generator metrics we've defined above. Here's how we can evaluate the generator:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -349,6 +407,10 @@ generator_metrics = [answer_correctness, citation_accuracy]
 evaluate(test_cases, generator_metrics)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate } from "deepeval";
 
@@ -357,7 +419,9 @@ const generatorMetrics = [answerCorrectness, citationAccuracy];
 await evaluate(testCases, generatorMetrics);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 🎉 **Congratulations!** You've successfully learnt how to:
 

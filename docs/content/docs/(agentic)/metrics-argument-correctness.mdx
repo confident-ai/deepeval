@@ -31,7 +31,9 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 The `ArgumentCorrectnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -67,6 +69,10 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate, LLMTestCase, ToolCall, metrics } from "deepeval";
 
@@ -99,7 +105,9 @@ const testCase = new LLMTestCase({
 await evaluate([testCase], [metric]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 There are **SEVEN** optional parameters when creating an `ArgumentCorrectnessMetric`:
 
@@ -115,7 +123,9 @@ There are **SEVEN** optional parameters when creating an `ArgumentCorrectnessMet
 
 You can also run the `ArgumentCorrectnessMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import Golden
@@ -137,6 +147,10 @@ def llm_app(input: str):
 
 evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { EvaluationDataset, Golden } from "deepeval";
@@ -170,13 +184,17 @@ for await (const golden of dataset.evalsIterator()) {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### As a standalone
 
 You can also run the `ArgumentCorrectnessMetric` on a single test case as a standalone, one-off execution.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -185,6 +203,10 @@ metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -192,7 +214,9 @@ await metric.measure(testCase);
 console.log(metric.score, metric.reason);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
@@ -209,7 +233,9 @@ The `ArgumentCorrectnessMetric` assesses the correctness of the arguments (input
 :::note
 You can set the `verbose_mode` of **ANY** `deepeval` metric to `True` to debug the `measure()` method:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -218,6 +244,10 @@ metric = ArgumentCorrectnessMetric(verbose_mode=True)
 metric.measure(test_case)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -225,7 +255,9 @@ const metric = new metrics.ArgumentCorrectnessMetric({ verboseMode: true });
 await metric.measure(testCase);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::
 

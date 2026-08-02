@@ -12,17 +12,25 @@ import { ASSETS } from "@site/src/assets";
 
 Start by installing DeepEval using pip:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash
 pip install -U deepeval
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 npm install deepeval
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### Write your first test
 
@@ -32,7 +40,9 @@ Let's evaluate the correctness of an LLM output using [`GEval`](https://deepeval
 When you pass a file explicitly (e.g. `deepeval test run evals/my_eval.py`), DeepEval runs it regardless of its name. The `test_` prefix (like `test_app.py`) is only needed for pytest's automatic discovery when you point it at a directory.
 :::
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="test_app.py"
 from deepeval import evaluate
@@ -56,6 +66,10 @@ test_case = LLMTestCase(
 evaluate([test_case], [correctness_metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="test_app.ts"
 import { evaluate, LLMTestCase, metrics } from "deepeval";
 import { SingleTurnParams } from "deepeval/testCase";
@@ -77,21 +91,31 @@ const testCase = new LLMTestCase({
 await evaluate([testCase], [correctnessMetric]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 To run your first evaluation, enter the following command in your terminal:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash
 deepeval test run test_app.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 npx tsx test_app.ts
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::note
 DeepEval's powerful **LLM-as-a-judge** metrics (like `GEval` used in this example) rely on an underlying LLM called the _Evaluation Model_ to perform evaluations. By default, DeepEval uses OpenAI's models for this purpose.

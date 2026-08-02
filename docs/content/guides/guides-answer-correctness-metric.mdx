@@ -22,7 +22,9 @@ Assessing Correctness involves comparing an LLM's actual output with the ground 
 
 Begin creating your Correctness metric by instantiating a `GEval` object, choosing your evaluation LLM, and naming the metric accordingly.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import GEval
@@ -32,6 +34,10 @@ correctness_metric = GEval(
     ...
 )
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { metrics } from "deepeval";
@@ -48,7 +54,9 @@ const correctnessMetric = new metrics.GEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::tip
 G-Eval is most effective when employing a model from the **GPT-4 model family** as your evaluation LLM, especially when it comes to assessing correctness.
@@ -66,7 +74,9 @@ G-Eval allows you to select parameters that are relevant for evaluation by provi
 
 `ACTUAL_OUTPUT` should **always** be included in your `evaluation_params`, as this is what every Correctness metric will be directly evaluating. As mentioned earlier, Correctness is determined by how well the actual output aligns with the ground truth, which is typically more variable. The ground truth is best represented by `EXPECTED_OUTPUT`, where the expected output serves as the **ideal reference** for the actual output, with an exact match earning a score of 1.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import GEval
@@ -79,6 +89,10 @@ correctness_metric = GEval(
     ...
 )
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { metrics } from "deepeval";
@@ -95,11 +109,15 @@ const correctnessMetric = new metrics.GEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 If the expected output is unavailable, you can alternatively compare the actual output with the `CONTEXT`, which serves as the **ideal retrieval context** for a RAG application. This comparison comes with its own set of evaluation criterias, however, which we will explore in the following step.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import GEval
@@ -113,6 +131,10 @@ correctness_metric = GEval(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 import { SingleTurnParams } from "deepeval/testCase";
@@ -125,7 +147,9 @@ const correctnessMetric = new metrics.GEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### 3. Defining your Evaluation Criteria
 
@@ -133,7 +157,9 @@ const correctnessMetric = new metrics.GEval({
 
 Here is a simple example of how one might define a basic Correctness metric:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import GEval
@@ -149,6 +175,10 @@ correctness_metric = GEval(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 import { SingleTurnParams } from "deepeval/testCase";
@@ -163,11 +193,15 @@ const correctnessMetric = new metrics.GEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Here's a more complex set of `evaluation_steps`, where detail is crucial to ensuring Correctness:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 correctness_metric = GEval(
@@ -184,6 +218,10 @@ correctness_metric = GEval(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 const correctnessMetric = new metrics.GEval({
   name: "Correctness",
@@ -197,11 +235,15 @@ const correctnessMetric = new metrics.GEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Here's another example metric which prioritizes general factual correctness over minutiae:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 correctness_metric = GEval(
@@ -218,6 +260,10 @@ correctness_metric = GEval(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 const correctnessMetric = new metrics.GEval({
   name: "Correctness",
@@ -231,7 +277,9 @@ const correctnessMetric = new metrics.GEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Each evaluation dataset is unique, so it's important to iteratively **adjust your `evaluation_steps`** until your Correctness metric produces scores that align with your expectations. Whether this means giving more importance to detail, numerical values, structure, or even defining a new set of evaluation steps relative to the context instead of the expected output, is up for experimentation. The key is to **keep refining the metrics until they deliver the desired scores**.
 
@@ -247,7 +295,9 @@ You may wonder what it means to **iterate on your Correctness metric** until it 
 
 Here is an example based on a detail-oriented Correctness metric:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -272,6 +322,10 @@ test_cases = [first_test_test_case, second_test_case, third_test_case]
 
 dataset = EvaluationDataset(test_cases=test_cases)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { LLMTestCase } from "deepeval/testCase";
@@ -308,7 +362,9 @@ const dataset = new EvaluationDataset();
 dataset.testCases = testCases;
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Having a benchmark helps guide the development of your metric, and the primary method to align your evaluations with this baseline is by adjusting your `evaluation_steps`, as detailed in step 3 above.
 
@@ -320,7 +376,9 @@ You may initially achieve an 80% or even over 90% alignment with your expectatio
 
 First, perform the Correctness evaluation on your dataset:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 correctness_metric = GEval(
@@ -343,6 +401,10 @@ dataset.pull(alias="dataset_for_correctness")
 evaluation_output = dataset.evaluate([correctness_metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate } from "deepeval";
 
@@ -364,13 +426,17 @@ await dataset.pull({ alias: "dataset_for_correctness" });
 const evaluationOutput = await evaluate(dataset.testCases, [correctnessMetric]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### Step 2: Determine the Threshold
 
 Next, determine the percentage of test cases you expect to be correct, extract all the test scores, and calculate the threshold accordingly:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 # Extract scores from the evaluation output
@@ -388,6 +454,10 @@ def calculate_threshold(scores, percentile):
 percentile = 75  # Targeting the top 25%
 threshold = calculate_threshold(scores, percentile)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 // Extract scores from the evaluation output
@@ -409,6 +479,8 @@ const percentile = 75; // Targeting the top 25%
 const threshold = calculateThreshold(scores, percentile);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 By following these steps, you can fine-tune the threshold to ensure your evaluation metrics align closely with your expectations, achieving the level of precision required for your specific needs.

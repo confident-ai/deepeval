@@ -23,7 +23,9 @@ You'll also want to supply any additional arguments such as `retrieval_context` 
 
 To create a custom metric that evaluates entire LLM conversations, simply instantiate a `ConversationalGEval` class and define an evaluation criteria in everyday language:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -45,6 +47,10 @@ metric = ConversationalGEval(
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate, metrics } from "deepeval";
 import { Turn, MultiTurnParams, ConversationalTestCase } from "deepeval/testCase";
@@ -65,7 +71,9 @@ const metric = new metrics.ConversationalGEval({
 await evaluate([convoTestCase], [metric]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 There are **THREE** mandatory and **SEVEN** optional parameters required when instantiating an `ConversationalGEval` class:
 
@@ -101,7 +109,9 @@ metric.upload()
 
 You can also run the `ConversationalGEval` on a single test case as a standalone, one-off execution.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -110,6 +120,10 @@ metric.measure(convo_test_case)
 print(metric.score, metric.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -117,7 +131,9 @@ await metric.measure(convoTestCase);
 console.log(metric.score, metric.reason);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.

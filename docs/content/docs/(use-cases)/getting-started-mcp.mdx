@@ -57,7 +57,9 @@ In `deepeval` MCP evaluations can be done using either single-turn or multi-turn
 <Tabs items={["OpenAI", "Anthropic", "Gemini", "Ollama", "Grok", "Azure OpenAI", "Amazon Bedrock", "Vertex AI"]}>
 <Tab value="OpenAI">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import MCPUseMetric
@@ -65,13 +67,19 @@ from deepeval.metrics import MCPUseMetric
 task_completion_metric = MCPUseMetric(model="gpt-4.1")
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 
 const taskCompletionMetric = new metrics.MCPUseMetric({ model: "gpt-4.1" });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Anthropic">
@@ -176,7 +184,9 @@ task_completion_metric = MCPUseMetric(model=model)
 
 Connect your application to MCP servers and create the `MCPServer` object for all the MCP servers you're using.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" showLineNumbers {5,19-23}
 import mcp
@@ -205,6 +215,10 @@ async def main():
     ))
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts" showLineNumbers {3,15-21}
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
@@ -229,7 +243,9 @@ mcpServers.push(
 );
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Step>
 <Step>
@@ -242,7 +258,9 @@ In your MCP application's main file, you need to track all the MCP interactions 
   alt="MCP Interaction tracking"
 />
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" showLineNumbers {1,20-24}
 from deepeval.test_case import MCPToolCall
@@ -270,6 +288,10 @@ for content in response.content:
             result=result
         ))
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="main.ts" showLineNumbers {1,21-27}
 import { MCPToolCall } from "deepeval/testCase";
@@ -306,7 +328,9 @@ for (const content of response.content) {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 You can also track any [resources](https://www.deepeval.com/docs/evaluation-mcp#resources) or [prompts](https://www.deepeval.com/docs/evaluation-mcp#prompts) if you use them. You are now tracking all the MCP interactions during run time of your application.
 
@@ -316,7 +340,9 @@ You can also track any [resources](https://www.deepeval.com/docs/evaluation-mcp#
 
 You can now create a test case for your MCP application using the above interactions.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -330,6 +356,10 @@ test_case = LLMTestCase(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { LLMTestCase } from "deepeval";
 // ...
@@ -342,7 +372,9 @@ const testCase = new LLMTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 The test cases must be created after the execution of your application. Click here to see a [full example on how to create single-turn test cases](https://github.com/confident-ai/deepeval/blob/main/examples/mcp_evaluation/mcp_eval_single_turn.py) for MCP evaluations.
 
@@ -356,7 +388,9 @@ You can make your `main()` function return `mcp_servers`, `tools_called`, `resou
 
 You can now use the [`MCPUseMetric`](/docs/metrics-mcp-use) to run evals on your single-turn your test case.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import MCPUseMetric
@@ -364,13 +398,19 @@ from deepeval.metrics import MCPUseMetric
 mcp_use_metric = MCPUseMetric()
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 
 const mcpUseMetric = new metrics.MCPUseMetric();
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Step>
 <Step>
@@ -378,7 +418,9 @@ const mcpUseMetric = new metrics.MCPUseMetric();
 
 Run an evaluation on the test cases you previously created using the metrics defined above.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -386,13 +428,19 @@ from deepeval import evaluate
 evaluate([test_case], [mcp_use_metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate } from "deepeval";
 
 await evaluate([testCase], [mcpUseMetric]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 🎉🥳 **Congratulations!** You just ran your first single-turn MCP evaluation. Here's what happened:
 
@@ -444,7 +492,9 @@ During the interactive session of your application, you need to track all the MC
   alt="MCP Interaction tracking"
 />
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" {7,13}
 from deepeval.test_case import MCPToolCall, Turn
@@ -463,6 +513,10 @@ async def main():
         )
     )
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="main.ts" {7,13}
 import { MCPToolCall, Turn } from "deepeval/testCase";
@@ -487,7 +541,9 @@ const main = async () => {
 };
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 You can also track any [resources](https://www.deepeval.com/docs/evaluation-mcp#resources) or [prompts](https://www.deepeval.com/docs/evaluation-mcp#prompts) if you use them. You are now tracking all the MCP interactions during run time of your application.
 
@@ -497,7 +553,9 @@ You can also track any [resources](https://www.deepeval.com/docs/evaluation-mcp#
 
 You can now create a test case for your MCP application using the above `turns` and `mcp_servers`.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import ConversationalTestCase
@@ -508,6 +566,10 @@ convo_test_case = ConversationalTestCase(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { ConversationalTestCase } from "deepeval";
 
@@ -517,7 +579,9 @@ const convoTestCase = new ConversationalTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 The test cases must be created after the execution of the application. Click here to see a [full example on how to create multi-turn test cases](https://github.com/confident-ai/deepeval/blob/main/examples/mcp_evaluation/mcp_eval_multi_turn.py) for MCP evaluations.
 
@@ -531,7 +595,9 @@ You can make your `main()` function return `turns` and `mcp_servers`. This helps
 
 You can now use the [MCP metrics](/docs/metrics-multi-turn-mcp-use) to run evals on your test cases. There's two metrics for multi-turn test cases that support MCP evals.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import MultiTurnMCPUseMetric, MCPTaskCompletionMetric
@@ -540,6 +606,10 @@ mcp_use_metric = MultiTurnMCPUseMetric()
 mcp_task_completion = MCPTaskCompletionMetric()
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 
@@ -547,7 +617,9 @@ const mcpUseMetric = new metrics.MultiTurnMCPUseMetric();
 const mcpTaskCompletion = new metrics.MCPTaskCompletionMetric();
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Step>
 <Step>
@@ -555,7 +627,9 @@ const mcpTaskCompletion = new metrics.MCPTaskCompletionMetric();
 
 Run an evaluation on the test cases you previously created using the metrics defined above.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -563,13 +637,19 @@ from deepeval import evaluate
 evaluate([convo_test_case], [mcp_use_metric, mcp_task_completion])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate } from "deepeval";
 
 await evaluate([convoTestCase], [mcpUseMetric, mcpTaskCompletion]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 🎉🥳 **Congratulations!** You just ran your first multi-turn MCP evaluation. Here's what happened:
 

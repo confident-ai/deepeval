@@ -33,7 +33,9 @@ beyond the content of the conversation.
 
 We are now going to create a `MeetingSummarizer` class that uses OpenAI's chat completions API to generate summaries and action items using the system prompt mentioned above for any given transcript.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 import os
@@ -69,6 +71,10 @@ class MeetingSummarizer:
         return content
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import "dotenv/config";
 import OpenAI from "openai";
@@ -101,7 +107,9 @@ class MeetingSummarizer {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::note
 You need to set your environment variable `OPENAI_API_KEY` in your `.env` file.
@@ -111,7 +119,9 @@ You need to set your environment variable `OPENAI_API_KEY` in your `.env` file.
 
 Now that we've defined our summarization agent, we can use the following code to generate the summary
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 with open("meeting_transcript.txt", "r") as file:
@@ -121,6 +131,10 @@ summarizer = MeetingSummarizer()
 summary = summarizer.summarize(transcript)
 print(summary)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { readFileSync } from "fs";
@@ -132,7 +146,9 @@ const summary = await summarizer.summarize(transcript);
 console.log(summary);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::note
 I have saved a file named `meeting_transcript.txt` that contains a mock transcript which is provided to the summarizer as shown above. You can provide your own transcript here or use the mock transcript that I've used:
@@ -396,7 +412,9 @@ formatting, or explanations.
 
 Here's how we'll define our helper function to generate summaries:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -418,6 +436,10 @@ class MeetingSummarizer:
             print(f"Error generating summary: {e}")
             return f"Error: Could not generate summary due to API issue: {e}"
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 // ...
@@ -443,7 +465,9 @@ class MeetingSummarizer {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### Generating action items
 
@@ -470,7 +494,9 @@ valid JSON format — no extra text or commentary.
 
 Here's how we'll define our helper function to generate action items:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 class MeetingSummarizer:
@@ -494,6 +520,10 @@ class MeetingSummarizer:
             print(f"Error generating action items: {e}")
             return {"error": f"API call failed: {e}", "raw_output": ""}
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 class MeetingSummarizer {
@@ -522,11 +552,15 @@ class MeetingSummarizer {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 We can now call these helper functions in our `summarize()` function and return their respective responses. Here's how we can do that:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 class MeetingSummarizer:
@@ -537,6 +571,10 @@ class MeetingSummarizer:
 
         return summary, action_items
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 class MeetingSummarizer {
@@ -550,11 +588,15 @@ class MeetingSummarizer {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 You can run the new `MeetingSummarizer` as follows:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 summarizer = MeetingSummarizer()
@@ -567,6 +609,10 @@ print(summary)
 print("JSON:")
 print(json.dumps(action_items, indent=2))
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { readFileSync } from "fs";
@@ -581,7 +627,9 @@ console.log("JSON:");
 console.log(JSON.stringify(actionItems, null, 2));
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ✅ Congratulations! 🎉 You've just built a very robust summarization agent that generates a string of text as summary and outputs the action items in a `JSON` object which we can parse and manipulate it in any way we want.
 

@@ -21,7 +21,9 @@ To evaluate a multi-turn chatbot that does all the above, we first have to model
 
 A multi-turn "interaction" is composed of `turns`, which is the conversation itself, and any other optional parameters such as scenario, expected outcome, etc. which we will learn about later in this section. In code, a multi-turn interaction is represented by a `ConversationalTestCase`:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import ConversationalTestCase
@@ -34,6 +36,10 @@ test_case = ConversationalTestCase(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { ConversationalTestCase, Turn } from "deepeval";
 
@@ -45,7 +51,9 @@ const testCase = new ConversationalTestCase({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::tip
 When you evaluate multi-turn use cases, **you don't just want to run evaluations on a random set of conversations.**
@@ -69,7 +77,9 @@ By far, option 3 is the best way to test multi-turn conversations. But we'll sti
 
 If you have conversations stored in your database, you can convert them to `ConversationalTestCase` objects:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import ConversationalTestCase, Turn
@@ -85,6 +95,10 @@ for conv in conversations:
 
 print(test_cases)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { ConversationalTestCase, Turn } from "deepeval";
@@ -104,7 +118,9 @@ for (const conv of conversations) {
 console.log(testCases);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 **Using historical conversations** is the quickest to run because the data already exists, but it only provides ad-hoc insights into past performance and cannot reliably evaluate how a new version will perform. Results from this approach are mostly backward-looking.
 
@@ -116,7 +132,9 @@ This example assumes each conversation is a list of messages following the OpenA
 
 To generate conversations manually, you have to create `turn`s from interacting with your chatbot and constructing a `ConversationalTestCase` once a conversation has completed:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import ConversationalTestCase, Turn
@@ -146,6 +164,10 @@ start_session(chatbot)
 # Print test cases
 print(test_cases)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { ConversationalTestCase, Turn } from "deepeval";
@@ -194,7 +216,9 @@ await startSession(chatbot);
 console.log(testCases);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 In this example, we called `chatbot.agent_with_memory.invoke` from `langchain` and collected the turns as user and assistant contents. Although effective, this method is extremely time consuming and hence not the most effective.
 
@@ -212,7 +236,9 @@ It is highly recommended to simulate turns instead, because you:
 
 First standardize your testing dataset by creating a list of goldens ([click here](/docs/evaluation-datasets#what-are-goldens) to learn more):
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from deepeval.dataset import EvaluationDataset, ConversationalGolden
@@ -237,6 +263,10 @@ dataset = EvaluationDataset(goldens=goldens)
 dataset.push(alias="Medical Chatbot Dataset")
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="main.ts"
 import { EvaluationDataset, ConversationalGolden } from "deepeval";
 
@@ -260,13 +290,17 @@ const dataset = new EvaluationDataset({ goldens });
 await dataset.push({ alias: "Medical Chatbot Dataset" });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 In reality, you'll need at least **20 goldens** for a barely-big-enough dataset, as each golden produces a single test case.
 
 Once you have defined your scenarios, use `deepeval`'s `ConversationSimulator` to simulate turns to create a list of `ConversationalTestCase`s:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import Turn
@@ -285,6 +319,10 @@ def model_callback(input, turns: List[Turn], thread_id: str) -> Turn:
 simulator = ConversationSimulator(model_callback=model_callback)
 test_cases = simulator.simulate(goldens=dataset.goldens)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { Turn, ConversationSimulator } from "deepeval";
@@ -320,7 +358,9 @@ const testCases = await simulator.simulate({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ✅ Done. We now need to create our metrics to run evaluations on these test cases.
 
@@ -336,7 +376,9 @@ Often times a conversation can be evaluated based on 1-2 generic criteria, and 1
 
 Relevancy is a generic metric because it is a criteria that can be applied to virtually any use case. This is how you can create a relevancy metric in `deepeval`:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import TurnRelevancyMetric
@@ -344,13 +386,19 @@ from deepeval.metrics import TurnRelevancyMetric
 relevancy = TurnRelevancyMetric()
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 
 const relevancy = new metrics.TurnRelevancyMetric();
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Under-the-hood, the `TurnRelevancyMetric` loops through each assistant turn and uses a **sliding window approach** to construct a series of **"unit interactions" as historical context** for evaluation. [Click here](/docs/metrics-conversation-relevancy) to learn more about the `TurnRelevancyMetric` and how it is calculated.
 
@@ -362,7 +410,9 @@ Relevancy, both for single and multi-turn use cases, is by far the most common m
 
 Faithfulness is specific to our LLM chatbot as our chatbot uses external knowledge from the [The Gale Encyclopedia of Alternative Medicine](https://dl.icdst.org/pdfs/files/03cb46934164321f675385fb74ac1bed.pdf) to make diagnoses (as explained in the [previous section](/tutorials/medical-chatbot/development#create-rag-pipeline-for-diagnosis)). `deepeval` also offers a faithfulness metric for multi-turn use cases:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import TurnFaithfulnessMetric
@@ -370,13 +420,19 @@ from deepeval.metrics import TurnFaithfulnessMetric
 faithfulness = TurnFaithfulnessMetric()
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 
 const faithfulness = new metrics.TurnFaithfulnessMetric();
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 [Click here](/docs/metrics-conversation-relevancy) to learn more about the `TurnRelevancyMetric` and how it is calculated.
 
@@ -388,7 +444,9 @@ The faithfulness is a metric specifically for assessing whether there are any co
 
 All that's left right now is to run an evaluation:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -405,6 +463,10 @@ evaluate(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate } from "deepeval";
 // ...
@@ -413,7 +475,9 @@ import { evaluate } from "deepeval";
 await evaluate(testCases, [relevancy, faithfulness]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 🎉🥳 **Congratulations!** You've successfully learnt how to evaluate your chatbot. In this example, we:
 

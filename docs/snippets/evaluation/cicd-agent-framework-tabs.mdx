@@ -1,7 +1,9 @@
 <Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Strands", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
 <Tab value="Manual Instrumentation">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="test_llm_app.py" showLineNumbers
 import pytest
@@ -26,6 +28,10 @@ def test_llm_app(golden: Golden):
     my_ai_agent(golden.input)
     assert_test(golden=golden, metrics=[TaskCompletionMetric()])
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="test_llm_app.ts" showLineNumbers
 import { EvaluationDataset, Golden, metrics } from "deepeval";
@@ -55,14 +61,18 @@ for await (const golden of dataset.evalsIterator({
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Wrap your agent's top-level function with `@observe` and set the trace-level test case fields with `update_current_trace(...)`. See [LLM tracing](/docs/evaluation-llm-tracing) for the full surface.
 
 </Tab>
 <Tab value="LangChain">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="test_langchain_app.py" showLineNumbers
 import pytest
@@ -91,6 +101,10 @@ def test_langchain_app(golden: Golden):
     )
     assert_test(golden=golden, metrics=[TaskCompletionMetric()])
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="test_langchain_app.ts" showLineNumbers
 import { createAgent } from "langchain";
@@ -121,7 +135,9 @@ for await (const golden of dataset.evalsIterator({
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Pass `deepeval`'s `CallbackHandler` to your agent's `invoke` method. See the [LangChain integration](/integrations/frameworks/langchain) for the full surface.
 
@@ -169,7 +185,9 @@ Pass `deepeval`'s `CallbackHandler` to your `StateGraph`'s `invoke` method. See 
 </Tab>
 <Tab value="OpenAI">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="test_openai_app.py" showLineNumbers
 import pytest
@@ -198,6 +216,10 @@ def test_openai_app(golden: Golden):
         )
     assert_test(golden=golden, metrics=[TaskCompletionMetric()])
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="test_openai_app.ts" showLineNumbers
 import OpenAI from "openai";
@@ -228,7 +250,9 @@ for await (const golden of dataset.evalsIterator({
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Drop-in replace `from openai import OpenAI` with `from deepeval.openai import OpenAI` — every completion call becomes an LLM span automatically. See the [OpenAI integration](/integrations/frameworks/openai) for the full surface.
 
@@ -399,7 +423,9 @@ Register `deepeval`'s event handler against LlamaIndex's instrumentation dispatc
 </Tab>
 <Tab value="OpenAI Agents">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="test_openai_agents_app.py" showLineNumbers
 import pytest
@@ -426,6 +452,10 @@ def test_openai_agents_app(golden: Golden):
     Runner.run_sync(agent, golden.input)
     assert_test(golden=golden, metrics=[TaskCompletionMetric()])
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="test_openai_agents_app.ts" showLineNumbers
 import { Agent, run, addTraceProcessor } from "@openai/agents";
@@ -454,7 +484,9 @@ for await (const golden of dataset.evalsIterator({
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Register `DeepEvalTracingProcessor` once, then build your agent with `deepeval`'s `Agent` shim. See the [OpenAI Agents integration](/integrations/frameworks/openai-agents) for the full surface.
 

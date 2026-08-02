@@ -26,7 +26,9 @@ You must provide the `role`, `content`, and `retrieval_context` for evaluation t
 
 The `TurnContextualPrecisionMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluation:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -55,6 +57,10 @@ metric = TurnContextualPrecisionMetric(threshold=0.5)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate, Turn, ConversationalTestCase, metrics } from "deepeval";
 
@@ -80,7 +86,9 @@ const metric = new metrics.TurnContextualPrecisionMetric({ threshold: 0.5 });
 await evaluate([convoTestCase], [metric]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 There are **EIGHT** optional parameters when creating a `TurnContextualPrecisionMetric`:
 
@@ -97,7 +105,9 @@ There are **EIGHT** optional parameters when creating a `TurnContextualPrecision
 
 You can also run the `TurnContextualPrecisionMetric` on a single test case as a standalone, one-off execution.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -106,6 +116,10 @@ metric.measure(convo_test_case)
 print(metric.score, metric.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 ...
 
@@ -113,7 +127,9 @@ await metric.measure(convoTestCase);
 console.log(metric.score, metric.reason);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.

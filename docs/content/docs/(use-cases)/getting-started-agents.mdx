@@ -32,17 +32,25 @@ Test cases are built from traces automatically, and everything in this quickstar
 
 ## Installation
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash
 pip install -U deepeval[inspect]
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 npm install deepeval
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 <details>
 
@@ -54,17 +62,25 @@ The `[inspect]` sub-module is optional and can bloat up `deepeval`'s package siz
 
 You should also run `deepeval login`:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash
 deepeval login
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 export CONFIDENT_API_KEY="confident_us_..."
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 It connects you to [Confident AI](https://www.confident-ai.com/) so you can store results, annotate, and inspect evaluated agent traces on the cloud.
 
@@ -93,7 +109,9 @@ The fastest way to start evaluating your agent is to unit test it. `deepeval` pl
 <Tabs items={["In Code", "Pull from Confident AI", "Load from CSV", "Load from JSON"]}>
 <Tab value="In Code">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import Golden, EvaluationDataset
@@ -107,6 +125,10 @@ goldens = [
 dataset = EvaluationDataset(goldens=goldens)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { Golden, EvaluationDataset } from "deepeval";
 
@@ -119,12 +141,16 @@ const goldens = [
 const dataset = new EvaluationDataset({ goldens });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Pull from Confident AI">
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -133,6 +159,10 @@ dataset = EvaluationDataset()
 dataset.pull(alias="My Evals Dataset")
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { EvaluationDataset } from "deepeval";
 
@@ -140,7 +170,9 @@ const dataset = new EvaluationDataset();
 await dataset.pull({ alias: "My Evals Dataset" });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="Load from CSV">
@@ -188,7 +220,9 @@ There are **ONE** mandatory and **ONE** optional parameter for `assert_test()` i
 :::tip[Unit test individual components too]
 Since your agent is already instrumented, you can attach metrics directly to individual spans — tool calls, sub-agents, retrievers — and `assert_test()` only needs the active golden:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="test_my_ai_agent.py"
 import pytest
@@ -202,6 +236,10 @@ def test_my_ai_agent(golden: Golden):
     assert_test(golden=golden)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="test_my_ai_agent.ts"
 import { myAiAgent } from "./your_app"; // traced; spans carry metrics
 
@@ -211,7 +249,9 @@ for await (const golden of dataset.evalsIterator()) {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 See [component-level evaluation](/docs/evaluation-component-level-llm-evals) for the per-integration metric attachment surface.
 :::
@@ -221,17 +261,25 @@ See [component-level evaluation](/docs/evaluation-component-level-llm-evals) for
 
 ### Run with `deepeval test run`
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```bash
 deepeval test run test_llm_app.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 npx tsx test_llm_app.ts
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::caution
 The plain `pytest` command works but is highly not recommended. `deepeval test run` adds a range of functionalities on top of Pytest for unit-testing LLMs, enabled by [8+ optional flags](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) — async behavior, error handling, repeats, identifiers, and more.
@@ -257,7 +305,9 @@ This is what the `[inspect]` sub-module you installed earlier is for — full de
 
 Drop `deepeval test run` into a `.yml` to unit test your agent on every push or PR. This example uses `poetry` for installation and `OPENAI_API_KEY` as your LLM judge to run evals locally. Add `CONFIDENT_API_KEY` to send results to Confident AI.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```yaml {32-33}
 name: AI Agent `deepeval` Tests
@@ -295,6 +345,10 @@ jobs:
         run: poetry run deepeval test run test_llm_app.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```yaml {27-28}
 name: AI Agent `deepeval` Tests
 
@@ -326,7 +380,9 @@ jobs:
         run: npx tsx test_llm_app.ts
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ✅ Done. Failing metrics now fail the build, so agent regressions get caught before they ship.
 
@@ -344,7 +400,9 @@ Unit testing is built for CI/CD, but during development you'll usually iterate o
 
 `evals_iterator()` works off the same `EvaluationDataset` of goldens you created [earlier](#create-a-dataset):
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import Golden, EvaluationDataset
@@ -358,6 +416,10 @@ goldens = [
 dataset = EvaluationDataset(goldens=goldens)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { Golden, EvaluationDataset } from "deepeval";
 
@@ -370,7 +432,9 @@ const goldens = [
 const dataset = new EvaluationDataset({ goldens });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Step>
 <Step>
@@ -410,7 +474,9 @@ Only integrations that emit agent spans are shown below. The OpenAI and Anthropi
 
 Mark your sub-agent with `@observe(type="agent")` and pass `metrics=[...]` to it:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" showLineNumbers
 from deepeval.tracing import observe, update_current_trace
@@ -428,6 +494,10 @@ def supervisor_agent(query: str) -> str:
 def research_agent(query: str) -> str:
     return "..."  # your sub-agent implementation
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript title="main.ts" showLineNumbers
 import { observe, updateCurrentTrace } from "deepeval/tracing";
@@ -452,7 +522,9 @@ const supervisorAgent = observe({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 </Tab>
 <Tab value="LangChain">

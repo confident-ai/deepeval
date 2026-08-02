@@ -24,7 +24,9 @@ You'll also need to supply any additional arguments such as `expected_output` an
 
 To create a custom metric that chooses the best `LLMTestCase`, simply instantiate a `ArenaGEval` class and define an evaluation criteria in everyday language:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import ArenaTestCase, LLMTestCase, SingleTurnParams, Contestant
@@ -63,6 +65,10 @@ metric = ArenaGEval(
 compare(test_cases=[a_test_case], metric=metric)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { compare, ArenaTestCase, Contestant, LLMTestCase, metrics } from "deepeval";
 import { SingleTurnParams } from "deepeval/testCase";
@@ -99,7 +105,9 @@ const metric = new metrics.ArenaGEval({
 await compare([aTestCase], metric);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 There are **THREE** mandatory and **FOUR** optional parameters required when instantiating an `ArenaGEval` class:
 
@@ -119,7 +127,9 @@ For accurate and valid results, only evaluation parameters that are mentioned in
 
 You can also run the `ArenaGEval` on a single test case as a standalone, one-off execution.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -128,6 +138,10 @@ metric.measure(a_test_case)
 print(metric.winner, metric.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -135,7 +149,9 @@ await metric.measure(aTestCase);
 console.log(metric.winner, metric.reason);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, computation) the `compare()` function offers.

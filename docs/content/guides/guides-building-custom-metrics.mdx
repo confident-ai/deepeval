@@ -27,7 +27,9 @@ There are many ways one can implement an LLM evaluation metric. Here is a [great
 
 To begin, create a class that inherits from `deepeval`'s `BaseMetric` class:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -35,6 +37,10 @@ from deepeval.metrics import BaseMetric
 class CustomMetric(BaseMetric):
     ...
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { metrics } from "deepeval";
@@ -44,7 +50,9 @@ abstract class CustomMetric extends metrics.BaseMetric {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 This is important because the `BaseMetric` class will help `deepeval` acknowledge your custom metric during evaluation.
 
@@ -65,7 +73,9 @@ Don't read too much into the advanced properties for now, we'll go over how they
 
 The `__init__()` method is a great place to set these properties:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -88,6 +98,10 @@ class CustomMetric(BaseMetric):
         self.async_mode = async_mode
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 
@@ -106,7 +120,9 @@ abstract class CustomMetric extends metrics.BaseMetric {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### 3. Implement the `measure()` and `a_measure()` methods
 
@@ -136,7 +152,9 @@ Both `measure()` and `a_measure()` **MUST**:
 
 You can also optionally set `self.reason` in the measure methods (if you're using an LLM for evaluation), or wrap everything in a `try` block to catch any exceptions and set it to `self.error`. Here's a hypothetical example:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -174,6 +192,10 @@ class CustomMetric(BaseMetric):
             raise
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 import { LLMTestCase } from "deepeval/testCase";
@@ -201,7 +223,9 @@ abstract class CustomMetric extends metrics.BaseMetric {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::tip
 
@@ -227,7 +251,9 @@ You can also [click here to find an example of offloading LLM inference to a sep
 
 Under the hood, `deepeval` calls the `is_successful()` method to determine the status of your metric for a given `LLMTestCase`. We recommend copy and pasting the code below directly as your `is_successful()` implementation:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -242,6 +268,10 @@ class CustomMetric(BaseMetric):
         else:
             return self.success
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { metrics } from "deepeval";
@@ -258,13 +288,17 @@ abstract class CustomMetric extends metrics.BaseMetric {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### 5. Name Your Custom Metric
 
 Probably the easiest step, all that's left is to name your custom metric:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -278,6 +312,10 @@ class CustomMetric(BaseMetric):
         return "My Custom Metric"
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 
@@ -290,7 +328,9 @@ abstract class CustomMetric extends metrics.BaseMetric {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 **Congratulations 🎉!** You've just learnt how to build a custom metric that is 100% integrated with `deepeval`'s ecosystem. In the following section, we'll go through a few real-life examples.
 
@@ -357,7 +397,9 @@ In this example, we'll be combining two default `deepeval` metrics as our custom
 
 We'll be combining the `AnswerRelevancyMetric` and `FaithfulnessMetric`, since we rarely see a user that cares about one but not the other.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import BaseMetric, AnswerRelevancyMetric, FaithfulnessMetric
@@ -462,6 +504,10 @@ class FaithfulRelevancyMetric(BaseMetric):
         self.success = self.score >= self.threshold
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 import { LLMTestCase } from "deepeval/testCase";
@@ -549,11 +595,15 @@ class FaithfulRelevancyMetric extends metrics.BaseMetric {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Now go ahead and try to use it:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python title="test_llm.py"
 from deepeval import assert_test
@@ -566,6 +616,10 @@ def test_llm():
     assert_test(test_case, [metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript title="test_llm.ts"
 import { evaluate } from "deepeval";
 import { LLMTestCase } from "deepeval/testCase";
@@ -576,16 +630,26 @@ const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
 await evaluate([testCase], [metric]);
 ```
 
-</LangSwitch>
+</Case>
 
-<LangSwitch>
+</Switch>
+
+<Switch>
+
+<Case id="python">
 
 ```bash
 deepeval test run test_llm.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```bash
 npx tsx test_llm.ts
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>

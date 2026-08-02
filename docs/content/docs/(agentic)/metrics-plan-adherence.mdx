@@ -16,7 +16,9 @@ Plan Adherence metric analyzes your **agent's full trace** to extract the plan a
 
 To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `PlanAdherenceMetric()` to your agent's `@observe` tag or in the `evals_iterator` method.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from somewhere import llm
@@ -53,6 +55,10 @@ metric = PlanAdherenceMetric(threshold=0.7, model="gpt-4o")
 for golden in dataset.evals_iterator(metrics=[metric]):
     agent(golden.input)
 ```
+
+</Case>
+
+<Case id="typescript">
 
 ```typescript
 import { llm } from "./somewhere";
@@ -97,7 +103,9 @@ for await (const golden of dataset.evalsIterator({ metrics: [metric] })) {
 }
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 There are **EIGHT** optional parameters when creating a `PlanAdherenceMetric`:
 

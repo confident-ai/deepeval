@@ -31,7 +31,9 @@ You'll also need to supply any additional arguments such as `expected_output` an
 
 To create a custom metric that uses LLMs for evaluation, simply instantiate an `GEval` class and **define an evaluation criteria in everyday language**:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import GEval
@@ -50,6 +52,10 @@ correctness_metric = GEval(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 import { SingleTurnParams } from "deepeval/testCase";
@@ -67,7 +73,9 @@ const correctnessMetric = new metrics.GEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 There are **THREE** mandatory and **EIGHT** optional parameters required when instantiating an `GEval` class:
 
@@ -90,7 +98,9 @@ For accurate and valid results, only the parameters that are mentioned in `crite
 
 As mentioned in the [metrics introduction section](/docs/metrics-introduction), all of `deepeval`'s metrics return a score ranging from 0 - 1, and a metric is only successful if the evaluation score is equal to or greater than `threshold`, and `GEval` is no exception. You can access the `score` and `reason` for each individual `GEval` metric:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -109,6 +119,10 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[correctness_metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { evaluate, LLMTestCase } from "deepeval";
 // ...
@@ -126,7 +140,9 @@ const testCase = new LLMTestCase({
 await evaluate([testCase], [correctnessMetric]);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::note
 This is an example of [end-to-end evaluation](/docs/evaluation-end-to-end-llm-evals), where your LLM application is treated as a black-box.
@@ -148,7 +164,9 @@ metric.upload()
 
 Providing `evaluation_steps` tells `GEval` to follow your `evaluation_steps` for evaluation instead of first generating one from `criteria`, which allows for more controllable metric scores (more info [here](#how-is-it-calculated)):
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -164,6 +182,10 @@ correctness_metric = GEval(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -178,13 +200,17 @@ const correctnessMetric = new metrics.GEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 ### Rubric
 
 You can provide a list of `Rubric`s through the `rubric` argument to confine your evaluation LLM to output in specific score ranges:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics.g_eval import Rubric
@@ -203,6 +229,10 @@ correctness_metric = GEval(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -219,7 +249,9 @@ const correctnessMetric = new metrics.GEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Note that `score_range` ranges from **0 - 10, inclusive** and different `Rubric`s must not have overlapping `score_range`s. You can also specify `score_range`s where the start and end values are the same to represent a single score.
 
@@ -254,7 +286,9 @@ evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 
 You can also run `GEval` on a single test case as a standalone, one-off execution.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -263,6 +297,10 @@ correctness_metric.measure(test_case)
 print(correctness_metric.score, correctness_metric.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 // ...
 
@@ -270,7 +308,9 @@ await correctnessMetric.measure(testCase);
 console.log(correctnessMetric.score, correctnessMetric.reason);
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
@@ -369,7 +409,9 @@ Please do not directly copy and paste examples below without first assessing the
 
 Answer correctness is the most used G-Eval metric of all and usually involves comparing the `actual_output` to the `expected_output`, which makes it a reference-based metric.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import GEval
@@ -386,6 +428,10 @@ correctness = GEval(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 import { SingleTurnParams } from "deepeval/testCase";
@@ -401,7 +447,9 @@ const correctness = new metrics.GEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 You'll notice that `evaluation_steps` are provided instead of `criteria` since it provides more reliability in how the metric is scored. For the full example, [click here](/blog/top-5-geval-use-cases#answer-correctness).
 
@@ -409,7 +457,9 @@ You'll notice that `evaluation_steps` are provided instead of `criteria` since i
 
 Coherence is usually a referenceless metric that covers several criteria such as fluency, consistency, and clarify. Below is an example of using `GEval` to assess clarify in the coherence spectrum of criteria:
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import GEval
@@ -427,6 +477,10 @@ clarity = GEval(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 import { SingleTurnParams } from "deepeval/testCase";
@@ -443,7 +497,9 @@ const clarity = new metrics.GEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Full example and advice on best practices available [here.](/blog/top-5-geval-use-cases#coherence)
 
@@ -451,7 +507,9 @@ Full example and advice on best practices available [here.](/blog/top-5-geval-us
 
 Tonality is similar to coherence in the sense that it is also a referenceless metric and extremely subjective to different use cases. This example shows the "professionalism" tonality criteria which you can imagine varies significantly between industries.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import GEval
@@ -469,6 +527,10 @@ professionalism = GEval(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 import { SingleTurnParams } from "deepeval/testCase";
@@ -485,7 +547,9 @@ const professionalism = new metrics.GEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Full example and advice on best practices available [here.](/blog/top-5-geval-use-cases#tonality)
 
@@ -493,7 +557,9 @@ Full example and advice on best practices available [here.](/blog/top-5-geval-us
 
 Safety evaluates whether your LLM's `actual_output` aligns with whatever ethical guidelines your organization might have and is designed to tackle criteria such as bias, toxicity, fairness, and PII leakage.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import GEval
@@ -511,6 +577,10 @@ pii_leakage = GEval(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 import { SingleTurnParams } from "deepeval/testCase";
@@ -527,7 +597,9 @@ const piiLeakage = new metrics.GEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Full example and advice on best practices available [here.](/blog/top-5-geval-use-cases#safety)
 
@@ -535,7 +607,9 @@ Full example and advice on best practices available [here.](/blog/top-5-geval-us
 
 Although `deepeval` already offer RAG metrics such as the `AnswerRelevancyMetric` and the `FaithfulnessMetric`, users often want to use `GEval` to create their own version in order to penalize hallucinations heavier than is built into `deepeval`. This is especially true for industries like healthcare.
 
-<LangSwitch>
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import GEval
@@ -554,6 +628,10 @@ medical_faithfulness = GEval(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
 ```typescript
 import { metrics } from "deepeval";
 import { SingleTurnParams } from "deepeval/testCase";
@@ -571,7 +649,9 @@ const medicalFaithfulness = new metrics.GEval({
 });
 ```
 
-</LangSwitch>
+</Case>
+
+</Switch>
 
 Full example and advice on best practices available [here.](/blog/top-5-geval-use-cases#custom-rag-metrics)
 
