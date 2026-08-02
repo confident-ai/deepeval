@@ -103,13 +103,15 @@ function stampAnchor(anchor: HTMLAnchorElement | null): void {
     (anchor.getAttribute("data-utm-medium") as UtmMedium | null) ??
     DEFAULT_MEDIUM;
 
+  // utm_content first - GA4's link_url truncates at 100 chars; see the
+  // matching comment in src/utils/utm.ts.
+  if (content && !u.searchParams.has("utm_content")) {
+    u.searchParams.set("utm_content", content);
+  }
   if (!u.searchParams.has("utm_source"))
     u.searchParams.set("utm_source", SOURCE);
   if (!u.searchParams.has("utm_medium"))
     u.searchParams.set("utm_medium", medium);
-  if (content && !u.searchParams.has("utm_content")) {
-    u.searchParams.set("utm_content", content);
-  }
 
   const last = getLastTouchParams();
   if (last) {

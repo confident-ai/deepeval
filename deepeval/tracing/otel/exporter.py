@@ -11,7 +11,8 @@ import typing
 import json
 
 from deepeval.prompt.prompt import Prompt
-from deepeval.telemetry import capture_tracing_integration
+from deepeval.telemetry import record_tracing_integration
+from deepeval.tracing.integrations import Integration
 from deepeval.tracing import trace_manager
 from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.types import (
@@ -98,7 +99,7 @@ class BaseSpanWrapper:
 class ConfidentSpanExporter(SpanExporter):
 
     def __init__(self, api_key: Optional[str] = None):
-        capture_tracing_integration("otel.ConfidentSpanExporter")
+        record_tracing_integration(Integration.OTEL)
         peb.init_clock_bridge()
 
         # Programmatic auth — set the key in settings without printing the
@@ -390,9 +391,14 @@ class ConfidentSpanExporter(SpanExporter):
     ):
 
         # check for pydantic ai trace input and output
-        pydantic_trace_input, pydantic_trace_output = (
-            check_pydantic_ai_trace_input_output(span)
-        )
+        try:
+            pydantic_trace_input, pydantic_trace_output = (
+                check_pydantic_ai_trace_input_output(span)
+            )
+        except Exception:
+            # A single malformed span must never fail the whole export batch
+            # (the OTLP endpoint would 500 and drop every trace in the request).
+            pydantic_trace_input, pydantic_trace_output = None, None
 
         if not base_span_wrapper.trace_input and pydantic_trace_input:
             base_span_wrapper.trace_input = pydantic_trace_input

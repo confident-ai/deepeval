@@ -92,9 +92,9 @@ evaluate(test_cases=[test_case], metrics=[metric])
 </Tab>
 </Tabs>
 
-There are **EIGHT** optional parameters when creating a `FaithfulnessMetric`:
+There are **NINE** optional parameters when creating a `FaithfulnessMetric`:
 
-- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
@@ -103,6 +103,7 @@ There are **EIGHT** optional parameters when creating a `FaithfulnessMetric`:
 - [Optional] `truths_extraction_limit`: an int which when set, determines the maximum number of factual truths to extract from the `retrieval_context`. The truths extracted will be used to determine the degree of factual alignment, and will be ordered by importance, decided by your evaluation `model`. Defaulted to `None`.
 - [Optional] `penalize_ambiguous_claims`: a boolean which when set to `True`, will **not** count claims that are ambiguous as faithful. Defaulted to `False`.
 - [Optional] `evaluation_template`: a class of type `FaithfulnessTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `FaithfulnessMetric` score. Defaulted to `deepeval`'s `FaithfulnessTemplate`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 ### Within components
 

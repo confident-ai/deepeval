@@ -143,6 +143,7 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": {
             "content": "Cloudy, 68F",
             "additional_kwargs": {},
@@ -428,6 +429,7 @@
   "toolsCalled": [
     {
       "name": "get_weather",
+      "type": "FUNCTION",
       "output": {
         "content": "Cloudy, 68F",
         "additional_kwargs": {},

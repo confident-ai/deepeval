@@ -514,6 +514,7 @@
       "toolsCalled": [
         {
           "name": "add_to_cart",
+          "type": "FUNCTION",
           "output": {
             "content": "Added 3x oranges to cart",
             "additional_kwargs": {},
@@ -995,6 +996,7 @@
   "toolsCalled": [
     {
       "name": "add_to_cart",
+      "type": "FUNCTION",
       "output": {
         "content": "Added 3x oranges to cart",
         "additional_kwargs": {},

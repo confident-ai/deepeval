@@ -60,6 +60,7 @@
       "toolsCalled": [
         {
           "name": "get_time",
+          "type": "FUNCTION",
           "inputParameters": {
             "city": "London"
           }
@@ -87,6 +88,7 @@
       "toolsCalled": [
         {
           "name": "get_time",
+          "type": "FUNCTION",
           "inputParameters": {
             "city": "London"
           }

@@ -29,7 +29,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
@@ -37,6 +37,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
         verbose_mode: bool = False,
         window_size: int = 10,
         template_class: Optional[str] = None,
+        flaky: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -45,6 +46,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self.window_size = window_size
         self.template_class = template_class
 
@@ -95,7 +97,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
 
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -145,7 +147,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
 
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
 
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -276,16 +278,6 @@ class TurnRelevancyMetric(BaseConversationalMetric):
 
         score = relevant_count / number_of_verdicts
         return 0 if self.strict_mode and score < self.threshold else score
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

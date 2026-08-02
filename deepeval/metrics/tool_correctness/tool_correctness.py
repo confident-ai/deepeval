@@ -32,7 +32,7 @@ class ToolCorrectnessMetric(BaseMetric):
     def __init__(
         self,
         available_tools: List[ToolCall] = None,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         evaluation_params: List[ToolCallParams] = [],
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
@@ -41,6 +41,7 @@ class ToolCorrectnessMetric(BaseMetric):
         verbose_mode: bool = False,
         should_exact_match: bool = False,
         should_consider_ordering: bool = False,
+        flaky: bool = False,
     ):
         self.available_tools = available_tools
         self.threshold = 1 if strict_mode else threshold
@@ -49,6 +50,7 @@ class ToolCorrectnessMetric(BaseMetric):
         self.include_reason = include_reason
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self.evaluation_params: List[ToolCallParams] = evaluation_params
         self.should_exact_match = should_exact_match
         self.should_consider_ordering = should_consider_ordering
@@ -112,7 +114,7 @@ class ToolCorrectnessMetric(BaseMetric):
                 self.reason = self._construct_final_reason(
                     tool_calling_reason, tool_selection_score.reason
                 )
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
 
                 expected_tools_formatted = (
                     "Expected Tools:\n[\n"
@@ -211,7 +213,7 @@ class ToolCorrectnessMetric(BaseMetric):
             self.reason = self._construct_final_reason(
                 tool_calling_reason, tool_selection_score.reason
             )
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
 
             expected_tools_formatted = (
                 "Expected Tools:\n[\n"
@@ -512,13 +514,6 @@ class ToolCorrectnessMetric(BaseMetric):
     ##################################################
     ### Others #######################################
     ##################################################
-
-    def is_successful(self) -> bool:
-        try:
-            self.success = self.score >= self.threshold
-        except (AttributeError, TypeError):
-            self.success = False
-        return self.success
 
     @property
     def __name__(self):

@@ -767,6 +767,81 @@ summary {
   row-gap: 0;
 }
 
+/* ------------------------------------------------------------------ */
+/* Framework comparison table — keep the scroll area visibly framed
+ * and use one-sided cell rules so adjacent cells never double up. */
+.framework-comparison-table {
+  max-width: 100%;
+  margin-block: 1.5rem;
+  overflow: hidden;
+  border: 1px solid
+    color-mix(in srgb, var(--color-fd-foreground) 28%, transparent);
+  background: var(--color-fd-card);
+}
+
+/* Keep Fumadocs' inner wrapper as the scroll container. The non-scrolling
+ * parent owns the border, so all four sides remain visible while the table
+ * moves horizontally beneath it. */
+.framework-comparison-table > div {
+  margin: 0;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-gutter: stable;
+}
+
+.framework-comparison-table table {
+  min-width: 78rem;
+  margin: 0;
+  border: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.framework-comparison-table th,
+.framework-comparison-table td {
+  border: 0 !important;
+  border-right: 1px solid var(--color-fd-border) !important;
+  border-bottom: 1px solid var(--color-fd-border) !important;
+}
+
+.framework-comparison-table th:last-child,
+.framework-comparison-table td:last-child {
+  border-right: 0 !important;
+}
+
+.framework-comparison-table tbody tr:last-child td {
+  border-bottom: 0 !important;
+}
+
+.comparison-status {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.comparison-status--strong {
+  color: hsl(142, 60%, 32%);
+}
+
+.comparison-status--partial {
+  color: hsl(35, 85%, 35%);
+}
+
+.comparison-status--unsupported {
+  color: hsl(0, 68%, 45%);
+}
+
+.dark .comparison-status--strong {
+  color: hsl(142, 55%, 62%);
+}
+
+.dark .comparison-status--partial {
+  color: hsl(40, 85%, 65%);
+}
+
+.dark .comparison-status--unsupported {
+  color: hsl(0, 75%, 68%);
+}
+
 html {
   scrollbar-gutter: stable;
 }

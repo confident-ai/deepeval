@@ -1,4 +1,9 @@
+import os
+import warnings
+
 import pytest
+from deepeval import evaluate
+from deepeval.metrics import DAGMetric
 from deepeval.metrics.dag import (
     TaskNode,
     BinaryJudgementNode,
@@ -6,13 +11,128 @@ from deepeval.metrics.dag import (
     VerdictNode,
     DeepAcyclicGraph,
 )
-from deepeval.test_case import SingleTurnParams
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics.dag.utils import (
     is_valid_dag_from_roots,
     extract_required_params,
     copy_graph,
     is_valid_dag,
 )
+
+requires_openai = pytest.mark.skipif(
+    os.getenv("OPENAI_API_KEY") is None
+    or not os.getenv("OPENAI_API_KEY").strip(),
+    reason="OPENAI_API_KEY is not set",
+)
+
+
+class LegacyDAGModel(DeepEvalBaseLLM):
+    """Deterministic judge for the legacy DAG."""
+
+    def __init__(self):
+        self.schema_calls = []
+        super().__init__(model="legacy-dag-model")
+
+    def load_model(self):
+        return self
+
+    def generate(self, prompt, schema=None, **kwargs):
+        assert schema is not None
+        self.schema_calls.append(schema.__name__)
+
+        if schema.__name__ == "TaskNodeOutput":
+            return schema(output=["Intro", "Body", "Conclusion"])
+        if schema.__name__ == "BinaryJudgementVerdict":
+            return schema(verdict=True, reason="All headings are present.")
+        if schema.__name__ == "NonBinaryJudgementVerdict":
+            return schema(verdict="Yes", reason="The headings are in order.")
+
+        raise AssertionError(f"Unexpected schema: {schema.__name__}")
+
+    async def a_generate(self, prompt, schema=None, **kwargs):
+        return self.generate(prompt, schema=schema, **kwargs)
+
+    def get_model_name(self):
+        return "legacy-dag-model"
+
+
+def build_legacy_dag() -> DeepAcyclicGraph:
+    """Build the shared-node legacy DAG."""
+    correct_order_node = NonBinaryJudgementNode(
+        criteria=(
+            "Are the summary headings in the correct order: "
+            "'intro' => 'body' => 'conclusion'?"
+        ),
+        children=[
+            VerdictNode(verdict="Yes", score=10),
+            VerdictNode(verdict="Two are out of order", score=4),
+            VerdictNode(verdict="All out of order", score=2),
+        ],
+    )
+
+    correct_headings_node = BinaryJudgementNode(
+        criteria=(
+            "Does the summary headings contain all three: "
+            "'intro', 'body', and 'conclusion'?"
+        ),
+        children=[
+            VerdictNode(verdict=False, score=0),
+            VerdictNode(verdict=True, child=correct_order_node),
+        ],
+    )
+
+    extract_headings_node = TaskNode(
+        instructions="Extract all headings in `actual_output`",
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
+        output_label="Summary headings",
+        children=[correct_headings_node, correct_order_node],
+    )
+
+    return DeepAcyclicGraph(root_nodes=[extract_headings_node])
+
+
+def build_legacy_dag_test_case() -> LLMTestCase:
+    return LLMTestCase(
+        input=(
+            "Alice: Today's agenda: product update, blockers, and marketing "
+            "timeline. Bob, updates?"
+        ),
+        actual_output=(
+            "Intro:\n"
+            "Alice outlined the agenda.\n\n"
+            "Body:\n"
+            "The team discussed engineering and marketing updates.\n\n"
+            "Conclusion:\n"
+            "The team aligned on next steps."
+        ),
+    )
+
+
+class TestLegacyDAG:
+    @pytest.mark.parametrize("async_mode", [False, True])
+    def test_remains_executable(self, async_mode):
+        """Protect the legacy DAG used by existing user codebases."""
+        model = LegacyDAGModel()
+        metric = DAGMetric(
+            name="Format Correctness",
+            dag=build_legacy_dag(),
+            model=model,
+            include_reason=False,
+            async_mode=async_mode,
+        )
+
+        score = metric.measure(
+            build_legacy_dag_test_case(),
+            _show_indicator=False,
+            _log_metric_to_confident=False,
+        )
+
+        assert score == 1
+        assert metric.success is True
+        assert model.schema_calls.count("TaskNodeOutput") == 1
+        assert model.schema_calls.count("BinaryJudgementVerdict") == 1
+        assert model.schema_calls.count("NonBinaryJudgementVerdict") == 1
 
 
 class TestDeepAcyclicGraph:
@@ -121,7 +241,7 @@ class TestDeepAcyclicGraph:
 
     def test_invalid_child_type(self):
         invalid_child = "string_instead_of_node"  # Invalid child type
-        with pytest.raises(AttributeError):
+        with pytest.raises(TypeError):
             TaskNode(
                 instructions="Invalid task",
                 output_label="X",
@@ -269,3 +389,245 @@ class TestDeepAcyclicGraph:
         task = TaskNode("Check", "result", [], [judge])
         dag = DeepAcyclicGraph(root_nodes=[task])
         assert is_valid_dag_from_roots(dag.root_nodes, multiturn=False)
+
+    def test_add_node_appends_and_returns(self):
+        task = TaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        judge = BinaryJudgementNode(criteria="?")
+        returned = task.add_node(judge)
+        assert returned is judge
+        assert task.children == [judge]
+
+    def test_add_verdict_score_leaf(self):
+        judge = BinaryJudgementNode(criteria="?")
+        verdict = judge.add_verdict(True, score=10)
+        assert isinstance(verdict, VerdictNode)
+        assert verdict.verdict is True
+        assert verdict.score == 10
+        assert verdict.child is None
+        assert judge.children == [verdict]
+
+    def test_add_verdict_then_sets_child(self):
+        order = NonBinaryJudgementNode(criteria="order?")
+        judge = BinaryJudgementNode(criteria="?")
+        verdict = judge.add_verdict(True, then=order)
+        assert verdict.child is order
+        assert verdict.score is None
+
+    def test_add_verdict_rejects_score_and_then(self):
+        order = NonBinaryJudgementNode(criteria="order?")
+        judge = BinaryJudgementNode(criteria="?")
+        with pytest.raises(ValueError):
+            judge.add_verdict(True, score=10, then=order)
+
+    def test_top_down_builds_valid_diamond(self):
+        extract = TaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
+        )
+        headings = BinaryJudgementNode(criteria="all three?")
+        order = NonBinaryJudgementNode(criteria="order?")
+        extract.add_node(headings)
+        extract.add_node(
+            order
+        )  # diamond: shared by extract and the True verdict
+        headings.add_verdict(False, score=0)
+        headings.add_verdict(True, then=order)
+        order.add_verdict("Yes", score=10)
+        order.add_verdict("No", score=0)
+
+        dag = DeepAcyclicGraph(root_nodes=[extract])
+        assert is_valid_dag_from_roots(dag.root_nodes, multiturn=False)
+        assert dag.indegree[extract] == 0
+        assert dag.indegree[order] == 2
+
+    def test_build_time_validation_incomplete_binary(self):
+        extract = TaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        judge = BinaryJudgementNode(criteria="?")
+        extract.add_node(judge)
+        judge.add_verdict(True, score=10)  # only one verdict
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[extract])
+
+    def test_nonbinary_schema_deferred_to_build(self):
+        order = NonBinaryJudgementNode(criteria="order?")
+        order.add_verdict("A", score=10)
+        order.add_verdict("B", score=0)
+        assert not hasattr(order, "_verdict_schema")
+        DeepAcyclicGraph(root_nodes=[order])
+        assert hasattr(order, "_verdict_schema")
+        assert sorted(order._verdict_options) == ["A", "B"]
+
+
+class TestTopDownBuilder:
+
+    def test_top_down_build_emits_no_deprecation_warning(self):
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            extract = TaskNode(
+                instructions="Extract",
+                output_label="X",
+                evaluation_params=[SingleTurnParams.INPUT],
+            )
+            judge = BinaryJudgementNode(criteria="?")
+            extract.add_node(judge)
+            judge.add_verdict(True, score=10)
+            judge.add_verdict(False, score=0)
+            DeepAcyclicGraph(root_nodes=[extract])
+        assert not [
+            w for w in caught if issubclass(w.category, DeprecationWarning)
+        ]
+
+    def test_bottom_up_children_emits_deprecation_warning(self):
+        with pytest.warns(DeprecationWarning):
+            BinaryJudgementNode(
+                criteria="?",
+                children=[
+                    VerdictNode(verdict=False, score=0),
+                    VerdictNode(verdict=True, score=10),
+                ],
+            )
+
+    def test_add_verdict_requires_score_or_then(self):
+        judge = BinaryJudgementNode(criteria="?")
+        with pytest.raises(ValueError):
+            judge.add_verdict(True)  # neither score nor then
+
+    def test_binary_two_true_verdicts_raises_at_build(self):
+        judge = BinaryJudgementNode(criteria="?")
+        judge.add_verdict(True, score=10)
+        judge.add_verdict(True, score=0)
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[judge])
+
+    def test_binary_non_bool_verdict_raises_at_build(self):
+        judge = BinaryJudgementNode(criteria="?")
+        judge.add_verdict("yes", score=10)
+        judge.add_verdict("no", score=0)
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[judge])
+
+    def test_nonbinary_empty_raises_at_build(self):
+        order = NonBinaryJudgementNode(criteria="order?")
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[order])
+
+    def test_nonbinary_duplicate_verdicts_raises_at_build(self):
+        order = NonBinaryJudgementNode(criteria="order?")
+        order.add_verdict("A", score=10)
+        order.add_verdict("A", score=0)
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[order])
+
+    def test_task_node_with_verdict_child_raises_at_build(self):
+        task = TaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        task.add_node(VerdictNode(verdict=True, score=10))
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[task])
+
+    def test_cycle_via_add_node_raises_at_build(self):
+        a = TaskNode(
+            instructions="A",
+            output_label="A",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        b = TaskNode(
+            instructions="B",
+            output_label="B",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        a.add_node(b)
+        b.add_node(a)
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[a])
+
+    def test_copy_graph_top_down_is_warning_free_and_isolated(self):
+        task = TaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        judge = BinaryJudgementNode(criteria="criteria")
+        task.add_node(judge)
+        judge.add_verdict(True, score=10)
+        judge.add_verdict(False, score=0)
+        dag = DeepAcyclicGraph(root_nodes=[task])
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            copied = copy_graph(dag)
+        assert not [
+            w for w in caught if issubclass(w.category, DeprecationWarning)
+        ]
+
+        copied_task = copied.root_nodes[0]
+        copied_judge = copied_task.children[0]
+        assert copied is not dag
+        assert isinstance(copied_task, TaskNode)
+        assert isinstance(copied_judge, BinaryJudgementNode)
+        assert copied_task is not task
+        assert copied_judge is not judge
+        assert copied_judge.criteria == "criteria"
+        assert len(copied_judge.children) == 2
+        assert {c.verdict for c in copied_judge.children} == {True, False}
+        assert {c.score for c in copied_judge.children} == {10, 0}
+
+
+@requires_openai
+class TestDAGMetric:
+
+    @staticmethod
+    def _build_dag() -> DeepAcyclicGraph:
+        extract = TaskNode(
+            instructions="Extract the refund period, in days, from the output.",
+            output_label="Refund period",
+            evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
+        )
+        judge = BinaryJudgementNode(
+            criteria="Is the extracted refund period exactly 30 days?"
+        )
+        extract.add_node(judge)
+        judge.add_verdict(True, score=10)
+        judge.add_verdict(False, score=0)
+        return DeepAcyclicGraph(root_nodes=[extract])
+
+    @staticmethod
+    def _test_case() -> LLMTestCase:
+        return LLMTestCase(
+            input="What if these shoes don't fit?",
+            actual_output="We offer a 30-day full refund at no extra cost.",
+        )
+
+    def test_dag_metric_sync_measure(self):
+        metric = DAGMetric(
+            name="Refund Period", dag=self._build_dag(), async_mode=False
+        )
+        metric.measure(self._test_case())
+        assert metric.score is not None
+        assert 0 <= metric.score <= 1
+        assert metric.reason is not None
+
+    def test_dag_metric_async_measure(self):
+        metric = DAGMetric(
+            name="Refund Period", dag=self._build_dag(), async_mode=True
+        )
+        metric.measure(self._test_case())
+        assert metric.score is not None
+        assert 0 <= metric.score <= 1
+        assert metric.reason is not None
+
+    def test_dag_metric_via_evaluate(self):
+        metric = DAGMetric(name="Refund Period", dag=self._build_dag())
+        evaluate([self._test_case()], [metric])

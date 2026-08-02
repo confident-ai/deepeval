@@ -370,6 +370,7 @@
       "toolsCalled": [
         {
           "name": "get_stock_price",
+          "type": "FUNCTION",
           "output": {
             "content": "$142.30 (-0.5%)",
             "additional_kwargs": {},
@@ -768,6 +769,7 @@
   "toolsCalled": [
     {
       "name": "get_stock_price",
+      "type": "FUNCTION",
       "output": {
         "content": "$142.30 (-0.5%)",
         "additional_kwargs": {},

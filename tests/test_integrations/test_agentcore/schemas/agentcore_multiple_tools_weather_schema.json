@@ -89,6 +89,7 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "inputParameters": {}
         }
       ],
