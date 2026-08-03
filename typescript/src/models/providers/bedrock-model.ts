@@ -15,11 +15,15 @@ export interface AmazonBedrockModelOptions {
   costPerOutputToken?: number;
 }
 
+type BedrockCredentials = {
+  accessKeyId: string;
+  secretAccessKey: string;
+  sessionToken?: string;
+};
+
 export class AmazonBedrockModel extends DeepEvalBaseLLM {
   private readonly region: string;
-  private readonly awsAccessKeyId?: string;
-  private readonly awsSecretAccessKey?: string;
-  private readonly awsSessionToken?: string;
+  private readonly credentials?: BedrockCredentials;
   private readonly temperature?: number;
   private readonly costPerInputToken?: number;
   private readonly costPerOutputToken?: number;
@@ -33,16 +37,59 @@ export class AmazonBedrockModel extends DeepEvalBaseLLM {
       process.env.AWS_BEDROCK_REGION ??
       process.env.AWS_REGION ??
       DEFAULT_BEDROCK_REGION;
-    this.awsAccessKeyId =
-      options.awsAccessKeyId ?? process.env.AWS_ACCESS_KEY_ID;
-    this.awsSecretAccessKey =
-      options.awsSecretAccessKey ?? process.env.AWS_SECRET_ACCESS_KEY;
-    this.awsSessionToken =
-      options.awsSessionToken ?? process.env.AWS_SESSION_TOKEN;
+    this.credentials = AmazonBedrockModel.resolveCredentials(options);
     // Only sent when explicitly set — some models (e.g. reasoning models) reject `temperature`.
     this.temperature = options.temperature;
     this.costPerInputToken = options.costPerInputToken;
     this.costPerOutputToken = options.costPerOutputToken;
+  }
+
+  private static resolveCredentials(
+    options: AmazonBedrockModelOptions,
+  ): BedrockCredentials | undefined {
+    const hasExplicitCredential =
+      options.awsAccessKeyId !== undefined ||
+      options.awsSecretAccessKey !== undefined ||
+      options.awsSessionToken !== undefined;
+
+    if (hasExplicitCredential) {
+      if (!options.awsAccessKeyId || !options.awsSecretAccessKey) {
+        throw new Error(
+          "Amazon Bedrock explicit credentials require both `awsAccessKeyId` and `awsSecretAccessKey` when any credential option is provided.",
+        );
+      }
+      return {
+        accessKeyId: options.awsAccessKeyId,
+        secretAccessKey: options.awsSecretAccessKey,
+        ...(options.awsSessionToken
+          ? { sessionToken: options.awsSessionToken }
+          : {}),
+      };
+    }
+
+    const envAccessKeyId = process.env.AWS_ACCESS_KEY_ID;
+    const envSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+    const envSessionToken = process.env.AWS_SESSION_TOKEN;
+    const hasEnvCredential =
+      envAccessKeyId !== undefined ||
+      envSecretAccessKey !== undefined ||
+      envSessionToken !== undefined;
+
+    if (!hasEnvCredential) {
+      return undefined;
+    }
+
+    if (!envAccessKeyId || !envSecretAccessKey) {
+      throw new Error(
+        "Amazon Bedrock environment credentials require both AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY when any AWS credential environment variable is set.",
+      );
+    }
+
+    return {
+      accessKeyId: envAccessKeyId,
+      secretAccessKey: envSecretAccessKey,
+      ...(envSessionToken ? { sessionToken: envSessionToken } : {}),
+    };
   }
 
   private async getSdk(): Promise<any> {
@@ -58,17 +105,9 @@ export class AmazonBedrockModel extends DeepEvalBaseLLM {
   private async getClient(): Promise<any> {
     if (!this.client) {
       const { BedrockRuntimeClient } = await this.getSdk();
-      const credentials =
-        this.awsAccessKeyId && this.awsSecretAccessKey
-          ? {
-              accessKeyId: this.awsAccessKeyId,
-              secretAccessKey: this.awsSecretAccessKey,
-              sessionToken: this.awsSessionToken,
-            }
-          : undefined;
       this.client = new BedrockRuntimeClient({
         region: this.region,
-        ...(credentials ? { credentials } : {}),
+        ...(this.credentials ? { credentials: this.credentials } : {}),
       });
     }
     return this.client;
@@ -116,6 +155,6 @@ export class AmazonBedrockModel extends DeepEvalBaseLLM {
   }
 
   supportsMultimodal(): boolean {
-    return true;
+    return false;
   }
 }
