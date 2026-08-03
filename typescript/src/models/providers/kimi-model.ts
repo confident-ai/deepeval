@@ -1,8 +1,8 @@
 import {
   DeepEvalOpenAICompatibleModel,
   type OpenAICompatibleModelOptions,
-} from "../openai-compatible-model";
-import type { ModelNamespace } from "../registry";
+} from "@/models/openai-compatible-model";
+import type { ModelNamespace } from "@/models/registry";
 
 export type KimiModelOptions = OpenAICompatibleModelOptions;
 

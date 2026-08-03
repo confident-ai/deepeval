@@ -1,5 +1,5 @@
 export {
   TurnContextualPrecisionMetric,
   type TurnContextualPrecisionMetricOptions,
-} from "./turn-contextual-precision";
-export * from "./schema";
+} from "@/metrics/turn-contextual-precision/turn-contextual-precision";
+export * from "@/metrics/turn-contextual-precision/schema";

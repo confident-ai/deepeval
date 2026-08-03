@@ -1,29 +1,29 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import {
   ConversationalTestCase,
   MultiTurnParams,
   Turn,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+} from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
   resolveRetrievalContext,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
   getTurnsInSlidingWindow,
-} from "../conversational-utils";
+} from "@/metrics/conversational-utils";
 import {
   VerdictsSchema,
   ContextualPrecisionScoreReasonSchema,
   type ContextualPrecisionVerdict,
   type InteractionContextualPrecisionScore,
-} from "./schema";
+} from "@/metrics/turn-contextual-precision/schema";
 
 const TEMPLATE_CLASS = "TurnContextualPrecisionMetric";
 

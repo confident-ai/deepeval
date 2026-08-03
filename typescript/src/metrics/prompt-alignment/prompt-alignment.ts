@@ -1,19 +1,19 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   VerdictsSchema,
   PromptAlignmentScoreReasonSchema,
   type PromptAlignmentVerdict,
-} from "./schema";
+} from "@/metrics/prompt-alignment/schema";
 
 const TEMPLATE_CLASS = "PromptAlignmentMetric";
 

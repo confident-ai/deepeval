@@ -6,12 +6,12 @@ import {
   Trace,
   traceManager,
   updateCurrentTrace,
-} from "./tracing";
+} from "@/tracing/tracing";
 
-import { Prompt } from "../prompt";
-import { ToolCall } from "../test-case";
-import type { BaseMetric } from "../metrics/base-metrics";
-import { _setAmbientPayloadReader } from "./pending-context";
+import { Prompt } from "@/prompt";
+import { ToolCall } from "@/test-case";
+import type { BaseMetric } from "@/metrics/base-metrics";
+import { _setAmbientPayloadReader } from "@/tracing/pending-context";
 
 export type LlmSpanContext = {
   prompt?: Prompt;

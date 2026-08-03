@@ -2,7 +2,7 @@ import {
   checkIfMultimodal,
   convertToMultiModalArray,
   MLLMImage,
-} from "../test-case/mllm-image";
+} from "@/test-case/mllm-image";
 
 // Per-provider multimodal message builders. A prompt is a plain string that may
 // contain image slugs (`[DEEPEVAL:IMAGE|PDF:{id}]`); when it does, we split it

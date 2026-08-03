@@ -1,20 +1,20 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   AdvicesSchema,
   VerdictsSchema,
   NonAdviceScoreReasonSchema,
   type NonAdviceVerdict,
-} from "./schema";
+} from "@/metrics/non-advice/schema";
 
 const TEMPLATE_CLASS = "NonAdviceMetric";
 

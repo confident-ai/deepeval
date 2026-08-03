@@ -12,9 +12,12 @@ import {
 } from "@opentelemetry/sdk-trace-base";
 import { ExportResult, ExportResultCode } from "@opentelemetry/core";
 import { Tracer, trace, Context } from "@opentelemetry/api";
-import { DeepEvalSpanProcessor, ROOT_VERCEL_SPANS } from "./processor";
-import { getSettings } from "../../config/settings";
-import { ROUTE_TO_REST_ATTRIBUTE } from "../../tracing/otel-routing";
+import {
+  DeepEvalSpanProcessor,
+  ROOT_VERCEL_SPANS,
+} from "@/integrations/ai-sdk/processor";
+import { getSettings } from "@/config/settings";
+import { ROUTE_TO_REST_ATTRIBUTE } from "@/tracing/otel-routing";
 
 // Creating a Wrapper for exporter to preserve parentIds of root spans
 class DeepEvalExporterWrapper implements SpanExporter {

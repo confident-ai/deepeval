@@ -1,22 +1,22 @@
-import { BaseArenaMetric } from "../base-arena-metric";
-import { ArenaTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseArenaMetric } from "@/metrics/base-arena-metric";
+import { ArenaTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
   checkArenaTestCaseParams,
-} from "../utils";
-import { StepsSchema } from "../g-eval/schema";
+} from "@/metrics/utils";
+import { StepsSchema } from "@/metrics/g-eval/schema";
 import {
   constructGEvalParamsString,
   numberEvaluationSteps,
   validateCriteriaAndEvaluationSteps,
-} from "../g-eval/utils";
-import { formatArenaTestCase } from "./utils";
-import { WinnerSchema, RewrittenReasonSchema } from "./schema";
+} from "@/metrics/g-eval/utils";
+import { formatArenaTestCase } from "@/metrics/arena-g-eval/utils";
+import { WinnerSchema, RewrittenReasonSchema } from "@/metrics/arena-g-eval/schema";
 
 const TEMPLATE_CLASS = "ArenaGEval";
 

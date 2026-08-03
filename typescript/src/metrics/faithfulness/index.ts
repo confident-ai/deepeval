@@ -1,5 +1,5 @@
 export {
   FaithfulnessMetric,
   type FaithfulnessMetricOptions,
-} from "./faithfulness";
-export * from "./schema";
+} from "@/metrics/faithfulness/faithfulness";
+export * from "@/metrics/faithfulness/schema";

@@ -1,8 +1,8 @@
-import { prettifyList } from "../utils";
-import { GEval } from "../g-eval/g-eval";
-import { ConversationalGEval } from "../conversational-g-eval/conversational-g-eval";
-import type { JudgementVerdict } from "./schema";
-import type { ChildMetric } from "./types";
+import { prettifyList } from "@/metrics/utils";
+import { GEval } from "@/metrics/g-eval/g-eval";
+import { ConversationalGEval } from "@/metrics/conversational-g-eval/conversational-g-eval";
+import type { JudgementVerdict } from "@/metrics/dag/schema";
+import type { ChildMetric } from "@/metrics/dag/types";
 
 export function taskVerboseLog(
   underscores: string,

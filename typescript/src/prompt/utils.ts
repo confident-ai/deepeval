@@ -6,7 +6,7 @@ import {
   OutputSchema,
   OutputSchemaSchema,
   StructuredSchemaField,
-} from "./types";
+} from "@/prompt/types";
 
 export function interpolateMustache(
   text: string,

@@ -1,14 +1,14 @@
-import { LLMTestCase, SingleTurnParams, ToolCall } from "../../test-case";
-import { resolveTemplate } from "../../templates";
-import { generateWithSchema } from "../utils";
-import { G_EVAL_PARAMS } from "../g-eval/utils";
+import { LLMTestCase, SingleTurnParams, ToolCall } from "@/test-case";
+import { resolveTemplate } from "@/templates";
+import { generateWithSchema } from "@/metrics/utils";
+import { G_EVAL_PARAMS } from "@/metrics/g-eval/utils";
 import {
   BinaryJudgementVerdictSchema,
   MetricScoreReasonSchema,
   TaskNodeOutputSchema,
   nonBinaryVerdictSchema,
   type JudgementVerdict,
-} from "./schema";
+} from "@/metrics/dag/schema";
 import {
   type AnyNode,
   type ChildMetric,
@@ -16,13 +16,13 @@ import {
   type ExecutableNode,
   type NodeContext,
   type VerdictLikeNode,
-} from "./types";
-import { cloneChildMetric, validateVerdictBranch } from "./utils";
+} from "@/metrics/dag/types";
+import { cloneChildMetric, validateVerdictBranch } from "@/metrics/dag/utils";
 import {
   judgementVerboseLog,
   taskVerboseLog,
   verdictVerboseLog,
-} from "./verbose";
+} from "@/metrics/dag/verbose";
 
 function formatValue(value: unknown): string {
   if (value == null) return "None";

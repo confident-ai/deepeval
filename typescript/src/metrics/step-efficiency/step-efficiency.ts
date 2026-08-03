@@ -1,14 +1,17 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
-} from "../utils";
-import { TaskSchema, EfficiencyVerdictSchema } from "./schema";
+} from "@/metrics/utils";
+import {
+  TaskSchema,
+  EfficiencyVerdictSchema,
+} from "@/metrics/step-efficiency/schema";
 
 const TEMPLATE_CLASS = "StepEfficiencyMetric";
 

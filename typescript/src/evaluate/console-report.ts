@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { MultiBar, Presets } from "cli-progress";
-import { TestResult, MetricData } from "./types";
+import { TestResult, MetricData } from "@/evaluate/types";
 
 /** A MultiBar styled like the rest of the runner (purple filled / dim track). */
 export function newProgressMultiBar(): MultiBar {

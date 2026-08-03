@@ -1,6 +1,6 @@
-import { Golden, ConversationalGolden } from "./golden";
-import { LLMTestCase, ConversationalTestCase, ToolCall } from "../test-case";
-import { Turn, resolveRetrievalContext } from "../test-case";
+import { Golden, ConversationalGolden } from "@/dataset/golden";
+import { LLMTestCase, ConversationalTestCase, ToolCall } from "@/test-case";
+import { Turn, resolveRetrievalContext } from "@/test-case";
 
 export function convertTestCasesToGoldens(testCases: LLMTestCase[]): Golden[] {
   const goldens: Golden[] = [];

@@ -1,14 +1,14 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
-} from "../utils";
-import { TaskSchema, AgentPlanSchema, PlanAdherenceScoreSchema } from "./schema";
+} from "@/metrics/utils";
+import { TaskSchema, AgentPlanSchema, PlanAdherenceScoreSchema } from "@/metrics/plan-adherence/schema";
 
 // `extract_task_from_trace` lives under StepEfficiencyMetric (shared, mirrors Python).
 const TASK_TEMPLATE_CLASS = "StepEfficiencyMetric";

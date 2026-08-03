@@ -1,9 +1,9 @@
-import { Api, Endpoints, HttpMethods } from "../confident/api";
+import { Api, Endpoints, HttpMethods } from "@/confident/api";
 import {
   interpolateText,
   outputSchemaToJsonSchema,
   generateOutputSchema,
-} from "./utils";
+} from "@/prompt/utils";
 import {
   ToolMode,
   OutputType,
@@ -28,7 +28,7 @@ import {
   GetCommitsResponseSchema,
   CreateVersionResponseSchema,
   PromptResponseSchema,
-} from "./types";
+} from "@/prompt/types";
 
 export { ToolMode, OutputType, type ModelSettings, type SchemaDefinition };
 

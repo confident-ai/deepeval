@@ -1,7 +1,7 @@
 import {
   DeepEvalOpenAICompatibleModel,
   type OpenAICompatibleModelOptions,
-} from "../openai-compatible-model";
+} from "@/models/openai-compatible-model";
 
 export interface PortkeyModelOptions extends OpenAICompatibleModelOptions {
   /** Upstream provider routed by Portkey (sent as the `x-portkey-provider` header). */

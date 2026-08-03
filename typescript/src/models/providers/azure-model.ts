@@ -1,9 +1,9 @@
 import {
   DeepEvalOpenAICompatibleModel,
   type OpenAICompatibleModelOptions,
-} from "../openai-compatible-model";
-import { requireApiKey } from "../utils";
-import type { ModelNamespace } from "../registry";
+} from "@/models/openai-compatible-model";
+import { requireApiKey } from "@/models/utils";
+import type { ModelNamespace } from "@/models/registry";
 
 export interface AzureOpenAIModelOptions extends OpenAICompatibleModelOptions {
   endpoint?: string;

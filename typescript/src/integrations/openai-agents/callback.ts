@@ -9,13 +9,13 @@ import {
   AgentSpan,
   LlmSpan,
   ToolSpan,
-} from "../../tracing/tracing";
-import { getAgentContext, getLlmContext } from "../../tracing/trace-context";
-import { applyPendingToSpan, popPendingFor } from "../../tracing/pending-context";
+} from "@/tracing/tracing";
+import { getAgentContext, getLlmContext } from "@/tracing/trace-context";
+import { applyPendingToSpan, popPendingFor } from "@/tracing/pending-context";
 import {
   updateSpanProperties,
   updateTracePropertiesFromSpanData,
-} from "./extractors";
+} from "@/integrations/openai-agents/extractors";
 
 export class DeepEvalTracingProcessor {
   private activeSpans: Map<string, BaseSpan> = new Map();

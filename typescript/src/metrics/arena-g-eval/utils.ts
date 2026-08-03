@@ -4,7 +4,7 @@ import {
   LLMTestCase,
   ToolCall,
   resolveRetrievalContext,
-} from "../../test-case";
+} from "@/test-case";
 
 // Fake names for masking contestant identities before judging (avoids name bias).
 const FAKE_NAMES = [

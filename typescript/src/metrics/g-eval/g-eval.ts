@@ -1,15 +1,15 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
-import { StepsSchema, ReasonScoreSchema } from "./schema";
+} from "@/metrics/utils";
+import { StepsSchema, ReasonScoreSchema } from "@/metrics/g-eval/schema";
 import {
   type Rubric,
   constructGEvalParamsString,
@@ -19,7 +19,7 @@ import {
   getScoreRange,
   validateAndSortRubrics,
   validateCriteriaAndEvaluationSteps,
-} from "./utils";
+} from "@/metrics/g-eval/utils";
 
 const TEMPLATE_CLASS = "GEval";
 

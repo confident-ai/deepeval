@@ -1,7 +1,7 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams, ToolCall } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams, ToolCall } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
@@ -9,12 +9,12 @@ import {
   constructVerboseLogs,
   prettifyList,
   printToolsCalled,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   VerdictsSchema,
   ArgumentCorrectnessScoreReasonSchema,
   type ArgumentCorrectnessVerdict,
-} from "./schema";
+} from "@/metrics/argument-correctness/schema";
 
 const TEMPLATE_CLASS = "ArgumentCorrectnessMetric";
 

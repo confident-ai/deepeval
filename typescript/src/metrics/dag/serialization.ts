@@ -1,21 +1,21 @@
 import { randomUUID } from "node:crypto";
-import { MultiTurnParams, SingleTurnParams } from "../../test-case";
-import { GEval } from "../g-eval/g-eval";
-import { ConversationalGEval } from "../conversational-g-eval/conversational-g-eval";
+import { MultiTurnParams, SingleTurnParams } from "@/test-case";
+import { GEval } from "@/metrics/g-eval/g-eval";
+import { ConversationalGEval } from "@/metrics/conversational-g-eval/conversational-g-eval";
 import {
   BinaryJudgementNode,
   NonBinaryJudgementNode,
   TaskNode,
   VerdictNode,
-} from "./nodes";
+} from "@/metrics/dag/nodes";
 import {
   ConversationalBinaryJudgementNode,
   ConversationalNonBinaryJudgementNode,
   ConversationalTaskNode,
   ConversationalVerdictNode,
   type TurnWindow,
-} from "../conversational-dag/nodes";
-import { DeepAcyclicGraph } from "./graph";
+} from "@/metrics/conversational-dag/nodes";
+import { DeepAcyclicGraph } from "@/metrics/dag/graph";
 import {
   type AnyNode,
   type ChildMetric,
@@ -23,8 +23,8 @@ import {
   type VerdictLikeNode,
   isNode,
   isVerdictNode,
-} from "./types";
-import { edgesOf, isValidDagFromRoots } from "./utils";
+} from "@/metrics/dag/types";
+import { edgesOf, isValidDagFromRoots } from "@/metrics/dag/utils";
 
 export enum NodeType {
   TASK = "TaskNode",

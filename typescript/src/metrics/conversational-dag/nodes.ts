@@ -2,17 +2,17 @@ import {
   ConversationalTestCase,
   MultiTurnParams,
   Turn,
-} from "../../test-case";
-import { resolveTemplate } from "../../templates";
-import { generateWithSchema } from "../utils";
-import { CONVERSATIONAL_G_EVAL_PARAMS } from "../conversational-g-eval/utils";
+} from "@/test-case";
+import { resolveTemplate } from "@/templates";
+import { generateWithSchema } from "@/metrics/utils";
+import { CONVERSATIONAL_G_EVAL_PARAMS } from "@/metrics/conversational-g-eval/utils";
 import {
   BinaryJudgementVerdictSchema,
   MetricScoreReasonSchema,
   TaskNodeOutputSchema,
   nonBinaryVerdictSchema,
   type JudgementVerdict,
-} from "../dag/schema";
+} from "@/metrics/dag/schema";
 import {
   type AnyNode,
   type ChildMetric,
@@ -20,13 +20,13 @@ import {
   type ExecutableNode,
   type NodeContext,
   type VerdictLikeNode,
-} from "../dag/types";
-import { cloneChildMetric, validateVerdictBranch } from "../dag/utils";
+} from "@/metrics/dag/types";
+import { cloneChildMetric, validateVerdictBranch } from "@/metrics/dag/utils";
 import {
   judgementVerboseLog,
   taskVerboseLog,
   verdictVerboseLog,
-} from "../dag/verbose";
+} from "@/metrics/dag/verbose";
 
 export type TurnWindow = [number, number];
 

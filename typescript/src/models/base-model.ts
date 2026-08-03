@@ -3,8 +3,8 @@ import {
   getModelData,
   type ModelData,
   type ModelNamespace,
-} from "./registry";
-import { computeCost } from "./utils";
+} from "@/models/registry";
+import { computeCost } from "@/models/utils";
 
 export interface GenerationResult<T = string> {
   output: T;

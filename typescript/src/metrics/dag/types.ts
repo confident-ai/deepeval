@@ -1,5 +1,5 @@
-import type { BaseMetricCore } from "../base-metrics";
-import type { SingleTurnParams, MultiTurnParams } from "../../test-case";
+import type { BaseMetricCore } from "@/metrics/base-metrics";
+import type { SingleTurnParams, MultiTurnParams } from "@/test-case";
 
 export type EvalParam = SingleTurnParams | MultiTurnParams;
 

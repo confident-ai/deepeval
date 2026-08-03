@@ -1,10 +1,10 @@
-import { Api, Endpoints, HttpMethods } from "../confident/api";
+import { Api, Endpoints, HttpMethods } from "@/confident/api";
 import {
   ConversationalTestCase,
   ToolCall,
   Turn,
   resolveRetrievalContext,
-} from "../test-case";
+} from "@/test-case";
 import {
   MetricData,
   ApiToolCall,
@@ -14,7 +14,7 @@ import {
   EvaluatedCase,
   ArenaCaseResult,
   ContestantRun,
-} from "./types";
+} from "@/evaluate/types";
 
 // --- shared leaf conversions (zod parse validates + strips extra fields) ---
 

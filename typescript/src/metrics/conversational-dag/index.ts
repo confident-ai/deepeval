@@ -1,7 +1,7 @@
 export {
   ConversationalDAGMetric,
   type ConversationalDAGMetricOptions,
-} from "./conversational-dag";
+} from "@/metrics/conversational-dag/conversational-dag";
 export {
   ConversationalTaskNode,
   ConversationalBinaryJudgementNode,
@@ -13,4 +13,4 @@ export {
   type ConversationalVerdictNodeOptions,
   type ConversationalAddVerdictOptions,
   type TurnWindow,
-} from "./nodes";
+} from "@/metrics/conversational-dag/nodes";

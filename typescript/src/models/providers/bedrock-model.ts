@@ -3,9 +3,9 @@ import {
   DeepEvalBaseLLM,
   type GenerationKwargs,
   type GenerationResult,
-} from "../base-model";
-import { extractJson, importOptional } from "../utils";
-import type { ModelNamespace } from "../registry";
+} from "@/models/base-model";
+import { extractJson, importOptional } from "@/models/utils";
+import type { ModelNamespace } from "@/models/registry";
 
 const DEFAULT_BEDROCK_REGION = "us-east-1";
 

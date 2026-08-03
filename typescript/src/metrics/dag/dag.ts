@@ -1,18 +1,18 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
+import { BaseMetric } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   checkSingleTurnParams,
   constructVerboseLogs,
-} from "../utils";
-import { Api, Endpoints, HttpMethods } from "../../confident/api";
-import { DeepAcyclicGraph } from "./graph";
-import { extractRequiredParams, isValidDagFromRoots } from "./utils";
+} from "@/metrics/utils";
+import { Api, Endpoints, HttpMethods } from "@/confident/api";
+import { DeepAcyclicGraph } from "@/metrics/dag/graph";
+import { extractRequiredParams, isValidDagFromRoots } from "@/metrics/dag/utils";
 import {
   buildDagFromPayload,
   constructDagUploadPayload,
-} from "./serialization";
+} from "@/metrics/dag/serialization";
 
 export interface DAGMetricOptions {
   name: string;

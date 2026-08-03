@@ -1,4 +1,4 @@
 export {
   PatternMatchMetric,
   type PatternMatchMetricOptions,
-} from "./pattern-match";
+} from "@/metrics/pattern-match/pattern-match";

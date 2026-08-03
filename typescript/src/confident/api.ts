@@ -1,5 +1,6 @@
 import axios from "axios";
-import { wait } from "../utils";
+import { getLogger, retryAfterLevel, retryBeforeLevel } from "@/logger";
+import { wait } from "@/utils";
 import { createInterface } from "readline";
 
 enum Regions {
@@ -25,6 +26,25 @@ export const API_BASE_URL =
       ? CONFIDENT_BASE_URL_AU
       : CONFIDENT_BASE_URL;
 
+const regionBaseUrl = (region?: string | null): string => {
+  switch ((region || "").trim().toUpperCase()) {
+    case Regions.EU:
+      return CONFIDENT_BASE_URL_EU;
+    case Regions.AU:
+      return CONFIDENT_BASE_URL_AU;
+    default:
+      return CONFIDENT_BASE_URL;
+  }
+};
+
+/** Read fresh from the environment, unlike {@link API_BASE_URL}. */
+export const getBaseApiUrl = (apiKey?: string | null): string => {
+  const region = process.env.CONFIDENT_REGION;
+  if (region && region.trim()) return regionBaseUrl(region);
+  const key = apiKey ?? process.env.CONFIDENT_API_KEY;
+  return key ? inferBaseUrlFromApiKey(key) : CONFIDENT_BASE_URL;
+};
+
 const inferBaseUrlFromApiKey = (apiKey: string): string => {
   if (apiKey.startsWith("confident_eu_")) {
     return CONFIDENT_BASE_URL_EU;
@@ -44,9 +64,19 @@ const RETRYABLE_ERROR_CODES = [
   "CERT_HAS_EXPIRED",
 ];
 
-function logRetryError(error: any, attempt: number): void {
-  console.error(
+const logger = getLogger("deepeval.confident.api");
+
+function logRetryBefore(error: any, attempt: number): void {
+  logger.log(
+    retryBeforeLevel(),
     `Confident AI Error: ${error}. Retrying: ${attempt} time(s)...`,
+  );
+}
+
+function logRetryExhausted(error: any, attempts: number): void {
+  logger.log(
+    retryAfterLevel(),
+    `Confident AI Error: ${error}. Giving up after ${attempts} attempt(s).`,
   );
 }
 
@@ -165,10 +195,11 @@ export class Api {
           RETRYABLE_ERROR_CODES.some((code) => error.code.includes(code));
 
         if (!isRetryable || attempt >= options.maxAttempts) {
+          if (isRetryable) logRetryExhausted(error, attempt);
           throw error;
         }
 
-        logRetryError(error, attempt);
+        logRetryBefore(error, attempt);
 
         // Calculate delay with exponential backoff and jitter
         if (options.jitter) {

@@ -19,12 +19,12 @@ import {
   parsePromptsToMessages,
   prepareToolCallInputParameters,
   safeExtractTokenUsage,
-} from "./utils";
-import { RunHierarchyTracker } from "./langgraph-utils";
-import { SpanType, TraceSpanStatus } from "../../tracing/tracing";
-import { traceManager } from "../../tracing";
-import { withCaptureTracingIntegration } from "../../telemetry";
-import { BaseMetric } from "../../metrics/base-metrics";
+} from "@/integrations/langchain/utils";
+import { RunHierarchyTracker } from "@/integrations/langchain/langgraph-utils";
+import { SpanType, TraceSpanStatus } from "@/tracing/tracing";
+import { traceManager } from "@/tracing";
+import { withCaptureTracingIntegration } from "@/telemetry";
+import { BaseMetric } from "@/metrics/base-metrics";
 
 let langchainInstalled: boolean | null = null;
 

@@ -7,38 +7,38 @@ import {
   stripPrivateFields,
   parseDelimited,
   safeJsonParse,
-} from "./utils";
-import { isConfident } from "../utils";
+} from "@/dataset/utils";
+import { isConfident } from "@/utils";
 
-import { Api, Endpoints, HttpMethods } from "../confident/api";
+import { Api, Endpoints, HttpMethods } from "@/confident/api";
 import {
   CreateDatasetVersionResponse,
   DatasetHttpResponse,
   DatasetVersion,
   GetDatasetVersionsResponse,
-} from "./api";
-import { ConversationalGolden, Golden } from "./golden";
-import { ConversationalTestCase, LLMTestCase } from "../test-case";
-import { asTestCaseString, asToolCalls } from "../test-case/utils";
+} from "@/dataset/api";
+import { ConversationalGolden, Golden } from "@/dataset/golden";
+import { ConversationalTestCase, LLMTestCase } from "@/test-case";
+import { asTestCaseString, asToolCalls } from "@/test-case/utils";
 import type { MultiBar, SingleBar } from "cli-progress";
-import { traceManager, Trace, BaseSpan } from "../tracing/tracing";
+import { traceManager, Trace, BaseSpan } from "@/tracing/tracing";
 import {
   evaluateTrace,
   countTraceMetrics,
   isDuplicateOfCase,
   primaryTraceFor,
-} from "../evaluate/trace-eval";
-import { buildTestResult } from "../evaluate/evaluate";
-import { postTestRun } from "../evaluate/confident";
+} from "@/evaluate/trace-eval";
+import { buildTestResult } from "@/evaluate/evaluate";
+import { postTestRun } from "@/evaluate/confident";
 import {
   printResultsTable,
   printCompletionSummary,
   printHyperparametersWarning,
   newProgressMultiBar,
-} from "../evaluate/console-report";
-import type { TestResult, EvaluatedCase } from "../evaluate/types";
-import type { ErrorConfig, DisplayConfig } from "../evaluate/configs";
-import type { BaseMetric } from "../metrics/base-metrics";
+} from "@/evaluate/console-report";
+import type { TestResult, EvaluatedCase } from "@/evaluate/types";
+import type { ErrorConfig, DisplayConfig } from "@/evaluate/configs";
+import type { BaseMetric } from "@/metrics/base-metrics";
 
 export type GoldenUnion = Golden | ConversationalGolden;
 export type GoldenUnionArray = Golden[] | ConversationalGolden[];

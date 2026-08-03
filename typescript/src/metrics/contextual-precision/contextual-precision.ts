@@ -1,23 +1,23 @@
-import { BaseMetric } from "../base-metrics";
+import { BaseMetric } from "@/metrics/base-metrics";
 import {
   LLMTestCase,
   SingleTurnParams,
   RetrievedContextData,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+} from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   VerdictsSchema,
   ContextualPrecisionScoreReasonSchema,
   type ContextualPrecisionVerdict,
-} from "./schema";
+} from "@/metrics/contextual-precision/schema";
 
 const TEMPLATE_CLASS = "ContextualPrecisionMetric";
 

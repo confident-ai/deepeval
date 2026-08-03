@@ -1,10 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
-import { config } from "dotenv";
-import { DEEPEVAL_RUNNING, HIDDEN_DIR } from "./constants";
+import { DEEPEVAL_RUNNING, HIDDEN_DIR } from "@/constants";
+import { loadDotenvFiles } from "@/config/dotenv-load";
 
 try {
-  config();
+  loadDotenvFiles();
 } catch (_error) {
   // Silently continue if dotenv is not available
   // This allows the package to work without dotenv as a dependency

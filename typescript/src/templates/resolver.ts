@@ -1,7 +1,7 @@
 import nunjucks from "nunjucks";
 // Per-feature bundles, mirroring deepeval/templates/<feature>/templates.json.
 // scripts/compile_metric_templates.py emits these into BOTH packages.
-import metricsBundle from "./metrics/templates.json";
+import metricsBundle from "@/templates/metrics/templates.json";
 const FRAGMENTS_KEY = "_fragments";
 
 type TemplateBundle = Record<string, Record<string, string>>;

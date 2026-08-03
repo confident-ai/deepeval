@@ -1,7 +1,7 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
@@ -9,14 +9,14 @@ import {
   constructVerboseLogs,
   prettifyList,
   resolveRetrievalContext,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   TruthsSchema,
   ClaimsSchema,
   VerdictsSchema,
   FaithfulnessScoreReasonSchema,
   type FaithfulnessVerdict,
-} from "./schema";
+} from "@/metrics/faithfulness/schema";
 
 const TEMPLATE_CLASS = "FaithfulnessMetric";
 

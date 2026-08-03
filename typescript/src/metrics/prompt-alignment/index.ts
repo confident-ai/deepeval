@@ -1,5 +1,5 @@
 export {
   PromptAlignmentMetric,
   type PromptAlignmentMetricOptions,
-} from "./prompt-alignment";
-export * from "./schema";
+} from "@/metrics/prompt-alignment/prompt-alignment";
+export * from "@/metrics/prompt-alignment/schema";

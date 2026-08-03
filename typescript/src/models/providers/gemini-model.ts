@@ -3,10 +3,10 @@ import {
   DeepEvalBaseLLM,
   type GenerationKwargs,
   type GenerationResult,
-} from "../base-model";
-import { extractJson, importOptional, requireApiKey } from "../utils";
-import { geminiContents } from "../multimodal";
-import type { ModelNamespace } from "../registry";
+} from "@/models/base-model";
+import { extractJson, importOptional, requireApiKey } from "@/models/utils";
+import { geminiContents } from "@/models/multimodal";
+import type { ModelNamespace } from "@/models/registry";
 
 const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 

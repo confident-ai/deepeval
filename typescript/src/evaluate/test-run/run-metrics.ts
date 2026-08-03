@@ -1,15 +1,29 @@
-import { ConversationalTestCase } from "../../test-case";
-import { Golden } from "../../dataset";
-import { BaseMetric, BaseConversationalMetric } from "../../metrics";
-import { DeepEvalError } from "../../errors";
-import { AnyTestCase, EvaluatedCase, MetricData } from "../types";
-import { ErrorConfig } from "../configs";
-import { runMetric, buildTestResult, metricMatchesCase } from "../evaluate";
-import { evaluateTrace, primaryTraceFor, turnTestCase } from "../trace-eval";
-import { buildFailureMessage } from "./errors";
-import { globalResultCollector } from "./collector";
-import { collectTracesFrom } from "./trace-scope";
-import { traceManager, type Trace } from "../../tracing/tracing";
+import { ConversationalTestCase } from "@/test-case";
+import { Golden } from "@/dataset";
+import { BaseMetric, BaseConversationalMetric } from "@/metrics";
+import { DeepEvalError } from "@/errors";
+import {
+  getMaxConcurrent,
+  mapWithConcurrency,
+  shouldIgnoreErrors,
+  shouldSkipOnMissingParams,
+} from "@/env-flags";
+import { AnyTestCase, EvaluatedCase, MetricData } from "@/evaluate/types";
+import { ErrorConfig } from "@/evaluate/configs";
+import {
+  runMetric,
+  buildTestResult,
+  metricMatchesCase,
+} from "@/evaluate/evaluate";
+import {
+  evaluateTrace,
+  primaryTraceFor,
+  turnTestCase,
+} from "@/evaluate/trace-eval";
+import { buildFailureMessage } from "@/evaluate/test-run/errors";
+import { globalResultCollector } from "@/evaluate/test-run/collector";
+import { collectTracesFrom } from "@/evaluate/test-run/trace-scope";
+import { traceManager, type Trace } from "@/tracing/tracing";
 
 type AnyMetric = BaseMetric | BaseConversationalMetric;
 
@@ -53,10 +67,13 @@ export interface MetricsOutcome {
   failureMessage: string;
 }
 
-const STRICT_ERROR_CONFIG: Required<ErrorConfig> = {
-  ignoreErrors: false,
-  skipOnMissingParams: false,
-};
+/** Strict by default; `deepeval test run` flags relax it for the whole run. */
+function runErrorConfig(): Required<ErrorConfig> {
+  return {
+    ignoreErrors: shouldIgnoreErrors(),
+    skipOnMissingParams: shouldSkipOnMissingParams(),
+  };
+}
 
 export async function evaluateCase(
   testCase: AnyTestCase,
@@ -81,8 +98,11 @@ export async function evaluateCase(
   }
 
   const start = Date.now();
-  const metricsData = await Promise.all(
-    metrics.map((m) => runMetric(m, testCase, STRICT_ERROR_CONFIG, () => {})),
+  const errorConfig = runErrorConfig();
+  const metricsData = await mapWithConcurrency(
+    metrics,
+    getMaxConcurrent(),
+    (m) => runMetric(m, testCase, errorConfig, () => {}),
   );
   return {
     testCase,
@@ -163,7 +183,7 @@ export async function runCallbackMetrics(
     // Span metrics run for every trace — each is a real component of the turn —
     // but only the reported trace is judged against the golden.
     const cases = await evaluateTrace(trace, {
-      errorConfig: STRICT_ERROR_CONFIG,
+      errorConfig: runErrorConfig(),
       golden: trace === primary ? golden : undefined,
     });
     for (const c of cases) {
@@ -187,7 +207,6 @@ export async function runCallbackMetrics(
       trace: traceApi,
     });
   }
-
   return {
     pass: allMetrics.every((m) => m.skipped || m.success),
     failureMessage: buildFailureMessage(allMetrics),

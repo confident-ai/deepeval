@@ -1,15 +1,15 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
-import { ConversationalTestCase, MultiTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { initializeModel, constructVerboseLogs } from "../utils";
-import { checkConversationalTestCaseParams } from "../conversational-utils";
-import { Api, Endpoints, HttpMethods } from "../../confident/api";
-import { DeepAcyclicGraph } from "../dag/graph";
-import { extractRequiredParams, isValidDagFromRoots } from "../dag/utils";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { ConversationalTestCase, MultiTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { initializeModel, constructVerboseLogs } from "@/metrics/utils";
+import { checkConversationalTestCaseParams } from "@/metrics/conversational-utils";
+import { Api, Endpoints, HttpMethods } from "@/confident/api";
+import { DeepAcyclicGraph } from "@/metrics/dag/graph";
+import { extractRequiredParams, isValidDagFromRoots } from "@/metrics/dag/utils";
 import {
   buildDagFromPayload,
   constructDagUploadPayload,
-} from "../dag/serialization";
+} from "@/metrics/dag/serialization";
 
 export interface ConversationalDAGMetricOptions {
   name: string;

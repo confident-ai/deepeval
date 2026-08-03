@@ -1,4 +1,4 @@
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
 
 /** A score band and the outcome it represents (GEval rubric). */
 export interface Rubric {

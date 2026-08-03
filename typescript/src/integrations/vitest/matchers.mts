@@ -1,9 +1,9 @@
-import { BaseMetric, BaseConversationalMetric } from "../../metrics/index.js";
+import { BaseMetric, BaseConversationalMetric } from "@/metrics/index.js";
 import {
   runMetrics,
   type ToPassOptions,
   type ToPassTarget,
-} from "../../evaluate/test-run/index.js";
+} from "@/evaluate/test-run/index.js";
 
 type AnyMetric = BaseMetric | BaseConversationalMetric;
 

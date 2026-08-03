@@ -1,5 +1,5 @@
 export {
   HallucinationMetric,
   type HallucinationMetricOptions,
-} from "./hallucination";
-export * from "./schema";
+} from "@/metrics/hallucination/hallucination";
+export * from "@/metrics/hallucination/schema";

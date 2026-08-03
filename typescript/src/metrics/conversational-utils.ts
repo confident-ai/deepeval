@@ -1,6 +1,6 @@
-import { ConversationalTestCase, MultiTurnParams, Turn } from "../test-case";
-import { DeepEvalError, MissingTestCaseParamsError } from "../errors";
-import { BaseConversationalMetric } from "./base-conversational-metric";
+import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
+import { DeepEvalError, MissingTestCaseParamsError } from "@/errors";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 
 /**
  * Verify a conversational test case provides the params a metric requires.

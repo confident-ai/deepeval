@@ -1,4 +1,4 @@
-import { applyPendingToSpan, popPendingFor, traceManager } from "../../tracing";
+import { applyPendingToSpan, popPendingFor, traceManager } from "@/tracing";
 import {
   BaseSpan,
   SpanType,
@@ -6,11 +6,11 @@ import {
   Trace,
   getCurrentSpan,
   setCurrentSpan,
-} from "../../tracing/tracing";
-import { Environment } from "../../tracing/utils";
-import { getConfidentApiKey, isConfident } from "../../utils";
-import { withCaptureTracingIntegration } from "../../telemetry";
-import { Prompt } from "../../prompt";
+} from "@/tracing/tracing";
+import { Environment } from "@/tracing/utils";
+import { getConfidentApiKey, isConfident } from "@/utils";
+import { withCaptureTracingIntegration } from "@/telemetry";
+import { Prompt } from "@/prompt";
 
 import { TracingEventType } from "@mastra/core/observability";
 import type {
@@ -29,7 +29,7 @@ import {
   mapSpanType,
   shouldDropSpan,
   updateDeepEvalSpan,
-} from "./converter";
+} from "@/integrations/mastra/converter";
 
 export interface DeepEvalExporterConfig {
   apiKey?: string;

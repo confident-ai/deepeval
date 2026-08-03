@@ -1,5 +1,5 @@
 export {
   SummarizationMetric,
   type SummarizationMetricOptions,
-} from "./summarization";
-export * from "./schema";
+} from "@/metrics/summarization/summarization";
+export * from "@/metrics/summarization/schema";

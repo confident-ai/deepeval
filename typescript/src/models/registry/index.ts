@@ -2,7 +2,7 @@
 // source of truth. Do not hand-edit it; run:
 //
 //   python scripts/compile_model_registry.py
-import generated from "./models.json";
+import generated from "@/models/registry/models.json";
 
 /** Mirrors Python's `DeepEvalModelData`. */
 export interface ModelData {

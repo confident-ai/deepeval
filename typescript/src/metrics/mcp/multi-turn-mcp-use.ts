@@ -1,25 +1,25 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
-import { ConversationalTestCase, MultiTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
-import { MissingTestCaseParamsError } from "../../errors";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { ConversationalTestCase, MultiTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
+import { MissingTestCaseParamsError } from "@/errors";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
-} from "../conversational-utils";
-import { getTasks, taskStepsTakenText, availableMcpServersBlock } from "./utils";
+} from "@/metrics/conversational-utils";
+import { getTasks, taskStepsTakenText, availableMcpServersBlock } from "@/metrics/mcp/utils";
 import {
   ToolScoreSchema,
   ArgsScoreSchema,
   ReasonSchema,
   type ToolScore,
   type ArgsScore,
-} from "./schema";
+} from "@/metrics/mcp/schema";
 
 // Reuses the MCPTaskCompletionMetric template namespace (mirrors Python).
 const TEMPLATE_CLASS = "MCPTaskCompletionMetric";

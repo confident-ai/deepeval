@@ -1,4 +1,4 @@
-import { LLMTestCase, ToolCall } from "./llm-test-case";
+import { LLMTestCase, ToolCall } from "@/test-case/llm-test-case";
 
 
 // Render a span/trace value as a test case's text field.git 

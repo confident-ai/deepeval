@@ -3,9 +3,9 @@ import {
   DeepEvalBaseLLM,
   type GenerationKwargs,
   type GenerationResult,
-} from "./base-model";
-import { extractJson, requireApiKey, toJsonSchema } from "./utils";
-import { openAIContent } from "./multimodal";
+} from "@/models/base-model";
+import { extractJson, requireApiKey, toJsonSchema } from "@/models/utils";
+import { openAIContent } from "@/models/multimodal";
 
 export interface OpenAICompatibleModelOptions {
   model?: string;

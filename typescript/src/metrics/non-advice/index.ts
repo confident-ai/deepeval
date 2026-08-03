@@ -1,2 +1,5 @@
-export { NonAdviceMetric, type NonAdviceMetricOptions } from "./non-advice";
-export * from "./schema";
+export {
+  NonAdviceMetric,
+  type NonAdviceMetricOptions,
+} from "@/metrics/non-advice/non-advice";
+export * from "@/metrics/non-advice/schema";

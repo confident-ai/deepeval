@@ -1,6 +1,6 @@
 import { SpanProcessor, ReadableSpan } from "@opentelemetry/sdk-trace-base";
 import { Context, Span } from "@opentelemetry/api";
-import { getLlmContext } from "../../tracing/trace-context";
+import { getLlmContext } from "@/tracing/trace-context";
 import {
   SpanType,
   getCurrentTrace,
@@ -12,19 +12,19 @@ import {
   ToolSpan,
   RetrieverSpan,
   TraceSpanStatus,
-} from "../../tracing/tracing";
+} from "@/tracing/tracing";
 import {
   applyPendingToSpan,
   popPendingFor,
-} from "../../tracing/pending-context";
+} from "@/tracing/pending-context";
 import {
   ROUTE_TO_REST_ATTRIBUTE,
   endOtelImplicitTrace,
   resolveSpanRoute,
   resolveTraceForOtelSpan,
-} from "../../tracing/otel-routing";
-import { AiSdkInstrumentationOptions } from "./index";
-import { ToolCall } from "../../test-case";
+} from "@/tracing/otel-routing";
+import { AiSdkInstrumentationOptions } from "@/integrations/ai-sdk/index";
+import { ToolCall } from "@/test-case";
 
 export const ROOT_VERCEL_SPANS = new Set([
   "ai.generateText",

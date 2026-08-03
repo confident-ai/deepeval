@@ -1,20 +1,20 @@
-import { BaseMetric } from "../base-metrics";
+import { BaseMetric } from "@/metrics/base-metrics";
 import {
   LLMTestCase,
   SingleTurnParams,
   ToolCallParams,
   ToolCall,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+} from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   printToolsCalled,
-} from "../utils";
-import { ToolSelectionScoreSchema, type ToolSelectionScore } from "./schema";
+} from "@/metrics/utils";
+import { ToolSelectionScoreSchema, type ToolSelectionScore } from "@/metrics/tool-correctness/schema";
 
 const TEMPLATE_CLASS = "ToolCorrectnessMetric";
 

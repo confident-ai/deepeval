@@ -26,6 +26,23 @@ export default defineConfig([
     },
   },
   {
+    files: ["src/**/*.{ts,mts,cts}"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["./*", "./**", "../*", "../**"],
+              message:
+                "Use the '@/' alias (rooted at src/) instead of relative imports.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ["tests/**/*.ts", "examples/vitest/**/*.ts"],
     languageOptions: {
       parserOptions: {

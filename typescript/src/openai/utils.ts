@@ -1,6 +1,6 @@
-import { getCurrentSpan } from "../tracing";
-import { SpanType, ToolSpan, TraceSpanStatus } from "../tracing/tracing";
-import { OutputParameters } from "./types";
+import { getCurrentSpan } from "@/tracing";
+import { SpanType, ToolSpan, TraceSpanStatus } from "@/tracing/tracing";
+import { OutputParameters } from "@/openai/types";
 
 function fmtUrl(u?: string) {
   if (!u) return "";

@@ -1,20 +1,20 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   ExtractedPIISchema,
   VerdictsSchema,
   PIILeakageScoreReasonSchema,
   type PIILeakageVerdict,
-} from "./schema";
+} from "@/metrics/pii-leakage/schema";
 
 const TEMPLATE_CLASS = "PIILeakageMetric";
 

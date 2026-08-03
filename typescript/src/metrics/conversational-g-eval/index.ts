@@ -1,4 +1,4 @@
 export {
   ConversationalGEval,
   type ConversationalGEvalMetricOptions,
-} from "./conversational-g-eval";
+} from "@/metrics/conversational-g-eval/conversational-g-eval";

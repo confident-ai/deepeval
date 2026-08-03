@@ -1,4 +1,4 @@
-import { BaseMetric } from "../base-metrics";
+import { BaseMetric } from "@/metrics/base-metrics";
 import {
   LLMTestCase,
   SingleTurnParams,
@@ -7,17 +7,17 @@ import {
   MCPResourceCall,
   MCPPromptCall,
   ToolCall,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+} from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
-} from "../utils";
-import { reprPrimitive, indentMultilineString } from "../mcp/utils";
-import { MCPPrimitivesScoreSchema, MCPArgsScoreSchema } from "./schema";
+} from "@/metrics/utils";
+import { reprPrimitive, indentMultilineString } from "@/metrics/mcp/utils";
+import { MCPPrimitivesScoreSchema, MCPArgsScoreSchema } from "@/metrics/mcp-use-metric/schema";
 
 const TEMPLATE_CLASS = "MCPUseMetric";
 

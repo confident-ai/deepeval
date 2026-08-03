@@ -5,7 +5,7 @@ import {
   ConversationalTestCase,
   ArenaTestCase,
   ToolCallType,
-} from "../test-case";
+} from "@/test-case";
 
 // Mirrors deepeval/evaluate/types.py (+ test_run MetricData), trimmed to what
 // the local runner needs today. Extend toward the Python shape as we grow.

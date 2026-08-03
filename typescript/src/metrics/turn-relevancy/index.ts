@@ -1,5 +1,5 @@
 export {
   TurnRelevancyMetric,
   type TurnRelevancyMetricOptions,
-} from "./turn-relevancy";
-export * from "./schema";
+} from "@/metrics/turn-relevancy/turn-relevancy";
+export * from "@/metrics/turn-relevancy/schema";

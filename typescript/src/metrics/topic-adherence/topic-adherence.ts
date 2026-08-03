@@ -1,28 +1,28 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import {
   ConversationalTestCase,
   MultiTurnParams,
   Turn,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+} from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
-} from "../conversational-utils";
+} from "@/metrics/conversational-utils";
 import {
   QAPairsSchema,
   RelevancyVerdictSchema,
   TopicAdherenceReasonSchema,
   type QAPair,
   type RelevancyVerdict,
-} from "./schema";
+} from "@/metrics/topic-adherence/schema";
 
 const TEMPLATE_CLASS = "TopicAdherenceMetric";
 type Verdict = RelevancyVerdict["verdict"];

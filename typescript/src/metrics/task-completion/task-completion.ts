@@ -1,15 +1,15 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   printToolsCalled,
-} from "../utils";
-import { TaskAndOutcomeSchema, TaskCompletionVerdictSchema } from "./schema";
+} from "@/metrics/utils";
+import { TaskAndOutcomeSchema, TaskCompletionVerdictSchema } from "@/metrics/task-completion/schema";
 
 const TEMPLATE_CLASS = "TaskCompletionMetric";
 

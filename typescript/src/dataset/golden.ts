@@ -1,4 +1,4 @@
-import { ToolCall, Turn } from "../test-case";
+import { ToolCall, Turn } from "@/test-case";
 
 export class Golden {
   id?: string;

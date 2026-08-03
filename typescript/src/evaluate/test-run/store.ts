@@ -1,13 +1,20 @@
 import * as fs from "fs";
 import * as path from "path";
-import { DEEPEVAL_RESULTS_DIR } from "../../constants";
+import { DEEPEVAL_RESULTS_DIR } from "@/constants";
+import { getDisplay, type TestRunDisplay } from "@/env-flags";
 import {
   buildTestCaseEntry,
   postPersistedTestRun,
   type PersistedCase,
-} from "../confident";
-import { printResultsTable } from "../console-report";
-import { EvaluatedCase, MetricData, TestResult } from "../types";
+} from "@/evaluate/confident";
+import { printResultsTable } from "@/evaluate/console-report";
+import {
+  exportTestRunJson,
+  saveLatestTestRun,
+  summarizeCases,
+  type LocalTestRun,
+} from "@/evaluate/test-run/local";
+import { EvaluatedCase, MetricData, TestResult } from "@/evaluate/types";
 
 export function getResultsDir(): string | null {
   return process.env[DEEPEVAL_RESULTS_DIR] || null;
@@ -62,6 +69,7 @@ export interface WrapUpOptions {
   official?: boolean;
   identifier?: string;
   printResults?: boolean;
+  display?: TestRunDisplay;
 }
 
 export async function wrapUpTestRun(
@@ -72,15 +80,48 @@ export async function wrapUpTestRun(
   if (cases.length === 0) return { link: null, testRunId: null };
 
   if (options.printResults ?? true) {
-    printResultsTable(cases.map(persistedToTestResult));
+    const display = options.display ?? getDisplay();
+    const results = cases
+      .map(persistedToTestResult)
+      .filter(
+        (result) =>
+          display === "all" ||
+          (display === "passing" ? result.success : !result.success),
+      );
+    // Every case still gets posted; `--display` only filters the terminal.
+    printResultsTable(results);
   }
-  return postPersistedTestRun(
+
+  const runDuration = options.runDuration ?? 0;
+  const official = options.official ?? false;
+  const run: LocalTestRun = {
+    link: null,
+    savedAt: new Date().toISOString(),
+    runDuration,
+    official,
+    identifier: options.identifier,
+    ...summarizeCases(cases),
     cases,
-    options.runDuration ?? 0,
-    options.official ?? false,
+  };
+  // Saved before posting so `deepeval view` can upload it later if the post
+  // fails or there is no API key yet.
+  saveLatestTestRun(run);
+
+  const posted = await postPersistedTestRun(
+    cases,
+    runDuration,
+    official,
     false,
     options.identifier,
   );
+
+  run.link = posted.link;
+  run.testRunId = posted.testRunId;
+  saveLatestTestRun(run);
+  const exported = exportTestRunJson(run);
+  if (exported) console.log(`✅ Test run saved to: ${exported}`);
+
+  return posted;
 }
 
 export function _resetWorkerCaseCount(): void {

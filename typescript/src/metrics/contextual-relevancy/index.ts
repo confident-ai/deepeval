@@ -1,5 +1,5 @@
 export {
   ContextualRelevancyMetric,
   type ContextualRelevancyMetricOptions,
-} from "./contextual-relevancy";
-export * from "./schema";
+} from "@/metrics/contextual-relevancy/contextual-relevancy";
+export * from "@/metrics/contextual-relevancy/schema";

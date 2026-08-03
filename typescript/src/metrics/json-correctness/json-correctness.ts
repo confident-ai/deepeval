@@ -1,16 +1,16 @@
 import type { ZodType } from "zod";
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { toJsonSchema } from "../../models/utils";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { toJsonSchema } from "@/models/utils";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
-} from "../utils";
-import { JsonCorrectnessScoreReasonSchema } from "./schema";
+} from "@/metrics/utils";
+import { JsonCorrectnessScoreReasonSchema } from "@/metrics/json-correctness/schema";
 
 const TEMPLATE_CLASS = "JsonCorrectnessMetric";
 const DEFAULT_CORRECT_REASON =

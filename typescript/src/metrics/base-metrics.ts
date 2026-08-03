@@ -1,5 +1,6 @@
-import { DeepEvalBaseLLM } from "../models";
-import { SingleTurnParams } from "../test-case";
+import { isVerboseMode } from "@/env-flags";
+import { DeepEvalBaseLLM } from "@/models";
+import { SingleTurnParams } from "@/test-case";
 
 // An indeterminate "pulse" progress bar (a bright window sliding across a dim
 // track, wrapping), mirroring rich's animated BarColumn in Python's per-metric
@@ -54,6 +55,8 @@ export abstract class BaseMetricCore {
     },
   ) {
     this.threshold = threshold;
+    // `--verbose` raises the floor for metrics that didn't opt out explicitly.
+    this.verboseMode = isVerboseMode();
     if (options) {
       this.strictMode = options.strictMode ?? this.strictMode;
       this.verboseMode = options.verboseMode ?? this.verboseMode;

@@ -1,28 +1,28 @@
 import { AsyncLocalStorage } from "async_hooks";
 import console from "console";
 
-import { getSettings } from "../config/settings";
-import { isConfident, wait } from "../utils";
+import { getSettings } from "@/config/settings";
+import { isConfident, wait } from "@/utils";
 import {
   tracingEnabled,
   validateEnvironment,
   validateSamplingRate,
   toZodCompatibleISO,
   Environment,
-} from "./utils";
+} from "@/tracing/utils";
 
-import { Api, Endpoints, HttpMethods } from "../confident/api";
-import { LLMTestCase, ToolCall, resolveRetrievalContext } from "../test-case";
-import type { BaseMetric } from "../metrics/base-metrics";
-import type { MetricData } from "../evaluate/types";
-import { Prompt } from "../prompt";
-import { SpanApiType, BaseApiSpan, TraceApi, TraceSpanApiStatus } from "./api";
-import { TraceWorkerStatus, printTraceStatus } from "./logging";
+import { Api, Endpoints, HttpMethods } from "@/confident/api";
+import { LLMTestCase, ToolCall, resolveRetrievalContext } from "@/test-case";
+import type { BaseMetric } from "@/metrics/base-metrics";
+import type { MetricData } from "@/evaluate/types";
+import { Prompt } from "@/prompt";
+import { SpanApiType, BaseApiSpan, TraceApi, TraceSpanApiStatus } from "@/tracing/api";
+import { TraceWorkerStatus, printTraceStatus } from "@/tracing/logging";
 import {
   applyPendingToSpan,
   popPendingFor,
   type PendingPayload,
-} from "./pending-context";
+} from "@/tracing/pending-context";
 
 export enum SpanType {
   AGENT = "agent",

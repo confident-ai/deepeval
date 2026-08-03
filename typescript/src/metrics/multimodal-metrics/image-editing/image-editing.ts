@@ -1,20 +1,20 @@
-import { BaseMetric } from "../../base-metrics";
+import { BaseMetric } from "@/metrics/base-metrics";
 import {
   LLMTestCase,
   SingleTurnParams,
   MLLMImage,
   convertToMultiModalArray,
-} from "../../../test-case";
-import { DeepEvalBaseLLM } from "../../../models";
-import { resolveTemplate } from "../../../templates";
+} from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
-} from "../../utils";
-import { separateImagesFromText } from "../utils";
-import { ListReasonScoreSchema } from "../schema";
+} from "@/metrics/utils";
+import { separateImagesFromText } from "@/metrics/multimodal-metrics/utils";
+import { ListReasonScoreSchema } from "@/metrics/multimodal-metrics/schema";
 
 const TEMPLATE_CLASS = "ImageEditingMetric";
 

@@ -140,7 +140,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
+    "prepublishOnly": "npm run build",
     "test": "jest",
     "test:e2e": "node dist/cli/index.js test run tests/deepeval-test-run-test/suites --identifier ts-e2e",
     "test:e2e:conversational": "node dist/cli/index.js test run tests/deepeval-test-run-test/conversational --identifier ts-e2e-conversational",
@@ -163,6 +164,7 @@
     "@sentry/node": "^10.21.0",
     "axios": "^1.6.0",
     "cli-progress": "^3.12.0",
+    "commander": "^14.0.3",
     "csv-parser": "^3.2.0",
     "dotenv": "^16.5.0",
     "nunjucks": "^3.2.4",
@@ -206,6 +208,7 @@
     "prettier": "3.6.2",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.9.1",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.46.2",
     "vitest": "^4.1.10"

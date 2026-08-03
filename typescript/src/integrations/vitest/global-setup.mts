@@ -4,9 +4,10 @@ import {
   DEEPEVAL_RUNNING,
   DEEPEVAL_OFFICIAL,
   DEEPEVAL_IDENTIFIER,
-} from "../../constants.js";
-import { createTestRunResultsDir } from "../../utils.js";
-import { wrapUpTestRun } from "../../evaluate/test-run/index.js";
+} from "@/constants.js";
+import { createTestRunResultsDir } from "@/utils.js";
+import { wrapUpTestRun } from "@/evaluate/test-run/index.js";
+import { flushTraces, traceFlushEnabled } from "@/tracing/flush.js";
 
 export default function setup() {
   let dir = process.env[DEEPEVAL_RESULTS_DIR];
@@ -23,6 +24,9 @@ export default function setup() {
 
   return async () => {
     const runDuration = (Date.now() - start) / 1000;
+    // Traces are posted in the background, so they have to land before the
+    // test run is wrapped up and the process exits.
+    if (traceFlushEnabled()) await flushTraces();
     await wrapUpTestRun(resultsDir, {
       runDuration,
       official: process.env[DEEPEVAL_OFFICIAL] === "1",

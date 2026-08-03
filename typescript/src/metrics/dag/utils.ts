@@ -1,5 +1,5 @@
-import { GEval } from "../g-eval/g-eval";
-import { ConversationalGEval } from "../conversational-g-eval/conversational-g-eval";
+import { GEval } from "@/metrics/g-eval/g-eval";
+import { ConversationalGEval } from "@/metrics/conversational-g-eval/conversational-g-eval";
 import {
   type AnyNode,
   type ChildMetric,
@@ -7,7 +7,7 @@ import {
   type EvalParam,
   isNode,
   isVerdictNode,
-} from "./types";
+} from "@/metrics/dag/types";
 
 /** Every node reachable from a verdict's `child` or a node's `children`. */
 export function edgesOf(node: AnyNode): AnyNode[] {

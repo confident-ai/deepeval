@@ -1,1 +1,1 @@
-export { ImageCoherenceMetric, type ImageCoherenceMetricOptions } from "./image-coherence";
+export { ImageCoherenceMetric, type ImageCoherenceMetricOptions } from "@/metrics/multimodal-metrics/image-coherence/image-coherence";

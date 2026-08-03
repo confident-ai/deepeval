@@ -1,28 +1,28 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import {
   ConversationalTestCase,
   MultiTurnParams,
   Turn,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+} from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   convertTurnToDict,
-} from "../conversational-utils";
+} from "@/metrics/conversational-utils";
 import {
   KnowledgeSchema,
   KnowledgeRetentionVerdictSchema,
   KnowledgeRetentionScoreReasonSchema,
   type Knowledge,
   type KnowledgeRetentionVerdict,
-} from "./schema";
+} from "@/metrics/knowledge-retention/schema";
 
 const TEMPLATE_CLASS = "KnowledgeRetentionMetric";
 

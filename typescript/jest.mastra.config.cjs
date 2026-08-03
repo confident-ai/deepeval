@@ -24,6 +24,9 @@ module.exports = {
   testEnvironment: "node",
   testMatch: ["**/test/test-integrations/test-mastra/**/*.test.ts"],
   moduleFileExtensions: ["ts", "js", "mjs", "cjs", "json", "node"],
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
+  },
   transform: {
     "^.+\\.(tsx?|jsx?|mjs|cjs)$": ["babel-jest", babelConfig],
   },

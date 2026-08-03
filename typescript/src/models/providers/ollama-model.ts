@@ -3,9 +3,9 @@ import {
   DeepEvalBaseLLM,
   type GenerationKwargs,
   type GenerationResult,
-} from "../base-model";
-import { extractJson, importOptional, toJsonSchema } from "../utils";
-import type { ModelNamespace } from "../registry";
+} from "@/models/base-model";
+import { extractJson, importOptional, toJsonSchema } from "@/models/utils";
+import type { ModelNamespace } from "@/models/registry";
 
 const DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434";
 

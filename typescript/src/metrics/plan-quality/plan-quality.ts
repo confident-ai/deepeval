@@ -1,14 +1,14 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
-} from "../utils";
-import { TaskSchema, AgentPlanSchema, PlanQualityScoreSchema } from "./schema";
+} from "@/metrics/utils";
+import { TaskSchema, AgentPlanSchema, PlanQualityScoreSchema } from "@/metrics/plan-quality/schema";
 
 // Shared templates (mirror Python): task extraction → StepEfficiencyMetric,
 // plan extraction → PlanAdherenceMetric.

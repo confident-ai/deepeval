@@ -1,21 +1,21 @@
 export {
   ImageCoherenceMetric,
   type ImageCoherenceMetricOptions,
-} from "./image-coherence";
+} from "@/metrics/multimodal-metrics/image-coherence";
 export {
   ImageHelpfulnessMetric,
   type ImageHelpfulnessMetricOptions,
-} from "./image-helpfulness";
+} from "@/metrics/multimodal-metrics/image-helpfulness";
 export {
   ImageReferenceMetric,
   type ImageReferenceMetricOptions,
-} from "./image-reference";
+} from "@/metrics/multimodal-metrics/image-reference";
 export {
   TextToImageMetric,
   type TextToImageMetricOptions,
-} from "./text-to-image";
+} from "@/metrics/multimodal-metrics/text-to-image";
 export {
   ImageEditingMetric,
   type ImageEditingMetricOptions,
-} from "./image-editing";
-export * from "./schema";
+} from "@/metrics/multimodal-metrics/image-editing";
+export * from "@/metrics/multimodal-metrics/schema";

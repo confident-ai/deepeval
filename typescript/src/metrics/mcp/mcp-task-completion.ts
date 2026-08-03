@@ -1,19 +1,19 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
-import { ConversationalTestCase, MultiTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
-import { MissingTestCaseParamsError } from "../../errors";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { ConversationalTestCase, MultiTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
+import { MissingTestCaseParamsError } from "@/errors";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
-} from "../conversational-utils";
-import { getTasks, taskStepsTakenText } from "./utils";
-import { TaskScoreSchema, ReasonSchema, type TaskScore } from "./schema";
+} from "@/metrics/conversational-utils";
+import { getTasks, taskStepsTakenText } from "@/metrics/mcp/utils";
+import { TaskScoreSchema, ReasonSchema, type TaskScore } from "@/metrics/mcp/schema";
 
 const TEMPLATE_CLASS = "MCPTaskCompletionMetric";
 

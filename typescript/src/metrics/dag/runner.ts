@@ -1,5 +1,5 @@
-import type { DeepAcyclicGraph } from "./graph";
-import type { JudgementVerdict } from "./schema";
+import type { DeepAcyclicGraph } from "@/metrics/dag/graph";
+import type { JudgementVerdict } from "@/metrics/dag/schema";
 import {
   type AnyNode,
   type ChildMetric,
@@ -9,7 +9,7 @@ import {
   isJudgementNode,
   isNode,
   isVerdictNode,
-} from "./types";
+} from "@/metrics/dag/types";
 
 export class DeepAcyclicGraphRunner {
   private readonly remaining: Map<AnyNode, number>;

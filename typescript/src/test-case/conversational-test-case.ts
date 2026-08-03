@@ -1,12 +1,12 @@
-import { ToolCall, RetrievedContextData } from "./llm-test-case";
-import { checkIfMultimodal, extractImageIdsFromList, extractImageIdsFromString, MLLM_IMAGE_REGISTRY, MLLMImage } from "./mllm-image";
+import { ToolCall, RetrievedContextData } from "@/test-case/llm-test-case";
+import { checkIfMultimodal, extractImageIdsFromList, extractImageIdsFromString, MLLM_IMAGE_REGISTRY, MLLMImage } from "@/test-case/mllm-image";
 import {
   MCPServer,
   MCPToolCall,
   MCPResourceCall,
   MCPPromptCall,
   validateMcpServers,
-} from "./mcp";
+} from "@/test-case/mcp";
 
 export enum MultiTurnParams {
   ROLE = "role",

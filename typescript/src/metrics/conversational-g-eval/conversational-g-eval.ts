@@ -1,29 +1,29 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
-import { ConversationalTestCase, MultiTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { ConversationalTestCase, MultiTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   convertTurnToDict,
-} from "../conversational-utils";
-import { StepsSchema, ReasonScoreSchema } from "../g-eval/schema";
+} from "@/metrics/conversational-utils";
+import { StepsSchema, ReasonScoreSchema } from "@/metrics/g-eval/schema";
 import {
   type Rubric,
   numberEvaluationSteps,
   formatRubrics,
   validateAndSortRubrics,
   validateCriteriaAndEvaluationSteps,
-} from "../g-eval/utils";
+} from "@/metrics/g-eval/utils";
 import {
   constructConversationalGEvalTurnParamsString,
   constructNonTurnsTestCaseString,
-} from "./utils";
+} from "@/metrics/conversational-g-eval/utils";
 
 const TEMPLATE_CLASS = "ConversationalGEval";
 

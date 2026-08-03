@@ -5,4 +5,4 @@ export {
   MetricTemplateNotFoundError,
   MetricTemplateInterpolationError,
   type ResolveTemplateOptions,
-} from "./resolver";
+} from "@/templates/resolver";

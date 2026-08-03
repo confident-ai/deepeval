@@ -16,9 +16,11 @@ for closing parity.
 - **No integration is at full Python parity.** Every one of them is missing
   component-level metric staging, and the two OTel-mode ones only reach the local
   trace tree behind a manual flag. See [Cross-cutting gaps](#cross-cutting-gaps).
-- Python's fourth capability column, `deepeval test run`, has **no TS equivalent at
-  all** — there is no `assertTest` and no test-runner plugin, so it is omitted from
-  the matrix below rather than filled with No.
+- Python's fourth capability column, `deepeval test run`, now **has a TS equivalent**
+  — a Vitest integration with an `expect(...).toPass()` matcher — but it is young and
+  not yet exercised per-integration, so it is omitted from the matrix below rather
+  than filled with guesses. Its own parity backlog lives in
+  [`src/evaluate/test-run/README.md`](../evaluate/test-run/README.md).
 
 ## Integration matrix
 
@@ -160,19 +162,23 @@ back plausible and wrong.
 Affects `evalsIterator({ metrics })` generally, not just integrations. Needs the
 golden plumbed into `evaluateTrace`.
 
-### 5. No `assertTest` / test-runner integration
+### 5. Test-runner integration exists, but no integration is verified against it
 
-Python's `assert_test()` plus the pytest plugin and `deepeval test run` have no TS
-counterpart; the CLI (`src/cli/`) only implements `deepeval gate`. CI users have to
-hand-roll Jest assertions around `evalsIterator` / `evaluate`. Treat as permanent
-unless a test-runner integration is scoped deliberately.
+`deepeval test run` now drives Vitest, and `expect(golden).toPass()` scores the trace
+a test just produced — so the pattern an integration user would reach for in CI is
+available. What hasn't been checked is whether each integration's spans actually land
+in that trace, since the per-test capture uses the same sink that gaps 2 and 6 cover.
+The runner's own parity backlog is in
+[`src/evaluate/test-run/README.md`](../evaluate/test-run/README.md).
 
-### 6. `evalsIterator` and Mastra fight over one capture sink
+### 6. `evalsIterator`, Mastra and the test runner fight over one capture sink
 
-`setTraceCaptureSink` writes a single global slot. `evalsIterator` sets it on entry
-and clears it to `undefined` on exit, while `DeepEvalExporter` sets it from
-`config.traceCaptureSink`. Whichever runs last wins, and the iterator's cleanup will
-also silently drop Mastra's sink. Needs a subscriber list rather than one slot.
+`setTraceCaptureSink` writes a single global slot with three consumers now.
+`evalsIterator` sets it on entry and clears it to `undefined` on exit,
+`DeepEvalExporter` sets it from `config.traceCaptureSink`, and the Vitest
+`beforeEach` sets it per test and clears it in `afterEach`. Whichever runs last
+wins, and either cleanup silently drops the others' sink. Needs a subscriber list
+rather than one slot.
 
 ## LangChain / LangGraph specifics
 

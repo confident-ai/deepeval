@@ -3,10 +3,10 @@ import {
   DeepEvalBaseLLM,
   type GenerationKwargs,
   type GenerationResult,
-} from "../base-model";
-import { aiSdkContent } from "../multimodal";
-import { checkIfMultimodal } from "../../test-case/mllm-image";
-import type { ModelNamespace } from "../registry";
+} from "@/models/base-model";
+import { aiSdkContent } from "@/models/multimodal";
+import { checkIfMultimodal } from "@/test-case/mllm-image";
+import type { ModelNamespace } from "@/models/registry";
 
 // Keyed by the segment before the first dot of an AI SDK provider id, which
 // looks like `openai.chat` or `google.generative-ai`.

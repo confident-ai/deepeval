@@ -1,4 +1,4 @@
-import { MetricData } from "../types";
+import { MetricData } from "@/evaluate/types";
 
 export function buildFailureMessage(metricsData: MetricData[]): string {
   const failed = metricsData.filter(

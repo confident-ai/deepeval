@@ -1,5 +1,5 @@
 export {
   JsonCorrectnessMetric,
   type JsonCorrectnessMetricOptions,
-} from "./json-correctness";
-export * from "./schema";
+} from "@/metrics/json-correctness/json-correctness";
+export * from "@/metrics/json-correctness/schema";

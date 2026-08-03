@@ -1,5 +1,5 @@
 export {
   TopicAdherenceMetric,
   type TopicAdherenceMetricOptions,
-} from "./topic-adherence";
-export * from "./schema";
+} from "@/metrics/topic-adherence/topic-adherence";
+export * from "@/metrics/topic-adherence/schema";

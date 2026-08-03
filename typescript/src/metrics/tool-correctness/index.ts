@@ -1,5 +1,5 @@
 export {
   ToolCorrectnessMetric,
   type ToolCorrectnessMetricOptions,
-} from "./tool-correctness";
-export * from "./schema";
+} from "@/metrics/tool-correctness/tool-correctness";
+export * from "@/metrics/tool-correctness/schema";

@@ -1,4 +1,4 @@
-import { LLMTestCase } from "./llm-test-case";
+import { LLMTestCase } from "@/test-case/llm-test-case";
 
 // Mirrors deepeval/test_case/arena_test_case.py.
 

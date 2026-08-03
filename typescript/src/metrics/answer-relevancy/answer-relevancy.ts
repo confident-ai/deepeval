@@ -1,20 +1,20 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   StatementsSchema,
   VerdictsSchema,
   AnswerRelevancyScoreReasonSchema,
   type AnswerRelevancyVerdict,
-} from "./schema";
+} from "@/metrics/answer-relevancy/schema";
 
 // Must match the key in templates.json (and the Python metric class name).
 const TEMPLATE_CLASS = "AnswerRelevancyMetric";

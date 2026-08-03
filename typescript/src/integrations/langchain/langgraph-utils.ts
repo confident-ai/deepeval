@@ -1,9 +1,9 @@
-import { traceManager } from "../../tracing";
+import { traceManager } from "@/tracing";
 import {
   getCurrentSpan,
   getCurrentTrace,
   setCurrentTrace,
-} from "../../tracing/tracing";
+} from "@/tracing/tracing";
 
 export interface TraceInitFields {
   name?: string;

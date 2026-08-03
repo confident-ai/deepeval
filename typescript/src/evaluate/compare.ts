@@ -1,15 +1,15 @@
 import { MultiBar, type SingleBar, Presets } from "cli-progress";
-import { ArenaTestCase } from "../test-case";
-import { BaseArenaMetric } from "../metrics";
-import { MissingTestCaseParamsError } from "../errors";
+import { ArenaTestCase } from "@/test-case";
+import { BaseArenaMetric } from "@/metrics";
+import { MissingTestCaseParamsError } from "@/errors";
 import {
   DisplayConfig,
   ErrorConfig,
   DEFAULT_DISPLAY_CONFIG,
   DEFAULT_ERROR_CONFIG,
-} from "./configs";
-import { postExperiment } from "./confident";
-import { type ArenaCaseResult } from "./types";
+} from "@/evaluate/configs";
+import { postExperiment } from "@/evaluate/confident";
+import { type ArenaCaseResult } from "@/evaluate/types";
 
 const PURPLE = "\x1b[38;2;106;0;255m";
 const GREEN = "\x1b[38;2;25;227;160m";

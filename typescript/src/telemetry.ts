@@ -9,6 +9,8 @@ import { PostHog } from "posthog-node";
 
 import Sentry from "@sentry/node";
 
+import { applyGrpcLoggingEnv } from "@/logger";
+
 export enum Feature {
   REDTEAMING = "redteaming",
   SYNTHESIZER = "synthesizer",
@@ -95,6 +97,10 @@ function initializeTelemetry() {
     attachStacktrace: false,
     defaultIntegrations: false,
   });
+
+  // grpc-js reads GRPC_VERBOSITY / GRPC_TRACE when the channel is created, so
+  // this has to run before the exporter exists.
+  applyGrpcLoggingEnv();
 
   const otlpExporter = new OTLPTraceExporter({
     url: NEW_RELIC_OTLP_ENDPOINT,

@@ -1,2 +1,5 @@
-export { ToxicityMetric, type ToxicityMetricOptions } from "./toxicity";
-export * from "./schema";
+export {
+  ToxicityMetric,
+  type ToxicityMetricOptions,
+} from "@/metrics/toxicity/toxicity";
+export * from "@/metrics/toxicity/schema";

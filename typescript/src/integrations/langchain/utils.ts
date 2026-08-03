@@ -2,8 +2,8 @@ import { ChatGeneration } from "@langchain/core/outputs";
 import { AIMessage } from "@langchain/core/messages";
 import cliProgress from "cli-progress";
 
-import { applyPendingToSpan, popPendingFor, traceManager } from "../../tracing";
-import { BaseMetric } from "../../metrics/base-metrics";
+import { applyPendingToSpan, popPendingFor, traceManager } from "@/tracing";
+import { BaseMetric } from "@/metrics/base-metrics";
 import {
   SpanType,
   TraceSpanStatus,
@@ -16,7 +16,7 @@ import {
   setCurrentSpan,
   getCurrentTrace,
   getCurrentSpan,
-} from "../../tracing/tracing";
+} from "@/tracing/tracing";
 
 enum MessageRole {
   System = "system",

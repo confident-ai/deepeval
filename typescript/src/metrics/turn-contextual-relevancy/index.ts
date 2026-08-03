@@ -1,5 +1,5 @@
 export {
   TurnContextualRelevancyMetric,
   type TurnContextualRelevancyMetricOptions,
-} from "./turn-contextual-relevancy";
-export * from "./schema";
+} from "@/metrics/turn-contextual-relevancy/turn-contextual-relevancy";
+export * from "@/metrics/turn-contextual-relevancy/schema";

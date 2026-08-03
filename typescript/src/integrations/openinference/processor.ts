@@ -9,19 +9,19 @@ import {
   LlmSpan,
   ToolSpan,
   TraceSpanStatus,
-} from "../../tracing/tracing";
+} from "@/tracing/tracing";
 import {
   applyPendingToSpan,
   popPendingFor,
-} from "../../tracing/pending-context";
+} from "@/tracing/pending-context";
 import {
   ROUTE_TO_REST_ATTRIBUTE,
   endOtelImplicitTrace,
   resolveSpanRoute,
   resolveTraceForOtelSpan,
-} from "../../tracing/otel-routing";
-import { OpenInferenceInstrumentationOptions } from "./index";
-import { ToolCall } from "../../test-case";
+} from "@/tracing/otel-routing";
+import { OpenInferenceInstrumentationOptions } from "@/integrations/openinference/index";
+import { ToolCall } from "@/test-case";
 
 // ---------------------------------------------------------------------------
 // OI span kind -> internal SpanType mapping

@@ -1,16 +1,16 @@
 import type { ZodType } from "zod";
-import { DeepEvalBaseLLM, OpenAIModel } from "../models";
+import { DeepEvalBaseLLM, OpenAIModel } from "@/models";
 import {
   LLMTestCase,
   SingleTurnParams,
   ToolCall,
   ArenaTestCase,
-} from "../test-case";
-import { DeepEvalError, MissingTestCaseParamsError } from "../errors";
-import { BaseMetricCore } from "./base-metrics";
+} from "@/test-case";
+import { DeepEvalError, MissingTestCaseParamsError } from "@/errors";
+import { BaseMetricCore } from "@/metrics/base-metrics";
 
 // Canonical helper lives in test-case (used by serialization boundaries too).
-export { resolveRetrievalContext } from "../test-case";
+export { resolveRetrievalContext } from "@/test-case";
 
 /**
  * Resolve a metric's `model` option into a concrete model.

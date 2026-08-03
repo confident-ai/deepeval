@@ -1,6 +1,6 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { checkSingleTurnParams, constructVerboseLogs } from "../utils";
+import { BaseMetric } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { checkSingleTurnParams, constructVerboseLogs } from "@/metrics/utils";
 
 export interface ExactMatchMetricOptions {
   threshold?: number;

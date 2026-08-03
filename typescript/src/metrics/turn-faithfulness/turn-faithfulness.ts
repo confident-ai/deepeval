@@ -1,23 +1,23 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import {
   ConversationalTestCase,
   MultiTurnParams,
   Turn,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+} from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
   resolveRetrievalContext,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
   getTurnsInSlidingWindow,
-} from "../conversational-utils";
+} from "@/metrics/conversational-utils";
 import {
   TruthsSchema,
   ClaimsSchema,
@@ -25,7 +25,7 @@ import {
   FaithfulnessScoreReasonSchema,
   type FaithfulnessVerdict,
   type InteractionFaithfulnessScore,
-} from "./schema";
+} from "@/metrics/turn-faithfulness/schema";
 
 const TEMPLATE_CLASS = "TurnFaithfulnessMetric";
 

@@ -1,22 +1,22 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import {
   ConversationalTestCase,
   MultiTurnParams,
   Turn,
   ToolCall,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+} from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   printToolsCalled,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
-} from "../conversational-utils";
+} from "@/metrics/conversational-utils";
 import {
   ToolSelectionScoreSchema,
   ArgumentCorrectnessScoreSchema,
@@ -24,7 +24,7 @@ import {
   type ToolSelectionScore,
   type ArgumentCorrectnessScore,
   type UserInputAndTools,
-} from "./schema";
+} from "@/metrics/tool-use/schema";
 
 const TEMPLATE_CLASS = "ToolUseMetric";
 

@@ -1,5 +1,8 @@
-export { DAGMetric, type DAGMetricOptions } from "./dag";
-export { DeepAcyclicGraph, type DeepAcyclicGraphOptions } from "./graph";
+export { DAGMetric, type DAGMetricOptions } from "@/metrics/dag/dag";
+export {
+  DeepAcyclicGraph,
+  type DeepAcyclicGraphOptions,
+} from "@/metrics/dag/graph";
 export {
   TaskNode,
   BinaryJudgementNode,
@@ -9,13 +12,13 @@ export {
   type JudgementNodeOptions,
   type VerdictNodeOptions,
   type AddVerdictOptions,
-} from "./nodes";
+} from "@/metrics/dag/nodes";
 export {
   type AnyNode,
   type ChildMetric,
   type ExecutableNode,
   type VerdictLikeNode,
-} from "./types";
+} from "@/metrics/dag/types";
 export {
   NodeType,
   ChildType,
@@ -27,10 +30,10 @@ export {
   constructDagUploadPayload,
   buildDagFromPayload,
   serializeDagToPayload,
-} from "./serialization";
+} from "@/metrics/dag/serialization";
 export {
   TaskNodeOutputSchema,
   BinaryJudgementVerdictSchema,
   MetricScoreReasonSchema,
   nonBinaryVerdictSchema,
-} from "./schema";
+} from "@/metrics/dag/schema";

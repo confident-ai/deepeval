@@ -1,15 +1,15 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
-import { TruthsSchema, ClaimsSchema } from "../faithfulness/schema";
+} from "@/metrics/utils";
+import { TruthsSchema, ClaimsSchema } from "@/metrics/faithfulness/schema";
 import {
   VerdictsSchema,
   QuestionsSchema,
@@ -17,7 +17,7 @@ import {
   SummarizationScoreReasonSchema,
   type SummarizationAlignmentVerdict,
   type SummarizationCoverageVerdict,
-} from "./schema";
+} from "@/metrics/summarization/schema";
 
 const TEMPLATE_CLASS = "SummarizationMetric";
 

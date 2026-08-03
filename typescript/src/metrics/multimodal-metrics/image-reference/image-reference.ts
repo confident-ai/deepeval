@@ -1,20 +1,23 @@
-import { BaseMetric } from "../../base-metrics";
+import { BaseMetric } from "@/metrics/base-metrics";
 import {
   LLMTestCase,
   SingleTurnParams,
   MLLMImage,
   convertToMultiModalArray,
-} from "../../../test-case";
-import { DeepEvalBaseLLM } from "../../../models";
-import { resolveTemplate } from "../../../templates";
+} from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
-} from "../../utils";
-import { getImageIndices, getImageContext } from "../utils";
-import { ReasonScoreSchema } from "../schema";
+} from "@/metrics/utils";
+import {
+  getImageIndices,
+  getImageContext,
+} from "@/metrics/multimodal-metrics/utils";
+import { ReasonScoreSchema } from "@/metrics/multimodal-metrics/schema";
 
 const TEMPLATE_CLASS = "ImageReferenceMetric";
 
