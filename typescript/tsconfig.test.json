@@ -4,5 +4,6 @@
     "noEmit": true,
     "rootDir": "."
   },
-  "include": ["tests", "examples/vitest"]
+  "include": ["tests", "examples/vitest"],
+  "exclude": ["node_modules", "dist"]
 }

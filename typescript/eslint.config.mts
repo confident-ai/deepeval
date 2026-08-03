@@ -25,5 +25,17 @@ export default defineConfig([
       ],
     },
   },
+  {
+    files: ["tests/**/*.ts", "examples/vitest/**/*.ts"],
+    languageOptions: {
+      parserOptions: {
+        project: ["./tsconfig.test.json"],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-floating-promises": "error",
+    },
+  },
   eslintConfigPrettier,
 ]);
