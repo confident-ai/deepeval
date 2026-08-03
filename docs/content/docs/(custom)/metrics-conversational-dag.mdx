@@ -43,7 +43,7 @@ To use a `ConversationalDAGMetric`, create a [`ConversationalTestCase`](/docs/ev
 
 - `turns`
 
-You'll also need to supply any additional arguments such as <C id="field::retrieval_context"/> and <C id="field::tools_called"/> in your `turns` if your evaluation criteria depends on these parameters.
+You'll also need to supply any additional arguments such as <Term py="retrieval_context" ts="retrievalContext"/> and <Term py="tools_called" ts="toolsCalled"/> in your `turns` if your evaluation criteria depends on these parameters.
 
 ## Usage
 
@@ -207,13 +207,13 @@ flowchart TD
 
 ### Root Nodes
 
-<C id="field::root_nodes"/> contains the nodes where evaluation begins. A root can be a `ConversationalTaskNode`, `ConversationalBinaryJudgementNode`, or `ConversationalNonBinaryJudgementNode`.
+<Term py="root_nodes" ts="rootNodes"/> contains the nodes where evaluation begins. A root can be a `ConversationalTaskNode`, `ConversationalBinaryJudgementNode`, or `ConversationalNonBinaryJudgementNode`.
 
 You can provide multiple `ConversationalTaskNode` roots. If a binary or non-binary judgement is a root, it must be the only root.
 
 ### Turn Windows
 
-Any task or judgement node can focus on a slice of the conversation instead of every turn. Pass a <C id="field::turn_window"/> of two inclusive indices to restrict what the node sees:
+Any task or judgement node can focus on a slice of the conversation instead of every turn. Pass a <Term py="turn_window" ts="turnWindow"/> of two inclusive indices to restrict what the node sees:
 
 <Switch>
 
@@ -255,7 +255,7 @@ A downstream node can be reused by multiple paths. Add the same node instance wh
 
 ### Reaching a Verdict
 
-A DAG has no single exit node. Instead, every path through the graph ends at one of the outcomes you register with <C id="method::add_verdict"/> on a judgement node:
+A DAG has no single exit node. Instead, every path through the graph ends at one of the outcomes you register with <Term py="add_verdict" ts="addVerdict"/> on a judgement node:
 
 <Switch>
 
@@ -301,7 +301,7 @@ Construct the graph after every judgement has all of its outcomes.
 
 ## DAG Node Types
 
-A multi-turn DAG uses three node types. Define the nodes first, then connect them with <C id="method::add_node"/> and <C id="method::add_verdict"/>.
+A multi-turn DAG uses three node types. Define the nodes first, then connect them with <Term py="add_node" ts="addNode"/> and <Term py="add_verdict" ts="addVerdict"/>.
 
 Each constructor configures only that node; it does not declare children or outcomes. Those connections are added after initialization.
 
@@ -348,12 +348,12 @@ const task = new metrics.ConversationalTaskNode({
 There are **TWO** mandatory and **THREE** optional parameters when creating a `ConversationalTaskNode`:
 
 - `instructions`: directions for processing the conversation.
-- <C id="field::output_label"/>: the name used to present this node's output to child nodes.
-- [Optional] <C id="field::evaluation_params"/>: a list of `MultiTurnParams` available to the node.
-- [Optional] <C id="field::turn_window"/>: two inclusive indices restricting the node to a slice of the conversation.
+- <Term py="output_label" ts="outputLabel"/>: the name used to present this node's output to child nodes.
+- [Optional] <Term py="evaluation_params" ts="evaluationParams"/>: a list of `MultiTurnParams` available to the node.
+- [Optional] <Term py="turn_window" ts="turnWindow"/>: two inclusive indices restricting the node to a slice of the conversation.
 - [Optional] `label`: a name displayed in verbose logs.
 
-After both nodes are initialized, connect a task to another task or judgement node with <C id="method::add_node"/>. This adds an outgoing edge; it does not define an outcome. A `ConversationalTaskNode` cannot end the graph on its own — only judgement nodes define outcomes.
+After both nodes are initialized, connect a task to another task or judgement node with <Term py="add_node" ts="addNode"/>. This adds an outgoing edge; it does not define an outcome. A `ConversationalTaskNode` cannot end the graph on its own — only judgement nodes define outcomes.
 
 <Switch>
 
@@ -416,8 +416,8 @@ const judgement = new metrics.ConversationalBinaryJudgementNode({
 There is **ONE** mandatory and **THREE** optional parameters when creating a `ConversationalBinaryJudgementNode`:
 
 - `criteria`: the yes-or-no question the evaluation model must answer.
-- [Optional] <C id="field::evaluation_params"/>: a list of `MultiTurnParams` available to the node.
-- [Optional] <C id="field::turn_window"/>: two inclusive indices restricting the node to a slice of the conversation.
+- [Optional] <Term py="evaluation_params" ts="evaluationParams"/>: a list of `MultiTurnParams` available to the node.
+- [Optional] <Term py="turn_window" ts="turnWindow"/>: two inclusive indices restricting the node to a slice of the conversation.
 - [Optional] `label`: a name displayed in verbose logs.
 
 The constructor does not define the branches. Add exactly one `True` verdict and one `False` verdict afterward:
@@ -491,8 +491,8 @@ const judgement = new metrics.ConversationalNonBinaryJudgementNode({
 There is **ONE** mandatory and **THREE** optional parameters when creating a `ConversationalNonBinaryJudgementNode`:
 
 - `criteria`: the classification question the evaluation model must answer.
-- [Optional] <C id="field::evaluation_params"/>: a list of `MultiTurnParams` available to the node.
-- [Optional] <C id="field::turn_window"/>: two inclusive indices restricting the node to a slice of the conversation.
+- [Optional] <Term py="evaluation_params" ts="evaluationParams"/>: a list of `MultiTurnParams` available to the node.
+- [Optional] <Term py="turn_window" ts="turnWindow"/>: two inclusive indices restricting the node to a slice of the conversation.
 - [Optional] `label`: a name displayed in verbose logs.
 
 The constructor does not define the possible outcomes. Add at least one unique string verdict afterward:

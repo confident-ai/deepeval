@@ -2,6 +2,7 @@ import {
   DeepEvalOpenAICompatibleModel,
   type OpenAICompatibleModelOptions,
 } from "../openai-compatible-model";
+import type { ModelNamespace } from "../registry";
 
 export type OpenAIModelOptions = OpenAICompatibleModelOptions;
 
@@ -15,6 +16,7 @@ const DEFAULT_OPENAI_MODEL = "gpt-4.1";
 export class OpenAIModel extends DeepEvalOpenAICompatibleModel {
   protected providerLabel = "OpenAI";
   protected apiKeyEnvVar = "OPENAI_API_KEY";
+  protected registryNamespace: ModelNamespace = "openai";
 
   constructor(options: OpenAIModelOptions = {}) {
     super({

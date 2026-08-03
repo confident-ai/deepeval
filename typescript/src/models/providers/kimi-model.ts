@@ -2,6 +2,7 @@ import {
   DeepEvalOpenAICompatibleModel,
   type OpenAICompatibleModelOptions,
 } from "../openai-compatible-model";
+import type { ModelNamespace } from "../registry";
 
 export type KimiModelOptions = OpenAICompatibleModelOptions;
 
@@ -16,6 +17,7 @@ const MOONSHOT_BASE_URL = "https://api.moonshot.cn/v1";
 export class KimiModel extends DeepEvalOpenAICompatibleModel {
   protected providerLabel = "Moonshot";
   protected apiKeyEnvVar = "MOONSHOT_API_KEY";
+  protected registryNamespace: ModelNamespace = "kimi";
 
   constructor(options: KimiModelOptions = {}) {
     super({

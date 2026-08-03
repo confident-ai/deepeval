@@ -1,6 +1,11 @@
 import type { ZodType } from "zod";
-import { DeepEvalBaseLLM, type GenerationResult } from "../base-model";
-import { computeCost, extractJson, importOptional } from "../utils";
+import {
+  DeepEvalBaseLLM,
+  type GenerationKwargs,
+  type GenerationResult,
+} from "../base-model";
+import { extractJson, importOptional } from "../utils";
+import type { ModelNamespace } from "../registry";
 
 const DEFAULT_BEDROCK_REGION = "us-east-1";
 
@@ -10,9 +15,12 @@ export interface AmazonBedrockModelOptions {
   awsAccessKeyId?: string;
   awsSecretAccessKey?: string;
   awsSessionToken?: string;
-  temperature?: number;
+  /** Defaults to `0`. Pass `null` to omit it from the request entirely. */
+  temperature?: number | null;
   costPerInputToken?: number;
   costPerOutputToken?: number;
+  /** Extra params merged into the Converse `inferenceConfig` (e.g. `topP`, `maxTokens`). */
+  generationKwargs?: GenerationKwargs;
 }
 
 export class AmazonBedrockModel extends DeepEvalBaseLLM {
@@ -20,10 +28,9 @@ export class AmazonBedrockModel extends DeepEvalBaseLLM {
   private readonly awsAccessKeyId?: string;
   private readonly awsSecretAccessKey?: string;
   private readonly awsSessionToken?: string;
-  private readonly temperature?: number;
-  private readonly costPerInputToken?: number;
-  private readonly costPerOutputToken?: number;
+  private readonly generationKwargs: GenerationKwargs;
   private sdk?: any;
+  protected registryNamespace: ModelNamespace = "bedrock";
   private client?: any;
 
   constructor(options: AmazonBedrockModelOptions = {}) {
@@ -39,10 +46,10 @@ export class AmazonBedrockModel extends DeepEvalBaseLLM {
       options.awsSecretAccessKey ?? process.env.AWS_SECRET_ACCESS_KEY;
     this.awsSessionToken =
       options.awsSessionToken ?? process.env.AWS_SESSION_TOKEN;
-    // Only sent when explicitly set — some models (e.g. reasoning models) reject `temperature`.
     this.temperature = options.temperature;
     this.costPerInputToken = options.costPerInputToken;
     this.costPerOutputToken = options.costPerOutputToken;
+    this.generationKwargs = { ...options.generationKwargs };
   }
 
   private async getSdk(): Promise<any> {
@@ -86,23 +93,25 @@ export class AmazonBedrockModel extends DeepEvalBaseLLM {
     const client = await this.getClient();
     const { ConverseCommand } = await this.getSdk();
 
+    const temperature = this.resolveTemperature();
+    const inferenceConfig: Record<string, unknown> = {
+      ...(temperature !== undefined && { temperature }),
+      ...this.generationKwargs,
+    };
+
     const response = await client.send(
       new ConverseCommand({
         modelId: this.modelName,
         messages: [{ role: "user", content: [{ text: prompt }] }],
-        ...(this.temperature !== undefined && {
-          inferenceConfig: { temperature: this.temperature },
-        }),
+        ...(Object.keys(inferenceConfig).length > 0 && { inferenceConfig }),
       }),
     );
 
     const blocks: any[] = response.output?.message?.content ?? [];
     const text: string = blocks.map((block) => block.text ?? "").join("");
-    const cost = computeCost(
+    const cost = this.resolveCost(
       response.usage?.inputTokens,
       response.usage?.outputTokens,
-      this.costPerInputToken,
-      this.costPerOutputToken,
     );
 
     if (schema) {
@@ -116,6 +125,6 @@ export class AmazonBedrockModel extends DeepEvalBaseLLM {
   }
 
   supportsMultimodal(): boolean {
-    return true;
+    return this.modelData.supportsMultimodal ?? true;
   }
 }

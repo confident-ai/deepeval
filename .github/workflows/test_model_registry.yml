@@ -1,0 +1,45 @@
+name: Model Registry
+
+# Guards that the TypeScript model registry (`typescript/src/models/registry/models.json`)
+# stays in sync with its Python source of truth, `deepeval/models/llms/constants.py`.
+# The check spans both packages, so it lives in its own workflow rather than the
+# Python-only Core Tests workflow.
+
+on:
+  push:
+    paths:
+      - 'deepeval/models/llms/constants.py'
+      - 'deepeval/models/base_model.py'
+      - 'typescript/src/models/registry/**'
+      - 'scripts/compile_model_registry.py'
+      - 'tests/test_models/test_model_registry.py'
+      - '.github/workflows/test_model_registry.yml'
+  pull_request:
+    paths:
+      - 'deepeval/models/llms/constants.py'
+      - 'deepeval/models/base_model.py'
+      - 'typescript/src/models/registry/**'
+      - 'scripts/compile_model_registry.py'
+      - 'tests/test_models/test_model_registry.py'
+      - '.github/workflows/test_model_registry.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      # The test only uses the standard library + the compile script, which loads
+      # constants.py in isolation, so no project install is needed — just pytest.
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Check models.json is in sync with constants.py
+        run: pytest -vv -rA tests/test_models/test_model_registry.py

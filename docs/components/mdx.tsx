@@ -3,10 +3,11 @@ import { Tabs, Tab } from "fumadocs-ui/components/tabs";
 import { Card, Cards } from "fumadocs-ui/components/card";
 import { Steps, Step } from "fumadocs-ui/components/steps";
 import type { MDXComponents } from "mdx/types";
-import { DEFAULT_LLM_MODEL } from "@/lib/defaults";
 import { MdxAnchor } from "@/components/mdx-anchor";
-import { C } from "@/components/lang/code-term";
+import { Term } from "@/components/lang/term";
+import { DefaultLLMModel } from "@/components/lang/default-llm-model";
 import { Switch, Case } from "@/components/lang/switch";
+import { Only } from "@/components/lang/only";
 
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 import ImageDisplayer from "@site/src/components/ImageDisplayer";
@@ -26,8 +27,6 @@ import SectionLabel from "@site/src/components/SectionLabel";
 import EnterpriseComparisonTable from "@site/src/sections/enterprise/EnterpriseComparisonTable";
 import EnterprisePlatformMockup from "@site/src/sections/enterprise/EnterprisePlatformMockup";
 import RepoContributors from "@site/src/sections/home/RepoContributors";
-
-const DefaultLLMModel = () => <code>{DEFAULT_LLM_MODEL}</code>;
 
 export const getMDXComponents = (components?: MDXComponents) =>
   ({
@@ -58,9 +57,10 @@ export const getMDXComponents = (components?: MDXComponents) =>
     EnterprisePlatformMockup,
     RepoContributors,
     DefaultLLMModel,
-    C,
+    Term,
     Switch,
     Case,
+    Only,
     ...components,
   }) satisfies MDXComponents;
 

@@ -1,15 +1,42 @@
 import type { ZodType } from "zod";
+import {
+  getModelData,
+  type ModelData,
+  type ModelNamespace,
+} from "./registry";
+import { computeCost } from "./utils";
 
-/**
- * The result of an LLM generation: the produced output plus the USD cost.
- */
 export interface GenerationResult<T = string> {
   output: T;
   cost: number | null;
 }
 
+/**
+ * Extra provider-specific generation parameters, the counterpart of Python's
+ * `generation_kwargs`. Merged last, so a key set here overrides the equivalent
+ * first-class option.
+ */
+export type GenerationKwargs = Record<string, unknown>;
+
+export const DEFAULT_TEMPERATURE = 0;
+
 export abstract class DeepEvalBaseLLM {
   modelName?: string;
+
+  /** Unset by providers Python has no data for; those resolve to defaults. */
+  protected registryNamespace?: ModelNamespace;
+
+  /** Set when the registry key differs from `modelName`, as on Azure. */
+  protected registryModelName?: string;
+
+  /** Take precedence over the registry's prices. */
+  protected costPerInputToken?: number;
+  protected costPerOutputToken?: number;
+
+  /** Unset means `DEFAULT_TEMPERATURE`; `null` means "never send temperature". */
+  protected temperature?: number | null;
+
+  private cachedModelData?: ModelData;
 
   constructor(modelName?: string) {
     this.modelName = this.parseModelName(modelName);
@@ -19,13 +46,17 @@ export abstract class DeepEvalBaseLLM {
     return modelName;
   }
 
-  /**
-   * Runs the model to produce an output (and its cost).
-   *
-   * @param prompt The prompt to send to the model.
-   * @param schema Optional zod schema; when provided, the model is asked to
-   *   return JSON and the parsed, validated value is returned as `output`.
-   */
+  // Lazy: subclasses set `registryNamespace` in field initializers, which run
+  // after this constructor.
+  protected get modelData(): ModelData {
+    this.cachedModelData ??= getModelData(
+      this.registryNamespace,
+      this.registryModelName ?? this.modelName,
+    );
+    return this.cachedModelData;
+  }
+
+  /** When `schema` is given, the model returns JSON parsed into `output`. */
   abstract generate<T = string>(
     prompt: string,
     schema?: ZodType<T>,
@@ -33,15 +64,47 @@ export abstract class DeepEvalBaseLLM {
 
   abstract getModelName(): string;
 
+  /** `undefined` means omit the field, as reasoning models reject it. */
+  protected resolveTemperature(): number | undefined {
+    if (this.temperature === null) {
+      return undefined;
+    }
+    if (this.modelData.supportsTemperature === false) {
+      return undefined;
+    }
+    return this.temperature ?? DEFAULT_TEMPERATURE;
+  }
+
+  /** `null` when neither the caller nor the registry knows the rates. */
+  protected resolveCost(
+    inputTokens: number | null | undefined,
+    outputTokens: number | null | undefined,
+  ): number | null {
+    return computeCost(
+      inputTokens,
+      outputTokens,
+      this.costPerInputToken ?? this.modelData.inputPrice,
+      this.costPerOutputToken ?? this.modelData.outputPrice,
+    );
+  }
+
   supportsMultimodal(): boolean | null {
-    return null;
+    return this.modelData.supportsMultimodal ?? null;
   }
 
   supportsStructuredOutputs(): boolean | null {
-    return null;
+    return this.modelData.supportsStructuredOutputs ?? null;
   }
 
   supportsLogProbs(): boolean | null {
-    return null;
+    return this.modelData.supportsLogProbs ?? null;
+  }
+
+  maxLogProbs(): number | null {
+    return this.modelData.maxLogProbs ?? null;
+  }
+
+  supportsTemperature(): boolean | null {
+    return this.modelData.supportsTemperature ?? null;
   }
 }

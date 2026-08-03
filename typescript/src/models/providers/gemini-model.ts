@@ -1,35 +1,37 @@
 import type { ZodType } from "zod";
-import { DeepEvalBaseLLM, type GenerationResult } from "../base-model";
 import {
-  computeCost,
-  extractJson,
-  importOptional,
-  requireApiKey,
-} from "../utils";
+  DeepEvalBaseLLM,
+  type GenerationKwargs,
+  type GenerationResult,
+} from "../base-model";
+import { extractJson, importOptional, requireApiKey } from "../utils";
 import { geminiContents } from "../multimodal";
+import type { ModelNamespace } from "../registry";
 
 const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 
 export interface GeminiModelOptions {
   model?: string;
   apiKey?: string;
-  temperature?: number;
+  /** Defaults to `0`. Pass `null` to omit it from the request entirely. */
+  temperature?: number | null;
   useVertexAI?: boolean;
   project?: string;
   location?: string;
   costPerInputToken?: number;
   costPerOutputToken?: number;
+  /** Extra params merged into the `generateContent` request `config`. */
+  generationKwargs?: GenerationKwargs;
 }
 
 export class GeminiModel extends DeepEvalBaseLLM {
   private readonly apiKey: string;
-  private readonly temperature?: number;
   private readonly useVertexAI: boolean;
   private readonly project?: string;
   private readonly location?: string;
-  private readonly costPerInputToken?: number;
-  private readonly costPerOutputToken?: number;
+  private readonly generationKwargs: GenerationKwargs;
   private client?: any;
+  protected registryNamespace: ModelNamespace = "gemini";
 
   constructor(options: GeminiModelOptions = {}) {
     super(
@@ -40,7 +42,6 @@ export class GeminiModel extends DeepEvalBaseLLM {
       process.env.GOOGLE_API_KEY ??
       process.env.GEMINI_API_KEY ??
       "";
-    // Only sent when explicitly set — some models (e.g. reasoning models) reject `temperature`.
     this.temperature = options.temperature;
     this.useVertexAI =
       options.useVertexAI ?? process.env.GOOGLE_GENAI_USE_VERTEXAI === "true";
@@ -48,6 +49,7 @@ export class GeminiModel extends DeepEvalBaseLLM {
     this.location = options.location ?? process.env.GOOGLE_CLOUD_LOCATION;
     this.costPerInputToken = options.costPerInputToken;
     this.costPerOutputToken = options.costPerOutputToken;
+    this.generationKwargs = { ...options.generationKwargs };
   }
 
   private async getClient(): Promise<any> {
@@ -72,12 +74,14 @@ export class GeminiModel extends DeepEvalBaseLLM {
   ): Promise<GenerationResult<T>> {
     const client = await this.getClient();
 
+    const temperature = this.resolveTemperature();
     const config: Record<string, unknown> = {
-      ...(this.temperature !== undefined && { temperature: this.temperature }),
+      ...(temperature !== undefined && { temperature }),
     };
     if (schema) {
       config.responseMimeType = "application/json";
     }
+    Object.assign(config, this.generationKwargs);
 
     const response = await client.models.generateContent({
       model: this.modelName,
@@ -86,11 +90,9 @@ export class GeminiModel extends DeepEvalBaseLLM {
     });
 
     const text: string = response.text ?? "";
-    const cost = computeCost(
+    const cost = this.resolveCost(
       response.usageMetadata?.promptTokenCount,
       response.usageMetadata?.candidatesTokenCount,
-      this.costPerInputToken,
-      this.costPerOutputToken,
     );
 
     if (schema) {
@@ -104,6 +106,6 @@ export class GeminiModel extends DeepEvalBaseLLM {
   }
 
   supportsMultimodal(): boolean {
-    return true;
+    return this.modelData.supportsMultimodal ?? true;
   }
 }

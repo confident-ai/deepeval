@@ -33,6 +33,11 @@
       "require": "./dist/tracing/index.js",
       "types": "./dist/tracing/index.d.ts"
     },
+    "./models": {
+      "import": "./dist/models/index.js",
+      "require": "./dist/models/index.js",
+      "types": "./dist/models/index.d.ts"
+    },
     "./confident": {
       "import": "./dist/confident/index.js",
       "require": "./dist/confident/index.js",
@@ -95,6 +100,9 @@
       ],
       "tracing": [
         "dist/tracing/index.d.ts"
+      ],
+      "models": [
+        "dist/models/index.d.ts"
       ],
       "confident": [
         "dist/confident/index.d.ts"

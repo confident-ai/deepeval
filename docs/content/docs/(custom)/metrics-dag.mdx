@@ -41,7 +41,7 @@ To use a `DAGMetric`, create an [`LLMTestCase`](/docs/evaluation-test-cases#llm-
 
 - `input`
 
-You'll also need to supply any additional arguments such as <C id="field::expected_output"/> and <C id="field::tools_called"/> if your evaluation criteria depends on these parameters.
+You'll also need to supply any additional arguments such as <Term py="expected_output" ts="expectedOutput"/> and <Term py="tools_called" ts="toolsCalled"/> if your evaluation criteria depends on these parameters.
 
 ## Usage
 
@@ -278,7 +278,7 @@ flowchart TD
 
 ### Root Nodes
 
-<C id="field::root_nodes"/> contains the nodes where evaluation begins. A root can be a `TaskNode`, `BinaryJudgementNode`, or `NonBinaryJudgementNode`.
+<Term py="root_nodes" ts="rootNodes"/> contains the nodes where evaluation begins. A root can be a `TaskNode`, `BinaryJudgementNode`, or `NonBinaryJudgementNode`.
 
 You can provide multiple `TaskNode` roots. If a binary or non-binary judgement is a root, it must be the only root.
 
@@ -362,7 +362,7 @@ Here, the heading-order judgement depends on the extracted headings and the succ
 
 ### Reaching a Verdict
 
-A DAG has no single exit node. Instead, every path through the graph ends at one of the outcomes you register with <C id="method::add_verdict"/> on a judgement node:
+A DAG has no single exit node. Instead, every path through the graph ends at one of the outcomes you register with <Term py="add_verdict" ts="addVerdict"/> on a judgement node:
 
 <Switch>
 
@@ -408,7 +408,7 @@ Construct the graph after every judgement has all of its outcomes.
 
 ## DAG Node Types
 
-A single-turn DAG uses three node types. Define the nodes first, then connect them with <C id="method::add_node"/> and <C id="method::add_verdict"/>.
+A single-turn DAG uses three node types. Define the nodes first, then connect them with <Term py="add_node" ts="addNode"/> and <Term py="add_verdict" ts="addVerdict"/>.
 
 Each constructor configures only that node; it does not declare children or outcomes. Those connections are added after initialization.
 
@@ -455,11 +455,11 @@ const task = new metrics.TaskNode({
 There are **TWO** mandatory and **TWO** optional parameters when creating a `TaskNode`:
 
 - `instructions`: directions for processing the available input.
-- <C id="field::output_label"/>: the name used to present this node's output to child nodes.
-- [Optional] <C id="field::evaluation_params"/>: test-case parameters available to the node.
+- <Term py="output_label" ts="outputLabel"/>: the name used to present this node's output to child nodes.
+- [Optional] <Term py="evaluation_params" ts="evaluationParams"/>: test-case parameters available to the node.
 - [Optional] `label`: a name displayed in verbose logs.
 
-After both nodes are initialized, connect a task to another task or judgement node with <C id="method::add_node"/>. This adds an outgoing edge; it does not define an outcome. A `TaskNode` cannot end the graph on its own — only judgement nodes define outcomes.
+After both nodes are initialized, connect a task to another task or judgement node with <Term py="add_node" ts="addNode"/>. This adds an outgoing edge; it does not define an outcome. A `TaskNode` cannot end the graph on its own — only judgement nodes define outcomes.
 
 <Switch>
 
@@ -522,7 +522,7 @@ const judgement = new metrics.BinaryJudgementNode({
 There is **ONE** mandatory and **TWO** optional parameters when creating a `BinaryJudgementNode`:
 
 - `criteria`: the yes-or-no question the evaluation model must answer.
-- [Optional] <C id="field::evaluation_params"/>: additional test-case parameters available to the node.
+- [Optional] <Term py="evaluation_params" ts="evaluationParams"/>: additional test-case parameters available to the node.
 - [Optional] `label`: a name displayed in verbose logs.
 
 The constructor does not define the branches. Add exactly one `True` verdict and one `False` verdict afterward:
@@ -592,7 +592,7 @@ const judgement = new metrics.NonBinaryJudgementNode({
 There is **ONE** mandatory and **TWO** optional parameters when creating a `NonBinaryJudgementNode`:
 
 - `criteria`: the classification question the evaluation model must answer.
-- [Optional] <C id="field::evaluation_params"/>: additional test-case parameters available to the node.
+- [Optional] <Term py="evaluation_params" ts="evaluationParams"/>: additional test-case parameters available to the node.
 - [Optional] `label`: a name displayed in verbose logs.
 
 The constructor does not define the possible outcomes. Add at least one unique string verdict afterward:

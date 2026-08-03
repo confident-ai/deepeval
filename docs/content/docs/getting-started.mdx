@@ -108,11 +108,11 @@ Create a test file to run your first **end-to-end evaluation**.
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
 
-An [LLM test case](/docs/evaluation-test-cases#llm-test-case) in `deepeval` represents a **single unit of LLM app interaction**, and contains mandatory fields such as the `input` and `actual_output` (LLM generated output), and optional ones like `expected_output`.
+An [LLM test case](/docs/evaluation-test-cases#llm-test-case) in `deepeval` represents a **single unit of LLM app interaction**, and contains mandatory fields such as the `input` and <Term py="actual_output" ts="actualOutput"/> (LLM generated output), and optional ones like <Term py="expected_output" ts="expectedOutput"/>.
 
 <ImageDisplayer src={ASSETS.llmTestCase} alt="LLM Test Case" />
 
-Run `touch test_example.py` in your terminal and paste in the following code:
+Run <Term py="touch test_example.py" ts="touch test_example.ts"/> in your terminal and paste in the following code:
 
 <Switch>
 
@@ -167,7 +167,7 @@ await evaluate([testCase], [correctnessMetric]);
 
 </Switch>
 
-Then, run `deepeval test run` from the root directory of your project to evaluate your LLM app **end-to-end**:
+Then, run <Term py="deepeval test run" ts="npx tsx"/> from the root directory of your project to evaluate your LLM app **end-to-end**:
 
 <Switch>
 
@@ -191,9 +191,9 @@ npx tsx test_example.ts
 
 Congratulations! Your test case should have passed ✅ Let's breakdown what happened.
 
-- The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input.
-- The variable `expected_output` represents the ideal answer for a given `input`, and [`GEval`](/docs/metrics-llm-evals) is a research-backed metric provided by `deepeval` for you to evaluate your LLM output's on any custom metric with human-like accuracy.
-- In this example, the metric `criteria` is correctness of the `actual_output` based on the provided `expected_output`, but not all metrics require an `expected_output`.
+- The variable `input` mimics a user input, and <Term py="actual_output" ts="actualOutput"/> is a placeholder for what your application's supposed to output based on this input.
+- The variable <Term py="expected_output" ts="expectedOutput"/> represents the ideal answer for a given `input`, and [`GEval`](/docs/metrics-llm-evals) is a research-backed metric provided by `deepeval` for you to evaluate your LLM output's on any custom metric with human-like accuracy.
+- In this example, the metric `criteria` is correctness of the <Term py="actual_output" ts="actualOutput"/> based on the provided <Term py="expected_output" ts="expectedOutput"/>, but not all metrics require an <Term py="expected_output" ts="expectedOutput"/>.
 - All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test have passed or not.
 
 If you run more than one test run, you will be able to **catch regressions** by comparing test cases side-by-side. This is also made easier if you're using `deepeval` alongside Confident AI ([see below](/docs/getting-started#save-results-on-cloud) for video demo).
@@ -208,7 +208,7 @@ A [conversational test case](/docs/evaluation-multiturn-test-cases#conversationa
   alt="Conversational Test Case"
 />
 
-Run `touch test_example.py` in your terminal and paste in the following code:
+Run <Term py="touch test_example.py" ts="touch test_example.ts"/> in your terminal and paste in the following code:
 
 <Switch>
 
@@ -262,7 +262,7 @@ await evaluate([testCase], [professionalismMetric]);
 
 </Switch>
 
-Then, run `deepeval test run` from the root directory of your project to evaluate your LLM app **end-to-end**:
+Then, run <Term py="deepeval test run" ts="npx tsx"/> from the root directory of your project to evaluate your LLM app **end-to-end**:
 
 <Switch>
 
@@ -413,7 +413,7 @@ python main.py
 
 🎉 Congratulations! Your eval should have run ✅ A quick recap of what happened:
 
-- `evals_iterator()` looped through your dataset, capturing one trace per golden.
+- <Term py="evals_iterator()" ts="evalsIterator()"/> looped through your dataset, capturing one trace per golden.
 - Your integration's adapter (or `@observe`) created spans for the components inside the trace.
 - The `metrics=[...]` you attached to one of those spans scored it once the trace finished.
 - DeepEval aggregated everything into one test run.
@@ -421,7 +421,7 @@ python main.py
 For sub-agents, retriever scoring, span context customization, and more, see [component-level evaluation](/docs/evaluation-component-level-llm-evals).
 
 :::tip
-Every `evals_iterator()` run is snapshotted to disk, so you can open it in a trace-tree TUI — with per-span scores and metric reasons — by running bare `deepeval inspect`. See the [`deepeval inspect` reference](/docs/command-line-interface#inspect) for full details.
+Every <Term py="evals_iterator()" ts="evalsIterator()"/> run is snapshotted to disk, so you can open it in a trace-tree TUI — with per-span scores and metric reasons — by running bare `deepeval inspect`. See the [`deepeval inspect` reference](/docs/command-line-interface#inspect) for full details.
 
 <ImageDisplayer
   src={ASSETS.deepevalTuiInspect}

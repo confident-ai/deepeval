@@ -3,6 +3,7 @@ import {
   type OpenAICompatibleModelOptions,
 } from "../openai-compatible-model";
 import { requireApiKey } from "../utils";
+import type { ModelNamespace } from "../registry";
 
 export interface AzureOpenAIModelOptions extends OpenAICompatibleModelOptions {
   endpoint?: string;
@@ -13,6 +14,7 @@ export interface AzureOpenAIModelOptions extends OpenAICompatibleModelOptions {
 export class AzureOpenAIModel extends DeepEvalOpenAICompatibleModel {
   protected providerLabel = "Azure OpenAI";
   protected apiKeyEnvVar = "AZURE_OPENAI_API_KEY";
+  protected registryNamespace: ModelNamespace = "openai";
   private endpoint?: string;
   private apiVersion?: string;
   private deployment?: string;
@@ -26,7 +28,6 @@ export class AzureOpenAIModel extends DeepEvalOpenAICompatibleModel {
 
     super({
       ...options,
-      // Azure routes by deployment; the request `model` is the deployment name.
       model: deployment,
       apiKey: options.apiKey ?? process.env.AZURE_OPENAI_API_KEY,
     });
@@ -34,6 +35,8 @@ export class AzureOpenAIModel extends DeepEvalOpenAICompatibleModel {
     this.endpoint = options.endpoint ?? process.env.AZURE_OPENAI_ENDPOINT;
     this.apiVersion = options.apiVersion ?? process.env.OPENAI_API_VERSION;
     this.deployment = deployment;
+    // Requests route by deployment, but pricing belongs to the underlying model.
+    this.registryModelName = options.model;
 
     if (!this.endpoint) {
       throw new Error(

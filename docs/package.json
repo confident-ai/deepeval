@@ -11,7 +11,8 @@
     "changelog-contributors": "node scripts/generate-changelog-contributors.mjs",
     "repo-contributors": "node scripts/generate-repo-contributors.mjs",
     "sdk-versions": "node scripts/generate-sdk-versions.mjs",
-    "prebuild": "npm run repo-contributors && npm run contributors && npm run changelog-contributors && npm run sdk-versions",
+    "validate-terms": "node scripts/validate-terms.mjs",
+    "prebuild": "npm run validate-terms && npm run repo-contributors && npm run contributors && npm run changelog-contributors && npm run sdk-versions",
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {

@@ -23,6 +23,7 @@ import TocFooter from "@/src/components/TocFooter";
 import SidebarSearch from "@/src/layouts/SidebarSearch";
 import LanguageSelector from "@/components/language-selector/language-selector";
 import { PageLanguageScope } from "@/components/lang/page-language-scope";
+import { TocLanguageSync } from "@/components/lang/toc-language-sync";
 import { LanguageScopedDocsLayout } from "@/components/lang/language-scoped-docs-layout";
 import Link from "next/link";
 
@@ -185,6 +186,7 @@ export function createSection(config: SectionConfig) {
         tableOfContentPopover={{ footer: tocFooter }}
       >
         <PageLanguageScope languages={page.data.languages}>
+          <TocLanguageSync />
           <DocsTitle>{page.data.title}</DocsTitle>
           <DocsDescription className="mb-0 text-[15px] font-light">
             {page.data.description}

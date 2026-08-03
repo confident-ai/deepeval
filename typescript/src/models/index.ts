@@ -1,4 +1,17 @@
-export { DeepEvalBaseLLM, type GenerationResult } from "./base-model";
+export {
+  DeepEvalBaseLLM,
+  type GenerationKwargs,
+  type GenerationResult,
+} from "./base-model";
+
+// Per-model pricing/capability data, generated from the Python registries.
+export {
+  getModelData,
+  DEFAULT_MODEL_DATA,
+  GENERATED_MODEL_DATA,
+  type ModelData,
+  type ModelNamespace,
+} from "./registry";
 
 // Shared base for every OpenAI-Chat-Completions-compatible provider/gateway.
 // Exported so advanced users can target any OpenAI-compatible endpoint directly.

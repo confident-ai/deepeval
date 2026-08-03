@@ -1,28 +1,30 @@
 import type { ZodType } from "zod";
-import { DeepEvalBaseLLM, type GenerationResult } from "../base-model";
 import {
-  computeCost,
-  extractJson,
-  importOptional,
-  toJsonSchema,
-} from "../utils";
+  DeepEvalBaseLLM,
+  type GenerationKwargs,
+  type GenerationResult,
+} from "../base-model";
+import { extractJson, importOptional, toJsonSchema } from "../utils";
+import type { ModelNamespace } from "../registry";
 
 const DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434";
 
 export interface OllamaModelOptions {
   model?: string;
   baseURL?: string;
-  temperature?: number;
+  /** Defaults to `0`. Pass `null` to omit it from the request entirely. */
+  temperature?: number | null;
   costPerInputToken?: number;
   costPerOutputToken?: number;
+  /** Extra params merged into Ollama's `chat(..., options: {...})` bag. */
+  generationKwargs?: GenerationKwargs;
 }
 
 export class OllamaModel extends DeepEvalBaseLLM {
   private readonly baseURL: string;
-  private readonly temperature?: number;
-  private readonly costPerInputToken?: number;
-  private readonly costPerOutputToken?: number;
+  private readonly generationKwargs: GenerationKwargs;
   private client?: any;
+  protected registryNamespace: ModelNamespace = "ollama";
 
   constructor(options: OllamaModelOptions = {}) {
     super(options.model ?? process.env.OLLAMA_MODEL_NAME);
@@ -30,10 +32,10 @@ export class OllamaModel extends DeepEvalBaseLLM {
       options.baseURL ??
       process.env.LOCAL_MODEL_BASE_URL ??
       DEFAULT_OLLAMA_BASE_URL;
-    // Only sent when explicitly set — some models (e.g. reasoning models) reject `temperature`.
     this.temperature = options.temperature;
     this.costPerInputToken = options.costPerInputToken;
     this.costPerOutputToken = options.costPerOutputToken;
+    this.generationKwargs = { ...options.generationKwargs };
   }
 
   private async getClient(): Promise<any> {
@@ -55,12 +57,16 @@ export class OllamaModel extends DeepEvalBaseLLM {
     }
     const client = await this.getClient();
 
+    const temperature = this.resolveTemperature();
+    const modelOptions: Record<string, unknown> = {
+      ...(temperature !== undefined && { temperature }),
+      ...this.generationKwargs,
+    };
+
     const request: Record<string, unknown> = {
       model: this.modelName,
       messages: [{ role: "user", content: prompt }],
-      ...(this.temperature !== undefined && {
-        options: { temperature: this.temperature },
-      }),
+      ...(Object.keys(modelOptions).length > 0 && { options: modelOptions }),
     };
     if (schema) {
       request.format = toJsonSchema(schema);
@@ -68,11 +74,9 @@ export class OllamaModel extends DeepEvalBaseLLM {
 
     const response = await client.chat(request);
     const text: string = response.message?.content ?? "";
-    const cost = computeCost(
+    const cost = this.resolveCost(
       response.prompt_eval_count,
       response.eval_count,
-      this.costPerInputToken,
-      this.costPerOutputToken,
     );
 
     if (schema) {
