@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import "deepeval/vitest";
-import { assertTest, LLMTestCase, metrics } from "deepeval";
+import { LLMTestCase, metrics } from "deepeval";
 
 class FakeMetric extends metrics.BaseMetric {
   private readonly label: string;
@@ -30,23 +30,26 @@ class FakeMetric extends metrics.BaseMetric {
 const testCase = () =>
   new LLMTestCase({ input: "What is 2+2?", actualOutput: "4" });
 
-describe("deepeval Vitest matchers", () => {
-  it("toPassMetric passes a passing metric", async () => {
-    await expect(testCase()).toPassMetric(new FakeMetric("Pass", true));
+describe("deepeval Vitest matcher", () => {
+  it("passes a single passing metric", async () => {
+    await expect(testCase()).toPass([new FakeMetric("Pass", true)]);
   });
 
-  it("toPassMetric fails a failing metric (via .not it passes)", async () => {
-    await expect(testCase()).not.toPassMetric(new FakeMetric("Fail", false));
-  });
-
-  it("toPassAll passes when all metrics pass", async () => {
-    await expect(testCase()).toPassAll([
+  it("passes when every metric in the list passes", async () => {
+    await expect(testCase()).toPass([
       new FakeMetric("A", true),
       new FakeMetric("B", true),
     ]);
   });
 
-  it("assertTest also works", async () => {
-    await assertTest(testCase(), [new FakeMetric("Pass", true)]);
+  it("fails a failing metric (via .not it passes)", async () => {
+    await expect(testCase()).not.toPass([new FakeMetric("Fail", false)]);
+  });
+
+  it("fails when any metric in the list fails", async () => {
+    await expect(testCase()).not.toPass([
+      new FakeMetric("A", true),
+      new FakeMetric("B", false),
+    ]);
   });
 });

@@ -6,7 +6,7 @@ import {
   DEEPEVAL_IDENTIFIER,
 } from "../../constants.js";
 import { createTestRunResultsDir } from "../../utils.js";
-import { wrapUpTestRun } from "../../evaluate/assert-test/index.js";
+import { wrapUpTestRun } from "../../evaluate/test-run/index.js";
 
 export default function setup() {
   let dir = process.env[DEEPEVAL_RESULTS_DIR];

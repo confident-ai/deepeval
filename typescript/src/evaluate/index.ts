@@ -1,11 +1,6 @@
 export { evaluate, type EvaluateOptions } from "./evaluate";
 export { compare, type CompareOptions } from "./compare";
-export {
-  assertTest,
-  AssertionFailedError,
-  globalResultCollector,
-  type AssertTestTraceParams,
-} from "./assert-test";
+export { globalResultCollector } from "./test-run";
 export {
   type TestResult,
   type MetricData,

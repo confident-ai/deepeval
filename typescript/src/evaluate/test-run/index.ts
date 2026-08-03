@@ -1,9 +1,12 @@
 export {
-  assertTest,
-  evaluateAssertCase,
-  type AssertTestTraceParams,
-} from "./assert-test";
-export { AssertionFailedError, buildFailureMessage } from "./errors";
+  runMetrics,
+  runTestCaseMetrics,
+  runTraceMetrics,
+  evaluateCase,
+  type MetricsOutcome,
+  type ToPassTarget,
+} from "./run-metrics";
+export { buildFailureMessage } from "./errors";
 export { globalResultCollector } from "./collector";
 export {
   persistCase,
@@ -11,7 +14,7 @@ export {
   wrapUpTestRun,
   getResultsDir,
   type WrapUpOptions,
-} from "./test-run-utils";
+} from "./store";
 export {
   beginTraceCapture,
   endTraceCapture,

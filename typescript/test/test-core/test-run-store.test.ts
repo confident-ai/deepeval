@@ -5,9 +5,9 @@ import {
   persistCase,
   readPersistedCases,
   wrapUpTestRun,
-} from "../../src/evaluate/assert-test/test-run-utils";
-import { _resetWorkerCaseCount } from "../../src/evaluate/assert-test/test-run-utils";
-import { assertTest } from "../../src/evaluate/assert-test";
+} from "../../src/evaluate/test-run/store";
+import { _resetWorkerCaseCount } from "../../src/evaluate/test-run/store";
+import { runMetrics } from "../../src/evaluate/test-run";
 import { LLMTestCase, ConversationalTestCase, Turn } from "../../src/test-case";
 import { BaseMetric } from "../../src/metrics";
 import { EvaluatedCase, MetricData } from "../../src/evaluate/types";
@@ -110,9 +110,9 @@ describe("test-run-store", () => {
     expect(result).toEqual({ link: null, testRunId: null });
   });
 
-  it("collector persists via assertTest when running under the CLI", async () => {
+  it("collector persists via toPass when running under the CLI", async () => {
     setIsRunningDeepEval(true);
-    await assertTest(new LLMTestCase({ input: "q", actualOutput: "a" }), [
+    await runMetrics(new LLMTestCase({ input: "q", actualOutput: "a" }), [
       new FakeMetric(true),
     ]);
     const cases = readPersistedCases(dir);
@@ -122,7 +122,7 @@ describe("test-run-store", () => {
 
   it("collector does NOT persist when not running under the CLI", async () => {
     setIsRunningDeepEval(false);
-    await assertTest(new LLMTestCase({ input: "q", actualOutput: "a" }), [
+    await runMetrics(new LLMTestCase({ input: "q", actualOutput: "a" }), [
       new FakeMetric(true),
     ]);
     expect(readPersistedCases(dir)).toHaveLength(0);

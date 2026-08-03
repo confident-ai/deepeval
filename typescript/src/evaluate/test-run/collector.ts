@@ -1,6 +1,6 @@
 import { EvaluatedCase } from "../types";
 import { getIsRunningDeepEval } from "../../utils";
-import { persistCase } from "./test-run-utils";
+import { persistCase } from "./store";
 
 class ResultCollector {
   private cases: EvaluatedCase[] = [];

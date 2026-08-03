@@ -8,7 +8,7 @@ function printHelp(): void {
 
 Commands:
   test run <path...>   Run Vitest test files as a deepeval test run: evaluate
-                       assertTest / matcher results and post them to Confident AI.
+                       toPass matcher results and post them to Confident AI.
   gate                 Check your project against its governance policy and exit
                        with a non-zero code if it doesn't pass.
 

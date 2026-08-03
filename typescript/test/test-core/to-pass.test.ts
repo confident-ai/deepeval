@@ -1,8 +1,7 @@
 import {
-  assertTest,
-  AssertionFailedError,
+  runMetrics,
   globalResultCollector,
-} from "../../src/evaluate/assert-test";
+} from "../../src/evaluate/test-run";
 import { LLMTestCase } from "../../src/test-case";
 import { BaseMetric, BaseConversationalMetric } from "../../src/metrics";
 import { DeepEvalError, MissingTestCaseParamsError } from "../../src/errors";
@@ -88,62 +87,83 @@ const missingParams = () =>
 const llmTestCase = () =>
   new LLMTestCase({ input: "What is 2+2?", actualOutput: "4" });
 
-describe("assertTest — explicit test case shape", () => {
-  it("resolves when the metric passes", async () => {
-    await expect(assertTest(llmTestCase(), [passing()])).resolves.toBeUndefined();
+describe("toPass — explicit test case shape", () => {
+  it("passes when the metric passes", async () => {
+    await expect(runMetrics(llmTestCase(), [passing()])).resolves.toMatchObject({
+      pass: true,
+    });
   });
 
-  it("throws AssertionFailedError naming the failing metric", async () => {
-    await expect(assertTest(llmTestCase(), [failing()])).rejects.toThrow(
-      AssertionFailedError,
-    );
-    await expect(assertTest(llmTestCase(), [failing()])).rejects.toThrow(
+  it("fails with a message naming the failing metric", async () => {
+    const outcome = await runMetrics(llmTestCase(), [failing()]);
+    expect(outcome.pass).toBe(false);
+    expect(outcome.failureMessage).toMatch(
       /FailMetric.*score: 0\.2.*threshold: 0\.5/,
     );
+  });
+
+  it("fails when any metric in the list fails", async () => {
+    const outcome = await runMetrics(llmTestCase(), [passing(), failing()]);
+    expect(outcome.pass).toBe(false);
+    expect(outcome.failureMessage).toContain("FailMetric");
+    expect(outcome.failureMessage).not.toContain("PassMetric");
   });
 
   it("rejects when a single metric's type doesn't match (no silent filtering)", async () => {
     // Even alongside a valid passing metric, one mismatched metric is fatal.
     await expect(
-      assertTest(llmTestCase(), [passing(), new FakeConversationalMetric()]),
+      runMetrics(llmTestCase(), [passing(), new FakeConversationalMetric()]),
     ).rejects.toThrow(DeepEvalError);
     await expect(
-      assertTest(llmTestCase(), [passing(), new FakeConversationalMetric()]),
+      runMetrics(llmTestCase(), [passing(), new FakeConversationalMetric()]),
     ).rejects.toThrow(/single-turn metrics only/);
   });
 
   it("rejects when every metric is the wrong type", async () => {
     await expect(
-      assertTest(llmTestCase(), [new FakeConversationalMetric()]),
+      runMetrics(llmTestCase(), [new FakeConversationalMetric()]),
     ).rejects.toThrow(DeepEvalError);
   });
 
   it("throws when no metrics are provided", async () => {
-    await expect(assertTest(llmTestCase(), [])).rejects.toThrow(DeepEvalError);
+    await expect(runMetrics(llmTestCase(), [])).rejects.toThrow(DeepEvalError);
+    await expect(runMetrics(llmTestCase())).rejects.toThrow(DeepEvalError);
   });
 
   it("propagates a metric error under strict config", async () => {
-    await expect(assertTest(llmTestCase(), [throwing()])).rejects.toThrow(
+    await expect(runMetrics(llmTestCase(), [throwing()])).rejects.toThrow(
       "boom",
     );
   });
 
   it("propagates MissingTestCaseParamsError (does not silently pass)", async () => {
-    await expect(assertTest(llmTestCase(), [missingParams()])).rejects.toThrow(
+    await expect(runMetrics(llmTestCase(), [missingParams()])).rejects.toThrow(
       MissingTestCaseParamsError,
     );
   });
 });
 
-describe("assertTest — trace-scoped shape", () => {
+describe("toPass — golden (trace-scoped) shape", () => {
   it("throws when there is no active trace", async () => {
     await expect(
-      assertTest({ golden: new Golden({ input: "hi" }), metrics: [passing()] }),
+      runMetrics(new Golden({ input: "hi" }), [passing()]),
     ).rejects.toThrow(DeepEvalError);
+  });
+
+  it("throws when there is no active trace and no metrics either", async () => {
+    await expect(runMetrics(new Golden({ input: "hi" }))).rejects.toThrow(
+      DeepEvalError,
+    );
+  });
+
+  it("rejects multi-turn metrics at the trace level", async () => {
+    await expect(
+      runMetrics(new Golden({ input: "hi" }), [new FakeConversationalMetric()]),
+    ).rejects.toThrow(/trace-level metrics must be single-turn/);
   });
 });
 
-describe("assertTest — result collection (CLI-gated)", () => {
+describe("toPass — result collection (CLI-gated)", () => {
   const wasRunning = getIsRunningDeepEval();
 
   beforeEach(() => {
@@ -157,24 +177,23 @@ describe("assertTest — result collection (CLI-gated)", () => {
 
   it("does NOT collect when not running via the CLI", async () => {
     setIsRunningDeepEval(false);
-    await assertTest(llmTestCase(), [passing()]);
+    await runMetrics(llmTestCase(), [passing()]);
     expect(globalResultCollector.size).toBe(0);
   });
 
   it("collects the evaluated case when running via the CLI", async () => {
     setIsRunningDeepEval(true);
-    await assertTest(llmTestCase(), [passing()]);
+    await runMetrics(llmTestCase(), [passing()]);
     expect(globalResultCollector.size).toBe(1);
     expect(globalResultCollector.getCases()[0].metricsData[0].name).toBe(
       "PassMetric",
     );
   });
 
-  it("collects failing cases too (records before it throws)", async () => {
+  it("collects failing cases too, not just passing ones", async () => {
     setIsRunningDeepEval(true);
-    await expect(assertTest(llmTestCase(), [failing()])).rejects.toThrow(
-      AssertionFailedError,
-    );
+    const outcome = await runMetrics(llmTestCase(), [failing()]);
+    expect(outcome.pass).toBe(false);
     expect(globalResultCollector.size).toBe(1);
     expect(globalResultCollector.getCases()[0].metricsData[0].success).toBe(
       false,

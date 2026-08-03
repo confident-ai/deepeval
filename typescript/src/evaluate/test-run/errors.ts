@@ -1,12 +1,5 @@
 import { MetricData } from "../types";
 
-export class AssertionFailedError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "AssertionFailedError";
-  }
-}
-
 export function buildFailureMessage(metricsData: MetricData[]): string {
   const failed = metricsData.filter(
     (m) => !m.skipped && (m.error != null || !m.success),

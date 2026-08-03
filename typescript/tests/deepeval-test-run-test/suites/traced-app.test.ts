@@ -1,5 +1,6 @@
-import { it } from "vitest";
-import { assertTest, Golden } from "deepeval";
+import { it, expect } from "vitest";
+import "deepeval/vitest";
+import { Golden } from "deepeval";
 import { ragApp } from "../fixtures/rag-app";
 import { correctness } from "../fixtures/metrics";
 
@@ -11,9 +12,11 @@ const goldens = [
   }),
 ];
 
+// Passing a Golden (rather than a test case) evaluates the trace the app just
+// produced, so the metrics come from the spans themselves.
 it.each(goldens)("traced app passes span metrics: $input", async (golden) => {
   await ragApp(golden.input); // produces a trace; span metrics are attached
-  await assertTest({ golden }); // evaluates the captured trace
+  await expect(golden).toPass();
 });
 
 it("traced app also accepts an explicit trace-level metric", async () => {
@@ -22,5 +25,5 @@ it("traced app also accepts an explicit trace-level metric", async () => {
     expectedOutput: "Paris",
   });
   await ragApp(golden.input);
-  await assertTest({ golden, metrics: [correctness()] });
+  await expect(golden).toPass([correctness()]);
 });

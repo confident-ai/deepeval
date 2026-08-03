@@ -1,7 +1,8 @@
-// Multi-turn evaluation: build a ConversationalTestCase from turns and assert
+// Multi-turn evaluation: build a ConversationalTestCase from turns and check
 // it passes real conversational metrics.
-import { it } from "vitest";
-import { assertTest, ConversationalTestCase, Turn } from "deepeval";
+import { it, expect } from "vitest";
+import "deepeval/vitest";
+import { ConversationalTestCase, Turn } from "deepeval";
 import {
   turnRelevancy,
   professionalism,
@@ -31,7 +32,7 @@ it("multi-turn conversation passes conversational metrics", async () => {
     ],
   });
 
-  await assertTest(conversation, [
+  await expect(conversation).toPass([
     turnRelevancy(),
     professionalism(),
     roleAdherence(),

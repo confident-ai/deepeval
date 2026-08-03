@@ -4,7 +4,7 @@ import {
   isCapturingTraces,
   getCapturedTraces,
   getLatestCapturedTrace,
-} from "../../src/evaluate/assert-test/trace-scope";
+} from "../../src/evaluate/test-run/trace-scope";
 import { traceManager } from "../../src/tracing";
 
 describe("trace-scope capture", () => {

@@ -1,5 +1,6 @@
-import { it } from "vitest";
-import { assertTest, Golden, LLMTestCase, metrics } from "deepeval";
+import { it, expect } from "vitest";
+import "deepeval/vitest";
+import { Golden, LLMTestCase, metrics } from "deepeval";
 import { observe } from "deepeval/tracing";
 
 class FakeMetric extends metrics.BaseMetric {
@@ -26,13 +27,13 @@ const llmApp = observe({
   fn: async (query: string) => `answer to ${query}`,
 });
 
-it("explicit assertTest works via the CLI-injected env", async () => {
+it("an explicit test case works via the CLI-injected env", async () => {
   const tc = new LLMTestCase({ input: "q", actualOutput: "a" });
-  await assertTest(tc, [new FakeMetric(true)]);
+  await expect(tc).toPass([new FakeMetric(true)]);
 });
 
-it("trace-scoped assertTest evaluates the observed trace", async () => {
+it("a golden evaluates the observed trace", async () => {
   const golden = new Golden({ input: "What is 2+2?", expectedOutput: "4" });
   await llmApp(golden.input);
-  await assertTest({ golden });
+  await expect(golden).toPass();
 });

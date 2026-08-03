@@ -1,5 +1,6 @@
-import { it } from "vitest";
-import { assertTest, LLMTestCase } from "deepeval";
+import { it, expect } from "vitest";
+import "deepeval/vitest";
+import { LLMTestCase } from "deepeval";
 import {
   answerRelevancy,
   faithfulness,
@@ -31,7 +32,7 @@ it.each(cases)("single-turn passes all metrics: $input", async (c) => {
     retrievalContext: c.retrievalContext,
   });
 
-  await assertTest(testCase, [
+  await expect(testCase).toPass([
     answerRelevancy(),
     faithfulness(),
     correctness(),

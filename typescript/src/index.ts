@@ -26,13 +26,10 @@ export {
 export {
   evaluate,
   compare,
-  assertTest,
-  AssertionFailedError,
   type EvaluationResult,
   type TestResult,
   type EvaluateOptions,
   type CompareOptions,
-  type AssertTestTraceParams,
 } from "./evaluate";
 export { Prompt } from "./prompt";
 export { ConversationSimulator } from "./simulate";

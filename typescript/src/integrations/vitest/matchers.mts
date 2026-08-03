@@ -1,60 +1,31 @@
-import type { LLMTestCase, ConversationalTestCase } from "../../test-case/index.js";
+import { Golden } from "../../dataset/index.js";
 import { BaseMetric, BaseConversationalMetric } from "../../metrics/index.js";
-import { buildTestResult } from "../../evaluate/evaluate.js";
 import {
-  evaluateAssertCase,
-  buildFailureMessage,
-  globalResultCollector,
-} from "../../evaluate/assert-test/index.js";
+  runMetrics,
+  type ToPassTarget,
+} from "../../evaluate/test-run/index.js";
 
-type AnyTestCase = LLMTestCase | ConversationalTestCase;
 type AnyMetric = BaseMetric | BaseConversationalMetric;
 
-async function runMatcher(
-  testCase: AnyTestCase,
-  metrics: AnyMetric[],
-): Promise<{ pass: boolean; failureMessage: string }> {
-  const evaluated = await evaluateAssertCase(testCase, metrics);
-  globalResultCollector.record(evaluated);
-  const testResult = buildTestResult(
-    0,
-    evaluated.testCase,
-    evaluated.metricsData,
-  );
-  return {
-    pass: testResult.success,
-    failureMessage: buildFailureMessage(evaluated.metricsData),
-  };
+function describeTarget(target: ToPassTarget): string {
+  return target instanceof Golden ? "the trace" : "the test case";
 }
 
-/** `expect(testCase).toPassMetric(metric)` */
-export async function toPassMetric(
+/**
+ * `expect(testCase).toPass([metricA, metricB])` — evaluate a test case.
+ * `expect(golden).toPass([metric])` — evaluate the trace this test produced.
+ */
+export async function toPass(
   this: { isNot?: boolean },
-  received: AnyTestCase,
-  metric: AnyMetric,
+  received: ToPassTarget,
+  metrics: AnyMetric[] = [],
 ) {
-  const { pass, failureMessage } = await runMatcher(received, [metric]);
+  const { pass, failureMessage } = await runMetrics(received, metrics);
   return {
     pass,
     message: () =>
       pass
-        ? `Expected the test case NOT to pass metric "${metric.name}", but it did.`
-        : failureMessage,
-  };
-}
-
-/** `expect(testCase).toPassAll([metricA, metricB])` */
-export async function toPassAll(
-  this: { isNot?: boolean },
-  received: AnyTestCase,
-  metrics: AnyMetric[],
-) {
-  const { pass, failureMessage } = await runMatcher(received, metrics);
-  return {
-    pass,
-    message: () =>
-      pass
-        ? `Expected the test case NOT to pass all metrics, but it did.`
+        ? `Expected ${describeTarget(received)} NOT to pass its metrics, but it did.`
         : failureMessage,
   };
 }
