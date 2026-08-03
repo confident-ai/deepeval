@@ -1,0 +1,59 @@
+name: TypeScript test-run E2E
+
+on:
+  pull_request:
+    paths:
+      - 'typescript/**'
+      - '.github/workflows/typescript_test_run_e2e.yml'
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    container:
+      image: node:22
+    defaults:
+      run:
+        working-directory: typescript
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (dist is needed for the CLI and package self-referencing)
+        run: npm run build
+
+      - name: Single-turn + traced suites — expect exit 0 and a posted TestRun
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+          CONFIDENT_TRACE_VERBOSE: 0
+        run: |
+          npm run test:e2e | tee e2e.log
+          grep -q "posted to Confident AI" e2e.log \
+            || (echo "::error::TestRun was not posted to Confident AI" && exit 1)
+
+      - name: Conversational suite — separate run (LLM + conversational can't mix)
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+          CONFIDENT_TRACE_VERBOSE: 0
+        run: |
+          npm run test:e2e:conversational | tee e2e-convo.log
+          grep -q "posted to Confident AI" e2e-convo.log \
+            || (echo "::error::Conversational TestRun was not posted to Confident AI" && exit 1)
+
+      - name: Negative suite — expect non-zero exit
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+          CONFIDENT_TRACE_VERBOSE: 0
+        run: |
+          if npm run test:e2e:negative; then
+            echo "::error::Negative suite should have failed but exited 0"
+            exit 1
+          else
+            echo "Negative suite correctly failed (non-zero exit)."
+          fi
