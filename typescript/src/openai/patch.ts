@@ -116,7 +116,8 @@ function patchAsyncOpenAIClientMethod(
       type: "llm",
       name: originalMethod.name.replace(/^bound /, "") ?? "OpenAI LLM Call",
       model: inputParameters.model,
-      //   metrics: llmContext?.metrics,
+      // `metrics` needs nothing here: `observe` drains both `next*Span(...)` and
+      // the scope-wide `setTracingContext({ llmSpanContext })` values itself.
       metricCollection: llmContext?.metricCollection,
       fn: async (...obsArgs: any[]) => {
         const response = await originalMethod(...obsArgs);
