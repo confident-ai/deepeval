@@ -1,9 +1,13 @@
+import math
+from types import SimpleNamespace
+
 import pytest
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.g_eval.utils import (
     CONVERSATIONAL_G_EVAL_API_PARAMS,
     G_EVAL_API_PARAMS,
+    calculate_weighted_summed_score,
     construct_geval_upload_payload,
     construct_non_turns_test_case_string,
     construct_test_case_string,
@@ -133,3 +137,36 @@ def test_conversational_geval_requires_tags_when_selected():
             [MultiTurnParams.TAGS],
             DummyConversationalMetric(),
         )
+
+
+def _score_token(token, top_logprobs):
+    return SimpleNamespace(
+        token=token,
+        top_logprobs=[
+            SimpleNamespace(token=tok, logprob=math.log(prob))
+            for tok, prob in top_logprobs
+        ],
+    )
+
+
+def _raw_response(content_tokens):
+    return SimpleNamespace(
+        choices=[
+            SimpleNamespace(logprobs=SimpleNamespace(content=content_tokens))
+        ]
+    )
+
+
+def test_weighted_score_uses_trailing_score_token_not_reasoning_digit():
+    # The model emits {"reason": ..., "score": 8}. The reasoning text happens to
+    # contain the digit "8" (with misleadingly certain logprobs) before the real
+    # score token at the end, whose logprobs are split evenly between 8 and 7.
+    # A forward search latches onto the reasoning token and returns 8.0; the
+    # score token is at the tail, so the correct weighted score is 7.5.
+    reasoning_token = _score_token("8", [("8", 0.99)])
+    score_token = _score_token("8", [("8", 0.5), ("7", 0.5)])
+    raw_response = _raw_response([reasoning_token, score_token])
+
+    result = calculate_weighted_summed_score(8, raw_response)
+
+    assert result == pytest.approx(7.5)
