@@ -2,7 +2,7 @@
 id: evaluation-end-to-end-single-turn
 title: Single-Turn End-to-End Evaluation
 sidebar_label: Single-Turn
-languages: [python, typescript]
+languages: [python]
 ---
 
 import { ASSETS } from "@site/src/assets";
@@ -57,10 +57,6 @@ sequenceDiagram
 <Tabs items={["In Code", "Pull from Confident AI", "Load from CSV", "Load from JSON"]}>
 <Tab value="In Code">
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.dataset import Golden, EvaluationDataset
 
@@ -73,34 +69,10 @@ goldens = [
 dataset = EvaluationDataset(goldens=goldens)
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { EvaluationDataset, Golden } from "deepeval/dataset";
-
-const goldens = [
-  new Golden({ input: "What is your name?" }),
-  new Golden({ input: "Choose a number between 1 and 100" }),
-  // ...
-];
-
-const dataset = new EvaluationDataset({ goldens });
-```
-
-</Case>
-
-</Switch>
-
 The dataset lives only for this run — no push, no save. Perfect for quickstarts and one-off evaluations.
 
 </Tab>
 <Tab value="Pull from Confident AI">
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -108,21 +80,6 @@ from deepeval.dataset import EvaluationDataset
 dataset = EvaluationDataset()
 dataset.pull(alias="My dataset")
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { EvaluationDataset } from "deepeval/dataset";
-
-const dataset = new EvaluationDataset();
-await dataset.pull({ alias: "My dataset" });
-```
-
-</Case>
-
-</Switch>
 
 </Tab>
 <Tab value="Load from CSV">
@@ -242,10 +199,6 @@ Same as [Approach 1](#approach-1-evals_iterator-with-tracing-recommended) — wr
 <Tabs items={["In Code", "Pull from Confident AI", "Load from CSV", "Load from JSON"]}>
 <Tab value="In Code">
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.dataset import Golden, EvaluationDataset
 
@@ -258,32 +211,8 @@ goldens = [
 dataset = EvaluationDataset(goldens=goldens)
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { EvaluationDataset, Golden } from "deepeval/dataset";
-
-const goldens = [
-  new Golden({ input: "What is your name?" }),
-  new Golden({ input: "Choose a number between 1 and 100" }),
-  // ...
-];
-
-const dataset = new EvaluationDataset({ goldens });
-```
-
-</Case>
-
-</Switch>
-
 </Tab>
 <Tab value="Pull from Confident AI">
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -291,21 +220,6 @@ from deepeval.dataset import EvaluationDataset
 dataset = EvaluationDataset()
 dataset.pull(alias="My Evals Dataset")
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { EvaluationDataset } from "deepeval/dataset";
-
-const dataset = new EvaluationDataset();
-await dataset.pull({ alias: "My Evals Dataset" });
-```
-
-</Case>
-
-</Switch>
 
 </Tab>
 <Tab value="Load from CSV">
@@ -345,10 +259,6 @@ To persist a dataset (push to Confident AI, save as CSV/JSON, version across run
 
 Loop over your goldens, call your LLM app, and wrap each result in an `LLMTestCase`:
 
-<Switch>
-
-<Case id="python">
-
 ```python title="main.py"
 from your_app import your_llm_app  # replace with your LLM app
 from deepeval.test_case import LLMTestCase
@@ -364,32 +274,6 @@ for golden in dataset.goldens:
         )
     )
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript title="main.ts"
-import { yourLlmApp } from "./your_app"; // replace with your LLM app
-import { LLMTestCase } from "deepeval/testCase";
-// ...
-
-for (const golden of dataset.goldens) {
-  if (!("input" in golden)) continue;
-  const { answer, retrievedChunks } = await yourLlmApp(golden.input);
-  dataset.addTestCase(
-    new LLMTestCase({
-      input: golden.input,
-      actualOutput: answer,
-      retrievalContext: retrievedChunks,
-    })
-  );
-}
-```
-
-</Case>
-
-</Switch>
 
 :::info
 The fields you populate on `LLMTestCase` must match what your metrics need. For example, `FaithfulnessMetric` requires `retrieval_context`. See [test cases](/docs/evaluation-test-cases#llm-test-cases) for the full parameter list.
@@ -411,10 +295,6 @@ Keep your metrics tight — **no more than 5 per run**, made up of:
 See [the metrics section](/docs/metrics-introduction) for the 50+ built-in metrics, or ask for tailored recommendations on [Discord](https://discord.com/invite/a3K9c8GRGt).
 :::
 
-<Switch>
-
-<Case id="python">
-
 ```python title="main.py"
 from deepeval import evaluate
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
@@ -425,24 +305,6 @@ evaluate(
     metrics=[AnswerRelevancyMetric(), FaithfulnessMetric()],
 )
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript title="main.ts"
-import { evaluate, metrics } from "deepeval";
-// ...
-
-await evaluate(
-  testCases,
-  [new metrics.AnswerRelevancyMetric(), new metrics.FaithfulnessMetric()]
-);
-```
-
-</Case>
-
-</Switch>
 
 There are **TWO** mandatory and **FIVE** optional parameters when calling `evaluate()` for end-to-end evaluation:
 

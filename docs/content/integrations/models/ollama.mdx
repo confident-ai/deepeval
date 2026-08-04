@@ -66,8 +66,8 @@ Alternatively, you can specify your model directly in code using `OllamaModel` f
 <Tab value="Python">
 
 ```python
-from deepeval.models import OllamaModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import OllamaModel
 
 model = OllamaModel(
     model="deepseek-r1:1.5b",
@@ -109,7 +109,7 @@ There is **ONE** mandatory parameter and **THREE** optional parameters when crea
 <Tab value="TypeScript">
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { OllamaModel } from "deepeval/models";
 
 const model = new OllamaModel({
@@ -118,7 +118,7 @@ const model = new OllamaModel({
   temperature: 0,
 });
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
+const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
 
 </Tab>
@@ -135,10 +135,10 @@ LOCAL_MODEL_BASE_URL=http://localhost:11434
 Then create the model with no arguments and pass it to any metric:
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { OllamaModel } from "deepeval/models";
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({
+const answerRelevancy = new AnswerRelevancyMetric({
   model: new OllamaModel(),
 });
 ```

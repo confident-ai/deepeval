@@ -2,6 +2,7 @@
 id: evaluation
 title: Evaluate Multi-Turn Convos
 sidebar_label: Evaluate Multi-Turn Convos
+languages: [python]
 ---
 
 import { ASSETS } from "@site/src/assets";
@@ -21,10 +22,6 @@ To evaluate a multi-turn chatbot that does all the above, we first have to model
 
 A multi-turn "interaction" is composed of `turns`, which is the conversation itself, and any other optional parameters such as scenario, expected outcome, etc. which we will learn about later in this section. In code, a multi-turn interaction is represented by a `ConversationalTestCase`:
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.test_case import ConversationalTestCase
 
@@ -35,25 +32,6 @@ test_case = ConversationalTestCase(
     ]
 )
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { ConversationalTestCase, Turn } from "deepeval";
-
-const testCase = new ConversationalTestCase({
-  turns: [
-    new Turn({ role: "user", content: "I've a sore throat." }),
-    new Turn({ role: "assistant", content: "Thanks for letting me know?" }),
-  ],
-});
-```
-
-</Case>
-
-</Switch>
 
 :::tip
 When you evaluate multi-turn use cases, **you don't just want to run evaluations on a random set of conversations.**
@@ -77,10 +55,6 @@ By far, option 3 is the best way to test multi-turn conversations. But we'll sti
 
 If you have conversations stored in your database, you can convert them to `ConversationalTestCase` objects:
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.test_case import ConversationalTestCase, Turn
 
@@ -96,32 +70,6 @@ for conv in conversations:
 print(test_cases)
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { ConversationalTestCase, Turn } from "deepeval";
-
-// Example: Fetch conversations from your database
-const conversations = await fetchConversationsFromDb(); // Your database query here
-
-const testCases = [];
-for (const conv of conversations) {
-  const turns = conv.messages.map(
-    (msg) => new Turn({ role: msg.role, content: msg.content }),
-  );
-  const testCase = new ConversationalTestCase({ turns });
-  testCases.push(testCase);
-}
-
-console.log(testCases);
-```
-
-</Case>
-
-</Switch>
-
 **Using historical conversations** is the quickest to run because the data already exists, but it only provides ad-hoc insights into past performance and cannot reliably evaluate how a new version will perform. Results from this approach are mostly backward-looking.
 
 :::tip
@@ -131,10 +79,6 @@ This example assumes each conversation is a list of messages following the OpenA
 ### Manual prompting
 
 To generate conversations manually, you have to create `turn`s from interacting with your chatbot and constructing a `ConversationalTestCase` once a conversation has completed:
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval.test_case import ConversationalTestCase, Turn
@@ -165,61 +109,6 @@ start_session(chatbot)
 print(test_cases)
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { ConversationalTestCase, Turn } from "deepeval";
-import * as readline from "node:readline/promises";
-import { randomUUID } from "node:crypto";
-
-// Initialize test case list
-const testCases: ConversationalTestCase[] = [];
-
-const startSession = async (chatbot: MedicalChatbot) => {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  const sessionId = randomUUID();
-  const turns: Turn[] = [];
-  while (true) {
-    const userInput = await rl.question("Your query: ");
-    if (userInput.toLowerCase() === "exit") {
-      break;
-    }
-
-    // Call chatbot
-    const response = await chatbot.agentWithMemory.invoke(
-      { messages: [{ role: "user", content: userInput }] },
-      { configurable: { thread_id: sessionId } },
-    );
-    const lastMessage = response.messages.at(-1);
-    const output =
-      typeof lastMessage?.content === "string" ? lastMessage.content : "";
-    // Add turns to list
-    turns.push(new Turn({ role: "user", content: userInput }));
-    turns.push(new Turn({ role: "assistant", content: output }));
-
-    console.log("Baymax:", output);
-  }
-  rl.close();
-  testCases.push(new ConversationalTestCase({ turns }));
-};
-
-// Initialize chatbot and start session
-const chatbot = new MedicalChatbot("...", "...");
-await startSession(chatbot);
-
-// Print test cases
-console.log(testCases);
-```
-
-</Case>
-
-</Switch>
-
 In this example, we called `chatbot.agent_with_memory.invoke` from `langchain` and collected the turns as user and assistant contents. Although effective, this method is extremely time consuming and hence not the most effective.
 
 :::note
@@ -235,10 +124,6 @@ It is highly recommended to simulate turns instead, because you:
 - Create **consistent benchmarks**, e.g., simulating a fixed number of conversations across the same scenarios, which makes performance comparisons straightforward (more on this later)
 
 First standardize your testing dataset by creating a list of goldens ([click here](/docs/evaluation-datasets#what-are-goldens) to learn more):
-
-<Switch>
-
-<Case id="python">
 
 ```python title="main.py"
 from deepeval.dataset import EvaluationDataset, ConversationalGolden
@@ -263,44 +148,9 @@ dataset = EvaluationDataset(goldens=goldens)
 dataset.push(alias="Medical Chatbot Dataset")
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript title="main.ts"
-import { EvaluationDataset, ConversationalGolden } from "deepeval";
-
-const goldens = [
-  new ConversationalGolden({
-    scenario: "User with a sore throat asking for paracetamol.",
-    expectedOutcome: "Gets a recommendation for panadol.",
-  }),
-  new ConversationalGolden({
-    scenario: "Frustrated user looking to rebook their appointment.",
-    expectedOutcome: "Gets redirected to a human agent",
-  }),
-  new ConversationalGolden({
-    scenario: "User just looking to talk to somebody.",
-    expectedOutcome: "Tell them this chatbot isn't meant for this use case.",
-  }),
-];
-
-// Create dataset and optionally push to Confident AI
-const dataset = new EvaluationDataset({ goldens });
-await dataset.push({ alias: "Medical Chatbot Dataset" });
-```
-
-</Case>
-
-</Switch>
-
 In reality, you'll need at least **20 goldens** for a barely-big-enough dataset, as each golden produces a single test case.
 
 Once you have defined your scenarios, use `deepeval`'s `ConversationSimulator` to simulate turns to create a list of `ConversationalTestCase`s:
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval.test_case import Turn
@@ -320,48 +170,6 @@ simulator = ConversationSimulator(model_callback=model_callback)
 test_cases = simulator.simulate(goldens=dataset.goldens)
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { Turn, ConversationSimulator } from "deepeval";
-
-// Wrap your chatbot in a callback func
-const modelCallback = async ({
-  input,
-  turns,
-  threadId,
-}: {
-  input: string;
-  turns: Turn[];
-  threadId: string;
-}) => {
-  // 1. Get latest simulated user input
-  const userInput = turns[turns.length - 1].content;
-  // 2. Call chatbot
-  const response = await chatbot.agentWithMemory.invoke(
-    { messages: [{ role: "user", content: userInput }] },
-    { configurable: { thread_id: threadId } },
-  );
-  const lastMessage = response.messages.at(-1);
-  const output =
-    typeof lastMessage?.content === "string" ? lastMessage.content : "";
-  // 3. Return chatbot turn
-  return new Turn({ role: "assistant", content: output });
-};
-
-const simulator = new ConversationSimulator({ modelCallback });
-const testCases = await simulator.simulate({
-  conversationalGoldens: dataset.goldens,
-  maxUserSimulations: 10,
-});
-```
-
-</Case>
-
-</Switch>
-
 ✅ Done. We now need to create our metrics to run evaluations on these test cases.
 
 :::info
@@ -376,29 +184,11 @@ Often times a conversation can be evaluated based on 1-2 generic criteria, and 1
 
 Relevancy is a generic metric because it is a criteria that can be applied to virtually any use case. This is how you can create a relevancy metric in `deepeval`:
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.metrics import TurnRelevancyMetric
 
 relevancy = TurnRelevancyMetric()
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { metrics } from "deepeval";
-
-const relevancy = new metrics.TurnRelevancyMetric();
-```
-
-</Case>
-
-</Switch>
 
 Under-the-hood, the `TurnRelevancyMetric` loops through each assistant turn and uses a **sliding window approach** to construct a series of **"unit interactions" as historical context** for evaluation. [Click here](/docs/metrics-conversation-relevancy) to learn more about the `TurnRelevancyMetric` and how it is calculated.
 
@@ -410,29 +200,11 @@ Relevancy, both for single and multi-turn use cases, is by far the most common m
 
 Faithfulness is specific to our LLM chatbot as our chatbot uses external knowledge from the [The Gale Encyclopedia of Alternative Medicine](https://dl.icdst.org/pdfs/files/03cb46934164321f675385fb74ac1bed.pdf) to make diagnoses (as explained in the [previous section](/tutorials/medical-chatbot/development#create-rag-pipeline-for-diagnosis)). `deepeval` also offers a faithfulness metric for multi-turn use cases:
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.metrics import TurnFaithfulnessMetric
 
 faithfulness = TurnFaithfulnessMetric()
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { metrics } from "deepeval";
-
-const faithfulness = new metrics.TurnFaithfulnessMetric();
-```
-
-</Case>
-
-</Switch>
 
 [Click here](/docs/metrics-conversation-relevancy) to learn more about the `TurnRelevancyMetric` and how it is calculated.
 
@@ -443,10 +215,6 @@ The faithfulness is a metric specifically for assessing whether there are any co
 ## Run Your First Multi-Turn Eval
 
 All that's left right now is to run an evaluation:
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -462,22 +230,6 @@ evaluate(
     }
 )
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { evaluate } from "deepeval";
-// ...
-
-// Test cases and metrics from previous sections
-await evaluate(testCases, [relevancy, faithfulness]);
-```
-
-</Case>
-
-</Switch>
 
 🎉🥳 **Congratulations!** You've successfully learnt how to evaluate your chatbot. In this example, we:
 

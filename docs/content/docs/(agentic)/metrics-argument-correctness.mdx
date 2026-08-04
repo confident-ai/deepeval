@@ -22,8 +22,8 @@ The `ArgumentCorrectnessMetric` uses an LLM to determine argument correctness, a
 To use the `ArgumentCorrectnessMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
-- `tools_called`
+- <Term py="actual_output" ts="actualOutput"/>
+- <Term py="tools_called" ts="toolsCalled"/>
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
 
@@ -36,9 +36,9 @@ The `ArgumentCorrectnessMetric()` can be used for [end-to-end](/docs/evaluation-
 <Case id="python">
 
 ```python
-from deepeval import evaluate
 from deepeval.metrics import ArgumentCorrectnessMetric
 from deepeval.test_case import LLMTestCase, ToolCall
+from deepeval import evaluate
 
 metric = ArgumentCorrectnessMetric(
     threshold=0.7,
@@ -74,9 +74,11 @@ evaluate(test_cases=[test_case], metrics=[metric])
 <Case id="typescript">
 
 ```typescript
-import { evaluate, LLMTestCase, ToolCall, metrics } from "deepeval";
+import { ArgumentCorrectnessMetric } from "deepeval/metrics";
+import { LLMTestCase, ToolCall } from "deepeval/test-case";
+import { evaluate } from "deepeval";
 
-const metric = new metrics.ArgumentCorrectnessMetric({
+const metric = new ArgumentCorrectnessMetric({
   threshold: 0.7,
   model: "gpt-4",
   includeReason: true,
@@ -109,15 +111,31 @@ await evaluate([testCase], [metric]);
 
 </Switch>
 
+<Switch>
+
+<Case id="python">
+
 There are **SEVEN** optional parameters when creating an `ArgumentCorrectnessMetric`:
 
-- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+</Case>
+
+<Case id="typescript">
+
+There are **SIX** optional parameters when creating an `ArgumentCorrectnessMetric`:
+
+</Case>
+
+</Switch>
+
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
-- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 ### Within components
 
@@ -153,7 +171,7 @@ evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 <Case id="typescript">
 
 ```typescript
-import { EvaluationDataset, Golden } from "deepeval";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
 import { observe, updateCurrentSpan } from "deepeval/tracing";
 // ...
 
@@ -179,8 +197,7 @@ const llmApp = observe({
 
 const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Hi!" })] });
 for await (const golden of dataset.evalsIterator()) {
-  if (!("input" in golden)) continue;
-  await llmApp(golden.input);
+  await llmApp((golden as Golden).input);
 }
 ```
 
@@ -231,7 +248,7 @@ The `ArgumentCorrectnessMetric` score is calculated according to the following e
 The `ArgumentCorrectnessMetric` assesses the correctness of the arguments (input parameters) for each tool call, based on the task outlined in the input.
 
 :::note
-You can set the `verbose_mode` of **ANY** `deepeval` metric to `True` to debug the `measure()` method:
+You can set the <Term py="verbose_mode" ts="verboseMode"/> of **ANY** `deepeval` metric to <Term py="True" ts="true"/> to debug the `measure()` method:
 
 <Switch>
 
@@ -251,7 +268,7 @@ metric.measure(test_case)
 ```typescript
 // ...
 
-const metric = new metrics.ArgumentCorrectnessMetric({ verboseMode: true });
+const metric = new ArgumentCorrectnessMetric({ verboseMode: true });
 await metric.measure(testCase);
 ```
 
@@ -277,11 +294,11 @@ await metric.measure(testCase);
       ),
     },
     {
-      question: "Do I need `expected_tools` for Argument Correctness?",
+      question: "Do I need expected tools for Argument Correctness?",
       answer: (
         <>
           No — it's referenceless. Provide only <code>input</code>,{" "}
-          <code>actual_output</code>, and <code>tools_called</code> on the{" "}
+          <Term py="actual_output" ts="actualOutput"/>, and <Term py="tools_called" ts="toolsCalled"/> on the{" "}
           <a href="/docs/evaluation-test-cases#llm-test-case">
             <code>LLMTestCase</code>
           </a>
@@ -295,7 +312,7 @@ await metric.measure(testCase);
         <>
           Exactly.{" "}
           <a href="/docs/metrics-tool-correctness">Tool Correctness</a> checks
-          "right tools?" deterministically against <code>expected_tools</code>;
+          "right tools?" deterministically against <Term py="expected_tools" ts="expectedTools"/>;
           Argument Correctness checks "right inputs?" via an LLM. Use both to
           verify selection and arguments.
         </>

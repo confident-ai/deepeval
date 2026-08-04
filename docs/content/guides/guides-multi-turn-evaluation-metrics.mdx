@@ -2,6 +2,7 @@
 id: guides-multi-turn-evaluation-metrics
 title: Multi-Turn Evaluation Metrics
 sidebar_label: Multi-Turn Evaluation Metrics
+languages: [python]
 ---
 **Multi-turn evaluation metrics** are purpose-built measurements that assess how well LLM systems perform across extended conversations. Unlike single-turn metrics that evaluate one input-output pair in isolation, multi-turn metrics analyze the entire conversation—capturing context retention, response relevance, goal completion, and behavioral consistency across every turn.
 
@@ -35,10 +36,6 @@ These are the most fundamental multi-turn metrics. They evaluate whether the con
 
 The `ConversationCompletenessMetric` evaluates whether your LLM **satisfies all user intentions** throughout a conversation. A conversation is only "complete" if every user need is addressed.
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval import evaluate
 from deepeval.test_case import Turn, ConversationalTestCase
@@ -57,31 +54,6 @@ metric = ConversationCompletenessMetric(threshold=0.7)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { evaluate, metrics } from "deepeval";
-import { Turn, ConversationalTestCase } from "deepeval/testCase";
-
-const convoTestCase = new ConversationalTestCase({
-  turns: [
-    new Turn({ role: "user", content: "I need to cancel my subscription and get a refund." }),
-    new Turn({ role: "assistant", content: "I've cancelled your subscription." }),
-    new Turn({ role: "user", content: "What about the refund?" }),
-    new Turn({ role: "assistant", content: "Your refund of $29.99 has been processed. It will appear in 3-5 business days." }),
-  ],
-});
-const metric = new metrics.ConversationCompletenessMetric({ threshold: 0.7 });
-
-await evaluate([convoTestCase], [metric]);
-```
-
-</Case>
-
-</Switch>
-
 **When to use it:** Always. This is the single most important multi-turn metric—it answers the fundamental question of whether the conversation succeeded.
 
 **How it's calculated:**
@@ -95,10 +67,6 @@ The metric extracts high-level user intentions from `"user"` turns, then checks 
 ### Turn Relevancy Metric
 
 The `TurnRelevancyMetric` evaluates whether each assistant response is **relevant to the conversational context** that preceded it. A single off-topic response can derail an entire conversation.
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -118,31 +86,6 @@ metric = TurnRelevancyMetric(threshold=0.7)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { evaluate, metrics } from "deepeval";
-import { Turn, ConversationalTestCase } from "deepeval/testCase";
-
-const convoTestCase = new ConversationalTestCase({
-  turns: [
-    new Turn({ role: "user", content: "What's your return policy?" }),
-    new Turn({ role: "assistant", content: "We offer a 30-day return policy with full refund." }),
-    new Turn({ role: "user", content: "Great, and do you ship internationally?" }),
-    new Turn({ role: "assistant", content: "Our return policy covers all items purchased in-store or online." }),
-  ],
-});
-const metric = new metrics.TurnRelevancyMetric({ threshold: 0.7 });
-
-await evaluate([convoTestCase], [metric]);
-```
-
-</Case>
-
-</Switch>
-
 **When to use it:** Always. This catches non-sequitur responses, context window overflow issues, and cases where the assistant ignores the user's latest message.
 
 **How it's calculated:**
@@ -156,10 +99,6 @@ The metric uses a sliding window approach—for each assistant turn, it evaluate
 ### Knowledge Retention Metric
 
 The `KnowledgeRetentionMetric` evaluates whether your LLM **retains factual information** presented by the user throughout the conversation. Forgetting a user's name, preferences, or previously stated requirements is a critical failure.
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -179,31 +118,6 @@ metric = KnowledgeRetentionMetric(threshold=0.7)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { evaluate, metrics } from "deepeval";
-import { Turn, ConversationalTestCase } from "deepeval/testCase";
-
-const convoTestCase = new ConversationalTestCase({
-  turns: [
-    new Turn({ role: "user", content: "My name is Sarah and I'm allergic to peanuts." }),
-    new Turn({ role: "assistant", content: "Nice to meet you, Sarah! I'll keep your peanut allergy in mind." }),
-    new Turn({ role: "user", content: "Can you suggest a dessert for me?" }),
-    new Turn({ role: "assistant", content: "How about our peanut butter brownies? They're delicious!" }),
-  ],
-});
-const metric = new metrics.KnowledgeRetentionMetric({ threshold: 0.7 });
-
-await evaluate([convoTestCase], [metric]);
-```
-
-</Case>
-
-</Switch>
-
 **When to use it:** When your application handles information-heavy conversations—customer support, medical intake, onboarding flows, or any scenario where the user shares facts the assistant should remember.
 
 **How it's calculated:**
@@ -221,10 +135,6 @@ These metrics ensure the assistant stays within its designated boundaries—both
 ### Role Adherence Metric
 
 The `RoleAdherenceMetric` evaluates whether your LLM **stays in character** and follows its assigned role throughout the conversation. A customer support bot that suddenly starts giving legal advice has violated its role.
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -245,32 +155,6 @@ metric = RoleAdherenceMetric(threshold=0.7)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { evaluate, metrics } from "deepeval";
-import { Turn, ConversationalTestCase } from "deepeval/testCase";
-
-const convoTestCase = new ConversationalTestCase({
-  chatbotRole: "A friendly restaurant booking assistant that only helps with reservations.",
-  turns: [
-    new Turn({ role: "user", content: "I'd like to book a table for two tonight." }),
-    new Turn({ role: "assistant", content: "I'd be happy to help! What time works for you?" }),
-    new Turn({ role: "user", content: "8pm. Also, what's the meaning of life?" }),
-    new Turn({ role: "assistant", content: "The meaning of life is a deep philosophical question that many have pondered..." }),
-  ],
-});
-const metric = new metrics.RoleAdherenceMetric({ threshold: 0.7 });
-
-await evaluate([convoTestCase], [metric]);
-```
-
-</Case>
-
-</Switch>
-
 **When to use it:** When your application has a defined persona, behavioral guidelines, or scope restrictions. Essential for customer-facing applications where off-brand behavior is unacceptable.
 
 **How it's calculated:**
@@ -288,10 +172,6 @@ The metric evaluates each assistant turn against the specified `chatbot_role`, u
 ### Topic Adherence Metric
 
 The `TopicAdherenceMetric` evaluates whether your LLM **only answers questions that fall within relevant topics** and correctly refuses off-topic requests.
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -314,34 +194,6 @@ metric = TopicAdherenceMetric(
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { evaluate, metrics } from "deepeval";
-import { Turn, ConversationalTestCase } from "deepeval/testCase";
-
-const convoTestCase = new ConversationalTestCase({
-  turns: [
-    new Turn({ role: "user", content: "How do I reset my password?" }),
-    new Turn({ role: "assistant", content: "Go to Settings > Account > Reset Password and follow the prompts." }),
-    new Turn({ role: "user", content: "Can you write me a poem about cats?" }),
-    new Turn({ role: "assistant", content: "Sure! Roses are red, cats are great..." }),
-  ],
-});
-const metric = new metrics.TopicAdherenceMetric({
-  relevantTopics: ["account management", "technical support", "billing"],
-  threshold: 0.7,
-});
-
-await evaluate([convoTestCase], [metric]);
-```
-
-</Case>
-
-</Switch>
-
 **When to use it:** When your application should only engage with specific topics—for example, a technical support bot that shouldn't answer general knowledge questions.
 
 **How it's calculated:**
@@ -359,10 +211,6 @@ These metrics evaluate tool-using and goal-oriented behavior within multi-turn c
 ### Goal Accuracy Metric
 
 The `GoalAccuracyMetric` evaluates your LLM's ability to **plan and execute tasks to reach a goal** across conversational turns. It assesses both the quality of the plan and how accurately it was followed.
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -385,40 +233,6 @@ metric = GoalAccuracyMetric(threshold=0.7)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { evaluate, metrics } from "deepeval";
-import { Turn, ConversationalTestCase, ToolCall } from "deepeval/testCase";
-
-const convoTestCase = new ConversationalTestCase({
-  turns: [
-    new Turn({ role: "user", content: "Book me a flight from NYC to London for next Friday." }),
-    new Turn({
-      role: "assistant",
-      content: "I'll search for available flights.",
-      toolsCalled: [new ToolCall({ name: "search_flights", description: "Search available flights" })],
-    }),
-    new Turn({ role: "assistant", content: "I found 3 flights. The cheapest is $450 on British Airways. Shall I book it?" }),
-    new Turn({ role: "user", content: "Yes, book it." }),
-    new Turn({
-      role: "assistant",
-      content: "Done! Your flight is confirmed. Confirmation: BA-12345.",
-      toolsCalled: [new ToolCall({ name: "book_flight", description: "Book a specific flight" })],
-    }),
-  ],
-});
-const metric = new metrics.GoalAccuracyMetric({ threshold: 0.7 });
-
-await evaluate([convoTestCase], [metric]);
-```
-
-</Case>
-
-</Switch>
-
 **When to use it:** When your multi-turn application involves task completion—booking systems, workflow assistants, or any conversational agent that needs to accomplish specific goals through a series of steps.
 
 **How it's calculated:**
@@ -432,10 +246,6 @@ The metric extracts goals from user messages, identifies the steps taken by the 
 ### Tool Use Metric
 
 The `ToolUseMetric` evaluates your LLM's **tool selection and argument generation** across a multi-turn conversation. It combines tool selection quality with argument correctness.
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -461,41 +271,6 @@ metric = ToolUseMetric(
 
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { evaluate, metrics } from "deepeval";
-import { Turn, ConversationalTestCase, ToolCall } from "deepeval/testCase";
-
-const convoTestCase = new ConversationalTestCase({
-  turns: [
-    new Turn({ role: "user", content: "What's the weather in Paris?" }),
-    new Turn({
-      role: "assistant",
-      content: "Let me check that for you.",
-      toolsCalled: [new ToolCall({ name: "get_weather", description: "Get current weather", inputParameters: { city: "Paris" } })],
-    }),
-    new Turn({ role: "assistant", content: "It's 22°C and sunny in Paris right now." }),
-  ],
-});
-const metric = new metrics.ToolUseMetric({
-  availableTools: [
-    new ToolCall({ name: "get_weather", description: "Get current weather for a city" }),
-    new ToolCall({ name: "search_flights", description: "Search for available flights" }),
-    new ToolCall({ name: "book_hotel", description: "Book a hotel room" }),
-  ],
-  threshold: 0.7,
-});
-
-await evaluate([convoTestCase], [metric]);
-```
-
-</Case>
-
-</Switch>
 
 **When to use it:** When your conversational application uses tools or function calls. This metric catches both wrong tool selection and incorrect arguments.
 
@@ -524,10 +299,6 @@ RAG multi-turn metrics require `retrieval_context` to be provided on assistant [
 
 Here's an example using `TurnFaithfulnessMetric`:
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval import evaluate
 from deepeval.test_case import Turn, ConversationalTestCase
@@ -554,39 +325,6 @@ metric = TurnFaithfulnessMetric(threshold=0.7)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { evaluate, metrics } from "deepeval";
-import { Turn, ConversationalTestCase } from "deepeval/testCase";
-
-const convoTestCase = new ConversationalTestCase({
-  turns: [
-    new Turn({ role: "user", content: "What's your return policy?" }),
-    new Turn({
-      role: "assistant",
-      content: "We offer a 30-day full refund at no extra cost.",
-      retrievalContext: ["All customers are eligible for a 30 day full refund at no extra cost."],
-    }),
-    new Turn({ role: "user", content: "What about exchanges?" }),
-    new Turn({
-      role: "assistant",
-      content: "Exchanges are available within 60 days of purchase.",
-      retrievalContext: ["Exchanges can be made within 60 days. Items must be in original condition."],
-    }),
-  ],
-});
-const metric = new metrics.TurnFaithfulnessMetric({ threshold: 0.7 });
-
-await evaluate([convoTestCase], [metric]);
-```
-
-</Case>
-
-</Switch>
-
 All RAG multi-turn metrics use a **sliding window** approach—for each turn, they evaluate retrieval quality against the preceding conversational context within the window. This accounts for the fact that a retrieval query in turn 5 may depend on what was discussed in turns 1–4.
 
 **→ Full documentation:** [Turn Faithfulness](/docs/metrics-turn-faithfulness) · [Turn Contextual Relevancy](/docs/metrics-turn-contextual-relevancy) · [Turn Contextual Precision](/docs/metrics-turn-contextual-precision) · [Turn Contextual Recall](/docs/metrics-turn-contextual-recall)
@@ -601,10 +339,6 @@ The built-in metrics cover common failure modes, but your application likely has
 ### Conversational G-Eval
 
 `ConversationalGEval` is the multi-turn equivalent of [`GEval`](/docs/metrics-llm-evals). It uses LLM-as-a-judge to evaluate entire conversations against any criteria you define.
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -632,45 +366,6 @@ de_escalation = ConversationalGEval(
 
 evaluate(test_cases=[convo_test_case], metrics=[empathy, de_escalation])
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { evaluate, metrics } from "deepeval";
-import { Turn, ConversationalTestCase, MultiTurnParams } from "deepeval/testCase";
-
-const convoTestCase = new ConversationalTestCase({
-  turns: [
-    new Turn({ role: "user", content: "I'm really frustrated. My order has been delayed three times." }),
-    new Turn({ role: "assistant", content: "Let me look into that. Your order was delayed due to weather." }),
-    new Turn({ role: "user", content: "This is unacceptable! I want a refund." }),
-    new Turn({
-      role: "assistant",
-      content: "I completely understand your frustration. Let me process that refund immediately and add a 15% discount for your next order as an apology.",
-    }),
-  ],
-});
-
-const empathy = new metrics.ConversationalGEval({
-  name: "Empathy",
-  criteria: "Evaluate whether the assistant shows genuine empathy when the user expresses frustration or dissatisfaction.",
-  evaluationParams: [MultiTurnParams.ROLE, MultiTurnParams.CONTENT],
-});
-
-const deEscalation = new metrics.ConversationalGEval({
-  name: "De-escalation",
-  criteria: "Evaluate whether the assistant effectively de-escalates tense situations by acknowledging concerns and offering concrete solutions.",
-  evaluationParams: [MultiTurnParams.ROLE, MultiTurnParams.CONTENT],
-});
-
-await evaluate([convoTestCase], [empathy, deEscalation]);
-```
-
-</Case>
-
-</Switch>
 
 **When to use it:** When you need to evaluate subjective, domain-specific qualities like tone, empathy, brand voice, policy compliance, or any other criteria not covered by built-in metrics.
 

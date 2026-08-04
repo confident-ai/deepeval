@@ -19,9 +19,6 @@ export {
   MCPResourceCall,
   MCPPromptCall,
   validateMcpServers,
-  type Tool,
-  type Resource,
-  type Prompt,
   type MCPTransport,
 } from "@/test-case/mcp";
 export { ArenaTestCase, Contestant } from "@/test-case/arena-test-case";

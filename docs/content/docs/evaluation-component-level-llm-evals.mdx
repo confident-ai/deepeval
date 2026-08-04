@@ -2,7 +2,7 @@
 id: evaluation-component-level-llm-evals
 title: Component-Level LLM Evaluation
 sidebar_label: Component-Level Evals
-languages: [python, typescript]
+languages: [python]
 ---
 
 import { ASSETS } from "@site/src/assets";
@@ -63,10 +63,6 @@ You can mix component-level and end-to-end in the same loop: pass `metrics=[...]
 <Tabs items={["In Code", "Pull from Confident AI", "Load from CSV", "Load from JSON"]}>
 <Tab value="In Code">
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.dataset import Golden, EvaluationDataset
 
@@ -79,34 +75,10 @@ goldens = [
 dataset = EvaluationDataset(goldens=goldens)
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { EvaluationDataset, Golden } from "deepeval/dataset";
-
-const goldens = [
-  new Golden({ input: "What is your name?" }),
-  new Golden({ input: "Choose a number between 1 and 100" }),
-  // ...
-];
-
-const dataset = new EvaluationDataset({ goldens });
-```
-
-</Case>
-
-</Switch>
-
 The dataset lives only for this run — no push, no save. Perfect for quickstarts and one-off evaluations.
 
 </Tab>
 <Tab value="Pull from Confident AI">
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -114,21 +86,6 @@ from deepeval.dataset import EvaluationDataset
 dataset = EvaluationDataset()
 dataset.pull(alias="My dataset")
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { EvaluationDataset } from "deepeval/dataset";
-
-const dataset = new EvaluationDataset();
-await dataset.pull({ alias: "My dataset" });
-```
-
-</Case>
-
-</Switch>
 
 </Tab>
 <Tab value="Load from CSV">
@@ -224,10 +181,6 @@ Only integrations that emit agent spans are shown below. The OpenAI and Anthropi
 
 Mark your sub-agent with `@observe(type="agent")` and pass `metrics=[...]` to it:
 
-<Switch>
-
-<Case id="python">
-
 ```python title="main.py" showLineNumbers
 from deepeval.tracing import observe, update_current_trace
 from deepeval.metrics import TaskCompletionMetric
@@ -244,37 +197,6 @@ def supervisor_agent(query: str) -> str:
 def research_agent(query: str) -> str:
     return "..."  # your sub-agent implementation
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript title="main.ts" showLineNumbers
-import { observe, updateCurrentTrace } from "deepeval/tracing";
-import { metrics } from "deepeval";
-// ...
-
-const researchAgent = observe({
-  type: "agent",
-  metrics: [new metrics.TaskCompletionMetric()],
-  fn: async (query: string): Promise<string> => {
-    return "..."; // your sub-agent implementation
-  },
-});
-
-const supervisorAgent = observe({
-  fn: async (query: string): Promise<string> => {
-    const research = await researchAgent(query);
-    const answer = "..."; // synthesize final answer here
-    updateCurrentTrace({ input: query, output: answer });
-    return answer;
-  },
-});
-```
-
-</Case>
-
-</Switch>
 
 </Tab>
 <Tab value="LangChain">

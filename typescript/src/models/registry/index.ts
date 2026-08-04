@@ -42,8 +42,42 @@ export const GENERATED_MODEL_DATA: Record<
   string,
   Record<string, ModelData>
 > = Object.fromEntries(
-  Object.entries(GENERATED).filter(([key]) => key !== "_meta"),
+  // Underscored keys are metadata (`_meta`, `_defaults`), not namespaces.
+  Object.entries(GENERATED).filter(([key]) => !key.startsWith("_")),
 );
+
+/**
+ * Namespaces whose provider falls back to a default model. Narrower than
+ * `ModelNamespace`: it includes `openrouter`, which has no pricing registry, and
+ * excludes the providers that require an explicit `*_MODEL_NAME`.
+ *
+ * Typed off the generated JSON, so dropping a namespace from Python's
+ * `DEFAULT_MODELS` breaks the build at the provider that reads it.
+ */
+export type DefaultModelNamespace = keyof typeof generated._defaults;
+
+/**
+ * The model a provider evaluates with when given neither a `model` option nor a
+ * `*_MODEL_NAME` env var.
+ *
+ * Generated from Python's `DEFAULT_MODELS`, so the two SDKs cannot fall back to
+ * different judges. Never hardcode a default in a provider — change
+ * `deepeval/models/llms/constants.py` and recompile.
+ */
+export function defaultModelName(namespace: DefaultModelNamespace): string {
+  return generated._defaults[namespace];
+}
+
+/** Vision-capable model names in a namespace — for "use one of these" errors. */
+export function multimodalModelNames(
+  namespace: ModelNamespace | string | undefined,
+): string[] {
+  const models = namespace ? GENERATED_MODEL_DATA[namespace] : undefined;
+  if (!models) return [];
+  return Object.entries(models)
+    .filter(([, data]) => data.supportsMultimodal)
+    .map(([name]) => name);
+}
 
 /** Unknown models resolve to `DEFAULT_MODEL_DATA`, as they do in Python. */
 export function getModelData(

@@ -43,8 +43,8 @@ Alternatively, you can define `KimiModel` directly in code:
 <Tab value="Python">
 
 ```python
-from deepeval.models import KimiModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import KimiModel
 
 model = KimiModel(
     model="kimi-k2-0711-preview",
@@ -90,7 +90,7 @@ There are **ZERO** mandatory and **SIX** optional parameters when creating an `K
 <Tab value="TypeScript">
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { KimiModel } from "deepeval/models";
 
 const model = new KimiModel({
@@ -99,7 +99,7 @@ const model = new KimiModel({
   temperature: 0,
 });
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
+const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
 
 </Tab>
@@ -108,10 +108,10 @@ const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
 To use any Moonshot model directly in `deepeval`, set `MOONSHOT_MODEL_NAME` and `MOONSHOT_API_KEY` in your `env` and create a `KimiModel` with no arguments:
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { KimiModel } from "deepeval/models";
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({
+const answerRelevancy = new AnswerRelevancyMetric({
   model: new KimiModel(),
 });
 ```

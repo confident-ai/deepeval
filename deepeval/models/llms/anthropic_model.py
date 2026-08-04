@@ -19,7 +19,10 @@ from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.utils import require_dependency, require_param
-from deepeval.models.llms.constants import ANTHROPIC_MODELS_DATA
+from deepeval.models.llms.constants import (
+    ANTHROPIC_MODELS_DATA,
+    DEFAULT_ANTHROPIC_MODEL,
+)
 
 # consistent retry rules
 retry_anthropic = create_retry_decorator(PS.ANTHROPIC)
@@ -27,8 +30,6 @@ retry_anthropic = create_retry_decorator(PS.ANTHROPIC)
 _ALIAS_MAP = {
     "api_key": ["_anthropic_api_key"],
 }
-
-default_model = "claude-sonnet-4-6-20250514"
 
 
 class AnthropicModel(DeepEvalBaseLLM):
@@ -59,7 +60,9 @@ class AnthropicModel(DeepEvalBaseLLM):
         else:
             self.api_key = settings.ANTHROPIC_API_KEY
 
-        model = model or settings.ANTHROPIC_MODEL_NAME or default_model
+        model = (
+            model or settings.ANTHROPIC_MODEL_NAME or DEFAULT_ANTHROPIC_MODEL
+        )
 
         if temperature is not None:
             temperature = float(temperature)

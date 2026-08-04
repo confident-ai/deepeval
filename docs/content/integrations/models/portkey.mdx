@@ -45,8 +45,8 @@ Alternatively, you can define `PortkeyModel` directly in code:
 <Tab value="Python">
 
 ```python
-from deepeval.models import PortkeyModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import PortkeyModel
 
 model = PortkeyModel(
     model="gpt-4.1",
@@ -99,7 +99,7 @@ Pass generation parameters such as `max_tokens` via `generation_kwargs` (they ar
 <Tab value="TypeScript">
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { PortkeyModel } from "deepeval/models";
 
 const model = new PortkeyModel({
@@ -109,7 +109,7 @@ const model = new PortkeyModel({
   baseURL: "your-base-url",
 });
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
+const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
 
 </Tab>
@@ -118,10 +118,10 @@ const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
 To use any Portkey model directly in `deepeval`, set `PORTKEY_MODEL_NAME`, `PORTKEY_PROVIDER_NAME`, and `PORTKEY_API_KEY` in your `env` and create a `PortkeyModel` with no arguments:
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { PortkeyModel } from "deepeval/models";
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({
+const answerRelevancy = new AnswerRelevancyMetric({
   model: new PortkeyModel(),
 });
 ```

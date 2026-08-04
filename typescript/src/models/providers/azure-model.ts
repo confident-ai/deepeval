@@ -9,6 +9,8 @@ export interface AzureOpenAIModelOptions extends OpenAICompatibleModelOptions {
   endpoint?: string;
   apiVersion?: string;
   deployment?: string;
+  /** Entra ID token, used instead of an API key. */
+  adToken?: string;
 }
 
 export class AzureOpenAIModel extends DeepEvalOpenAICompatibleModel {
@@ -18,6 +20,7 @@ export class AzureOpenAIModel extends DeepEvalOpenAICompatibleModel {
   private endpoint?: string;
   private apiVersion?: string;
   private deployment?: string;
+  private adToken?: string;
 
   constructor(options: AzureOpenAIModelOptions = {}) {
     const deployment =
@@ -34,6 +37,7 @@ export class AzureOpenAIModel extends DeepEvalOpenAICompatibleModel {
 
     this.endpoint = options.endpoint ?? process.env.AZURE_OPENAI_ENDPOINT;
     this.apiVersion = options.apiVersion ?? process.env.OPENAI_API_VERSION;
+    this.adToken = options.adToken ?? process.env.AZURE_OPENAI_AD_TOKEN;
     this.deployment = deployment;
     // Requests route by deployment, but pricing belongs to the underlying model.
     this.registryModelName = options.model;
@@ -52,8 +56,17 @@ export class AzureOpenAIModel extends DeepEvalOpenAICompatibleModel {
 
   protected async createClient(): Promise<any> {
     const { AzureOpenAI } = (await import("openai")) as any;
+    const credential = this.adToken
+      ? { azureADTokenProvider: async () => this.adToken as string }
+      : {
+          apiKey: requireApiKey(
+            this.apiKey,
+            this.providerLabel,
+            this.apiKeyEnvVar,
+          ),
+        };
     return new AzureOpenAI({
-      apiKey: requireApiKey(this.apiKey, this.providerLabel, this.apiKeyEnvVar),
+      ...credential,
       endpoint: this.endpoint,
       apiVersion: this.apiVersion,
       deployment: this.deployment,

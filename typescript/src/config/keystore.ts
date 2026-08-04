@@ -6,6 +6,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { HIDDEN_DIR, KEY_FILE } from "@/constants";
 import { isSecretSetting } from "@/config/schema";
+import { isReadOnlyFileSystem } from "@/config/utils";
 
 export type KeystoreData = Record<string, string>;
 
@@ -25,6 +26,7 @@ export function readKeystore(): KeystoreData {
 }
 
 function writeKeystore(data: KeystoreData): void {
+  if (isReadOnlyFileSystem()) return;
   const file = keystorePath();
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, JSON.stringify(data), "utf-8");

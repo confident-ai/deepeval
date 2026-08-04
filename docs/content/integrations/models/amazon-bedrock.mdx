@@ -56,8 +56,8 @@ To use Amazon bedrock models for `deepeval` metrics, define an `AmazonBedrockMod
 <Tab value="Python">
 
 ```python
-from deepeval.models import AmazonBedrockModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import AmazonBedrockModel
 
 model = AmazonBedrockModel(
     model="anthropic.claude-3-opus-20240229-v1:0",
@@ -113,7 +113,7 @@ To use Amazon bedrock models for `deepeval` metrics, define an `AmazonBedrockMod
 <Tab value="TypeScript">
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { AmazonBedrockModel } from "deepeval/models";
 
 const model = new AmazonBedrockModel({
@@ -121,7 +121,7 @@ const model = new AmazonBedrockModel({
   region: "us-east-1",
   temperature: 0,
 });
-const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
+const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
 
 </Tab>
@@ -130,10 +130,10 @@ const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
 Every option is backed by an environment variable, so you can set `AWS_BEDROCK_MODEL_NAME`, `AWS_BEDROCK_REGION`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` in your `env` and construct the model with no arguments:
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { AmazonBedrockModel } from "deepeval/models";
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({
+const answerRelevancy = new AnswerRelevancyMetric({
   model: new AmazonBedrockModel(),
 });
 ```

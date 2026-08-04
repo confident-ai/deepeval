@@ -1,4 +1,4 @@
-import { BaseMetric } from "@/metrics/base-metrics";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import { LLMTestCase, SingleTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
 import {
@@ -8,7 +8,10 @@ import {
 } from "@/metrics/utils";
 import { Api, Endpoints, HttpMethods } from "@/confident/api";
 import { DeepAcyclicGraph } from "@/metrics/dag/graph";
-import { extractRequiredParams, isValidDagFromRoots } from "@/metrics/dag/utils";
+import {
+  extractRequiredParams,
+  isValidDagFromRoots,
+} from "@/metrics/dag/utils";
 import {
   buildDagFromPayload,
   constructDagUploadPayload,
@@ -18,7 +21,8 @@ export interface DAGMetricOptions {
   name: string;
   dag: DeepAcyclicGraph;
   model?: DeepEvalBaseLLM | string;
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -44,11 +48,12 @@ export class DAGMetric extends BaseMetric {
       throw new Error("Cycle detected in DAG graph.");
     }
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
     });
 
     this.metricName = options.name;
@@ -123,15 +128,7 @@ export class DAGMetric extends BaseMetric {
     return data;
   }
 
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
-  }
-
   get name(): string {
-    return this.includeDagSuffix
-      ? `${this.metricName} [DAG]`
-      : this.metricName;
+    return this.includeDagSuffix ? `${this.metricName} [DAG]` : this.metricName;
   }
 }

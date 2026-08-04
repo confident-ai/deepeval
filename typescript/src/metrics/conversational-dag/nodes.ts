@@ -1,8 +1,4 @@
-import {
-  ConversationalTestCase,
-  MultiTurnParams,
-  Turn,
-} from "@/test-case";
+import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
 import { resolveTemplate } from "@/templates";
 import { generateWithSchema } from "@/metrics/utils";
 import { CONVERSATIONAL_G_EVAL_PARAMS } from "@/metrics/conversational-g-eval/utils";

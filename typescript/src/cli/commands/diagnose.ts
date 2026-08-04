@@ -10,7 +10,8 @@ import {
 } from "@/config/settings";
 import { loadedDotenvPaths } from "@/config/dotenv-load";
 import { getBaseApiUrl } from "@/confident/api";
-import { PROVIDERS, type ProviderSpec } from "@/cli/providers";
+import { getProvider, type ProviderSpec } from "@/cli/providers";
+import { selectProvider } from "@/models/provider-selection";
 import { printTable } from "@/cli/utils";
 import { getVersion } from "@/cli/version";
 
@@ -40,30 +41,24 @@ function displayValue(name: SettingName, value: unknown): string {
   return text.length <= 80 ? text : `${text.slice(0, 77)}…`;
 }
 
-/** An explicit USE_* toggle wins, else the first provider with credentials. */
-function resolveActiveProvider(settings: Record<string, unknown>): {
+/** Asks the same resolver metrics use, so the report cannot drift from it. */
+function resolveActiveProvider(): {
   provider: ProviderSpec | null;
   reason: string;
 } {
-  for (const provider of PROVIDERS) {
-    if (settings[provider.useFlag] === true) {
-      return { provider, reason: `${provider.useFlag} is set` };
-    }
+  const selected = selectProvider();
+  if (selected === null) {
+    return {
+      provider: getProvider("openai") ?? null,
+      reason: "no provider selected, defaulting to OpenAI",
+    };
   }
-  for (const provider of PROVIDERS) {
-    const secrets = provider.secretSettings ?? [];
-    const configured = secrets.some((setting) => {
-      const value = settings[setting];
-      return typeof value === "string" && value.trim() !== "";
-    });
-    if (configured) {
-      return {
-        provider,
-        reason: `credentials found (${secrets.join(", ")})`,
-      };
-    }
-  }
-  return { provider: null, reason: "no credentials found" };
+  const provider = getProvider(selected) ?? null;
+  const reason =
+    selected === "ollama"
+      ? "LOCAL_MODEL_API_KEY is the Ollama placeholder"
+      : `${provider?.useFlag} is set`;
+  return { provider, reason };
 }
 
 interface DiagnoseReport {
@@ -88,7 +83,7 @@ interface DiagnoseReport {
 function buildReport(): DiagnoseReport {
   const settings = getSettings() as Record<string, unknown>;
   const apiKey = (settings.CONFIDENT_API_KEY as string | undefined) ?? "";
-  const { provider, reason } = resolveActiveProvider(settings);
+  const { provider, reason } = resolveActiveProvider();
 
   const relevant = SETTING_NAMES.filter((name) => {
     const value = settings[name];

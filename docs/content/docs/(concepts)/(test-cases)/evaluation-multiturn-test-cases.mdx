@@ -46,7 +46,7 @@ test_case = ConversationalTestCase(
 <Case id="typescript">
 
 ```typescript
-import { ConversationalTestCase, Turn } from "deepeval";
+import { ConversationalTestCase, Turn } from "deepeval/test-case";
 
 const testCase = new ConversationalTestCase({
   scenario: "User chit-chatting randomly with AI.",
@@ -96,7 +96,7 @@ test_case = ConversationalTestCase(turns=turns)
 <Case id="typescript">
 
 ```typescript title="main.ts"
-import { Turn, ConversationalTestCase } from "deepeval";
+import { Turn, ConversationalTestCase } from "deepeval/test-case";
 
 const turns = [
   new Turn({ role: "user", content: "Why did the chicken cross the road?" }),
@@ -162,7 +162,7 @@ test_case = ConversationalTestCase(scenario="Frustrated user asking for a refund
 <Case id="typescript">
 
 ```typescript
-import { Turn, ConversationalTestCase } from "deepeval";
+import { Turn, ConversationalTestCase } from "deepeval/test-case";
 
 const testCase = new ConversationalTestCase({
   scenario: "Frustrated user asking for a refund.",
@@ -197,7 +197,7 @@ test_case = ConversationalTestCase(
 <Case id="typescript">
 
 ```typescript
-import { Turn, ConversationalTestCase } from "deepeval";
+import { Turn, ConversationalTestCase } from "deepeval/test-case";
 
 const testCase = new ConversationalTestCase({
   scenario: "Frustrated user asking for a refund.",
@@ -229,7 +229,7 @@ test_case = ConversationalTestCase(chatbot_role="A happy jolly wizard.", turns=[
 <Case id="typescript">
 
 ```typescript
-import { Turn, ConversationalTestCase } from "deepeval";
+import { Turn, ConversationalTestCase } from "deepeval/test-case";
 
 const testCase = new ConversationalTestCase({
   chatbotRole: "A happy jolly wizard.",
@@ -263,7 +263,7 @@ test_case = ConversationalTestCase(
 <Case id="typescript">
 
 ```typescript
-import { Turn, ConversationalTestCase } from "deepeval";
+import { Turn, ConversationalTestCase } from "deepeval/test-case";
 
 const testCase = new ConversationalTestCase({
   userDescription: "John Smith, lives in NYC, has a dog, divorced.",
@@ -297,7 +297,7 @@ test_case = ConversationalTestCase(
 <Case id="typescript">
 
 ```typescript
-import { Turn, ConversationalTestCase } from "deepeval";
+import { Turn, ConversationalTestCase } from "deepeval/test-case";
 
 const testCase = new ConversationalTestCase({
   context: ["Customers must be over 50 to be eligible for a refund."],
@@ -343,7 +343,7 @@ test_case = ConversationalTestCase(
 <Case id="typescript">
 
 ```typescript
-import { ConversationalTestCase, Turn, MLLMImage } from "deepeval/testCase";
+import { ConversationalTestCase, Turn, MLLMImage } from "deepeval/test-case";
 
 const shoes = new MLLMImage({ url: "./shoes.png", local: true });
 
@@ -410,7 +410,7 @@ print(test_case.turns[0].content)
 <Case id="typescript">
 
 ```typescript
-import { ConversationalTestCase, Turn, MLLMImage } from "deepeval/testCase";
+import { ConversationalTestCase, Turn, MLLMImage } from "deepeval/test-case";
 
 const shoes = new MLLMImage({ url: "./shoes.png", local: true });
 
@@ -504,7 +504,7 @@ test_case = ConversationalTestCase(name="my-external-unique-id", ...)
 <Case id="typescript">
 
 ```typescript
-import { Turn, ConversationalTestCase } from "deepeval";
+import { Turn, ConversationalTestCase } from "deepeval/test-case";
 
 const testCase = new ConversationalTestCase({
   name: "my-external-unique-id",

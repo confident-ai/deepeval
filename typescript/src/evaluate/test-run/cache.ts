@@ -5,6 +5,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { CACHE_FILE, HIDDEN_DIR } from "@/constants";
+import { isReadOnlyFileSystem } from "@/config/utils";
 import { getLogger } from "@/logger";
 import { ConversationalTestCase, resolveRetrievalContext } from "@/test-case";
 import type { BaseMetricCore } from "@/metrics/base-metrics";
@@ -15,7 +16,7 @@ const CACHE_VERSION = 1;
 
 /** The metric knobs that change a score. */
 interface MetricConfiguration {
-  threshold?: number;
+  threshold?: number | null;
   evaluationModel?: string;
   strictMode: boolean;
   includeReason: boolean;
@@ -144,6 +145,10 @@ export function cacheMetricData(
 
 export function flushCache(): void {
   if (pending.size === 0) return;
+  if (isReadOnlyFileSystem()) {
+    pending.clear();
+    return;
+  }
 
   // Re-read: sibling vitest workers may have flushed since we loaded it.
   let onDisk: CacheFile;
@@ -181,6 +186,7 @@ export function flushCache(): void {
 export function clearCache(): void {
   pending.clear();
   loaded = null;
+  if (isReadOnlyFileSystem()) return;
   try {
     fs.rmSync(cachePath(), { force: true });
   } catch {}

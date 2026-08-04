@@ -115,8 +115,9 @@ so a run without `CONFIDENT_API_KEY` is still recoverable and `deepeval view` ca
 upload it afterwards. `DEEPEVAL_RESULTS_FOLDER` additionally exports a timestamped
 `test_run_*.json`.
 
-Still missing versus Python: `.latest_run_full.json` and the `inspect` trace-tree
-TUI that reads it.
+`deepeval inspect` reads these files directly (see `src/inspect/`), so Python's
+separate `.latest_run_full.json` snapshot is not needed — traces already ride
+along on each persisted case under `entry.trace`.
 
 ### 7. Missing CLI flags
 
@@ -205,8 +206,8 @@ needs a test.
    uploaded nothing.
 5. **`setupFiles` merge** (gap 8) — prerequisite for documenting a config-file
    setup path.
-6. **Local persistence + `view` / `inspect`** (gap 6) — makes the logged-out path
-   as useful as Python's.
+6. ~~**Local persistence + `view` / `inspect`** (gap 6)~~ — done; both commands
+   now read the local files, so the logged-out path is as useful as Python's.
 7. **Hyperparameters, then cache** (gaps 7, 5) — in that order; the cache key
    depends on them.
 8. **Capture-sink subscriber list** (gap 10) — shared fix with the integrations

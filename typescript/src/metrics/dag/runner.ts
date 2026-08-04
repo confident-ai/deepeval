@@ -23,9 +23,7 @@ export class DeepAcyclicGraphRunner {
 
   async run(metric: DagHostMetric, testCase: any): Promise<void> {
     await Promise.all(
-      this.graph.rootNodes.map((root) =>
-        this.visit(root, metric, testCase, 0),
-      ),
+      this.graph.rootNodes.map((root) => this.visit(root, metric, testCase, 0)),
     );
   }
 

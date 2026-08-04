@@ -3,9 +3,33 @@ from typing import Any, Callable, Union
 from deepeval.models.base_model import DeepEvalModelData
 
 DEFAULT_GPT_MODEL = "gpt-5.4"
+DEFAULT_ANTHROPIC_MODEL = "claude-opus-5"
+DEFAULT_GEMINI_MODEL = "gemini-3.6-flash"
 # OpenRouter uses provider/model format (e.g., "openai/gpt-4", "anthropic/claude-3-opus")
 # DeepEval does not validate OpenRouter model strings.
 DEFAULT_OPENROUTER_MODEL = f"openai/{DEFAULT_GPT_MODEL}"
+
+# Every judge model a provider falls back to when the caller passes no model and
+# sets no ``*_MODEL_NAME``. Keys are the namespaces of ``REGISTRIES`` in
+# ``scripts/compile_model_registry.py``, which projects this into
+# ``typescript/src/models/registry/models.json`` so the TypeScript SDK falls back
+# to the same models. Provider modules must read their default from here rather
+# than declaring their own — that is the whole point of the dict.
+#
+# ``openrouter`` has no registry namespace of its own (its names are
+# ``provider/model`` strings that DeepEval does not validate), so it appears here
+# without a corresponding pricing table.
+#
+# Providers absent from this dict — Grok, DeepSeek, Kimi, Ollama, local, Azure,
+# Portkey and Bedrock — deliberately have no Python default: they raise unless
+# their ``*_MODEL_NAME`` is set. Adding a key here is a behavior change that also
+# changes the TypeScript SDK.
+DEFAULT_MODELS: dict[str, str] = {
+    "openai": DEFAULT_GPT_MODEL,
+    "anthropic": DEFAULT_ANTHROPIC_MODEL,
+    "gemini": DEFAULT_GEMINI_MODEL,
+    "openrouter": DEFAULT_OPENROUTER_MODEL,
+}
 
 ModelDataFactory = Callable[[], DeepEvalModelData]
 ModelDataValue = Union[DeepEvalModelData, ModelDataFactory]
@@ -659,6 +683,27 @@ ANTHROPIC_MODELS_DATA = ModelDataRegistry(
             input_price=5.00 / 1e6,
             output_price=25.00 / 1e6,
         ),
+        "claude-opus-5": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=5.00 / 1e6,
+            output_price=25.00 / 1e6,
+        ),
+        # Standard rate. Anthropic ran an introductory $2/$10 through
+        # 2026-08-31; this table has no notion of time-varying pricing, so it
+        # records the durable number.
+        "claude-sonnet-5": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=3.00 / 1e6,
+            output_price=15.00 / 1e6,
+        ),
         "claude-fable-5": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
@@ -826,6 +871,14 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             input_price=2.0 / 1e6,
             output_price=12.0 / 1e6,
         ),
+        "gemini-3.6-flash": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=1.5 / 1e6,
+            output_price=7.5 / 1e6,
+        ),
         "gemini-3.5-flash": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
@@ -833,6 +886,14 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_json=True,
             input_price=1.5 / 1e6,
             output_price=9.0 / 1e6,
+        ),
+        "gemini-3.5-flash-lite": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=0.3 / 1e6,
+            output_price=2.5 / 1e6,
         ),
         "gemini-3-flash-preview": make_model_data(
             supports_log_probs=False,

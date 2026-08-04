@@ -2,6 +2,7 @@
 id: guides-multi-turn-simulation
 title: Multi-Turn Simulation
 sidebar_label: Multi-Turn Simulation
+languages: [python]
 ---
 **Multi-turn simulation** is the process of automatically generating realistic conversations between a simulated user and your LLM application. It is the foundation of multi-turn evaluation—without simulation, you'd need to manually chat with your application for every scenario you want to test.
 
@@ -54,10 +55,6 @@ A [`ConversationalGolden`](/docs/conversation-simulator#simulate-a-conversation)
 | `expected_outcome` | What success looks like (e.g., "Customer receives refund confirmation and apology")            |
 | `user_description` | Personality and context of the simulated user (e.g., "Impatient, has contacted support twice") |
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.dataset import ConversationalGolden
 
@@ -67,24 +64,6 @@ golden = ConversationalGolden(
     user_description="Impatient customer who has already contacted support twice"
 )
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { ConversationalGolden } from "deepeval/dataset";
-
-const golden = new ConversationalGolden({
-  scenario: "Frustrated customer requesting a refund for a defective product",
-  expectedOutcome: "Customer receives refund confirmation and apology",
-  userDescription: "Impatient customer who has already contacted support twice",
-});
-```
-
-</Case>
-
-</Switch>
 
 The simulator uses all three fields to generate realistic user messages. The `scenario` sets the topic, the `user_description` shapes the tone and behavior, and the `expected_outcome` tells the simulator when the conversation has reached a natural conclusion.
 
@@ -124,10 +103,6 @@ The result is a `ConversationalTestCase`—a complete conversation with all turn
 
 The output of a simulation. It contains the full list of [`Turn`s](/docs/evaluation-multiturn-test-cases) that occurred during the conversation, along with the original scenario and expected outcome from the golden. This is the object you pass to `evaluate()`.
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.test_case import ConversationalTestCase, Turn
 
@@ -141,27 +116,6 @@ test_case = ConversationalTestCase(
 )
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { ConversationalTestCase, Turn } from "deepeval/testCase";
-
-const testCase = new ConversationalTestCase({
-  turns: [
-    new Turn({ role: "user", content: "I want a refund for order #1234." }),
-    new Turn({ role: "assistant", content: "I'd be happy to help with that. Let me look up order #1234." }),
-    new Turn({ role: "user", content: "It's been defective since day one." }),
-    new Turn({ role: "assistant", content: "I'm sorry to hear that. I've processed a full refund to your original payment method." }),
-  ],
-});
-```
-
-</Case>
-
-</Switch>
-
 ## The Model Callback
 
 The `model_callback` is the bridge between the simulator and your application. It's an async function that receives a user message and returns your application's response as a `Turn`.
@@ -169,10 +123,6 @@ The `model_callback` is the bridge between the simulator and your application. I
 ### Minimal Callback
 
 The simplest callback only needs the `input` parameter:
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval.test_case import Turn
@@ -182,32 +132,11 @@ async def model_callback(input: str) -> Turn:
     return Turn(role="assistant", content=response)
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { Turn } from "deepeval/testCase";
-
-const modelCallback = async ({ input }: { input: string }) => {
-  const response = await yourLlmApp(input);
-  return new Turn({ role: "assistant", content: response });
-};
-```
-
-</Case>
-
-</Switch>
-
 This works for stateless applications where the conversation history is managed internally (e.g., via an API that tracks sessions). The simulator sends a user message string, and your application returns a response.
 
 ### Callback with Conversation History
 
 Most applications need access to the full conversation history to generate contextually appropriate responses. Add the `turns` parameter:
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from typing import List
@@ -221,35 +150,11 @@ async def model_callback(input: str, turns: List[Turn]) -> Turn:
     return Turn(role="assistant", content=response)
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { Turn } from "deepeval/testCase";
-
-const modelCallback = async ({ input, turns }: { input: string; turns: Turn[] }) => {
-  const messages = turns.map((t) => ({ role: t.role, content: t.content }));
-  messages.push({ role: "user", content: input });
-
-  const response = await yourLlmApp(messages);
-  return new Turn({ role: "assistant", content: response });
-};
-```
-
-</Case>
-
-</Switch>
-
 The `turns` parameter contains all preceding turns in the conversation (both user and assistant). This is essential for applications where you manage the conversation history yourself rather than relying on an external session store.
 
 ### Callback with Thread ID
 
 For applications that maintain server-side state—API calls, database lookups, session management—use the `thread_id` parameter:
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from typing import List
@@ -263,26 +168,6 @@ async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
     return Turn(role="assistant", content=response)
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { Turn } from "deepeval/testCase";
-
-const modelCallback = async ({ input, turns, threadId }: { input: string; turns: Turn[]; threadId: string }) => {
-  const response = await yourApi.chat({
-    threadId,
-    message: input,
-  });
-  return new Turn({ role: "assistant", content: response });
-};
-```
-
-</Case>
-
-</Switch>
-
 Each simulated conversation gets a unique `thread_id`. This allows your application to persist state across turns—for example, fetching a user's order history from a database on the first turn and referencing it in subsequent turns.
 
 :::tip
@@ -292,10 +177,6 @@ Use `thread_id` when your application relies on external state like database ses
 ### Returning Rich Turns
 
 The `Turn` object can carry more than just text content. If your application uses a RAG pipeline or calls tools, include those details in the returned turn so that specialized metrics can evaluate them:
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval.test_case import Turn, ToolCall
@@ -319,37 +200,6 @@ async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
     )
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { Turn, ToolCall } from "deepeval/testCase";
-
-const modelCallback = async ({ input, turns, threadId }: { input: string; turns: Turn[]; threadId: string }) => {
-  const result = await yourLlmApp(input, turns, threadId);
-
-  return new Turn({
-    role: "assistant",
-    content: result.response,
-    retrievalContext: result.retrievedDocs,
-    toolsCalled: result.toolCalls?.map(
-      (tc: any) =>
-        new ToolCall({
-          name: tc.name,
-          description: tc.description,
-          inputParameters: tc.args,
-          output: tc.result,
-        }),
-    ),
-  });
-};
-```
-
-</Case>
-
-</Switch>
-
 Here's what each field on `Turn` unlocks:
 
 | Field                 | Type             | What It Enables                                                                                                                                                                                                                                              |
@@ -366,10 +216,6 @@ If you only need conversation-level metrics like [`ConversationCompletenessMetri
 ### Basic Simulation
 
 With a callback and goldens defined, running a simulation is straightforward:
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval.test_case import Turn
@@ -390,43 +236,11 @@ simulator = ConversationSimulator(model_callback=model_callback)
 test_cases = simulator.simulate(conversational_goldens=[golden])
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { ConversationSimulator } from "deepeval";
-import { Turn } from "deepeval/testCase";
-import { ConversationalGolden } from "deepeval/dataset";
-
-const golden = new ConversationalGolden({
-  scenario: "Customer wants to track a delayed package",
-  expectedOutcome: "Customer receives tracking info and estimated delivery date",
-  userDescription: "Polite but anxious, checking for the third time this week",
-});
-
-const modelCallback = async ({ input, turns, threadId }: { input: string; turns: Turn[]; threadId: string }) => {
-  const response = await yourLlmApp(input, turns, threadId);
-  return new Turn({ role: "assistant", content: response });
-};
-
-const simulator = new ConversationSimulator({ modelCallback });
-const testCases = await simulator.simulate({ conversationalGoldens: [golden] });
-```
-
-</Case>
-
-</Switch>
-
 The `simulate` method returns a list of `ConversationalTestCase`s—one per golden.
 
 ### Controlling Conversation Length
 
 By default, simulations run for up to 10 user-assistant cycles. You can adjust this with `max_user_simulations`:
-
-<Switch>
-
-<Case id="python">
 
 ```python
 test_cases = simulator.simulate(
@@ -434,21 +248,6 @@ test_cases = simulator.simulate(
     max_user_simulations=5
 )
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-const testCases = await simulator.simulate({
-  conversationalGoldens: [golden],
-  maxUserSimulations: 5,
-});
-```
-
-</Case>
-
-</Switch>
 
 A simulation ends when **either** condition is met:
 
@@ -482,7 +281,7 @@ simulator = ConversationSimulator(
 
 ### Custom Simulator Model
 
-The simulated user is powered by an LLM (defaulting to `gpt-4.1`). You can change this model or use a custom one:
+The simulated user is powered by an LLM (defaulting to <DefaultLLMModel />). You can change this model or use a custom one:
 
 ```python
 simulator = ConversationSimulator(
@@ -511,10 +310,6 @@ simulator = ConversationSimulator(
 
 Some applications have hardcoded opening messages (e.g., a greeting or disclaimer). You can provide initial turns on the golden, and the simulator will continue from there:
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.dataset import ConversationalGolden
 from deepeval.test_case import Turn
@@ -528,28 +323,6 @@ golden = ConversationalGolden(
     ]
 )
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { ConversationalGolden } from "deepeval/dataset";
-import { Turn } from "deepeval/testCase";
-
-const golden = new ConversationalGolden({
-  scenario: "Customer asking about return policies",
-  expectedOutcome: "Customer understands the return process",
-  userDescription: "First-time buyer, unfamiliar with the store",
-  turns: [
-    new Turn({ role: "assistant", content: "Welcome to ShopCo! How can I help you today?" }),
-  ],
-});
-```
-
-</Case>
-
-</Switch>
 
 The simulator sees the existing assistant turn and generates a user response that continues naturally from it. This is useful when:
 
@@ -590,10 +363,6 @@ The quality of your simulations depends heavily on how well you design your [`Co
 
 **Cover the full spectrum of user behavior:**
 
-<Switch>
-
-<Case id="python">
-
 ```python
 goldens = [
     ConversationalGolden(
@@ -614,41 +383,9 @@ goldens = [
 ]
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-const goldens = [
-  new ConversationalGolden({
-    scenario: "Customer requesting a refund",
-    expectedOutcome: "Refund is processed",
-    userDescription: "Calm and cooperative customer",
-  }),
-  new ConversationalGolden({
-    scenario: "Customer requesting a refund",
-    expectedOutcome: "Refund is processed despite user frustration",
-    userDescription: "Angry customer who threatens to leave a bad review",
-  }),
-  new ConversationalGolden({
-    scenario: "Customer requesting a refund",
-    expectedOutcome: "Customer is redirected to the right department",
-    userDescription: "Confused customer who doesn't know the refund policy",
-  }),
-];
-```
-
-</Case>
-
-</Switch>
-
 Same scenario, three very different conversations. The `user_description` drives the variation.
 
 **Test edge cases explicitly:**
-
-<Switch>
-
-<Case id="python">
 
 ```python
 ConversationalGolden(
@@ -658,27 +395,7 @@ ConversationalGolden(
 )
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-new ConversationalGolden({
-  scenario: "User asks the assistant to do something outside its capabilities",
-  expectedOutcome: "Assistant politely declines and suggests alternatives",
-  userDescription: "Persistent user who keeps rephrasing the same off-topic request",
-});
-```
-
-</Case>
-
-</Switch>
-
 **Test multi-topic conversations:**
-
-<Switch>
-
-<Case id="python">
 
 ```python
 ConversationalGolden(
@@ -688,29 +405,9 @@ ConversationalGolden(
 )
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-new ConversationalGolden({
-  scenario: "User starts with a billing question, then pivots to a technical issue, then asks about account deletion",
-  expectedOutcome: "All three topics are addressed correctly",
-  userDescription: "Busy user who jumps between topics quickly",
-});
-```
-
-</Case>
-
-</Switch>
-
 ## From Simulation to Evaluation
 
 Once you have simulated conversations, pass them directly to `evaluate()` with your chosen metrics:
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval import evaluate
@@ -729,24 +426,6 @@ evaluate(
     ]
 )
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { evaluate, metrics } from "deepeval";
-
-await evaluate(testCases, [
-  new metrics.ConversationCompletenessMetric(),
-  new metrics.TurnRelevancyMetric(),
-  new metrics.KnowledgeRetentionMetric(),
-]);
-```
-
-</Case>
-
-</Switch>
 
 This creates a test run—a snapshot of your application's conversational performance. For details on which metrics to choose, see the [Multi-Turn Evaluation Metrics guide](/guides/guides-multi-turn-evaluation-metrics).
 

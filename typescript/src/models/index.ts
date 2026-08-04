@@ -1,14 +1,21 @@
 export {
   DeepEvalBaseLLM,
+  type ContentTokenLogProbs,
   type GenerationKwargs,
   type GenerationResult,
+  type RawGenerationOptions,
+  type RawGenerationResult,
+  type TokenLogProb,
 } from "@/models/base-model";
 
-// Per-model pricing/capability data, generated from the Python registries.
+// Per-model pricing/capability data and provider defaults, generated from the
+// Python registries.
 export {
   getModelData,
+  defaultModelName,
   DEFAULT_MODEL_DATA,
   GENERATED_MODEL_DATA,
+  type DefaultModelNamespace,
   type ModelData,
   type ModelNamespace,
 } from "@/models/registry";

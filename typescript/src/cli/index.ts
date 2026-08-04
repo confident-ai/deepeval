@@ -3,6 +3,7 @@ import { Command } from "commander";
 import { registerAuthCommands } from "@/cli/commands/auth";
 import { registerDiagnoseCommand } from "@/cli/commands/diagnose";
 import { registerGateCommand } from "@/cli/commands/gate";
+import { registerInspectCommand } from "@/cli/commands/inspect";
 import { registerProviderCommands } from "@/cli/commands/providers";
 import { registerSettingsCommands } from "@/cli/commands/settings";
 import { registerTestCommands } from "@/cli/commands/test";
@@ -25,6 +26,7 @@ function buildProgram(): Command {
   registerProviderCommands(program);
   registerAuthCommands(program);
   registerViewCommand(program);
+  registerInspectCommand(program);
 
   return program;
 }

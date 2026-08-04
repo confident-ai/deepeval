@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Type
 
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
@@ -20,6 +20,10 @@ from deepeval.metrics.mcp.utils import (
 )
 from deepeval.metrics.mcp.schema import Task, TaskScore, Reason
 from deepeval.errors import MissingTestCaseParamsError
+from deepeval.templates import make_template_class
+
+
+MCPTaskCompletionTemplate = make_template_class("MCPTaskCompletionMetric")
 
 
 class MCPTaskCompletionMetric(BaseConversationalMetric):
@@ -37,6 +41,9 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         flaky: bool = False,
+        evaluation_template: Type[
+            MCPTaskCompletionTemplate
+        ] = MCPTaskCompletionTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -46,13 +53,13 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case,
@@ -76,7 +83,6 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -113,7 +119,6 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case,

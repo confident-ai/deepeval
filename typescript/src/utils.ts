@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { DEEPEVAL_RUNNING, HIDDEN_DIR } from "@/constants";
 import { loadDotenvFiles } from "@/config/dotenv-load";
+import { boolToEnvStr, parseBool } from "@/config/utils";
 
 try {
   loadDotenvFiles();
@@ -81,11 +82,11 @@ export function wait(ms: number): Promise<void> {
 }
 
 export function getIsRunningDeepEval(): boolean {
-  return process.env[DEEPEVAL_RUNNING] === "1";
+  return parseBool(process.env[DEEPEVAL_RUNNING]) ?? false;
 }
 
 export function setIsRunningDeepEval(flag: boolean): void {
-  process.env[DEEPEVAL_RUNNING] = flag ? "1" : "0";
+  process.env[DEEPEVAL_RUNNING] = boolToEnvStr(flag);
 }
 
 export function createTestRunResultsDir(): string {

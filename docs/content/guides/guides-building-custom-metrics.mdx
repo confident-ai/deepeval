@@ -2,6 +2,7 @@
 id: guides-building-custom-metrics
 title: Building Custom LLM Metrics
 sidebar_label: Building Custom Metrics
+languages: [python]
 ---
 
 
@@ -27,32 +28,12 @@ There are many ways one can implement an LLM evaluation metric. Here is a [great
 
 To begin, create a class that inherits from `deepeval`'s `BaseMetric` class:
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.metrics import BaseMetric
 
 class CustomMetric(BaseMetric):
     ...
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { metrics } from "deepeval";
-
-abstract class CustomMetric extends metrics.BaseMetric {
-  // ...
-}
-```
-
-</Case>
-
-</Switch>
 
 This is important because the `BaseMetric` class will help `deepeval` acknowledge your custom metric during evaluation.
 
@@ -72,10 +53,6 @@ Don't read too much into the advanced properties for now, we'll go over how they
 :::
 
 The `__init__()` method is a great place to set these properties:
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -97,32 +74,6 @@ class CustomMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { metrics } from "deepeval";
-
-abstract class CustomMetric extends metrics.BaseMetric {
-  constructor(
-    threshold: number = 0.5,
-    // Optional
-    evaluationModel?: string,
-    includeReason: boolean = true,
-    strictMode: boolean = true,
-  ) {
-    super(threshold, { includeReason, strictMode });
-    // Optional
-    this.evaluationModel = evaluationModel;
-  }
-}
-```
-
-</Case>
-
-</Switch>
 
 ### 3. Implement the `measure()` and `a_measure()` methods
 
@@ -151,10 +102,6 @@ Both `measure()` and `a_measure()` **MUST**:
 - set `self.success`
 
 You can also optionally set `self.reason` in the measure methods (if you're using an LLM for evaluation), or wrap everything in a `try` block to catch any exceptions and set it to `self.error`. Here's a hypothetical example:
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -192,41 +139,6 @@ class CustomMetric(BaseMetric):
             raise
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { metrics } from "deepeval";
-import { LLMTestCase } from "deepeval/testCase";
-
-abstract class CustomMetric extends metrics.BaseMetric {
-  // ...
-
-  // In TypeScript, measure() is async — there is no separate a_measure()
-  async measure(testCase: LLMTestCase): Promise<number> {
-    // Although not required, we recommend catching errors
-    // in a try block
-    try {
-      this.score = await generateHypotheticalScore(testCase);
-      if (this.includeReason) {
-        this.reason = await generateHypotheticalReason(testCase);
-      }
-      this.success = this.score >= this.threshold;
-      return this.score;
-    } catch (e) {
-      // set metric error and re-throw it
-      this.error = String(e);
-      throw e;
-    }
-  }
-}
-```
-
-</Case>
-
-</Switch>
-
 :::tip
 
 Often times, the blocking part of an LLM evaluation metric stems from the API calls made to your LLM provider (such as OpenAI's API endpoints), and so ultimately you'll have to ensure that LLM inference can indeed be made asynchronous.
@@ -251,10 +163,6 @@ You can also [click here to find an example of offloading LLM inference to a sep
 
 Under the hood, `deepeval` calls the `is_successful()` method to determine the status of your metric for a given `LLMTestCase`. We recommend copy and pasting the code below directly as your `is_successful()` implementation:
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
@@ -269,36 +177,9 @@ class CustomMetric(BaseMetric):
             return self.success
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { metrics } from "deepeval";
-
-abstract class CustomMetric extends metrics.BaseMetric {
-  // ...
-
-  isSuccessful(): boolean {
-    if (this.error !== undefined) {
-      this.success = false;
-    }
-    return this.success ?? false;
-  }
-}
-```
-
-</Case>
-
-</Switch>
-
 ### 5. Name Your Custom Metric
 
 Probably the easiest step, all that's left is to name your custom metric:
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -311,26 +192,6 @@ class CustomMetric(BaseMetric):
     def __name__(self):
         return "My Custom Metric"
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { metrics } from "deepeval";
-
-abstract class CustomMetric extends metrics.BaseMetric {
-  // ...
-
-  get name(): string {
-    return "My Custom Metric";
-  }
-}
-```
-
-</Case>
-
-</Switch>
 
 **Congratulations 🎉!** You've just learnt how to build a custom metric that is 100% integrated with `deepeval`'s ecosystem. In the following section, we'll go through a few real-life examples.
 
@@ -396,10 +257,6 @@ print(metric.is_successful())
 In this example, we'll be combining two default `deepeval` metrics as our custom metric, hence why we're calling it a "composite" metric.
 
 We'll be combining the `AnswerRelevancyMetric` and `FaithfulnessMetric`, since we rarely see a user that cares about one but not the other.
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval.metrics import BaseMetric, AnswerRelevancyMetric, FaithfulnessMetric
@@ -504,106 +361,7 @@ class FaithfulRelevancyMetric(BaseMetric):
         self.success = self.score >= self.threshold
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { metrics } from "deepeval";
-import { LLMTestCase } from "deepeval/testCase";
-
-class FaithfulRelevancyMetric extends metrics.BaseMetric {
-  constructor(
-    threshold: number = 0.5,
-    includeReason: boolean = true,
-    strictMode: boolean = false,
-  ) {
-    super(strictMode ? 1 : threshold, { includeReason, strictMode });
-  }
-
-  async measure(testCase: LLMTestCase): Promise<number> {
-    try {
-      const { relevancyMetric, faithfulnessMetric } = this.initializeMetrics();
-      // Remember, deepeval's default metrics follow the same pattern as your custom metric!
-      // Run both metrics concurrently
-      await Promise.all([
-        relevancyMetric.measure(testCase),
-        faithfulnessMetric.measure(testCase),
-      ]);
-
-      // Custom logic to set score, reason, and success
-      this.setScoreReasonSuccess(relevancyMetric, faithfulnessMetric);
-      return this.score!;
-    } catch (e) {
-      // Set and re-throw error
-      this.error = String(e);
-      throw e;
-    }
-  }
-
-  isSuccessful(): boolean {
-    if (this.error !== undefined) {
-      this.success = false;
-    }
-    return this.success ?? false;
-  }
-
-  get name(): string {
-    return "Composite Relevancy Faithfulness Metric";
-  }
-
-  //////////////////////
-  /// Helper methods ///
-  //////////////////////
-  private initializeMetrics() {
-    const relevancyMetric = new metrics.AnswerRelevancyMetric({
-      threshold: this.threshold,
-      includeReason: this.includeReason,
-      strictMode: this.strictMode,
-    });
-    const faithfulnessMetric = new metrics.FaithfulnessMetric({
-      threshold: this.threshold,
-      includeReason: this.includeReason,
-      strictMode: this.strictMode,
-    });
-    return { relevancyMetric, faithfulnessMetric };
-  }
-
-  private setScoreReasonSuccess(
-    relevancyMetric: metrics.BaseMetric,
-    faithfulnessMetric: metrics.BaseMetric,
-  ) {
-    // Get scores and reasons for both
-    const relevancyScore = relevancyMetric.score ?? 0;
-    const relevancyReason = relevancyMetric.reason ?? "";
-    const faithfulnessScore = faithfulnessMetric.score ?? 0;
-    const faithfulnessReason = faithfulnessMetric.reason ?? "";
-
-    // Custom logic to set score
-    const compositeScore = Math.min(relevancyScore, faithfulnessScore);
-    this.score =
-      this.strictMode && compositeScore < this.threshold ? 0 : compositeScore;
-
-    // Custom logic to set reason
-    if (this.includeReason) {
-      this.reason = relevancyReason + "\n" + faithfulnessReason;
-    }
-
-    // Custom logic to set success
-    this.success = this.score >= this.threshold;
-  }
-}
-```
-
-</Case>
-
-</Switch>
-
 Now go ahead and try to use it:
-
-<Switch>
-
-<Case id="python">
 
 ```python title="test_llm.py"
 from deepeval import assert_test
@@ -616,40 +374,6 @@ def test_llm():
     assert_test(test_case, [metric])
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript title="test_llm.ts"
-import { evaluate } from "deepeval";
-import { LLMTestCase } from "deepeval/testCase";
-// ...
-
-const metric = new FaithfulRelevancyMetric();
-const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
-await evaluate([testCase], [metric]);
-```
-
-</Case>
-
-</Switch>
-
-<Switch>
-
-<Case id="python">
-
 ```bash
 deepeval test run test_llm.py
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```bash
-npx tsx test_llm.ts
-```
-
-</Case>
-
-</Switch>

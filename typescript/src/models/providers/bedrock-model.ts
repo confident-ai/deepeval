@@ -5,6 +5,7 @@ import {
   type GenerationResult,
 } from "@/models/base-model";
 import { extractJson, importOptional } from "@/models/utils";
+import { bedrockContent } from "@/models/multimodal";
 import type { ModelNamespace } from "@/models/registry";
 
 const DEFAULT_BEDROCK_REGION = "us-east-1";
@@ -102,7 +103,7 @@ export class AmazonBedrockModel extends DeepEvalBaseLLM {
     const response = await client.send(
       new ConverseCommand({
         modelId: this.modelName,
-        messages: [{ role: "user", content: [{ text: prompt }] }],
+        messages: [{ role: "user", content: await bedrockContent(prompt) }],
         ...(Object.keys(inferenceConfig).length > 0 && { inferenceConfig }),
       }),
     );
@@ -122,9 +123,5 @@ export class AmazonBedrockModel extends DeepEvalBaseLLM {
 
   getModelName(): string {
     return this.modelName ?? "amazon-bedrock";
-  }
-
-  supportsMultimodal(): boolean {
-    return this.modelData.supportsMultimodal ?? true;
   }
 }

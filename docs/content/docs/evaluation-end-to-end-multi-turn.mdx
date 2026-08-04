@@ -2,7 +2,7 @@
 id: evaluation-end-to-end-multi-turn
 title: Multi-Turn End-to-End Evaluation
 sidebar_label: Multi-Turn
-languages: [python, typescript]
+languages: [python]
 ---
 
 import { ASSETS } from "@site/src/assets";
@@ -62,10 +62,6 @@ The `ConversationSimulator` needs a way to ask your chatbot for its next reply, 
 <Tabs items={["Python", "OpenAI", "LangChain", "LlamaIndex", "OpenAI Agents", "Pydantic"]}>
 <Tab value="Python">
 
-<Switch>
-
-<Case id="python">
-
 ```python title="main.py" showLineNumbers={true}
 from typing import List
 from deepeval.test_case import Turn
@@ -74,23 +70,6 @@ async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
     response = await your_chatbot(input, turns, thread_id)
     return Turn(role="assistant", content=response)
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript title="main.ts" showLineNumbers={true}
-import { Turn } from "deepeval";
-
-const modelCallback = async ({ input, turns, threadId }: { input: string; turns: Turn[]; threadId: string }): Promise<Turn> => {
-  const response = await yourChatbot(input, turns, threadId);
-  return new Turn({ role: "assistant", content: response });
-};
-```
-
-</Case>
-
-</Switch>
 
 </Tab>
 <Tab value="OpenAI">
@@ -215,10 +194,6 @@ A `ConversationalGolden` describes the situation the simulated user is in, what 
 <Tabs items={["In Code", "Pull from Confident AI", "Load from CSV", "Load from JSON"]}>
 <Tab value="In Code">
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.dataset import ConversationalGolden, EvaluationDataset
 
@@ -234,37 +209,10 @@ goldens = [
 dataset = EvaluationDataset(goldens=goldens)
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { EvaluationDataset, ConversationalGolden } from "deepeval/dataset";
-
-const goldens = [
-  new ConversationalGolden({
-    scenario: "Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
-    expectedOutcome: "Successful purchase of a ticket.",
-    userDescription: "Andy Byron is the CEO of Astronomer.",
-  }),
-  // ...
-];
-
-const dataset = new EvaluationDataset({ goldens });
-```
-
-</Case>
-
-</Switch>
-
 The dataset lives only for this run — no push, no save. Perfect for quickstarts and one-off evaluations.
 
 </Tab>
 <Tab value="Pull from Confident AI">
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -272,21 +220,6 @@ from deepeval.dataset import EvaluationDataset
 dataset = EvaluationDataset()
 dataset.pull(alias="My multi-turn dataset")
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { EvaluationDataset } from "deepeval/dataset";
-
-const dataset = new EvaluationDataset();
-await dataset.pull({ alias: "My multi-turn dataset" });
-```
-
-</Case>
-
-</Switch>
 
 </Tab>
 <Tab value="Load from CSV">
@@ -333,10 +266,6 @@ This page covers **sourcing** goldens for an eval run only. To **persist** a dat
 
 Hand the goldens and the callback to a `ConversationSimulator` to produce a list of `ConversationalTestCase`s:
 
-<Switch>
-
-<Case id="python">
-
 ```python title="main.py"
 from deepeval.conversation_simulator import ConversationSimulator
 
@@ -347,34 +276,12 @@ conversational_test_cases = simulator.simulate(
 )
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript title="main.ts"
-import { ConversationSimulator } from "deepeval";
-
-const simulator = new ConversationSimulator({ modelCallback });
-const conversationalTestCases = await simulator.simulate({
-  conversationalGoldens: dataset.goldens,
-  maxUserSimulations: 10,
-});
-```
-
-</Case>
-
-</Switch>
-
 The simulator exposes additional configuration beyond what fits here — see [stopping logic](/docs/conversation-simulator-stopping-logic), [custom templates](/docs/conversation-simulator-custom-templates), and [lifecycle hooks](/docs/conversation-simulator-lifecycle-hooks) for the full surface.
 
 <details>
 <summary>Click to view an example simulated test case</summary>
 
 The simulator carries `scenario`, `expected_outcome`, and `user_description` over from the golden, and fills in `turns`:
-
-<Switch>
-
-<Case id="python">
 
 ```python
 ConversationalTestCase(
@@ -391,29 +298,6 @@ ConversationalTestCase(
 )
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-new ConversationalTestCase({
-  scenario: "Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
-  expectedOutcome: "Successful purchase of a ticket.",
-  userDescription: "Andy Byron is the CEO of Astronomer.",
-  turns: [
-    new Turn({ role: "user", content: "Hi, I'd like to buy a VIP ticket for the Coldplay show." }),
-    new Turn({ role: "assistant", content: "Sure — which date and city are you looking for?" }),
-    new Turn({ role: "user", content: "The November 12 show in NYC." }),
-    new Turn({ role: "assistant", content: "Got it. That'll be $850. Shall I proceed?" }),
-    // ...
-  ],
-});
-```
-
-</Case>
-
-</Switch>
-
 </details>
 
 </Step>
@@ -428,10 +312,6 @@ Pass the simulated test cases and your multi-turn metrics to `evaluate()`:
 
 Default. Metrics dispatch concurrently across conversations for the fastest run.
 
-<Switch>
-
-<Case id="python">
-
 ```python title="main.py"
 from deepeval import evaluate
 from deepeval.metrics import TurnRelevancyMetric
@@ -441,23 +321,6 @@ evaluate(
     metrics=[TurnRelevancyMetric()],
 )
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript title="main.ts"
-import { evaluate, metrics } from "deepeval";
-
-await evaluate(
-  conversationalTestCases,
-  [new metrics.TurnRelevancyMetric()]
-);
-```
-
-</Case>
-
-</Switch>
 
 </Tab>
 <Tab value="Sync">

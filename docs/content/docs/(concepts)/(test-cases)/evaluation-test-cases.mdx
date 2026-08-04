@@ -52,7 +52,7 @@ test_case = LLMTestCase(
 <Case id="typescript">
 
 ```typescript title="main.ts"
-import { LLMTestCase, ToolCall } from "deepeval";
+import { LLMTestCase, ToolCall } from "deepeval/test-case";
 
 const testCase = new LLMTestCase({
   input: "What if these shoes don't fit?",
@@ -227,7 +227,7 @@ test_case = LLMTestCase(
 <Case id="typescript">
 
 ```typescript
-import { LLMTestCase } from "deepeval";
+import { LLMTestCase } from "deepeval/test-case";
 
 const testCase = new LLMTestCase({
   input: "Why did the chicken cross the road?",
@@ -253,9 +253,9 @@ deepeval login
 ```python title="test_file.py"
 import deepeval
 
-from deepeval import assert_test
-from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+from deepeval import assert_test
 
 def test_llm():
     test_case = LLMTestCase(input="...", actual_output="...")
@@ -679,7 +679,7 @@ test_case = LLMTestCase(token_cost=1.32, ...)
 <Case id="typescript">
 
 ```typescript
-import { LLMTestCase } from "deepeval";
+import { LLMTestCase } from "deepeval/test-case";
 
 const testCase = new LLMTestCase({ input: "...", actualOutput: "...", tokenCost: 1.32 });
 ```
@@ -710,7 +710,7 @@ test_case = LLMTestCase(completion_time=7.53, ...)
 <Case id="typescript">
 
 ```typescript
-import { LLMTestCase } from "deepeval";
+import { LLMTestCase } from "deepeval/test-case";
 
 const testCase = new LLMTestCase({ input: "...", actualOutput: "...", completionTime: 7.53 });
 ```
@@ -745,7 +745,7 @@ test_case = LLMTestCase(
 <Case id="typescript">
 
 ```typescript
-import { LLMTestCase, MLLMImage } from "deepeval/testCase";
+import { LLMTestCase, MLLMImage } from "deepeval/test-case";
 
 const shoes = new MLLMImage({ url: "./shoes.png", local: true });
 const blueShoes = new MLLMImage({ url: "https://shoe-images.com/edited-shoes", local: false });
@@ -807,7 +807,7 @@ print(test_case.input)
 <Case id="typescript">
 
 ```typescript
-import { LLMTestCase, MLLMImage } from "deepeval/testCase";
+import { LLMTestCase, MLLMImage } from "deepeval/test-case";
 
 const shoes = new MLLMImage({ url: "./shoes.png", local: true });
 
@@ -833,8 +833,8 @@ Change the color of these shoes to blue: [DEEPEVAL:IMAGE:awefv234fvbnhg456]
 Users who'd like to access their images themselves for any ETL can use the <Term py="convert_to_multi_modal_array" ts="convertToMultiModalArray"/> method to convert your test cases to a list of strings and `MLLMImage` in order. Here's how to use it:
 
 ```python
-from deepeval.test_case import LLMTestCase, MLLMImage
 from deepeval.utils import convert_to_multi_modal_array
+from deepeval.test_case import LLMTestCase, MLLMImage
 
 shoes = MLLMImage(url='./shoes.png', local=True)
 
@@ -858,13 +858,31 @@ The `[DEEPEVAL:IMAGE:awefv234fvbnhg456]` here is actually the instance of `MLLMI
 
 ## Mark Test Cases As Flaky
 
-The `flaky` is an **optional** parameter of type boolean (defaulted to `False`) that marks an `LLMTestCase` as flaky. A flaky test case's results are still computed, recorded, and reported as normal, but its failures won't block your CI/CD pipeline — when a flaky test case fails, `assert_test()` prints a warning instead of raising an `AssertionError`.
+The `flaky` is an **optional** parameter of type boolean (defaulted to <Term py="False" ts="false"/>) that marks an `LLMTestCase` as flaky. A flaky test case's results are still computed, recorded, and reported as normal, but its failures won't block your CI/CD pipeline — when a flaky test case fails, <Switch><Case id="python">`assert_test()` prints a warning instead of raising an `AssertionError`.</Case><Case id="typescript">`expect(testCase).toPass()` prints a warning instead of failing the test.</Case></Switch>
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(flaky=True, ...)
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { LLMTestCase } from "deepeval/test-case";
+
+const testCase = new LLMTestCase({ input: "...", actualOutput: "...", flaky: true });
+```
+
+</Case>
+
+</Switch>
 
 This is most useful for test cases you know are noisy — for example ones with borderline scores that flip between passing and failing across runs — that you still want to keep evaluating and tracking without letting them gate deployments. The `flaky` status is also logged on Confident AI so you can monitor how often flaky test cases actually fail.
 
@@ -895,7 +913,7 @@ test_case = LLMTestCase(name="my-external-unique-id", ...)
 <Case id="typescript">
 
 ```typescript
-import { LLMTestCase } from "deepeval";
+import { LLMTestCase } from "deepeval/test-case";
 
 const testCase = new LLMTestCase({ input: "...", actualOutput: "...", name: "my-external-unique-id" });
 ```

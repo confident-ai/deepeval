@@ -44,8 +44,8 @@ Alternatively, you can define `OpenRouterModel` directly in code:
 <Tab value="Python">
 
 ```python
-from deepeval.models import OpenRouterModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import OpenRouterModel
 
 model = OpenRouterModel(
     model="openai/gpt-4.1",
@@ -82,7 +82,7 @@ You should also set the other necessary vars like `OPENROUTER_API_KEY` to be abl
 
 There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `OpenRouterModel`:
 
-- [Optional] `model`: A string specifying the OpenRouter model to use. Defaults to `OPENROUTER_MODEL_NAME` if set; otherwise falls back to "openai/gpt-4.1".
+- [Optional] `model`: A string specifying the OpenRouter model to use. Defaults to `OPENROUTER_MODEL_NAME` if set; otherwise falls back to <DefaultLLMModel provider="openrouter" />.
 - [Optional] `api_key`: A string specifying your OpenRouter API key for authentication. Defaults to `OPENROUTER_API_KEY` if not passed; raises an error at runtime if unset.
 - [Optional] `base_url`: A string specifying the base URL for the OpenRouter API endpoint. Defaults to `OPENROUTER_BASE_URL` if set; otherwise falls back to "https://openrouter.ai/api/v1".
 - [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
@@ -115,7 +115,7 @@ model = OpenRouterModel(
 <Tab value="TypeScript">
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { OpenRouterModel } from "deepeval/models";
 
 const model = new OpenRouterModel({
@@ -130,7 +130,7 @@ const model = new OpenRouterModel({
   },
 });
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
+const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
 
 </Tab>
@@ -139,10 +139,10 @@ const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
 To use any OpenRouter model directly in `deepeval`, set `OPENROUTER_MODEL_NAME` and `OPENROUTER_API_KEY` in your `env` and create an `OpenRouterModel` with no arguments:
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { OpenRouterModel } from "deepeval/models";
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({
+const answerRelevancy = new AnswerRelevancyMetric({
   model: new OpenRouterModel(),
 });
 ```
@@ -152,7 +152,7 @@ const answerRelevancy = new metrics.AnswerRelevancyMetric({
 
 There are **ZERO** mandatory and **EIGHT** optional parameters when creating an `OpenRouterModel`:
 
-- [Optional] `model`: A string specifying the OpenRouter model to use. Defaults to `OPENROUTER_MODEL_NAME` if set; otherwise falls back to "openai/gpt-4.1".
+- [Optional] `model`: A string specifying the OpenRouter model to use. Defaults to `OPENROUTER_MODEL_NAME` if set; otherwise falls back to <DefaultLLMModel provider="openrouter" />.
 - [Optional] `apiKey`: A string specifying your OpenRouter API key for authentication. Defaults to `OPENROUTER_API_KEY` if not passed; raises an error at runtime if unset.
 - [Optional] `baseURL`: A string specifying the base URL for the OpenRouter API endpoint. Defaults to `OPENROUTER_BASE_URL` if set; otherwise falls back to "https://openrouter.ai/api/v1".
 - [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.

@@ -8,7 +8,13 @@ import {
   shouldIgnoreErrors,
   shouldSkipOnMissingParams,
 } from "@/env-flags";
-import { AnyTestCase, EvaluatedCase, MetricData } from "@/evaluate/types";
+import {
+  AnyTestCase,
+  EvaluatedCase,
+  MetricData,
+  aggregateSuccess,
+} from "@/evaluate/types";
+import { checkAtLeastOneMetricHasThreshold } from "@/metrics/utils";
 import { ErrorConfig } from "@/evaluate/configs";
 import {
   runMetric,
@@ -82,6 +88,7 @@ export async function evaluateCase(
   if (!metrics || metrics.length === 0) {
     throw new DeepEvalError("toPass requires at least one metric.");
   }
+  checkAtLeastOneMetricHasThreshold(metrics);
   const mismatched = metrics.filter((m) => !metricMatchesCase(m, testCase));
   if (mismatched.length > 0) {
     const isConversational = testCase instanceof ConversationalTestCase;
@@ -123,10 +130,18 @@ export async function runTestCaseMetrics(
     evaluated.testCase,
     evaluated.metricsData,
   );
-  return {
-    pass: testResult.success,
-    failureMessage: buildFailureMessage(evaluated.metricsData),
-  };
+  const failureMessage = buildFailureMessage(evaluated.metricsData);
+
+  // A flaky test case reports its failure without failing the test (Python's
+  // assert_test warns rather than raising).
+  if (!testResult.success && testCase.flaky) {
+    console.warn(
+      `Flaky test case failed (not reported as a failure): ${failureMessage}`,
+    );
+    return { pass: true, failureMessage };
+  }
+
+  return { pass: testResult.success, failureMessage };
 }
 
 
@@ -208,7 +223,7 @@ export async function runCallbackMetrics(
     });
   }
   return {
-    pass: allMetrics.every((m) => m.skipped || m.success),
+    pass: aggregateSuccess(allMetrics),
     failureMessage: buildFailureMessage(allMetrics),
   };
 }

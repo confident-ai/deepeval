@@ -8,7 +8,7 @@ import tseslint from "typescript-eslint";
 export default defineConfig([
   {
     ignores: ["dist/**", "test/**"],
-    files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
+    files: ["**/*.{js,mjs,cjs,ts,mts,cts,tsx}"],
     languageOptions: {
       globals: globals.node,
     },
@@ -40,6 +40,14 @@ export default defineConfig([
           ],
         },
       ],
+    },
+  },
+  {
+    // Emits ESM with no alias rewriting step, so siblings must be imported
+    // relatively with explicit extensions.
+    files: ["src/inspect/ui/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": "off",
     },
   },
   {

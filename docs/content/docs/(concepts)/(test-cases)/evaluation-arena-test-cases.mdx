@@ -55,7 +55,7 @@ test_case = ArenaTestCase(contestants=[
 <Case id="typescript">
 
 ```typescript title="main.ts"
-import { ArenaTestCase, LLMTestCase, Contestant } from "deepeval";
+import { ArenaTestCase, LLMTestCase, Contestant } from "deepeval/test-case";
 
 const testCase = new ArenaTestCase({
   contestants: [
@@ -243,7 +243,7 @@ import {
   LLMTestCase,
   Contestant,
   MLLMImage,
-} from "deepeval/testCase";
+} from "deepeval/test-case";
 
 const shoes = new MLLMImage({ url: "./shoes.png", local: true });
 
@@ -318,7 +318,7 @@ print(test_case.input)
 <Case id="typescript">
 
 ```typescript
-import { LLMTestCase, MLLMImage } from "deepeval/testCase";
+import { LLMTestCase, MLLMImage } from "deepeval/test-case";
 
 const shoes = new MLLMImage({ url: "./shoes.png", local: true });
 
@@ -344,8 +344,8 @@ Change the color of these shoes to blue: [DEEPEVAL:IMAGE:awefv234fvbnhg456]
 Users who'd like to access their images themselves for any ETL can use the `convert_to_multi_modal_array` method to convert your test cases to a list of strings and `MLLMImage` in order. Here's how to use it:
 
 ```python
-from deepeval.test_case import LLMTestCase, MLLMImage
 from deepeval.utils import convert_to_multi_modal_array
+from deepeval.test_case import LLMTestCase, MLLMImage
 
 shoes = MLLMImage(url='./shoes.png', local=True)
 
@@ -396,11 +396,12 @@ compare(test_cases=[test_case], metric=arena_geval)
 <Case id="typescript">
 
 ```typescript
-import { compare, metrics } from "deepeval";
-import { SingleTurnParams } from "deepeval/testCase";
+import { SingleTurnParams } from "deepeval/test-case";
+import { ArenaGEval } from "deepeval/metrics";
+import { compare } from "deepeval";
 // ...
 
-const arenaGEval = new metrics.ArenaGEval({
+const arenaGEval = new ArenaGEval({
   name: "Friendly",
   criteria:
     "Choose the winner of the more friendly contestant based on the input and actual output",

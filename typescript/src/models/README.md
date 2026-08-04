@@ -17,10 +17,25 @@ abstract generate<T = string>(
 
 ### Key API facts (and how they differ from Python)
 
-- **`generate()` is the only call, and it is always `async`.** There is **no
+- **`generate()` is the only required call, and it is always `async`.** There is **no
   `aGenerate` / sync split** like Python's `generate()` + `a_generate()`. Pass a prompt
   string; optionally pass a **zod schema** to get a parsed, validated object back as
   `output` (otherwise `output` is the raw string).
+- **`generateRaw()` is an optional second method** for per-token log probabilities:
+
+  ```ts
+  generateRaw?(prompt: string, options?: { topLogprobs?: number }):
+    Promise<{ output: string; cost: number | null; logProbs?: ContentTokenLogProbs[] }>;
+  ```
+
+  Only `DeepEvalOpenAICompatibleModel` implements it (so OpenAI, Azure, OpenRouter,
+  Portkey), matching the providers Python gives a `generate_raw_response`. Its
+  **absence is the capability signal** — the TS equivalent of Python's
+  `AttributeError` gate — so every caller keeps a non-log-prob fallback. `logProbs`
+  is normalized away from OpenAI's wire format, unlike Python which passes
+  `ChatCompletion` straight through to the metric. The request deliberately omits
+  `response_format`, as Python's does: structured outputs and `top_logprobs` don't
+  compose, so the prompt asks for JSON and the caller recovers it with `extractJson`.
 - **Every model returns `{ output, cost }`** — so in metric-land all TS models are
   "native" and cost is accrued whenever the model reports it.
 - **Cost is automatic for known models.** Prices come from the generated registry (see
@@ -81,6 +96,19 @@ them either. Unknown models resolve to `DEFAULT_MODEL_DATA`, matching Python's
 `AzureOpenAIModel` sets `registryModelName` as well: requests route by deployment, which
 can be named anything, but pricing belongs to the underlying `model`.
 
+### Default models are generated too
+
+`DEFAULT_MODELS` in `constants.py` is projected into the same artifact, under `_defaults`,
+and read back through `defaultModelName(namespace)`. **Never write a default model name
+into a provider** — change `constants.py` and recompile, or the two SDKs will fall back to
+different judges, which is precisely how they drifted before. The `_defaults` keys are
+typed off the generated JSON, so removing one breaks the build at the provider that reads
+it, and a test asserts no provider reintroduces a `DEFAULT_*_MODEL` literal.
+
+Grok, DeepSeek and Kimi are the deliberate exceptions: they keep TypeScript-only defaults
+because Python requires their `*_MODEL_NAME` instead. Both sides of that asymmetry are
+documented next to `DEFAULT_MODELS`.
+
 ### Models that exist only in TypeScript
 
 `AISDKModel` has no Python counterpart, yet most models reached through it *are* models
@@ -111,26 +139,29 @@ model to `constants.py` — then both SDKs get it.
 
 | Class | Default model | API key env | Base URL | Notes |
 |---|---|---|---|---|
-| `OpenAIModel` | `gpt-4.1` (`OPENAI_MODEL_NAME`) | `OPENAI_API_KEY` | OpenAI default | canonical |
+| `OpenAIModel` | `gpt-5.4` † (`OPENAI_MODEL_NAME`) | `OPENAI_API_KEY` | OpenAI default | canonical |
 | `AzureOpenAIModel` | deployment name | `AZURE_OPENAI_API_KEY` | `AZURE_OPENAI_ENDPOINT` (req.) | uses `AzureOpenAI` client; routes by `deployment`; `OPENAI_API_VERSION` |
 | `DeepSeekModel` | `deepseek-chat` | `DEEPSEEK_API_KEY` | `https://api.deepseek.com` | |
 | `GrokModel` (xAI) | `grok-3` | `GROK_API_KEY` / `XAI_API_KEY` | `https://api.x.ai/v1` | |
 | `KimiModel` (Moonshot) | `moonshot-v1-8k` | `MOONSHOT_API_KEY` | `https://api.moonshot.cn/v1` | `.ai/v1` for international |
 | `LocalModel` (vLLM / LM Studio) | `LOCAL_MODEL_NAME` (req.) | `LOCAL_MODEL_API_KEY` (placeholder ok) | `LOCAL_MODEL_BASE_URL` (req.) | any OpenAI `/v1` server |
-| `OpenRouterModel` (gateway) | `openai/gpt-4.1` | `OPENROUTER_API_KEY` | `https://openrouter.ai/api/v1` | ranking headers via `defaultHeaders` |
+| `OpenRouterModel` (gateway) | `openai/gpt-5.4` † | `OPENROUTER_API_KEY` | `https://openrouter.ai/api/v1` | ranking headers via `defaultHeaders` |
 | `PortkeyModel` (gateway) | `PORTKEY_MODEL_NAME` | `PORTKEY_API_KEY` | `https://api.portkey.ai/v1` | auth via `x-portkey-*` headers; `provider` option |
 
 All of the above report `supportsStructuredOutputs() = true` and
 `supportsMultimodal() = true`.
 
+† Generated from `DEFAULT_MODELS` in `constants.py` — this table records the current value,
+it does not define it.
+
 ### Native-SDK providers
 
 | Class | Default model | API key env | SDK package | Multimodal |
 |---|---|---|---|---|
-| `GeminiModel` | `gemini-2.5-flash` | `GOOGLE_API_KEY` / `GEMINI_API_KEY` | `@google/genai` | ✅ (fetches+base64s remote images) |
-| `AnthropicModel` | `claude-sonnet-4-6` | `ANTHROPIC_API_KEY` | `@anthropic-ai/sdk` | ✅ |
-| `AmazonBedrockModel` | `AWS_BEDROCK_MODEL_NAME` (req.) | AWS creds / region | `@aws-sdk/client-bedrock-runtime` | ⚠️ see discrepancy |
-| `OllamaModel` | `OLLAMA_MODEL_NAME` (req.) | — (local) | `ollama` | ❌ text-only |
+| `GeminiModel` | `gemini-3.6-flash` † | `GOOGLE_API_KEY` / `GEMINI_API_KEY` | `@google/genai` | ✅ (fetches+base64s remote images) |
+| `AnthropicModel` | `claude-opus-5` † | `ANTHROPIC_API_KEY` | `@anthropic-ai/sdk` | ✅ |
+| `AmazonBedrockModel` | `AWS_BEDROCK_MODEL_NAME` (req.) | AWS creds / region | `@aws-sdk/client-bedrock-runtime` | ✅ (Converse image blocks, inlined as bytes) |
+| `OllamaModel` | `OLLAMA_MODEL_NAME` (req.) | — (local) | `ollama` | ✅ (base64 in per-message `images`) |
 | `AISDKModel` | from the AI SDK model | (per AI SDK provider) | `ai` (+ a provider, e.g. `@ai-sdk/openai`) | ✅ |
 
 - `GeminiModel` also supports **Vertex AI** (`useVertexAI` / `GOOGLE_GENAI_USE_VERTEXAI`,
@@ -142,21 +173,23 @@ All of the above report `supportsStructuredOutputs() = true` and
 ## Multimodal support
 
 Image slugs in the prompt are split into provider-specific text+image parts by
-`multimodal.ts` (`openAIContent`, `aiSdkContent`, `anthropicContent`, `geminiContents`).
-Wired into: **OpenAI-compatible base** (so OpenAI/Azure/Grok/Kimi/Local/OpenRouter/Portkey),
-**Anthropic**, **Gemini**, **AI SDK**. Plain-text prompts pass through unchanged.
+`multimodal.ts` (`openAIContent`, `aiSdkContent`, `anthropicContent`, `geminiContents`,
+`ollamaMessages`, `bedrockContent`). Wired into **every** provider: the OpenAI-compatible
+base (so OpenAI/Azure/Grok/Kimi/Local/OpenRouter/Portkey), Anthropic, Gemini, AI SDK,
+Ollama, and Bedrock. Plain-text prompts pass through unchanged.
+
+Providers differ in what they accept, so the builders differ in shape: OpenAI and the AI
+SDK take a URL or data URI; Anthropic takes a remote URL directly or base64; Gemini,
+Ollama, and Bedrock require the bytes, so remote images are fetched and inlined.
+
+Metrics refuse a multimodal test case outright when the evaluation model isn't
+vision-capable — see `checkMultimodalSupport` in `metrics/utils.ts`.
 
 ## Gaps & discrepancies vs Python
 
-- **`AmazonBedrockModel` reports `supportsMultimodal() = true` but its `generate()` only
-  sends text** (`content: [{ text: prompt }]`, no slug→image conversion). The flag is
-  ahead of the implementation — image slugs would be sent as literal text. Treat Bedrock
-  as text-only until the Converse content builder is added.
-- **`OllamaModel` is text-only** and (unlike the others) does **not** override
-  `supportsMultimodal()`, so it returns the base `null`.
-- **GEval still does no log-prob-weighted scoring.** `supportsLogProbs()` now reports real
-  per-model values from the registry, but nothing consumes them and no provider requests
-  log probs from its API yet.
+- **Bedrock image `format` is lowercase.** Python uppercases the mime subtype
+  (`JPEG`), which the Converse API rejects; TS sends the documented lowercase value and
+  throws for formats Bedrock doesn't accept at all.
 - **No `TEMPERATURE` global** — Python's `settings.TEMPERATURE` is written by the CLI's
   `set-*` commands; the TS CLI has no config store, so there is nothing to read. TS uses
   the same `0` default, just without the env-var layer in between.
@@ -178,8 +211,8 @@ import {
   OpenAIModel, AnthropicModel, GeminiModel, AISDKModel, LocalModel, AzureOpenAIModel,
 } from "deepeval/models";
 
-// Default (gpt-4.1, OPENAI_API_KEY). Cost is reported automatically — gpt-4.1 is
-// priced in the registry.
+// Default: whatever DEFAULT_MODELS.openai generates, plus OPENAI_API_KEY. Cost is
+// reported automatically — every generated default is priced in the registry.
 const m1 = new OpenAIModel();
 
 // Override the registry's prices (e.g. negotiated rates)

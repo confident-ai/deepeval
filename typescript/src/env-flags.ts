@@ -2,25 +2,18 @@
 // dependency-free so metrics and the evaluate pipeline can both use it without
 // import cycles.
 
+import { parseBool } from "@/config/utils";
 import {
   DEEPEVAL_DISPLAY,
-  DEEPEVAL_IGNORE_ERRORS,
   DEEPEVAL_MAX_CONCURRENT,
-  DEEPEVAL_SKIP_ON_MISSING_PARAMS,
-  DEEPEVAL_USE_CACHE,
   DEEPEVAL_VERBOSE_MODE,
+  ENABLE_DEEPEVAL_CACHE,
+  IGNORE_DEEPEVAL_ERRORS,
+  SKIP_DEEPEVAL_MISSING_PARAMS,
 } from "@/constants";
 
-const TRUTHY = new Set(["1", "true", "yes", "on", "y", "t"]);
-const FALSY = new Set(["0", "false", "no", "off", "n", "f"]);
-
 export function envBool(name: string): boolean | undefined {
-  const raw = process.env[name];
-  if (raw === undefined || raw.trim() === "") return undefined;
-  const value = raw.trim().toLowerCase();
-  if (TRUTHY.has(value)) return true;
-  if (FALSY.has(value)) return false;
-  return undefined;
+  return parseBool(process.env[name]);
 }
 
 export function envNumber(name: string): number | undefined {
@@ -43,15 +36,15 @@ export function isVerboseMode(): boolean {
 }
 
 export function shouldIgnoreErrors(): boolean {
-  return envBool(DEEPEVAL_IGNORE_ERRORS) ?? false;
+  return envBool(IGNORE_DEEPEVAL_ERRORS) ?? false;
 }
 
 export function shouldSkipOnMissingParams(): boolean {
-  return envBool(DEEPEVAL_SKIP_ON_MISSING_PARAMS) ?? false;
+  return envBool(SKIP_DEEPEVAL_MISSING_PARAMS) ?? false;
 }
 
 export function shouldUseCache(): boolean {
-  return envBool(DEEPEVAL_USE_CACHE) ?? false;
+  return envBool(ENABLE_DEEPEVAL_CACHE) ?? false;
 }
 
 export function getMaxConcurrent(): number {

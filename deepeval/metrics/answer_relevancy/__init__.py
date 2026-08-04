@@ -1,3 +1,3 @@
-from .answer_relevancy import AnswerRelevancyMetric
+from .answer_relevancy import AnswerRelevancyMetric, AnswerRelevancyTemplate
 
-__all__ = ["AnswerRelevancyMetric"]
+__all__ = ["AnswerRelevancyMetric", "AnswerRelevancyTemplate"]

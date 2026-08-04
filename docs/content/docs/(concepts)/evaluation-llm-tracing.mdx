@@ -45,8 +45,8 @@ Tracing only runs when you want it to run, and takes 3 lines of code:
 <Case id="python">
 
 ```python showLineNumbers {2,7,14}
-from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.tracing import observe, update_current_span
+from deepeval.metrics import AnswerRelevancyMetric
 from openai import OpenAI
 
 client = OpenAI()
@@ -67,14 +67,14 @@ def get_res(query: str):
 <Case id="typescript">
 
 ```typescript showLineNumbers {3,7,17}
-import { metrics } from "deepeval";
-import OpenAI from "openai";
 import { observe, updateCurrentSpan } from "deepeval/tracing";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import OpenAI from "openai";
 
 const client = new OpenAI();
 
 const getRes = observe({
-  metrics: [new metrics.AnswerRelevancyMetric()],
+  metrics: [new AnswerRelevancyMetric()],
   fn: async (query: string) => {
     const response = (
       await client.chat.completions.create({
@@ -164,8 +164,8 @@ llm_app("Who founded DeepEval?")
 <Case id="typescript">
 
 ```typescript title="main.ts" showLineNumbers {2,4,11}
-import OpenAI from "openai";
 import { observe } from "deepeval/tracing";
+import OpenAI from "openai";
 
 const retriever = observe({
   fn: async (query: string) => {
@@ -281,8 +281,8 @@ client.chat.completions.create(
 <Case id="typescript">
 
 ```typescript title="openai_app.ts" showLineNumbers {2,4}
-import OpenAI from "openai";
 import { instrumentOpenAI } from "deepeval/openai";
+import OpenAI from "openai";
 
 const client = new OpenAI();
 instrumentOpenAI(client);
@@ -536,8 +536,12 @@ def llm_app(query: str) -> str:
 <Case id="typescript">
 
 ```typescript title="main.ts" showLineNumbers {2,7,8,23,24}
+import {
+  observe,
+  updateCurrentTrace,
+  updateCurrentSpan,
+} from "deepeval/tracing";
 import OpenAI from "openai";
-import { observe, updateCurrentTrace, updateCurrentSpan } from "deepeval/tracing";
 
 const retriever = observe({
   fn: async (query: string) => {

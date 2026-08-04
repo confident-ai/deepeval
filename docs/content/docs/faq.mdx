@@ -242,9 +242,9 @@ This is almost always caused by **rate limits or insufficient API quota** on you
 Yes — this is one of `deepeval`'s core design goals. Use `deepeval test run` with Pytest:
 
 ```python title="test_llm_app.py"
-from deepeval import assert_test
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
+from deepeval import assert_test
 
 def test_my_app():
     test_case = LLMTestCase(input="...", actual_output="...")
@@ -284,7 +284,7 @@ test_case = ConversationalTestCase(
 <Case id="typescript">
 
 ```typescript
-import { Turn, ConversationalTestCase } from "deepeval";
+import { Turn, ConversationalTestCase } from "deepeval/test-case";
 
 const testCase = new ConversationalTestCase({
   turns: [
@@ -353,8 +353,8 @@ This is useful when you want a stronger (but more expensive) model for critical 
 Yes. Every metric in `deepeval` supports an `evaluation_template` parameter. You can subclass the metric's default template class and override specific prompt methods:
 
 ```python
-from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.metrics.answer_relevancy import AnswerRelevancyTemplate
+from deepeval.metrics import AnswerRelevancyMetric
 
 class MyTemplate(AnswerRelevancyTemplate):
     @staticmethod

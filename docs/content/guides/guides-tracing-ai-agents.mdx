@@ -2,6 +2,7 @@
 id: guides-tracing-ai-agents
 title: Tracing AI Agents
 sidebar_label: Tracing AI Agents
+languages: [python]
 ---
 
 
@@ -62,10 +63,6 @@ To trace an agent, you decorate the different layers of your system with `@obser
 
 The root function that orchestrates the reasoning loop should be decorated with `type="agent"`. This span accepts two unique optional parameters: `available_tools` (a list of tools the agent is allowed to use) and `agent_handoffs` (a list of other agents it can delegate to).
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.tracing import observe
 
@@ -79,34 +76,9 @@ def travel_agent(user_request: str) -> str:
     pass
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { observe } from "deepeval/tracing";
-
-const travelAgent = observe({
-  type: "agent",
-  availableTools: ["..."],
-  agentHandoffs: ["hotel_booking_agent"],
-  fn: async (userRequest: string) => {
-    // Orchestration logic goes here...
-  },
-});
-```
-
-</Case>
-
-</Switch>
-
 ### Tool Spans
 
 Every external function the agent can call — an API, a database query, a calculator — should be decorated with `type="tool"`. You can optionally provide a `description` that is logged with the span and automatically propagated to the parent LLM span's `tools_called` attribute.
-
-<Switch>
-
-<Case id="python">
 
 ```python title="agent.py"
 from deepeval.tracing import observe
@@ -120,36 +92,6 @@ def book_flight(flight_id: str) -> dict:
     return {"status": "confirmed", "booking_ref": "AB123"}
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript title="agent.ts"
-import { observe } from "deepeval/tracing";
-
-const searchFlights = observe({
-  type: "tool",
-  name: "search_flights",
-  description: "Search for available flights between two cities",
-  fn: async (origin: string, destination: string, date: string) => {
-    return [{ flightId: "123", price: 450 }];
-  },
-});
-
-const bookFlight = observe({
-  type: "tool",
-  name: "book_flight",
-  description: "Book a selected flight by its ID",
-  fn: async (flightId: string) => {
-    return { status: "confirmed", bookingRef: "AB123" };
-  },
-});
-```
-
-</Case>
-
-</Switch>
-
 :::tip
 `deepeval` automatically infers `tools_called` on the parent LLM span from any `type="tool"` child spans. You do not need to set this manually — just decorate your tool functions and the wiring happens for you.
 :::
@@ -157,10 +99,6 @@ const bookFlight = observe({
 ### LLM Spans
 
 The function that makes the actual inference call to your LLM — where the agent *decides* what to do next — should be decorated with `type="llm"`. If you have configured auto-patching via `trace_manager.configure(openai_client=client)`, the model name and token counts are captured automatically.
-
-<Switch>
-
-<Case id="python">
 
 ```python title="agent.py"
 from deepeval.tracing import observe
@@ -171,33 +109,9 @@ def reason_and_plan(messages: list) -> str:
     return response.choices[0].message.content
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript title="agent.ts"
-import { observe } from "deepeval/tracing";
-
-const reasonAndPlan = observe({
-  type: "llm",
-  fn: async (messages: any[]) => {
-    const response = await client.chat.completions.create({ model: "gpt-4o", messages });
-    return response.choices[0].message.content;
-  },
-});
-```
-
-</Case>
-
-</Switch>
-
 ## A Complete Single-Agent Example
 
 Here is a fully instrumented travel agent combining all span types from the sections above:
-<Switch>
-
-<Case id="python">
-
 ```python title="agent.py"
 from deepeval.tracing import observe, update_current_trace, update_current_span
 from deepeval.test_case import ToolCall
@@ -240,72 +154,6 @@ def travel_agent(user_request: str) -> str:
             return decision
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript title="agent.ts"
-import { observe, updateCurrentTrace, updateCurrentSpan } from "deepeval/tracing";
-import { ToolCall } from "deepeval/testCase";
-
-const searchFlights = observe({
-  type: "tool",
-  name: "search_flights",
-  description: "Search for available flights",
-  fn: async (origin: string, destination: string, date: string) => {
-    // Your API call here
-    return [{ flightId: "AA123", price: 450 }];
-  },
-});
-
-const bookFlight = observe({
-  type: "tool",
-  name: "book_flight",
-  description: "Book a flight by ID",
-  fn: async (flightId: string) => {
-    // Your booking API call here
-    return { status: "confirmed", ref: "XKCD99" };
-  },
-});
-
-const reasonAndPlan = observe({
-  type: "llm",
-  fn: async (messages: any[]) => {
-    const response = await client.chat.completions.create({ model: "gpt-4o", messages });
-    return response.choices[0].message.content;
-  },
-});
-
-const travelAgent = observe({
-  type: "agent",
-  availableTools: ["search_flights", "book_flight"],
-  metricCollection: "agent-task-completion-metrics",
-  fn: async (userRequest: string) => {
-    updateCurrentTrace({
-      tags: ["travel-booking"],
-      metadata: { agentVersion: "v3.1" },
-    });
-    const messages: any[] = [{ role: "user", content: userRequest }];
-    while (true) {
-      const decision = await reasonAndPlan(messages);
-      if (decision.includes("search_flights")) {
-        const results = await searchFlights("JFK", "LAX", "2025-01-15");
-        messages.push({ role: "tool", content: JSON.stringify(results) });
-      } else if (decision.includes("book_flight")) {
-        const confirmation = await bookFlight("AA123");
-        messages.push({ role: "tool", content: JSON.stringify(confirmation) });
-      } else {
-        return decision;
-      }
-    }
-  },
-});
-```
-
-</Case>
-
-</Switch>
-
 When `travel_agent()` runs, `deepeval` builds the full execution tree: the `agent` span at the root, each `reason_and_plan()` call as an `llm` child span, and each tool call as a `tool` grandchild span. The `metric_collection` on the agent span triggers asynchronous task-completion evaluation in Confident AI after each execution, with zero latency added to the live agent.
 
 ## Accessing Raw Agent Traces Locally
@@ -342,10 +190,6 @@ When building complex systems, developers often use a multi-agent architecture w
 
 You can declare these relationships upfront using the `agent_handoffs` parameter.
 
-<Switch>
-
-<Case id="python">
-
 ```python title="multi_agent.py"
 from deepeval.tracing import observe
 
@@ -373,43 +217,6 @@ def travel_coordinator(user_request: str) -> str:
     return f"Flight: {flight_result}, Hotel: {hotel_result}"
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript title="multi_agent.ts"
-import { observe } from "deepeval/tracing";
-
-const hotelAgent = observe({
-  type: "agent",
-  name: "hotel_agent",
-  availableTools: ["..."],
-  agentHandoffs: [],
-  fn: async (userRequest: string) => {
-    // Sub-agent logic
-  },
-});
-
-const travelCoordinator = observe({
-  type: "agent",
-  availableTools: ["..."],
-  agentHandoffs: ["hotel_agent"],
-  fn: async (userRequest: string) => {
-    // Coordinator logic
-    const flightResult = await searchFlights("JFK", "LAX", "2024-12-01");
-
-    // Sub-agent handoff — automatically becomes a child span
-    const hotelResult = await hotelAgent("Need a hotel in LAX for Dec 1st");
-
-    return `Flight: ${flightResult}, Hotel: ${hotelResult}`;
-  },
-});
-```
-
-</Case>
-
-</Switch>
-
 In Confident AI, `hotel_agent` will appear as a child span of `travel_coordinator`. The platform renders this as a nested graph, showing exactly which sub-agent handled which part of the overarching task.
 
 :::note
@@ -423,10 +230,6 @@ To evaluate an agent's reasoning, you must compare what the agent *actually did*
 `deepeval` handles the first part automatically: any time a `type="tool"` span executes inside an `type="llm"` span, `deepeval` infers the connection and automatically populates the `tools_called` attribute on the LLM span.
 
 To provide the ground truth for evaluation, you must supply the `expected_tools`. You do this by calling `update_current_span()` from within the LLM inference function.
-
-<Switch>
-
-<Case id="python">
 
 ```python title="agent.py"
 from deepeval.tracing import observe, update_current_span
@@ -443,33 +246,6 @@ def reason_and_plan(messages: list, expected_tool_calls: list = None) -> str:
     return response.choices[0].message.content
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript title="agent.ts"
-import { observe, updateCurrentSpan } from "deepeval/tracing";
-import { ToolCall } from "deepeval/testCase";
-
-const reasonAndPlan = observe({
-  type: "llm",
-  fn: async (messages: any[], expectedToolCalls?: ToolCall[]) => {
-    const response = await client.chat.completions.create({ model: "gpt-4o", messages });
-
-    // Provide ground truth for component-level evaluation
-    if (expectedToolCalls) {
-      updateCurrentSpan({ expectedTools: expectedToolCalls });
-    }
-
-    return response.choices[0].message.content;
-  },
-});
-```
-
-</Case>
-
-</Switch>
-
 By providing `expected_tools`, metrics like the `ToolCorrectnessMetric` can calculate exact precision and recall scores for the agent's tool selection process.
 
 ## Attaching Evaluations
@@ -481,10 +257,6 @@ You enable these evaluations by attaching a `metric_collection` to the appropria
 ### Evaluating Locally During Development
 
 During development, you can attach `deepeval` metrics directly to `@observe` using the `metrics` parameter. The metrics run synchronously when the function completes, giving you immediate per-span evaluation results in your terminal — no Confident AI connection needed.
-<Switch>
-
-<Case id="python">
-
 ```python title="agent.py"
 from deepeval.tracing import observe
 from deepeval.metrics import ToolCorrectnessMetric, TaskCompletionMetric
@@ -508,42 +280,6 @@ def travel_agent(user_request: str) -> str:
     ...
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript title="agent.ts"
-import { metrics } from "deepeval";
-import { observe } from "deepeval/tracing";
-
-const toolCorrectness = new metrics.ToolCorrectnessMetric({ threshold: 0.8 });
-const taskCompletion = new metrics.TaskCompletionMetric({ threshold: 0.7 });
-
-// Component-level: evaluate tool selection on each reasoning step
-const reasonAndPlan = observe({
-  type: "llm",
-  metrics: [toolCorrectness],
-  fn: async (messages: any[]) => {
-    const response = await client.chat.completions.create({ model: "gpt-4o", messages });
-    return response.choices[0].message.content;
-  },
-});
-
-// End-to-end: evaluate task completion on the full agent trace
-const travelAgent = observe({
-  type: "agent",
-  availableTools: ["search_flights", "book_flight"],
-  metrics: [taskCompletion],
-  fn: async (userRequest: string) => {
-    // ...
-  },
-});
-```
-
-</Case>
-
-</Switch>
-
 :::note
 The `metrics` parameter runs LLM-as-a-judge evaluations synchronously and will add latency to your agent's execution. Use this exclusively during development and testing. For production, switch to `metric_collection` as shown in the sections below. It requires Confident AI so ensure you ran the `deepeval login` command and have a valid API key configured.
 :::
@@ -552,41 +288,15 @@ The `metrics` parameter runs LLM-as-a-judge evaluations synchronously and will a
 
 Attach a metric collection to the `type="llm"` span to evaluate the isolated reasoning steps. This allows you to catch when an agent chooses the wrong tool or hallucinates arguments, even if it eventually fumbles its way to a correct final answer.
 
-<Switch>
-
-<Case id="python">
-
 ```python
 @observe(type="llm", metric_collection="tool-correctness-metrics")
 def reason_and_plan(messages: list) -> str:
     ...
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-const reasonAndPlan = observe({
-  type: "llm",
-  metricCollection: "tool-correctness-metrics",
-  fn: async (messages: any[]) => {
-    // ...
-  },
-});
-```
-
-</Case>
-
-</Switch>
-
 ### End-to-End (The Agent Span)
 
 Attach a metric collection to the root `type="agent"` span to evaluate the final trajectory and output of the entire task.
-
-<Switch>
-
-<Case id="python">
 
 ```python
 @observe(
@@ -597,25 +307,6 @@ Attach a metric collection to the root `type="agent"` span to evaluate the final
 def travel_agent(user_request: str) -> str:
     ...
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-const travelAgent = observe({
-  type: "agent",
-  availableTools: ["..."],
-  metricCollection: "agent-task-completion-metrics",
-  fn: async (userRequest: string) => {
-    // ...
-  },
-});
-```
-
-</Case>
-
-</Switch>
 
 Here is a summary of how to map your metric collections:
 
@@ -832,33 +523,11 @@ Log in to Confident AI and create metric collections tailored to your evaluation
 
 In your production code, attach the appropriate collection names to your `@observe` decorators. 
 
-<Switch>
-
-<Case id="python">
-
 ```python
 @observe(type="agent", metric_collection="agent-task-completion")
 def travel_coordinator(user_request: str):
     ...
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-const travelCoordinator = observe({
-  type: "agent",
-  metricCollection: "agent-task-completion",
-  fn: async (userRequest: string) => {
-    // ...
-  },
-});
-```
-
-</Case>
-
-</Switch>
 
 When the trace is sent to Confident AI, the platform evaluates the entire execution tree asynchronously, ensuring your live agent experiences zero added latency.
 

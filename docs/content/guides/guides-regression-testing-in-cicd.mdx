@@ -2,6 +2,7 @@
 # id: guides-regression-testing-in-cicd
 title: Regression Testing LLM Systems in CI/CD
 sidebar_label: Regression Testing in CI/CD
+languages: [python]
 ---
 
 
@@ -14,10 +15,6 @@ This guide will show how you can include `deepeval` in your CI/CD pipelines, usi
 ## Creating Your Test File
 
 `deepeval` treats rows in an evaluation dataset as unit test cases, and a wide range of research backed LLM evaluation metrics, which you can define in a `test_<name>.py` file to implement your regression test.
-
-<Switch>
-
-<Case id="python">
 
 ```python title="test_file.py"
 import pytest
@@ -42,61 +39,19 @@ def test_example(test_case: LLMTestCase):
     assert_test(test_case, [metric])
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript title="test_file.ts"
-import { evaluate, metrics } from "deepeval";
-import { LLMTestCase } from "deepeval/testCase";
-import { EvaluationDataset } from "deepeval/dataset";
-
-const firstTestCase = new LLMTestCase({ input: "...", actualOutput: "..." });
-const secondTestCase = new LLMTestCase({ input: "...", actualOutput: "..." });
-const dataset = new EvaluationDataset();
-dataset.testCases = [firstTestCase, secondTestCase];
-
-const metric = new metrics.AnswerRelevancyMetric({ threshold: 0.5 });
-await evaluate(dataset.testCases, [metric]);
-```
-
-</Case>
-
-</Switch>
-
 :::tip
 In the example shown above, the `LLMTestCase`s are hardcoded for demonstration purposes only. Instead, you should aim to choose one of the [three ways `deepeval` offers to load a dataset](/docs/evaluation-datasets#load-an-existing-dataset) in a more scalable way.
 :::
 
 To check that your test file is working, run `deepeval test run` (or execute the script directly for TypeScript):
 
-<Switch>
-
-<Case id="python">
-
 ```bash
 deepeval test run test_file.py
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```bash
-npx tsx test_file.ts
-```
-
-</Case>
-
-</Switch>
-
 ## Setting Up Your YAML File
 
 To set up a GitHub workflow that triggers `deepeval test run` on every pull or push request, define a `.yaml` file:
-
-<Switch>
-
-<Case id="python">
 
 ```yaml title=".github/workflows/regression.yml"
 name: LLM Regression Test
@@ -128,40 +83,6 @@ jobs:
       - name: Run DeepEval Unit Tests
         run: poetry run deepeval test run test_file.py
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```yaml title=".github/workflows/regression.yml"
-name: LLM Regression Test
-
-on:
-  push:
-  pull_request:
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Run DeepEval Tests
-        run: npx tsx test_file.ts
-```
-
-</Case>
-
-</Switch>
 
 **Congratulations 🎉!** You've now setup an automated regression testing suite in under 30 lines of code.
 

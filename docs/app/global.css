@@ -842,6 +842,22 @@ summary {
   color: hsl(0, 75%, 68%);
 }
 
+/* ------------------------------------------------------------------ */
+/* FAQ inline code — each `<details>` is `not-prose` so prose rules
+ * never leak into the accordion, which also drops the typography
+ * plugin's inline-code chip. Re-apply it to the question and the
+ * answer so `code` reads identically to the surrounding prose.
+ * `:not(pre) >` keeps fenced code blocks inside answers untouched. */
+.faq-item :not(pre) > code {
+  padding: 0 4px;
+  border: solid 1px var(--color-fd-border);
+  border-radius: 4px;
+  font-size: 0.8em;
+  font-weight: 400;
+  background: var(--color-fd-muted);
+  color: var(--color-fd-foreground);
+}
+
 html {
   scrollbar-gutter: stable;
 }

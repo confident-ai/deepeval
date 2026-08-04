@@ -73,8 +73,8 @@ You may want to use stronger reasoning models like `gpt-4.1` for metrics that re
 <Tab value="Python">
 
 ```python
-from deepeval.models import GPTModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import GPTModel
 
 model = GPTModel(
     model="gpt-4.1",
@@ -119,7 +119,7 @@ There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `
 <Tab value="TypeScript">
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { OpenAIModel } from "deepeval/models";
 
 const model = new OpenAIModel({
@@ -128,7 +128,7 @@ const model = new OpenAIModel({
   costPerInputToken: 0.000002,
   costPerOutputToken: 0.000008,
 });
-const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
+const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
 
 </Tab>
@@ -137,9 +137,9 @@ const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
 `deepeval` by default uses OpenAI models for evaluations, you can simply pass the name of your desired model in metric initialization and set the `OPENAI_API_KEY` to use OpenAI models:
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({
+const answerRelevancy = new AnswerRelevancyMetric({
   model: "gpt-4.1",
 });
 ```
@@ -203,7 +203,7 @@ Below is a list of commonly used OpenAI models:
 <Case id="python">
 
 :::caution[G-Eval requires log probabilities]
-`GEval` and `ConversationalGEval` compute scores from token-level log probabilities, which some OpenAI models do not expose. The `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5-chat-latest`, `gpt-5.1`, and `gpt-5.2` models return no log probabilities, so passing any of them as the judge model for these metrics raises `AttributeError: log_probs unsupported.`. For `GEval` and `ConversationalGEval`, use a log-probability-capable model such as `gpt-5.4` (the default) or `gpt-4.1`. Other metrics are unaffected.
+`GEval` and `ConversationalGEval` compute scores from token-level log probabilities, which some OpenAI models do not expose. The `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5-chat-latest`, `gpt-5.1`, and `gpt-5.2` models return no log probabilities, so passing any of them as the judge model for these metrics raises `AttributeError: log_probs unsupported.`. For `GEval` and `ConversationalGEval`, use a log-probability-capable model such as <DefaultLLMModel /> (the default) or `gpt-4.1`. Other metrics are unaffected.
 :::
 
 </Case>

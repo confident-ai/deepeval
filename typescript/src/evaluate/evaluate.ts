@@ -4,13 +4,19 @@ import {
   BaseMetricCore,
   BaseConversationalMetric,
 } from "@/metrics";
+import { checkAtLeastOneMetricHasThreshold } from "@/metrics/utils";
 import {
   LLMTestCase,
   ConversationalTestCase,
   resolveRetrievalContext,
 } from "@/test-case";
 import { MissingTestCaseParamsError } from "@/errors";
-import { TestResult, MetricData, EvaluationResult } from "@/evaluate/types";
+import {
+  TestResult,
+  MetricData,
+  EvaluationResult,
+  aggregateSuccess,
+} from "@/evaluate/types";
 import {
   AsyncConfig,
   DisplayConfig,
@@ -72,6 +78,8 @@ export async function evaluate(
   metrics: AnyMetric[],
   options: EvaluateOptions = {},
 ): Promise<EvaluationResult> {
+  checkAtLeastOneMetricHasThreshold(metrics);
+
   const display: Required<DisplayConfig> = {
     ...DEFAULT_DISPLAY_CONFIG,
     ...options.displayConfig,
@@ -287,10 +295,12 @@ function buildMetricData(metric: BaseMetricCore): MetricData {
   return {
     name: metric.name,
     threshold: metric.threshold,
-    success: metric.skipped ? true : (metric.success ?? false),
+    // Score-only leaves `success` undefined; that absence is the verdict.
+    success: metric.skipped ? true : metric.success,
     score: metric.score,
     reason: metric.reason,
     strictMode: metric.strictMode,
+    flaky: metric.flaky,
     evaluationModel: metric.evaluationModel,
     evaluationCost: metric.evaluationCost,
     verboseLogs: metric.verboseLogs,
@@ -304,7 +314,7 @@ export function buildTestResult(
   testCase: AnyTestCase,
   metricsData: MetricData[],
 ): TestResult {
-  const success = metricsData.every((m) => m.skipped || m.success);
+  const success = aggregateSuccess(metricsData);
 
   if (testCase instanceof ConversationalTestCase) {
     return {

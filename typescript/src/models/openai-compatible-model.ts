@@ -1,8 +1,11 @@
 import type { ZodType } from "zod";
 import {
   DeepEvalBaseLLM,
+  type ContentTokenLogProbs,
   type GenerationKwargs,
   type GenerationResult,
+  type RawGenerationOptions,
+  type RawGenerationResult,
 } from "@/models/base-model";
 import { extractJson, requireApiKey, toJsonSchema } from "@/models/utils";
 import { openAIContent } from "@/models/multimodal";
@@ -103,6 +106,54 @@ export class DeepEvalOpenAICompatibleModel extends DeepEvalBaseLLM {
       return { output: schema.parse(extractJson(content)), cost };
     }
     return { output: content as T, cost };
+  }
+
+  /**
+   * Deliberately sends no `response_format`: structured outputs and
+   * `top_logprobs` don't compose well, and the caller needs the score token to
+   * appear as a plain token. The prompt asks for JSON and the caller recovers
+   * it with `extractJson`, matching Python's `generate_raw_response`.
+   */
+  async generateRaw(
+    prompt: string,
+    options: RawGenerationOptions = {},
+  ): Promise<RawGenerationResult> {
+    if (this.supportsLogProbs() === false) {
+      throw new Error(
+        `Model '${this.getModelName()}' does not support 'logprobs' / 'top_logprobs'.`,
+      );
+    }
+    const client = await this.getClient();
+
+    const temperature = this.resolveTemperature();
+    const request: Record<string, unknown> = {
+      model: this.modelName,
+      messages: [{ role: "user", content: openAIContent(prompt) }],
+      ...(temperature !== undefined && { temperature }),
+      logprobs: true,
+      top_logprobs: this.capTopLogprobs(options.topLogprobs ?? 20),
+    };
+    Object.assign(request, this.generationKwargs);
+
+    const completion = await client.chat.completions.create(request);
+    const choice = completion.choices?.[0];
+    const cost = this.resolveCost(
+      completion.usage?.prompt_tokens,
+      completion.usage?.completion_tokens,
+    );
+
+    const logProbs: ContentTokenLogProbs[] | undefined = (
+      choice?.logprobs?.content as any[] | undefined
+    )?.map((entry) => ({
+      token: entry.token,
+      logprob: entry.logprob,
+      topLogProbs: (entry.top_logprobs ?? []).map((alt: any) => ({
+        token: alt.token,
+        logprob: alt.logprob,
+      })),
+    }));
+
+    return { output: choice?.message?.content ?? "", cost, logProbs };
   }
 
   getModelName(): string {

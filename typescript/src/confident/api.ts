@@ -1,4 +1,6 @@
 import axios from "axios";
+import https from "https";
+import { parseBool } from "@/config/utils";
 import { getLogger, retryAfterLevel, retryBeforeLevel } from "@/logger";
 import { wait } from "@/utils";
 import { createInterface } from "readline";
@@ -12,37 +14,40 @@ enum Regions {
 const _LOCAL_API_BASE_URL = "http://localhost:3001";
 const _LOCAL_DEEPEVAL_BASE_URL = "http://0.0.0.0:8000";
 const PROD_DEEPEVAL_BASE_URL = "https://deepeval.confident-ai.com";
-const CONFIDENT_BASE_URL = "https://api.confident-ai.com";
+const CONFIDENT_BASE_URL_US = "https://api.confident-ai.com";
 const CONFIDENT_BASE_URL_EU = "https://eu.api.confident-ai.com";
 const CONFIDENT_BASE_URL_AU = "https://au.api.confident-ai.com";
 
-const region = process.env.CONFIDENT_REGION || Regions.US;
-
 export const DEEPEVAL_BASE_URL = PROD_DEEPEVAL_BASE_URL;
-export const API_BASE_URL =
-  region === Regions.EU
-    ? CONFIDENT_BASE_URL_EU
-    : region === Regions.AU
-      ? CONFIDENT_BASE_URL_AU
-      : CONFIDENT_BASE_URL;
 
-const regionBaseUrl = (region?: string | null): string => {
+/**
+ * @deprecated Resolved once at import time, so it misses any later
+ * `editSettings` call. Use {@link getBaseApiUrl}.
+ */
+export const API_BASE_URL = regionBaseUrl(process.env.CONFIDENT_REGION);
+
+function regionBaseUrl(region?: string | null): string {
   switch ((region || "").trim().toUpperCase()) {
     case Regions.EU:
       return CONFIDENT_BASE_URL_EU;
     case Regions.AU:
       return CONFIDENT_BASE_URL_AU;
     default:
-      return CONFIDENT_BASE_URL;
+      return CONFIDENT_BASE_URL_US;
   }
-};
+}
 
-/** Read fresh from the environment, unlike {@link API_BASE_URL}. */
+/**
+ * Precedence: `CONFIDENT_BASE_URL`, `CONFIDENT_REGION`, the region encoded in
+ * the API key prefix, then the US default.
+ */
 export const getBaseApiUrl = (apiKey?: string | null): string => {
+  const override = process.env.CONFIDENT_BASE_URL?.trim();
+  if (override) return override.replace(/\/+$/, "");
   const region = process.env.CONFIDENT_REGION;
   if (region && region.trim()) return regionBaseUrl(region);
   const key = apiKey ?? process.env.CONFIDENT_API_KEY;
-  return key ? inferBaseUrlFromApiKey(key) : CONFIDENT_BASE_URL;
+  return key ? inferBaseUrlFromApiKey(key) : CONFIDENT_BASE_URL_US;
 };
 
 const inferBaseUrlFromApiKey = (apiKey: string): string => {
@@ -51,7 +56,7 @@ const inferBaseUrlFromApiKey = (apiKey: string): string => {
   } else if (apiKey.startsWith("confident_au_")) {
     return CONFIDENT_BASE_URL_AU;
   }
-  return CONFIDENT_BASE_URL;
+  return CONFIDENT_BASE_URL_US;
 };
 
 const RETRYABLE_ERROR_CODES = [
@@ -65,6 +70,23 @@ const RETRYABLE_ERROR_CODES = [
 ];
 
 const logger = getLogger("deepeval.confident.api");
+
+let insecureAgent: https.Agent | undefined;
+let warnedAboutSsl = false;
+
+/** Node has no ambient `verify=False`, so this is per-request via an agent. */
+function sslAgent(): https.Agent | undefined {
+  if (!(parseBool(process.env.CONFIDENT_DISABLE_SSL) ?? false))
+    return undefined;
+  if (!warnedAboutSsl) {
+    warnedAboutSsl = true;
+    logger.warning(
+      "CONFIDENT_DISABLE_SSL is set: TLS certificate verification is disabled for Confident AI requests.",
+    );
+  }
+  insecureAgent ??= new https.Agent({ rejectUnauthorized: false });
+  return insecureAgent;
+}
 
 function logRetryBefore(error: any, attempt: number): void {
   logger.log(
@@ -151,12 +173,7 @@ export class Api {
       throw new Error("Please provide a valid Confident AI API Key.");
     }
 
-    // if region is set or url is provided, respect that
-    if (!process.env.CONFIDENT_REGION && !baseUrl) {
-      this.baseApiUrl = inferBaseUrlFromApiKey(apiKey);
-    } else {
-      this.baseApiUrl = baseUrl || API_BASE_URL;
-    }
+    this.baseApiUrl = baseUrl?.trim() ? baseUrl : getBaseApiUrl(apiKey);
 
     this.apiKey = apiKey;
     this.headers = {
@@ -184,6 +201,7 @@ export class Api {
           headers,
           data,
           params,
+          httpsAgent: sslAgent(),
         });
         return response;
       } catch (error: any) {

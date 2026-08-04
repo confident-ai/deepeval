@@ -45,10 +45,7 @@ export interface VerdictLikeNode {
   readonly child?: AnyNode | ChildMetric;
   validate(): void;
   generateReason(metric: DagHostMetric): Promise<string>;
-  runChildMetric(
-    metric: DagHostMetric,
-    testCase: any,
-  ): Promise<ChildMetric>;
+  runChildMetric(metric: DagHostMetric, testCase: any): Promise<ChildMetric>;
   verboseLog(depth: number, childMetric?: ChildMetric): string;
 }
 

@@ -9,6 +9,7 @@ import {
   LATEST_TEST_RUN_FILE,
   DEEPEVAL_RESULTS_FOLDER,
 } from "@/constants";
+import { isReadOnlyFileSystem } from "@/config/utils";
 import type { PersistedCase } from "@/evaluate/confident";
 
 export interface LocalTestRun {
@@ -30,6 +31,7 @@ function latestTestRunPath(): string {
 
 export function saveLatestTestRun(run: LocalTestRun): string {
   const file = latestTestRunPath();
+  if (isReadOnlyFileSystem()) return file;
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, JSON.stringify(run, null, 2), "utf-8");
   return file;
@@ -46,6 +48,7 @@ export function readLatestTestRun(): LocalTestRun | null {
 }
 
 export function deleteLatestTestRun(): void {
+  if (isReadOnlyFileSystem()) return;
   try {
     fs.rmSync(latestTestRunPath(), { force: true });
   } catch {}
@@ -60,10 +63,14 @@ function timestamp(): string {
   );
 }
 
-/** Returns the path written, or null when `DEEPEVAL_RESULTS_FOLDER` is unset. */
+/**
+ * Returns the path written, or null when `DEEPEVAL_RESULTS_FOLDER` is unset or
+ * the file system is read-only.
+ */
 export function exportTestRunJson(run: LocalTestRun): string | null {
   const folder = process.env[DEEPEVAL_RESULTS_FOLDER];
   if (!folder || folder.trim() === "") return null;
+  if (isReadOnlyFileSystem()) return null;
   fs.mkdirSync(folder, { recursive: true });
   const file = path.join(folder, `test_run_${timestamp()}.json`);
   fs.writeFileSync(file, JSON.stringify(run, null, 2), "utf-8");

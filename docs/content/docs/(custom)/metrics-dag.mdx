@@ -52,13 +52,13 @@ Simply create a direct acyclic graph to define your evaluation trajectory using 
 <Case id="python">
 
 ```python
-from deepeval import evaluate
-from deepeval.metrics import DAGMetric
 from deepeval.metrics.dag import (
     BinaryJudgementNode,
     DeepAcyclicGraph,
 )
 from deepeval.test_case import LLMTestCase, SingleTurnParams
+from deepeval.metrics import DAGMetric
+from deepeval import evaluate
 
 correctness = BinaryJudgementNode(
     criteria="Is the actual output correct for the input?",
@@ -88,10 +88,15 @@ evaluate(test_cases=[test_case], metrics=[metric])
 <Case id="typescript">
 
 ```typescript
-import { evaluate, LLMTestCase, metrics } from "deepeval";
-import { SingleTurnParams } from "deepeval/testCase";
+import {
+  BinaryJudgementNode,
+  DAGMetric,
+  DeepAcyclicGraph,
+} from "deepeval/metrics";
+import { LLMTestCase, SingleTurnParams } from "deepeval/test-case";
+import { evaluate } from "deepeval";
 
-const correctness = new metrics.BinaryJudgementNode({
+const correctness = new BinaryJudgementNode({
   criteria: "Is the actual output correct for the input?",
   evaluationParams: [
     SingleTurnParams.INPUT,
@@ -101,9 +106,9 @@ const correctness = new metrics.BinaryJudgementNode({
 correctness.addVerdict(true, { score: 10 });
 correctness.addVerdict(false, { score: 0 });
 
-const metric = new metrics.DAGMetric({
+const metric = new DAGMetric({
   name: "Correctness",
-  dag: new metrics.DeepAcyclicGraph({ rootNodes: [correctness] }),
+  dag: new DeepAcyclicGraph({ rootNodes: [correctness] }),
 });
 
 const testCase = new LLMTestCase({
@@ -130,7 +135,9 @@ There are **TWO** mandatory and **SEVEN** optional parameters when creating a `D
 - [Optional] `model`: an OpenAI model name or a [custom evaluation model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] `include_reason`: whether to generate a reason for the final score. Defaulted to `True`.
 - [Optional] `strict_mode`: when `True`, sets the threshold to `1`. Defaulted to `False`.
-- [Optional] `async_mode`: whether `measure()` executes the graph asynchronously. Defaulted to `True`.
+- <Only id="python">
+    [Optional] `async_mode`: whether `measure()` executes the graph asynchronously. Defaulted to `True`.
+  </Only>
 - [Optional] `verbose_mode`: whether to print the nodes and outcomes used to calculate the score. Defaulted to `False`.
 - [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
@@ -208,8 +215,7 @@ const llmApp = observe({
 
 const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Hi!" })] });
 for await (const golden of dataset.evalsIterator()) {
-  if (!("input" in golden)) continue;
-  await llmApp(golden.input);
+  await llmApp((golden as Golden).input);
 }
 ```
 
@@ -326,15 +332,15 @@ dag = DeepAcyclicGraph(root_nodes=[extract])
 
 ```typescript
 // Define the processing and judgement nodes
-const extract = new metrics.TaskNode({
+const extract = new TaskNode({
   instructions: "Extract every heading.",
   outputLabel: "Extracted headings",
   evaluationParams: [SingleTurnParams.ACTUAL_OUTPUT],
 });
-const headingsPresent = new metrics.BinaryJudgementNode({
+const headingsPresent = new BinaryJudgementNode({
   criteria: "Are all required headings present?",
 });
-const headingOrder = new metrics.NonBinaryJudgementNode({
+const headingOrder = new NonBinaryJudgementNode({
   criteria: "Classify the ordering of the headings.",
 });
 
@@ -351,14 +357,14 @@ headingOrder.addVerdict("Correct", { score: 10 });
 headingOrder.addVerdict("Incorrect", { score: 0 });
 
 // Validate and create the completed DAG
-const dag = new metrics.DeepAcyclicGraph({ rootNodes: [extract] });
+const dag = new DeepAcyclicGraph({ rootNodes: [extract] });
 ```
 
 </Case>
 
 </Switch>
 
-Here, the heading-order judgement depends on the extracted headings and the successful `True` branch. The graph tracks both incoming dependencies and executes the shared node only when the active path reaches it.
+Here, the heading-order judgement depends on the extracted headings and the successful <Term py="True" ts="true"/> branch. The graph tracks both incoming dependencies and executes the shared node only when the active path reaches it.
 
 ### Reaching a Verdict
 
@@ -400,7 +406,7 @@ Each call must define exactly one of `score` or `then`. A `score` terminates eva
 
 - cycles;
 - invalid node connections;
-- binary judgements without exactly one `True` and one `False` verdict;
+- binary judgements without exactly one <Term py="True" ts="true"/> and one <Term py="False" ts="false"/> verdict;
 - non-binary judgements without unique string verdicts; and
 - verdicts that define both `score` and `then`, or neither.
 
@@ -421,8 +427,8 @@ A `TaskNode` transforms test-case parameters or outputs from parent task nodes i
 <Case id="python">
 
 ```python
-from deepeval.metrics.dag import TaskNode
 from deepeval.test_case import SingleTurnParams
+from deepeval.metrics.dag import TaskNode
 
 task = TaskNode(
     instructions="Extract every heading from the actual output.",
@@ -437,10 +443,10 @@ task = TaskNode(
 <Case id="typescript">
 
 ```typescript
-import { metrics } from "deepeval";
-import { SingleTurnParams } from "deepeval/testCase";
+import { SingleTurnParams } from "deepeval/test-case";
+import { TaskNode } from "deepeval/metrics";
 
-const task = new metrics.TaskNode({
+const task = new TaskNode({
   instructions: "Extract every heading from the actual output.",
   outputLabel: "Extracted headings",
   evaluationParams: [SingleTurnParams.ACTUAL_OUTPUT],
@@ -452,7 +458,21 @@ const task = new metrics.TaskNode({
 
 </Switch>
 
+<Switch>
+
+<Case id="python">
+
 There are **TWO** mandatory and **TWO** optional parameters when creating a `TaskNode`:
+
+</Case>
+
+<Case id="typescript">
+
+There are **TWO** mandatory and **ONE** optional parameters when creating a `TaskNode`:
+
+</Case>
+
+</Switch>
 
 - `instructions`: directions for processing the available input.
 - <Term py="output_label" ts="outputLabel"/>: the name used to present this node's output to child nodes.
@@ -483,15 +503,15 @@ task.addNode(judgement);
 
 ### `BinaryJudgementNode`
 
-A `BinaryJudgementNode` evaluates one criterion and returns either `True` or `False`.
+A `BinaryJudgementNode` evaluates one criterion and returns either <Term py="True" ts="true"/> or <Term py="False" ts="false"/>.
 
 <Switch>
 
 <Case id="python">
 
 ```python
-from deepeval.metrics.dag import BinaryJudgementNode
 from deepeval.test_case import SingleTurnParams
+from deepeval.metrics.dag import BinaryJudgementNode
 
 judgement = BinaryJudgementNode(
     criteria="Are all required headings present?",
@@ -505,10 +525,10 @@ judgement = BinaryJudgementNode(
 <Case id="typescript">
 
 ```typescript
-import { metrics } from "deepeval";
-import { SingleTurnParams } from "deepeval/testCase";
+import { SingleTurnParams } from "deepeval/test-case";
+import { BinaryJudgementNode } from "deepeval/metrics";
 
-const judgement = new metrics.BinaryJudgementNode({
+const judgement = new BinaryJudgementNode({
   criteria: "Are all required headings present?",
   evaluationParams: [SingleTurnParams.ACTUAL_OUTPUT],
   label: "Required headings",
@@ -525,7 +545,7 @@ There is **ONE** mandatory and **TWO** optional parameters when creating a `Bina
 - [Optional] <Term py="evaluation_params" ts="evaluationParams"/>: additional test-case parameters available to the node.
 - [Optional] `label`: a name displayed in verbose logs.
 
-The constructor does not define the branches. Add exactly one `True` verdict and one `False` verdict afterward:
+The constructor does not define the branches. Add exactly one <Term py="True" ts="true"/> verdict and one <Term py="False" ts="false"/> verdict afterward:
 
 <Switch>
 
@@ -575,10 +595,10 @@ judgement = NonBinaryJudgementNode(
 <Case id="typescript">
 
 ```typescript
-import { metrics } from "deepeval";
-import { SingleTurnParams } from "deepeval/testCase";
+import { NonBinaryJudgementNode } from "deepeval/metrics";
+import { SingleTurnParams } from "deepeval/test-case";
 
-const judgement = new metrics.NonBinaryJudgementNode({
+const judgement = new NonBinaryJudgementNode({
   criteria: "Classify the ordering of the headings.",
   evaluationParams: [SingleTurnParams.ACTUAL_OUTPUT],
   label: "Heading order",
@@ -649,7 +669,7 @@ Independent branches always execute concurrently.
 
 ### Branch Selection
 
-Only the verdict matching a judgement node's output is followed. A binary judgement selects its `True` or `False` verdict, while a non-binary judgement selects one of its configured string verdicts.
+Only the verdict matching a judgement node's output is followed. A binary judgement selects its <Term py="True" ts="true"/> or <Term py="False" ts="false"/> verdict, while a non-binary judgement selects one of its configured string verdicts.
 
 ### Score Calculation
 
@@ -668,8 +688,8 @@ A verdict can continue into a `GEval` or another `BaseMetric` instead of assigni
 <Case id="python">
 
 ```python
-from deepeval.metrics import GEval
 from deepeval.test_case import SingleTurnParams
+from deepeval.metrics import GEval
 
 subjective_quality = GEval(
     name="Writing Quality",
@@ -685,10 +705,10 @@ judgement.add_verdict(verdict=True, then=subjective_quality)
 <Case id="typescript">
 
 ```typescript
-import { metrics } from "deepeval";
-import { SingleTurnParams } from "deepeval/testCase";
+import { SingleTurnParams } from "deepeval/test-case";
+import { GEval } from "deepeval/metrics";
 
-const subjectiveQuality = new metrics.GEval({
+const subjectiveQuality = new GEval({
   name: "Writing Quality",
   criteria: "Determine whether the response is clear and well written.",
   evaluationParams: [SingleTurnParams.ACTUAL_OUTPUT],
@@ -733,14 +753,14 @@ dag = DeepAcyclicGraph(root_nodes=[policy_check])
 <Case id="typescript">
 
 ```typescript
-const policyCheck = new metrics.BinaryJudgementNode({
+const policyCheck = new BinaryJudgementNode({
   criteria: "Does the response violate the refund policy?",
   evaluationParams: [SingleTurnParams.ACTUAL_OUTPUT],
 });
 policyCheck.addVerdict(true, { score: 0 });
 policyCheck.addVerdict(false, { score: 10 });
 
-const dag = new metrics.DeepAcyclicGraph({ rootNodes: [policyCheck] });
+const dag = new DeepAcyclicGraph({ rootNodes: [policyCheck] });
 ```
 
 </Case>
@@ -784,7 +804,7 @@ responseQuality.addVerdict("Excellent", { score: 10 });
 responseQuality.addVerdict("Acceptable", { score: 6 });
 responseQuality.addVerdict("Poor", { score: 2 });
 
-const dag = new metrics.DeepAcyclicGraph({ rootNodes: [extract] });
+const dag = new DeepAcyclicGraph({ rootNodes: [extract] });
 ```
 
 </Case>

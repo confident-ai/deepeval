@@ -41,8 +41,8 @@ Alternatively, you can define `LocalModel` directly in code:
 <Tab value="Python">
 
 ```python
-from deepeval.models import LocalModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import LocalModel
 
 model = LocalModel(
     model="<model_name>",
@@ -93,7 +93,7 @@ Any `**kwargs` you would like to use for your model can be passed directly to `L
 <Tab value="TypeScript">
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { LocalModel } from "deepeval/models";
 
 const model = new LocalModel({
@@ -103,7 +103,7 @@ const model = new LocalModel({
   temperature: 0,
 });
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
+const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
 
 </Tab>
@@ -121,10 +121,10 @@ LOCAL_MODEL_API_KEY=lm-studio
 Then create the model with no arguments and pass it to any metric:
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { LocalModel } from "deepeval/models";
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({
+const answerRelevancy = new AnswerRelevancyMetric({
   model: new LocalModel(),
 });
 ```

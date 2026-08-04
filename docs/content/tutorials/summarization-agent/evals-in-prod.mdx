@@ -2,6 +2,7 @@
 id: evals-in-prod
 title: Deployment
 sidebar_label: Setup Evals in Production
+languages: [python]
 ---
 
 In this section, we'll set up CI/CD workflows for your summarization agent, and learn how to add metrics and create spans with test cases in your application for better tracing experience.
@@ -12,10 +13,6 @@ In this section, we'll set up CI/CD workflows for your summarization agent, and 
 this provides full visibility for debugging internal components of your LLM application. We have added these decorators during development of our agent, we will now add metrics and spans for running online evals. [Learn more about tracing here](https://deepeval.com/docs/evaluation-llm-tracing).
 
 Here's how we can add metrics and create spans for our `@observe` decorators in the `MeetingSummarizer` class:
-
-<Switch>
-
-<Case id="python">
 
 ```python {6,27,39,51-53,59,73-75}
 import os
@@ -102,121 +99,6 @@ class MeetingSummarizer:
             return {"error": f"API call failed: {e}", "raw_output": ""}
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import "dotenv/config";
-import OpenAI from "openai";
-import { metrics } from "deepeval";
-import { observe, updateCurrentSpan } from "deepeval/tracing";
-import { SingleTurnParams } from "deepeval/testCase";
-
-class MeetingSummarizer {
-  model: string;
-  client: OpenAI;
-  summarySystemPrompt: string;
-  actionItemSystemPrompt: string;
-
-  constructor(
-    model: string = "gpt-4",
-    summarySystemPrompt: string = "",
-    actionItemSystemPrompt: string = "",
-  ) {
-    this.model = model;
-    this.client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    this.summarySystemPrompt = summarySystemPrompt || (
-      "..." // Use the summary_system_prompt mentioned above
-    );
-    this.actionItemSystemPrompt = actionItemSystemPrompt || (
-      "..." // Use the action_item_system_prompt mentioned above
-    );
-  }
-
-  summarize = observe({
-    type: "agent",
-    fn: async (
-      transcript: string,
-      summaryModel: string = "gpt-4o",
-      actionItemModel: string = "gpt-4-turbo",
-    ) => {
-      const summary = await this.getSummary(transcript, summaryModel);
-      const actionItems = await this.getActionItems(transcript, actionItemModel);
-
-      return [summary, actionItems] as [string, Record<string, any>];
-    },
-  });
-
-  getSummary = observe({
-    metrics: [
-      new metrics.GEval({
-        name: "Summary Concision",
-        criteria: "Assess whether the summary is concise and focused only on the essential points of the meeting.",
-        evaluationParams: [SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT],
-      }),
-    ],
-    name: "Summary",
-    fn: async (transcript: string, model?: string) => {
-      try {
-        const response = await this.client.chat.completions.create({
-          model: model || this.model,
-          messages: [
-            { role: "system", content: this.summarySystemPrompt },
-            { role: "user", content: transcript },
-          ],
-        });
-
-        const summary = response.choices[0].message.content?.trim() ?? "";
-        updateCurrentSpan({ input: transcript, output: summary });
-        return summary;
-      } catch (e) {
-        console.log(`Error generating summary: ${e}`);
-        return `Error: Could not generate summary due to API issue: ${e}`;
-      }
-    },
-  });
-
-  getActionItems = observe({
-    metrics: [
-      new metrics.GEval({
-        name: "Action Item Check",
-        criteria: "Assess whether all action items from the meeting are captured accurately.",
-        evaluationParams: [SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT],
-      }),
-    ],
-    name: "Action Items",
-    fn: async (transcript: string, model?: string) => {
-      try {
-        const response = await this.client.chat.completions.create({
-          model: model || this.model,
-          messages: [
-            { role: "system", content: this.actionItemSystemPrompt },
-            { role: "user", content: transcript },
-          ],
-        });
-
-        const actionItems = response.choices[0].message.content?.trim() ?? "";
-        try {
-          const parsed = JSON.parse(actionItems);
-          updateCurrentSpan({ input: transcript, output: JSON.stringify(parsed) });
-          return parsed;
-        } catch {
-          return { error: "Invalid JSON returned from model", raw_output: actionItems };
-        }
-      } catch (e) {
-        console.log(`Error generating action items: ${e}`);
-        return { error: `API call failed: ${e}`, raw_output: "" };
-      }
-    },
-  });
-}
-```
-
-</Case>
-
-</Switch>
-
 ## Why Continuous Evaluation
 
 Most summarization agents are built to summarize documents and transcripts, often to improve productivity. This means that the documents to be summarized are ever-growing, and your summarizer needs to be able to keep up with that. That's why continuous testing is essential — your summarizer must remain reliable, even as new types of documents are introduced.
@@ -229,10 +111,6 @@ In the previous section, we created a `deepeval` dataset. You can now reuse this
 
 Here's how you can pull datasets and reuse them to generate test cases:
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.dataset import EvaluationDataset
 
@@ -240,28 +118,9 @@ dataset = EvaluationDataset()
 dataset.pull(alias="MeetingSummarizer Dataset")
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { EvaluationDataset } from "deepeval/dataset";
-
-const dataset = new EvaluationDataset();
-await dataset.pull({ alias: "MeetingSummarizer Dataset" });
-```
-
-</Case>
-
-</Switch>
-
 ## Integrating CI/CD
 
 You can use `pytest` with `assert_test` during your CI/CD to trace and evaluate your summarization agent, here's how you can write the test file to do that:
-
-<Switch>
-
-<Case id="python">
 
 ```python title="test_meeting_summarizer_quality.py" {13}
 import pytest
@@ -281,54 +140,11 @@ def test_meeting_summarizer_components(golden):
     assert_test(golden=golden)  # evaluates spans
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript title="meeting_summarizer_quality.ts"
-import { EvaluationDataset } from "deepeval/dataset";
-import { MeetingSummarizer } from "./meetingSummarizer"; // import your summarizer here
-
-const dataset = new EvaluationDataset();
-await dataset.pull({ alias: "MeetingSummarizer Dataset" });
-
-const summarizer = new MeetingSummarizer();
-
-for await (const golden of dataset.evalsIterator()) {
-  if (!("input" in golden)) continue;
-  await summarizer.summarize(golden.input); // captures trace and evaluates spans
-}
-```
-
-</Case>
-
-</Switch>
-
-<Switch>
-
-<Case id="python">
-
 ```bash
 poetry run deepeval test run test_meeting_summarizer_quality.py
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```bash
-npx tsx meeting_summarizer_quality.ts
-```
-
-</Case>
-
-</Switch>
-
 Finally, let's integrate this test into GitHub Actions to enable automated quality checks on every push.
-
-<Switch>
-
-<Case id="python">
 
 ```yaml {32-33}
 name: Meeting Summarizer DeepEval Tests
@@ -365,45 +181,6 @@ jobs:
           CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }} # Add your CONFIDENT_API_KEY
         run: poetry run deepeval test run test_meeting_summarizer_quality.py
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```yaml
-name: Meeting Summarizer DeepEval Tests
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Run DeepEval Unit Tests
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} # Add your OPENAI_API_KEY
-          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }} # Add your CONFIDENT_API_KEY
-        run: npx tsx meeting_summarizer_quality.ts
-```
-
-</Case>
-
-</Switch>
 
 And that's it! You now have a **robust, production-ready summarization agent** with automated evaluation integrated into your development workflow.
 

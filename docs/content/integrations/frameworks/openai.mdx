@@ -96,10 +96,10 @@ Replace `from openai import OpenAI` with `from deepeval.openai import OpenAI`. W
 <Case id="python">
 
 ```python title="openai_app.py" showLineNumbers
-from deepeval.openai import OpenAI
-from deepeval.tracing import trace, LlmSpanContext
 from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.tracing import trace, LlmSpanContext
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.openai import OpenAI
 
 client = OpenAI()
 
@@ -122,9 +122,10 @@ for golden in dataset.evals_iterator():
 <Case id="typescript">
 
 ```typescript title="openai_app.ts" showLineNumbers
-import OpenAI from "openai";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { instrumentOpenAI } from "deepeval/openai";
-import { EvaluationDataset, Golden, metrics } from "deepeval";
+import OpenAI from "openai";
 
 const client = new OpenAI();
 instrumentOpenAI(client);
@@ -135,14 +136,13 @@ const dataset = new EvaluationDataset({
 });
 
 for await (const golden of dataset.evalsIterator({
-  metrics: [new metrics.AnswerRelevancyMetric()],
+  metrics: [new AnswerRelevancyMetric()],
 })) {
-  if (!("input" in golden)) continue;
   await client.chat.completions.create({
     model: "gpt-4o",
     messages: [
       { role: "system", content: "Be concise." },
-      { role: "user", content: golden.input },
+      { role: "user", content: (golden as Golden).input },
     ],
   });
 }
@@ -182,11 +182,11 @@ Use the `deepeval` pytest integration. Each parametrized test invocation becomes
 
 ```python title="test_openai_app.py" showLineNumbers
 import pytest
-from deepeval import assert_test
-from deepeval.openai import OpenAI
-from deepeval.tracing import trace, LlmSpanContext
 from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.tracing import trace, LlmSpanContext
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.openai import OpenAI
+from deepeval import assert_test
 
 client = OpenAI()
 dataset = EvaluationDataset(goldens=[
@@ -224,11 +224,11 @@ Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one OpenA
 ```python title="openai_app.py" showLineNumbers
 import asyncio
 
-from deepeval.openai import AsyncOpenAI
-from deepeval.tracing import trace, LlmSpanContext
 from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.evaluate.configs import AsyncConfig
+from deepeval.tracing import trace, LlmSpanContext
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.evaluate.configs import AsyncConfig
+from deepeval.openai import AsyncOpenAI
 
 client = AsyncOpenAI()
 dataset = EvaluationDataset(goldens=[
@@ -253,9 +253,10 @@ for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True)):
 <Case id="typescript">
 
 ```typescript title="openai_app.ts" showLineNumbers
-import OpenAI from "openai";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { instrumentOpenAI } from "deepeval/openai";
-import { EvaluationDataset, Golden, metrics } from "deepeval";
+import OpenAI from "openai";
 
 const client = new OpenAI();
 instrumentOpenAI(client);
@@ -274,10 +275,9 @@ const callOpenAI = async (prompt: string) =>
   });
 
 for await (const golden of dataset.evalsIterator({
-  metrics: [new metrics.AnswerRelevancyMetric()],
+  metrics: [new AnswerRelevancyMetric()],
 })) {
-  if (!("input" in golden)) continue;
-  await callOpenAI(golden.input);
+  await callOpenAI((golden as Golden).input);
 }
 ```
 
@@ -292,9 +292,9 @@ Sync (`OpenAI`) and async (`AsyncOpenAI`) clients both work; pick whichever matc
 Passing `metrics=[...]` to `LlmSpanContext` evaluates the next OpenAI call's LLM span specifically. The same context manager lets you attach extra evaluation parameters that some metrics need.
 
 ```python title="openai_app.py" showLineNumbers
-from deepeval.openai import OpenAI
-from deepeval.tracing import trace, LlmSpanContext
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
+from deepeval.tracing import trace, LlmSpanContext
+from deepeval.openai import OpenAI
 
 client = OpenAI()
 
@@ -325,8 +325,8 @@ The patch captures input messages, output text, and `tools_called` automatically
 <Case id="python">
 
 ```python title="openai_app.py" showLineNumbers
-from deepeval.openai import OpenAI
 from deepeval.tracing import trace, LlmSpanContext, observe
+from deepeval.openai import OpenAI
 
 client = OpenAI()
 
@@ -357,9 +357,9 @@ def respond_to_user(prompt: str) -> str:
 <Case id="typescript">
 
 ```typescript title="openai_app.ts" showLineNumbers
-import OpenAI from "openai";
-import { instrumentOpenAI } from "deepeval/openai";
 import { observe, updateCurrentTrace } from "deepeval/tracing";
+import { instrumentOpenAI } from "deepeval/openai";
+import OpenAI from "openai";
 
 const client = new OpenAI();
 instrumentOpenAI(client);
@@ -421,13 +421,13 @@ def respond_to_user(prompt: str) -> str:
 <Case id="typescript">
 
 ```typescript title="openai_app.ts" showLineNumbers
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { observe } from "deepeval/tracing";
-import { metrics } from "deepeval";
 // ...
 
 const respondToUser = observe({
   name: "respond_to_user",
-  metrics: [new metrics.AnswerRelevancyMetric()],
+  metrics: [new AnswerRelevancyMetric()],
   fn: async (prompt: string) => {
     const response = await client.chat.completions.create({
       model: "gpt-4o",
@@ -488,7 +488,6 @@ for golden in dataset.evals_iterator():
 // ...
 
 for await (const golden of dataset.evalsIterator()) {
-  if (!("input" in golden)) continue;
   await respondToUser(golden.input);
 }
 ```
@@ -556,8 +555,8 @@ const planThenRespond = observe({
 When the model returns tool calls, the LLM span's `tools_called` field captures them automatically. Use `expected_tools` on `LlmSpanContext` if you want to evaluate tool selection with a tool-aware metric.
 
 ```python title="openai_app.py" showLineNumbers
-from deepeval.test_case import ToolCall
 from deepeval.tracing import trace, LlmSpanContext
+from deepeval.test_case import ToolCall
 ...
 
 with trace(

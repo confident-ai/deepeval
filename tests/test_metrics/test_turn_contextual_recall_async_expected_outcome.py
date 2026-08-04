@@ -65,7 +65,6 @@ async def test_a_measure_forwards_expected_outcome_not_multimodal_flag():
         await metric.a_measure(
             test_case,
             _show_indicator=False,
-            _log_metric_to_confident=False,
         )
 
     assert "expected_outcome" in captured, "scoring helper was never called"

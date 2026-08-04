@@ -2,6 +2,7 @@
 # id: guides-rag-triad
 title: Using the RAG Triad for RAG evaluation
 sidebar_label: RAG Triad
+languages: [python]
 ---
 
 
@@ -41,35 +42,13 @@ You might have noticed we didn't mention the contextual precision and contextual
 
 Using the RAG triad of metrics in `deepeval` is as simple as writing a few lines of code. First, create a test case to represent a user query, retrieved text chunks, and an LLM response:
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(input="...", actual_output="...", retrieval_context=["..."])
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { LLMTestCase } from "deepeval/testCase";
-
-const testCase = new LLMTestCase({ input: "...", actualOutput: "...", retrievalContext: ["..."] });
-```
-
-</Case>
-
-</Switch>
-
 Here, `input` is the user query, `actual_output` is the LLM generated response, and `retrieval_context` is a list of strings representing the retrieved text chunks. Then, define the RAG triad metrics:
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric, ContextualRelevancyMetric
@@ -79,23 +58,6 @@ answer_relevancy = AnswerRelevancyMetric()
 faithfulness = FaithfulnessMetric()
 contextual_relevancy = ContextualRelevancyMetric()
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { metrics } from "deepeval";
-
-// ...
-const answerRelevancy = new metrics.AnswerRelevancyMetric();
-const faithfulness = new metrics.FaithfulnessMetric();
-const contextualRelevancy = new metrics.ContextualRelevancyMetric();
-```
-
-</Case>
-
-</Switch>
 
 :::tip
 You can find how these metrics are implemented and calculated on their respective documentation pages:
@@ -108,31 +70,12 @@ You can find how these metrics are implemented and calculated on their respectiv
 
 Lastly, evaluate your test case using these metrics:
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval import evaluate
 
 ...
 evaluate(test_cases=[test_case], metrics=[answer_relevancy, faithfulness, contextual_relevancy])
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { evaluate } from "deepeval";
-
-// ...
-await evaluate([testCase], [answerRelevancy, faithfulness, contextualRelevancy]);
-```
-
-</Case>
-
-</Switch>
 
 Congratulations 🎉! You've learnt everything you need to know for the RAG triad.
 

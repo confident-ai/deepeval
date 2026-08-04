@@ -39,8 +39,8 @@ You can also specify your model directly in code using `DeepSeekModel`.
 <Tab value="Python">
 
 ```python
-from deepeval.models import DeepSeekModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import DeepSeekModel
 
 model = DeepSeekModel(
     model="deepseek-chat",
@@ -88,7 +88,7 @@ Parameters may be explicitly passed to the model at initialization time, or conf
 <Tab value="TypeScript">
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { DeepSeekModel } from "deepeval/models";
 
 const model = new DeepSeekModel({
@@ -97,7 +97,7 @@ const model = new DeepSeekModel({
   temperature: 0,
 });
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
+const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
 
 </Tab>
@@ -106,10 +106,10 @@ const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
 To use any DeepSeek model directly in `deepeval`, set `DEEPSEEK_MODEL_NAME` and `DEEPSEEK_API_KEY` in your `env` and create a `DeepSeekModel` with no arguments:
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { DeepSeekModel } from "deepeval/models";
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({
+const answerRelevancy = new AnswerRelevancyMetric({
   model: new DeepSeekModel(),
 });
 ```

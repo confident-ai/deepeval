@@ -49,8 +49,8 @@ This approach is ideal when you need to use separate models for specific metrics
 <Tab value="Python">
 
 ```python
-from deepeval.models import AzureOpenAIModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import AzureOpenAIModel
 
 model = AzureOpenAIModel(
     model="gpt-4.1",
@@ -106,7 +106,7 @@ Parameters may be explicitly passed to the model at initialization time, or conf
 <Tab value="TypeScript">
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { AzureOpenAIModel } from "deepeval/models";
 
 const model = new AzureOpenAIModel({
@@ -118,7 +118,7 @@ const model = new AzureOpenAIModel({
   temperature: 0,
 });
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
+const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
 
 </Tab>
@@ -138,10 +138,10 @@ OPENAI_API_VERSION=2025-01-01-preview
 Then create the model with no arguments and pass it to any metric:
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { AzureOpenAIModel } from "deepeval/models";
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({
+const answerRelevancy = new AnswerRelevancyMetric({
   model: new AzureOpenAIModel(),
 });
 ```

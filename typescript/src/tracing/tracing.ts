@@ -16,13 +16,19 @@ import { LLMTestCase, ToolCall, resolveRetrievalContext } from "@/test-case";
 import type { BaseMetric } from "@/metrics/base-metrics";
 import type { MetricData } from "@/evaluate/types";
 import { Prompt } from "@/prompt";
-import { SpanApiType, BaseApiSpan, TraceApi, TraceSpanApiStatus } from "@/tracing/api";
+import {
+  SpanApiType,
+  BaseApiSpan,
+  TraceApi,
+  TraceSpanApiStatus,
+} from "@/tracing/api";
 import { TraceWorkerStatus, printTraceStatus } from "@/tracing/logging";
 import {
   applyPendingToSpan,
   popPendingFor,
   type PendingPayload,
 } from "@/tracing/pending-context";
+import { isTraceInternalEnabled } from "@/tracing/utils";
 
 export enum SpanType {
   AGENT = "agent",
@@ -467,7 +473,10 @@ export class TraceManager {
     put("expectedTools", span.expectedTools);
     // Span-type extras (model / tools) when present, like Python's api span.
     put("model", (span as { model?: unknown }).model);
-    put("availableTools", (span as { availableTools?: unknown }).availableTools);
+    put(
+      "availableTools",
+      (span as { availableTools?: unknown }).availableTools,
+    );
     dict.children = (span.children ?? []).map((child) =>
       this.createNestedSpansDict(child),
     );
@@ -1359,10 +1368,41 @@ export function observe<Args extends any[], T>(options: {
   description?: string;
   availableTools?: string[];
   agentHandoffs?: string[];
+  /** Only observe when there is an active parent span. */
+  _dropIfRoot?: boolean;
+  /** Only observe when `CONFIDENT_TRACE_INTERNAL` is on. */
+  _internal?: boolean;
   fn: (...args: Args) => T | Promise<T>;
 }): (...args: Args) => Promise<T> {
-  const { type, fn, ...rest } = options;
+  const { type, fn, _dropIfRoot, _internal, ...rest } = options;
 
+  const observed = routeObserve<Args, T>(type, fn, rest);
+  if (!_dropIfRoot && !_internal) return observed;
+
+  return async (...args: Args): Promise<T> => {
+    const skip =
+      (_internal && !isTraceInternalEnabled()) ||
+      (_dropIfRoot && getCurrentSpan() === undefined);
+    return skip ? await fn(...args) : await observed(...args);
+  };
+}
+
+function routeObserve<Args extends any[], T>(
+  type: SpanType | string | undefined,
+  fn: (...args: Args) => T | Promise<T>,
+  rest: {
+    name?: string;
+    metricCollection?: string;
+    metrics?: BaseMetric[];
+    model?: string;
+    costPerInputToken?: number;
+    costPerOutputToken?: number;
+    embedder?: string;
+    description?: string;
+    availableTools?: string[];
+    agentHandoffs?: string[];
+  },
+): (...args: Args) => Promise<T> {
   // Route to the appropriate specialized observe function based on type
   if (type === SpanType.AGENT) {
     return ObserveAgent({

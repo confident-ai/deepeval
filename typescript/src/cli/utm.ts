@@ -2,6 +2,8 @@
 // deepeval/cli/utils.py. No `ref_page`: a CLI invocation is not a page.
 // Programmatic hosts (api.*, deepeval.*, otel.*) are never tagged.
 
+import { parseBool } from "@/config/utils";
+
 export const PROD = "https://app.confident-ai.com";
 export const WWW = "https://www.confident-ai.com";
 
@@ -34,8 +36,12 @@ export function withUtm(
   return parsed.toString();
 }
 
-/** Open a URL in the user's browser, ignoring failures (headless, SSH, CI). */
+/**
+ * Ignores failures (headless, SSH, CI). Suppressed by
+ * `CONFIDENT_OPEN_BROWSER=0`, which defaults to on.
+ */
 export async function openBrowser(url: string): Promise<void> {
+  if (!(parseBool(process.env.CONFIDENT_OPEN_BROWSER) ?? true)) return;
   try {
     const open = (await import("open")).default;
     await open(url);

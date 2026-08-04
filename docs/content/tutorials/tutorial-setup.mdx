@@ -2,6 +2,7 @@
 id: tutorial-setup
 title: Set Up DeepEval
 sidebar_label: Set Up DeepEval
+languages: [python]
 ---
 
 import { ASSETS } from "@site/src/assets";
@@ -12,25 +13,9 @@ import { ASSETS } from "@site/src/assets";
 
 Start by installing DeepEval using pip:
 
-<Switch>
-
-<Case id="python">
-
 ```bash
 pip install -U deepeval
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```bash
-npm install deepeval
-```
-
-</Case>
-
-</Switch>
 
 ### Write your first test
 
@@ -39,10 +24,6 @@ Let's evaluate the correctness of an LLM output using [`GEval`](https://deepeval
 :::note
 When you pass a file explicitly (e.g. `deepeval test run evals/my_eval.py`), DeepEval runs it regardless of its name. The `test_` prefix (like `test_app.py`) is only needed for pytest's automatic discovery when you point it at a directory.
 :::
-
-<Switch>
-
-<Case id="python">
 
 ```python title="test_app.py"
 from deepeval import evaluate
@@ -66,56 +47,11 @@ test_case = LLMTestCase(
 evaluate([test_case], [correctness_metric])
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript title="test_app.ts"
-import { evaluate, LLMTestCase, metrics } from "deepeval";
-import { SingleTurnParams } from "deepeval/testCase";
-
-const correctnessMetric = new metrics.GEval({
-  name: "Correctness",
-  criteria: "Determine if the 'actual output' is correct based on the 'expected output'.",
-  evaluationParams: [SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
-  threshold: 0.5,
-});
-
-const testCase = new LLMTestCase({
-  input: "I have a persistent cough and fever. Should I be worried?",
-  // Replace this with the actual output from your LLM application
-  actualOutput: "A persistent cough and fever could signal various illnesses, from minor infections to more serious conditions like pneumonia or COVID-19. It's advisable to seek medical attention if symptoms worsen, persist beyond a few days, or if you experience difficulty breathing, chest pain, or other concerning signs.",
-  expectedOutput: "A persistent cough and fever could indicate a range of illnesses, from a mild viral infection to more serious conditions like pneumonia or COVID-19. You should seek medical attention if your symptoms worsen, persist for more than a few days, or are accompanied by difficulty breathing, chest pain, or other concerning signs.",
-});
-
-await evaluate([testCase], [correctnessMetric]);
-```
-
-</Case>
-
-</Switch>
-
 To run your first evaluation, enter the following command in your terminal:
-
-<Switch>
-
-<Case id="python">
 
 ```bash
 deepeval test run test_app.py
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```bash
-npx tsx test_app.ts
-```
-
-</Case>
-
-</Switch>
 
 :::note
 DeepEval's powerful **LLM-as-a-judge** metrics (like `GEval` used in this example) rely on an underlying LLM called the _Evaluation Model_ to perform evaluations. By default, DeepEval uses OpenAI's models for this purpose.

@@ -98,7 +98,7 @@ mcp_server = MCPServer(
 <Case id="typescript">
 
 ```typescript title="main.ts"
-import { MCPServer } from "deepeval/testCase";
+import { MCPServer } from "deepeval/test-case";
 
 const mcpServer = new MCPServer({
   serverName: "GitHub",
@@ -164,7 +164,7 @@ mcp_tool_called = MCPToolCall(
 
 ```typescript title="main.ts"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { MCPToolCall } from "deepeval/testCase";
+import { MCPToolCall } from "deepeval/test-case";
 
 const session = new Client({ name: "my-mcp-client", version: "1.0.0" });
 
@@ -222,7 +222,7 @@ mcp_resource_called = MCPResourceCall(
 
 ```typescript title="main.ts"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { MCPResourceCall } from "deepeval/testCase";
+import { MCPResourceCall } from "deepeval/test-case";
 
 const session = new Client({ name: "my-mcp-client", version: "1.0.0" });
 
@@ -278,7 +278,7 @@ mcp_prompt_called = MCPPromptCall(
 
 ```typescript title="main.ts"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { MCPPromptCall } from "deepeval/testCase";
+import { MCPPromptCall } from "deepeval/test-case";
 
 const session = new Client({ name: "my-mcp-client", version: "1.0.0" });
 
@@ -354,21 +354,25 @@ import {
   MCPResourceCall,
   MCPPromptCall,
   LLMTestCase,
-} from "deepeval/testCase";
-import { evaluate, metrics } from "deepeval";
+} from "deepeval/test-case";
+import { MCPUseMetric } from "deepeval/metrics";
+import { evaluate } from "deepeval";
 
 // Create test case
 const testCase = new LLMTestCase({
   input: "...", // Your input
   actualOutput: "...", // Your LLM app's output
   mcpServers: [new MCPServer({ serverName: "..." })],
-  mcpToolsCalled: [new MCPToolCall({ name: "...", args: {}, result: "..." })],
-  mcpPromptsCalled: [new MCPPromptCall({ name: "...", result: "..." })],
-  mcpResourcesCalled: [new MCPResourceCall({ uri: "...", result: "..." })],
+  // Each `result` is the one your MCP client returned, unchanged
+  mcpToolsCalled: [new MCPToolCall({ name: "...", args: {}, result: toolResult })],
+  mcpPromptsCalled: [new MCPPromptCall({ name: "...", result: promptResult })],
+  mcpResourcesCalled: [
+    new MCPResourceCall({ uri: "...", result: resourceResult }),
+  ],
 });
 
 // Run evaluations
-await evaluate([testCase], [new metrics.MCPUseMetric()]);
+await evaluate([testCase], [new MCPUseMetric()]);
 ```
 
 </Case>
@@ -394,8 +398,8 @@ The [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases#conversatio
 
 ```python title="main.py"
 from deepeval.test_case import ConversationalTestCase
-from deepeval.test_case.mcp import MCPServer
 from deepeval.metrics import MultiTurnMCPMetric
+from deepeval.test_case.mcp import MCPServer
 from deepeval import evaluate
 
 test_case = ConversationalTestCase(
@@ -411,15 +415,16 @@ evaluate(test_cases=[test_case], metrics=[MultiTurnMCPMetric()])
 <Case id="typescript">
 
 ```typescript title="main.ts"
-import { ConversationalTestCase, MCPServer } from "deepeval/testCase";
-import { evaluate, metrics } from "deepeval";
+import { ConversationalTestCase, MCPServer } from "deepeval/test-case";
+import { MultiTurnMCPUseMetric } from "deepeval/metrics";
+import { evaluate } from "deepeval";
 
 const testCase = new ConversationalTestCase({
   turns,
   mcpServers: [new MCPServer({ serverName: "..." }), new MCPServer({ serverName: "..." })],
 });
 
-await evaluate([testCase], [new metrics.MultiTurnMCPUseMetric()]);
+await evaluate([testCase], [new MultiTurnMCPUseMetric()]);
 ```
 
 </Case>
@@ -439,13 +444,13 @@ To set primitives at runtime, the `Turn` object accepts optional parameters like
 <Case id="python">
 
 ```python
-from deepeval.test_case.mcp import MCPServer
 from deepeval.test_case.mcp import (
     MCPServer,
     MCPToolCall,
     MCPResourceCall,
     MCPPromptCall
 )
+from deepeval.test_case.mcp import MCPServer
 
 turns = [
     Turn(role="user", content="Some example input"),
@@ -476,16 +481,23 @@ import {
   MCPToolCall,
   MCPResourceCall,
   MCPPromptCall,
-} from "deepeval/testCase";
+} from "deepeval/test-case";
 
 const turns = [
   new Turn({ role: "user", content: "Some example input" }),
   new Turn({
     role: "assistant",
     content: "Do this too", // Your content here for a tool / resource / prompt call
-    mcpToolsCalled: [new MCPToolCall({ name: "...", args: {}, result: "..." })],
-    mcpResourcesCalled: [new MCPResourceCall({ uri: "...", result: "..." })],
-    mcpPromptsCalled: [new MCPPromptCall({ name: "...", result: "..." })],
+    // Each `result` is the one your MCP client returned, unchanged
+    mcpToolsCalled: [
+      new MCPToolCall({ name: "...", args: {}, result: toolResult }),
+    ],
+    mcpResourcesCalled: [
+      new MCPResourceCall({ uri: "...", result: resourceResult }),
+    ],
+    mcpPromptsCalled: [
+      new MCPPromptCall({ name: "...", result: promptResult }),
+    ],
   }),
 ];
 

@@ -1,7 +1,8 @@
 """Compile the Python model registries into the TypeScript package's models.json.
 
 ``deepeval/models/llms/constants.py`` is the single source of truth for per-model
-pricing and capability data. This projects it into a committed artifact at
+pricing and capability data, and for the default model each provider falls back
+to. This projects both into a committed artifact at
 ``typescript/src/models/registry/models.json``.
 
 Unlike ``compile_metric_templates.py`` this is a ONE-WAY emit: Python keeps
@@ -21,17 +22,15 @@ from pathlib import Path
 from typing import Any, Dict
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-CONSTANTS_PY = (
-    REPO_ROOT / "deepeval" / "models" / "llms" / "constants.py"
-)
+CONSTANTS_PY = REPO_ROOT / "deepeval" / "models" / "llms" / "constants.py"
 MODELS_JSON = (
-    REPO_ROOT
-    / "typescript"
-    / "src"
-    / "models"
-    / "registry"
-    / "models.json"
+    REPO_ROOT / "typescript" / "src" / "models" / "registry" / "models.json"
 )
+
+# Namespaces that carry a default model but no pricing registry, so
+# `_build_defaults` must not demand a registry entry for them. OpenRouter model
+# names are `provider/model` strings that DeepEval deliberately does not validate.
+REGISTRYLESS_DEFAULTS = {"openrouter"}
 
 # Python registry variable -> namespace key in the emitted JSON.
 REGISTRIES = {
@@ -137,6 +136,45 @@ def _extract_entry(namespace: str, model: str, value: Any) -> Dict[str, Any]:
     }
 
 
+def _build_defaults(
+    constants: types.ModuleType, bundle: dict
+) -> Dict[str, str]:
+    """Project ``DEFAULT_MODELS``, checking each default has pricing data.
+
+    A default that is missing from its own registry would evaluate at zero cost
+    in both SDKs, so it is an error here rather than a silent one at runtime.
+    """
+    defaults = getattr(constants, "DEFAULT_MODELS", None)
+    if not isinstance(defaults, dict):
+        raise AttributeError(
+            f"DEFAULT_MODELS is missing from {CONSTANTS_PY}, or is not a dict. "
+            "Provider defaults must live there so both SDKs read one value."
+        )
+
+    for namespace, model in sorted(defaults.items()):
+        if not isinstance(model, str) or not model:
+            raise TypeError(
+                f"DEFAULT_MODELS[{namespace!r}] must be a non-empty model name, "
+                f"got {model!r}."
+            )
+        if namespace in REGISTRYLESS_DEFAULTS:
+            continue
+        if namespace not in bundle:
+            raise KeyError(
+                f"DEFAULT_MODELS[{namespace!r}] names a namespace with no "
+                "registry. Add one to REGISTRIES, or list the namespace in "
+                "REGISTRYLESS_DEFAULTS if it genuinely has no pricing data."
+            )
+        if model not in bundle[namespace]:
+            raise KeyError(
+                f"DEFAULT_MODELS[{namespace!r}] is {model!r}, which is absent "
+                f"from {namespace.upper()}_MODELS_DATA. A default with no "
+                "pricing entry would be billed as free by both SDKs."
+            )
+
+    return dict(sorted(defaults.items()))
+
+
 def build_registry() -> dict:
     constants = _load_constants()
 
@@ -159,6 +197,7 @@ def build_registry() -> dict:
             model: _extract_entry(namespace, model, value)
             for model, value in dict.items(registry)
         }
+    bundle["_defaults"] = _build_defaults(constants, bundle)
     return bundle
 
 

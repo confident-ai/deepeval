@@ -125,7 +125,6 @@ class TestLegacyDAG:
         score = metric.measure(
             build_legacy_dag_test_case(),
             _show_indicator=False,
-            _log_metric_to_confident=False,
         )
 
         assert score == 1

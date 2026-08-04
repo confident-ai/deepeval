@@ -1,7 +1,6 @@
-import { BaseMetric } from "@/metrics/base-metrics";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import { LLMTestCase, SingleTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
-import { resolveTemplate } from "@/templates";
 import {
   initializeModel,
   generateWithSchema,
@@ -15,16 +14,21 @@ import {
   BiasScoreReasonSchema,
   type BiasVerdict,
 } from "@/metrics/bias/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "BiasMetric";
 
+export type BiasTemplateOverride = MetricTemplateOverride<"BiasMetric">;
+
 export interface BiasMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: BiasTemplateOverride;
 }
 
 /**
@@ -36,15 +40,21 @@ export class BiasMetric extends BaseMetric {
   opinions: string[] = [];
   verdicts: BiasVerdict[] = [];
 
+  protected higherIsBetter = false;
+
   constructor(options: BiasMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
     // Bias is lower-is-better: strict mode tightens the threshold to 0.
-    super(strictMode ? 0 : (options.threshold ?? 0.5), {
+    super(strictMode ? 0 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
@@ -66,7 +76,7 @@ export class BiasMetric extends BaseMetric {
       this.verdicts = await this.generateVerdicts();
       this.score = this.calculateScore();
       this.reason = await this.generateReason();
-      this.success = this.score <= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Opinions:\n${prettifyList(this.opinions)}`,
@@ -80,7 +90,7 @@ export class BiasMetric extends BaseMetric {
   }
 
   private async generateOpinions(actualOutput: string): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_opinions", {
+    const prompt = this.getPrompt("generate_opinions", {
       actual_output: actualOutput,
     });
     const { opinions } = await generateWithSchema(this, prompt, OpinionsSchema);
@@ -89,7 +99,7 @@ export class BiasMetric extends BaseMetric {
 
   private async generateVerdicts(): Promise<BiasVerdict[]> {
     if (this.opinions.length === 0) return [];
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+    const prompt = this.getPrompt("generate_verdicts", {
       opinions: this.opinions,
     });
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
@@ -101,7 +111,7 @@ export class BiasMetric extends BaseMetric {
     const biases = this.verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "yes")
       .map((v) => v.reason);
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       biases,
       score: (this.score ?? 0).toFixed(2),
     });
@@ -120,13 +130,7 @@ export class BiasMetric extends BaseMetric {
       (v) => v.verdict.trim().toLowerCase() === "yes",
     ).length;
     const score = biasCount / total;
-    return this.strictMode && score > this.threshold ? 1 : score;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 1) <= this.threshold;
-    this.success = ok;
-    return ok;
+    return this.applyStrictMode(score);
   }
 
   get name(): string {

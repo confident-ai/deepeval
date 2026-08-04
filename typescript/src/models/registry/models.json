@@ -612,6 +612,24 @@
       "outputPrice": 2.5e-05,
       "supportsTemperature": false
     },
+    "claude-opus-5": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5e-06,
+      "outputPrice": 2.5e-05,
+      "supportsTemperature": false
+    },
+    "claude-sonnet-5": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05,
+      "supportsTemperature": false
+    },
     "claude-fable-5": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
@@ -775,6 +793,14 @@
       "inputPrice": 2e-06,
       "outputPrice": 1.2e-05
     },
+    "gemini-3.6-flash": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.5e-06,
+      "outputPrice": 7.5e-06
+    },
     "gemini-3.5-flash": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
@@ -782,6 +808,14 @@
       "supportsJson": true,
       "inputPrice": 1.5e-06,
       "outputPrice": 9e-06
+    },
+    "gemini-3.5-flash-lite": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-07,
+      "outputPrice": 2.5e-06
     },
     "gemini-3-flash-preview": {
       "supportsLogProbs": false,
@@ -1847,5 +1881,11 @@
       "supportsStructuredOutputs": true,
       "supportsJson": false
     }
+  },
+  "_defaults": {
+    "anthropic": "claude-opus-5",
+    "gemini": "gemini-3.6-flash",
+    "openai": "gpt-5.4",
+    "openrouter": "openai/gpt-5.4"
   }
 }

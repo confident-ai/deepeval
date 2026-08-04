@@ -1,4 +1,5 @@
 import type { ZodType } from "zod";
+import { parseBool } from "@/config/utils";
 import {
   DeepEvalBaseLLM,
   type GenerationKwargs,
@@ -6,9 +7,7 @@ import {
 } from "@/models/base-model";
 import { extractJson, importOptional, requireApiKey } from "@/models/utils";
 import { geminiContents } from "@/models/multimodal";
-import type { ModelNamespace } from "@/models/registry";
-
-const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
+import { defaultModelName, type ModelNamespace } from "@/models/registry";
 
 export interface GeminiModelOptions {
   model?: string;
@@ -34,8 +33,17 @@ export class GeminiModel extends DeepEvalBaseLLM {
   protected registryNamespace: ModelNamespace = "gemini";
 
   constructor(options: GeminiModelOptions = {}) {
+    const useVertexAI =
+      options.useVertexAI ??
+      parseBool(process.env.GOOGLE_GENAI_USE_VERTEXAI) ??
+      false;
+
     super(
-      options.model ?? process.env.GEMINI_MODEL_NAME ?? DEFAULT_GEMINI_MODEL,
+      options.model ??
+        // Vertex AI deployments name models differently from the Gemini API.
+        (useVertexAI ? process.env.VERTEX_AI_MODEL_NAME : undefined) ??
+        process.env.GEMINI_MODEL_NAME ??
+        defaultModelName("gemini"),
     );
     this.apiKey =
       options.apiKey ??
@@ -43,8 +51,7 @@ export class GeminiModel extends DeepEvalBaseLLM {
       process.env.GEMINI_API_KEY ??
       "";
     this.temperature = options.temperature;
-    this.useVertexAI =
-      options.useVertexAI ?? process.env.GOOGLE_GENAI_USE_VERTEXAI === "true";
+    this.useVertexAI = useVertexAI;
     this.project = options.project ?? process.env.GOOGLE_CLOUD_PROJECT;
     this.location = options.location ?? process.env.GOOGLE_CLOUD_LOCATION;
     this.costPerInputToken = options.costPerInputToken;
@@ -102,7 +109,7 @@ export class GeminiModel extends DeepEvalBaseLLM {
   }
 
   getModelName(): string {
-    return this.modelName ?? DEFAULT_GEMINI_MODEL;
+    return this.modelName ?? defaultModelName("gemini");
   }
 
   supportsMultimodal(): boolean {

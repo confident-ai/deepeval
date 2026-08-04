@@ -54,11 +54,11 @@ Simply create a direct acyclic graph to define your evaluation trajectory using 
 <Case id="python">
 
 ```python
-from deepeval import evaluate
-from deepeval.metrics import ConversationalDAGMetric
-from deepeval.metrics.dag import DeepAcyclicGraph
 from deepeval.metrics.conversational_dag import ConversationalBinaryJudgementNode
 from deepeval.test_case import ConversationalTestCase, Turn, MultiTurnParams
+from deepeval.metrics import ConversationalDAGMetric
+from deepeval.metrics.dag import DeepAcyclicGraph
+from deepeval import evaluate
 
 satisfaction = ConversationalBinaryJudgementNode(
     criteria="Do the assistant's replies satisfy the user's questions?",
@@ -87,19 +87,28 @@ evaluate(test_cases=[test_case], metrics=[metric])
 <Case id="typescript">
 
 ```typescript
-import { evaluate, ConversationalTestCase, Turn, metrics } from "deepeval";
-import { MultiTurnParams } from "deepeval/testCase";
+import {
+  ConversationalBinaryJudgementNode,
+  ConversationalDAGMetric,
+  DeepAcyclicGraph,
+} from "deepeval/metrics";
+import {
+  ConversationalTestCase,
+  Turn,
+  MultiTurnParams,
+} from "deepeval/test-case";
+import { evaluate } from "deepeval";
 
-const satisfaction = new metrics.ConversationalBinaryJudgementNode({
+const satisfaction = new ConversationalBinaryJudgementNode({
   criteria: "Do the assistant's replies satisfy the user's questions?",
   evaluationParams: [MultiTurnParams.ROLE, MultiTurnParams.CONTENT],
 });
 satisfaction.addVerdict(true, { score: 10 });
 satisfaction.addVerdict(false, { score: 0 });
 
-const metric = new metrics.ConversationalDAGMetric({
+const metric = new ConversationalDAGMetric({
   name: "User Satisfaction",
-  dag: new metrics.DeepAcyclicGraph({ rootNodes: [satisfaction] }),
+  dag: new DeepAcyclicGraph({ rootNodes: [satisfaction] }),
 });
 
 const testCase = new ConversationalTestCase({
@@ -128,7 +137,9 @@ There are **TWO** mandatory and **SEVEN** optional parameters when creating a `C
 - [Optional] `model`: an OpenAI model name or a [custom evaluation model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] `include_reason`: whether to generate a reason for the final score. Defaulted to `True`.
 - [Optional] `strict_mode`: when `True`, sets the threshold to `1`. Defaulted to `False`.
-- [Optional] `async_mode`: whether `measure()` executes the graph asynchronously. Defaulted to `True`.
+- <Only id="python">
+    [Optional] `async_mode`: whether `measure()` executes the graph asynchronously. Defaulted to `True`.
+  </Only>
 - [Optional] `verbose_mode`: whether to print the nodes and outcomes used to calculate the score. Defaulted to `False`.
 - [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
@@ -233,7 +244,7 @@ task = ConversationalTaskNode(
 <Case id="typescript">
 
 ```typescript
-const task = new metrics.ConversationalTaskNode({
+const task = new ConversationalTaskNode({
   instructions: "Summarize the assistant's replies in one paragraph.",
   outputLabel: "Summary",
   evaluationParams: [MultiTurnParams.ROLE, MultiTurnParams.CONTENT],
@@ -293,7 +304,7 @@ Each call must define exactly one of `score` or `then`. A `score` terminates eva
 
 - cycles;
 - invalid node connections;
-- binary judgements without exactly one `True` and one `False` verdict;
+- binary judgements without exactly one <Term py="True" ts="true"/> and one <Term py="False" ts="false"/> verdict;
 - non-binary judgements without unique string verdicts; and
 - verdicts that define both `score` and `then`, or neither.
 
@@ -330,10 +341,10 @@ task = ConversationalTaskNode(
 <Case id="typescript">
 
 ```typescript
-import { metrics } from "deepeval";
-import { MultiTurnParams } from "deepeval/testCase";
+import { ConversationalTaskNode } from "deepeval/metrics";
+import { MultiTurnParams } from "deepeval/test-case";
 
-const task = new metrics.ConversationalTaskNode({
+const task = new ConversationalTaskNode({
   instructions: "Summarize the conversation and explain the assistant's behaviour overall.",
   outputLabel: "Summary",
   evaluationParams: [MultiTurnParams.ROLE, MultiTurnParams.CONTENT],
@@ -345,7 +356,21 @@ const task = new metrics.ConversationalTaskNode({
 
 </Switch>
 
+<Switch>
+
+<Case id="python">
+
 There are **TWO** mandatory and **THREE** optional parameters when creating a `ConversationalTaskNode`:
+
+</Case>
+
+<Case id="typescript">
+
+There are **TWO** mandatory and **TWO** optional parameters when creating a `ConversationalTaskNode`:
+
+</Case>
+
+</Switch>
 
 - `instructions`: directions for processing the conversation.
 - <Term py="output_label" ts="outputLabel"/>: the name used to present this node's output to child nodes.
@@ -377,7 +402,7 @@ task.addNode(judgement);
 
 ### `ConversationalBinaryJudgementNode`
 
-A `ConversationalBinaryJudgementNode` evaluates one criterion against the conversation and returns either `True` or `False`.
+A `ConversationalBinaryJudgementNode` evaluates one criterion against the conversation and returns either <Term py="True" ts="true"/> or <Term py="False" ts="false"/>.
 
 <Switch>
 
@@ -399,10 +424,10 @@ judgement = ConversationalBinaryJudgementNode(
 <Case id="typescript">
 
 ```typescript
-import { metrics } from "deepeval";
-import { MultiTurnParams } from "deepeval/testCase";
+import { ConversationalBinaryJudgementNode } from "deepeval/metrics";
+import { MultiTurnParams } from "deepeval/test-case";
 
-const judgement = new metrics.ConversationalBinaryJudgementNode({
+const judgement = new ConversationalBinaryJudgementNode({
   criteria: "Do the assistant's replies satisfy the user's questions?",
   evaluationParams: [MultiTurnParams.ROLE, MultiTurnParams.CONTENT],
   label: "User satisfaction",
@@ -420,7 +445,7 @@ There is **ONE** mandatory and **THREE** optional parameters when creating a `Co
 - [Optional] <Term py="turn_window" ts="turnWindow"/>: two inclusive indices restricting the node to a slice of the conversation.
 - [Optional] `label`: a name displayed in verbose logs.
 
-The constructor does not define the branches. Add exactly one `True` verdict and one `False` verdict afterward:
+The constructor does not define the branches. Add exactly one <Term py="True" ts="true"/> verdict and one <Term py="False" ts="false"/> verdict afterward:
 
 <Switch>
 
@@ -447,7 +472,7 @@ judgement.addVerdict(true, { then: behaviourNode });
 Here, `score` ends the path, while `then` names the node or metric to execute next.
 
 :::caution
-There is no need to specify that the output has to be either `True` or `False` in the `criteria`.
+There is no need to specify that the output has to be either <Term py="True" ts="true"/> or <Term py="False" ts="false"/> in the `criteria`.
 :::
 
 ### `ConversationalNonBinaryJudgementNode`
@@ -474,10 +499,10 @@ judgement = ConversationalNonBinaryJudgementNode(
 <Case id="typescript">
 
 ```typescript
-import { metrics } from "deepeval";
-import { MultiTurnParams } from "deepeval/testCase";
+import { ConversationalNonBinaryJudgementNode } from "deepeval/metrics";
+import { MultiTurnParams } from "deepeval/test-case";
 
-const judgement = new metrics.ConversationalNonBinaryJudgementNode({
+const judgement = new ConversationalNonBinaryJudgementNode({
   criteria: "How was the assistant's behaviour towards the user?",
   evaluationParams: [MultiTurnParams.ROLE, MultiTurnParams.CONTENT],
   label: "Assistant behaviour",
@@ -553,7 +578,7 @@ Independent branches always execute concurrently.
 
 ### Branch Selection
 
-Only the verdict matching a judgement node's output is followed. A binary judgement selects its `True` or `False` verdict, while a non-binary judgement selects one of its configured string verdicts.
+Only the verdict matching a judgement node's output is followed. A binary judgement selects its <Term py="True" ts="true"/> or <Term py="False" ts="false"/> verdict, while a non-binary judgement selects one of its configured string verdicts.
 
 ### Score Calculation
 
@@ -572,8 +597,8 @@ A verdict can continue into a `ConversationalGEval` or another `BaseConversation
 <Case id="python">
 
 ```python
-from deepeval.metrics import ConversationalGEval
 from deepeval.test_case import MultiTurnParams
+from deepeval.metrics import ConversationalGEval
 
 politeness = ConversationalGEval(
     name="Politeness",
@@ -589,10 +614,10 @@ judgement.add_verdict(verdict=True, then=politeness)
 <Case id="typescript">
 
 ```typescript
-import { metrics } from "deepeval";
-import { MultiTurnParams } from "deepeval/testCase";
+import { MultiTurnParams } from "deepeval/test-case";
+import { ConversationalGEval } from "deepeval/metrics";
 
-const politeness = new metrics.ConversationalGEval({
+const politeness = new ConversationalGEval({
   name: "Politeness",
   criteria: "Determine whether the assistant remains polite throughout the conversation.",
   evaluationParams: [MultiTurnParams.CONTENT],
@@ -637,14 +662,14 @@ dag = DeepAcyclicGraph(root_nodes=[resolution_check])
 <Case id="typescript">
 
 ```typescript
-const resolutionCheck = new metrics.ConversationalBinaryJudgementNode({
+const resolutionCheck = new ConversationalBinaryJudgementNode({
   criteria: "Was the user's issue resolved by the end of the conversation?",
   evaluationParams: [MultiTurnParams.ROLE, MultiTurnParams.CONTENT],
 });
 resolutionCheck.addVerdict(false, { score: 0 });
 resolutionCheck.addVerdict(true, { score: 10 });
 
-const dag = new metrics.DeepAcyclicGraph({ rootNodes: [resolutionCheck] });
+const dag = new DeepAcyclicGraph({ rootNodes: [resolutionCheck] });
 ```
 
 </Case>
@@ -686,7 +711,7 @@ behaviour.addVerdict("Rude", { score: 0 });
 behaviour.addVerdict("Neutral", { score: 5 });
 behaviour.addVerdict("Playful", { score: 10 });
 
-const dag = new metrics.DeepAcyclicGraph({ rootNodes: [summary] });
+const dag = new DeepAcyclicGraph({ rootNodes: [summary] });
 ```
 
 </Case>
@@ -728,7 +753,7 @@ For a complete runnable example, see the [multi-turn walkthrough in the Building
       answer: (
         <>
           Pass <code>then</code> instead of <code>score</code> when registering
-          a verdict — e.g. point a <code>True</code> verdict's{" "}
+          a verdict — e.g. point a <Term py="True" ts="true"/> verdict's{" "}
           <code>then</code> at a{" "}
           <code>ConversationalNonBinaryJudgementNode</code> to grade further.
           Provide one, never both.

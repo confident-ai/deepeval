@@ -1,6 +1,7 @@
 export {
   MCPTaskCompletionMetric,
   type MCPTaskCompletionMetricOptions,
+  type MCPTaskCompletionTemplateOverride,
 } from "@/metrics/mcp/mcp-task-completion";
 export {
   MultiTurnMCPUseMetric,

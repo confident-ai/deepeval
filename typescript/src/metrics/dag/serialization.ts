@@ -68,10 +68,11 @@ const NODE_CLASSES: Record<"single" | "multi", NodeConstructors> = {
  * has no import-by-name, so anything beyond G-Eval must be registered by the
  * caller before deserializing.
  */
-export const METRIC_CLASS_REGISTRY: Record<string, new (options: any) => any> = {
-  GEval,
-  ConversationalGEval,
-};
+export const METRIC_CLASS_REGISTRY: Record<string, new (options: any) => any> =
+  {
+    GEval,
+    ConversationalGEval,
+  };
 
 export function registerMetricClass(
   name: string,
@@ -216,13 +217,14 @@ export function dagToJson(dag: DeepAcyclicGraph, indent = 2): string {
 
 // -------------------------------------------------------------- deserializing
 
-function collectReferencedIds(
-  nodesSpec: Record<string, any>,
-): Set<string> {
+function collectReferencedIds(nodesSpec: Record<string, any>): Set<string> {
   const referenced = new Set<string>();
   for (const spec of Object.values(nodesSpec)) {
     for (const id of spec.children ?? []) referenced.add(id);
-    if (spec.child?.type === ChildType.NODE && typeof spec.child.ref === "string") {
+    if (
+      spec.child?.type === ChildType.NODE &&
+      typeof spec.child.ref === "string"
+    ) {
       referenced.add(spec.child.ref);
     }
   }
@@ -324,7 +326,9 @@ function buildNodes(
   options: BuildOptions,
 ): AnyNode[] {
   if (nodesSpec == null || Object.keys(nodesSpec).length === 0) {
-    throw new Error("Invalid DAG document: 'nodes' must be a non-empty object.");
+    throw new Error(
+      "Invalid DAG document: 'nodes' must be a non-empty object.",
+    );
   }
   const validTypes: string[] = Object.values(NodeType);
   for (const [id, spec] of Object.entries(nodesSpec)) {

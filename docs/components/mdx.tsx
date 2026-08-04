@@ -8,6 +8,8 @@ import { Term } from "@/components/lang/term";
 import { DefaultLLMModel } from "@/components/lang/default-llm-model";
 import { Switch, Case } from "@/components/lang/switch";
 import { Only } from "@/components/lang/only";
+import { NotImplemented } from "@/components/lang/not-implemented";
+import { ListItem } from "@/components/lang/list-item";
 
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 import ImageDisplayer from "@site/src/components/ImageDisplayer";
@@ -32,6 +34,8 @@ export const getMDXComponents = (components?: MDXComponents) =>
   ({
     ...defaultMdxComponents,
     a: MdxAnchor,
+    // Lets a single markdown bullet be language-specific; see `ListItem`.
+    li: ListItem,
     Tabs,
     Tab,
     Card,
@@ -61,6 +65,7 @@ export const getMDXComponents = (components?: MDXComponents) =>
     Switch,
     Case,
     Only,
+    NotImplemented,
     ...components,
   }) satisfies MDXComponents;
 

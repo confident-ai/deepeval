@@ -62,8 +62,8 @@ Alternatively, you can specify your model directly in code using `GrokModel` fro
 <Tab value="Python">
 
 ```python
-from deepeval.models import GrokModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import GrokModel
 
 model = GrokModel(
     model="grok-4.1",
@@ -109,7 +109,7 @@ There are **ZERO** mandatory and **SIX** optional parameters when creating a `Gr
 <Tab value="TypeScript">
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { GrokModel } from "deepeval/models";
 
 const model = new GrokModel({
@@ -118,7 +118,7 @@ const model = new GrokModel({
   temperature: 0,
 });
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
+const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
 
 </Tab>
@@ -127,10 +127,10 @@ const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
 To use any Grok model directly in `deepeval`, set `GROK_MODEL_NAME` and `GROK_API_KEY` in your `env` and create a `GrokModel` with no arguments:
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { GrokModel } from "deepeval/models";
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({
+const answerRelevancy = new AnswerRelevancyMetric({
   model: new GrokModel(),
 });
 ```

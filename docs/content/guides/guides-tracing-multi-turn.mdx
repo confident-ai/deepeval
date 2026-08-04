@@ -2,6 +2,7 @@
 id: guides-tracing-multi-turn
 title: Tracing Multi-Turn Applications
 sidebar_label: Tracing Multi-Turn Systems
+languages: [python]
 ---
 
 
@@ -82,10 +83,6 @@ To track a session, you must pass a `thread_id` to the `update_current_trace()` 
 
 Because `deepeval` does not manage conversational state, your application must continue to handle retrieving and storing the chat history. Tracing simply records the execution—you manage the logic. You pass that history into your decorated functions as normal.
 
-<Switch>
-
-<Case id="python">
-
 ```python title="chatbot.py"
 from deepeval.tracing import observe, update_current_trace
 
@@ -115,49 +112,6 @@ async def handle_turn(user_message: str, thread_id: str, user_id: str) -> str:
     return response
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript title="chatbot.ts"
-import { observe, updateCurrentTrace } from "deepeval/tracing";
-
-const conversations: Record<string, { role: string; content: string }[]> = {};
-
-const generateReply = observe({
-  type: "llm",
-  fn: async (history: { role: string; content: string }[], userMessage: string) => {
-    const messages = [...history, { role: "user", content: userMessage }];
-    const response = await client.chat.completions.create({
-      model: "gpt-4o",
-      messages,
-    });
-    return response.choices[0].message.content;
-  },
-});
-
-const handleTurn = observe({
-  fn: async (userMessage: string, threadId: string, userId: string) => {
-    updateCurrentTrace({
-      threadId,
-      userId, // Links the thread to a specific user on Confident AI
-    });
-    const history = conversations[threadId] ?? [];
-    const response = await generateReply(history, userMessage);
-    conversations[threadId] = [
-      ...history,
-      { role: "user", content: userMessage },
-      { role: "assistant", content: response },
-    ];
-    return response;
-  },
-});
-```
-
-</Case>
-
-</Switch>
-
 :::tip
 Generate your `thread_id` once at the start of a new user session (for example, using `str(uuid.uuid4())`) and persist it in your database alongside the user's conversation history.
 :::
@@ -167,10 +121,6 @@ Generate your `thread_id` once at the start of a new user session (for example, 
 If your chatbot uses Retrieval-Augmented Generation (RAG), the retrieved documents will likely change with every turn. Multi-turn RAG metrics need to know exactly which documents were retrieved for which specific turn to accurately calculate hallucination and relevancy scores.
 
 You must attach the `retrieval_context` to a retriever span during the turn using `update_current_span()`.
-
-<Switch>
-
-<Case id="python">
 
 ```python title="chatbot.py"
 from deepeval.tracing import observe, update_current_span
@@ -186,40 +136,11 @@ async def retrieve_context(user_message: str) -> list:
     return docs
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript title="chatbot.ts"
-import { observe, updateCurrentSpan } from "deepeval/tracing";
-
-const retrieveContext = observe({
-  type: "retriever",
-  fn: async (userMessage: string) => {
-    // Simulated database search
-    const docs = ["DeepEval threads group traces by thread_id."];
-
-    // Attach the context to this specific turn's retriever span
-    updateCurrentSpan({ retrievalContext: docs });
-
-    return docs;
-  },
-});
-```
-
-</Case>
-
-</Switch>
-
 ## Tagging and Filtering Threads
 
 In production, you will accumulate thousands of conversational threads. To efficiently identify failing sessions or compare specific cohorts of users, you should attach `tags` and `metadata` to each trace.
 
 `tags` appear as filterable labels in Confident AI's Thread Explorer. `metadata` is a free-form dictionary useful for versioning, A/B test flags, or any dimension you want to slice by later.
-
-<Switch>
-
-<Case id="python">
 
 ```python title="chatbot.py"
 @observe
@@ -236,32 +157,6 @@ async def handle_turn(user_message: str, thread_id: str, user_id: str) -> str:
     )
     # ... rest of logic
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript title="chatbot.ts"
-const handleTurn = observe({
-  fn: async (userMessage: string, threadId: string, userId: string) => {
-    updateCurrentTrace({
-      threadId,
-      userId,
-      tags: ["customer-support", "billing"],
-      metadata: {
-        turnNumber: (conversations[threadId]?.length ?? 0) + 1,
-        modelVersion: "v2.1",
-        userPlan: "enterprise",
-      },
-    });
-    // ... rest of logic
-  },
-});
-```
-
-</Case>
-
-</Switch>
 
 :::tip
 Use `tags` for broad categorization (product area, agent type) and `metadata` for precise, queryable values (model version, A/B variant, session tier). Both are available in raw trace dictionaries locally and are searchable in Confident AI's Thread Explorer in production.
@@ -443,10 +338,6 @@ Log in to Confident AI and create a metric collection containing your desired mu
 
 In your application code, reference the metric collection by name in `update_current_trace()`. When each trace is exported, Confident AI identifies the `thread_id`, reconstructs the full thread, and evaluates it against your specified metrics asynchronously.
 
-<Switch>
-
-<Case id="python">
-
 ```python
 @observe
 async def handle_turn(user_message: str, thread_id: str) -> str:
@@ -456,26 +347,6 @@ async def handle_turn(user_message: str, thread_id: str) -> str:
     )
     # ... rest of logic
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-const handleTurn = observe({
-  fn: async (userMessage: string, threadId: string) => {
-    updateCurrentTrace({
-      threadId,
-      metricCollection: "multi-turn-metrics",
-    });
-    // ... rest of logic
-  },
-});
-```
-
-</Case>
-
-</Switch>
 
 When the trace is sent to Confident AI, the platform automatically identifies the `thread_id` and evaluates the entire thread against your specified metrics.
 
@@ -500,31 +371,12 @@ Use the Thread Explorer on Confident AI to review the aggregated multi-turn scor
 
 In addition to attaching a `metric_collection` that runs automatically on every new trace, you can also trigger evaluation for a specific thread at any point using `evaluate_thread()`. This is useful when you want to evaluate a thread after it has fully completed rather than evaluating incrementally turn by turn.
 
-<Switch>
-
-<Case id="python">
-
 ```python title="chatbot.py"
 from deepeval.tracing import evaluate_thread
 
 # Trigger evaluation for a specific thread by its ID
 evaluate_thread(thread_id="session-123", metric_collection="my-thread-metrics")
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript title="chatbot.ts"
-import { evaluateThread } from "deepeval/tracing";
-
-// Trigger evaluation for a specific thread by its ID
-evaluateThread({ threadId: "session-123", metricCollection: "my-thread-metrics" });
-```
-
-</Case>
-
-</Switch>
 
 Confident AI will reconstruct the full thread from all traces sharing `"session-123"` and run the metric collection passed in `evaluate_thread` method asynchronously. This is particularly useful for support or sales workflows where a conversation has a clear end state — you wait until the session closes, then evaluate the whole thing in one shot rather than after each individual turn.
 

@@ -142,10 +142,11 @@ for golden in dataset.evals_iterator():
 <Case id="typescript">
 
 ```typescript title="openai_agents_app.ts" showLineNumbers
-import { Agent, run, tool, addTraceProcessor } from "@openai/agents";
-import { z } from "zod";
 import { DeepEvalTracingProcessor } from "deepeval/integrations/openai-agents";
-import { EvaluationDataset, Golden, metrics } from "deepeval";
+import { Agent, run, tool, addTraceProcessor } from "@openai/agents";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { TaskCompletionMetric } from "deepeval/metrics";
+import { z } from "zod";
 
 addTraceProcessor(new DeepEvalTracingProcessor());
 
@@ -169,10 +170,9 @@ const dataset = new EvaluationDataset({
 
 // The `TaskCompletionMetric` scores the trace of each agent run.
 for await (const golden of dataset.evalsIterator({
-  metrics: [new metrics.TaskCompletionMetric()],
+  metrics: [new TaskCompletionMetric()],
 })) {
-  if (!("input" in golden)) continue;
-  await run(agent, golden.input);
+  await run(agent, (golden as Golden).input);
 }
 ```
 
@@ -215,10 +215,10 @@ Use the `deepeval` pytest integration. Each parametrized test invocation becomes
 ```python title="test_openai_agents_app.py" showLineNumbers
 import pytest
 from agents import Runner, add_trace_processor
-from deepeval import assert_test
 from deepeval.openai_agents import Agent, DeepEvalTracingProcessor, function_tool
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.metrics import TaskCompletionMetric
+from deepeval import assert_test
 
 add_trace_processor(DeepEvalTracingProcessor())
 
@@ -284,8 +284,9 @@ for golden in dataset.evals_iterator(
 <Case id="typescript">
 
 ```typescript title="openai_agents_app.ts" showLineNumbers
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { TaskCompletionMetric } from "deepeval/metrics";
 import { run } from "@openai/agents";
-import { EvaluationDataset, Golden, metrics } from "deepeval";
 // ...
 
 const dataset = new EvaluationDataset({
@@ -296,10 +297,9 @@ const dataset = new EvaluationDataset({
 });
 
 for await (const golden of dataset.evalsIterator({
-  metrics: [new metrics.TaskCompletionMetric()],
+  metrics: [new TaskCompletionMetric()],
 })) {
-  if (!("input" in golden)) continue;
-  await run(agent, golden.input);
+  await run(agent, (golden as Golden).input);
 }
 ```
 
@@ -318,8 +318,8 @@ The `metrics=[...]` you pass to `evals_iterator` evaluates the **trace**. To eva
 Use `agent_metrics=[...]` on `deepeval.openai_agents.Agent`. The metric is applied to that agent's span on every run, including when it's invoked as a sub-agent through a handoff.
 
 ```python title="openai_agents_app.py" showLineNumbers
-from deepeval.openai_agents import Agent
 from deepeval.metrics import TaskCompletionMetric
+from deepeval.openai_agents import Agent
 ...
 
 agent = Agent(
@@ -335,8 +335,8 @@ agent = Agent(
 Use `llm_metrics=[...]` on `Agent`. The metric is applied to the LLM span produced for that agent's model calls. Useful when you want to score the model's reasoning step in isolation.
 
 ```python title="openai_agents_app.py" showLineNumbers
-from deepeval.openai_agents import Agent
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.openai_agents import Agent
 ...
 
 agent = Agent(
@@ -353,8 +353,8 @@ Pass `metrics=[...]` to `function_tool` to evaluate a specific tool's behavior. 
 
 ```python title="openai_agents_app.py" showLineNumbers
 from deepeval.openai_agents import function_tool
-from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
+from deepeval.metrics import GEval
 
 @function_tool(metrics=[GEval(
     name="Helpful Weather Lookup",
@@ -377,8 +377,8 @@ The integration captures inputs, outputs, model names, and tool calls automatica
 - Use `update_current_trace(...)` and `update_current_span(...)` from inside a tool body to mutate fields the framework can't see.
 
 ```python title="openai_agents_app.py" showLineNumbers
-from deepeval.openai_agents import function_tool
 from deepeval.tracing import update_current_trace, update_current_span
+from deepeval.openai_agents import function_tool
 
 @function_tool
 def get_weather(city: str) -> str:
@@ -397,8 +397,8 @@ The primitives above — `Agent`, `function_tool`, `add_trace_processor`, `@obse
 When a parent agent hands off to a sub-agent, the sub-agent's span runs as a child of the parent's. Attaching `agent_metrics` to the sub-agent scores that hand-off step in isolation.
 
 ```python title="openai_agents_app.py" showLineNumbers
-from deepeval.openai_agents import Agent
 from deepeval.metrics import TaskCompletionMetric, AnswerRelevancyMetric
+from deepeval.openai_agents import Agent
 ...
 
 triage_agent = Agent(
@@ -480,8 +480,8 @@ async def respond_to_user(prompt: str) -> str:
 <Case id="typescript">
 
 ```typescript title="openai_agents_app.ts" showLineNumbers
-import { run } from "@openai/agents";
 import { observe } from "deepeval/tracing";
+import { run } from "@openai/agents";
 // ...
 
 const respondToUser = observe({

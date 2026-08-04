@@ -2,6 +2,7 @@
 id: improvement
 title: Improving Your Summarizer
 sidebar_label: Testing Prompts and Models
+languages: [python]
 ---
 
 import { ASSETS } from "@site/src/assets";
@@ -21,10 +22,6 @@ In the previous section, we've seen [how to create datasets](/tutorials/summariz
 
 Here's how we can pull datasets from the cloud:
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.dataset import EvaluationDataset
 
@@ -32,26 +29,7 @@ dataset = EvaluationDataset()
 dataset.pull(alias="MeetingSummarizer Dataset")
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { EvaluationDataset } from "deepeval/dataset";
-
-const dataset = new EvaluationDataset();
-await dataset.pull({ alias: "MeetingSummarizer Dataset" });
-```
-
-</Case>
-
-</Switch>
-
 The dataset pulled contains goldens, which can be used to create test cases during run time and run evals. Here's how to create test cases using datasets:
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -76,40 +54,6 @@ for golden in dataset.goldens:
 print(len(summary_test_cases))
 print(len(action_item_test_cases))
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { LLMTestCase } from "deepeval";
-import { MeetingSummarizer } from "./meetingSummarizer"; // import your summarizer here
-
-const summarizer = new MeetingSummarizer(); // Initialize with your best config
-const summaryTestCases: LLMTestCase[] = [];
-const actionItemTestCases: LLMTestCase[] = [];
-for (const golden of dataset.goldens) {
-  if (!("input" in golden)) continue;
-  const [summary, actionItems] = await summarizer.summarize(golden.input);
-  const summaryTestCase = new LLMTestCase({
-    input: golden.input,
-    actualOutput: summary,
-  });
-  const actionItemTestCase = new LLMTestCase({
-    input: golden.input,
-    actualOutput: JSON.stringify(actionItems),
-  });
-  summaryTestCases.push(summaryTestCase);
-  actionItemTestCases.push(actionItemTestCase);
-}
-
-console.log(summaryTestCases.length);
-console.log(actionItemTestCases.length);
-```
-
-</Case>
-
-</Switch>
 
 You can use these test cases to evaluate your summarizer anywhere and anytime. Make sure you've already [created a dataset on Confident AI](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens) for this to work. [Click here](/docs/evaluation-datasets) to learn more about datasets.
 
@@ -192,10 +136,6 @@ These are more elaborate and clear system prompts that are updated by taking the
 
 We can pull a dataset and use that dataset to iterate over our hyperparameters to initialize our summarization agent with different configurations to produce different test cases. Here's how we can do that:
 
-<Switch>
-
-<Case id="python">
-
 ```python
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.dataset import EvaluationDataset
@@ -248,72 +188,6 @@ for model in models:
     )
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { evaluate, LLMTestCase, metrics } from "deepeval";
-import { EvaluationDataset } from "deepeval/dataset";
-import { SingleTurnParams } from "deepeval/testCase";
-import { MeetingSummarizer } from "./meetingSummarizer"; // import your summarizer here
-
-const dataset = new EvaluationDataset();
-await dataset.pull({ alias: "MeetingSummarizer Dataset" });
-
-const summarySystemPrompt = "..."; // Use your new summary system prompt here
-
-const actionItemSystemPrompt = "..."; // Use your new action item system prompt here
-
-const models = ["gpt-3.5-turbo", "gpt-4o", "gpt-4-turbo"];
-
-// Use the same metrics used before
-const summaryConcision = new metrics.GEval({
-  name: "Summary Concision",
-  criteria: "Assess whether the summary is concise and focused only on the essential points of the meeting.",
-  evaluationParams: [SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT],
-});
-const actionItemCheck = new metrics.GEval({
-  name: "Action Item Check",
-  criteria: "Assess whether all action items from the meeting are captured accurately.",
-  evaluationParams: [SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT],
-});
-
-for (const model of models) {
-  const summarizer = new MeetingSummarizer(
-    model,
-    summarySystemPrompt,
-    actionItemSystemPrompt,
-  );
-
-  const summaryTestCases: LLMTestCase[] = [];
-  const actionItemTestCases: LLMTestCase[] = [];
-  for (const golden of dataset.goldens) {
-  if (!("input" in golden)) continue;
-    const [summary, actionItems] = await summarizer.summarize(golden.input);
-
-    const summaryTestCase = new LLMTestCase({
-      input: golden.input,
-      actualOutput: summary,
-    });
-    const actionItemTestCase = new LLMTestCase({
-      input: golden.input,
-      actualOutput: JSON.stringify(actionItems),
-    });
-
-    summaryTestCases.push(summaryTestCase);
-    actionItemTestCases.push(actionItemTestCase);
-  }
-
-  await evaluate(summaryTestCases, [summaryConcision]);
-  await evaluate(actionItemTestCases, [actionItemCheck]);
-}
-```
-
-</Case>
-
-</Switch>
-
 :::tip
 By logging hyperparameters in the evaluate function, you can easily compare performance across runs in [Confident AI](https://www.confident-ai.com) and trace score changes back to specific hyperparameter adjustments. Learn more about [the evaluate function here](https://deepeval.com/docs/evaluation-introduction#evaluating-without-pytest).
 
@@ -364,10 +238,6 @@ In this situation, you can either use more test cases to run evaluations to get 
 
 **OR** alternatively, you can update your `MeetingSummarizer` to to use two different models for different tasks. Here's how you can do that:
 
-<Switch>
-
-<Case id="python">
-
 ```python {6-7,9-10,14,17,25,28,36,39}
 from deepeval.tracing import observe
 class MeetingSummarizer:
@@ -408,64 +278,6 @@ class MeetingSummarizer:
       )
       ...
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { observe } from "deepeval/tracing";
-
-class MeetingSummarizer {
-  // ...
-  summarize = observe({
-    fn: async (
-      transcript: string,
-      summaryModel: string = "gpt-4o",
-      actionItemModel: string = "gpt-4-turbo",
-    ) => {
-      const summary = await this.getSummary(transcript, summaryModel);
-      const actionItems = await this.getActionItems(transcript, actionItemModel);
-
-      return [summary, actionItems] as [string, Record<string, any>];
-    },
-  });
-
-  getSummary = observe({
-    fn: async (transcript: string, model?: string) => {
-      // ...
-      const response = await this.client.chat.completions.create({
-        model: model || this.model,
-        messages: [
-          { role: "system", content: this.summarySystemPrompt },
-          { role: "user", content: transcript },
-        ],
-      });
-      return response.choices[0].message.content ?? "";
-    },
-  });
-
-  getActionItems = observe({
-    fn: async (transcript: string, model?: string) => {
-      // ...
-      const response = await this.client.chat.completions.create({
-        model: model || this.model,
-        messages: [
-          { role: "system", content: this.actionItemSystemPrompt },
-          { role: "user", content: transcript },
-        ],
-      });
-      return JSON.parse(
-        response.choices[0].message.content ?? "{}",
-      ) as Record<string, any>;
-    },
-  });
-}
-```
-
-</Case>
-
-</Switch>
 
 This setup allows you to change your model for these tasks anytime you want. You now have a robust summarization agent for generating summaries and action items.
 

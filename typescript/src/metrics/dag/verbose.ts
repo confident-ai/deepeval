@@ -61,7 +61,10 @@ export function verdictVerboseLog(
     `${stars}\n` +
     `Verdict: ${verdict}\n` +
     `Type: ${type}`;
-  if (childMetric instanceof GEval || childMetric instanceof ConversationalGEval) {
+  if (
+    childMetric instanceof GEval ||
+    childMetric instanceof ConversationalGEval
+  ) {
     log += `\n\nCriteria:\n${childMetric.criteria}\n`;
     log += `Evaluation Steps:\n${prettifyList(childMetric.evaluationSteps ?? [])}`;
   } else if (childMetric) {

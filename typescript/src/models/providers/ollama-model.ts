@@ -5,6 +5,7 @@ import {
   type GenerationResult,
 } from "@/models/base-model";
 import { extractJson, importOptional, toJsonSchema } from "@/models/utils";
+import { ollamaMessages } from "@/models/multimodal";
 import type { ModelNamespace } from "@/models/registry";
 
 const DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434";
@@ -65,7 +66,7 @@ export class OllamaModel extends DeepEvalBaseLLM {
 
     const request: Record<string, unknown> = {
       model: this.modelName,
-      messages: [{ role: "user", content: prompt }],
+      messages: await ollamaMessages(prompt),
       ...(Object.keys(modelOptions).length > 0 && { options: modelOptions }),
     };
     if (schema) {

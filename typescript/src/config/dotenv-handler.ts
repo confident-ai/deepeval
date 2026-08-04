@@ -3,6 +3,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import { isReadOnlyFileSystem } from "@/config/utils";
 
 const LINE_RE = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/;
 
@@ -27,6 +28,7 @@ export class DotenvHandler {
   }
 
   private write(lines: string[]): void {
+    if (isReadOnlyFileSystem()) return;
     const dir = path.dirname(this.filePath);
     if (dir && dir !== ".") fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(

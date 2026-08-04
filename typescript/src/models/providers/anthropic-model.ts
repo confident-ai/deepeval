@@ -6,9 +6,8 @@ import {
 } from "@/models/base-model";
 import { extractJson, importOptional, requireApiKey } from "@/models/utils";
 import { anthropicContent } from "@/models/multimodal";
-import type { ModelNamespace } from "@/models/registry";
+import { defaultModelName, type ModelNamespace } from "@/models/registry";
 
-const DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 4096;
 
 export interface AnthropicModelOptions {
@@ -34,7 +33,7 @@ export class AnthropicModel extends DeepEvalBaseLLM {
     super(
       options.model ??
         process.env.ANTHROPIC_MODEL_NAME ??
-        DEFAULT_ANTHROPIC_MODEL,
+        defaultModelName("anthropic"),
     );
     this.apiKey = options.apiKey ?? process.env.ANTHROPIC_API_KEY ?? "";
     this.temperature = options.temperature;
@@ -88,7 +87,7 @@ export class AnthropicModel extends DeepEvalBaseLLM {
   }
 
   getModelName(): string {
-    return this.modelName ?? DEFAULT_ANTHROPIC_MODEL;
+    return this.modelName ?? defaultModelName("anthropic");
   }
 
   supportsMultimodal(): boolean {

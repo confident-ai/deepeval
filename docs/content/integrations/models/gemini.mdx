@@ -36,14 +36,14 @@ See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-co
 
 <Case id="python">
 
-Alternatively, you can specify your model directly in code using `GeminiModel` from `deepeval`'s model collection. By default, `model` is set to `gemini-2.5-pro`.
+Alternatively, you can specify your model directly in code using `GeminiModel` from `deepeval`'s model collection. By default, `model` is set to <DefaultLLMModel provider="gemini" />.
 
 <Tabs items={["Python", "ENV"]}>
 <Tab value="Python">
 
 ```python
-from deepeval.models import GeminiModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import GeminiModel
 
 model = GeminiModel(
     model="gemini-2.5-pro",
@@ -93,13 +93,13 @@ At runtime, you must provide an API key (via `api_key` or `GOOGLE_API_KEY`) unle
 
 <Case id="typescript">
 
-Alternatively, you can specify your model directly in code using `GeminiModel` from `deepeval`'s model collection. By default, `model` is set to `gemini-2.5-flash`.
+Alternatively, you can specify your model directly in code using `GeminiModel` from `deepeval`'s model collection. By default, `model` is set to <DefaultLLMModel provider="gemini" />.
 
 <Tabs items={["TypeScript", "ENV"]}>
 <Tab value="TypeScript">
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { GeminiModel } from "deepeval/models";
 
 const model = new GeminiModel({
@@ -110,7 +110,7 @@ const model = new GeminiModel({
   costPerOutputToken: 0.000005,
 });
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
+const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
 
 </Tab>
@@ -119,10 +119,10 @@ const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
 Every option is backed by an environment variable, so you can set `GEMINI_MODEL_NAME` and `GOOGLE_API_KEY` in your `env` and construct the model with no arguments:
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { GeminiModel } from "deepeval/models";
 
-const answerRelevancy = new metrics.AnswerRelevancyMetric({
+const answerRelevancy = new AnswerRelevancyMetric({
   model: new GeminiModel(),
 });
 ```
@@ -132,7 +132,7 @@ const answerRelevancy = new metrics.AnswerRelevancyMetric({
 
 There are **ZERO** mandatory and **NINE** optional parameters when creating a `GeminiModel`:
 
-- [Optional] `model`: A string specifying the name of the Gemini model to use. Defaults to `GEMINI_MODEL_NAME` if not passed; falls back to `gemini-2.5-flash` if unset.
+- [Optional] `model`: A string specifying the name of the Gemini model to use. Defaults to `GEMINI_MODEL_NAME` if not passed; falls back to <DefaultLLMModel provider="gemini" /> if unset.
 - [Optional] `apiKey`: A string specifying the Google API key for authentication. Defaults to `GOOGLE_API_KEY`, then `GEMINI_API_KEY`, if not passed; raises an error at runtime if unset.
 - [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
 - [Optional] `useVertexAI`: A boolean routing requests through Vertex AI instead of the Gemini API. Defaults to `true` when `GOOGLE_GENAI_USE_VERTEXAI` is set to the exact string `true`, else `false`.

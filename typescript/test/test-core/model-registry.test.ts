@@ -1,11 +1,16 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   DEFAULT_MODEL_DATA,
   GENERATED_MODEL_DATA,
+  defaultModelName,
   getModelData,
   OpenAIModel,
   AnthropicModel,
   AzureOpenAIModel,
   AISDKModel,
+  GeminiModel,
+  OpenRouterModel,
 } from "../../src/models";
 import { resolveAiSdkNamespace } from "../../src/models/providers/ai-sdk-model";
 
@@ -21,13 +26,15 @@ describe("generated model registry", () => {
       "ollama",
       "bedrock",
     ]) {
-      expect(Object.keys(GENERATED_MODEL_DATA[namespace] ?? {}).length).
-        toBeGreaterThan(0);
+      expect(
+        Object.keys(GENERATED_MODEL_DATA[namespace] ?? {}).length,
+      ).toBeGreaterThan(0);
     }
   });
 
-  it("excludes the _meta header from the namespaces", () => {
+  it("excludes the underscored metadata keys from the namespaces", () => {
     expect(GENERATED_MODEL_DATA._meta).toBeUndefined();
+    expect(GENERATED_MODEL_DATA._defaults).toBeUndefined();
   });
 
   it("resolves prices and capabilities for a known model", () => {
@@ -100,9 +107,9 @@ describe("providers backed by the registry", () => {
   it("reads per-model capabilities rather than a hardcoded default", () => {
     // gpt-4.1-nano is text-only in the registry, even though the OpenAI
     // transport itself supports images.
-    expect(new OpenAIModel({ model: "gpt-4.1-nano" }).supportsMultimodal()).toBe(
-      false,
-    );
+    expect(
+      new OpenAIModel({ model: "gpt-4.1-nano" }).supportsMultimodal(),
+    ).toBe(false);
     expect(new OpenAIModel({ model: "gpt-4.1" }).supportsMultimodal()).toBe(
       true,
     );
@@ -144,23 +151,100 @@ describe("providers backed by the registry", () => {
   });
 });
 
+describe("provider defaults generated from Python", () => {
+  // Every `*_MODEL_NAME` a provider under test consults, so a developer's local
+  // env cannot make these assertions pass or fail for the wrong reason.
+  const MODEL_NAME_VARS = [
+    "OPENAI_MODEL_NAME",
+    "ANTHROPIC_MODEL_NAME",
+    "GEMINI_MODEL_NAME",
+    "VERTEX_AI_MODEL_NAME",
+    "OPENROUTER_MODEL_NAME",
+  ];
+  let saved: Record<string, string | undefined>;
+
+  beforeEach(() => {
+    saved = Object.fromEntries(MODEL_NAME_VARS.map((v) => [v, process.env[v]]));
+    for (const v of MODEL_NAME_VARS) delete process.env[v];
+  });
+
+  afterEach(() => {
+    for (const [v, value] of Object.entries(saved)) {
+      if (value === undefined) delete process.env[v];
+      else process.env[v] = value;
+    }
+  });
+
+  it("falls back to the generated default when given no model", () => {
+    expect(new OpenAIModel().getModelName()).toBe(defaultModelName("openai"));
+    expect(new AnthropicModel().getModelName()).toBe(
+      defaultModelName("anthropic"),
+    );
+    expect(new GeminiModel().getModelName()).toBe(defaultModelName("gemini"));
+    expect(new OpenRouterModel().getModelName()).toBe(
+      defaultModelName("openrouter"),
+    );
+  });
+
+  it("prefers an explicit model and the env var over the default", () => {
+    expect(new OpenAIModel({ model: "gpt-4o" }).getModelName()).toBe("gpt-4o");
+    process.env.OPENAI_MODEL_NAME = "gpt-4.1-mini";
+    expect(new OpenAIModel().getModelName()).toBe("gpt-4.1-mini");
+  });
+
+  it("prices every default it generates", () => {
+    for (const namespace of ["openai", "anthropic", "gemini"] as const) {
+      const data = getModelData(namespace, defaultModelName(namespace));
+      expect(data.inputPrice).toBeGreaterThan(0);
+      expect(data.outputPrice).toBeGreaterThan(0);
+    }
+  });
+
+  // The drift this guards against is how Python and TypeScript ended up on
+  // different judges: a provider quietly declaring its own fallback, invisible
+  // to `scripts/compile_model_registry.py`.
+  it("has no hardcoded default model literal in a synced provider", () => {
+    const modelsDir = join(__dirname, "../../src/models");
+    // Grok, DeepSeek and Kimi deliberately keep TypeScript-only defaults —
+    // Python requires their `*_MODEL_NAME` instead. See DEFAULT_MODELS.
+    const unsynced = ["grok-model.ts", "deepseek-model.ts", "kimi-model.ts"];
+    const offenders: string[] = [];
+
+    for (const dir of ["providers", "gateways"]) {
+      for (const file of readdirSync(join(modelsDir, dir))) {
+        if (!file.endsWith(".ts") || unsynced.includes(file)) continue;
+        const source = readFileSync(join(modelsDir, dir, file), "utf-8");
+        source.split("\n").forEach((line, index) => {
+          if (/^\s*(const|let)\s+DEFAULT_\w*MODEL\b\s*=\s*["'`]/.test(line)) {
+            offenders.push(`${dir}/${file}:${index + 1}: ${line.trim()}`);
+          }
+        });
+      }
+    }
+
+    expect(offenders).toEqual([]);
+  });
+});
+
 describe("temperature resolution", () => {
   // `resolveTemperature` is protected; reach through a cast rather than
   // widening the public surface just for tests.
   const resolve = (model: object) =>
-    (model as { resolveTemperature(): number | undefined }).resolveTemperature();
+    (
+      model as { resolveTemperature(): number | undefined }
+    ).resolveTemperature();
 
   it("defaults to 0, matching Python", () => {
     expect(resolve(new OpenAIModel({ model: "gpt-4.1" }))).toBe(0);
-    expect(resolve(new AnthropicModel({ model: "claude-3-opus-20240229" }))).toBe(
-      0,
-    );
+    expect(
+      resolve(new AnthropicModel({ model: "claude-3-opus-20240229" })),
+    ).toBe(0);
   });
 
   it("honors an explicit temperature", () => {
-    expect(resolve(new OpenAIModel({ model: "gpt-4.1", temperature: 0.7 }))).toBe(
-      0.7,
-    );
+    expect(
+      resolve(new OpenAIModel({ model: "gpt-4.1", temperature: 0.7 })),
+    ).toBe(0.7);
   });
 
   it("omits temperature for models that reject it", () => {

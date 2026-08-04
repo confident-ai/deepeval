@@ -104,7 +104,6 @@ async def measure_metric_task(
                     test_case,
                     _show_indicator=False,
                     _in_component=_in_component,
-                    _log_metric_to_confident=False,
                 )
                 finish_text = "Done"
             except MissingTestCaseParamsError as e:
@@ -123,7 +122,6 @@ async def measure_metric_task(
                     await metric.a_measure(
                         test_case,
                         _in_component=_in_component,
-                        _log_metric_to_confident=False,
                     )
                     finish_text = "Done"
                 except MissingTestCaseParamsError as e:
@@ -253,7 +251,6 @@ async def safe_a_measure(
             tc,
             _show_indicator=False,
             _in_component=_in_component,
-            _log_metric_to_confident=False,
         )
         update_pbar(progress, pbar_eval_id)
 

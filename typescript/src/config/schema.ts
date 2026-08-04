@@ -2,6 +2,11 @@
 // `Settings(BaseSettings)` in deepeval/config/settings.py.
 
 import { z } from "zod";
+import {
+  BOOL_TOKENS_MESSAGE,
+  normalizeFileSystemMode,
+  parseBool,
+} from "@/config/utils";
 import { isValidLogLevel } from "@/logger";
 import { Environment } from "@/tracing/utils";
 
@@ -12,8 +17,21 @@ export interface SettingFieldMeta {
 }
 
 const optionalString = () => z.string().optional();
-// Not `z.coerce.boolean()`: that's JS truthiness, so "false" would parse as true.
-const optionalBool = () => z.stringbool().optional();
+// Not `z.coerce.boolean()` (JS truthiness parses "false" as true) nor
+// `z.stringbool()` (its trim and quote handling are not configurable).
+// Failing here lets `parseSettings` warn and drop the key.
+const optionalBool = () =>
+  z
+    .string()
+    .transform((value, ctx) => {
+      const parsed = parseBool(value);
+      if (parsed === undefined) {
+        ctx.addIssue({ code: "custom", message: BOOL_TOKENS_MESSAGE });
+        return z.NEVER;
+      }
+      return parsed;
+    })
+    .optional();
 const optionalNumber = () => z.coerce.number().optional();
 
 const logLevel = () =>
@@ -24,6 +42,8 @@ const logLevel = () =>
         "Expected one of DEBUG, INFO, WARNING, ERROR, CRITICAL, NOTSET, or a number.",
     })
     .optional();
+
+const boolWithDefault = (fallback: boolean) => optionalBool().default(fallback);
 
 const secretString = (description: string) =>
   optionalString().describe(description).meta({ secret: true });
@@ -41,8 +61,28 @@ export const settingsSchema = z.object({
     })
     .optional()
     .describe("Confident AI data region (US, EU or AU)."),
-  CONFIDENT_OPEN_BROWSER: optionalBool().describe(
+  CONFIDENT_BASE_URL: optionalString().describe(
+    "Override the Confident AI API URL. Takes precedence over CONFIDENT_REGION.",
+  ),
+  CONFIDENT_DISABLE_SSL: optionalBool().describe(
+    "Skip TLS certificate verification for Confident AI requests. Intended for self-signed certificates; unsafe otherwise.",
+  ),
+  CONFIDENT_OPEN_BROWSER: boolWithDefault(true).describe(
     "Open a browser automatically for Confident AI links and flows.",
+  ),
+
+  // General
+  APP_ENV: z
+    .string()
+    .default("dev")
+    .describe(
+      "Application environment name used for dotenv selection (loads .env.<APP_ENV> if present).",
+    ),
+  DEEPEVAL_DISABLE_DOTENV: optionalBool().describe(
+    "Disable dotenv autoloading (.env → .env.<APP_ENV> → .env.local). Tip: set to 1 in CI to prevent loading env files on import.",
+  ),
+  ENV_DIR_PATH: optionalString().describe(
+    "Directory containing .env files (default: current working directory).",
   ),
 
   // CLI
@@ -52,8 +92,20 @@ export const settingsSchema = z.object({
   DEEPEVAL_IDENTIFIER: optionalString().describe(
     "Identifier to help identify your test run on Confident AI.",
   ),
+  IGNORE_DEEPEVAL_ERRORS: optionalBool().describe(
+    "Continue a run when a metric errors, instead of failing the test case.",
+  ),
+  SKIP_DEEPEVAL_MISSING_PARAMS: optionalBool().describe(
+    "Skip a metric when the test case is missing a parameter it requires.",
+  ),
+  ENABLE_DEEPEVAL_CACHE: optionalBool().describe(
+    "Reuse cached metric results for unchanged test cases and configurations.",
+  ),
   DEEPEVAL_TELEMETRY_OPT_OUT: optionalBool().describe(
     "Disable anonymous telemetry.",
+  ),
+  ERROR_REPORTING: optionalBool().describe(
+    "Send crash reports to Sentry. Off unless enabled, and always off when DEEPEVAL_TELEMETRY_OPT_OUT is set.",
   ),
 
   // Storage & output
@@ -63,6 +115,23 @@ export const settingsSchema = z.object({
   DEEPEVAL_CACHE_FOLDER: optionalString().describe(
     "Directory DeepEval uses for its cache and key files (default: .deepeval).",
   ),
+  DEEPEVAL_FILE_SYSTEM: z
+    .string()
+    .transform((value, ctx) => {
+      const mode = normalizeFileSystemMode(value);
+      if (mode === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Expected READ_ONLY (aliases: READ-ONLY, READONLY, RO).",
+        });
+        return z.NEVER;
+      }
+      return mode;
+    })
+    .optional()
+    .describe(
+      "Set to READ_ONLY to stop DeepEval writing its keystore, dotenv, cache, and test-run files.",
+    ),
 
   // Debug & tracing
   LOG_LEVEL: logLevel().describe(
@@ -95,12 +164,14 @@ export const settingsSchema = z.object({
     .describe(
       'Environment traces are attributed to ("development", "staging", "production", "testing").',
     ),
-  CONFIDENT_TRACE_VERBOSE: z
-    .stringbool()
-    .default(true)
-    .describe("Print tracing diagnostics."),
+  CONFIDENT_TRACE_VERBOSE: boolWithDefault(true).describe(
+    "Print tracing diagnostics.",
+  ),
   CONFIDENT_TRACE_FLUSH: optionalBool().describe(
     "Flush traces synchronously at the end of a run.",
+  ),
+  CONFIDENT_TRACE_INTERNAL: optionalBool().describe(
+    "Trace DeepEval's own metric and model methods inside @observe spans.",
   ),
   CONFIDENT_TRACE_SAMPLE_RATE: z.coerce
     .number()
@@ -161,6 +232,9 @@ export const settingsSchema = z.object({
   AZURE_OPENAI_API_KEY: secretString("Azure OpenAI API key."),
   AZURE_OPENAI_ENDPOINT: optionalString().describe(
     "Azure OpenAI endpoint / base URL.",
+  ),
+  AZURE_OPENAI_AD_TOKEN: secretString(
+    "Microsoft Entra ID token, used instead of AZURE_OPENAI_API_KEY.",
   ),
   OPENAI_API_VERSION: optionalString().describe("Azure OpenAI API version."),
   AZURE_DEPLOYMENT_NAME: optionalString().describe(
@@ -240,8 +314,17 @@ export const settingsSchema = z.object({
   GOOGLE_API_KEY: secretString("Google AI Studio API key."),
   GEMINI_API_KEY: secretString("Gemini API key (alias of GOOGLE_API_KEY)."),
   GEMINI_MODEL_NAME: optionalString().describe("Gemini model name."),
+  GEMINI_COST_PER_INPUT_TOKEN: optionalNumber().describe(
+    "USD per input token for the Gemini model.",
+  ),
+  GEMINI_COST_PER_OUTPUT_TOKEN: optionalNumber().describe(
+    "USD per output token for the Gemini model.",
+  ),
   GOOGLE_GENAI_USE_VERTEXAI: optionalBool().describe(
     "Use Vertex AI instead of the Gemini Developer API.",
+  ),
+  VERTEX_AI_MODEL_NAME: optionalString().describe(
+    "Vertex AI model name, preferred over GEMINI_MODEL_NAME when GOOGLE_GENAI_USE_VERTEXAI is on.",
   ),
   GOOGLE_CLOUD_PROJECT: optionalString().describe(
     "Google Cloud project ID used for Vertex AI.",

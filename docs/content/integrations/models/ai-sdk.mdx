@@ -27,7 +27,7 @@ OPENAI_API_KEY=<your-openai-api-key>
 Wrap any AI SDK `LanguageModel` in an `AISDKModel` and pass it to a metric.
 
 ```typescript
-import { metrics } from "deepeval";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { AISDKModel } from "deepeval/models";
 import { openai } from "@ai-sdk/openai";
 
@@ -35,7 +35,7 @@ const model = new AISDKModel({
   model: openai("gpt-4o"),
   temperature: 0,
 });
-const answerRelevancy = new metrics.AnswerRelevancyMetric({ model });
+const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
 
 There are **ONE** mandatory and **FIVE** optional parameters when creating an `AISDKModel`:
@@ -56,8 +56,8 @@ Any parameter the AI SDK accepts but `deepeval` does not expose as a first-class
 Models reached through the AI SDK are priced from `deepeval`'s model cost registry, so `gpt-4o` costs the same whether you reach it through `AISDKModel` or `OpenAIModel`. Providers the registry does not cover report a `null` cost until you supply `costPerInputToken` and `costPerOutputToken` yourself:
 
 ```typescript
-import { AISDKModel } from "deepeval/models";
 import { mistral } from "@ai-sdk/mistral";
+import { AISDKModel } from "deepeval/models";
 
 const model = new AISDKModel({
   model: mistral("mistral-large-latest"),

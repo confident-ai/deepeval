@@ -20,16 +20,22 @@ is the status and rationale.
 
 ## Current state
 
-211 MDX files: 119 docs, 34 integrations, 20 guides, 17 tutorials, 17 blog,
-4 changelog.
+212 MDX files: 119 docs, 35 integrations, 20 guides, 17 tutorials, 17 blog,
+4 changelog. [`languages-audit.json`](languages-audit.json) lists the 78 of
+them that actually carry a `<Switch>`, `<Term>` or `<Only>` tag, with each
+page's url, declared `languages`, tag counts and code-fence tallies; a
+`languages` declaration alone does not put a page in the file. It is a hand-run
+snapshot, not generated at build time, so treat it as of its `generatedAt` date.
 
 **Page-level support is declared and validated.** Every page in `content/docs`
 and `content/integrations` carries a `languages` frontmatter field, enforced by
-a strict Zod schema in [`source.config.ts`](source.config.ts) — 98 declare
-`[python, typescript]`, 55 declare `[python]` and 1 declares `[typescript]`.
+a strict Zod schema in [`source.config.ts`](source.config.ts) — 84 declare
+`[python, typescript]`, 69 declare `[python]` and 1 declares `[typescript]`.
 Guides, tutorials, changelog and blog may omit the field and simply follow the
-reader's preference; 6 guides declare `[python]` because the features they cover
-are Python-only.
+reader's preference; 19 of the 20 guides and 13 of the 17 tutorials declare
+`[python]` anyway. The five that don't are the four tutorial index pages, which
+stay undeclared so they cannot strand a `[python]` child, and
+`guides-llm-observability`, which is prose with no code fence in it.
 
 **The sidebar follows the selection.** `languages` rides along on each page-tree
 node, and [`lib/lang/page-tree.ts`](lib/lang/page-tree.ts) prunes the tree to the
@@ -41,17 +47,36 @@ links. The same pruned tree drives the prev/next footer. Readers still reach the
 501 page through direct links, bookmarks and search hits.
 
 **The selector only appears on docs and integrations.** Those are the reference
-surfaces where the choice is meaningful. Guides and tutorials still honour a
-selection made elsewhere — their 187 `<Switch>` blocks render TypeScript for
-a reader who picked it — they just don't offer their own control.
+surfaces where the choice is meaningful, and they are now the only surfaces with
+anything to switch. Guides and tutorials carry no language tag at all: the 187
+`<Switch>` blocks that were spread across 26 of those pages have been collapsed
+to their Python case, and every one of the 26 now declares `languages: [python]`.
+Those pages are narrative rather than reference — each walks through one Python
+codebase end to end — so a half-translated walkthrough served the reader worse
+than an honest 501, which is what a TypeScript reader now gets.
 
-**Code blocks are essentially done.** 493 `<Switch>` blocks, 461 of which
-carry a TypeScript fence; the other 32 are `bash` and `yaml` pairs. None is
-one-sided, and no Python-only page leaks a TypeScript fence.
+**Within docs, the workflow pages went the same way.** Thirteen more pages are
+now `[python]`: the 5-minute quickstart and its five use-case siblings, and the
+evaluation workflow set — `evaluation-introduction`, single- and multi-turn
+end-to-end (with the folder index that holds them), component-level, CI/CD, and
+flags and configs. That collapsed 88 more `<Switch>` blocks and 17 `<Term>`
+spans. What a TypeScript reader keeps is the part that is reference rather than
+walkthrough: every concepts page including test cases, datasets and tracing,
+every individual metric page, the Others group, and integrations. The cost is
+that 38 of the pages they do keep link into one of these 13, mostly to
+`evaluation-component-level-llm-evals` and `evaluation-flags-and-configs`, and
+those links now land on a 501.
 
-**Prose has barely started.** `<Term>` covers 98 spans across 4 pages, while
-2,265 snake_case identifiers across 170 files (446 distinct) are still
-hardcoded Python in prose that TypeScript readers see. The mechanism is now
+**Code blocks are done where they remain.** 287 `<Switch>` blocks, 251 of which
+carry a TypeScript fence; the other 36 are `bash` and `yaml` pairs. None is
+one-sided — `validate-terms` now enforces that — and no Python-only page leaks
+a TypeScript fence.
+
+**Prose has barely started.** `<Term>` covers 128 spans across 7 pages, while
+1,188 snake_case identifiers across 66 files (293 distinct) are still hardcoded
+Python in prose that TypeScript readers see. That count is over the pages a
+TypeScript reader can still reach, so it fell with every page that went
+`[python]` rather than through any conversion work. The mechanism is now
 settled — see [Inline prose terms](#inline-prose-terms) — so what remains is
 volume, not design.
 
@@ -96,10 +121,9 @@ The registry's one substantive guarantee, that a Python spelling has exactly
 one TypeScript counterpart, is enforced instead by
 [`scripts/validate-terms.mjs`](scripts/validate-terms.mjs), which runs in
 `prebuild`. It also fails on a tag missing either attribute — MDX props are not
-typechecked, so nothing else covers that — and on a `<Term>` nested inside a
-`<Case>` or `<Only>`, where the wrapper has already fixed the language and a
-one-case `<Switch>` would otherwise render TypeScript text inside a block
-labelled Python.
+typechecked, so nothing else covers that — on a `<Term>` nested inside a
+`<Case>` or `<Only>`, where the wrapper has already fixed the language, and on a
+`<Switch>` missing a case for some language.
 
 Coverage stays measurable: remaining raw snake_case spans in prose is the same
 metric [Current state](#current-state) already tracks, and it does not depend
@@ -180,18 +204,18 @@ six `vector-databases/*`, and the framework pages `agentcore`, `anthropic`,
 
 Roughly in order of how much they hurt a TypeScript reader.
 
-1. **Prose identifiers.** The 2,265 spans above. The design question is
+1. **Prose identifiers.** The 1,188 spans above. The design question is
    answered (see [Inline prose terms](#inline-prose-terms)); this is now a
    page-by-page conversion job with no blocker in front of it.
 2. **Integrations, per [Integration coverage](#integration-coverage).** The
    models half is now bilingual, so a TypeScript reader keeps Integrations'
    largest section; vector databases still vanish entirely and 9 of 12 framework
    pages remain Python-only.
-3. **Partial gaps.** 239 unpaired ` ```python ` fences sit on 52 otherwise
-   bilingual pages, mostly framework integration tabs, the pytest and
-   `deepeval test run` workflows, Pydantic schemas, and `save_as()`. Each
-   should become a one-case `<Switch>`, which labels the gap without
-   anyone writing TypeScript.
+3. **Partial gaps.** Roughly 116 unpaired ` ```python ` fences sit on 28
+   otherwise bilingual pages, mostly framework integration tabs, the pytest and
+   `deepeval test run` workflows, Pydantic schemas, and `save_as()`. Each needs
+   its TypeScript case written, or `<Only id="python">` around it until someone
+   does — today they render to TypeScript readers as if they were theirs.
 4. **Unverified TypeScript spellings.** `validate-terms` proves the docs agree
    with themselves, not that they agree with the SDK
    (`typescript/package.json`, currently `0.1.32`). A spelling that is wrong
@@ -235,10 +259,14 @@ Replacing the `<PythonOnly />` marker component with `languages` frontmatter:
 - The reader's preference is never overridden, only the current page's
   rendering. Selecting TypeScript, passing through a Python-only page, and
   landing on a bilingual one keeps the selection intact.
-- The selector is scoped to docs and integrations. Guides and tutorials inherit
-  the choice without offering their own, so the 187 `<Switch>` blocks there
-  are finally reachable — they previously had a TypeScript variant no reader
-  could ever display — without implying those sections are language-complete.
+- The selector is scoped to docs and integrations, which is now also the only
+  place a language tag appears at all. Inheriting the choice had made the 187
+  `<Switch>` blocks in guides and tutorials reachable for the first time, and
+  that is what showed the TypeScript half was not worth keeping: both sections
+  walk through a single Python codebase, so the blocks were reduced to their
+  Python case and all 26 pages declared `[python]`. A TypeScript reader gets a
+  501 there instead of a walkthrough that switches its snippets but not its
+  narrative.
 - Clamping became local to the page subtree, so the root `pythonOnlyPage` state
   and its mount/unmount flash are gone.
 
@@ -249,7 +277,8 @@ children, rewritten across all 493 call sites by
 The old component picked a child by index, which forced Python first and
 TypeScript second with nothing validating the order, limited each side to a
 single element, and could not distinguish the 32 same-language pairs (`bash`,
-`yaml`). Naming the language removes all three constraints, and a one-sided
-block is now the explicit way to mark a gap.
+`yaml`). Naming the language removes all three constraints, and lets
+`validate-terms` require that a `<Switch>` cover every language — a one-sided
+block is an `<Only>`, not a `<Switch>` with a case missing.
 
 Unchanged: the partial-gap backlog has not moved.

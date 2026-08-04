@@ -23,7 +23,12 @@
       "require": "./dist/dataset/index.js",
       "types": "./dist/dataset/index.d.ts"
     },
-    "./testCase": {
+    "./metrics": {
+      "import": "./dist/metrics/index.js",
+      "require": "./dist/metrics/index.js",
+      "types": "./dist/metrics/index.d.ts"
+    },
+    "./test-case": {
       "import": "./dist/test-case/index.js",
       "require": "./dist/test-case/index.js",
       "types": "./dist/test-case/index.d.ts"
@@ -95,7 +100,10 @@
       "dataset": [
         "dist/dataset/index.d.ts"
       ],
-      "testCase": [
+      "metrics": [
+        "dist/metrics/index.d.ts"
+      ],
+      "test-case": [
         "dist/test-case/index.d.ts"
       ],
       "tracing": [
@@ -140,13 +148,15 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc && tsc-alias",
+    "build": "tsc && tsc-alias && npm run build:inspect-ui",
+    "build:inspect-ui": "tsc -p tsconfig.inspect.json && node scripts/mark-inspect-ui-esm.mjs",
     "prepublishOnly": "npm run build",
     "test": "jest",
     "test:e2e": "node dist/cli/index.js test run tests/deepeval-test-run-test/suites --identifier ts-e2e",
     "test:e2e:conversational": "node dist/cli/index.js test run tests/deepeval-test-run-test/conversational --identifier ts-e2e-conversational",
     "test:e2e:negative": "node dist/cli/index.js test run tests/deepeval-test-run-test/negative",
     "typecheck:test": "tsc -p tsconfig.test.json",
+    "check:env-parity": "node scripts/check-env-parity.mjs",
     "lint": "eslint",
     "lint:fix": "eslint --fix"
   },
@@ -195,6 +205,7 @@
     "@types/node": "^20.17.30",
     "@types/nunjucks": "^3.2.6",
     "@types/papaparse": "^5.3.16",
+    "@types/react": "^19.2.18",
     "@types/uuid": "^9.0.0",
     "ai": "^6.0.97",
     "babel-jest": "^29.7.0",
@@ -260,5 +271,9 @@
     "vitest": {
       "optional": true
     }
+  },
+  "optionalDependencies": {
+    "ink": "^7.1.1",
+    "react": "^19.2.8"
   }
 }

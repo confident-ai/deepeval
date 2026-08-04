@@ -11,39 +11,23 @@ import { ASSETS } from "@site/src/assets";
 
 `deepeval` provides a CLI for managing common tasks directly from the terminal. You can use it for:
 
-<Switch>
-
-<Case id="python">
-
 - Logging in/out and viewing test runs
 - Running evaluations from test files
-- Checking a project against its governance policy (`deepeval gate`)
-- Inspecting saved test runs in a terminal TUI (`deepeval inspect`)
-- Diagnosing your environment (`deepeval diagnose`): default models, effective settings, and where each value comes from
-- Generating synthetic goldens from docs, contexts, scratch, or existing goldens
-- Enabling/disabling debug
-- Selecting an LLM/embeddings provider (OpenAI, Azure OpenAI, Gemini, Grok, DeepSeek, LiteLLM, local/Ollama)
-- Setting/unsetting provider-specific options (model, endpoint, deployment, etc.)
-- Listing and updating any deepeval setting (`deepeval settings -l`, `deepeval settings --set KEY=VALUE`)
-- Saving settings and secrets persistently to `.env` files
-
-</Case>
-
-<Case id="typescript">
-
-- Logging in/out and viewing test runs
-- Running evaluations from test files
-- Checking a project against its governance policy (`npx deepeval gate`)
-- Diagnosing your environment (`npx deepeval diagnose`): default models, effective settings, and where each value comes from
+- Checking a project against its governance policy (<Term py="deepeval gate" ts="npx deepeval gate"/>)
+- Diagnosing your environment (<Term py="deepeval diagnose" ts="npx deepeval diagnose"/>): default models, effective settings, and where each value comes from
 - Enabling/disabling debug
 - Selecting an LLM provider (OpenAI, Azure OpenAI, Gemini, Grok, DeepSeek, OpenRouter, local/Ollama)
 - Setting/unsetting provider-specific options (model, endpoint, deployment, etc.)
-- Listing and updating any deepeval setting (`npx deepeval settings -l`, `npx deepeval settings --set KEY=VALUE`)
+- Listing and updating any deepeval setting (<Term py="deepeval settings -l" ts="npx deepeval settings -l"/>, <Term py="deepeval settings --set KEY=VALUE" ts="npx deepeval settings --set KEY=VALUE"/>)
 - Saving settings and secrets persistently to `.env` files
+- Inspecting saved test runs in a terminal TUI (<Term py="deepeval inspect" ts="npx deepeval inspect"/>)
 
-</Case>
+<Only id="python">
 
-</Switch>
+- Generating synthetic goldens from docs, contexts, scratch, or existing goldens
+- Selecting an embeddings provider (Azure OpenAI, local, Ollama)
+
+</Only>
 
 :::tip
 For the full and most up-to-date list of flags for any command, append `--help` to it.
@@ -85,31 +69,13 @@ npx deepeval --help
 
 ## Read & Write Settings
 
-<Switch>
-
-<Case id="python">
-
-deepeval reads settings from dotenv files in the current working directory (or `ENV_DIR_PATH=/path/to/project`), without overriding existing process environment variables. Dotenv precedence (lowest → highest) is: `.env` → `.env.<APP_ENV>` → `.env.local`.
-
-</Case>
-
-<Case id="typescript">
-
-deepeval reads settings from dotenv files in the current working directory, without overriding existing process environment variables. Dotenv precedence (lowest → highest) is: `.env` → `.env.local`.
-
-</Case>
-
-</Switch>
+deepeval reads settings from dotenv files in the current working directory, without overriding existing process environment variables. Dotenv precedence (lowest → highest) is: `.env` → `.env.<APP_ENV>` → `.env.local`.
 
 deepeval also uses a legacy JSON keystore at `.deepeval/.deepeval` for **non-secret** keys. This keystore is treated as a fallback (dotenv/process env take precedence). Secrets are never written to the JSON keystore.
 
-<Only id="python">
-
 :::tip
-To disable dotenv autoloading (useful in pytest/CI to avoid loading local `.env*` files on import), set `DEEPEVAL_DISABLE_DOTENV=1`.
+Point deepeval at a different directory with `ENV_DIR_PATH=/path/to/project`, or disable dotenv autoloading entirely with `DEEPEVAL_DISABLE_DOTENV=1` (useful in CI to avoid loading local `.env*` files on import).
 :::
-
-</Only>
 
 ## Core Commands
 
@@ -255,16 +221,16 @@ npx deepeval test run tests/evals
 
 Useful options:
 
-| Option                           | Description                                                          |
-| -------------------------------- | -------------------------------------------------------------------- |
-| `--verbose`, `-v`                | Turn on verbose logs for every metric.                               |
-| `--identifier`, `-i`             | Attach an identifier to the test run.                                |
-| `--use-cache`, `-c`              | Reuse cached metric results where possible.                          |
-| `--ignore-errors`                | Continue when deepeval evaluation errors occur.                      |
-| `--skip-on-missing-params`, `-s` | Skip test cases with missing metric parameters.                       |
-| `--display`, `-d`                | Control final result display (`all`, `passing`, `failing`).           |
-| `--max-concurrent`               | Maximum number of metrics evaluated at once (default: 100).           |
-| `--official`, `-o`               | Mark this test run as the official baseline on Confident AI.           |
+| Option                           | Description                                                  |
+| -------------------------------- | ------------------------------------------------------------ |
+| `--verbose`, `-v`                | Turn on verbose logs for every metric.                       |
+| `--identifier`, `-i`             | Attach an identifier to the test run.                        |
+| `--use-cache`, `-c`              | Reuse cached metric results where possible.                  |
+| `--ignore-errors`                | Continue when deepeval evaluation errors occur.              |
+| `--skip-on-missing-params`, `-s` | Skip test cases with missing metric parameters.              |
+| `--display`, `-d`                | Control final result display (`all`, `passing`, `failing`).  |
+| `--max-concurrent`               | Maximum number of metrics evaluated at once (default: 100).  |
+| `--official`, `-o`               | Mark this test run as the official baseline on Confident AI. |
 
 :::note
 `--ignore-errors` has no short form here, because `-i` is bound to `--identifier`.
@@ -276,19 +242,41 @@ For anything Vitest already handles — stopping on first failure, filtering by 
 
 </Switch>
 
-<Only id="python">
-
 ### `inspect`
 
-Use `deepeval inspect` to open a saved test run inside a terminal TUI — a trace-tree viewer for metric scores, reasons, inputs/outputs, tool calls, and retriever context, all without leaving the terminal.
+Use <Term py="deepeval inspect" ts="npx deepeval inspect"/> to open a saved test run inside a terminal TUI — a trace-tree viewer for metric scores, reasons, inputs/outputs, tool calls, and retriever context, all without leaving the terminal.
 
-The TUI is a **trace** viewer, so it's only useful for runs produced by `evals_iterator()` with an instrumented agent (see [single-turn end-to-end evals](/docs/evaluation-end-to-end-single-turn#approach-1-evals_iterator-with-tracing-recommended)). Each such call writes a rolling snapshot to `.deepeval/.latest_run_full.json` (gitignored alongside the rest of the hidden cache dir), so the zero-arg form picks up the most recent run automatically:
+The TUI is a **trace** viewer, so it's only useful for runs whose test cases captured a trace from an instrumented app. Every such run writes a rolling snapshot into the gitignored `.deepeval` cache dir, so the zero-arg form picks up the most recent one automatically:
+
+<Switch>
+
+<Case id="python">
+
+Traces come from `evals_iterator()` against an agent instrumented with `@observe` (see [single-turn end-to-end evals](/docs/evaluation-end-to-end-single-turn#approach-1-evals_iterator-with-tracing-recommended)). Each call rewrites `.deepeval/.latest_run_full.json`.
 
 ```bash
 deepeval inspect
 ```
 
+</Case>
+
+<Case id="typescript">
+
+Traces come from an app instrumented with `observe()` (see [single-turn end-to-end evals](/docs/evaluation-end-to-end-single-turn#approach-1-evals_iterator-with-tracing-recommended)). Each run rewrites `.deepeval/.latest_test_run.json`.
+
+```bash
+npx deepeval inspect
+```
+
+</Case>
+
+</Switch>
+
 You can also point it at a specific file or folder:
+
+<Switch>
+
+<Case id="python">
 
 ```bash
 deepeval inspect ./experiments/test_run_20260512_174200.json
@@ -296,12 +284,32 @@ deepeval inspect ./experiments          # latest test_run_*.json inside
 deepeval inspect --folder ./experiments # same, via explicit flag
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```bash
+npx deepeval inspect ./experiments/test_run_20260512_174200.json
+npx deepeval inspect ./experiments          # latest test_run_*.json inside
+npx deepeval inspect --folder ./experiments # same, via explicit flag
+```
+
+</Case>
+
+</Switch>
+
 This allows you to inspect traces and spans locally on your machine:
 
 <ImageDisplayer
   src={ASSETS.deepevalTuiInspect}
   alt="deepeval inspect TUI showing a trace tree with per-span scores and metric reasons"
 />
+
+<Switch>
+
+<Case id="python">
+
+Move with `↑`/`↓` or `j`/`k`, fold a span with `h`/`l`, and cycle between traces with `←`/`→` or `n`/`p`. Press `/` to filter spans by name, `y` to copy the selected node as JSON (`Y` for the whole trace), `?` for the keybinding list, and `q` to quit.
 
 Resolution order when no path is passed: `--folder` → `DEEPEVAL_RESULTS_FOLDER` → `.deepeval/.latest_run_full.json` → `./experiments` (legacy fallback).
 
@@ -311,6 +319,26 @@ The TUI needs an optional extras bundle (Textual + clipboard support):
 pip install 'deepeval[inspect]'
 ```
 
+</Case>
+
+<Case id="typescript">
+
+Move with `↑`/`↓` or `j`/`k`, fold a span with `←`/`→` or `h`/`l`, and cycle between traces with `n`/`p`. Press `PgUp`/`PgDn` to scroll a long detail pane, `g`/`G` to jump to the top or bottom, and `q` to quit. The footer lists the full set.
+
+Resolution order when no path is passed: `--folder` → `DEEPEVAL_RESULTS_FOLDER` → `.deepeval/.latest_test_run.json`.
+
+The TUI is built on [Ink](https://github.com/vadimdemedes/ink), declared as an optional dependency. `npm install` pulls it in by default, so there's usually nothing extra to do — but if you installed with `--omit=optional`, add it back:
+
+```bash
+npm install ink react
+```
+
+</Case>
+
+</Switch>
+
+<Only id="python">
+
 :::tip
 When an `evals_iterator()` run finishes in an interactive terminal and at least one test case captured a trace, deepeval offers to open it in the TUI for you. Disable per-call with `DisplayConfig(inspect_after_run=False)` or globally with `DEEPEVAL_NO_INSPECT_PROMPT=1` (e.g. in CI). See [display configs](/docs/evaluation-flags-and-configs#display-configs).
 :::
@@ -319,23 +347,15 @@ When an `evals_iterator()` run finishes in an interactive terminal and at least 
 
 ### `diagnose`
 
-<Switch>
-
 Use <Term py="deepeval diagnose" ts="npx deepeval diagnose"/> to print the configuration your environment actually resolves to — and where each value comes from. Reach for it when evals are using the wrong model, credentials, or data region, or when you're not sure which `.env` file is winning.
+
+<Switch>
 
 <Case id="python">
 
 ```bash
 deepeval diagnose
 ```
-
-The report shows:
-
-- **Versions**: deepeval and Python.
-- **Default models**: the LLM and embedding model deepeval will use when a class (metric, synthesizer, simulator, etc.) is constructed without an explicit `model=...`, and what each is used by.
-- **Configured settings**: every deepeval setting that is explicitly set, with secrets masked (only the last 6 characters shown) and the **winning source** for each — the report uses the same resolvers as the runtime, so what you see is what your evals get.
-- **Setting sources**: the precedence order (process environment → `.env.local` → `.env.<APP_ENV>` → `.env` → JSON keystore → built-in defaults) and which of those exist on disk. Each variable is resolved independently against this order.
-- **Confident AI**: login status, masked API key, data region, and the API and OTEL endpoints — with warnings if the endpoints look like they belong to a different region than your API key.
 
 </Case>
 
@@ -345,22 +365,22 @@ The report shows:
 npx deepeval diagnose
 ```
 
-The report shows:
-
-- **Versions**: deepeval, Node, and your platform.
-- **Confident AI**: login status, masked API key (only the last 6 characters shown) and where it came from, data region, and the API endpoint.
-- **Evaluation model**: the provider and model deepeval will use when a metric is constructed without an explicit `model`, plus the reason it won.
-- **Configuration sources**: which dotenv files were loaded and where the JSON keystore lives. Each variable is resolved independently against the precedence order above.
-- **Configured settings**: every deepeval setting that is explicitly set, with secrets masked and the **winning source** for each — the report uses the same resolvers as the runtime, so what you see is what your evals get.
-
 </Case>
 
 </Switch>
 
+The report shows:
+
+- **Versions**: deepeval and the runtime it's running on.
+- **Evaluation model**: the model deepeval will use when a metric<Only id="python"> (or synthesizer, simulator, etc.)</Only> is constructed without an explicit model, plus the reason it won.<Only id="python"> The default embedding model is listed alongside it, with what each is used by.</Only>
+- **Configuration sources**: the precedence order every variable is resolved against, independently (process environment → `.env.local` → `.env.<APP_ENV>` → `.env` → JSON keystore → built-in defaults), which dotenv files were loaded, and where the keystore lives.
+- **Configured settings**: every deepeval setting that is explicitly set, with secrets masked (only the last 6 characters shown) and the **winning source** for each — the report uses the same resolvers as the runtime, so what you see is what your evals get.
+- **Confident AI**: login status, masked API key, data region, and the API endpoint.<Only id="python"> The OTEL endpoint is shown too, with warnings if either endpoint looks like it belongs to a different region than your API key.</Only>
+
 Options:
 
-| Option   | Description                                                              |
-| -------- | ------------------------------------------------------------------------ |
+| Option   | Description                                                             |
+| -------- | ----------------------------------------------------------------------- |
 | `--json` | Output the full report as JSON (machine-readable, secrets stay masked). |
 
 :::tip
@@ -373,27 +393,22 @@ Use these commands to connect `deepeval` to **Confident AI** (`deepeval` Cloud) 
 
 ### `login` & `logout`
 
-<Switch>
-
-<Case id="python">
-
-- `deepeval login [--api-key ...] [--save=dotenv[:path]]`: Log in to Confident AI. The interactive flow opens a browser for authentication, then returns to the terminal to create an organization and first project or select an existing project. DeepEval creates a dedicated project API key and saves it as `CONFIDENT_API_KEY`. Use `--api-key` for CI, headless automation, or manual fallback.
-- `deepeval logout [--save=dotenv[:path]]`: Remove your Confident AI credentials from local persistence — the JSON keystore and every dotenv file deepeval auto-loads (`.env`, `.env.<APP_ENV>`, `.env.local`). If `CONFIDENT_API_KEY` is exported by your shell itself, deepeval cannot unset it and will tell you to run `unset CONFIDENT_API_KEY`.
-
-</Case>
-
-<Case id="typescript">
-
-- `npx deepeval login [--api-key ...] [--save=dotenv[:path]]`: Log in to Confident AI. The interactive flow opens a browser for authentication, then returns to the terminal to create an organization and first project or select an existing project. DeepEval creates a dedicated project API key and saves it as `CONFIDENT_API_KEY`. Use `--api-key` for CI, headless automation, or manual fallback.
-- `npx deepeval logout [--save=dotenv[:path]]`: Remove your Confident AI credentials from local persistence — the JSON keystore and every dotenv file deepeval auto-loads (`.env`, `.env.local`). If `CONFIDENT_API_KEY` is exported by your shell itself, deepeval cannot unset it and will tell you to run `unset CONFIDENT_API_KEY`.
-
-</Case>
-
-</Switch>
+- <Term
+    py="deepeval login [--api-key ...] [--save=dotenv[:path]]"
+    ts="npx deepeval login [--api-key ...] [--save=dotenv[:path]]"
+  />
+  : Log in to Confident AI. The interactive flow opens a browser for
+  authentication, then returns to the terminal to create an organization and
+  first project or select an existing project. DeepEval creates a dedicated
+  project API key and saves it as `CONFIDENT_API_KEY`. Use `--api-key` for CI,
+  headless automation, or manual fallback.
+- <Term py="deepeval logout [--save=dotenv[:path]]" ts="npx deepeval logout [--save=dotenv[:path]]"/>: Remove your Confident AI credentials from local persistence — the JSON keystore and every dotenv file deepeval auto-loads (`.env`, `.env.<APP_ENV>`, `.env.local`). If `CONFIDENT_API_KEY` is exported by your shell itself, deepeval cannot unset it and will tell you to run `unset CONFIDENT_API_KEY`.
 
 ### `view`
 
-<Term py="deepeval view" ts="npx deepeval view"/> opens the latest test run on Confident AI in your browser. If needed, it uploads the cached run artifacts first. It takes no flags.
+<Term py="deepeval view" ts="npx deepeval view" /> opens the latest test run on Confident
+AI in your browser. If needed, it uploads the cached run artifacts first. It takes
+no flags.
 
 ### `set-confident-region`
 
@@ -419,11 +434,11 @@ npx deepeval set-confident-region EU --save=dotenv
 
 </Switch>
 
-| Option                  | Description                                                             |
-| ----------------------- | ----------------------------------------------------------------------- |
-| `REGION`                | Positional argument. One of `US`, `EU`, or `AU`.                        |
-| `--save`, `-s`          | Persist `CONFIDENT_REGION` to a dotenv file. Usage: `dotenv[:path]`.    |
-| `--quiet`, `-q`         | Suppress printing to the terminal (useful for CI).                      |
+| Option          | Description                                                          |
+| --------------- | -------------------------------------------------------------------- |
+| `REGION`        | Positional argument. One of `US`, `EU`, or `AU`.                     |
+| `--save`, `-s`  | Persist `CONFIDENT_REGION` to a dotenv file. Usage: `dotenv[:path]`. |
+| `--quiet`, `-q` | Suppress printing to the terminal (useful for CI).                   |
 
 :::caution
 Your API key is issued for a single region. Pointing deepeval at a region your key doesn't belong to will fail to authenticate. Run `diagnose` to see the region and endpoint currently in effect.
@@ -453,9 +468,9 @@ npx deepeval gate
 
 </Switch>
 
-| Option          | Description                                                                    |
-| --------------- | ------------------------------------------------------------------------------ |
-| `--quiet`, `-q` | Suppress output. The exit code still reflects the verdict.                      |
+| Option          | Description                                                |
+| --------------- | ---------------------------------------------------------- |
+| `--quiet`, `-q` | Suppress output. The exit code still reflects the verdict. |
 
 :::note
 Your project must be associated with a governance policy. If it isn't, the command exits non-zero and tells you to contact your organization administrator.
@@ -469,7 +484,7 @@ All `set-*` / `unset-*` commands follow the same rules:
 - Secrets (API keys) are never written to `.deepeval/.deepeval`.
 - Pass `--save=dotenv[:path]` to write settings (including secrets) to a dotenv file (default: `.env.local`).
 - If `--save` is omitted, deepeval will use `DEEPEVAL_DEFAULT_SAVE` if set; otherwise it won’t write a dotenv file (some commands like `login` still default to `.env.local`).
-- Unsetting one provider only removes that provider’s keys. If other provider credentials remain (e.g. `OPENAI_API_KEY`), they may still be selected by default.
+- Unsetting one provider only removes that provider’s keys. Leftover credentials from other providers (e.g. `OPENAI_API_KEY`) don’t select anything on their own — the `USE_*` flags decide which provider is active.
 
 :::tip
 You can set a default save target via `DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local` so you don’t have to pass `--save` each time.
@@ -727,6 +742,8 @@ If you want to see what environment variables `deepeval` manages under the hood,
 | Portkey          | `set-portkey`      | `unset-portkey`      |
 | OpenRouter       | `set-openrouter`   | `unset-openrouter`   |
 
+To evaluate with a provider that has no entry above, wrap any [Vercel AI SDK](/integrations/models/ai-sdk) `LanguageModel` in an `AISDKModel` and pass it to a metric in code.
+
 </Case>
 
 </Switch>
@@ -737,24 +754,8 @@ For provider-specific flags, run any of the `set-*` commands above with `--help`
 
 ## Common Issues
 
-<Switch>
-
-<Case id="python">
-
 - **Nothing printed?** For `set-*` / `unset-*` / `set-debug`, a clean exit with no output often means you are passing the `--quiet` / `-q` flag.
-- **Provider still active after unsetting?** Unsetting turns off target provider `USE_*` flags; if a provider remains enabled and properly configured it will become the active provider. If no provider is enabled, but OpenAI credentials are present, OpenAI may be used as a fallback. To force a provider, run the corresponding `set-<provider>` command.
-- **Dotenv edits not picked up?** deepeval loads dotenv files from the current working directory by default, or `ENV_DIR_PATH` if set. Ensure your Python process runs in that context.
-
-</Case>
-
-<Case id="typescript">
-
-- **Nothing printed?** For `set-*` / `unset-*` / `set-debug`, a clean exit with no output often means you are passing the `--quiet` / `-q` flag.
-- **Provider still active after unsetting?** Unsetting turns off target provider `USE_*` flags; if a provider remains enabled and properly configured it will become the active provider. If no provider is enabled, but OpenAI credentials are present, OpenAI may be used as a fallback. To force a provider, run the corresponding `set-<provider>` command.
-- **Dotenv edits not picked up?** deepeval loads dotenv files from the current working directory only. Ensure your Node process runs in that directory.
-
-</Case>
-
-</Switch>
+- **Provider still active after unsetting?** Unsetting turns off that provider's `USE_*` flag only; if another provider's flag is still on, it becomes the active provider. With no `USE_*` flag enabled, deepeval falls back to OpenAI. To force a provider, run the corresponding `set-<provider>` command.
+- **Dotenv edits not picked up?** deepeval loads dotenv files from the current working directory by default, or `ENV_DIR_PATH` if set. Ensure your process runs in that context.
 
 If you’re still stuck, the dedicated [Troubleshooting](/docs/troubleshooting) page covers deeper debugging (TLS errors, logging, timeouts, dotenv loading, and config caching).
