@@ -1,0 +1,549 @@
+---
+title: Top 5 LLM Evaluation Platforms in 2026, Compared
+description: A practical comparison of the top LLM evaluation platforms in 2026 for evaluating AI applications.
+date: 2026-08-04
+authors: [kritinv]
+category: comparisons
+---
+
+LLM evaluation frameworks like [DeepEval](https://github.com/confident-ai/deepeval)
+help developers and researchers evaluate their AI applications in code.
+However, when entire teams are building and evaluating AI applications,
+you'll need an LLM evaluation platform.
+
+A framework runs in one engineer's terminal. A platform is necessary when
+teams need cross-functional collaboration — and enterprises, standardization.
+It gives the whole team:
+
+- A collaborative dataset editor
+- Shareable testing reports
+- Regression tracking
+- Evals on live production traces
+- Org-wide, enforceable quality gates
+
+The result: PMs, QA, domain experts, and other stakeholders participate in
+quality decisions instead of filing engineering tickets for every evaluation
+run.
+
+This guide compares the best LLM evaluation platforms for shipping AI
+applications in 2026.
+
+## What is an LLM evaluation platform?
+
+An **LLM evaluation platform** is the managed layer around your evaluation
+workflow: dataset management, testing reports, regression tracking,
+collaboration, production monitoring, and alerting — usually with a UI that
+non-engineers can use.
+
+LLM evaluation platforms are usually full-stack solutions covering development
+to production, but your evaluation layer depends on what you're building. AI
+agent teams live in tracing — scoring tool calls, retrievals, and reasoning
+steps, and following failed scores back to the component responsible. RAG
+teams run retrieval and grounding metrics against curated datasets. Chatbot
+teams rely on multi-turn testing reports and simulations.
+
+An evaluation platform is not the same thing as:
+
+- **An evaluation framework** (like DeepEval or Ragas), which runs in code —
+  see our
+  [Top 5 LLM evaluation frameworks](/blog/top-5-llm-evaluation-frameworks)
+  comparison for that category.
+- **An observability platform**, which records what your application did —
+  traces, latency, cost — but never judges whether the outputs were any good.
+- **An ML platform** (like MLflow or SageMaker), which manages model training
+  and deployment — built for models, not for judging your LLM app's outputs.
+
+There is overlap between these categories, but only an evaluation platform
+answers the question leadership actually asks: **"Is this AI app allowed to
+ship — and is it still meeting the bar in production?"**
+
+## What to look for in an LLM evaluation platform
+
+Across an organization, AI apps are built by different teams, on different
+stacks — each measuring quality its own way, if at all. These are the criteria
+worth checking before committing to a platform:
+
+1. **Use case coverage** – does it evaluate RAG, AI agents, chatbots,
+   single-turn, multi-turn, and safety — or just one of these?
+2. **Metric depth and trust** – are metrics research-backed and explainable,
+   with every score carrying reasoning your team can inspect and defend?
+3. **Collaboration workflows** – can PMs, QA, and domain experts run
+   evaluation cycles independently, without an engineer writing scripts?
+4. **CI/CD integration** – can evaluations run automatically in your
+   deployment pipeline and gate releases on regressions?
+5. **Production evaluation** – can you monitor live traffic with online evals
+   and signals — continuous enforcement, not after-the-fact dashboards?
+6. **Simulation and data generation** – can you generate test data dynamically,
+   including multi-turn conversations and adversarial inputs?
+7. **Red teaming and safety** – is security testing a first-class part of the
+   quality standard, so gates can block on vulnerabilities — not just
+   accuracy?
+8. **AI governance** – can you define the standard once and enforce it
+   automatically across every team and use case — before launch and
+   continuously in production?
+9. **Deployment and cost** – is it vendor- and stack-agnostic, with enterprise
+   controls (self-hosting, SSO, RBAC, audit logs) and pricing that scales?
+
+Now that we know what a complete team evaluation workflow requires, here are
+the platforms that can help build it.
+
+## Top LLM evaluation platforms at a glance
+
+This table maps each platform to the criteria above.
+
+<span className="comparison-status comparison-status--strong">✓ Strong</span>
+means the capability is native and central to the product,
+<span className="comparison-status comparison-status--partial">~ Partial</span>
+means it is narrower or requires additional setup, and
+<span className="comparison-status comparison-status--unsupported">
+  ✕ Not supported
+</span>
+means the capability is unavailable as a native workflow.
+
+<div className="framework-comparison-table">
+
+| Capability                         | Confident AI                                                                                                                                     | LangSmith                                                                                                                       | Langfuse                                                                                                                      | Braintrust                                                                                                                 | Arize AI                                                                                                                      |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Use case coverage**              | <span className="comparison-status comparison-status--strong">✓ Strong:</span> RAG, agents, chatbots, multi-turn, and safety                     | <span className="comparison-status comparison-status--partial">~ Partial:</span> LangChain-centric, no multi-turn or safety     | <span className="comparison-status comparison-status--partial">~ Partial:</span> tracing-first with lightweight evals         | <span className="comparison-status comparison-status--partial">~ Partial:</span> prompt-centric evaluation                 | <span className="comparison-status comparison-status--partial">~ Partial:</span> monitoring-first with custom evaluators      |
+| **Metric depth and trust**         | <span className="comparison-status comparison-status--strong">✓ Strong:</span> 50+ research-backed metrics with human alignment                  | <span className="comparison-status comparison-status--partial">~ Partial:</span> custom judge prompts, openevals templates      | <span className="comparison-status comparison-status--partial">~ Partial:</span> prebuilt judge evaluators, custom scores     | <span className="comparison-status comparison-status--partial">~ Partial:</span> custom scorers and judge templates        | <span className="comparison-status comparison-status--partial">~ Partial:</span> judge templates with alignment tooling       |
+| **Collaboration workflows**        | <span className="comparison-status comparison-status--strong">✓ Strong:</span> dataset curation, annotation queues, no-code evals, prompt studio | <span className="comparison-status comparison-status--partial">~ Partial:</span> annotation queues with rubrics                 | <span className="comparison-status comparison-status--partial">~ Partial:</span> annotation queues, engineer-led setup        | <span className="comparison-status comparison-status--strong">✓ Strong:</span> no-code playground and dataset editor       | <span className="comparison-status comparison-status--partial">~ Partial:</span> labeling queues and annotations              |
+| **CI/CD integration**              | <span className="comparison-status comparison-status--strong">✓ Strong:</span> GitHub and GitLab integrations, PR-style prompt versioning        | <span className="comparison-status comparison-status--strong">✓ Strong:</span> SDK-driven CI evaluation                         | <span className="comparison-status comparison-status--partial">~ Partial:</span> manual, assembled by the team                | <span className="comparison-status comparison-status--strong">✓ Strong:</span> CI gates on prompt changes                  | <span className="comparison-status comparison-status--strong">✓ Strong:</span> experiment workflows in CI                     |
+| **Production evaluation**          | <span className="comparison-status comparison-status--strong">✓ Strong:</span> online evals, signals, alerting, auto-curated datasets            | <span className="comparison-status comparison-status--strong">✓ Strong:</span> evaluation scoring on traces                     | <span className="comparison-status comparison-status--strong">✓ Strong:</span> online evals and monitors (alerts cloud-only)  | <span className="comparison-status comparison-status--partial">~ Partial:</span> online scoring on logs, no quality alerts | <span className="comparison-status comparison-status--strong">✓ Strong:</span> real-time dashboards and monitoring            |
+| **Simulation and data generation** | <span className="comparison-status comparison-status--strong">✓ Strong:</span> simulated conversations, synthetic dataset generation             | <span className="comparison-status comparison-status--partial">~ Partial:</span> simulation via openevals, in code only         | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native simulation or generation | <span className="comparison-status comparison-status--partial">~ Partial:</span> Loop generates test cases, no simulation  | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native simulation or generation |
+| **Red teaming and safety**         | <span className="comparison-status comparison-status--strong">✓ Strong:</span> 120+ vulnerabilities, OWASP, NIST AI RMF, MITRE ATLAS             | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native red teaming                | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native red teaming              | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native red teaming           | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native red teaming              |
+| **AI governance**                  | <span className="comparison-status comparison-status--strong">✓ Strong:</span> org-wide gate, enforced pre-launch and live                       | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no governance layer                  | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no governance layer                | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no governance layer             | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no governance layer                |
+| **Deployment and cost**            | <span className="comparison-status comparison-status--partial">~ Partial:</span> $1/GB traces, enterprise self-hosting                           | <span className="comparison-status comparison-status--partial">~ Partial:</span> per-seat pricing, Enterprise-only self-hosting | <span className="comparison-status comparison-status--strong">✓ Strong:</span> MIT-licensed, free self-hosting                | <span className="comparison-status comparison-status--partial">~ Partial:</span> $3/GB traces, steep tier jump             | <span className="comparison-status comparison-status--strong">✓ Strong:</span> free open-source Phoenix, managed AX path      |
+
+</div>
+
+## 1. Confident AI
+
+### What is Confident AI and why should AI teams consider it?
+
+[Confident AI](https://confident-ai.com) is the AI quality platform built for
+enterprise teams to standardize evals and observability across the org. Think
+of it as the funnel every AI use case passes through: platform teams define
+what "good" means once, and different product teams — whatever stack they're
+on — measure their apps against that standard before launch with
+research-backed eval metrics, then monitor them live with online evals and
+signals on real traffic.
+
+Its main advantage is enforcement. It is the only platform in this comparison
+where the same standard extends to security through native red teaming, and
+is applied automatically through AI governance — an org-wide gate that blocks
+anything failing its evals or red-team checks before it ships, and keeps
+enforcing that bar every day the app is live. Nothing reaches customers
+without clearing it.
+
+### Key features
+
+- **50+ research-backed metrics** for AI agents, multi-turn, and RAG
+- **Postman for AI evals:** run evals on the API endpoints that host your
+  agents instead of recreating them directly on the platform
+- **Full tracing** of every call, span, and agent step, and the most common
+  failure modes
+- **Online evals** that run against real production traces, with monitored
+  alerts
+- **Live signals** to identify patterns in user sentiment, issues, and use
+  cases
+- **Experimentation, regression testing, and prompt management**, plus
+  multi-turn simulation
+- **Dataset workflows** that automatically build your next dataset from
+  traces, queued for annotation
+- **Native red teaming:** 120+ vulnerabilities such as PII leakage and tool
+  misuse, 20+ attack vectors such as linear jailbreaking, scanned on agentic
+  traces — with shareable risk assessments aligned to OWASP Top 10, NIST AI
+  RMF, and MITRE ATLAS
+- **AI governance:** define the standard once and an automatic gate blocks
+  releases that fail their evals or red-team checks — enforced before launch
+  and live in production
+- **Enterprise-ready:** self-hosting, SOC 2 Type II, GDPR, SSO, RBAC, and
+  audit logs
+
+### Getting started
+
+Create a free account at
+[app.confident-ai.com](https://app.confident-ai.com/auth/signup), connect your
+AI application over HTTP or with a few lines of SDK code, and run your first
+evaluation — no need to recreate your app on the platform.
+
+### Pricing
+
+| Plan       | Price        | Includes                                                      |
+| ---------- | ------------ | ------------------------------------------------------------- |
+| Free       | $0           | Core evaluation workflows, unlimited traces at $1/GB-month    |
+| Starter    | $200/month   | Unlimited user seats                                          |
+| Team       | $2,000/month | Unlimited user seats, full collaboration and production suite |
+| Enterprise | Custom       | Self-hosting, SSO, and enterprise controls                    |
+
+**Confident AI is for you if...**
+
+- Different teams build AI apps on different stacks and you need one
+  consistent bar for how they're measured and monitored
+- You want evals and observability in one place — measure before launch,
+  monitor live after
+- Leadership needs an automatic answer to "is this AI app allowed to ship?"
+- Security testing should be part of the same standard, not a separate vendor
+- PMs, QA, and domain experts need to run evaluation cycles without code
+
+**Confident AI is not for you if...**
+
+- You're a developer who just needs metrics in code — an open-source
+  framework like DeepEval will serve you better
+- You need a fully open-source platform on the free tier (self-hosting is
+  enterprise-only)
+
+Confident AI's eval metrics and adversarial testing are powered by
+[DeepEval](https://github.com/confident-ai/deepeval) and
+[DeepTeam](https://github.com/confident-ai/deepteam) respectively — two of the
+most-used open-source packages for LLM evaluation and red teaming.
+
+## 2. LangSmith
+
+### What is LangSmith and why should AI teams consider it?
+
+[LangSmith](https://smith.langchain.com/) is the managed platform from the
+LangChain team, combining tracing, evaluation, prompt playgrounds, and dataset
+management. It is the most established name in the LLM tooling space, and the
+natural choice if your stack is built on LangChain or LangGraph.
+
+Its center of gravity is observability and debugging: when your chain produces
+a strange output, you can trace the issue back to the exact step. Evaluation
+is a lighter layer — you write your own judge prompts rather than drawing on a
+built-in metric library — and because the platform is deepest inside the
+LangChain ecosystem, standardizing an organization on LangSmith tends to mean
+standardizing on the stack too.
+
+### Key features
+
+- Native trace capture for LangChain and LangGraph applications
+- Evaluation scoring on traces with custom evaluator support
+- Human annotation queues for review workflows
+- Agent execution graph visualization for debugging
+- Prompt playground with side-by-side comparisons and versioning
+- Dataset management for evaluation workflows
+
+### Pricing
+
+| Plan       | Price          | Includes                          |
+| ---------- | -------------- | --------------------------------- |
+| Developer  | $0             | Personal tracing and evaluation   |
+| Plus       | $39/seat/month | Team workspaces and higher limits |
+| Enterprise | Custom         | Enterprise controls and support   |
+
+**LangSmith is for you if...**
+
+- Your entire stack is built on LangChain or LangGraph
+- Tracing and prompt debugging are your primary needs, with evals second
+- You want prompt management tightly integrated with evaluation
+
+**LangSmith is not for you if...**
+
+- You need research-backed metrics out of the box rather than custom evaluators
+- Your application isn't built on LangChain — or you don't want an org-wide
+  standard to force every team onto one stack
+- You need multi-turn simulation, red teaming, or safety evaluation
+- Non-engineers need to run evaluation cycles independently
+- You want self-hosting without an Enterprise contract
+
+## 3. Langfuse
+
+### What is Langfuse and why should AI teams consider it?
+
+[Langfuse](https://langfuse.com/) is a 100% open-source (MIT) LLM engineering
+platform offering tracing, prompt management, and evals, with one of the
+largest open-source communities in the space. It captures traces with high
+fidelity, supports session-level grouping, and gives teams full data ownership
+through Docker-based self-hosting — which makes security review and
+procurement easy.
+
+The trade-off is that its evaluation layer is lighter than its observability
+layer. Prebuilt judge evaluators (built with partners like Ragas) cover
+common dimensions, but deeper scoring means writing your own judge prompts or
+bringing an external evaluation library.
+
+### Key features
+
+- OpenTelemetry-native LLM tracing with broad integrations
+- Data masking, sampling, and environments for production adoption
+- Prompt management with versioning and composite prompts for chained
+  workflows
+- Custom evaluation scores attached to traces, with cost and error tracking
+- Fully open-source and self-hostable, with unlimited users on all tiers
+
+### Pricing
+
+| Plan        | Price               | Includes                                      |
+| ----------- | ------------------- | --------------------------------------------- |
+| Self-hosted | Free (MIT)          | Full platform via Docker                      |
+| Cloud       | Free and paid tiers | Managed hosting, unlimited users on all tiers |
+
+**Langfuse is for you if...**
+
+- Self-hosting and full data ownership are non-negotiable
+- Observability and prompt management are your primary needs
+- Your evaluation needs are lightweight and your team is happy building
+  custom scoring
+
+**Langfuse is not for you if...**
+
+- You want research-backed metrics out of the box
+- You need multi-turn evaluation, simulation, or red teaming
+- You need quality alerting on a self-hosted deployment (monitors are
+  cloud-only)
+- Non-engineers need to own evaluation workflows
+
+## 4. Braintrust
+
+### What is Braintrust and why should AI teams consider it?
+
+[Braintrust](https://www.braintrust.dev/) positions itself as an end-to-end
+platform for evaluating AI products, with a focus on making prompt evaluations
+fast and reproducible. Its playground is one of the most polished in the
+category, and it's more non-technical-friendly than most: users can test
+prompt and model variations without code, and a dataset editor lets
+non-engineers contribute test cases.
+
+Its sweet spot is prompt optimization for an individual product team iterating
+on its own app — less so enforcing one standard across an entire organization.
+It evaluates prompts in isolation, rather than testing your AI application
+end-to-end over HTTP the way it runs in production.
+
+### Key features
+
+- Evaluation playground for testing prompt and model combinations without code
+- Experiment tracking with diffs between runs
+- CI/CD evaluation gates for catching prompt regressions before deployment
+- Dataset editor accessible to non-technical team members
+- Custom scorer creation, with online scoring automations on production logs
+
+### Pricing
+
+| Plan       | Price      | Includes                        |
+| ---------- | ---------- | ------------------------------- |
+| Free       | $0         | Core evaluation and playground  |
+| Pro        | $249/month | Team features, tracing at $3/GB |
+| Enterprise | Custom     | Enterprise controls and support |
+
+**Braintrust is for you if...**
+
+- Prompt optimization is your primary evaluation concern
+- You want a clean playground for side-by-side prompt and model comparison
+- You need automated CI gates on prompt changes
+
+**Braintrust is not for you if...**
+
+- You need to test your application end-to-end the way it runs in production
+- You're evaluating agents, multi-turn chatbots, or safety — not just prompts
+- You're cost-sensitive on tracing or need a mid-tier between $0 and
+  $249/month
+
+## 5. Arize AI
+
+### What is Arize AI and why should AI teams consider it?
+
+[Arize AI](https://arize.com/) brings ML monitoring heritage to LLM
+evaluation through its managed AX platform and the open-source Phoenix
+library. Phoenix provides OpenTelemetry-based tracing, LLM-as-a-judge
+evaluators, and embeddings analysis, with a natural upgrade path to AX for
+enterprise-scale monitoring.
+
+Arize is most compelling for monitoring-led organizations: enterprise-scale
+infrastructure, real-time dashboards, and the ability to combine ML and LLM
+observability in one platform, oriented toward engineering teams. It watches
+production well, but it doesn't enforce an org-wide quality standard — the
+evaluation layer is secondary, with judge templates and custom evaluators
+rather than a deep built-in metric library.
+
+### Key features
+
+- Prebuilt judge templates and custom evaluators with user-defined criteria
+- Experiment workflows for testing datasets against LLM outputs via UI
+- Span-level tracing for debugging evaluation failures in context
+- Phoenix open-source library as a free local starting point
+- Real-time dashboards tracking evaluation scores over time
+
+### Pricing
+
+| Plan          | Price     | Includes                                      |
+| ------------- | --------- | --------------------------------------------- |
+| Phoenix       | Free      | Open-source tracing, datasets, and evaluators |
+| AX Free       | $0        | Managed entry tier                            |
+| AX Pro        | $50/month | Team monitoring and evaluation                |
+| AX Enterprise | Custom    | Enterprise-scale observability                |
+
+**Arize AI is for you if...**
+
+- Your organization already uses Arize for ML monitoring
+- You're a monitoring-led enterprise handling high-volume workloads
+- You want an open-source local starting point (Phoenix) with a managed
+  upgrade path
+
+**Arize AI is not for you if...**
+
+- You want deep built-in LLM metrics rather than custom evaluators
+- You need multi-turn simulation, red teaming, or safety evaluation
+- Non-engineers need to run evaluation cycles, not just label data
+
+## Which LLM evaluation platform should you choose?
+
+### Step 1: Identify what you are evaluating
+
+- **Multiple use cases (RAG + agents + chatbots + safety):** Confident AI is
+  the only platform in this comparison that covers all of them natively.
+- **LangChain applications:** LangSmith offers the tightest native
+  integration, with the trade-off that depth outside that ecosystem is
+  limited.
+- **Self-hosting on a free plan:** Langfuse's MIT license lets you run the
+  full platform via Docker at no cost — just expect a lighter evaluation
+  layer.
+
+### Step 2: Decide who runs evaluations
+
+If evaluation stays with engineers, any platform here works, and a framework
+like DeepEval may even be enough on its own. If PMs, QA, and domain experts
+need to run evaluation cycles independently, Confident AI is the only platform
+in this comparison where non-engineers run full evaluation cycles — elsewhere,
+collaboration stops at annotation queues and playgrounds, with engineers
+setting up each run.
+
+### Step 3: Decide whether you need evaluation or observability first
+
+An evaluation-first platform starts with datasets and success criteria, gates
+releases on quality, and extends the same metrics into production. Confident
+AI and Braintrust are built this way.
+
+An observability-first platform starts with traces and dashboards, then adds
+scoring on top. LangSmith, Langfuse, and Arize follow this model — strong at
+debugging what happened, lighter at judging whether it was good.
+
+### Step 4: Check the constraint that will actually decide it
+
+- **Need one standard enforced across many teams?** Only Confident AI has an
+  AI governance layer — an automatic gate that blocks releases failing their
+  evals or red-team checks, before launch and continuously in production.
+- **Need red teaming without another vendor?** Only Confident AI includes it.
+- **Must self-host on day one?** Langfuse is the only MIT-licensed, fully
+  self-hostable option here.
+- **Evaluating at scale?** Compare trace costs: Confident AI is $1/GB-month
+  with unlimited traces; Braintrust is $3/GB.
+
+## Final comparison
+
+| Tool             | Open source        | Primary interface     | Best for                                         | You may also need                                           |
+| ---------------- | ------------------ | --------------------- | ------------------------------------------------ | ----------------------------------------------------------- |
+| **Confident AI** | No (self-hostable) | UI + HTTP + SDK       | Standardizing evals and observability org-wide   | Nothing — evals, observability, red teaming, and governance |
+| **LangSmith**    | No                 | UI + SDK              | LangChain-native tracing with basic evals        | Deeper metrics and simulation for non-LangChain components  |
+| **Langfuse**     | MIT                | UI + SDK + self-host  | Self-hosted observability with lightweight evals | Deeper metrics and simulation beyond judge templates        |
+| **Braintrust**   | No                 | UI + playground + SDK | Prompt optimization and regression gates         | Broader tooling for agents, multi-turn, and safety          |
+| **Arize AI**     | Phoenix (OSS)      | UI + OTel + Phoenix   | Monitoring-led enterprises adding LLM evaluation | Research-backed metrics and simulation                      |
+
+### Recommendations by team type
+
+**For enterprise platform teams**
+
+- **Confident AI** to standardize evals and observability across the org and
+  enforce them automatically through AI governance
+
+**For cross-functional AI teams**
+
+- **Confident AI** if PMs, QA, and domain experts need to own evaluation
+  cycles alongside engineers
+
+**For LangChain engineering teams**
+
+- **LangSmith** for native tracing and debugging
+- **Confident AI** when evaluation depth and team workflows outgrow it
+
+**For teams that must self-host**
+
+- **Langfuse** for MIT-licensed observability and prompt management
+- Pair with **DeepEval** for open-source metric coverage
+
+**For monitoring-led enterprises**
+
+- **Arize AI** to combine ML and LLM observability at scale
+- **Confident AI** when the evaluation layer needs to be first-class
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is the best overall LLM evaluation platform in 2026?",
+      answer: (
+        <>
+          Confident AI — it combines evals, observability, red teaming, and AI
+          governance in one platform, with an org-wide gate that enforces the
+          same standard before launch and in production. A specialist may be
+          better if your only requirement is LangChain tracing, self-hosted
+          observability, or prompt regression.
+        </>
+      ),
+    },
+    {
+      question:
+        "What's the difference between an evaluation framework and an evaluation platform?",
+      answer: (
+        <>
+          A framework (like DeepEval or Ragas) runs in code — scripts,
+          evaluations, scores. A platform adds a UI, collaboration workflows,
+          production monitoring, dataset management, and regression testing on
+          top. See our{" "}
+          <a href="/blog/top-5-llm-evaluation-frameworks">
+            Top 5 LLM evaluation frameworks
+          </a>{" "}
+          comparison for the framework side.
+        </>
+      ),
+    },
+    {
+      question: "Are DeepEval and Confident AI the same product?",
+      answer: (
+        <>
+          No — they're separate products. DeepEval is an open-source evaluation
+          framework that runs locally in code. Confident AI is the AI quality
+          platform for enterprise teams to standardize evals and observability
+          across the org — its metrics and adversarial testing are powered by
+          DeepEval and DeepTeam, but the platform is its own product, not
+          "DeepEval's UI."
+        </>
+      ),
+    },
+    {
+      question: "How do I evaluate multi-turn conversations on a platform?",
+      answer: (
+        <>
+          Static test datasets don't capture conversational behavior. Multi-turn
+          simulation generates realistic user-AI conversations with tool use and
+          branching paths. Confident AI is the only platform in this comparison
+          with native multi-turn simulation — elsewhere it requires external
+          code libraries or isn't supported.
+        </>
+      ),
+    },
+    {
+      question: "How do I integrate LLM evaluation into CI/CD?",
+      answer: (
+        <>
+          Confident AI runs evaluations in your pipeline, returns testing
+          reports with regression tracking, and its governance gate blocks
+          releases that fail. LangSmith, Braintrust, and Arize support CI-driven
+          evaluation through their SDKs; Langfuse requires assembling the
+          pipeline yourself.
+        </>
+      ),
+    },
+    {
+      question: "Do I need a separate tool for red teaming?",
+      answer: (
+        <>
+          On most platforms, yes. Confident AI is the only one here with native
+          red teaming — 120+ vulnerabilities, 20+ attack methods, and risk
+          assessments aligned to OWASP Top 10, NIST AI RMF, and MITRE ATLAS —
+          powered by DeepTeam, an open-source red teaming package.
+        </>
+      ),
+    },
+  ]}
+/>
