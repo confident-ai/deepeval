@@ -4,6 +4,8 @@ import { getLlmContext } from "../../tracing/trace-context";
 import {
   SpanType,
   getCurrentTrace,
+  getCurrentSpan,
+  setCurrentSpan,
   traceManager,
   BaseSpan,
   LlmSpan,
@@ -11,6 +13,16 @@ import {
   RetrieverSpan,
   TraceSpanStatus,
 } from "../../tracing/tracing";
+import {
+  applyPendingToSpan,
+  popPendingFor,
+} from "../../tracing/pending-context";
+import {
+  ROUTE_TO_REST_ATTRIBUTE,
+  endOtelImplicitTrace,
+  resolveSpanRoute,
+  resolveTraceForOtelSpan,
+} from "../../tracing/otel-routing";
 import { AiSdkInstrumentationOptions } from "./index";
 import { ToolCall } from "../../test-case";
 
@@ -42,6 +54,7 @@ const SPAN_TYPE_MAPPING: Record<string, SpanType> = {
 export class DeepEvalSpanProcessor implements SpanProcessor {
   private options: AiSdkInstrumentationOptions;
   private aiSpanIds = new Set<string>();
+  private previousSpans = new Map<string, BaseSpan | undefined>();
 
   constructor(options?: AiSdkInstrumentationOptions) {
     this.options = options || {};
@@ -68,8 +81,15 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
     this.setTraceAttributes(span);
     this.setSpanAttributes(span, spanName);
 
-    if (this.options.isTestMode) {
-      const currentTrace = getCurrentTrace();
+    // Routing decision, stamped so `onEnd` and the export filter act on the same
+    // answer even if the async context has moved on by then.
+    const route = resolveSpanRoute({ isTestMode: this.options.isTestMode });
+    if (route === "rest") {
+      span.setAttribute(ROUTE_TO_REST_ATTRIBUTE, true);
+
+      // A bare caller has no trace of their own; open one implicitly for the
+      // root so the spans have somewhere to live.
+      const currentTrace = resolveTraceForOtelSpan(isAiRoot);
       if (currentTrace) {
         const traceId = currentTrace.uuid;
         span.setAttribute("confident.internal.trace_uuid", traceId);
@@ -103,6 +123,10 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
           deepEvalSpan = new BaseSpan(commonParams);
         }
 
+        // Drain `next*Span(...)` defaults and the scope-wide `setTracingContext`
+        // values, before the attribute-derived fields land in `onEnd`.
+        applyPendingToSpan(deepEvalSpan, popPendingFor(type));
+
         traceManager.addSpan(deepEvalSpan);
         try {
           traceManager.addSpanToTrace(deepEvalSpan);
@@ -110,7 +134,20 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
           deepEvalSpan.parentUuid = undefined;
           traceManager.addSpanToTrace(deepEvalSpan);
         }
+        this.previousSpans.set(spanId, getCurrentSpan());
+        setCurrentSpan(deepEvalSpan);
       }
+    }
+  }
+
+  /** Restore the span that was current before `spanId` started. */
+  private popSpanContext(spanId: string): void {
+    if (!this.previousSpans.has(spanId)) return;
+    const previous = this.previousSpans.get(spanId);
+    this.previousSpans.delete(spanId);
+    // Siblings ending out of order may already have replaced the current span.
+    if (getCurrentSpan()?.uuid === spanId) {
+      setCurrentSpan(previous ?? null);
     }
   }
 
@@ -195,10 +232,11 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
       }
     }
 
-    if (this.options.isTestMode) {
+    if (attributes[ROUTE_TO_REST_ATTRIBUTE]) {
       this.updateAndEndSpan(span, attributes, name);
     }
 
+    this.popSpanContext(span.spanContext().spanId);
     this.aiSpanIds.delete(span.spanContext().spanId);
   }
 
@@ -707,9 +745,16 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
     deepEvalSpan.error = attributes["error"]
       ? String(attributes["error"])
       : undefined;
-    deepEvalSpan.metricCollection =
-      attributes["confident.span.metric_collection"];
-    deepEvalSpan.metadata = metadataObj;
+    // Assign only when the attribute carries something: these fields can also
+    // have been set from user code (`next*Span`, `updateCurrentSpan`), and an
+    // absent attribute must not erase that.
+    if (attributes["confident.span.metric_collection"] !== undefined) {
+      deepEvalSpan.metricCollection =
+        attributes["confident.span.metric_collection"];
+    }
+    if (metadataObj !== undefined) {
+      deepEvalSpan.metadata = metadataObj;
+    }
 
     if (deepEvalSpan.type === SpanType.LLM) {
       const llmSpan = deepEvalSpan as LlmSpan;
@@ -769,6 +814,12 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
       if (!parentId) {
         traceManager.endTrace(traceId);
       }
+    }
+
+    const rootParentId =
+      (span as any).parentSpanId || (span as any).parentSpanContext?.spanId;
+    if (!rootParentId) {
+      endOtelImplicitTrace(traceId);
     }
   }
 

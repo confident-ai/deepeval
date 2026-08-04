@@ -2,7 +2,7 @@ import { ChatGeneration } from "@langchain/core/outputs";
 import { AIMessage } from "@langchain/core/messages";
 import cliProgress from "cli-progress";
 
-import { traceManager } from "../../tracing";
+import { applyPendingToSpan, popPendingFor, traceManager } from "../../tracing";
 import { BaseMetric } from "../../metrics/base-metrics";
 import {
   SpanType,
@@ -259,6 +259,8 @@ export const enterCurrentContext = ({
   if (spanInstance instanceof LlmSpan && prompt) {
     spanInstance["prompt"] = prompt;
   }
+
+  applyPendingToSpan(spanInstance, popPendingFor(spanInstance.type));
 
   traceManager.addSpan(spanInstance);
   traceManager.addSpanToTrace(spanInstance);
