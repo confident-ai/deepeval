@@ -39,13 +39,13 @@ def test_all_tokens_filtered_falls_back_to_raw_score():
 
 def test_non_decimal_tokens_filtered_falls_back_to_raw_score():
     # High-probability but non-decimal tokens are filtered too.
-    resp = _chat_completion("5", [("five", math.log(0.9)), (" ", math.log(0.8))])
+    resp = _chat_completion(
+        "5", [("five", math.log(0.9)), (" ", math.log(0.8))]
+    )
     assert _call(5, resp) == 5
 
 
 def test_normal_weighted_score_is_computed():
-    resp = _chat_completion(
-        "5", [("5", math.log(0.9)), ("4", math.log(0.1))]
-    )
+    resp = _chat_completion("5", [("5", math.log(0.9)), ("4", math.log(0.1))])
     score = _call(5, resp)
     assert 4.0 < score <= 5.0
