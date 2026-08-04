@@ -5,27 +5,6 @@ import { LLMTestCase, ToolCall } from "../test-case";
 import { Prompt } from "../prompt";
 import type { BaseSpan } from "./tracing";
 
-/**
- * `next*Span`: declarative defaults for the NEXT span of a given type.
- *
- * Counterpart to `updateCurrentSpan(...)` for spans without a user-code seam —
- * i.e. spans the user never executes code inside, so `updateCurrentSpan` from
- * "their" body isn't reachable. The canonical case is an integration-emitted
- * agent / LLM span where the only callsite the user owns is the one wrapping
- * the framework call.
- *
- * Semantics (mirrors Python's `next_*_span` family):
- *   - One-shot: the payload is consumed by the FIRST span of the matching type
- *     created inside the active scope. Subsequent spans see an empty slot.
- *   - Per-type isolation: each helper writes to its own slot, so nesting
- *     `nextAgentSpan(..., () => nextLlmSpan(..., fn))` is unambiguous.
- *   - One-stop params: each helper accepts BASE fields (everything
- *     `updateCurrentSpan` takes) AND its type-specific fields in one call.
- *   - Consumer responsibility: integrations call `popPendingFor(...)` when they
- *     classify a fresh span and apply the payload to it. If nothing is
- *     listening the payload is discarded when the scope exits.
- */
-
 export interface PendingSpanParams {
   input?: any;
   output?: any;
@@ -70,18 +49,6 @@ export type PendingPayload = Record<string, any>;
 /** Which typed slot a span competes for. `undefined` → base slot only. */
 export type SlotKind = "agent" | "llm" | "tool" | "retriever";
 
-/**
- * Mutable wrapper around a pending-defaults payload.
- *
- * Why a wrapper instead of putting the payload straight into the store: a
- * consumer often runs inside a NESTED `AsyncLocalStorage.run(...)` scope (the
- * framework opens its own context around the call). Replacing the store's
- * field from there would not be visible to the outer `next*Span` scope, so a
- * second framework call inside the same scope could re-consume a value that
- * was already drained. Store inheritance copies the REFERENCE to this wrapper,
- * so mutating `payload` is visible in both the consumer's sub-context and the
- * outer scope. (Same rationale as Python's `_PendingSlot`.)
- */
 class PendingSlot {
   payload?: PendingPayload;
 
@@ -100,32 +67,18 @@ type SlotStore = {
 
 const pendingStore = new AsyncLocalStorage<SlotStore>();
 
-/**
- * Reads *ambient* defaults for a span kind — values that apply to every matching
- * span in scope rather than being consumed by the first one.
- *
- * This is the seam for `setTracingContext({ llmSpanContext, agentSpanContext })`,
- * which predates `next*Span` and is scope-wide rather than one-shot. Registering
- * it here means an integration only ever calls {@link popPendingFor} and gets
- * both mechanisms merged, with the one-shot payload winning.
- *
- * Injected rather than imported so this module stays free of a require cycle
- * (`trace-context` → `tracing` → `pending-context`).
- */
 export type AmbientPayloadReader = (
   kind: SlotKind | undefined,
 ) => PendingPayload | undefined;
 
 let ambientReader: AmbientPayloadReader | undefined;
 
-/** @internal Registered by `trace-context` at module load. */
 export function _setAmbientPayloadReader(
   reader: AmbientPayloadReader | undefined,
 ): void {
   ambientReader = reader;
 }
 
-/** Strip undefined values so consumers don't re-check every field. */
 function dropUndefined(params: Record<string, any>): PendingPayload {
   const out: PendingPayload = {};
   for (const [key, value] of Object.entries(params)) {
@@ -146,12 +99,6 @@ function withSlot<T>(
   return pendingStore.run(store, async () => await fn());
 }
 
-/**
- * Set base-span defaults for the next span of ANY type, for the duration of
- * `fn`. Use when the upcoming span's type doesn't matter or isn't known; for a
- * typed match use `nextAgentSpan` / `nextLlmSpan` / `nextToolSpan` /
- * `nextRetrieverSpan`.
- */
 export function nextSpan<T>(
   params: PendingSpanParams,
   fn: () => T | Promise<T>,
@@ -191,13 +138,6 @@ export function nextRetrieverSpan<T>(
   return withSlot("retriever", params, fn);
 }
 
-/**
- * Map a span's `type` onto the typed slot it consumes, if any.
- *
- * Compared against literals rather than the `SpanType` enum on purpose: the
- * enum lives in `tracing.ts`, which imports this module, so a value import
- * would create a require cycle. The enum's values ARE these strings.
- */
 export function slotKindForSpanType(
   spanType: string | undefined,
 ): SlotKind | undefined {
@@ -273,9 +213,6 @@ const BASE_FIELDS: readonly string[] = [
 ];
 
 // Guards against cross-type leakage (e.g. `embedder` landing on an LLM span).
-// Python uses `hasattr`; an allowlist is used here instead because spans are
-// not always class instances — the `observe` path builds plain object literals,
-// so an `in` check would silently drop legitimate fields.
 const TYPED_FIELDS: Record<SlotKind, readonly string[]> = {
   agent: ["availableTools", "agentHandoffs"],
   llm: [
