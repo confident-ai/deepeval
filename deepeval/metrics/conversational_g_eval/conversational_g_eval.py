@@ -390,9 +390,11 @@ class ConversationalGEval(BaseConversationalMetric):
         self, raw_score: int, raw_response: ChatCompletion
     ) -> Union[int, float]:
         generated_logprobs = raw_response.choices[0].logprobs.content
-        # First, locate the token that we care for logprobs, i.e., the token matching the score
+        # First, locate the token that we care for logprobs, i.e., the token matching the score.
+        # Scan backwards: the response schema emits "reason" before "score", so a digit that
+        # happens to appear in the reasoning text would otherwise shadow the actual score token.
         score_logprobs = None
-        for token_logprobs in generated_logprobs:
+        for token_logprobs in reversed(generated_logprobs):
             if token_logprobs.token == str(raw_score):
                 score_logprobs = token_logprobs
                 break

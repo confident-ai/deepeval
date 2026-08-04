@@ -12,6 +12,9 @@ from deepeval.metrics.g_eval.utils import (
     construct_non_turns_test_case_string,
     construct_test_case_string,
 )
+from deepeval.metrics.conversational_g_eval.conversational_g_eval import (
+    ConversationalGEval,
+)
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     check_llm_test_case_params,
@@ -165,6 +168,25 @@ def test_weighted_summed_score_uses_the_score_token_not_the_reason():
     assert calculate_weighted_summed_score(8, raw_response) == pytest.approx(
         8.5
     )
+
+
+def test_conversational_weighted_summed_score_uses_the_score_token():
+    # The conversational copy of this routine had the same forward scan, so the
+    # trailing score token was shadowed by an identical digit in the reason.
+    reason_top_logprobs = [SimpleNamespace(token="8", logprob=0.0)]
+    score_top_logprobs = [
+        SimpleNamespace(token="8", logprob=math.log(0.5)),
+        SimpleNamespace(token="9", logprob=math.log(0.5)),
+    ]
+    raw_response = _raw_response_with_tokens(
+        [("8", reason_top_logprobs), ("8", score_top_logprobs)]
+    )
+
+    # generate_weighted_summed_score does not touch self, so call it unbound.
+    result = ConversationalGEval.generate_weighted_summed_score(
+        None, 8, raw_response
+    )
+    assert result == pytest.approx(8.5)
 
 
 def test_weighted_summed_score_without_a_shadowing_reason_token():
