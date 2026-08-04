@@ -2,7 +2,7 @@ import { ConversationalTestCase } from "../../test-case";
 import { Golden } from "../../dataset";
 import { BaseMetric, BaseConversationalMetric } from "../../metrics";
 import { DeepEvalError } from "../../errors";
-import { getCurrentTrace } from "../../tracing";
+import { getCurrentTrace, traceManager } from "../../tracing";
 import { AnyTestCase, EvaluatedCase, MetricData } from "../types";
 import { ErrorConfig } from "../configs";
 import { runMetric, buildTestResult, metricMatchesCase } from "../evaluate";
@@ -101,6 +101,10 @@ export async function runTraceMetrics(
         `be single-turn.`,
     );
   }
+
+  // Integrations that deliver spans on their own schedule may still owe us
+  // events from the code under test — let them drain before picking a trace.
+  await traceManager.awaitSettled();
 
   const trace = getLatestCapturedTrace() ?? getCurrentTrace();
   if (!trace) {

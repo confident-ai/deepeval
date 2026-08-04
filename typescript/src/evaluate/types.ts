@@ -84,6 +84,12 @@ export interface EvaluatedCase {
   runDuration: number;
   /** A serialized trace (TraceApi) to embed + link on the posted test case. */
   trace?: unknown;
+  /**
+   * True when this case is the trace scope rather than a single span. Trace-level
+   * results are already reported by the golden's case, so component-level
+   * reporting skips them to avoid a duplicate row.
+   */
+  isTraceScope?: boolean;
 }
 
 /** A snapshot of one arena case's result, since the metric is reused (input to `postExperiment`). */

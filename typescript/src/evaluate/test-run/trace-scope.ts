@@ -4,6 +4,8 @@ import type { Trace } from "../../tracing/tracing";
 interface TraceCaptureStore {
   traces: Trace[];
   capturing: boolean;
+  unsubscribe?: () => void;
+  endEvaluation?: () => void;
 }
 
 const STORE_KEY = "__deepeval_trace_capture__";
@@ -20,16 +22,23 @@ export function beginTraceCapture(): void {
   const s = store();
   s.traces = [];
   s.capturing = true;
-  traceManager.setTraceCaptureSink((trace: Trace) => {
+  s.unsubscribe?.();
+  s.unsubscribe = traceManager.addTraceCaptureSink((trace: Trace) => {
     store().traces.push(trace);
   });
+  // Integrations consult this to materialise spans in-process for local eval.
+  s.endEvaluation?.();
+  s.endEvaluation = traceManager.beginEvaluation();
 }
 
 export function endTraceCapture(): void {
   const s = store();
   s.capturing = false;
   s.traces = [];
-  traceManager.setTraceCaptureSink(undefined);
+  s.unsubscribe?.();
+  s.unsubscribe = undefined;
+  s.endEvaluation?.();
+  s.endEvaluation = undefined;
   traceManager.clearTraces();
 }
 
