@@ -1091,55 +1091,6 @@ class EvaluationDataset:
         console = Console()
         console.print("✅ Dataset successfully deleted from Confident AI!")
 
-    # def create_golden(
-    #     self,
-    #     golden: Union[Golden, ConversationalGolden],
-    #     alias: Optional[str] = None,
-    #     version: Optional[str] = None,
-    #     finalized: bool = True,
-    # ):
-    #     resolved_alias = alias or self._alias
-    #     if not resolved_alias:
-    #         raise ValueError(
-    #             "No dataset alias available. Pull a dataset first, or pass "
-    #             "`alias` explicitly."
-    #         )
-    #     api = Api(api_key=self.confident_api_key)
-
-    #     golden._prepare_for_api()
-    #     try:
-    #         golden_body = golden.model_dump(by_alias=True, exclude_none=True)
-    #     except AttributeError:
-    #         # Pydantic version below 2.0
-    #         golden_body = golden.dict(by_alias=True, exclude_none=True)
-    #     golden_body["finalized"] = finalized
-
-    #     body = {"alias": resolved_alias, "golden": golden_body}
-    #     if version is not None:
-    #         body["version"] = version
-
-    #     api.send_request(
-    #         method=HttpMethods.POST,
-    #         endpoint=Endpoints.GOLDENS_ENDPOINT,
-    #         body=body,
-    #     )
-    #     console = Console()
-    #     console.print("✅ Golden successfully created on Confident AI!")
-
-    # def get_golden(
-    #     self, golden_id: str
-    # ) -> Union[Golden, ConversationalGolden]:
-    #     api = Api(api_key=self.confident_api_key)
-    #     data, _ = api.send_request(
-    #         method=HttpMethods.GET,
-    #         endpoint=Endpoints.GOLDEN_ENDPOINT,
-    #         url_params={"goldenId": golden_id},
-    #     )
-    #     golden_data = convert_keys_to_snake_case(data)
-    #     if golden_data.get("scenario") is not None:
-    #         return ConversationalGolden(**golden_data)
-    #     return Golden(**golden_data)
-
     def update_golden(
         self,
         golden: Union[Golden, ConversationalGolden],
