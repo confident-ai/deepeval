@@ -143,6 +143,7 @@
       "toolsCalled": [
         {
           "name": "research_topic",
+          "type": "FUNCTION",
           "output": {
             "content": "Quantum computing achieves new milestone in error correction.",
             "additional_kwargs": {},
@@ -411,6 +412,7 @@
   "toolsCalled": [
     {
       "name": "research_topic",
+      "type": "FUNCTION",
       "output": {
         "content": "Quantum computing achieves new milestone in error correction.",
         "additional_kwargs": {},

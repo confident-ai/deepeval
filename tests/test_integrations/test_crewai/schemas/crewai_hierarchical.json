@@ -28,6 +28,7 @@
       "toolsCalled": [
         {
           "name": "delegate_work_to_coworker",
+          "type": "FUNCTION",
           "output": "SUCCESS",
           "inputParameters": {
             "task": "Write the word: 'SUCCESS'.",

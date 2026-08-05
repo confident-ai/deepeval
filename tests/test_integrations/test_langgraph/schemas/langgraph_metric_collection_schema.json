@@ -511,6 +511,7 @@
       "toolsCalled": [
         {
           "name": "convert_temperature",
+          "type": "FUNCTION",
           "output": {
             "content": "25.0°C = 77.0°F",
             "additional_kwargs": {},
@@ -952,6 +953,7 @@
   "toolsCalled": [
     {
       "name": "convert_temperature",
+      "type": "FUNCTION",
       "output": {
         "content": "25.0°C = 77.0°F",
         "additional_kwargs": {},

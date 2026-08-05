@@ -1938,6 +1938,7 @@
       "toolsCalled": [
         {
           "name": "confirm_order",
+          "type": "FUNCTION",
           "output": {
             "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
             "additional_kwargs": {},
@@ -3575,6 +3576,7 @@
   "toolsCalled": [
     {
       "name": "confirm_order",
+      "type": "FUNCTION",
       "output": {
         "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
         "additional_kwargs": {},

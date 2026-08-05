@@ -20,6 +20,7 @@ from typing import Dict, List, Optional, Tuple
 from deepeval.config.settings import get_settings
 from deepeval.confident.api import get_confident_api_key
 from deepeval.telemetry import capture_tracing_integration
+from deepeval.tracing.integrations import Integration
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -90,7 +91,7 @@ def instrument_agentcore(
             "See deepeval/integrations/README.md."
         )
 
-    with capture_tracing_integration("agentcore"):
+    with capture_tracing_integration(Integration.AGENTCORE):
         _require_opentelemetry()
 
         if not api_key:

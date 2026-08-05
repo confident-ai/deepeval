@@ -78,16 +78,17 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
-There are **TWO** mandatory and **SIX** optional parameters when creating a `DAGMetric`:
+There are **TWO** mandatory and **SEVEN** optional parameters when creating a `DAGMetric`:
 
 - `name`: a string representing the metric's name.
 - `dag`: the `DeepAcyclicGraph` to execute.
-- [Optional] `threshold`: the minimum passing score, defaulted to `0.5`.
+- [Optional] `threshold`: the minimum passing score. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: an OpenAI model name or a [custom evaluation model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] `include_reason`: whether to generate a reason for the final score. Defaulted to `True`.
 - [Optional] `strict_mode`: when `True`, sets the threshold to `1`. Defaulted to `False`.
 - [Optional] `async_mode`: whether `measure()` executes the graph asynchronously. Defaulted to `True`.
 - [Optional] `verbose_mode`: whether to print the nodes and outcomes used to calculate the score. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 ### Within components
 

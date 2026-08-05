@@ -63,6 +63,7 @@ def create_api_test_case(
             userDescription=test_case.user_description,
             context=test_case.context,
             tags=test_case.tags,
+            flaky=test_case.flaky,
             comments=test_case.comments,
             imagesMapping=test_case._get_images_mapping(),
             metadata=test_case.metadata,
@@ -118,6 +119,7 @@ def create_api_test_case(
             metadata=test_case.metadata,
             comments=test_case.comments,
             tags=test_case.tags,
+            flaky=test_case.flaky,
             trace=trace,
         )
         # llm_test_case_lookup_map[instance_id] = api_test_case

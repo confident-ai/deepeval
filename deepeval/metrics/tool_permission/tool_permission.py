@@ -35,10 +35,11 @@ class ToolPermissionMetric(BaseMetric):
         self,
         allowed_tools: Optional[List[str]] = None,
         denied_tools: Optional[List[str]] = None,
-        threshold: float = 1.0,
+        threshold: Optional[float] = 1.0,
         include_reason: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
     ):
         if allowed_tools is None and denied_tools is None:
             raise ValueError(
@@ -54,6 +55,7 @@ class ToolPermissionMetric(BaseMetric):
         self.include_reason = include_reason
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         # Deterministic metric: no evaluation model is used.
         self.model = None
         self.using_native_model = False
@@ -81,7 +83,7 @@ class ToolPermissionMetric(BaseMetric):
             self.score = (
                 0 if self.strict_mode and score < self.threshold else score
             )
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.reason = self._generate_reason(tools_called, unauthorized)
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -153,13 +155,6 @@ class ToolPermissionMetric(BaseMetric):
             f"were unauthorized: {names}. Allowed={allowed}, "
             f"Denied={denied}."
         )
-
-    def is_successful(self) -> bool:
-        try:
-            self.success = self.score >= self.threshold
-        except (AttributeError, TypeError):
-            self.success = False
-        return self.success
 
     @property
     def __name__(self):

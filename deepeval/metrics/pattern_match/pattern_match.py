@@ -1,5 +1,5 @@
 import re
-from typing import List
+from typing import List, Optional
 
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
@@ -20,12 +20,14 @@ class PatternMatchMetric(BaseMetric):
         self,
         pattern: str,
         ignore_case: bool = False,
-        threshold: float = 1.0,
+        threshold: Optional[float] = 1.0,
         verbose_mode: bool = False,
+        flaky: bool = False,
     ):
         self.pattern = pattern.strip()
         self.ignore_case = ignore_case
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self.threshold = threshold
 
         flags = re.IGNORECASE if ignore_case else 0
@@ -63,7 +65,7 @@ class PatternMatchMetric(BaseMetric):
                 if full_match
                 else "The actual output does not match the pattern."
             )
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
 
             if self.verbose_mode:
                 self.verbose_logs = construct_verbose_logs(
@@ -89,16 +91,6 @@ class PatternMatchMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         )
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

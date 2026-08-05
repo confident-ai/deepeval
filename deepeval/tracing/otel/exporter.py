@@ -11,7 +11,8 @@ import typing
 import json
 
 from deepeval.prompt.prompt import Prompt
-from deepeval.telemetry import capture_tracing_integration
+from deepeval.telemetry import record_tracing_integration
+from deepeval.tracing.integrations import Integration
 from deepeval.tracing import trace_manager
 from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.types import (
@@ -98,7 +99,7 @@ class BaseSpanWrapper:
 class ConfidentSpanExporter(SpanExporter):
 
     def __init__(self, api_key: Optional[str] = None):
-        capture_tracing_integration("otel.ConfidentSpanExporter")
+        record_tracing_integration(Integration.OTEL)
         peb.init_clock_bridge()
 
         # Programmatic auth — set the key in settings without printing the

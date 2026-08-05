@@ -730,6 +730,7 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": {
             "content": "Partly cloudy, 65°F",
             "additional_kwargs": {},
@@ -746,6 +747,7 @@
         },
         {
           "name": "get_stock_price",
+          "type": "FUNCTION",
           "output": {
             "content": "$245.60",
             "additional_kwargs": {},
@@ -762,6 +764,7 @@
         },
         {
           "name": "get_exchange_rate",
+          "type": "FUNCTION",
           "output": {
             "content": "1 USD = 0.92 EUR",
             "additional_kwargs": {},
@@ -779,6 +782,7 @@
         },
         {
           "name": "calculate",
+          "type": "FUNCTION",
           "output": {
             "content": "100 * 1.5 = 150.0",
             "additional_kwargs": {},
@@ -1456,6 +1460,7 @@
   "toolsCalled": [
     {
       "name": "get_weather",
+      "type": "FUNCTION",
       "output": {
         "content": "Partly cloudy, 65°F",
         "additional_kwargs": {},
@@ -1472,6 +1477,7 @@
     },
     {
       "name": "get_stock_price",
+      "type": "FUNCTION",
       "output": {
         "content": "$245.60",
         "additional_kwargs": {},
@@ -1488,6 +1494,7 @@
     },
     {
       "name": "get_exchange_rate",
+      "type": "FUNCTION",
       "output": {
         "content": "1 USD = 0.92 EUR",
         "additional_kwargs": {},
@@ -1505,6 +1512,7 @@
     },
     {
       "name": "calculate",
+      "type": "FUNCTION",
       "output": {
         "content": "100 * 1.5 = 150.0",
         "additional_kwargs": {},

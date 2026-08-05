@@ -251,6 +251,25 @@ The `[DEEPEVAL:IMAGE:awefv234fvbnhg456]` here is actually the instance of `MLLMI
 
 :::
 
+## Mark Test Cases As Flaky
+
+The `flaky` is an **optional** parameter of type boolean (defaulted to `False`) that marks a `ConversationalTestCase` as flaky. A flaky test case's results are still computed, recorded, and reported as normal, but its failures won't block your CI/CD pipeline — when a flaky test case fails, `assert_test()` prints a warning instead of raising an `AssertionError`.
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase
+
+test_case = ConversationalTestCase(
+    flaky=True,
+    turns=[Turn(...)]
+)
+```
+
+This is most useful for conversations you know are noisy — for example simulated conversations with borderline scores that flip between passing and failing across runs — that you still want to keep evaluating and tracking without letting them gate deployments. The `flaky` status is also logged on Confident AI so you can monitor how often flaky test cases actually fail.
+
+:::info
+A single-turn `LLMTestCase` can also be marked `flaky`, and so can metrics — a flaky **metric's** failure never decides its test case's pass/fail status.
+:::
+
 ## Label Test Cases For Confident AI
 
 If you're using Confident AI, these are some additional parameters to help manage your test cases.

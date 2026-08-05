@@ -43,7 +43,10 @@ export interface EvaluateOptions {
 }
 
 /** A conversational metric runs on a `ConversationalTestCase`; otherwise single-turn. */
-function metricMatchesCase(metric: AnyMetric, testCase: AnyTestCase): boolean {
+export function metricMatchesCase(
+  metric: AnyMetric,
+  testCase: AnyTestCase,
+): boolean {
   const caseIsConversational = testCase instanceof ConversationalTestCase;
   const metricIsConversational = metric instanceof BaseConversationalMetric;
   return caseIsConversational === metricIsConversational;

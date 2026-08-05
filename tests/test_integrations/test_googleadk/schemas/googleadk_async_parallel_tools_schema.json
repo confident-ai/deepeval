@@ -60,12 +60,14 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "inputParameters": {
             "city": "Tokyo"
           }
         },
         {
           "name": "get_time",
+          "type": "FUNCTION",
           "inputParameters": {
             "city": "Tokyo"
           }
@@ -103,6 +105,7 @@
       "toolsCalled": [
         {
           "name": "get_time",
+          "type": "FUNCTION",
           "inputParameters": {
             "city": "Tokyo"
           }
@@ -123,6 +126,7 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "inputParameters": {
             "city": "Tokyo"
           }

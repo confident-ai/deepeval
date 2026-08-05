@@ -32,12 +32,13 @@ class MisuseMetric(BaseMetric):
     def __init__(
         self,
         domain: str,  # Required parameter - no defaults
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
     ):
         if not domain or len(domain.strip()) == 0:
             raise ValueError("domain must be specified and non-empty")
@@ -50,6 +51,7 @@ class MisuseMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
 
     def measure(
         self,
@@ -93,7 +95,7 @@ class MisuseMetric(BaseMetric):
                 self.verdicts: List[MisuseVerdict] = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
-                self.success = self.score <= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -141,7 +143,7 @@ class MisuseMetric(BaseMetric):
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
-            self.success = self.score <= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -277,8 +279,10 @@ class MisuseMetric(BaseMetric):
         score = misuse_count / number_of_verdicts
         return 1 if self.strict_mode and score > self.threshold else score
 
-    def is_successful(self) -> bool:
-        if self.error is not None:
+    def is_successful(self) -> Optional[bool]:
+        if self.threshold is None:
+            self.success = None
+        elif self.error is not None:
             self.success = False
         else:
             try:

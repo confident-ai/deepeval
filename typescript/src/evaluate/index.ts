@@ -1,5 +1,6 @@
 export { evaluate, type EvaluateOptions } from "./evaluate";
 export { compare, type CompareOptions } from "./compare";
+export { globalResultCollector } from "./test-run";
 export {
   type TestResult,
   type MetricData,
