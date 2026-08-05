@@ -496,6 +496,42 @@ Since `expected_output`, `context`, `retrieval_context`, `tools_called`, and `ex
 </Tab>
 </Tabs>
 
+### Edit Or Delete Goldens
+
+You can update or delete individual goldens in a dataset on Confident AI using the `update_golden()` and `delete_golden()` methods. Goldens must first be pulled from Confident AI so they carry the `id` assigned by the platform.
+
+To update a golden, mutate it and pass it to `update_golden()`:
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(alias="My Evals Dataset")
+
+golden = dataset.goldens[0]
+golden.expected_output = "An updated expected output"
+dataset.update_golden(golden)
+```
+
+There is **ONE** mandatory and **ONE** optional parameter when calling the `update_golden()` method:
+
+- `golden`: the `Golden` or `ConversationalGolden` to update, which must carry an `id` from a previous `pull()`.
+- [Optional] `finalized`: a boolean which when set to `False`, marks the golden as unfinalized on Confident AI. Defaulted to `True`.
+
+To delete a golden, pass either the golden itself or its id to `delete_golden()`:
+
+```python
+...
+
+dataset.delete_golden(dataset.goldens[0])
+# Or, delete by id directly
+dataset.delete_golden("your-golden-id")
+```
+
+:::tip
+Both methods work for multi-turn datasets exactly the same way.
+:::
+
 ## Generate A Dataset
 
 Sometimes, you might not have datasets ready to use, and that's ok. `deepeval` provides two options for both single-turn and multi-turn use cases:

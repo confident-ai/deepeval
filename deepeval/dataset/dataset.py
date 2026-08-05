@@ -1091,6 +1091,55 @@ class EvaluationDataset:
         console = Console()
         console.print("✅ Dataset successfully deleted from Confident AI!")
 
+    def update_golden(
+        self,
+        golden: Union[Golden, ConversationalGolden],
+        finalized: bool = True,
+    ):
+        if not golden.id:
+            raise ValueError(
+                "Cannot update a golden without an id. Pull the dataset first "
+                "so its goldens carry the id assigned by Confident AI."
+            )
+        api = Api(api_key=self.confident_api_key)
+
+        golden._prepare_for_api()
+        try:
+            golden_body = golden.model_dump(by_alias=True, exclude_none=True)
+        except AttributeError:
+            # Pydantic version below 2.0
+            golden_body = golden.dict(by_alias=True, exclude_none=True)
+        golden_body["finalized"] = finalized
+
+        api.send_request(
+            method=HttpMethods.PUT,
+            endpoint=Endpoints.GOLDEN_ENDPOINT,
+            body=golden_body,
+            url_params={"goldenId": golden.id},
+        )
+        console = Console()
+        console.print("✅ Golden successfully updated on Confident AI!")
+
+    def delete_golden(
+        self,
+        golden: Union[Golden, ConversationalGolden, str],
+    ):
+        golden_id = golden if isinstance(golden, str) else golden.id
+        if not golden_id:
+            raise ValueError(
+                "Cannot delete a golden without an id. Pull the dataset first "
+                "so its goldens carry the id assigned by Confident AI, or pass "
+                "the golden id directly."
+            )
+        api = Api(api_key=self.confident_api_key)
+        api.send_request(
+            method=HttpMethods.DELETE,
+            endpoint=Endpoints.GOLDEN_ENDPOINT,
+            url_params={"goldenId": golden_id},
+        )
+        console = Console()
+        console.print("✅ Golden successfully deleted from Confident AI!")
+
     def generate_goldens_from_docs(
         self,
         document_paths: List[str],
