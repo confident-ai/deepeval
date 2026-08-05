@@ -17,15 +17,43 @@ describe("trace-scope capture", () => {
     expect(isCapturingTraces()).toBe(false);
   });
 
+  const registeredSinks = (): number =>
+    (traceManager as unknown as { traceCaptureSinks: Set<unknown> })
+      .traceCaptureSinks.size;
+
   it("registers a capture sink on begin and clears it on end", () => {
     beginTraceCapture();
     expect(isCapturingTraces()).toBe(true);
     // Sink is registered on the trace manager (suppresses posting).
-    expect((traceManager as unknown as { traceCaptureSink?: unknown }).traceCaptureSink).toBeDefined();
+    expect(registeredSinks()).toBe(1);
 
     endTraceCapture();
     expect(isCapturingTraces()).toBe(false);
-    expect((traceManager as unknown as { traceCaptureSink?: unknown }).traceCaptureSink).toBeUndefined();
+    expect(registeredSinks()).toBe(0);
+  });
+
+  it("leaves an unrelated subscriber's sink alone", () => {
+    const seen: string[] = [];
+    const unsubscribe = traceManager.addTraceCaptureSink((t) =>
+      seen.push(t.uuid),
+    );
+    try {
+      beginTraceCapture();
+      const trace = traceManager.startNewTrace();
+      traceManager.endTrace(trace.uuid);
+
+      // Both subscribers receive the trace...
+      expect(seen).toEqual([trace.uuid]);
+      expect(getCapturedTraces()).toHaveLength(1);
+
+      // ...and ending the eval scope must not unregister the other one.
+      endTraceCapture();
+      const second = traceManager.startNewTrace();
+      traceManager.endTrace(second.uuid);
+      expect(seen).toEqual([trace.uuid, second.uuid]);
+    } finally {
+      unsubscribe();
+    }
   });
 
   it("captures a completed trace via the sink", () => {

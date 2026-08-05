@@ -143,23 +143,46 @@ describe("toPass — explicit test case shape", () => {
   });
 });
 
-describe("toPass — golden (trace-scoped) shape", () => {
-  it("throws when there is no active trace", async () => {
-    await expect(
-      runMetrics(new Golden({ input: "hi" }), [passing()]),
-    ).rejects.toThrow(DeepEvalError);
+describe("toPass — callback (trace-scoped) shape", () => {
+  it("throws when the callback produces no trace", async () => {
+    await expect(runMetrics(() => undefined, [passing()])).rejects.toThrow(
+      /no trace was produced/,
+    );
   });
 
-  it("throws when there is no active trace and no metrics either", async () => {
-    await expect(runMetrics(new Golden({ input: "hi" }))).rejects.toThrow(
-      DeepEvalError,
-    );
+  it("throws when the callback produces no trace and there are no metrics", async () => {
+    await expect(runMetrics(() => undefined)).rejects.toThrow(DeepEvalError);
   });
 
   it("rejects multi-turn metrics at the trace level", async () => {
     await expect(
-      runMetrics(new Golden({ input: "hi" }), [new FakeConversationalMetric()]),
+      runMetrics(() => undefined, [new FakeConversationalMetric()]),
     ).rejects.toThrow(/trace-level metrics must be single-turn/);
+  });
+
+  it("awaits an async callback before evaluating", async () => {
+    let ran = false;
+    await expect(
+      runMetrics(async () => {
+        await new Promise((r) => setTimeout(r, 5));
+        ran = true;
+      }),
+    ).rejects.toThrow(/no trace was produced/);
+    // The rejection is about the missing trace, not about the callback: it ran,
+    // and it was awaited to completion first.
+    expect(ran).toBe(true);
+  });
+
+  it("rejects a promise receiver, which would run outside the capture window", async () => {
+    await expect(
+      runMetrics(Promise.resolve("already running") as never),
+    ).rejects.toThrow(/received a promise/);
+  });
+
+  it("rejects a golden receiver and points at the callback form", async () => {
+    await expect(
+      runMetrics(new Golden({ input: "hi" }) as never, [passing()]),
+    ).rejects.toThrow(/expect\(golden\)\.toPass\(\) is not supported/);
   });
 });
 

@@ -15,6 +15,7 @@ import { OpenInferenceSpanProcessor } from "./processor";
 import { getSettings } from "../../config/settings";
 import { ExportResult, ExportResultCode } from "@opentelemetry/core";
 import { Prompt } from "../../prompt";
+import { ROUTE_TO_REST_ATTRIBUTE } from "../../tracing/otel-routing";
 
 // OpenInference exporter filter to remove the parent Id for root spans
 class OpenInferenceExporterWrapper implements SpanExporter {
@@ -92,6 +93,7 @@ export class OpenInferenceFilterProcessor implements SpanProcessor {
 
   onEnd(span: ReadableSpan): void {
     const attrs = (span as any).attributes || {};
+    if (attrs[ROUTE_TO_REST_ATTRIBUTE]) return;
     // Also allow spans that were flagged by OpenInferenceSpanProcessor in onStart
     if (
       attrs["openinference.span.kind"] ||

@@ -1,10 +1,12 @@
 export {
   runMetrics,
   runTestCaseMetrics,
-  runTraceMetrics,
+  runCallbackMetrics,
   evaluateCase,
   type MetricsOutcome,
   type ToPassTarget,
+  type ToPassCallback,
+  type ToPassOptions,
 } from "./run-metrics";
 export { buildFailureMessage } from "./errors";
 export { globalResultCollector } from "./collector";
@@ -21,4 +23,5 @@ export {
   isCapturingTraces,
   getCapturedTraces,
   getLatestCapturedTrace,
+  collectTracesFrom,
 } from "./trace-scope";

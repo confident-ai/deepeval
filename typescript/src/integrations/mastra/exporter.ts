@@ -1,5 +1,12 @@
-import { traceManager } from "../../tracing";
-import { SpanType, TraceManagerConfig, Trace } from "../../tracing/tracing";
+import { applyPendingToSpan, popPendingFor, traceManager } from "../../tracing";
+import {
+  BaseSpan,
+  SpanType,
+  TraceManagerConfig,
+  Trace,
+  getCurrentSpan,
+  setCurrentSpan,
+} from "../../tracing/tracing";
 import { Environment } from "../../tracing/utils";
 import { getConfidentApiKey, isConfident } from "../../utils";
 import { withCaptureTracingIntegration } from "../../telemetry";
@@ -51,6 +58,11 @@ export class DeepEvalExporter implements ObservabilityExporter {
   private disabled = false;
 
   private traceIds = new Map<string, string>();
+  /** Span to restore as "current" when a span ends, keyed by span uuid. */
+  private previousSpans = new Map<string, BaseSpan | undefined>();
+  private mastra?: InitExporterOptions["mastra"];
+  private unsubscribeSink?: () => void;
+  private unregisterSettleHook?: () => void;
 
   constructor(config: DeepEvalExporterConfig = {}) {
     this.config = config;
@@ -73,8 +85,18 @@ export class DeepEvalExporter implements ObservabilityExporter {
     }
 
     if (config.traceCaptureSink) {
-      traceManager.setTraceCaptureSink(config.traceCaptureSink);
+      this.unsubscribeSink = traceManager.addTraceCaptureSink(
+        config.traceCaptureSink,
+      );
     }
+
+    // Mastra delivers span events on its own bus, so they can land after the
+    // user's `await agent.generate(...)` has already returned. Local eval asks
+    // us to settle first; `flush()` is Mastra's own "everything queued is
+    // exported" barrier, so there is nothing to poll for.
+    this.unregisterSettleHook = traceManager.addSettleHook(async () => {
+      await this.mastra?.observability?.flush();
+    });
 
     withCaptureTracingIntegration("mastra", () => {}).catch((err) => {
       if (config.debug) console.error("DeepEval telemetry failed:", err);
@@ -92,6 +114,7 @@ export class DeepEvalExporter implements ObservabilityExporter {
     if (!this.config.name && options.config?.serviceName) {
       this.config.name = options.config.serviceName;
     }
+    this.mastra = options.mastra;
   }
 
   async exportTracingEvent(event: TracingEvent): Promise<void> {
@@ -137,7 +160,10 @@ export class DeepEvalExporter implements ObservabilityExporter {
           : undefined,
     });
 
+    applyPendingToSpan(deepEvalSpan, popPendingFor(deepEvalSpan.type));
+
     traceManager.addSpan(deepEvalSpan);
+    let attached = true;
     try {
       traceManager.addSpanToTrace(deepEvalSpan);
     } catch {
@@ -146,6 +172,35 @@ export class DeepEvalExporter implements ObservabilityExporter {
         traceManager.addSpanToTrace(deepEvalSpan);
       } catch {
         traceManager.removeSpan(deepEvalSpan.uuid);
+        attached = false;
+      }
+    }
+
+    if (attached) this.pushSpanContext(deepEvalSpan);
+  }
+
+  private pushSpanContext(deepEvalSpan: BaseSpan): void {
+    try {
+      this.previousSpans.set(deepEvalSpan.uuid, getCurrentSpan());
+      setCurrentSpan(deepEvalSpan);
+    } catch (err) {
+      if (this.config.debug) {
+        console.error("DeepEval: failed to enter span context", err);
+      }
+    }
+  }
+
+  private popSpanContext(spanUuid: string): void {
+    if (!this.previousSpans.has(spanUuid)) return;
+    const previous = this.previousSpans.get(spanUuid);
+    this.previousSpans.delete(spanUuid);
+    try {
+      if (getCurrentSpan()?.uuid === spanUuid) {
+        setCurrentSpan(previous ?? null);
+      }
+    } catch (err) {
+      if (this.config.debug) {
+        console.error("DeepEval: failed to restore span context", err);
       }
     }
   }
@@ -160,6 +215,7 @@ export class DeepEvalExporter implements ObservabilityExporter {
     if (!existing) return;
 
     finalizeDeepEvalSpan(existing, span);
+    this.popSpanContext(span.id);
     const traceUuid = existing.traceUuid;
 
     if (mapSpanType(span.type) === SpanType.TOOL) {
@@ -249,6 +305,12 @@ export class DeepEvalExporter implements ObservabilityExporter {
   }
 
   async shutdown(): Promise<void> {
+    this.unregisterSettleHook?.();
+    this.unregisterSettleHook = undefined;
+    this.unsubscribeSink?.();
+    this.unsubscribeSink = undefined;
+    this.previousSpans.clear();
+
     if (this.disabled) return;
 
     for (const traceUuid of this.traceIds.values()) {

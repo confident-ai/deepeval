@@ -1,26 +1,30 @@
-import { Golden } from "../../dataset/index.js";
 import { BaseMetric, BaseConversationalMetric } from "../../metrics/index.js";
 import {
   runMetrics,
+  type ToPassOptions,
   type ToPassTarget,
 } from "../../evaluate/test-run/index.js";
 
 type AnyMetric = BaseMetric | BaseConversationalMetric;
 
 function describeTarget(target: ToPassTarget): string {
-  return target instanceof Golden ? "the trace" : "the test case";
+  return typeof target === "function"
+    ? "the callback's trace"
+    : "the test case";
 }
 
 /**
+ * `expect(() => myAgent(input)).toPass([metric])` — run the callback and evaluate
+ * the trace it produces. Add `{ golden }` for expected values.
  * `expect(testCase).toPass([metricA, metricB])` — evaluate a test case.
- * `expect(golden).toPass([metric])` — evaluate the trace this test produced.
  */
 export async function toPass(
   this: { isNot?: boolean },
   received: ToPassTarget,
   metrics: AnyMetric[] = [],
+  options: ToPassOptions = {},
 ) {
-  const { pass, failureMessage } = await runMetrics(received, metrics);
+  const { pass, failureMessage } = await runMetrics(received, metrics, options);
   return {
     pass,
     message: () =>

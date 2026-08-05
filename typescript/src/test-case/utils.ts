@@ -1,4 +1,38 @@
-import { LLMTestCase } from "./llm-test-case";
+import { LLMTestCase, ToolCall } from "./llm-test-case";
+
+
+// Render a span/trace value as a test case's text field.git 
+export function asTestCaseString(value: unknown): string {
+  if (value === null || value === undefined) return "None";
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value) ?? String(value);
+  } catch {
+    // Circular or otherwise unserialisable — better than throwing mid-run.
+    return String(value);
+  }
+}
+
+export function asToolCalls(
+  value: ToolCall[] | undefined,
+): ToolCall[] | undefined {
+  if (value === undefined || value === null || !Array.isArray(value)) {
+    return undefined;
+  }
+  return value.map((call) => {
+    if (call instanceof ToolCall) return call;
+    // Typed as ToolCall but shaped like one at runtime — read it loosely.
+    const loose = call as Partial<ToolCall> | null | undefined;
+    return new ToolCall({
+      name: String(loose?.name ?? "unknown"),
+      description: loose?.description,
+      type: loose?.type,
+      reasoning: loose?.reasoning,
+      output: loose?.output,
+      inputParameters: loose?.inputParameters,
+    });
+  });
+}
 
 /**
  * Deep copy function for TypeScript.

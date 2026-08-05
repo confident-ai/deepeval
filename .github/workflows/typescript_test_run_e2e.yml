@@ -5,6 +5,12 @@ on:
     paths:
       - 'typescript/**'
       - '.github/workflows/typescript_test_run_e2e.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'typescript/**'
+      - '.github/workflows/typescript_test_run_e2e.yml'
   workflow_dispatch:
 
 jobs:

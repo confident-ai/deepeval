@@ -1,5 +1,9 @@
 import { traceManager } from "../../tracing";
-import { setCurrentTrace } from "../../tracing/tracing";
+import {
+  getCurrentSpan,
+  getCurrentTrace,
+  setCurrentTrace,
+} from "../../tracing/tracing";
 
 export interface TraceInitFields {
   name?: string;
@@ -70,6 +74,21 @@ export class RunHierarchyTracker {
         return { traceUuid: ancestorTrace, parentUuid: undefined };
       }
     }
+
+    const ambientTrace = getCurrentTrace();
+    if (ambientTrace && traceManager.getTraceByUuid(ambientTrace.uuid)) {
+      const ambientSpan = getCurrentSpan();
+      return {
+        traceUuid: ambientTrace.uuid,
+        // Guard against a stale span from another trace: an unresolvable parent
+        // would make `addSpanToTrace` throw inside the user's callback.
+        parentUuid:
+          ambientSpan?.traceUuid === ambientTrace.uuid
+            ? ambientSpan.uuid
+            : undefined,
+      };
+    }
+
     const trace = this.ensureTrace();
     return { traceUuid: trace.uuid, parentUuid: undefined };
   }

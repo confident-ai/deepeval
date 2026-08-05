@@ -14,6 +14,7 @@ import { ExportResult, ExportResultCode } from "@opentelemetry/core";
 import { Tracer, trace, Context } from "@opentelemetry/api";
 import { DeepEvalSpanProcessor, ROOT_VERCEL_SPANS } from "./processor";
 import { getSettings } from "../../config/settings";
+import { ROUTE_TO_REST_ATTRIBUTE } from "../../tracing/otel-routing";
 
 // Creating a Wrapper for exporter to preserve parentIds of root spans
 class DeepEvalExporterWrapper implements SpanExporter {
@@ -87,9 +88,9 @@ export class DeepEvalBatchFilterProcessor implements SpanProcessor {
   }
 
   onEnd(span: ReadableSpan): void {
-    if (span.name && span.name.startsWith("ai.")) {
-      this.underlyingProcessor.onEnd(span);
-    }
+    if (!span.name || !span.name.startsWith("ai.")) return;
+    if ((span.attributes as any)?.[ROUTE_TO_REST_ATTRIBUTE]) return;
+    this.underlyingProcessor.onEnd(span);
   }
 
   shutdown(): Promise<void> {

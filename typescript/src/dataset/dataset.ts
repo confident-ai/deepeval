@@ -19,9 +19,15 @@ import {
 } from "./api";
 import { ConversationalGolden, Golden } from "./golden";
 import { ConversationalTestCase, LLMTestCase } from "../test-case";
+import { asTestCaseString, asToolCalls } from "../test-case/utils";
 import type { MultiBar, SingleBar } from "cli-progress";
 import { traceManager, Trace, BaseSpan } from "../tracing/tracing";
-import { evaluateTrace, countTraceMetrics } from "../evaluate/trace-eval";
+import {
+  evaluateTrace,
+  countTraceMetrics,
+  isDuplicateOfCase,
+  primaryTraceFor,
+} from "../evaluate/trace-eval";
 import { buildTestResult } from "../evaluate/evaluate";
 import { postTestRun } from "../evaluate/confident";
 import {
@@ -647,8 +653,16 @@ export class EvaluationDataset {
     };
 
     const captured: Trace[] = [];
-    traceManager.setTraceCaptureSink((t) => captured.push(t));
+    const unsubscribe = traceManager.addTraceCaptureSink((t) =>
+      captured.push(t),
+    );
+    // Tells integrations that spans must be materialised in-process for this run
+    // instead of being exported straight to Confident AI.
+    const endEvaluation = traceManager.beginEvaluation();
     const allCases: EvaluatedCase[] = [];
+    /** Span-level cases for the local report, paired with their golden's case. */
+    const componentCases: Array<{ case: EvaluatedCase; parentIndex: number }> =
+      [];
     const startTime = Date.now();
     let count = 0;
     try {
@@ -656,47 +670,71 @@ export class EvaluationDataset {
         const start = captured.length;
         yield golden;
         // Resumed: the agent ran in the loop body — evaluate the traces it produced.
+        await traceManager.awaitSettled();
         callbackBar?.increment();
         count += 1;
         const newTraces = captured.slice(start);
+        const traceGolden = golden as Golden;
+
+        const primary = primaryTraceFor(newTraces);
+
         for (const trace of newTraces) {
-          if (metrics.length > 0) {
+          // Trace-level metrics judge the turn, so they belong to the reported
+          // trace only — attaching them to every trace would score fragments and
+          // multiply the metric runs.
+          if (metrics.length > 0 && trace === primary) {
             metrics.forEach((m) => (m.showIndicator = false));
             trace.metrics = [...(trace.metrics ?? []), ...metrics];
           }
           suppressSpinners(trace.rootSpans);
         }
-        const total = newTraces.reduce((s, t) => s + countTraceMetrics(t), 0);
+        const total = newTraces.reduce(
+          (s, t) => s + countTraceMetrics(t, t === primary ? traceGolden : undefined),
+          0,
+        );
         const evalBar = multibar?.create(Math.max(total, 1), 0, {
           label: `     🎯 Evaluating component(s) (#${count})`,
         });
+        const parentIndex = allCases.length;
         for (const trace of newTraces) {
           // Run all metrics (span + trace); attaches metricsData to each scope.
-          await evaluateTrace(trace, {
+          const evaluated = await evaluateTrace(trace, {
             errorConfig: options.errorConfig,
             onMetric: () => evalBar?.increment(),
+            golden: trace === primary ? traceGolden : undefined,
           });
-          // One golden-based test case per trace, with the trace embedded — so
-          // the platform shows the I/O and links to the trace (mirrors Python).
-          const g = golden as Golden;
-          const rootOutput = trace.output ?? trace.rootSpans?.[0]?.output;
+          // Span-level results are reported locally only — the posted test run
+          // keeps one case per golden, with the per-span scores riding along
+          // inside the embedded trace (mirrors Python).
+          for (const _case of evaluated) {
+            if (_case.isTraceScope || _case.metricsData.length === 0) continue;
+            componentCases.push({ case: _case, parentIndex });
+          }
+        }
+
+        if (primary) {
+          const rootOutput = primary.output ?? primary.rootSpans?.[0]?.output;
           const testCase = new LLMTestCase({
-            input: g.input,
+            input: traceGolden.input,
             actualOutput:
               rootOutput != null
-                ? String(rootOutput)
-                : (g.actualOutput ?? "None"),
-            expectedOutput: trace.expectedOutput,
-            context: trace.context,
-            retrievalContext: trace.retrievalContext,
-            toolsCalled: trace.toolsCalled,
-            expectedTools: trace.expectedTools,
+                ? asTestCaseString(rootOutput)
+                : (traceGolden.actualOutput ?? "None"),
+            expectedOutput: primary.expectedOutput,
+            context: primary.context,
+            retrievalContext: primary.retrievalContext,
+            toolsCalled: asToolCalls(primary.toolsCalled),
+            expectedTools: asToolCalls(primary.expectedTools),
+            // Links the posted run back to the dataset these goldens came from.
+            _datasetAlias: traceGolden._datasetAlias,
+            _datasetId: traceGolden._datasetId,
+            _datasetRank: traceGolden._datasetRank,
           });
           const { confidentApiKey: _omit, ...traceApi } =
-            traceManager.createTraceApi(trace);
+            traceManager.createTraceApi(primary);
           allCases.push({
             testCase,
-            metricsData: trace.metricsData ?? [],
+            metricsData: primary.metricsData ?? [],
             runDuration: 0,
             trace: traceApi,
           });
@@ -705,13 +743,26 @@ export class EvaluationDataset {
         mainBar?.increment();
       }
     } finally {
-      traceManager.setTraceCaptureSink(undefined);
+      unsubscribe();
+      endEvaluation();
       multibar?.stop();
     }
     const runDuration = (Date.now() - startTime) / 1000;
-    const results: TestResult[] = allCases.map((c, i) =>
+    const goldenResults: TestResult[] = allCases.map((c, i) =>
       buildTestResult(i, c.testCase, c.metricsData),
     );
+    const componentResults: TestResult[] = [];
+    for (const { case: c, parentIndex } of componentCases) {
+      const result = buildTestResult(
+        goldenResults.length + componentResults.length,
+        c.testCase,
+        c.metricsData,
+      );
+      if (!isDuplicateOfCase(result, goldenResults[parentIndex])) {
+        componentResults.push(result);
+      }
+    }
+    const results: TestResult[] = [...goldenResults, ...componentResults];
     this._evalResults = results;
 
     const printResults = options.displayConfig?.printResults ?? true;

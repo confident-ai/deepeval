@@ -18,6 +18,11 @@ import type { MetricData } from "../evaluate/types";
 import { Prompt } from "../prompt";
 import { SpanApiType, BaseApiSpan, TraceApi, TraceSpanApiStatus } from "./api";
 import { TraceWorkerStatus, printTraceStatus } from "./logging";
+import {
+  applyPendingToSpan,
+  popPendingFor,
+  type PendingPayload,
+} from "./pending-context";
 
 export enum SpanType {
   AGENT = "agent",
@@ -263,6 +268,7 @@ export interface Trace {
   uuid: string;
   status: TraceSpanStatus;
   rootSpans: BaseSpan[];
+  _isOtelImplicit?: boolean;
   startTime: Date;
   endTime?: Date;
   metadata?: Record<string, any>;
@@ -364,15 +370,57 @@ export class TraceManager {
   private environment: Environment;
   private samplingRate: number;
   private customMaskFn: MaskFunction | null = null;
-  private evaluating: boolean = false;
-  /** When set, completed traces are captured here (for local eval) instead of posted. */
-  private traceCaptureSink?: (trace: Trace) => void;
+  private evaluatingDepth: number = 0;
+  private traceCaptureSinks = new Set<(trace: Trace) => void>();
+  private settleHooks = new Set<() => Promise<void>>();
   private confidentApiKey: string = "";
   private tracingEnabled: boolean = true;
 
-  /** Register/clear a sink that receives each completed trace (used by `evalsIterator`). */
+  public addTraceCaptureSink(sink: (trace: Trace) => void): () => void {
+    this.traceCaptureSinks.add(sink);
+    return () => {
+      this.traceCaptureSinks.delete(sink);
+    };
+  }
+
   public setTraceCaptureSink(sink?: (trace: Trace) => void): void {
-    this.traceCaptureSink = sink;
+    this.traceCaptureSinks.clear();
+    if (sink) this.traceCaptureSinks.add(sink);
+  }
+
+  public addSettleHook(hook: () => Promise<void>): () => void {
+    this.settleHooks.add(hook);
+    return () => {
+      this.settleHooks.delete(hook);
+    };
+  }
+
+  public get isEvaluating(): boolean {
+    return this.evaluatingDepth > 0;
+  }
+
+  public beginEvaluation(): () => void {
+    this.evaluatingDepth += 1;
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      this.evaluatingDepth = Math.max(0, this.evaluatingDepth - 1);
+    };
+  }
+
+  /** Await every registered settle hook. A failing hook must not fail the run. */
+  public async awaitSettled(): Promise<void> {
+    if (this.settleHooks.size === 0) return;
+    await Promise.all(
+      Array.from(this.settleHooks).map((hook) =>
+        hook().catch((error) => {
+          if (this.settings.CONFIDENT_TRACE_VERBOSE) {
+            console.warn("[DeepEval] settle hook failed:", error);
+          }
+        }),
+      ),
+    );
   }
 
   private settings = getSettings();
@@ -467,15 +515,10 @@ export class TraceManager {
       if (trace.status === TraceSpanStatus.IN_PROGRESS) {
         trace.status = TraceSpanStatus.SUCCESS;
       }
-      if (this.traceCaptureSink) {
-        this.traceCaptureSink(trace);
-      } else if (!this.evaluating) {
+      if (this.traceCaptureSinks.size > 0) {
+        for (const sink of this.traceCaptureSinks) sink(trace);
+      } else if (!this.isEvaluating) {
         this.postTrace(trace);
-      } else {
-        trace.rootSpans = [trace.rootSpans[0].children[0]];
-        for (const rootSpan of trace.rootSpans) {
-          rootSpan.parentUuid = undefined;
-        }
       }
       this.activeTraces.delete(traceUuid);
     }
@@ -546,6 +589,7 @@ export class TraceManager {
       output: span.output,
       metadata: span.metadata,
       metricCollection: span.metricCollection,
+      metrics: span.metrics,
       expectedOutput: span.expectedOutput,
       retrievalContext: span.retrievalContext,
       context: span.context,
@@ -941,6 +985,7 @@ export class Tracer {
   private observeKwargs: Record<string, any>;
   private functionKwargs: Record<string, any>;
   private result: any = null;
+  private pendingPayload?: PendingPayload | null;
 
   constructor(
     spanType: SpanType | string | null,
@@ -1062,8 +1107,16 @@ export class Tracer {
     });
   }
 
-  // Create a span instance based on the span type.
   private createSpanInstance(): BaseSpan {
+    const span = this.buildSpanInstance();
+    if (this.pendingPayload === undefined) {
+      this.pendingPayload = popPendingFor(this.spanType) ?? null;
+    }
+    applyPendingToSpan(span, this.pendingPayload ?? undefined);
+    return span;
+  }
+
+  private buildSpanInstance(): BaseSpan {
     const spanKwargs: BaseSpan = {
       uuid: this.uuid,
       traceUuid: this.traceUuid!,
