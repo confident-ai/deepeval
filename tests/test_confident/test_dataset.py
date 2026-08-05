@@ -291,6 +291,28 @@ class TestMultiTurnDataset:
         updated = next(g for g in dataset.goldens if g.id == golden_id)
         assert updated.expected_outcome == "UPDATED expected outcome"
 
+    def test_delete_golden(self):
+        goldens_data = load_goldens_data("goldens_multi_turn.json")
+        initial_goldens = [
+            self.create_golden_from_data(data) for data in goldens_data
+        ]
+
+        dataset = EvaluationDataset(goldens=initial_goldens)
+        dataset.delete(alias=self.PUSH_ALIAS)
+        dataset.push(alias=self.PUSH_ALIAS)
+
+        dataset.goldens = []
+        dataset.pull(alias=self.PUSH_ALIAS)
+
+        golden_id = dataset.goldens[0].id
+        dataset.delete_golden(dataset.goldens[0])
+
+        dataset.goldens = []
+        dataset.pull(alias=self.PUSH_ALIAS)
+
+        assert len(dataset.goldens) == len(initial_goldens) - 1
+        assert all(g.id != golden_id for g in dataset.goldens)
+
     # def test_dataset_queue(self):
     #     goldens_data = load_goldens_data("goldens_multi_turn.json")
 

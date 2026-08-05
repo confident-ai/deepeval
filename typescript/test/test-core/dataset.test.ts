@@ -180,4 +180,48 @@ describe("Dataset Module", () => {
       version: versionResult.version,
     });
   });
+
+  test("Should update a golden on Confident AI", async () => {
+    const mutationAlias = "QA Dataset Golden Mutations";
+
+    const seed = new EvaluationDataset();
+    seed.addGolden(new Golden({ input: "Golden to update" }));
+    seed.addGolden(new Golden({ input: "Golden to keep" }));
+    await seed.push({ alias: mutationAlias });
+
+    const dataset = new EvaluationDataset();
+    await dataset.pull({ alias: mutationAlias });
+    expect(dataset.goldens.length).toBeGreaterThan(0);
+
+    const golden = dataset.goldens[0];
+    expect(golden.id).toBeDefined();
+    golden.expectedOutput = "UPDATED expected output";
+    await dataset.updateGolden({ golden });
+
+    const pulled = new EvaluationDataset();
+    await pulled.pull({ alias: mutationAlias });
+    const updated = pulled.goldens.find((g) => g.id === golden.id);
+    expect(updated).toBeDefined();
+    if (updated instanceof Golden) {
+      expect(updated.expectedOutput).toBe("UPDATED expected output");
+    }
+  });
+
+  test("Should delete a golden from Confident AI", async () => {
+    const mutationAlias = "QA Dataset Golden Mutations";
+
+    const dataset = new EvaluationDataset();
+    await dataset.pull({ alias: mutationAlias });
+    const initialCount = dataset.goldens.length;
+    expect(initialCount).toBeGreaterThan(0);
+
+    const goldenId = dataset.goldens[0].id;
+    expect(goldenId).toBeDefined();
+    await dataset.deleteGolden({ golden: dataset.goldens[0] });
+
+    const pulled = new EvaluationDataset();
+    await pulled.pull({ alias: mutationAlias });
+    expect(pulled.goldens.length).toBe(initialCount - 1);
+    expect(pulled.goldens.every((g) => g.id !== goldenId)).toBe(true);
+  });
 });
