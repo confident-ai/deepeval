@@ -1,7 +1,7 @@
 export {
   DeepEvalBaseLLM,
   type ContentTokenLogProbs,
-  type GenerationKwargs,
+  type ExtraGenerationParams,
   type GenerationResult,
   type RawGenerationOptions,
   type RawGenerationResult,

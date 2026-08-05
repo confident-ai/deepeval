@@ -105,7 +105,7 @@ const model = new GeminiModel({
 const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
 
-There are **ZERO** mandatory and **EIGHT** optional parameters when creating a `GeminiModel` through Vertex AI:
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `GeminiModel` through Vertex AI:
 
 - [Optional] `model`: A string specifying the name of the Gemini model to use. Defaults to `GEMINI_MODEL_NAME` if not passed; falls back to <DefaultLLMModel provider="gemini" /> if unset.
 - [Optional] `useVertexAI`: A boolean routing requests through Vertex AI instead of the Gemini API. Defaults to `true` when `GOOGLE_GENAI_USE_VERTEXAI` is set to the exact string `true`, else `false`.
@@ -114,14 +114,24 @@ There are **ZERO** mandatory and **EIGHT** optional parameters when creating a `
 - [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
 - [Optional] `costPerInputToken`: A number specifying the cost per input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
 - [Optional] `costPerOutputToken`: A number specifying the cost per output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
-- [Optional] `generationKwargs`: An object of additional generation parameters merged into the `generateContent` request `config`.
+
+Any other key you pass is merged into the `generateContent` request `config`, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new GeminiModel({
+  model: "gemini-2.5-pro",
+  useVertexAI: true,
+  topP: 0.9,
+  maxOutputTokens: 512,
+});
+```
 
 :::note
 To use Vertex AI you must set `useVertexAI` (via the option or `GOOGLE_GENAI_USE_VERTEXAI=true`) along with project and location (via options or GOOGLE_CLOUD_PROJECT / GOOGLE_CLOUD_LOCATION). Requests are authenticated with Application Default Credentials.
 :::
 
 :::tip
-Any additional parameters you would like to use for your model can be passed through the `generationKwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/content-generation-parameters).
+Before passing additional generation parameters, we request you to double check the params supported by the model and your model provider in their [official docs](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/content-generation-parameters).
 :::
 
 </Case>

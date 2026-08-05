@@ -130,7 +130,7 @@ const answerRelevancy = new AnswerRelevancyMetric({
 </Tab>
 </Tabs>
 
-There are **ZERO** mandatory and **NINE** optional parameters when creating a `GeminiModel`:
+There are **ZERO** mandatory and **EIGHT** optional parameters when creating a `GeminiModel`:
 
 - [Optional] `model`: A string specifying the name of the Gemini model to use. Defaults to `GEMINI_MODEL_NAME` if not passed; falls back to <DefaultLLMModel provider="gemini" /> if unset.
 - [Optional] `apiKey`: A string specifying the Google API key for authentication. Defaults to `GOOGLE_API_KEY`, then `GEMINI_API_KEY`, if not passed; raises an error at runtime if unset.
@@ -140,7 +140,16 @@ There are **ZERO** mandatory and **NINE** optional parameters when creating a `G
 - [Optional] `location`: A string specifying the Google Cloud location for Vertex AI. Defaults to `GOOGLE_CLOUD_LOCATION` if not passed.
 - [Optional] `costPerInputToken`: A number specifying the cost per input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
 - [Optional] `costPerOutputToken`: A number specifying the cost per output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
-- [Optional] `generationKwargs`: An object of additional generation parameters merged into the `generateContent` request `config`.
+
+Any other key you pass is merged into the `generateContent` request `config`, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new GeminiModel({
+  model: "gemini-2.5-pro",
+  topP: 0.9,
+  maxOutputTokens: 512,
+});
+```
 
 :::note
 At runtime, you must provide an API key (via `apiKey`, `GOOGLE_API_KEY`, or `GEMINI_API_KEY`) unless you’re using Vertex AI. See [Vertex AI](/docs/integrations/models/vertex-ai).

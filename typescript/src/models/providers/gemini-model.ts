@@ -2,14 +2,15 @@ import type { ZodType } from "zod";
 import { parseBool } from "@/config/utils";
 import {
   DeepEvalBaseLLM,
-  type GenerationKwargs,
+  type ExtraGenerationParams,
   type GenerationResult,
 } from "@/models/base-model";
 import { extractJson, importOptional, requireApiKey } from "@/models/utils";
 import { geminiContents } from "@/models/multimodal";
 import { defaultModelName, type ModelNamespace } from "@/models/registry";
 
-export interface GeminiModelOptions {
+/** Any other key is merged into the `generateContent` request `config`. */
+export interface GeminiModelOptions extends ExtraGenerationParams {
   model?: string;
   apiKey?: string;
   /** Defaults to `0`. Pass `null` to omit it from the request entirely. */
@@ -19,8 +20,6 @@ export interface GeminiModelOptions {
   location?: string;
   costPerInputToken?: number;
   costPerOutputToken?: number;
-  /** Extra params merged into the `generateContent` request `config`. */
-  generationKwargs?: GenerationKwargs;
 }
 
 export class GeminiModel extends DeepEvalBaseLLM {
@@ -28,35 +27,44 @@ export class GeminiModel extends DeepEvalBaseLLM {
   private readonly useVertexAI: boolean;
   private readonly project?: string;
   private readonly location?: string;
-  private readonly generationKwargs: GenerationKwargs;
+  private readonly extraParams: ExtraGenerationParams;
   private client?: any;
   protected registryNamespace: ModelNamespace = "gemini";
 
   constructor(options: GeminiModelOptions = {}) {
+    const {
+      model,
+      apiKey,
+      temperature,
+      useVertexAI: useVertexAIOption,
+      project,
+      location,
+      costPerInputToken,
+      costPerOutputToken,
+      ...extraParams
+    } = options;
+
     const useVertexAI =
-      options.useVertexAI ??
+      useVertexAIOption ??
       parseBool(process.env.GOOGLE_GENAI_USE_VERTEXAI) ??
       false;
 
     super(
-      options.model ??
+      model ??
         // Vertex AI deployments name models differently from the Gemini API.
         (useVertexAI ? process.env.VERTEX_AI_MODEL_NAME : undefined) ??
         process.env.GEMINI_MODEL_NAME ??
         defaultModelName("gemini"),
     );
     this.apiKey =
-      options.apiKey ??
-      process.env.GOOGLE_API_KEY ??
-      process.env.GEMINI_API_KEY ??
-      "";
-    this.temperature = options.temperature;
+      apiKey ?? process.env.GOOGLE_API_KEY ?? process.env.GEMINI_API_KEY ?? "";
+    this.temperature = temperature;
     this.useVertexAI = useVertexAI;
-    this.project = options.project ?? process.env.GOOGLE_CLOUD_PROJECT;
-    this.location = options.location ?? process.env.GOOGLE_CLOUD_LOCATION;
-    this.costPerInputToken = options.costPerInputToken;
-    this.costPerOutputToken = options.costPerOutputToken;
-    this.generationKwargs = { ...options.generationKwargs };
+    this.project = project ?? process.env.GOOGLE_CLOUD_PROJECT;
+    this.location = location ?? process.env.GOOGLE_CLOUD_LOCATION;
+    this.costPerInputToken = costPerInputToken;
+    this.costPerOutputToken = costPerOutputToken;
+    this.extraParams = extraParams;
   }
 
   private async getClient(): Promise<any> {
@@ -88,7 +96,7 @@ export class GeminiModel extends DeepEvalBaseLLM {
     if (schema) {
       config.responseMimeType = "application/json";
     }
-    Object.assign(config, this.generationKwargs);
+    Object.assign(config, this.extraParams);
 
     const response = await client.models.generateContent({
       model: this.modelName,

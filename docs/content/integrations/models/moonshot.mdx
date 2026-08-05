@@ -119,7 +119,7 @@ const answerRelevancy = new AnswerRelevancyMetric({
 </Tab>
 </Tabs>
 
-There are **ZERO** mandatory and **EIGHT** optional parameters when creating a `KimiModel`:
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `KimiModel`:
 
 - [Optional] `model`: A string specifying the name of the Kimi model to use. Defaults to `MOONSHOT_MODEL_NAME` if not passed; falls back to `moonshot-v1-8k` if unset.
 - [Optional] `apiKey`: A string specifying your Kimi API key for authentication. Defaults to `MOONSHOT_API_KEY` if not passed; raises an error at runtime if unset.
@@ -128,14 +128,23 @@ There are **ZERO** mandatory and **EIGHT** optional parameters when creating a `
 - [Optional] `defaultHeaders`: An object of extra HTTP headers sent with every request.
 - [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
 - [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
-- [Optional] `generationKwargs`: An object of additional generation parameters forwarded to the OpenAI `chat.completions.create(...)` call.
+
+Any other key you pass is forwarded as-is to the OpenAI `chat.completions.create(...)` call, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new KimiModel({
+  model: "moonshot-v1-8k",
+  top_p: 0.9,
+  max_tokens: 512,
+});
+```
 
 </Case>
 
 </Switch>
 
 :::tip
-Any additional parameters you would like to use for your model can be passed through the generation kwargs parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://docs.together.ai/docs/inference-parameters).
+Before passing additional generation parameters, we request you to double check the params supported by the model and your model provider in their [official docs](https://docs.together.ai/docs/inference-parameters).
 :::
 
 ### Available Moonshot Models

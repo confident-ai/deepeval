@@ -130,7 +130,7 @@ const answerRelevancy = new AnswerRelevancyMetric({
 </Tab>
 </Tabs>
 
-There are **ZERO** mandatory and **EIGHT** optional parameters when creating a `LocalModel`:
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `LocalModel`:
 
 - [Optional] `model`: A string specifying the local model to use. Defaults to `LOCAL_MODEL_NAME` if not passed; raises an error if unset.
 - [Optional] `apiKey`: A string specifying the API key for your local server. Defaults to `LOCAL_MODEL_API_KEY` if not passed; falls back to a placeholder string, so local servers without authentication work out of the box.
@@ -139,11 +139,17 @@ There are **ZERO** mandatory and **EIGHT** optional parameters when creating a `
 - [Optional] `defaultHeaders`: An object of extra HTTP headers sent with every request.
 - [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
 - [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
-- [Optional] `generationKwargs`: An object of additional generation parameters forwarded to the local server's `chat.completions.create(...)` call.
 
-:::tip
-Any additional parameters you would like to use for your model can be passed through the generation kwargs parameter.
-:::
+Any other key you pass is forwarded as-is to the local server's `chat.completions.create(...)` call, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new LocalModel({
+  model: "<model_name>",
+  baseURL: "http://localhost:8000/v1/",
+  top_p: 0.9,
+  max_tokens: 512,
+});
+```
 
 </Case>
 

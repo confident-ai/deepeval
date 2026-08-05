@@ -38,18 +38,24 @@ const model = new AISDKModel({
 const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
 
-There are **ONE** mandatory and **FIVE** optional parameters when creating an `AISDKModel`:
+There are **ONE** mandatory and **FOUR** optional parameters when creating an `AISDKModel`:
 
 - [Mandatory] `model`: A Vercel AI SDK `LanguageModel` instance, such as `openai("gpt-4o")` from `@ai-sdk/openai`.
 - [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
 - [Optional] `maxOutputTokens`: A number specifying the maximum number of tokens to generate.
 - [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
 - [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
-- [Optional] `generationKwargs`: An object of additional generation parameters forwarded to the underlying `generateText(...)` and `generateObject(...)` calls.
 
-:::tip
-Any parameter the AI SDK accepts but `deepeval` does not expose as a first-class option — `topP`, `seed`, `presencePenalty` and so on — can be passed through `generationKwargs`.
-:::
+Any other key you pass is forwarded as-is to the underlying `generateText(...)` and `generateObject(...)` calls, so parameters the AI SDK accepts but `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new AISDKModel({
+  model: openai("gpt-4o"),
+  topP: 0.9,
+  seed: 42,
+  presencePenalty: 0.5,
+});
+```
 
 ### Pricing
 

@@ -59,13 +59,20 @@ abstract generate<T = string>(
   `temperature: null` forces omission — useful for a new reasoning model the registry
   does not cover yet, where the `0` default would otherwise be rejected. Resolution is
   `resolveTemperature()` on `DeepEvalBaseLLM`.
-- **`generationKwargs` is the escape hatch** for anything not exposed as a first-class
-  option — the counterpart of Python's `generation_kwargs`. Every provider accepts it,
-  and it is merged **last**, so a key set there overrides the equivalent option (e.g.
-  `temperature`). Each provider forwards it to the natural place for its SDK: the
-  request body for OpenAI-compatible providers and Anthropic, `config` for Gemini,
-  `inferenceConfig` for Bedrock, the `options` bag for Ollama, and the
+- **Unrecognized options are the escape hatch** for anything not exposed as a
+  first-class option. Every options type extends `ExtraGenerationParams` (an index
+  signature), and every constructor destructures the options it knows and keeps the
+  rest — so where Python needs a nested `generation_kwargs` dict, TypeScript takes the
+  same keys inline. The rest bag is merged **last**, so a key given there overrides the
+  equivalent option (e.g. `temperature`). Each provider forwards it to the natural place
+  for its SDK: the request body for OpenAI-compatible providers and Anthropic, `config`
+  for Gemini, `inferenceConfig` for Bedrock, the `options` bag for Ollama, and the
   `generateText`/`generateObject` call for the AI SDK.
+
+  A subclass that adds its own options must destructure them out **before** calling
+  `super(...)`, or they land in the rest bag and get sent to the provider — that is why
+  `AzureOpenAIModel` peels off `endpoint`/`apiVersion`/`deployment`/`adToken` and
+  `PortkeyModel` peels off `provider`.
 
 ## The model registry (Python is the source of truth)
 
@@ -227,10 +234,12 @@ const m2 = new OpenAIModel({
 const m2c = new OpenAIModel({ model: "o3-mini" });
 const m2d = new OpenAIModel({ model: "brand-new-reasoning-model", temperature: null });
 
-// Provider params with no first-class option, via the generationKwargs escape hatch
+// Provider params with no first-class option are passed inline and forwarded as-is
 const m2b = new OpenAIModel({
   model: "gpt-4.1",
-  generationKwargs: { top_p: 0.9, seed: 42, max_completion_tokens: 512 },
+  top_p: 0.9,
+  seed: 42,
+  max_completion_tokens: 512,
 });
 
 // Other providers

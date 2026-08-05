@@ -146,21 +146,30 @@ const answerRelevancy = new AnswerRelevancyMetric({
 </Tab>
 </Tabs>
 
-There are **ZERO** mandatory and **SIX** optional parameters when creating an `OllamaModel`:
+There are **ZERO** mandatory and **FIVE** optional parameters when creating an `OllamaModel`:
 
 - [Optional] `model`: A string specifying the name of the Ollama model to use. Defaults to `OLLAMA_MODEL_NAME` if not passed; raises an error at runtime if unset.
 - [Optional] `baseURL`: A string specifying the base URL of the Ollama server. Defaults to `LOCAL_MODEL_BASE_URL` if not passed; falls back to `http://localhost:11434` if unset.
 - [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
 - [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
 - [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
-- [Optional] `generationKwargs`: An object of additional generation parameters merged into Ollama's `chat(..., options: {...})` call.
+
+Any other key you pass is merged into Ollama's `chat(..., options: {...})` call, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new OllamaModel({
+  model: "deepseek-r1:1.5b",
+  top_p: 0.9,
+  num_predict: 512,
+});
+```
 
 </Case>
 
 </Switch>
 
 :::tip
-Any additional parameters you would like to use for your model can be passed through the generation kwargs parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://ollama.readthedocs.io/en/api/#parameters).
+Before passing additional generation parameters, we request you to double check the params supported by the model and your model provider in their [official docs](https://ollama.readthedocs.io/en/api/#parameters).
 :::
 
 ### Available Ollama Models

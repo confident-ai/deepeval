@@ -23,22 +23,25 @@ export class AzureOpenAIModel extends DeepEvalOpenAICompatibleModel {
   private adToken?: string;
 
   constructor(options: AzureOpenAIModelOptions = {}) {
-    const deployment =
-      options.deployment ??
-      options.model ??
+    // Peeled off so they reach the client rather than the request body.
+    const { endpoint, apiVersion, deployment, adToken, ...rest } = options;
+
+    const resolvedDeployment =
+      deployment ??
+      rest.model ??
       process.env.AZURE_DEPLOYMENT_NAME ??
       process.env.AZURE_MODEL_NAME;
 
     super({
-      ...options,
-      model: deployment,
-      apiKey: options.apiKey ?? process.env.AZURE_OPENAI_API_KEY,
+      ...rest,
+      model: resolvedDeployment,
+      apiKey: rest.apiKey ?? process.env.AZURE_OPENAI_API_KEY,
     });
 
-    this.endpoint = options.endpoint ?? process.env.AZURE_OPENAI_ENDPOINT;
-    this.apiVersion = options.apiVersion ?? process.env.OPENAI_API_VERSION;
-    this.adToken = options.adToken ?? process.env.AZURE_OPENAI_AD_TOKEN;
-    this.deployment = deployment;
+    this.endpoint = endpoint ?? process.env.AZURE_OPENAI_ENDPOINT;
+    this.apiVersion = apiVersion ?? process.env.OPENAI_API_VERSION;
+    this.adToken = adToken ?? process.env.AZURE_OPENAI_AD_TOKEN;
+    this.deployment = resolvedDeployment;
     // Requests route by deployment, but pricing belongs to the underlying model.
     this.registryModelName = options.model;
 

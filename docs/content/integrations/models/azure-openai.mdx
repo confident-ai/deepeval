@@ -149,7 +149,7 @@ const answerRelevancy = new AnswerRelevancyMetric({
 </Tab>
 </Tabs>
 
-There are **ZERO** mandatory and **NINE** optional parameters when creating an `AzureOpenAIModel`:
+There are **ZERO** mandatory and **EIGHT** optional parameters when creating an `AzureOpenAIModel`:
 
 - [Optional] `model`: A string specifying the name of the Azure OpenAI model your deployment serves. Used to look up pricing and capabilities in `deepeval`'s model registry, and used as the deployment name when `deployment` is not passed.
 - [Optional] `deployment`: A string specifying the name of your Azure OpenAI deployment, which requests are routed by. Defaults to `model`, then `AZURE_DEPLOYMENT_NAME`, then `AZURE_MODEL_NAME` if not passed; raises an error if unset.
@@ -159,14 +159,23 @@ There are **ZERO** mandatory and **NINE** optional parameters when creating an `
 - [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
 - [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
 - [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
-- [Optional] `generationKwargs`: An object of additional generation parameters forwarded to the Azure OpenAI `chat.completions.create(...)` call.
+
+Any other key you pass is forwarded as-is to the Azure OpenAI `chat.completions.create(...)` call, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new AzureOpenAIModel({
+  model: "gpt-4.1",
+  top_p: 0.9,
+  seed: 42,
+});
+```
 
 </Case>
 
 </Switch>
 
 :::tip
-Any additional parameters you would like to use for your model can be passed through the generation kwargs parameter. However, we recommend that you double check the params supported by the model and your model provider in their [official docs](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/reference#request-body).
+Before passing additional generation parameters, we recommend that you double check the params supported by the model and your model provider in their [official docs](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/reference#request-body).
 :::
 
 ### Available Azure OpenAI Models

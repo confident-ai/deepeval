@@ -116,7 +116,7 @@ const answerRelevancy = new AnswerRelevancyMetric({
 </Tab>
 </Tabs>
 
-There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `AnthropicModel`:
+There are **ZERO** mandatory and **SIX** optional parameters when creating an `AnthropicModel`:
 
 - [Optional] `model`: A string specifying which Claude model to use. Defaults to `ANTHROPIC_MODEL_NAME` if not passed; falls back to <DefaultLLMModel provider="anthropic" /> if unset.
 - [Optional] `apiKey`: A string specifying your Anthropic API key. Defaults to `ANTHROPIC_API_KEY` if not passed; raises an error at runtime if unset.
@@ -124,11 +124,16 @@ There are **ZERO** mandatory and **SEVEN** optional parameters when creating an 
 - [Optional] `maxTokens`: A number specifying the maximum number of tokens to generate. Defaults to `4096`.
 - [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
 - [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
-- [Optional] `generationKwargs`: An object of additional generation parameters forwarded to the Anthropic `messages.create(...)` call.
 
-:::tip
-Pass generation parameters that have no first-class option, such as `top_p`, via `generationKwargs` (they are forwarded to `messages.create(...)`).
-:::
+Any other key you pass is forwarded as-is to the Anthropic `messages.create(...)` call, so generation parameters with no first-class option go inline alongside the rest:
+
+```typescript
+const model = new AnthropicModel({
+  model: "claude-sonnet-4-6",
+  top_p: 0.9,
+  stop_sequences: ["\n\n"],
+});
+```
 
 </Case>
 

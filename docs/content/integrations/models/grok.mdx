@@ -138,7 +138,7 @@ const answerRelevancy = new AnswerRelevancyMetric({
 </Tab>
 </Tabs>
 
-There are **ZERO** mandatory and **EIGHT** optional parameters when creating a `GrokModel`:
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `GrokModel`:
 
 - [Optional] `model`: A string specifying the name of the Grok model to use. Defaults to `GROK_MODEL_NAME` if not passed; falls back to `grok-3` if unset.
 - [Optional] `apiKey`: A string specifying your Grok API key for authentication. Defaults to `GROK_API_KEY`, then `XAI_API_KEY`, if not passed; raises an error at runtime if unset.
@@ -147,14 +147,23 @@ There are **ZERO** mandatory and **EIGHT** optional parameters when creating a `
 - [Optional] `defaultHeaders`: An object of extra HTTP headers sent with every request.
 - [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
 - [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
-- [Optional] `generationKwargs`: An object of additional generation parameters forwarded to the OpenAI `chat.completions.create(...)` call.
+
+Any other key you pass is forwarded as-is to the OpenAI `chat.completions.create(...)` call, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new GrokModel({
+  model: "grok-4",
+  top_p: 0.9,
+  max_tokens: 512,
+});
+```
 
 </Case>
 
 </Switch>
 
 :::tip
-Any additional parameters you would like to use for your model can be passed through the generation kwargs parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://docs.x.ai/docs/guides/function-calling#function-calling-modes).
+Before passing additional generation parameters, we request you to double check the params supported by the model and your model provider in their [official docs](https://docs.x.ai/docs/guides/function-calling#function-calling-modes).
 :::
 
 ### Available Grok Models

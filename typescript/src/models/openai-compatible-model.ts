@@ -2,7 +2,7 @@ import type { ZodType } from "zod";
 import {
   DeepEvalBaseLLM,
   type ContentTokenLogProbs,
-  type GenerationKwargs,
+  type ExtraGenerationParams,
   type GenerationResult,
   type RawGenerationOptions,
   type RawGenerationResult,
@@ -10,7 +10,8 @@ import {
 import { extractJson, requireApiKey, toJsonSchema } from "@/models/utils";
 import { openAIContent } from "@/models/multimodal";
 
-export interface OpenAICompatibleModelOptions {
+/** Any other key is forwarded to `chat.completions.create(...)`. */
+export interface OpenAICompatibleModelOptions extends ExtraGenerationParams {
   model?: string;
   apiKey?: string;
   baseURL?: string;
@@ -19,8 +20,6 @@ export interface OpenAICompatibleModelOptions {
   defaultHeaders?: Record<string, string>;
   costPerInputToken?: number;
   costPerOutputToken?: number;
-  /** Extra params forwarded to `chat.completions.create(...)`. */
-  generationKwargs?: GenerationKwargs;
 }
 
 /**
@@ -34,21 +33,32 @@ export class DeepEvalOpenAICompatibleModel extends DeepEvalBaseLLM {
   protected apiKey: string;
   protected baseURL?: string;
   protected defaultHeaders?: Record<string, string>;
-  protected generationKwargs: GenerationKwargs;
+  protected extraParams: ExtraGenerationParams;
   protected client?: any;
 
   protected providerLabel = "OpenAI-compatible";
   protected apiKeyEnvVar = "OPENAI_API_KEY";
 
   constructor(options: OpenAICompatibleModelOptions = {}) {
-    super(options.model);
-    this.apiKey = options.apiKey ?? "";
-    this.baseURL = options.baseURL;
-    this.temperature = options.temperature;
-    this.defaultHeaders = options.defaultHeaders;
-    this.costPerInputToken = options.costPerInputToken;
-    this.costPerOutputToken = options.costPerOutputToken;
-    this.generationKwargs = { ...options.generationKwargs };
+    const {
+      model,
+      apiKey,
+      baseURL,
+      temperature,
+      defaultHeaders,
+      costPerInputToken,
+      costPerOutputToken,
+      ...extraParams
+    } = options;
+
+    super(model);
+    this.apiKey = apiKey ?? "";
+    this.baseURL = baseURL;
+    this.temperature = temperature;
+    this.defaultHeaders = defaultHeaders;
+    this.costPerInputToken = costPerInputToken;
+    this.costPerOutputToken = costPerOutputToken;
+    this.extraParams = extraParams;
   }
 
   /**
@@ -93,7 +103,7 @@ export class DeepEvalOpenAICompatibleModel extends DeepEvalBaseLLM {
         },
       };
     }
-    Object.assign(request, this.generationKwargs);
+    Object.assign(request, this.extraParams);
 
     const completion = await client.chat.completions.create(request);
     const content: string = completion.choices?.[0]?.message?.content ?? "";
@@ -133,7 +143,7 @@ export class DeepEvalOpenAICompatibleModel extends DeepEvalBaseLLM {
       logprobs: true,
       top_logprobs: this.capTopLogprobs(options.topLogprobs ?? 20),
     };
-    Object.assign(request, this.generationKwargs);
+    Object.assign(request, this.extraParams);
 
     const completion = await client.chat.completions.create(request);
     const choice = completion.choices?.[0];

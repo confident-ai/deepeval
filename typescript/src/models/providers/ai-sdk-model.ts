@@ -1,7 +1,7 @@
 import type { ZodType } from "zod";
 import {
   DeepEvalBaseLLM,
-  type GenerationKwargs,
+  type ExtraGenerationParams,
   type GenerationResult,
 } from "@/models/base-model";
 import { aiSdkContent } from "@/models/multimodal";
@@ -41,7 +41,8 @@ export function resolveAiSdkNamespace(
   return NAMESPACE_BY_PROVIDER_ID[provider.split(".")[0]];
 }
 
-export interface AISDKModelOptions {
+/** Any other key is forwarded to `generateText(...)` / `generateObject(...)`. */
+export interface AISDKModelOptions extends ExtraGenerationParams {
   /** A Vercel AI SDK `LanguageModel`, e.g. `openai("gpt-4o")`. */
   model: any;
   /** Defaults to `0`. Pass `null` to omit it from the request entirely. */
@@ -49,28 +50,31 @@ export interface AISDKModelOptions {
   maxOutputTokens?: number;
   costPerInputToken?: number;
   costPerOutputToken?: number;
-  /** Extra params forwarded to `generateText(...)` / `generateObject(...)`. */
-  generationKwargs?: GenerationKwargs;
 }
 
 export class AISDKModel extends DeepEvalBaseLLM {
   private readonly aiModel: any;
   private readonly maxOutputTokens?: number;
-  private readonly generationKwargs: GenerationKwargs;
+  private readonly extraParams: ExtraGenerationParams;
 
   constructor(options: AISDKModelOptions) {
-    super(
-      typeof options.model === "string"
-        ? options.model
-        : options.model?.modelId,
-    );
-    this.aiModel = options.model;
-    this.temperature = options.temperature;
-    this.maxOutputTokens = options.maxOutputTokens;
-    this.costPerInputToken = options.costPerInputToken;
-    this.costPerOutputToken = options.costPerOutputToken;
-    this.generationKwargs = { ...options.generationKwargs };
-    this.registryNamespace = resolveAiSdkNamespace(options.model);
+    const {
+      model,
+      temperature,
+      maxOutputTokens,
+      costPerInputToken,
+      costPerOutputToken,
+      ...extraParams
+    } = options;
+
+    super(typeof model === "string" ? model : model?.modelId);
+    this.aiModel = model;
+    this.temperature = temperature;
+    this.maxOutputTokens = maxOutputTokens;
+    this.costPerInputToken = costPerInputToken;
+    this.costPerOutputToken = costPerOutputToken;
+    this.extraParams = extraParams;
+    this.registryNamespace = resolveAiSdkNamespace(model);
   }
 
   async generate<T = string>(
@@ -93,7 +97,7 @@ export class AISDKModel extends DeepEvalBaseLLM {
         ...input,
         ...(temperature !== undefined && { temperature }),
         maxOutputTokens: this.maxOutputTokens,
-        ...this.generationKwargs,
+        ...this.extraParams,
       });
       const cost = this.resolveCost(usage?.inputTokens, usage?.outputTokens);
       return { output: object as T, cost };
@@ -104,7 +108,7 @@ export class AISDKModel extends DeepEvalBaseLLM {
       ...input,
       ...(temperature !== undefined && { temperature }),
       maxOutputTokens: this.maxOutputTokens,
-      ...this.generationKwargs,
+      ...this.extraParams,
     });
     const cost = this.resolveCost(usage?.inputTokens, usage?.outputTokens);
     return { output: text as T, cost };

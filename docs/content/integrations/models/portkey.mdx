@@ -129,7 +129,7 @@ const answerRelevancy = new AnswerRelevancyMetric({
 </Tab>
 </Tabs>
 
-There are **ZERO** mandatory and **NINE** optional parameters when creating a `PortkeyModel`:
+There are **ZERO** mandatory and **EIGHT** optional parameters when creating a `PortkeyModel`:
 
 - [Optional] `model`: A string specifying the name of the Portkey model to use. Defaults to `PORTKEY_MODEL_NAME` if not passed; raises an error at runtime if unset.
 - [Optional] `apiKey`: A string specifying your Portkey API key for authentication. Sent as the `x-portkey-api-key` header. Defaults to `PORTKEY_API_KEY` if not passed; raises an error at runtime if unset.
@@ -139,13 +139,18 @@ There are **ZERO** mandatory and **NINE** optional parameters when creating a `P
 - [Optional] `defaultHeaders`: An object of extra HTTP headers sent with every request.
 - [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
 - [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
-- [Optional] `generationKwargs`: An object of additional generation parameters forwarded to Portkey's `chat.completions.create(...)` call.
+
+Any other key you pass is forwarded as-is to Portkey's `chat.completions.create(...)` call, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new PortkeyModel({
+  model: "gpt-4.1",
+  top_p: 0.9,
+  max_tokens: 512,
+});
+```
 
 We recommend double-checking the parameters supported by your chosen model and provider in the [official Portkey docs](https://portkey.ai/docs).
-
-:::tip
-Pass generation parameters such as `max_tokens` via `generationKwargs` (they are forwarded to `chat.completions.create(...)`).
-:::
 
 </Case>
 

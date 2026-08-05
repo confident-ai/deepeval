@@ -1,7 +1,7 @@
 import type { ZodType } from "zod";
 import {
   DeepEvalBaseLLM,
-  type GenerationKwargs,
+  type ExtraGenerationParams,
   type GenerationResult,
 } from "@/models/base-model";
 import { extractJson, importOptional, requireApiKey } from "@/models/utils";
@@ -10,7 +10,8 @@ import { defaultModelName, type ModelNamespace } from "@/models/registry";
 
 const DEFAULT_MAX_TOKENS = 4096;
 
-export interface AnthropicModelOptions {
+/** Any other key is forwarded to `messages.create(...)`. */
+export interface AnthropicModelOptions extends ExtraGenerationParams {
   model?: string;
   apiKey?: string;
   /** Defaults to `0`. Pass `null` to omit it from the request entirely. */
@@ -18,29 +19,35 @@ export interface AnthropicModelOptions {
   maxTokens?: number;
   costPerInputToken?: number;
   costPerOutputToken?: number;
-  /** Extra params forwarded to `messages.create(...)`. */
-  generationKwargs?: GenerationKwargs;
 }
 
 export class AnthropicModel extends DeepEvalBaseLLM {
   private readonly apiKey: string;
   private readonly maxTokens: number;
-  private readonly generationKwargs: GenerationKwargs;
+  private readonly extraParams: ExtraGenerationParams;
   private client?: any;
   protected registryNamespace: ModelNamespace = "anthropic";
 
   constructor(options: AnthropicModelOptions = {}) {
+    const {
+      model,
+      apiKey,
+      temperature,
+      maxTokens,
+      costPerInputToken,
+      costPerOutputToken,
+      ...extraParams
+    } = options;
+
     super(
-      options.model ??
-        process.env.ANTHROPIC_MODEL_NAME ??
-        defaultModelName("anthropic"),
+      model ?? process.env.ANTHROPIC_MODEL_NAME ?? defaultModelName("anthropic"),
     );
-    this.apiKey = options.apiKey ?? process.env.ANTHROPIC_API_KEY ?? "";
-    this.temperature = options.temperature;
-    this.maxTokens = options.maxTokens ?? DEFAULT_MAX_TOKENS;
-    this.costPerInputToken = options.costPerInputToken;
-    this.costPerOutputToken = options.costPerOutputToken;
-    this.generationKwargs = { ...options.generationKwargs };
+    this.apiKey = apiKey ?? process.env.ANTHROPIC_API_KEY ?? "";
+    this.temperature = temperature;
+    this.maxTokens = maxTokens ?? DEFAULT_MAX_TOKENS;
+    this.costPerInputToken = costPerInputToken;
+    this.costPerOutputToken = costPerOutputToken;
+    this.extraParams = extraParams;
   }
 
   private async getClient(): Promise<any> {
@@ -68,7 +75,7 @@ export class AnthropicModel extends DeepEvalBaseLLM {
       max_tokens: this.maxTokens,
       ...(temperature !== undefined && { temperature }),
       messages: [{ role: "user", content: anthropicContent(prompt) }],
-      ...this.generationKwargs,
+      ...this.extraParams,
     });
 
     const text: string = (message.content ?? [])

@@ -42,11 +42,15 @@ export interface RawGenerationOptions {
 }
 
 /**
- * Extra provider-specific generation parameters, the counterpart of Python's
- * `generation_kwargs`. Merged last, so a key set here overrides the equivalent
- * first-class option.
+ * Provider params with no first-class option. Every model's options type
+ * extends this, so any key the underlying SDK accepts is passed inline next to
+ * the options and collected by rest destructuring — where Python needs a
+ * separate `generation_kwargs` dict. Merged last into the request, so a key
+ * given here overrides the equivalent first-class option.
  */
-export type GenerationKwargs = Record<string, unknown>;
+export interface ExtraGenerationParams {
+  [key: string]: unknown;
+}
 
 export const DEFAULT_TEMPERATURE = 0;
 

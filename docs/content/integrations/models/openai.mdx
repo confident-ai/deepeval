@@ -147,7 +147,7 @@ const answerRelevancy = new AnswerRelevancyMetric({
 </Tab>
 </Tabs>
 
-There are **ZERO** mandatory and **EIGHT** optional parameters when creating an `OpenAIModel`:
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `OpenAIModel`:
 
 - [Optional] `model`: A string specifying the name of the OpenAI model to use. Defaulted to `OPENAI_MODEL_NAME` if not set; falls back to <DefaultLLMModel />.
 - [Optional] `apiKey`: A string specifying the OpenAI API key for authentication. Defaults to `OPENAI_API_KEY` if not passed; raises an error at runtime if unset.
@@ -156,7 +156,17 @@ There are **ZERO** mandatory and **EIGHT** optional parameters when creating an 
 - [Optional] `defaultHeaders`: An object of extra HTTP headers sent with every request.
 - [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
 - [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
-- [Optional] `generationKwargs`: An object of additional generation parameters forwarded to the OpenAI `chat.completions.create(...)` call.
+
+Any other key you pass is forwarded as-is to the OpenAI `chat.completions.create(...)` call, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new OpenAIModel({
+  model: "gpt-4.1",
+  top_p: 0.9,
+  seed: 42,
+  max_completion_tokens: 512,
+});
+```
 
 </Case>
 
@@ -167,7 +177,7 @@ You can use custom providers by setting the API key and base URL with your custo
 :::
 
 :::tip
-Any additional parameters you would like to use for your model can be passed through the generation kwargs parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://platform.openai.com/docs/api-reference/responses/create).
+Before passing additional generation parameters, double check the params supported by the model and your model provider in their [official docs](https://platform.openai.com/docs/api-reference/responses/create).
 :::
 
 ### Available OpenAI Models
