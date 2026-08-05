@@ -12,7 +12,6 @@ export type SpanRoute = "rest" | "otlp";
 export const ROUTE_TO_REST_ATTRIBUTE = "confident.internal.route_to_rest";
 
 export interface RestRoutingOptions {
-  /** Explicit override, e.g. a schema-asserting test harness. */
   isTestMode?: boolean;
 }
 

@@ -604,7 +604,7 @@ export class EvaluationDataset {
         callbackBar?.increment();
         count += 1;
         const newTraces = captured.slice(start);
-        const g0 = golden as Golden;
+        const traceGolden = golden as Golden;
 
         const primary = primaryTraceFor(newTraces);
 
@@ -619,7 +619,7 @@ export class EvaluationDataset {
           suppressSpinners(trace.rootSpans);
         }
         const total = newTraces.reduce(
-          (s, t) => s + countTraceMetrics(t, t === primary ? g0 : undefined),
+          (s, t) => s + countTraceMetrics(t, t === primary ? traceGolden : undefined),
           0,
         );
         const evalBar = multibar?.create(Math.max(total, 1), 0, {
@@ -631,34 +631,34 @@ export class EvaluationDataset {
           const evaluated = await evaluateTrace(trace, {
             errorConfig: options.errorConfig,
             onMetric: () => evalBar?.increment(),
-            golden: trace === primary ? g0 : undefined,
+            golden: trace === primary ? traceGolden : undefined,
           });
           // Span-level results are reported locally only — the posted test run
           // keeps one case per golden, with the per-span scores riding along
           // inside the embedded trace (mirrors Python).
-          for (const c of evaluated) {
-            if (c.isTraceScope || c.metricsData.length === 0) continue;
-            componentCases.push({ case: c, parentIndex });
+          for (const _case of evaluated) {
+            if (_case.isTraceScope || _case.metricsData.length === 0) continue;
+            componentCases.push({ case: _case, parentIndex });
           }
         }
 
         if (primary) {
           const rootOutput = primary.output ?? primary.rootSpans?.[0]?.output;
           const testCase = new LLMTestCase({
-            input: g0.input,
+            input: traceGolden.input,
             actualOutput:
               rootOutput != null
                 ? asTestCaseString(rootOutput)
-                : (g0.actualOutput ?? "None"),
+                : (traceGolden.actualOutput ?? "None"),
             expectedOutput: primary.expectedOutput,
             context: primary.context,
             retrievalContext: primary.retrievalContext,
             toolsCalled: asToolCalls(primary.toolsCalled),
             expectedTools: asToolCalls(primary.expectedTools),
             // Links the posted run back to the dataset these goldens came from.
-            _datasetAlias: g0._datasetAlias,
-            _datasetId: g0._datasetId,
-            _datasetRank: g0._datasetRank,
+            _datasetAlias: traceGolden._datasetAlias,
+            _datasetId: traceGolden._datasetId,
+            _datasetRank: traceGolden._datasetRank,
           });
           const { confidentApiKey: _omit, ...traceApi } =
             traceManager.createTraceApi(primary);

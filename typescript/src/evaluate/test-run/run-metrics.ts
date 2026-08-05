@@ -192,8 +192,7 @@ export async function runMetrics(
     return runCallbackMetrics(target as ToPassCallback, metrics, options.golden);
   }
   // `expect(myAgent(input))` instead of `expect(() => myAgent(input))`: the call
-  // already started, so its traces are outside the window we capture. Say so
-  // rather than treating the promise as a test case.
+  // already started, so its traces are outside the window we capture.
   if (typeof (target as { then?: unknown })?.then === "function") {
     throw new DeepEvalError(
       "expect(...).toPass() received a promise. Pass the call as a callback — " +
