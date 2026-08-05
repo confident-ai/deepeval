@@ -21,7 +21,7 @@ const getWeather = createTool({
   inputSchema: z.object({ city: z.string() }),
   outputSchema: z.object({ weather: z.string() }),
   execute: async ({ city }) => {
-    // SEAM 1 — attach the metric to THIS tool span, plus the per-call data the
+    // Attach the metric to THIS tool span, plus the per-call data the
     // metric needs. Nothing can infer `expectedTools` for you.
     updateCurrentSpan({
       metrics: [new metrics.ToolCorrectnessMetric()],

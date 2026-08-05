@@ -24,9 +24,6 @@ async function main() {
     // TRACE-level: judges the whole turn against the golden.
     metrics: [new metrics.TaskCompletionMetric()],
   })) {
-    // SEAM 2 — nothing of yours runs inside the framework's LLM span, so stage
-    // the metric for the next one. One-shot: it lands on the FIRST LLM span, so
-    // in a tool-calling agent that is the tool-selection turn, not the answer.
     await nextLlmSpan({ metrics: [new metrics.AnswerRelevancyMetric()] }, () =>
       ask((golden as Golden).input),
     );
