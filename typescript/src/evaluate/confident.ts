@@ -66,6 +66,8 @@ export interface PersistedCase {
   conversational: boolean;
   entry: Record<string, unknown>;
   metricsData: MetricData[];
+  datasetAlias?: string;
+  datasetId?: string;
 }
 
 export function buildTestCaseEntry(
@@ -75,11 +77,15 @@ export function buildTestCaseEntry(
   const success = metricsData.every((m) => m.skipped || m.success);
   const evaluationCost = caseCost(metricsData);
   const metricsDataApi = metricsData.map(convertMetricData);
+  const datasetAlias = testCase._datasetAlias;
+  const datasetId = testCase._datasetId;
 
   if (testCase instanceof ConversationalTestCase) {
     return {
       conversational: true,
       metricsData,
+      datasetAlias,
+      datasetId,
       entry: {
         name: testCase.name ?? `test_case_${order}`,
         success,
@@ -99,6 +105,8 @@ export function buildTestCaseEntry(
   return {
     conversational: false,
     metricsData,
+    datasetAlias,
+    datasetId,
     entry: {
       name: testCase.name ?? `test_case_${order}`,
       input: testCase.input,
@@ -151,6 +159,9 @@ async function sendTestRun(
     else testCases.push(entry);
   });
 
+  const datasetAlias = persisted.find((c) => c.datasetAlias)?.datasetAlias;
+  const datasetId = persisted.find((c) => c.datasetId)?.datasetId;
+
   const payload = {
     testCases,
     conversationalTestCases,
@@ -161,6 +172,8 @@ async function sendTestRun(
     evaluationCost: hasCost ? totalCost : undefined,
     official: official || undefined,
     identifier: identifier || undefined,
+    datasetAlias: datasetAlias || undefined,
+    datasetId: datasetId || undefined,
   };
 
   try {

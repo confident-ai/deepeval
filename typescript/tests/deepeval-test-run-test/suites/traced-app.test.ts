@@ -12,11 +12,11 @@ const goldens = [
   }),
 ];
 
-// Passing a Golden (rather than a test case) evaluates the trace the app just
-// produced, so the metrics come from the spans themselves.
+// Passing a callback (rather than a test case) runs the app inside the assertion
+// and evaluates the trace it produced, so the metrics come from the spans
+// themselves — no metrics argument needed.
 it.each(goldens)("traced app passes span metrics: $input", async (golden) => {
-  await ragApp(golden.input); // produces a trace; span metrics are attached
-  await expect(golden).toPass();
+  await expect(() => ragApp(golden.input)).toPass();
 });
 
 it("traced app also accepts an explicit trace-level metric", async () => {
@@ -24,6 +24,6 @@ it("traced app also accepts an explicit trace-level metric", async () => {
     input: "What is the capital of France?",
     expectedOutput: "Paris",
   });
-  await ragApp(golden.input);
-  await expect(golden).toPass([correctness()]);
+  // `golden` supplies the expected output the trace-level metric judges against.
+  await expect(() => ragApp(golden.input)).toPass([correctness()], { golden });
 });

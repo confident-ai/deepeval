@@ -6,6 +6,7 @@ import {
   endTraceCapture,
 } from "../../evaluate/test-run/trace-scope.js";
 import { toPass } from "./matchers.mjs";
+import type { ToPassOptions } from "../../evaluate/test-run/index.js";
 
 type AnyMetric = BaseMetric | BaseConversationalMetric;
 
@@ -20,10 +21,10 @@ afterEach(() => {
 
 declare module "vitest" {
   interface Assertion<T = any> {
-    toPass(metrics?: AnyMetric[]): Promise<T>;
+    toPass(metrics?: AnyMetric[], options?: ToPassOptions): Promise<T>;
   }
   interface AsymmetricMatchersContaining {
-    toPass(metrics?: AnyMetric[]): Promise<void>;
+    toPass(metrics?: AnyMetric[], options?: ToPassOptions): Promise<void>;
   }
 }
 

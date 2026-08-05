@@ -32,8 +32,7 @@ it("an explicit test case works via the CLI-injected env", async () => {
   await expect(tc).toPass([new FakeMetric(true)]);
 });
 
-it("a golden evaluates the observed trace", async () => {
+it("a callback evaluates the observed trace", async () => {
   const golden = new Golden({ input: "What is 2+2?", expectedOutput: "4" });
-  await llmApp(golden.input);
-  await expect(golden).toPass();
+  await expect(() => llmApp(golden.input)).toPass();
 });

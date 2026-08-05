@@ -26,6 +26,7 @@ import {
   evaluateTrace,
   countTraceMetrics,
   isDuplicateOfCase,
+  primaryTraceFor,
 } from "../evaluate/trace-eval";
 import { buildTestResult } from "../evaluate/evaluate";
 import { postTestRun } from "../evaluate/confident";
@@ -43,15 +44,6 @@ export type GoldenUnion = Golden | ConversationalGolden;
 export type GoldenUnionArray = Golden[] | ConversationalGolden[];
 export type TestCaseUnion = LLMTestCase | ConversationalTestCase;
 export type TestCaseUnionArray = LLMTestCase[] | ConversationalTestCase[];
-
-function primaryTraceFor(traces: Trace[]): Trace | undefined {
-  for (let i = traces.length - 1; i >= 0; i--) {
-    const candidate = traces[i];
-    const output = candidate.output ?? candidate.rootSpans?.[0]?.output;
-    if (output != null) return candidate;
-  }
-  return traces[traces.length - 1];
-}
 
 export class EvaluationDataset {
   private _multiTurn: boolean | null = null;
@@ -663,6 +655,10 @@ export class EvaluationDataset {
             retrievalContext: primary.retrievalContext,
             toolsCalled: asToolCalls(primary.toolsCalled),
             expectedTools: asToolCalls(primary.expectedTools),
+            // Links the posted run back to the dataset these goldens came from.
+            _datasetAlias: g0._datasetAlias,
+            _datasetId: g0._datasetId,
+            _datasetRank: g0._datasetRank,
           });
           const { confidentApiKey: _omit, ...traceApi } =
             traceManager.createTraceApi(primary);

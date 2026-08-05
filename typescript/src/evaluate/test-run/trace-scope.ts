@@ -54,3 +54,22 @@ export function getLatestCapturedTrace(): Trace | undefined {
   const { traces } = store();
   return traces[traces.length - 1];
 }
+
+// Run `fn` and return the traces it produced.
+export async function collectTracesFrom<T>(
+  fn: () => T | Promise<T>,
+): Promise<{ result: T; traces: Trace[] }> {
+  const ownsScope = !isCapturingTraces();
+  if (ownsScope) beginTraceCapture();
+  try {
+    const before = getCapturedTraces().length;
+    const result = await fn();
+    await traceManager.awaitSettled();
+    // Slice rather than take the whole store: an outer scope may hold traces from
+    // earlier assertions in the same test.
+    return { result, traces: getCapturedTraces().slice(before) };
+  } finally {
+    // The returned Trace objects stay valid — this only stops capturing.
+    if (ownsScope) endTraceCapture();
+  }
+}

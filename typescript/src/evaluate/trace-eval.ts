@@ -27,6 +27,10 @@ function goldenToTraceTestCase(golden: Golden, trace: Trace): LLMTestCase {
     retrievalContext: trace.retrievalContext ?? golden.retrievalContext,
     toolsCalled: asToolCalls(trace.toolsCalled ?? golden.toolsCalled),
     expectedTools: asToolCalls(trace.expectedTools ?? golden.expectedTools),
+    // Carry the dataset the golden came from, so the posted run links back to it.
+    _datasetAlias: golden._datasetAlias,
+    _datasetId: golden._datasetId,
+    _datasetRank: golden._datasetRank,
   });
 }
 
@@ -74,6 +78,16 @@ export function isDuplicateOfCase(
       m.success === other.success
     );
   });
+}
+
+
+export function primaryTraceFor(traces: Trace[]): Trace | undefined {
+  for (let i = traces.length - 1; i >= 0; i--) {
+    const candidate = traces[i];
+    const output = candidate.output ?? candidate.rootSpans?.[0]?.output;
+    if (output != null) return candidate;
+  }
+  return traces[traces.length - 1];
 }
 
 export interface TraceEvalOptions {
