@@ -11,7 +11,9 @@ class UnBiasedModel(DeepEvalBaseModel):
         try:
             from Dbias.bias_classification import classifier
         except ImportError as e:
-            print("Run `pip install deepeval[bias]`")
+            raise ImportError(
+                "Run `pip install deepeval[bias]` to use the neural bias scorer."
+            ) from e
         return classifier
 
     def _call(self, text):
