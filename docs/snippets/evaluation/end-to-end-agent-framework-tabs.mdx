@@ -1,3 +1,7 @@
+<Switch>
+
+<Case id="python">
+
 <Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Strands", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
 <Tab value="Manual Instrumentation">
 
@@ -916,3 +920,43 @@ See the [CrewAI integration](/integrations/frameworks/crewai) for the full surfa
 
 </Tab>
 </Tabs>
+
+</Case>
+
+<Case id="typescript">
+
+Wrap the top-level function with `observe` and call `updateCurrentTrace(...)` to set the trace-level test case fields:
+
+```typescript title="main.ts" showLineNumbers
+import { TaskCompletionMetric } from "deepeval/metrics";
+import { observe, updateCurrentTrace } from "deepeval/tracing";
+...
+
+const myAiAgent = observe({
+  type: "agent",
+  fn: async (query: string): Promise<string> => {
+    const answer = "..."; // await your LLM call here
+    updateCurrentTrace({ input: query, output: answer });
+    return answer;
+  },
+});
+
+for await (const golden of dataset.evalsIterator({
+  metrics: [new TaskCompletionMetric()],
+})) {
+  if (!("input" in golden)) continue;
+  await myAiAgent(golden.input);
+}
+```
+
+`evalsIterator()` is async-only, so there's no sync variant to choose between — goldens are evaluated concurrently and awaited by the loop. See [tracing](/docs/evaluation-llm-tracing) for the full `observe` and `updateCurrentTrace` surface.
+
+<NotImplemented id="typescript" feature="deepeval.integrations">
+
+The adapters that do ship — LangChain, OpenAI, OpenAI Agents, the Vercel AI SDK and Mastra — don't have pages here yet. Until they land, instrument your agent with `observe` as above: it produces the same trace and span structure an adapter would, so the metrics you attach score the same components.
+
+</NotImplemented>
+
+</Case>
+
+</Switch>

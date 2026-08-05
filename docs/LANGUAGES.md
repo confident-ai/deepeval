@@ -78,7 +78,129 @@ already exists in the TypeScript SDK: for RAG, all five RAG metrics and their
 four turn-level counterparts, the CSV/JSON golden loaders, `evalsIterator()` and
 `ConversationSimulator`; for arena, `ArenaTestCase`, `Contestant`, `ArenaGEval`
 and `compare()`; for MCP, `MCPServer`, the three call classes, and all three MCP
-metrics. `getting-started-agents` and `getting-started-chatbots` stay `[python]`.
+metrics.
+
+`getting-started-chatbots` followed for the same reason — `ConversationalTestCase`,
+`Turn`, `ConversationalGolden`, `ConversationSimulator`, `TurnRelevancyMetric` and
+`KnowledgeRetentionMetric` all ship in TypeScript. Its Python `simulate()` example
+was also stale (`goldens=`, `max_turns=`, and a `deepeval.conversation_simulator`
+import path that no longer exists) and was corrected to
+`conversational_goldens=` / `max_user_simulations=` off `deepeval.simulator`.
+
+`evaluation-unit-testing-in-ci-cd` followed the agents page, since it shares the
+`cicd-agent-framework-tabs` snippet and every CLI surface it documents exists in
+TypeScript: `npx deepeval test run`, its `-o/--official` flag, `official` and
+`hyperparameters` on `evaluate()`, `flaky` on both test case classes, and
+`logHyperparameters()` as the counterpart to `@deepeval.log_hyperparameters`. Its
+multi-turn Python example also carried the same stale
+`deepeval.conversation_simulator` import as the chatbots page and was corrected to
+`deepeval.simulator`.
+
+Its `<FAQs>` block is the one part that stayed language-neutral prose rather than
+being switched. `question` is typed `string` (it seeds the React key, the
+`<details name>` group, and the FAQPage JSON-LD `name`), so a `<Term>` cannot go
+there at all. And a `<Switch>` inside an `answer` would be walked by `extractText`,
+which concatenates every child — so both languages' text would land in the
+schema.org JSON-LD as one contradictory blob. Answers were reworded to say "your
+language's test runner" and "unit testing" instead of naming `pytest` /
+`assert_test()`, which keeps the structured data clean for crawlers.
+
+`evaluation-end-to-end-single-turn` completes the evaluation section. Both of its
+approaches convert cleanly: the iterator has the same five-vs-six option split
+described under the component-level page, and `evaluate()` takes its two mandatory
+arguments positionally in TypeScript with the rest in a third options object (no
+`asyncConfig`, since metric execution is always concurrent and awaited).
+
+Two headings were deliberately **left** with Python spellings —
+`## Approach 1: evals_iterator() with tracing (recommended)` and
+`## Approach 2: evaluate()`. A `<Term>` in a heading breaks, and these headings
+are anchor targets linked from `evaluation-component-level-llm-evals`,
+`evaluation-end-to-end-llm-evals`, and this page's own body, so renaming them
+would break cross-page links for a cosmetic gain.
+
+The page also carries a pre-existing `[TODO: ...]` authoring note inside the sync
+vs async callout. That callout is `AsyncConfig`-specific, so it now lives in the
+Python case and the TODO stays Python-side rather than being inherited by
+TypeScript readers.
+
+`evaluation-end-to-end-multi-turn` prompted the extraction of
+`snippets/evaluation/model-callback-tabs.mdx`. The six-tab `model_callback` block
+was duplicated across this page, `evaluation-unit-testing-in-ci-cd`, and
+`getting-started-chatbots`. The first two were byte-identical apart from
+`showLineNumbers={true}` vs `showLineNumbers`, but the chatbots copy had
+**silently drifted and was broken**: a stray `"` in the fence meta, `title=main.py`
+unquoted, a `model_callback` annotated `-> str` that returned a `Turn`, a missing
+`from typing import List` under a `List[Turn]` annotation, three tabs missing
+`from deepeval.test_case import Turn` while returning `Turn(...)`, and a LangChain
+example still on `RunnableWithMessageHistory` rather than `create_agent`.
+Centralizing fixed all of it by construction — the snippet carries the
+end-to-end/CI-CD version.
+
+The TypeScript case gives the callback two tabs rather than a `<NotImplemented>`
+wholesale, because the Python "Python" and "OpenAI" tabs are not deepeval
+integrations at all — they just call a chat client inside the callback, which
+ports directly. Only the framework tabs (LangChain, LlamaIndex, OpenAI Agents,
+Pydantic) are behind `<NotImplemented>`. Note the TS `ModelCallback` takes a
+**single object** `{ input, turns, threadId }` and always passes all three, unlike
+Python's optional argument injection, so callout prose was reworded to "take only
+the ones you need" instead of "may optionally accept".
+
+While converting, two stale Python bugs were fixed on this page and in the CI/CD
+page: `from deepeval.conversation_simulator import ConversationSimulator` (the
+module is `deepeval.simulator`) and a `simulate(goldens=..., max_turns=...)` call
+whose real parameters are `conversational_goldens=` and `max_user_simulations=`.
+
+TypeScript has no `AsyncConfig` and no `ConversationSimulator(max_concurrent=...)`
+— the simulator runs every golden concurrently via `Promise.all` — so the
+Async/Sync tabs and the concurrency note are per-language rather than shared.
+
+`evaluation-end-to-end-llm-evals/index` is the cheapest conversion so far and a
+useful shape to recognize: a **concepts page with no code fences at all**, so it
+needed zero `<Switch>` blocks — only `<Term>` on test case field names
+(`actual_output`, `retrieval_context`, `tools_called`, `expected_outcome`,
+`user_description`) and on the iterator/observe spellings. Two of its `<Term>`s
+sit inside markdown table cells, which renders fine (`environment-variables`
+already does this).
+
+Prose that named an API purely to refer to a workflow was reworded to name the
+workflow instead — "the recommended evals iterator path", "the iterator form is
+single-turn only", "using `pytest`/`vitest` and `deepeval test run`" — since a
+`<Term>` per mention would have been noise where no reader needs the exact
+identifier. The Single-Turn vs Multi-Turn table needed no changes at all: every
+symbol in it (`LLMTestCase`, `Golden`, `ConversationalGolden`, `BaseMetric`,
+`ConversationSimulator`) is spelled identically in both SDKs.
+
+`evaluation-component-level-llm-evals` went bilingual once its three includes
+(`load-dataset`, `component-level-agent-framework-tabs`,
+`sub-agent-framework-tabs`) already were, leaving only prose and the CI/CD tail.
+Two shape differences are called out per language rather than smoothed over:
+TypeScript's `evalsIterator()` takes five options in a single object and has no
+`asyncConfig` or `cacheConfig`, because it is an async generator with no sync
+variant — so the Async/Sync bullets above the integration tabs are wrapped in
+`<Only id="python">`. It does accept `hyperparameters` directly, which is why the
+Hyperparameters section switches to passing them to the iterator instead of
+mirroring Python's `@deepeval.log_hyperparameters` decorator.
+
+Its mermaid diagram was **neutralized rather than switched**. `<Term>` does not
+render inside a code fence, and duplicating a 17-line sequence diagram per
+language is noise, so participants and messages were reworded to concepts
+("Evals iterator", "Open a test run over the dataset"). This follows
+`evaluation-introduction`, whose diagram already labels participants
+conceptually.
+
+`getting-started-agents` is bilingual as a **first phase**, and the TypeScript
+half of its three framework snippets is deliberately a placeholder. The blocker is
+that the framework tabs have no TypeScript equivalent to document: `evalsIterator()`
+is async-only so the Async/Sync split is a Python-only concept, TypeScript ships
+adapters for only LangChain, OpenAI Agents, the Vercel AI SDK and Mastra, and for
+sub-agents specifically there is no `nextAgentSpan` and `AgentSpanContext` ships
+with its `metrics` field commented out. So `cicd-agent-framework-tabs`,
+`end-to-end-agent-framework-tabs` and `sub-agent-framework-tabs` each wrap their
+whole tab set in `<Case id="python">` and give TypeScript one real `observe()`
+example plus a `<NotImplemented>`, matching what
+`component-level-agent-framework-tabs` already does. The per-tab TypeScript cases
+already written inside those snippets (Manual Instrumentation, LangChain, OpenAI,
+OpenAI Agents) are preserved but unreachable until phase two promotes them.
 
 All four replaced their hand-rolled judge-model tab set with
 `snippets/models/configure-llm-judge-tabs.mdx`, which is bilingual and already
@@ -201,6 +323,30 @@ Self-mapping terms were dropped rather than migrated. In the registry a
 self-map documented intent ("identical in both, deliberately"); inline it is
 just a duplicated string, so `LLMTestCase`, `deepeval` and friends went back to
 plain backtick spans.
+
+## Import order in TypeScript test files
+
+Every TypeScript example that is a test file orders its imports so the two
+Vitest lines bracket the block:
+
+- `import { it, expect } from "vitest";` is **first**, above every `deepeval`
+  import. `it` and `expect` are generic test-runner plumbing that carries no
+  `deepeval` meaning, so it belongs out of the way at the top rather than
+  interleaved with the imports a reader is actually there to look at.
+- `import "deepeval/vitest";` is **last**. It is a side-effecting import with no
+  bindings — it registers the `toPass()` matcher — and putting it on the closing
+  line is what marks the file as a test file at a glance.
+
+Everything else (`deepeval/metrics`, `deepeval/dataset`, `deepeval/tracing`,
+local application imports) sits between them in whatever order reads best.
+
+This is presentational, not functional: `npx deepeval test run` injects the
+matcher regardless, so `deepeval/vitest` only matters when the file is run with
+`vitest` directly. Nine examples were reordered to this convention across
+`getting-started`, `evaluation-introduction`, `evaluation-datasets`,
+`getting-started-rag` and `cicd-agent-framework-tabs`. Two of those blocks carry
+a `{6}` line highlight; reordering preserved the line count, so the highlight
+still lands on the same statement.
 
 ## Integration coverage
 

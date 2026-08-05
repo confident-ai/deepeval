@@ -137,11 +137,11 @@ def test_rag(golden: Golden):
 <Case id="typescript">
 
 ```typescript title="rag.test.ts" showLineNumbers
+import { it, expect } from "vitest";
 import { AnswerRelevancyMetric, FaithfulnessMetric } from "deepeval/metrics";
 import { LLMTestCase } from "deepeval/test-case";
 import { Golden } from "deepeval/dataset";
 import { ragPipeline } from "./your-app"; // returns { answer, retrievedChunks }
-import { it, expect } from "vitest";
 import "deepeval/vitest";
 
 it.each(dataset.goldens as Golden[])(
@@ -201,10 +201,10 @@ def test_rag(golden: Golden):
 <Case id="typescript">
 
 ```typescript title="rag.test.ts" showLineNumbers
+import { it, expect } from "vitest";
 import { AnswerRelevancyMetric, FaithfulnessMetric } from "deepeval/metrics";
 import { observe, updateCurrentTrace } from "deepeval/tracing";
 import { Golden } from "deepeval/dataset";
-import { it, expect } from "vitest";
 import "deepeval/vitest";
 
 const ragPipeline = observe({

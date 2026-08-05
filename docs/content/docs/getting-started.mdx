@@ -150,9 +150,9 @@ def test_correctness():
 <Case id="typescript">
 
 ```typescript title="example.test.ts"
+import { it, expect } from "vitest";
 import { LLMTestCase, SingleTurnParams } from "deepeval/test-case";
 import { GEval } from "deepeval/metrics";
-import { it, expect } from "vitest";
 import "deepeval/vitest";
 
 it("gives medically sound advice", async () => {
@@ -256,13 +256,13 @@ def test_professionalism():
 <Case id="typescript">
 
 ```typescript title="example.test.ts"
+import { it, expect } from "vitest";
 import {
   ConversationalTestCase,
   MultiTurnParams,
   Turn,
 } from "deepeval/test-case";
 import { ConversationalGEval } from "deepeval/metrics";
-import { it, expect } from "vitest";
 import "deepeval/vitest";
 
 it("stays professional across the conversation", async () => {
@@ -584,8 +584,8 @@ def test_agent(golden: Golden):
 <Case id="typescript">
 
 ```typescript title="agent.test.ts"
-import { Golden } from "deepeval/dataset";
 import { it, expect } from "vitest";
+import { Golden } from "deepeval/dataset";
 import { myAgent } from "./agent";
 import "deepeval/vitest";
 

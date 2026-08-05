@@ -1,3 +1,7 @@
+<Switch>
+
+<Case id="python">
+
 <Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Strands", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
 <Tab value="Manual Instrumentation">
 
@@ -570,3 +574,51 @@ Call `instrument_crewai()` once, then build your crew with `deepeval`'s `Crew` a
 
 </Tab>
 </Tabs>
+
+</Case>
+
+<Case id="typescript">
+
+```typescript title="llm_app.test.ts" showLineNumbers
+import { it, expect } from "vitest";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { TaskCompletionMetric } from "deepeval/metrics";
+import { observe, updateCurrentTrace } from "deepeval/tracing";
+import "deepeval/vitest";
+
+// 1. Load your dataset of goldens
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What is pi rounded to 2 decimal places?" })],
+});
+
+// 2. Instrument your agent
+const myAiAgent = observe({
+  type: "agent",
+  fn: async (query: string): Promise<string> => {
+    const answer = "Pi rounded to 2 decimal places is 3.14.";
+    updateCurrentTrace({ input: query, output: answer });
+    return answer;
+  },
+});
+
+// 3. Evaluate end-to-end on each golden
+it.each(dataset.goldens as Golden[])(
+  "completes the task: $input",
+  async (golden) => {
+    await myAiAgent(golden.input);
+    await expect(golden).toPass([new TaskCompletionMetric()]);
+  },
+);
+```
+
+`toPass()` only needs the golden — the test case is built from the captured trace. Importing `deepeval/vitest` registers the matcher, and `npx deepeval test run` injects it for you.
+
+<NotImplemented id="typescript" feature="deepeval.integrations">
+
+The adapters that do ship — LangChain, OpenAI, OpenAI Agents, the Vercel AI SDK and Mastra — don't have pages here yet. Until they land, instrument your agent with `observe` as above: it produces the same trace and span structure an adapter would, so the metrics you attach score the same components.
+
+</NotImplemented>
+
+</Case>
+
+</Switch>
