@@ -1,5 +1,18 @@
 import { LLMTestCase, ToolCall } from "./llm-test-case";
 
+
+// Render a span/trace value as a test case's text field.git 
+export function asTestCaseString(value: unknown): string {
+  if (value === null || value === undefined) return "None";
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value) ?? String(value);
+  } catch {
+    // Circular or otherwise unserialisable — better than throwing mid-run.
+    return String(value);
+  }
+}
+
 export function asToolCalls(
   value: ToolCall[] | undefined,
 ): ToolCall[] | undefined {

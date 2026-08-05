@@ -19,7 +19,7 @@ import {
 } from "./api";
 import { ConversationalGolden, Golden } from "./golden";
 import { ConversationalTestCase, LLMTestCase } from "../test-case";
-import { asToolCalls } from "../test-case/utils";
+import { asTestCaseString, asToolCalls } from "../test-case/utils";
 import type { MultiBar, SingleBar } from "cli-progress";
 import { traceManager, Trace, BaseSpan } from "../tracing/tracing";
 import {
@@ -43,6 +43,15 @@ export type GoldenUnion = Golden | ConversationalGolden;
 export type GoldenUnionArray = Golden[] | ConversationalGolden[];
 export type TestCaseUnion = LLMTestCase | ConversationalTestCase;
 export type TestCaseUnionArray = LLMTestCase[] | ConversationalTestCase[];
+
+function primaryTraceFor(traces: Trace[]): Trace | undefined {
+  for (let i = traces.length - 1; i >= 0; i--) {
+    const candidate = traces[i];
+    const output = candidate.output ?? candidate.rootSpans?.[0]?.output;
+    if (output != null) return candidate;
+  }
+  return traces[traces.length - 1];
+}
 
 export class EvaluationDataset {
   private _multiTurn: boolean | null = null;
@@ -603,57 +612,63 @@ export class EvaluationDataset {
         callbackBar?.increment();
         count += 1;
         const newTraces = captured.slice(start);
+        const g0 = golden as Golden;
+
+        const primary = primaryTraceFor(newTraces);
+
         for (const trace of newTraces) {
-          if (metrics.length > 0) {
+          // Trace-level metrics judge the turn, so they belong to the reported
+          // trace only — attaching them to every trace would score fragments and
+          // multiply the metric runs.
+          if (metrics.length > 0 && trace === primary) {
             metrics.forEach((m) => (m.showIndicator = false));
             trace.metrics = [...(trace.metrics ?? []), ...metrics];
           }
           suppressSpinners(trace.rootSpans);
         }
-        const g0 = golden as Golden;
         const total = newTraces.reduce(
-          (s, t) => s + countTraceMetrics(t, g0),
+          (s, t) => s + countTraceMetrics(t, t === primary ? g0 : undefined),
           0,
         );
         const evalBar = multibar?.create(Math.max(total, 1), 0, {
           label: `     🎯 Evaluating component(s) (#${count})`,
         });
+        const parentIndex = allCases.length;
         for (const trace of newTraces) {
           // Run all metrics (span + trace); attaches metricsData to each scope.
           const evaluated = await evaluateTrace(trace, {
             errorConfig: options.errorConfig,
             onMetric: () => evalBar?.increment(),
-            golden: g0,
+            golden: trace === primary ? g0 : undefined,
           });
           // Span-level results are reported locally only — the posted test run
           // keeps one case per golden, with the per-span scores riding along
           // inside the embedded trace (mirrors Python).
-          const parentIndex = allCases.length;
           for (const c of evaluated) {
             if (c.isTraceScope || c.metricsData.length === 0) continue;
             componentCases.push({ case: c, parentIndex });
           }
-          // One golden-based test case per trace, with the trace embedded — so
-          // the platform shows the I/O and links to the trace (mirrors Python).
-          const g = golden as Golden;
-          const rootOutput = trace.output ?? trace.rootSpans?.[0]?.output;
+        }
+
+        if (primary) {
+          const rootOutput = primary.output ?? primary.rootSpans?.[0]?.output;
           const testCase = new LLMTestCase({
-            input: g.input,
+            input: g0.input,
             actualOutput:
               rootOutput != null
-                ? String(rootOutput)
-                : (g.actualOutput ?? "None"),
-            expectedOutput: trace.expectedOutput,
-            context: trace.context,
-            retrievalContext: trace.retrievalContext,
-            toolsCalled: asToolCalls(trace.toolsCalled),
-            expectedTools: asToolCalls(trace.expectedTools),
+                ? asTestCaseString(rootOutput)
+                : (g0.actualOutput ?? "None"),
+            expectedOutput: primary.expectedOutput,
+            context: primary.context,
+            retrievalContext: primary.retrievalContext,
+            toolsCalled: asToolCalls(primary.toolsCalled),
+            expectedTools: asToolCalls(primary.expectedTools),
           });
           const { confidentApiKey: _omit, ...traceApi } =
-            traceManager.createTraceApi(trace);
+            traceManager.createTraceApi(primary);
           allCases.push({
             testCase,
-            metricsData: trace.metricsData ?? [],
+            metricsData: primary.metricsData ?? [],
             runDuration: 0,
             trace: traceApi,
           });

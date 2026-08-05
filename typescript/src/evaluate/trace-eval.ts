@@ -1,5 +1,5 @@
 import { LLMTestCase } from "../test-case";
-import { asToolCalls } from "../test-case/utils";
+import { asTestCaseString, asToolCalls } from "../test-case/utils";
 import { Golden } from "../dataset/golden";
 import {
   BaseSpan,
@@ -12,10 +12,7 @@ import { ErrorConfig, DEFAULT_ERROR_CONFIG } from "./configs";
 import { runMetric } from "./evaluate";
 
 /** Stringify a span's input/output the way the metrics expect (objects → JSON). */
-function asString(v: unknown): string {
-  if (v == null) return "None";
-  return typeof v === "string" ? v : JSON.stringify(v);
-}
+const asString = asTestCaseString;
 
 // Build the trace-level test case from the golden, filling gaps from the trace.
 function goldenToTraceTestCase(golden: Golden, trace: Trace): LLMTestCase {
