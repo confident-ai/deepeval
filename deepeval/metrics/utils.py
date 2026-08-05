@@ -21,7 +21,7 @@ from deepeval.utils import convert_to_multi_modal_array, serialize_to_json
 from deepeval.config.settings import get_settings
 from deepeval.models import (
     DeepEvalBaseLLM,
-    GPTModel,
+    OpenAIModel,
     AnthropicModel,
     AzureOpenAIModel,
     OllamaModel,
@@ -71,7 +71,7 @@ from deepeval.test_case import (
 )
 
 MULTIMODAL_SUPPORTED_MODELS = {
-    GPTModel: OPENAI_MODELS_DATA,
+    OpenAIModel: OPENAI_MODELS_DATA,
     GeminiModel: GEMINI_MODELS_DATA,
     OllamaModel: OLLAMA_MODELS_DATA,
     AzureOpenAIModel: OPENAI_MODELS_DATA,
@@ -684,7 +684,7 @@ def initialize_model(
     if isinstance(model, DeepEvalBaseLLM):
         return model, False
     if should_use_openai_model():
-        return GPTModel(model=model), True
+        return OpenAIModel(model=model), True
     if should_use_gemini_model():
         return GeminiModel(model=model), True
     if should_use_litellm():
@@ -710,11 +710,11 @@ def initialize_model(
     elif should_use_amazon_bedrock_model():
         return AmazonBedrockModel(model=model), True
     elif isinstance(model, str) or model is None:
-        return GPTModel(model=model), True
+        return OpenAIModel(model=model), True
 
     # Otherwise (the model is a wrong type), we raise an error
     raise TypeError(
-        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, GPTModel, AzureOpenAIModel, LiteLLMModel, OllamaModel, LocalModel."
+        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, OpenAIModel, AzureOpenAIModel, LiteLLMModel, OllamaModel, LocalModel."
     )
 
 
@@ -722,7 +722,7 @@ def is_native_model(
     model: Optional[Union[str, DeepEvalBaseLLM]] = None,
 ) -> bool:
     if (
-        isinstance(model, GPTModel)
+        isinstance(model, OpenAIModel)
         or isinstance(model, AnthropicModel)
         or isinstance(model, AzureOpenAIModel)
         or isinstance(model, OllamaModel)

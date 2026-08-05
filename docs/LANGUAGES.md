@@ -29,8 +29,8 @@ snapshot, not generated at build time, so treat it as of its `generatedAt` date.
 
 **Page-level support is declared and validated.** Every page in `content/docs`
 and `content/integrations` carries a `languages` frontmatter field, enforced by
-a strict Zod schema in [`source.config.ts`](source.config.ts) — 84 declare
-`[python, typescript]`, 69 declare `[python]` and 1 declares `[typescript]`.
+a strict Zod schema in [`source.config.ts`](source.config.ts) — 81 declare
+`[python, typescript]`, 72 declare `[python]` and 1 declares `[typescript]`.
 Guides, tutorials, changelog and blog may omit the field and simply follow the
 reader's preference; 19 of the 20 guides and 13 of the 17 tutorials declare
 `[python]` anyway. The five that don't are the four tutorial index pages, which
@@ -42,8 +42,8 @@ node, and [`lib/lang/page-tree.ts`](lib/lang/page-tree.ts) prunes the tree to th
 reader's language before Fumadocs renders it. Folders and separator groups
 collapse once they empty out, so selecting TypeScript today drops the whole
 "Synthetic Data Generation" and "Prompt Optimization" sections, plus the
-vector-database half of Integrations, rather than leaving headings over dead
-links. The same pruned tree drives the prev/next footer. Readers still reach the
+framework and vector-database halves of Integrations, rather than leaving
+headings over dead links. The same pruned tree drives the prev/next footer. Readers still reach the
 501 page through direct links, bookmarks and search hits.
 
 **The selector only appears on docs and integrations.** Those are the reference
@@ -55,17 +55,27 @@ Those pages are narrative rather than reference — each walks through one Pytho
 codebase end to end — so a half-translated walkthrough served the reader worse
 than an honest 501, which is what a TypeScript reader now gets.
 
-**Within docs, the workflow pages went the same way.** Thirteen more pages are
+**Within docs, the workflow pages went the same way.** Twelve more pages are
 now `[python]`: the 5-minute quickstart and its five use-case siblings, and the
 evaluation workflow set — `evaluation-introduction`, single- and multi-turn
-end-to-end (with the folder index that holds them), component-level, CI/CD, and
-flags and configs. That collapsed 88 more `<Switch>` blocks and 17 `<Term>`
-spans. What a TypeScript reader keeps is the part that is reference rather than
-walkthrough: every concepts page including test cases, datasets and tracing,
-every individual metric page, the Others group, and integrations. The cost is
-that 38 of the pages they do keep link into one of these 13, mostly to
-`evaluation-component-level-llm-evals` and `evaluation-flags-and-configs`, and
-those links now land on a 501.
+end-to-end (with the folder index that holds them), component-level, and CI/CD.
+That collapsed 88 more `<Switch>` blocks and 17 `<Term>` spans. What a
+TypeScript reader keeps is the part that is reference rather than walkthrough:
+every concepts page including test cases, datasets and tracing, every individual
+metric page, the Others group, and integrations. The cost is that many of the
+pages they do keep link into one of these 12, mostly to
+`evaluation-component-level-llm-evals`, and those links now land on a 501.
+
+`evaluation-flags-and-configs` was in that set and has since been brought back
+to `[python, typescript]`. It is reference rather than walkthrough — a flag and
+field index, section by section — so it splits cleanly per language in a way the
+workflow pages did not, and it was the most-linked-to member of the group. It is
+also the one page where a *silent* gap was most expensive: a reader who cannot
+see which fields their SDK honors will pass one that does nothing. Fields with
+no TypeScript counterpart (`results_subfolder`, `inspect_after_run`, HTML
+export, `-r`, the `on_test_run_end` hook) are `<Only id="python">` rather than
+flagged as missing, and the two `AsyncConfig` fields the TS runner accepts but
+ignores (`runAsync`, `throttleValue`) are documented for neither.
 
 **Code blocks are done where they remain.** 287 `<Switch>` blocks, 251 of which
 carry a TypeScript fence; the other 36 are `bash` and `yaml` pairs. None is
@@ -149,7 +159,7 @@ support; frontmatter tracks what each page actually *contains*, so a page stays
 
 | Group | TypeScript SDK surface | Docs verdict |
 | --- | --- | --- |
-| Frameworks | `langchain` (LangGraph included, via `integrations/langchain/langgraph-utils.ts`), `openai-agents`, `openai` | 3 of 12 pages already bilingual, `langgraph` eligible, the other 8 permanently Python-only |
+| Frameworks | `langchain` (LangGraph included, via `integrations/langchain/langgraph-utils.ts`), `openai-agents`, `openai` | all 12 pages `[python]` — 4 are eligible and awaiting a rewrite, the other 8 permanently Python-only |
 | Models | every provider except LiteLLM — `LocalModel` covers both LM Studio and vLLM, `KimiModel` is Moonshot, `GeminiModel` takes `useVertexAI` | **done** — 14 of 16 pages bilingual, `ai-sdk` is TypeScript-only, `litellm` permanently Python-only |
 | Vector databases | none | all 6 permanently Python-only |
 
@@ -162,6 +172,14 @@ documented integration existed in Python; `AISDKModel` has no Python counterpart
 **Existing pages missing TypeScript examples.** The SDK already supports these,
 so the work is writing the `<Switch>` blocks and then widening `languages`.
 
+- `frameworks/langchain`, `frameworks/openai` and `frameworks/openai-agents`.
+  These three were bilingual and have been taken back to `[python]`: their 15
+  `<Switch>` blocks were collapsed to their Python case and the TypeScript
+  cases deleted. The examples were written against the SDK rather than read off
+  it, so the whole framework story is being redocumented from scratch instead of
+  patched snippet by snippet. This is the one place where deleting working
+  content was the right call — a plausible-looking `deepeval/integrations/*`
+  import that does not resolve costs a reader more than an honest 501.
 - `frameworks/langgraph`, covered by `integrations/langchain/langgraph-utils.ts`.
 
 **Integrations with no page at all.** These need writing from scratch; no amount
@@ -209,11 +227,10 @@ Roughly in order of how much they hurt a TypeScript reader.
    page-by-page conversion job with no blocker in front of it.
 2. **Integrations, per [Integration coverage](#integration-coverage).** The
    models half is now bilingual, so a TypeScript reader keeps Integrations'
-   largest section; vector databases still vanish entirely and 9 of 12 framework
-   pages remain Python-only.
+   largest section; frameworks and vector databases both vanish entirely.
 3. **Partial gaps.** Roughly 116 unpaired ` ```python ` fences sit on 28
    otherwise bilingual pages, mostly framework integration tabs, the pytest and
-   `deepeval test run` workflows, Pydantic schemas, and `save_as()`. Each needs
+   `deepeval test run` workflows, and Pydantic schemas. Each needs
    its TypeScript case written, or `<Only id="python">` around it until someone
    does — today they render to TypeScript readers as if they were theirs.
 4. **Unverified TypeScript spellings.** `validate-terms` proves the docs agree

@@ -73,6 +73,15 @@ if TYPE_CHECKING:
 valid_file_types = ["csv", "json", "jsonl"]
 
 
+def _parse_column(df, col_name, parse):
+    """Map a CSV column through ``parse``, or ``None`` for every row when the
+    file has no such column. An absent column must not become an empty list, or
+    a metric requiring that field passes its parameter check with nothing."""
+    if col_name is None or col_name not in df.columns:
+        return [None] * len(df)
+    return [parse(value) for value in df[col_name].values]
+
+
 @dataclass
 class EvaluationDataset:
     _multi_turn: bool = field(default=False)
@@ -315,59 +324,46 @@ class EvaluationDataset:
         expected_outputs = get_column_data(
             df, expected_output_col_name, default=None
         )
-        contexts = [
-            context.split(context_col_delimiter) if context else []
-            for context in get_column_data(df, context_col_name, default="")
-        ]
-        retrieval_contexts = [
-            (
-                reconstruct_retrieval_context(
-                    retrieval_context.split(retrieval_context_col_delimiter)
-                )
-                if retrieval_context
-                else []
-            )
-            for retrieval_context in get_column_data(
-                df, retrieval_context_col_name, default=""
-            )
-        ]
-        tools_called = []
-        for tools_called_json in get_column_data(
-            df, tools_called_col_name, default="[]"
-        ):
-            if tools_called_json:
-                try:
-                    parsed_tools = [
-                        ToolCall(**tool)
-                        for tool in trimAndLoadJson(tools_called_json)
-                    ]
-                    tools_called.append(parsed_tools)
-                except ValueError as e:
-                    raise ValueError(f"Error processing tools_called: {e}")
-            else:
-                tools_called.append([])
 
-        expected_tools = []
-        for expected_tools_json in get_column_data(
-            df, expected_tools_col_name, default="[]"
-        ):
-            if expected_tools_json:
-                try:
-                    parsed_tools = [
-                        ToolCall(**tool)
-                        for tool in trimAndLoadJson(expected_tools_json)
-                    ]
-                    expected_tools.append(parsed_tools)
-                except ValueError as e:
-                    raise ValueError(f"Error processing expected_tools: {e}")
-            else:
-                expected_tools.append([])
-        metadatas = [
-            ast.literal_eval(metadata) if metadata else None
-            for metadata in get_column_data(
-                df, additional_metadata_col_name, default=""
-            )
-        ]
+        def parse_tools(value, field: str):
+            if not value:
+                return []
+            try:
+                return [ToolCall(**tool) for tool in trimAndLoadJson(value)]
+            except ValueError as e:
+                raise ValueError(f"Error processing {field}: {e}")
+
+        contexts = _parse_column(
+            df,
+            context_col_name,
+            lambda value: value.split(context_col_delimiter) if value else [],
+        )
+        retrieval_contexts = _parse_column(
+            df,
+            retrieval_context_col_name,
+            lambda value: (
+                reconstruct_retrieval_context(
+                    value.split(retrieval_context_col_delimiter)
+                )
+                if value
+                else []
+            ),
+        )
+        tools_called = _parse_column(
+            df,
+            tools_called_col_name,
+            lambda value: parse_tools(value, "tools_called"),
+        )
+        expected_tools = _parse_column(
+            df,
+            expected_tools_col_name,
+            lambda value: parse_tools(value, "expected_tools"),
+        )
+        metadatas = _parse_column(
+            df,
+            additional_metadata_col_name,
+            lambda value: ast.literal_eval(value) if value else None,
+        )
 
         for (
             input,
@@ -499,6 +495,9 @@ class EvaluationDataset:
         name_key_name: str = "name",
         source_file_col_name: Optional[str] = "source_file",
         additional_metadata_col_name: Optional[str] = "additional_metadata",
+        custom_column_key_values_col_name: Optional[
+            str
+        ] = "custom_column_key_values",
         scenario_col_name: Optional[str] = "scenario",
         turns_col_name: Optional[str] = "turns",
         expected_outcome_col_name: Optional[str] = "expected_outcome",
@@ -531,72 +530,62 @@ class EvaluationDataset:
         expected_outputs = get_column_data(
             df, expected_output_col_name, default=None
         )
-        contexts = [
-            context.split(context_col_delimiter) if context else []
-            for context in get_column_data(df, context_col_name, default="")
-        ]
-        retrieval_contexts = [
-            (
+
+        def parse_tools(value, delimiter: str):
+            if not value:
+                return []
+            try:
+                return [ToolCall(**tool) for tool in trimAndLoadJson(value)]
+            except (ValueError, json.JSONDecodeError):
+                # Fallback to simple split on delimiter
+                return value.split(delimiter)
+
+        contexts = _parse_column(
+            df,
+            context_col_name,
+            lambda value: value.split(context_col_delimiter) if value else [],
+        )
+        retrieval_contexts = _parse_column(
+            df,
+            retrieval_context_col_name,
+            lambda value: (
                 reconstruct_retrieval_context(
-                    retrieval_context.split(retrieval_context_col_delimiter)
+                    value.split(retrieval_context_col_delimiter)
                 )
-                if retrieval_context
+                if value
                 else []
-            )
-            for retrieval_context in get_column_data(
-                df, retrieval_context_col_name, default=""
-            )
-        ]
-
-        tools_called = []
-        for tools_called_str in get_column_data(
-            df, tools_called_col_name, default=""
-        ):
-            if tools_called_str:
-                try:
-                    # Try loading JSON-serialized ToolCall objects
-                    parsed_tools = [
-                        ToolCall(**tool)
-                        for tool in trimAndLoadJson(tools_called_str)
-                    ]
-                    tools_called.append(parsed_tools)
-                except ValueError or json.JSONDecodeError:
-                    # Fallback to simple split on delimiter
-                    tools_called.append(
-                        tools_called_str.split(tools_called_col_delimiter)
-                    )
-            else:
-                tools_called.append([])
-
-        expected_tools = []
-        for expected_tools_str in get_column_data(
-            df, expected_tools_col_name, default=""
-        ):
-            if expected_tools_str:
-                try:
-                    # Try loading JSON-serialized ToolCall objects
-                    parsed_tools = [
-                        ToolCall(**tool)
-                        for tool in trimAndLoadJson(expected_tools_str)
-                    ]
-                    expected_tools.append(parsed_tools)
-                except ValueError or json.JSONDecodeError:
-                    # Fallback to simple split on delimiter
-                    expected_tools.append(
-                        expected_tools_str.split(expected_tools_col_delimiter)
-                    )
-            else:
-                expected_tools.append([])
+            ),
+        )
+        tools_called = _parse_column(
+            df,
+            tools_called_col_name,
+            lambda value: parse_tools(value, tools_called_col_delimiter),
+        )
+        expected_tools = _parse_column(
+            df,
+            expected_tools_col_name,
+            lambda value: parse_tools(value, expected_tools_col_delimiter),
+        )
 
         comments = get_column_data(df, comments_key_name)
         name = get_column_data(df, name_key_name)
         source_files = get_column_data(df, source_file_col_name)
-        metadatas = [
-            ast.literal_eval(metadata) if metadata else None
-            for metadata in get_column_data(
-                df, additional_metadata_col_name, default=""
-            )
-        ]
+
+        def parse_mapping(value):
+            if not value:
+                return None
+            try:
+                return trimAndLoadJson(value)
+            except (ValueError, json.JSONDecodeError):
+                # Tolerate a cell written as a Python dict literal.
+                return ast.literal_eval(value)
+
+        metadatas = _parse_column(
+            df, additional_metadata_col_name, parse_mapping
+        )
+        custom_column_key_values = _parse_column(
+            df, custom_column_key_values_col_name, parse_mapping
+        )
         scenarios = get_column_data(df, scenario_col_name)
         turns_raw = get_column_data(df, turns_col_name)
         expected_outcomes = get_column_data(df, expected_outcome_col_name)
@@ -614,6 +603,7 @@ class EvaluationDataset:
             name,
             source_file,
             metadata,
+            custom_columns,
             scenario,
             turns,
             expected_outcome,
@@ -630,6 +620,7 @@ class EvaluationDataset:
             name,
             source_files,
             metadatas,
+            custom_column_key_values,
             scenarios,
             turns_raw,
             expected_outcomes,
@@ -647,6 +638,7 @@ class EvaluationDataset:
                         comments=comments,
                         name=name,
                         additional_metadata=metadata,
+                        custom_column_key_values=custom_columns,
                     )
                 )
             else:
@@ -660,6 +652,7 @@ class EvaluationDataset:
                         tools_called=tools_called,
                         expected_tools=expected_tools,
                         additional_metadata=metadata,
+                        custom_column_key_values=custom_columns,
                         source_file=source_file,
                         comments=comments,
                         name=name,
@@ -680,6 +673,9 @@ class EvaluationDataset:
         name_key_name: str = "name",
         source_file_key_name: Optional[str] = "source_file",
         additional_metadata_key_name: Optional[str] = "additional_metadata",
+        custom_column_key_values_key_name: Optional[
+            str
+        ] = "custom_column_key_values",
         scenario_key_name: Optional[str] = "scenario",
         turns_key_name: Optional[str] = "turns",
         expected_outcome_key_name: Optional[str] = "expected_outcome",
@@ -705,6 +701,7 @@ class EvaluationDataset:
                 name = json_obj.get(name_key_name)
                 parsed_turns = parse_turns(turns) if turns else []
                 metadata = json_obj.get(additional_metadata_key_name)
+                custom_columns = json_obj.get(custom_column_key_values_key_name)
 
                 self.add_golden(
                     ConversationalGolden(
@@ -716,6 +713,7 @@ class EvaluationDataset:
                         comments=comments,
                         name=name,
                         additional_metadata=metadata,
+                        custom_column_key_values=custom_columns,
                     )
                 )
             else:
@@ -732,6 +730,7 @@ class EvaluationDataset:
                 name = json_obj.get(name_key_name)
                 source_file = json_obj.get(source_file_key_name)
                 metadata = json_obj.get(additional_metadata_key_name)
+                custom_columns = json_obj.get(custom_column_key_values_key_name)
 
                 self.add_golden(
                     Golden(
@@ -743,6 +742,7 @@ class EvaluationDataset:
                         tools_called=tools_called,
                         expected_tools=expected_tools,
                         additional_metadata=metadata,
+                        custom_column_key_values=custom_columns,
                         comments=comments,
                         name=name,
                         source_file=source_file,
@@ -1540,6 +1540,9 @@ class EvaluationDataset:
                             "expected_output": golden.expected_output,
                             "retrieval_context": retrieval_context,
                             "context": context,
+                            "name": golden.name,
+                            "comments": golden.comments,
+                            "source_file": golden.source_file,
                             "tools_called": _dump_tools(golden.tools_called),
                             "expected_tools": _dump_tools(
                                 golden.expected_tools

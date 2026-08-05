@@ -11,6 +11,7 @@ import {
 } from "@/constants";
 import { isReadOnlyFileSystem } from "@/config/utils";
 import type { PersistedCase } from "@/evaluate/confident";
+import type { ProcessedHyperparameters } from "@/evaluate/hyperparameters";
 
 export interface LocalTestRun {
   /** Confident AI link, once the run has been posted. */
@@ -20,6 +21,7 @@ export interface LocalTestRun {
   runDuration: number;
   official: boolean;
   identifier?: string;
+  hyperparameters?: ProcessedHyperparameters;
   testPassed: number;
   testFailed: number;
   cases: PersistedCase[];

@@ -14,6 +14,7 @@ export type LanguageMeta = {
   readonly label: string;
   readonly icon: string;
   readonly description: string;
+  readonly tag?: string;
 };
 
 export const LANGUAGES = {
@@ -26,6 +27,7 @@ export const LANGUAGES = {
     label: "TypeScript",
     icon: "/icons/typescript.svg",
     description: "Beta release",
+    tag: "Beta",
   },
 } as const satisfies Record<string, LanguageMeta>;
 

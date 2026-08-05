@@ -64,9 +64,11 @@ export function registerViewCommand(program: Command): void {
       const posted = await postPersistedTestRun(
         latest.cases,
         latest.runDuration,
-        latest.official,
-        false,
-        latest.identifier,
+        {
+          official: latest.official,
+          identifier: latest.identifier,
+          hyperparameters: latest.hyperparameters,
+        },
       );
       if (!posted.link) {
         console.log("❌ The test run could not be uploaded.");

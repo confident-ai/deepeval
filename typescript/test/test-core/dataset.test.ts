@@ -68,19 +68,14 @@ describe("Dataset Module", () => {
   test("Should load test cases from CSV file", async () => {
     const csvPath = await createTempCsvFile();
     const dataset = new EvaluationDataset();
-    const result = await dataset.addTestCasesFromCSV({
+    const testCases = await dataset.addTestCasesFromCSV({
       filePath: csvPath,
-      inputCol: "input",
-      actualOutputCol: "actual_output",
-      expectedOutputCol: "expected_output",
-      contextCol: "context",
       contextDelimiter: ";",
-      retrievalContextCol: "retrieval_context",
     });
-    const testCases = result;
     const firstTestCase = testCases[0];
 
     expect(testCases.length).toBe(2);
+    expect(dataset.testCases.length).toBe(2);
     if (firstTestCase instanceof LLMTestCase) {
       expect(firstTestCase.input).toBe("What is the capital of Germany?");
       expect(firstTestCase.actualOutput).toBe(

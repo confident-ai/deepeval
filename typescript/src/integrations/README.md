@@ -13,9 +13,20 @@ for closing parity.
   — are TS-only with no Python counterpart, so only four rows are true ports.
 - **Seven of Python's rows have no TS equivalent**, listed under
   [Not ported](#not-ported).
-- **No integration is at full Python parity.** Every one of them is missing
-  component-level metric staging, and the two OTel-mode ones only reach the local
-  trace tree behind a manual flag. See [Cross-cutting gaps](#cross-cutting-gaps).
+- **No integration is at full Python parity.** None can attach a *metric* to a
+  framework-created span — the staging contexts exist and carry everything else, but
+  `metrics` is commented out in four places
+  ([gap 1](#1-component-level-metrics-metrics-is-commented-out-of-the-staging-contexts)) —
+  and the two OTel-mode ones only reach the local trace tree behind a manual flag.
+  See [Cross-cutting gaps](#cross-cutting-gaps).
+- **No framework page documents TypeScript today.** `frameworks/langchain`,
+  `frameworks/openai` and `frameworks/openai-agents` were bilingual and have been
+  taken back to `languages: [python]`; their `<Switch>` blocks were collapsed to
+  the Python case and the TypeScript examples deleted, because they were written
+  against the intended surface rather than read off this module. All 12 framework
+  pages are now Python-only and the whole Frameworks section is hidden from a
+  TypeScript reader. [Per-framework docs readiness](#per-framework-docs-readiness)
+  is the starting point for rewriting them.
 - Python's fourth capability column, `deepeval test run`, now **has a TS equivalent**
   — a Vitest integration with an `expect(...).toPass()` matcher — but it is young and
   not yet exercised per-integration, so it is omitted from the matrix below rather
@@ -59,7 +70,7 @@ prerequisite for porting any of them well.
 Ordered by how much they block. These apply across integrations, so fixing one
 generally unblocks several docs pages at once.
 
-### 1. No `next_*_span` staging helpers — component-level evals
+### 1. Component-level metrics: `metrics` is commented out of the staging contexts
 
 Python's `deepeval/tracing/context.py` exports `next_agent_span`, `next_llm_span`,
 `next_tool_span`, and `next_retriever_span`. Each is a context manager that stages
@@ -71,15 +82,69 @@ with next_llm_span(metrics=[AnswerRelevancyMetric()]):
     agent.invoke(...)   # first LLM span the callback opens picks the metric up
 ```
 
-There is no TS equivalent anywhere in `src/`. This is the single largest gap: it is
-the only way to attach a metric to a span the *framework* creates (as opposed to one
-you wrapped in `observe` yourself), so **component-level evals are impossible for
-every integration**. On the LangChain docs page alone it blocks three subsections,
-an advanced pattern, a bullet, and an FAQ answer.
+There are no functions by these names in TS, but **the staging mechanism itself
+already exists** — the gap is narrower than "no equivalent", and this is the single
+most important thing to know before rewriting any framework page.
 
-Needs: an async-context-local staging slot (the ALS store in `tracing/tracing.ts` is
-the natural home), a drain point in each integration's span-open path, and one-shot
-semantics matching Python (only the first matching span consumes the staged config).
+`src/tracing/trace-context.ts` defines `LlmSpanContext` and `AgentSpanContext`,
+backed by two `AsyncLocalStorage` stores, staged by `setTracingContext(opts, fn)`
+(exported from `deepeval/tracing`) and drained by three integrations —
+`src/openai/patch.ts`, `src/integrations/openai-agents/callback.ts`, and
+`src/integrations/ai-sdk/processor.ts`. It is ambient-scope rather than Python's
+one-shot-per-span-type, so it is closer to Python's own `LlmSpanContext` than to
+`next_*_span`.
+
+What it carries today, verified against the drain sites:
+
+| Field | OpenAI | OpenAI Agents | AI SDK |
+| --- | :--: | :--: | :--: |
+| `expectedOutput`, `expectedTools`, `context`, `retrievalContext` | Yes | No | No |
+| `prompt` | Yes | Yes (LLM spans) | — |
+| `metricCollection` | Yes | Yes (agent / LLM / tool) | — |
+| `metrics` | **commented out** | **commented out** | **commented out** |
+
+**`metrics` is the whole gap.** It is commented out in four places rather than
+absent by design — the field on both context types, the trace assignment in
+`setTracingContext`, and the consumption site in the OpenAI patch:
+
+```ts
+// src/tracing/trace-context.ts
+export type LlmSpanContext = {
+  prompt?: Prompt;
+  //   metrics?: BaseMetric[];
+
+// src/openai/patch.ts
+    return await observe({
+      type: "llm",
+      //   metrics: llmContext?.metrics,
+      metricCollection: llmContext?.metricCollection,
+```
+
+So component-level *metric collections* (the Confident AI online-eval path) work
+today for OpenAI and OpenAI Agents, while component-level *metrics* (the local
+eval path every docs page uses) do not. Uncommenting and wiring the four sites is
+plausibly the highest-leverage change in this module.
+
+**LangChain has a separate, unrelated hatch.** It does not read the ALS contexts at
+all; `handleLLMStart` instead pulls `metrics`, `metricCollection` and `prompt` off
+LangChain's per-call `metadata` and assigns them straight to the LLM span:
+
+```ts
+// src/integrations/langchain/callback-handler.ts
+const metrics = metadata?.["metrics"];
+llmSpan.metrics = metrics;
+```
+
+`config: { metadata: { metrics: [...] } }` therefore reaches a LangChain LLM span
+today with nothing commented out in the way. `handleToolStart` and
+`handleRetrieverStart` take the same `metadata` argument and ignore it, and there is
+no agent span to attach to, so it covers one span type on one integration. Not
+exercised end to end — verify before documenting.
+
+Needs, to reach Python parity: uncomment `metrics` through the four sites above, add
+a drain point in the LangChain and Mastra span-open paths (neither reads the ALS
+contexts), and decide whether to keep ambient scoping or add Python's one-shot
+semantics where only the first matching span consumes the staged config.
 
 ### 2. No eval-session concept — OTel integrations need a manual flag
 
@@ -180,6 +245,19 @@ The runner's own parity backlog is in
 wins, and either cleanup silently drops the others' sink. Needs a subscriber list
 rather than one slot.
 
+### 7. OpenInference is unreachable from the published package
+
+`src/integrations/openinference/` is complete and exports `instrumentOpenInference`,
+`createOpenInferenceProcessors` and `OpenInferenceSpanProcessor`, but there is no
+`./integrations/openinference` key in either `exports` or `typesVersions` in
+`typescript/package.json`. An `exports` map is exhaustive, so the specifier throws
+`ERR_PACKAGE_PATH_NOT_EXPORTED` at runtime and TS2307 under `nodenext`. It cannot be
+documented until the key is added.
+
+`./integrations` is exported and mapped, but `src/integrations/index.ts` is an empty
+file, so that specifier resolves to a module with no exports. Either barrel the four
+public entry points through it or drop the key.
+
 ## LangChain / LangGraph specifics
 
 Beyond the cross-cutting items, the LangChain integration diverges from Python in
@@ -204,10 +282,128 @@ ways that make parts of `/integrations/frameworks/langchain` unwritable for TS.
   `evalsIterator({ metrics })` in eval scripts; the constructor kwarg is for online
   evals on live traffic.
 
+## Per-framework docs readiness
+
+What a TypeScript half of each framework page could honestly contain today. The
+cross-cutting gaps above apply to all of them; this section is what each page's
+author hits in practice, and which sections of the existing Python page survive.
+
+Docs conventions (`<Switch>`, `<Only>`, `languages` frontmatter) are in
+[`.cursor/rules/docs-languages.mdc`](../../../.cursor/rules/docs-languages.mdc);
+migration status is in [`docs/LANGUAGES.md`](../../../docs/LANGUAGES.md). Pages live
+in `docs/content/integrations/frameworks/`.
+
+**Start with OpenAI and OpenAI Agents.** They are the only two where all three
+capability columns are Yes, and OpenAI Agents is the reference implementation for
+ambient-trace adoption that LangChain and Mastra still need.
+
+### OpenAI — `frameworks/openai`
+
+Entry point `instrumentOpenAI(client)` from `deepeval/openai`, which patches the
+client in place rather than re-exporting a subclass — so the Python page's "drop-in
+replacement, change your import" framing does not carry over and the TS case needs
+its own prose.
+
+The `LlmSpanContext` section translates better than anywhere else: TS has the same
+concept, staged as `setTracingContext({ llmSpanContext: {...} }, fn)`, and the
+OpenAI patch is the one drain site that consumes every field
+([gap 1](#1-component-level-metrics-metrics-is-commented-out-of-the-staging-contexts)). `expectedOutput`,
+`expectedTools`, `context`, `retrievalContext`, `prompt` and `metricCollection` all
+land on the LLM span; only `metrics` is commented out. The pytest /
+`deepeval test run` sections become Vitest + `expect(golden).toPass()`.
+
+Two footguns to verify before writing the quickstart, both from reading
+`src/openai/`:
+
+- `instrumentOpenAI` guards on a module-level `let registered = false` and returns
+  early, so only the **first** client ever passed to it is patched. A second client
+  is silently un-instrumented.
+- `updateAllAttributes(...)` runs only inside `if (llmContext && …)`, and
+  `getLlmContext()` returns `undefined` unless `setTracingContext` staged one. On
+  the bare path the LLM span may therefore get no input, output or `toolsCalled` —
+  the `else` branch just logs `getLlmContext() returned undefined`. The matrix above
+  says Bare = Yes for OpenAI on the strength of the trace being created; whether the
+  span is *populated* bare is untested.
+
+### OpenAI Agents — `frameworks/openai-agents`
+
+Entry point `new DeepEvalTracingProcessor()` via `addTraceProcessor`. Nesting and
+`evalsIterator` both work, and this is the reference implementation for adopting an
+ambient trace — it checks `getCurrentTrace()` before starting a new one, which is
+exactly what LangChain and Mastra fail to do.
+
+Python's `Agent` / `function_tool` shims — `agent_metrics`, `llm_metrics`,
+`metrics=`, `confident_prompt` — have no TS equivalent;
+`src/integrations/openai-agents/` exports only the processor, so you use the SDK's
+own `Agent` and `tool`. The staging contexts partly cover the difference:
+`onSpanStart` reads `metricCollection` per span type (agent context for agent spans,
+LLM context for LLM spans, `toolsMetricCollection` for tool spans) and `onSpanEnd`
+copies `llmSpanContext.prompt` onto LLM spans with its alias, hash, version and
+label. So the prompt-binding section has a real TS counterpart, and the
+component sections can be written against *metric collections* — but not against
+`metrics`, which is commented out.
+
+### LangChain — `frameworks/langchain`
+
+The most heavily gapped of the four, in rough order of how much each costs:
+
+1. **Trace-level metrics grade the wrong text** ([gap 4](#4-trace-level-test-cases-are-built-from-traceinput-not-the-golden)).
+   `handleChainStart` sets `trace.input` to LangChain's raw payload and
+   `scopeToTestCase` stringifies it, so `evalsIterator({ metrics })` scores
+   `{"messages":[{"role":"user","content":"…"}]}` rather than the question, and the
+   golden's `expectedOutput` is dropped. This hits the page's *first* example.
+   Metrics with `requiresTrace` read the nested span dict and are less exposed.
+2. **No agent spans, no nested-chain spans.** Only the root chain gets one, typed
+   `SpanType.CUSTOM` and named `"Langchain Chain Run"` unless `runName` is set. The
+   Python page's `Agent: math_agent` trace diagram is wrong for TS. LLM, tool and
+   retriever spans do exist and nest correctly through `RunHierarchyTracker`.
+3. **Component metrics**: LLM spans only, via LangChain's `config.metadata` — see
+   the escape hatch in [gap 1](#1-component-level-metrics-metrics-is-commented-out-of-the-staging-contexts).
+   Tool, retriever and agent subsections stay unwritable.
+4. **`observe()` nesting is broken** ([gap 3](#3-observe-nesting-is-broken-for-langchain-and-mastra)),
+   so the "Wrap a LangChain run in `@observe`" pattern is false.
+5. **No tool decorator** — `patch-tool.ts` is commented out end to end, yet the page
+   advertises one in two places.
+
+Not gaps: constructor kwargs are at full parity (only `thread_id` → `threadId`
+casing differs), so the API-reference table just needs a `<Switch>`.
+
+### LangGraph — `frameworks/langgraph`
+
+Rides on `DeepEvalCallbackHandler`, so it inherits every LangChain item above.
+`RunHierarchyTracker` exists specifically for the LangGraph-server case where ALS is
+lost across callbacks, which is why the ALS bypass in
+[gap 3](#3-observe-nesting-is-broken-for-langchain-and-mastra) cannot simply be
+deleted — it needs an ambient-trace fallback, not a removal. This page was never
+bilingual, so it is a first write rather than a rewrite.
+
+### Mastra — no page yet
+
+TS-only, `new DeepEvalExporter(config)`. Needs a page from scratch. Two blockers
+first: `observe()` nesting is broken for the simpler reason that the exporter never
+calls `getCurrentTrace()`, and its `config.traceCaptureSink` collides with
+`evalsIterator` and the Vitest runner over the single global sink slot
+([gap 6](#6-evalsiterator-mastra-and-the-test-runner-fight-over-one-capture-sink)).
+
+### Vercel AI SDK (tracing) — no page yet
+
+TS-only, `configureAiSdkTracing(options)`. Distinct from
+`integrations/models/ai-sdk`, which covers `AISDKModel` as a judge model and is
+already bilingual — pick a URL that does not imply the two are the same integration.
+Reaching the iterator needs `isTestMode: true` and double-exports while it does
+([gap 2](#2-no-eval-session-concept--otel-integrations-need-a-manual-flag)).
+
+### OpenInference — no page, and not shippable
+
+Blocked outright on the missing subpath export
+([gap 7](#7-openinference-is-unreachable-from-the-published-package)). Same
+`isTestMode` caveat as AI SDK on top of that.
+
 ## Suggested order of work
 
-1. **`next_*_span`** (gap 1) — unblocks component-level evals for every integration and
-   the largest share of the docs.
+1. **Uncomment `metrics` on the staging contexts** (gap 1) — four commented lines,
+   and it unblocks component-level evals for OpenAI and OpenAI Agents immediately.
+   Cheapest item here by a wide margin relative to what it opens up in the docs.
 2. **Golden-based trace test cases** (gap 4) — small change, stops silently wrong scores.
 3. **Eval-session routing** (gap 2) — makes AI SDK / OpenInference work in the iterator
    without a manual flag, and kills the double export.
@@ -217,3 +413,6 @@ ways that make parts of `/integrations/frameworks/langchain` unwritable for TS.
    trace tree matches reality.
 6. **Tool decorator** — finish or delete `patch-tool.ts`, and align the docs either way.
 7. **Capture-sink subscriber list** (gap 6) — small correctness fix.
+8. **Drain the staging contexts in LangChain and Mastra** (gap 1) — neither reads
+   `getLlmContext()` / `getAgentContext()`, so they miss whatever step 1 unlocks.
+9. **Export OpenInference** (gap 7) — a `package.json` key, not code.

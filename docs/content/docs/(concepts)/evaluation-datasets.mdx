@@ -589,7 +589,7 @@ Dataset management is an essential part of your evaluation lifecycle. We recomme
 
 You can store both single-turn and multi-turn datasets with `deepeval`. The single-turn datasets contains a list of `Golden`s and the multi-turn would contain `ConversationalGolden`s instead.
 
-<Tabs items={["Confident AI", "Locally as JSON", "Locally as CSV"]}>
+<Tabs items={["Confident AI", "Locally as JSON", "Locally as CSV", "Locally as JSONL"]}>
 <Tab value="Confident AI">
 
 You can save your dataset on the cloud by using the `push` method:
@@ -673,7 +673,7 @@ dataset.save_as(
 
 There are **TWO** mandatory and **TWO** optional parameter when calling the `save_as()` method:
 
-- `file_type`: a string of either `"csv"` or `"json"` and specifies which file format to save `Golden`s in.
+- `file_type`: a string of either `"csv"`, `"json"`, or `"jsonl"` and specifies which file format to save `Golden`s in.
 - `directory`: a string specifying the path of the directory you wish to save `Golden`s at.
 - `file_name`: a string specifying the custom filename for the dataset file. Defaulted to the "YYYYMMDD_HHMMSS" format of time now.
 - `include_test_cases`: a boolean which when set to `True`, will also save any test cases within your dataset. Defaulted to `False`.
@@ -686,11 +686,30 @@ By default the `save_as()` method only saves the `Golden`s within your `Evaluati
 
 <Case id="typescript">
 
-<NotImplemented id="typescript" feature="save_as">
+You can save your dataset locally to a JSON file by using the `saveAs()` method:
 
-It writes the goldens (and optionally the test cases) in your dataset to a local JSON or CSV file. Until it lands, serialize `dataset.goldens` yourself, or [push the dataset to Confident AI](#save-dataset) where it is versioned for you.
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
 
-</NotImplemented>
+const dataset = new EvaluationDataset({ goldens });
+await dataset.saveAs({
+  fileType: "json",
+  directory: "./deepeval-test-dataset",
+});
+```
+
+There are **TWO** mandatory and **TWO** optional parameters when calling the `saveAs()` method:
+
+- `fileType`: a string of either `"csv"`, `"json"`, or `"jsonl"` and specifies which file format to save `Golden`s in.
+- `directory`: a string specifying the path of the directory you wish to save `Golden`s at. It is created if it does not exist.
+- `fileName`: a string specifying the custom filename for the dataset file. Defaulted to the "YYYYMMDD_HHMMSS" format of time now.
+- `includeTestCases`: a boolean which when set to `true`, will also save any test cases within your dataset. Defaulted to `false`.
+
+`saveAs()` returns the full path it wrote to.
+
+:::note
+By default the `saveAs()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `includeTestCases` to `true`.
+:::
 
 </Case>
 
@@ -717,7 +736,7 @@ dataset.save_as(
 
 There are **TWO** mandatory and **TWO** optional parameter when calling the `save_as()` method:
 
-- `file_type`: a string of either `"csv"` or `"json"` and specifies which file format to save `Golden`s in.
+- `file_type`: a string of either `"csv"`, `"json"`, or `"jsonl"` and specifies which file format to save `Golden`s in.
 - `directory`: a string specifying the path of the directory you wish to save `Golden`s at.
 - `file_name`: a string specifying the custom filename for the dataset file. Defaulted to the "YYYYMMDD_HHMMSS" format of time now.
 - `include_test_cases`: a boolean which when set to `True`, will also save any test cases within your dataset. Defaulted to `False`.
@@ -730,11 +749,81 @@ By default the `save_as()` method only saves the `Golden`s within your `Evaluati
 
 <Case id="typescript">
 
-<NotImplemented id="typescript" feature="save_as">
+You can save your dataset locally to a CSV file by using the `saveAs()` method:
 
-It writes the goldens (and optionally the test cases) in your dataset to a local JSON or CSV file. Until it lands, serialize `dataset.goldens` yourself, or [push the dataset to Confident AI](#save-dataset) where it is versioned for you.
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
 
-</NotImplemented>
+const dataset = new EvaluationDataset({ goldens });
+await dataset.saveAs({
+  fileType: "csv",
+  directory: "./deepeval-test-dataset",
+});
+```
+
+There are **TWO** mandatory and **TWO** optional parameters when calling the `saveAs()` method:
+
+- `fileType`: a string of either `"csv"`, `"json"`, or `"jsonl"` and specifies which file format to save `Golden`s in.
+- `directory`: a string specifying the path of the directory you wish to save `Golden`s at. It is created if it does not exist.
+- `fileName`: a string specifying the custom filename for the dataset file. Defaulted to the "YYYYMMDD_HHMMSS" format of time now.
+- `includeTestCases`: a boolean which when set to `true`, will also save any test cases within your dataset. Defaulted to `false`.
+
+A CSV holds one column per golden field, with lists such as `context` joined on `|` and objects such as `tools_called` written as JSON.
+
+:::note
+By default the `saveAs()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `includeTestCases` to `true`.
+:::
+
+</Case>
+
+</Switch>
+
+</Tab>
+<Tab value="Locally as JSONL">
+
+<Switch>
+
+<Case id="python">
+
+You can save your dataset locally to a JSONL file by using the `save_as()` method:
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset(goldens)
+dataset.save_as(
+    file_type="jsonl",
+    directory="./deepeval-test-dataset",
+)
+```
+
+Each line holds one golden, which makes the file cheap to append to and to stream back in with [`add_goldens_from_jsonl_file()`](#load-dataset).
+
+:::note
+By default the `save_as()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `include_test_cases` to `True`.
+:::
+
+</Case>
+
+<Case id="typescript">
+
+You can save your dataset locally to a JSONL file by using the `saveAs()` method:
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset({ goldens });
+await dataset.saveAs({
+  fileType: "jsonl",
+  directory: "./deepeval-test-dataset",
+});
+```
+
+Each line holds one golden, which makes the file cheap to append to and to stream back in with [`addGoldensFromJSONL()`](#load-dataset).
+
+:::note
+By default the `saveAs()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `includeTestCases` to `true`.
+:::
 
 </Case>
 
@@ -755,7 +844,7 @@ It writes the goldens (and optionally the test cases) in your dataset to a local
 
 <Case id="typescript">
 
-`deepeval` offers support for loading datasets stored on Confident AI or in a CSV file into an `EvaluationDataset`. The remaining local file formats are on their way, and each tab below says where things stand.
+`deepeval` offers support for loading datasets stored on Confident AI, or in JSON, JSONL, and CSV files, into an `EvaluationDataset` as either test cases or goldens.
 
 </Case>
 
@@ -845,11 +934,46 @@ Loading datasets as goldens are especially helpful if you're looking to generate
 
 <Case id="typescript">
 
-<NotImplemented id="typescript" feature="add_goldens_from_json_file">
+You can load an existing `EvaluationDataset` you might have generated elsewhere by supplying a `filePath` to your `.json` file as **either test cases or goldens**. Your `.json` file should contain an array of objects.
 
-It reads an array of objects out of a `.json` file and turns each one into a golden or a test case. Until it lands, `JSON.parse` the file yourself and pass the rows to `new Golden({ ... })`, then hand them to `new EvaluationDataset({ goldens })`.
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
 
-</NotImplemented>
+const dataset = new EvaluationDataset();
+
+// Add goldens from a JSON file
+await dataset.addGoldensFromJSON({
+  filePath: "example.json", // filePath is the absolute path to your .json file
+});
+```
+
+An object carrying a `scenario` becomes a `ConversationalGolden` and everything else becomes a `Golden`, so a single file cannot mix the two. Keys default to the snake_case names `deepeval` writes to file, with the camelCase spelling of each accepted as a fallback — a dataset saved by either SDK loads without configuration. If your file uses different names, override only the keys that differ:
+
+```typescript
+await dataset.addGoldensFromJSON({
+  filePath: "example.json",
+  keys: { input: "query", expectedOutput: "gold_answer" },
+});
+```
+
+You can also add single-turn `LLMTestCase`s to your dataset from a JSON file. Every object must have an input and an actual output, since a test case cannot be evaluated without one.
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset();
+
+// Add as test cases
+await dataset.addTestCasesFromJSON({
+  // filePath is the absolute path to your .json file
+  filePath: "example.json",
+  keys: { input: "query", actualOutput: "response" },
+});
+```
+
+:::info
+Loading datasets as goldens is especially helpful if you're looking to generate LLM `actualOutput`s at evaluation time. You might find yourself in this situation if you are generating data for testing or using historical data from production.
+:::
 
 </Case>
 
@@ -895,11 +1019,36 @@ An `EvaluationDataset` can contain either single-turn or multi-turn goldens, but
 
 <Case id="typescript">
 
-<NotImplemented id="typescript" feature="add_goldens_from_jsonl_file">
+You can load existing `Golden`s or `ConversationalGolden`s from a `.jsonl` file by supplying a `filePath`. Each line should contain one JSON object that maps to either a `Golden` or a `ConversationalGolden`.
 
-It reads a `.jsonl` file one line at a time, mapping each line to a golden. Until it lands, split the file on newlines and `JSON.parse` each line into `new Golden({ ... })` yourself.
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
 
-</NotImplemented>
+const dataset = new EvaluationDataset();
+
+// Add goldens from a JSONL file
+await dataset.addGoldensFromJSONL({
+  filePath: "example.jsonl", // filePath is the absolute path to your .jsonl file
+});
+```
+
+For single-turn goldens, each line can look like:
+
+```json
+{"input": "What is DeepEval?", "expected_output": "An LLM evaluation framework.", "context": ["DeepEval helps evaluate LLM apps."]}
+```
+
+For multi-turn goldens, each line can look like:
+
+```json
+{"scenario": "A user asks for help evaluating an LLM app.", "expected_outcome": "The user understands how to create an evaluation dataset.", "context": ["DeepEval supports evaluation datasets."]}
+```
+
+Blank lines are skipped, and a line that doesn't parse fails with its line number. A `context` written as one delimited string rather than an array is split on `contextDelimiter`, which defaults to `|`.
+
+:::note
+An `EvaluationDataset` can contain either single-turn or multi-turn goldens, but not both. If a JSONL file mixes `Golden` and `ConversationalGolden` rows, `deepeval` will raise an error.
+:::
 
 </Case>
 
@@ -951,42 +1100,61 @@ dataset.add_test_cases_from_csv_file(
 ```
 
 :::note
-Since `expected_output`, `context`, `retrieval_context`, `tools_called`, and `expected_tools` are optional parameters for an `LLMTestCase`, these fields are similarly **optional** parameters when adding test cases from an existing dataset.
+Since `expected_output`, `context`, `retrieval_context`, `tools_called`, and `expected_tools` are optional parameters for an `LLMTestCase`, these fields are similarly **optional** parameters when adding test cases from an existing dataset. A column your file doesn't have leaves its field as `None` rather than empty, so a metric that requires it still reports it as missing.
 :::
 
 </Case>
 
 <Case id="typescript">
 
-You can build single-turn `LLMTestCase`s out of a `.csv` file by supplying a `filePath` along with the columns to read them from. Columns such as `context` hold a list of strings, so pass a `contextDelimiter` to tell `deepeval` how to split those cells.
+You can add test cases or goldens into your `EvaluationDataset` by supplying a `filePath` to your `.csv` file. Your `.csv` file should contain rows that can be mapped into `Golden` or `ConversationalGolden` through their column names.
+
+Remember, parameters such as `context` hold a list of strings, so pass a `contextDelimiter` to tell `deepeval` how to split those cells into a list of strings.
 
 ```typescript
 import { EvaluationDataset } from "deepeval/dataset";
 
 const dataset = new EvaluationDataset();
 
-dataset.testCases = await dataset.addTestCasesFromCSV({
-  // filePath is the absolute path to your .csv file
+// Add goldens
+await dataset.addGoldensFromCSV({
+  filePath: "example.csv", // filePath is the absolute path to your .csv file
+});
+```
+
+Column names default to `deepeval`'s own, so a file that already uses them needs no configuration. If yours differ, name only the columns that do, through `keys`:
+
+```typescript
+await dataset.addGoldensFromCSV({
+  filePath: "example.csv",
+  keys: { input: "query", actualOutput: "response" },
+  contextDelimiter: ";",
+  retrievalContextDelimiter: ";",
+});
+```
+
+A row with a `scenario` becomes a `ConversationalGolden`, and its `turns` cell is read as JSON. Cells such as `toolsCalled`, `additionalMetadata`, and `customColumnKeyValues` are read as JSON too, which is the shape [`saveAs()`](#save-dataset) writes.
+
+You can also add single-turn `LLMTestCase`s to your dataset from a CSV file.
+
+```typescript
+// Add as test cases
+await dataset.addTestCasesFromCSV({
   filePath: "example.csv",
   inputCol: "query",
-  actualOutputCol: "actual_output",
-  expectedOutputCol: "expected_output",
-  contextCol: "context",
+  actualOutputCol: "response",
   contextDelimiter: ";",
-  retrievalContextCol: "retrieval_context",
   retrievalContextDelimiter: ";",
 });
 ```
 
 :::note
-Since `expectedOutput`, `context`, `retrievalContext`, `toolsCalled`, and `expectedTools` are optional parameters for an `LLMTestCase`, these columns are similarly **optional** when adding test cases from an existing dataset.
+Since `expectedOutput`, `context`, `retrievalContext`, `toolsCalled`, and `expectedTools` are optional parameters for an `LLMTestCase`, these columns are similarly **optional** when adding test cases from an existing dataset. A column your file doesn't have leaves its field unset rather than empty, so a metric that requires it still reports it as missing.
 :::
 
-<NotImplemented id="typescript" feature="add_goldens_from_csv_file">
-
-It reads the same file into goldens instead of test cases, which is what you want when the `actualOutput` is generated at evaluation time. Until it lands, read the CSV yourself and construct `new Golden({ ... })` per row.
-
-</NotImplemented>
+:::note
+An `EvaluationDataset` can contain either single-turn or multi-turn goldens, but not both. If a CSV file mixes `Golden` and `ConversationalGolden` rows, `deepeval` will raise an error.
+:::
 
 </Case>
 
@@ -1344,11 +1512,13 @@ The `turns` parameter should **100%** be generated at evaluation time in your `C
             when you run evals.
           </Case>
           <Case id="typescript">
-            Partly, for now. You can read test cases straight out of a CSV file
-            with <code>addTestCasesFromCSV()</code>; loading goldens from JSON,
-            JSONL, or CSV and saving a dataset back to disk are still
-            TypeScript-only gaps, so store datasets on Confident AI in the
-            meantime.
+            Yes. You can load goldens from JSON, JSONL, and CSV with{" "}
+            <code>addGoldensFromJSON()</code>,{" "}
+            <code>addGoldensFromJSONL()</code>, and{" "}
+            <code>addGoldensFromCSV()</code>, test cases with{" "}
+            <code>addTestCasesFromJSON()</code> and{" "}
+            <code>addTestCasesFromCSV()</code>, and write a dataset back to
+            disk with <code>saveAs()</code>.
           </Case>
         </Switch>
       ),

@@ -17,8 +17,9 @@ as the backlog for closing parity.
 - **Result accumulation is arguably better than Python's.** Each worker appends to
   its own `worker-<pid>.jsonl`, so parallelism needs no file locking, where Python
   serializes every worker through one portalocker-guarded JSON file.
-- **Almost none of the CLI surface is ported.** Python has a dozen-plus flags; TS
-  has `--official` and `--identifier`. See [Cross-cutting gaps](#cross-cutting-gaps).
+- **Most of the CLI surface is ported.** Eight of Python's dozen-plus flags, with
+  the rest either pytest-native or unported. See
+  [Cross-cutting gaps](#cross-cutting-gaps).
 
 ## Capability matrix
 
@@ -37,7 +38,7 @@ as the backlog for closing parity.
 | Batched upload                  | 40 LLM / 20 conversational, POST + PUTs     | **Single POST**            | [4](#4-single-shot-upload-that-fails-silently)  |
 | Deferred upload when logged out | `.latest_test_run.json` + `deepeval view`   | **Results deleted**        | [6](#6-results-are-destroyed-when-not-logged-in)|
 | Post-run hook                   | `@deepeval.on_test_run_end`                 | **None**                   | [7](#7-missing-cli-flags)                       |
-| Hyperparameter logging          | `@deepeval.log_hyperparameters`             | **None**                   | [7](#7-missing-cli-flags)                       |
+| Hyperparameter logging          | `@deepeval.log_hyperparameters`             | `logHyperparameters()`     | —                                               |
 | Run telemetry                   | `capture_evaluation_run(Entrypoint.PYTEST)` | **None**                   | [9](#9-no-run-telemetry)                        |
 
 ## Cross-cutting gaps
@@ -129,11 +130,20 @@ ported, roughly in order of demand:
   native equivalents — `--bail=1`, `-t`, `--reporter`)
 - passthrough of extra args to the underlying runner (Python forwards `ctx.args`)
 - `@deepeval.on_test_run_end` hook equivalent
-- `log_hyperparameters` equivalent — the upload payload has no `hyperparameters`
-  field at all, and `console-report.ts` already prints Python's "No hyperparameters
-  logged" warning unconditionally because of it
 
 `-n` needs nothing — Vitest is parallel by default.
+
+Hyperparameters are ported. `evaluate()` takes `hyperparameters` (and
+`identifier`) directly, and `logHyperparameters()` covers the test-run path where
+there is no `evaluate()` call to pass them to: each worker writes
+`hyperparameters.json` into the shared results dir and `wrapUpTestRun` reads it
+back, since a worker cannot reach the main process's memory. The wrap-up warning
+in `console-report.ts` is now Python's two-tier version rather than an
+unconditional "No hyperparameters logged".
+
+One divergence: Python pushes an unpulled `Prompt` from inside
+`process_hyperparameters` to obtain a hash. The TS equivalent is synchronous, so
+it warns and drops that entry instead.
 
 ### 8. No auto-registration
 
@@ -208,8 +218,8 @@ needs a test.
    setup path.
 6. ~~**Local persistence + `view` / `inspect`** (gap 6)~~ — done; both commands
    now read the local files, so the logged-out path is as useful as Python's.
-7. **Hyperparameters, then cache** (gaps 7, 5) — in that order; the cache key
-   depends on them.
+7. ~~**Hyperparameters, then cache**~~ (gaps 7, 5) — both done. The cache key does
+   not currently include hyperparameters, which is the remaining loose end.
 8. **Capture-sink subscriber list** (gap 10) — shared fix with the integrations
    backlog.
 9. **`chatbotRole`, ordering, telemetry, env test** (gaps 11, 12, 9, 13) — small

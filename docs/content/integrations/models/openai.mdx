@@ -74,9 +74,9 @@ You may want to use stronger reasoning models like `gpt-4.1` for metrics that re
 
 ```python
 from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.models import GPTModel
+from deepeval.models import OpenAIModel
 
-model = GPTModel(
+model = OpenAIModel(
     model="gpt-4.1",
     temperature=0,
     cost_per_input_token=0.000002,
@@ -101,7 +101,7 @@ answer_relevancy = AnswerRelevancyMetric(
 </Tab>
 </Tabs>
 
-There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `GPTModel`:
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `OpenAIModel`:
 
 - [Optional] `model`: A string specifying the name of the GPT model to use. Defaulted to `OPENAI_MODEL_NAME` if not set; falls back to <DefaultLLMModel />.
 - [Optional] `api_key`: A string specifying the OpenAI API key for authentication. Defaults to `OPENAI_API_KEY` if not passed; raises an error at runtime if unset.

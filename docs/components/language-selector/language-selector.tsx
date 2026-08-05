@@ -13,6 +13,7 @@ import {
   LANGUAGES,
   LANGUAGE_IDS,
   type Language,
+  type LanguageMeta,
 } from "@/lib/lang/languages";
 import { SDK_VERSIONS } from "@/lib/lang/versions";
 import styles from "./language-selector.module.scss";
@@ -27,7 +28,10 @@ const badge = (src: string, label: string) => (
   />
 );
 
-type LanguageOption = { id: Language } & (typeof LANGUAGES)[Language];
+const tag = (text: string | undefined) =>
+  text ? <span className={styles.tag}>{text}</span> : null;
+
+type LanguageOption = { id: Language } & LanguageMeta;
 
 const OPTIONS: LanguageOption[] = LANGUAGE_IDS.map((id) => ({
   id,
@@ -63,6 +67,7 @@ const LanguageSelector = () => {
       <PopoverTrigger aria-label="Select language" className={styles.trigger}>
         {badge(active.icon, active.label)}
         <span className={styles.label}>{active.label}</span>
+        {tag(active.tag)}
         <span className={styles.version}>{`v${SDK_VERSIONS[active.id]}`}</span>
         <ChevronsUpDown className={styles.chevron} />
       </PopoverTrigger>
@@ -77,7 +82,10 @@ const LanguageSelector = () => {
             <div className={styles.itemContent}>
               {badge(option.icon, option.label)}
               <span className={styles.text}>
-                <span className={styles.label}>{option.label}</span>
+                <span className={styles.labelRow}>
+                  <span className={styles.label}>{option.label}</span>
+                  {tag(option.tag)}
+                </span>
                 <span className={styles.description}>{option.description}</span>
               </span>
             </div>

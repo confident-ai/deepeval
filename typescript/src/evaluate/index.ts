@@ -13,3 +13,8 @@ export {
   type CacheConfig,
 } from "@/evaluate/configs";
 export { printResultsTable } from "@/evaluate/console-report";
+export {
+  logHyperparameters,
+  type Hyperparameters,
+  type HyperparameterValue,
+} from "@/evaluate/hyperparameters";

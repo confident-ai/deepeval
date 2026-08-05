@@ -26,10 +26,12 @@ export {
 export {
   evaluate,
   compare,
+  logHyperparameters,
   type EvaluationResult,
   type TestResult,
   type EvaluateOptions,
   type CompareOptions,
+  type Hyperparameters,
 } from "@/evaluate";
 export { Prompt } from "@/prompt";
 export { ConversationSimulator } from "@/simulate";

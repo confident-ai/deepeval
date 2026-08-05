@@ -21,3 +21,4 @@ export const HIDDEN_DIR = process.env.DEEPEVAL_CACHE_FOLDER || ".deepeval";
 export const KEY_FILE = ".deepeval";
 export const CACHE_FILE = ".deepeval-cache.json";
 export const LATEST_TEST_RUN_FILE = ".latest_test_run.json";
+export const HYPERPARAMETERS_FILE = "hyperparameters.json";

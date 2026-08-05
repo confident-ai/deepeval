@@ -1,4 +1,4 @@
-import { ConversationalTestCase } from "@/test-case";
+import { ConversationalTestCase, resolveRetrievalContext } from "@/test-case";
 import { Golden } from "@/dataset";
 import { BaseMetric, BaseConversationalMetric } from "@/metrics";
 import { DeepEvalError } from "@/errors";
@@ -59,7 +59,7 @@ function applyGoldenToTrace(trace: Trace, golden: Golden): void {
   if (trace.expectedOutput == null) trace.expectedOutput = golden.expectedOutput;
   if (trace.context == null) trace.context = golden.context;
   if (trace.retrievalContext == null)
-    trace.retrievalContext = golden.retrievalContext;
+    trace.retrievalContext = resolveRetrievalContext(golden.retrievalContext);
   if (trace.expectedTools == null) trace.expectedTools = golden.expectedTools;
 }
 

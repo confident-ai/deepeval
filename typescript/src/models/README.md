@@ -197,7 +197,7 @@ vision-capable — see `checkMultimodalSupport` in `metrics/utils.ts`.
   when the caller passed `cost_per_input_token`, so explicit costs are ignored for models
   it prices. TS lets the explicit value win.
 - **Temperature omission is uniform.** For models that reject `temperature`, Python is
-  inconsistent — `GPTModel` forces `1`, `AzureOpenAIModel` and `AnthropicModel` omit it.
+  inconsistent — `OpenAIModel` forces `1`, `AzureOpenAIModel` and `AnthropicModel` omit it.
   TS always omits, which every provider accepts. Python's `AnthropicModel` also defaults
   to unset rather than `0.0`; TS uses `0` there like every other provider.
 - **Structured output uses `strict: false`** + a tolerant `extractJson` rather than strict

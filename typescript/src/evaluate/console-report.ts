@@ -2,6 +2,10 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { MultiBar, Presets } from "cli-progress";
 import { TestResult, MetricData } from "@/evaluate/types";
+import {
+  countPrompts,
+  type ProcessedHyperparameters,
+} from "@/evaluate/hyperparameters";
 
 /** A MultiBar styled like the rest of the runner (purple filled / dim track). */
 export function newProgressMultiBar(): MultiBar {
@@ -400,13 +404,32 @@ function aggregateRows(testResults: TestResult[]): string[][] {
 
 const SEP = "=".repeat(80);
 
-/** Mirror Python's "No hyperparameters logged" warning (we don't log them yet). */
-export function printHyperparametersWarning(): void {
-  console.log(
-    `\n${BOLD}${YELLOW}⚠ WARNING:${RESET} No hyperparameters logged.\n` +
-      `» Log hyperparameters to attribute prompts and models to your test runs.\n\n` +
-      SEP,
-  );
+/**
+ * Nudge toward logging hyperparameters, then prompts (mirrors Python's two-tier
+ * wrap-up warning). Silent once both are present.
+ */
+export function printHyperparametersWarning(
+  hyperparameters?: ProcessedHyperparameters,
+): void {
+  if (!hyperparameters || Object.keys(hyperparameters).length === 0) {
+    console.log(
+      `\n${BOLD}${YELLOW}⚠ WARNING:${RESET} No hyperparameters logged.\n` +
+        `» Log hyperparameters to attribute prompts and models to your test runs.\n\n` +
+        SEP,
+    );
+    return;
+  }
+
+  if (countPrompts(hyperparameters) === 0) {
+    console.log(
+      `\n${BOLD}${YELLOW}⚠ WARNING:${RESET} No prompts logged.\n` +
+        `» Log prompts to evaluate and optimize your prompt templates and models.\n\n` +
+        SEP,
+    );
+    return;
+  }
+
+  console.log(`\n${GREEN}✓ Prompts Logged${RESET}\n`);
 }
 
 /** Mirror Python's wrap-up completion summary (printed when not posting to Confident AI). */

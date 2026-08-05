@@ -56,7 +56,7 @@ def test_normalize_kwargs_and_extract_aliases_moves_aliases_and_logs(caplog):
 
     with caplog.at_level(logging.WARNING):
         normalized, extracted = normalize_kwargs_and_extract_aliases(
-            "GPTModel",
+            "OpenAIModel",
             original_kwargs,
             alias_map,
         )
@@ -88,7 +88,7 @@ def test_normalize_kwargs_and_extract_aliases_no_alias_usage_no_logs(caplog):
 
     with caplog.at_level(logging.WARNING):
         normalized, extracted = normalize_kwargs_and_extract_aliases(
-            "GPTModel",
+            "OpenAIModel",
             kwargs,
             alias_map,
         )

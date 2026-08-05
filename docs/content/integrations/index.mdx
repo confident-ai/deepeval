@@ -9,6 +9,8 @@ import { OpenAIMark } from "@site/src/components/BrandMarks";
 
 DeepEval integrates with the frameworks, model providers, and data stores teams already use to build LLM applications. Use these pages to connect tracing, evaluation, synthetic data, and model configuration to your existing stack.
 
+<Only id="python">
+
 ## Frameworks
 
 Framework integrations let DeepEval evaluate entire execution traces without manually orchestrating every intermediate step. Use these when you want traces, spans, and component-level evals to line up with the framework your agents, chains, tools, and workflows already run on.
@@ -27,129 +29,125 @@ Framework integrations let DeepEval evaluate entire execution traces without man
     href="/integrations/frameworks/langchain"
     description="Trace and evaluate LangChain chains, tools, and agents."
   />
-  <Only id="python">
-    <Card
-      icon={
-        <img
-          src="/icons/integrations/pydanticai.svg"
-          alt=""
-          width={20}
-          height={20}
-        />
-      }
-      title="Pydantic AI"
-      href="/integrations/frameworks/pydanticai"
-      description="Trace Pydantic AI agents and evaluate their outputs."
-    />
-  </Only>
+  <Card
+    icon={
+      <img
+        src="/icons/integrations/pydanticai.svg"
+        alt=""
+        width={20}
+        height={20}
+      />
+    }
+    title="Pydantic AI"
+    href="/integrations/frameworks/pydanticai"
+    description="Trace Pydantic AI agents and evaluate their outputs."
+  />
   <Card
     icon={<OpenAIMark width={20} height={20} />}
     title="OpenAI Agents"
     href="/integrations/frameworks/openai-agents"
     description="Evaluate workflows built with the OpenAI Agents SDK."
   />
-  <Only id="python">
-    <Card
-      icon={
-        <img
-          src="/icons/integrations/langgraph.svg"
-          alt=""
-          width={20}
-          height={20}
-        />
-      }
-      title="LangGraph"
-      href="/integrations/frameworks/langgraph"
-      description="Trace and evaluate graph-based agent workflows."
-    />
-    <Card
-      icon={
-        <img
-          src="/icons/integrations/agentcore.svg"
-          alt=""
-          width={20}
-          height={20}
-        />
-      }
-      title="AgentCore"
-      href="/integrations/frameworks/agentcore"
-      description="Instrument AWS AgentCore agents with OpenTelemetry traces."
-    />
-    <Card
-      icon={
-        <img
-          src="/icons/integrations/strands.svg"
-          alt=""
-          width={20}
-          height={20}
-        />
-      }
-      title="Strands"
-      href="/integrations/frameworks/strands"
-      description="Instrument Strands Agents SDK apps with OpenTelemetry traces."
-    />
-    <Card
-      icon={
-        <img
-          src="/icons/integrations/google-adk.png"
-          alt=""
-          width={20}
-          height={20}
-        />
-      }
-      title="Google ADK"
-      href="/integrations/frameworks/google-adk"
-      description="Trace Google ADK agents through OpenTelemetry and OpenInference."
-    />
-    <Card
-      icon={
-        <img
-          src="/icons/integrations/llamaindex.svg"
-          alt=""
-          width={20}
-          height={20}
-        />
-      }
-      title="LlamaIndex"
-      href="/integrations/frameworks/llamaindex"
-      description="Instrument LlamaIndex retrieval and agent pipelines."
-    />
-    <Card
-      icon={
-        <img
-          src="/icons/integrations/crewai.svg"
-          alt=""
-          width={20}
-          height={20}
-        />
-      }
-      title="CrewAI"
-      href="/integrations/frameworks/crewai"
-      description="Trace CrewAI crews, agents, tasks, and tool calls."
-    />
-  </Only>
+  <Card
+    icon={
+      <img
+        src="/icons/integrations/langgraph.svg"
+        alt=""
+        width={20}
+        height={20}
+      />
+    }
+    title="LangGraph"
+    href="/integrations/frameworks/langgraph"
+    description="Trace and evaluate graph-based agent workflows."
+  />
+  <Card
+    icon={
+      <img
+        src="/icons/integrations/agentcore.svg"
+        alt=""
+        width={20}
+        height={20}
+      />
+    }
+    title="AgentCore"
+    href="/integrations/frameworks/agentcore"
+    description="Instrument AWS AgentCore agents with OpenTelemetry traces."
+  />
+  <Card
+    icon={
+      <img
+        src="/icons/integrations/strands.svg"
+        alt=""
+        width={20}
+        height={20}
+      />
+    }
+    title="Strands"
+    href="/integrations/frameworks/strands"
+    description="Instrument Strands Agents SDK apps with OpenTelemetry traces."
+  />
+  <Card
+    icon={
+      <img
+        src="/icons/integrations/google-adk.png"
+        alt=""
+        width={20}
+        height={20}
+      />
+    }
+    title="Google ADK"
+    href="/integrations/frameworks/google-adk"
+    description="Trace Google ADK agents through OpenTelemetry and OpenInference."
+  />
+  <Card
+    icon={
+      <img
+        src="/icons/integrations/llamaindex.svg"
+        alt=""
+        width={20}
+        height={20}
+      />
+    }
+    title="LlamaIndex"
+    href="/integrations/frameworks/llamaindex"
+    description="Instrument LlamaIndex retrieval and agent pipelines."
+  />
+  <Card
+    icon={
+      <img
+        src="/icons/integrations/crewai.svg"
+        alt=""
+        width={20}
+        height={20}
+      />
+    }
+    title="CrewAI"
+    href="/integrations/frameworks/crewai"
+    description="Trace CrewAI crews, agents, tasks, and tool calls."
+  />
   <Card
     icon={<OpenAIMark width={20} height={20} />}
     title="OpenAI"
     href="/integrations/frameworks/openai"
     description="Trace OpenAI SDK calls and evaluate OpenAI-powered apps."
   />
-  <Only id="python">
-    <Card
-      icon={
-        <img
-          src="/icons/integrations/claude.svg"
-          alt=""
-          width={20}
-          height={20}
-        />
-      }
-      title="Anthropic"
-      href="/integrations/frameworks/anthropic"
-      description="Trace Anthropic model calls inside DeepEval workflows."
-    />
-  </Only>
+  <Card
+    icon={
+      <img
+        src="/icons/integrations/claude.svg"
+        alt=""
+        width={20}
+        height={20}
+      />
+    }
+    title="Anthropic"
+    href="/integrations/frameworks/anthropic"
+    description="Trace Anthropic model calls inside DeepEval workflows."
+  />
 </Cards>
+
+</Only>
 
 ## Evaluation Models
 

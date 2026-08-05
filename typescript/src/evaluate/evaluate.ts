@@ -34,6 +34,10 @@ import {
   exportToMarkdown,
 } from "@/evaluate/console-report";
 import { postTestRun } from "@/evaluate/confident";
+import {
+  processHyperparameters,
+  type Hyperparameters,
+} from "@/evaluate/hyperparameters";
 import { mapWithConcurrency, shouldUseCache } from "@/env-flags";
 import {
   cacheMetricData,
@@ -52,6 +56,10 @@ export interface EvaluateOptions {
   cacheConfig?: CacheConfig;
   /** Mark this as the official test run for the dataset on Confident AI. */
   official?: boolean;
+  /** Names this test run so it can be found and compared on Confident AI. */
+  identifier?: string;
+  /** The model, prompt and settings that produced these outputs. */
+  hyperparameters?: Hyperparameters;
 }
 
 /** A conversational metric runs on a `ConversationalTestCase`; otherwise single-turn. */
@@ -204,11 +212,13 @@ export async function evaluate(
   }
   const runDuration = (Date.now() - startTime) / 1000;
 
+  const hyperparameters = processHyperparameters(options.hyperparameters);
+
   if (display.printResults) {
     printResultsTable(testResults, {
       truncatePassing: display.truncatePassingCases,
     });
-    printHyperparametersWarning();
+    printHyperparametersWarning(hyperparameters);
   }
 
   // Optionally write the report to a Markdown/MDX file.
@@ -217,11 +227,11 @@ export async function evaluate(
   }
 
   // Post results to Confident AI (no-op + returns nulls unless logged in).
-  const { link, testRunId } = await postTestRun(
-    evaluatedCases,
-    runDuration,
-    options.official ?? false,
-  );
+  const { link, testRunId } = await postTestRun(evaluatedCases, runDuration, {
+    official: options.official,
+    identifier: options.identifier,
+    hyperparameters,
+  });
 
   if (display.printResults && !link) {
     const tokenCost = testResults

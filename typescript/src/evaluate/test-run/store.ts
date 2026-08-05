@@ -7,7 +7,11 @@ import {
   postPersistedTestRun,
   type PersistedCase,
 } from "@/evaluate/confident";
-import { printResultsTable } from "@/evaluate/console-report";
+import {
+  printHyperparametersWarning,
+  printResultsTable,
+} from "@/evaluate/console-report";
+import { readHyperparameters } from "@/evaluate/hyperparameters";
 import {
   exportTestRunJson,
   saveLatestTestRun,
@@ -79,6 +83,9 @@ export async function wrapUpTestRun(
   const cases = readPersistedCases(dir);
   if (cases.length === 0) return { link: null, testRunId: null };
 
+  // Written by `logHyperparameters()` in whichever worker ran the test file.
+  const hyperparameters = readHyperparameters(dir);
+
   if (options.printResults ?? true) {
     const display = options.display ?? getDisplay();
     const results = cases
@@ -90,6 +97,7 @@ export async function wrapUpTestRun(
       );
     // Every case still gets posted; `--display` only filters the terminal.
     printResultsTable(results);
+    printHyperparametersWarning(hyperparameters);
   }
 
   const runDuration = options.runDuration ?? 0;
@@ -100,6 +108,7 @@ export async function wrapUpTestRun(
     runDuration,
     official,
     identifier: options.identifier,
+    hyperparameters,
     ...summarizeCases(cases),
     cases,
   };
@@ -107,13 +116,11 @@ export async function wrapUpTestRun(
   // fails or there is no API key yet.
   saveLatestTestRun(run);
 
-  const posted = await postPersistedTestRun(
-    cases,
-    runDuration,
+  const posted = await postPersistedTestRun(cases, runDuration, {
     official,
-    false,
-    options.identifier,
-  );
+    identifier: options.identifier,
+    hyperparameters,
+  });
 
   run.link = posted.link;
   run.testRunId = posted.testRunId;

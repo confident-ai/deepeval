@@ -16,6 +16,7 @@ import {
   ContestantRun,
   aggregateSuccess,
 } from "@/evaluate/types";
+import type { ProcessedHyperparameters } from "@/evaluate/hyperparameters";
 
 // --- shared leaf conversions (zod parse validates + strips extra fields) ---
 
@@ -139,12 +140,18 @@ export function buildTestCaseEntry(
   };
 }
 
+export interface PostTestRunOptions {
+  official?: boolean;
+  /** Suppress the "posted to Confident AI" line so the caller can print its own. */
+  silent?: boolean;
+  identifier?: string;
+  hyperparameters?: ProcessedHyperparameters;
+}
+
 async function sendTestRun(
   persisted: PersistedCase[],
   runDuration: number,
-  official: boolean,
-  silent: boolean,
-  identifier?: string,
+  { official, silent, identifier, hyperparameters }: PostTestRunOptions,
 ): Promise<{ link: string | null; testRunId: string | null }> {
   const apiKey = process.env.CONFIDENT_API_KEY;
   if (!apiKey || apiKey.trim() === "" || persisted.length === 0) {
@@ -192,6 +199,10 @@ async function sendTestRun(
     identifier: identifier || undefined,
     datasetAlias: datasetAlias || undefined,
     datasetId: datasetId || undefined,
+    hyperparameters:
+      hyperparameters && Object.keys(hyperparameters).length
+        ? hyperparameters
+        : undefined,
   };
 
   try {
@@ -218,25 +229,21 @@ async function sendTestRun(
 export async function postTestRun(
   cases: EvaluatedCase[],
   runDuration: number,
-  official = false,
-  silent = false,
+  options: PostTestRunOptions = {},
 ): Promise<{ link: string | null; testRunId: string | null }> {
   return sendTestRun(
     cases.map((c, i) => buildTestCaseEntry(c, i)),
     runDuration,
-    official,
-    silent,
+    options,
   );
 }
 
 export async function postPersistedTestRun(
   persisted: PersistedCase[],
   runDuration: number,
-  official = false,
-  silent = false,
-  identifier?: string,
+  options: PostTestRunOptions = {},
 ): Promise<{ link: string | null; testRunId: string | null }> {
-  return sendTestRun(persisted, runDuration, official, silent, identifier);
+  return sendTestRun(persisted, runDuration, options);
 }
 
 function arenaMetricData(
