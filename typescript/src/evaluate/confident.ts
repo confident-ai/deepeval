@@ -68,10 +68,11 @@ export interface PersistedCase {
   metricsData: MetricData[];
   datasetAlias?: string;
   datasetId?: string;
+  displayOnly?: boolean;
 }
 
 export function buildTestCaseEntry(
-  { testCase, metricsData, runDuration, trace }: EvaluatedCase,
+  { testCase, metricsData, runDuration, trace, displayOnly }: EvaluatedCase,
   order: number,
 ): PersistedCase {
   const success = metricsData.every((m) => m.skipped || m.success);
@@ -86,6 +87,7 @@ export function buildTestCaseEntry(
       metricsData,
       datasetAlias,
       datasetId,
+      displayOnly,
       entry: {
         name: testCase.name ?? `test_case_${order}`,
         success,
@@ -107,6 +109,7 @@ export function buildTestCaseEntry(
     metricsData,
     datasetAlias,
     datasetId,
+    displayOnly,
     entry: {
       name: testCase.name ?? `test_case_${order}`,
       input: testCase.input,
@@ -146,7 +149,13 @@ async function sendTestRun(
   let totalCost = 0;
   let hasCost = false;
 
-  persisted.forEach(({ conversational, entry }, order) => {
+  // Component results are reported locally only: on the platform they belong to
+  // the turn's trace, not as test cases beside it. Filtering here also keeps them
+  // out of the pass/fail counts and the aggregate scores.
+  const postable = persisted.filter((c) => !c.displayOnly);
+  if (postable.length === 0) return { link: null, testRunId: null };
+
+  postable.forEach(({ conversational, entry }, order) => {
     entry.order = order;
     if (entry.success) testPassed += 1;
     else testFailed += 1;
@@ -159,13 +168,13 @@ async function sendTestRun(
     else testCases.push(entry);
   });
 
-  const datasetAlias = persisted.find((c) => c.datasetAlias)?.datasetAlias;
-  const datasetId = persisted.find((c) => c.datasetId)?.datasetId;
+  const datasetAlias = postable.find((c) => c.datasetAlias)?.datasetAlias;
+  const datasetId = postable.find((c) => c.datasetId)?.datasetId;
 
   const payload = {
     testCases,
     conversationalTestCases,
-    metricsScores: buildMetricsScores(persisted),
+    metricsScores: buildMetricsScores(postable),
     testPassed,
     testFailed,
     runDuration,

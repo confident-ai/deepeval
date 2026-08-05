@@ -589,6 +589,7 @@ export class TraceManager {
       output: span.output,
       metadata: span.metadata,
       metricCollection: span.metricCollection,
+      metrics: span.metrics,
       expectedOutput: span.expectedOutput,
       retrievalContext: span.retrievalContext,
       context: span.context,

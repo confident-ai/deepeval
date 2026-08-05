@@ -86,6 +86,8 @@ export interface EvaluatedCase {
   trace?: unknown;
   // True when this case is the trace scope rather than a single span.
   isTraceScope?: boolean;
+  // Report this case locally but do not post it. Component (span) results belong
+  displayOnly?: boolean;
 }
 
 /** A snapshot of one arena case's result, since the metric is reused (input to `postExperiment`). */

@@ -47,6 +47,10 @@ function scopeToTestCase(scope: BaseSpan | Trace): LLMTestCase {
   });
 }
 
+export function turnTestCase(trace: Trace, golden?: Golden): LLMTestCase {
+  return golden ? goldenToTraceTestCase(golden, trace) : scopeToTestCase(trace);
+}
+
 /** Depth-first list of every span under the given roots. */
 function allSpans(roots: BaseSpan[]): BaseSpan[] {
   const out: BaseSpan[] = [];

@@ -5,11 +5,11 @@ import { DeepEvalError } from "../../errors";
 import { AnyTestCase, EvaluatedCase, MetricData } from "../types";
 import { ErrorConfig } from "../configs";
 import { runMetric, buildTestResult, metricMatchesCase } from "../evaluate";
-import { evaluateTrace, primaryTraceFor } from "../trace-eval";
+import { evaluateTrace, primaryTraceFor, turnTestCase } from "../trace-eval";
 import { buildFailureMessage } from "./errors";
 import { globalResultCollector } from "./collector";
 import { collectTracesFrom } from "./trace-scope";
-import type { Trace } from "../../tracing/tracing";
+import { traceManager, type Trace } from "../../tracing/tracing";
 
 type AnyMetric = BaseMetric | BaseConversationalMetric;
 
@@ -157,6 +157,8 @@ export async function runCallbackMetrics(
   }
 
   const allMetrics: MetricData[] = [];
+  let turnCase: EvaluatedCase | undefined;
+
   for (const trace of traces) {
     // Span metrics run for every trace — each is a real component of the turn —
     // but only the reported trace is judged against the golden.
@@ -164,8 +166,26 @@ export async function runCallbackMetrics(
       errorConfig: STRICT_ERROR_CONFIG,
       golden: trace === primary ? golden : undefined,
     });
-    for (const c of cases) globalResultCollector.record(c);
+    for (const c of cases) {
+      if (c.isTraceScope && trace === primary) {
+        turnCase = c;
+        continue; // recorded below, with the trace attached
+      }
+      globalResultCollector.record({ ...c, displayOnly: true });
+    }
     allMetrics.push(...cases.flatMap((c) => c.metricsData));
+  }
+
+  // Exactly one posted case per turn, carrying the trace
+  if (primary) {
+    const { confidentApiKey: _omit, ...traceApi } =
+      traceManager.createTraceApi(primary);
+    globalResultCollector.record({
+      testCase: turnCase?.testCase ?? turnTestCase(primary, golden),
+      metricsData: turnCase?.metricsData ?? [],
+      runDuration: 0,
+      trace: traceApi,
+    });
   }
 
   return {
