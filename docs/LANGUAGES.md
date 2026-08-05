@@ -66,6 +66,57 @@ metric page, the Others group, and integrations. The cost is that many of the
 pages they do keep link into one of these 12, mostly to
 `evaluation-component-level-llm-evals`, and those links now land on a 501.
 
+`getting-started`, `getting-started-rag`, `getting-started-llm-arena` and
+`getting-started-mcp` have since been brought back to `[python, typescript]`.
+They are the walkthroughs in the group whose narrative does not depend on a
+single Python codebase — install, write a test case, run the CLI, add tracing —
+so each step has a real TypeScript counterpart rather than a half-translation.
+`getting-started` is also the page a TypeScript reader is most likely to arrive
+on first, and a 501 there reads as "this SDK is not ready" rather than "this page
+is not written". The other three followed it because every API each reaches for
+already exists in the TypeScript SDK: for RAG, all five RAG metrics and their
+four turn-level counterparts, the CSV/JSON golden loaders, `evalsIterator()` and
+`ConversationSimulator`; for arena, `ArenaTestCase`, `Contestant`, `ArenaGEval`
+and `compare()`; for MCP, `MCPServer`, the three call classes, and all three MCP
+metrics. `getting-started-agents` and `getting-started-chatbots` stay `[python]`.
+
+All four replaced their hand-rolled judge-model tab set with
+`snippets/models/configure-llm-judge-tabs.mdx`, which is bilingual and already
+maintained. The old tabs enumerated eight Python `deepeval.models` classes each,
+which had no TypeScript half and would have had to be written three more times.
+
+A few spots on these pages are worth knowing about:
+
+- The RAG install `<details>` is a `<Switch>` because the TUI is a `[inspect]`
+  extra in Python and an optional `ink` dependency in TypeScript — a real
+  packaging difference, not a docs gap.
+- RAG's retriever and generator spans call
+  `updateCurrentSpan({ input, retrievalContext })` directly rather than passing a
+  `testCase:`. TypeScript's `LLMTestCase` requires `actualOutput` and a retriever
+  span has none, and this is how `evaluation-llm-tracing` already writes them.
+- Arena's "log prompts and models" is a `<Switch>` over a real SDK difference,
+  not a gap. Both languages merge each `Contestant`'s `hyperparameters` onto that
+  contestant's test run, but a `Prompt` has to reach the platform as a version
+  reference: Python pushes an unpushed prompt for you, while TypeScript's
+  normalizer is a sync path that can only warn, so the TypeScript snippet pulls
+  first. Writing this section also corrected the Python snippet, which passed
+  `hyperparameters=` to `compare()` — that parameter exists in neither SDK; the
+  field lives on `Contestant`.
+- The MCP page's GitHub links to `examples/mcp_evaluation/*.py` are `<Only
+  id="python">`, on the same reasoning as `getting-started`'s full example: they
+  link a `.py` file, not a docs page. There is no `typescript/examples/mcp` yet.
+
+The wrappers on them mark differences in the *SDKs*, not in the docs' own coverage:
+the retry section is a `<Switch>` because TypeScript delegates retries to the
+provider client, and the full example is `<Only id="python">` because it links a
+`.py` file. Links into pages that are still `[python]` — the use-case
+quickstarts, the synthesizer, component-level and end-to-end evals, the
+custom-LLM guide — are left shared, and a TypeScript reader who follows one gets
+the 501 with its switch button. Rewriting the sentence per language to route
+around a link states a permanent difference where there is only an unwritten
+page, and leaves prose to re-merge by hand once the page lands. The 501 is the
+mechanism for that gap; `<Switch>` is not.
+
 `evaluation-flags-and-configs` was in that set and has since been brought back
 to `[python, typescript]`. It is reference rather than walkthrough — a flag and
 field index, section by section — so it splits cleanly per language in a way the
@@ -181,6 +232,17 @@ so the work is writing the `<Switch>` blocks and then widening `languages`.
   content was the right call — a plausible-looking `deepeval/integrations/*`
   import that does not resolve costs a reader more than an honest 501.
 - `frameworks/langgraph`, covered by `integrations/langchain/langgraph-utils.ts`.
+
+The shared component-level snippet
+([`snippets/evaluation/component-level-agent-framework-tabs.mdx`](snippets/evaluation/component-level-agent-framework-tabs.mdx))
+is where this gap is now visible to readers rather than only to us. Its Python
+case is the twelve-framework tab set; its TypeScript case is manual `observe`
+instrumentation plus a `<NotImplemented>` for `deepeval.integrations`, so a
+TypeScript reader on `getting-started` is told the adapters ship but their pages
+do not exist yet. Closing any of the four eligible framework pages above means
+filling that case in with real tabs. Note the snippet lives outside `content/`,
+so `validate-terms` does not scan it and its `<NotImplemented>` is not in the
+count the script prints.
 
 **Integrations with no page at all.** These need writing from scratch; no amount
 of metadata helps.

@@ -1,3 +1,7 @@
+<Switch>
+
+<Case id="python">
+
 <Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Strands", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
 <Tab value="Manual Instrumentation">
 
@@ -5,10 +9,6 @@ Wrap the top-level function with `@observe`, set trace-level fields with `update
 
 <Tabs items={["Async", "Sync"]}>
 <Tab value="Async">
-
-<Switch>
-
-<Case id="python">
 
 ```python title="main.py" showLineNumbers
 import asyncio
@@ -40,52 +40,6 @@ for golden in dataset.evals_iterator():
     task = asyncio.create_task(my_ai_agent(golden.input))
     dataset.evaluate(task)
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript title="main.ts" showLineNumbers
-import { LLMTestCase, metrics } from "deepeval";
-import { observe, updateCurrentSpan, updateCurrentTrace } from "deepeval/tracing";
-...
-
-const myAiAgent = observe({
-  type: "agent",
-  fn: async (query: string): Promise<string> => {
-    const chunks = await retrieve(query);
-    const answer = await generate(query, chunks);
-    updateCurrentTrace({ input: query, output: answer });
-    return answer;
-  },
-});
-
-const retrieve = observe({
-  type: "retriever",
-  fn: async (query: string): Promise<string[]> => ["..."],
-});
-
-const generate = observe({
-  type: "llm",
-  metrics: [new metrics.AnswerRelevancyMetric()],
-  fn: async (query: string, chunks: string[]): Promise<string> => {
-    const response = "..."; // await your LLM call here with `query` and `chunks`
-    updateCurrentSpan({
-      testCase: new LLMTestCase({ input: query, actualOutput: response, retrievalContext: chunks }),
-    });
-    return response;
-  },
-});
-
-for await (const golden of dataset.evalsIterator()) {
-  if (!("input" in golden)) continue;
-  await myAiAgent(golden.input);
-}
-```
-
-</Case>
-
-</Switch>
 
 </Tab>
 <Tab value="Sync">
@@ -870,3 +824,67 @@ See the [CrewAI integration](/integrations/frameworks/crewai) for the full surfa
 
 </Tab>
 </Tabs>
+
+</Case>
+
+<Case id="typescript">
+
+Wrap the top-level function with `observe`, set trace-level fields with `updateCurrentTrace(...)`, and wrap inner functions you want to grade with `observe` too. Attach a component metric by passing `metrics` to `observe` and registering its test case with `updateCurrentSpan({ testCase })`:
+
+```typescript title="main.ts" showLineNumbers
+import {
+  observe,
+  updateCurrentSpan,
+  updateCurrentTrace,
+} from "deepeval/tracing";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+...
+
+const retrieve = observe({
+  type: "retriever",
+  fn: async (query: string): Promise<string[]> => ["..."],
+});
+
+const generate = observe({
+  type: "llm",
+  metrics: [new AnswerRelevancyMetric()],
+  fn: async (query: string, chunks: string[]): Promise<string> => {
+    const response = "..."; // await your LLM call here with `query` and `chunks`
+    updateCurrentSpan({
+      testCase: new LLMTestCase({
+        input: query,
+        actualOutput: response,
+        retrievalContext: chunks,
+      }),
+    });
+    return response;
+  },
+});
+
+const myAiAgent = observe({
+  type: "agent",
+  fn: async (query: string): Promise<string> => {
+    const chunks = await retrieve(query);
+    const answer = await generate(query, chunks);
+    updateCurrentTrace({ input: query, output: answer });
+    return answer;
+  },
+});
+
+for await (const golden of dataset.evalsIterator()) {
+  await myAiAgent((golden as Golden).input);
+}
+```
+
+The same pattern works on any observed function — retrievers, tool wrappers, sub-agents. See [tracing](/docs/evaluation-llm-tracing) for the full surface.
+
+<NotImplemented id="typescript" feature="deepeval.integrations">
+
+The adapters that do ship — LangChain, OpenAI, OpenAI Agents, the Vercel AI SDK and Mastra — don't have pages here yet. Until they land, instrument those apps with `observe` as above: it produces the same trace and span structure an adapter would, so the metrics you attach score the same components.
+
+</NotImplemented>
+
+</Case>
+
+</Switch>

@@ -36,59 +36,7 @@ If you haven't already, we recommend reading the end-to-end and component-level 
 
 `deepeval` loads datasets from Confident AI, a CSV, a JSON file, or directly in code into an `EvaluationDataset`.
 
-<Tabs items={["Pull from Confident AI", "Load from CSV", "Load from JSON", "In Code"]}>
-<Tab value="Pull from Confident AI">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.pull(alias="My Evals Dataset")
-```
-
-</Tab>
-<Tab value="Load from CSV">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.add_goldens_from_csv_file(
-    file_path="example.csv",
-    input_col_name="query",
-)
-```
-
-</Tab>
-<Tab value="Load from JSON">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.add_goldens_from_json_file(
-    file_path="example.json",
-    input_key_name="query",
-)
-```
-
-</Tab>
-<Tab value="In Code">
-
-```python
-from deepeval.dataset import Golden, EvaluationDataset
-
-goldens = [
-    Golden(input="What is your name?"),
-    Golden(input="Choose a number between 1 and 100"),
-    # ...
-]
-
-dataset = EvaluationDataset(goldens=goldens)
-```
-
-</Tab>
-</Tabs>
+<include cwd>snippets/datasets/load-dataset.mdx#single-turn</include>
 
 :::info[Multi-turn datasets]
 For [multi-turn](/docs/evaluation-end-to-end-multi-turn) evals, use `ConversationalGolden` instead of `Golden`. See [the datasets page](/docs/evaluation-datasets#load-dataset) for the full surface.

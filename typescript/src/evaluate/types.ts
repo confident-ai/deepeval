@@ -6,6 +6,7 @@ import {
   ArenaTestCase,
   ToolCallType,
 } from "@/test-case";
+import type { Hyperparameters } from "@/evaluate/hyperparameters";
 
 // Mirrors deepeval/evaluate/types.py (+ test_run MetricData), trimmed to what
 // the local runner needs today. Extend toward the Python shape as we grow.
@@ -131,5 +132,5 @@ export interface ContestantRun {
   runDuration: number;
   evaluationCost: number;
   hasCost: boolean;
-  hyperparameters: Record<string, unknown>;
+  hyperparameters: Hyperparameters;
 }

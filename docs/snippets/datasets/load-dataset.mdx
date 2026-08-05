@@ -1,0 +1,330 @@
+<section id="single-turn">
+
+<Tabs items={["In Code", "Pull from Confident AI", "Load from CSV", "Load from JSON"]}>
+<Tab value="In Code">
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.dataset import Golden, EvaluationDataset
+
+goldens = [
+    Golden(input="What is your name?"),
+    Golden(input="Choose a number between 1 and 100"),
+    # ...
+]
+
+dataset = EvaluationDataset(goldens=goldens)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+
+const goldens = [
+  new Golden({ input: "What is your name?" }),
+  new Golden({ input: "Choose a number between 1 and 100" }),
+  // ...
+];
+
+const dataset = new EvaluationDataset({ goldens });
+```
+
+</Case>
+
+</Switch>
+
+The dataset lives only for this run — no push, no save. Perfect for quickstarts and one-off evaluations.
+
+</Tab>
+<Tab value="Pull from Confident AI">
+
+You can load entire datasets on Confident AI's cloud in one line of code.
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(alias="My Evals Dataset")
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset();
+await dataset.pull({ alias: "My Evals Dataset" });
+```
+
+</Case>
+
+</Switch>
+
+Non-technical domain experts can **create, annotate, and comment** on datasets on Confident AI. You can also upload datasets in CSV format, or push synthetic datasets created in `deepeval` to Confident AI in one line of code.
+
+For more information, visit the [Confident AI datasets section.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens)
+
+</Tab>
+<Tab value="Load from CSV">
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.add_goldens_from_csv_file(
+    file_path="example.csv",
+    input_col_name="query",
+)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset();
+await dataset.addGoldensFromCSV({
+  filePath: "example.csv",
+  keys: { input: "query" },
+});
+```
+
+Column names default to `deepeval`'s own, so `keys` only has to name the ones that differ.
+
+</Case>
+
+</Switch>
+
+For more advanced options, like loading `context` and `tools_called` columns or renaming every column, see [loading a dataset](/docs/evaluation-datasets#load-dataset).
+
+</Tab>
+<Tab value="Load from JSON">
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.add_goldens_from_json_file(
+    file_path="example.json",
+    input_key_name="query",
+)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset();
+await dataset.addGoldensFromJSON({
+  filePath: "example.json",
+  keys: { input: "query" },
+});
+```
+
+</Case>
+
+</Switch>
+
+For more advanced options, like loading `context` and `tools_called` keys or reading goldens a line at a time from a `.jsonl` file, see [loading a dataset](/docs/evaluation-datasets#load-dataset).
+
+</Tab>
+</Tabs>
+
+:::note
+An `EvaluationDataset` holds either single-turn or multi-turn goldens, never both. A file that mixes the two raises an error.
+:::
+
+</section>
+
+<section id="multi-turn">
+
+<Tabs items={["In Code", "Pull from Confident AI", "Load from CSV", "Load from JSON"]}>
+<Tab value="In Code">
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.dataset import ConversationalGolden, EvaluationDataset
+
+goldens = [
+    ConversationalGolden(
+        scenario="Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
+        expected_outcome="Successful purchase of a ticket.",
+        user_description="Andy Byron is the CEO of Astronomer.",
+    ),
+    # ...
+]
+
+dataset = EvaluationDataset(goldens=goldens)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { ConversationalGolden, EvaluationDataset } from "deepeval/dataset";
+
+const goldens = [
+  new ConversationalGolden({
+    scenario:
+      "Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
+    expectedOutcome: "Successful purchase of a ticket.",
+    userDescription: "Andy Byron is the CEO of Astronomer.",
+  }),
+  // ...
+];
+
+const dataset = new EvaluationDataset({ goldens });
+```
+
+</Case>
+
+</Switch>
+
+Multi-turn goldens describe a scenario to simulate, not pre-written turns.
+
+</Tab>
+<Tab value="Pull from Confident AI">
+
+You can load entire datasets on Confident AI's cloud in one line of code.
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(alias="My Multi-Turn Dataset")
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset();
+await dataset.pull({ alias: "My Multi-Turn Dataset" });
+```
+
+</Case>
+
+</Switch>
+
+Non-technical domain experts can **create, annotate, and comment** on datasets on Confident AI. You can also upload datasets in CSV format, or push synthetic datasets created in `deepeval` to Confident AI in one line of code.
+
+For more information, visit the [Confident AI datasets section.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens)
+
+</Tab>
+<Tab value="Load from CSV">
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.add_goldens_from_csv_file(
+    file_path="conversations.csv",
+    scenario_col_name="scenario",
+    expected_outcome_col_name="expected_outcome",
+    user_description_col_name="user_description",
+)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset();
+await dataset.addGoldensFromCSV({ filePath: "conversations.csv" });
+```
+
+A row carrying a `scenario` column becomes a `ConversationalGolden`, so no `keys` override is needed when your columns already use `deepeval`'s names.
+
+</Case>
+
+</Switch>
+
+For more advanced options, like loading `turns` and `context` columns or renaming every column, see [loading a dataset](/docs/evaluation-datasets#load-dataset).
+
+</Tab>
+<Tab value="Load from JSON">
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.add_goldens_from_json_file(
+    file_path="conversations.json",
+    scenario_key_name="scenario",
+    expected_outcome_key_name="expected_outcome",
+    user_description_key_name="user_description",
+)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset();
+await dataset.addGoldensFromJSON({ filePath: "conversations.json" });
+```
+
+</Case>
+
+</Switch>
+
+For more advanced options, like loading `turns` and `context` keys or reading goldens a line at a time from a `.jsonl` file, see [loading a dataset](/docs/evaluation-datasets#load-dataset).
+
+</Tab>
+</Tabs>
+
+:::note
+An `EvaluationDataset` holds either single-turn or multi-turn goldens, never both. A file that mixes the two raises an error.
+:::
+
+</section>

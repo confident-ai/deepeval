@@ -16,7 +16,10 @@ import {
   ContestantRun,
   aggregateSuccess,
 } from "@/evaluate/types";
-import type { ProcessedHyperparameters } from "@/evaluate/hyperparameters";
+import {
+  processHyperparameters,
+  type ProcessedHyperparameters,
+} from "@/evaluate/hyperparameters";
 
 // --- shared leaf conversions (zod parse validates + strips extra fields) ---
 
@@ -361,7 +364,7 @@ export async function postExperiment(
     runDuration: e.runDuration,
     evaluationCost: e.hasCost ? e.evaluationCost : undefined,
     hyperparameters: Object.keys(e.hyperparameters).length
-      ? e.hyperparameters
+      ? processHyperparameters(e.hyperparameters)
       : undefined,
   }));
 

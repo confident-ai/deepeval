@@ -191,68 +191,7 @@ See [Conversation Simulator → Model Callback](/docs/conversation-simulator-mod
 
 A `ConversationalGolden` describes the situation the simulated user is in, what success looks like, and who they are. Wrap a list of them in an `EvaluationDataset` so the simulator can iterate. Pick whichever source fits where your goldens live today:
 
-<Tabs items={["In Code", "Pull from Confident AI", "Load from CSV", "Load from JSON"]}>
-<Tab value="In Code">
-
-```python
-from deepeval.dataset import ConversationalGolden, EvaluationDataset
-
-goldens = [
-    ConversationalGolden(
-        scenario="Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
-        expected_outcome="Successful purchase of a ticket.",
-        user_description="Andy Byron is the CEO of Astronomer.",
-    ),
-    # ...
-]
-
-dataset = EvaluationDataset(goldens=goldens)
-```
-
-The dataset lives only for this run — no push, no save. Perfect for quickstarts and one-off evaluations.
-
-</Tab>
-<Tab value="Pull from Confident AI">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.pull(alias="My multi-turn dataset")
-```
-
-</Tab>
-<Tab value="Load from CSV">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.add_goldens_from_csv_file(
-    file_path="conversations.csv",
-    scenario_col_name="scenario",
-    expected_outcome_col_name="expected_outcome",
-    user_description_col_name="user_description",
-)
-```
-
-</Tab>
-<Tab value="Load from JSON">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.add_goldens_from_json_file(
-    file_path="conversations.json",
-    scenario_key_name="scenario",
-    expected_outcome_key_name="expected_outcome",
-    user_description_key_name="user_description",
-)
-```
-
-</Tab>
-</Tabs>
+<include cwd>snippets/datasets/load-dataset.mdx#multi-turn</include>
 
 :::tip
 This page covers **sourcing** goldens for an eval run only. To **persist** a dataset (push to Confident AI, save as CSV/JSON, version it across runs), see [the datasets page](/docs/evaluation-datasets) for the full storage and lifecycle story.
