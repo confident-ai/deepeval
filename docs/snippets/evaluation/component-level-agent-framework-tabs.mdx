@@ -78,7 +78,7 @@ The same pattern works on any `@observe`'d function — retrievers, tool wrapper
 </Tab>
 <Tab value="LangChain">
 
-Build your agent with `create_agent`, then pass `deepeval`'s `CallbackHandler` to its `invoke` / `ainvoke` method inside the loop. Stage a component metric for the next LLM call with `next_llm_span(...)` — the `CallbackHandler` drains it onto the first LLM span LangChain opens during the agent run:
+Build your agent with create_agent, pass deepeval's CallbackHandler to its invoke / ainvoke method, and set your metrics on the dataset before the loop. The CallbackHandler traces the agent automatically; the dataset-level metrics will score the resulting spans once the run finishes.
 
 <Tabs items={["Async", "Sync"]}>
 <Tab value="Async">
@@ -86,7 +86,6 @@ Build your agent with `create_agent`, then pass `deepeval`'s `CallbackHandler` t
 ```python title="langchain_app.py" showLineNumbers
 import asyncio
 from langchain.agents import create_agent
-from deepeval.tracing import next_llm_span
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.metrics import AnswerRelevancyMetric
 ...
@@ -101,12 +100,13 @@ agent = create_agent(
     system_prompt="Be concise.",
 )
 
+dataset.metrics = [AnswerRelevancyMetric()]
+
 async def run_agent(prompt: str):
-    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
-        return await agent.ainvoke(
-            {"messages": [{"role": "user", "content": prompt}]},
-            config={"callbacks": [CallbackHandler()]},
-        )
+    return await agent.ainvoke(
+        {"messages": [{"role": "user", "content": prompt}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
 
 for golden in dataset.evals_iterator():
     task = asyncio.create_task(run_agent(golden.input))
@@ -118,7 +118,6 @@ for golden in dataset.evals_iterator():
 
 ```python title="langchain_app.py" showLineNumbers
 from langchain.agents import create_agent
-from deepeval.tracing import next_llm_span
 from deepeval.evaluate import AsyncConfig
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.metrics import AnswerRelevancyMetric
@@ -134,23 +133,24 @@ agent = create_agent(
     system_prompt="Be concise.",
 )
 
+dataset.metrics = [AnswerRelevancyMetric()]
+
 for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=False)):
-    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
-        agent.invoke(
-            {"messages": [{"role": "user", "content": golden.input}]},
-            config={"callbacks": [CallbackHandler()]},
-        )
+    agent.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
 ```
 
 </Tab>
 </Tabs>
 
-`next_llm_span` is one-shot — only the first LLM span in the agent run picks up the metric, so later turns inside `create_agent`'s loop won't be scored. To score every LLM call, drive the loop yourself (`next_llm_span` per `agent.invoke(...)`) or score end-to-end with trace-level metrics on `CallbackHandler(metrics=[...])`. For retrievers, use `next_retriever_span(...)` the same way; for deterministic tool calls, prefer `next_tool_span(...)` + `update_current_span(...)`. See the [LangChain integration](/integrations/frameworks/langchain) for the full surface.
+By declaring `dataset.metrics` before the loop, the metric is visible when `evals_iterator()` starts. The `CallbackHandler` drains it onto the first LLM span the LangChain agent opens. If you need to score individual tool calls or retrievers, see the [LangChain integration](/integrations/frameworks/langchain) for advanced patterns like `next_tool_span` or `next_retriever_span`.
 
 </Tab>
 <Tab value="LangGraph">
 
-Wire your `StateGraph`, then pass `deepeval`'s `CallbackHandler` to its `invoke` / `ainvoke` method inside the loop. Stage a component metric for the next LLM call with `next_llm_span(...)` — the `CallbackHandler` drains it onto the first LLM span LangGraph opens during the graph run:
+Wire your `StateGraph`, pass `deepeval`'s `CallbackHandler` to its `invoke` / `ainvoke` method, and declare your metrics on the dataset before the loop. The `CallbackHandler` drains the dataset-level metric onto the first LLM span the graph emits.
 
 <Tabs items={["Async", "Sync"]}>
 <Tab value="Async">
@@ -159,7 +159,6 @@ Wire your `StateGraph`, then pass `deepeval`'s `CallbackHandler` to its `invoke`
 import asyncio
 from langchain.chat_models import init_chat_model
 from langgraph.graph import StateGraph, MessagesState, START, END
-from deepeval.tracing import next_llm_span
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.metrics import AnswerRelevancyMetric
 ...
@@ -177,12 +176,13 @@ graph = (
     .compile()
 )
 
+dataset.metrics = [AnswerRelevancyMetric()]
+
 async def run_graph(prompt: str):
-    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
-        return await graph.ainvoke(
-            {"messages": [{"role": "user", "content": prompt}]},
-            config={"callbacks": [CallbackHandler()]},
-        )
+    return await graph.ainvoke(
+        {"messages": [{"role": "user", "content": prompt}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
 
 for golden in dataset.evals_iterator():
     task = asyncio.create_task(run_graph(golden.input))
@@ -195,7 +195,6 @@ for golden in dataset.evals_iterator():
 ```python title="langgraph_app.py" showLineNumbers
 from langchain.chat_models import init_chat_model
 from langgraph.graph import StateGraph, MessagesState, START, END
-from deepeval.tracing import next_llm_span
 from deepeval.evaluate import AsyncConfig
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.metrics import AnswerRelevancyMetric
@@ -214,18 +213,19 @@ graph = (
     .compile()
 )
 
+dataset.metrics = [AnswerRelevancyMetric()]
+
 for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=False)):
-    with next_llm_span(metrics=[AnswerRelevancyMetric()]):
-        graph.invoke(
-            {"messages": [{"role": "user", "content": golden.input}]},
-            config={"callbacks": [CallbackHandler()]},
-        )
+    graph.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
 ```
 
 </Tab>
 </Tabs>
 
-`next_llm_span` is one-shot — only the first LLM span the graph emits picks up the metric, so later loop turns through the `chatbot` node won't be scored. To score every LLM call, drive the loop yourself (`next_llm_span` per `graph.invoke(...)`) or score end-to-end with trace-level metrics on `CallbackHandler(metrics=[...])`. See the [LangGraph integration](/integrations/frameworks/langgraph) for the full surface.
+By declaring `dataset.metrics` before the loop, the metric is visible when `evals_iterator()` starts. The `CallbackHandler` drains it onto the first LLM span the graph emits. To score every LLM call individually, you can set metrics directly on the `CallbackHandler` (`CallbackHandler(metrics=[...])`). See the [LangGraph integration](/integrations/frameworks/langgraph) for the full surface.
 
 </Tab>
 <Tab value="OpenAI">
