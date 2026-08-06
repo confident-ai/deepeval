@@ -138,6 +138,58 @@ def _invoke_ok(runner: CliRunner, argv: list[str]) -> str:
     return result.output
 
 
+def _assert_root_help_renders(output: str) -> None:
+    normalized_output = _normalize_cli_output(output)
+    assert "Usage: deepeval [OPTIONS] COMMAND [ARGS]..." in normalized_output
+    assert "Commands" in normalized_output
+    assert "settings" in normalized_output
+
+
+def test_root_help_renders(runner: CliRunner) -> None:
+    result = runner.invoke(cli_app, ["--help"], catch_exceptions=False)
+
+    assert result.exit_code == 0, result.output
+    _assert_root_help_renders(result.output)
+
+
+def test_root_no_args_renders_help(runner: CliRunner) -> None:
+    result = runner.invoke(cli_app, [], catch_exceptions=False)
+
+    # Click 8.2 changed no-args help for groups from exit code 0 to 2.
+    # DeepEval still supports Python 3.9, where the lock resolves Click 8.1.x,
+    # so keep this regression focused on the cross-version contract: help
+    # renders without a Typer/Click exception.
+    assert result.exit_code in (0, 2), result.output
+    _assert_root_help_renders(result.output)
+
+
+@pytest.mark.parametrize(
+    ("argv", "expected_usage"),
+    [
+        (
+            ["settings", "--help"],
+            "Usage: deepeval settings [OPTIONS] [FILTERS]...",
+        ),
+        (["inspect", "--help"], "Usage: deepeval inspect [OPTIONS] [PATH]"),
+        (
+            ["set-confident-region", "--help"],
+            "Usage: deepeval set-confident-region [OPTIONS] REGION:{US|EU|AU}",
+        ),
+        (
+            ["test", "--help"],
+            "Usage: deepeval test [OPTIONS] COMMAND [ARGS]...",
+        ),
+    ],
+)
+def test_representative_command_help_renders(
+    runner: CliRunner, argv: list[str], expected_usage: str
+) -> None:
+    result = runner.invoke(cli_app, argv, catch_exceptions=False)
+
+    assert result.exit_code == 0, result.output
+    assert expected_usage in _normalize_cli_output(result.output)
+
+
 def test_settings_set_coerces_and_persists_dotenv(
     runner: CliRunner, env_path: Path, settings: Settings
 ) -> None:
