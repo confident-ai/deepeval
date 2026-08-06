@@ -61,6 +61,17 @@ export const ApiToolCallSchema = z.object({
 });
 export type ApiToolCall = z.infer<typeof ApiToolCallSchema>;
 
+export const SendTestCaseResponseBodySchema = z.object({
+  actualOutput: z.string().optional(),
+  retrievalContext: z.array(z.string()).optional(),
+  toolsCalled: z.array(ApiToolCallSchema).optional(),
+  expectedTools: z.array(ApiToolCallSchema).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+});
+export type SendTestCaseResponseBody = z.infer<
+  typeof SendTestCaseResponseBodySchema
+>;
+
 export const ApiMetricDataSchema = z.object({
   name: z.string(),
   threshold: z.number(),

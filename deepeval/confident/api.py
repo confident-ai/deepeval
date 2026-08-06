@@ -154,6 +154,7 @@ class Endpoints(Enum):
     GOLDEN_ENDPOINT = "/v1/goldens/:goldenId"
 
     TEST_RUN_ENDPOINT = "/v1/test-run"
+    TEST_RUN_EVALUATE_ENDPOINT = "/v1/test-runs/evaluate/:testCaseId"
     EXPERIMENT_ENDPOINT = "/v1/experiment"
     TRACES_ENDPOINT = "/v1/traces"
     ANNOTATIONS_ENDPOINT = "/v1/annotations"
