@@ -15,7 +15,6 @@ import re
 import os
 import mimetypes
 import base64
-import weakref
 import warnings
 from dataclasses import dataclass, field
 from urllib.parse import urlparse, unquote
@@ -257,7 +256,7 @@ class ToolCall(BaseModel):
         validation_alias=AliasChoices("inputParameters", "input_parameters"),
     )
 
-    @field_serializer('type')
+    @field_serializer("type")
     def serialize_type(self, value: ToolCallType) -> str:
         return value.value
 
