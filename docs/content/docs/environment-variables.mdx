@@ -304,6 +304,20 @@ If `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are not set, the AWS SDK defa
 </details>
 
 <details>
+<summary>OrcaRouter</summary>
+
+| Variable                | Values           | Effect                                                         |
+| ----------------------- | ---------------- | -------------------------------------------------------------- |
+| `USE_ORCAROUTER_MODEL`     | `1` / `0` / `unset`      | Prefer OrcaRouter as the default LLM provider (where applicable). |
+| `ORCAROUTER_API_KEY`       | `string` / unset | OrcaRouter API key.                                               |
+| `ORCAROUTER_MODEL_NAME`    | `string` / unset | Optional default model name passed to OrcaRouter.                 |
+| `ORCAROUTER_BASE_URL`      | `string` / unset | Optional OrcaRouter base URL.                                     |
+| `ORCAROUTER_COST_PER_INPUT_TOKEN`  | `float` / unset  | Optional input-token cost used for cost reporting.              |
+| `ORCAROUTER_COST_PER_OUTPUT_TOKEN` | `float` / unset  | Optional output-token cost used for cost reporting.              |
+
+</details>
+
+<details>
 <summary>Embeddings</summary>
 
 | Variable                          | Values           | Effect                                                                                |

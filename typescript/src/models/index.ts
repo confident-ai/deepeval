@@ -38,6 +38,10 @@ export {
   type OpenRouterModelOptions,
 } from "./gateways/openrouter-model";
 export {
+  OrcaRouterModel,
+  type OrcaRouterModelOptions,
+} from "./gateways/orcarouter-model";
+export {
   PortkeyModel,
   type PortkeyModelOptions,
 } from "./gateways/portkey-model";

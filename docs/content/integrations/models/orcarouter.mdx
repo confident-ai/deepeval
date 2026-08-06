@@ -1,0 +1,123 @@
+---
+id: orcarouter
+title: OrcaRouter
+sidebar_label: OrcaRouter
+---
+
+`deepeval`'s integration with OrcaRouter allows you to use the OrcaRouter gateway, connecting any [OrcaRouter supported model](https://www.orcarouter.ai/models) to power all of `deepeval`'s metrics.
+
+### Command Line
+
+To configure your OrcaRouter model through the CLI, run the following command:
+
+```bash
+deepeval set-orcarouter \
+    --model "openai/gpt-5.4" \ # Ex: openai/gpt-5.4
+    --base-url "https://api.orcarouter.ai/v1" \
+    --temperature=0 \
+    --prompt-api-key
+```
+
+:::info
+The CLI command above sets OrcaRouter as the default provider for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset OrcaRouter:
+
+```bash
+deepeval unset-orcarouter
+```
+:::
+
+:::tip[Persisting settings]
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
+### Python
+
+Alternatively, you can define `OrcaRouterModel` directly in Python code:
+
+<Tabs items={["Python", "ENV"]}>
+<Tab value="Python">
+
+```python
+from deepeval.models import OrcaRouterModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = OrcaRouterModel(
+    model="openai/gpt-5.4",
+    api_key="sk-orca-your-orcarouter-api-key",
+    # Optional: override the default OrcaRouter endpoint
+    base_url="https://api.orcarouter.ai/v1",
+    # Optional: pass OrcaRouter headers via **kwargs
+    default_headers={
+        "HTTP-Referer": "https://your-site.com",
+        "X-Title": "My eval pipeline",
+    },
+)
+
+answer_relevancy = AnswerRelevancyMetric(model=model)
+```
+
+</Tab>
+<Tab value="ENV">
+
+To use any OrcaRouter model directly in `deepeval`, set the `USE_ORCAROUTER_MODEL=1` in your `env` and simply pass the name of your desired model in your metric initialization:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="openai/gpt-5.4",
+)
+```
+
+You should also set the other necessary vars like `ORCAROUTER_API_KEY` to be able to use the OrcaRouter models as shown above.
+
+</Tab>
+</Tabs>
+
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `OrcaRouterModel`:
+
+- [Optional] `model`: A string specifying the OrcaRouter model to use. Defaults to `ORCAROUTER_MODEL_NAME` if set; otherwise falls back to "openai/gpt-5.4".
+- [Optional] `api_key`: A string specifying your OrcaRouter API key for authentication. Defaults to `ORCAROUTER_API_KEY` if not passed; raises an error at runtime if unset.
+- [Optional] `base_url`: A string specifying the base URL for the OrcaRouter API endpoint. Defaults to `ORCAROUTER_BASE_URL` if set; otherwise falls back to "https://api.orcarouter.ai/v1".
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `ORCAROUTER_COST_PER_INPUT_TOKEN` if not passed; falls back to `None` if unset (cost is then reported as unknown).
+- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `ORCAROUTER_COST_PER_OUTPUT_TOKEN` if not passed; falls back to `None` if unset (cost is then reported as unknown).
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to OrcaRouter's `chat.completions.create(...)` call
+
+Any additional `**kwargs` you would like to use for your `OrcaRouter` client can be passed directly to `OrcaRouterModel(...)`. These are forwarded to the underlying OpenAI client constructor. We recommend double-checking the parameters and headers supported by your chosen model in the [official OrcaRouter docs](https://docs.orcarouter.ai).
+
+:::tip[Routing across upstreams]
+OrcaRouter model ids are namespaced by upstream (`openai/gpt-5.4`, `anthropic/claude-opus-4.8`, `google/gemini-3.5-flash`), so switching the judge model for a metric is a one-string change. Named routers such as `orcarouter/auto` pick an upstream per request instead of pinning one.
+
+Routing preferences are passed through `generation_kwargs`, which the gateway reads from the request body:
+
+```python
+model = OrcaRouterModel(
+    model="orcarouter/auto",
+    generation_kwargs={
+        "extra_body": {
+            "models": ["openai/gpt-5.4", "anthropic/claude-opus-4.8"],
+            "route": "fallback",
+        }
+    },
+)
+```
+
+Note that a router picking freely across a pool can land on an upstream that does not support strict structured output, which `deepeval` relies on for metric verdicts. Pin an explicit model id if you need that guarantee.
+:::
+
+:::tip
+Pass headers specific to OrcaRouter via kwargs:
+
+```python
+model = OrcaRouterModel(
+    model="openai/gpt-5.4",
+    api_key="sk-orca-your-orcarouter-api-key",
+    default_headers={
+        "HTTP-Referer": "https://your-site.com",
+        "X-Title": "My eval pipeline",
+    },
+)
+```
+:::

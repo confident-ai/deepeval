@@ -5,6 +5,7 @@
     "azure-openai",
     "ollama",
     "openrouter",
+    "orcarouter",
     "anthropic",
     "amazon-bedrock",
     "gemini",

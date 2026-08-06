@@ -6,6 +6,10 @@ DEFAULT_GPT_MODEL = "gpt-5.4"
 # OpenRouter uses provider/model format (e.g., "openai/gpt-4", "anthropic/claude-3-opus")
 # DeepEval does not validate OpenRouter model strings.
 DEFAULT_OPENROUTER_MODEL = f"openai/{DEFAULT_GPT_MODEL}"
+# OrcaRouter uses the same provider/model namespacing (e.g. "openai/gpt-5.4",
+# "anthropic/claude-opus-4.8"). DeepEval does not validate OrcaRouter model
+# strings either.
+DEFAULT_ORCAROUTER_MODEL = f"openai/{DEFAULT_GPT_MODEL}"
 
 ModelDataFactory = Callable[[], DeepEvalModelData]
 ModelDataValue = Union[DeepEvalModelData, ModelDataFactory]

@@ -36,6 +36,7 @@ class ProviderSlug(str, Enum):
     LOCAL = "local"
     OLLAMA = "ollama"
     OPENROUTER = "openrouter"
+    ORCAROUTER = "orcarouter"
     PORTKEY = "portkey"
 
 

@@ -679,6 +679,28 @@ class Settings(BaseSettings):
         None, description="OpenRouter base URL (if using a custom endpoint)."
     )
 
+    # OrcaRouter
+    USE_ORCAROUTER_MODEL: Optional[bool] = Field(
+        None, description="Select OrcaRouter as the active LLM provider."
+    )
+    ORCAROUTER_API_KEY: Optional[SecretStr] = Field(
+        None, description="OrcaRouter API key."
+    )
+    ORCAROUTER_MODEL_NAME: Optional[str] = Field(
+        None, description="OrcaRouter model name (e.g. `openai/gpt-5.4`)."
+    )
+    ORCAROUTER_COST_PER_INPUT_TOKEN: Optional[float] = Field(
+        None,
+        description="OrcaRouter input token cost (used for cost reporting).",
+    )
+    ORCAROUTER_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
+        None,
+        description="OrcaRouter output token cost (used for cost reporting).",
+    )
+    ORCAROUTER_BASE_URL: Optional[AnyUrl] = Field(
+        None, description="OrcaRouter base URL (if using a custom endpoint)."
+    )
+
     # Vertex AI
     VERTEX_AI_MODEL_NAME: Optional[str] = Field(
         None,
@@ -1036,6 +1058,7 @@ class Settings(BaseSettings):
         "USE_AZURE_OPENAI_EMBEDDING",
         "USE_LOCAL_EMBEDDINGS",
         "USE_PORTKEY_MODEL",
+        "USE_ORCAROUTER_MODEL",
         mode="before",
     )
     @classmethod
