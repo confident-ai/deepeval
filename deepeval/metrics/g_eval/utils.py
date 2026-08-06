@@ -1,7 +1,9 @@
 from typing import List, Optional, Union, Tuple, Dict
 from openai.types.chat.chat_completion import ChatCompletion
 import math
+import warnings
 
+from deepeval.errors import DeepEvalError
 from deepeval.models import DeepEvalBaseLLM, GPTModel, AzureOpenAIModel
 from deepeval.test_case import (
     SingleTurnParams,
@@ -15,8 +17,7 @@ from deepeval.models.llms.constants import OPENAI_MODELS_DATA
 from deepeval.test_case.conversational_test_case import ConversationalTestCase
 
 
-from pydantic import BaseModel, Field
-from typing import Optional, List, Tuple
+from pydantic import Field
 
 
 class APIRubric(BaseModel):
@@ -381,6 +382,36 @@ def calculate_weighted_summed_score(
         return weighted_summed_score
     except Exception:
         raise
+
+
+G_EVAL_SCORE_MODES = ("auto", "logprobs_weighted", "top_token")
+
+
+def resolve_weighted_score(
+    raw_score: int,
+    raw_response: ChatCompletion,
+    score_mode: str,
+) -> Union[int, float]:
+    if score_mode == "top_token":
+        return raw_score
+    try:
+        return calculate_weighted_summed_score(raw_score, raw_response)
+    except (KeyError, AttributeError, TypeError, ValueError) as e:
+        if score_mode == "logprobs_weighted":
+            raise DeepEvalError(
+                "Unable to compute the logprobs-weighted G-Eval score because "
+                "the evaluator model's response did not include usable "
+                f"logprobs ({type(e).__name__}: {e}). Set "
+                "score_mode='top_token' to score without logprobs."
+            ) from e
+        warnings.warn(
+            "G-Eval could not compute the logprobs-weighted score "
+            f"({type(e).__name__}: {e}); falling back to the raw top token "
+            "score. Set score_mode='logprobs_weighted' to raise instead, or "
+            "score_mode='top_token' to silence this warning.",
+            UserWarning,
+        )
+        return raw_score
 
 
 def number_evaluation_steps(evaluation_steps: List[str]) -> str:
