@@ -24,7 +24,9 @@ def test_instrument_google_adk_runs_without_confident_api_key(monkeypatch):
     # No Confident key configured anywhere.
     monkeypatch.setattr(gadk_otel, "get_confident_api_key", lambda: None)
     monkeypatch.setattr(
-        gadk_otel, "_require_google_adk_instrumentor", lambda: _DummyInstrumentor
+        gadk_otel,
+        "_require_google_adk_instrumentor",
+        lambda: _DummyInstrumentor,
     )
 
     captured = {}
@@ -49,7 +51,9 @@ def test_instrument_google_adk_forwards_explicit_key(monkeypatch):
         lambda: (_ for _ in ()).throw(AssertionError("must not be consulted")),
     )
     monkeypatch.setattr(
-        gadk_otel, "_require_google_adk_instrumentor", lambda: _DummyInstrumentor
+        gadk_otel,
+        "_require_google_adk_instrumentor",
+        lambda: _DummyInstrumentor,
     )
 
     captured = {}
