@@ -476,14 +476,19 @@ def accrue_token_usage(
     metric.
 
     Native models return their cost as an ``EvaluationCost`` (a ``float``
-    subclass carrying ``input_tokens``/``output_tokens``). Costs from providers
-    that aren't wrapped yet — or ``None`` when pricing is unknown — are plain
-    floats with no token data, so tokens are only accrued when ``cost`` actually
-    carries them. Call this right after ``metric._accrue_cost(cost)`` so token
-    usage tracks cost exactly.
+    subclass carrying input, output, and cache input token counts). Costs from
+    providers that aren't wrapped yet — or ``None`` when pricing is unknown —
+    are plain floats with no token data, so tokens are only accrued when
+    ``cost`` actually carries them. Call this right after
+    ``metric._accrue_cost(cost)`` so token usage tracks cost exactly.
     """
     if isinstance(cost, EvaluationCost):
-        metric._accrue_tokens(cost.input_tokens, cost.output_tokens)
+        metric._accrue_tokens(
+            cost.input_tokens,
+            cost.output_tokens,
+            cost.cache_read_input_tokens,
+            cost.cache_creation_input_tokens,
+        )
 
 
 def verdict_from_json(

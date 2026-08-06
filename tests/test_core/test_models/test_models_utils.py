@@ -1,10 +1,13 @@
 import pytest
 import logging
+from types import SimpleNamespace
 from pydantic import SecretStr
 
 from deepeval.errors import DeepEvalError
 from deepeval.models.base_model import DeepEvalModelData
 from deepeval.models.utils import (
+    EvaluationCost,
+    get_cache_token_counts,
     require_secret_api_key,
     require_costs,
     normalize_kwargs_and_extract_aliases,
@@ -99,6 +102,33 @@ def test_normalize_kwargs_and_extract_aliases_no_alias_usage_no_logs(caplog):
 
     # no warnings logged
     assert caplog.records == []
+
+
+def test_evaluation_cost_carries_cache_token_counts():
+    cost = EvaluationCost(
+        0.25,
+        input_tokens=100,
+        output_tokens=20,
+        cache_read_input_tokens=40,
+        cache_creation_input_tokens=10,
+    )
+
+    assert cost == 0.25
+    assert cost.input_tokens == 100
+    assert cost.output_tokens == 20
+    assert cost.cache_read_input_tokens == 40
+    assert cost.cache_creation_input_tokens == 10
+
+
+def test_get_cache_token_counts_preserves_explicit_zero_values():
+    usage = SimpleNamespace(
+        prompt_tokens_details=SimpleNamespace(
+            cached_tokens=0,
+            cache_write_tokens=0,
+        ),
+    )
+
+    assert get_cache_token_counts(usage) == (0, 0)
 
 
 ##############################

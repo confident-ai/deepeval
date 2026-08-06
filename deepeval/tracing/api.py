@@ -51,6 +51,12 @@ class MetricData(BaseModel):
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
     input_tokens: Optional[int] = Field(None, alias="inputTokenCount")
     output_tokens: Optional[int] = Field(None, alias="outputTokenCount")
+    cache_read_input_tokens: Optional[int] = Field(
+        None, alias="cacheReadInputTokenCount"
+    )
+    cache_creation_input_tokens: Optional[int] = Field(
+        None, alias="cacheCreationInputTokenCount"
+    )
     verbose_logs: Optional[str] = Field(None, alias="verboseLogs")
 
 

@@ -872,6 +872,39 @@ def test_openai_calculate_cost_returns_correct_value(settings):
     assert cost == expected
 
 
+@patch("deepeval.models.llms.openai_model.OpenAI")
+def test_openai_generate_preserves_cache_token_usage(
+    mock_openai_class, settings
+):
+    mock_client = Mock()
+    mock_openai_class.return_value = mock_client
+    mock_completion = SimpleNamespace(
+        choices=[SimpleNamespace(message=SimpleNamespace(content="cached"))],
+        usage=SimpleNamespace(
+            prompt_tokens=100,
+            completion_tokens=20,
+            prompt_tokens_details=SimpleNamespace(
+                cached_tokens=40,
+                cache_write_tokens=12,
+            ),
+        ),
+    )
+    mock_client.chat.completions.create.return_value = mock_completion
+
+    with settings.edit(persist=False):
+        settings.OPENAI_API_KEY = "test-key"
+        settings.OPENAI_COST_PER_INPUT_TOKEN = 0.005
+        settings.OPENAI_COST_PER_OUTPUT_TOKEN = 0.015
+
+    model = GPTModel(model="model-not-in-registry")
+
+    output, cost = model.generate("test prompt")
+
+    assert output == "cached"
+    assert cost.cache_read_input_tokens == 40
+    assert cost.cache_creation_input_tokens == 12
+
+
 def test_openai_calculate_cost_returns_none_when_prices_missing(settings):
     with settings.edit(persist=False):
         settings.OPENAI_API_KEY = "test-key"
