@@ -67,6 +67,32 @@ To revert back to the default OpenAI embeddings run:
 deepeval unset-ollama-embeddings
 ```
 
+### Using Gemini embeddings
+
+To use Google Gemini for embeddings, first configure your Google credentials (Gemini API key or
+Vertex AI project/location) via `deepeval set-gemini`, then set the Gemini embedder:
+
+```bash
+deepeval set-gemini-embedding --model=gemini-embedding-001
+```
+
+To revert back to the default OpenAI embeddings run:
+
+```bash
+deepeval unset-gemini-embedding
+```
+
+You can also pass the embedder directly:
+
+```python
+from deepeval.models import GeminiEmbeddingModel
+
+embedder = GeminiEmbeddingModel(
+    model="gemini-embedding-001",
+    api_key="<your-google-api-key>",
+)
+```
+
 ### Using local LLM models
 
 There are several local LLM providers that offer OpenAI API compatible endpoints, like vLLM or LM Studio. You can use them with `deepeval` by setting several parameters from the CLI. To configure any of those providers, you need to supply the base URL where the service is running. These are some of the most popular alternatives for base URLs:

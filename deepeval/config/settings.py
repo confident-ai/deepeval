@@ -705,6 +705,14 @@ class Settings(BaseSettings):
         None, description="Azure embedding deployment name."
     )
 
+    # Gemini
+    USE_GEMINI_EMBEDDING: Optional[bool] = Field(
+        None, description="Use Google Gemini for embeddings."
+    )
+    GEMINI_EMBEDDING_MODEL_NAME: Optional[str] = Field(
+        None, description="Gemini embedding model name."
+    )
+
     # Local
     USE_LOCAL_EMBEDDINGS: Optional[bool] = Field(
         None, description="Use a local/self-hosted embeddings endpoint."
@@ -1034,6 +1042,7 @@ class Settings(BaseSettings):
         "USE_DEEPSEEK_MODEL",
         "USE_LITELLM",
         "USE_AZURE_OPENAI_EMBEDDING",
+        "USE_GEMINI_EMBEDDING",
         "USE_LOCAL_EMBEDDINGS",
         "USE_PORTKEY_MODEL",
         mode="before",

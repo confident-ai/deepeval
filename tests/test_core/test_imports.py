@@ -284,6 +284,7 @@ def test_models_imports():
         AzureOpenAIEmbeddingModel,
         LocalEmbeddingModel,
         OllamaEmbeddingModel,
+        GeminiEmbeddingModel,
         OpenRouterModel,
     )
 
@@ -307,6 +308,7 @@ def test_models_imports():
         AzureOpenAIEmbeddingModel,
         LocalEmbeddingModel,
         OllamaEmbeddingModel,
+        GeminiEmbeddingModel,
         OpenRouterModel,
     ]
 
