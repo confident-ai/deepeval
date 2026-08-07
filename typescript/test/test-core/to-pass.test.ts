@@ -179,10 +179,28 @@ describe("toPass — callback (trace-scoped) shape", () => {
     ).rejects.toThrow(/received a promise/);
   });
 
-  it("rejects a golden receiver and points at the callback form", async () => {
+  it("rejects a golden without `run` and points at the golden subject form", async () => {
     await expect(
-      runMetrics(new Golden({ input: "hi" }) as never, [passing()]),
-    ).rejects.toThrow(/expect\(golden\)\.toPass\(\) is not supported/);
+      runMetrics(new Golden({ input: "hi" }), [passing()]),
+    ).rejects.toThrow(/needs a `run` callback/);
+  });
+
+  it("accepts a golden with `run` and evaluates the traces it produces", async () => {
+    const { observe, updateCurrentTrace } = await import(
+      "../../src/tracing"
+    );
+    const agent = observe({
+      type: "agent",
+      fn: async (query: string) => {
+        updateCurrentTrace({ input: query, output: "4" });
+        return "4";
+      },
+    });
+    const golden = new Golden({ input: "What is 2+2?" });
+    const outcome = await runMetrics(golden, [passing()], {
+      run: (g) => agent(g.input),
+    });
+    expect(outcome.pass).toBe(true);
   });
 });
 

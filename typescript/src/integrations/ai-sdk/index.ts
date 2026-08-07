@@ -121,11 +121,11 @@ export function createDeepEvalProcessors(
       ? process.env.CONFIDENT_API_KEY
       : undefined);
 
+  // The local processor is unconditional: it materialises spans in-process,
+  // which is what evals read. Only the OTLP exporter needs a key, so a keyless
+  // caller loses the export to Confident AI and nothing else.
   if (!apiKey) {
-    console.warn(
-      "DeepEval: No API Key found. AI SDK tracing will be disabled.",
-    );
-    return [];
+    return [new DeepEvalSpanProcessor(options, { otlpEnabled: false })];
   }
 
   const baseUrl =
@@ -168,7 +168,6 @@ export function configureAiSdkTracing(
   }
 
   const processors = createDeepEvalProcessors(_currentOptions);
-  if (processors.length === 0) return null;
 
   let environment = options?.environment;
   if (!environment && getSettings().CONFIDENT_TRACE_ENVIRONMENT) {

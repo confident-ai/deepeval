@@ -9,13 +9,13 @@ import { OpenAIMark } from "@site/src/components/BrandMarks";
 
 DeepEval integrates with the frameworks, model providers, and data stores teams already use to build LLM applications. Use these pages to connect tracing, evaluation, synthetic data, and model configuration to your existing stack.
 
-<Only id="python">
-
 ## Frameworks
 
 Framework integrations let DeepEval evaluate entire execution traces without manually orchestrating every intermediate step. Use these when you want traces, spans, and component-level evals to line up with the framework your agents, chains, tools, and workflows already run on.
 
 <Cards>
+<Switch>
+<Case id="python">
   <Card
     icon={
       <img
@@ -145,9 +145,48 @@ Framework integrations let DeepEval evaluate entire execution traces without man
     href="/integrations/frameworks/anthropic"
     description="Trace Anthropic model calls inside DeepEval workflows."
   />
+</Case>
+<Case id="typescript">
+  <Card
+    icon={
+      <img
+        src="/icons/integrations/langchain.svg"
+        alt=""
+        width={20}
+        height={20}
+      />
+    }
+    title="LangChain"
+    href="/integrations/frameworks/langchain"
+    description="Trace and evaluate LangChain chains, tools, and agents."
+  />
+  <Card
+    title="Mastra"
+    href="/integrations/frameworks/mastra"
+    description="Trace and evaluate Mastra agents, tools, and workflows."
+  />
+  <Card
+    icon={
+      <img
+        src="/icons/integrations/ai-sdk.svg"
+        alt=""
+        width={20}
+        height={20}
+      />
+    }
+    title="Vercel AI SDK"
+    href="/integrations/frameworks/ai-sdk"
+    description="Trace and evaluate generateText, tools, streaming, and embeddings."
+  />
+  <Card
+    icon={<OpenAIMark width={20} height={20} />}
+    title="OpenAI Agents"
+    href="/integrations/frameworks/openai-agents"
+    description="Evaluate workflows built with the OpenAI Agents SDK."
+  />
+</Case>
+</Switch>
 </Cards>
-
-</Only>
 
 ## Evaluation Models
 

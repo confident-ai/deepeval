@@ -136,19 +136,20 @@ export class DeepEvalCallbackHandler
     this.hierarchy.recordRun(uuidStr, parentRunId, traceUuid);
 
     // Only the root chain gets a span (preserves the established trace shape:
-    // the agent/graph as root, with LLM/tool spans beneath it).
+    // the agent/graph as root, with LLM/tool spans beneath it). Typed as AGENT
+    // so nextAgentSpan drains onto it; nested LangGraph nodes stay unspanned.
     if (parentUuid === undefined) {
-      const baseSpan = enterCurrentContext({
+      const agentSpan = enterCurrentContext({
         uuidStr,
-        spanType: SpanType.CUSTOM,
+        spanType: SpanType.AGENT,
         funcName: runName ?? "Langchain Chain Run",
         traceUuidOverride: traceUuid,
         parentUuidOverride: undefined,
       });
 
-      if (baseSpan) {
+      if (agentSpan) {
         this.hierarchy.recordSpan(uuidStr);
-        baseSpan.input = inputs;
+        agentSpan.input = inputs;
 
         // Trace-level, not span-level: a metric on the root chain span would be
         // reported per-span rather than as the run's end-to-end score. Skip

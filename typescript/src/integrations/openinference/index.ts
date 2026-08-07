@@ -139,11 +139,11 @@ export function createOpenInferenceProcessors(
       ? process.env.CONFIDENT_API_KEY
       : undefined);
 
+  // The local processor is unconditional: it materialises spans in-process,
+  // which is what evals read. Only the OTLP exporter needs a key, so a keyless
+  // caller loses the export to Confident AI and nothing else.
   if (!apiKey) {
-    console.warn(
-      "DeepEval: No API Key found. OpenInference tracing will be disabled.",
-    );
-    return [];
+    return [new OpenInferenceSpanProcessor(options, { otlpEnabled: false })];
   }
 
   const baseUrl =
@@ -181,7 +181,6 @@ export function instrumentOpenInference(
   _currentOptions = options || {};
 
   const processors = createOpenInferenceProcessors(_currentOptions);
-  if (processors.length === 0) return;
 
   let environment = options?.environment;
   if (!environment && getSettings().CONFIDENT_TRACE_ENVIRONMENT) {

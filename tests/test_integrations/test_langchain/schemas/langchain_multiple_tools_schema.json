@@ -1,11 +1,12 @@
 {
   "uuid": "27c2a169-f1a2-4f8a-ac18-43b73fd9ad22",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019d050f-7a4a-7771-858e-ba4c8e22be3d",
       "name": "city_info_chain",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "startTime": "2026-03-19T07:46:33.674Z",
       "endTime": "2026-03-19T07:46:39.404Z",
       "input": {
@@ -92,7 +93,7 @@
             "status": "success"
           },
           {
-            "content": "Current weather in Tokyo: Cloudy, 68°F (≈20°C).",
+            "content": "Current weather in Tokyo: Cloudy, 68\u00b0F (\u224820\u00b0C).",
             "additional_kwargs": {
               "refusal": null
             },
@@ -158,10 +159,11 @@
           }
         }
       ],
-      "integration": "LangChain"
+      "integration": "LangChain",
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019d050f-8179-70c3-a0da-3712d28ab56b",
@@ -199,7 +201,7 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Current weather in Tokyo: Cloudy, 68°F (≈20°C).",
+        "content": "Current weather in Tokyo: Cloudy, 68\u00b0F (\u224820\u00b0C).",
         "tool_calls": []
       },
       "model": "gpt-5.4-mini-2025-08-07",
@@ -376,7 +378,7 @@
         "status": "success"
       },
       {
-        "content": "Current weather in Tokyo: Cloudy, 68°F (≈20°C).",
+        "content": "Current weather in Tokyo: Cloudy, 68\u00b0F (\u224820\u00b0C).",
         "additional_kwargs": {
           "refusal": null
         },

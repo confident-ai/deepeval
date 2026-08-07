@@ -364,6 +364,21 @@ support; frontmatter tracks what each page actually *contains*, so a page stays
 replaces — "no integration page should be `[typescript]`" — held only while every
 documented integration existed in Python; `AISDKModel` has no Python counterpart.
 
+`frameworks/mastra` is the second, and the first `[typescript]` page in the
+Frameworks group. Writing it meant the group could no longer be wrapped whole in
+`<Only id="python">` on the integrations index: the heading and intro are now
+shared and the card grid is a `<Switch>`, so a TypeScript reader gets a
+Frameworks section with Mastra in it rather than no section at all.
+
+Two things surfaced while writing it, both since fixed in the SDK rather than
+documented around. `DeepEvalExporter` disabled itself when `CONFIDENT_API_KEY`
+was unset, which made a keyless local eval score nothing; the OTel integrations
+(`ai-sdk`, `openinference`) had the same gate one level up, returning no span
+processors at all. And both OTel processors overwrote a span's `input`/`output`
+with `undefined` when the OTel attributes carried none, silently erasing values
+staged by `next*Span(...)` or `updateCurrentSpan(...)`. See
+[Keyless operation](#keyless-operation).
+
 ### What blocks wider TypeScript coverage
 
 **Existing pages missing TypeScript examples.** The SDK already supports these,
@@ -393,8 +408,6 @@ count the script prints.
 **Integrations with no page at all.** These need writing from scratch; no amount
 of metadata helps.
 
-- **Mastra** — `integrations/mastra`, exporting `DeepEvalExporter`.
-  TypeScript-only.
 - **Vercel AI SDK as a framework** — `integrations/ai-sdk`, the tracing exporter.
   Distinct from `models/ai-sdk`, which covers `AISDKModel` as a judge model and
   is written.
@@ -426,6 +439,35 @@ these keep `languages: [python]` and need no revisiting: `models/litellm`, all
 six `vector-databases/*`, and the framework pages `agentcore`, `anthropic`,
 `crewai`, `google-adk`, `huggingface`, `llamaindex`, `pydanticai` and `strands`.
 
+### Keyless operation
+
+Every integration works without a Confident AI API key, in both SDKs. This is
+load-bearing for the docs: each integration page opens with a local eval, and a
+page that has to say "log in first" before its first snippet is describing a
+worse product than the one that ships.
+
+Python has been explicit about this for a while — `DeepEvalInstrumentationSettings`
+documents `api_key` as "fully optional" and gates only the outbound
+`x-confident-api-key` header. TypeScript had drifted, in three places:
+
+- `DeepEvalExporter` (Mastra) set a `disabled` flag in its constructor and
+  dropped every span, so a keyless local eval scored nothing.
+- `createDeepEvalProcessors` (`ai-sdk`) and `createOpenInferenceProcessors`
+  returned `[]`, which removed the *local* span processor along with the OTLP
+  exporter. The local one is what evals read; only the exporter needs a key.
+- `isConfident()` printed `console.error("Confident AI API key not found.")` as
+  a side effect of being asked a question, so the now-normal keyless path
+  logged an error per call.
+
+The fix keeps one rule: **a missing key removes the upload and nothing else.**
+`postTrace` already skipped uploading and said so, so nothing above it needed to
+know. For the OTel integrations there is one extra wrinkle — with no exporter
+installed, routing a span to OTLP drops it on the floor — so `resolveSpanRoute`
+takes `otlpEnabled` and routes in-process when no transport exists.
+
+`typescript/test/test-integrations/keyless-tracing.test.ts` locks this in across
+all three integrations with `CONFIDENT_API_KEY` deleted from the environment.
+
 ## Outstanding
 
 Roughly in order of how much they hurt a TypeScript reader.
@@ -449,9 +491,10 @@ Roughly in order of how much they hurt a TypeScript reader.
    but it is a convention rather than a check. Resolving each `ts` value
    against the SDK's exported type surface would close this; it was not
    possible against the old registry either, so nothing regressed.
-5. **No TypeScript-only pages.** `languages: [typescript]` parses and filters
-   correctly but nothing uses it, so the case is untested. Mastra and the Vercel
-   AI SDK are the natural first users once written.
+5. **TypeScript-only pages are barely exercised.** `models/ai-sdk` and
+   `frameworks/mastra` are the only two, and Mastra is the only one whose
+   sidebar group would otherwise be empty for a TypeScript reader. The Vercel AI
+   SDK as a *framework* is the natural third.
 6. **No preference persistence.** The selection is `useState` with no storage,
    so it resets to Python on every refresh, new tab, and search-result landing.
    Since most docs traffic arrives directly on an interior page, a TypeScript

@@ -7,6 +7,10 @@ languages: [typescript]
 
 `deepeval` supports using any [Vercel AI SDK](https://ai-sdk.dev/) `LanguageModel` to power its evaluation metrics. This lets you evaluate with the exact same model instance your application already generates with, including providers that have no dedicated `deepeval` class of their own.
 
+:::tip[Tracing your AI SDK app]
+This page covers **judge models** (`AISDKModel`). To trace and evaluate `generateText`, tools, streaming, and embeddings, see the [Vercel AI SDK framework integration](/integrations/frameworks/ai-sdk).
+:::
+
 ### Setting Up Your Environment
 
 Install the AI SDK core package alongside the provider you want to evaluate with:

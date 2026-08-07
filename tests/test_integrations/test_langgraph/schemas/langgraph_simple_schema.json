@@ -2,150 +2,6 @@
   "uuid": "3950c95f-cd8a-4644-b341-57a0157e17ac",
   "baseSpans": [
     {
-      "uuid": "019d0517-45b5-7eb2-8028-a131e66695b4",
-      "name": "LangGraph",
-      "status": "SUCCESS",
-      "type": "base",
-      "startTime": "2026-03-19T07:55:04.502Z",
-      "endTime": "2026-03-19T07:55:07.644Z",
-      "input": {
-        "messages": [
-          {
-            "content": "What's the weather in San Francisco?",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "a11b3c6f-21e7-4120-996d-47729c9b863f"
-          }
-        ]
-      },
-      "output": {
-        "messages": [
-          {
-            "content": "What's the weather in San Francisco?",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "a11b3c6f-21e7-4120-996d-47729c9b863f"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 168,
-                "prompt_tokens": 133,
-                "total_tokens": 301,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2VczPJP1BMxAqse44kXVOpujaoI",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-45b6-7141-84b5-c91df7cad066-0",
-            "tool_calls": [
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "San Francisco"
-                },
-                "id": "call_BDzcxeIZTufx2i3mknSKKkVO",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 133,
-              "output_tokens": 168,
-              "total_tokens": 301,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
-            }
-          },
-          {
-            "content": "Foggy, 58°F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "id": "5495f6e9-8412-419d-a5cf-05a4d45edbe6",
-            "tool_call_id": "call_BDzcxeIZTufx2i3mknSKKkVO",
-            "status": "success"
-          },
-          {
-            "content": "It's foggy in San Francisco and 58°F.",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 14,
-                "prompt_tokens": 168,
-                "total_tokens": 182,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2Vfmfw43S5ucdAomplscPPCdfMM",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-4ef9-7cd0-b5df-fbbba943487b-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 168,
-              "output_tokens": 14,
-              "total_tokens": 182,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          }
-        ]
-      },
-      "integration": "LangChain"
-    },
-    {
       "uuid": "019d0517-4ef9-7cd0-b5df-fbabafec6edf",
       "name": "agent",
       "status": "SUCCESS",
@@ -219,7 +75,7 @@
             }
           },
           {
-            "content": "Foggy, 58°F",
+            "content": "Foggy, 58\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -233,7 +89,7 @@
       "output": {
         "messages": [
           {
-            "content": "It's foggy in San Francisco and 58°F.",
+            "content": "It's foggy in San Francisco and 58\u00b0F.",
             "additional_kwargs": {
               "refusal": null
             },
@@ -357,7 +213,7 @@
             }
           },
           {
-            "content": "Foggy, 58°F",
+            "content": "Foggy, 58\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -367,7 +223,7 @@
             "status": "success"
           },
           {
-            "content": "It's foggy in San Francisco and 58°F.",
+            "content": "It's foggy in San Francisco and 58\u00b0F.",
             "additional_kwargs": {
               "refusal": null
             },
@@ -496,7 +352,7 @@
       "output": {
         "messages": [
           {
-            "content": "Foggy, 58°F",
+            "content": "Foggy, 58\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -512,7 +368,7 @@
           "name": "get_weather",
           "type": "FUNCTION",
           "output": {
-            "content": "Foggy, 58°F",
+            "content": "Foggy, 58\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -688,7 +544,154 @@
       "integration": "LangChain"
     }
   ],
-  "agentSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "019d0517-45b5-7eb2-8028-a131e66695b4",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-19T07:55:04.502Z",
+      "endTime": "2026-03-19T07:55:07.644Z",
+      "input": {
+        "messages": [
+          {
+            "content": "What's the weather in San Francisco?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "a11b3c6f-21e7-4120-996d-47729c9b863f"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "What's the weather in San Francisco?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "a11b3c6f-21e7-4120-996d-47729c9b863f"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 168,
+                "prompt_tokens": 133,
+                "total_tokens": 301,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 128,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5.4-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2VczPJP1BMxAqse44kXVOpujaoI",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0517-45b6-7141-84b5-c91df7cad066-0",
+            "tool_calls": [
+              {
+                "name": "get_weather",
+                "args": {
+                  "city": "San Francisco"
+                },
+                "id": "call_BDzcxeIZTufx2i3mknSKKkVO",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 133,
+              "output_tokens": 168,
+              "total_tokens": 301,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 128
+              }
+            }
+          },
+          {
+            "content": "Foggy, 58\u00b0F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_weather",
+            "id": "5495f6e9-8412-419d-a5cf-05a4d45edbe6",
+            "tool_call_id": "call_BDzcxeIZTufx2i3mknSKKkVO",
+            "status": "success"
+          },
+          {
+            "content": "It's foggy in San Francisco and 58\u00b0F.",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 14,
+                "prompt_tokens": 168,
+                "total_tokens": 182,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5.4-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2Vfmfw43S5ucdAomplscPPCdfMM",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0517-4ef9-7cd0-b5df-fbbba943487b-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 168,
+              "output_tokens": 14,
+              "total_tokens": 182,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      },
+      "integration": "LangChain",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
   "llmSpans": [
     {
       "uuid": "019d0517-4ef9-7cd0-b5df-fbbba943487b",
@@ -709,7 +712,7 @@
         },
         {
           "role": "tool",
-          "content": "Foggy, 58°F"
+          "content": "Foggy, 58\u00b0F"
         },
         {
           "role": "Tool Input",
@@ -718,7 +721,7 @@
       ],
       "output": {
         "role": "AI",
-        "content": "It's foggy in San Francisco and 58°F.",
+        "content": "It's foggy in San Francisco and 58\u00b0F.",
         "tool_calls": []
       },
       "model": "gpt-5.4-mini-2025-08-07",
@@ -779,7 +782,7 @@
         "city": "San Francisco"
       },
       "output": {
-        "content": "Foggy, 58°F",
+        "content": "Foggy, 58\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -881,7 +884,7 @@
         }
       },
       {
-        "content": "Foggy, 58°F",
+        "content": "Foggy, 58\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -891,7 +894,7 @@
         "status": "success"
       },
       {
-        "content": "It's foggy in San Francisco and 58°F.",
+        "content": "It's foggy in San Francisco and 58\u00b0F.",
         "additional_kwargs": {
           "refusal": null
         },
@@ -945,7 +948,7 @@
       "name": "get_weather",
       "type": "FUNCTION",
       "output": {
-        "content": "Foggy, 58°F",
+        "content": "Foggy, 58\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",

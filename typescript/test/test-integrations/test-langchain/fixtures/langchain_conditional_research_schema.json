@@ -1,12 +1,13 @@
 {
   "name": "langchain-conditional-test",
   "uuid": "13d56e66-a1ef-412e-8754-0a4bdc0a7b41",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019ed9d8-b717-748f-ad0b-f5f3eefc2023",
       "name": "research_chain",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "traceUuid": "13d56e66-a1ef-412e-8754-0a4bdc0a7b41",
       "startTime": "2026-06-18T08:28:39.064Z",
       "endTime": "2026-06-18T08:28:42.999Z",
@@ -172,10 +173,11 @@
             }
           }
         ]
-      }
+      },
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019ed9d8-b719-7733-8540-25a16e5ef1f5",

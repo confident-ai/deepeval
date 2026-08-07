@@ -1,11 +1,12 @@
 {
   "uuid": "27b8a8dd-ad62-4f71-9dda-90d5a1b9a70f",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019d050f-f945-7642-bfec-02a91c5a6db0",
       "name": "parallel_weather_chain",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "startTime": "2026-03-19T07:47:06.182Z",
       "endTime": "2026-03-19T07:47:10.451Z",
       "input": {
@@ -224,10 +225,11 @@
           }
         }
       ],
-      "integration": "LangChain"
+      "integration": "LangChain",
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019d0510-051a-75f0-b319-c7497f3e327f",

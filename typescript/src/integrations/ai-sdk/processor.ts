@@ -53,11 +53,16 @@ const SPAN_TYPE_MAPPING: Record<string, SpanType> = {
 
 export class DeepEvalSpanProcessor implements SpanProcessor {
   private options: AiSdkInstrumentationOptions;
+  private otlpEnabled: boolean;
   private aiSpanIds = new Set<string>();
   private previousSpans = new Map<string, BaseSpan | undefined>();
 
-  constructor(options?: AiSdkInstrumentationOptions) {
+  constructor(
+    options?: AiSdkInstrumentationOptions,
+    routing: { otlpEnabled?: boolean } = {},
+  ) {
     this.options = options || {};
+    this.otlpEnabled = routing.otlpEnabled ?? true;
   }
 
   forceFlush(): Promise<void> {
@@ -83,7 +88,10 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
 
     // Routing decision, stamped so `onEnd` and the export filter act on the same
     // answer even if the async context has moved on by then.
-    const route = resolveSpanRoute({ isTestMode: this.options.isTestMode });
+    const route = resolveSpanRoute({
+      isTestMode: this.options.isTestMode,
+      otlpEnabled: this.otlpEnabled,
+    });
     if (route === "rest") {
       span.setAttribute(ROUTE_TO_REST_ATTRIBUTE, true);
 
@@ -740,14 +748,18 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
       }
     }
 
-    deepEvalSpan.input = inputObj;
-    deepEvalSpan.output = outputObj;
     deepEvalSpan.error = attributes["error"]
       ? String(attributes["error"])
       : undefined;
     // Assign only when the attribute carries something: these fields can also
     // have been set from user code (`next*Span`, `updateCurrentSpan`), and an
     // absent attribute must not erase that.
+    if (inputObj !== undefined) {
+      deepEvalSpan.input = inputObj;
+    }
+    if (outputObj !== undefined) {
+      deepEvalSpan.output = outputObj;
+    }
     if (attributes["confident.span.metric_collection"] !== undefined) {
       deepEvalSpan.metricCollection =
         attributes["confident.span.metric_collection"];

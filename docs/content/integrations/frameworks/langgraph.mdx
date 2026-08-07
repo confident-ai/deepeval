@@ -138,14 +138,14 @@ Done ✅. You've run your first eval with full traceability into LangGraph via `
 
 Each LangGraph run that receives a `CallbackHandler` produces a **trace** — the end-to-end unit your user observes. Inside that trace are **component spans** for each callback LangGraph emits through LangChain:
 
-- **Graph / node spans** — the compiled `StateGraph` invocation and each node it dispatches to.
+- **Agent span** — the compiled `StateGraph` `invoke(...)` call (the root of the tree). Nested graph nodes stay custom spans.
 - **LLM spans** — chat model and completion calls inside a node.
 - **Tool spans** — tool calls executed by `ToolNode` (or your own).
 - **Retriever spans** — retriever calls, when your graph uses retrieval.
 
 ```text
 Trace                           ← what the user observes
-└── Graph: weather_graph         ← one graph invoke(...) call
+└── Agent: weather_graph         ← one graph invoke(...) call
     ├── Node: chatbot           ← model picks a tool
     │   └── LLM: gpt-4o-mini
     ├── Node: tools             ← ToolNode runs the tool
@@ -234,9 +234,9 @@ for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
 
 Passing `metrics=[...]` to `evals_iterator` evaluates the overall LangGraph run. To evaluate a component instead, attach metrics where the graph creates that component.
 
-### Agent spans (sub-agents)
+### Agent spans
 
-Wrap the `graph.invoke(...)` in `with next_agent_span(metrics=[...]):`. The `CallbackHandler` drains the staged metric onto the **first agent span** the graph emits — useful for scoring a sub-agent node or subgraph in isolation.
+Wrap the `graph.invoke(...)` in `with next_agent_span(metrics=[...]):`. The `CallbackHandler` drains the staged metric onto the **root agent span** opened by `invoke(...)` — useful when you want a span-level score on the graph run itself rather than the whole trace.
 
 ```python title="langgraph_agent.py" showLineNumbers
 from deepeval.integrations.langchain import CallbackHandler
@@ -252,7 +252,7 @@ for golden in dataset.evals_iterator():
         )
 ```
 
-The same one-shot semantic as `next_llm_span` applies: only the first agent span in the graph run picks up the staged metric.
+The same one-shot semantic as `next_llm_span` applies: only the root agent span picks up the staged metric.
 
 ### LLM calls
 

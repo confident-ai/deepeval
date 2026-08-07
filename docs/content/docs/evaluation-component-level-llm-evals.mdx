@@ -246,8 +246,9 @@ import "deepeval/vitest";
 it.each(dataset.goldens as Golden[])(
   "completes the task: $input",
   async (golden) => {
-    await myAiAgent(golden.input);
-    await expect(golden).toPass();
+    await expect(golden).toPass([], {
+      run: (g) => myAiAgent(g.input),
+    });
   },
 );
 ```

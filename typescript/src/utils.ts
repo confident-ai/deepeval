@@ -12,17 +12,17 @@ try {
 }
 
 /**
- * Check if the user is authenticated with Confident AI
+ * Check if the user is authenticated with Confident AI.
+ *
+ * Being unauthenticated is a normal mode — everything except uploading works —
+ * so this stays a silent predicate. Callers that genuinely cannot continue
+ * (`pull`) raise their own error, and the ones that degrade (`postTrace`, the
+ * end-of-run report) print their own hint.
+ *
  * @returns boolean indicating if the user is authenticated
  */
 export function isConfident(): boolean {
-  // Check for API key in environment variables
-  const confidentApiKey = process.env.CONFIDENT_API_KEY;
-  const isConfident = !!confidentApiKey && confidentApiKey.trim() !== "";
-  if (!isConfident) {
-    console.error("Confident AI API key not found.");
-  }
-  return isConfident;
+  return getConfidentApiKey() !== null;
 }
 
 /**

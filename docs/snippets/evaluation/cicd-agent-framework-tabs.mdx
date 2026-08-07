@@ -605,13 +605,14 @@ const myAiAgent = observe({
 it.each(dataset.goldens as Golden[])(
   "completes the task: $input",
   async (golden) => {
-    await myAiAgent(golden.input);
-    await expect(golden).toPass([new TaskCompletionMetric()]);
+    await expect(golden).toPass([new TaskCompletionMetric()], {
+      run: (g) => myAiAgent(g.input),
+    });
   },
 );
 ```
 
-`toPass()` only needs the golden — the test case is built from the captured trace. Importing `deepeval/vitest` registers the matcher, and `npx deepeval test run` injects it for you.
+The golden is the subject; `run` produces the trace judged against it. Importing `deepeval/vitest` registers the matcher, and `npx deepeval test run` injects it for you.
 
 <NotImplemented id="typescript" feature="deepeval.integrations">
 

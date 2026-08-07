@@ -76,9 +76,10 @@ There are **ONE** mandatory and **ONE** optional parameter for `assert_test()` i
 
 <Case id="typescript">
 
-The golden goes to `expect()`, and `toPass()` takes one optional argument:
+The golden goes to `expect()`, and `toPass()` takes:
 
 - [Optional] `metrics`: an array of `BaseMetric`s that you wish to run on your trace (aka. end-to-end evals).
+- `options.run`: a callback `(golden) => ...` that runs your app so the matcher can capture and score its trace.
 
 </Case>
 
