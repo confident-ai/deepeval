@@ -399,9 +399,9 @@ class GeminiModel(DeepEvalBaseLLM):
         """
         return self._build_client()
 
-    def _require_oauth2(self):
+    def _require_google_auth(self):
         return require_dependency(
-            "google.oauth2",
+            "google.auth",
             provider_label="GeminiModel",
             install_hint="Install it with `pip install google-auth`.",
         )
@@ -446,7 +446,7 @@ class GeminiModel(DeepEvalBaseLLM):
                     service_account_key = json.loads(service_account_key_json)
                 except Exception as e:
                     raise DeepEvalError(
-                        "GOOGLE_SERVICE_ACCOUNT_KEY must be valid JSON for a Google service account."
+                        "GOOGLE_SERVICE_ACCOUNT_KEY must be valid JSON for a Google credential."
                     ) from e
 
                 if not isinstance(service_account_key, dict):
@@ -454,8 +454,11 @@ class GeminiModel(DeepEvalBaseLLM):
                         "GOOGLE_SERVICE_ACCOUNT_KEY must decode to a JSON object."
                     )
 
-                oauth2 = self._require_oauth2()
-                credentials = oauth2.service_account.Credentials.from_service_account_info(
+                # Dispatches on the credential's own "type" field, so this accepts
+                # service account keys, authorized user credentials, external
+                # accounts and impersonated service accounts alike.
+                google_auth = self._require_google_auth()
+                credentials, _ = google_auth.load_credentials_from_dict(
                     service_account_key,
                     scopes=["https://www.googleapis.com/auth/cloud-platform"],
                 )
