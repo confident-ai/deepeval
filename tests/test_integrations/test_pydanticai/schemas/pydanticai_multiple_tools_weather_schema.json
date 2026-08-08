@@ -1,35 +1,45 @@
 {
-  "uuid": "45540ddd6f4a7eeb93b6621be528548c",
+  "uuid": "0ac6f9e0a8e3888f099fe516b27fd846",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "dc419612e00cba13",
+      "uuid": "d236d9144b8314fb",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:29.468Z",
-      "endTime": "2026-06-01T16:36:31.728Z",
+      "startTime": "2026-07-12T14:34:05.560Z",
+      "endTime": "2026-07-12T14:34:12.899Z",
       "input": [
         {
           "role": "user",
           "content": "Use the get_weather tool exactly once to get the weather in Tokyo."
         }
       ],
-      "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F.",
+      "output": "The weather in Tokyo is sunny with a temperature of 72\u00b0F.",
       "integration": "PydanticAI",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "output": "Sunny, 72F",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "fe08319bf6aae2ce",
+      "uuid": "2e5e38f00dbcef22",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "dc419612e00cba13",
-      "startTime": "2026-06-01T16:36:30.663Z",
-      "endTime": "2026-06-01T16:36:31.726Z",
+      "parentUuid": "d236d9144b8314fb",
+      "startTime": "2026-07-12T14:34:11.724Z",
+      "endTime": "2026-07-12T14:34:12.896Z",
       "input": [
         {
           "role": "system",
@@ -43,7 +53,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_BkYMpl3EzFlZbY4KQYDLYKkh",
+            "id": "call_Z2JM7sYaMVJhkEAfJBzhDa6a",
             "name": "get_weather",
             "arguments": "{\"city\":\"Tokyo\"}"
           }
@@ -52,7 +62,7 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_BkYMpl3EzFlZbY4KQYDLYKkh",
+            "id": "call_Z2JM7sYaMVJhkEAfJBzhDa6a",
             "name": "get_weather",
             "result": "Sunny, 72F"
           }
@@ -88,7 +98,8 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null
               },
               {
                 "name": "get_time",
@@ -117,7 +128,8 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null
               }
             ],
             "native_tools": [],
@@ -135,23 +147,23 @@
       "output": [
         {
           "role": "assistant",
-          "content": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F."
+          "content": "The weather in Tokyo is sunny with a temperature of 72\u00b0F."
         }
       ],
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 205.0,
+      "inputTokenCount": 201.0,
       "outputTokenCount": 16.0
     },
     {
-      "uuid": "7521745eed0e9010",
+      "uuid": "bfcda440963e71b5",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "dc419612e00cba13",
-      "startTime": "2026-06-01T16:36:29.470Z",
-      "endTime": "2026-06-01T16:36:30.659Z",
+      "parentUuid": "d236d9144b8314fb",
+      "startTime": "2026-07-12T14:34:05.563Z",
+      "endTime": "2026-07-12T14:34:11.719Z",
       "input": [
         {
           "role": "system",
@@ -192,7 +204,8 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null
               },
               {
                 "name": "get_time",
@@ -221,7 +234,8 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null
               }
             ],
             "native_tools": [],
@@ -241,7 +255,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_BkYMpl3EzFlZbY4KQYDLYKkh",
+            "id": "call_Z2JM7sYaMVJhkEAfJBzhDa6a",
             "name": "get_weather",
             "arguments": "{\"city\":\"Tokyo\"}"
           }
@@ -250,20 +264,20 @@
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 178.0,
-      "outputTokenCount": 14.0
+      "inputTokenCount": 176.0,
+      "outputTokenCount": 15.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "a73d0a65f89b9954",
+      "uuid": "ce5e8ecb71050b81",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "dc419612e00cba13",
-      "startTime": "2026-06-01T16:36:30.660Z",
-      "endTime": "2026-06-01T16:36:30.661Z",
+      "parentUuid": "d236d9144b8314fb",
+      "startTime": "2026-07-12T14:34:11.721Z",
+      "endTime": "2026-07-12T14:34:11.722Z",
       "input": {
         "city": "Tokyo"
       },
@@ -271,8 +285,8 @@
       "integration": "PydanticAI"
     }
   ],
-  "startTime": "2026-06-01T16:36:29.468Z",
-  "endTime": "2026-06-01T16:36:31.728Z",
+  "startTime": "2026-07-12T14:34:05.560Z",
+  "endTime": "2026-07-12T14:34:12.899Z",
   "name": "pydanticai-multiple-tools-weather",
   "metadata": {
     "test_type": "multiple_tools_weather"
@@ -291,6 +305,6 @@
       "content": "Use the get_weather tool exactly once to get the weather in Tokyo."
     }
   ],
-  "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F.",
+  "output": "The weather in Tokyo is sunny with a temperature of 72\u00b0F.",
   "status": "SUCCESS"
 }

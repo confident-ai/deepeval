@@ -14,10 +14,13 @@ dataset = EvaluationDataset(goldens=[Golden(input="What's 7 * 8?")])
 
 answer_relavancy_metric = AnswerRelevancyMetric()
 
+# Constructing the settings activates instrumentation for all agents
+# (pydantic-ai 2.x removed the ``Agent(instrument=...)`` kwarg).
+DeepEvalInstrumentationSettings()
+
 agent = Agent(
     "openai:gpt-4o-mini",
     system_prompt="Be concise, reply with one sentence.",
-    instrument=DeepEvalInstrumentationSettings(),
 )
 
 

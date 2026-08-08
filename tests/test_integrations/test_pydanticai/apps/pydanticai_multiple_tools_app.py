@@ -33,7 +33,6 @@ def create_multiple_tools_agent(
             "When asked about time, use the get_time tool. "
             "Be concise in your responses."
         ),
-        instrument=settings,
         name="multiple_tools_agent",
     )
 

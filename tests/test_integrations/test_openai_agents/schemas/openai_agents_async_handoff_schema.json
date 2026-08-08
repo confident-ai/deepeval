@@ -1,14 +1,14 @@
 {
-  "uuid": "trace_406f6733e1a149bba79fc703a23c670f",
+  "uuid": "trace_62dea12511fa41c987cdd574e016fe08",
   "baseSpans": [
     {
-      "uuid": "a25db2a3-68b1-4b60-a4d3-4d3311216a1c",
-      "name": "Handoff → EnglishAgent",
+      "uuid": "72857f87-174a-431c-ad53-25c945f64c68",
+      "name": "Handoff \u2192 EnglishAgent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "6bd3910a-2a97-440e-8d1e-402449f481d4",
-      "startTime": "2026-01-29T14:39:02.016Z",
-      "endTime": "2026-01-29T14:39:02.016Z",
+      "parentUuid": "67df70aa-327b-4691-8c2a-64b2a90ede90",
+      "startTime": "2026-07-12T14:00:55.222Z",
+      "endTime": "2026-07-12T14:00:55.223Z",
       "metadata": {
         "from_agent": "TriageAgent",
         "to_agent": "EnglishAgent"
@@ -19,69 +19,70 @@
   ],
   "agentSpans": [
     {
-      "uuid": "7d9eda7d-3b2b-41bf-8a11-a5b3a94613f2",
+      "uuid": "d58c196c-476c-4a4e-b036-7bca81af30f7",
       "name": "EnglishAgent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T14:39:02.017Z",
-      "endTime": "2026-01-29T14:39:02.885Z",
+      "startTime": "2026-07-12T14:00:55.223Z",
+      "endTime": "2026-07-12T14:00:56.196Z",
       "metadata": {
         "output_type": "str"
       },
       "input": [
         {
           "arguments": "{}",
-          "call_id": "call_TcGFTO45nB3IDzdHwTAVLZyb",
+          "call_id": "call_epzobJ7uDSLRQoopwd0dUOfq",
           "name": "transfer_to_englishagent",
           "type": "function_call",
+          "id": "fc_0d9ff10c3c986702006a539e16c8ec81a1851c43a899094c75",
+          "caller": null,
           "namespace": null,
-          "id": "fc_0e365b104066eae100697b7105c560819180a0a5f87047f639",
           "status": "completed"
         },
         {
-          "call_id": "call_TcGFTO45nB3IDzdHwTAVLZyb",
+          "call_id": "call_epzobJ7uDSLRQoopwd0dUOfq",
           "output": "{\"assistant\": \"EnglishAgent\"}",
           "type": "function_call_output"
         }
       ],
       "output": "Hello",
+      "integration": "OpenAI Agents",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "OpenAI Agents"
+      "agentHandoffs": []
     },
     {
-      "uuid": "6bd3910a-2a97-440e-8d1e-402449f481d4",
+      "uuid": "67df70aa-327b-4691-8c2a-64b2a90ede90",
       "name": "TriageAgent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T14:39:00.540Z",
-      "endTime": "2026-01-29T14:39:02.016Z",
+      "startTime": "2026-07-12T14:00:50.942Z",
+      "endTime": "2026-07-12T14:00:55.223Z",
       "metadata": {
         "output_type": "str"
       },
       "input": "Hello",
       "output": {
-        "call_id": "call_TcGFTO45nB3IDzdHwTAVLZyb",
+        "call_id": "call_epzobJ7uDSLRQoopwd0dUOfq",
         "name": "transfer_to_englishagent",
         "arguments": "{}"
       },
+      "integration": "OpenAI Agents",
       "availableTools": [],
       "agentHandoffs": [
         "SpanishAgent",
         "EnglishAgent"
-      ],
-      "integration": "OpenAI Agents"
+      ]
     }
   ],
   "llmSpans": [
     {
-      "uuid": "1e0d5c14-766e-47a0-8a16-bd372c08705b",
+      "uuid": "1b42efbd-830f-4fd2-aaf5-63c93bc31cc1",
       "name": "LLM Generation",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "7d9eda7d-3b2b-41bf-8a11-a5b3a94613f2",
-      "startTime": "2026-01-29T14:39:02.017Z",
-      "endTime": "2026-01-29T14:39:02.885Z",
+      "parentUuid": "d58c196c-476c-4a4e-b036-7bca81af30f7",
+      "startTime": "2026-07-12T14:00:55.224Z",
+      "endTime": "2026-07-12T14:00:56.193Z",
       "metadata": {
         "cached_input_tokens": 0,
         "ouptut_reasoning_tokens": 0,
@@ -113,31 +114,31 @@
           "content": "Hello"
         },
         {
-          "call_id": "call_TcGFTO45nB3IDzdHwTAVLZyb",
+          "call_id": "call_epzobJ7uDSLRQoopwd0dUOfq",
           "name": "transfer_to_englishagent",
           "arguments": "{}"
         },
         {
           "role": "tool",
-          "call_id": "call_TcGFTO45nB3IDzdHwTAVLZyb",
+          "call_id": "call_epzobJ7uDSLRQoopwd0dUOfq",
           "output": "{\"assistant\": \"EnglishAgent\"}"
         }
       ],
       "output": "Hello",
-      "model": "gpt-4o-2024-08-06",
-      "inputTokenCount": 55.0,
-      "outputTokenCount": 2.0,
       "integration": "OpenAI Agents",
-      "provider": "OpenAI"
+      "model": "gpt-4o-2024-08-06",
+      "provider": "OpenAI",
+      "inputTokenCount": 55.0,
+      "outputTokenCount": 2.0
     },
     {
-      "uuid": "da08668f-fdc1-4205-b038-a4d402351702",
+      "uuid": "3ce1088f-2a3a-4a27-ac79-32cd3d2697c5",
       "name": "LLM Generation",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "6bd3910a-2a97-440e-8d1e-402449f481d4",
-      "startTime": "2026-01-29T14:39:00.541Z",
-      "endTime": "2026-01-29T14:39:02.015Z",
+      "parentUuid": "67df70aa-327b-4691-8c2a-64b2a90ede90",
+      "startTime": "2026-07-12T14:00:50.948Z",
+      "endTime": "2026-07-12T14:00:55.219Z",
       "metadata": {
         "cached_input_tokens": 0,
         "ouptut_reasoning_tokens": 0,
@@ -194,18 +195,18 @@
           "content": "Hello"
         }
       ],
-      "output": "{\"call_id\": \"call_TcGFTO45nB3IDzdHwTAVLZyb\", \"name\": \"transfer_to_englishagent\", \"arguments\": \"{}\"}",
-      "model": "gpt-4o-2024-08-06",
-      "inputTokenCount": 83.0,
-      "outputTokenCount": 14.0,
+      "output": "{\"call_id\": \"call_epzobJ7uDSLRQoopwd0dUOfq\", \"name\": \"transfer_to_englishagent\", \"arguments\": \"{}\"}",
       "integration": "OpenAI Agents",
-      "provider": "OpenAI"
+      "model": "gpt-4o-2024-08-06",
+      "provider": "OpenAI",
+      "inputTokenCount": 83.0,
+      "outputTokenCount": 14.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T14:39:00.540Z",
-  "endTime": "2026-01-29T14:39:02.885Z",
+  "startTime": "2026-07-12T14:00:50.941Z",
+  "endTime": "2026-07-12T14:00:56.196Z",
   "name": "openai_agents_async_handoff",
   "metadata": {
     "tags": [

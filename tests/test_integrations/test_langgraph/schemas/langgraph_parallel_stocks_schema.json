@@ -46,7 +46,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -184,7 +185,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -252,7 +254,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -394,7 +397,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -462,7 +466,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -600,7 +605,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -669,7 +675,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -811,7 +818,8 @@
           },
           "inputParameters": {
             "symbol": "AAPL"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "get_stock_price",
@@ -828,7 +836,8 @@
           },
           "inputParameters": {
             "symbol": "MSFT"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "get_stock_price",
@@ -845,7 +854,8 @@
           },
           "inputParameters": {
             "symbol": "GOOGL"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "get_stock_price",
@@ -862,7 +872,8 @@
           },
           "inputParameters": {
             "symbol": "TSLA"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "get_stock_price",
@@ -879,7 +890,8 @@
           },
           "inputParameters": {
             "symbol": "AMZN"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -923,7 +935,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -1032,7 +1045,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -1434,7 +1448,8 @@
             },
             "prompt_tokens_details": {
               "audio_tokens": 0,
-              "cached_tokens": 0
+              "cached_tokens": 0,
+              "cache_write_tokens": null
             }
           },
           "model_provider": "openai",
@@ -1572,7 +1587,8 @@
             },
             "prompt_tokens_details": {
               "audio_tokens": 0,
-              "cached_tokens": 0
+              "cached_tokens": 0,
+              "cache_write_tokens": null
             }
           },
           "model_provider": "openai",
@@ -1620,7 +1636,8 @@
       },
       "inputParameters": {
         "symbol": "AAPL"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "get_stock_price",
@@ -1637,7 +1654,8 @@
       },
       "inputParameters": {
         "symbol": "MSFT"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "get_stock_price",
@@ -1654,7 +1672,8 @@
       },
       "inputParameters": {
         "symbol": "GOOGL"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "get_stock_price",
@@ -1671,7 +1690,8 @@
       },
       "inputParameters": {
         "symbol": "TSLA"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "get_stock_price",
@@ -1688,7 +1708,8 @@
       },
       "inputParameters": {
         "symbol": "AMZN"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

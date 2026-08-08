@@ -46,7 +46,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -120,7 +121,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -188,7 +190,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -369,7 +372,8 @@
             },
             "prompt_tokens_details": {
               "audio_tokens": 0,
-              "cached_tokens": 0
+              "cached_tokens": 0,
+              "cache_write_tokens": null
             }
           },
           "model_provider": "openai",

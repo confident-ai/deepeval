@@ -22,7 +22,8 @@
           "inputParameters": {
             "location": "San Francisco",
             "unit": "c"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "OpenAI"
@@ -78,7 +79,8 @@
           "inputParameters": {
             "location": "San Francisco",
             "unit": "c"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "toolsCalled": [
@@ -89,7 +91,8 @@
           "inputParameters": {
             "location": "San Francisco",
             "unit": "c"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "model": "gpt-4o-mini",
@@ -134,7 +137,8 @@
       "inputParameters": {
         "location": "San Francisco",
         "unit": "c"
-      }
+      },
+      "type": "FUNCTION"
     }
   ],
   "status": "SUCCESS"

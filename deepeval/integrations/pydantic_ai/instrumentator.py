@@ -130,7 +130,10 @@ class DeepEvalInstrumentationSettings(InstrumentationSettings):
     Construction does the non-negotiable plumbing — creates a
     ``TracerProvider``, registers ``SpanInterceptor`` and
     ``ContextAwareSpanProcessor``, sets the global tracer provider, and
-    forwards itself to ``Agent(instrument=...)``. The constructor is
+    wires itself onto pydantic-ai's agents via ``Agent.instrument_all``.
+    (pydantic-ai 2.x removed the ``Agent(instrument=...)`` constructor
+    kwarg, so simply constructing these settings is what activates
+    instrumentation — no per-agent wiring needed.) The constructor is
     required for the integration to work; you cannot use the runtime
     helpers (``update_current_trace`` / ``update_current_span``) to
     bootstrap the OTel pipeline.
@@ -225,6 +228,15 @@ class DeepEvalInstrumentationSettings(InstrumentationSettings):
             logger.warning(f"Could not set global tracer provider: {e}")
 
         super().__init__(tracer_provider=trace_provider)
+
+        # Wire these settings onto pydantic-ai's agents. pydantic-ai 2.x
+        # removed the ``Agent(instrument=...)`` constructor kwarg, so
+        # constructing the settings is now what activates instrumentation
+        # (realizing the "forwards itself" contract this class documents).
+        # ``instrument_all`` is available on both 1.x and 2.x.
+        from pydantic_ai import Agent
+
+        Agent.instrument_all(self)
 
 
 class ConfidentInstrumentationSettings(DeepEvalInstrumentationSettings):

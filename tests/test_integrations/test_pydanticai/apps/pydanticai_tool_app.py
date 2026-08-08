@@ -31,7 +31,6 @@ def create_tool_agent(
             "You are a calculator assistant. Use the calculate tool "
             "for math operations. Be concise."
         ),
-        instrument=settings,
         name="tool_agent",
     )
 

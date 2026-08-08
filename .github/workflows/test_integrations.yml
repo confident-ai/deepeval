@@ -91,10 +91,6 @@ jobs:
           poetry install --no-interaction --no-root --only main
           poetry install --with integrations
           poetry run pip install -U crewai
-          # Pin to pydantic-ai-slim[openai] to avoid the meta-package's
-          # mistral extra (mistralai is currently quarantined on PyPI;
-          # see comment in pyproject.toml integrations group).
-          poetry run pip install -U "pydantic-ai-slim[openai]"
 
       - name: Install Project
         run: poetry install --no-interaction --only main

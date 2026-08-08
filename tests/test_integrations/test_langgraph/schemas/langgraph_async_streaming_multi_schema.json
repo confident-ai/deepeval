@@ -455,7 +455,8 @@
           },
           "inputParameters": {
             "symbol": "AMZN"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "get_stock_price",
@@ -472,7 +473,8 @@
           },
           "inputParameters": {
             "symbol": "AMZN"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -980,7 +982,8 @@
       },
       "inputParameters": {
         "symbol": "AMZN"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "get_stock_price",
@@ -997,7 +1000,8 @@
       },
       "inputParameters": {
         "symbol": "AMZN"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

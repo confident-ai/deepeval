@@ -46,7 +46,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -148,7 +149,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -216,7 +218,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -322,7 +325,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -390,7 +394,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -492,7 +497,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -561,7 +567,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -667,7 +674,8 @@
           },
           "inputParameters": {
             "city": "Sydney, Australia"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "get_weather",
@@ -684,7 +692,8 @@
           },
           "inputParameters": {
             "city": "Tokyo, Japan"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "search_news",
@@ -701,7 +710,8 @@
           },
           "inputParameters": {
             "topic": "tech"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -745,7 +755,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -838,7 +849,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -1156,7 +1168,8 @@
             },
             "prompt_tokens_details": {
               "audio_tokens": 0,
-              "cached_tokens": 0
+              "cached_tokens": 0,
+              "cache_write_tokens": null
             }
           },
           "model_provider": "openai",
@@ -1258,7 +1271,8 @@
             },
             "prompt_tokens_details": {
               "audio_tokens": 0,
-              "cached_tokens": 0
+              "cached_tokens": 0,
+              "cache_write_tokens": null
             }
           },
           "model_provider": "openai",
@@ -1306,7 +1320,8 @@
       },
       "inputParameters": {
         "city": "Sydney, Australia"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "get_weather",
@@ -1323,7 +1338,8 @@
       },
       "inputParameters": {
         "city": "Tokyo, Japan"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "search_news",
@@ -1340,7 +1356,8 @@
       },
       "inputParameters": {
         "topic": "tech"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

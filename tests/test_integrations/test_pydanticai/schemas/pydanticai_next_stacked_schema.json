@@ -1,14 +1,14 @@
 {
-  "uuid": "d1060023702e963c31a0c750870b3478",
+  "uuid": "1f01ed1835bbf06c659eb26e742c48bb",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "6630f331b3688d55",
+      "uuid": "d84648a003b255f0",
       "name": "next_span_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:39.903Z",
-      "endTime": "2026-06-01T16:36:40.835Z",
+      "startTime": "2026-07-12T14:34:22.532Z",
+      "endTime": "2026-07-12T14:34:23.537Z",
       "metadata": {
         "layer": "agent",
         "scenario": "stacked"
@@ -19,7 +19,7 @@
           "content": "Say goodbye in exactly three words."
         }
       ],
-      "output": "Farewell until next.",
+      "output": "Farewell, take care.",
       "integration": "PydanticAI",
       "availableTools": [],
       "agentHandoffs": [],
@@ -28,13 +28,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "a0a6bf47cd760da5",
+      "uuid": "aec61c5469700bea",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "6630f331b3688d55",
-      "startTime": "2026-06-01T16:36:39.917Z",
-      "endTime": "2026-06-01T16:36:40.827Z",
+      "parentUuid": "d84648a003b255f0",
+      "startTime": "2026-07-12T14:34:22.534Z",
+      "endTime": "2026-07-12T14:34:23.534Z",
       "metadata": {
         "layer": "llm",
         "scenario": "stacked"
@@ -67,21 +67,21 @@
       "output": [
         {
           "role": "assistant",
-          "content": "Farewell until next."
+          "content": "Farewell, take care."
         }
       ],
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
       "inputTokenCount": 28.0,
-      "outputTokenCount": 5.0,
+      "outputTokenCount": 7.0,
       "metricCollection": "llm_stacked_v1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-06-01T16:36:39.903Z",
-  "endTime": "2026-06-01T16:36:40.835Z",
+  "startTime": "2026-07-12T14:34:22.532Z",
+  "endTime": "2026-07-12T14:34:23.537Z",
   "name": "pydanticai-next-stacked-test",
   "metadata": {
     "test_type": "next_stacked"
@@ -99,6 +99,6 @@
       "content": "Say goodbye in exactly three words."
     }
   ],
-  "output": "Farewell until next.",
+  "output": "Farewell, take care.",
   "status": "SUCCESS"
 }

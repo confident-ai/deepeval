@@ -46,7 +46,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -130,7 +131,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -198,7 +200,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -286,7 +289,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -354,7 +358,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -438,7 +443,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -507,7 +513,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -595,7 +602,8 @@
           },
           "inputParameters": {
             "city": "Paris"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "calculate",
@@ -612,7 +620,8 @@
           },
           "inputParameters": {
             "expression": "100 * 1.5 + 50"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -656,7 +665,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -741,7 +751,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -1003,7 +1014,8 @@
             },
             "prompt_tokens_details": {
               "audio_tokens": 0,
-              "cached_tokens": 0
+              "cached_tokens": 0,
+              "cache_write_tokens": null
             }
           },
           "model_provider": "openai",
@@ -1087,7 +1099,8 @@
             },
             "prompt_tokens_details": {
               "audio_tokens": 0,
-              "cached_tokens": 0
+              "cached_tokens": 0,
+              "cache_write_tokens": null
             }
           },
           "model_provider": "openai",
@@ -1135,7 +1148,8 @@
       },
       "inputParameters": {
         "city": "Paris"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "calculate",
@@ -1152,7 +1166,8 @@
       },
       "inputParameters": {
         "expression": "100 * 1.5 + 50"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

@@ -115,7 +115,8 @@
           },
           "inputParameters": {
             "symbol": "TSLA"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -383,7 +384,8 @@
       },
       "inputParameters": {
         "symbol": "TSLA"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }

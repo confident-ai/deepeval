@@ -1,22 +1,32 @@
 {
-  "uuid": "ea8da60991ed99754a453b9cd9e8b64b",
+  "uuid": "ea2b9062c4b9aa142e6ca904d85c0d99",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "8e67fb7fdad8d19c",
+      "uuid": "9001e63e660ceaa8",
       "name": "evals_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:36.995Z",
-      "endTime": "2026-06-01T16:36:39.059Z",
+      "startTime": "2026-07-12T14:34:18.896Z",
+      "endTime": "2026-07-12T14:34:21.353Z",
       "input": [
         {
           "role": "user",
           "content": "Use the special_tool to process 'Sync Data'"
         }
       ],
-      "output": "The query \"Sync Data\" has been processed.",
+      "output": "The query \"Sync Data\" has been processed successfully.",
       "integration": "PydanticAI",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "type": "FUNCTION",
+          "output": "Processed: Sync Data",
+          "inputParameters": {
+            "query": "Sync Data"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": [],
       "metricCollection": "agent_metrics_v1"
@@ -24,13 +34,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "ac551573e2cb3a46",
+      "uuid": "d4bc97a9e0abfa11",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "8e67fb7fdad8d19c",
-      "startTime": "2026-06-01T16:36:38.293Z",
-      "endTime": "2026-06-01T16:36:39.059Z",
+      "parentUuid": "9001e63e660ceaa8",
+      "startTime": "2026-07-12T14:34:20.280Z",
+      "endTime": "2026-07-12T14:34:21.351Z",
       "input": [
         {
           "role": "system",
@@ -44,7 +54,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_mGP0znNrH6k7P8omd8FN3E9g",
+            "id": "call_X6lpuh4uG8GDEXA1RRVGvo1T",
             "name": "special_tool",
             "arguments": "{\"query\":\"Sync Data\"}"
           }
@@ -53,7 +63,7 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_mGP0znNrH6k7P8omd8FN3E9g",
+            "id": "call_X6lpuh4uG8GDEXA1RRVGvo1T",
             "name": "special_tool",
             "result": "Processed: Sync Data"
           }
@@ -88,7 +98,8 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null
               }
             ],
             "native_tools": [],
@@ -106,23 +117,23 @@
       "output": [
         {
           "role": "assistant",
-          "content": "The query \"Sync Data\" has been processed."
+          "content": "The query \"Sync Data\" has been processed successfully."
         }
       ],
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 90.0,
-      "outputTokenCount": 11.0
+      "inputTokenCount": 86.0,
+      "outputTokenCount": 13.0
     },
     {
-      "uuid": "48c404fe398d019f",
+      "uuid": "64f8477190c59483",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "8e67fb7fdad8d19c",
-      "startTime": "2026-06-01T16:36:36.997Z",
-      "endTime": "2026-06-01T16:36:38.288Z",
+      "parentUuid": "9001e63e660ceaa8",
+      "startTime": "2026-07-12T14:34:18.900Z",
+      "endTime": "2026-07-12T14:34:20.277Z",
       "input": [
         {
           "role": "system",
@@ -162,7 +173,8 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null
               }
             ],
             "native_tools": [],
@@ -182,7 +194,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_mGP0znNrH6k7P8omd8FN3E9g",
+            "id": "call_X6lpuh4uG8GDEXA1RRVGvo1T",
             "name": "special_tool",
             "arguments": "{\"query\":\"Sync Data\"}"
           }
@@ -191,20 +203,20 @@
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 63.0,
-      "outputTokenCount": 15.0
+      "inputTokenCount": 61.0,
+      "outputTokenCount": 16.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "2c073e85368feab3",
+      "uuid": "af5a489b640e024e",
       "name": "special_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "8e67fb7fdad8d19c",
-      "startTime": "2026-06-01T16:36:38.290Z",
-      "endTime": "2026-06-01T16:36:38.291Z",
+      "parentUuid": "9001e63e660ceaa8",
+      "startTime": "2026-07-12T14:34:20.279Z",
+      "endTime": "2026-07-12T14:34:20.279Z",
       "input": {
         "query": "Sync Data"
       },
@@ -212,8 +224,8 @@
       "integration": "PydanticAI"
     }
   ],
-  "startTime": "2026-06-01T16:36:36.995Z",
-  "endTime": "2026-06-01T16:36:39.059Z",
+  "startTime": "2026-07-12T14:34:18.896Z",
+  "endTime": "2026-07-12T14:34:21.353Z",
   "name": "pydanticai-full-features-sync",
   "metadata": {
     "env": "testing",
@@ -233,7 +245,7 @@
       "content": "Use the special_tool to process 'Sync Data'"
     }
   ],
-  "output": "The query \"Sync Data\" has been processed.",
+  "output": "The query \"Sync Data\" has been processed successfully.",
   "status": "SUCCESS",
   "metricCollection": "trace_metrics_override_v1"
 }

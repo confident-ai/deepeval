@@ -265,7 +265,11 @@ def check_tool_input_parameters_from_gen_ai_attributes(
     span: ReadableSpan,
 ) -> Optional[dict]:
     try:
-        tool_arguments = span.attributes.get("tool_arguments")
+        # ``tool_arguments`` is the legacy name; pydantic-ai 2.x emits the
+        # OTel GenAI-semconv ``gen_ai.tool.call.arguments`` instead.
+        tool_arguments = span.attributes.get(
+            "tool_arguments"
+        ) or span.attributes.get("gen_ai.tool.call.arguments")
         if tool_arguments:
             return json.loads(tool_arguments)
     except Exception:
@@ -622,7 +626,11 @@ def check_pydantic_ai_tools_called(
 
 def check_tool_output(span: ReadableSpan):
     try:
-        return span.attributes.get("tool_response")
+        # ``tool_response`` is the legacy name; pydantic-ai 2.x emits the
+        # OTel GenAI-semconv ``gen_ai.tool.call.result`` instead.
+        return span.attributes.get("tool_response") or span.attributes.get(
+            "gen_ai.tool.call.result"
+        )
     except Exception:
         pass
     return None

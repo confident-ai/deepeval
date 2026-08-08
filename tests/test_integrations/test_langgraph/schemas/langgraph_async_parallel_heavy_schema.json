@@ -46,7 +46,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -292,7 +293,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -360,7 +362,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -610,7 +613,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -678,7 +682,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -924,7 +929,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -993,7 +999,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -1243,7 +1250,8 @@
           },
           "inputParameters": {
             "city": "Tokyo"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "get_weather",
@@ -1260,7 +1268,8 @@
           },
           "inputParameters": {
             "city": "New York"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "get_weather",
@@ -1277,7 +1286,8 @@
           },
           "inputParameters": {
             "city": "London"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "get_weather",
@@ -1294,7 +1304,8 @@
           },
           "inputParameters": {
             "city": "Sydney"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "get_weather",
@@ -1311,7 +1322,8 @@
           },
           "inputParameters": {
             "city": "Paris"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "get_stock_price",
@@ -1328,7 +1340,8 @@
           },
           "inputParameters": {
             "symbol": "GOOGL"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "get_stock_price",
@@ -1345,7 +1358,8 @@
           },
           "inputParameters": {
             "symbol": "AAPL"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "calculate",
@@ -1362,7 +1376,8 @@
           },
           "inputParameters": {
             "expression": "0.15*378.90"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "get_stock_price",
@@ -1379,7 +1394,8 @@
           },
           "inputParameters": {
             "symbol": "MSFT"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "calculate",
@@ -1396,7 +1412,8 @@
           },
           "inputParameters": {
             "expression": "1/0.79"
-          }
+          },
+          "type": "FUNCTION"
         },
         {
           "name": "calculate",
@@ -1413,7 +1430,8 @@
           },
           "inputParameters": {
             "expression": "1/0.92"
-          }
+          },
+          "type": "FUNCTION"
         }
       ],
       "integration": "LangChain"
@@ -1457,7 +1475,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -1614,7 +1633,8 @@
                 },
                 "prompt_tokens_details": {
                   "audio_tokens": 0,
-                  "cached_tokens": 0
+                  "cached_tokens": 0,
+                  "cache_write_tokens": null
                 }
               },
               "model_provider": "openai",
@@ -2269,7 +2289,8 @@
             },
             "prompt_tokens_details": {
               "audio_tokens": 0,
-              "cached_tokens": 0
+              "cached_tokens": 0,
+              "cache_write_tokens": null
             }
           },
           "model_provider": "openai",
@@ -2515,7 +2536,8 @@
             },
             "prompt_tokens_details": {
               "audio_tokens": 0,
-              "cached_tokens": 0
+              "cached_tokens": 0,
+              "cache_write_tokens": null
             }
           },
           "model_provider": "openai",
@@ -2563,7 +2585,8 @@
       },
       "inputParameters": {
         "city": "Tokyo"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "get_weather",
@@ -2580,7 +2603,8 @@
       },
       "inputParameters": {
         "city": "New York"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "get_weather",
@@ -2597,7 +2621,8 @@
       },
       "inputParameters": {
         "city": "London"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "get_weather",
@@ -2614,7 +2639,8 @@
       },
       "inputParameters": {
         "city": "Sydney"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "get_weather",
@@ -2631,7 +2657,8 @@
       },
       "inputParameters": {
         "city": "Paris"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "get_stock_price",
@@ -2648,7 +2675,8 @@
       },
       "inputParameters": {
         "symbol": "GOOGL"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "get_stock_price",
@@ -2665,7 +2693,8 @@
       },
       "inputParameters": {
         "symbol": "AAPL"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "calculate",
@@ -2682,7 +2711,8 @@
       },
       "inputParameters": {
         "expression": "0.15*378.90"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "get_stock_price",
@@ -2699,7 +2729,8 @@
       },
       "inputParameters": {
         "symbol": "MSFT"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "calculate",
@@ -2716,7 +2747,8 @@
       },
       "inputParameters": {
         "expression": "1/0.79"
-      }
+      },
+      "type": "FUNCTION"
     },
     {
       "name": "calculate",
@@ -2733,7 +2765,8 @@
       },
       "inputParameters": {
         "expression": "1/0.92"
-      }
+      },
+      "type": "FUNCTION"
     }
   ]
 }
