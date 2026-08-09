@@ -495,11 +495,16 @@ Roughly in order of how much they hurt a TypeScript reader.
    `frameworks/mastra` are the only two, and Mastra is the only one whose
    sidebar group would otherwise be empty for a TypeScript reader. The Vercel AI
    SDK as a *framework* is the natural third.
-6. **No preference persistence.** The selection is `useState` with no storage,
-   so it resets to Python on every refresh, new tab, and search-result landing.
-   Since most docs traffic arrives directly on an interior page, a TypeScript
-   reader currently has to re-select on nearly every visit. Needs localStorage
-   plus a pre-hydration script to avoid a flash.
+6. **No preference persistence across visits.** The selection is `useState`
+   with no cookie/localStorage, so a new tab or hard refresh does not remember
+   the last pick. Mono-language pages now SSR and open in their only language
+   (TS-only → TypeScript, Python-only → Python) via the generated
+   `page-languages` map, and bilingual pages still default to Python — so a
+   crawler hitting Mastra indexes real content instead of a 501. Soft-nav onto
+   a mono-language page adopts that language; bilingual pages keep the current
+   preference. Cross-visit persistence still needs localStorage (or a cookie)
+   plus a pre-hydration script if we want to avoid resetting bilingual pages
+   to Python on every landing.
 7. **`llms.txt` is Python-only.** `lowerTerms` in
    [`lib/lang/term.ts`](lib/lang/term.ts) hardcodes Python when lowering
    `<Term>` tags. `languages` now makes per-language output possible.
@@ -524,9 +529,9 @@ Replacing the `<PythonOnly />` marker component with `languages` frontmatter:
   with the parent and have nothing left linking to it — so
   `assertPageTreeLanguages` in [`lib/lang/validate.ts`](lib/lang/validate.ts)
   walks every section's tree at build time and fails with the offending URLs.
-- The reader's preference is never overridden, only the current page's
-  rendering. Selecting TypeScript, passing through a Python-only page, and
-  landing on a bilingual one keeps the selection intact.
+- Soft-navigating onto a **mono-language** page adopts that page's only
+  language so the reader (and SSR) never land on a 501 for a page that can
+  serve them. Bilingual pages keep the current preference across navigations.
 - The selector is scoped to docs and integrations, which is now also the only
   place a language tag appears at all. Inheriting the choice had made the 187
   `<Switch>` blocks in guides and tutorials reachable for the first time, and

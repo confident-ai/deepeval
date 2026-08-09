@@ -8,10 +8,11 @@ import type { Language } from "@/lib/lang/languages";
 /**
  * Gates a page on the reader's language.
  *
- * Content only ever renders in the language the reader actually picked, so a
- * page that cannot serve it shows nothing rather than quietly falling back to
- * the other language. The preference is left untouched so it still applies on
- * the next page.
+ * Content only ever renders in a language the page declares, so a mismatch
+ * shows a 501 rather than quietly falling back. In practice
+ * `LanguageProvider` already opens mono-language pages in their only
+ * language (SSR and soft-nav), so this is a safety net for odd edge cases.
+ * Bilingual pages keep the reader's preference across navigations.
  */
 export const PageLanguageScope = ({
   languages,

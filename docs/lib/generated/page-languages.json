@@ -1,0 +1,660 @@
+{
+  "/docs//evaluation-arena-test-cases": [
+    "python",
+    "typescript"
+  ],
+  "/docs//evaluation-multiturn-test-cases": [
+    "python",
+    "typescript"
+  ],
+  "/docs//evaluation-test-cases": [
+    "python",
+    "typescript"
+  ],
+  "/docs/benchmarks-arc": [
+    "python"
+  ],
+  "/docs/benchmarks-bbq": [
+    "python"
+  ],
+  "/docs/benchmarks-big-bench-hard": [
+    "python"
+  ],
+  "/docs/benchmarks-bool-q": [
+    "python"
+  ],
+  "/docs/benchmarks-drop": [
+    "python"
+  ],
+  "/docs/benchmarks-gsm8k": [
+    "python"
+  ],
+  "/docs/benchmarks-hellaswag": [
+    "python"
+  ],
+  "/docs/benchmarks-human-eval": [
+    "python"
+  ],
+  "/docs/benchmarks-ifeval": [
+    "python"
+  ],
+  "/docs/benchmarks-introduction": [
+    "python"
+  ],
+  "/docs/benchmarks-lambada": [
+    "python"
+  ],
+  "/docs/benchmarks-logi-qa": [
+    "python"
+  ],
+  "/docs/benchmarks-math-qa": [
+    "python"
+  ],
+  "/docs/benchmarks-mmlu": [
+    "python"
+  ],
+  "/docs/benchmarks-squad": [
+    "python"
+  ],
+  "/docs/benchmarks-truthful-qa": [
+    "python"
+  ],
+  "/docs/benchmarks-winogrande": [
+    "python"
+  ],
+  "/docs/command-line-interface": [
+    "python",
+    "typescript"
+  ],
+  "/docs/community-metrics-overview": [
+    "python"
+  ],
+  "/docs/conversation-simulator": [
+    "python"
+  ],
+  "/docs/conversation-simulator-custom-templates": [
+    "python"
+  ],
+  "/docs/conversation-simulator-lifecycle-hooks": [
+    "python"
+  ],
+  "/docs/conversation-simulator-model-callback": [
+    "python"
+  ],
+  "/docs/conversation-simulator-simulation-graph": [
+    "python"
+  ],
+  "/docs/conversation-simulator-stopping-logic": [
+    "python"
+  ],
+  "/docs/data-privacy": [
+    "python",
+    "typescript"
+  ],
+  "/docs/environment-variables": [
+    "python",
+    "typescript"
+  ],
+  "/docs/evaluation-component-level-llm-evals": [
+    "python",
+    "typescript"
+  ],
+  "/docs/evaluation-datasets": [
+    "python",
+    "typescript"
+  ],
+  "/docs/evaluation-end-to-end-llm-evals": [
+    "python",
+    "typescript"
+  ],
+  "/docs/evaluation-end-to-end-multi-turn": [
+    "python",
+    "typescript"
+  ],
+  "/docs/evaluation-end-to-end-single-turn": [
+    "python",
+    "typescript"
+  ],
+  "/docs/evaluation-flags-and-configs": [
+    "python",
+    "typescript"
+  ],
+  "/docs/evaluation-introduction": [
+    "python",
+    "typescript"
+  ],
+  "/docs/evaluation-llm-tracing": [
+    "python",
+    "typescript"
+  ],
+  "/docs/evaluation-mcp": [
+    "python",
+    "typescript"
+  ],
+  "/docs/evaluation-prompts": [
+    "python"
+  ],
+  "/docs/evaluation-unit-testing-in-ci-cd": [
+    "python",
+    "typescript"
+  ],
+  "/docs/faq": [
+    "python",
+    "typescript"
+  ],
+  "/docs/getting-started": [
+    "python",
+    "typescript"
+  ],
+  "/docs/getting-started-agents": [
+    "python",
+    "typescript"
+  ],
+  "/docs/getting-started-chatbots": [
+    "python",
+    "typescript"
+  ],
+  "/docs/getting-started-llm-arena": [
+    "python",
+    "typescript"
+  ],
+  "/docs/getting-started-mcp": [
+    "python",
+    "typescript"
+  ],
+  "/docs/getting-started-rag": [
+    "python",
+    "typescript"
+  ],
+  "/docs/golden-synthesizer": [
+    "python"
+  ],
+  "/docs/introduction": [
+    "python",
+    "typescript"
+  ],
+  "/docs/introduction-comparisons": [
+    "python",
+    "typescript"
+  ],
+  "/docs/introduction-design-philosophy": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-agent-loop-detection": [
+    "python"
+  ],
+  "/docs/metrics-answer-relevancy": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-arena-g-eval": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-argument-correctness": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-bias": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-citation-faithfulness": [
+    "python"
+  ],
+  "/docs/metrics-contextual-precision": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-contextual-recall": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-contextual-relevancy": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-conversation-completeness": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-conversational-dag": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-conversational-g-eval": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-custom": [
+    "python"
+  ],
+  "/docs/metrics-dag": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-exact-match": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-faithfulness": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-goal-accuracy": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-hallucination": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-introduction": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-json-correctness": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-knowledge-retention": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-llm-evals": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-mcp-task-completion": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-mcp-use": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-misuse": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-multi-turn-mcp-use": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-non-advice": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-pattern-match": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-pii-leakage": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-plan-adherence": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-plan-quality": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-prompt-alignment": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-ragas": [
+    "python"
+  ],
+  "/docs/metrics-role-adherence": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-role-violation": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-step-efficiency": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-summarization": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-task-completion": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-tool-correctness": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-tool-permission": [
+    "python"
+  ],
+  "/docs/metrics-tool-use": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-topic-adherence": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-toxicity": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-turn-contextual-precision": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-turn-contextual-recall": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-turn-contextual-relevancy": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-turn-faithfulness": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-turn-relevancy": [
+    "python",
+    "typescript"
+  ],
+  "/docs/miscellaneous": [
+    "python"
+  ],
+  "/docs/multimodal-metrics-image-coherence": [
+    "python",
+    "typescript"
+  ],
+  "/docs/multimodal-metrics-image-editing": [
+    "python",
+    "typescript"
+  ],
+  "/docs/multimodal-metrics-image-helpfulness": [
+    "python",
+    "typescript"
+  ],
+  "/docs/multimodal-metrics-image-reference": [
+    "python",
+    "typescript"
+  ],
+  "/docs/multimodal-metrics-text-to-image": [
+    "python",
+    "typescript"
+  ],
+  "/docs/prompt-optimization-copro": [
+    "python"
+  ],
+  "/docs/prompt-optimization-gepa": [
+    "python"
+  ],
+  "/docs/prompt-optimization-introduction": [
+    "python"
+  ],
+  "/docs/prompt-optimization-miprov2": [
+    "python"
+  ],
+  "/docs/prompt-optimization-simba": [
+    "python"
+  ],
+  "/docs/synthesizer-generate-from-contexts": [
+    "python"
+  ],
+  "/docs/synthesizer-generate-from-docs": [
+    "python"
+  ],
+  "/docs/synthesizer-generate-from-goldens": [
+    "python"
+  ],
+  "/docs/synthesizer-generate-from-scratch": [
+    "python"
+  ],
+  "/docs/synthetic-data-generation-introduction": [
+    "python"
+  ],
+  "/docs/troubleshooting": [
+    "python",
+    "typescript"
+  ],
+  "/docs/vibe-coder-quickstart": [
+    "python",
+    "typescript"
+  ],
+  "/docs/vibe-coding": [
+    "python",
+    "typescript"
+  ],
+  "/guides/guides-ai-agent-evaluation": [
+    "python"
+  ],
+  "/guides/guides-ai-agent-evaluation-metrics": [
+    "python"
+  ],
+  "/guides/guides-answer-correctness-metric": [
+    "python"
+  ],
+  "/guides/guides-building-custom-metrics": [
+    "python"
+  ],
+  "/guides/guides-dag-metric": [
+    "python"
+  ],
+  "/guides/guides-multi-turn-evaluation": [
+    "python"
+  ],
+  "/guides/guides-multi-turn-evaluation-metrics": [
+    "python"
+  ],
+  "/guides/guides-multi-turn-simulation": [
+    "python"
+  ],
+  "/guides/guides-optimizing-hyperparameters": [
+    "python"
+  ],
+  "/guides/guides-rag-evaluation": [
+    "python"
+  ],
+  "/guides/guides-rag-triad": [
+    "python"
+  ],
+  "/guides/guides-red-teaming": [
+    "python"
+  ],
+  "/guides/guides-regression-testing-in-cicd": [
+    "python"
+  ],
+  "/guides/guides-tracing-ai-agents": [
+    "python"
+  ],
+  "/guides/guides-tracing-multi-turn": [
+    "python"
+  ],
+  "/guides/guides-tracing-rag": [
+    "python"
+  ],
+  "/guides/guides-using-custom-embedding-models": [
+    "python"
+  ],
+  "/guides/guides-using-custom-llms": [
+    "python"
+  ],
+  "/guides/guides-using-synthesizer": [
+    "python"
+  ],
+  "/integrations": [
+    "python",
+    "typescript"
+  ],
+  "/integrations/frameworks/agentcore": [
+    "python"
+  ],
+  "/integrations/frameworks/ai-sdk": [
+    "typescript"
+  ],
+  "/integrations/frameworks/anthropic": [
+    "python"
+  ],
+  "/integrations/frameworks/crewai": [
+    "python"
+  ],
+  "/integrations/frameworks/google-adk": [
+    "python"
+  ],
+  "/integrations/frameworks/huggingface": [
+    "python"
+  ],
+  "/integrations/frameworks/langchain": [
+    "python",
+    "typescript"
+  ],
+  "/integrations/frameworks/langgraph": [
+    "python"
+  ],
+  "/integrations/frameworks/llamaindex": [
+    "python"
+  ],
+  "/integrations/frameworks/mastra": [
+    "typescript"
+  ],
+  "/integrations/frameworks/openai": [
+    "python"
+  ],
+  "/integrations/frameworks/openai-agents": [
+    "python",
+    "typescript"
+  ],
+  "/integrations/frameworks/pydanticai": [
+    "python"
+  ],
+  "/integrations/frameworks/strands": [
+    "python"
+  ],
+  "/integrations/models/ai-sdk": [
+    "typescript"
+  ],
+  "/integrations/models/amazon-bedrock": [
+    "python",
+    "typescript"
+  ],
+  "/integrations/models/anthropic": [
+    "python",
+    "typescript"
+  ],
+  "/integrations/models/azure-openai": [
+    "python",
+    "typescript"
+  ],
+  "/integrations/models/deepseek": [
+    "python",
+    "typescript"
+  ],
+  "/integrations/models/gemini": [
+    "python",
+    "typescript"
+  ],
+  "/integrations/models/grok": [
+    "python",
+    "typescript"
+  ],
+  "/integrations/models/litellm": [
+    "python"
+  ],
+  "/integrations/models/lmstudio": [
+    "python",
+    "typescript"
+  ],
+  "/integrations/models/moonshot": [
+    "python",
+    "typescript"
+  ],
+  "/integrations/models/ollama": [
+    "python",
+    "typescript"
+  ],
+  "/integrations/models/openai": [
+    "python",
+    "typescript"
+  ],
+  "/integrations/models/openrouter": [
+    "python",
+    "typescript"
+  ],
+  "/integrations/models/portkey": [
+    "python",
+    "typescript"
+  ],
+  "/integrations/models/vertex-ai": [
+    "python",
+    "typescript"
+  ],
+  "/integrations/models/vllm": [
+    "python",
+    "typescript"
+  ],
+  "/integrations/vector-databases/chroma": [
+    "python"
+  ],
+  "/integrations/vector-databases/cognee": [
+    "python"
+  ],
+  "/integrations/vector-databases/elasticsearch": [
+    "python"
+  ],
+  "/integrations/vector-databases/pgvector": [
+    "python"
+  ],
+  "/integrations/vector-databases/qdrant": [
+    "python"
+  ],
+  "/integrations/vector-databases/weaviate": [
+    "python"
+  ],
+  "/tutorials/medical-chatbot/development": [
+    "python"
+  ],
+  "/tutorials/medical-chatbot/evals-in-prod": [
+    "python"
+  ],
+  "/tutorials/medical-chatbot/evaluation": [
+    "python"
+  ],
+  "/tutorials/medical-chatbot/improvement": [
+    "python"
+  ],
+  "/tutorials/rag-qa-agent/development": [
+    "python"
+  ],
+  "/tutorials/rag-qa-agent/evals-in-prod": [
+    "python"
+  ],
+  "/tutorials/rag-qa-agent/evaluation": [
+    "python"
+  ],
+  "/tutorials/rag-qa-agent/improvement": [
+    "python"
+  ],
+  "/tutorials/summarization-agent/development": [
+    "python"
+  ],
+  "/tutorials/summarization-agent/evals-in-prod": [
+    "python"
+  ],
+  "/tutorials/summarization-agent/evaluation": [
+    "python"
+  ],
+  "/tutorials/summarization-agent/improvement": [
+    "python"
+  ],
+  "/tutorials/tutorial-setup": [
+    "python"
+  ]
+}

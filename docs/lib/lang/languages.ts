@@ -40,3 +40,15 @@ export const LANGUAGE_IDS = Object.keys(LANGUAGES) as [
 
 /** Explicit rather than `LANGUAGE_IDS[0]` so reordering cannot change it. */
 export const DEFAULT_LANGUAGE: Language = "python";
+
+/**
+ * Language to open a page in when the reader has no usable preference yet.
+ *
+ * Mono-language pages use their only language (so TS-only pages SSR as
+ * TypeScript instead of a Python 501). Bilingual / undeclared pages keep the
+ * product default (Python).
+ */
+export function resolveInitialLanguage(supported?: Language[]): Language {
+  if (supported?.length === 1) return supported[0];
+  return DEFAULT_LANGUAGE;
+}
