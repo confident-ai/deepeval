@@ -6,9 +6,9 @@ import {
   renderResponseInput,
   renderMessages,
   safeJson,
-} from "./utils";
-import { InputParameters, OutputParameters } from "./types";
-import { ToolCall } from "../test-case";
+} from "@/openai/utils";
+import { InputParameters, OutputParameters } from "@/openai/types";
+import { ToolCall } from "@/test-case";
 
 export function safeExtractInputParameters(
   isCompletion: boolean,

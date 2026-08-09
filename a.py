@@ -303,9 +303,9 @@ def scenario_judge_model() -> None:
     # Constructing the client needs a key present; nothing is ever sent to it.
     os.environ.setdefault("OPENAI_API_KEY", "sk-unused-by-this-script")
     try:
-        from deepeval.models import GPTModel
+        from deepeval.models import OpenAIModel
 
-        model = GPTModel(model="gpt-4.1")
+        model = OpenAIModel(model="gpt-4.1")
     except Exception as error:
         print(f"        skipped, could not construct a model: {error}")
         return

@@ -12,15 +12,11 @@ import {
 } from "@mastra/core/observability";
 import type { AnyExportedSpan, TracingEvent } from "@mastra/core/observability";
 
-import { DeepEvalExporter } from "../../../src/integrations/mastra";
-import { BaseMetric } from "../../../src/metrics/base-metrics";
-import { BaseSpan, SpanType, traceManager } from "../../../src/tracing/tracing";
-import {
-  nextLlmSpan,
-  nextToolSpan,
-  updateCurrentSpan,
-} from "../../../src/tracing";
-import { Environment } from "../../../src/tracing/utils";
+import { DeepEvalExporter } from "@/integrations/mastra";
+import { BaseMetric } from "@/metrics/base-metrics";
+import { BaseSpan, SpanType, traceManager } from "@/tracing/tracing";
+import { nextLlmSpan, nextToolSpan, updateCurrentSpan } from "@/tracing";
+import { Environment } from "@/tracing/utils";
 
 class StubMetric extends BaseMetric {
   constructor(private label: string) {

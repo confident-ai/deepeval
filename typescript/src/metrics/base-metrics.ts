@@ -1,5 +1,14 @@
-import { DeepEvalBaseLLM } from "../models";
-import { SingleTurnParams } from "../test-case";
+import { isVerboseMode } from "@/env-flags";
+import { DeepEvalBaseLLM } from "@/models";
+import { SingleTurnParams } from "@/test-case";
+import { observeMethods } from "@/tracing/internal";
+import { resolveTemplate } from "@/templates";
+import {
+  camelizeVars,
+  decamelizeVars,
+  findOverride,
+  type TemplateVars,
+} from "@/templates/override";
 
 // An indeterminate "pulse" progress bar (a bright window sliding across a dim
 // track, wrapping), mirroring rich's animated BarColumn in Python's per-metric
@@ -17,6 +26,14 @@ function animatedBar(frame: number, width = 24, window = 6): string {
   return bar + RESET;
 }
 
+/** `undefined` takes the default; an explicit `null` (score-only) must survive. */
+export function resolveThreshold(
+  threshold: number | null | undefined,
+  fallback: number,
+): number | null {
+  return threshold === undefined ? fallback : threshold;
+}
+
 /**
  * Shared state + behavior for every metric (single-turn and conversational).
  * Holds the result fields, the progress indicator, and cost accrual; the
@@ -24,7 +41,8 @@ function animatedBar(frame: number, width = 24, window = 6): string {
  * `requiredParams` type and the `measure(testCase)` signature.
  */
 export abstract class BaseMetricCore {
-  threshold: number;
+  /** `null` = score-only: scores, but gives no verdict. */
+  threshold: number | null;
   score?: number;
   scoreBreakdown?: Record<string, any>;
   reason?: string;
@@ -34,6 +52,8 @@ export abstract class BaseMetricCore {
   verboseMode: boolean = false;
   includeReason: boolean = false;
   showIndicator: boolean = true;
+  /** Scores, but never fails a test case. */
+  flaky: boolean = false;
   error?: string;
   evaluationCost?: number;
   verboseLogs?: string;
@@ -41,28 +61,103 @@ export abstract class BaseMetricCore {
   requiresTrace: boolean = false;
   model?: DeepEvalBaseLLM;
   usingNativeModel?: boolean = undefined;
+  /** Direction of the threshold comparison; the safety metrics flip it. */
+  protected higherIsBetter: boolean = true;
+  /** Set from `testCase.multimodal` by the param-check helpers. */
+  multimodal: boolean = false;
+  /** Opt-in: only these render their `{% if multimodal %}` branches, as in Python. */
+  protected multimodalAware: boolean = false;
+  /** This metric's key in the shared template bundle. */
+  protected templateClass: string = "";
+  protected evaluationTemplate?: unknown;
   private _spinner: import("ora").Ora | null = null;
   private _barTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
-    threshold: number,
+    threshold: number | null,
     options?: {
       strictMode?: boolean;
       verboseMode?: boolean;
       includeReason?: boolean;
       showIndicator?: boolean;
+      flaky?: boolean;
+      evaluationTemplate?: unknown;
     },
   ) {
+    observeMethods(this, { methods: ["measure"] });
     this.threshold = threshold;
+    // `--verbose` raises the floor for metrics that didn't opt out explicitly.
+    this.verboseMode = isVerboseMode();
     if (options) {
       this.strictMode = options.strictMode ?? this.strictMode;
       this.verboseMode = options.verboseMode ?? this.verboseMode;
       this.includeReason = options.includeReason ?? this.includeReason;
       this.showIndicator = options.showIndicator ?? this.showIndicator;
+      this.flaky = options.flaky ?? this.flaky;
+      this.evaluationTemplate = options.evaluationTemplate;
     }
   }
 
-  abstract isSuccessful(): boolean;
+  /**
+   * An explicit `templateClass` borrows another metric's template and skips the
+   * override, so an override can't hijack a prompt that isn't this metric's own.
+   */
+  protected getPrompt(
+    method: string,
+    vars: Record<string, unknown> = {},
+    opts: { templateClass?: string; strict?: boolean } = {},
+  ): string {
+    const { templateClass, strict = true } = opts;
+    // An explicit `multimodal` in `vars` still wins.
+    const resolved: Record<string, unknown> = {
+      multimodal: this.multimodalAware && this.multimodal,
+      ...vars,
+    };
+    const render = (v: Record<string, unknown>) =>
+      resolveTemplate(
+        "metrics",
+        templateClass ?? this.templateClass,
+        method,
+        v,
+        { strict },
+      );
+
+    if (templateClass === undefined) {
+      const override = findOverride(this.evaluationTemplate, method);
+      if (override) {
+        const keys = Object.keys(resolved);
+        const context = camelizeVars(resolved) as TemplateVars;
+        return override(context, (overridden) =>
+          render(decamelizeVars(overridden ?? context, keys)),
+        );
+      }
+    }
+    return render(resolved);
+  }
+
+  /**
+   * Threshold is checked before the error, as in Python: a metric with nothing to
+   * decide has no verdict to give, even when it failed.
+   */
+  isSuccessful(): boolean | undefined {
+    if (this.threshold === null) {
+      this.success = undefined;
+    } else if (this.error != null || this.score == null) {
+      this.success = false;
+    } else {
+      this.success = this.higherIsBetter
+        ? this.score >= this.threshold
+        : this.score <= this.threshold;
+    }
+    return this.success;
+  }
+
+  /** Strict mode collapses a near-miss score to the failing extreme. */
+  protected applyStrictMode(score: number): number {
+    if (!this.strictMode || this.threshold === null) return score;
+    if (this.higherIsBetter) return score < this.threshold ? 0 : score;
+    return score > this.threshold ? 1 : score;
+  }
 
   /** The "✨ You're running DeepEval's latest …" description line (mirrors Python). */
   describe(): string {
@@ -109,9 +204,16 @@ export abstract class BaseMetricCore {
     this._spinner = null;
   }
 
+  /**
+   * A cost we can't price makes the running total meaningless, so it becomes
+   * `undefined` ("unknown") rather than staying at its current value, which
+   * would read as free. Sticky, as in Python's `_accrue_cost`.
+   */
   accrueCost(cost: number | null): void {
     if (cost != null && this.evaluationCost != null) {
       this.evaluationCost += cost;
+    } else {
+      this.evaluationCost = undefined;
     }
   }
 

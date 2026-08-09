@@ -2,6 +2,7 @@
 id: lmstudio
 title: LM Studio
 sidebar_label: LM Studio
+languages: [python, typescript]
 ---
 
 `deepeval` supports running evaluations using local LLMs that expose OpenAI-compatible APIs. One such provider is **LM Studio**, a user-friendly desktop app for running models locally.
@@ -28,16 +29,20 @@ You can persist CLI settings with the optional `--save` flag.
 See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
 :::
 
-### Python
+### In Code
 
-Alternatively, you can define `LocalModel` directly in Python code:
+Alternatively, you can define `LocalModel` directly in code:
+
+<Switch>
+
+<Case id="python">
 
 <Tabs items={["Python", "ENV"]}>
 <Tab value="Python">
 
 ```python
-from deepeval.models import LocalModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import LocalModel
 
 model = LocalModel(
     model="<model_name>",
@@ -79,6 +84,78 @@ There are **ZERO** mandatory and **SIX** optional parameters when creating a `Lo
 :::tip
 Any `**kwargs` you would like to use for your model can be passed directly to `LocalModel(...)`; these are forwarded to the underlying OpenAI client constructor.
 :::
+
+</Case>
+
+<Case id="typescript">
+
+<Tabs items={["TypeScript", "ENV"]}>
+<Tab value="TypeScript">
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { LocalModel } from "deepeval/models";
+
+const model = new LocalModel({
+  model: "<model_name>",
+  baseURL: "http://localhost:1234/v1/",
+  apiKey: "lm-studio", // any placeholder works if your server has no auth
+  temperature: 0,
+});
+
+const answerRelevancy = new AnswerRelevancyMetric({ model });
+```
+
+</Tab>
+<Tab value="ENV">
+
+`deepeval` autoloads `.env.local` then `.env` at import time, so you can keep your local server details out of your code entirely:
+
+```bash
+# .env.local
+LOCAL_MODEL_NAME=<model_name>
+LOCAL_MODEL_BASE_URL=http://localhost:1234/v1/
+LOCAL_MODEL_API_KEY=lm-studio
+```
+
+Then create the model with no arguments and pass it to any metric:
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { LocalModel } from "deepeval/models";
+
+const answerRelevancy = new AnswerRelevancyMetric({
+  model: new LocalModel(),
+});
+```
+
+</Tab>
+</Tabs>
+
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `LocalModel`:
+
+- [Optional] `model`: A string specifying the local model to use. Defaults to `LOCAL_MODEL_NAME` if not passed; raises an error if unset.
+- [Optional] `apiKey`: A string specifying the API key for your local server. Defaults to `LOCAL_MODEL_API_KEY` if not passed; falls back to a placeholder string, so local servers without authentication work out of the box.
+- [Optional] `baseURL`: A string specifying the base URL of your local server. Defaults to `LOCAL_MODEL_BASE_URL` if not passed; raises an error if unset.
+- [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
+- [Optional] `defaultHeaders`: An object of extra HTTP headers sent with every request.
+- [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+- [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+
+Any other key you pass is forwarded as-is to the local server's `chat.completions.create(...)` call, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new LocalModel({
+  model: "<model_name>",
+  baseURL: "http://localhost:1234/v1/",
+  top_p: 0.9,
+  max_tokens: 512,
+});
+```
+
+</Case>
+
+</Switch>
 
 ### Reverting to OpenAI
 

@@ -1,12 +1,13 @@
 {
   "name": "langchain-multi-tool-test",
   "uuid": "c7be35ea-d304-43d9-9b1f-3b3e4198344c",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019ed9d8-a4af-71dc-9894-1ac43d3068be",
       "name": "city_info_chain",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "traceUuid": "c7be35ea-d304-43d9-9b1f-3b3e4198344c",
       "startTime": "2026-06-18T08:28:34.351Z",
       "endTime": "2026-06-18T08:28:36.854Z",
@@ -125,7 +126,7 @@
             ],
             "kwargs": {
               "id": "chatcmpl-Ds2Oyj7mvWxsbhBL4PACCnCEW5lWX",
-              "content": "The weather in Tokyo is currently cloudy with a temperature of 68°F.",
+              "content": "The weather in Tokyo is currently cloudy with a temperature of 68\u00b0F.",
               "additional_kwargs": {},
               "response_metadata": {
                 "tokenUsage": {
@@ -172,10 +173,11 @@
             }
           }
         ]
-      }
+      },
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019ed9d8-a4b0-750e-9af7-99e1a18fb0ad",
@@ -236,7 +238,7 @@
       ],
       "output": {
         "role": "AI",
-        "content": "The weather in Tokyo is currently cloudy with a temperature of 68°F.",
+        "content": "The weather in Tokyo is currently cloudy with a temperature of 68\u00b0F.",
         "toolCalls": []
       },
       "model": "gpt-4o-mini-2024-07-18",
@@ -404,7 +406,7 @@
         ],
         "kwargs": {
           "id": "chatcmpl-Ds2Oyj7mvWxsbhBL4PACCnCEW5lWX",
-          "content": "The weather in Tokyo is currently cloudy with a temperature of 68°F.",
+          "content": "The weather in Tokyo is currently cloudy with a temperature of 68\u00b0F.",
           "additional_kwargs": {},
           "response_metadata": {
             "tokenUsage": {

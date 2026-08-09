@@ -8,7 +8,7 @@ from deepeval.test_case import ConversationalTestCase, LLMTestCase
 def _build_measure_kwargs(func: Callable) -> dict:
     params = inspect.signature(func).parameters
     kwargs = {}
-    for key in ("_show_indicator", "_in_component", "_log_metric_to_confident"):
+    for key in ("_show_indicator", "_in_component"):
         if key in params:
             kwargs[key] = False
     return kwargs

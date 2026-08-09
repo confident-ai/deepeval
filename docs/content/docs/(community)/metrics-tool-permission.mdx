@@ -2,7 +2,9 @@
 id: metrics-tool-permission
 title: Tool Permission
 sidebar_label: Tool Permission
+languages: [python]
 ---
+
 <MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={true} />
 
 The Tool Permission metric measures whether your agent only called tools it was **authorized** to, against a permission policy. Unlike the `ToolCorrectnessMetric`, which compares the tools that were called against the tools that were *expected*, this metric enforces **least privilege**: it flags any tool call outside the granted policy, regardless of whether the task was completed.

@@ -24,6 +24,8 @@ it("traced app also accepts an explicit trace-level metric", async () => {
     input: "What is the capital of France?",
     expectedOutput: "Paris",
   });
-  // `golden` supplies the expected output the trace-level metric judges against.
-  await expect(() => ragApp(golden.input)).toPass([correctness()], { golden });
+  // The golden is the subject; `task` produces the trace judged against it.
+  await expect(golden).toPass([correctness()], {
+    task: (g) => ragApp(g.input),
+  });
 });

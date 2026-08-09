@@ -2,6 +2,7 @@
 id: metrics-conversational-g-eval
 title: Conversational G-Eval
 sidebar_label: Conversational G-Eval
+languages: [python, typescript]
 ---
 
 <MetricTagsDisplayer multiTurn={true} custom={true} chatbot={true} />
@@ -16,16 +17,20 @@ To use the `ConversationalGEval` metric, you'll have to provide the following ar
 
 - `turns`
 
-You'll also want to supply any additional arguments such as `retrieval_context` and `tools_called` in `turns` if your evaluation criteria depends on these parameters.
+You'll also want to supply any additional arguments such as <Term py="retrieval_context" ts="retrievalContext"/> and <Term py="tools_called" ts="toolsCalled"/> in `turns` if your evaluation criteria depends on these parameters.
 
 ## Usage
 
 To create a custom metric that evaluates entire LLM conversations, simply instantiate a `ConversationalGEval` class and define an evaluation criteria in everyday language:
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval import evaluate
 from deepeval.test_case import Turn, MultiTurnParams, ConversationalTestCase
 from deepeval.metrics import ConversationalGEval
+from deepeval import evaluate
 
 convo_test_case = ConversationalTestCase(
     turns=[Turn(role="...", content="..."), Turn(role="...", content="...")]
@@ -42,23 +47,74 @@ metric = ConversationalGEval(
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import {
+  Turn,
+  MultiTurnParams,
+  ConversationalTestCase,
+} from "deepeval/test-case";
+import { ConversationalGEval } from "deepeval/metrics";
+import { evaluate } from "deepeval";
+
+const convoTestCase = new ConversationalTestCase({
+  turns: [new Turn({ role: "user", content: "..." }), new Turn({ role: "assistant", content: "..." })],
+});
+const metric = new ConversationalGEval({
+  name: "Professionalism",
+  criteria: "Determine whether the assistant has acted professionally based on the content.",
+  evaluationParams: [MultiTurnParams.CONTENT],
+});
+
+// To run metric as a standalone
+// await metric.measure(convoTestCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([convoTestCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
+<Switch>
+
+<Case id="python">
+
 There are **THREE** mandatory and **SEVEN** optional parameters required when instantiating an `ConversationalGEval` class:
+
+</Case>
+
+<Case id="typescript">
+
+There are **THREE** mandatory and **SIX** optional parameters required when instantiating an `ConversationalGEval` class:
+
+</Case>
+
+</Switch>
 
 - `name`: name of metric. This will **not** affect the evaluation.
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
-- [Optional] `evaluation_params`: a list of type `MultiTurnParams`, include only the parameters that are relevant for evaluation. Defaulted to `[MultiTurnParams.CONTENT]`.
-- [Optional] `evaluation_steps`: a list of strings outlining the exact steps the LLM should take for evaluation. If `evaluation_steps` is not provided, `ConversationalGEval` will generate a series of `evaluation_steps` on your behalf based on the provided `criteria`. You can only provide either `evaluation_steps` **OR** `criteria`, and not both.
-- [Optional] `threshold`: the passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] <Term py="evaluation_params" ts="evaluationParams"/>: a list of type `MultiTurnParams`, include only the parameters that are relevant for evaluation. Defaulted to `[MultiTurnParams.CONTENT]`.
+- [Optional] <Term py="evaluation_steps" ts="evaluationSteps"/>: a list of strings outlining the exact steps the LLM should take for evaluation. If <Term py="evaluation_steps" ts="evaluationSteps"/> is not provided, `ConversationalGEval` will generate a series of <Term py="evaluation_steps" ts="evaluationSteps"/> on your behalf based on the provided `criteria`. You can only provide either <Term py="evaluation_steps" ts="evaluationSteps"/> **OR** `criteria`, and not both.
+- [Optional] `threshold`: the passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `evaluation_template`: a class of type `ConversationalGEvalTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `ConversationalGEval` score. Defaulted to `deepeval`'s `ConversationalGEvalTemplate`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="evaluation_template" ts="evaluationTemplate"/>: a class of type `ConversationalGEvalTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `ConversationalGEval` score. Defaulted to `deepeval`'s `ConversationalGEvalTemplate`.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 :::danger
-For accurate and valid results, only turn parameters that are mentioned in `criteria`/`evaluation_steps` should be included as a member of `evaluation_params`.
+For accurate and valid results, only turn parameters that are mentioned in `criteria`/<Term py="evaluation_steps" ts="evaluationSteps"/> should be included as a member of <Term py="evaluation_params" ts="evaluationParams"/>.
 :::
+
+<Only id="python">
 
 :::tip
 You can upload your `ConversationalGEval` metrics to [Confident AI](https://app.confident-ai.com/) and use them as custom evaluation metrics. To upload a metric simply call the `upload` method of a `ConversationalGEval` metric instance:
@@ -72,9 +128,15 @@ metric.upload()
 
 :::
 
+</Only>
+
 ### As a standalone
 
 You can also run the `ConversationalGEval` on a single test case as a standalone, one-off execution.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -83,13 +145,28 @@ metric.measure(convo_test_case)
 print(metric.score, metric.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+await metric.measure(convoTestCase);
+console.log(metric.score, metric.reason);
+```
+
+</Case>
+
+</Switch>
+
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
 :::
 
 ## How Is It Calculated?
 
-The `ConversationalGEval` is an adapted version of [`GEval`](/docs/metrics-llm-evals), so alike `GEval`, the `ConversationalGEval` metric is a two-step algorithm that first generates a series of `evaluation_steps` using chain of thoughts (CoTs) based on the given `criteria`, before using the generated `evaluation_steps` to determine the final score using the `evaluation_params` presented in each turn.
+The `ConversationalGEval` is an adapted version of [`GEval`](/docs/metrics-llm-evals), so alike `GEval`, the `ConversationalGEval` metric is a two-step algorithm that first generates a series of <Term py="evaluation_steps" ts="evaluationSteps"/> using chain of thoughts (CoTs) based on the given `criteria`, before using the generated <Term py="evaluation_steps" ts="evaluationSteps"/> to determine the final score using the <Term py="evaluation_params" ts="evaluationParams"/> presented in each turn.
 
 Unlike regular `GEval` though, the `ConversationalGEval` takes the entire conversation history into account during evaluation.
 
@@ -110,9 +187,13 @@ You can learn what the default `ConversationalGEvalTemplate` looks like [here on
 
 Here's a quick example of how you can override the process of extracting claims in the `ConversationalGEval` algorithm:
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval.metrics import ConversationalGEval
 from deepeval.metrics.conversational_g_eval import ConversationalGEvalTemplate
+from deepeval.metrics import ConversationalGEval
 import textwrap
 
 
@@ -145,6 +226,61 @@ metric = ConversationalGEval(evaluation_template=CustomConvoGEvalTemplate)
 metric.measure(...)
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { MultiTurnParams } from "deepeval/test-case";
+import { ConversationalGEval } from "deepeval/metrics";
+
+// Inject custom template to metric
+const metric = new ConversationalGEval({
+  name: "Politeness",
+  criteria: "...",
+  evaluationParams: [MultiTurnParams.CONTENT],
+  evaluationTemplate: {
+    generateEvaluationSteps: ({ parameters, criteria }) =>
+      `You are given criteria for evaluating a conversation based on the following parameters: ${parameters}.
+Write 3-4 clear and concise evaluation steps that describe how to judge the quality of each turn and the conversation overall.
+
+Criteria:
+${criteria}
+
+Return JSON only in the format:
+{
+    "steps": [
+        "Step 1",
+        "Step 2",
+        "Step 3"
+    ]
+}
+
+JSON:
+`,
+  },
+});
+await metric.measure(convoTestCase);
+```
+
+Each override receives the template's variables as its first argument, and the default renderer as its second, so you can extend a prompt instead of replacing it:
+
+```typescript
+const metric = new ConversationalGEval({
+  name: "Politeness",
+  criteria: "...",
+  evaluationParams: [MultiTurnParams.CONTENT],
+  evaluationTemplate: {
+    generateEvaluationSteps: (vars, renderDefault) =>
+      `${renderDefault(vars)}\n\nWeigh the assistant's final turn most heavily.`,
+  },
+});
+```
+
+</Case>
+
+</Switch>
+
 ## FAQs
 
 <FAQs
@@ -157,7 +293,7 @@ metric.measure(...)
           When your criteria spans an <code>ConversationalTestCase</code> — tone
           consistency, memory of earlier context, recovery after a bad turn.
           Plain <a href="/docs/metrics-llm-evals">GEval</a> sees only one{" "}
-          <code>input</code>/<code>actual_output</code> pair and can't reason
+          <code>input</code>/<Term py="actual_output" ts="actualOutput"/> pair and can't reason
           across turns.
         </>
       ),
@@ -172,11 +308,11 @@ metric.measure(...)
       ),
     },
     {
-      question: "Which turn parameters should I put in `evaluation_params`?",
+      question: "Which turn parameters should I put in evaluation params?",
       answer: (
         <>
           Only the parameters you want evaluated. Include just the fields your{" "}
-          <code>criteria</code>/<code>evaluation_steps</code> reference (e.g.{" "}
+          <code>criteria</code>/<Term py="evaluation_steps" ts="evaluationSteps"/> reference (e.g.{" "}
           <code>MultiTurnParams.TOOLS_CALLED</code> if it depends on tool usage)
           — unused params add noise.
         </>

@@ -4,7 +4,7 @@ import {
   ToolSpan,
   AgentSpan,
   Trace,
-} from "../../tracing/tracing";
+} from "@/tracing/tracing";
 
 import {
   SpanData,

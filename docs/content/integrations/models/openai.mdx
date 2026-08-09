@@ -2,9 +2,10 @@
 # id: openai
 title: OpenAI
 sidebar_label: OpenAI
+languages: [python, typescript]
 ---
 
-By default, DeepEval uses `gpt-4.1` to power all of its evaluation metrics. To enable this, you’ll need to set up your OpenAI API key. DeepEval also supports all other OpenAI models, which can be configured directly in Python.
+By default, DeepEval uses <DefaultLLMModel /> to power all of its evaluation metrics. To enable this, you’ll need to set up your OpenAI API key. DeepEval also supports all other OpenAI models, which can be configured directly in code.
 
 ### Setting Up Your API Key
 
@@ -43,7 +44,7 @@ deepeval set-openai \
 ```
 
 :::info
-The CLI command above sets `gpt-4.1` as the default model for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset the current settings:
+The CLI command above sets `gpt-4.1` as the default model for all metrics, unless overridden in code. To use a different default model provider, you must first unset the current settings:
 
 ```bash
 deepeval unset-openai
@@ -56,22 +57,26 @@ You can persist CLI settings with the optional `--save` flag.
 See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
 :::
 
-### Python
+### In Code
 
-You may use OpenAI models other than `gpt-4.1`, which can be configured directly in python code through DeepEval's `GPTModel`.
+You may use OpenAI models other than <DefaultLLMModel />, which can be configured directly in code.
 
 :::info
 You may want to use stronger reasoning models like `gpt-4.1` for metrics that require a high level of reasoning — for example, a custom GEval for mathematical correctness.
 :::
 
+<Switch>
+
+<Case id="python">
+
 <Tabs items={["Python", "ENV"]}>
 <Tab value="Python">
 
 ```python
-from deepeval.models import GPTModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import OpenAIModel
 
-model = GPTModel(
+model = OpenAIModel(
     model="gpt-4.1",
     temperature=0,
     cost_per_input_token=0.000002,
@@ -96,7 +101,7 @@ answer_relevancy = AnswerRelevancyMetric(
 </Tab>
 </Tabs>
 
-There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `GPTModel`:
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `OpenAIModel`:
 
 - [Optional] `model`: A string specifying the name of the GPT model to use. Defaulted to `OPENAI_MODEL_NAME` if not set; falls back to <DefaultLLMModel />.
 - [Optional] `api_key`: A string specifying the OpenAI API key for authentication. Defaults to `OPENAI_API_KEY` if not passed; raises an error at runtime if unset.
@@ -106,12 +111,73 @@ There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `
 - [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `OPENAI_COST_PER_OUTPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
 - [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the OpenAI `chat.completions.create(...)` and `beta.chat.completions.parse(...)` calls.
 
+</Case>
+
+<Case id="typescript">
+
+<Tabs items={["TypeScript", "ENV"]}>
+<Tab value="TypeScript">
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { OpenAIModel } from "deepeval/models";
+
+const model = new OpenAIModel({
+  model: "gpt-4.1",
+  temperature: 0,
+  costPerInputToken: 0.000002,
+  costPerOutputToken: 0.000008,
+});
+const answerRelevancy = new AnswerRelevancyMetric({ model });
+```
+
+</Tab>
+<Tab value="ENV">
+
+`deepeval` by default uses OpenAI models for evaluations, you can simply pass the name of your desired model in metric initialization and set the `OPENAI_API_KEY` to use OpenAI models:
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+
+const answerRelevancy = new AnswerRelevancyMetric({
+  model: "gpt-4.1",
+});
+```
+
+</Tab>
+</Tabs>
+
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `OpenAIModel`:
+
+- [Optional] `model`: A string specifying the name of the OpenAI model to use. Defaulted to `OPENAI_MODEL_NAME` if not set; falls back to <DefaultLLMModel />.
+- [Optional] `apiKey`: A string specifying the OpenAI API key for authentication. Defaults to `OPENAI_API_KEY` if not passed; raises an error at runtime if unset.
+- [Optional] `baseURL`: A string specifying your OpenAI URL.
+- [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
+- [Optional] `defaultHeaders`: An object of extra HTTP headers sent with every request.
+- [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+- [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+
+Any other key you pass is forwarded as-is to the OpenAI `chat.completions.create(...)` call, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new OpenAIModel({
+  model: "gpt-4.1",
+  top_p: 0.9,
+  seed: 42,
+  max_completion_tokens: 512,
+});
+```
+
+</Case>
+
+</Switch>
+
 :::info
-You can use custom providers by setting `api_key` and `base_url` with your custom provider's details.
+You can use custom providers by setting the API key and base URL with your custom provider's details.
 :::
 
 :::tip
-Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://platform.openai.com/docs/api-reference/responses/create).
+Before passing additional generation parameters, double check the params supported by the model and your model provider in their [official docs](https://platform.openai.com/docs/api-reference/responses/create).
 :::
 
 ### Available OpenAI Models
@@ -142,6 +208,22 @@ Below is a list of commonly used OpenAI models:
 - `davinci-002`
 - `babbage-002`
 
+<Switch>
+
+<Case id="python">
+
 :::caution[G-Eval requires log probabilities]
-`GEval` and `ConversationalGEval` compute scores from token-level log probabilities, which some OpenAI models do not expose. The `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5-chat-latest`, `gpt-5.1`, and `gpt-5.2` models return no log probabilities, so passing any of them as the judge model for these metrics raises `AttributeError: log_probs unsupported.`. For `GEval` and `ConversationalGEval`, use a log-probability-capable model such as `gpt-5.4` (the default) or `gpt-4.1`. Other metrics are unaffected.
+`GEval` and `ConversationalGEval` compute scores from token-level log probabilities, which some OpenAI models do not expose. The `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5-chat-latest`, `gpt-5.1`, and `gpt-5.2` models return no log probabilities, so passing any of them as the judge model for these metrics raises `AttributeError: log_probs unsupported.`. For `GEval` and `ConversationalGEval`, use a log-probability-capable model such as <DefaultLLMModel /> (the default) or `gpt-4.1`. Other metrics are unaffected.
 :::
+
+</Case>
+
+<Case id="typescript">
+
+:::note[Reasoning models]
+Reasoning models such as `o1` and `o3-mini` reject the `temperature` parameter. `deepeval` omits it automatically for the models it recognizes. If you hit an error on a model too new to be recognized, pass `temperature: null` to suppress it.
+:::
+
+</Case>
+
+</Switch>

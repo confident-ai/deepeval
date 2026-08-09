@@ -19,12 +19,12 @@ import {
   parsePromptsToMessages,
   prepareToolCallInputParameters,
   safeExtractTokenUsage,
-} from "./utils";
-import { RunHierarchyTracker } from "./langgraph-utils";
-import { SpanType, TraceSpanStatus } from "../../tracing/tracing";
-import { traceManager } from "../../tracing";
-import { withCaptureTracingIntegration } from "../../telemetry";
-import { BaseMetric } from "../../metrics/base-metrics";
+} from "@/integrations/langchain/utils";
+import { RunHierarchyTracker } from "@/integrations/langchain/langgraph-utils";
+import { SpanType, TraceSpanStatus } from "@/tracing/tracing";
+import { traceManager } from "@/tracing";
+import { withCaptureTracingIntegration } from "@/telemetry";
+import { BaseMetric } from "@/metrics/base-metrics";
 
 let langchainInstalled: boolean | null = null;
 
@@ -136,31 +136,34 @@ export class DeepEvalCallbackHandler
     this.hierarchy.recordRun(uuidStr, parentRunId, traceUuid);
 
     // Only the root chain gets a span (preserves the established trace shape:
-    // the agent/graph as root, with LLM/tool spans beneath it).
+    // the agent/graph as root, with LLM/tool spans beneath it). Typed as AGENT
+    // so nextAgentSpan drains onto it; nested LangGraph nodes stay unspanned.
     if (parentUuid === undefined) {
-      const baseSpan = enterCurrentContext({
+      const agentSpan = enterCurrentContext({
         uuidStr,
-        spanType: SpanType.CUSTOM,
+        spanType: SpanType.AGENT,
         funcName: runName ?? "Langchain Chain Run",
         traceUuidOverride: traceUuid,
         parentUuidOverride: undefined,
       });
 
-      if (baseSpan) {
+      if (agentSpan) {
         this.hierarchy.recordSpan(uuidStr);
-        baseSpan.input = inputs;
+        agentSpan.input = inputs;
 
+        // Trace-level, not span-level: a metric on the root chain span would be
+        // reported per-span rather than as the run's end-to-end score. Skip
+        // undefined so an enclosing `observe` / `updateCurrentTrace` isn't
+        // clobbered.
         const trace = traceManager.getTraceByUuid(traceUuid);
         if (trace) {
           trace.input = inputs;
-        }
-
-        // Handler-level defaults. Conditional so they don't erase what
-        // `enterCurrentContext` already applied from `next*Span(...)` /
-        // `setTracingContext(...)`.
-        if (this.metrics !== undefined) baseSpan.metrics = this.metrics;
-        if (this.metricCollection !== undefined) {
-          baseSpan.metricCollection = this.metricCollection;
+          if (this.metrics !== undefined) {
+            trace.metrics = this.metrics;
+          }
+          if (this.metricCollection !== undefined) {
+            trace.metricCollection = this.metricCollection;
+          }
         }
       }
     }
@@ -207,9 +210,9 @@ export class DeepEvalCallbackHandler
       // trace by ancestry so it is not left dangling.
       const traceUuid = this.hierarchy.getTraceUuid(uuidStr);
       if (traceUuid && traceManager.getTraceByUuid(traceUuid)) {
-        const others = Array.from(traceManager.getActiveSpans().values(),).filter(
-          (s) => s.traceUuid === traceUuid
-        );
+        const others = Array.from(
+          traceManager.getActiveSpans().values(),
+        ).filter((s) => s.traceUuid === traceUuid);
         if (others.length === 0) {
           traceManager.setTraceStatus(traceUuid, TraceSpanStatus.ERRORED);
           traceManager.endTrace(traceUuid);

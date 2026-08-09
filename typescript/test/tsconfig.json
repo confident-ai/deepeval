@@ -1,0 +1,15 @@
+// Editors resolve a file's project by walking up to the nearest tsconfig.json.
+// Without this, the Jest suites fall into the root config (include: ["src"]),
+// losing both the "@/*" paths and the Jest globals.
+//
+// Separate from tsconfig.test.json, which covers the e2e suites in tests/.
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "..",
+    "types": ["jest", "node"]
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"]
+}

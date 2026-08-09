@@ -2,6 +2,7 @@
 id: evaluation-llm-tracing
 title: LLM Tracing
 sidebar_label: Tracing
+languages: [python, typescript]
 ---
 
 import { ASSETS } from "@site/src/assets";
@@ -39,9 +40,13 @@ This means you don't need a separate concept to evaluate traces. The primitives 
 
 Tracing only runs when you want it to run, and takes 3 lines of code:
 
+<Switch>
+
+<Case id="python">
+
 ```python showLineNumbers {2,7,14}
-from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.tracing import observe, update_current_span
+from deepeval.metrics import AnswerRelevancyMetric
 from openai import OpenAI
 
 client = OpenAI()
@@ -56,6 +61,37 @@ def get_res(query: str):
     update_current_span(input=query, output=response)
     return response
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript showLineNumbers {3,7,17}
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import OpenAI from "openai";
+
+const client = new OpenAI();
+
+const getRes = observe({
+  metrics: [new AnswerRelevancyMetric()],
+  fn: async (query: string) => {
+    const response = (
+      await client.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: query }],
+      })
+    ).choices[0].message.content;
+
+    updateCurrentSpan({ input: query, output: response });
+    return response;
+  },
+});
+```
+
+</Case>
+
+</Switch>
 
 </details>
 
@@ -99,6 +135,10 @@ Finally, pick how you want to instrument your app. `deepeval` also offers **firs
 
 Wrap any function in your LLM app with `@observe` — each call becomes a **span**, and the outermost call becomes the **trace**. Spans nest naturally as `@observe`'d functions call each other.
 
+<Switch>
+
+<Case id="python">
+
 ```python title="main.py" showLineNumbers {2,4,9}
 from openai import OpenAI
 from deepeval.tracing import observe
@@ -118,6 +158,39 @@ def llm_app(query: str) -> str:
 
 llm_app("Who founded DeepEval?")
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript title="main.ts" showLineNumbers {2,4,11}
+import { observe } from "deepeval/tracing";
+import OpenAI from "openai";
+
+const retriever = observe({
+  fn: async (query: string) => {
+    // Your retrieval logic
+    return [`Context for the given ${query}`];
+  },
+});
+
+const llmApp = observe({
+  fn: async (query: string) => {
+    const context = await retriever(query);
+    const response = await new OpenAI().chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: `${query}\n\n${context}` }],
+    });
+    return response.choices[0].message.content;
+  },
+});
+
+await llmApp("Who founded DeepEval?");
+```
+
+</Case>
+
+</Switch>
 
 `@observe` accepts a few optional parameters:
 
@@ -189,6 +262,10 @@ See the [LangGraph integration](/integrations/frameworks/langgraph) for the full
 
 Drop-in replace `from openai import OpenAI` with `from deepeval.openai import OpenAI`. Every `chat.completions.create(...)`, `chat.completions.parse(...)`, and `responses.create(...)` call becomes an LLM span automatically.
 
+<Switch>
+
+<Case id="python">
+
 ```python title="openai_app.py" showLineNumbers {1}
 from deepeval.openai import OpenAI
 
@@ -198,6 +275,26 @@ client.chat.completions.create(
     messages=[{"role": "user", "content": "Hello"}],
 )
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript title="openai_app.ts" showLineNumbers {2,4}
+import { instrumentOpenAI } from "deepeval/openai";
+import OpenAI from "openai";
+
+const client = new OpenAI();
+instrumentOpenAI(client);
+await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Hello" }],
+});
+```
+
+</Case>
+
+</Switch>
 
 See the [OpenAI integration](/integrations/frameworks/openai) for the full surface (including async, streaming, and tool-calling).
 
@@ -407,6 +504,10 @@ This is the **most important concept on this page**: traces and spans both map t
 
 Both functions accept the **same** `LLMTestCase` parameters, and both can be called from anywhere inside your `@observe`'d code. A typical pattern is to set span-level test cases inside the components you want to grade individually, and let trace-level data accumulate from those same spans:
 
+<Switch>
+
+<Case id="python">
+
 ```python title="main.py" showLineNumbers {2,9,17,18}
 from openai import OpenAI
 from deepeval.tracing import observe, update_current_trace, update_current_span
@@ -429,6 +530,48 @@ def llm_app(query: str) -> str:
     update_current_trace(input=query, output=res)      # finishes trace test case
     return res
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript title="main.ts" showLineNumbers {2,7,8,23,24}
+import {
+  observe,
+  updateCurrentTrace,
+  updateCurrentSpan,
+} from "deepeval/tracing";
+import OpenAI from "openai";
+
+const retriever = observe({
+  fn: async (query: string) => {
+    const chunks = ["List", "of", "text", "chunks"];
+    updateCurrentSpan({ input: query, retrievalContext: chunks });   // span test case
+    updateCurrentTrace({ retrievalContext: chunks });                // contributes to trace test case
+    return chunks;
+  },
+});
+
+const llmApp = observe({
+  fn: async (query: string) => {
+    const chunks = await retriever(query);
+    const res = (
+      await new OpenAI().chat.completions.create({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: `${query}\n\n${chunks}` }],
+      })
+    ).choices[0].message.content;
+
+    updateCurrentSpan({ input: query, output: res });    // span test case
+    updateCurrentTrace({ input: query, output: res });   // finishes trace test case
+    return res;
+  },
+});
+```
+
+</Case>
+
+</Switch>
 
 You can call either function **multiple times** from different spans — values are merged across calls, with later calls overriding earlier ones.
 
@@ -464,6 +607,10 @@ The more self-describing the trace tree is, the less the agent has to guess from
 
 By default, a trace has no name. Set one at runtime with `update_current_trace(name=...)` so the failing run reads as "Customer support flow failed at retriever" rather than "`llm_app` failed at `retrieve`":
 
+<Switch>
+
+<Case id="python">
+
 ```python showLineNumbers {5}
 from deepeval.tracing import observe, update_current_trace
 
@@ -472,6 +619,25 @@ def llm_app(query: str):
     update_current_trace(name="Customer support flow")
     # ...
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript showLineNumbers {5}
+import { observe, updateCurrentTrace } from "deepeval/tracing";
+
+const llmApp = observe({
+  fn: async (query: string) => {
+    updateCurrentTrace({ name: "Customer support flow" });
+    // ...
+  },
+});
+```
+
+</Case>
+
+</Switch>
 
 Span names default to the function name they decorate, which is usually descriptive enough — but you can override with `update_current_span(name=...)` whenever the function name doesn't reflect what the span actually does.
 
@@ -489,6 +655,10 @@ There are four built-in types plus a custom fallback. Each type accepts a few ty
 | `"agent"`               | An autonomous decision-making step   | `available_tools`, `handoff_agents`                                                                                                   |
 | anything else (default) | Custom — grouping or general-purpose | —                                                                                                                                     |
 
+<Switch>
+
+<Case id="python">
+
 ```python showLineNumbers
 from deepeval.tracing import observe
 
@@ -504,6 +674,42 @@ def web_search(query: str) -> str: ...
 @observe(type="agent", available_tools=["search", "calculator"])
 def supervisor_agent(query: str) -> str: ...
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript showLineNumbers
+import { observe } from "deepeval/tracing";
+
+const retrieve = observe({
+  type: "retriever",
+  embedder: "text-embedding-3-small",
+  fn: async (query: string) => { /* ... */ },
+});
+
+const generate = observe({
+  type: "llm",
+  model: "gpt-4o",
+  fn: async (prompt: string) => { /* ... */ },
+});
+
+const webSearch = observe({
+  type: "tool",
+  description: "Search the web for a query.",
+  fn: async (query: string) => { /* ... */ },
+});
+
+const supervisorAgent = observe({
+  type: "agent",
+  availableTools: ["search", "calculator"],
+  fn: async (query: string) => { /* ... */ },
+});
+```
+
+</Case>
+
+</Switch>
 
 :::tip[Pairs well with Confident AI]
 If you also push your traces to [Confident AI](#visualize-and-monitor-on-confident-ai), span types unlock tailored displays in the observability dashboard — model + token cost rendered on LLM spans, chunk size and top-k on retriever spans, tool descriptions on tool spans. Same `type` parameter, no extra code.

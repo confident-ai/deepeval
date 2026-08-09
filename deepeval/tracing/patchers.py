@@ -98,7 +98,7 @@ def patch_openai_client(client: OpenAI):
                     # look up per-token cost from the registry so that cost
                     # data is populated for all known models (including gpt-5.x)
                     # even when the caller uses patch_openai_client directly
-                    # rather than GPTModel.
+                    # rather than OpenAIModel.
                     model_data = OPENAI_MODELS_DATA.get(model)
                     cost_per_input_token = (
                         model_data.input_price if model_data else None

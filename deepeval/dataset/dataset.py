@@ -1,8 +1,6 @@
 from asyncio import Task
 from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Union, Literal
 from dataclasses import dataclass, field
-from opentelemetry.trace import Tracer
-from opentelemetry.context import Context, attach, detach
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 import json
@@ -11,8 +9,6 @@ import os
 import datetime
 import time
 import ast
-import uuid
-from opentelemetry import baggage
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.dataset.utils import (
@@ -22,7 +18,6 @@ from deepeval.dataset.utils import (
     convert_convo_goldens_to_convo_test_cases,
     convert_convo_test_cases_to_convo_goldens,
     format_turns,
-    check_tracer,
     parse_turns,
     serialize_retrieval_context,
     join_retrieval_context,
@@ -65,7 +60,6 @@ from deepeval.test_run import (
 )
 
 from deepeval.tracing import trace_manager
-from deepeval.tracing.tracing import EVAL_DUMMY_SPAN_NAME
 
 if TYPE_CHECKING:
     from deepeval.evaluate.configs import (
@@ -77,6 +71,15 @@ if TYPE_CHECKING:
 
 
 valid_file_types = ["csv", "json", "jsonl"]
+
+
+def _parse_column(df, col_name, parse):
+    """Map a CSV column through ``parse``, or ``None`` for every row when the
+    file has no such column. An absent column must not become an empty list, or
+    a metric requiring that field passes its parameter check with nothing."""
+    if col_name is None or col_name not in df.columns:
+        return [None] * len(df)
+    return [parse(value) for value in df[col_name].values]
 
 
 @dataclass
@@ -321,59 +324,46 @@ class EvaluationDataset:
         expected_outputs = get_column_data(
             df, expected_output_col_name, default=None
         )
-        contexts = [
-            context.split(context_col_delimiter) if context else []
-            for context in get_column_data(df, context_col_name, default="")
-        ]
-        retrieval_contexts = [
-            (
-                reconstruct_retrieval_context(
-                    retrieval_context.split(retrieval_context_col_delimiter)
-                )
-                if retrieval_context
-                else []
-            )
-            for retrieval_context in get_column_data(
-                df, retrieval_context_col_name, default=""
-            )
-        ]
-        tools_called = []
-        for tools_called_json in get_column_data(
-            df, tools_called_col_name, default="[]"
-        ):
-            if tools_called_json:
-                try:
-                    parsed_tools = [
-                        ToolCall(**tool)
-                        for tool in trimAndLoadJson(tools_called_json)
-                    ]
-                    tools_called.append(parsed_tools)
-                except ValueError as e:
-                    raise ValueError(f"Error processing tools_called: {e}")
-            else:
-                tools_called.append([])
 
-        expected_tools = []
-        for expected_tools_json in get_column_data(
-            df, expected_tools_col_name, default="[]"
-        ):
-            if expected_tools_json:
-                try:
-                    parsed_tools = [
-                        ToolCall(**tool)
-                        for tool in trimAndLoadJson(expected_tools_json)
-                    ]
-                    expected_tools.append(parsed_tools)
-                except ValueError as e:
-                    raise ValueError(f"Error processing expected_tools: {e}")
-            else:
-                expected_tools.append([])
-        metadatas = [
-            ast.literal_eval(metadata) if metadata else None
-            for metadata in get_column_data(
-                df, additional_metadata_col_name, default=""
-            )
-        ]
+        def parse_tools(value, field: str):
+            if not value:
+                return []
+            try:
+                return [ToolCall(**tool) for tool in trimAndLoadJson(value)]
+            except ValueError as e:
+                raise ValueError(f"Error processing {field}: {e}")
+
+        contexts = _parse_column(
+            df,
+            context_col_name,
+            lambda value: value.split(context_col_delimiter) if value else [],
+        )
+        retrieval_contexts = _parse_column(
+            df,
+            retrieval_context_col_name,
+            lambda value: (
+                reconstruct_retrieval_context(
+                    value.split(retrieval_context_col_delimiter)
+                )
+                if value
+                else []
+            ),
+        )
+        tools_called = _parse_column(
+            df,
+            tools_called_col_name,
+            lambda value: parse_tools(value, "tools_called"),
+        )
+        expected_tools = _parse_column(
+            df,
+            expected_tools_col_name,
+            lambda value: parse_tools(value, "expected_tools"),
+        )
+        metadatas = _parse_column(
+            df,
+            additional_metadata_col_name,
+            lambda value: ast.literal_eval(value) if value else None,
+        )
 
         for (
             input,
@@ -505,6 +495,9 @@ class EvaluationDataset:
         name_key_name: str = "name",
         source_file_col_name: Optional[str] = "source_file",
         additional_metadata_col_name: Optional[str] = "additional_metadata",
+        custom_column_key_values_col_name: Optional[
+            str
+        ] = "custom_column_key_values",
         scenario_col_name: Optional[str] = "scenario",
         turns_col_name: Optional[str] = "turns",
         expected_outcome_col_name: Optional[str] = "expected_outcome",
@@ -537,72 +530,62 @@ class EvaluationDataset:
         expected_outputs = get_column_data(
             df, expected_output_col_name, default=None
         )
-        contexts = [
-            context.split(context_col_delimiter) if context else []
-            for context in get_column_data(df, context_col_name, default="")
-        ]
-        retrieval_contexts = [
-            (
+
+        def parse_tools(value, delimiter: str):
+            if not value:
+                return []
+            try:
+                return [ToolCall(**tool) for tool in trimAndLoadJson(value)]
+            except (ValueError, json.JSONDecodeError):
+                # Fallback to simple split on delimiter
+                return value.split(delimiter)
+
+        contexts = _parse_column(
+            df,
+            context_col_name,
+            lambda value: value.split(context_col_delimiter) if value else [],
+        )
+        retrieval_contexts = _parse_column(
+            df,
+            retrieval_context_col_name,
+            lambda value: (
                 reconstruct_retrieval_context(
-                    retrieval_context.split(retrieval_context_col_delimiter)
+                    value.split(retrieval_context_col_delimiter)
                 )
-                if retrieval_context
+                if value
                 else []
-            )
-            for retrieval_context in get_column_data(
-                df, retrieval_context_col_name, default=""
-            )
-        ]
-
-        tools_called = []
-        for tools_called_str in get_column_data(
-            df, tools_called_col_name, default=""
-        ):
-            if tools_called_str:
-                try:
-                    # Try loading JSON-serialized ToolCall objects
-                    parsed_tools = [
-                        ToolCall(**tool)
-                        for tool in trimAndLoadJson(tools_called_str)
-                    ]
-                    tools_called.append(parsed_tools)
-                except ValueError or json.JSONDecodeError:
-                    # Fallback to simple split on delimiter
-                    tools_called.append(
-                        tools_called_str.split(tools_called_col_delimiter)
-                    )
-            else:
-                tools_called.append([])
-
-        expected_tools = []
-        for expected_tools_str in get_column_data(
-            df, expected_tools_col_name, default=""
-        ):
-            if expected_tools_str:
-                try:
-                    # Try loading JSON-serialized ToolCall objects
-                    parsed_tools = [
-                        ToolCall(**tool)
-                        for tool in trimAndLoadJson(expected_tools_str)
-                    ]
-                    expected_tools.append(parsed_tools)
-                except ValueError or json.JSONDecodeError:
-                    # Fallback to simple split on delimiter
-                    expected_tools.append(
-                        expected_tools_str.split(expected_tools_col_delimiter)
-                    )
-            else:
-                expected_tools.append([])
+            ),
+        )
+        tools_called = _parse_column(
+            df,
+            tools_called_col_name,
+            lambda value: parse_tools(value, tools_called_col_delimiter),
+        )
+        expected_tools = _parse_column(
+            df,
+            expected_tools_col_name,
+            lambda value: parse_tools(value, expected_tools_col_delimiter),
+        )
 
         comments = get_column_data(df, comments_key_name)
         name = get_column_data(df, name_key_name)
         source_files = get_column_data(df, source_file_col_name)
-        metadatas = [
-            ast.literal_eval(metadata) if metadata else None
-            for metadata in get_column_data(
-                df, additional_metadata_col_name, default=""
-            )
-        ]
+
+        def parse_mapping(value):
+            if not value:
+                return None
+            try:
+                return trimAndLoadJson(value)
+            except (ValueError, json.JSONDecodeError):
+                # Tolerate a cell written as a Python dict literal.
+                return ast.literal_eval(value)
+
+        metadatas = _parse_column(
+            df, additional_metadata_col_name, parse_mapping
+        )
+        custom_column_key_values = _parse_column(
+            df, custom_column_key_values_col_name, parse_mapping
+        )
         scenarios = get_column_data(df, scenario_col_name)
         turns_raw = get_column_data(df, turns_col_name)
         expected_outcomes = get_column_data(df, expected_outcome_col_name)
@@ -620,6 +603,7 @@ class EvaluationDataset:
             name,
             source_file,
             metadata,
+            custom_columns,
             scenario,
             turns,
             expected_outcome,
@@ -636,6 +620,7 @@ class EvaluationDataset:
             name,
             source_files,
             metadatas,
+            custom_column_key_values,
             scenarios,
             turns_raw,
             expected_outcomes,
@@ -653,6 +638,7 @@ class EvaluationDataset:
                         comments=comments,
                         name=name,
                         additional_metadata=metadata,
+                        custom_column_key_values=custom_columns,
                     )
                 )
             else:
@@ -666,6 +652,7 @@ class EvaluationDataset:
                         tools_called=tools_called,
                         expected_tools=expected_tools,
                         additional_metadata=metadata,
+                        custom_column_key_values=custom_columns,
                         source_file=source_file,
                         comments=comments,
                         name=name,
@@ -686,6 +673,9 @@ class EvaluationDataset:
         name_key_name: str = "name",
         source_file_key_name: Optional[str] = "source_file",
         additional_metadata_key_name: Optional[str] = "additional_metadata",
+        custom_column_key_values_key_name: Optional[
+            str
+        ] = "custom_column_key_values",
         scenario_key_name: Optional[str] = "scenario",
         turns_key_name: Optional[str] = "turns",
         expected_outcome_key_name: Optional[str] = "expected_outcome",
@@ -711,6 +701,7 @@ class EvaluationDataset:
                 name = json_obj.get(name_key_name)
                 parsed_turns = parse_turns(turns) if turns else []
                 metadata = json_obj.get(additional_metadata_key_name)
+                custom_columns = json_obj.get(custom_column_key_values_key_name)
 
                 self.add_golden(
                     ConversationalGolden(
@@ -722,6 +713,7 @@ class EvaluationDataset:
                         comments=comments,
                         name=name,
                         additional_metadata=metadata,
+                        custom_column_key_values=custom_columns,
                     )
                 )
             else:
@@ -738,6 +730,7 @@ class EvaluationDataset:
                 name = json_obj.get(name_key_name)
                 source_file = json_obj.get(source_file_key_name)
                 metadata = json_obj.get(additional_metadata_key_name)
+                custom_columns = json_obj.get(custom_column_key_values_key_name)
 
                 self.add_golden(
                     Golden(
@@ -749,6 +742,7 @@ class EvaluationDataset:
                         tools_called=tools_called,
                         expected_tools=expected_tools,
                         additional_metadata=metadata,
+                        custom_column_key_values=custom_columns,
                         comments=comments,
                         name=name,
                         source_file=source_file,
@@ -1090,55 +1084,6 @@ class EvaluationDataset:
         )
         console = Console()
         console.print("✅ Dataset successfully deleted from Confident AI!")
-
-    def update_golden(
-        self,
-        golden: Union[Golden, ConversationalGolden],
-        finalized: bool = True,
-    ):
-        if not golden.id:
-            raise ValueError(
-                "Cannot update a golden without an id. Pull the dataset first "
-                "so its goldens carry the id assigned by Confident AI."
-            )
-        api = Api(api_key=self.confident_api_key)
-
-        golden._prepare_for_api()
-        try:
-            golden_body = golden.model_dump(by_alias=True, exclude_none=True)
-        except AttributeError:
-            # Pydantic version below 2.0
-            golden_body = golden.dict(by_alias=True, exclude_none=True)
-        golden_body["finalized"] = finalized
-
-        api.send_request(
-            method=HttpMethods.PUT,
-            endpoint=Endpoints.GOLDEN_ENDPOINT,
-            body=golden_body,
-            url_params={"goldenId": golden.id},
-        )
-        console = Console()
-        console.print("✅ Golden successfully updated on Confident AI!")
-
-    def delete_golden(
-        self,
-        golden: Union[Golden, ConversationalGolden, str],
-    ):
-        golden_id = golden if isinstance(golden, str) else golden.id
-        if not golden_id:
-            raise ValueError(
-                "Cannot delete a golden without an id. Pull the dataset first "
-                "so its goldens carry the id assigned by Confident AI, or pass "
-                "the golden id directly."
-            )
-        api = Api(api_key=self.confident_api_key)
-        api.send_request(
-            method=HttpMethods.DELETE,
-            endpoint=Endpoints.GOLDEN_ENDPOINT,
-            url_params={"goldenId": golden_id},
-        )
-        console = Console()
-        console.print("✅ Golden successfully deleted from Confident AI!")
 
     def generate_goldens_from_docs(
         self,
@@ -1546,6 +1491,9 @@ class EvaluationDataset:
                             "expected_output": golden.expected_output,
                             "retrieval_context": retrieval_context,
                             "context": context,
+                            "name": golden.name,
+                            "comments": golden.comments,
+                            "source_file": golden.source_file,
                             "tools_called": _dump_tools(golden.tools_called),
                             "expected_tools": _dump_tools(
                                 golden.expected_tools
@@ -1570,7 +1518,6 @@ class EvaluationDataset:
         cache_config: Optional["CacheConfig"] = None,
         error_config: Optional["ErrorConfig"] = None,
         async_config: Optional["AsyncConfig"] = None,
-        run_otel: Optional[bool] = False,
     ) -> Iterator[Golden]:
         from deepeval.evaluate.utils import (
             aggregate_metric_pass_rates,
@@ -1606,11 +1553,6 @@ class EvaluationDataset:
             start_time = time.perf_counter()
             test_results: List[TestResult] = []
 
-            # sandwich start trace for OTEL
-            if run_otel:
-                ctx = self._start_otel_test_run()  # ignored span
-                ctx_token = attach(ctx)
-
             if async_config.run_async:
                 loop = get_or_create_event_loop()
                 for golden in a_execute_agentic_test_cases_from_loop(
@@ -1624,15 +1566,7 @@ class EvaluationDataset:
                     error_config=error_config,
                     async_config=async_config,
                 ):
-                    if run_otel:
-                        _tracer = check_tracer()
-                        with _tracer.start_as_current_span(
-                            name=EVAL_DUMMY_SPAN_NAME,
-                            context=ctx,
-                        ):
-                            yield golden
-                    else:
-                        yield golden
+                    yield golden
 
             else:
                 for golden in execute_agentic_test_cases_from_loop(
@@ -1644,15 +1578,7 @@ class EvaluationDataset:
                     test_results=test_results,
                     identifier=identifier,
                 ):
-                    if run_otel:
-                        _tracer = check_tracer()
-                        with _tracer.start_as_current_span(
-                            name=EVAL_DUMMY_SPAN_NAME,
-                            context=ctx,
-                        ):
-                            yield golden
-                    else:
-                        yield golden
+                    yield golden
 
             end_time = time.perf_counter()
             run_duration = end_time - start_time
@@ -1694,56 +1620,28 @@ class EvaluationDataset:
             # save test run
             global_test_run_manager.save_test_run(TEMP_FILE_PATH)
 
-            # sandwich end trace for OTEL
-            if run_otel:
-                self._end_otel_test_run(ctx)
-                detach(ctx_token)
-
+            res = global_test_run_manager.wrap_up_test_run(
+                run_duration, display_table=False
+            )
+            if isinstance(res, tuple):
+                confident_link, test_run_id = res
             else:
-                res = global_test_run_manager.wrap_up_test_run(
-                    run_duration, display_table=False
-                )
-                if isinstance(res, tuple):
-                    confident_link, test_run_id = res
-                else:
-                    confident_link = test_run_id = None
+                confident_link = test_run_id = None
 
-                # Offer the inspect TUI after all other run output has
-                # flushed — mirrors the placement in
-                # ``deepeval/evaluate/evaluate.py``.
-                from deepeval.evaluate.inspect_prompt import (
-                    maybe_offer_inspect_tui,
-                )
+            # Offer the inspect TUI after all other run output has
+            # flushed — mirrors the placement in
+            # ``deepeval/evaluate/evaluate.py``.
+            from deepeval.evaluate.inspect_prompt import (
+                maybe_offer_inspect_tui,
+            )
 
-                maybe_offer_inspect_tui(global_test_run_manager, display_config)
+            maybe_offer_inspect_tui(global_test_run_manager, display_config)
 
-                return EvaluationResult(
-                    test_results=test_results,
-                    confident_link=confident_link,
-                    test_run_id=test_run_id,
-                )
+            return EvaluationResult(
+                test_results=test_results,
+                confident_link=confident_link,
+                test_run_id=test_run_id,
+            )
 
     def evaluate(self, task: Task):
         coerce_to_task(task)
-
-    def _start_otel_test_run(self, tracer: Optional[Tracer] = None) -> Context:
-        _tracer = check_tracer(tracer)
-        run_id = str(uuid.uuid4())
-        print("Starting OTLP test run with run_id: ", run_id)
-        ctx = baggage.set_baggage(
-            "confident.test_run.id", run_id, context=Context()
-        )
-        with _tracer.start_as_current_span(
-            "start_otel_test_run", context=ctx
-        ) as span:
-            span.set_attribute("confident.test_run.id", run_id)
-        return ctx
-
-    def _end_otel_test_run(self, ctx: Context, tracer: Optional[Tracer] = None):
-        run_id = baggage.get_baggage("confident.test_run.id", context=ctx)
-        print("Ending OTLP test run with run_id: ", run_id)
-        _tracer = check_tracer(tracer)
-        with _tracer.start_as_current_span(
-            "stop_otel_test_run", context=ctx
-        ) as span:
-            span.set_attribute("confident.test_run.id", run_id)

@@ -1,12 +1,19 @@
-import { ToolCall, RetrievedContextData } from "./llm-test-case";
-import { checkIfMultimodal, extractImageIdsFromList, extractImageIdsFromString, MLLM_IMAGE_REGISTRY, MLLMImage } from "./mllm-image";
+import { ToolCall, RetrievedContextData } from "@/test-case/llm-test-case";
+import {
+  checkIfMultimodal,
+  extractImageIdsFromList,
+  extractImageIdsFromString,
+  MLLM_IMAGE_REGISTRY,
+  MLLMImage,
+} from "@/test-case/mllm-image";
 import {
   MCPServer,
   MCPToolCall,
   MCPResourceCall,
   MCPPromptCall,
   validateMcpServers,
-} from "./mcp";
+  validateMcpCalls,
+} from "@/test-case/mcp";
 
 export enum MultiTurnParams {
   ROLE = "role",
@@ -85,6 +92,7 @@ export class Turn {
         );
       }
     }
+    validateMcpCalls(this);
   }
 }
 
@@ -101,6 +109,8 @@ export class ConversationalTestCase {
   comments?: string;
   tags?: string[];
   multimodal: boolean = false;
+  /** A flaky test case reports its failures without failing the run. */
+  flaky: boolean = false;
   _datasetRank?: number;
   _datasetAlias?: string;
   _datasetId?: string;
@@ -118,6 +128,7 @@ export class ConversationalTestCase {
     comments?: string;
     tags?: string[];
     multimodal?: boolean;
+    flaky?: boolean;
     _datasetRank?: number;
     _datasetAlias?: string;
     _datasetId?: string;
@@ -134,6 +145,7 @@ export class ConversationalTestCase {
     this.comments = params.comments;
     this.tags = params.tags;
     this.multimodal = params.multimodal ?? this.detectMultimodal();
+    this.flaky = params.flaky ?? false;
     this._datasetRank = params._datasetRank;
     this._datasetAlias = params._datasetAlias;
     this._datasetId = params._datasetId;
@@ -152,7 +164,9 @@ export class ConversationalTestCase {
       this.turns.forEach((turn) => {
         extractImageIdsFromString(turn.content, ids);
         extractImageIdsFromList(
-          turn.retrievalContext?.map((c) => (typeof c === "string" ? c : c.context)),
+          turn.retrievalContext?.map((c) =>
+            typeof c === "string" ? c : c.context,
+          ),
           ids,
         );
       });
@@ -172,7 +186,11 @@ export class ConversationalTestCase {
   /** Auto-detect multimodality from image slugs in the fields/turns (mirrors Python). */
   private detectMultimodal(): boolean {
     const has = (s?: string) => s != null && checkIfMultimodal(s);
-    if (has(this.scenario) || has(this.expectedOutcome) || has(this.userDescription)) {
+    if (
+      has(this.scenario) ||
+      has(this.expectedOutcome) ||
+      has(this.userDescription)
+    ) {
       return true;
     }
     for (const turn of this.turns ?? []) {

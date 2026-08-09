@@ -268,11 +268,11 @@ class TestJudgeModel:
                 "GEval",
                 async_mode=False,
                 in_component=False,
-                model=shipped_model("GPTModel", "gpt-4o"),
+                model=shipped_model("OpenAIModel", "gpt-4o"),
             )
 
         props = backend.only()
-        assert props["judge.provider"] == "GPTModel"
+        assert props["judge.provider"] == "OpenAIModel"
         assert props["judge.model"] == "gpt-4o"
 
     def test_a_self_hosted_model_name_cannot_leak(self, backend):
@@ -301,11 +301,11 @@ class TestJudgeModel:
                 "GEval",
                 async_mode=False,
                 in_component=False,
-                model=shipped_model("GPTModel", "gpt-internal-finetune-42"),
+                model=shipped_model("OpenAIModel", "gpt-internal-finetune-42"),
             )
 
         props = backend.only()
-        assert props["judge.provider"] == "GPTModel"
+        assert props["judge.provider"] == "OpenAIModel"
         assert props["judge.model"] == "other"
 
     def test_a_subclass_of_a_shipped_model_is_not_treated_as_ours(
@@ -314,7 +314,7 @@ class TestJudgeModel:
         """Subclassing is how a user-defined class would otherwise inherit a
         provider it did not write."""
 
-        class InternalJudge(type(shipped_model("GPTModel", "gpt-4o"))):
+        class InternalJudge(type(shipped_model("OpenAIModel", "gpt-4o"))):
             name = "gpt-4o"
 
         with telemetry.capture_evaluation_run(Entrypoint.EVALUATE):

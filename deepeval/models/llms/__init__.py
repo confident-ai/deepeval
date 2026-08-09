@@ -1,5 +1,5 @@
 from .azure_model import AzureOpenAIModel
-from .openai_model import GPTModel
+from .openai_model import OpenAIModel, warn_gpt_model_deprecated
 from .local_model import LocalModel
 from .ollama_model import OllamaModel
 from .gemini_model import GeminiModel
@@ -14,7 +14,7 @@ from .openrouter_model import OpenRouterModel
 
 __all__ = [
     "AzureOpenAIModel",
-    "GPTModel",
+    "OpenAIModel",
     "LocalModel",
     "OllamaModel",
     "GeminiModel",
@@ -27,3 +27,10 @@ __all__ = [
     "PortkeyModel",
     "OpenRouterModel",
 ]
+
+
+def __getattr__(name: str):
+    if name == "GPTModel":
+        warn_gpt_model_deprecated()
+        return OpenAIModel
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

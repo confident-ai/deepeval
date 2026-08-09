@@ -1,7 +1,6 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
@@ -9,33 +8,29 @@ import {
   constructVerboseLogs,
   prettifyList,
   resolveRetrievalContext,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   ContextualRelevancyVerdictsSchema,
   ContextualRelevancyScoreReasonSchema,
   type ContextualRelevancyVerdicts,
-} from "./schema";
+} from "@/metrics/contextual-relevancy/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
+import { contextualRelevancyVerdictVars } from "@/metrics/retrieval-context-display";
 
 const TEMPLATE_CLASS = "ContextualRelevancyMetric";
 
-// Text-only values of the verdict template's precomputed vars (Python builds
-// these in `_contextual_relevancy_verdict_kwargs`).
-const EXTRACTION_INSTRUCTIONS =
-  "You should first extract statements found in the context, which are " +
-  "high level information found in the context, before deciding on a " +
-  "verdict and optionally a reason for each statement.";
-const EMPTY_CONTEXT_INSTRUCTION =
-  '\nIf provided context contains no actual content or statements then: ' +
-  'give "no" as a "verdict",\nput context into "statement", and ' +
-  '"No statements found in provided context." into "reason".';
+export type ContextualRelevancyTemplateOverride =
+  MetricTemplateOverride<"ContextualRelevancyMetric">;
 
 export interface ContextualRelevancyMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: ContextualRelevancyTemplateOverride;
 }
 
 /**
@@ -48,12 +43,16 @@ export class ContextualRelevancyMetric extends BaseMetric {
 
   constructor(options: ContextualRelevancyMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.RETRIEVAL_CONTEXT,
@@ -81,7 +80,7 @@ export class ContextualRelevancyMetric extends BaseMetric {
       );
       this.score = this.calculateScore();
       this.reason = await this.generateReason(testCase.input);
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Verdicts:\n${prettifyList(this.verdictsList)}`,
@@ -97,13 +96,10 @@ export class ContextualRelevancyMetric extends BaseMetric {
     input: string,
     context: string,
   ): Promise<ContextualRelevancyVerdicts> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+    const prompt = this.getPrompt("generate_verdicts", {
       input,
       context,
-      context_type: "context",
-      statement_or_image: "statement",
-      extraction_instructions: EXTRACTION_INSTRUCTIONS,
-      empty_context_instruction: EMPTY_CONTEXT_INSTRUCTION,
+      ...contextualRelevancyVerdictVars(this.multimodal),
     });
     return generateWithSchema(this, prompt, ContextualRelevancyVerdictsSchema);
   }
@@ -119,7 +115,7 @@ export class ContextualRelevancyMetric extends BaseMetric {
         else relevantStatements.push(v.statement);
       }
     }
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       input,
       irrelevant_statements: irrelevantStatements,
       relevant_statements: relevantStatements,
@@ -144,13 +140,7 @@ export class ContextualRelevancyMetric extends BaseMetric {
     }
     if (totalVerdicts === 0) return 0;
     const score = relevant / totalVerdicts;
-    return this.strictMode && score < this.threshold ? 0 : score;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
+    return this.applyStrictMode(score);
   }
 
   get name(): string {

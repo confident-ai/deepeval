@@ -1,12 +1,13 @@
 {
   "name": "langchain-streaming-test",
   "uuid": "98c1f1ba-222b-4ee2-a843-6ab1d8f1b21a",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019ed9d8-ae7a-74c0-a99a-59388b6183c6",
       "name": "streaming_single_chain",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "traceUuid": "98c1f1ba-222b-4ee2-a843-6ab1d8f1b21a",
       "startTime": "2026-06-18T08:28:36.858Z",
       "endTime": "2026-06-18T08:28:39.055Z",
@@ -187,10 +188,11 @@
             }
           }
         ]
-      }
+      },
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019ed9d8-ae7c-741e-b620-b9ed939fc314",

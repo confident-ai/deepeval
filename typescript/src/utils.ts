@@ -1,27 +1,28 @@
 import * as fs from "fs";
 import * as path from "path";
-import { config } from "dotenv";
-import { DEEPEVAL_RUNNING, HIDDEN_DIR } from "./constants";
+import { DEEPEVAL_RUNNING, HIDDEN_DIR } from "@/constants";
+import { loadDotenvFiles } from "@/config/dotenv-load";
+import { boolToEnvStr, parseBool } from "@/config/utils";
 
 try {
-  config();
+  loadDotenvFiles();
 } catch (_error) {
   // Silently continue if dotenv is not available
   // This allows the package to work without dotenv as a dependency
 }
 
 /**
- * Check if the user is authenticated with Confident AI
+ * Check if the user is authenticated with Confident AI.
+ *
+ * Being unauthenticated is a normal mode — everything except uploading works —
+ * so this stays a silent predicate. Callers that genuinely cannot continue
+ * (`pull`) raise their own error, and the ones that degrade (`postTrace`, the
+ * end-of-run report) print their own hint.
+ *
  * @returns boolean indicating if the user is authenticated
  */
 export function isConfident(): boolean {
-  // Check for API key in environment variables
-  const confidentApiKey = process.env.CONFIDENT_API_KEY;
-  const isConfident = !!confidentApiKey && confidentApiKey.trim() !== "";
-  if (!isConfident) {
-    console.error("Confident AI API key not found.");
-  }
-  return isConfident;
+  return getConfidentApiKey() !== null;
 }
 
 /**
@@ -81,11 +82,11 @@ export function wait(ms: number): Promise<void> {
 }
 
 export function getIsRunningDeepEval(): boolean {
-  return process.env[DEEPEVAL_RUNNING] === "1";
+  return parseBool(process.env[DEEPEVAL_RUNNING]) ?? false;
 }
 
 export function setIsRunningDeepEval(flag: boolean): void {
-  process.env[DEEPEVAL_RUNNING] = flag ? "1" : "0";
+  process.env[DEEPEVAL_RUNNING] = boolToEnvStr(flag);
 }
 
 export function createTestRunResultsDir(): string {

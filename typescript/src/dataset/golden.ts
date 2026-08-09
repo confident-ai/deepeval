@@ -1,4 +1,4 @@
-import { ToolCall, Turn } from "../test-case";
+import { RetrievedContextData, ToolCall, Turn } from "@/test-case";
 
 export class Golden {
   id?: string;
@@ -6,9 +6,10 @@ export class Golden {
   actualOutput?: string;
   expectedOutput?: string;
   context?: string[];
-  retrievalContext?: string[];
+  retrievalContext?: (string | RetrievedContextData)[];
   additionalMetadata?: Record<string, any>;
   comments?: string;
+  name?: string;
   toolsCalled?: ToolCall[];
   expectedTools?: ToolCall[];
   sourceFile?: string;
@@ -23,13 +24,14 @@ export class Golden {
     actualOutput?: string;
     expectedOutput?: string;
     context?: string[];
-    retrievalContext?: string[];
+    retrievalContext?: (string | RetrievedContextData)[];
     toolsCalled?: ToolCall[];
     expectedTools?: ToolCall[];
     additionalMetadata?: Record<string, any>;
     sourceFile?: string;
     customColumnKeyValues?: Record<string, string>;
     comments?: string;
+    name?: string;
     _datasetRank?: number;
     _datasetAlias?: string;
     _datasetId?: string;
@@ -45,6 +47,7 @@ export class Golden {
     this.additionalMetadata = params.additionalMetadata;
     this.sourceFile = params.sourceFile;
     this.comments = params.comments;
+    this.name = params.name;
     this._datasetRank = params._datasetRank;
     this._datasetAlias = params._datasetAlias;
     this._datasetId = params._datasetId;

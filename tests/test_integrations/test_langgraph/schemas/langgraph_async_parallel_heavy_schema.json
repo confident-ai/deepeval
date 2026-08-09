@@ -2,330 +2,6 @@
   "uuid": "02e60636-9d75-48ba-bd5a-db9828cab1c9",
   "baseSpans": [
     {
-      "uuid": "019d0516-ff8d-7200-8155-618538756c91",
-      "name": "LangGraph",
-      "status": "SUCCESS",
-      "type": "base",
-      "startTime": "2026-03-19T07:54:46.541Z",
-      "endTime": "2026-03-19T07:54:58.093Z",
-      "input": {
-        "messages": [
-          {
-            "content": "Call exactly these tools with the exact parameters shown. Do NOT use any other tools.\n\n1. get_weather(city='Tokyo')\n2. get_weather(city='New York')\n3. get_weather(city='London')\n4. get_weather(city='Paris')\n5. get_weather(city='Sydney')\n6. get_stock_price(symbol='AAPL')\n7. get_stock_price(symbol='GOOGL')\n8. get_stock_price(symbol='MSFT')\n9. calculate(expression='1/0.92')\n10. calculate(expression='1/0.79')\n11. calculate(expression='0.15*378.90')\n\nAfter receiving all results, provide a brief summary.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "265f9a7a-b4f0-48c5-adfb-18e1c1978e7d"
-          }
-        ]
-      },
-      "output": {
-        "messages": [
-          {
-            "content": "Call exactly these tools with the exact parameters shown. Do NOT use any other tools.\n\n1. get_weather(city='Tokyo')\n2. get_weather(city='New York')\n3. get_weather(city='London')\n4. get_weather(city='Paris')\n5. get_weather(city='Sydney')\n6. get_stock_price(symbol='AAPL')\n7. get_stock_price(symbol='GOOGL')\n8. get_stock_price(symbol='MSFT')\n9. calculate(expression='1/0.92')\n10. calculate(expression='1/0.79')\n11. calculate(expression='0.15*378.90')\n\nAfter receiving all results, provide a brief summary.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "265f9a7a-b4f0-48c5-adfb-18e1c1978e7d"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 326,
-                "prompt_tokens": 377,
-                "total_tokens": 703,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2VLiKqV6izcOcfL8nsjYS1ECb2U",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0516-ff8f-7790-a54a-093064e6abf0-0",
-            "tool_calls": [
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_H5GD1VRxN4t0yo6fm6MXu72j",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "New York"
-                },
-                "id": "call_Ez1UX0cO0b1Qph9l2AnBAWHT",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "London"
-                },
-                "id": "call_RonQKQVVLV2Wi4NhuKegR86z",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "Paris"
-                },
-                "id": "call_chQSBegSP598ZFEjWJoHV70i",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "Sydney"
-                },
-                "id": "call_nvVpg9TqMdabzxnqHxHzFhnP",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_stock_price",
-                "args": {
-                  "symbol": "AAPL"
-                },
-                "id": "call_y50JdsMQgssOPOMFrhiO30it",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_stock_price",
-                "args": {
-                  "symbol": "GOOGL"
-                },
-                "id": "call_idjWJlO6pMuNF7xPumfjYPpS",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_stock_price",
-                "args": {
-                  "symbol": "MSFT"
-                },
-                "id": "call_VmaIre7EsMnmx0Er5YYTJXol",
-                "type": "tool_call"
-              },
-              {
-                "name": "calculate",
-                "args": {
-                  "expression": "1/0.92"
-                },
-                "id": "call_NvuN2l6IR8EBsJ3wdQXh4H7S",
-                "type": "tool_call"
-              },
-              {
-                "name": "calculate",
-                "args": {
-                  "expression": "1/0.79"
-                },
-                "id": "call_FrGRuU63o98M2RHwABo274XN",
-                "type": "tool_call"
-              },
-              {
-                "name": "calculate",
-                "args": {
-                  "expression": "0.15*378.90"
-                },
-                "id": "call_fLhAcybKUkvdIZ1uXB6xoKy7",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 377,
-              "output_tokens": 326,
-              "total_tokens": 703,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
-            }
-          },
-          {
-            "content": "Sunny, 72°F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "id": "53b0fae2-dcbf-4d9f-9c00-b170b46c9ee2",
-            "tool_call_id": "call_H5GD1VRxN4t0yo6fm6MXu72j",
-            "status": "success"
-          },
-          {
-            "content": "Cloudy, 58°F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "id": "5794dba1-6c2e-43c1-b2f1-c527173b21bd",
-            "tool_call_id": "call_Ez1UX0cO0b1Qph9l2AnBAWHT",
-            "status": "success"
-          },
-          {
-            "content": "Rainy, 52°F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "id": "616c4b04-dc0c-409c-956d-2d86feba8038",
-            "tool_call_id": "call_RonQKQVVLV2Wi4NhuKegR86z",
-            "status": "success"
-          },
-          {
-            "content": "Partly cloudy, 65°F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "id": "8ce5e8d8-ffc5-40c7-9799-04116ed0ad30",
-            "tool_call_id": "call_chQSBegSP598ZFEjWJoHV70i",
-            "status": "success"
-          },
-          {
-            "content": "Clear, 78°F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "id": "ff35096f-5419-41ea-85d2-3ca038721257",
-            "tool_call_id": "call_nvVpg9TqMdabzxnqHxHzFhnP",
-            "status": "success"
-          },
-          {
-            "content": "$178.50",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_stock_price",
-            "id": "4855a328-f9e1-419f-8ead-8807ffcf84f9",
-            "tool_call_id": "call_y50JdsMQgssOPOMFrhiO30it",
-            "status": "success"
-          },
-          {
-            "content": "$142.30",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_stock_price",
-            "id": "af4818df-ff8c-4b48-939e-6fc7455db51c",
-            "tool_call_id": "call_idjWJlO6pMuNF7xPumfjYPpS",
-            "status": "success"
-          },
-          {
-            "content": "$378.90",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_stock_price",
-            "id": "3af3b9ed-5798-4b01-b673-dd1542334eca",
-            "tool_call_id": "call_VmaIre7EsMnmx0Er5YYTJXol",
-            "status": "success"
-          },
-          {
-            "content": "1/0.92 = 1.0869565217391304",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "calculate",
-            "id": "9f8e622f-f73f-4a62-a7a4-147fe7e86184",
-            "tool_call_id": "call_NvuN2l6IR8EBsJ3wdQXh4H7S",
-            "status": "success"
-          },
-          {
-            "content": "1/0.79 = 1.2658227848101264",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "calculate",
-            "id": "9bff3865-6aab-446c-8ad3-d5d601368d4b",
-            "tool_call_id": "call_FrGRuU63o98M2RHwABo274XN",
-            "status": "success"
-          },
-          {
-            "content": "0.15*378.90 = 56.834999999999994",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "calculate",
-            "id": "e522c90f-acfb-4026-86e2-86a439d4f4ee",
-            "tool_call_id": "call_fLhAcybKUkvdIZ1uXB6xoKy7",
-            "status": "success"
-          },
-          {
-            "content": "Summary of results:\n\nWeather\n- Tokyo: Sunny, 72°F\n- New York: Cloudy, 58°F\n- London: Rainy, 52°F\n- Paris: Partly cloudy, 65°F\n- Sydney: Clear, 78°F\n\nStock prices\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n\nCalculations\n- 1 / 0.92 = 1.0869565217391304\n- 1 / 0.79 = 1.2658227848101264\n- 0.15 * 378.90 = 56.834999999999994\n\nIf you want any values rounded or converted (e.g., temperatures to °C, stocks to another currency, or formatted calculations), tell me how you’d like them.",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 511,
-                "prompt_tokens": 688,
-                "total_tokens": 1199,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 320,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2VQGSA3fYddx35rUgftRCZlS06q",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-14c7-7ff3-a7d2-8b7bae46b4a2-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 688,
-              "output_tokens": 511,
-              "total_tokens": 1199,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 320
-              }
-            }
-          }
-        ]
-      },
-      "integration": "LangChain"
-    },
-    {
       "uuid": "019d0517-14c6-7fe2-9799-d379394dc1f9",
       "name": "agent",
       "status": "SUCCESS",
@@ -479,7 +155,7 @@
             }
           },
           {
-            "content": "Sunny, 72°F",
+            "content": "Sunny, 72\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -489,7 +165,7 @@
             "status": "success"
           },
           {
-            "content": "Cloudy, 58°F",
+            "content": "Cloudy, 58\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -499,7 +175,7 @@
             "status": "success"
           },
           {
-            "content": "Rainy, 52°F",
+            "content": "Rainy, 52\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -509,7 +185,7 @@
             "status": "success"
           },
           {
-            "content": "Partly cloudy, 65°F",
+            "content": "Partly cloudy, 65\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -519,7 +195,7 @@
             "status": "success"
           },
           {
-            "content": "Clear, 78°F",
+            "content": "Clear, 78\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -593,7 +269,7 @@
       "output": {
         "messages": [
           {
-            "content": "Summary of results:\n\nWeather\n- Tokyo: Sunny, 72°F\n- New York: Cloudy, 58°F\n- London: Rainy, 52°F\n- Paris: Partly cloudy, 65°F\n- Sydney: Clear, 78°F\n\nStock prices\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n\nCalculations\n- 1 / 0.92 = 1.0869565217391304\n- 1 / 0.79 = 1.2658227848101264\n- 0.15 * 378.90 = 56.834999999999994\n\nIf you want any values rounded or converted (e.g., temperatures to °C, stocks to another currency, or formatted calculations), tell me how you’d like them.",
+            "content": "Summary of results:\n\nWeather\n- Tokyo: Sunny, 72\u00b0F\n- New York: Cloudy, 58\u00b0F\n- London: Rainy, 52\u00b0F\n- Paris: Partly cloudy, 65\u00b0F\n- Sydney: Clear, 78\u00b0F\n\nStock prices\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n\nCalculations\n- 1 / 0.92 = 1.0869565217391304\n- 1 / 0.79 = 1.2658227848101264\n- 0.15 * 378.90 = 56.834999999999994\n\nIf you want any values rounded or converted (e.g., temperatures to \u00b0C, stocks to another currency, or formatted calculations), tell me how you\u2019d like them.",
             "additional_kwargs": {
               "refusal": null
             },
@@ -797,7 +473,7 @@
             }
           },
           {
-            "content": "Sunny, 72°F",
+            "content": "Sunny, 72\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -807,7 +483,7 @@
             "status": "success"
           },
           {
-            "content": "Cloudy, 58°F",
+            "content": "Cloudy, 58\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -817,7 +493,7 @@
             "status": "success"
           },
           {
-            "content": "Rainy, 52°F",
+            "content": "Rainy, 52\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -827,7 +503,7 @@
             "status": "success"
           },
           {
-            "content": "Partly cloudy, 65°F",
+            "content": "Partly cloudy, 65\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -837,7 +513,7 @@
             "status": "success"
           },
           {
-            "content": "Clear, 78°F",
+            "content": "Clear, 78\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -907,7 +583,7 @@
             "status": "success"
           },
           {
-            "content": "Summary of results:\n\nWeather\n- Tokyo: Sunny, 72°F\n- New York: Cloudy, 58°F\n- London: Rainy, 52°F\n- Paris: Partly cloudy, 65°F\n- Sydney: Clear, 78°F\n\nStock prices\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n\nCalculations\n- 1 / 0.92 = 1.0869565217391304\n- 1 / 0.79 = 1.2658227848101264\n- 0.15 * 378.90 = 56.834999999999994\n\nIf you want any values rounded or converted (e.g., temperatures to °C, stocks to another currency, or formatted calculations), tell me how you’d like them.",
+            "content": "Summary of results:\n\nWeather\n- Tokyo: Sunny, 72\u00b0F\n- New York: Cloudy, 58\u00b0F\n- London: Rainy, 52\u00b0F\n- Paris: Partly cloudy, 65\u00b0F\n- Sydney: Clear, 78\u00b0F\n\nStock prices\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n\nCalculations\n- 1 / 0.92 = 1.0869565217391304\n- 1 / 0.79 = 1.2658227848101264\n- 0.15 * 378.90 = 56.834999999999994\n\nIf you want any values rounded or converted (e.g., temperatures to \u00b0C, stocks to another currency, or formatted calculations), tell me how you\u2019d like them.",
             "additional_kwargs": {
               "refusal": null
             },
@@ -1116,7 +792,7 @@
       "output": {
         "messages": [
           {
-            "content": "Sunny, 72°F",
+            "content": "Sunny, 72\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -1126,7 +802,7 @@
             "status": "success"
           },
           {
-            "content": "Cloudy, 58°F",
+            "content": "Cloudy, 58\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -1136,7 +812,7 @@
             "status": "success"
           },
           {
-            "content": "Rainy, 52°F",
+            "content": "Rainy, 52\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -1146,7 +822,7 @@
             "status": "success"
           },
           {
-            "content": "Partly cloudy, 65°F",
+            "content": "Partly cloudy, 65\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -1156,7 +832,7 @@
             "status": "success"
           },
           {
-            "content": "Clear, 78°F",
+            "content": "Clear, 78\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -1232,7 +908,7 @@
           "name": "get_weather",
           "type": "FUNCTION",
           "output": {
-            "content": "Sunny, 72°F",
+            "content": "Sunny, 72\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -1249,7 +925,7 @@
           "name": "get_weather",
           "type": "FUNCTION",
           "output": {
-            "content": "Cloudy, 58°F",
+            "content": "Cloudy, 58\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -1266,7 +942,7 @@
           "name": "get_weather",
           "type": "FUNCTION",
           "output": {
-            "content": "Rainy, 52°F",
+            "content": "Rainy, 52\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -1283,7 +959,7 @@
           "name": "get_weather",
           "type": "FUNCTION",
           "output": {
-            "content": "Clear, 78°F",
+            "content": "Clear, 78\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -1300,7 +976,7 @@
           "name": "get_weather",
           "type": "FUNCTION",
           "output": {
-            "content": "Partly cloudy, 65°F",
+            "content": "Partly cloudy, 65\u00b0F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
@@ -1738,7 +1414,334 @@
       "integration": "LangChain"
     }
   ],
-  "agentSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "019d0516-ff8d-7200-8155-618538756c91",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-19T07:54:46.541Z",
+      "endTime": "2026-03-19T07:54:58.093Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Call exactly these tools with the exact parameters shown. Do NOT use any other tools.\n\n1. get_weather(city='Tokyo')\n2. get_weather(city='New York')\n3. get_weather(city='London')\n4. get_weather(city='Paris')\n5. get_weather(city='Sydney')\n6. get_stock_price(symbol='AAPL')\n7. get_stock_price(symbol='GOOGL')\n8. get_stock_price(symbol='MSFT')\n9. calculate(expression='1/0.92')\n10. calculate(expression='1/0.79')\n11. calculate(expression='0.15*378.90')\n\nAfter receiving all results, provide a brief summary.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "265f9a7a-b4f0-48c5-adfb-18e1c1978e7d"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Call exactly these tools with the exact parameters shown. Do NOT use any other tools.\n\n1. get_weather(city='Tokyo')\n2. get_weather(city='New York')\n3. get_weather(city='London')\n4. get_weather(city='Paris')\n5. get_weather(city='Sydney')\n6. get_stock_price(symbol='AAPL')\n7. get_stock_price(symbol='GOOGL')\n8. get_stock_price(symbol='MSFT')\n9. calculate(expression='1/0.92')\n10. calculate(expression='1/0.79')\n11. calculate(expression='0.15*378.90')\n\nAfter receiving all results, provide a brief summary.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "265f9a7a-b4f0-48c5-adfb-18e1c1978e7d"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 326,
+                "prompt_tokens": 377,
+                "total_tokens": 703,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 128,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5.4-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2VLiKqV6izcOcfL8nsjYS1ECb2U",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0516-ff8f-7790-a54a-093064e6abf0-0",
+            "tool_calls": [
+              {
+                "name": "get_weather",
+                "args": {
+                  "city": "Tokyo"
+                },
+                "id": "call_H5GD1VRxN4t0yo6fm6MXu72j",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_weather",
+                "args": {
+                  "city": "New York"
+                },
+                "id": "call_Ez1UX0cO0b1Qph9l2AnBAWHT",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_weather",
+                "args": {
+                  "city": "London"
+                },
+                "id": "call_RonQKQVVLV2Wi4NhuKegR86z",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_weather",
+                "args": {
+                  "city": "Paris"
+                },
+                "id": "call_chQSBegSP598ZFEjWJoHV70i",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_weather",
+                "args": {
+                  "city": "Sydney"
+                },
+                "id": "call_nvVpg9TqMdabzxnqHxHzFhnP",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "AAPL"
+                },
+                "id": "call_y50JdsMQgssOPOMFrhiO30it",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "GOOGL"
+                },
+                "id": "call_idjWJlO6pMuNF7xPumfjYPpS",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "MSFT"
+                },
+                "id": "call_VmaIre7EsMnmx0Er5YYTJXol",
+                "type": "tool_call"
+              },
+              {
+                "name": "calculate",
+                "args": {
+                  "expression": "1/0.92"
+                },
+                "id": "call_NvuN2l6IR8EBsJ3wdQXh4H7S",
+                "type": "tool_call"
+              },
+              {
+                "name": "calculate",
+                "args": {
+                  "expression": "1/0.79"
+                },
+                "id": "call_FrGRuU63o98M2RHwABo274XN",
+                "type": "tool_call"
+              },
+              {
+                "name": "calculate",
+                "args": {
+                  "expression": "0.15*378.90"
+                },
+                "id": "call_fLhAcybKUkvdIZ1uXB6xoKy7",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 377,
+              "output_tokens": 326,
+              "total_tokens": 703,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 128
+              }
+            }
+          },
+          {
+            "content": "Sunny, 72\u00b0F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_weather",
+            "id": "53b0fae2-dcbf-4d9f-9c00-b170b46c9ee2",
+            "tool_call_id": "call_H5GD1VRxN4t0yo6fm6MXu72j",
+            "status": "success"
+          },
+          {
+            "content": "Cloudy, 58\u00b0F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_weather",
+            "id": "5794dba1-6c2e-43c1-b2f1-c527173b21bd",
+            "tool_call_id": "call_Ez1UX0cO0b1Qph9l2AnBAWHT",
+            "status": "success"
+          },
+          {
+            "content": "Rainy, 52\u00b0F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_weather",
+            "id": "616c4b04-dc0c-409c-956d-2d86feba8038",
+            "tool_call_id": "call_RonQKQVVLV2Wi4NhuKegR86z",
+            "status": "success"
+          },
+          {
+            "content": "Partly cloudy, 65\u00b0F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_weather",
+            "id": "8ce5e8d8-ffc5-40c7-9799-04116ed0ad30",
+            "tool_call_id": "call_chQSBegSP598ZFEjWJoHV70i",
+            "status": "success"
+          },
+          {
+            "content": "Clear, 78\u00b0F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_weather",
+            "id": "ff35096f-5419-41ea-85d2-3ca038721257",
+            "tool_call_id": "call_nvVpg9TqMdabzxnqHxHzFhnP",
+            "status": "success"
+          },
+          {
+            "content": "$178.50",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "id": "4855a328-f9e1-419f-8ead-8807ffcf84f9",
+            "tool_call_id": "call_y50JdsMQgssOPOMFrhiO30it",
+            "status": "success"
+          },
+          {
+            "content": "$142.30",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "id": "af4818df-ff8c-4b48-939e-6fc7455db51c",
+            "tool_call_id": "call_idjWJlO6pMuNF7xPumfjYPpS",
+            "status": "success"
+          },
+          {
+            "content": "$378.90",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "id": "3af3b9ed-5798-4b01-b673-dd1542334eca",
+            "tool_call_id": "call_VmaIre7EsMnmx0Er5YYTJXol",
+            "status": "success"
+          },
+          {
+            "content": "1/0.92 = 1.0869565217391304",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "calculate",
+            "id": "9f8e622f-f73f-4a62-a7a4-147fe7e86184",
+            "tool_call_id": "call_NvuN2l6IR8EBsJ3wdQXh4H7S",
+            "status": "success"
+          },
+          {
+            "content": "1/0.79 = 1.2658227848101264",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "calculate",
+            "id": "9bff3865-6aab-446c-8ad3-d5d601368d4b",
+            "tool_call_id": "call_FrGRuU63o98M2RHwABo274XN",
+            "status": "success"
+          },
+          {
+            "content": "0.15*378.90 = 56.834999999999994",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "calculate",
+            "id": "e522c90f-acfb-4026-86e2-86a439d4f4ee",
+            "tool_call_id": "call_fLhAcybKUkvdIZ1uXB6xoKy7",
+            "status": "success"
+          },
+          {
+            "content": "Summary of results:\n\nWeather\n- Tokyo: Sunny, 72\u00b0F\n- New York: Cloudy, 58\u00b0F\n- London: Rainy, 52\u00b0F\n- Paris: Partly cloudy, 65\u00b0F\n- Sydney: Clear, 78\u00b0F\n\nStock prices\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n\nCalculations\n- 1 / 0.92 = 1.0869565217391304\n- 1 / 0.79 = 1.2658227848101264\n- 0.15 * 378.90 = 56.834999999999994\n\nIf you want any values rounded or converted (e.g., temperatures to \u00b0C, stocks to another currency, or formatted calculations), tell me how you\u2019d like them.",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 511,
+                "prompt_tokens": 688,
+                "total_tokens": 1199,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 320,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5.4-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2VQGSA3fYddx35rUgftRCZlS06q",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0517-14c7-7ff3-a7d2-8b7bae46b4a2-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 688,
+              "output_tokens": 511,
+              "total_tokens": 1199,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 320
+              }
+            }
+          }
+        ]
+      },
+      "integration": "LangChain",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
   "llmSpans": [
     {
       "uuid": "019d0517-14c7-7ff3-a7d2-8b7bae46b4a2",
@@ -1763,23 +1766,23 @@
         },
         {
           "role": "tool",
-          "content": "Sunny, 72°F"
+          "content": "Sunny, 72\u00b0F"
         },
         {
           "role": "tool",
-          "content": "Cloudy, 58°F"
+          "content": "Cloudy, 58\u00b0F"
         },
         {
           "role": "tool",
-          "content": "Rainy, 52°F"
+          "content": "Rainy, 52\u00b0F"
         },
         {
           "role": "tool",
-          "content": "Partly cloudy, 65°F"
+          "content": "Partly cloudy, 65\u00b0F"
         },
         {
           "role": "tool",
-          "content": "Clear, 78°F"
+          "content": "Clear, 78\u00b0F"
         },
         {
           "role": "tool",
@@ -1828,7 +1831,7 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Summary of results:\n\nWeather\n- Tokyo: Sunny, 72°F\n- New York: Cloudy, 58°F\n- London: Rainy, 52°F\n- Paris: Partly cloudy, 65°F\n- Sydney: Clear, 78°F\n\nStock prices\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n\nCalculations\n- 1 / 0.92 = 1.0869565217391304\n- 1 / 0.79 = 1.2658227848101264\n- 0.15 * 378.90 = 56.834999999999994\n\nIf you want any values rounded or converted (e.g., temperatures to °C, stocks to another currency, or formatted calculations), tell me how you’d like them.",
+        "content": "Summary of results:\n\nWeather\n- Tokyo: Sunny, 72\u00b0F\n- New York: Cloudy, 58\u00b0F\n- London: Rainy, 52\u00b0F\n- Paris: Partly cloudy, 65\u00b0F\n- Sydney: Clear, 78\u00b0F\n\nStock prices\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n\nCalculations\n- 1 / 0.92 = 1.0869565217391304\n- 1 / 0.79 = 1.2658227848101264\n- 0.15 * 378.90 = 56.834999999999994\n\nIf you want any values rounded or converted (e.g., temperatures to \u00b0C, stocks to another currency, or formatted calculations), tell me how you\u2019d like them.",
         "tool_calls": []
       },
       "model": "gpt-5.4-mini-2025-08-07",
@@ -2117,7 +2120,7 @@
         "city": "Paris"
       },
       "output": {
-        "content": "Partly cloudy, 65°F",
+        "content": "Partly cloudy, 65\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -2140,7 +2143,7 @@
         "city": "Sydney"
       },
       "output": {
-        "content": "Clear, 78°F",
+        "content": "Clear, 78\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -2163,7 +2166,7 @@
         "city": "London"
       },
       "output": {
-        "content": "Rainy, 52°F",
+        "content": "Rainy, 52\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -2186,7 +2189,7 @@
         "city": "New York"
       },
       "output": {
-        "content": "Cloudy, 58°F",
+        "content": "Cloudy, 58\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -2209,7 +2212,7 @@
         "city": "Tokyo"
       },
       "output": {
-        "content": "Sunny, 72°F",
+        "content": "Sunny, 72\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -2388,7 +2391,7 @@
         }
       },
       {
-        "content": "Sunny, 72°F",
+        "content": "Sunny, 72\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -2398,7 +2401,7 @@
         "status": "success"
       },
       {
-        "content": "Cloudy, 58°F",
+        "content": "Cloudy, 58\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -2408,7 +2411,7 @@
         "status": "success"
       },
       {
-        "content": "Rainy, 52°F",
+        "content": "Rainy, 52\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -2418,7 +2421,7 @@
         "status": "success"
       },
       {
-        "content": "Partly cloudy, 65°F",
+        "content": "Partly cloudy, 65\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -2428,7 +2431,7 @@
         "status": "success"
       },
       {
-        "content": "Clear, 78°F",
+        "content": "Clear, 78\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -2498,7 +2501,7 @@
         "status": "success"
       },
       {
-        "content": "Summary of results:\n\nWeather\n- Tokyo: Sunny, 72°F\n- New York: Cloudy, 58°F\n- London: Rainy, 52°F\n- Paris: Partly cloudy, 65°F\n- Sydney: Clear, 78°F\n\nStock prices\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n\nCalculations\n- 1 / 0.92 = 1.0869565217391304\n- 1 / 0.79 = 1.2658227848101264\n- 0.15 * 378.90 = 56.834999999999994\n\nIf you want any values rounded or converted (e.g., temperatures to °C, stocks to another currency, or formatted calculations), tell me how you’d like them.",
+        "content": "Summary of results:\n\nWeather\n- Tokyo: Sunny, 72\u00b0F\n- New York: Cloudy, 58\u00b0F\n- London: Rainy, 52\u00b0F\n- Paris: Partly cloudy, 65\u00b0F\n- Sydney: Clear, 78\u00b0F\n\nStock prices\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n\nCalculations\n- 1 / 0.92 = 1.0869565217391304\n- 1 / 0.79 = 1.2658227848101264\n- 0.15 * 378.90 = 56.834999999999994\n\nIf you want any values rounded or converted (e.g., temperatures to \u00b0C, stocks to another currency, or formatted calculations), tell me how you\u2019d like them.",
         "additional_kwargs": {
           "refusal": null
         },
@@ -2552,7 +2555,7 @@
       "name": "get_weather",
       "type": "FUNCTION",
       "output": {
-        "content": "Sunny, 72°F",
+        "content": "Sunny, 72\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -2569,7 +2572,7 @@
       "name": "get_weather",
       "type": "FUNCTION",
       "output": {
-        "content": "Cloudy, 58°F",
+        "content": "Cloudy, 58\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -2586,7 +2589,7 @@
       "name": "get_weather",
       "type": "FUNCTION",
       "output": {
-        "content": "Rainy, 52°F",
+        "content": "Rainy, 52\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -2603,7 +2606,7 @@
       "name": "get_weather",
       "type": "FUNCTION",
       "output": {
-        "content": "Clear, 78°F",
+        "content": "Clear, 78\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
@@ -2620,7 +2623,7 @@
       "name": "get_weather",
       "type": "FUNCTION",
       "output": {
-        "content": "Partly cloudy, 65°F",
+        "content": "Partly cloudy, 65\u00b0F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",

@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Type
 
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.utils import (
@@ -21,6 +21,12 @@ from deepeval.metrics.conversation_completeness.schema import (
     ConversationCompletenessVerdict,
     ConversationCompletenessScoreReason,
 )
+from deepeval.templates import make_template_class
+
+
+ConversationCompletenessTemplate = make_template_class(
+    "ConversationCompletenessMetric"
+)
 
 
 class ConversationCompletenessMetric(BaseConversationalMetric):
@@ -36,6 +42,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         verbose_mode: bool = False,
         window_size: int = 3,
         flaky: bool = False,
+        evaluation_template: Type[
+            ConversationCompletenessTemplate
+        ] = ConversationCompletenessTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -46,13 +55,13 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         self.verbose_mode = verbose_mode
         self.flaky = flaky
         self.window_size = window_size
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
 
         multimodal = test_case.multimodal
@@ -78,7 +87,6 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -113,7 +121,6 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         multimodal = test_case.multimodal

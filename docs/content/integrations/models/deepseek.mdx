@@ -2,9 +2,10 @@
 # id: deepseek
 title: DeepSeek
 sidebar_label: DeepSeek
+languages: [python, typescript]
 ---
 
-`deepeval` allows you to use `deepseek-chat` and `deepseek-reasoner` directly from DeepSeek to run all of `deepeval`'s metrics, which can be set through the CLI or in python.
+`deepeval` allows you to use `deepseek-chat` and `deepseek-reasoner` directly from DeepSeek to run all of `deepeval`'s metrics, which can be set through the CLI or in code.
 
 ### Command Line
 
@@ -15,7 +16,7 @@ deepeval set-deepseek --model=deepseek-chat \
     --temperature=0
 ```
 
-The CLI command above sets `deepseek-chat` as the default model for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset DeepSeek:
+The CLI command above sets `deepseek-chat` as the default model for all metrics, unless overridden in code. To use a different default model provider, you must first unset DeepSeek:
 
 ```bash
 deepeval unset-deepseek
@@ -26,16 +27,20 @@ You can persist CLI settings with the optional `--save` flag.
 See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
 :::
 
-### Python
+### In Code
 
 You can also specify your model directly in code using `DeepSeekModel`.
+
+<Switch>
+
+<Case id="python">
 
 <Tabs items={["Python", "ENV"]}>
 <Tab value="Python">
 
 ```python
-from deepeval.models import DeepSeekModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import DeepSeekModel
 
 model = DeepSeekModel(
     model="deepseek-chat",
@@ -75,8 +80,69 @@ There are **ZERO** mandatory and **SIX** optional parameters when creating a `De
 
 Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via `deepeval` settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-deep-seek) for the DeepSeek-related environment variables.
 
+</Case>
+
+<Case id="typescript">
+
+<Tabs items={["TypeScript", "ENV"]}>
+<Tab value="TypeScript">
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { DeepSeekModel } from "deepeval/models";
+
+const model = new DeepSeekModel({
+  model: "deepseek-chat",
+  apiKey: "your-api-key",
+  temperature: 0,
+});
+
+const answerRelevancy = new AnswerRelevancyMetric({ model });
+```
+
+</Tab>
+<Tab value="ENV">
+
+To use any DeepSeek model directly in `deepeval`, set `DEEPSEEK_MODEL_NAME` and `DEEPSEEK_API_KEY` in your `env` and create a `DeepSeekModel` with no arguments:
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { DeepSeekModel } from "deepeval/models";
+
+const answerRelevancy = new AnswerRelevancyMetric({
+  model: new DeepSeekModel(),
+});
+```
+
+</Tab>
+</Tabs>
+
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `DeepSeekModel`:
+
+- [Optional] `model`: A string specifying the name of the DeepSeek model to use. Defaults to `DEEPSEEK_MODEL_NAME` if not passed; falls back to `deepseek-chat` if unset.
+- [Optional] `apiKey`: A string specifying your DeepSeek API key for authentication. Defaults to `DEEPSEEK_API_KEY` if not passed; raises an error at runtime if unset.
+- [Optional] `baseURL`: A string specifying the base URL for the DeepSeek API endpoint. Defaults to `https://api.deepseek.com`.
+- [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
+- [Optional] `defaultHeaders`: An object of extra HTTP headers sent with every request.
+- [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+- [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+
+Any other key you pass is forwarded as-is to the OpenAI `chat.completions.create(...)` call, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new DeepSeekModel({
+  model: "deepseek-chat",
+  top_p: 0.9,
+  max_tokens: 512,
+});
+```
+
+</Case>
+
+</Switch>
+
 :::tip
-Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://api-docs.deepseek.com/api/create-chat-completion#request).
+Before passing additional generation parameters, we request you to double check the params supported by the model and your model provider in their [official docs](https://api-docs.deepseek.com/api/create-chat-completion#request).
 :::
 
 ### Available DeepSeek Models

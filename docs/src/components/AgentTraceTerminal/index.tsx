@@ -1,14 +1,7 @@
 import styles from "./AgentTraceTerminal.module.scss";
 
 export type LineKind =
-  | "cmd"
-  | "root"
-  | "agent"
-  | "tool"
-  | "llm"
-  | "retriever"
-  | "blank"
-  | "summary";
+  "cmd" | "root" | "agent" | "tool" | "llm" | "retriever" | "blank" | "summary";
 
 export type TraceLine = {
   kind: LineKind;
@@ -87,11 +80,86 @@ export const DEFAULT_TRACE: TraceLine[] = [
   },
 ];
 
+/** Same spans, same metrics, same scores — TypeScript spellings. */
+export const TYPESCRIPT_TRACE: TraceLine[] = [
+  { kind: "cmd", name: "npx deepeval test run agents/checkout.test.ts" },
+  { kind: "blank" },
+  { kind: "root", prefix: "●", name: "checkout agent" },
+  { kind: "blank", prefix: "│" },
+  {
+    kind: "agent",
+    prefix: "├─",
+    name: "planRefundStrategy",
+    metric: "G-Eval",
+    score: "0.94",
+    duration: "220ms",
+    pass: true,
+  },
+  {
+    kind: "retriever",
+    prefix: "│  ├─",
+    name: "retrievePolicyDocs(query=…)",
+    metric: "Context Recall",
+    score: "0.89",
+    duration: "68ms",
+    pass: true,
+  },
+  {
+    kind: "tool",
+    prefix: "│  ├─",
+    name: 'lookupOrder(id="#9281")',
+    metric: "Faithfulness",
+    score: "1.00",
+    duration: "45ms",
+    pass: true,
+  },
+  {
+    kind: "llm",
+    prefix: "│  └─",
+    name: "gpt-4o · classifyIntent",
+    metric: "Answer Relevancy",
+    score: "0.92",
+    duration: "130ms",
+    pass: true,
+  },
+  { kind: "blank", prefix: "│" },
+  {
+    kind: "tool",
+    prefix: "├─",
+    name: "processRefund(amount=29.99)",
+    metric: "deterministic",
+    duration: "85ms",
+  },
+  { kind: "blank", prefix: "│" },
+  {
+    kind: "llm",
+    prefix: "└─",
+    name: "gpt-4o · draftResponse",
+    metric: "Helpfulness",
+    score: "0.88",
+    duration: "195ms",
+    pass: true,
+  },
+  { kind: "blank" },
+  {
+    kind: "summary",
+    name: "Trace score  0.92   ·   5/5 metrics passed",
+    pass: true,
+  },
+];
+
+const TRACES = {
+  python: DEFAULT_TRACE,
+  typescript: TYPESCRIPT_TRACE,
+} as const;
+
 const DEFAULT_TITLE = "agent_trace · deepeval";
 const DEFAULT_ARIA_LABEL = "Example agent trace with per-step metric scores";
 
 interface AgentTraceTerminalProps {
   title?: string;
+  /** Picks the matching trace; ignored when `lines` is given. */
+  language?: keyof typeof TRACES;
   lines?: TraceLine[];
   ariaLabel?: string;
 }
@@ -113,7 +181,8 @@ function kindLabel(kind: LineKind): string | null {
 
 const AgentTraceTerminal: React.FC<AgentTraceTerminalProps> = ({
   title = DEFAULT_TITLE,
-  lines = DEFAULT_TRACE,
+  language = "python",
+  lines = TRACES[language],
   ariaLabel = DEFAULT_ARIA_LABEL,
 }) => {
   return (
@@ -169,9 +238,7 @@ const AgentTraceTerminal: React.FC<AgentTraceTerminalProps> = ({
               <>
                 <span className={styles.prefix}>{line.prefix}</span>
                 <span
-                  className={`${styles.badge} ${
-                    styles[`badge_${line.kind}`]
-                  }`}
+                  className={`${styles.badge} ${styles[`badge_${line.kind}`]}`}
                 >
                   {kindLabel(line.kind)}
                 </span>

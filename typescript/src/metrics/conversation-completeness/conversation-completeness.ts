@@ -1,37 +1,39 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
-import {
-  ConversationalTestCase,
-  MultiTurnParams,
-  Turn,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { resolveThreshold } from "@/metrics/base-metrics";
+import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   convertTurnToDict,
-} from "../conversational-utils";
+} from "@/metrics/conversational-utils";
 import {
   UserIntentionsSchema,
   ConversationCompletenessVerdictSchema,
   ConversationCompletenessScoreReasonSchema,
   type ConversationCompletenessVerdict,
-} from "./schema";
+} from "@/metrics/conversation-completeness/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "ConversationCompletenessMetric";
 
+export type ConversationCompletenessTemplateOverride =
+  MetricTemplateOverride<"ConversationCompletenessMetric">;
+
 export interface ConversationCompletenessMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: ConversationCompletenessTemplateOverride;
 }
 
 /**
@@ -45,12 +47,16 @@ export class ConversationCompletenessMetric extends BaseConversationalMetric {
 
   constructor(options: ConversationCompletenessMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE];
     const { model, usingNativeModel } = initializeModel(options.model);
     this.model = model;
@@ -73,7 +79,7 @@ export class ConversationCompletenessMetric extends BaseConversationalMetric {
       );
       this.score = this.calculateScore();
       this.reason = await this.generateReason();
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `User Intentions:\n${prettifyList(this.userIntentions)}`,
@@ -87,7 +93,7 @@ export class ConversationCompletenessMetric extends BaseConversationalMetric {
   }
 
   private async extractUserIntentions(turns: Turn[]): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "extract_user_intentions", {
+    const prompt = this.getPrompt("extract_user_intentions", {
       turns: turns.map((turn) => convertTurnToDict(turn)),
     });
     const { intentions } = await generateWithSchema(
@@ -102,19 +108,25 @@ export class ConversationCompletenessMetric extends BaseConversationalMetric {
     turns: Turn[],
     intention: string,
   ): Promise<ConversationCompletenessVerdict> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+    const prompt = this.getPrompt("generate_verdicts", {
       turns: turns.map((turn) => convertTurnToDict(turn)),
       intention,
     });
-    return generateWithSchema(this, prompt, ConversationCompletenessVerdictSchema);
+    return generateWithSchema(
+      this,
+      prompt,
+      ConversationCompletenessVerdictSchema,
+    );
   }
 
   private async generateReason(): Promise<string | undefined> {
     if (!this.includeReason) return undefined;
     const incompletenesses = this.verdicts
-      .filter((v) => v?.verdict != null && v.verdict.trim().toLowerCase() === "no")
+      .filter(
+        (v) => v?.verdict != null && v.verdict.trim().toLowerCase() === "no",
+      )
       .map((v) => v.reason);
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       score: this.score,
       incompletenesses,
       intentions: this.userIntentions,
@@ -135,13 +147,7 @@ export class ConversationCompletenessMetric extends BaseConversationalMetric {
       (v) => v.verdict.trim().toLowerCase() !== "no",
     ).length;
     const score = satisfied / total;
-    return this.strictMode && score < this.threshold ? 0 : score;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
+    return this.applyStrictMode(score);
   }
 
   get name(): string {

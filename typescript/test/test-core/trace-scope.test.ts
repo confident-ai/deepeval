@@ -4,8 +4,8 @@ import {
   isCapturingTraces,
   getCapturedTraces,
   getLatestCapturedTrace,
-} from "../../src/evaluate/test-run/trace-scope";
-import { traceManager } from "../../src/tracing";
+} from "@/evaluate/test-run/trace-scope";
+import { traceManager } from "@/tracing";
 
 describe("trace-scope capture", () => {
   afterEach(() => {

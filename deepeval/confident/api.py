@@ -19,9 +19,6 @@ from deepeval.confident.types import ApiResponse, ConfidentApiError
 from deepeval.config.settings import get_settings
 
 CONFIDENT_API_KEY_ENV_VAR = "CONFIDENT_API_KEY"
-DEEPEVAL_BASE_URL = "https://deepeval.confident-ai.com"
-DEEPEVAL_BASE_URL_EU = "https://eu.deepeval.confident-ai.com"
-DEEPEVAL_BASE_URL_AU = "https://au.deepeval.confident-ai.com"
 API_BASE_URL = "https://api.confident-ai.com"
 API_BASE_URL_EU = "https://eu.api.confident-ai.com"
 API_BASE_URL_AU = "https://au.api.confident-ai.com"
@@ -151,7 +148,6 @@ class Endpoints(Enum):
     DATASET_ALIAS_ENDPOINT = "/v1/datasets/:alias"
     DATASET_ALIAS_QUEUE_ENDPOINT = "/v1/datasets/:alias/queue"
     DATASET_ALIAS_VERSIONS_ENDPOINT = "/v1/datasets/:alias/versions"
-    GOLDEN_ENDPOINT = "/v1/goldens/:goldenId"
 
     TEST_RUN_ENDPOINT = "/v1/test-run"
     EXPERIMENT_ENDPOINT = "/v1/experiment"

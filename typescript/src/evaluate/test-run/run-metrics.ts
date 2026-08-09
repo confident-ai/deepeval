@@ -1,22 +1,45 @@
-import { ConversationalTestCase } from "../../test-case";
-import { Golden } from "../../dataset";
-import { BaseMetric, BaseConversationalMetric } from "../../metrics";
-import { DeepEvalError } from "../../errors";
-import { AnyTestCase, EvaluatedCase, MetricData } from "../types";
-import { ErrorConfig } from "../configs";
-import { runMetric, buildTestResult, metricMatchesCase } from "../evaluate";
-import { evaluateTrace, primaryTraceFor, turnTestCase } from "../trace-eval";
-import { buildFailureMessage } from "./errors";
-import { globalResultCollector } from "./collector";
-import { collectTracesFrom } from "./trace-scope";
-import { traceManager, type Trace } from "../../tracing/tracing";
+import { ConversationalTestCase, resolveRetrievalContext } from "@/test-case";
+import { Golden } from "@/dataset";
+import { BaseMetric, BaseConversationalMetric } from "@/metrics";
+import { DeepEvalError } from "@/errors";
+import {
+  getMaxConcurrent,
+  mapWithConcurrency,
+  shouldIgnoreErrors,
+  shouldSkipOnMissingParams,
+} from "@/env-flags";
+import {
+  AnyTestCase,
+  EvaluatedCase,
+  MetricData,
+  aggregateSuccess,
+} from "@/evaluate/types";
+import { checkAtLeastOneMetricHasThreshold } from "@/metrics/utils";
+import { ErrorConfig } from "@/evaluate/configs";
+import {
+  runMetric,
+  buildTestResult,
+  metricMatchesCase,
+} from "@/evaluate/evaluate";
+import {
+  evaluateTrace,
+  primaryTraceFor,
+  turnTestCase,
+} from "@/evaluate/trace-eval";
+import { buildFailureMessage } from "@/evaluate/test-run/errors";
+import { globalResultCollector } from "@/evaluate/test-run/collector";
+import { collectTracesFrom } from "@/evaluate/test-run/trace-scope";
+import { traceManager, type Trace } from "@/tracing/tracing";
 
 type AnyMetric = BaseMetric | BaseConversationalMetric;
 
 export type ToPassCallback = () => unknown;
 
+/** Produces the trace judged by `expect(golden).toPass(..., { task })`. */
+export type ToPassTask = (golden: Golden) => unknown;
+
 /** Anything `expect(...).toPass()` can be called on. */
-export type ToPassTarget = AnyTestCase | ToPassCallback;
+export type ToPassTarget = AnyTestCase | ToPassCallback | Golden;
 
 /** Trace-level metrics judge a single turn, so they must be single-turn. */
 function assertSingleTurn(metrics: AnyMetric[]): void {
@@ -36,10 +59,11 @@ function assertSingleTurn(metrics: AnyMetric[]): void {
 function applyGoldenToTrace(trace: Trace, golden: Golden): void {
   if (trace.input == null) trace.input = golden.input;
   if (trace.output == null) trace.output = trace.rootSpans[0]?.output;
-  if (trace.expectedOutput == null) trace.expectedOutput = golden.expectedOutput;
+  if (trace.expectedOutput == null)
+    trace.expectedOutput = golden.expectedOutput;
   if (trace.context == null) trace.context = golden.context;
   if (trace.retrievalContext == null)
-    trace.retrievalContext = golden.retrievalContext;
+    trace.retrievalContext = resolveRetrievalContext(golden.retrievalContext);
   if (trace.expectedTools == null) trace.expectedTools = golden.expectedTools;
 }
 
@@ -53,10 +77,13 @@ export interface MetricsOutcome {
   failureMessage: string;
 }
 
-const STRICT_ERROR_CONFIG: Required<ErrorConfig> = {
-  ignoreErrors: false,
-  skipOnMissingParams: false,
-};
+/** Strict by default; `deepeval test run` flags relax it for the whole run. */
+function runErrorConfig(): Required<ErrorConfig> {
+  return {
+    ignoreErrors: shouldIgnoreErrors(),
+    skipOnMissingParams: shouldSkipOnMissingParams(),
+  };
+}
 
 export async function evaluateCase(
   testCase: AnyTestCase,
@@ -65,6 +92,7 @@ export async function evaluateCase(
   if (!metrics || metrics.length === 0) {
     throw new DeepEvalError("toPass requires at least one metric.");
   }
+  checkAtLeastOneMetricHasThreshold(metrics);
   const mismatched = metrics.filter((m) => !metricMatchesCase(m, testCase));
   if (mismatched.length > 0) {
     const isConversational = testCase instanceof ConversationalTestCase;
@@ -81,8 +109,11 @@ export async function evaluateCase(
   }
 
   const start = Date.now();
-  const metricsData = await Promise.all(
-    metrics.map((m) => runMetric(m, testCase, STRICT_ERROR_CONFIG, () => {})),
+  const errorConfig = runErrorConfig();
+  const metricsData = await mapWithConcurrency(
+    metrics,
+    getMaxConcurrent(),
+    (m) => runMetric(m, testCase, errorConfig, () => {}),
   );
   return {
     testCase,
@@ -103,12 +134,19 @@ export async function runTestCaseMetrics(
     evaluated.testCase,
     evaluated.metricsData,
   );
-  return {
-    pass: testResult.success,
-    failureMessage: buildFailureMessage(evaluated.metricsData),
-  };
-}
+  const failureMessage = buildFailureMessage(evaluated.metricsData);
 
+  // A flaky test case reports its failure without failing the test (Python's
+  // assert_test warns rather than raising).
+  if (!testResult.success && testCase.flaky) {
+    console.warn(
+      `Flaky test case failed (not reported as a failure): ${failureMessage}`,
+    );
+    return { pass: true, failureMessage };
+  }
+
+  return { pass: testResult.success, failureMessage };
+}
 
 // Evaluate the trace(s) produced by running `fn`.
 export async function runCallbackMetrics(
@@ -148,9 +186,9 @@ export async function runCallbackMetrics(
       const needsInput = !metrics.some((m) => m.requiresTrace);
       if (!golden && needsInput && primary.input == null) {
         throw new DeepEvalError(
-          "expect(callback).toPass([...]) has trace-level metrics but the trace " +
-            "has no input. Pass `{ golden }`, call `updateCurrentTrace({ input })`, " +
-            "or use a trace-based metric.",
+          "expect(...).toPass([...]) has trace-level metrics but the trace " +
+            "has no input. Prefer `expect(golden).toPass(metrics, { task })`, " +
+            "call `updateCurrentTrace({ input })`, or use a trace-based metric.",
         );
       }
     }
@@ -163,7 +201,7 @@ export async function runCallbackMetrics(
     // Span metrics run for every trace — each is a real component of the turn —
     // but only the reported trace is judged against the golden.
     const cases = await evaluateTrace(trace, {
-      errorConfig: STRICT_ERROR_CONFIG,
+      errorConfig: runErrorConfig(),
       golden: trace === primary ? golden : undefined,
     });
     for (const c of cases) {
@@ -187,48 +225,70 @@ export async function runCallbackMetrics(
       trace: traceApi,
     });
   }
-
   return {
-    pass: allMetrics.every((m) => m.skipped || m.success),
+    pass: aggregateSuccess(allMetrics),
     failureMessage: buildFailureMessage(allMetrics),
   };
 }
 
-/** Options for the callback form of `toPass`. */
+/**
+ * Options for `toPass`.
+ *
+ * Prefer the golden subject form:
+ *   `expect(golden).toPass(metrics, { task: (g) => myAgent(g.input) })`
+ *
+ * The callback form still accepts `{ golden }` for expected values:
+ *   `expect(() => myAgent(input)).toPass(metrics, { golden })`
+ */
 export interface ToPassOptions {
+  /** Produces the trace when the expect subject is a `Golden`. */
+  task?: ToPassTask;
+  /**
+   * Expected values for the callback form. Prefer making the golden the
+   * expect subject and passing `task` instead.
+   */
   golden?: Golden;
 }
 
 /**
- * Single entry point behind `expect(target).toPass(metrics)`. A callback is run
- * and the traces it produces are evaluated; a test case is evaluated directly.
+ * Single entry point behind `expect(target).toPass(metrics)`.
+ *
+ * - `Golden` + `{ task }` — run the app, judge its trace against the golden
+ * - callback — run the callback, judge its trace (optional `{ golden }`)
+ * - test case — measure metrics against the test case directly
  */
 export async function runMetrics(
   target: ToPassTarget,
   metrics: AnyMetric[] = [],
   options: ToPassOptions = {},
 ): Promise<MetricsOutcome> {
+  if (target instanceof Golden) {
+    if (!options.task) {
+      throw new DeepEvalError(
+        "expect(golden).toPass() needs a `task` callback — " +
+          "`expect(golden).toPass(metrics, { task: (g) => myAgent(g.input) })` — " +
+          "so the trace being judged is exactly the one your call produced.",
+      );
+    }
+    const golden = target;
+    const task = options.task;
+    return runCallbackMetrics(() => task(golden), metrics, golden);
+  }
   if (typeof target === "function") {
-    return runCallbackMetrics(target as ToPassCallback, metrics, options.golden);
+    return runCallbackMetrics(
+      target as ToPassCallback,
+      metrics,
+      options.golden,
+    );
   }
   // `expect(myAgent(input))` instead of `expect(() => myAgent(input))`: the call
   // already started, so its traces are outside the window we capture.
   if (typeof (target as { then?: unknown })?.then === "function") {
     throw new DeepEvalError(
-      "expect(...).toPass() received a promise. Pass the call as a callback — " +
-        "`expect(() => myAgent(input))` — so it runs inside the assertion and " +
-        "its trace can be captured.",
-    );
-  }
-  // A `Golden` receiver is not a supported shape. `ToPassTarget` excludes it, but
-  // vitest types `toPass` on `Assertion<T>` for any T, so this can only be caught
-  // here — and falling through would hand a Golden to the test-case path.
-  if (target instanceof Golden) {
-    throw new DeepEvalError(
-      "expect(golden).toPass() is not supported. Run the code inside the " +
-        "assertion instead: `expect(() => myAgent(golden.input)).toPass(metrics, " +
-        "{ golden })`, so the trace being judged is exactly the one your call " +
-        "produced.",
+      "expect(...).toPass() received a promise. Pass a Golden with `task`, or " +
+        "a callback — `expect(golden).toPass(metrics, { task: (g) => myAgent(g.input) })` " +
+        "or `expect(() => myAgent(input))` — so the call runs inside the assertion " +
+        "and its trace can be captured.",
     );
   }
   return runTestCaseMetrics(target, metrics);

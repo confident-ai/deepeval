@@ -1,2 +1,6 @@
-export { MisuseMetric, type MisuseMetricOptions } from "./misuse";
-export * from "./schema";
+export {
+  MisuseMetric,
+  type MisuseMetricOptions,
+  type MisuseTemplateOverride,
+} from "@/metrics/misuse/misuse";
+export * from "@/metrics/misuse/schema";

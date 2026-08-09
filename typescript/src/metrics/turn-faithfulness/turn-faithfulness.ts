@@ -1,23 +1,19 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
-import {
-  ConversationalTestCase,
-  MultiTurnParams,
-  Turn,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { resolveThreshold } from "@/metrics/base-metrics";
+import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
   resolveRetrievalContext,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
   getTurnsInSlidingWindow,
-} from "../conversational-utils";
+} from "@/metrics/conversational-utils";
 import {
   TruthsSchema,
   ClaimsSchema,
@@ -25,9 +21,13 @@ import {
   FaithfulnessScoreReasonSchema,
   type FaithfulnessVerdict,
   type InteractionFaithfulnessScore,
-} from "./schema";
+} from "@/metrics/turn-faithfulness/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "TurnFaithfulnessMetric";
+
+export type TurnFaithfulnessTemplateOverride =
+  MetricTemplateOverride<"TurnFaithfulnessMetric">;
 
 function limitDescription(limit?: number): string {
   if (limit == null) return "factual, explicit truths";
@@ -36,7 +36,8 @@ function limitDescription(limit?: number): string {
 }
 
 export interface TurnFaithfulnessMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
@@ -45,6 +46,7 @@ export interface TurnFaithfulnessMetricOptions {
   truthsExtractionLimit?: number;
   penalizeAmbiguousClaims?: boolean;
   windowSize?: number;
+  evaluationTemplate?: TurnFaithfulnessTemplateOverride;
 }
 
 /**
@@ -61,12 +63,16 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
 
   constructor(options: TurnFaithfulnessMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       MultiTurnParams.ROLE,
       MultiTurnParams.CONTENT,
@@ -101,7 +107,7 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
         turnsWindows.map((window) => this.getInteractionScore(window)),
       );
       this.score = this.calculateScore();
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
       this.reason = await this.generateFinalReason();
 
       this.verboseLogs = constructVerboseLogs(this, [
@@ -144,7 +150,7 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
   }
 
   private async generateTruths(retrievalContext: string[]): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_truths", {
+    const prompt = this.getPrompt("generate_truths", {
       reference_context: retrievalContext.join("\n\n"),
       limit_description: limitDescription(this.truthsExtractionLimit),
     });
@@ -156,7 +162,7 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
     userContent: string,
     assistantContent: string,
   ): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_claims", {
+    const prompt = this.getPrompt("generate_claims", {
       input: userContent,
       assistant_output: assistantContent,
     });
@@ -169,7 +175,7 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
     truths: string[],
   ): Promise<FaithfulnessVerdict[]> {
     if (claims.length === 0) return [];
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+    const prompt = this.getPrompt("generate_verdicts", {
       claims,
       reference_context: truths.join("\n\n"),
     });
@@ -194,8 +200,7 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
     }
     const score = count / verdicts.length;
     const reason = await this.getInteractionReason(score, verdicts);
-    if (this.strictMode && score < this.threshold) return { score: 0, reason };
-    return { score, reason };
+    return { score: this.applyStrictMode(score), reason };
   }
 
   private async getInteractionReason(
@@ -206,7 +211,7 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
     const contradictions = verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "no")
       .map((v) => v.reason);
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       contradictions,
       score: score.toFixed(2),
     });
@@ -230,7 +235,7 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
       return "There were no retrieval contexts in your turns to evaluate, hence the score is 1";
     }
     const reasons = this.scores.map((s) => s.reason);
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_final_reason", {
+    const prompt = this.getPrompt("generate_final_reason", {
       final_score: this.score,
       success: this.success,
       reasons,
@@ -241,12 +246,6 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
       FaithfulnessScoreReasonSchema,
     );
     return reason;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

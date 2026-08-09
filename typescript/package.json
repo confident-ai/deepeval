@@ -23,7 +23,12 @@
       "require": "./dist/dataset/index.js",
       "types": "./dist/dataset/index.d.ts"
     },
-    "./testCase": {
+    "./metrics": {
+      "import": "./dist/metrics/index.js",
+      "require": "./dist/metrics/index.js",
+      "types": "./dist/metrics/index.d.ts"
+    },
+    "./test-case": {
       "import": "./dist/test-case/index.js",
       "require": "./dist/test-case/index.js",
       "types": "./dist/test-case/index.d.ts"
@@ -33,10 +38,20 @@
       "require": "./dist/tracing/index.js",
       "types": "./dist/tracing/index.d.ts"
     },
+    "./models": {
+      "import": "./dist/models/index.js",
+      "require": "./dist/models/index.js",
+      "types": "./dist/models/index.d.ts"
+    },
     "./confident": {
       "import": "./dist/confident/index.js",
       "require": "./dist/confident/index.js",
       "types": "./dist/confident/index.d.ts"
+    },
+    "./prompt": {
+      "import": "./dist/prompt/index.js",
+      "require": "./dist/prompt/index.js",
+      "types": "./dist/prompt/index.d.ts"
     },
     "./openai": {
       "import": "./dist/openai/index.js",
@@ -90,14 +105,23 @@
       "dataset": [
         "dist/dataset/index.d.ts"
       ],
-      "testCase": [
+      "metrics": [
+        "dist/metrics/index.d.ts"
+      ],
+      "test-case": [
         "dist/test-case/index.d.ts"
       ],
       "tracing": [
         "dist/tracing/index.d.ts"
       ],
+      "models": [
+        "dist/models/index.d.ts"
+      ],
       "confident": [
         "dist/confident/index.d.ts"
+      ],
+      "prompt": [
+        "dist/prompt/index.d.ts"
       ],
       "openai": [
         "dist/openai/index.d.ts"
@@ -132,12 +156,15 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc-alias && npm run build:inspect-ui",
+    "build:inspect-ui": "tsc -p tsconfig.inspect.json && node scripts/mark-inspect-ui-esm.mjs",
+    "prepublishOnly": "npm run build",
     "test": "jest",
     "test:e2e": "node dist/cli/index.js test run tests/deepeval-test-run-test/suites --identifier ts-e2e",
     "test:e2e:conversational": "node dist/cli/index.js test run tests/deepeval-test-run-test/conversational --identifier ts-e2e-conversational",
     "test:e2e:negative": "node dist/cli/index.js test run tests/deepeval-test-run-test/negative",
     "typecheck:test": "tsc -p tsconfig.test.json",
+    "check:env-parity": "node scripts/check-env-parity.mjs",
     "lint": "eslint",
     "lint:fix": "eslint --fix"
   },
@@ -155,6 +182,7 @@
     "@sentry/node": "^10.21.0",
     "axios": "^1.6.0",
     "cli-progress": "^3.12.0",
+    "commander": "^14.0.3",
     "csv-parser": "^3.2.0",
     "dotenv": "^16.5.0",
     "nunjucks": "^3.2.4",
@@ -185,6 +213,7 @@
     "@types/node": "^20.17.30",
     "@types/nunjucks": "^3.2.6",
     "@types/papaparse": "^5.3.16",
+    "@types/react": "^19.2.18",
     "@types/uuid": "^9.0.0",
     "ai": "^6.0.97",
     "babel-jest": "^29.7.0",
@@ -198,6 +227,7 @@
     "prettier": "3.6.2",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.9.1",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.46.2",
     "vitest": "^4.1.10"
@@ -249,5 +279,9 @@
     "vitest": {
       "optional": true
     }
+  },
+  "optionalDependencies": {
+    "ink": "^7.1.1",
+    "react": "^19.2.8"
   }
 }

@@ -1,36 +1,38 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
-import {
-  ConversationalTestCase,
-  MultiTurnParams,
-  Turn,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { resolveThreshold } from "@/metrics/base-metrics";
+import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   convertTurnToDict,
-} from "../conversational-utils";
+} from "@/metrics/conversational-utils";
 import {
   OutOfCharacterResponseVerdictsSchema,
   RoleAdherenceScoreReasonSchema,
   type OutOfCharacterResponseVerdict,
-} from "./schema";
+} from "@/metrics/role-adherence/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "RoleAdherenceMetric";
 
+export type RoleAdherenceTemplateOverride =
+  MetricTemplateOverride<"RoleAdherenceMetric">;
+
 export interface RoleAdherenceMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: RoleAdherenceTemplateOverride;
 }
 
 /**
@@ -43,12 +45,15 @@ export class RoleAdherenceMetric extends BaseConversationalMetric {
 
   constructor(options: RoleAdherenceMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE];
     const { model, usingNativeModel } = initializeModel(options.model);
     this.model = model;
@@ -72,7 +77,7 @@ export class RoleAdherenceMetric extends BaseConversationalMetric {
       );
       this.score = this.calculateScore(testCase.turns);
       this.reason = await this.generateReason(role);
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Chatbot Role:\n${role}`,
@@ -89,8 +94,7 @@ export class RoleAdherenceMetric extends BaseConversationalMetric {
     turns: Turn[],
     role: string,
   ): Promise<OutOfCharacterResponseVerdict[]> {
-    const prompt = resolveTemplate("metrics", 
-      TEMPLATE_CLASS,
+    const prompt = this.getPrompt(
       "extract_out_of_character_response_verdicts",
       { turns: turns.map((turn) => convertTurnToDict(turn)), role },
     );
@@ -109,7 +113,7 @@ export class RoleAdherenceMetric extends BaseConversationalMetric {
 
   private async generateReason(role: string): Promise<string | undefined> {
     if (!this.includeReason) return undefined;
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       score: this.score,
       role,
       out_of_character_responses: this.outOfCharacterVerdicts.map(
@@ -132,13 +136,7 @@ export class RoleAdherenceMetric extends BaseConversationalMetric {
       assistantTurns,
     );
     const score = (assistantTurns - outOfChar) / assistantTurns;
-    return this.strictMode && score < this.threshold ? 0 : score;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
+    return this.applyStrictMode(score);
   }
 
   get name(): string {

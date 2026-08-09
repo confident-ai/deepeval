@@ -2,14 +2,15 @@
 id: metrics-contextual-precision
 title: Contextual Precision
 sidebar_label: Contextual Precision
+languages: [python, typescript]
 ---
 <MetricTagsDisplayer singleTurn={true} rag={true} referenceBased={true} />
 
-The contextual precision metric uses LLM-as-a-judge to measure your RAG pipeline's retriever by evaluating whether nodes in your `retrieval_context` that are relevant to the given `input` are ranked higher than irrelevant ones. `deepeval`'s contextual precision metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+The contextual precision metric uses LLM-as-a-judge to measure your RAG pipeline's retriever by evaluating whether nodes in your <Term py="retrieval_context" ts="retrievalContext"/> that are relevant to the given `input` are ranked higher than irrelevant ones. `deepeval`'s contextual precision metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 :::info
 
-The `ContextualPrecisionMetric` focuses on evaluating the re-ranker of your RAG pipeline's retriever by assessing the ranking order of the text chunks in the `retrieval_context`.
+The `ContextualPrecisionMetric` focuses on evaluating the re-ranker of your RAG pipeline's retriever by assessing the ranking order of the text chunks in the <Term py="retrieval_context" ts="retrievalContext"/>.
 
 :::
 
@@ -18,9 +19,9 @@ The `ContextualPrecisionMetric` focuses on evaluating the re-ranker of your RAG 
 To use the `ContextualPrecisionMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
-- `expected_output`
-- `retrieval_context`
+- <Term py="actual_output" ts="actualOutput"/>
+- <Term py="expected_output" ts="expectedOutput"/>
+- <Term py="retrieval_context" ts="retrievalContext"/>
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
 
@@ -31,10 +32,14 @@ The `ContextualPrecisionMetric()` can be used for [end-to-end](/docs/evaluation-
 <Tabs items={["Text Based", "Multimodal"]}>
 <Tab value="Text Based">
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval import evaluate
-from deepeval.test_case import LLMTestCase
 from deepeval.metrics import ContextualPrecisionMetric
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
 
 # Replace this with the actual output from your LLM application
 actual_output = "We offer a 30-day full refund at no extra cost."
@@ -64,13 +69,58 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { ContextualPrecisionMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+import { evaluate } from "deepeval";
+
+// Replace this with the actual output from your LLM application
+const actualOutput = "We offer a 30-day full refund at no extra cost.";
+
+// Replace this with the expected output of your RAG generator
+const expectedOutput = "You are eligible for a 30 day full refund at no extra cost.";
+
+// Replace this with the actual retrieved context from your RAG pipeline
+const retrievalContext = ["All customers are eligible for a 30 day full refund at no extra cost."];
+
+const metric = new ContextualPrecisionMetric({
+  threshold: 0.7,
+  model: "gpt-4.1",
+  includeReason: true,
+});
+const testCase = new LLMTestCase({
+  input: "What if these shoes don't fit?",
+  actualOutput,
+  expectedOutput,
+  retrievalContext,
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
 </Tab>
 <Tab value="Multimodal">
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval import evaluate
-from deepeval.test_case import LLMTestCase, MLLMImage
 from deepeval.metrics import ContextualPrecisionMetric
+from deepeval.test_case import LLMTestCase, MLLMImage
+from deepeval import evaluate
 
 # Replace this with the actual retrieved context from your RAG pipeline
 retrieval_context = [
@@ -97,23 +147,81 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { ContextualPrecisionMetric } from "deepeval/metrics";
+import { LLMTestCase, MLLMImage } from "deepeval/test-case";
+import { evaluate } from "deepeval";
+
+// Replace this with the actual retrieved context from your RAG pipeline
+const retrievalContext = [
+  `The Eiffel Tower ${new MLLMImage({ url: "..." })} is a wrought-iron lattice tower built in the late 19th century.`,
+  `...`,
+];
+
+const metric = new ContextualPrecisionMetric({
+  threshold: 0.7,
+  model: "gpt-4.1",
+  includeReason: true,
+});
+const testCase = new LLMTestCase({
+  input: `Tell me about this landmark in France: ${new MLLMImage({ url: "..." })}`,
+  actualOutput: `This appears to be Eiffel Tower, which is a famous landmark in France`,
+  expectedOutput: `The Eiffel Tower is located in Paris, France. ${new MLLMImage({ url: "..." })}`,
+  retrievalContext,
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
 </Tab>
 </Tabs>
 
+<Switch>
+
+<Case id="python">
+
 There are **EIGHT** optional parameters when creating a `ContextualPrecisionMetric`:
 
-- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+</Case>
+
+<Case id="typescript">
+
+There are **SEVEN** optional parameters when creating a `ContextualPrecisionMetric`:
+
+</Case>
+
+</Switch>
+
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
-- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `evaluation_template`: a class of type `ContextualPrecisionTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `ContextualPrecisionMetric` score. Defaulted to `deepeval`'s `ContextualPrecisionTemplate`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="evaluation_template" ts="evaluationTemplate"/>: a class of type `ContextualPrecisionTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `ContextualPrecisionMetric` score. Defaulted to `deepeval`'s `ContextualPrecisionTemplate`.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 ### Within components
 
 You can also run the `ContextualPrecisionMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import Golden
@@ -136,9 +244,48 @@ def llm_app(input: str):
 evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+// ...
+
+const innerComponent = observe({
+  metrics: [metric],
+  fn: async () => {
+    // Set test case at runtime
+    const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
+    updateCurrentSpan({ testCase });
+  },
+});
+
+const llmApp = observe({
+  fn: async (input: string) => {
+    // Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    await innerComponent();
+  },
+});
+
+const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Hi!" })] });
+for await (const golden of dataset.evalsIterator()) {
+  await llmApp((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
 ### As a standalone
 
 You can also run the `ContextualPrecisionMetric` on a single test case as a standalone, one-off execution.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -146,6 +293,21 @@ You can also run the `ContextualPrecisionMetric` on a single test case as a stan
 metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+await metric.measure(testCase);
+console.log(metric.score, metric.reason);
+```
+
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
@@ -159,18 +321,18 @@ The `ContextualPrecisionMetric` score is calculated according to the following e
 
 :::info
 
-- **_k_** is the (i+1)<sup>th</sup> node in the `retrieval_context` (nodes with the same `source` are grouped together as a single node if `RetrievedContextData` is used)
-- **_n_** is the length of the `retrieval_context` (after grouping by `source`)
-- **_r<sub>k</sub>_** is the binary relevance for the k<sup>th</sup> node in the `retrieval_context`. _r<sub>k</sub>_ = 1 for nodes that are relevant, 0 if not.
+- **_k_** is the (i+1)<sup>th</sup> node in the <Term py="retrieval_context" ts="retrievalContext"/> (nodes with the same `source` are grouped together as a single node if `RetrievedContextData` is used)
+- **_n_** is the length of the <Term py="retrieval_context" ts="retrievalContext"/> (after grouping by `source`)
+- **_r<sub>k</sub>_** is the binary relevance for the k<sup>th</sup> node in the <Term py="retrieval_context" ts="retrievalContext"/>. _r<sub>k</sub>_ = 1 for nodes that are relevant, 0 if not.
 
 :::
 
-The `ContextualPrecisionMetric` first uses an LLM to determine for each node in the `retrieval_context` whether it is relevant to the `input` based on information in the `expected_output`, before calculating the **weighted cumulative precision** as the contextual precision score. The weighted cumulative precision (WCP) is used because it:
+The `ContextualPrecisionMetric` first uses an LLM to determine for each node in the <Term py="retrieval_context" ts="retrievalContext"/> whether it is relevant to the `input` based on information in the <Term py="expected_output" ts="expectedOutput"/>, before calculating the **weighted cumulative precision** as the contextual precision score. The weighted cumulative precision (WCP) is used because it:
 
-- **Emphasizes on Top Results**: WCP places a stronger emphasis on the relevance of top-ranked results. This emphasis is important because LLMs tend to give more attention to earlier nodes in the `retrieval_context` (which may cause downstream hallucination if nodes are ranked incorrectly).
+- **Emphasizes on Top Results**: WCP places a stronger emphasis on the relevance of top-ranked results. This emphasis is important because LLMs tend to give more attention to earlier nodes in the <Term py="retrieval_context" ts="retrievalContext"/> (which may cause downstream hallucination if nodes are ranked incorrectly).
 - **Rewards Relevant Ordering**: WCP can handle varying degrees of relevance (e.g., "highly relevant", "somewhat relevant", "not relevant"). This is in contrast to metrics like precision, which treats all retrieved nodes as equally important.
 
-A higher contextual precision score represents a greater ability of the retrieval system to correctly rank relevant nodes higher in the `retrieval_context`.
+A higher contextual precision score represents a greater ability of the retrieval system to correctly rank relevant nodes higher in the <Term py="retrieval_context" ts="retrievalContext"/>.
 
 ## Customize Your Template
 
@@ -185,9 +347,13 @@ You can learn what the default `ContextualPrecisionTemplate` looks like [here on
 
 Here's a quick example of how you can override the statement generation step of the `ContextualPrecisionMetric` algorithm:
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval.metrics import ContextualPrecisionTemplate
 from deepeval.metrics.contextual_precision import ContextualPrecisionTemplate
+from deepeval.metrics import ContextualPrecisionTemplate
 
 # Define custom template
 class CustomTemplate(ContextualPrecisionTemplate):
@@ -226,6 +392,62 @@ metric = ContextualPrecisionMetric(evaluation_template=CustomTemplate)
 metric.measure(...)
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { ContextualPrecisionMetric } from "deepeval/metrics";
+
+// Inject custom template to metric
+const metric = new ContextualPrecisionMetric({
+  evaluationTemplate: {
+    generateVerdicts: ({ input, expectedOutput, contextToDisplay }) =>
+      `Given the input, expected output, and retrieval context, please generate a list of JSON objects to determine whether each node in the retrieval context was remotely useful in arriving at the expected output.
+
+Example JSON:
+{
+    "verdicts": [
+        {
+            "verdict": "yes",
+            "reason": "..."
+        }
+    ]
+}
+The number of 'verdicts' SHOULD BE STRICTLY EQUAL to that of the contexts.
+**
+
+Input:
+${input}
+
+Expected output:
+${expectedOutput}
+
+Retrieval Context:
+${contextToDisplay}
+
+JSON:
+`,
+  },
+});
+await metric.measure(testCase);
+```
+
+Each override receives the template's variables as its first argument, and the default renderer as its second, so you can extend a prompt instead of replacing it:
+
+```typescript
+const metric = new ContextualPrecisionMetric({
+  evaluationTemplate: {
+    generateVerdicts: (vars, renderDefault) =>
+      `${renderDefault(vars)}\n\nRank a node useful only if it is cited verbatim.`,
+  },
+});
+```
+
+</Case>
+
+</Switch>
+
 ## FAQs
 
 <FAQs
@@ -236,7 +458,7 @@ metric.measure(...)
         <>
           Yes — ranking is the whole point. A weighted cumulative precision
           rewards relevant nodes appearing early in the{" "}
-          <code>retrieval_context</code> and penalizes irrelevant ones ranked
+          <Term py="retrieval_context" ts="retrievalContext"/> and penalizes irrelevant ones ranked
           ahead. The same chunks in a different order score differently, which is
           why this metric targets your re-ranker.
         </>
@@ -249,7 +471,7 @@ metric.measure(...)
         <>
           It asks whether relevant chunks are ranked above irrelevant ones, not
           just present. Relevant nodes buried beneath noise in the{" "}
-          <code>retrieval_context</code> drop the score even when everything was
+          <Term py="retrieval_context" ts="retrievalContext"/> drop the score even when everything was
           retrieved — implicating your re-ranker or top-K ordering.
         </>
       ),
@@ -267,12 +489,12 @@ metric.measure(...)
       ),
     },
     {
-      question: "Why does it require an `expected_output`?",
+      question: "Why does it require an expected output?",
       answer: (
         <>
           It's reference-based: the LLM judges each node against the ideal{" "}
-          <code>expected_output</code>, not the generator's{" "}
-          <code>actual_output</code>, keeping ranking evaluation honest even
+          <Term py="expected_output" ts="expectedOutput"/>, not the generator's{" "}
+          <Term py="actual_output" ts="actualOutput"/>, keeping ranking evaluation honest even
           when the generator answered poorly. See the{" "}
           <a href="/docs/evaluation-test-cases#llm-test-case">test case docs</a>.
         </>

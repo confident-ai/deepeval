@@ -4,25 +4,21 @@
  * Drives `OpenInferenceSpanProcessor` with synthetic OTel spans — no model call,
  * no network, no exporter.
  */
-import { OpenInferenceSpanProcessor } from "../../../src/integrations/openinference/processor";
-import { OpenInferenceFilterProcessor } from "../../../src/integrations/openinference";
-import { BaseMetric } from "../../../src/metrics/base-metrics";
+import { OpenInferenceSpanProcessor } from "@/integrations/openinference/processor";
+import { OpenInferenceFilterProcessor } from "@/integrations/openinference";
+import { BaseMetric } from "@/metrics/base-metrics";
 import {
   SpanType,
   getCurrentSpan,
   setCurrentSpan,
   setCurrentTrace,
   traceManager,
-} from "../../../src/tracing/tracing";
+} from "@/tracing/tracing";
 import {
   isTraceOtelImplicit,
   ROUTE_TO_REST_ATTRIBUTE,
-} from "../../../src/tracing/otel-routing";
-import {
-  nextLlmSpan,
-  nextToolSpan,
-  updateCurrentSpan,
-} from "../../../src/tracing";
+} from "@/tracing/otel-routing";
+import { nextLlmSpan, nextToolSpan, updateCurrentSpan } from "@/tracing";
 
 class StubMetric extends BaseMetric {
   constructor(private label: string) {

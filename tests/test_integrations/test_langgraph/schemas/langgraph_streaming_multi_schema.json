@@ -2,128 +2,6 @@
   "uuid": "ff3b08ec-5baa-47d6-b2bc-d8eca9721942",
   "baseSpans": [
     {
-      "uuid": "019d0517-83be-7d00-908a-77d76fa270e3",
-      "name": "LangGraph",
-      "status": "SUCCESS",
-      "type": "base",
-      "startTime": "2026-03-19T07:55:20.382Z",
-      "endTime": "2026-03-19T07:55:26.508Z",
-      "input": {
-        "messages": [
-          {
-            "content": "Get the stock price and company info for TSLA",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "ded58b69-4595-45e1-b002-c4346cc239fb"
-          }
-        ]
-      },
-      "output": {
-        "messages": [
-          {
-            "content": "Get the stock price and company info for TSLA",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "ded58b69-4595-45e1-b002-c4346cc239fb"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {},
-            "response_metadata": {
-              "finish_reason": "tool_calls",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "service_tier": "default",
-              "model_provider": "openai"
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-83bf-7353-9e29-76b42674c9ad",
-            "tool_calls": [
-              {
-                "name": "get_stock_price",
-                "args": {
-                  "symbol": "TSLA"
-                },
-                "id": "call_IT0zCmjAdFbYShCo8qoAtpIJ",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_company_info",
-                "args": {
-                  "symbol": "TSLA"
-                },
-                "id": "call_UwGWSJWWil9JWFdMWyc6Hc1K",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 162,
-              "output_tokens": 185,
-              "total_tokens": 347,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
-            }
-          },
-          {
-            "content": "$245.60 (+2.1%)",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_stock_price",
-            "id": "d3ecf315-c1b8-43b2-a6d3-57e4f4b54885",
-            "tool_call_id": "call_IT0zCmjAdFbYShCo8qoAtpIJ",
-            "status": "success"
-          },
-          {
-            "content": "Tesla Inc. - Electric vehicles, Market Cap: $780B",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_company_info",
-            "id": "292fbd2d-2bdb-45bb-86e4-4731e1b3edb5",
-            "tool_call_id": "call_UwGWSJWWil9JWFdMWyc6Hc1K",
-            "status": "success"
-          },
-          {
-            "content": "Here’s what I found for TSLA:\n\n- Stock price: $245.60 (up 2.1%)\n- Company info: Tesla, Inc. — Electric vehicles; Market cap: $780B\n\nNote: Prices change continuously. Want more details (intraday chart, historical prices, fundamentals, or latest news)?",
-            "additional_kwargs": {},
-            "response_metadata": {
-              "finish_reason": "stop",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "service_tier": "default",
-              "model_provider": "openai"
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-8dd2-70a2-9ef1-6aa4660fb0b7",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 252,
-              "output_tokens": 267,
-              "total_tokens": 519,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 192
-              }
-            }
-          }
-        ]
-      },
-      "integration": "LangChain"
-    },
-    {
       "uuid": "019d0517-8dd1-77f1-ae6c-406cdc5c4ad3",
       "name": "agent",
       "status": "SUCCESS",
@@ -209,7 +87,7 @@
       "output": {
         "messages": [
           {
-            "content": "Here’s what I found for TSLA:\n\n- Stock price: $245.60 (up 2.1%)\n- Company info: Tesla, Inc. — Electric vehicles; Market cap: $780B\n\nNote: Prices change continuously. Want more details (intraday chart, historical prices, fundamentals, or latest news)?",
+            "content": "Here\u2019s what I found for TSLA:\n\n- Stock price: $245.60 (up 2.1%)\n- Company info: Tesla, Inc. \u2014 Electric vehicles; Market cap: $780B\n\nNote: Prices change continuously. Want more details (intraday chart, historical prices, fundamentals, or latest news)?",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
@@ -321,7 +199,7 @@
             "status": "success"
           },
           {
-            "content": "Here’s what I found for TSLA:\n\n- Stock price: $245.60 (up 2.1%)\n- Company info: Tesla, Inc. — Electric vehicles; Market cap: $780B\n\nNote: Prices change continuously. Want more details (intraday chart, historical prices, fundamentals, or latest news)?",
+            "content": "Here\u2019s what I found for TSLA:\n\n- Stock price: $245.60 (up 2.1%)\n- Company info: Tesla, Inc. \u2014 Electric vehicles; Market cap: $780B\n\nNote: Prices change continuously. Want more details (intraday chart, historical prices, fundamentals, or latest news)?",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
@@ -613,7 +491,132 @@
       "integration": "LangChain"
     }
   ],
-  "agentSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "019d0517-83be-7d00-908a-77d76fa270e3",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-19T07:55:20.382Z",
+      "endTime": "2026-03-19T07:55:26.508Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Get the stock price and company info for TSLA",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "ded58b69-4595-45e1-b002-c4346cc239fb"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Get the stock price and company info for TSLA",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "ded58b69-4595-45e1-b002-c4346cc239fb"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {},
+            "response_metadata": {
+              "finish_reason": "tool_calls",
+              "model_name": "gpt-5.4-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
+            },
+            "type": "ai",
+            "id": "lc_run--019d0517-83bf-7353-9e29-76b42674c9ad",
+            "tool_calls": [
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "TSLA"
+                },
+                "id": "call_IT0zCmjAdFbYShCo8qoAtpIJ",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_company_info",
+                "args": {
+                  "symbol": "TSLA"
+                },
+                "id": "call_UwGWSJWWil9JWFdMWyc6Hc1K",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 162,
+              "output_tokens": 185,
+              "total_tokens": 347,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 128
+              }
+            }
+          },
+          {
+            "content": "$245.60 (+2.1%)",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "id": "d3ecf315-c1b8-43b2-a6d3-57e4f4b54885",
+            "tool_call_id": "call_IT0zCmjAdFbYShCo8qoAtpIJ",
+            "status": "success"
+          },
+          {
+            "content": "Tesla Inc. - Electric vehicles, Market Cap: $780B",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_company_info",
+            "id": "292fbd2d-2bdb-45bb-86e4-4731e1b3edb5",
+            "tool_call_id": "call_UwGWSJWWil9JWFdMWyc6Hc1K",
+            "status": "success"
+          },
+          {
+            "content": "Here\u2019s what I found for TSLA:\n\n- Stock price: $245.60 (up 2.1%)\n- Company info: Tesla, Inc. \u2014 Electric vehicles; Market cap: $780B\n\nNote: Prices change continuously. Want more details (intraday chart, historical prices, fundamentals, or latest news)?",
+            "additional_kwargs": {},
+            "response_metadata": {
+              "finish_reason": "stop",
+              "model_name": "gpt-5.4-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
+            },
+            "type": "ai",
+            "id": "lc_run--019d0517-8dd2-70a2-9ef1-6aa4660fb0b7",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 252,
+              "output_tokens": 267,
+              "total_tokens": 519,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 192
+              }
+            }
+          }
+        ]
+      },
+      "integration": "LangChain",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
   "llmSpans": [
     {
       "uuid": "019d0517-8dd2-70a2-9ef1-6aa4660fb0b7",
@@ -651,7 +654,7 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Here’s what I found for TSLA:\n\n- Stock price: $245.60 (up 2.1%)\n- Company info: Tesla, Inc. — Electric vehicles; Market cap: $780B\n\nNote: Prices change continuously. Want more details (intraday chart, historical prices, fundamentals, or latest news)?",
+        "content": "Here\u2019s what I found for TSLA:\n\n- Stock price: $245.60 (up 2.1%)\n- Company info: Tesla, Inc. \u2014 Electric vehicles; Market cap: $780B\n\nNote: Prices change continuously. Want more details (intraday chart, historical prices, fundamentals, or latest news)?",
         "tool_calls": []
       },
       "model": "gpt-5.4-mini-2025-08-07",
@@ -660,7 +663,7 @@
       "tokenIntervals": {
         "2026-03-19T07:55:25.749683Z": "",
         "2026-03-19T07:55:25.776802Z": "Here",
-        "2026-03-19T07:55:25.776890Z": "’s",
+        "2026-03-19T07:55:25.776890Z": "\u2019s",
         "2026-03-19T07:55:25.819046Z": " what",
         "2026-03-19T07:55:25.819122Z": " I",
         "2026-03-19T07:55:25.901005Z": " found",
@@ -691,7 +694,7 @@
         "2026-03-19T07:55:26.095083Z": ",",
         "2026-03-19T07:55:26.126069Z": " Inc",
         "2026-03-19T07:55:26.126277Z": ".",
-        "2026-03-19T07:55:26.139889Z": " —",
+        "2026-03-19T07:55:26.139889Z": " \u2014",
         "2026-03-19T07:55:26.140039Z": " Electric",
         "2026-03-19T07:55:26.153480Z": " vehicles",
         "2026-03-19T07:55:26.153611Z": ";",
@@ -940,7 +943,7 @@
         "status": "success"
       },
       {
-        "content": "Here’s what I found for TSLA:\n\n- Stock price: $245.60 (up 2.1%)\n- Company info: Tesla, Inc. — Electric vehicles; Market cap: $780B\n\nNote: Prices change continuously. Want more details (intraday chart, historical prices, fundamentals, or latest news)?",
+        "content": "Here\u2019s what I found for TSLA:\n\n- Stock price: $245.60 (up 2.1%)\n- Company info: Tesla, Inc. \u2014 Electric vehicles; Market cap: $780B\n\nNote: Prices change continuously. Want more details (intraday chart, historical prices, fundamentals, or latest news)?",
         "additional_kwargs": {},
         "response_metadata": {
           "finish_reason": "stop",

@@ -1,3 +1,3 @@
-from .misuse import MisuseMetric
+from .misuse import MisuseMetric, MisuseTemplate
 
-__all__ = ["MisuseMetric"]
+__all__ = ["MisuseMetric", "MisuseTemplate"]

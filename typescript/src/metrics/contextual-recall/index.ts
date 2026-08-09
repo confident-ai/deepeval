@@ -1,5 +1,6 @@
 export {
   ContextualRecallMetric,
   type ContextualRecallMetricOptions,
-} from "./contextual-recall";
-export * from "./schema";
+  type ContextualRecallTemplateOverride,
+} from "@/metrics/contextual-recall/contextual-recall";
+export * from "@/metrics/contextual-recall/schema";

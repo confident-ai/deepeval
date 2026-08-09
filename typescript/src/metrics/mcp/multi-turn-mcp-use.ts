@@ -1,31 +1,36 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
-import { ConversationalTestCase, MultiTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
-import { MissingTestCaseParamsError } from "../../errors";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { resolveThreshold } from "@/metrics/base-metrics";
+import { ConversationalTestCase, MultiTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { MissingTestCaseParamsError } from "@/errors";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
-} from "../conversational-utils";
-import { getTasks, taskStepsTakenText, availableMcpServersBlock } from "./utils";
+} from "@/metrics/conversational-utils";
+import {
+  getTasks,
+  taskStepsTakenText,
+  availableMcpServersBlock,
+} from "@/metrics/mcp/utils";
 import {
   ToolScoreSchema,
   ArgsScoreSchema,
   ReasonSchema,
   type ToolScore,
   type ArgsScore,
-} from "./schema";
-
-// Reuses the MCPTaskCompletionMetric template namespace (mirrors Python).
-const TEMPLATE_CLASS = "MCPTaskCompletionMetric";
+} from "@/metrics/mcp/schema";
+// Owns no templates: every prompt is borrowed, so there is no `evaluationTemplate`
+// (as in Python, whose constructor also has no `evaluation_template`).
+const BORROWED_TEMPLATE_CLASS = "MCPTaskCompletionMetric";
 
 export interface MultiTurnMCPUseMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
@@ -41,12 +46,14 @@ export interface MultiTurnMCPUseMetricOptions {
 export class MultiTurnMCPUseMetric extends BaseConversationalMetric {
   constructor(options: MultiTurnMCPUseMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
     });
+    this.multimodalAware = true;
     this.requiredParams = [MultiTurnParams.ROLE, MultiTurnParams.CONTENT];
     const { model, usingNativeModel } = initializeModel(options.model);
     this.model = model;
@@ -75,11 +82,15 @@ export class MultiTurnMCPUseMetric extends BaseConversationalMetric {
         tasks.map((task) =>
           generateWithSchema(
             this,
-            resolveTemplate("metrics", TEMPLATE_CLASS, "get_tool_correctness_score", {
-              task,
-              available_tools: availableTools,
-              steps_taken: taskStepsTakenText(task),
-            }),
+            this.getPrompt(
+              "get_tool_correctness_score",
+              {
+                task,
+                available_tools: availableTools,
+                steps_taken: taskStepsTakenText(task),
+              },
+              { templateClass: BORROWED_TEMPLATE_CLASS },
+            ),
             ToolScoreSchema,
           ),
         ),
@@ -88,20 +99,24 @@ export class MultiTurnMCPUseMetric extends BaseConversationalMetric {
         tasks.map((task) =>
           generateWithSchema(
             this,
-            resolveTemplate("metrics", TEMPLATE_CLASS, "get_args_correctness_score", {
-              task,
-              available_tools: availableTools,
-              available_resources: availableResources,
-              available_prompts: availablePrompts,
-              steps_taken: taskStepsTakenText(task),
-            }),
+            this.getPrompt(
+              "get_args_correctness_score",
+              {
+                task,
+                available_tools: availableTools,
+                available_resources: availableResources,
+                available_prompts: availablePrompts,
+                steps_taken: taskStepsTakenText(task),
+              },
+              { templateClass: BORROWED_TEMPLATE_CLASS },
+            ),
             ArgsScoreSchema,
           ),
         ),
       );
 
       this.score = this.calculateScore(toolScores, argScores);
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
       this.reason = await this.generateReason(toolScores, argScores);
 
       this.verboseLogs = constructVerboseLogs(this, [
@@ -123,7 +138,7 @@ export class MultiTurnMCPUseMetric extends BaseConversationalMetric {
     const mean = (xs: { score: number }[]) =>
       xs.reduce((s, x) => s + x.score, 0) / Math.max(xs.length, 1);
     const score = Math.min(mean(toolScores), mean(argScores));
-    return this.strictMode && score < this.threshold ? 0 : score;
+    return this.applyStrictMode(score);
   }
 
   private async generateReason(
@@ -137,20 +152,18 @@ export class MultiTurnMCPUseMetric extends BaseConversationalMetric {
     ];
     const { reason } = await generateWithSchema(
       this,
-      resolveTemplate("metrics", TEMPLATE_CLASS, "generate_final_reason", {
-        final_score: this.score,
-        success: this.success,
-        reasons,
-      }),
+      this.getPrompt(
+        "generate_final_reason",
+        {
+          final_score: this.score,
+          success: this.success,
+          reasons,
+        },
+        { templateClass: BORROWED_TEMPLATE_CLASS },
+      ),
       ReasonSchema,
     );
     return reason;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

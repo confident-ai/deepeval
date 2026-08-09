@@ -5,23 +5,39 @@ import {
   ConversationalTestCase,
   ArenaTestCase,
   ToolCallType,
-} from "../test-case";
+} from "@/test-case";
+import type { Hyperparameters } from "@/evaluate/hyperparameters";
 
 // Mirrors deepeval/evaluate/types.py (+ test_run MetricData), trimmed to what
 // the local runner needs today. Extend toward the Python shape as we grow.
 
 export interface MetricData {
   name: string;
-  threshold: number;
-  success: boolean;
+  /** `null` = score-only. */
+  threshold: number | null;
+  success?: boolean;
   score?: number;
   reason?: string;
   strictMode: boolean;
+  /** Recorded, but never fails its test case. */
+  flaky: boolean;
   evaluationModel?: string;
   evaluationCost?: number;
   verboseLogs?: string;
   error?: string;
   skipped: boolean;
+}
+
+/** Flaky and score-only metrics don't vote. */
+export function metricVotes(m: MetricData): boolean {
+  return !m.flaky && m.success !== undefined;
+}
+
+/** A test case passes unless some voting metric actually failed. */
+export function aggregateSuccess(metricsData: MetricData[]): boolean {
+  return !metricsData.some(
+    (m) => !m.skipped && metricVotes(m) && m.success === false,
+  );
 }
 
 export interface TestResult {
@@ -63,11 +79,12 @@ export type ApiToolCall = z.infer<typeof ApiToolCallSchema>;
 
 export const ApiMetricDataSchema = z.object({
   name: z.string(),
-  threshold: z.number(),
-  success: z.boolean(),
+  threshold: z.number().nullish(),
+  success: z.boolean().nullish(),
   score: z.number().nullish(),
   reason: z.string().nullish(),
   strictMode: z.boolean(),
+  flaky: z.boolean().default(false),
   evaluationModel: z.string().nullish(),
   error: z.string().nullish(),
   evaluationCost: z.number().nullish(),
@@ -115,5 +132,5 @@ export interface ContestantRun {
   runDuration: number;
   evaluationCost: number;
   hasCost: boolean;
-  hyperparameters: Record<string, unknown>;
+  hyperparameters: Hyperparameters;
 }

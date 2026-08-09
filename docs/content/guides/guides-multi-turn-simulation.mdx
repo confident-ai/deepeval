@@ -2,6 +2,7 @@
 id: guides-multi-turn-simulation
 title: Multi-Turn Simulation
 sidebar_label: Multi-Turn Simulation
+languages: [python]
 ---
 **Multi-turn simulation** is the process of automatically generating realistic conversations between a simulated user and your LLM application. It is the foundation of multi-turn evaluation—without simulation, you'd need to manually chat with your application for every scenario you want to test.
 
@@ -280,7 +281,7 @@ simulator = ConversationSimulator(
 
 ### Custom Simulator Model
 
-The simulated user is powered by an LLM (defaulting to `gpt-4.1`). You can change this model or use a custom one:
+The simulated user is powered by an LLM (defaulting to <DefaultLLMModel />). You can change this model or use a custom one:
 
 ```python
 simulator = ConversationSimulator(

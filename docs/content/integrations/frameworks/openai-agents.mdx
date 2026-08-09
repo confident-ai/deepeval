@@ -2,13 +2,18 @@
 id: openai-agents
 title: OpenAI Agents
 sidebar_label: OpenAI Agents
+languages: [python, typescript]
 ---
 
 <IntegrationTagsDisplayer native={true} cicdEvals={true} traceability={true} />
 
-[OpenAI Agents](https://openai.github.io/openai-agents-python/) is OpenAI's Python SDK for building agents that reason, call tools, and hand off to other agents.
+[OpenAI Agents](https://openai.github.io/openai-agents-python/) is OpenAI's SDK for building agents that reason, call tools, and hand off to other agents.
 
-The `deepeval` integration plugs into the agents SDK's tracing pipeline as a `TracingProcessor`. Every `Runner.run(...)`, agent step, LLM call, and tool call becomes a span you can inspect — without rewriting your agent code.
+The `deepeval` integration plugs into the agents SDK's tracing pipeline as a <Term py="TracingProcessor" ts="DeepEvalTracingProcessor"/>. Every agent run, LLM call, and tool call becomes a span you can inspect — without rewriting your agent code.
+
+<Switch>
+
+<Case id="python">
 
 <AgentTraceTerminal
   title="openai_agents_app · deepeval"
@@ -60,12 +65,70 @@ The `deepeval` integration plugs into the agents SDK's tracing pipeline as a `Tr
   ]}
 />
 
+</Case>
+
+<Case id="typescript">
+
+<AgentTraceTerminal
+  title="openai_agents_app · deepeval"
+  ariaLabel="Example OpenAI Agents trace with per-step metric scores"
+  lines={[
+    { kind: "cmd", name: "npx deepeval test run openai-agents.test.ts" },
+    { kind: "blank" },
+    { kind: "root", prefix: "●", name: "openai_agents_app" },
+    { kind: "blank", prefix: "│" },
+    {
+      kind: "agent",
+      prefix: "└─",
+      name: "weatherAgent",
+      metric: "Task Completion",
+      score: "0.95",
+      duration: "230ms",
+      pass: true,
+    },
+    {
+      kind: "llm",
+      prefix: "   ├─",
+      name: "gpt-4o · plan",
+      metric: "G-Eval",
+      score: "0.43",
+      duration: "78ms",
+      pass: false,
+    },
+    {
+      kind: "tool",
+      prefix: "   ├─",
+      name: 'getWeather(city="Paris")',
+      duration: "36ms",
+    },
+    {
+      kind: "llm",
+      prefix: "   └─",
+      name: "gpt-4o · respond",
+      metric: "Faithfulness",
+      score: "0.94",
+      duration: "82ms",
+      pass: true,
+    },
+    { kind: "blank" },
+    {
+      kind: "summary",
+      name: "Trace score  0.77   ·   2/3 metrics passed",
+      pass: false,
+    },
+  ]}
+/>
+
+</Case>
+
+</Switch>
+
 `deepeval`'s OpenAI Agents integration enables you to:
 
-- **Trace every `Runner.run(...)`** — each agent run produces a trace, and each LLM, tool, and sub-agent call becomes a component span.
-- **Attach metrics directly to `Agent` and `function_tool`** with `agent_metrics`, `llm_metrics`, and `metrics=` on tools.
+- **Trace every agent run** — each <Term py="Runner.run(...)" ts="run(...)"/> produces a trace, and each LLM, tool, and sub-agent call becomes a component span.
+- **Evaluate traces or individual components** with any `deepeval` metric.
 - **Run evals from scripts or CI/CD** — same agent, different surfaces.
-- **Compose with `@observe` and `with trace(...)`** to evaluate larger flows that wrap one or more agent runs.
+- **Customize trace and span data** through agent/tool config (Python) or <Term py="next_*_span" ts="next*Span"/> staging (both).
 
 ## Getting Started
 
@@ -75,11 +138,29 @@ The `deepeval` integration plugs into the agents SDK's tracing pipeline as a `Tr
 
 ### Installation
 
+<Switch>
+
+<Case id="python">
+
 ```bash
 pip install -U deepeval openai-agents
 ```
 
 The integration registers `DeepEvalTracingProcessor` against the agents SDK's tracing pipeline, then provides `Agent` and `function_tool` shims that accept `deepeval` metrics directly.
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+npm install deepeval @openai/agents
+```
+
+Register `DeepEvalTracingProcessor` once with the agents SDK's `addTraceProcessor`. TypeScript uses the SDK's own `Agent` and `tool` — metrics attach through `evalsIterator` / `toPass` and `next*Span` staging rather than Agent kwargs.
+
+</Case>
+
+</Switch>
 
 </Step>
 
@@ -87,7 +168,11 @@ The integration registers `DeepEvalTracingProcessor` against the agents SDK's tr
 
 ### Instrument and evaluate
 
-Register the processor once at startup, then use `deepeval.openai_agents.Agent` and `function_tool` in place of the SDK's classes. Attach metrics to the agent or to specific tools.
+Register the processor once at startup, then run your goldens through the agent.
+
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_agents_app.py" showLineNumbers
 from agents import Runner, add_trace_processor
@@ -116,6 +201,53 @@ for golden in dataset.evals_iterator():
     Runner.run_sync(agent, golden.input)
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript title="openai-agents-app.ts" showLineNumbers
+import { Agent, tool, run, addTraceProcessor } from "@openai/agents";
+import { z } from "zod";
+
+import { DeepEvalTracingProcessor } from "deepeval/integrations/openai-agents";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { TaskCompletionMetric } from "deepeval/metrics";
+
+addTraceProcessor(new DeepEvalTracingProcessor());
+
+const getWeather = tool({
+  name: "getWeather",
+  description: "Return the weather in a city.",
+  parameters: z.object({ city: z.string() }),
+  execute: async ({ city }) => `It's always sunny in ${city}!`,
+});
+
+const agent = new Agent({
+  name: "weatherAgent",
+  instructions: "Answer weather questions concisely.",
+  model: "gpt-4o-mini",
+  tools: [getWeather],
+});
+
+const ask = (question: string) => run(agent, question);
+
+// Goldens are the inputs you want to evaluate.
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What's the weather in Paris?" })],
+});
+
+// The `TaskCompletionMetric` is passed into the `evalsIterator`.
+for await (const golden of dataset.evalsIterator({
+  metrics: [new TaskCompletionMetric()],
+})) {
+  await ask((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
 Done ✅. You've run your first eval with full traceability into OpenAI Agents via `deepeval`.
 
 </Step>
@@ -124,11 +256,14 @@ Done ✅. You've run your first eval with full traceability into OpenAI Agents v
 
 ## What gets traced
 
-Each `Runner.run(...)` call produces a **trace** — the end-to-end unit your user observes. Inside that trace are **component spans** for every step the agent took:
+Each <Term py="Runner.run(...)" ts="run(...)"/> call produces a **trace** — the end-to-end unit your user observes. Inside that trace are **component spans** for every step the agent took:
 
 - **Agent spans** — one per `Agent` invocation, including handoffs to other agents.
 - **LLM spans** — model calls (Responses API and Chat Completions).
-- **Tool spans** — `function_tool`, `MCPListTools`, and other agents-SDK tool calls.
+- **Tool spans** — function tools, MCP tools, and other agents-SDK tool calls.
+
+<Switch>
+<Case id="python">
 
 ```text
 Trace                          ← what the user observes
@@ -138,23 +273,41 @@ Trace                          ← what the user observes
     └── LLM: gpt-4o            ← component span: final answer
 ```
 
+</Case>
+<Case id="typescript">
+
+```text
+Trace                          ← what the user observes
+└── Agent: weatherAgent        ← one run(...) call
+    ├── LLM: gpt-4o            ← component span: model plans
+    ├── Tool: getWeather       ← component span: tool input + output
+    └── LLM: gpt-4o            ← component span: final answer
+```
+
+</Case>
+</Switch>
+
 The trace and its component spans are independently evaluable.
 
 ## Running evals
 
 There are two surfaces for running evals against an OpenAI Agents app. Pick by where you want results to surface — your terminal during development, or your CI pipeline as a pass/fail gate.
 
-### In CI/CD (pytest)
+### In CI/CD
+
+<Switch>
+
+<Case id="python">
 
 Use the `deepeval` pytest integration. Each parametrized test invocation becomes one agent run; failing metrics fail the test, which fails the build.
 
 ```python title="test_openai_agents_app.py" showLineNumbers
 import pytest
 from agents import Runner, add_trace_processor
-from deepeval import assert_test
 from deepeval.openai_agents import Agent, DeepEvalTracingProcessor, function_tool
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.metrics import TaskCompletionMetric
+from deepeval import assert_test
 
 add_trace_processor(DeepEvalTracingProcessor())
 
@@ -186,9 +339,53 @@ Run it with:
 deepeval test run test_openai_agents_app.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
+Use the `toPass()` matcher. The golden is the subject; `task` produces the trace judged against it. A failing metric fails the test, which fails the build.
+
+```typescript title="openai-agents.test.ts" showLineNumbers
+import { it, expect } from "vitest";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { TaskCompletionMetric } from "deepeval/metrics";
+import { ask } from "./openai-agents-app";
+import "deepeval/vitest";
+
+const dataset = new EvaluationDataset({
+  goldens: [
+    new Golden({ input: "What's the weather in Paris?" }),
+    new Golden({ input: "What's the weather in London?" }),
+  ],
+});
+
+it.each(dataset.goldens as Golden[])(
+  "completes the weather task",
+  async (golden) => {
+    await expect(golden).toPass([new TaskCompletionMetric()], {
+      task: (g) => ask(g.input),
+    });
+  },
+);
+```
+
+Run it with:
+
+```bash
+npx deepeval test run openai-agents.test.ts
+```
+
+</Case>
+
+</Switch>
+
 ### In a script
 
-Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one agent run; metrics score the resulting trace.
+Use <Term py="EvaluationDataset" ts="EvaluationDataset"/> + <Term py="evals_iterator" ts="evalsIterator"/>. Each `Golden` becomes one agent run; metrics score the resulting trace.
+
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_agents_app.py" showLineNumbers
 import asyncio
@@ -213,17 +410,44 @@ for golden in dataset.evals_iterator(
 
 Sync (`Runner.run_sync`) and async (`Runner.run`) execution both work; pick whichever matches your code.
 
+</Case>
+
+<Case id="typescript">
+
+```typescript title="openai-agents-app.ts" showLineNumbers
+const dataset = new EvaluationDataset({
+  goldens: [
+    new Golden({ input: "What's the weather in Paris?" }),
+    new Golden({ input: "What's the weather in London?" }),
+  ],
+});
+
+for await (const golden of dataset.evalsIterator({
+  metrics: [new TaskCompletionMetric()],
+})) {
+  await ask((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
 ## Applying metrics to components
 
-The `metrics=[...]` you pass to `evals_iterator` evaluates the **trace**. To evaluate a **component** — a specific agent, LLM call, or tool — attach metrics directly to the agent or tool.
+Passing metrics to <Term py="evals_iterator" ts="evalsIterator"/> evaluates the **trace**. To evaluate a **component** — a specific agent, LLM call, or tool — attach metrics where that component is created.
 
 ### Agent spans
+
+<Switch>
+
+<Case id="python">
 
 Use `agent_metrics=[...]` on `deepeval.openai_agents.Agent`. The metric is applied to that agent's span on every run, including when it's invoked as a sub-agent through a handoff.
 
 ```python title="openai_agents_app.py" showLineNumbers
-from deepeval.openai_agents import Agent
 from deepeval.metrics import TaskCompletionMetric
+from deepeval.openai_agents import Agent
 ...
 
 agent = Agent(
@@ -234,13 +458,39 @@ agent = Agent(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
+Wrap the call in `nextAgentSpan(...)`. The processor drains the staged metric onto the **first agent span** it opens inside the callback — useful for scoring the agent (or a handoff target) in isolation.
+
+```typescript title="openai-agents-app.ts" showLineNumbers
+import { TaskCompletionMetric } from "deepeval/metrics";
+import { nextAgentSpan } from "deepeval/tracing";
+...
+
+for await (const golden of dataset.evalsIterator()) {
+  await nextAgentSpan({ metrics: [new TaskCompletionMetric()] }, () =>
+    ask((golden as Golden).input),
+  );
+}
+```
+
+</Case>
+
+</Switch>
+
 ### LLM calls
+
+<Switch>
+
+<Case id="python">
 
 Use `llm_metrics=[...]` on `Agent`. The metric is applied to the LLM span produced for that agent's model calls. Useful when you want to score the model's reasoning step in isolation.
 
 ```python title="openai_agents_app.py" showLineNumbers
-from deepeval.openai_agents import Agent
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.openai_agents import Agent
 ...
 
 agent = Agent(
@@ -251,14 +501,44 @@ agent = Agent(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
+Wrap the call in `nextLlmSpan(...)`. The processor drains the staged metric onto the **first LLM span** it opens inside the callback; later model calls in the same run get nothing.
+
+```typescript title="openai-agents-app.ts" showLineNumbers
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { nextLlmSpan } from "deepeval/tracing";
+...
+
+for await (const golden of dataset.evalsIterator()) {
+  await nextLlmSpan({ metrics: [new AnswerRelevancyMetric()] }, () =>
+    ask((golden as Golden).input),
+  );
+}
+```
+
+:::caution[One-shot per run]
+`nextLlmSpan` stages config for the **first** LLM span the processor opens inside the callback. Later model calls in the same `run(...)` — the tool-choice turn followed by the final-answer turn — won't receive it. To score every model call, use `setTracingContext(...)` instead, or score the run end-to-end with trace-level metrics on `evalsIterator({ metrics: [...] })`.
+:::
+
+</Case>
+
+</Switch>
+
 ### Tool calls
+
+<Switch>
+
+<Case id="python">
 
 Pass `metrics=[...]` to `function_tool` to evaluate a specific tool's behavior. Useful for tools that return non-deterministic content (e.g. retrieval, summarization tools).
 
 ```python title="openai_agents_app.py" showLineNumbers
 from deepeval.openai_agents import function_tool
-from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
+from deepeval.metrics import GEval
 
 @function_tool(metrics=[GEval(
     name="Helpful Weather Lookup",
@@ -272,17 +552,52 @@ def get_weather(city: str) -> str:
 
 For deterministic tool calls, prefer `update_current_span(...)` to add metadata, inputs, and outputs instead of attaching metrics to the tool span.
 
+</Case>
+
+<Case id="typescript">
+
+Inside a tool `execute` body your code **is** the tool span, so reach it with `updateCurrentSpan(...)`:
+
+```typescript title="openai-agents-app.ts" showLineNumbers
+import { updateCurrentSpan } from "deepeval/tracing";
+import { tool } from "@openai/agents";
+import { z } from "zod";
+...
+
+const getWeather = tool({
+  name: "getWeather",
+  description: "Return the weather in a city.",
+  parameters: z.object({ city: z.string() }),
+  execute: async ({ city }) => {
+    updateCurrentSpan({
+      metadata: { source: "staticTable" },
+    });
+    return `It's always sunny in ${city}!`;
+  },
+});
+```
+
+`nextToolSpan(...)` stages the same fields from outside the tool, on the same one-shot semantic as `nextLlmSpan`. Prefer it for deterministic tools where you only want traceability and metadata rather than a metric.
+
+</Case>
+
+</Switch>
+
 ## Customizing trace and span data
 
 The integration captures inputs, outputs, model names, and tool calls automatically. For anything dynamic, the right API depends on where your code runs.
+
+<Switch>
+
+<Case id="python">
 
 - Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`, `user_id`).
 - Use `Agent`/`function_tool` kwargs (`agent_metrics`, `llm_metrics`, `metrics=`, `confident_prompt`) for component-level defaults.
 - Use `update_current_trace(...)` and `update_current_span(...)` from inside a tool body to mutate fields the framework can't see.
 
 ```python title="openai_agents_app.py" showLineNumbers
-from deepeval.openai_agents import function_tool
 from deepeval.tracing import update_current_trace, update_current_span
+from deepeval.openai_agents import function_tool
 
 @function_tool
 def get_weather(city: str) -> str:
@@ -292,17 +607,50 @@ def get_weather(city: str) -> str:
     return f"It's always sunny in {city}!"
 ```
 
+</Case>
+
+<Case id="typescript">
+
+- Use `setTracingContext(...)` for trace-level fields (`name`, `tags`, `metadata`, `threadId`, `userId`) and scope-wide span defaults.
+- Use `nextAgentSpan(...)` / `nextLlmSpan(...)` / `nextToolSpan(...)` to stage component-level fields onto the next span the processor opens.
+- Use `updateCurrentSpan(...)` / `updateCurrentTrace(...)` from inside a tool body to mutate fields the framework can't see.
+
+```typescript title="openai-agents-app.ts" showLineNumbers
+import { setTracingContext, updateCurrentSpan } from "deepeval/tracing";
+...
+
+await setTracingContext(
+  {
+    name: "weather-ask",
+    tags: ["openai-agents", "weather"],
+    threadId: "thread-123",
+    userId: "user-xyz",
+  },
+  () => ask("What's the weather in Paris?"),
+);
+```
+
+</Case>
+
+</Switch>
+
 ## Advanced patterns
 
-The primitives above — `Agent`, `function_tool`, `add_trace_processor`, `@observe`, `with trace(...)` — compose around one boundary: the agents SDK owns the run lifecycle, and your code attaches metrics where they make sense.
+The primitives above compose around one boundary: the agents SDK owns the run lifecycle, and your code attaches metrics where they make sense.
 
 ### Evaluate a sub-agent through handoff
 
-When a parent agent hands off to a sub-agent, the sub-agent's span runs as a child of the parent's. Attaching `agent_metrics` to the sub-agent scores that hand-off step in isolation.
+When a parent agent hands off to a sub-agent, the sub-agent's span runs as a child of the parent's.
+
+<Switch>
+
+<Case id="python">
+
+Attaching `agent_metrics` to the sub-agent scores that hand-off step in isolation.
 
 ```python title="openai_agents_app.py" showLineNumbers
-from deepeval.openai_agents import Agent
 from deepeval.metrics import TaskCompletionMetric, AnswerRelevancyMetric
+from deepeval.openai_agents import Agent
 ...
 
 triage_agent = Agent(
@@ -360,9 +708,66 @@ for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True)):
 </Tab>
 </Tabs>
 
-### Wrap an agent run in `@observe`
+</Case>
 
-When the agent run is part of a larger operation, decorate the outer function with `@observe`. The agents-SDK spans nest under your observed span automatically.
+<Case id="typescript">
+
+Build handoffs with the SDK's `Agent`, then stage a metric onto the first agent span (or use `setTracingContext` with `agentSpanContext` to score every agent span in the run).
+
+```typescript title="openai-agents-app.ts" showLineNumbers
+import { Agent } from "@openai/agents";
+import { TaskCompletionMetric } from "deepeval/metrics";
+import { nextAgentSpan } from "deepeval/tracing";
+...
+
+const weatherSpecialist = new Agent({
+  name: "weatherSpecialist",
+  instructions: "Answer weather questions.",
+  model: "gpt-4o-mini",
+  tools: [getWeather],
+});
+
+const triageAgent = new Agent({
+  name: "triage",
+  instructions: "Route the question to the right specialist.",
+  model: "gpt-4o-mini",
+  handoffs: [weatherSpecialist],
+});
+
+for await (const golden of dataset.evalsIterator()) {
+  await nextAgentSpan({ metrics: [new TaskCompletionMetric()] }, () =>
+    run(triageAgent, (golden as Golden).input),
+  );
+}
+```
+
+To score **every** agent span in the handoff tree (triage + specialist), use scope-wide context:
+
+```typescript title="openai-agents-app.ts" showLineNumbers
+import { setTracingContext } from "deepeval/tracing";
+...
+
+await setTracingContext(
+  {
+    agentSpanContext: {
+      metricCollection: "agents_v1",
+    },
+  },
+  () => run(triageAgent, "What's the weather in Paris?"),
+);
+```
+
+</Case>
+
+</Switch>
+
+### Wrap an agent run in observe
+
+When the agent run is part of a larger operation, wrap the outer function with <Term py="@observe" ts="observe()"/>. OpenAI Agents spans nest under your observed span when a current trace already exists.
+
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_agents_app.py" showLineNumbers
 from agents import Runner
@@ -375,7 +780,33 @@ async def respond_to_user(prompt: str) -> str:
     return result.final_output.strip()
 ```
 
-### Bind a Confident AI prompt to an agent
+</Case>
+
+<Case id="typescript">
+
+```typescript title="openai-agents-app.ts" showLineNumbers
+import { run } from "@openai/agents";
+import { observe } from "deepeval/tracing";
+...
+
+const respondToUser = observe({
+  name: "respondToUser",
+  fn: async (prompt: string) => {
+    const result = await run(agent, prompt);
+    return String(result.finalOutput).trim();
+  },
+});
+```
+
+</Case>
+
+</Switch>
+
+### Bind a Confident AI prompt
+
+<Switch>
+
+<Case id="python">
 
 Pass `confident_prompt=` to attach a Confident AI [`Prompt`](/docs/prompt-management) to every LLM span produced by that agent. Prompt analytics (commit hash, version, label) flow with the trace.
 
@@ -394,19 +825,79 @@ agent = Agent(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
+Stage a `Prompt` on the LLM context — the processor copies alias, hash, version, and label onto every LLM span opened inside the callback.
+
+```typescript title="openai-agents-app.ts" showLineNumbers
+import { Prompt } from "deepeval/prompt";
+import { setTracingContext } from "deepeval/tracing";
+...
+
+const prompt = new Prompt({ alias: "weather-system" });
+await prompt.pull({ version: "latest" });
+
+await setTracingContext(
+  {
+    llmSpanContext: { prompt },
+  },
+  () => ask("What's the weather in Paris?"),
+);
+```
+
+</Case>
+
+</Switch>
+
 ## API reference
+
+<Switch>
+
+<Case id="python">
 
 `deepeval.openai_agents.Agent(...)` accepts the SDK's standard `Agent` kwargs plus the following deepeval-specific ones:
 
-| Kwarg                     | Type        | Description                                                                          |
-| ------------------------- | ----------- | ------------------------------------------------------------------------------------ |
-| `agent_metrics`     | `list`   | Metrics applied to this agent's span on every run.                              |
-| `llm_metrics`       | `list`   | Metrics applied to LLM spans produced by this agent's model calls.              |
-| `confident_prompt`  | `Prompt` | Confident AI prompt object; captured on every LLM span produced by this agent.  |
+| Kwarg              | Type     | Description                                                                         |
+| ------------------ | -------- | ----------------------------------------------------------------------------------- |
+| `agent_metrics`    | `list`   | Metrics applied to this agent's span on every run.                                   |
+| `llm_metrics`      | `list`   | Metrics applied to LLM spans produced by this agent's model calls.                   |
+| `confident_prompt` | `Prompt` | Confident AI prompt object; captured on every LLM span produced by this agent.       |
 
 `function_tool(..., metrics=[...])` accepts the SDK's standard kwargs plus `metrics`, applied to that tool's span on every call.
 
-For runtime helpers (`update_current_trace`, `update_current_span`) and the test-decorator surface (`@observe`, `@assert_test`, `with trace(...)`), see the [tracing reference](/docs/evaluation-llm-tracing).
+Register with `add_trace_processor(DeepEvalTracingProcessor())`.
+
+</Case>
+
+<Case id="typescript">
+
+`new DeepEvalTracingProcessor()` has no constructor options. Register it once:
+
+```typescript
+import { addTraceProcessor } from "@openai/agents";
+import { DeepEvalTracingProcessor } from "deepeval/integrations/openai-agents";
+
+addTraceProcessor(new DeepEvalTracingProcessor());
+```
+
+Build agents with `@openai/agents` (`Agent`, `tool`, `run`). Attach metrics with:
+
+| Helper | Targets |
+| ------ | ------- |
+| `evalsIterator({ metrics })` / `toPass([...])` | Trace-level |
+| `nextAgentSpan(...)` | First agent span in the callback |
+| `nextLlmSpan(...)` | First LLM span in the callback |
+| `nextToolSpan(...)` | First tool span in the callback |
+| `setTracingContext({ agentSpanContext / llmSpanContext })` | Every matching span in scope |
+| `updateCurrentSpan(...)` | Current span (use inside a tool body) |
+
+</Case>
+
+</Switch>
+
+For runtime helpers (<Term py="update_current_trace" ts="updateCurrentTrace"/>, <Term py="update_current_span" ts="updateCurrentSpan"/>) and the test surface (<Term py="@observe" ts="observe()"/>, <Term py="assert_test" ts="toPass"/>, <Term py="trace(...)" ts="setTracingContext(...)"/>), see the [tracing reference](/docs/evaluation-llm-tracing).
 
 ## FAQs
 
@@ -416,10 +907,22 @@ For runtime helpers (`update_current_trace`, `update_current_span`) and the test
       question: "Can I evaluate a sub-agent reached through a handoff?",
       answer: (
         <>
-          Yes. Attach <code>agent_metrics=[...]</code> to the sub-agent's{" "}
-          <code>deepeval.openai_agents.Agent</code>. The metric runs on that
-          agent's span every time it's invoked — including when a parent agent
-          hands off to it — so the hand-off step is scored on its own.
+          Yes.{" "}
+          <Switch>
+            <Case id="python">
+              Attach <code>agent_metrics=[...]</code> to the sub-agent's{" "}
+              <code>deepeval.openai_agents.Agent</code>. The metric runs on that
+              agent's span every time it's invoked — including when a parent
+              agent hands off to it.
+            </Case>
+            <Case id="typescript">
+              Stage a metric with{" "}
+              <code>nextAgentSpan({"{ metrics: [...] }"}, () =&gt; run(...))</code>{" "}
+              or use <code>setTracingContext</code> with an{" "}
+              <code>agentSpanContext</code> to score every agent span in the
+              handoff tree.
+            </Case>
+          </Switch>
         </>
       ),
     },
@@ -427,10 +930,21 @@ For runtime helpers (`update_current_trace`, `update_current_span`) and the test
       question: "Can I make these agent evals a CI/CD gate?",
       answer: (
         <>
-          Yes. Register <code>DeepEvalTracingProcessor()</code> once, build your
-          agent with the shim, then run <code>Runner.run(...)</code> in a
-          parametrized <code>pytest</code> test and assert with{" "}
-          <code>assert_test(...)</code> under <code>deepeval test run</code>.
+          Yes. Register <code>DeepEvalTracingProcessor</code> once, then{" "}
+          <Switch>
+            <Case id="python">
+              run <code>Runner.run(...)</code> in a parametrized{" "}
+              <code>pytest</code> test and assert with{" "}
+              <code>assert_test(...)</code> under <code>deepeval test run</code>.
+            </Case>
+            <Case id="typescript">
+              use{" "}
+              <code>
+                expect(golden).toPass([...], {"{ task: (g) => ask(g.input) }"})
+              </code>{" "}
+              and run <code>npx deepeval test run</code>.
+            </Case>
+          </Switch>
         </>
       ),
     },
@@ -438,9 +952,11 @@ For runtime helpers (`update_current_trace`, `update_current_span`) and the test
       question: "Where can I view these agent traces beyond the terminal?",
       answer: (
         <>
-          Run <code>deepeval login</code> and{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> renders each{" "}
-          <code>Runner.run(...)</code> as a trace — agent, LLM, and tool spans,
+          Run <Term py="deepeval login" ts="npx deepeval login" /> and{" "}
+          <a href="https://www.confident-ai.com/?utm_source=deepeval&utm_medium=docs&utm_content=faq_confident_ai&ref_page=/integrations/frameworks/openai-agents">
+            Confident AI
+          </a>{" "}
+          renders each agent run as a trace — agent, LLM, and tool spans,
           including handoffs — with their scores in a shared cloud UI. It's
           optional.
         </>
@@ -452,11 +968,10 @@ For runtime helpers (`update_current_trace`, `update_current_span`) and the test
         <>
           Yes. With <code>DeepEvalTracingProcessor</code> registered and a
           Confident AI login, live agent runs stream in for{" "}
-          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
+          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals?utm_source=deepeval&utm_medium=docs&utm_content=faq_online_evals&ref_page=/integrations/frameworks/openai-agents">
             online evals
           </a>{" "}
-          on real traffic, and <code>confident_prompt</code> ties prompt
-          versions to each trace.
+          on real traffic.
         </>
       ),
     },

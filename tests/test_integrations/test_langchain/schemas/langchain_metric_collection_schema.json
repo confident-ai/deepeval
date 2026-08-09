@@ -2,151 +2,6 @@
   "uuid": "eb2f515a-6310-4637-b111-aa48df72de0b",
   "baseSpans": [
     {
-      "uuid": "019df245-d827-75e2-82e0-0c01e3d37c91",
-      "name": "LangGraph",
-      "status": "SUCCESS",
-      "type": "base",
-      "startTime": "2026-05-04T09:15:56.840Z",
-      "endTime": "2026-05-04T09:16:00.046Z",
-      "input": {
-        "messages": [
-          {
-            "content": "Use the calculate tool to compute 15 * 3. Do not ask clarifying questions.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "7eaaeca9-6801-4e38-ac8b-7680e2ad42b7"
-          }
-        ]
-      },
-      "output": {
-        "messages": [
-          {
-            "content": "Use the calculate tool to compute 15 * 3. Do not ask clarifying questions.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "7eaaeca9-6801-4e38-ac8b-7680e2ad42b7"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 25,
-                "prompt_tokens": 165,
-                "total_tokens": 190,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-Dbjh7lkOlAZhN1qS8zIlJxHia9dH5",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019df245-d829-7551-8038-bde3fdd4ae24-0",
-            "tool_calls": [
-              {
-                "name": "calculate",
-                "args": {
-                  "expression": "15 * 3"
-                },
-                "id": "call_JNBdO1jm1uWO9nme6rgxxjbI",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 165,
-              "output_tokens": 25,
-              "total_tokens": 190,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          },
-          {
-            "content": "45",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "calculate",
-            "id": "bb64b765-85a8-4ad3-9daa-08bb9f2208fa",
-            "tool_call_id": "call_JNBdO1jm1uWO9nme6rgxxjbI",
-            "status": "success"
-          },
-          {
-            "content": "45",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 4,
-                "prompt_tokens": 195,
-                "total_tokens": 199,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-Dbjh95kkRX5O7psZMXI1Co695JP6w",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019df245-e106-7761-81c1-8ee7e98c51ac-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 195,
-              "output_tokens": 4,
-              "total_tokens": 199,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          }
-        ]
-      },
-      "metricCollection": "trace_quality",
-      "integration": "LangChain"
-    },
-    {
       "uuid": "019df245-e104-7b43-be18-0ac557ab792f",
       "name": "model",
       "status": "SUCCESS",
@@ -434,7 +289,154 @@
       "integration": "LangChain"
     }
   ],
-  "agentSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "019df245-d827-75e2-82e0-0c01e3d37c91",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-05-04T09:15:56.840Z",
+      "endTime": "2026-05-04T09:16:00.046Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Use the calculate tool to compute 15 * 3. Do not ask clarifying questions.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "7eaaeca9-6801-4e38-ac8b-7680e2ad42b7"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Use the calculate tool to compute 15 * 3. Do not ask clarifying questions.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "7eaaeca9-6801-4e38-ac8b-7680e2ad42b7"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 25,
+                "prompt_tokens": 165,
+                "total_tokens": 190,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5.4-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-Dbjh7lkOlAZhN1qS8zIlJxHia9dH5",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019df245-d829-7551-8038-bde3fdd4ae24-0",
+            "tool_calls": [
+              {
+                "name": "calculate",
+                "args": {
+                  "expression": "15 * 3"
+                },
+                "id": "call_JNBdO1jm1uWO9nme6rgxxjbI",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 165,
+              "output_tokens": 25,
+              "total_tokens": 190,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "45",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "calculate",
+            "id": "bb64b765-85a8-4ad3-9daa-08bb9f2208fa",
+            "tool_call_id": "call_JNBdO1jm1uWO9nme6rgxxjbI",
+            "status": "success"
+          },
+          {
+            "content": "45",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 4,
+                "prompt_tokens": 195,
+                "total_tokens": 199,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5.4-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-Dbjh95kkRX5O7psZMXI1Co695JP6w",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019df245-e106-7761-81c1-8ee7e98c51ac-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 195,
+              "output_tokens": 4,
+              "total_tokens": 199,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      },
+      "integration": "LangChain",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
   "llmSpans": [
     {
       "uuid": "019df245-e106-7761-81c1-8ee7e98c51ac",
@@ -720,5 +722,6 @@
         "expression": "15 * 3"
       }
     }
-  ]
+  ],
+  "metricCollection": "trace_quality"
 }

@@ -1,0 +1,115 @@
+name: Ts Integration
+
+on:
+  pull_request:
+    paths:
+      - 'typescript/**'
+      - '.github/workflows/typescript_integration.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'typescript/**'
+      - '.github/workflows/typescript_integration.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  langchain:
+    runs-on: ubuntu-latest
+    container:
+      image: node:22
+    defaults:
+      run:
+        working-directory: typescript
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm ci
+      - name: Run LangChain tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CONFIDENT_TRACE_VERBOSE: 0
+        run: npx jest -c jest.integrations.config.js test/test-integrations/test-langchain
+
+  openai-agents:
+    runs-on: ubuntu-latest
+    container:
+      image: node:22
+    defaults:
+      run:
+        working-directory: typescript
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm ci
+      - name: Run OpenAI Agents tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CONFIDENT_TRACE_VERBOSE: 0
+        run: npx jest -c jest.integrations.config.js test/test-integrations/test-openai-agents
+
+  openai:
+    runs-on: ubuntu-latest
+    container:
+      image: node:22
+    defaults:
+      run:
+        working-directory: typescript
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm ci
+      - name: Run OpenAI tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CONFIDENT_TRACE_VERBOSE: 0
+        run: npx jest -c jest.integrations.config.js test/test-integrations/test-openai
+
+  ai-sdk:
+    runs-on: ubuntu-latest
+    container:
+      image: node:22
+    defaults:
+      run:
+        working-directory: typescript
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm ci
+      - name: Run AI SDK tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CONFIDENT_TRACE_VERBOSE: 0
+        run: npx jest -c jest.integrations.config.js test/test-integrations/test-ai-sdk
+
+  openinference:
+    runs-on: ubuntu-latest
+    container:
+      image: node:22
+    defaults:
+      run:
+        working-directory: typescript
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm ci
+      - name: Run OpenInference tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CONFIDENT_TRACE_VERBOSE: 0
+        run: npx jest -c jest.integrations.config.js test/test-integrations/test-openinference
+
+  mastra:
+    runs-on: ubuntu-latest
+    container:
+      image: node:22
+    defaults:
+      run:
+        working-directory: typescript
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm ci
+      - name: Run Mastra tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CONFIDENT_TRACE_VERBOSE: 0
+        run: npx jest -c jest.mastra.config.cjs

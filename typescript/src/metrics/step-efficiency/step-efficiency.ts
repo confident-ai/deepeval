@@ -1,16 +1,22 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
-} from "../utils";
-import { TaskSchema, EfficiencyVerdictSchema } from "./schema";
+} from "@/metrics/utils";
+import {
+  TaskSchema,
+  EfficiencyVerdictSchema,
+} from "@/metrics/step-efficiency/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "StepEfficiencyMetric";
+
+export type StepEfficiencyTemplateOverride =
+  MetricTemplateOverride<"StepEfficiencyMetric">;
 
 /** Serialize the trace dict the way the templates expect (pretty JSON). */
 function traceJson(d: unknown): string {
@@ -20,12 +26,14 @@ function traceJson(d: unknown): string {
 }
 
 export interface StepEfficiencyMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: StepEfficiencyTemplateOverride;
 }
 
 /**
@@ -36,12 +44,16 @@ export interface StepEfficiencyMetricOptions {
 export class StepEfficiencyMetric extends BaseMetric {
   constructor(options: StepEfficiencyMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
@@ -63,23 +75,23 @@ export class StepEfficiencyMetric extends BaseMetric {
 
       const { task } = await generateWithSchema(
         this,
-        resolveTemplate("metrics", TEMPLATE_CLASS, "extract_task_from_trace", {
+        this.getPrompt("extract_task_from_trace", {
           trace_json: json,
         }),
         TaskSchema,
       );
       const { score, reason } = await generateWithSchema(
         this,
-        resolveTemplate("metrics", TEMPLATE_CLASS, "get_execution_efficiency", {
+        this.getPrompt("get_execution_efficiency", {
           task,
           trace_json_str: json,
         }),
         EfficiencyVerdictSchema,
       );
 
-      this.score = this.strictMode && score < this.threshold ? 0 : score;
+      this.score = this.applyStrictMode(score);
       this.reason = reason;
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
       this.verboseLogs = constructVerboseLogs(this, [
         `Task: ${task}`,
         `Efficiency Score: ${this.score}\nEfficiency Reason: ${this.reason}`,
@@ -88,12 +100,6 @@ export class StepEfficiencyMetric extends BaseMetric {
     } finally {
       this.stopProgress();
     }
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

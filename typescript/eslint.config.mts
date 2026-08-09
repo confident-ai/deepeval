@@ -8,13 +8,15 @@ import tseslint from "typescript-eslint";
 export default defineConfig([
   {
     ignores: ["dist/**", "test/**"],
-    files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
+    files: ["**/*.{js,mjs,cjs,ts,mts,cts,tsx}"],
     languageOptions: {
       globals: globals.node,
     },
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
+      // Best-effort cleanup / optional side effects use empty catch on purpose.
+      "no-empty": ["error", { allowEmptyCatch: true }],
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {
@@ -23,6 +25,31 @@ export default defineConfig([
           caughtErrorsIgnorePattern: "^_",
         },
       ],
+    },
+  },
+  {
+    files: ["src/**/*.{ts,mts,cts}"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["./*", "./**", "../*", "../**"],
+              message:
+                "Use the '@/' alias (rooted at src/) instead of relative imports.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // Emits ESM with no alias rewriting step, so siblings must be imported
+    // relatively with explicit extensions.
+    files: ["src/inspect/ui/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": "off",
     },
   },
   {

@@ -1,1 +1,3 @@
-from .plan_quality import PlanQualityMetric
+from .plan_quality import PlanQualityMetric, PlanQualityTemplate
+
+__all__ = ["PlanQualityMetric", "PlanQualityTemplate"]

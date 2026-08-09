@@ -1,3 +1,3 @@
-from .contextual_recall import ContextualRecallMetric
+from .contextual_recall import ContextualRecallMetric, ContextualRecallTemplate
 
-__all__ = ["ContextualRecallMetric"]
+__all__ = ["ContextualRecallMetric", "ContextualRecallTemplate"]

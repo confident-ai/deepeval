@@ -1,5 +1,5 @@
-import { traceManager } from "../../tracing";
-import type { Trace } from "../../tracing/tracing";
+import { traceManager } from "@/tracing";
+import type { Trace } from "@/tracing/tracing";
 
 interface TraceCaptureStore {
   traces: Trace[];
