@@ -465,8 +465,8 @@ know. For the OTel integrations there is one extra wrinkle — with no exporter
 installed, routing a span to OTLP drops it on the floor — so `resolveSpanRoute`
 takes `otlpEnabled` and routes in-process when no transport exists.
 
-`typescript/test/test-integrations/keyless-tracing.test.ts` locks this in across
-all three integrations with `CONFIDENT_API_KEY` deleted from the environment.
+Ts Integration CI does not inject `CONFIDENT_API_KEY`, so every suite exercises
+the keyless path by default.
 
 ## Outstanding
 
