@@ -1,18 +1,18 @@
 // Regression coverage for settings that were declared but never read back.
 
-import { OpenAIModel, AnthropicModel } from "../../src/models";
+import { OpenAIModel, AnthropicModel } from "@/models";
 import {
   parseBool,
   isReadOnlyFileSystem,
   normalizeFileSystemMode,
-} from "../../src/config/utils";
-import { settingsSchema } from "../../src/config/schema";
+} from "@/config/utils";
+import { settingsSchema } from "@/config/schema";
 import {
   shouldIgnoreErrors,
   shouldSkipOnMissingParams,
   shouldUseCache,
-} from "../../src/env-flags";
-import { getBaseApiUrl } from "../../src/confident/api";
+} from "@/env-flags";
+import { getBaseApiUrl } from "@/confident/api";
 
 /** `resolveCost` and `resolveTemperature` are protected. */
 function resolved(model: unknown) {
@@ -239,24 +239,24 @@ describe("Confident AI base URL", () => {
     process.env.CONFIDENT_BASE_URL = "https://confident.internal/";
     process.env.CONFIDENT_REGION = "EU";
 
-    expect(getBaseApiUrl("confident_au_abc")).toBe(
+    expect(getBaseApiUrl("confident_eu_abc")).toBe(
       "https://confident.internal",
     );
   });
 
   it("falls back to the region, then to the key prefix", () => {
     process.env.CONFIDENT_REGION = "EU";
-    expect(getBaseApiUrl("confident_au_abc")).toContain("eu.");
+    expect(getBaseApiUrl("confident_eu_abc")).toContain("eu.");
 
     delete process.env.CONFIDENT_REGION;
-    expect(getBaseApiUrl("confident_au_abc")).toContain("au.");
+    expect(getBaseApiUrl("confident_eu_abc")).toContain("eu.");
     expect(getBaseApiUrl("confident_abc")).toBe("https://api.confident-ai.com");
   });
 
   it("is read fresh, so a later settings change is picked up", () => {
     expect(getBaseApiUrl("confident_abc")).toBe("https://api.confident-ai.com");
-    process.env.CONFIDENT_REGION = "AU";
-    expect(getBaseApiUrl("confident_abc")).toContain("au.");
+    process.env.CONFIDENT_REGION = "EU";
+    expect(getBaseApiUrl("confident_abc")).toContain("eu.");
   });
 });
 

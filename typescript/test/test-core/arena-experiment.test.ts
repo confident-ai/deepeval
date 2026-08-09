@@ -1,8 +1,8 @@
 import axios from "axios";
-import { postExperiment } from "../../src/evaluate/confident";
-import { ArenaTestCase, Contestant, LLMTestCase } from "../../src/test-case";
-import { type ArenaCaseResult } from "../../src/evaluate/types";
-import { Prompt } from "../../src/prompt";
+import { postExperiment } from "@/evaluate/confident";
+import { ArenaTestCase, Contestant, LLMTestCase } from "@/test-case";
+import { type ArenaCaseResult } from "@/evaluate/types";
+import { Prompt } from "@/prompt";
 
 jest.mock("axios");
 

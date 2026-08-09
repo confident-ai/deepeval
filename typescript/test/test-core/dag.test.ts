@@ -1,6 +1,6 @@
 import type { ZodType } from "zod";
 
-import { DeepEvalBaseLLM, type GenerationResult } from "../../src/models";
+import { DeepEvalBaseLLM, type GenerationResult } from "@/models";
 import {
   BinaryJudgementNode,
   ConversationalBinaryJudgementNode,
@@ -15,14 +15,14 @@ import {
   dagFromJson,
   dagToJson,
   isValidTurnWindow,
-} from "../../src/metrics";
+} from "@/metrics";
 import {
   ConversationalTestCase,
   LLMTestCase,
   MultiTurnParams,
   SingleTurnParams,
   Turn,
-} from "../../src/test-case";
+} from "@/test-case";
 
 /**
  * Answers prompts from canned replies picked by a substring match, so a test

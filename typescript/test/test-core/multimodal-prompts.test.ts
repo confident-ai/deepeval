@@ -1,19 +1,19 @@
 // Which metrics switch their `{% if multimodal %}` branches on, and what changes.
 
-import { AnswerRelevancyMetric } from "../../src/metrics/answer-relevancy/answer-relevancy";
-import { FaithfulnessMetric } from "../../src/metrics/faithfulness/faithfulness";
-import { ContextualPrecisionMetric } from "../../src/metrics/contextual-precision/contextual-precision";
-import { ContextualRecallMetric } from "../../src/metrics/contextual-recall/contextual-recall";
-import { ContextualRelevancyMetric } from "../../src/metrics/contextual-relevancy/contextual-relevancy";
-import { SummarizationMetric } from "../../src/metrics/summarization/summarization";
-import { ToxicityMetric } from "../../src/metrics/toxicity/toxicity";
-import { ExactMatchMetric } from "../../src/metrics/exact-match/exact-match";
-import { idRetrievalContext } from "../../src/metrics/retrieval-context-display";
-import { checkSingleTurnParams } from "../../src/metrics/utils";
-import { LLMTestCase, MLLMImage, SingleTurnParams } from "../../src/test-case";
-import { OpenAIModel } from "../../src/models";
-import { bedrockContent, ollamaMessages } from "../../src/models/multimodal";
-import { resolveTemplate } from "../../src/templates";
+import { AnswerRelevancyMetric } from "@/metrics/answer-relevancy/answer-relevancy";
+import { FaithfulnessMetric } from "@/metrics/faithfulness/faithfulness";
+import { ContextualPrecisionMetric } from "@/metrics/contextual-precision/contextual-precision";
+import { ContextualRecallMetric } from "@/metrics/contextual-recall/contextual-recall";
+import { ContextualRelevancyMetric } from "@/metrics/contextual-relevancy/contextual-relevancy";
+import { SummarizationMetric } from "@/metrics/summarization/summarization";
+import { ToxicityMetric } from "@/metrics/toxicity/toxicity";
+import { ExactMatchMetric } from "@/metrics/exact-match/exact-match";
+import { idRetrievalContext } from "@/metrics/retrieval-context-display";
+import { checkSingleTurnParams } from "@/metrics/utils";
+import { LLMTestCase, MLLMImage, SingleTurnParams } from "@/test-case";
+import { OpenAIModel } from "@/models";
+import { bedrockContent, ollamaMessages } from "@/models/multimodal";
+import { resolveTemplate } from "@/templates";
 
 function prompts(metric: unknown) {
   return metric as {

@@ -1,7 +1,7 @@
 import { Agent } from "@mastra/core/agent";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import type { DeepEvalExporter } from "../../../../src/integrations/mastra";
+import type { DeepEvalExporter } from "@/integrations/mastra";
 import { buildMastra } from "./mastra-harness";
 
 const WEATHER: Record<string, string> = {

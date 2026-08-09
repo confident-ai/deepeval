@@ -1,9 +1,10 @@
-import { runMetrics, globalResultCollector } from "../../src/evaluate/test-run";
-import { LLMTestCase } from "../../src/test-case";
-import { BaseMetric, BaseConversationalMetric } from "../../src/metrics";
-import { DeepEvalError, MissingTestCaseParamsError } from "../../src/errors";
-import { Golden } from "../../src/dataset";
-import { getIsRunningDeepEval, setIsRunningDeepEval } from "../../src/utils";
+import { runMetrics, globalResultCollector } from "@/evaluate/test-run";
+import { LLMTestCase } from "@/test-case";
+import { BaseMetric, BaseConversationalMetric } from "@/metrics";
+import { DeepEvalError, MissingTestCaseParamsError } from "@/errors";
+import { Golden } from "@/dataset";
+import { getIsRunningDeepEval, setIsRunningDeepEval } from "@/utils";
+import { observe, updateCurrentTrace } from "@/tracing";
 
 // A deterministic single-turn metric. `impl` mutates the metric's result state
 // the way a real `measure()` would (runMetric reads score/success afterward).
@@ -182,7 +183,6 @@ describe("toPass — callback (trace-scoped) shape", () => {
   });
 
   it("accepts a golden with `run` and evaluates the traces it produces", async () => {
-    const { observe, updateCurrentTrace } = await import("../../src/tracing");
     const agent = observe({
       type: "agent",
       fn: async (query: string) => {

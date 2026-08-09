@@ -2,19 +2,19 @@
 // log-prob-weighted scoring.
 
 import { z } from "zod";
-import { AnswerRelevancyMetric } from "../../src/metrics/answer-relevancy/answer-relevancy";
-import { generateWithSchema } from "../../src/metrics/utils";
+import { AnswerRelevancyMetric } from "@/metrics/answer-relevancy/answer-relevancy";
+import { generateWithSchema } from "@/metrics/utils";
 import {
   calculateWeightedSummedScore,
   evaluateGEvalPrompt,
-} from "../../src/metrics/g-eval/utils";
-import { DeepEvalBaseLLM } from "../../src/models";
+} from "@/metrics/g-eval/utils";
+import { DeepEvalBaseLLM } from "@/models";
 import type {
   ContentTokenLogProbs,
   GenerationResult,
   RawGenerationOptions,
   RawGenerationResult,
-} from "../../src/models";
+} from "@/models";
 
 const Schema = z.object({ statements: z.array(z.string()) });
 

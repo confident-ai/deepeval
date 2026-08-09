@@ -10,5 +10,8 @@ module.exports = {
     "/node_modules/",
     // Integration suites run under the Ts Integration workflow.
     "/test/test-integrations/",
+    // Live Confident AI suites run under the Ts Confident Tests workflow.
+    "/test/test-confident/",
   ],
 };
+

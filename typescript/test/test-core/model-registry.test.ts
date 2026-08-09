@@ -11,8 +11,8 @@ import {
   AISDKModel,
   GeminiModel,
   OpenRouterModel,
-} from "../../src/models";
-import { resolveAiSdkNamespace } from "../../src/models/providers/ai-sdk-model";
+} from "@/models";
+import { resolveAiSdkNamespace } from "@/models/providers/ai-sdk-model";
 
 describe("generated model registry", () => {
   it("carries every namespace emitted from the Python registries", () => {
@@ -204,7 +204,7 @@ describe("provider defaults generated from Python", () => {
   // different judges: a provider quietly declaring its own fallback, invisible
   // to `scripts/compile_model_registry.py`.
   it("has no hardcoded default model literal in a synced provider", () => {
-    const modelsDir = join(__dirname, "../../src/models");
+    const modelsDir = join(__dirname, "@/models");
     // Grok, DeepSeek and Kimi deliberately keep TypeScript-only defaults —
     // Python requires their `*_MODEL_NAME` instead. See DEFAULT_MODELS.
     const unsynced = ["grok-model.ts", "deepseek-model.ts", "kimi-model.ts"];

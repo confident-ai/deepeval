@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Api, Endpoints, HttpMethods } from "../../src/confident/api";
+import { Api, Endpoints, HttpMethods } from "@/confident/api";
 
 jest.mock("axios");
 

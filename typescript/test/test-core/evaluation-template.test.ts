@@ -1,16 +1,16 @@
 // Coverage for `evaluationTemplate`, the prompt-override hook on every metric.
 
-import { AnswerRelevancyMetric } from "../../src/metrics/answer-relevancy/answer-relevancy";
-import { FaithfulnessMetric } from "../../src/metrics/faithfulness/faithfulness";
-import { SummarizationMetric } from "../../src/metrics/summarization/summarization";
+import { AnswerRelevancyMetric } from "@/metrics/answer-relevancy/answer-relevancy";
+import { FaithfulnessMetric } from "@/metrics/faithfulness/faithfulness";
+import { SummarizationMetric } from "@/metrics/summarization/summarization";
 import {
   camelizeVars,
   decamelizeVars,
   findOverride,
   snakeToCamel,
-} from "../../src/templates/override";
-import { resolveTemplate } from "../../src/templates";
-import metricsBundle from "../../src/templates/metrics/templates.json";
+} from "@/templates/override";
+import { resolveTemplate } from "@/templates";
+import metricsBundle from "@/templates/metrics/templates.json";
 
 /** `getPrompt` is protected; tests drive it the way the metric's own code does. */
 function prompts(metric: unknown) {

@@ -10,10 +10,10 @@ import {
   updateRetrieverSpan,
   SpanType,
   TraceSpanStatus,
-} from "../../src/tracing/tracing";
-import { TraceSpanApiStatus } from "../../src/tracing/api";
-import { LLMTestCase } from "../../src/test-case";
-import { Environment } from "../../src/tracing/utils";
+} from "@/tracing/tracing";
+import { TraceSpanApiStatus } from "@/tracing/api";
+import { LLMTestCase } from "@/test-case";
+import { Environment } from "@/tracing/utils";
 
 config();
 process.env.CONFIDENT_TRACE_VERBOSE = "YES";
