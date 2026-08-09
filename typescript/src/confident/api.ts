@@ -12,7 +12,6 @@ enum Regions {
 
 const CONFIDENT_BASE_URL_US = "https://api.confident-ai.com";
 const CONFIDENT_BASE_URL_EU = "https://eu.api.confident-ai.com";
-const CONFIDENT_BASE_URL_AU = "https://au.api.confident-ai.com";
 
 /**
  * @deprecated Resolved once at import time, so it misses any later
@@ -24,8 +23,6 @@ function regionBaseUrl(region?: string | null): string {
   switch ((region || "").trim().toUpperCase()) {
     case Regions.EU:
       return CONFIDENT_BASE_URL_EU;
-    case Regions.AU:
-      return CONFIDENT_BASE_URL_AU;
     default:
       return CONFIDENT_BASE_URL_US;
   }
@@ -47,8 +44,6 @@ export const getBaseApiUrl = (apiKey?: string | null): string => {
 const inferBaseUrlFromApiKey = (apiKey: string): string => {
   if (apiKey.startsWith("confident_eu_")) {
     return CONFIDENT_BASE_URL_EU;
-  } else if (apiKey.startsWith("confident_au_")) {
-    return CONFIDENT_BASE_URL_AU;
   }
   return CONFIDENT_BASE_URL_US;
 };
