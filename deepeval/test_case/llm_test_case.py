@@ -257,7 +257,7 @@ class ToolCall(BaseModel):
         validation_alias=AliasChoices("inputParameters", "input_parameters"),
     )
 
-    @field_serializer('type')
+    @field_serializer("type")
     def serialize_type(self, value: ToolCallType) -> str:
         return value.value
 
