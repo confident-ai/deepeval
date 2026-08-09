@@ -29,6 +29,7 @@ def test_request_succeeds_by_auto_routing_eu_key_when_region_unset(monkeypatch):
         CONFIDENT_API_KEY = SecretStr("confident_eu_6M_dummy")
         API_KEY = None
         DEEPEVAL_DEFAULT_SAVE = None
+        CONFIDENT_DISABLE_SSL = None
 
     monkeypatch.setattr(confident_api, "get_settings", lambda: DummySettings())
 
@@ -91,6 +92,7 @@ def test_request_succeeds_by_auto_routing_au_key_when_region_unset(monkeypatch):
         CONFIDENT_API_KEY = SecretStr("confident_au_7M_dummy")
         API_KEY = None
         DEEPEVAL_DEFAULT_SAVE = None
+        CONFIDENT_DISABLE_SSL = None
 
     monkeypatch.setattr(confident_api, "get_settings", lambda: DummySettings())
 
