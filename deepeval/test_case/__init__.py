@@ -8,6 +8,8 @@ from .llm_test_case import (
     ToolCallType,
     MLLMImage,
     RetrievedContextData,
+    Audio, 
+    AudioChunk
 )
 from .conversational_test_case import (
     ConversationalTestCase,
@@ -36,6 +38,8 @@ __all__ = [
     "MCPResourceCall",
     "MCPToolCall",
     "MLLMImage",
+    "Audio",
+    "AudioChunk",
     "RetrievedContextData",
     "ArenaTestCase",
     "Contestant",

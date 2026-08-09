@@ -67,6 +67,14 @@ from .multimodal_metrics import (
     ImageHelpfulnessMetric,
     ImageReferenceMetric,
 )
+from .voice import (
+    ResponsivenessMetric,
+    TurnLatencyMetric,
+    SpeakingRateMetric,
+    SilenceDurationMetric,
+    InterruptionMetric,
+    ClippingMetric,
+)
 
 __all__ = [
     # Base classes
@@ -133,4 +141,11 @@ __all__ = [
     "ImageCoherenceMetric",
     "ImageHelpfulnessMetric",
     "ImageReferenceMetric",
+    # Voice metrics
+    "ResponsivenessMetric",
+    "TurnLatencyMetric",
+    "SpeakingRateMetric",
+    "SilenceDurationMetric",
+    "InterruptionMetric",
+    "ClippingMetric",
 ]
