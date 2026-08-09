@@ -145,7 +145,7 @@ import { ragPipeline } from "./your-app"; // returns { answer, retrievedChunks }
 import "deepeval/vitest";
 
 it.each(dataset.goldens as Golden[])(
-  "answers grounded in what it retrieved: $input",
+  "answers grounded in what it retrieved #%$",
   async (golden) => {
     const { answer, retrievedChunks } = await ragPipeline(golden.input);
     const testCase = new LLMTestCase({
@@ -221,7 +221,7 @@ const ragPipeline = observe({
 });
 
 it.each(dataset.goldens as Golden[])(
-  "answers grounded in what it retrieved: $input",
+  "answers grounded in what it retrieved #%$",
   async (golden) => {
     await ragPipeline(golden.input);
     await expect(golden).toPass([

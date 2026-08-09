@@ -146,7 +146,7 @@ const dataset = new EvaluationDataset({
 });
 
 it.each(dataset.goldens as Golden[])(
-  "answers the user's question: $input",
+  "answers the user's question #%$",
   async (golden) => {
     const answer = await yourLlmApp(golden.input);
     const testCase = new LLMTestCase({
@@ -242,9 +242,12 @@ const testCases = await simulator.simulate({
 
 logHyperparameters({ model: "gpt-4.1", systemPrompt: "Be concise." });
 
-it.each(testCases)("stays relevant across the conversation", async (testCase) => {
-  await expect(testCase).toPass([new TurnRelevancyMetric()]);
-});
+it.each(testCases)(
+  "stays relevant across the conversation #%$",
+  async (testCase) => {
+    await expect(testCase).toPass([new TurnRelevancyMetric()]);
+  },
+);
 ```
 
 The test case goes to `expect()`, and `toPass()` takes one argument:

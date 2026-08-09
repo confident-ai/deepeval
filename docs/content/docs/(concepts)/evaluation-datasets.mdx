@@ -342,10 +342,8 @@ import { AnswerRelevancyMetric } from "deepeval/metrics";
 import "deepeval/vitest";
 // ...
 
-dataset.testCases.forEach((testCase, index) => {
-  it(`llm app #${index}`, async () => {
-    await expect(testCase).toPass([new AnswerRelevancyMetric()]);
-  });
+it.each(dataset.testCases)("llm app stays relevant #%$", async (testCase) => {
+  await expect(testCase).toPass([new AnswerRelevancyMetric()]);
 });
 ```
 
@@ -501,11 +499,12 @@ import { TurnRelevancyMetric } from "deepeval/metrics";
 import "deepeval/vitest";
 // ...
 
-dataset.testCases.forEach((testCase, index) => {
-  it(`llm app #${index}`, async () => {
+it.each(dataset.testCases)(
+  "llm app stays relevant across the conversation #%$",
+  async (testCase) => {
     await expect(testCase).toPass([new TurnRelevancyMetric()]);
-  });
-});
+  },
+);
 ```
 
 And execute the test file:

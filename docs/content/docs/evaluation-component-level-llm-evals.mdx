@@ -244,7 +244,7 @@ import { myAiAgent } from "./your-app"; // traced; spans carry metrics
 import "deepeval/vitest";
 
 it.each(dataset.goldens as Golden[])(
-  "completes the task: $input",
+  "completes the task #%$",
   async (golden) => {
     await expect(golden).toPass([], {
       task: (g) => myAiAgent(g.input),

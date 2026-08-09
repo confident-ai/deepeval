@@ -447,7 +447,7 @@ const myAiAgent = observe({
 
 // 3. Evaluate end-to-end on each golden
 it.each(dataset.goldens as Golden[])(
-  "completes the task: $input",
+  "completes the task #%$",
   async (golden) => {
     await expect(golden).toPass([new TaskCompletionMetric()], {
       task: (g) => myAiAgent(g.input),
@@ -491,7 +491,7 @@ const ask = (prompt: string) =>
 
 // 3. Evaluate end-to-end on each golden
 it.each(dataset.goldens as Golden[])(
-  "completes the task: $input",
+  "completes the task #%$",
   async (golden) => {
     await expect(golden).toPass([new TaskCompletionMetric()], {
       task: (g) => ask(g.input),
@@ -536,7 +536,7 @@ const ask = (prompt: string) => mastra.getAgent("mathAgent").generate(prompt);
 
 // 3. Evaluate end-to-end on each golden
 it.each(dataset.goldens as Golden[])(
-  "completes the task: $input",
+  "completes the task #%$",
   async (golden) => {
     await expect(golden).toPass([new TaskCompletionMetric()], {
       task: (g) => ask(g.input),
@@ -580,7 +580,7 @@ const ask = (prompt: string) =>
 
 // 3. Evaluate end-to-end on each golden
 it.each(dataset.goldens as Golden[])(
-  "completes the task: $input",
+  "completes the task #%$",
   async (golden) => {
     await expect(golden).toPass([new TaskCompletionMetric()], {
       task: (g) => ask(g.input),
@@ -619,7 +619,7 @@ const respond = (prompt: string) =>
 
 // 3. Evaluate end-to-end on each golden
 it.each(dataset.goldens as Golden[])(
-  "answers the question: $input",
+  "answers the question #%$",
   async (golden) => {
     await expect(golden).toPass([new AnswerRelevancyMetric()], {
       task: (g) => respond(g.input),
@@ -657,7 +657,7 @@ const agent = new Agent({
 
 // 3. Evaluate end-to-end on each golden
 it.each(dataset.goldens as Golden[])(
-  "completes the task: $input",
+  "completes the task #%$",
   async (golden) => {
     await expect(golden).toPass([new TaskCompletionMetric()], {
       task: (g) => run(agent, g.input),
@@ -697,7 +697,7 @@ const ask = (prompt: string) =>
 
 // 3. Evaluate end-to-end on each golden
 it.each(dataset.goldens as Golden[])(
-  "completes the task: $input",
+  "completes the task #%$",
   async (golden) => {
     await expect(golden).toPass([new TaskCompletionMetric()], {
       task: (g) => ask(g.input),

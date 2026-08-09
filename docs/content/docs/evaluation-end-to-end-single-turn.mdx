@@ -452,7 +452,7 @@ import { myAiAgent } from "./your-app"; // observe()-instrumented
 import "deepeval/vitest";
 
 it.each(dataset.goldens as Golden[])(
-  "completes the task: $input",
+  "completes the task #%$",
   async (golden) => {
     await myAiAgent(golden.input);
     await expect(golden).toPass([new TaskCompletionMetric()]);
@@ -472,7 +472,7 @@ import { myAiAgent } from "./your-app";
 import "deepeval/vitest";
 
 it.each(dataset.goldens as Golden[])(
-  "answers the user's question: $input",
+  "answers the user's question #%$",
   async (golden) => {
     const output = await myAiAgent(golden.input);
     const testCase = new LLMTestCase({

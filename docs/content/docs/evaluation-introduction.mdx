@@ -361,10 +361,8 @@ for (const golden of dataset.goldens as Golden[]) {
   );
 }
 
-dataset.testCases.forEach((testCase, index) => {
-  it(`customer chatbot #${index}`, async () => {
-    await expect(testCase).toPass([new AnswerRelevancyMetric()]);
-  });
+it.each(dataset.testCases)("AI app stays relevant #%$", async (testCase) => {
+  await expect(testCase).toPass([new AnswerRelevancyMetric()]);
 });
 ```
 
@@ -377,6 +375,10 @@ npx deepeval test run example.test.ts
 The test case goes to `expect()`, and `toPass()` takes one argument:
 
 - `metrics`: an array of metrics of type `BaseMetric`, run concurrently against the test case
+
+:::info
+`it.each` is offered by Vitest. It loops through your `EvaluationDataset` to register one test per test case, and `%$` in the title interpolates that case's position in the dataset so each test is named uniquely.
+:::
 
 :::info
 Importing `deepeval/vitest` registers the `toPass()` matcher. `npx deepeval test run` injects it for you, so the import only matters when you run the same file with `vitest` directly.

@@ -386,9 +386,12 @@ const testCases = await simulator.simulate({
   maxUserSimulations: 10,
 });
 
-it.each(testCases)("stays relevant across the conversation", async (testCase) => {
-  await expect(testCase).toPass([new TurnRelevancyMetric()]);
-});
+it.each(testCases)(
+  "stays relevant across the conversation #%$",
+  async (testCase) => {
+    await expect(testCase).toPass([new TurnRelevancyMetric()]);
+  },
+);
 ```
 
 ```bash
