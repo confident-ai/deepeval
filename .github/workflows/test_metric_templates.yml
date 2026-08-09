@@ -5,14 +5,16 @@ name: Metric Templates Sync
 # it lives in its own workflow rather than a language-specific test workflow.
 
 on:
-  push:
+  pull_request:
     paths:
       - 'deepeval/**/templates/**'
       - 'typescript/src/templates/metrics/**'
       - 'scripts/compile_metric_templates.py'
       - 'tests/test_templates/test_metric_templates.py'
       - '.github/workflows/test_metric_templates.yml'
-  pull_request:
+  push:
+    branches:
+      - main
     paths:
       - 'deepeval/**/templates/**'
       - 'typescript/src/templates/metrics/**'

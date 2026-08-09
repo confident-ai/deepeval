@@ -10,7 +10,7 @@ name: Model Registry Sync
 # provider module declares its own default, which is how the two SDKs drifted apart.
 
 on:
-  push:
+  pull_request:
     paths:
       - 'deepeval/models/llms/*.py'
       - 'deepeval/models/base_model.py'
@@ -18,7 +18,9 @@ on:
       - 'scripts/compile_model_registry.py'
       - 'tests/test_models/test_model_registry.py'
       - '.github/workflows/test_model_registry.yml'
-  pull_request:
+  push:
+    branches:
+      - main
     paths:
       - 'deepeval/models/llms/*.py'
       - 'deepeval/models/base_model.py'
