@@ -432,7 +432,6 @@
           }
         ]
       },
-      "metricCollection": "trace_quality",
       "integration": "LangChain",
       "availableTools": [],
       "agentHandoffs": []
@@ -723,5 +722,6 @@
         "expression": "15 * 3"
       }
     }
-  ]
+  ],
+  "metricCollection": "trace_quality"
 }
