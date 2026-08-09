@@ -696,57 +696,6 @@ export class EvaluationDataset {
     }
   }
 
-  async updateGolden(params: {
-    golden: GoldenUnion;
-    finalized?: boolean;
-    projectId?: string;
-  }): Promise<void> {
-    const { golden, finalized = true, projectId } = params;
-    if (!golden.id) {
-      throw new Error(
-        "Cannot update a golden without an id. Pull the dataset first so its goldens carry the id assigned by Confident AI.",
-      );
-    }
-    const api = new Api();
-    const body = stripPrivateFields(JSON.parse(JSON.stringify(golden)));
-    delete body.id;
-    body.finalized = finalized;
-    await api.sendRequest(
-      HttpMethods.PUT,
-      Endpoints.GOLDEN_ENDPOINT,
-      body,
-      undefined,
-      undefined,
-      { goldenId: golden.id },
-      projectId,
-    );
-    console.log("✅ Golden successfully updated on Confident AI!");
-  }
-
-  async deleteGolden(params: {
-    golden: GoldenUnion | string;
-    projectId?: string;
-  }): Promise<void> {
-    const { golden, projectId } = params;
-    const goldenId = typeof golden === "string" ? golden : golden.id;
-    if (!goldenId) {
-      throw new Error(
-        "Cannot delete a golden without an id. Pull the dataset first so its goldens carry the id assigned by Confident AI, or pass the golden id directly.",
-      );
-    }
-    const api = new Api();
-    await api.sendRequest(
-      HttpMethods.DELETE,
-      Endpoints.GOLDEN_ENDPOINT,
-      undefined,
-      undefined,
-      undefined,
-      { goldenId },
-      projectId,
-    );
-    console.log("✅ Golden successfully deleted from Confident AI!");
-  }
-
   /** A column the file lacks stays unset, so a metric still reports it missing. */
   async addTestCasesFromCSV({
     filePath,

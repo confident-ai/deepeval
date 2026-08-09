@@ -8,17 +8,11 @@ import { createInterface } from "readline";
 enum Regions {
   EU = "EU",
   US = "US",
-  AU = "AU",
 }
 
-const _LOCAL_API_BASE_URL = "http://localhost:3001";
-const _LOCAL_DEEPEVAL_BASE_URL = "http://0.0.0.0:8000";
-const PROD_DEEPEVAL_BASE_URL = "https://deepeval.confident-ai.com";
 const CONFIDENT_BASE_URL_US = "https://api.confident-ai.com";
 const CONFIDENT_BASE_URL_EU = "https://eu.api.confident-ai.com";
 const CONFIDENT_BASE_URL_AU = "https://au.api.confident-ai.com";
-
-export const DEEPEVAL_BASE_URL = PROD_DEEPEVAL_BASE_URL;
 
 /**
  * @deprecated Resolved once at import time, so it misses any later
@@ -113,7 +107,6 @@ export enum Endpoints {
   DATASET_ALIAS_ENDPOINT = "/v1/datasets/:alias",
   DATASET_ALIAS_QUEUE_ENDPOINT = "/v1/datasets/:alias/queue",
   DATASET_ALIAS_VERSIONS_ENDPOINT = "/v1/datasets/:alias/versions",
-  GOLDEN_ENDPOINT = "/v1/goldens/:goldenId",
   TEST_RUN_ENDPOINT = "/v1/test-run",
   TRACING_ENDPOINT = "/v1/tracing",
   TRACES_ENDPOINT = "/v1/traces",
