@@ -140,9 +140,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
 
         self.model_data = OPENAI_MODELS_DATA.get(model)
 
-        # Omit temperature for known reasoning models (supports_temperature=False)
-        # or for unrecognised deployment names not in the model catalogue.
-        if self.model_data.supports_temperature is False or model not in OPENAI_MODELS_DATA:
+        # Omit temperature for unrecognised deployments or reasoning models.
+        if (
+            model not in OPENAI_MODELS_DATA
+            or self.model_data.supports_temperature is False
+        ):
             temperature = None
 
         cost_per_input_token, cost_per_output_token = require_costs(
