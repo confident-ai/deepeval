@@ -58,6 +58,7 @@ import {
 import type { TestResult, EvaluatedCase } from "@/evaluate/types";
 import type { ErrorConfig, DisplayConfig } from "@/evaluate/configs";
 import type { BaseMetric } from "@/metrics/base-metrics";
+import { Entrypoint, beginEvaluationRun, recordGolden } from "@/telemetry";
 
 export type GoldenUnion = Golden | ConversationalGolden;
 export type GoldenUnionArray = Golden[] | ConversationalGolden[];
@@ -1016,8 +1017,12 @@ export class EvaluationDataset {
       [];
     const startTime = Date.now();
     let count = 0;
+    // Ambient rather than callback-scoped: the loop body runs in the consumer's
+    // async context, which an `AsyncLocalStorage` scope here would not cover.
+    const run = beginEvaluationRun(Entrypoint.EVALS_ITERATOR);
     try {
       for (const golden of goldens) {
+        recordGolden(golden);
         const start = captured.length;
         yield golden;
         // Resumed: the agent ran in the loop body — evaluate the traces it produced.
@@ -1094,7 +1099,11 @@ export class EvaluationDataset {
         evalBar?.update(Math.max(total, 1));
         mainBar?.increment();
       }
+    } catch (error) {
+      run.finish(error);
+      throw error;
     } finally {
+      run.finish();
       unsubscribe();
       endEvaluation();
       multibar?.stop();

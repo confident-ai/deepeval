@@ -173,11 +173,7 @@ def capture_benchmark_run(benchmark: str, num_tasks: Any) -> Iterator[None]:
 
 
 def record_tracing_integration(integration: Integration) -> None:
-    """Fires once per process per integration.
-
-    It used to fire on every handler construction, which for a per-request
-    LangChain callback meant one event per user request.
-    """
+    """Fires once per process, not once per handler construction."""
     first_time = register_integration(integration.value)
     if telemetry_opt_out() or not first_time:
         return

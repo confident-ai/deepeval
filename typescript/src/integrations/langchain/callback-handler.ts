@@ -23,7 +23,8 @@ import {
 import { RunHierarchyTracker } from "@/integrations/langchain/langgraph-utils";
 import { SpanType, TraceSpanStatus } from "@/tracing/tracing";
 import { traceManager } from "@/tracing";
-import { withCaptureTracingIntegration } from "@/telemetry";
+import { recordTracingIntegration } from "@/telemetry";
+import { Integration } from "@/tracing/integrations";
 import { BaseMetric } from "@/metrics/base-metrics";
 
 let langchainInstalled: boolean | null = null;
@@ -107,13 +108,9 @@ export class DeepEvalCallbackHandler
     this.metrics = metrics;
     this.metricCollection = metricCollection;
 
-    this.captureTelemetry();
-  }
-
-  private captureTelemetry() {
-    withCaptureTracingIntegration("langchain.CallbackHandler", () => {
-      // NOTE(tanay): Just capture the event, don't do trace management here
-    }).catch((err) => console.error("Telemetry failed:", err));
+    // Once per process, not once per handler: a handler in a long-lived graph
+    // is constructed per request.
+    recordTracingIntegration(Integration.LANGCHAIN);
   }
 
   async handleChainStart(

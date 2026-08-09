@@ -16,7 +16,10 @@ import {
   DeepEvalSpanProcessor,
   ROOT_VERCEL_SPANS,
 } from "@/integrations/ai-sdk/processor";
+import { getVersion } from "@/cli/version";
 import { getSettings } from "@/config/settings";
+import { recordTracingIntegration } from "@/telemetry";
+import { Integration } from "@/tracing/integrations";
 import { ROUTE_TO_REST_ATTRIBUTE } from "@/tracing/otel-routing";
 
 // Creating a Wrapper for exporter to preserve parentIds of root spans
@@ -176,10 +179,13 @@ export function configureAiSdkTracing(
     environment = "development";
   }
 
+  recordTracingIntegration(Integration.AI_SDK);
+
   const provider = new NodeTracerProvider({
     resource: resourceFromAttributes({
       [ATTR_SERVICE_NAME]: "deepeval-ts-client",
-      "deepeval.sdk.version": "typescript",
+      "deepeval.sdk.language": "typescript",
+      "deepeval.sdk.version": getVersion(),
       "deepeval.environment": environment,
     }),
     spanProcessors: processors,

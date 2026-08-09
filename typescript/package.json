@@ -179,7 +179,6 @@
     "@opentelemetry/sdk-trace-base": "^2.2.0",
     "@opentelemetry/sdk-trace-node": "^2.2.0",
     "@opentelemetry/semantic-conventions": "^1.37.0",
-    "@sentry/node": "^10.21.0",
     "axios": "^1.6.0",
     "cli-progress": "^3.12.0",
     "commander": "^14.0.3",

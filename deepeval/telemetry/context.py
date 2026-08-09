@@ -1,12 +1,9 @@
 """Run-scoped accumulation.
 
-Per-test-case and per-metric events used to be 87% of all ingestion. They are
-now in-memory counters folded into a single event per run.
-
-Two accumulators exist because there are two shapes of evaluation. A bounded
-run (`evaluate()`, pytest, compare) opens a `RunAccumulator` and flushes on
-exit. Bare `metric.measure()` calls have no enclosing run -- 72% of metric
-volume -- so they land in a process-level accumulator with its own flush
+Per-test-case and per-metric events are in-memory counters folded into a single
+event per run. A bounded run (`evaluate()`, pytest, compare) opens a
+`RunAccumulator` and flushes on exit; bare `metric.measure()` calls have no
+enclosing run, so they land in a process-level accumulator with its own flush
 policy.
 """
 
@@ -220,9 +217,8 @@ def record_metric(
 class StandaloneAccumulator:
     """Metrics measured outside any `evaluate()` call.
 
-    Flushes on a count threshold, on an interval, and at process exit.
-    `atexit` alone is not enough: containers get SIGKILLed, and most of this
-    population runs on ephemeral infrastructure.
+    Flushes on a count threshold, on an interval, and at process exit --
+    `atexit` alone loses SIGKILLed containers.
     """
 
     def __init__(self) -> None:

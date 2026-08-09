@@ -7,6 +7,11 @@ import {
 } from "@/evaluate/test-run/local";
 import { coerceBlankToNull, prompt } from "@/cli/utils";
 import { openBrowser, PROD, withUtm } from "@/cli/utm";
+import {
+  captureLoginPromptShown,
+  LoginPromptSurface,
+  recordLoginCompleted,
+} from "@/telemetry";
 
 async function promptLogin(): Promise<boolean> {
   const loginUrl = withUtm(PROD, { content: "upload_and_open_link" });
@@ -27,6 +32,8 @@ async function promptLogin(): Promise<boolean> {
         },
         { save: "dotenv:.env.local" },
       );
+      // Closes the funnel this surface opened, since `deepeval login` did not.
+      recordLoginCompleted(LoginPromptSurface.CLI_VIEW);
       console.log("\n🎉🥳 Congratulations! You've successfully logged in! 🙌");
       return true;
     }
@@ -41,6 +48,7 @@ export function registerViewCommand(program: Command): void {
     .action(async () => {
       const latest = readLatestTestRun();
       if (!latest) {
+        captureLoginPromptShown(LoginPromptSurface.CLI_VIEW_NO_RUN);
         console.log(
           "❌ No test run found in cache. Run `deepeval login` + an evaluation " +
             "to get started 🚀.",
@@ -57,6 +65,7 @@ export function registerViewCommand(program: Command): void {
 
       const apiKey = getSettings().CONFIDENT_API_KEY;
       if (!apiKey || apiKey.trim() === "") {
+        captureLoginPromptShown(LoginPromptSurface.CLI_VIEW);
         await promptLogin();
       }
 

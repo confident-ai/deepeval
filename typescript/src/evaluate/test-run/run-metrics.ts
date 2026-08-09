@@ -29,6 +29,7 @@ import {
 import { buildFailureMessage } from "@/evaluate/test-run/errors";
 import { globalResultCollector } from "@/evaluate/test-run/collector";
 import { collectTracesFrom } from "@/evaluate/test-run/trace-scope";
+import { recordGolden, recordTestCase } from "@/telemetry";
 import { traceManager, type Trace } from "@/tracing/tracing";
 
 type AnyMetric = BaseMetric | BaseConversationalMetric;
@@ -272,9 +273,11 @@ export async function runMetrics(
     }
     const golden = target;
     const task = options.task;
+    recordGolden(golden);
     return runCallbackMetrics(() => task(golden), metrics, golden);
   }
   if (typeof target === "function") {
+    if (options.golden) recordGolden(options.golden);
     return runCallbackMetrics(
       target as ToPassCallback,
       metrics,
@@ -291,5 +294,6 @@ export async function runMetrics(
         "and its trace can be captured.",
     );
   }
+  recordTestCase(target);
   return runTestCaseMetrics(target, metrics);
 }
