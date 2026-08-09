@@ -1,7 +1,11 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { MultiBar, Presets } from "cli-progress";
-import { TestResult, MetricData } from "./types";
+import { TestResult, MetricData } from "@/evaluate/types";
+import {
+  countPrompts,
+  type ProcessedHyperparameters,
+} from "@/evaluate/hyperparameters";
 
 /** A MultiBar styled like the rest of the runner (purple filled / dim track). */
 export function newProgressMultiBar(): MultiBar {
@@ -143,7 +147,11 @@ function wrapCell(c: string, width: number): string[] {
 }
 
 /** A labeled panel line (`Label: value`) wrapped to `inner`, continuations indented. */
-function wrapLabeledLine(prefix: string, value: string, inner: number): string[] {
+function wrapLabeledLine(
+  prefix: string,
+  value: string,
+  inner: number,
+): string[] {
   const indent = visLen(prefix);
   const chunks = wrapText(value, Math.max(10, inner - indent));
   return chunks.map((chunk, i) =>
@@ -219,10 +227,17 @@ function tableLines(
   return [...header, divider, ...rows.flatMap((r) => row(r, "│"))];
 }
 
+const DIM = "\x1b[2m";
+
 function metricStatusCell(m: MetricData): string {
   if (m.skipped) return `${YELLOW}${BOLD}SKIP${RESET}`;
   if (m.error) return `${RED}${BOLD}ERROR${RESET}`;
-  return m.success ? `${GREEN}${BOLD}PASS${RESET}` : `${RED}${BOLD}FAIL${RESET}`;
+  // No threshold means no verdict to report, only a score.
+  if (m.success === undefined) return `${DIM}${BOLD}NONE${RESET}`;
+  const status = m.success
+    ? `${GREEN}${BOLD}PASS${RESET}`
+    : `${RED}${BOLD}FAIL${RESET}`;
+  return m.flaky ? `${status} ${DIM}(flaky)${RESET}` : status;
 }
 
 /**
@@ -265,16 +280,32 @@ export function printResultsTable(
       lines.push(`${CYAN}${BOLD}Conversation Turns${RESET}`);
       for (const turn of tc.turns ?? []) {
         const role = turn.role.charAt(0).toUpperCase() + turn.role.slice(1);
-        lines.push(...wrapLabeledLine(`  ${BOLD}${role}:${RESET} `, turn.content, inner));
+        lines.push(
+          ...wrapLabeledLine(`  ${BOLD}${role}:${RESET} `, turn.content, inner),
+        );
       }
     } else {
-      lines.push(...wrapLabeledLine(`${CYAN}${BOLD}Input:${RESET} `, String(tc.input), inner));
       lines.push(
-        ...wrapLabeledLine(`${CYAN}${BOLD}Actual Output:${RESET} `, String(tc.actualOutput), inner),
+        ...wrapLabeledLine(
+          `${CYAN}${BOLD}Input:${RESET} `,
+          String(tc.input),
+          inner,
+        ),
+      );
+      lines.push(
+        ...wrapLabeledLine(
+          `${CYAN}${BOLD}Actual Output:${RESET} `,
+          String(tc.actualOutput),
+          inner,
+        ),
       );
       if (tc.expectedOutput && tc.expectedOutput !== "N/A") {
         lines.push(
-          ...wrapLabeledLine(`${CYAN}${BOLD}Expected Output:${RESET} `, tc.expectedOutput, inner),
+          ...wrapLabeledLine(
+            `${CYAN}${BOLD}Expected Output:${RESET} `,
+            tc.expectedOutput,
+            inner,
+          ),
         );
       }
     }
@@ -285,7 +316,7 @@ export function printResultsTable(
       // Full reason for shown (failing) cases — the table wraps it. Passing
       // cases are truncated (only relevant when truncatePassing is off).
       let reason = String(m.reason ?? m.error ?? "N/A");
-      if (truncate && m.success && reason.length > 50) {
+      if (truncate && m.success !== false && reason.length > 50) {
         reason = reason.slice(0, 47) + "...";
       }
       return [
@@ -324,22 +355,38 @@ export function printResultsTable(
   console.log();
 }
 
-/** Aggregate rows `[metric, avgScore, passRate, total]` across all test cases. */
+/**
+ * Rows of `[metric, avgScore, passRate, total]`. The pass rate covers only metrics
+ * that reached a verdict; flaky ones count, broken out to stay reconcilable.
+ */
 function aggregateRows(testResults: TestResult[]): string[][] {
   const agg = new Map<
     string,
-    { total: number; passes: number; scoreSum: number; scoreCount: number }
+    {
+      total: number;
+      verdicts: number;
+      passes: number;
+      flaky: number;
+      scoreSum: number;
+      scoreCount: number;
+    }
   >();
   for (const tc of testResults) {
     for (const m of tc.metricsData ?? []) {
       const a = agg.get(m.name) ?? {
         total: 0,
+        verdicts: 0,
         passes: 0,
+        flaky: 0,
         scoreSum: 0,
         scoreCount: 0,
       };
       a.total += 1;
-      if (m.success) a.passes += 1;
+      if (m.success !== undefined) {
+        a.verdicts += 1;
+        if (m.success) a.passes += 1;
+        if (m.flaky) a.flaky += 1;
+      }
       if (m.score != null) {
         a.scoreSum += m.score;
         a.scoreCount += 1;
@@ -350,20 +397,39 @@ function aggregateRows(testResults: TestResult[]): string[][] {
   return [...agg.entries()].map(([name, a]) => [
     name,
     a.scoreCount > 0 ? (a.scoreSum / a.scoreCount).toFixed(2) : "N/A",
-    a.total > 0 ? `${((a.passes / a.total) * 100).toFixed(2)}%` : "N/A",
-    String(a.total),
+    a.verdicts > 0 ? `${((a.passes / a.verdicts) * 100).toFixed(2)}%` : "N/A",
+    a.flaky > 0 ? `${a.total} (flaky=${a.flaky})` : String(a.total),
   ]);
 }
 
 const SEP = "=".repeat(80);
 
-/** Mirror Python's "No hyperparameters logged" warning (we don't log them yet). */
-export function printHyperparametersWarning(): void {
-  console.log(
-    `\n${BOLD}${YELLOW}⚠ WARNING:${RESET} No hyperparameters logged.\n` +
-      `» Log hyperparameters to attribute prompts and models to your test runs.\n\n` +
-      SEP,
-  );
+/**
+ * Nudge toward logging hyperparameters, then prompts (mirrors Python's two-tier
+ * wrap-up warning). Silent once both are present.
+ */
+export function printHyperparametersWarning(
+  hyperparameters?: ProcessedHyperparameters,
+): void {
+  if (!hyperparameters || Object.keys(hyperparameters).length === 0) {
+    console.log(
+      `\n${BOLD}${YELLOW}⚠ WARNING:${RESET} No hyperparameters logged.\n` +
+        `» Log hyperparameters to attribute prompts and models to your test runs.\n\n` +
+        SEP,
+    );
+    return;
+  }
+
+  if (countPrompts(hyperparameters) === 0) {
+    console.log(
+      `\n${BOLD}${YELLOW}⚠ WARNING:${RESET} No prompts logged.\n` +
+        `» Log prompts to evaluate and optimize your prompt templates and models.\n\n` +
+        SEP,
+    );
+    return;
+  }
+
+  console.log(`\n${GREEN}✓ Prompts Logged${RESET}\n`);
 }
 
 /** Mirror Python's wrap-up completion summary (printed when not posting to Confident AI). */
@@ -408,7 +474,9 @@ export function exportToMarkdown(
   const ts =
     `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}` +
     `_${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
-  const safe = (evaluationName || "evaluation").replace(/\s+/g, "_").toLowerCase();
+  const safe = (evaluationName || "evaluation")
+    .replace(/\s+/g, "_")
+    .toLowerCase();
   const filepath = path.join(outputDir, `${safe}_${ts}.${fileType}`);
 
   const sorted = [...testResults].sort(
@@ -439,9 +507,11 @@ export function exportToMarkdown(
         ? "⏭️ SKIP"
         : m.error
           ? "⚠️ ERROR"
-          : m.success
-            ? "✅"
-            : "❌";
+          : m.success === undefined
+            ? "➖ NONE"
+            : m.success
+              ? "✅"
+              : "❌";
       const score = m.score != null ? m.score.toFixed(2) : "N/A";
       const thresh = m.threshold != null ? m.threshold.toFixed(2) : "N/A";
       const reason = String(m.reason ?? m.error ?? "N/A").replace(

@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Tuple, Union, Type
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import SingleTurnParams, LLMTestCase, MLLMImage
@@ -19,6 +19,10 @@ from deepeval.utils import (
     get_or_create_event_loop,
     convert_to_multi_modal_array,
 )
+from deepeval.templates import make_template_class
+
+
+ImageHelpfulnessTemplate = make_template_class("ImageHelpfulnessMetric")
 
 
 class ImageHelpfulnessMetric(BaseMetric):
@@ -37,6 +41,9 @@ class ImageHelpfulnessMetric(BaseMetric):
         verbose_mode: bool = False,
         max_context_size: Optional[int] = None,
         flaky: bool = False,
+        evaluation_template: Type[
+            ImageHelpfulnessTemplate
+        ] = ImageHelpfulnessTemplate,
     ):
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -46,13 +53,13 @@ class ImageHelpfulnessMetric(BaseMetric):
         self.verbose_mode = verbose_mode
         self.flaky = flaky
         self.max_context_size = max_context_size
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
             test_case,
@@ -76,7 +83,6 @@ class ImageHelpfulnessMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -167,7 +173,6 @@ class ImageHelpfulnessMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
             test_case,

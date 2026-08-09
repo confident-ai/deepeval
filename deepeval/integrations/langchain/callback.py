@@ -317,12 +317,15 @@ class CallbackHandler(BaseCallbackHandler):
             f"on_chain_start: run_id={run_id}, parent_run_id={parent_run_id}, name={extract_name(serialized, **kwargs)}"
         )
         # Create spans for all chains to establish proper parent-child hierarchy
-        # This is important for LangGraph where there are nested chains
+        # This is important for LangGraph where there are nested chains.
+        # Root only: agent span so next_agent_span drains onto the invoke(...);
+        # nested LangGraph nodes stay custom so the tree stays agent → llm/tool.
         with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
             uuid_str = str(run_id)
+            span_type = "agent" if parent_run_id is None else "custom"
             base_span = enter_current_context(
                 uuid_str=uuid_str,
-                span_type="custom",
+                span_type=span_type,
                 func_name=extract_name(serialized, **kwargs),
             )
             base_span.integration = Integration.LANGCHAIN.value
@@ -331,13 +334,23 @@ class CallbackHandler(BaseCallbackHandler):
 
             base_span.input = inputs
 
-            # Only set trace-level input/metrics for root chain
+            # Only set trace-level input/metrics for root chain. These belong on
+            # the trace, not the root span: the trace-level test case is built
+            # from ``golden.input`` and falls back to ``golden.expected_output``,
+            # whereas the span path would grade LangChain's raw input/output
+            # dicts. Skip ``None`` so an enclosing ``@observe`` /
+            # ``update_current_trace(metrics=...)`` isn't clobbered.
             if parent_run_id is None:
+                pending = pop_pending_for("agent")
+                if pending:
+                    apply_pending_to_span(base_span, pending)
                 trace = trace_manager.get_trace_by_uuid(base_span.trace_uuid)
                 if trace:
                     trace.input = inputs
-                base_span.metrics = self.metrics
-                base_span.metric_collection = self.metric_collection
+                    if self.metrics is not None:
+                        trace.metrics = self.metrics
+                    if self.metric_collection is not None:
+                        trace.metric_collection = self.metric_collection
 
     def on_chain_end(
         self,

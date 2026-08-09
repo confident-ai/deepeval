@@ -1,8 +1,8 @@
 import * as path from "path";
 import { expect } from "@jest/globals";
-import { DeepEvalExporter } from "../../../src/integrations/mastra";
-import { traceManager } from "../../../src/tracing/tracing";
-import { Environment } from "../../../src/tracing/utils";
+import { DeepEvalExporter } from "@/integrations/mastra";
+import { traceManager } from "@/tracing/tracing";
+import { Environment } from "@/tracing/utils";
 import { generateTraceJson, assertTraceJson } from "../utils";
 
 import { runSimpleApp } from "./apps/mastra-simple-app";

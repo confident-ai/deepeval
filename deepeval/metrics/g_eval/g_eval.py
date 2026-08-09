@@ -2,7 +2,7 @@
 
 import asyncio
 from rich.console import Console
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Tuple, Union, Type
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
     LLMTestCase,
@@ -40,6 +40,10 @@ from deepeval.metrics.g_eval.utils import (
 )
 from deepeval.config.settings import get_settings
 from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.templates import make_template_class
+
+
+GEvalTemplate = make_template_class("GEval")
 
 
 class GEval(BaseMetric):
@@ -58,6 +62,7 @@ class GEval(BaseMetric):
         verbose_mode: bool = False,
         _include_g_eval_suffix: bool = True,
         flaky: bool = False,
+        evaluation_template: Type[GEvalTemplate] = GEvalTemplate,
     ):
         if evaluation_params is not None and len(evaluation_params) == 0:
             raise ValueError("evaluation_params cannot be an empty list.")
@@ -85,13 +90,13 @@ class GEval(BaseMetric):
         self.verbose_mode = verbose_mode
         self.flaky = flaky
         self._include_g_eval_suffix = _include_g_eval_suffix
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
         _additional_context: Optional[str] = None,
     ) -> float:
 
@@ -172,7 +177,6 @@ class GEval(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
         _additional_context: Optional[str] = None,
     ) -> float:
 

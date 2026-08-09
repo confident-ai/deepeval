@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 
-import { AnnotationType, sendAnnotation } from "../../src/annotation";
+import { AnnotationType, sendAnnotation } from "@/annotation";
 
 config();
 

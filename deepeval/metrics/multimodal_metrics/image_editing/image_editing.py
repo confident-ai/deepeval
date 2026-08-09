@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Tuple, Union, Type
 import math
 import textwrap
 
@@ -19,6 +19,10 @@ from deepeval.metrics.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.multimodal_metrics.image_editing.schema import ReasonScore
 from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.templates import make_template_class
+
+
+ImageEditingTemplate = make_template_class("ImageEditingMetric")
 
 
 class ImageEditingMetric(BaseMetric):
@@ -36,6 +40,7 @@ class ImageEditingMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         flaky: bool = False,
+        evaluation_template: Type[ImageEditingTemplate] = ImageEditingTemplate,
     ):
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -44,13 +49,13 @@ class ImageEditingMetric(BaseMetric):
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
             test_case,
@@ -75,7 +80,6 @@ class ImageEditingMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -123,7 +127,6 @@ class ImageEditingMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
             test_case,

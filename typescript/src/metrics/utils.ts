@@ -1,16 +1,50 @@
 import type { ZodType } from "zod";
-import { DeepEvalBaseLLM, OpenAIModel } from "../models";
+import {
+  AmazonBedrockModel,
+  AnthropicModel,
+  AzureOpenAIModel,
+  DeepEvalBaseLLM,
+  DeepSeekModel,
+  GeminiModel,
+  GrokModel,
+  KimiModel,
+  LocalModel,
+  OllamaModel,
+  OpenAIModel,
+  OpenRouterModel,
+  PortkeyModel,
+} from "@/models";
+import { selectProvider, type ProviderId } from "@/models/provider-selection";
 import {
   LLMTestCase,
   SingleTurnParams,
   ToolCall,
   ArenaTestCase,
-} from "../test-case";
-import { DeepEvalError, MissingTestCaseParamsError } from "../errors";
-import { BaseMetricCore } from "./base-metrics";
+} from "@/test-case";
+import { DeepEvalError, MissingTestCaseParamsError } from "@/errors";
+import { extractJson } from "@/models/utils";
+import { BaseMetricCore } from "@/metrics/base-metrics";
 
 // Canonical helper lives in test-case (used by serialization boundaries too).
-export { resolveRetrievalContext } from "../test-case";
+export { resolveRetrievalContext } from "@/test-case";
+
+const MODEL_BY_PROVIDER: Record<
+  ProviderId,
+  (model?: string) => DeepEvalBaseLLM
+> = {
+  openai: (model) => new OpenAIModel({ model }),
+  gemini: (model) => new GeminiModel({ model }),
+  portkey: (model) => new PortkeyModel({ model }),
+  ollama: (model) => new OllamaModel({ model }),
+  "local-model": (model) => new LocalModel({ model }),
+  "azure-openai": (model) => new AzureOpenAIModel({ model }),
+  moonshot: (model) => new KimiModel({ model }),
+  grok: (model) => new GrokModel({ model }),
+  deepseek: (model) => new DeepSeekModel({ model }),
+  openrouter: (model) => new OpenRouterModel({ model }),
+  anthropic: (model) => new AnthropicModel({ model }),
+  bedrock: (model) => new AmazonBedrockModel({ model }),
+};
 
 /**
  * Resolve a metric's `model` option into a concrete model.
@@ -25,10 +59,14 @@ export function initializeModel(model?: DeepEvalBaseLLM | string): {
   if (model instanceof DeepEvalBaseLLM) {
     return { model, usingNativeModel: true };
   }
-  if (typeof model === "string") {
-    return { model: new OpenAIModel({ model }), usingNativeModel: true };
-  }
-  return { model: new OpenAIModel(), usingNativeModel: true };
+
+  const modelName = typeof model === "string" ? model : undefined;
+  const provider = selectProvider();
+  const build = provider
+    ? MODEL_BY_PROVIDER[provider]
+    : MODEL_BY_PROVIDER.openai;
+
+  return { model: build(modelName), usingNativeModel: true };
 }
 
 /**
@@ -46,7 +84,38 @@ export async function generateWithSchema<T>(
   }
   const { output, cost } = await metric.model.generate(prompt, schema);
   metric.accrueCost(cost);
-  return output;
+
+  // Every shipped provider parses against the schema itself, so this is a
+  // no-op for them. A custom model that ignores the `schema` argument hands
+  // back raw text instead, which every metric would otherwise destructure into
+  // `undefined` and fail on far from the cause.
+  const parsed = schema.safeParse(output);
+  if (parsed.success) return parsed.data;
+
+  if (typeof output === "string") {
+    try {
+      return schema.parse(extractJson(output));
+    } catch {
+      // Fall through to the error below, which names the real problem.
+    }
+  }
+
+  throw new DeepEvalError(
+    `The evaluation model '${metric.model.getModelName()}' did not return output matching the schema ` +
+      `the '${metric.name}' metric asked for. A custom model's \`generate\` must honor its \`schema\` ` +
+      `argument and return the parsed object as \`output\`.`,
+  );
+}
+
+/** A run needs one non-flaky metric with a threshold, else nothing votes. */
+export function checkAtLeastOneMetricHasThreshold(
+  metrics: BaseMetricCore[],
+): void {
+  if (metrics.some((m) => m.threshold !== null && !m.flaky)) return;
+  throw new DeepEvalError(
+    "You must provide at least one non-flaky metric with a 'threshold', " +
+      "otherwise test cases can never pass or fail.",
+  );
 }
 
 // --- Required-param validation (centralized, enum-driven) ------------------
@@ -68,6 +137,37 @@ const LLM_TEST_CASE_PARAM_GETTERS: Record<
   [SingleTurnParams.MCP_RESOURCES_CALLED]: (tc) => tc.mcpResourcesCalled,
   [SingleTurnParams.MCP_PROMPTS_CALLED]: (tc) => tc.mcpPromptsCalled,
 };
+
+/**
+ * Refuse a multimodal test case on a model that cannot see images, as Python's
+ * `check_llm_test_case_params` does. An unknown capability counts as "cannot":
+ * the alternative is a request whose images are silently dropped, scoring the
+ * judge on image slugs it read as literal text.
+ */
+export function checkMultimodalSupport(metric: BaseMetricCore): void {
+  if (!metric.multimodal) return;
+  const model = metric.model;
+  if (model?.supportsMultimodal()) return;
+
+  if (!model) {
+    const err = `The '${metric.name}' metric has no evaluation model and cannot evaluate multimodal test cases.`;
+    metric.error = err;
+    throw new DeepEvalError(err);
+  }
+
+  // Listed in full, as Python does — any subset would be an arbitrary
+  // recommendation, and registry order puts the oldest models first.
+  const alternatives = model.multimodalAlternatives();
+  const suggestion =
+    alternatives.length > 0
+      ? ` Vision-capable models for this provider include ${alternatives.join(", ")}.`
+      : "";
+  const err =
+    `The evaluation model '${model.getModelName()}' does not support multimodal evaluations, ` +
+    `which the '${metric.name}' metric needs for this test case.${suggestion}`;
+  metric.error = err;
+  throw new DeepEvalError(err);
+}
 
 function joinMissingParams(params: string[]): string {
   if (params.length === 1) return params[0];
@@ -91,6 +191,9 @@ export function checkSingleTurnParams(
     metric.error = err;
     throw new DeepEvalError(err);
   }
+
+  metric.multimodal = testCase.multimodal;
+  checkMultimodalSupport(metric);
 
   if (
     requiredParams.includes(SingleTurnParams.ACTUAL_OUTPUT) &&

@@ -1,10 +1,10 @@
-import { Api, Endpoints, HttpMethods } from "../confident/api";
+import { Api, Endpoints, HttpMethods } from "@/confident/api";
 import {
   ConversationalTestCase,
   ToolCall,
   Turn,
   resolveRetrievalContext,
-} from "../test-case";
+} from "@/test-case";
 import {
   MetricData,
   ApiToolCall,
@@ -14,7 +14,12 @@ import {
   EvaluatedCase,
   ArenaCaseResult,
   ContestantRun,
-} from "./types";
+  aggregateSuccess,
+} from "@/evaluate/types";
+import {
+  processHyperparameters,
+  type ProcessedHyperparameters,
+} from "@/evaluate/hyperparameters";
 
 // --- shared leaf conversions (zod parse validates + strips extra fields) ---
 
@@ -48,13 +53,19 @@ function buildMetricsScores(cases: { metricsData: MetricData[] }[]) {
   for (const { metricsData } of cases) {
     for (const m of metricsData) {
       if (m.skipped) continue;
-      const e = map.get(m.name) ?? { scores: [], passes: 0, fails: 0, errors: 0 };
+      const e = map.get(m.name) ?? {
+        scores: [],
+        passes: 0,
+        fails: 0,
+        errors: 0,
+      };
       if (m.error) {
         e.errors += 1;
       } else {
         if (m.score != null) e.scores.push(m.score);
-        if (m.success) e.passes += 1;
-        else e.fails += 1;
+        // A score-only metric has no verdict, so it counts as neither.
+        if (m.success === true) e.passes += 1;
+        else if (m.success === false) e.fails += 1;
       }
       map.set(m.name, e);
     }
@@ -75,7 +86,7 @@ export function buildTestCaseEntry(
   { testCase, metricsData, runDuration, trace, displayOnly }: EvaluatedCase,
   order: number,
 ): PersistedCase {
-  const success = metricsData.every((m) => m.skipped || m.success);
+  const success = aggregateSuccess(metricsData);
   const evaluationCost = caseCost(metricsData);
   const metricsDataApi = metricsData.map(convertMetricData);
   const datasetAlias = testCase._datasetAlias;
@@ -91,6 +102,7 @@ export function buildTestCaseEntry(
       entry: {
         name: testCase.name ?? `test_case_${order}`,
         success,
+        flaky: testCase.flaky,
         metricsData: metricsDataApi,
         runDuration,
         evaluationCost,
@@ -120,6 +132,7 @@ export function buildTestCaseEntry(
       toolsCalled: testCase.toolsCalled?.map(convertTool),
       expectedTools: testCase.expectedTools?.map(convertTool),
       success,
+      flaky: testCase.flaky,
       metricsData: metricsDataApi,
       runDuration,
       evaluationCost,
@@ -130,12 +143,18 @@ export function buildTestCaseEntry(
   };
 }
 
+export interface PostTestRunOptions {
+  official?: boolean;
+  /** Suppress the "posted to Confident AI" line so the caller can print its own. */
+  silent?: boolean;
+  identifier?: string;
+  hyperparameters?: ProcessedHyperparameters;
+}
+
 async function sendTestRun(
   persisted: PersistedCase[],
   runDuration: number,
-  official: boolean,
-  silent: boolean,
-  identifier?: string,
+  { official, silent, identifier, hyperparameters }: PostTestRunOptions,
 ): Promise<{ link: string | null; testRunId: string | null }> {
   const apiKey = process.env.CONFIDENT_API_KEY;
   if (!apiKey || apiKey.trim() === "" || persisted.length === 0) {
@@ -183,6 +202,10 @@ async function sendTestRun(
     identifier: identifier || undefined,
     datasetAlias: datasetAlias || undefined,
     datasetId: datasetId || undefined,
+    hyperparameters:
+      hyperparameters && Object.keys(hyperparameters).length
+        ? hyperparameters
+        : undefined,
   };
 
   try {
@@ -209,25 +232,21 @@ async function sendTestRun(
 export async function postTestRun(
   cases: EvaluatedCase[],
   runDuration: number,
-  official = false,
-  silent = false,
+  options: PostTestRunOptions = {},
 ): Promise<{ link: string | null; testRunId: string | null }> {
   return sendTestRun(
     cases.map((c, i) => buildTestCaseEntry(c, i)),
     runDuration,
-    official,
-    silent,
+    options,
   );
 }
 
 export async function postPersistedTestRun(
   persisted: PersistedCase[],
   runDuration: number,
-  official = false,
-  silent = false,
-  identifier?: string,
+  options: PostTestRunOptions = {},
 ): Promise<{ link: string | null; testRunId: string | null }> {
-  return sendTestRun(persisted, runDuration, official, silent, identifier);
+  return sendTestRun(persisted, runDuration, options);
 }
 
 function arenaMetricData(
@@ -240,6 +259,7 @@ function arenaMetricData(
     name: metricName,
     threshold: 1,
     strictMode: true,
+    flaky: false,
     evaluationModel: r.evaluationModel,
     evaluationCost: r.evaluationCost,
     verboseLogs: r.verboseLogs,
@@ -330,7 +350,13 @@ export async function postExperiment(
     testCases: e.testCases,
     conversationalTestCases: [],
     metricsScores: [
-      { metric: metricName, scores: e.scores, passes: e.passes, fails: e.fails, errors: e.errors },
+      {
+        metric: metricName,
+        scores: e.scores,
+        passes: e.passes,
+        fails: e.fails,
+        errors: e.errors,
+      },
     ],
     identifier: e.identifier,
     testPassed: e.testPassed,
@@ -338,7 +364,7 @@ export async function postExperiment(
     runDuration: e.runDuration,
     evaluationCost: e.hasCost ? e.evaluationCost : undefined,
     hyperparameters: Object.keys(e.hyperparameters).length
-      ? e.hyperparameters
+      ? processHyperparameters(e.hyperparameters)
       : undefined,
   }));
 

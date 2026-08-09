@@ -2,6 +2,7 @@
 id: troubleshooting
 title: Troubleshooting
 sidebar_label: Troubleshooting
+languages: [python, typescript]
 ---
 
 This page covers the most common failure modes and how to debug them quickly.
@@ -10,13 +11,29 @@ This page covers the most common failure modes and how to debug them quickly.
 
 If `deepeval` fails to upload results to Confident AI with an error like:
 
+<Switch>
+
+<Case id="python">
+
 ```text
 SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```text
+Error: unable to verify the first certificate (UNABLE_TO_VERIFY_LEAF_SIGNATURE)
+```
+
+</Case>
+
+</Switch>
+
 it usually means certificate verification is failing in the local environment (not inside `deepeval`).
 
-Run these checks from the same machine and Python environment where you run `deepeval`.
+Run these checks from the same machine and environment where you run `deepeval`.
 
 1. Check with `curl`
 
@@ -26,7 +43,13 @@ curl -v https://api.confident-ai.com/
 
 If `curl` reports an SSL / certificate error, copy the full output.
 
-2. Check with Python (`requests`)
+2. Check in code
+
+Reach the API through the same HTTP stack `deepeval` uses:
+
+<Switch>
+
+<Case id="python">
 
 ```bash
 unset REQUESTS_CA_BUNDLE SSL_CERT_FILE SSL_CERT_DIR
@@ -39,11 +62,33 @@ print(r.status_code)
 PY
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```bash
+node -e "require('https').get('https://api.confident-ai.com', r => console.log(r.statusCode)).on('error', e => console.error(e))"
+```
+
+</Case>
+
+</Switch>
+
 If this fails with a certificate error, copy the full output.
+
+<Only id="typescript">
+
+When your organization terminates TLS with a private CA, point Node at that CA bundle:
+
+```bash
+export NODE_EXTRA_CA_CERTS=/path/to/your-ca.pem
+```
+
+</Only>
 
 3. Re-run `deepeval`
 
-If the Python snippet succeeds, re-run your `deepeval` evaluation from the same terminal session and see whether the upload still fails. If you still get the TLS error, please include the full traceback and the output of the two checks above when reporting the issue.
+If that snippet succeeds, re-run your `deepeval` evaluation from the same terminal session and see whether the upload still fails. If you still get the TLS error, please include the full error and the output of the two checks above when reporting the issue.
 
 ### When to disable SSL verification
 
@@ -56,8 +101,8 @@ Disabling SSL verification should only be a temporary workaround while you fix t
 You may need to turn it on when:
 
 - You are using `CONFIDENT_BASE_URL` to point `deepeval` at an internal or self-hosted Confident AI API.
-- That endpoint uses a self-signed certificate, private CA, or certificate chain that is not trusted by your Python environment.
-- You have confirmed the failure is certificate verification related, for example with `SSLCertVerificationError` or `CERTIFICATE_VERIFY_FAILED`.
+- That endpoint uses a self-signed certificate, private CA, or certificate chain that your runtime's certificate store does not trust.
+- You have confirmed the failure is certificate verification related.
 
 Prefer fixing the trusted certificate chain instead of disabling verification. For public Confident AI endpoints (`https://api.confident-ai.com`, `https://eu.api.confident-ai.com`, or `https://au.api.confident-ai.com`), leave SSL verification enabled and report the full TLS diagnostics if errors persist.
 
@@ -68,6 +113,10 @@ export CONFIDENT_DISABLE_SSL=1
 
 ## Configure Logging
 
+<Switch>
+
+<Case id="python">
+
 `deepeval` uses the standard Python `logging` module. To see logs, your application (or test runner) needs to configure logging output.
 
 ```python
@@ -75,6 +124,20 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 ```
+
+</Case>
+
+<Case id="typescript">
+
+`deepeval` writes to the console with no setup, at `WARNING` and above. Lower `LOG_LEVEL` to see the rest.
+
+```bash
+export LOG_LEVEL=DEBUG
+```
+
+</Case>
+
+</Switch>
 
 `deepeval` also exposes a few environment flags that can make debugging easier:
 
@@ -85,6 +148,8 @@ logging.basicConfig(level=logging.DEBUG)
 - `DEEPEVAL_RETRY_AFTER_LOG_LEVEL`: log level for retry "after attempt" messages.
 
 Note that retry logging levels are read at call-time.
+
+<Only id="python">
 
 ## Timeout Tuning
 
@@ -121,9 +186,11 @@ If the per-attempt timeout is unset or resolves to `0`, `deepeval` skips the inn
 For sync timeouts, `deepeval` uses a bounded semaphore. See `DEEPEVAL_TIMEOUT_THREAD_LIMIT` and `DEEPEVAL_TIMEOUT_SEMAPHORE_WARN_AFTER_SECONDS`.
 :::
 
+</Only>
+
 ## Dotenv Loading
 
-`deepeval` loads dotenv files at import time (`import deepeval`). In `pytest`, this can pull in a project `.env` you didn’t intend to load. Dotenv never overrides existing process env vars. Lowest to highest: `.env`, `.env.{APP_ENV}`, `.env.local`.
+`deepeval` loads dotenv files the first time it is imported, which can pull in a project `.env` you didn’t intend to load when running your test suite. Dotenv never overrides existing process env vars. Lowest to highest: `.env`, `.env.{APP_ENV}`, `.env.local`.
 
 Controls: `DEEPEVAL_DISABLE_DOTENV=1` (skip) and `ENV_DIR_PATH` (dotenv directory, default: current working directory).
 
@@ -131,15 +198,39 @@ Controls: `DEEPEVAL_DISABLE_DOTENV=1` (skip) and `ENV_DIR_PATH` (dotenv director
 Set `DEEPEVAL_DISABLE_DOTENV=1` **before** anything imports `deepeval`.
 :::
 
+<Switch>
+
+<Case id="python">
+
 ```bash
 DEEPEVAL_DISABLE_DOTENV=1 pytest -q
 ENV_DIR_PATH=/path/to/project pytest -q
 APP_ENV=production pytest -q
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```bash
+DEEPEVAL_DISABLE_DOTENV=1 npx deepeval test run tests/evals
+ENV_DIR_PATH=/path/to/project npx deepeval test run tests/evals
+APP_ENV=production npx deepeval test run tests/evals
+```
+
+</Case>
+
+</Switch>
+
 ## Save Config
 
-`deepeval` settings are cached. If you change environment variables at runtime and don’t see the change, restart the process or call:
+`deepeval` settings are cached. If you change environment variables at runtime and don’t see the change, restart the process.
+
+<Switch>
+
+<Case id="python">
+
+You can also reload them in place:
 
 ```python
 from deepeval.config.settings import reset_settings
@@ -159,15 +250,29 @@ with settings.edit(save="dotenv"):
 
 Computed fields (like the derived timeout settings) are not persisted.
 
+</Case>
+
+<Case id="typescript">
+
+To persist a setting instead of exporting it every session, write it to your dotenv file with the CLI:
+
+```bash
+npx deepeval settings --set DEEPEVAL_VERBOSE_MODE=1 --save
+```
+
+</Case>
+
+</Switch>
+
 ## Report issue
 
 If you open a GitHub issue, please include:
 
 - `deepeval` version
-- OS + Python version
+- Your OS, plus the output of <Term py="python --version" ts="node --version"/>
 - A minimal repro script
-- Full traceback
+- Full stack trace
 - Logs with `LOG_LEVEL=DEBUG`
-- Any non-default timeout/retry env vars you have set
+- Any non-default `deepeval` env vars you have set
 
 Please redact API keys and any other secrets.

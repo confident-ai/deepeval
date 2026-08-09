@@ -1,5 +1,6 @@
 from openai.types.chat.chat_completion import ChatCompletion
 from typing import Any, Optional, Tuple, Union, Dict, List
+import warnings
 from deepeval.test_case import MLLMImage
 from pydantic import BaseModel, SecretStr
 from openai import (
@@ -43,7 +44,7 @@ _ALIAS_MAP = {
 }
 
 
-class GPTModel(DeepEvalBaseLLM):
+class OpenAIModel(DeepEvalBaseLLM):
     def __init__(
         self,
         model: Optional[str] = None,
@@ -58,7 +59,7 @@ class GPTModel(DeepEvalBaseLLM):
         settings = get_settings()
 
         normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
-            "GPTModel",
+            "OpenAIModel",
             kwargs,
             _ALIAS_MAP,
         )
@@ -490,7 +491,7 @@ class GPTModel(DeepEvalBaseLLM):
             self.api_key,
             provider_label="OpenAI",
             env_var_name="OPENAI_API_KEY",
-            param_hint="`api_key` to GPTModel(...)",
+            param_hint="`api_key` to OpenAIModel(...)",
         )
 
         kw = dict(
@@ -557,3 +558,19 @@ class GPTModel(DeepEvalBaseLLM):
             )
         except Exception:
             pass
+
+
+def warn_gpt_model_deprecated(stacklevel: int = 3) -> None:
+    warnings.warn(
+        "'GPTModel' is deprecated and will be removed in a future release. "
+        "Use 'OpenAIModel' instead.",
+        DeprecationWarning,
+        stacklevel=stacklevel,
+    )
+
+
+def __getattr__(name: str):
+    if name == "GPTModel":
+        warn_gpt_model_deprecated()
+        return OpenAIModel
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

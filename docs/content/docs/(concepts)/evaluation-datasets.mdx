@@ -2,6 +2,7 @@
 id: evaluation-datasets
 title: Datasets
 sidebar_label: Datasets
+languages: [python, typescript]
 ---
 import { ASSETS } from "@site/src/assets";
 
@@ -12,7 +13,7 @@ In `deepeval`, an evaluation dataset, or just dataset, is a collection of golden
 
 There are two approaches to running evals using datasets in `deepeval`:
 
-1. Using `deepeval test run`
+1. Using <Term py="deepeval test run" ts="npx deepeval test run" />
 2. Using `evaluate`
 
 Depending on the type of goldens you supply, datasets are either **single-turn** or **mult-turn**. Evaluating a dataset means exactly the same as evaluating your LLM system, because by definition a dataset contains all the information produced by your LLM needed for evaluation.
@@ -49,16 +50,38 @@ here.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/creat
 
 An `EvaluationDataset` in `deepeval` is simply a collection of goldens. You can initialize an empty dataset to start with:
 
+<Switch>
+
+<Case id="python">
+
 ```python
 from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset()
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset();
+```
+
+</Case>
+
+</Switch>
+
 A dataset can either be a single-turn one, **or** a multi-turn one (but not both). During initialization supplying your dataset with a list of `Golden`s will make it a single-turn one, whereas supplying it with `ConversationalGolden`s will make it multi-turn:
 
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset, Golden
@@ -67,8 +90,26 @@ dataset = EvaluationDataset(goldens=[Golden(input="What is your name?")])
 print(dataset._multi_turn) # prints False
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "What is your name?" })] });
+```
+
+</Case>
+
+</Switch>
+
 </Tab>
 <Tab value="Multi-Turn">
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset, ConversationalGolden
@@ -84,13 +125,38 @@ dataset = EvaluationDataset(
 print(dataset._multi_turn) # prints True
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset, ConversationalGolden } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset({
+  goldens: [
+    new ConversationalGolden({
+      scenario: "Frustrated user asking for a refund.",
+      expectedOutcome: "Redirected to a human agent.",
+    }),
+  ],
+});
+```
+
+</Case>
+
+</Switch>
+
 </Tab>
 </Tabs>
 
-To ensure best practices, datasets in `deepeval` are stateful and opinionated. This means you cannot change the value of `_multi_turn` once its value has been set. However, you can always add new goldens after initialization using the `add_golden` method:
+To ensure best practices, datasets in `deepeval` are stateful and opinionated. This means you cannot change the value of <Term py="_multi_turn" ts="_multiTurn" /> once its value has been set. However, you can always add new goldens after initialization using the <Term py="add_golden" ts="addGolden" /> method:
 
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -98,8 +164,26 @@ To ensure best practices, datasets in `deepeval` are stateful and opinionated. T
 dataset.add_golden(Golden(input="Nice."))
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+dataset.addGolden(new Golden({ input: "Nice." }));
+```
+
+</Case>
+
+</Switch>
+
 </Tab>
 <Tab value="Multi-Turn">
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -112,6 +196,25 @@ dataset.add_golden(
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+dataset.addGolden(
+  new ConversationalGolden({
+    scenario: "User expressing gratitude for redirecting to human.",
+    expectedOutcome: "Appreciates the gratitude.",
+  })
+);
+```
+
+</Case>
+
+</Switch>
+
 </Tab>
 </Tabs>
 
@@ -123,6 +226,10 @@ You run evals on test cases in datasets, which you'll create at evaluation time 
 
 First step is to load in the goldens to your dataset. This example will load datasets from Confident AI, but you can also explore [other options below.](#load-dataset)
 
+<Switch>
+
+<Case id="python">
+
 ```python title="main.py"
 from deepeval.dataset import EvaluationDataset
 
@@ -131,14 +238,34 @@ dataset.pull(alias="My Dataset") # replace with your alias
 print(dataset.goldens) # print to sanity check yourself
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript title="index.ts"
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset();
+await dataset.pull({ alias: "My Dataset" }); // replace with your alias
+console.log(dataset.goldens); // print to sanity check yourself
+```
+
+</Case>
+
+</Switch>
+
 :::tip
 Your dataset is either single or multi-turn the moment you pull your dataset.
 :::
 
-Once you have your dataset and can see a non-empty list of goldens, you can start generating outputs and **add it back to your dataset** as test cases via the `add_test_case()` method:
+Once you have your dataset and can see a non-empty list of goldens, you can start generating outputs and **add it back to your dataset** as test cases via the <Term py="add_test_case()" ts="addTestCase()" /> method:
 
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
+
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" {9}
 from deepeval.test_case import LLMTestCase
@@ -154,10 +281,37 @@ for golden in dataset.goldens:
 print(dataset.test_cases) # print to santiy check yourself
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript title="index.ts" {9}
+import { LLMTestCase } from "deepeval/test-case";
+// ...
+
+for (const golden of dataset.goldens) {
+  const testCase = new LLMTestCase({
+    input: golden.input,
+    actualOutput: await yourLlmApp(golden.input), // replace with your LLM app
+  });
+  dataset.addTestCase(testCase);
+}
+
+console.log(dataset.testCases); // print to santiy check yourself
+```
+
+</Case>
+
+</Switch>
+
 Lastly, you can run evaluations on the list of test cases in your dataset:
 
-<Tabs items={["Unit-Testing In CI/CD", "In Python Scripts"]}>
+<Tabs items={["Unit-Testing In CI/CD", "In Scripts"]}>
 <Tab value="Unit-Testing In CI/CD">
+
+<Switch>
+
+<Case id="python">
 
 ```python title="test_llm_app.py" {5}
 import pytest
@@ -178,8 +332,39 @@ deepeval test run test_llm_app.py
 
 You can learn more about `assert_test` in [this section.](/docs/evaluation-end-to-end-llm-evals#use-deepeval-test-run-in-cicd-pipelines)
 
+</Case>
+
+<Case id="typescript">
+
+```typescript title="llm_app.test.ts" {6}
+import { it, expect } from "vitest";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import "deepeval/vitest";
+// ...
+
+it.each(dataset.testCases)("llm app stays relevant #%$", async (testCase) => {
+  await expect(testCase).toPass([new AnswerRelevancyMetric()]);
+});
+```
+
+And execute the test file:
+
+```bash
+npx deepeval test run llm_app.test.ts
+```
+
+You can learn more about `toPass()` in [this section.](/docs/evaluation-end-to-end-llm-evals#use-deepeval-test-run-in-cicd-pipelines)
+
+</Case>
+
+</Switch>
+
 </Tab>
-<Tab value="In Python Scripts">
+<Tab value="In Scripts">
+
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" {5}
 from deepeval.metrics import AnswerRelevancyMetric
@@ -189,11 +374,43 @@ from deepeval import evaluate
 evaluate(test_cases=dataset.test_cases, metrics=[AnswerRelevancyMetric()])
 ```
 
-And run `main.py`:
+</Case>
+
+<Case id="typescript">
+
+```typescript title="index.ts" {4}
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { evaluate } from "deepeval";
+// ...
+
+await evaluate(dataset.testCases, [new AnswerRelevancyMetric()]);
+```
+
+</Case>
+
+</Switch>
+
+And run <Term py="main.py" ts="index.ts" />:
+
+<Switch>
+
+<Case id="python">
 
 ```bash
 python main.py
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+npx tsx index.ts
+```
+
+</Case>
+
+</Switch>
 
 You can learn more about `evaluate` in [this section.](/docs/evaluation-end-to-end-llm-evals#use-evaluate-in-python-scripts)
 
@@ -202,6 +419,10 @@ You can learn more about `evaluate` in [this section.](/docs/evaluation-end-to-e
 
 </Tab>
 <Tab value="Multi-Turn">
+
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" {9}
 from deepeval.test_case import ConversationalTestCase
@@ -217,10 +438,37 @@ for golden in dataset.goldens:
 print(dataset.test_cases) # print to santiy check yourself
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript title="index.ts" {9}
+import { ConversationalTestCase } from "deepeval/test-case";
+// ...
+
+for (const golden of dataset.goldens) {
+  const testCase = new ConversationalTestCase({
+    scenario: golden.scenario,
+    turns: await generateTurns(golden.scenario), // replace with your method to simulate conversations
+  });
+  dataset.addTestCase(testCase);
+}
+
+console.log(dataset.testCases); // print to santiy check yourself
+```
+
+</Case>
+
+</Switch>
+
 Lastly, you can run evaluations on the list of test cases in your dataset:
 
-<Tabs items={["Unit-Testing In CI/CD", "In Python Scripts"]}>
+<Tabs items={["Unit-Testing In CI/CD", "In Scripts"]}>
 <Tab value="Unit-Testing In CI/CD">
+
+<Switch>
+
+<Case id="python">
 
 ```python title="test_llm_app.py" {5}
 import pytest
@@ -241,8 +489,42 @@ deepeval test run test_llm_app.py
 
 You can learn more about `assert_test` in [this section.](/docs/evaluation-end-to-end-llm-evals#use-deepeval-test-run-in-cicd-pipelines)
 
+</Case>
+
+<Case id="typescript">
+
+```typescript title="llm_app.test.ts" {6}
+import { it, expect } from "vitest";
+import { TurnRelevancyMetric } from "deepeval/metrics";
+import "deepeval/vitest";
+// ...
+
+it.each(dataset.testCases)(
+  "llm app stays relevant across the conversation #%$",
+  async (testCase) => {
+    await expect(testCase).toPass([new TurnRelevancyMetric()]);
+  },
+);
+```
+
+And execute the test file:
+
+```bash
+npx deepeval test run llm_app.test.ts
+```
+
+You can learn more about `toPass()` in [this section.](/docs/evaluation-end-to-end-llm-evals#use-deepeval-test-run-in-cicd-pipelines)
+
+</Case>
+
+</Switch>
+
 </Tab>
-<Tab value="In Python Scripts">
+<Tab value="In Scripts">
+
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" {5}
 from deepeval.metrics import ConversationalRelevancyMetric
@@ -252,11 +534,43 @@ from deepeval import evaluate
 evaluate(test_cases=dataset.test_cases, metrics=[ConversationalRelevancyMetric()])
 ```
 
-And run `main.py`:
+</Case>
+
+<Case id="typescript">
+
+```typescript title="index.ts" {4}
+import { TurnRelevancyMetric } from "deepeval/metrics";
+import { evaluate } from "deepeval";
+// ...
+
+await evaluate(dataset.testCases, [new TurnRelevancyMetric()]);
+```
+
+</Case>
+
+</Switch>
+
+And run <Term py="main.py" ts="index.ts" />:
+
+<Switch>
+
+<Case id="python">
 
 ```bash
 python main.py
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+npx tsx index.ts
+```
+
+</Case>
+
+</Switch>
 
 You can learn more about `evaluate` in [this section.](/docs/evaluation-end-to-end-llm-evals#use-evaluate-in-python-scripts)
 
@@ -274,10 +588,14 @@ Dataset management is an essential part of your evaluation lifecycle. We recomme
 
 You can store both single-turn and multi-turn datasets with `deepeval`. The single-turn datasets contains a list of `Golden`s and the multi-turn would contain `ConversationalGolden`s instead.
 
-<Tabs items={["Confident AI", "Locally as JSON", "Locally as CSV"]}>
+<Tabs items={["Confident AI", "Locally as JSON", "Locally as CSV", "Locally as JSONL"]}>
 <Tab value="Confident AI">
 
 You can save your dataset on the cloud by using the `push` method:
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -286,13 +604,46 @@ dataset = EvaluationDataset(goldens)
 dataset.push(alias="My dataset")
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset({ goldens });
+await dataset.push({ alias: "My dataset" });
+```
+
+</Case>
+
+</Switch>
+
 This pushes all goldens in your evaluation dataset to Confident AI. If you're unsure whether your goldens are ready for evaluation, you should set `finalized` to `False` instead:
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
 
 dataset.push(alias="My dataset", finalized=False)
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+await dataset.push({ alias: "My dataset", finalized: false });
+```
+
+</Case>
+
+</Switch>
 
 This means they won't be pulled until you've manually marked them as finalized on the platform. You can learn more on Confident AI's docs [here.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens)
 
@@ -302,6 +653,10 @@ You can also push multi-turn datasets exactly the same way.
 
 </Tab>
 <Tab value="Locally as JSON">
+
+<Switch>
+
+<Case id="python">
 
 You can save your dataset locally to a JSON file by using the `save_as()` method:
 
@@ -317,7 +672,7 @@ dataset.save_as(
 
 There are **TWO** mandatory and **TWO** optional parameter when calling the `save_as()` method:
 
-- `file_type`: a string of either `"csv"` or `"json"` and specifies which file format to save `Golden`s in.
+- `file_type`: a string of either `"csv"`, `"json"`, or `"jsonl"` and specifies which file format to save `Golden`s in.
 - `directory`: a string specifying the path of the directory you wish to save `Golden`s at.
 - `file_name`: a string specifying the custom filename for the dataset file. Defaulted to the "YYYYMMDD_HHMMSS" format of time now.
 - `include_test_cases`: a boolean which when set to `True`, will also save any test cases within your dataset. Defaulted to `False`.
@@ -326,8 +681,45 @@ There are **TWO** mandatory and **TWO** optional parameter when calling the `sav
 By default the `save_as()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `include_test_cases` to `True`.
 :::
 
+</Case>
+
+<Case id="typescript">
+
+You can save your dataset locally to a JSON file by using the `saveAs()` method:
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset({ goldens });
+await dataset.saveAs({
+  fileType: "json",
+  directory: "./deepeval-test-dataset",
+});
+```
+
+There are **TWO** mandatory and **TWO** optional parameters when calling the `saveAs()` method:
+
+- `fileType`: a string of either `"csv"`, `"json"`, or `"jsonl"` and specifies which file format to save `Golden`s in.
+- `directory`: a string specifying the path of the directory you wish to save `Golden`s at. It is created if it does not exist.
+- `fileName`: a string specifying the custom filename for the dataset file. Defaulted to the "YYYYMMDD_HHMMSS" format of time now.
+- `includeTestCases`: a boolean which when set to `true`, will also save any test cases within your dataset. Defaulted to `false`.
+
+`saveAs()` returns the full path it wrote to.
+
+:::note
+By default the `saveAs()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `includeTestCases` to `true`.
+:::
+
+</Case>
+
+</Switch>
+
 </Tab>
 <Tab value="Locally as CSV">
+
+<Switch>
+
+<Case id="python">
 
 You can save your dataset locally to a CSV file by using the `save_as()` method:
 
@@ -343,7 +735,7 @@ dataset.save_as(
 
 There are **TWO** mandatory and **TWO** optional parameter when calling the `save_as()` method:
 
-- `file_type`: a string of either `"csv"` or `"json"` and specifies which file format to save `Golden`s in.
+- `file_type`: a string of either `"csv"`, `"json"`, or `"jsonl"` and specifies which file format to save `Golden`s in.
 - `directory`: a string specifying the path of the directory you wish to save `Golden`s at.
 - `file_name`: a string specifying the custom filename for the dataset file. Defaulted to the "YYYYMMDD_HHMMSS" format of time now.
 - `include_test_cases`: a boolean which when set to `True`, will also save any test cases within your dataset. Defaulted to `False`.
@@ -352,17 +744,119 @@ There are **TWO** mandatory and **TWO** optional parameter when calling the `sav
 By default the `save_as()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `include_test_cases` to `True`.
 :::
 
+</Case>
+
+<Case id="typescript">
+
+You can save your dataset locally to a CSV file by using the `saveAs()` method:
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset({ goldens });
+await dataset.saveAs({
+  fileType: "csv",
+  directory: "./deepeval-test-dataset",
+});
+```
+
+There are **TWO** mandatory and **TWO** optional parameters when calling the `saveAs()` method:
+
+- `fileType`: a string of either `"csv"`, `"json"`, or `"jsonl"` and specifies which file format to save `Golden`s in.
+- `directory`: a string specifying the path of the directory you wish to save `Golden`s at. It is created if it does not exist.
+- `fileName`: a string specifying the custom filename for the dataset file. Defaulted to the "YYYYMMDD_HHMMSS" format of time now.
+- `includeTestCases`: a boolean which when set to `true`, will also save any test cases within your dataset. Defaulted to `false`.
+
+A CSV holds one column per golden field, with lists such as `context` joined on `|` and objects such as `tools_called` written as JSON.
+
+:::note
+By default the `saveAs()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `includeTestCases` to `true`.
+:::
+
+</Case>
+
+</Switch>
+
+</Tab>
+<Tab value="Locally as JSONL">
+
+<Switch>
+
+<Case id="python">
+
+You can save your dataset locally to a JSONL file by using the `save_as()` method:
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset(goldens)
+dataset.save_as(
+    file_type="jsonl",
+    directory="./deepeval-test-dataset",
+)
+```
+
+Each line holds one golden, which makes the file cheap to append to and to stream back in with [`add_goldens_from_jsonl_file()`](#load-dataset).
+
+:::note
+By default the `save_as()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `include_test_cases` to `True`.
+:::
+
+</Case>
+
+<Case id="typescript">
+
+You can save your dataset locally to a JSONL file by using the `saveAs()` method:
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset({ goldens });
+await dataset.saveAs({
+  fileType: "jsonl",
+  directory: "./deepeval-test-dataset",
+});
+```
+
+Each line holds one golden, which makes the file cheap to append to and to stream back in with [`addGoldensFromJSONL()`](#load-dataset).
+
+:::note
+By default the `saveAs()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `includeTestCases` to `true`.
+:::
+
+</Case>
+
+</Switch>
+
 </Tab>
 </Tabs>
 
 ### Load Dataset
 
+<Switch>
+
+<Case id="python">
+
 `deepeval` offers support for loading datasets stored in JSON, JSONL, CSV, and hugging face datasets into an `EvaluationDataset` as either test cases or goldens.
+
+</Case>
+
+<Case id="typescript">
+
+`deepeval` offers support for loading datasets stored on Confident AI, or in JSON, JSONL, and CSV files, into an `EvaluationDataset` as either test cases or goldens.
+
+</Case>
+
+</Switch>
 
 <Tabs items={["Confident AI", "From JSON", "From JSONL", "From CSV"]}>
 <Tab value="Confident AI">
 
 You can load entire datasets on Confident AI's cloud in one line of code.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -371,12 +865,31 @@ dataset = EvaluationDataset()
 dataset.pull(alias="My Evals Dataset")
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset();
+await dataset.pull({ alias: "My Evals Dataset" });
+```
+
+</Case>
+
+</Switch>
+
 Non-technical domain experts can **create, annotate, and comment** on datasets on Confident AI. You can also upload datasets in CSV format, or push synthetic datasets created in `deepeval` to Confident AI in one line of code.
 
 For more information, visit the [Confident AI datasets section.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens)
 
 </Tab>
 <Tab value="From JSON">
+
+<Switch>
+
+<Case id="python">
 
 You can loading an existing `EvaluationDataset` you might have generated elsewhere by supplying a `file_path` to your `.json` file as **either test cases or goldens**. Your `.json` file should contain an array of objects (or list of dictionaries).
 
@@ -416,8 +929,61 @@ dataset.add_test_cases_from_json_file(
 Loading datasets as goldens are especially helpful if you're looking to generate LLM `actual_output`s at evaluation time. You might find yourself in this situation if you are generating data for testing or using historical data from production.
 :::
 
+</Case>
+
+<Case id="typescript">
+
+You can load an existing `EvaluationDataset` you might have generated elsewhere by supplying a `filePath` to your `.json` file as **either test cases or goldens**. Your `.json` file should contain an array of objects.
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset();
+
+// Add goldens from a JSON file
+await dataset.addGoldensFromJSON({
+  filePath: "example.json", // filePath is the absolute path to your .json file
+});
+```
+
+An object carrying a `scenario` becomes a `ConversationalGolden` and everything else becomes a `Golden`, so a single file cannot mix the two. Keys default to the snake_case names `deepeval` writes to file, with the camelCase spelling of each accepted as a fallback — a dataset saved by either SDK loads without configuration. If your file uses different names, override only the keys that differ:
+
+```typescript
+await dataset.addGoldensFromJSON({
+  filePath: "example.json",
+  keys: { input: "query", expectedOutput: "gold_answer" },
+});
+```
+
+You can also add single-turn `LLMTestCase`s to your dataset from a JSON file. Every object must have an input and an actual output, since a test case cannot be evaluated without one.
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset();
+
+// Add as test cases
+await dataset.addTestCasesFromJSON({
+  // filePath is the absolute path to your .json file
+  filePath: "example.json",
+  keys: { input: "query", actualOutput: "response" },
+});
+```
+
+:::info
+Loading datasets as goldens is especially helpful if you're looking to generate LLM `actualOutput`s at evaluation time. You might find yourself in this situation if you are generating data for testing or using historical data from production.
+:::
+
+</Case>
+
+</Switch>
+
 </Tab>
 <Tab value="From JSONL">
+
+<Switch>
+
+<Case id="python">
 
 You can load existing `Golden`s or `ConversationalGolden`s from a `.jsonl` file by supplying a `file_path`. Each line should contain one JSON object that maps to either a `Golden` or a `ConversationalGolden`.
 
@@ -448,8 +1014,51 @@ For multi-turn goldens, each line can look like:
 An `EvaluationDataset` can contain either single-turn or multi-turn goldens, but not both. If a JSONL file mixes `Golden` and `ConversationalGolden` rows, `deepeval` will raise an error.
 :::
 
+</Case>
+
+<Case id="typescript">
+
+You can load existing `Golden`s or `ConversationalGolden`s from a `.jsonl` file by supplying a `filePath`. Each line should contain one JSON object that maps to either a `Golden` or a `ConversationalGolden`.
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset();
+
+// Add goldens from a JSONL file
+await dataset.addGoldensFromJSONL({
+  filePath: "example.jsonl", // filePath is the absolute path to your .jsonl file
+});
+```
+
+For single-turn goldens, each line can look like:
+
+```json
+{"input": "What is DeepEval?", "expected_output": "An LLM evaluation framework.", "context": ["DeepEval helps evaluate LLM apps."]}
+```
+
+For multi-turn goldens, each line can look like:
+
+```json
+{"scenario": "A user asks for help evaluating an LLM app.", "expected_outcome": "The user understands how to create an evaluation dataset.", "context": ["DeepEval supports evaluation datasets."]}
+```
+
+Blank lines are skipped, and a line that doesn't parse fails with its line number. A `context` written as one delimited string rather than an array is split on `contextDelimiter`, which defaults to `|`.
+
+:::note
+An `EvaluationDataset` can contain either single-turn or multi-turn goldens, but not both. If a JSONL file mixes `Golden` and `ConversationalGolden` rows, `deepeval` will raise an error.
+:::
+
+</Case>
+
+</Switch>
+
 </Tab>
 <Tab value="From CSV">
+
+<Switch>
+
+<Case id="python">
 
 You can add test cases or goldens into your `EvaluationDataset` by supplying a `file_path` to your `.csv` file. Your `.csv` file should contain rows that can be mapped into `Golden` or `ConversationalGolden` through their column names.
 
@@ -490,47 +1099,68 @@ dataset.add_test_cases_from_csv_file(
 ```
 
 :::note
-Since `expected_output`, `context`, `retrieval_context`, `tools_called`, and `expected_tools` are optional parameters for an `LLMTestCase`, these fields are similarly **optional** parameters when adding test cases from an existing dataset.
+Since `expected_output`, `context`, `retrieval_context`, `tools_called`, and `expected_tools` are optional parameters for an `LLMTestCase`, these fields are similarly **optional** parameters when adding test cases from an existing dataset. A column your file doesn't have leaves its field as `None` rather than empty, so a metric that requires it still reports it as missing.
 :::
+
+</Case>
+
+<Case id="typescript">
+
+You can add test cases or goldens into your `EvaluationDataset` by supplying a `filePath` to your `.csv` file. Your `.csv` file should contain rows that can be mapped into `Golden` or `ConversationalGolden` through their column names.
+
+Remember, parameters such as `context` hold a list of strings, so pass a `contextDelimiter` to tell `deepeval` how to split those cells into a list of strings.
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset();
+
+// Add goldens
+await dataset.addGoldensFromCSV({
+  filePath: "example.csv", // filePath is the absolute path to your .csv file
+});
+```
+
+Column names default to `deepeval`'s own, so a file that already uses them needs no configuration. If yours differ, name only the columns that do, through `keys`:
+
+```typescript
+await dataset.addGoldensFromCSV({
+  filePath: "example.csv",
+  keys: { input: "query", actualOutput: "response" },
+  contextDelimiter: ";",
+  retrievalContextDelimiter: ";",
+});
+```
+
+A row with a `scenario` becomes a `ConversationalGolden`, and its `turns` cell is read as JSON. Cells such as `toolsCalled`, `additionalMetadata`, and `customColumnKeyValues` are read as JSON too, which is the shape [`saveAs()`](#save-dataset) writes.
+
+You can also add single-turn `LLMTestCase`s to your dataset from a CSV file.
+
+```typescript
+// Add as test cases
+await dataset.addTestCasesFromCSV({
+  filePath: "example.csv",
+  inputCol: "query",
+  actualOutputCol: "response",
+  contextDelimiter: ";",
+  retrievalContextDelimiter: ";",
+});
+```
+
+:::note
+Since `expectedOutput`, `context`, `retrievalContext`, `toolsCalled`, and `expectedTools` are optional parameters for an `LLMTestCase`, these columns are similarly **optional** when adding test cases from an existing dataset. A column your file doesn't have leaves its field unset rather than empty, so a metric that requires it still reports it as missing.
+:::
+
+:::note
+An `EvaluationDataset` can contain either single-turn or multi-turn goldens, but not both. If a CSV file mixes `Golden` and `ConversationalGolden` rows, `deepeval` will raise an error.
+:::
+
+</Case>
+
+</Switch>
 
 </Tab>
 </Tabs>
-
-### Edit Or Delete Goldens
-
-You can update or delete individual goldens in a dataset on Confident AI using the `update_golden()` and `delete_golden()` methods. Goldens must first be pulled from Confident AI so they carry the `id` assigned by the platform.
-
-To update a golden, mutate it and pass it to `update_golden()`:
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.pull(alias="My Evals Dataset")
-
-golden = dataset.goldens[0]
-golden.expected_output = "An updated expected output"
-dataset.update_golden(golden)
-```
-
-There is **ONE** mandatory and **ONE** optional parameter when calling the `update_golden()` method:
-
-- `golden`: the `Golden` or `ConversationalGolden` to update, which must carry an `id` from a previous `pull()`.
-- [Optional] `finalized`: a boolean which when set to `False`, marks the golden as unfinalized on Confident AI. Defaulted to `True`.
-
-To delete a golden, pass either the golden itself or its id to `delete_golden()`:
-
-```python
-...
-
-dataset.delete_golden(dataset.goldens[0])
-# Or, delete by id directly
-dataset.delete_golden("your-golden-id")
-```
-
-:::tip
-Both methods work for multi-turn datasets exactly the same way.
-:::
 
 ## Generate A Dataset
 
@@ -540,6 +1170,10 @@ Sometimes, you might not have datasets ready to use, and that's ok. `deepeval` p
 - `ConversationSimulator` for generating `turn`s in a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases#conversational-test-case)
 
 ### Synthesizer
+
+<Switch>
+
+<Case id="python">
 
 `deepeval` offers anyone the ability to easily generate synthetic datasets from documents locally on your machine. This is especially helpful if you don't have an evaluation dataset prepared beforehand.
 
@@ -566,9 +1200,27 @@ In this example, we've used the `generate_goldens_from_docs` method, which is on
 For more information on how `deepeval`'s `Synthesizer` works, visit the [Golden Synthesizer section.](/docs/golden-synthesizer#how-does-it-work)
 :::
 
+</Case>
+
+<Case id="typescript">
+
+<NotImplemented id="typescript" feature="Synthesizer">
+
+It generates synthetic goldens from your documents, contexts, or from scratch, which is what you reach for when you have no dataset prepared beforehand. Until it lands, write your goldens by hand or [pull a dataset from Confident AI](#load-dataset), where synthetic goldens generated elsewhere can be stored and shared.
+
+</NotImplemented>
+
+</Case>
+
+</Switch>
+
 ### Conversation Simulator
 
 While a `Synthesizer` generates goldens, the `ConversationSimulator` works slightly different as it generates `turns` in a `ConversationalTestCase` instead:
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.simulator import ConversationSimulator
@@ -599,6 +1251,39 @@ convo_test_cases = simulator.simulate(
 print(convo_test_cases)
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { ConversationSimulator, ConversationalGolden, Turn } from "deepeval";
+
+// Define simulator
+const simulator = new ConversationSimulator({
+  modelCallback: async ({ input }) =>
+    new Turn({
+      role: "assistant",
+      content: `I don't know how to answer this: ${input}`,
+    }),
+});
+
+// Start simulation
+const convoTestCases = await simulator.simulate({
+  conversationalGoldens: [
+    new ConversationalGolden({
+      scenario: "A user opening a bank account",
+      expectedOutcome: "The user's banking request is fully resolved.",
+    }),
+  ],
+  maxUserSimulations: 10,
+});
+console.log(convoTestCases);
+```
+
+</Case>
+
+</Switch>
+
 You can learn more in the [conversation simulator page.](/docs/conversation-simulator)
 
 ## What Are Goldens?
@@ -606,7 +1291,7 @@ You can learn more in the [conversation simulator page.](/docs/conversation-simu
 Goldens represent a more flexible alternative to test cases in the `deepeval`, and **is the preferred way to initialize a dataset**. Unlike test cases, goldens:
 
 - Only require `input`/`scenario` to initialize
-- Store expected results like `expected_output`/`expected_outcome`
+- Store expected results like <Term py="expected_output" ts="expectedOutput" />/<Term py="expected_outcome" ts="expectedOutcome" />
 - Serve as templates before becoming fully-formed test cases
 
 Goldens excel in development workflows where you need to:
@@ -615,13 +1300,17 @@ Goldens excel in development workflows where you need to:
 - Compare performance between model versions
 - Test with `input`s that haven't yet been processed by your LLM
 
-Think of goldens as "pending test cases" - they contain all the input data and expected results, but are missing the dynamic elements (`actual_output`, `retrieval_context`, `tools_called`) that will be generated when your LLM processes them.
+Think of goldens as "pending test cases" - they contain all the input data and expected results, but are missing the dynamic elements (<Term py="actual_output" ts="actualOutput" />, <Term py="retrieval_context" ts="retrievalContext" />, <Term py="tools_called" ts="toolsCalled" />) that will be generated when your LLM processes them.
 
 ### Data model
 
 The golden data model is nearly identical to their single/multi-turn test case counterparts (aka. `LLMTestCase` and `ConversationalTestCase`).
 
 For single-turn `Golden`s:
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from pydantic import BaseModel
@@ -643,11 +1332,42 @@ class Golden(BaseModel):
     tools_called: Optional[List[ToolCall]] = None
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+class Golden {
+  input: string;
+  expectedOutput?: string;
+  context?: string[];
+  expectedTools?: ToolCall[];
+
+  // Useful metadata for generating test cases
+  additionalMetadata?: Record<string, any>;
+  comments?: string;
+  customColumnKeyValues?: Record<string, string>;
+
+  // Fields that you should ideally not populate
+  actualOutput?: string;
+  retrievalContext?: string[];
+  toolsCalled?: ToolCall[];
+}
+```
+
+</Case>
+
+</Switch>
+
 :::info
-The `actual_output`, `retrieval_context`, and `tools_called` are meant to be populated dynamically instead of passed directly from a golden to test case at evaluation time.
+The <Term py="actual_output" ts="actualOutput" />, <Term py="retrieval_context" ts="retrievalContext" />, and <Term py="tools_called" ts="toolsCalled" /> are meant to be populated dynamically instead of passed directly from a golden to test case at evaluation time.
 :::
 
 For multi-turn `ConversationalGolden`s:
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from pydantic import BaseModel
@@ -666,6 +1386,31 @@ class ConversationalGolden(BaseModel):
     # Fields that you should ideally not populate
     turns: Optional[Turn] = None
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+class ConversationalGolden {
+  scenario: string;
+  expectedOutcome?: string;
+  userDescription?: string;
+  context?: string[];
+
+  // Useful metadata for generating test cases
+  additionalMetadata?: Record<string, any>;
+  comments?: string;
+  customColumnKeyValues?: Record<string, string>;
+
+  // Fields that you should ideally not populate
+  turns?: Turn[];
+}
+```
+
+</Case>
+
+</Switch>
 
 You can easily add and edit custom columns on [Confident AI.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens#custom-dataset-columns)
 
@@ -689,8 +1434,9 @@ The `turns` parameter should **100%** be generated at evaluation time in your `C
           A golden only needs an <code>input</code> (or <code>scenario</code>)
           plus expected results, and acts as a "pending test case." It becomes a
           full test case once your LLM app generates the dynamic fields like{" "}
-          <code>actual_output</code>, <code>retrieval_context</code>, and{" "}
-          <code>tools_called</code> at evaluation time.
+          <Term py="actual_output" ts="actualOutput" />,{" "}
+          <Term py="retrieval_context" ts="retrievalContext" />, and{" "}
+          <Term py="tools_called" ts="toolsCalled" /> at evaluation time.
         </>
       ),
     },
@@ -702,25 +1448,52 @@ The `turns` parameter should **100%** be generated at evaluation time in your `C
     {
       question: "Do I need production data to create a dataset?",
       answer: (
-        <>
-          No. You can generate synthetic goldens with the{" "}
-          <a href="/docs/golden-synthesizer">Synthesizer</a> from documents or
-          from scratch, or simulate multi-turn conversations with the{" "}
-          <a href="/docs/conversation-simulator">conversation simulator</a>.
-        </>
+        <Switch>
+          <Case id="python">
+            No. You can generate synthetic goldens with the{" "}
+            <a href="/docs/golden-synthesizer">Synthesizer</a> from documents or
+            from scratch, or simulate multi-turn conversations with the{" "}
+            <a href="/docs/conversation-simulator">conversation simulator</a>.
+          </Case>
+          <Case id="typescript">
+            No. You can simulate multi-turn conversations with the{" "}
+            <a href="/docs/conversation-simulator">conversation simulator</a>,
+            or write goldens by hand and grow the dataset from there. The{" "}
+            <code>Synthesizer</code> that generates single-turn goldens for you
+            has not landed in TypeScript yet.
+          </Case>
+        </Switch>
       ),
     },
     {
       question: "Can I load datasets from local files?",
-      answer:
-        "Yes. You can save and load datasets locally, including importing goldens from JSON and JSONL files, and convert them to test cases when you run evals.",
+      answer: (
+        <Switch>
+          <Case id="python">
+            Yes. You can save and load datasets locally, including importing
+            goldens from JSON and JSONL files, and convert them to test cases
+            when you run evals.
+          </Case>
+          <Case id="typescript">
+            Yes. You can load goldens from JSON, JSONL, and CSV with{" "}
+            <code>addGoldensFromJSON()</code>,{" "}
+            <code>addGoldensFromJSONL()</code>, and{" "}
+            <code>addGoldensFromCSV()</code>, test cases with{" "}
+            <code>addTestCasesFromJSON()</code> and{" "}
+            <code>addTestCasesFromCSV()</code>, and write a dataset back to
+            disk with <code>saveAs()</code>.
+          </Case>
+        </Switch>
+      ),
     },
     {
       question: "Can I add custom columns to a golden?",
       answer: (
         <>
-          Yes. Goldens support <code>additional_metadata</code>,{" "}
-          <code>comments</code>, and <code>custom_column_key_values</code> for
+          Yes. Goldens support{" "}
+          <Term py="additional_metadata" ts="additionalMetadata" />,{" "}
+          <code>comments</code>, and{" "}
+          <Term py="custom_column_key_values" ts="customColumnKeyValues" /> for
           arbitrary metadata you want to carry through evaluation.
         </>
       ),

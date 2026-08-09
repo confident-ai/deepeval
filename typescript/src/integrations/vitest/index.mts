@@ -1,12 +1,12 @@
 import { expect, beforeEach, afterEach } from "vitest";
-import type { BaseMetric, BaseConversationalMetric } from "../../metrics/index.js";
-import { getIsRunningDeepEval } from "../../utils.js";
+import type { BaseMetric, BaseConversationalMetric } from "@/metrics/index.js";
+import { getIsRunningDeepEval } from "@/utils.js";
 import {
   beginTraceCapture,
   endTraceCapture,
-} from "../../evaluate/test-run/trace-scope.js";
-import { toPass } from "./matchers.mjs";
-import type { ToPassOptions } from "../../evaluate/test-run/index.js";
+} from "@/evaluate/test-run/trace-scope.js";
+import { toPass } from "@/integrations/vitest/matchers.mjs";
+import type { ToPassOptions } from "@/evaluate/test-run/index.js";
 
 type AnyMetric = BaseMetric | BaseConversationalMetric;
 
@@ -28,4 +28,4 @@ declare module "vitest" {
   }
 }
 
-export { toPass } from "./matchers.mjs";
+export { toPass } from "@/integrations/vitest/matchers.mjs";

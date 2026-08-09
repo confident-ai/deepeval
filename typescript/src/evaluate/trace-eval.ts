@@ -1,15 +1,15 @@
-import { LLMTestCase } from "../test-case";
-import { asTestCaseString, asToolCalls } from "../test-case/utils";
-import { Golden } from "../dataset/golden";
+import { LLMTestCase } from "@/test-case";
+import { asTestCaseString, asToolCalls } from "@/test-case/utils";
+import { Golden } from "@/dataset/golden";
 import {
   BaseSpan,
   Trace,
   TraceSpanStatus,
   traceManager,
-} from "../tracing/tracing";
-import { MetricData, EvaluatedCase, TestResult } from "./types";
-import { ErrorConfig, DEFAULT_ERROR_CONFIG } from "./configs";
-import { runMetric } from "./evaluate";
+} from "@/tracing/tracing";
+import { MetricData, EvaluatedCase, TestResult } from "@/evaluate/types";
+import { ErrorConfig, DEFAULT_ERROR_CONFIG } from "@/evaluate/configs";
+import { runMetric } from "@/evaluate/evaluate";
 
 /** Stringify a span's input/output the way the metrics expect (objects → JSON). */
 const asString = asTestCaseString;
@@ -83,7 +83,6 @@ export function isDuplicateOfCase(
     );
   });
 }
-
 
 export function primaryTraceFor(traces: Trace[]): Trace | undefined {
   for (let i = traces.length - 1; i >= 0; i--) {

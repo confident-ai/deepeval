@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Union, Tuple
+from typing import List, Dict, Optional, Union, Tuple, Type
 
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.utils import get_or_create_event_loop
@@ -19,6 +19,10 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.metrics.tool_correctness.schema import ToolSelectionScore
+from deepeval.templates import make_template_class
+
+
+ToolCorrectnessTemplate = make_template_class("ToolCorrectnessMetric")
 
 
 class ToolCorrectnessMetric(BaseMetric):
@@ -42,6 +46,9 @@ class ToolCorrectnessMetric(BaseMetric):
         should_exact_match: bool = False,
         should_consider_ordering: bool = False,
         flaky: bool = False,
+        evaluation_template: Type[
+            ToolCorrectnessTemplate
+        ] = ToolCorrectnessTemplate,
     ):
         self.available_tools = available_tools
         self.threshold = 1 if strict_mode else threshold
@@ -54,13 +61,13 @@ class ToolCorrectnessMetric(BaseMetric):
         self.evaluation_params: List[ToolCallParams] = evaluation_params
         self.should_exact_match = should_exact_match
         self.should_consider_ordering = should_consider_ordering
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(
@@ -87,7 +94,6 @@ class ToolCorrectnessMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -169,7 +175,6 @@ class ToolCorrectnessMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
             test_case,

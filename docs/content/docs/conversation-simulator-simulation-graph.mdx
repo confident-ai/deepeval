@@ -2,6 +2,7 @@
 id: conversation-simulator-simulation-graph
 title: Simulation Graph
 sidebar_label: Simulation Graph
+languages: [python]
 ---
 
 By default, `ConversationSimulator` generates every simulated user turn with a single LLM call against a fixed prompt template. That works for fuzzy exploration but breaks down when you need the simulated user to follow a specific trajectory — e.g., "first ask about pricing, push back if the assistant cites policy, escalate after three pushbacks, accept any compromise".

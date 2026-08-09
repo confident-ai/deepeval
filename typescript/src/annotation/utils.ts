@@ -1,4 +1,4 @@
-import { APIAnnotation, AnnotationType } from "./api";
+import { APIAnnotation, AnnotationType } from "@/annotation/api";
 
 export const validateAPIAnnotation = (
   apiAnnotation: APIAnnotation,

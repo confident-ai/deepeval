@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 import { randomUUID } from "crypto";
-import { Prompt } from "../../src";
+import { Prompt } from "@/prompt";
 
 config();
 

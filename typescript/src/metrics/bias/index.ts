@@ -1,2 +1,6 @@
-export { BiasMetric, type BiasMetricOptions } from "./bias";
-export * from "./schema";
+export {
+  BiasMetric,
+  type BiasMetricOptions,
+  type BiasTemplateOverride,
+} from "@/metrics/bias/bias";
+export * from "@/metrics/bias/schema";

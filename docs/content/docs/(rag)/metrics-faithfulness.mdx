@@ -2,13 +2,14 @@
 id: metrics-faithfulness
 title: Faithfulness
 sidebar_label: Faithfulness
+languages: [python, typescript]
 ---
 <MetricTagsDisplayer singleTurn={true} rag={true} referenceless={true} />
 
-The faithfulness metric uses LLM-as-a-judge to measure the quality of your RAG pipeline's generator by evaluating whether the `actual_output` factually aligns with the contents of your `retrieval_context`. `deepeval`'s faithfulness metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+The faithfulness metric uses LLM-as-a-judge to measure the quality of your RAG pipeline's generator by evaluating whether the <Term py="actual_output" ts="actualOutput"/> factually aligns with the contents of your <Term py="retrieval_context" ts="retrievalContext"/>. `deepeval`'s faithfulness metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 :::note
-Although similar to the `HallucinationMetric`, the faithfulness metric in `deepeval` is more concerned with contradictions between the `actual_output` and `retrieval_context` in RAG pipelines, rather than hallucination in the actual LLM itself.
+Although similar to the `HallucinationMetric`, the faithfulness metric in `deepeval` is more concerned with contradictions between the <Term py="actual_output" ts="actualOutput"/> and <Term py="retrieval_context" ts="retrievalContext"/> in RAG pipelines, rather than hallucination in the actual LLM itself.
 :::
 
 ## Required Arguments
@@ -16,8 +17,8 @@ Although similar to the `HallucinationMetric`, the faithfulness metric in `deepe
 To use the `FaithfulnessMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
-- `retrieval_context`
+- <Term py="actual_output" ts="actualOutput"/>
+- <Term py="retrieval_context" ts="retrievalContext"/>
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
 
@@ -28,10 +29,14 @@ The `FaithfulnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-
 <Tabs items={["Text Based", "Multimodal"]}>
 <Tab value="Text Based">
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval import evaluate
-from deepeval.test_case import LLMTestCase
 from deepeval.metrics import FaithfulnessMetric
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
 
 # Replace this with the actual output from your LLM application
 actual_output = "We offer a 30-day full refund at no extra cost."
@@ -57,13 +62,54 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { FaithfulnessMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+import { evaluate } from "deepeval";
+
+// Replace this with the actual output from your LLM application
+const actualOutput = "We offer a 30-day full refund at no extra cost.";
+
+// Replace this with the actual retrieved context from your RAG pipeline
+const retrievalContext = ["All customers are eligible for a 30 day full refund at no extra cost."];
+
+const metric = new FaithfulnessMetric({
+  threshold: 0.7,
+  model: "gpt-4.1",
+  includeReason: true,
+});
+const testCase = new LLMTestCase({
+  input: "What if these shoes don't fit?",
+  actualOutput,
+  retrievalContext,
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
 </Tab>
 <Tab value="Multimodal">
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval import evaluate
 from deepeval.test_case import LLMTestCase, MLLMImage
 from deepeval.metrics import FaithfulnessMetric
+from deepeval import evaluate
 
 # Replace this with the actual retrieved context from your RAG pipeline
 retrieval_context = [
@@ -89,25 +135,85 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { LLMTestCase, MLLMImage } from "deepeval/test-case";
+import { FaithfulnessMetric } from "deepeval/metrics";
+import { evaluate } from "deepeval";
+
+// Replace this with the actual retrieved context from your RAG pipeline
+const retrievalContext = [
+  `The Eiffel Tower ${new MLLMImage({ url: "..." })} is a wrought-iron lattice tower built in the late 19th century.`,
+  `...`,
+];
+
+const metric = new FaithfulnessMetric({
+  threshold: 0.7,
+  model: "gpt-4.1",
+  includeReason: true,
+});
+const testCase = new LLMTestCase({
+  input: `Tell me about this landmark in France: ${new MLLMImage({ url: "..." })}`,
+  actualOutput: `This appears to be Eiffel Tower, which is a famous landmark in France`,
+  retrievalContext,
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
 </Tab>
 </Tabs>
 
+<Switch>
+
+<Case id="python">
+
 There are **NINE** optional parameters when creating a `FaithfulnessMetric`:
 
-- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+</Case>
+
+<Case id="typescript">
+
+There are **EIGHT** optional parameters when creating a `FaithfulnessMetric`:
+
+</Case>
+
+</Switch>
+
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
-- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `truths_extraction_limit`: an int which when set, determines the maximum number of factual truths to extract from the `retrieval_context`. The truths extracted will be used to determine the degree of factual alignment, and will be ordered by importance, decided by your evaluation `model`. Defaulted to `None`.
-- [Optional] `penalize_ambiguous_claims`: a boolean which when set to `True`, will **not** count claims that are ambiguous as faithful. Defaulted to `False`.
-- [Optional] `evaluation_template`: a class of type `FaithfulnessTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `FaithfulnessMetric` score. Defaulted to `deepeval`'s `FaithfulnessTemplate`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables
+    [concurrent execution within the `measure()`
+    method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to
+    `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="truths_extraction_limit" ts="truthsExtractionLimit"/>: a number which when set, determines the maximum number of factual truths to extract from the <Term py="retrieval_context" ts="retrievalContext"/>. The truths extracted will be used to determine the degree of factual alignment, and will be ordered by importance, decided by your evaluation `model`. Defaulted to <Term py="None" ts="null"/>.
+- [Optional] <Term py="penalize_ambiguous_claims" ts="penalizeAmbiguousClaims"/>: a boolean which when set to <Term py="True" ts="true"/>, will **not** count claims that are ambiguous as faithful. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="evaluation_template" ts="evaluationTemplate"/>: of type <Term py="FaithfulnessTemplate" ts="FaithfulnessTemplateOverride"/>, which allows you to [override the default prompts](#customize-your-template) used to compute the `FaithfulnessMetric` score. Defaulted to `deepeval`'s default prompts.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 ### Within components
 
 You can also run the `FaithfulnessMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import Golden
@@ -130,9 +236,48 @@ def llm_app(input: str):
 evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+// ...
+
+const innerComponent = observe({
+  metrics: [metric],
+  fn: async () => {
+    // Set test case at runtime
+    const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
+    updateCurrentSpan({ testCase });
+  },
+});
+
+const llmApp = observe({
+  fn: async (input: string) => {
+    // Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    await innerComponent();
+  },
+});
+
+const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "Hi!" })] });
+for await (const golden of dataset.evalsIterator()) {
+  await llmApp((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
 ### As a standalone
 
 You can also run the `FaithfulnessMetric` on a single test case as a standalone, one-off execution.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -140,6 +285,21 @@ You can also run the `FaithfulnessMetric` on a single test case as a standalone,
 metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+await metric.measure(testCase);
+console.log(metric.score, metric.reason);
+```
+
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
@@ -151,12 +311,12 @@ The `FaithfulnessMetric` score is calculated according to the following equation
 
 <Equation formula="\text{Faithfulness} = \frac{\text{Number of Truthful Claims}}{\text{Total Number of Claims}}" />
 
-The `FaithfulnessMetric` first uses an LLM to extract all claims made in the `actual_output`, before using the same LLM to classify whether each claim is truthful based on the facts presented in the `retrieval_context`.
+The `FaithfulnessMetric` first uses an LLM to extract all claims made in the <Term py="actual_output" ts="actualOutput"/>, before using the same LLM to classify whether each claim is truthful based on the facts presented in the <Term py="retrieval_context" ts="retrievalContext"/>.
 
-**A claim is considered truthful if it does not contradict any facts** presented in the `retrieval_context`.
+**A claim is considered truthful if it does not contradict any facts** presented in the <Term py="retrieval_context" ts="retrievalContext"/>.
 
 :::note
-Sometimes, you may want to only consider the most important factual truths in the `retrieval_context`. If this is the case, you can choose to set the `truths_extraction_limit` parameter to limit the maximum number of truths to consider during evaluation.
+Sometimes, you may want to only consider the most important factual truths in the <Term py="retrieval_context" ts="retrievalContext"/>. If this is the case, you can choose to set the <Term py="truths_extraction_limit" ts="truthsExtractionLimit"/> parameter to limit the maximum number of truths to consider during evaluation.
 :::
 
 ## Customize Your Template
@@ -172,9 +332,13 @@ You can learn what the default `FaithfulnessTemplate` looks like [here on GitHub
 
 Here's a quick example of how you can override the process of extracting claims in the `FaithfulnessMetric` algorithm:
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval.metrics import FaithfulnessMetric
 from deepeval.metrics.faithfulness import FaithfulnessTemplate
+from deepeval.metrics import FaithfulnessMetric
 
 # Define custom template
 class CustomTemplate(FaithfulnessTemplate):
@@ -203,6 +367,54 @@ metric = FaithfulnessMetric(evaluation_template=CustomTemplate)
 metric.measure(...)
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { FaithfulnessMetric } from "deepeval/metrics";
+
+// Inject custom template to metric
+const metric = new FaithfulnessMetric({
+  evaluationTemplate: {
+    generateClaims: ({ actualOutput }) =>
+      `Based on the given text, please extract a comprehensive list of facts that can inferred from the provided text.
+
+Example:
+Example Text:
+"CNN claims that the sun is 3 times smaller than earth."
+
+Example JSON:
+{
+    "claims": []
+}
+===== END OF EXAMPLE ======
+
+Text:
+${actualOutput}
+
+JSON:
+`,
+  },
+});
+await metric.measure(testCase);
+```
+
+Each override receives the template's variables as its first argument, and the default renderer as its second, so you can extend a prompt instead of replacing it:
+
+```typescript
+const metric = new FaithfulnessMetric({
+  evaluationTemplate: {
+    generateClaims: (vars, renderDefault) =>
+      `${renderDefault(vars)}\n\nTreat each numbered item as its own claim.`,
+  },
+});
+```
+
+</Case>
+
+</Switch>
+
 ## FAQs
 
 <FAQs
@@ -211,8 +423,8 @@ metric.measure(...)
       question: "Is a low faithfulness score a retrieval or a generation problem?",
       answer: (
         <>
-          Generation. It grades <code>actual_output</code> against the
-          already-retrieved <code>retrieval_context</code>, so a low score means
+          Generation. It grades <Term py="actual_output" ts="actualOutput"/> against the
+          already-retrieved <Term py="retrieval_context" ts="retrievalContext"/>, so a low score means
           unsupported claims (a prompt or model issue). Retrieval quality is
           covered by{" "}
           <a href="/docs/metrics-contextual-recall">Contextual Recall</a> and{" "}
@@ -224,8 +436,8 @@ metric.measure(...)
       question: "How is Faithfulness different from the Hallucination metric?",
       answer: (
         <>
-          Faithfulness checks the <code>actual_output</code> against the
-          retrieved <code>retrieval_context</code> ("is this grounded in what I
+          Faithfulness checks the <Term py="actual_output" ts="actualOutput"/> against the
+          retrieved <Term py="retrieval_context" ts="retrievalContext"/> ("is this grounded in what I
           retrieved?"), while <code>HallucinationMetric</code> compares it
           against a ground-truth <code>context</code>. Use faithfulness for RAG,
           hallucination when you have known-correct reference context.
@@ -239,7 +451,7 @@ metric.measure(...)
         <>
           The classic confidently-wrong case: an on-topic answer (high{" "}
           <a href="/docs/metrics-answer-relevancy">answer relevancy</a>) backed
-          by claims your <code>retrieval_context</code> doesn't support. The
+          by claims your <Term py="retrieval_context" ts="retrievalContext"/> doesn't support. The
           model is leaning on parametric knowledge instead of retrieved
           evidence — tighten your prompt to force grounding.
         </>
@@ -250,10 +462,10 @@ metric.measure(...)
       answer: (
         <>
           Faithfulness only rewards claims supported by the{" "}
-          <code>retrieval_context</code> — a real-world truth absent from the
+          <Term py="retrieval_context" ts="retrievalContext"/> — a real-world truth absent from the
           retrieved text still counts as unfaithful. Use{" "}
-          <code>truths_extraction_limit</code> to focus on key truths and{" "}
-          <code>penalize_ambiguous_claims</code> to control borderline scoring.
+          <Term py="truths_extraction_limit" ts="truthsExtractionLimit"/> to focus on key truths and{" "}
+          <Term py="penalize_ambiguous_claims" ts="penalizeAmbiguousClaims"/> to control borderline scoring.
         </>
       ),
     },

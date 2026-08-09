@@ -6,17 +6,25 @@ export {
   type MetricsOutcome,
   type ToPassTarget,
   type ToPassCallback,
+  type ToPassTask,
   type ToPassOptions,
-} from "./run-metrics";
-export { buildFailureMessage } from "./errors";
-export { globalResultCollector } from "./collector";
+} from "@/evaluate/test-run/run-metrics";
+export { buildFailureMessage } from "@/evaluate/test-run/errors";
+export { globalResultCollector } from "@/evaluate/test-run/collector";
 export {
   persistCase,
   readPersistedCases,
   wrapUpTestRun,
   getResultsDir,
   type WrapUpOptions,
-} from "./store";
+} from "@/evaluate/test-run/store";
+export {
+  saveLatestTestRun,
+  readLatestTestRun,
+  deleteLatestTestRun,
+  exportTestRunJson,
+  type LocalTestRun,
+} from "@/evaluate/test-run/local";
 export {
   beginTraceCapture,
   endTraceCapture,
@@ -24,4 +32,4 @@ export {
   getCapturedTraces,
   getLatestCapturedTrace,
   collectTracesFrom,
-} from "./trace-scope";
+} from "@/evaluate/test-run/trace-scope";

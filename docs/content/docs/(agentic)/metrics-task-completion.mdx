@@ -2,6 +2,7 @@
 id: metrics-task-completion
 title: Task Completion
 sidebar_label: Task Completion
+languages: [python, typescript]
 ---
 <MetricTagsDisplayer singleTurn={true} agent={true} referenceless={true} />
 
@@ -15,10 +16,14 @@ Task Completion analyzes your **agent's full trace** to determine task success, 
 
 To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `TaskCompletionMetric()` to your agent's `@observe` tag.
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval.tracing import observe
 from deepeval.dataset import Golden, EvaluationDataset
 from deepeval.metrics import TaskCompletionMetric
+from deepeval.tracing import observe
 
 @observe()
 def trip_planner_agent(input):
@@ -50,18 +55,81 @@ for golden in dataset.evals_iterator(metrics=[task_completion]):
     trip_planner_agent(golden.input)
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { Golden, EvaluationDataset } from "deepeval/dataset";
+import { TaskCompletionMetric } from "deepeval/metrics";
+import { observe } from "deepeval/tracing";
+
+const tripPlannerAgent = observe({
+  type: "agent",
+  fn: async (input: string) => {
+    const destination = "Paris";
+    const days = 2;
+
+    const restaurantFinder = observe({
+      fn: async (city: string) => ["Le Jules Verne", "Angelina Paris", "Septime"],
+    });
+
+    const itineraryGenerator = observe({
+      fn: async (destination: string, days: number) =>
+        ["Eiffel Tower", "Louvre Museum", "Montmartre"].slice(0, days),
+    });
+
+    const itinerary = await itineraryGenerator(destination, days);
+    const restaurants = await restaurantFinder(destination);
+
+    return [...itinerary, ...restaurants];
+  },
+});
+
+// Create dataset
+const dataset = new EvaluationDataset({ goldens: [new Golden({ input: "This is a test query" })] });
+
+// Initialize metric
+const taskCompletion = new TaskCompletionMetric({ threshold: 0.7, model: "gpt-4o" });
+
+// Loop through dataset
+for await (const golden of dataset.evalsIterator({ metrics: [taskCompletion] })) {
+  await tripPlannerAgent((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
+<Switch>
+
+<Case id="python">
+
 There are **EIGHT** optional parameters when creating a `TaskCompletionMetric`:
 
-- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] `task`: a string representing the task to be completed. If no task is supplied, it is automatically inferred from the trace. Defaulted to the `None`
-- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
-- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+</Case>
 
-To learn more about how the `evals_iterator` work, [click here.](/docs/evaluation-end-to-end-llm-evals#e2e-evals-for-tracing)
+<Case id="typescript">
+
+There are **SEVEN** optional parameters when creating a `TaskCompletionMetric`:
+
+</Case>
+
+</Switch>
+
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `task`: a string representing the task to be completed. If no task is supplied, it is automatically inferred from the trace. Defaulted to the <Term py="None" ts="null"/>
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+
+To learn more about how the <Term py="evals_iterator" ts="evalsIterator"/> work, [click here.](/docs/evaluation-end-to-end-llm-evals#e2e-evals-for-tracing)
 
 ## How Is It Calculated?
 
@@ -80,7 +148,7 @@ The `TaskCompletionMetric` score is calculated according to the following equati
       question: "Does Task Completion need me to define the task, or is it inferred?",
       answer: (
         <>
-          Inferred by default. <code>task</code> defaults to <code>None</code>{" "}
+          Inferred by default. <code>task</code> defaults to <Term py="None" ts="null"/>{" "}
           and is extracted from your agent's trace. Set it explicitly only to
           pin the agent against a specific goal.
         </>
@@ -116,7 +184,7 @@ The `TaskCompletionMetric` score is calculated according to the following equati
           LLM-judged and referenceless. The score is the{" "}
           <code>AlignmentScore</code> between the extracted{" "}
           <strong>Task</strong> and <strong>Outcome</strong> — no expected
-          outputs to label. Set <code>include_reason=True</code> for the judge's
+          outputs to label. Set <Term py="include_reason=True" ts="includeReason: true"/> for the judge's
           explanation.
         </>
       ),

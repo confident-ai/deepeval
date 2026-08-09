@@ -2,10 +2,11 @@
 id: metrics-hallucination
 title: Hallucination
 sidebar_label: Hallucination
+languages: [python, typescript]
 ---
 <MetricTagsDisplayer singleTurn={true} referenceBased={true} />
 
-The hallucination metric uses LLM-as-a-judge to determine whether your LLM generates factually correct information by comparing the `actual_output` to the provided `context`.
+The hallucination metric uses LLM-as-a-judge to determine whether your LLM generates factually correct information by comparing the <Term py="actual_output" ts="actualOutput"/> to the provided `context`.
 
 :::info
 If you're looking to evaluate hallucination for a RAG system, please refer to the [faithfulness metric](/docs/metrics-faithfulness) instead.
@@ -16,7 +17,7 @@ If you're looking to evaluate hallucination for a RAG system, please refer to th
 To use the `HallucinationMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- <Term py="actual_output" ts="actualOutput"/>
 - `context`
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
@@ -25,10 +26,14 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 The `HallucinationMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval import evaluate
 from deepeval.metrics import HallucinationMetric
 from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
 
 # Replace this with the actual documents that you are passing as input to your LLM.
 context=["A man with blond-hair, and a brown shirt drinking out of a public water fountain."]
@@ -50,19 +55,72 @@ metric = HallucinationMetric(threshold=0.5)
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { HallucinationMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+import { evaluate } from "deepeval";
+
+// Replace this with the actual documents that you are passing as input to your LLM.
+const context = ["A man with blond-hair, and a brown shirt drinking out of a public water fountain."];
+
+// Replace this with the actual output from your LLM application
+const actualOutput = "A blond drinking water in public.";
+
+const testCase = new LLMTestCase({
+  input: "What was the blond doing?",
+  actualOutput,
+  context,
+});
+const metric = new HallucinationMetric({ threshold: 0.5 });
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
+<Switch>
+
+<Case id="python">
+
 There are **SEVEN** optional parameters when creating a `HallucinationMetric`:
 
-- [Optional] `threshold`: a float representing the maximum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+</Case>
+
+<Case id="typescript">
+
+There are **SIX** optional parameters when creating a `HallucinationMetric`:
+
+</Case>
+
+</Switch>
+
+- [Optional] `threshold`: a number representing the maximum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
-- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 0 for perfection, 1 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 0 for perfection, 1 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 ### Within components
 
 You can also run the `HallucinationMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import Golden
@@ -85,9 +143,50 @@ def llm_app(input: str):
 evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+// ...
+
+const innerComponent = observe({
+  metrics: [metric],
+  fn: async () => {
+    // Set test case at runtime
+    const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
+    updateCurrentSpan({ testCase });
+  },
+});
+
+const llmApp = observe({
+  fn: async (input: string) => {
+    // Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    await innerComponent();
+  },
+});
+
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "Hi!" })],
+});
+for await (const golden of dataset.evalsIterator()) {
+  await llmApp((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
 ### As a standalone
 
 You can also run the `HallucinationMetric` on a single test case as a standalone, one-off execution.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -95,6 +194,21 @@ You can also run the `HallucinationMetric` on a single test case as a standalone
 metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+await metric.measure(testCase);
+console.log(metric.score, metric.reason);
+```
+
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
@@ -106,7 +220,7 @@ The `HallucinationMetric` score is calculated according to the following equatio
 
 <Equation formula="\text{Hallucination} = \frac{\text{Number of Contradicted Contexts}}{\text{Total Number of Contexts}}" />
 
-The `HallucinationMetric` uses an LLM to determine, for each context in `contexts`, whether there are any contradictions to the `actual_output`.
+The `HallucinationMetric` uses an LLM to determine, for each context in `contexts`, whether there are any contradictions to the <Term py="actual_output" ts="actualOutput"/>.
 
 :::info
 Although extremely similar to the `FaithfulnessMetric`, the `HallucinationMetric` is calculated differently since it uses `contexts` as the source of truth instead. Since `contexts` is the ideal segment of your knowledge base relevant to a specific input, the degree of hallucination can be measured by the degree of which the `contexts` is disagreed upon.
@@ -124,7 +238,7 @@ Although extremely similar to the `FaithfulnessMetric`, the `HallucinationMetric
           Use <code>HallucinationMetric</code> when you have a curated,
           ground-truth <code>context</code>. Use{" "}
           <a href="/docs/metrics-faithfulness">Faithfulness</a> for RAG, where
-          the source of truth is the <code>retrieval_context</code> your
+          the source of truth is the <Term py="retrieval_context" ts="retrievalContext"/> your
           retriever fetched.
         </>
       ),
@@ -134,19 +248,19 @@ Although extremely similar to the `FaithfulnessMetric`, the `HallucinationMetric
       answer: (
         <>
           The score is the fraction of <code>context</code> documents that
-          contradict the <code>actual_output</code>, so 0 is perfect.{" "}
+          contradict the <Term py="actual_output" ts="actualOutput"/>, so 0 is perfect.{" "}
           <code>threshold</code> is therefore a <em>maximum</em> — output passes
-          at or below it. <code>strict_mode</code> forces the threshold to 0.
+          at or below it. <Term py="strict_mode" ts="strictMode"/> forces the threshold to 0.
         </>
       ),
     },
     {
       question:
-        "It compares against `context`, not `retrieval_context` — what's the difference?",
+        "It compares against `context`, not retrieval context — what's the difference?",
       answer: (
         <>
           <code>context</code> is ground-truth reference material you supply;{" "}
-          <code>retrieval_context</code> is what your retriever fetched. This
+          <Term py="retrieval_context" ts="retrievalContext"/> is what your retriever fetched. This
           metric checks contradictions against <code>context</code> only, so it
           measures the generator, not the retriever.
         </>
@@ -160,7 +274,7 @@ Although extremely similar to the `FaithfulnessMetric`, the `HallucinationMetric
           trusted ground truth, so feeding it noisy retrieved chunks misleads —
           use{" "}
           <a href="/docs/metrics-faithfulness">Faithfulness</a> for runtime{" "}
-          <code>retrieval_context</code> instead.
+          <Term py="retrieval_context" ts="retrievalContext"/> instead.
         </>
       ),
     },

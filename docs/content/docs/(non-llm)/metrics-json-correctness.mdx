@@ -2,10 +2,11 @@
 id: metrics-json-correctness
 title: Json Correctness
 sidebar_label: Json Correctness
+languages: [python, typescript]
 ---
 <MetricTagsDisplayer singleTurn={true} usesLLMs={false} referenceless={true} />
 
-The json correctness metric measures whether your LLM application is able to generate `actual_output`s with the correct **json schema**.
+The json correctness metric measures whether your LLM application is able to generate <Term py="actual_output" ts="actualOutput"/>s with the correct **json schema**.
 
 :::note
 
@@ -18,13 +19,17 @@ The `JsonCorrectnessMetric` like the `ExactMatchMetric` is not an LLM-eval, and 
 To use the `JsonCorrectnessMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- <Term py="actual_output" ts="actualOutput"/>
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
 
 ## Usage
 
 First define your schema by creating a `pydantic` `BaseModel`:
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from pydantic import BaseModel
@@ -33,8 +38,28 @@ class ExampleSchema(BaseModel):
     name: str
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { z } from "zod";
+
+const ExampleSchema = z.object({
+  name: z.string(),
+});
+```
+
+</Case>
+
+</Switch>
+
 :::tip
-If your `actual_output` is a list of JSON objects, you can simply create a list schema by wrapping your existing schema in a `RootModel`. For example:
+If your <Term py="actual_output" ts="actualOutput"/> is a list of JSON objects, you can simply create a list schema by wrapping your existing schema in a `RootModel`. For example:
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from pydantic import RootModel
@@ -46,14 +71,32 @@ class ExampleSchemaList(RootModel[List[ExampleSchema]]):
     pass
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+const ExampleSchemaList = z.array(ExampleSchema);
+```
+
+</Case>
+
+</Switch>
+
 :::
 
-Then supply it as the `expected_schema` when creating a `JsonCorrectnessMetric`, which can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
+Then supply it as the <Term py="expected_schema" ts="expectedSchema"/> when creating a `JsonCorrectnessMetric`, which can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
+
+<Switch>
+
+<Case id="python">
 
 ```python
-from deepeval import evaluate
 from deepeval.metrics import JsonCorrectnessMetric
 from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
 
 
 metric = JsonCorrectnessMetric(
@@ -74,24 +117,75 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { JsonCorrectnessMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+import { evaluate } from "deepeval";
+
+const metric = new JsonCorrectnessMetric({
+  expectedSchema: ExampleSchema,
+  model: "gpt-4",
+  includeReason: true,
+});
+const testCase = new LLMTestCase({
+  input: "Output me a random Json with the 'name' key",
+  // Replace this with the actual output from your LLM application
+  actualOutput: "{'name': null}",
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
+<Switch>
+
+<Case id="python">
+
 There are **ONE** mandatory and **SEVEN** optional parameters when creating an `PromptAlignmentMetric`:
 
-- `expected_schema`: a `pydantic` `BaseModel` specifying the schema of the Json that is expected from your LLM.
-- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+</Case>
+
+<Case id="typescript">
+
+There are **ONE** mandatory and **SIX** optional parameters when creating an `PromptAlignmentMetric`:
+
+</Case>
+
+</Switch>
+
+- <Term py="expected_schema" ts="expectedSchema"/>: a `pydantic` `BaseModel` specifying the schema of the Json that is expected from your LLM.
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use to generate reasons, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
-- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 :::info
-Unlike other metrics, the `model` is used for generating reason instead of evaluation. It will only be used if the `actual_output` has the wrong schema, **AND** if `include_reason` is set to `True`.
+Unlike other metrics, the `model` is used for generating reason instead of evaluation. It will only be used if the <Term py="actual_output" ts="actualOutput"/> has the wrong schema, **AND** if <Term py="include_reason" ts="includeReason"/> is set to <Term py="True" ts="true"/>.
 :::
 
 ### Within components
 
 You can also run the `JsonCorrectnessMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import Golden
@@ -114,9 +208,50 @@ def llm_app(input: str):
 evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+// ...
+
+const innerComponent = observe({
+  metrics: [metric],
+  fn: async () => {
+    // Set test case at runtime
+    const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
+    updateCurrentSpan({ testCase });
+  },
+});
+
+const llmApp = observe({
+  fn: async (input: string) => {
+    // Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    await innerComponent();
+  },
+});
+
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "Hi!" })],
+});
+for await (const golden of dataset.evalsIterator()) {
+  await llmApp((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
 ### As a standalone
 
 You can also run the `JsonCorrectnessMetric` on a single test case as a standalone, one-off execution.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -124,6 +259,21 @@ You can also run the `JsonCorrectnessMetric` on a single test case as a standalo
 metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+await metric.measure(testCase);
+console.log(metric.score, metric.reason);
+```
+
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
@@ -140,7 +290,7 @@ The `PromptAlignmentMetric` score is calculated according to the following equat
 \end{cases}"
 />
 
-The `JsonCorrectnessMetric` does not use an LLM for evaluation and instead uses the provided `expected_schema` to determine whether the `actual_output` can be loaded into the schema.
+The `JsonCorrectnessMetric` does not use an LLM for evaluation and instead uses the provided <Term py="expected_schema" ts="expectedSchema"/> to determine whether the <Term py="actual_output" ts="actualOutput"/> can be loaded into the schema.
 
 ## FAQs
 
@@ -151,10 +301,10 @@ The `JsonCorrectnessMetric` does not use an LLM for evaluation and instead uses 
       answer: (
         <>
           Scoring is deterministic — it only checks whether{" "}
-          <code>actual_output</code> loads into your <code>expected_schema</code>.
+          <Term py="actual_output" ts="actualOutput"/> loads into your <Term py="expected_schema" ts="expectedSchema"/>.
           The <code>model</code> only <em>generates the reason</em> on invalid
-          schemas when <code>include_reason</code> is <code>True</code>; set{" "}
-          <code>include_reason=False</code> to skip it.
+          schemas when <Term py="include_reason" ts="includeReason"/> is <Term py="True" ts="true"/>; set{" "}
+          <Term py="include_reason=False" ts="includeReason: false"/> to skip it.
         </>
       ),
     },
@@ -164,7 +314,7 @@ The `JsonCorrectnessMetric` does not use an LLM for evaluation and instead uses 
         <>
           Schema validation is free and deterministic. A model is only invoked
           — incurring token cost — when an output fails the schema and{" "}
-          <code>include_reason</code> is <code>True</code>.
+          <Term py="include_reason" ts="includeReason"/> is <Term py="True" ts="true"/>.
         </>
       ),
     },
@@ -175,7 +325,7 @@ The `JsonCorrectnessMetric` does not use an LLM for evaluation and instead uses 
           Wrap your <code>pydantic</code> <code>BaseModel</code> in a{" "}
           <code>RootModel</code> — e.g.{" "}
           <code>class ExampleSchemaList(RootModel[List[ExampleSchema]])</code>{" "}
-          — and pass it as the <code>expected_schema</code>.
+          — and pass it as the <Term py="expected_schema" ts="expectedSchema"/>.
         </>
       ),
     },

@@ -1,0 +1,76 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3rem 0 2rem;
+}
+
+.code {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  color: var(--color-fd-muted-foreground);
+  opacity: 0.35;
+}
+
+.reason {
+  margin: 0.5rem 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-fd-muted-foreground);
+  opacity: 0.55;
+}
+
+.title {
+  margin: 1.25rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-fd-foreground);
+}
+
+.body {
+  margin: 0.75rem 0 0;
+  max-width: 34rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-fd-muted-foreground);
+}
+
+.action {
+  margin-top: 1.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-fd-border);
+  border-radius: 0;
+  background-color: var(--color-fd-primary);
+  color: var(--color-fd-primary-foreground);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+.game {
+  width: 100%;
+  max-width: 40rem;
+  margin-top: 3rem;
+  border-top: 1px solid var(--color-fd-border);
+  padding-top: 1rem;
+}
+
+.hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-fd-muted-foreground);
+  opacity: 0.7;
+}

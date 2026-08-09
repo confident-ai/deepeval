@@ -1,0 +1,483 @@
+---
+id: ai-sdk
+title: Vercel AI SDK
+sidebar_label: Vercel AI SDK
+languages: [typescript]
+---
+
+<IntegrationTagsDisplayer otel={true} cicdEvals={true} traceability={true} />
+
+[Vercel AI SDK](https://ai-sdk.dev/) is a TypeScript toolkit for calling LLMs — `generateText`, `streamText`, tools, structured output, and embeddings — with built-in OpenTelemetry spans for every step.
+
+The `deepeval` integration registers an OpenTelemetry processor that turns those `ai.*` spans into traces you can inspect and evaluate. No rewrite of your AI SDK calls beyond enabling telemetry.
+
+:::tip[Judge model vs tracing]
+This page covers **tracing and evaluating** AI SDK apps. To use an AI SDK `LanguageModel` as the judge behind a metric, see [Vercel AI SDK (models)](/integrations/models/ai-sdk).
+:::
+
+<AgentTraceTerminal
+  title="ai_sdk_agent · deepeval"
+  ariaLabel="Example Vercel AI SDK trace with per-step metric scores"
+  lines={[
+    { kind: "cmd", name: "npx deepeval test run ai-sdk-agent.test.ts" },
+    { kind: "blank" },
+    { kind: "root", prefix: "●", name: "ai_sdk_agent" },
+    { kind: "blank", prefix: "│" },
+    {
+      kind: "llm",
+      prefix: "└─",
+      name: "ai.generateText",
+      metric: "Task Completion",
+      score: "0.96",
+      duration: "180ms",
+      pass: true,
+    },
+    {
+      kind: "llm",
+      prefix: "   ├─",
+      name: "gpt-4o-mini · chooseTool",
+      metric: "G-Eval",
+      score: "0.44",
+      duration: "62ms",
+      pass: false,
+    },
+    {
+      kind: "tool",
+      prefix: "   ├─",
+      name: 'getWeather(city="Tokyo")',
+      duration: "18ms",
+    },
+    {
+      kind: "llm",
+      prefix: "   └─",
+      name: "gpt-4o-mini · finalAnswer",
+      metric: "Answer Relevancy",
+      score: "0.95",
+      duration: "74ms",
+      pass: true,
+    },
+    { kind: "blank" },
+    {
+      kind: "summary",
+      name: "Trace score  0.78   ·   2/3 metrics passed",
+      pass: false,
+    },
+  ]}
+/>
+
+`deepeval`'s Vercel AI SDK integration enables you to:
+
+- **Trace every AI SDK call** — `configureAiSdkTracing(...)` once, then pass the tracer into `experimental_telemetry` on each call.
+- **Evaluate traces or individual components** with any `deepeval` metric.
+- **Run evals from scripts or CI/CD** — same instrumentation, different surfaces.
+- **Customize trace and span data** through configure options, AI SDK telemetry metadata, and `deepeval`'s span-staging helpers.
+
+## Getting Started
+
+<Steps>
+
+<Step>
+
+### Installation
+
+```bash
+npm install deepeval ai @ai-sdk/openai
+```
+
+No Confident AI account is needed to evaluate locally. Traces are built in-process either way; a `CONFIDENT_API_KEY` only adds the upload, so run `npx deepeval login` when you want them in a shared dashboard too.
+
+</Step>
+
+<Step>
+
+### Instrument and evaluate
+
+Call `configureAiSdkTracing(...)` once at startup, then pass the returned tracer into `experimental_telemetry` on every AI SDK call you want traced.
+
+```typescript title="ai-sdk-agent.ts" showLineNumbers
+import { generateText, tool, stepCountIs } from "ai";
+import { openai } from "@ai-sdk/openai";
+import { z } from "zod";
+
+import { configureAiSdkTracing } from "deepeval/integrations/ai-sdk";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { TaskCompletionMetric } from "deepeval/metrics";
+
+const tracer = configureAiSdkTracing({ name: "weather-app" });
+
+const ask = (question: string) =>
+  generateText({
+    model: openai("gpt-4o-mini"),
+    prompt: question,
+    tools: {
+      getWeather: tool({
+        description: "Get the current weather for a city.",
+        inputSchema: z.object({ city: z.string() }),
+        execute: async ({ city }) => ({
+          weather: city.toLowerCase() === "tokyo" ? "Sunny, 72F" : "Rainy, 55F",
+        }),
+      }),
+    },
+    stopWhen: stepCountIs(2),
+    experimental_telemetry: {
+      isEnabled: true,
+      tracer,
+    },
+  });
+
+// Goldens are the inputs you want to evaluate.
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What's the weather in Tokyo?" })],
+});
+
+// The `TaskCompletionMetric` is passed into the `evalsIterator`.
+for await (const golden of dataset.evalsIterator({
+  metrics: [new TaskCompletionMetric()],
+})) {
+  await ask((golden as Golden).input);
+}
+```
+
+Done ✅. You've run your first eval with full traceability into the Vercel AI SDK via `deepeval`.
+
+</Step>
+
+</Steps>
+
+:::caution[Telemetry is opt-in per call]
+AI SDK only emits spans when `experimental_telemetry.isEnabled` is `true` and a `tracer` is provided. Forgetting either means `deepeval` never sees the call — configure once, pass the tracer on every `generateText` / `streamText` / `embed` you care about.
+:::
+
+## What gets traced
+
+Each top-level AI SDK call (`generateText`, `streamText`, `generateObject`, `streamObject`, `embed`, `embedMany`) that has telemetry enabled produces a **trace**. Inside it, Vercel’s `ai.*` spans map to `deepeval` span types:
+
+| AI SDK span                                              | `deepeval` span |
+| -------------------------------------------------------- | --------------- |
+| `ai.generateText`, `ai.streamText`, `ai.generateObject`, `ai.streamObject`, and their `.doGenerate` / `.doStream` children | LLM |
+| `ai.toolCall`                                            | Tool            |
+| `ai.embed`, `ai.embedMany`, and their `.doEmbed` children | Retriever       |
+
+```text
+Trace                              ← what the user observes
+└── LLM: ai.generateText            ← one generateText(...) call
+    ├── LLM: ai.generateText.doGenerate   ← model chooses a tool
+    ├── Tool: getWeather                  ← tool input + output
+    └── LLM: ai.generateText.doGenerate   ← final answer
+```
+
+The trace and its component spans are independently evaluable. Every tool call is also collected onto the trace's `toolsCalled` so trace-level metrics can reason about tool use.
+
+There is **no agent span** — AI SDK's root is the generation call itself. Stage LLM / tool / retriever metrics with `nextLlmSpan` / `nextToolSpan` / `nextRetrieverSpan`, or score the whole run with trace-level metrics on `evalsIterator`.
+
+## Running evals
+
+There are two surfaces for running evals against an AI SDK app. Pick by where you want results to surface — your terminal during development, or your CI pipeline as a pass/fail gate.
+
+### In CI/CD (Vitest)
+
+Use the `toPass()` matcher. The golden is the subject; `task` produces the trace judged against it. A failing metric fails the test, which fails the build.
+
+```typescript title="ai-sdk-agent.test.ts" showLineNumbers
+import { it, expect } from "vitest";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { TaskCompletionMetric } from "deepeval/metrics";
+import { ask } from "./ai-sdk-agent";
+import "deepeval/vitest";
+
+const dataset = new EvaluationDataset({
+  goldens: [
+    new Golden({ input: "What's the weather in Tokyo?" }),
+    new Golden({ input: "What's the weather in London?" }),
+  ],
+});
+
+it.each(dataset.goldens as Golden[])(
+  "completes the weather task",
+  async (golden) => {
+    await expect(golden).toPass([new TaskCompletionMetric()], {
+      task: (g) => ask(g.input),
+    });
+  },
+);
+```
+
+Run it with:
+
+```bash
+npx deepeval test run ai-sdk-agent.test.ts
+```
+
+### In a script
+
+Use `EvaluationDataset` + `evalsIterator(...)`. Each `Golden` becomes one AI SDK run, and metrics passed to the iterator score the resulting trace end-to-end.
+
+```typescript title="ai-sdk-agent.ts" showLineNumbers
+const dataset = new EvaluationDataset({
+  goldens: [
+    new Golden({ input: "What's the weather in Tokyo?" }),
+    new Golden({ input: "What's the weather in London?" }),
+  ],
+});
+
+for await (const golden of dataset.evalsIterator({
+  metrics: [new TaskCompletionMetric()],
+})) {
+  await ask((golden as Golden).input);
+}
+```
+
+:::note[Evals keep spans in-process automatically]
+While `evalsIterator()` or `toPass()` is running, the processor routes spans into `deepeval`'s in-process trace manager so metrics can read them — you do not need `isTestMode: true` for that. Pass `isTestMode: true` when you want the same local path **outside** an eval (for example, asserting on traces in a unit test). Outside evals with a `CONFIDENT_API_KEY`, spans export over OTLP to Confident AI by default.
+:::
+
+## Applying metrics to components
+
+Passing `metrics=[...]` to `evalsIterator` evaluates the overall AI SDK run. To evaluate a component instead, stage metrics onto the next span the processor opens.
+
+### LLM calls
+
+Wrap the call in `nextLlmSpan(...)`. The processor drains the staged metric onto the **first LLM span** it opens inside the callback — typically the root `ai.generateText` / `ai.streamText` span.
+
+```typescript title="ai-sdk-agent.ts" showLineNumbers
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { nextLlmSpan } from "deepeval/tracing";
+...
+
+for await (const golden of dataset.evalsIterator()) {
+  await nextLlmSpan({ metrics: [new AnswerRelevancyMetric()] }, () =>
+    ask((golden as Golden).input),
+  );
+}
+```
+
+:::caution[One-shot per run]
+`nextLlmSpan` stages config for the **first** LLM span AI SDK opens inside the callback. Later model steps in the same `generateText` — the tool-choice `doGenerate` followed by the final-answer `doGenerate` — won't receive it. To score every model call, use `setTracingContext(...)` instead, or score the run end-to-end with trace-level metrics on `evalsIterator({ metrics: [...] })`.
+:::
+
+### Tool calls
+
+Inside a tool `execute` body your code **is** the tool span, so reach it with `updateCurrentSpan(...)`:
+
+```typescript title="ai-sdk-agent.ts" showLineNumbers
+import { updateCurrentSpan } from "deepeval/tracing";
+import { tool } from "ai";
+import { z } from "zod";
+...
+
+const getWeather = tool({
+  description: "Get the current weather for a city.",
+  inputSchema: z.object({ city: z.string() }),
+  execute: async ({ city }) => {
+    updateCurrentSpan({
+      metadata: { operation: "getWeather" },
+    });
+    return {
+      weather: city.toLowerCase() === "tokyo" ? "Sunny, 72F" : "Rainy, 55F",
+    };
+  },
+});
+```
+
+`nextToolSpan(...)` stages the same fields from outside the tool, on the same one-shot semantic as `nextLlmSpan`.
+
+### Retriever calls (embeddings)
+
+`ai.embed` / `ai.embedMany` become retriever spans, so `nextRetrieverSpan(...)` stages a metric (or a Confident AI `metricCollection`) on the first one in the callback.
+
+```typescript title="ai-sdk-agent.ts" showLineNumbers
+import { embed } from "ai";
+import { openai } from "@ai-sdk/openai";
+import { nextRetrieverSpan } from "deepeval/tracing";
+...
+
+for await (const golden of dataset.evalsIterator()) {
+  await nextRetrieverSpan({ metricCollection: "embeddings_v1" }, () =>
+    embed({
+      model: openai.embedding("text-embedding-3-small"),
+      value: (golden as Golden).input,
+      experimental_telemetry: { isEnabled: true, tracer },
+    }),
+  );
+}
+```
+
+## Customizing trace and span data
+
+AI SDK owns the span lifecycle, so customization happens at configure time, per-call telemetry metadata, or the span-staging boundary.
+
+- Use `configureAiSdkTracing({...})` for defaults that apply to every trace.
+- Use `experimental_telemetry.metadata` / `functionId` for values that change per call.
+- Use `nextLlmSpan(...)` / `nextToolSpan(...)` / `nextRetrieverSpan(...)` to stage component-level fields onto the next span the processor opens.
+- Use `updateCurrentSpan(...)` inside a tool body, where your code already sits on the span.
+
+Configure-level defaults:
+
+```typescript title="ai-sdk-agent.ts" showLineNumbers
+const tracer = configureAiSdkTracing({
+  name: "weather-app",
+  environment: "development",
+  traceMetricCollection: "online_weather_v1",
+});
+```
+
+Per-call telemetry — `functionId` becomes the trace name; recognized metadata keys become trace fields:
+
+```typescript title="ai-sdk-agent.ts" showLineNumbers
+await generateText({
+  model: openai("gpt-4o-mini"),
+  prompt: "What's the weather in Tokyo?",
+  experimental_telemetry: {
+    isEnabled: true,
+    tracer,
+    functionId: "weather-ask",
+    metadata: {
+      threadId: "thread-123",
+      userId: "user-xyz",
+      tags: ["production"],
+      traceName: "weather-ask",
+    },
+  },
+});
+```
+
+Recognized metadata keys: `threadId`, `userId`, `testCaseId`, `turnId`, `tags`, `context`, `traceName`, `traceMetricCollection`, `metricCollection`, `expectedOutput`, `sessionId`, `promptAlias`, `promptCommitHash`. Other keys fall through to span metadata.
+
+## Advanced patterns
+
+### Score every matching span with `setTracingContext`
+
+Where `next*Span(...)` is one-shot, `setTracingContext(...)` is scope-wide: it applies to **every** matching span in the callback. Use this when a tool loop makes several model calls and you want all of them scored.
+
+```typescript title="ai-sdk-agent.ts" showLineNumbers
+import { AnswerRelevancyMetric, ToolCorrectnessMetric } from "deepeval/metrics";
+import { setTracingContext } from "deepeval/tracing";
+...
+
+await setTracingContext(
+  {
+    llmSpanContext: {
+      metrics: [new AnswerRelevancyMetric()],
+      toolsMetrics: [new ToolCorrectnessMetric()],
+    },
+  },
+  () => ask("What's the weather in Tokyo?"),
+);
+```
+
+`toolsMetrics` and `toolsMetricCollection` are declared on `llmSpanContext` but target the tool spans in scope.
+
+### Streaming
+
+`streamText` / `streamObject` produce the same span types as their non-streaming counterparts. Consume the stream fully so the span can end with a complete output:
+
+```typescript title="ai-sdk-agent.ts" showLineNumbers
+import { streamText } from "ai";
+...
+
+const { textStream } = streamText({
+  model: openai("gpt-4o-mini"),
+  prompt: "Count from 1 to 5.",
+  experimental_telemetry: { isEnabled: true, tracer },
+});
+
+for await (const chunk of textStream) {
+  // consume chunks so the span completes
+}
+```
+
+## API reference
+
+`configureAiSdkTracing({...})` accepts the following options and returns an OpenTelemetry `Tracer` to pass into `experimental_telemetry`.
+
+| Field                   | Type      | Description                                                                 |
+| ----------------------- | --------- | --------------------------------------------------------------------------- |
+| `apiKey`                | `string`  | Confident AI API key. Defaults to `CONFIDENT_API_KEY`.                        |
+| `otelEndpoint`          | `string`  | OTLP endpoint override. Defaults to Confident AI's OTel URL.                  |
+| `name`                  | `string`  | Default trace name.                                                         |
+| `environment`           | `string`  | Trace environment, e.g. `"development"` or `"production"`.                    |
+| `traceMetricCollection` | `string`  | Trace-level metric collection, for online evals on live traffic.              |
+| `isTestMode`            | `boolean` | Force in-process spans outside of an eval session (unit tests, local debug).  |
+| `debug`                 | `boolean` | Log configure / flush diagnostics.                                          |
+
+Also exported:
+
+- `createDeepEvalProcessors(options?)` — build the span processors without registering a global provider (bring-your-own `NodeTracerProvider`).
+- `forceFlush()` — flush the registered provider (useful before a process exits outside an eval).
+- `DeepEvalSpanProcessor` — the processor that materializes `deepeval` spans from `ai.*` OTel spans.
+
+For native tracing helpers (`observe`, `updateCurrentTrace`, `updateCurrentSpan`, `nextLlmSpan`) see the [tracing reference](/docs/evaluation-llm-tracing).
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Do I need an API key to evaluate an AI SDK app locally?",
+      answer: (
+        <>
+          No. Without a <code>CONFIDENT_API_KEY</code>, the processor still builds
+          every span in-process, so metrics, datasets,{" "}
+          <code>evalsIterator()</code> and <code>toPass()</code> all work. The key
+          buys one thing: uploading the trace to Confident AI.
+        </>
+      ),
+    },
+    {
+      question: "Why don't I see any spans?",
+      answer: (
+        <>
+          AI SDK telemetry is opt-in. Confirm you called{" "}
+          <code>configureAiSdkTracing(...)</code> once and passed{" "}
+          <code>
+            experimental_telemetry: {"{ isEnabled: true, tracer }"}
+          </code>{" "}
+          into the <code>generateText</code> / <code>streamText</code> /{" "}
+          <code>embed</code> call. Without both, no <code>ai.*</code> spans are
+          emitted.
+        </>
+      ),
+    },
+    {
+      question: "Can I gate CI/CD on my AI SDK app's metrics?",
+      answer: (
+        <>
+          Yes. Use{" "}
+          <code>
+            expect(golden).toPass([...], {"{ task: (g) => ask(g.input) }"})
+          </code>{" "}
+          in a Vitest test and run <code>npx deepeval test run</code> so a
+          failing metric fails the build.
+        </>
+      ),
+    },
+    {
+      question: "Is this the same as the Vercel AI SDK model page?",
+      answer: (
+        <>
+          No. This page instruments your app's{" "}
+          <code>generateText</code> / tools / embeddings for tracing and evals.
+          The{" "}
+          <a href="/integrations/models/ai-sdk">models page</a> wraps an AI SDK{" "}
+          <code>LanguageModel</code> as the judge behind a metric (
+          <code>AISDKModel</code>).
+        </>
+      ),
+    },
+    {
+      question: "Can I monitor an AI SDK app in production?",
+      answer: (
+        <>
+          Yes. Keep <code>configureAiSdkTracing(...)</code> registered, pass
+          telemetry on each call, and set <code>threadId</code> /{" "}
+          <code>userId</code> in <code>experimental_telemetry.metadata</code>;
+          those live traces support{" "}
+          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals?utm_source=deepeval&utm_medium=docs&utm_content=faq_online_evals&ref_page=/integrations/frameworks/ai-sdk">
+            online evals
+          </a>{" "}
+          on real traffic when a <code>traceMetricCollection</code> is set.
+        </>
+      ),
+    },
+  ]}
+/>

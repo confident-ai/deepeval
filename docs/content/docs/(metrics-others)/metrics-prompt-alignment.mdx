@@ -2,10 +2,11 @@
 id: metrics-prompt-alignment
 title: Prompt Alignment
 sidebar_label: Prompt Alignment
+languages: [python, typescript]
 ---
 <MetricTagsDisplayer singleTurn={true} referenceless={true} />
 
-The prompt alignment metric uses LLM-as-a-judge to measure whether your LLM application is able to generate `actual_output`s that aligns with any **instructions** specified in your prompt template. `deepeval`'s prompt alignment metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+The prompt alignment metric uses LLM-as-a-judge to measure whether your LLM application is able to generate <Term py="actual_output" ts="actualOutput"/>s that aligns with any **instructions** specified in your prompt template. `deepeval`'s prompt alignment metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 :::tip
 Not sure if this metric is for you? Run the follow command to find out:
@@ -21,7 +22,7 @@ deepeval recommend metrics
 To use the `PromptAlignmentMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- <Term py="actual_output" ts="actualOutput"/>
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
 
@@ -29,10 +30,14 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 The `PromptAlignmentMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval import evaluate
-from deepeval.test_case import LLMTestCase
 from deepeval.metrics import PromptAlignmentMetric
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
 
 metric = PromptAlignmentMetric(
     prompt_instructions=["Reply in all uppercase"],
@@ -52,20 +57,71 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { PromptAlignmentMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+import { evaluate } from "deepeval";
+
+const metric = new PromptAlignmentMetric({
+  promptInstructions: ["Reply in all uppercase"],
+  model: "gpt-4",
+  includeReason: true,
+});
+const testCase = new LLMTestCase({
+  input: "What if these shoes don't fit?",
+  // Replace this with the actual output from your LLM application
+  actualOutput: "We offer a 30-day full refund at no extra cost.",
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
+<Switch>
+
+<Case id="python">
+
 There are **ONE** mandatory and **SEVEN** optional parameters when creating an `PromptAlignmentMetric`:
 
-- `prompt_instructions`: a list of strings specifying the instructions you want followed in your prompt template.
-- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+</Case>
+
+<Case id="typescript">
+
+There are **ONE** mandatory and **SIX** optional parameters when creating an `PromptAlignmentMetric`:
+
+</Case>
+
+</Switch>
+
+- <Term py="prompt_instructions" ts="promptInstructions"/>: a list of strings specifying the instructions you want followed in your prompt template.
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
-- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 ### Within components
 
 You can also run the `PromptAlignmentMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import Golden
@@ -88,9 +144,50 @@ def llm_app(input: str):
 evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+// ...
+
+const innerComponent = observe({
+  metrics: [metric],
+  fn: async () => {
+    // Set test case at runtime
+    const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
+    updateCurrentSpan({ testCase });
+  },
+});
+
+const llmApp = observe({
+  fn: async (input: string) => {
+    // Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    await innerComponent();
+  },
+});
+
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "Hi!" })],
+});
+for await (const golden of dataset.evalsIterator()) {
+  await llmApp((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
 ### As a standalone
 
 You can also run the `PromptAlignmentMetric` on a single test case as a standalone, one-off execution.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -98,6 +195,21 @@ You can also run the `PromptAlignmentMetric` on a single test case as a standalo
 metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+await metric.measure(testCase);
+console.log(metric.score, metric.reason);
+```
+
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
@@ -109,11 +221,11 @@ The `PromptAlignmentMetric` score is calculated according to the following equat
 
 <Equation formula="\text{Prompt Alignment} = \frac{\text{Number of Instructions Followed}}{\text{Total Number of Instructions}}" />
 
-The `PromptAlignmentMetric` uses an LLM to classify whether each prompt instruction is followed in the `actual_output` using additional context from the `input`.
+The `PromptAlignmentMetric` uses an LLM to classify whether each prompt instruction is followed in the <Term py="actual_output" ts="actualOutput"/> using additional context from the `input`.
 
 :::tip
 
-By providing an initial list of `prompt_instructions` instead of the entire prompt template, the `PromptAlignmentMetric` is able to more accurately determine whether the core instructions laid out in your prompt template is followed.
+By providing an initial list of <Term py="prompt_instructions" ts="promptInstructions"/> instead of the entire prompt template, the `PromptAlignmentMetric` is able to more accurately determine whether the core instructions laid out in your prompt template is followed.
 
 :::
 
@@ -123,12 +235,12 @@ By providing an initial list of `prompt_instructions` instead of the entire prom
   qas={[
     {
       question:
-        "Why do I pass `prompt_instructions` separately instead of the full prompt template?",
+        "Why do I pass prompt instructions separately instead of the full prompt template?",
       answer: (
         <>
           A full template mixes instructions with examples and formatting, making
           the judge less reliable. Listing only the{" "}
-          <code>prompt_instructions</code> you want obeyed lets the metric score
+          <Term py="prompt_instructions" ts="promptInstructions"/> you want obeyed lets the metric score
           each one cleanly and pinpoint which was followed or ignored.
         </>
       ),
@@ -137,20 +249,20 @@ By providing an initial list of `prompt_instructions` instead of the entire prom
       question: "How do I find out which specific instruction was violated?",
       answer: (
         <>
-          Keep <code>include_reason=True</code> (default) for a{" "}
+          Keep <Term py="include_reason=True" ts="includeReason: true"/> (default) for a{" "}
           <code>reason</code> naming the failed instructions, or set{" "}
-          <code>verbose_mode=True</code> for the per-instruction classification.
+          <Term py="verbose_mode=True" ts="verboseMode: true"/> for the per-instruction classification.
           Splitting bundled instructions into separate entries isolates the
           offender.
         </>
       ),
     },
     {
-      question: "Should each `prompt_instruction` be a single rule or can I bundle several?",
+      question: "Should each prompt instruction be a single rule or can I bundle several?",
       answer: (
         <>
           One atomic rule per entry. Each item in{" "}
-          <code>prompt_instructions</code> is classified as followed or not, so
+          <Term py="prompt_instructions" ts="promptInstructions"/> is classified as followed or not, so
           bundling (e.g. "uppercase and under 20 words") forces an
           all-or-nothing verdict and hides which half failed.
         </>
@@ -160,9 +272,9 @@ By providing an initial list of `prompt_instructions` instead of the entire prom
       question: "What does a score of `1.0` actually mean here?",
       answer: (
         <>
-          Every instruction in <code>prompt_instructions</code> was followed in
-          the <code>actual_output</code> — but only the ones you listed are
-          evaluated. <code>strict_mode</code> forces this same binary 1-or-0
+          Every instruction in <Term py="prompt_instructions" ts="promptInstructions"/> was followed in
+          the <Term py="actual_output" ts="actualOutput"/> — but only the ones you listed are
+          evaluated. <Term py="strict_mode" ts="strictMode"/> forces this same binary 1-or-0
           outcome and sets the threshold to 1.
         </>
       ),

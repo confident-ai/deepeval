@@ -2,6 +2,7 @@
 id: multimodal-metrics-image-coherence
 title: Image Coherence
 sidebar_label: Image Coherence
+languages: [python, typescript]
 ---
 <MetricTagsDisplayer singleTurn={true} />
 
@@ -16,16 +17,20 @@ Image Coherence evaluates MLLM responses containing text accompanied by retrieve
 To use the `ImageCoherence`, you'll have to provide the following arguments when creating a [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- <Term py="actual_output" ts="actualOutput"/>
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+The `input` and <Term py="actual_output" ts="actualOutput"/> are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval import evaluate
-from deepeval.metrics import ImageCoherenceMetric
 from deepeval.test_case import LLMTestCase, MLLMImage
+from deepeval.metrics import ImageCoherenceMetric
+from deepeval import evaluate
 
 metric = ImageCoherenceMetric(
     threshold=0.7,
@@ -46,18 +51,69 @@ m_test_case = LLMTestCase(
 evaluate(test_cases=[m_test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { LLMTestCase, MLLMImage } from "deepeval/test-case";
+import { ImageCoherenceMetric } from "deepeval/metrics";
+import { evaluate } from "deepeval";
+
+const metric = new ImageCoherenceMetric({
+  threshold: 0.7,
+});
+const mTestCase = new LLMTestCase({
+  input: "Provide step-by-step instructions on how to fold a paper airplane.",
+  actualOutput: `
+        1. Take the sheet of paper and fold it lengthwise:
+        ${new MLLMImage({ url: "./paper_plane_1", local: true })}
+        2. Unfold the paper. Fold the top left and right corners towards the center.
+        ${new MLLMImage({ url: "./paper_plane_2", local: true })}
+        ...
+    `,
+});
+
+
+await evaluate([mTestCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
+<Switch>
+
+<Case id="python">
+
 There are **SIX** optional parameters when creating a `ImageCoherence`:
 
-- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `max_context_size`: a number representing the maximum number of characters in each context, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `None`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+</Case>
+
+<Case id="typescript">
+
+There are **FIVE** optional parameters when creating a `ImageCoherence`:
+
+</Case>
+
+</Switch>
+
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="max_context_size" ts="maxContextSize"/>: a number representing the maximum number of characters in each context, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="None" ts="null"/>.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 ### As a standalone
 
 You can also run the `ImageCoherenceMetric` on a single test case as a standalone, one-off execution.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -66,11 +122,26 @@ metric.measure(m_test_case)
 print(metric.score, metric.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+await metric.measure(mTestCase);
+console.log(metric.score, metric.reason);
+```
+
+</Case>
+
+</Switch>
+
 ## How Is It Calculated?
 
 The `ImageCoherence` score is calculated as follows:
 
-1. **Individual Image Coherence**: Each image's coherence score is based on the text directly above and below the image, limited by a `max_context_size` in characters. If `max_context_size` is not supplied, all available text is used. The equation can be expressed as:
+1. **Individual Image Coherence**: Each image's coherence score is based on the text directly above and below the image, limited by a <Term py="max_context_size" ts="maxContextSize"/> in characters. If <Term py="max_context_size" ts="maxContextSize"/> is not supplied, all available text is used. The equation can be expressed as:
 
 <Equation formula="C_i = f(\text{Context}_{\text{above}}, \text{Context}_{\text{below}}, \text{Image}_i)" />
 
@@ -113,7 +184,7 @@ The `ImageCoherence` score is calculated as follows:
         <>
           Each <code>MLLMImage</code> is scored from the text directly above and
           below it, and the final score is the <strong>average</strong>{" "}
-          (<code>O = (ΣC_i) / n</code>). Use <code>max_context_size</code> to cap
+          (<code>O = (ΣC_i) / n</code>). Use <Term py="max_context_size" ts="maxContextSize"/> to cap
           the surrounding text per image.
         </>
       ),

@@ -1,1 +1,3 @@
-from .arena_g_eval import ArenaGEval
+from .arena_g_eval import ArenaGEval, ArenaGEvalTemplate
+
+__all__ = ["ArenaGEval", "ArenaGEvalTemplate"]

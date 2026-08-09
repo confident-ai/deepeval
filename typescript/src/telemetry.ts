@@ -9,6 +9,9 @@ import { PostHog } from "posthog-node";
 
 import Sentry from "@sentry/node";
 
+import { isReadOnlyFileSystem, parseBool } from "@/config/utils";
+import { applyGrpcLoggingEnv } from "@/logger";
+
 export enum Feature {
   REDTEAMING = "redteaming",
   SYNTHESIZER = "synthesizer",
@@ -41,7 +44,13 @@ const POSTHOG_HOST = "https://us.i.posthog.com";
 // Telemetry Helpers
 // -------------------
 function telemetryOptOut(): boolean {
-  return process.env.DEEPEVAL_TELEMETRY_OPT_OUT === "1";
+  return parseBool(process.env.DEEPEVAL_TELEMETRY_OPT_OUT) ?? false;
+}
+
+/** Gated separately from product analytics, and off unless asked for. */
+function errorReportingEnabled(): boolean {
+  if (telemetryOptOut()) return false;
+  return parseBool(process.env.ERROR_REPORTING) ?? false;
 }
 
 function _blockedByFirewall(): boolean {
@@ -88,13 +97,19 @@ function initializeTelemetry() {
     return;
   }
 
-  Sentry.init({
-    dsn: "https://5ef587d58109ee45d6544f3657efdd1f@o4506098477236224.ingest.sentry.io/4506098479136768",
-    tracesSampleRate: 1.0,
-    sendDefaultPii: false,
-    attachStacktrace: false,
-    defaultIntegrations: false,
-  });
+  if (errorReportingEnabled()) {
+    Sentry.init({
+      dsn: "https://5ef587d58109ee45d6544f3657efdd1f@o4506098477236224.ingest.sentry.io/4506098479136768",
+      tracesSampleRate: 1.0,
+      sendDefaultPii: false,
+      attachStacktrace: false,
+      defaultIntegrations: false,
+    });
+  }
+
+  // grpc-js reads GRPC_VERBOSITY / GRPC_TRACE when the channel is created, so
+  // this has to run before the exporter exists.
+  applyGrpcLoggingEnv();
 
   const otlpExporter = new OTLPTraceExporter({
     url: NEW_RELIC_OTLP_ENDPOINT,
@@ -194,7 +209,7 @@ export async function withCaptureTracingIntegration<T>(
 // -------------------
 
 async function writeTelemetryFile(data: Record<string, string>): Promise<void> {
-  if (telemetryOptOut()) {
+  if (telemetryOptOut() || isReadOnlyFileSystem()) {
     return;
   }
 
@@ -299,7 +314,7 @@ async function getUniqueId(): Promise<string> {
 // Move Folders
 // -------------------
 function _moveTelemetryFilesIfNeeded() {
-  if (telemetryOptOut()) {
+  if (telemetryOptOut() || isReadOnlyFileSystem()) {
     return;
   }
 

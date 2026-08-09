@@ -1,11 +1,12 @@
 {
   "uuid": "70e6bb0b-bdc9-40f9-bef6-e7f1689f76f5",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019d050f-90b1-7ab2-afa3-d57168361927",
       "name": "mixed_tools_chain",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "startTime": "2026-03-19T07:46:39.409Z",
       "endTime": "2026-03-19T07:46:44.319Z",
       "input": {
@@ -92,7 +93,7 @@
             "status": "success"
           },
           {
-            "content": "Paris: Partly cloudy, 62°F (≈16.7°C).",
+            "content": "Paris: Partly cloudy, 62\u00b0F (\u224816.7\u00b0C).",
             "additional_kwargs": {
               "refusal": null
             },
@@ -158,10 +159,11 @@
           }
         }
       ],
-      "integration": "LangChain"
+      "integration": "LangChain",
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019d050f-977a-7ba0-a7a6-2b4f6fc32b56",
@@ -195,7 +197,7 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Paris: Partly cloudy, 62°F (≈16.7°C).",
+        "content": "Paris: Partly cloudy, 62\u00b0F (\u224816.7\u00b0C).",
         "tool_calls": []
       },
       "model": "gpt-5.4-mini-2025-08-07",
@@ -366,7 +368,7 @@
         "status": "success"
       },
       {
-        "content": "Paris: Partly cloudy, 62°F (≈16.7°C).",
+        "content": "Paris: Partly cloudy, 62\u00b0F (\u224816.7\u00b0C).",
         "additional_kwargs": {
           "refusal": null
         },

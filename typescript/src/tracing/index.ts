@@ -1,4 +1,4 @@
-export { BaseApiSpan, TraceApi } from "./api";
+export { BaseApiSpan, TraceApi } from "@/tracing/api";
 
 export {
   updateCurrentSpan,
@@ -12,9 +12,9 @@ export {
   getCurrentTrace,
   type Trace,
   type BaseSpan,
-} from "./tracing";
+} from "@/tracing/tracing";
 
-export { setTracingContext } from "./trace-context";
+export { setTracingContext } from "@/tracing/trace-context";
 
 export {
   resolveSpanRoute,
@@ -25,7 +25,7 @@ export {
   ROUTE_TO_REST_ATTRIBUTE,
   type SpanRoute,
   type RestRoutingOptions,
-} from "./otel-routing";
+} from "@/tracing/otel-routing";
 
 export {
   nextSpan,
@@ -41,6 +41,12 @@ export {
   type PendingToolSpanParams,
   type PendingRetrieverSpanParams,
   type PendingPayload,
-} from "./pending-context";
+} from "@/tracing/pending-context";
 
-export { evaluateThread, evaluateTrace, evaluateSpan } from "./offline-evals";
+export { flushTraces, traceFlushEnabled } from "@/tracing/flush";
+
+export {
+  evaluateThread,
+  evaluateTrace,
+  evaluateSpan,
+} from "@/tracing/offline-evals";

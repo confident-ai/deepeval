@@ -1,32 +1,37 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   RoleViolationsSchema,
   VerdictsSchema,
   RoleViolationScoreReasonSchema,
   type RoleViolationVerdict,
-} from "./schema";
+} from "@/metrics/role-violation/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "RoleViolationMetric";
+
+export type RoleViolationTemplateOverride =
+  MetricTemplateOverride<"RoleViolationMetric">;
 
 export interface RoleViolationMetricOptions {
   /** The role the assistant must stay in (e.g. "helpful assistant"). Required. */
   role: string;
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: RoleViolationTemplateOverride;
 }
 
 /**
@@ -41,12 +46,16 @@ export class RoleViolationMetric extends BaseMetric {
 
   constructor(options: RoleViolationMetricOptions) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 0 : (options.threshold ?? 0.5), {
+    super(strictMode ? 0 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
@@ -71,7 +80,7 @@ export class RoleViolationMetric extends BaseMetric {
       this.verdicts = await this.generateVerdicts();
       this.score = this.calculateScore();
       this.reason = await this.generateReason();
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Role violations:\n${prettifyList(this.roleViolations)}`,
@@ -85,7 +94,7 @@ export class RoleViolationMetric extends BaseMetric {
   }
 
   private async detectRoleViolations(actualOutput: string): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "detect_role_violations", {
+    const prompt = this.getPrompt("detect_role_violations", {
       actual_output: actualOutput,
       expected_role: this.role,
     });
@@ -99,7 +108,7 @@ export class RoleViolationMetric extends BaseMetric {
 
   private async generateVerdicts(): Promise<RoleViolationVerdict[]> {
     if (this.roleViolations.length === 0) return [];
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+    const prompt = this.getPrompt("generate_verdicts", {
       role_violations: this.roleViolations,
     });
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
@@ -111,7 +120,7 @@ export class RoleViolationMetric extends BaseMetric {
     const violationReasons = this.verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "yes")
       .map((v) => v.reason);
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       role_violations: violationReasons,
       score: (this.score ?? 0).toFixed(2),
     });
@@ -130,12 +139,6 @@ export class RoleViolationMetric extends BaseMetric {
       if (v.verdict.trim().toLowerCase() === "yes") return 0;
     }
     return 1;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

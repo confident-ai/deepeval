@@ -9,6 +9,7 @@ import rehypeKatex from "rehype-katex";
 import { remarkAdmonitions } from "./lib/remark-admonitions";
 import { AUTHOR_IDS } from "./lib/authors";
 import { BLOG_CATEGORY_IDS } from "./lib/blog-categories";
+import { LANGUAGE_IDS } from "./lib/lang/languages";
 
 /**
  * Extend Fumadocs' default page frontmatter with a Docusaurus-style
@@ -19,8 +20,27 @@ import { BLOG_CATEGORY_IDS } from "./lib/blog-categories";
  * Note: fumadocs-mdx only allows collection/config exports from this
  * file, so this schema stays internal (non-exported).
  */
+const languagesField = z
+  .array(z.enum(LANGUAGE_IDS))
+  .min(1, 'declare at least one language')
+  .refine((langs) => new Set(langs).size === langs.length, {
+    message: 'listed a language twice',
+  });
+
 const extendedPageSchema = pageSchema.extend({
   sidebar_label: z.string().optional(),
+  languages: languagesField.optional(),
+});
+
+/**
+ * `languages` is required for docs and integrations because those are the
+ * reference surfaces the language selector acts on — an undeclared page
+ * there would silently render whatever the reader last picked. Guides,
+ * tutorials, changelog and blog stay optional and simply follow the
+ * reader's preference when they say nothing.
+ */
+const strictPageSchema = extendedPageSchema.extend({
+  languages: languagesField,
 });
 
 const commonOptions = {
@@ -32,6 +52,14 @@ const commonOptions = {
   },
   meta: {
     schema: metaSchema,
+  },
+} as const;
+
+const strictOptions = {
+  ...commonOptions,
+  docs: {
+    ...commonOptions.docs,
+    schema: strictPageSchema,
   },
 } as const;
 
@@ -63,7 +91,7 @@ const blogOptions = {
   },
 } as const;
 
-export const docs = defineDocs({ dir: "content/docs", ...commonOptions });
+export const docs = defineDocs({ dir: "content/docs", ...strictOptions });
 export const guides = defineDocs({ dir: "content/guides", ...commonOptions });
 export const tutorials = defineDocs({
   dir: "content/tutorials",
@@ -71,7 +99,7 @@ export const tutorials = defineDocs({
 });
 export const integrations = defineDocs({
   dir: "content/integrations",
-  ...commonOptions,
+  ...strictOptions,
 });
 export const changelog = defineDocs({
   dir: "content/changelog",

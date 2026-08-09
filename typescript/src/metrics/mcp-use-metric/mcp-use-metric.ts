@@ -1,4 +1,4 @@
-import { BaseMetric } from "../base-metrics";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import {
   LLMTestCase,
   SingleTurnParams,
@@ -7,27 +7,34 @@ import {
   MCPResourceCall,
   MCPPromptCall,
   ToolCall,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+} from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
-} from "../utils";
-import { reprPrimitive, indentMultilineString } from "../mcp/utils";
-import { MCPPrimitivesScoreSchema, MCPArgsScoreSchema } from "./schema";
+} from "@/metrics/utils";
+import { reprPrimitive, indentMultilineString } from "@/metrics/mcp/utils";
+import {
+  MCPPrimitivesScoreSchema,
+  MCPArgsScoreSchema,
+} from "@/metrics/mcp-use-metric/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "MCPUseMetric";
 
+export type MCPUseTemplateOverride = MetricTemplateOverride<"MCPUseMetric">;
+
 export interface MCPUseMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: MCPUseTemplateOverride;
 }
 
 function block(label: string, items: unknown[]): string {
@@ -47,12 +54,16 @@ function block(label: string, items: unknown[]): string {
 export class MCPUseMetric extends BaseMetric {
   constructor(options: MCPUseMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
@@ -85,7 +96,7 @@ export class MCPUseMetric extends BaseMetric {
 
       const primScore = await generateWithSchema(
         this,
-        resolveTemplate("metrics", TEMPLATE_CLASS, "get_primitive_correctness_prompt", {
+        this.getPrompt("get_primitive_correctness_prompt", {
           test_case: testCaseVars,
           available_primitives: availablePrimitives,
           primitives_used: primitivesUsed,
@@ -94,7 +105,7 @@ export class MCPUseMetric extends BaseMetric {
       );
       const argScore = await generateWithSchema(
         this,
-        resolveTemplate("metrics", TEMPLATE_CLASS, "get_mcp_argument_correctness_prompt", {
+        this.getPrompt("get_mcp_argument_correctness_prompt", {
           test_case: testCaseVars,
           available_primitives: availablePrimitives,
           primitives_used: primitivesUsed,
@@ -103,11 +114,11 @@ export class MCPUseMetric extends BaseMetric {
       );
 
       const score = Math.min(primScore.score, argScore.score);
-      this.score = this.strictMode && score < this.threshold ? 0 : score;
+      this.score = this.applyStrictMode(score);
       this.reason = this.includeReason
         ? `[\n\t${primScore.reason}\n\t${argScore.reason}\n]\n`
         : undefined;
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         availablePrimitives,
@@ -130,7 +141,10 @@ export class MCPUseMetric extends BaseMetric {
     let availablePrimitives = "MCP Primitives Available: \n";
     for (const server of mcpServers) {
       availablePrimitives += `MCP Server ${server.serverName}\n`;
-      availablePrimitives += block("Available Tools", server.availableTools ?? []);
+      availablePrimitives += block(
+        "Available Tools",
+        server.availableTools ?? [],
+      );
       availablePrimitives += block(
         "Available Resources",
         server.availableResources ?? [],
@@ -145,12 +159,6 @@ export class MCPUseMetric extends BaseMetric {
     primitivesUsed += block("MCP Resources Called", mcpResourcesCalled);
     primitivesUsed += block("MCP Prompts Called", mcpPromptsCalled);
     return { availablePrimitives, primitivesUsed };
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

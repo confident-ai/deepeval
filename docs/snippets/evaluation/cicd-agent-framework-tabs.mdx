@@ -1,3 +1,7 @@
+<Switch>
+
+<Case id="python">
+
 <Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Strands", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
 <Tab value="Manual Instrumentation">
 
@@ -409,3 +413,304 @@ Call `instrument_crewai()` once, then build your crew with `deepeval`'s `Crew` a
 
 </Tab>
 </Tabs>
+
+</Case>
+
+<Case id="typescript">
+
+Every tab below uses the same matcher: the golden is the subject, and `task` produces the trace judged against it. Importing `deepeval/vitest` registers `toPass()`, and `npx deepeval test run` injects it for you.
+
+<Tabs items={["Manual Instrumentation", "LangChain", "Mastra", "LangGraph", "OpenAI", "OpenAI Agents", "Vercel AI SDK"]}>
+<Tab value="Manual Instrumentation">
+
+```typescript title="llm-app.test.ts" showLineNumbers
+import { it, expect } from "vitest";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { TaskCompletionMetric } from "deepeval/metrics";
+import { observe, updateCurrentTrace } from "deepeval/tracing";
+import "deepeval/vitest";
+
+// 1. Load your dataset of goldens
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What is pi rounded to 2 decimal places?" })],
+});
+
+// 2. Instrument your agent
+const myAiAgent = observe({
+  type: "agent",
+  fn: async (query: string): Promise<string> => {
+    const answer = "Pi rounded to 2 decimal places is 3.14.";
+    updateCurrentTrace({ input: query, output: answer });
+    return answer;
+  },
+});
+
+// 3. Evaluate end-to-end on each golden
+it.each(dataset.goldens as Golden[])(
+  "completes the task #%$",
+  async (golden) => {
+    await expect(golden).toPass([new TaskCompletionMetric()], {
+      task: (g) => myAiAgent(g.input),
+    });
+  },
+);
+```
+
+Wrap your agent's top-level function with `observe` and set the trace-level test case fields with `updateCurrentTrace(...)`. See [LLM tracing](/docs/evaluation-llm-tracing) for the full surface.
+
+</Tab>
+<Tab value="LangChain">
+
+```typescript title="langchain-app.test.ts" showLineNumbers
+import { it, expect } from "vitest";
+import { createAgent } from "langchain";
+import { DeepEvalCallbackHandler } from "deepeval/integrations/langchain";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { TaskCompletionMetric } from "deepeval/metrics";
+import "deepeval/vitest";
+
+// 1. Load your dataset of goldens
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What is pi rounded to 2 decimal places?" })],
+});
+
+// 2. Instrument your agent
+const agent = createAgent({
+  model: "openai:gpt-4o-mini",
+  tools: [],
+  systemPrompt: "Answer math questions concisely.",
+});
+
+const handler = new DeepEvalCallbackHandler({});
+
+const ask = (prompt: string) =>
+  agent.invoke(
+    { messages: [{ role: "user", content: prompt }] },
+    { callbacks: [handler] },
+  );
+
+// 3. Evaluate end-to-end on each golden
+it.each(dataset.goldens as Golden[])(
+  "completes the task #%$",
+  async (golden) => {
+    await expect(golden).toPass([new TaskCompletionMetric()], {
+      task: (g) => ask(g.input),
+    });
+  },
+);
+```
+
+Pass `deepeval`'s `DeepEvalCallbackHandler` to your agent's `invoke` method. See the [LangChain integration](/integrations/frameworks/langchain) for the full surface.
+
+</Tab>
+<Tab value="Mastra">
+
+```typescript title="mastra-app.test.ts" showLineNumbers
+import { it, expect } from "vitest";
+import { Observability } from "@mastra/observability";
+import { Mastra } from "@mastra/core/mastra";
+import { DeepEvalExporter } from "deepeval/integrations/mastra";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { TaskCompletionMetric } from "deepeval/metrics";
+import "deepeval/vitest";
+
+// 1. Load your dataset of goldens
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What is pi rounded to 2 decimal places?" })],
+});
+
+// 2. Instrument your agent
+const mastra = new Mastra({
+  agents: { mathAgent },
+  observability: new Observability({
+    configs: {
+      deepeval: {
+        serviceName: "math-app",
+        exporters: [new DeepEvalExporter()],
+      },
+    },
+  }),
+});
+
+const ask = (prompt: string) => mastra.getAgent("mathAgent").generate(prompt);
+
+// 3. Evaluate end-to-end on each golden
+it.each(dataset.goldens as Golden[])(
+  "completes the task #%$",
+  async (golden) => {
+    await expect(golden).toPass([new TaskCompletionMetric()], {
+      task: (g) => ask(g.input),
+    });
+  },
+);
+```
+
+`toPass()` waits for the exporter to settle before scoring, so no manual flush is needed inside a test. See the [Mastra integration](/integrations/frameworks/mastra) for the full surface.
+
+</Tab>
+<Tab value="LangGraph">
+
+```typescript title="langgraph-app.test.ts" showLineNumbers
+import { it, expect } from "vitest";
+import { StateGraph, MessagesAnnotation, START, END } from "@langchain/langgraph";
+import { DeepEvalCallbackHandler } from "deepeval/integrations/langchain";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { TaskCompletionMetric } from "deepeval/metrics";
+import "deepeval/vitest";
+
+// 1. Load your dataset of goldens
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What is pi rounded to 2 decimal places?" })],
+});
+
+// 2. Instrument your graph
+const graph = new StateGraph(MessagesAnnotation)
+  .addNode("chatbot", chatbot)
+  .addEdge(START, "chatbot")
+  .addEdge("chatbot", END)
+  .compile();
+
+const handler = new DeepEvalCallbackHandler({});
+
+const ask = (prompt: string) =>
+  graph.invoke(
+    { messages: [{ role: "user", content: prompt }] },
+    { callbacks: [handler] },
+  );
+
+// 3. Evaluate end-to-end on each golden
+it.each(dataset.goldens as Golden[])(
+  "completes the task #%$",
+  async (golden) => {
+    await expect(golden).toPass([new TaskCompletionMetric()], {
+      task: (g) => ask(g.input),
+    });
+  },
+);
+```
+
+The same `DeepEvalCallbackHandler` covers LangGraph, since LangGraph runs on LangChain's callback system. See the [LangGraph integration](/integrations/frameworks/langgraph) for the full surface.
+
+</Tab>
+<Tab value="OpenAI">
+
+```typescript title="openai-app.test.ts" showLineNumbers
+import { it, expect } from "vitest";
+import { OpenAI } from "openai";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { instrumentOpenAI } from "deepeval/openai";
+import "deepeval/vitest";
+
+// 1. Load your dataset of goldens
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What is pi rounded to 2 decimal places?" })],
+});
+
+// 2. Instrument your client
+const client = new OpenAI();
+instrumentOpenAI(client);
+
+const respond = (prompt: string) =>
+  client.chat.completions.create({
+    model: "gpt-4o",
+    messages: [{ role: "user", content: prompt }],
+  });
+
+// 3. Evaluate end-to-end on each golden
+it.each(dataset.goldens as Golden[])(
+  "answers the question #%$",
+  async (golden) => {
+    await expect(golden).toPass([new AnswerRelevancyMetric()], {
+      task: (g) => respond(g.input),
+    });
+  },
+);
+```
+
+`instrumentOpenAI` patches the client in place, so every call it makes becomes an LLM span. See the [OpenAI integration](/integrations/frameworks/openai) for the full surface.
+
+</Tab>
+<Tab value="OpenAI Agents">
+
+```typescript title="openai-agents-app.test.ts" showLineNumbers
+import { it, expect } from "vitest";
+import { Agent, run, addTraceProcessor } from "@openai/agents";
+import { DeepEvalTracingProcessor } from "deepeval/integrations/openai-agents";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { TaskCompletionMetric } from "deepeval/metrics";
+import "deepeval/vitest";
+
+// 1. Load your dataset of goldens
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What is pi rounded to 2 decimal places?" })],
+});
+
+// 2. Instrument your agent
+addTraceProcessor(new DeepEvalTracingProcessor());
+
+const agent = new Agent({
+  name: "mathAgent",
+  instructions: "Answer math questions concisely.",
+  model: "gpt-4o-mini",
+});
+
+// 3. Evaluate end-to-end on each golden
+it.each(dataset.goldens as Golden[])(
+  "completes the task #%$",
+  async (golden) => {
+    await expect(golden).toPass([new TaskCompletionMetric()], {
+      task: (g) => run(agent, g.input),
+    });
+  },
+);
+```
+
+Register the processor once and every `run(...)` becomes a trace. See the [OpenAI Agents integration](/integrations/frameworks/openai-agents) for the full surface.
+
+</Tab>
+<Tab value="Vercel AI SDK">
+
+```typescript title="ai-sdk-app.test.ts" showLineNumbers
+import { it, expect } from "vitest";
+import { generateText } from "ai";
+import { openai } from "@ai-sdk/openai";
+import { configureAiSdkTracing } from "deepeval/integrations/ai-sdk";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { TaskCompletionMetric } from "deepeval/metrics";
+import "deepeval/vitest";
+
+// 1. Load your dataset of goldens
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What is pi rounded to 2 decimal places?" })],
+});
+
+// 2. Instrument your app
+const tracer = configureAiSdkTracing({ name: "math-app" });
+
+const ask = (prompt: string) =>
+  generateText({
+    model: openai("gpt-4o-mini"),
+    prompt,
+    experimental_telemetry: { isEnabled: true, tracer },
+  });
+
+// 3. Evaluate end-to-end on each golden
+it.each(dataset.goldens as Golden[])(
+  "completes the task #%$",
+  async (golden) => {
+    await expect(golden).toPass([new TaskCompletionMetric()], {
+      task: (g) => ask(g.input),
+    });
+  },
+);
+```
+
+Telemetry is opt-in per call: a call without `isEnabled` and a `tracer` is never traced. See the [Vercel AI SDK integration](/integrations/frameworks/ai-sdk) for the full surface.
+
+</Tab>
+</Tabs>
+
+</Case>
+
+</Switch>

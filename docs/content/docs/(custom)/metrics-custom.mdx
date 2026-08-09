@@ -2,6 +2,7 @@
 id: metrics-custom
 title: "'Do it yourself' Metrics"
 sidebar_label: Do it yourself
+languages: [python]
 ---
 <MetricTagsDisplayer custom={true} usesLLMs={false} />
 
@@ -150,13 +151,12 @@ Both `measure()` and `a_measure()` **MUST**:
 
 You can also optionally set `self.reason` in the measure methods (if you're using an LLM for evaluation), or wrap everything in a `try` block to catch any exceptions and set it to `self.error`. Here's a hypothetical example:
 
-
 <Tabs items={["Single-Turn", "Multi-Turn"]}>
 <Tab value="Single-Turn">
 
 ```python
-from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
+from deepeval.metrics import BaseMetric
 
 class CustomMetric(BaseMetric):
     ...
@@ -239,8 +239,8 @@ Often times, the blocking part of an LLM evaluation metric stems from the API ca
 If you've explored all your options and realize there is no asynchronous implementation of your LLM call (eg., if you're using an open-source model from Hugging Face's `transformers` library), simply **reuse the `measure` method in `a_measure()`**:
 
 ```python
-from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
+from deepeval.metrics import BaseMetric
 
 class CustomMetric(BaseMetric):
     ...
@@ -260,8 +260,8 @@ Under the hood, `deepeval` calls the `is_successful()` method to determine the s
 <Tab value="Single-Turn">
 
 ```python
-from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
+from deepeval.metrics import BaseMetric
 
 class CustomMetric(BaseMetric):
     ...
@@ -309,8 +309,8 @@ Probably the easiest step, all that's left is to name your custom metric:
 <Tab value="Single-Turn">
 
 ```python
-from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
+from deepeval.metrics import BaseMetric
 
 class CustomMetric(BaseMetric):
     ...
@@ -338,7 +338,6 @@ class CustomConversationalMetric(BaseConversationalMetric):
 </Tab>
 </Tabs>
 
-
 **Congratulations 🎉!** You've just learnt how to build a custom metric that is 100% integrated with `deepeval`'s ecosystem. In the following section, we'll go through a few real-life examples.
 
 ## More Examples
@@ -348,9 +347,9 @@ class CustomConversationalMetric(BaseConversationalMetric):
 An LLM-Eval is an LLM evaluation metric that is scored using an LLM, and so a non-LLM eval is simply a metric that is not scored using an LLM. In this example, we'll demonstrate how to use the [rouge score](https://www.confident-ai.com/blog/llm-evaluation-metrics-everything-you-need-for-llm-evaluation) instead:
 
 ```python
-from deepeval.scorer import Scorer
-from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
+from deepeval.metrics import BaseMetric
+from deepeval.scorer import Scorer
 
 class RougeMetric(BaseMetric):
     def __init__(self, threshold: float = 0.5):
@@ -465,7 +464,6 @@ class FaithfulRelevancyMetric(BaseMetric):
     def __name__(self):
         return "Composite Relevancy Faithfulness Metric"
 
-
     ######################
     ### Helper methods ###
     ######################
@@ -512,8 +510,8 @@ class FaithfulRelevancyMetric(BaseMetric):
 Now go ahead and try to use it:
 
 ```python title="test_llm.py"
-from deepeval import assert_test
 from deepeval.test_case import LLMTestCase
+from deepeval import assert_test
 ...
 
 def test_llm():

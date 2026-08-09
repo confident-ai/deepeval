@@ -2,6 +2,7 @@
 id: metrics-step-efficiency
 title: Step Efficiency
 sidebar_label: Step Efficiency
+languages: [python, typescript]
 ---
 <MetricTagsDisplayer usesLLMs={true} singleTurn={true} agent={true} referenceless={true} />
 
@@ -13,7 +14,11 @@ Step Efficiency analyzes your **agent's full trace** to determine the task and e
 
 ## Usage
 
-To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `StepEfficiencyMetric()` to your agent's `@observe` tag or in the `evals_iterator` method.
+To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `StepEfficiencyMetric()` to your agent's `@observe` tag or in the <Term py="evals_iterator" ts="evalsIterator"/> method.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from somewhere import llm
@@ -51,20 +56,87 @@ for golden in dataset.evals_iterator(metrics=[metric]):
     agent(golden.input)
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { observe, updateCurrentTrace } from "deepeval/tracing";
+import { Golden, EvaluationDataset } from "deepeval/dataset";
+import { StepEfficiencyMetric } from "deepeval/metrics";
+import { ToolCall } from "deepeval/test-case";
+import { llm } from "./somewhere";
+
+const toolCall = observe({
+  type: "tool",
+  fn: async (input: string) => {
+    // ...
+    return [new ToolCall({ name: "CheckWeather" })];
+  },
+});
+
+const agent = observe({
+  type: "agent",
+  fn: async (input: string) => {
+    const tools = await toolCall(input);
+    const output = await llm(input, tools);
+    updateCurrentTrace({
+      input,
+      output,
+      toolsCalled: tools,
+    });
+    return output;
+  },
+});
+
+// Create dataset
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What's the weather like in SF?" })],
+});
+
+// Initialize metric
+const metric = new StepEfficiencyMetric({ threshold: 0.7, model: "gpt-4o" });
+
+// Loop through dataset
+for await (const golden of dataset.evalsIterator({ metrics: [metric] })) {
+  await agent((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
+<Switch>
+
+<Case id="python">
+
 There are **EIGHT** optional parameters when creating a `StepEfficiencyMetric`:
 
-- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
-- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+</Case>
 
-To learn more about how the `evals_iterator` work, [click here.](/docs/evaluation-end-to-end-llm-evals#e2e-evals-for-tracing)
+<Case id="typescript">
+
+There are **SEVEN** optional parameters when creating a `StepEfficiencyMetric`:
+
+</Case>
+
+</Switch>
+
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+
+To learn more about how the <Term py="evals_iterator" ts="evalsIterator"/> work, [click here.](/docs/evaluation-end-to-end-llm-evals#e2e-evals-for-tracing)
 
 :::info
-The `StepEfficiencyMetric` is an agentic trace-only metric, so unlike other `deepeval` metrics, it cannot be used as a standaolne and **MUST** be used in the `evals_iterator` or `observe` decorator.
+The `StepEfficiencyMetric` is an agentic trace-only metric, so unlike other `deepeval` metrics, it cannot be used as a standaolne and **MUST** be used in the <Term py="evals_iterator" ts="evalsIterator"/> or `observe` decorator.
 :::
 
 ## How Is It Calculated?
@@ -90,7 +162,7 @@ The `StepEfficiencyMetric` score is calculated using the following steps:
           <code>AlignmentScore</code> between the extracted <strong>Task</strong>{" "}
           and <strong>Execution Steps</strong>, penalizing any action not
           strictly required — duplicates, retries, detours. Set{" "}
-          <code>include_reason</code> to see flagged steps.
+          <Term py="include_reason" ts="includeReason"/> to see flagged steps.
         </>
       ),
     },

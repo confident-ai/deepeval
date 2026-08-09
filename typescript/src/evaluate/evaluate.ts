@@ -3,14 +3,20 @@ import {
   BaseMetric,
   BaseMetricCore,
   BaseConversationalMetric,
-} from "../metrics";
+} from "@/metrics";
+import { checkAtLeastOneMetricHasThreshold } from "@/metrics/utils";
 import {
   LLMTestCase,
   ConversationalTestCase,
   resolveRetrievalContext,
-} from "../test-case";
-import { MissingTestCaseParamsError } from "../errors";
-import { TestResult, MetricData, EvaluationResult } from "./types";
+} from "@/test-case";
+import { MissingTestCaseParamsError } from "@/errors";
+import {
+  TestResult,
+  MetricData,
+  EvaluationResult,
+  aggregateSuccess,
+} from "@/evaluate/types";
 import {
   AsyncConfig,
   DisplayConfig,
@@ -20,15 +26,25 @@ import {
   DEFAULT_DISPLAY_CONFIG,
   DEFAULT_ERROR_CONFIG,
   DEFAULT_CACHE_CONFIG,
-} from "./configs";
+} from "@/evaluate/configs";
 import {
   printResultsTable,
   printHyperparametersWarning,
   printCompletionSummary,
   exportToMarkdown,
-} from "./console-report";
-import { postTestRun } from "./confident";
-import { type EvaluatedCase } from "./types";
+} from "@/evaluate/console-report";
+import { postTestRun } from "@/evaluate/confident";
+import {
+  processHyperparameters,
+  type Hyperparameters,
+} from "@/evaluate/hyperparameters";
+import { mapWithConcurrency, shouldUseCache } from "@/env-flags";
+import {
+  cacheMetricData,
+  ensureCacheFlushedOnExit,
+  getCachedMetricData,
+} from "@/evaluate/test-run/cache";
+import { type EvaluatedCase } from "@/evaluate/types";
 
 type AnyTestCase = LLMTestCase | ConversationalTestCase;
 type AnyMetric = BaseMetric | BaseConversationalMetric;
@@ -40,6 +56,10 @@ export interface EvaluateOptions {
   cacheConfig?: CacheConfig;
   /** Mark this as the official test run for the dataset on Confident AI. */
   official?: boolean;
+  /** Names this test run so it can be found and compared on Confident AI. */
+  identifier?: string;
+  /** The model, prompt and settings that produced these outputs. */
+  hyperparameters?: Hyperparameters;
 }
 
 /** A conversational metric runs on a `ConversationalTestCase`; otherwise single-turn. */
@@ -66,6 +86,8 @@ export async function evaluate(
   metrics: AnyMetric[],
   options: EvaluateOptions = {},
 ): Promise<EvaluationResult> {
+  checkAtLeastOneMetricHasThreshold(metrics);
+
   const display: Required<DisplayConfig> = {
     ...DEFAULT_DISPLAY_CONFIG,
     ...options.displayConfig,
@@ -74,9 +96,15 @@ export async function evaluate(
     ...DEFAULT_ERROR_CONFIG,
     ...options.errorConfig,
   };
-  // Reserved for when concurrency/caching are wired up.
-  void ({ ...DEFAULT_ASYNC_CONFIG, ...options.asyncConfig } as AsyncConfig);
-  void ({ ...DEFAULT_CACHE_CONFIG, ...options.cacheConfig } as CacheConfig);
+  const asyncCfg: Required<AsyncConfig> = {
+    ...DEFAULT_ASYNC_CONFIG,
+    ...options.asyncConfig,
+  };
+  const cacheCfg: Required<CacheConfig> = {
+    ...DEFAULT_CACHE_CONFIG,
+    ...resolveCacheConfig(),
+    ...options.cacheConfig,
+  };
 
   // Per-case work list: only the metrics that match each case's type.
   const work = testCases.map((testCase, index) => ({
@@ -155,10 +183,17 @@ export async function evaluate(
     for (const { index, testCase, metrics: applicable } of work) {
       const caseBar = caseBars[index];
       const caseStart = Date.now();
-      const metricsData = await Promise.all(
-        applicable.map((m) =>
-          runMetric(m, testCase, errorCfg, () => caseBar?.increment()),
-        ),
+      const metricsData = await mapWithConcurrency(
+        applicable,
+        asyncCfg.maxConcurrent,
+        (m) =>
+          runMetric(
+            m,
+            testCase,
+            errorCfg,
+            () => caseBar?.increment(),
+            cacheCfg,
+          ),
       );
       caseBar?.update(Math.max(applicable.length, 1));
       mainBar?.increment();
@@ -177,11 +212,13 @@ export async function evaluate(
   }
   const runDuration = (Date.now() - startTime) / 1000;
 
+  const hyperparameters = processHyperparameters(options.hyperparameters);
+
   if (display.printResults) {
     printResultsTable(testResults, {
       truncatePassing: display.truncatePassingCases,
     });
-    printHyperparametersWarning();
+    printHyperparametersWarning(hyperparameters);
   }
 
   // Optionally write the report to a Markdown/MDX file.
@@ -190,11 +227,11 @@ export async function evaluate(
   }
 
   // Post results to Confident AI (no-op + returns nulls unless logged in).
-  const { link, testRunId } = await postTestRun(
-    evaluatedCases,
-    runDuration,
-    options.official ?? false,
-  );
+  const { link, testRunId } = await postTestRun(evaluatedCases, runDuration, {
+    official: options.official,
+    identifier: options.identifier,
+    hyperparameters,
+  });
 
   if (display.printResults && !link) {
     const tokenCost = testResults
@@ -217,7 +254,16 @@ export async function runMetric(
   testCase: AnyTestCase,
   errorCfg: Required<ErrorConfig>,
   onDone: () => void,
+  cacheCfg: Required<CacheConfig> = resolveCacheConfig(),
 ): Promise<MetricData> {
+  if (cacheCfg.useCache) {
+    const cached = getCachedMetricData(testCase, metric);
+    if (cached) {
+      onDone();
+      return cached;
+    }
+  }
+
   // fresh state per (metric, test case)
   metric.score = undefined;
   metric.success = undefined;
@@ -229,7 +275,10 @@ export async function runMetric(
     // Dispatched in `evaluate`, so the metric matches the test case type.
     await (metric.measure as (tc: AnyTestCase) => Promise<number>)(testCase);
   } catch (e) {
-    if (e instanceof MissingTestCaseParamsError && errorCfg.skipOnMissingParams) {
+    if (
+      e instanceof MissingTestCaseParamsError &&
+      errorCfg.skipOnMissingParams
+    ) {
       metric.skipped = true;
     } else if (errorCfg.ignoreErrors) {
       metric.error = (e as Error).message;
@@ -239,17 +288,29 @@ export async function runMetric(
     }
   }
   onDone();
-  return buildMetricData(metric);
+  const metricData = buildMetricData(metric);
+  if (cacheCfg.writeCache) {
+    cacheMetricData(testCase, metric, metricData);
+    ensureCacheFlushedOnExit();
+  }
+  return metricData;
+}
+
+/** Writes stay on regardless, so the next run has something to reuse. */
+export function resolveCacheConfig(): Required<CacheConfig> {
+  return { useCache: shouldUseCache(), writeCache: true };
 }
 
 function buildMetricData(metric: BaseMetricCore): MetricData {
   return {
     name: metric.name,
     threshold: metric.threshold,
-    success: metric.skipped ? true : (metric.success ?? false),
+    // Score-only leaves `success` undefined; that absence is the verdict.
+    success: metric.skipped ? true : metric.success,
     score: metric.score,
     reason: metric.reason,
     strictMode: metric.strictMode,
+    flaky: metric.flaky,
     evaluationModel: metric.evaluationModel,
     evaluationCost: metric.evaluationCost,
     verboseLogs: metric.verboseLogs,
@@ -263,7 +324,7 @@ export function buildTestResult(
   testCase: AnyTestCase,
   metricsData: MetricData[],
 ): TestResult {
-  const success = metricsData.every((m) => m.skipped || m.success);
+  const success = aggregateSuccess(metricsData);
 
   if (testCase instanceof ConversationalTestCase) {
     return {

@@ -1,5 +1,6 @@
 export {
   TurnContextualRecallMetric,
   type TurnContextualRecallMetricOptions,
-} from "./turn-contextual-recall";
-export * from "./schema";
+  type TurnContextualRecallTemplateOverride,
+} from "@/metrics/turn-contextual-recall/turn-contextual-recall";
+export * from "@/metrics/turn-contextual-recall/schema";

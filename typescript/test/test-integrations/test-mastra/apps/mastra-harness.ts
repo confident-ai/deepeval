@@ -1,6 +1,6 @@
 import { Mastra } from "@mastra/core/mastra";
 import { Observability } from "@mastra/observability";
-import type { DeepEvalExporter } from "../../../../src/integrations/mastra";
+import type { DeepEvalExporter } from "@/integrations/mastra";
 
 export function buildMastra(
   exporter: DeepEvalExporter,

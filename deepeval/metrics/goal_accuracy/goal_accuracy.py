@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Type
 import asyncio
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -20,6 +20,10 @@ from deepeval.metrics.goal_accuracy.schema import (
     GoalScore,
     PlanScore,
 )
+from deepeval.templates import make_template_class
+
+
+GoalAccuracyTemplate = make_template_class("GoalAccuracyMetric")
 
 
 class GoalAccuracyMetric(BaseConversationalMetric):
@@ -38,6 +42,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         flaky: bool = False,
+        evaluation_template: Type[GoalAccuracyTemplate] = GoalAccuracyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -47,13 +52,13 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         multimodal = test_case.multimodal
         check_conversational_test_case_params(
@@ -78,7 +83,6 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -122,7 +126,6 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         multimodal = test_case.multimodal
         check_conversational_test_case_params(

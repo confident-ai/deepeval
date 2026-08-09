@@ -1,7 +1,6 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
@@ -9,22 +8,32 @@ import {
   constructVerboseLogs,
   prettifyList,
   resolveRetrievalContext,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   VerdictsSchema,
   ContextualRecallScoreReasonSchema,
   type ContextualRecallVerdict,
-} from "./schema";
+} from "@/metrics/contextual-recall/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
+import {
+  contextualRecallVerdictVars,
+  contextualRecallReasonContentType,
+} from "@/metrics/retrieval-context-display";
 
 const TEMPLATE_CLASS = "ContextualRecallMetric";
 
+export type ContextualRecallTemplateOverride =
+  MetricTemplateOverride<"ContextualRecallMetric">;
+
 export interface ContextualRecallMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: ContextualRecallTemplateOverride;
 }
 
 /**
@@ -36,12 +45,16 @@ export class ContextualRecallMetric extends BaseMetric {
 
   constructor(options: ContextualRecallMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.RETRIEVAL_CONTEXT,
@@ -66,7 +79,7 @@ export class ContextualRecallMetric extends BaseMetric {
       );
       this.score = this.calculateScore();
       this.reason = await this.generateReason(testCase.expectedOutput ?? "");
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Verdicts:\n${prettifyList(this.verdicts)}`,
@@ -82,13 +95,9 @@ export class ContextualRecallMetric extends BaseMetric {
     expectedOutput: string,
     retrievalContext: string[],
   ): Promise<ContextualRecallVerdict[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+    const prompt = this.getPrompt("generate_verdicts", {
       expected_output: expectedOutput,
-      content_type: "sentence",
-      content_type_plural: "sentences",
-      content_or: "sentence",
-      context_to_display: retrievalContext,
-      node_instruction: "",
+      ...contextualRecallVerdictVars(retrievalContext, this.multimodal),
     });
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
@@ -104,12 +113,12 @@ export class ContextualRecallMetric extends BaseMetric {
       if (v.verdict.toLowerCase() === "yes") supportiveReasons.push(v.reason);
       else unsupportiveReasons.push(v.reason);
     }
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       expected_output: expectedOutput,
       supportive_reasons: supportiveReasons,
       unsupportive_reasons: unsupportiveReasons,
       score: (this.score ?? 0).toFixed(2),
-      content_type: "sentence",
+      content_type: contextualRecallReasonContentType(this.multimodal),
     });
     const { reason } = await generateWithSchema(
       this,
@@ -126,13 +135,7 @@ export class ContextualRecallMetric extends BaseMetric {
       (v) => v.verdict.toLowerCase() === "yes",
     ).length;
     const score = justified / total;
-    return this.strictMode && score < this.threshold ? 0 : score;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
+    return this.applyStrictMode(score);
   }
 
   get name(): string {

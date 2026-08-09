@@ -1,16 +1,17 @@
-import { LLMTestCase } from "./llm-test-case";
+import { LLMTestCase } from "@/test-case/llm-test-case";
+import type { Hyperparameters } from "@/evaluate/hyperparameters";
 
 // Mirrors deepeval/test_case/arena_test_case.py.
 
 export class Contestant {
   name: string;
   testCase: LLMTestCase;
-  hyperparameters?: Record<string, unknown>;
+  hyperparameters?: Hyperparameters;
 
   constructor(params: {
     name: string;
     testCase: LLMTestCase;
-    hyperparameters?: Record<string, unknown>;
+    hyperparameters?: Hyperparameters;
   }) {
     this.name = params.name;
     this.testCase = params.testCase;

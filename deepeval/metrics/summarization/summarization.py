@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Type
 import asyncio
 
 from deepeval.test_case import (
@@ -31,6 +31,10 @@ from deepeval.metrics.summarization.schema import (
     SummarizationScoreReason,
 )
 from deepeval.metrics.faithfulness.schema import Truths, Claims
+from deepeval.templates import make_template_class
+
+
+SummarizationTemplate = make_template_class("SummarizationMetric")
 
 
 class SummarizationMetric(BaseMetric):
@@ -52,6 +56,9 @@ class SummarizationMetric(BaseMetric):
         verbose_mode: bool = False,
         truths_extraction_limit: Optional[int] = None,
         flaky: bool = False,
+        evaluation_template: Type[
+            SummarizationTemplate
+        ] = SummarizationTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -72,13 +79,13 @@ class SummarizationMetric(BaseMetric):
         self.truths_extraction_limit = truths_extraction_limit
         if self.truths_extraction_limit is not None:
             self.truths_extraction_limit = max(self.truths_extraction_limit, 0)
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(
@@ -104,7 +111,6 @@ class SummarizationMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -145,7 +151,6 @@ class SummarizationMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(

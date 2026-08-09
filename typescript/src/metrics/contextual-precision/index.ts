@@ -1,5 +1,6 @@
 export {
   ContextualPrecisionMetric,
   type ContextualPrecisionMetricOptions,
-} from "./contextual-precision";
-export * from "./schema";
+  type ContextualPrecisionTemplateOverride,
+} from "@/metrics/contextual-precision/contextual-precision";
+export * from "@/metrics/contextual-precision/schema";

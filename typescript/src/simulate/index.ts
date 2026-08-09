@@ -1,6 +1,6 @@
-import { ConversationalGolden } from "../dataset";
-import { ConversationalTestCase, Turn } from "../test-case";
-import { Api, HttpMethods, Endpoints } from "../confident/api";
+import { ConversationalGolden } from "@/dataset";
+import { ConversationalTestCase, Turn } from "@/test-case";
+import { Api, HttpMethods, Endpoints } from "@/confident/api";
 import * as cliProgress from "cli-progress";
 
 export interface SimulateHttpResponse {

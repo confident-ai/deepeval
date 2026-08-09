@@ -1,20 +1,21 @@
 import type { ZodType } from "zod";
-import { DeepEvalBaseLLM, type GenerationResult } from "../base-model";
 import {
-  computeCost,
-  extractJson,
-  importOptional,
-  requireApiKey,
-} from "../utils";
-import { anthropicContent } from "../multimodal";
+  DeepEvalBaseLLM,
+  type ExtraGenerationParams,
+  type GenerationResult,
+} from "@/models/base-model";
+import { extractJson, importOptional, requireApiKey } from "@/models/utils";
+import { anthropicContent } from "@/models/multimodal";
+import { defaultModelName, type ModelNamespace } from "@/models/registry";
 
-const DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 4096;
 
-export interface AnthropicModelOptions {
+/** Any other key is forwarded to `messages.create(...)`. */
+export interface AnthropicModelOptions extends ExtraGenerationParams {
   model?: string;
   apiKey?: string;
-  temperature?: number;
+  /** Defaults to `0`. Pass `null` to omit it from the request entirely. */
+  temperature?: number | null;
   maxTokens?: number;
   costPerInputToken?: number;
   costPerOutputToken?: number;
@@ -22,25 +23,33 @@ export interface AnthropicModelOptions {
 
 export class AnthropicModel extends DeepEvalBaseLLM {
   private readonly apiKey: string;
-  private readonly temperature?: number;
   private readonly maxTokens: number;
-  private readonly costPerInputToken?: number;
-  private readonly costPerOutputToken?: number;
+  private readonly extraParams: ExtraGenerationParams;
   private client?: any;
+  protected registryNamespace: ModelNamespace = "anthropic";
 
   constructor(options: AnthropicModelOptions = {}) {
+    const {
+      model,
+      apiKey,
+      temperature,
+      maxTokens,
+      costPerInputToken,
+      costPerOutputToken,
+      ...extraParams
+    } = options;
+
     super(
-      options.model ??
+      model ??
         process.env.ANTHROPIC_MODEL_NAME ??
-        DEFAULT_ANTHROPIC_MODEL,
+        defaultModelName("anthropic"),
     );
-    this.apiKey = options.apiKey ?? process.env.ANTHROPIC_API_KEY ?? "";
-    // Left undefined unless explicitly set — some models (e.g. reasoning models)
-    // reject `temperature`, so we only send it when the caller provides it.
-    this.temperature = options.temperature;
-    this.maxTokens = options.maxTokens ?? DEFAULT_MAX_TOKENS;
-    this.costPerInputToken = options.costPerInputToken;
-    this.costPerOutputToken = options.costPerOutputToken;
+    this.apiKey = apiKey ?? process.env.ANTHROPIC_API_KEY ?? "";
+    this.temperature = temperature;
+    this.maxTokens = maxTokens ?? DEFAULT_MAX_TOKENS;
+    this.costPerInputToken = costPerInputToken;
+    this.costPerOutputToken = costPerOutputToken;
+    this.extraParams = extraParams;
   }
 
   private async getClient(): Promise<any> {
@@ -62,22 +71,22 @@ export class AnthropicModel extends DeepEvalBaseLLM {
   ): Promise<GenerationResult<T>> {
     const client = await this.getClient();
 
+    const temperature = this.resolveTemperature();
     const message = await client.messages.create({
       model: this.modelName,
       max_tokens: this.maxTokens,
-      ...(this.temperature !== undefined && { temperature: this.temperature }),
+      ...(temperature !== undefined && { temperature }),
       messages: [{ role: "user", content: anthropicContent(prompt) }],
+      ...this.extraParams,
     });
 
     const text: string = (message.content ?? [])
       .filter((block: any) => block.type === "text")
       .map((block: any) => block.text)
       .join("");
-    const cost = computeCost(
+    const cost = this.resolveCost(
       message.usage?.input_tokens,
       message.usage?.output_tokens,
-      this.costPerInputToken,
-      this.costPerOutputToken,
     );
 
     if (schema) {
@@ -87,10 +96,10 @@ export class AnthropicModel extends DeepEvalBaseLLM {
   }
 
   getModelName(): string {
-    return this.modelName ?? DEFAULT_ANTHROPIC_MODEL;
+    return this.modelName ?? defaultModelName("anthropic");
   }
 
   supportsMultimodal(): boolean {
-    return true;
+    return this.modelData.supportsMultimodal ?? true;
   }
 }

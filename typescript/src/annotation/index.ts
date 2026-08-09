@@ -1,8 +1,8 @@
-import { validateAPIAnnotation } from "./utils";
-import { APIAnnotation } from "./api";
-import { Api, Endpoints, HttpMethods } from "../confident";
+import { validateAPIAnnotation } from "@/annotation/utils";
+import { APIAnnotation } from "@/annotation/api";
+import { Api, Endpoints, HttpMethods } from "@/confident";
 
-export * from "./api";
+export * from "@/annotation/api";
 
 export const sendAnnotation = async ({
   rating,

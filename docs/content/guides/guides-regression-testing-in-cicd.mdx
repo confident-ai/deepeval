@@ -2,6 +2,7 @@
 # id: guides-regression-testing-in-cicd
 title: Regression Testing LLM Systems in CI/CD
 sidebar_label: Regression Testing in CI/CD
+languages: [python]
 ---
 
 
@@ -42,7 +43,7 @@ def test_example(test_case: LLMTestCase):
 In the example shown above, the `LLMTestCase`s are hardcoded for demonstration purposes only. Instead, you should aim to choose one of the [three ways `deepeval` offers to load a dataset](/docs/evaluation-datasets#load-an-existing-dataset) in a more scalable way.
 :::
 
-To check that your test file is working, run `deepeval test run`:
+To check that your test file is working, run `deepeval test run` (or execute the script directly for TypeScript):
 
 ```bash
 deepeval test run test_file.py

@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Type
 import asyncio
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -24,6 +24,10 @@ from deepeval.metrics.tool_use.schema import (
     ArgumentCorrectnessScore,
     Reason,
 )
+from deepeval.templates import make_template_class
+
+
+ToolUseTemplate = make_template_class("ToolUseMetric")
 
 
 class ToolUseMetric(BaseConversationalMetric):
@@ -43,6 +47,7 @@ class ToolUseMetric(BaseConversationalMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         flaky: bool = False,
+        evaluation_template: Type[ToolUseTemplate] = ToolUseTemplate,
     ):
         self.available_tools = available_tools
         self.threshold = 1 if strict_mode else threshold
@@ -53,13 +58,13 @@ class ToolUseMetric(BaseConversationalMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case,
@@ -83,7 +88,6 @@ class ToolUseMetric(BaseConversationalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -141,7 +145,6 @@ class ToolUseMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case,

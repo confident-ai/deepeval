@@ -1,4 +1,4 @@
-import { ToolCall } from "../test-case";
+import { ToolCall } from "@/test-case";
 
 export interface InputParameters {
   model?: string;

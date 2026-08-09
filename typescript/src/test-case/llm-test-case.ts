@@ -4,8 +4,15 @@ import {
   MCPResourceCall,
   MCPPromptCall,
   validateMcpServers,
-} from "./mcp";
-import { checkIfMultimodal, extractImageIdsFromList, extractImageIdsFromString, MLLM_IMAGE_REGISTRY, MLLMImage, SLUG_PATTERN } from "./mllm-image";
+  validateMcpCalls,
+} from "@/test-case/mcp";
+import {
+  checkIfMultimodal,
+  extractImageIdsFromList,
+  extractImageIdsFromString,
+  MLLM_IMAGE_REGISTRY,
+  MLLMImage,
+} from "@/test-case/mllm-image";
 
 export enum SingleTurnParams {
   INPUT = "input",
@@ -103,6 +110,8 @@ export class LLMTestCase {
   completionTime?: number;
   name?: string;
   multimodal: boolean = false;
+  /** A flaky test case reports its failures without failing the run. */
+  flaky: boolean = false;
   _traceDict?: Record<string, unknown>;
   _datasetRank?: number;
   _datasetAlias?: string;
@@ -127,6 +136,7 @@ export class LLMTestCase {
     completionTime?: number;
     name?: string;
     multimodal?: boolean;
+    flaky?: boolean;
     _datasetRank?: number;
     _datasetAlias?: string;
     _datasetId?: string;
@@ -148,6 +158,7 @@ export class LLMTestCase {
     this.tokenCost = params.tokenCost;
     this.completionTime = params.completionTime;
     this.name = params.name;
+    this.flaky = params.flaky ?? false;
     this._datasetRank = params._datasetRank;
     this._datasetAlias = params._datasetAlias;
     this._datasetId = params._datasetId;
@@ -162,9 +173,11 @@ export class LLMTestCase {
     extractImageIdsFromString(this.actualOutput, ids);
     extractImageIdsFromString(this.expectedOutput, ids);
     extractImageIdsFromList(this.context, ids);
-    
+
     extractImageIdsFromList(
-      this.retrievalContext?.map((c) => (typeof c === "string" ? c : c.context)),
+      this.retrievalContext?.map((c) =>
+        typeof c === "string" ? c : c.context,
+      ),
       ids,
     );
 
@@ -244,5 +257,6 @@ export class LLMTestCase {
     if (this.mcpServers != null) {
       validateMcpServers(this.mcpServers);
     }
+    validateMcpCalls(this);
   }
 }

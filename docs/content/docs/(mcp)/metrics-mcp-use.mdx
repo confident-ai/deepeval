@@ -2,6 +2,7 @@
 id: metrics-mcp-use
 title: MCP-Use
 sidebar_label: MCP-Use
+languages: [python, typescript]
 ---
 <MetricTagsDisplayer singleTurn={true} referenceless={true} />
 
@@ -12,19 +13,23 @@ The MCP Use is a metric that is used to evaluate how effectively an **MCP based 
 To use the `MCPUseMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://www.deepeval.com/docs/evaluation-test-cases):
 
 - `input`
-- `actual_output`
-- `mcp_servers`
+- <Term py="actual_output" ts="actualOutput"/>
+- <Term py="mcp_servers" ts="mcpServers"/>
 
-You'll also need to supply any `mcp_tools_called`, `mcp_resources_called`, and `mcp_prompts_called` if used, for evaluation to happen. Click here to learn about [how it is calculated](#how-is-it-calculated).
+You'll also need to supply any <Term py="mcp_tools_called" ts="mcpToolsCalled"/>, <Term py="mcp_resources_called" ts="mcpResourcesCalled"/>, and <Term py="mcp_prompts_called" ts="mcpPromptsCalled"/> if used, for evaluation to happen. Click here to learn about [how it is calculated](#how-is-it-calculated).
 
 ## Usage
 
 The `MCPUseMetric` can be used on a single-turn `LLMTestCase` case with MCP parameters. Click here to see [how to create an MCP single-turn test case](https://www.deepeval.com/docs/evaluation-mcp#single-turn).
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval import evaluate
-from deepeval.metrics import MCPUseMetric
 from deepeval.test_case import LLMTestCase, MCPServer
+from deepeval.metrics import MCPUseMetric
+from deepeval import evaluate
 
 test_case = LLMTestCase(
     input="...", # Your input here
@@ -42,19 +47,68 @@ metric = MCPUseMetric()
 evaluate([test_case], [metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { LLMTestCase, MCPServer } from "deepeval/test-case";
+import { MCPUseMetric } from "deepeval/metrics";
+import { evaluate } from "deepeval";
+
+const testCase = new LLMTestCase({
+  input: "...", // Your input here
+  actualOutput: "...", // Your LLM app's final output here
+  mcpServers: [new MCPServer({ serverName: "..." })], // Your MCP server's data
+  // MCP primitives used (if any)
+});
+
+const metric = new MCPUseMetric();
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
+<Switch>
+
+<Case id="python">
+
 There are **SEVEN** optional parameters when creating a `MCPTaskCompletionMetric`:
 
-- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+</Case>
+
+<Case id="typescript">
+
+There are **SIX** optional parameters when creating a `MCPTaskCompletionMetric`:
+
+</Case>
+
+</Switch>
+
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
-- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 ### As a standalone
 
 You can also run the `MCPUseMetric` on a single test case as a standalone, one-off execution.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -62,6 +116,21 @@ You can also run the `MCPUseMetric` on a single test case as a standalone, one-o
 metric.measure(convo_test_case)
 print(metric.score, metric.reason)
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+await metric.measure(testCase);
+console.log(metric.score, metric.reason);
+```
+
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
@@ -92,7 +161,7 @@ The `MCPUseMetric` evaluates if the right tools have been called with the right 
           <a href="https://www.deepeval.com/docs/evaluation-test-cases">
             LLMTestCase
           </a>{" "}
-          (one <code>input</code>/<code>actual_output</code>). For MCP usage
+          (one <code>input</code>/<Term py="actual_output" ts="actualOutput"/>). For MCP usage
           across a conversation, use <code>MultiTurnMCPUseMetric</code> on a{" "}
           <code>ConversationalTestCase</code>.
         </>
@@ -103,10 +172,10 @@ The `MCPUseMetric` evaluates if the right tools have been called with the right 
         "What MCP data do I have to populate for the metric to actually run?",
       answer: (
         <>
-          <code>input</code>, <code>actual_output</code>, and{" "}
-          <code>mcp_servers</code> (the available primitives), plus whichever
-          primitives were called — <code>mcp_tools_called</code>,{" "}
-          <code>mcp_resources_called</code>, <code>mcp_prompts_called</code>. See{" "}
+          <code>input</code>, <Term py="actual_output" ts="actualOutput"/>, and{" "}
+          <Term py="mcp_servers" ts="mcpServers"/> (the available primitives), plus whichever
+          primitives were called — <Term py="mcp_tools_called" ts="mcpToolsCalled"/>,{" "}
+          <Term py="mcp_resources_called" ts="mcpResourcesCalled"/>, <Term py="mcp_prompts_called" ts="mcpPromptsCalled"/>. See{" "}
           <a href="https://www.deepeval.com/docs/evaluation-mcp#single-turn">
             creating an MCP single-turn test case
           </a>
@@ -120,7 +189,7 @@ The `MCPUseMetric` evaluates if the right tools have been called with the right 
       answer: (
         <>
           A low <code>AlignmentScore</code> means a sub-optimal primitive or bad
-          arguments. Enable <code>verbose_mode</code> or read{" "}
+          arguments. Enable <Term py="verbose_mode" ts="verboseMode"/> or read{" "}
           <code>metric.reason</code> for the judge's rationale on the better
           choice.
         </>
@@ -131,8 +200,8 @@ The `MCPUseMetric` evaluates if the right tools have been called with the right 
         "What happens if I don't pass any called primitives?",
       answer: (
         <>
-          With no <code>mcp_tools_called</code>,{" "}
-          <code>mcp_resources_called</code>, or <code>mcp_prompts_called</code>,{" "}
+          With no <Term py="mcp_tools_called" ts="mcpToolsCalled"/>,{" "}
+          <Term py="mcp_resources_called" ts="mcpResourcesCalled"/>, or <Term py="mcp_prompts_called" ts="mcpPromptsCalled"/>,{" "}
           <code>MCPUseMetric</code> judges whether calling any{" "}
           <em>available</em> primitive would have helped — i.e. the
           decision not to use MCP at all.
