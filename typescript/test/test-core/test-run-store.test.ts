@@ -43,6 +43,7 @@ const metricData = (success: boolean): MetricData => ({
   score: success ? 0.9 : 0.1,
   strictMode: false,
   skipped: false,
+  flaky: false,
 });
 
 const llmCase = (success = true): EvaluatedCase => ({

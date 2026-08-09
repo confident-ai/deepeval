@@ -189,14 +189,18 @@ describe("Dataset Module", () => {
     expect(dataset.goldens.length).toBeGreaterThan(0);
 
     const golden = dataset.goldens[0];
+    expect(golden).toBeInstanceOf(Golden);
     expect(golden.id).toBeDefined();
+    if (!(golden instanceof Golden)) {
+      throw new Error("Expected a single-turn Golden");
+    }
     golden.expectedOutput = "UPDATED expected output";
     await dataset.updateGolden({ golden });
 
     const pulled = new EvaluationDataset();
     await pulled.pull({ alias: mutationAlias });
     const updated = pulled.goldens.find((g) => g.id === golden.id);
-    expect(updated).toBeDefined();
+    expect(updated).toBeInstanceOf(Golden);
     if (updated instanceof Golden) {
       expect(updated.expectedOutput).toBe("UPDATED expected output");
     }

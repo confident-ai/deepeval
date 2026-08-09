@@ -174,7 +174,6 @@
           }
         ]
       },
-      "metricCollection": "root-trace-evals",
       "availableTools": [],
       "agentHandoffs": []
     }
@@ -510,5 +509,6 @@
       }
     }
   ],
+  "metricCollection": "root-trace-evals",
   "status": "SUCCESS"
 }
