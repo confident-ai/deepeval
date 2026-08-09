@@ -27,9 +27,9 @@ from deepeval.templates.resolver import MetricTemplateNotFoundError
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BUNDLE = json.loads(
-    (REPO_ROOT / "deepeval" / "templates" / "metrics" / "templates.json").read_text(
-        encoding="utf-8"
-    )
+    (
+        REPO_ROOT / "deepeval" / "templates" / "metrics" / "templates.json"
+    ).read_text(encoding="utf-8")
 )
 BUNDLE_KEYS = sorted(k for k in BUNDLE if not k.startswith("_"))
 METRIC_KEYS = [k for k in BUNDLE_KEYS if k not in DAG_NODE_TEMPLATE_CLASSES]
@@ -96,7 +96,9 @@ class TestOverride:
 
         class Custom(base):
             @staticmethod
-            def generate_statements(actual_output: str, multimodal: bool = False):
+            def generate_statements(
+                actual_output: str, multimodal: bool = False
+            ):
                 return f"CUSTOM {actual_output}"
 
         metric = stub("AnswerRelevancyMetric", Custom)
@@ -110,7 +112,9 @@ class TestOverride:
 
         class Custom(base):
             @staticmethod
-            def generate_statements(actual_output: str, multimodal: bool = False):
+            def generate_statements(
+                actual_output: str, multimodal: bool = False
+            ):
                 return "CUSTOM"
 
         metric = stub("AnswerRelevancyMetric", Custom)
@@ -211,7 +215,9 @@ class TestNamingRule:
         import deepeval.metrics
 
         metric_cls = getattr(deepeval.metrics, key)
-        package = importlib.import_module(metric_cls.__module__.rsplit(".", 1)[0])
+        package = importlib.import_module(
+            metric_cls.__module__.rsplit(".", 1)[0]
+        )
         name = template_class_name(key)
 
         template = getattr(package, name)

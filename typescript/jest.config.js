@@ -8,6 +8,7 @@ module.exports = {
   },
   testPathIgnorePatterns: [
     "/node_modules/",
-    "/test/test-integrations/test-mastra/",
+    // Integration suites run under the Ts Integration workflow.
+    "/test/test-integrations/",
   ],
 };
