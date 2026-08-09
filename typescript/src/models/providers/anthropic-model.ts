@@ -40,7 +40,9 @@ export class AnthropicModel extends DeepEvalBaseLLM {
     } = options;
 
     super(
-      model ?? process.env.ANTHROPIC_MODEL_NAME ?? defaultModelName("anthropic"),
+      model ??
+        process.env.ANTHROPIC_MODEL_NAME ??
+        defaultModelName("anthropic"),
     );
     this.apiKey = apiKey ?? process.env.ANTHROPIC_API_KEY ?? "";
     this.temperature = temperature;

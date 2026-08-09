@@ -84,7 +84,6 @@ export function isDuplicateOfCase(
   });
 }
 
-
 export function primaryTraceFor(traces: Trace[]): Trace | undefined {
   for (let i = traces.length - 1; i >= 0; i--) {
     const candidate = traces[i];

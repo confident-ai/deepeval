@@ -42,7 +42,9 @@ class StubModel extends DeepEvalBaseLLM {
     this.prompts.push(prompt);
     const match = this.replies.find(([needle]) => prompt.includes(needle));
     if (!match) {
-      throw new Error(`StubModel has no reply for prompt: ${prompt.slice(0, 80)}`);
+      throw new Error(
+        `StubModel has no reply for prompt: ${prompt.slice(0, 80)}`,
+      );
     }
     return { output: match[1] as T, cost: 0 };
   }
@@ -108,9 +110,9 @@ describe("DAGMetric", () => {
     });
 
     expect(await metric.measure(testCase)).toBe(1);
-    expect(model.prompts.some((p) => p.includes("Summarize the failure."))).toBe(
-      false,
-    );
+    expect(
+      model.prompts.some((p) => p.includes("Summarize the failure.")),
+    ).toBe(false);
   });
 
   test("runs a node shared by two parents exactly once", async () => {
@@ -232,9 +234,9 @@ describe("DAGMetric", () => {
     multi.addVerdict(true, { score: 10 });
     multi.addVerdict(false, { score: 0 });
 
-    expect(
-      () => new DeepAcyclicGraph({ rootNodes: [single, multi] }),
-    ).toThrow(/cannot mix multi and single turn nodes/);
+    expect(() => new DeepAcyclicGraph({ rootNodes: [single, multi] })).toThrow(
+      /cannot mix multi and single turn nodes/,
+    );
   });
 });
 

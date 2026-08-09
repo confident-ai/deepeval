@@ -11,10 +11,7 @@ import { runMetrics } from "../../src/evaluate/test-run";
 import { LLMTestCase, ConversationalTestCase, Turn } from "../../src/test-case";
 import { BaseMetric } from "../../src/metrics";
 import { EvaluatedCase, MetricData } from "../../src/evaluate/types";
-import {
-  getIsRunningDeepEval,
-  setIsRunningDeepEval,
-} from "../../src/utils";
+import { getIsRunningDeepEval, setIsRunningDeepEval } from "../../src/utils";
 import { DEEPEVAL_RESULTS_DIR } from "../../src/constants";
 
 class FakeMetric extends BaseMetric {

@@ -195,7 +195,10 @@ describe("integrations work without CONFIDENT_API_KEY", () => {
   });
 
   it("scores an OTel integration's spans through evalsIterator", async () => {
-    const processor = new OpenInferenceSpanProcessor({}, { otlpEnabled: false });
+    const processor = new OpenInferenceSpanProcessor(
+      {},
+      { otlpEnabled: false },
+    );
     const metric = new StubMetric("component-metric");
     const dataset = new EvaluationDataset({
       goldens: [new Golden({ input: "What's the weather in Tokyo?" })],

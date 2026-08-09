@@ -1,15 +1,9 @@
-import {
-  runMetrics,
-  globalResultCollector,
-} from "../../src/evaluate/test-run";
+import { runMetrics, globalResultCollector } from "../../src/evaluate/test-run";
 import { LLMTestCase } from "../../src/test-case";
 import { BaseMetric, BaseConversationalMetric } from "../../src/metrics";
 import { DeepEvalError, MissingTestCaseParamsError } from "../../src/errors";
 import { Golden } from "../../src/dataset";
-import {
-  getIsRunningDeepEval,
-  setIsRunningDeepEval,
-} from "../../src/utils";
+import { getIsRunningDeepEval, setIsRunningDeepEval } from "../../src/utils";
 
 // A deterministic single-turn metric. `impl` mutates the metric's result state
 // the way a real `measure()` would (runMetric reads score/success afterward).
@@ -89,9 +83,11 @@ const llmTestCase = () =>
 
 describe("toPass — explicit test case shape", () => {
   it("passes when the metric passes", async () => {
-    await expect(runMetrics(llmTestCase(), [passing()])).resolves.toMatchObject({
-      pass: true,
-    });
+    await expect(runMetrics(llmTestCase(), [passing()])).resolves.toMatchObject(
+      {
+        pass: true,
+      },
+    );
   });
 
   it("fails with a message naming the failing metric", async () => {
@@ -186,9 +182,7 @@ describe("toPass — callback (trace-scoped) shape", () => {
   });
 
   it("accepts a golden with `run` and evaluates the traces it produces", async () => {
-    const { observe, updateCurrentTrace } = await import(
-      "../../src/tracing"
-    );
+    const { observe, updateCurrentTrace } = await import("../../src/tracing");
     const agent = observe({
       type: "agent",
       fn: async (query: string) => {

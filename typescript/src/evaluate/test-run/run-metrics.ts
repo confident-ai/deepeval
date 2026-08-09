@@ -59,7 +59,8 @@ function assertSingleTurn(metrics: AnyMetric[]): void {
 function applyGoldenToTrace(trace: Trace, golden: Golden): void {
   if (trace.input == null) trace.input = golden.input;
   if (trace.output == null) trace.output = trace.rootSpans[0]?.output;
-  if (trace.expectedOutput == null) trace.expectedOutput = golden.expectedOutput;
+  if (trace.expectedOutput == null)
+    trace.expectedOutput = golden.expectedOutput;
   if (trace.context == null) trace.context = golden.context;
   if (trace.retrievalContext == null)
     trace.retrievalContext = resolveRetrievalContext(golden.retrievalContext);
@@ -146,7 +147,6 @@ export async function runTestCaseMetrics(
 
   return { pass: testResult.success, failureMessage };
 }
-
 
 // Evaluate the trace(s) produced by running `fn`.
 export async function runCallbackMetrics(
@@ -275,7 +275,11 @@ export async function runMetrics(
     return runCallbackMetrics(() => run(golden), metrics, golden);
   }
   if (typeof target === "function") {
-    return runCallbackMetrics(target as ToPassCallback, metrics, options.golden);
+    return runCallbackMetrics(
+      target as ToPassCallback,
+      metrics,
+      options.golden,
+    );
   }
   // `expect(myAgent(input))` instead of `expect(() => myAgent(input))`: the call
   // already started, so its traces are outside the window we capture.

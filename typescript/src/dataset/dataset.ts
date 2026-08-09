@@ -1040,7 +1040,8 @@ export class EvaluationDataset {
           suppressSpinners(trace.rootSpans);
         }
         const total = newTraces.reduce(
-          (s, t) => s + countTraceMetrics(t, t === primary ? traceGolden : undefined),
+          (s, t) =>
+            s + countTraceMetrics(t, t === primary ? traceGolden : undefined),
           0,
         );
         const evalBar = multibar?.create(Math.max(total, 1), 0, {

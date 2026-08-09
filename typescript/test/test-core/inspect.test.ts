@@ -9,7 +9,11 @@ import {
   resolveInspectTarget,
   summarizeTestRun,
 } from "../../src/inspect/loader";
-import { wrapText, durationMs, metricTally } from "../../src/inspect/ui/styling";
+import {
+  wrapText,
+  durationMs,
+  metricTally,
+} from "../../src/inspect/ui/styling";
 
 function tempDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), "deepeval-inspect-"));
@@ -73,7 +77,9 @@ describe("inspect loader", () => {
 
     const root = traces[0]!.rootSpans[0]!;
     expect(root.children.map((s) => s.uuid)).toEqual(["child-a"]);
-    expect(root.children[0]!.children.map((s) => s.uuid)).toEqual(["grandchild"]);
+    expect(root.children[0]!.children.map((s) => s.uuid)).toEqual([
+      "grandchild",
+    ]);
   });
 
   it("orders siblings by start time", () => {
@@ -170,8 +176,14 @@ describe("inspect loader", () => {
 describe("inspect target resolution", () => {
   it("picks the most recently modified export in a folder", () => {
     const dir = tempDir();
-    const older = writeJson(path.join(dir, "test_run_20260101_000000.json"), {});
-    const newer = writeJson(path.join(dir, "test_run_20250101_000000.json"), {});
+    const older = writeJson(
+      path.join(dir, "test_run_20260101_000000.json"),
+      {},
+    );
+    const newer = writeJson(
+      path.join(dir, "test_run_20250101_000000.json"),
+      {},
+    );
     fs.utimesSync(older, new Date(1), new Date(1));
 
     expect(findLatestTestRun(dir)).toBe(newer);
@@ -228,7 +240,9 @@ describe("inspect formatting helpers", () => {
       }),
     ).toBe(2500);
     expect(durationMs({})).toBeUndefined();
-    expect(durationMs({ startTime: "nonsense", endTime: "also" })).toBeUndefined();
+    expect(
+      durationMs({ startTime: "nonsense", endTime: "also" }),
+    ).toBeUndefined();
   });
 
   it("tallies metrics, counting errored ones separately", () => {

@@ -10,10 +10,7 @@ import {
   ToolSpan,
   TraceSpanStatus,
 } from "@/tracing/tracing";
-import {
-  applyPendingToSpan,
-  popPendingFor,
-} from "@/tracing/pending-context";
+import { applyPendingToSpan, popPendingFor } from "@/tracing/pending-context";
 import {
   ROUTE_TO_REST_ATTRIBUTE,
   endOtelImplicitTrace,
