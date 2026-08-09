@@ -1,10 +1,10 @@
-name: Model Registry
+name: Model Registry Sync
 
 # Guards that the TypeScript model registry (`typescript/src/models/registry/models.json`)
 # stays in sync with its Python source of truth, `deepeval/models/llms/constants.py`
 # — both the per-model pricing/capability data and the default model each provider
 # falls back to. The check spans both packages, so it lives in its own workflow
-# rather than the Python-only Core Tests workflow.
+# rather than a language-specific test workflow.
 #
 # `deepeval/models/llms/*_model.py` is watched because one test asserts that no
 # provider module declares its own default, which is how the two SDKs drifted apart.

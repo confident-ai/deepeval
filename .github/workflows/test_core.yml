@@ -1,4 +1,4 @@
-name: Core Tests
+name: Py Core Tests
 
 on:
   push:

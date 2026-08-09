@@ -1,9 +1,9 @@
 import { AsyncLocalStorage } from "async_hooks";
 
-import { BaseMetric } from "../metrics/base-metrics";
-import { LLMTestCase, ToolCall } from "../test-case";
-import { Prompt } from "../prompt";
-import type { BaseSpan } from "./tracing";
+import { BaseMetric } from "@/metrics/base-metrics";
+import { LLMTestCase, ToolCall } from "@/test-case";
+import { Prompt } from "@/prompt";
+import type { BaseSpan } from "@/tracing/tracing";
 
 export interface PendingSpanParams {
   input?: any;

@@ -12,7 +12,6 @@ import {
   extractImageIdsFromString,
   MLLM_IMAGE_REGISTRY,
   MLLMImage,
-  SLUG_PATTERN,
 } from "@/test-case/mllm-image";
 
 export enum SingleTurnParams {

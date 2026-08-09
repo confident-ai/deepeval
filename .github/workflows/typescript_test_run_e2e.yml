@@ -1,4 +1,4 @@
-name: TypeScript test-run E2E
+name: Ts Test-Run E2E
 
 on:
   pull_request:

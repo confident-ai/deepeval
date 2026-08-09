@@ -1,4 +1,4 @@
-name: All Integration Tests
+name: Py Integration Tests
 
 on:
   push:

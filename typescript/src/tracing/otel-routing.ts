@@ -3,7 +3,7 @@ import {
   getCurrentTrace,
   setCurrentTrace,
   traceManager,
-} from "./tracing";
+} from "@/tracing/tracing";
 
 // Where an OTel-based integration should send a span.
 export type SpanRoute = "rest" | "otlp";

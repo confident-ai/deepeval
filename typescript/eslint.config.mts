@@ -15,6 +15,8 @@ export default defineConfig([
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
+      // Best-effort cleanup / optional side effects use empty catch on purpose.
+      "no-empty": ["error", { allowEmptyCatch: true }],
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {

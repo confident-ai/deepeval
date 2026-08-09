@@ -1,4 +1,4 @@
-name: Metrics Tests
+name: Py Metrics Tests
 
 on:
   push:

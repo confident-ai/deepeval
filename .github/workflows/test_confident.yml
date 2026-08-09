@@ -1,4 +1,4 @@
-name: Confident Tests
+name: Py Confident Tests
 
 on:
   push:
