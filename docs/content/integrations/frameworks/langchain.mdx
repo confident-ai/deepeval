@@ -269,13 +269,30 @@ Each LangChain call that receives a <Term py="CallbackHandler" ts="DeepEvalCallb
 - **Tool spans** — tool calls and function executions.
 - **Retriever spans** — retriever calls, when your app uses retrieval.
 
+<Switch>
+<Case id="python">
+
 ```text
 Trace                           ← what the user observes
-└── Agent: mathAgent             ← one createAgent / create_agent invoke(...) call
+└── Agent: math_agent            ← one create_agent invoke(...) call
     ├── LLM: gpt-4o-mini        ← component span: model chooses a tool
     ├── Tool: multiply          ← component span: tool input + output
     └── LLM: gpt-4o-mini        ← component span: final answer
 ```
+
+</Case>
+<Case id="typescript">
+
+```text
+Trace                           ← what the user observes
+└── Agent: mathAgent             ← one createAgent invoke(...) call
+    ├── LLM: gpt-4o-mini        ← component span: model chooses a tool
+    ├── Tool: multiply          ← component span: tool input + output
+    └── LLM: gpt-4o-mini        ← component span: final answer
+```
+
+</Case>
+</Switch>
 
 The trace and its component spans are independently evaluable.
 
@@ -831,15 +848,15 @@ def respond_to_user(prompt: str) -> str:
 
 | Kwarg | Type | Description |
 | --- | --- | --- |
-| `name` | `string` | Default trace name. |
-| `tags` | `string[]` | Tags applied to traces produced by this callback. |
-| `metadata` | `object` | Trace metadata applied when the callback starts a trace. |
-| <Term py="thread_id" ts="threadId"/> | `string` | Groups related runs into a single trace thread. |
-| <Term py="user_id" ts="userId"/> | `string` | Actor identifier for the trace. |
-| `metrics` | `array` | Trace-level metrics for the run. Prefer <Term py="evals_iterator" ts="evalsIterator"/> in eval scripts. |
-| <Term py="metric_collection" ts="metricCollection"/> | `string` | Trace-level metric collection, for online evals on live traffic. |
-| <Term py="test_case_id" ts="testCaseId"/> | `string` | Optional test case identifier. |
-| <Term py="turn_id" ts="turnId"/> | `string` | Optional turn identifier for conversational traces. |
+| `name` | <Term py="str" ts="string"/> | Default trace name. |
+| `tags` | <Term py="list[str]" ts="string[]"/> | Tags applied to traces produced by this callback. |
+| `metadata` | <Term py="dict" ts="object"/> | Trace metadata applied when the callback starts a trace. |
+| <Term py="thread_id" ts="threadId"/> | <Term py="str" ts="string"/> | Groups related runs into a single trace thread. |
+| <Term py="user_id" ts="userId"/> | <Term py="str" ts="string"/> | Actor identifier for the trace. |
+| `metrics` | <Term py="list" ts="array"/> | Trace-level metrics for the run. Prefer <Term py="evals_iterator" ts="evalsIterator"/> in eval scripts. |
+| <Term py="metric_collection" ts="metricCollection"/> | <Term py="str" ts="string"/> | Trace-level metric collection, for online evals on live traffic. |
+| <Term py="test_case_id" ts="testCaseId"/> | <Term py="str" ts="string"/> | Optional test case identifier. |
+| <Term py="turn_id" ts="turnId"/> | <Term py="str" ts="string"/> | Optional turn identifier for conversational traces. |
 
 For native tracing helpers (<Term py="@observe" ts="observe()"/>, <Term py="update_current_trace" ts="updateCurrentTrace"/>, <Term py="update_current_span" ts="updateCurrentSpan"/>) see the [tracing reference](/docs/evaluation-llm-tracing).
 

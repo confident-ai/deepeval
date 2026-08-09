@@ -262,13 +262,30 @@ Each <Term py="Runner.run(...)" ts="run(...)"/> call produces a **trace** — th
 - **LLM spans** — model calls (Responses API and Chat Completions).
 - **Tool spans** — function tools, MCP tools, and other agents-SDK tool calls.
 
+<Switch>
+<Case id="python">
+
 ```text
 Trace                          ← what the user observes
-└── Agent: weatherAgent        ← one run(...) / Runner.run(...) call
+└── Agent: weather_agent       ← one Runner.run(...) call
+    ├── LLM: gpt-4o            ← component span: model plans
+    ├── Tool: get_weather      ← component span: tool input + output
+    └── LLM: gpt-4o            ← component span: final answer
+```
+
+</Case>
+<Case id="typescript">
+
+```text
+Trace                          ← what the user observes
+└── Agent: weatherAgent        ← one run(...) call
     ├── LLM: gpt-4o            ← component span: model plans
     ├── Tool: getWeather       ← component span: tool input + output
     └── LLM: gpt-4o            ← component span: final answer
 ```
+
+</Case>
+</Switch>
 
 The trace and its component spans are independently evaluable.
 
