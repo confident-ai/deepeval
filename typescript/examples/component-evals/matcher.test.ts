@@ -1,5 +1,5 @@
 /**
- * Component-level evals inside a test — `expect(golden).toPass(..., { run })`.
+ * Component-level evals inside a test — `expect(golden).toPass(..., { task })`.
  *
  *   npx deepeval test run examples/component-evals/matcher.test.ts
  *
@@ -18,11 +18,11 @@ import { ask } from "./weather-agent";
 test("weather agent answers with the tool's data", async () => {
   const golden = new Golden({ input: "What's the weather in Tokyo?" });
 
-  // The golden is the subject; `run` produces the trace judged against it.
+  // The golden is the subject; `task` produces the trace judged against it.
   // Metrics passed here are TRACE-level; the staged LLM metric and the tool
   // metric are evaluated too.
   await expect(golden).toPass([new metrics.TaskCompletionMetric()], {
-    run: (g) =>
+    task: (g) =>
       nextLlmSpan({ metrics: [new metrics.AnswerRelevancyMetric()] }, () =>
         ask(g.input),
       ),
@@ -32,19 +32,19 @@ test("weather agent answers with the tool's data", async () => {
 /* ---------------------------------------------------------------------------
  * Other shapes.
  *
- * Keeping the response for ordinary assertions — capture it inside `run`:
+ * Keeping the response for ordinary assertions — capture it inside `task`:
  *
  *   let answer = "";
  *   await expect(golden).toPass([new metrics.TaskCompletionMetric()], {
- *     run: async (g) => {
+ *     task: async (g) => {
  *       answer = (await ask(g.input)).text;
  *     },
  *   });
  *   expect(answer.toLowerCase()).toContain("tokyo");
  *
- * Span metrics only — empty metrics array, still pass `run`:
+ * Span metrics only — empty metrics array, still pass `task`:
  *
- *   await expect(golden).toPass([], { run: (g) => ask(g.input) });
+ *   await expect(golden).toPass([], { task: (g) => ask(g.input) });
  *
  * A plain test case, with no app run involved:
  *
@@ -53,5 +53,5 @@ test("weather agent answers with the tool's data", async () => {
  *
  * Rejected on purpose, each with a message telling you the fix:
  *   expect(ask(input))          — the call already started, so its trace is missed
- *   expect(golden).toPass([...]) — missing `run`; no way to know which trace
+ *   expect(golden).toPass([...]) — missing `task`; no way to know which trace
  * ------------------------------------------------------------------------- */

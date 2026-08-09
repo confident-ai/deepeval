@@ -35,8 +35,8 @@ type AnyMetric = BaseMetric | BaseConversationalMetric;
 
 export type ToPassCallback = () => unknown;
 
-/** Produces the trace judged by `expect(golden).toPass(..., { run })`. */
-export type ToPassRun = (golden: Golden) => unknown;
+/** Produces the trace judged by `expect(golden).toPass(..., { task })`. */
+export type ToPassTask = (golden: Golden) => unknown;
 
 /** Anything `expect(...).toPass()` can be called on. */
 export type ToPassTarget = AnyTestCase | ToPassCallback | Golden;
@@ -187,7 +187,7 @@ export async function runCallbackMetrics(
       if (!golden && needsInput && primary.input == null) {
         throw new DeepEvalError(
           "expect(...).toPass([...]) has trace-level metrics but the trace " +
-            "has no input. Prefer `expect(golden).toPass(metrics, { run })`, " +
+            "has no input. Prefer `expect(golden).toPass(metrics, { task })`, " +
             "call `updateCurrentTrace({ input })`, or use a trace-based metric.",
         );
       }
@@ -235,17 +235,17 @@ export async function runCallbackMetrics(
  * Options for `toPass`.
  *
  * Prefer the golden subject form:
- *   `expect(golden).toPass(metrics, { run: (g) => myAgent(g.input) })`
+ *   `expect(golden).toPass(metrics, { task: (g) => myAgent(g.input) })`
  *
  * The callback form still accepts `{ golden }` for expected values:
  *   `expect(() => myAgent(input)).toPass(metrics, { golden })`
  */
 export interface ToPassOptions {
   /** Produces the trace when the expect subject is a `Golden`. */
-  run?: ToPassRun;
+  task?: ToPassTask;
   /**
    * Expected values for the callback form. Prefer making the golden the
-   * expect subject and passing `run` instead.
+   * expect subject and passing `task` instead.
    */
   golden?: Golden;
 }
@@ -253,7 +253,7 @@ export interface ToPassOptions {
 /**
  * Single entry point behind `expect(target).toPass(metrics)`.
  *
- * - `Golden` + `{ run }` — run the app, judge its trace against the golden
+ * - `Golden` + `{ task }` — run the app, judge its trace against the golden
  * - callback — run the callback, judge its trace (optional `{ golden }`)
  * - test case — measure metrics against the test case directly
  */
@@ -263,16 +263,16 @@ export async function runMetrics(
   options: ToPassOptions = {},
 ): Promise<MetricsOutcome> {
   if (target instanceof Golden) {
-    if (!options.run) {
+    if (!options.task) {
       throw new DeepEvalError(
-        "expect(golden).toPass() needs a `run` callback — " +
-          "`expect(golden).toPass(metrics, { run: (g) => myAgent(g.input) })` — " +
+        "expect(golden).toPass() needs a `task` callback — " +
+          "`expect(golden).toPass(metrics, { task: (g) => myAgent(g.input) })` — " +
           "so the trace being judged is exactly the one your call produced.",
       );
     }
     const golden = target;
-    const run = options.run;
-    return runCallbackMetrics(() => run(golden), metrics, golden);
+    const task = options.task;
+    return runCallbackMetrics(() => task(golden), metrics, golden);
   }
   if (typeof target === "function") {
     return runCallbackMetrics(
@@ -285,8 +285,8 @@ export async function runMetrics(
   // already started, so its traces are outside the window we capture.
   if (typeof (target as { then?: unknown })?.then === "function") {
     throw new DeepEvalError(
-      "expect(...).toPass() received a promise. Pass a Golden with `run`, or " +
-        "a callback — `expect(golden).toPass(metrics, { run: (g) => myAgent(g.input) })` " +
+      "expect(...).toPass() received a promise. Pass a Golden with `task`, or " +
+        "a callback — `expect(golden).toPass(metrics, { task: (g) => myAgent(g.input) })` " +
         "or `expect(() => myAgent(input))` — so the call runs inside the assertion " +
         "and its trace can be captured.",
     );

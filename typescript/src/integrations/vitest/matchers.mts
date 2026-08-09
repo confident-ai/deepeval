@@ -14,7 +14,7 @@ function describeTarget(target: ToPassTarget): string {
 }
 
 /**
- * `expect(golden).toPass([metric], { run: (g) => myAgent(g.input) })` — run the
+ * `expect(golden).toPass([metric], { task: (g) => myAgent(g.input) })` — run the
  * app, evaluate the trace it produces against the golden.
  * `expect(() => myAgent(input)).toPass([metric], { golden })` — callback form;
  * prefer the golden subject above.

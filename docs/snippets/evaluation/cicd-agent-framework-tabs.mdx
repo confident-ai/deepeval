@@ -418,7 +418,7 @@ Call `instrument_crewai()` once, then build your crew with `deepeval`'s `Crew` a
 
 <Case id="typescript">
 
-Every tab below uses the same matcher: the golden is the subject, and `run` produces the trace judged against it. Importing `deepeval/vitest` registers `toPass()`, and `npx deepeval test run` injects it for you.
+Every tab below uses the same matcher: the golden is the subject, and `task` produces the trace judged against it. Importing `deepeval/vitest` registers `toPass()`, and `npx deepeval test run` injects it for you.
 
 <Tabs items={["Manual Instrumentation", "LangChain", "Mastra", "LangGraph", "OpenAI", "OpenAI Agents", "Vercel AI SDK"]}>
 <Tab value="Manual Instrumentation">
@@ -450,7 +450,7 @@ it.each(dataset.goldens as Golden[])(
   "completes the task: $input",
   async (golden) => {
     await expect(golden).toPass([new TaskCompletionMetric()], {
-      run: (g) => myAiAgent(g.input),
+      task: (g) => myAiAgent(g.input),
     });
   },
 );
@@ -494,7 +494,7 @@ it.each(dataset.goldens as Golden[])(
   "completes the task: $input",
   async (golden) => {
     await expect(golden).toPass([new TaskCompletionMetric()], {
-      run: (g) => ask(g.input),
+      task: (g) => ask(g.input),
     });
   },
 );
@@ -539,7 +539,7 @@ it.each(dataset.goldens as Golden[])(
   "completes the task: $input",
   async (golden) => {
     await expect(golden).toPass([new TaskCompletionMetric()], {
-      run: (g) => ask(g.input),
+      task: (g) => ask(g.input),
     });
   },
 );
@@ -583,7 +583,7 @@ it.each(dataset.goldens as Golden[])(
   "completes the task: $input",
   async (golden) => {
     await expect(golden).toPass([new TaskCompletionMetric()], {
-      run: (g) => ask(g.input),
+      task: (g) => ask(g.input),
     });
   },
 );
@@ -622,7 +622,7 @@ it.each(dataset.goldens as Golden[])(
   "answers the question: $input",
   async (golden) => {
     await expect(golden).toPass([new AnswerRelevancyMetric()], {
-      run: (g) => respond(g.input),
+      task: (g) => respond(g.input),
     });
   },
 );
@@ -660,7 +660,7 @@ it.each(dataset.goldens as Golden[])(
   "completes the task: $input",
   async (golden) => {
     await expect(golden).toPass([new TaskCompletionMetric()], {
-      run: (g) => run(agent, g.input),
+      task: (g) => run(agent, g.input),
     });
   },
 );
@@ -700,7 +700,7 @@ it.each(dataset.goldens as Golden[])(
   "completes the task: $input",
   async (golden) => {
     await expect(golden).toPass([new TaskCompletionMetric()], {
-      run: (g) => ask(g.input),
+      task: (g) => ask(g.input),
     });
   },
 );

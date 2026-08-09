@@ -345,7 +345,7 @@ deepeval test run test_langchain_agent.py
 
 <Case id="typescript">
 
-Use the `toPass()` matcher. The golden is the subject; `run` produces the trace judged against it. A failing metric fails the test, which fails the build.
+Use the `toPass()` matcher. The golden is the subject; `task` produces the trace judged against it. A failing metric fails the test, which fails the build.
 
 ```typescript title="langchain-agent.test.ts" showLineNumbers
 import { it, expect } from "vitest";
@@ -365,7 +365,7 @@ it.each(dataset.goldens as Golden[])(
   "completes the math task",
   async (golden) => {
     await expect(golden).toPass([new TaskCompletionMetric()], {
-      run: (g) => ask(g.input),
+      task: (g) => ask(g.input),
     });
   },
 );
@@ -793,7 +793,7 @@ it.each(dataset.goldens as Golden[])(
   "scores the first model call",
   async (golden) => {
     await expect(golden).toPass([], {
-      run: (g) => runAgent(g.input),
+      task: (g) => runAgent(g.input),
     });
   },
 );
@@ -896,7 +896,7 @@ For native tracing helpers (<Term py="@observe" ts="observe()"/>, <Term py="upda
             <Case id="typescript">
               Use{" "}
               <code>
-                expect(golden).toPass([...], {"{ run: (g) => ask(g.input) }"})
+                expect(golden).toPass([...], {"{ task: (g) => ask(g.input) }"})
               </code>{" "}
               with a <code>DeepEvalCallbackHandler</code> inside{" "}
               <code>ask</code>, then run{" "}

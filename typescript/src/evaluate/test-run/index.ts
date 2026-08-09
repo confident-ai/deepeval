@@ -6,7 +6,7 @@ export {
   type MetricsOutcome,
   type ToPassTarget,
   type ToPassCallback,
-  type ToPassRun,
+  type ToPassTask,
   type ToPassOptions,
 } from "@/evaluate/test-run/run-metrics";
 export { buildFailureMessage } from "@/evaluate/test-run/errors";

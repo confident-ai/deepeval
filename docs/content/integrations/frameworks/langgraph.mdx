@@ -385,7 +385,7 @@ deepeval test run test_langgraph_agent.py
 
 <Case id="typescript">
 
-Use the `toPass()` matcher. The golden is the subject; `run` produces the trace judged against it. A failing metric fails the test, which fails the build.
+Use the `toPass()` matcher. The golden is the subject; `task` produces the trace judged against it. A failing metric fails the test, which fails the build.
 
 ```typescript title="langgraph-agent.test.ts" showLineNumbers
 import { it, expect } from "vitest";
@@ -405,7 +405,7 @@ it.each(dataset.goldens as Golden[])(
   "answers the weather question",
   async (golden) => {
     await expect(golden).toPass([new TaskCompletionMetric()], {
-      run: (g) => ask(g.input),
+      task: (g) => ask(g.input),
     });
   },
 );
@@ -709,7 +709,7 @@ import "deepeval/vitest";
 it.each(dataset.goldens as Golden[])(
   "scores the graph run",
   async (golden) => {
-    await expect(golden).toPass([], { run: (g) => runGraph(g.input) });
+    await expect(golden).toPass([], { task: (g) => runGraph(g.input) });
   },
 );
 ```
@@ -918,7 +918,7 @@ For native tracing helpers (<Term py="@observe" ts="observe()"/>, <Term py="upda
               Pass a <code>DeepEvalCallbackHandler</code> into the graph config,
               then assert with{" "}
               <code>
-                expect(golden).toPass([...], {"{ run: (g) => ask(g.input) }"})
+                expect(golden).toPass([...], {"{ task: (g) => ask(g.input) }"})
               </code>{" "}
               under <code>npx deepeval test run</code>.
             </Case>

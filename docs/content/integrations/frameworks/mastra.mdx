@@ -181,7 +181,7 @@ There are two surfaces for running evals against a Mastra app. Pick by where you
 
 ### In CI/CD (Vitest)
 
-Use the `toPass()` matcher. The golden is the subject; `run` produces the trace judged against it. A failing metric fails the test, which fails the build.
+Use the `toPass()` matcher. The golden is the subject; `task` produces the trace judged against it. A failing metric fails the test, which fails the build.
 
 ```typescript title="mastra-agent.test.ts" showLineNumbers
 import { it, expect } from "vitest";
@@ -201,7 +201,7 @@ it.each(dataset.goldens as Golden[])(
   "completes the weather task",
   async (golden) => {
     await expect(golden).toPass([new TaskCompletionMetric()], {
-      run: (g) => ask(g.input),
+      task: (g) => ask(g.input),
     });
   },
 );
@@ -451,7 +451,7 @@ For native tracing helpers (`observe`, `updateCurrentTrace`, `updateCurrentSpan`
         <>
           Yes. Use{" "}
           <code>
-            expect(golden).toPass([...], {"{ run: (g) => ask(g.input) }"})
+            expect(golden).toPass([...], {"{ task: (g) => ask(g.input) }"})
           </code>{" "}
           in a Vitest test and run <code>npx deepeval test run</code> so a
           failing metric fails the build. The matcher waits for Mastra's

@@ -176,13 +176,13 @@ describe("toPass — callback (trace-scoped) shape", () => {
     ).rejects.toThrow(/received a promise/);
   });
 
-  it("rejects a golden without `run` and points at the golden subject form", async () => {
+  it("rejects a golden without `task` and points at the golden subject form", async () => {
     await expect(
       runMetrics(new Golden({ input: "hi" }), [passing()]),
-    ).rejects.toThrow(/needs a `run` callback/);
+    ).rejects.toThrow(/needs a `task` callback/);
   });
 
-  it("accepts a golden with `run` and evaluates the traces it produces", async () => {
+  it("accepts a golden with `task` and evaluates the traces it produces", async () => {
     const agent = observe({
       type: "agent",
       fn: async (query: string) => {
@@ -192,7 +192,7 @@ describe("toPass — callback (trace-scoped) shape", () => {
     });
     const golden = new Golden({ input: "What is 2+2?" });
     const outcome = await runMetrics(golden, [passing()], {
-      run: (g) => agent(g.input),
+      task: (g) => agent(g.input),
     });
     expect(outcome.pass).toBe(true);
   });

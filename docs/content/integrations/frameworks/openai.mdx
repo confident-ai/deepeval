@@ -287,7 +287,7 @@ deepeval test run test_openai_app.py
 
 <Case id="typescript">
 
-Use the `toPass()` matcher. The golden is the subject; `run` produces the trace judged against it. A failing metric fails the test, which fails the build.
+Use the `toPass()` matcher. The golden is the subject; `task` produces the trace judged against it. A failing metric fails the test, which fails the build.
 
 ```typescript title="openai-app.test.ts" showLineNumbers
 import { it, expect } from "vitest";
@@ -303,7 +303,7 @@ const dataset = new EvaluationDataset({
 });
 
 it.each(dataset.goldens as Golden[])("answers the question", async (golden) => {
-  await expect(golden).toPass([], { run: (g) => respond(g.input) });
+  await expect(golden).toPass([], { task: (g) => respond(g.input) });
 });
 ```
 
@@ -650,7 +650,7 @@ import "deepeval/vitest";
 it.each(dataset.goldens as Golden[])(
   "scores the model call",
   async (golden) => {
-    await expect(golden).toPass([], { run: (g) => respondToUser(g.input) });
+    await expect(golden).toPass([], { task: (g) => respondToUser(g.input) });
   },
 );
 ```
@@ -810,7 +810,7 @@ await setTracingContext(
             <Case id="typescript">
               assert with{" "}
               <code>
-                expect(golden).toPass([], {"{ run: (g) => respond(g.input) }"})
+                expect(golden).toPass([], {"{ task: (g) => respond(g.input) }"})
               </code>{" "}
               and run <code>npx deepeval test run</code>.
             </Case>
