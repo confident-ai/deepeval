@@ -503,7 +503,7 @@ export class EvaluationDataset {
     alias?: string;
   }): Promise<void> {
     const { golden, finalized = true, projectId, alias } = params;
-    const datasetAlias = alias ?? this._alias!;
+    const datasetAlias = alias ?? this._alias;
     if (!golden.id || !datasetAlias) {
       throw new Error(
         "Cannot update a golden without an id and alias. Pull the dataset first so it carries alias and golden ids assigned by Confident AI, or pass the alias and golden id directly.",
@@ -531,7 +531,7 @@ export class EvaluationDataset {
     alias?: string;
   }): Promise<void> {
     const { golden, projectId, alias } = params;
-    const datasetAlias = alias ?? this._alias!;
+    const datasetAlias = alias ?? this._alias;
     const goldenId = typeof golden === "string" ? golden : golden.id;
     if (!goldenId || !datasetAlias) {
       throw new Error(
