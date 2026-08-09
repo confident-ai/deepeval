@@ -9,11 +9,7 @@ import {
   resolveInspectTarget,
   summarizeTestRun,
 } from "@/inspect/loader";
-import {
-  wrapText,
-  durationMs,
-  metricTally,
-} from "@/inspect/ui/styling";
+import { wrapText, durationMs, metricTally } from "@/inspect/ui/styling";
 
 function tempDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), "deepeval-inspect-"));

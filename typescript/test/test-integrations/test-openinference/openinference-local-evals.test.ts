@@ -18,11 +18,7 @@ import {
   isTraceOtelImplicit,
   ROUTE_TO_REST_ATTRIBUTE,
 } from "@/tracing/otel-routing";
-import {
-  nextLlmSpan,
-  nextToolSpan,
-  updateCurrentSpan,
-} from "@/tracing";
+import { nextLlmSpan, nextToolSpan, updateCurrentSpan } from "@/tracing";
 
 class StubMetric extends BaseMetric {
   constructor(private label: string) {
