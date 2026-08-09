@@ -48,6 +48,11 @@
       "require": "./dist/confident/index.js",
       "types": "./dist/confident/index.d.ts"
     },
+    "./prompt": {
+      "import": "./dist/prompt/index.js",
+      "require": "./dist/prompt/index.js",
+      "types": "./dist/prompt/index.d.ts"
+    },
     "./openai": {
       "import": "./dist/openai/index.js",
       "require": "./dist/openai/index.js",
@@ -114,6 +119,9 @@
       ],
       "confident": [
         "dist/confident/index.d.ts"
+      ],
+      "prompt": [
+        "dist/prompt/index.d.ts"
       ],
       "openai": [
         "dist/openai/index.d.ts"

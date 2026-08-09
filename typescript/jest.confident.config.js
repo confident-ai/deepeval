@@ -9,4 +9,8 @@ module.exports = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
+  // See jest.config.js: pin CommonJS so ts-jest skips its TS151002 warning.
+  transform: {
+    "^.+\\.tsx?$": ["ts-jest", { tsconfig: { module: "commonjs" } }],
+  },
 };

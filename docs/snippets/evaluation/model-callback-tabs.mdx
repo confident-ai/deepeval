@@ -124,7 +124,7 @@ async def model_callback(input: str, turns: List[Turn]) -> Turn:
 
 <Case id="typescript">
 
-<Tabs items={["TypeScript", "OpenAI"]}>
+<Tabs items={["TypeScript", "OpenAI", "LangChain"]}>
 <Tab value="TypeScript">
 
 ```typescript title="main.ts" showLineNumbers={true}
@@ -174,13 +174,37 @@ export const modelCallback = async ({
 ```
 
 </Tab>
+<Tab value="LangChain">
+
+```typescript title="main.ts" showLineNumbers={true} {18-21}
+import { createAgent } from "langchain";
+import { MemorySaver } from "@langchain/langgraph";
+import { Turn } from "deepeval/test-case";
+
+const agent = createAgent({
+  model: "openai:gpt-4o-mini",
+  systemPrompt: "You are a ticket purchasing assistant.",
+  checkpointer: new MemorySaver(),
+});
+
+export const modelCallback = async ({
+  input,
+  threadId,
+}: {
+  input: string;
+  threadId: string;
+}): Promise<Turn> => {
+  const result = await agent.invoke(
+    { messages: [{ role: "user", content: input }] },
+    { configurable: { thread_id: threadId } },
+  );
+  const last = result.messages[result.messages.length - 1];
+  return new Turn({ role: "assistant", content: String(last.content) });
+};
+```
+
+</Tab>
 </Tabs>
-
-<NotImplemented id="typescript" feature="deepeval.integrations">
-
-Framework-specific callbacks (LangChain, LlamaIndex, and friends) aren't documented here yet. Until they land, call your framework directly inside the callback as above — the simulator only cares that each call resolves to the next assistant `Turn`.
-
-</NotImplemented>
 
 </Case>
 

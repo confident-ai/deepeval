@@ -10,10 +10,6 @@ Wrap the top-level function with `@observe` and call `update_current_trace(...)`
 <Tabs items={["Async", "Sync"]}>
 <Tab value="Async">
 
-<Switch>
-
-<Case id="python">
-
 ```python title="main.py" showLineNumbers
 import asyncio
 from deepeval.tracing import observe, update_current_trace
@@ -30,36 +26,6 @@ for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     task = asyncio.create_task(my_ai_agent(golden.input))
     dataset.evaluate(task)
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript title="main.ts" showLineNumbers
-import { metrics } from "deepeval";
-import { observe, updateCurrentTrace } from "deepeval/tracing";
-...
-
-const myAiAgent = observe({
-  type: "agent",
-  fn: async (query: string): Promise<string> => {
-    const answer = "..."; // await your LLM call here
-    updateCurrentTrace({ input: query, output: answer });
-    return answer;
-  },
-});
-
-for await (const golden of dataset.evalsIterator({
-  metrics: [new metrics.TaskCompletionMetric()],
-})) {
-  if (!("input" in golden)) continue;
-  await myAiAgent(golden.input);
-}
-```
-
-</Case>
-
-</Switch>
 
 </Tab>
 <Tab value="Sync">
@@ -96,10 +62,6 @@ Build your agent with `create_agent`, then pass `deepeval`'s `CallbackHandler` t
 <Tabs items={["Async", "Sync"]}>
 <Tab value="Async">
 
-<Switch>
-
-<Case id="python">
-
 ```python title="langchain_app.py" showLineNumbers
 import asyncio
 from langchain.agents import create_agent
@@ -127,44 +89,6 @@ for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     task = asyncio.create_task(run_agent(golden.input))
     dataset.evaluate(task)
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript title="langchain_app.ts" showLineNumbers
-import { createAgent, tool } from "langchain";
-import { z } from "zod";
-import { metrics } from "deepeval";
-import { DeepEvalCallbackHandler } from "deepeval/integrations/langchain";
-...
-
-const multiply = tool(({ a, b }) => a * b, {
-  name: "multiply",
-  description: "Multiply two numbers.",
-  schema: z.object({ a: z.number(), b: z.number() }),
-});
-
-const agent = createAgent({
-  model: "openai:gpt-4o-mini",
-  tools: [multiply],
-  systemPrompt: "Be concise.",
-});
-
-for await (const golden of dataset.evalsIterator({
-  metrics: [new metrics.TaskCompletionMetric()],
-})) {
-  if (!("input" in golden)) continue;
-  await agent.invoke(
-    { messages: [{ role: "user", content: golden.input }] },
-    { callbacks: [new DeepEvalCallbackHandler({})] },
-  );
-}
-```
-
-</Case>
-
-</Switch>
 
 </Tab>
 <Tab value="Sync">
@@ -288,10 +212,6 @@ Drop-in replace `from openai import OpenAI` with `from deepeval.openai import Op
 <Tabs items={["Async", "Sync"]}>
 <Tab value="Async">
 
-<Switch>
-
-<Case id="python">
-
 ```python title="openai_app.py" showLineNumbers
 import asyncio
 from deepeval.openai import AsyncOpenAI
@@ -312,34 +232,6 @@ for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     task = asyncio.create_task(call_openai(golden.input))
     dataset.evaluate(task)
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript title="openai_app.ts" showLineNumbers
-import OpenAI from "openai";
-import { metrics } from "deepeval";
-import { instrumentOpenAI } from "deepeval/openai";
-...
-
-const client = new OpenAI();
-instrumentOpenAI(client);
-
-for await (const golden of dataset.evalsIterator({
-  metrics: [new metrics.TaskCompletionMetric()],
-})) {
-  if (!("input" in golden)) continue;
-  await client.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [{ role: "user", content: golden.input }],
-  });
-}
-```
-
-</Case>
-
-</Switch>
 
 </Tab>
 <Tab value="Sync">
@@ -667,10 +559,6 @@ Register `DeepEvalTracingProcessor` once, then build your agent with `deepeval`'
 <Tabs items={["Async", "Sync"]}>
 <Tab value="Async">
 
-<Switch>
-
-<Case id="python">
-
 ```python title="openai_agents_app.py" showLineNumbers
 import asyncio
 from agents import Runner, add_trace_processor
@@ -694,44 +582,6 @@ for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     task = asyncio.create_task(Runner.run(agent, golden.input))
     dataset.evaluate(task)
 ```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript title="openai_agents_app.ts" showLineNumbers
-import { Agent, run, tool, addTraceProcessor } from "@openai/agents";
-import { z } from "zod";
-import { metrics } from "deepeval";
-import { DeepEvalTracingProcessor } from "deepeval/integrations/openai-agents";
-...
-
-addTraceProcessor(new DeepEvalTracingProcessor());
-
-const getWeather = tool({
-  name: "get_weather",
-  description: "Get the weather for a city.",
-  parameters: z.object({ city: z.string() }),
-  execute: async ({ city }) => `It's always sunny in ${city}!`,
-});
-
-const agent = new Agent({
-  name: "weather_agent",
-  instructions: "Answer weather questions concisely.",
-  tools: [getWeather],
-});
-
-for await (const golden of dataset.evalsIterator({
-  metrics: [new metrics.TaskCompletionMetric()],
-})) {
-  if (!("input" in golden)) continue;
-  await run(agent, golden.input);
-}
-```
-
-</Case>
-
-</Switch>
 
 </Tab>
 <Tab value="Sync">
@@ -925,6 +775,11 @@ See the [CrewAI integration](/integrations/frameworks/crewai) for the full surfa
 
 <Case id="typescript">
 
+`evalsIterator()` is async-only, so there's no sync variant to choose between — goldens are evaluated concurrently and awaited by the loop.
+
+<Tabs items={["Manual Instrumentation", "LangChain", "Mastra", "LangGraph", "OpenAI", "OpenAI Agents", "Vercel AI SDK"]}>
+<Tab value="Manual Instrumentation">
+
 Wrap the top-level function with `observe` and call `updateCurrentTrace(...)` to set the trace-level test case fields:
 
 ```typescript title="main.ts" showLineNumbers
@@ -944,18 +799,191 @@ const myAiAgent = observe({
 for await (const golden of dataset.evalsIterator({
   metrics: [new TaskCompletionMetric()],
 })) {
-  if (!("input" in golden)) continue;
-  await myAiAgent(golden.input);
+  await myAiAgent((golden as Golden).input);
 }
 ```
 
-`evalsIterator()` is async-only, so there's no sync variant to choose between — goldens are evaluated concurrently and awaited by the loop. See [tracing](/docs/evaluation-llm-tracing) for the full `observe` and `updateCurrentTrace` surface.
+See [tracing](/docs/evaluation-llm-tracing) for the full `observe` and `updateCurrentTrace` surface.
 
-<NotImplemented id="typescript" feature="deepeval.integrations">
+</Tab>
+<Tab value="LangChain">
 
-The adapters that do ship — LangChain, OpenAI, OpenAI Agents, the Vercel AI SDK and Mastra — don't have pages here yet. Until they land, instrument your agent with `observe` as above: it produces the same trace and span structure an adapter would, so the metrics you attach score the same components.
+Build your agent with `createAgent`, then pass `deepeval`'s `DeepEvalCallbackHandler` to its `invoke` method inside the loop:
 
-</NotImplemented>
+```typescript title="langchain-agent.ts" showLineNumbers
+import { createAgent } from "langchain";
+import { DeepEvalCallbackHandler } from "deepeval/integrations/langchain";
+import { TaskCompletionMetric } from "deepeval/metrics";
+...
+
+const agent = createAgent({
+  model: "openai:gpt-4o-mini",
+  tools: [multiply],
+  systemPrompt: "Be concise.",
+});
+
+const handler = new DeepEvalCallbackHandler({});
+
+for await (const golden of dataset.evalsIterator({
+  metrics: [new TaskCompletionMetric()],
+})) {
+  await agent.invoke(
+    { messages: [{ role: "user", content: (golden as Golden).input }] },
+    { callbacks: [handler] },
+  );
+}
+```
+
+See the [LangChain integration](/integrations/frameworks/langchain) for the full surface.
+
+</Tab>
+<Tab value="Mastra">
+
+Register a `DeepEvalExporter` on your `Mastra` instance's `Observability` config, then run your goldens through the agent:
+
+```typescript title="mastra-agent.ts" showLineNumbers
+import { Observability } from "@mastra/observability";
+import { Mastra } from "@mastra/core/mastra";
+import { DeepEvalExporter } from "deepeval/integrations/mastra";
+import { TaskCompletionMetric } from "deepeval/metrics";
+...
+
+const mastra = new Mastra({
+  agents: { weatherAgent },
+  observability: new Observability({
+    configs: {
+      deepeval: {
+        serviceName: "weather-app",
+        exporters: [new DeepEvalExporter()],
+      },
+    },
+  }),
+});
+
+for await (const golden of dataset.evalsIterator({
+  metrics: [new TaskCompletionMetric()],
+})) {
+  await mastra.getAgent("weatherAgent").generate((golden as Golden).input);
+}
+```
+
+`evalsIterator()` waits for the exporter to settle before scoring, so no manual flush is needed inside an eval. See the [Mastra integration](/integrations/frameworks/mastra) for the full surface.
+
+</Tab>
+<Tab value="LangGraph">
+
+Wire your `StateGraph`, then pass the same `DeepEvalCallbackHandler` to its `invoke` method inside the loop:
+
+```typescript title="langgraph-agent.ts" showLineNumbers
+import { StateGraph, MessagesAnnotation, START, END } from "@langchain/langgraph";
+import { DeepEvalCallbackHandler } from "deepeval/integrations/langchain";
+import { TaskCompletionMetric } from "deepeval/metrics";
+...
+
+const graph = new StateGraph(MessagesAnnotation)
+  .addNode("chatbot", chatbot)
+  .addEdge(START, "chatbot")
+  .addEdge("chatbot", END)
+  .compile();
+
+const handler = new DeepEvalCallbackHandler({});
+
+for await (const golden of dataset.evalsIterator({
+  metrics: [new TaskCompletionMetric()],
+})) {
+  await graph.invoke(
+    { messages: [{ role: "user", content: (golden as Golden).input }] },
+    { callbacks: [handler] },
+  );
+}
+```
+
+See the [LangGraph integration](/integrations/frameworks/langgraph) for the full surface.
+
+</Tab>
+<Tab value="OpenAI">
+
+Call `instrumentOpenAI(client)` once on the client you already construct — every completion or response call it makes becomes an LLM span under the trace:
+
+```typescript title="openai-app.ts" showLineNumbers
+import { OpenAI } from "openai";
+import { TaskCompletionMetric } from "deepeval/metrics";
+import { instrumentOpenAI } from "deepeval/openai";
+...
+
+const client = new OpenAI();
+instrumentOpenAI(client);
+
+for await (const golden of dataset.evalsIterator({
+  metrics: [new TaskCompletionMetric()],
+})) {
+  await client.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: (golden as Golden).input }],
+  });
+}
+```
+
+See the [OpenAI integration](/integrations/frameworks/openai) for the full surface.
+
+</Tab>
+<Tab value="OpenAI Agents">
+
+Register `DeepEvalTracingProcessor` once with the agents SDK, then run your goldens through the agent:
+
+```typescript title="openai-agents-app.ts" showLineNumbers
+import { Agent, run, addTraceProcessor } from "@openai/agents";
+import { DeepEvalTracingProcessor } from "deepeval/integrations/openai-agents";
+import { TaskCompletionMetric } from "deepeval/metrics";
+...
+
+addTraceProcessor(new DeepEvalTracingProcessor());
+
+const agent = new Agent({
+  name: "weatherAgent",
+  instructions: "Answer weather questions concisely.",
+  model: "gpt-4o-mini",
+  tools: [getWeather],
+});
+
+for await (const golden of dataset.evalsIterator({
+  metrics: [new TaskCompletionMetric()],
+})) {
+  await run(agent, (golden as Golden).input);
+}
+```
+
+See the [OpenAI Agents integration](/integrations/frameworks/openai-agents) for the full surface.
+
+</Tab>
+<Tab value="Vercel AI SDK">
+
+Call `configureAiSdkTracing(...)` once at startup, then pass the returned tracer into `experimental_telemetry` on every call you want traced:
+
+```typescript title="ai-sdk-agent.ts" showLineNumbers
+import { generateText } from "ai";
+import { openai } from "@ai-sdk/openai";
+import { configureAiSdkTracing } from "deepeval/integrations/ai-sdk";
+import { TaskCompletionMetric } from "deepeval/metrics";
+...
+
+const tracer = configureAiSdkTracing({ name: "weather-app" });
+
+for await (const golden of dataset.evalsIterator({
+  metrics: [new TaskCompletionMetric()],
+})) {
+  await generateText({
+    model: openai("gpt-4o-mini"),
+    prompt: (golden as Golden).input,
+    experimental_telemetry: { isEnabled: true, tracer },
+  });
+}
+```
+
+A call without `isEnabled` and a `tracer` emits no spans at all. See the [Vercel AI SDK integration](/integrations/frameworks/ai-sdk) for the full surface.
+
+</Tab>
+</Tabs>
 
 </Case>
 

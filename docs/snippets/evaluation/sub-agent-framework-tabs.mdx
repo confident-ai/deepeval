@@ -192,7 +192,10 @@ reporter = Agent(
 
 <Case id="typescript">
 
-Mark your sub-agent with `observe({ type: "agent" })` and pass `metrics: [...]` to it:
+<Tabs items={["Manual Instrumentation", "LangChain", "Mastra", "LangGraph", "OpenAI Agents"]}>
+<Tab value="Manual Instrumentation">
+
+Mark your sub-agent with `observe({ type: "agent" })` and pass `metrics` to it:
 
 ```typescript title="main.ts" showLineNumbers
 import { TaskCompletionMetric } from "deepeval/metrics";
@@ -219,11 +222,76 @@ const supervisorAgent = observe({
 
 Every nested `observe` call becomes its own span, so the metrics you attach to a sub-agent score that sub-agent alone.
 
-<NotImplemented id="typescript" feature="deepeval.integrations">
+</Tab>
+<Tab value="LangChain">
 
-Framework-specific sub-agent instrumentation isn't documented here yet. Until it lands, wrap the sub-agent in `observe({ type: "agent" })` as above — it produces the same agent span an adapter would, so the metrics you attach score the same component.
+Stage a metric for the next agent span with `nextAgentSpan(...)` — the `DeepEvalCallbackHandler` drains it onto the next agent span opened during the run:
 
-</NotImplemented>
+```typescript title="langchain-agent.ts" showLineNumbers
+import { TaskCompletionMetric } from "deepeval/metrics";
+import { nextAgentSpan } from "deepeval/tracing";
+...
+
+const runAgent = (prompt: string) =>
+  nextAgentSpan({ metrics: [new TaskCompletionMetric()] }, () => ask(prompt));
+```
+
+Like `nextLlmSpan`, this is one-shot — only the first agent span in the run picks up the metric, which is the root span `invoke(...)` opens.
+
+</Tab>
+<Tab value="Mastra">
+
+Stage a metric for the next agent span with `nextAgentSpan(...)` — Mastra's `AGENT_RUN` and `WORKFLOW_RUN` spans both arrive as agent spans, so this scores a sub-agent or a workflow step in isolation:
+
+```typescript title="mastra-agent.ts" showLineNumbers
+import { TaskCompletionMetric } from "deepeval/metrics";
+import { nextAgentSpan } from "deepeval/tracing";
+...
+
+const runAgent = (prompt: string) =>
+  nextAgentSpan({ metrics: [new TaskCompletionMetric()] }, () =>
+    mastra.getAgent("weatherAgent").generate(prompt),
+  );
+```
+
+</Tab>
+<Tab value="LangGraph">
+
+Stage a metric for the next agent span with `nextAgentSpan(...)` — the `DeepEvalCallbackHandler` drains it onto the next agent span opened during the graph run:
+
+```typescript title="langgraph-agent.ts" showLineNumbers
+import { TaskCompletionMetric } from "deepeval/metrics";
+import { nextAgentSpan } from "deepeval/tracing";
+...
+
+const runGraph = (prompt: string) =>
+  nextAgentSpan({ metrics: [new TaskCompletionMetric()] }, () => ask(prompt));
+```
+
+Like `nextLlmSpan`, this is one-shot — only the first agent span in the graph run picks up the metric. Nested graph nodes are recorded for hierarchy but do not open agent spans of their own, so scoring a specific node means invoking that subgraph directly.
+
+</Tab>
+<Tab value="OpenAI Agents">
+
+Stage a metric for the next agent span with `nextAgentSpan(...)` — the `DeepEvalTracingProcessor` opens one agent span per `Agent` invocation, including handoffs:
+
+```typescript title="openai-agents-app.ts" showLineNumbers
+import { TaskCompletionMetric } from "deepeval/metrics";
+import { nextAgentSpan } from "deepeval/tracing";
+...
+
+const runAgent = (prompt: string) =>
+  nextAgentSpan({ metrics: [new TaskCompletionMetric()] }, () =>
+    run(agent, prompt),
+  );
+```
+
+One-shot again: the metric lands on the agent you invoked, not on an agent it later hands off to. To score a handoff target on its own, run that agent directly as its own eval.
+
+</Tab>
+</Tabs>
+
+The Vercel AI SDK has no tab here because its root is the generation call itself — there is no agent span to stage onto. Score those runs end-to-end, or with `nextLlmSpan` / `nextToolSpan`.
 
 </Case>
 

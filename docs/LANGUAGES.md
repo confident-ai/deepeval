@@ -20,7 +20,7 @@ is the status and rationale.
 
 ## Current state
 
-212 MDX files: 119 docs, 35 integrations, 20 guides, 17 tutorials, 17 blog,
+215 MDX files: 119 docs, 37 integrations, 20 guides, 17 tutorials, 18 blog,
 4 changelog. [`languages-audit.json`](languages-audit.json) lists the 78 of
 them that actually carry a `<Switch>`, `<Term>` or `<Only>` tag, with each
 page's url, declared `languages`, tag counts and code-fence tallies; a
@@ -29,8 +29,8 @@ snapshot, not generated at build time, so treat it as of its `generatedAt` date.
 
 **Page-level support is declared and validated.** Every page in `content/docs`
 and `content/integrations` carries a `languages` frontmatter field, enforced by
-a strict Zod schema in [`source.config.ts`](source.config.ts) — 81 declare
-`[python, typescript]`, 72 declare `[python]` and 1 declares `[typescript]`.
+a strict Zod schema in [`source.config.ts`](source.config.ts) — 96 declare
+`[python, typescript]`, 57 declare `[python]` and 3 declare `[typescript]`.
 Guides, tutorials, changelog and blog may omit the field and simply follow the
 reader's preference; 19 of the 20 guides and 13 of the 17 tutorials declare
 `[python]` anyway. The five that don't are the four tutorial index pages, which
@@ -136,11 +136,14 @@ example still on `RunnableWithMessageHistory` rather than `create_agent`.
 Centralizing fixed all of it by construction — the snippet carries the
 end-to-end/CI-CD version.
 
-The TypeScript case gives the callback two tabs rather than a `<NotImplemented>`
-wholesale, because the Python "Python" and "OpenAI" tabs are not deepeval
-integrations at all — they just call a chat client inside the callback, which
-ports directly. Only the framework tabs (LangChain, LlamaIndex, OpenAI Agents,
-Pydantic) are behind `<NotImplemented>`. Note the TS `ModelCallback` takes a
+The TypeScript case gives the callback three tabs rather than a
+`<NotImplemented>` wholesale, because the Python "Python" and "OpenAI" tabs are
+not deepeval integrations at all — they just call a chat client inside the
+callback, which ports directly. LangChain was added for the same reason: the tab
+is `createAgent` + `MemorySaver` keyed by `threadId`, with no deepeval adapter
+involved. LlamaIndex, OpenAI Agents and Pydantic AI have no tab because their
+JS thread/session APIs don't line up one-to-one with the Python ones shown.
+Note the TS `ModelCallback` takes a
 **single object** `{ input, turns, threadId }` and always passes all three, unlike
 Python's optional argument injection, so callout prose was reworded to "take only
 the ones you need" instead of "may optionally accept".
@@ -188,19 +191,32 @@ language is noise, so participants and messages were reworded to concepts
 `evaluation-introduction`, whose diagram already labels participants
 conceptually.
 
-`getting-started-agents` is bilingual as a **first phase**, and the TypeScript
-half of its three framework snippets is deliberately a placeholder. The blocker is
-that the framework tabs have no TypeScript equivalent to document: `evalsIterator()`
-is async-only so the Async/Sync split is a Python-only concept, TypeScript ships
-adapters for only LangChain, OpenAI Agents, the Vercel AI SDK and Mastra, and for
-sub-agents specifically there is no `nextAgentSpan` and `AgentSpanContext` ships
-with its `metrics` field commented out. So `cicd-agent-framework-tabs`,
-`end-to-end-agent-framework-tabs` and `sub-agent-framework-tabs` each wrap their
-whole tab set in `<Case id="python">` and give TypeScript one real `observe()`
-example plus a `<NotImplemented>`, matching what
-`component-level-agent-framework-tabs` already does. The per-tab TypeScript cases
-already written inside those snippets (Manual Instrumentation, LangChain, OpenAI,
-OpenAI Agents) are preserved but unreachable until phase two promotes them.
+`getting-started-agents` is bilingual, and phase two has now landed for the four
+shared framework snippets. `component-level-agent-framework-tabs`,
+`cicd-agent-framework-tabs` and `end-to-end-agent-framework-tabs` each give
+TypeScript its own seven-tab set — Manual Instrumentation, LangChain, Mastra,
+LangGraph, OpenAI, OpenAI Agents, Vercel AI SDK — and `sub-agent-framework-tabs`
+gives it five, dropping OpenAI and the Vercel AI SDK because neither opens an
+agent span to stage onto. Mastra sits third rather than last: the tab order is a
+promotion decision, not an alphabetical or per-SDK-module one. The `<NotImplemented>` blocks are gone from all four.
+The two blockers recorded here earlier are also gone: `nextAgentSpan` ships in
+`tracing/pending-context.ts` and `AgentSpanContext.metrics` is live in
+`tracing/trace-context.ts`.
+
+Two asymmetries remain by design. `evalsIterator()` is async-only, so the
+Async/Sync split stays a Python-only concept and the TypeScript tabs state that
+once at the top rather than nesting a second tab layer. And the tab lists differ
+per language because the adapter sets do: Pydantic AI, AgentCore, Strands,
+Anthropic, LlamaIndex, Google ADK and CrewAI are Python-only, while the Vercel AI
+SDK and Mastra are TypeScript-only. OpenInference ships in `typescript/src` but
+has no page to link, so it is not a tab yet.
+
+The dead per-tab `<Case id="typescript">` blocks that used to sit inside the
+Python case of `cicd-` and `end-to-end-` were deleted rather than promoted. They
+were unreachable, and they had drifted: `import { metrics } from "deepeval"`
+namespace access, `test_langchain_app.ts` snake-case filenames, and a
+CI/CD snippet whose "TypeScript" half ran `evalsIterator` instead of the
+`toPass()` matcher the surrounding page is about.
 
 All four replaced their hand-rolled judge-model tab set with
 `snippets/models/configure-llm-judge-tabs.mdx`, which is bilingual and already
@@ -250,18 +266,16 @@ export, `-r`, the `on_test_run_end` hook) are `<Only id="python">` rather than
 flagged as missing, and the two `AsyncConfig` fields the TS runner accepts but
 ignores (`runAsync`, `throttleValue`) are documented for neither.
 
-**Code blocks are done where they remain.** 287 `<Switch>` blocks, 251 of which
-carry a TypeScript fence; the other 36 are `bash` and `yaml` pairs. None is
-one-sided — `validate-terms` now enforces that — and no Python-only page leaks
-a TypeScript fence.
+**Code blocks are done where they remain.** 523 `<Switch>` blocks across 91
+files, most carrying a TypeScript fence and the rest `bash` / `yaml` / prose
+pairs. None is one-sided — `validate-terms` now enforces that — and no
+Python-only page leaks a TypeScript fence.
 
-**Prose has barely started.** `<Term>` covers 128 spans across 7 pages, while
-1,188 snake_case identifiers across 66 files (293 distinct) are still hardcoded
-Python in prose that TypeScript readers see. That count is over the pages a
-TypeScript reader can still reach, so it fell with every page that went
-`[python]` rather than through any conversion work. The mechanism is now
-settled — see [Inline prose terms](#inline-prose-terms) — so what remains is
-volume, not design.
+**Prose is well underway.** `<Term>` covers 1,419 spans (130 distinct
+spellings) across 71 files. The remaining hardcoded snake_case in shared prose
+has not been recounted since the framework rewrites; the mechanism is settled —
+see [Inline prose terms](#inline-prose-terms) — so what is left is volume, not
+design.
 
 ## Inline prose terms
 
@@ -356,7 +370,7 @@ support; frontmatter tracks what each page actually *contains*, so a page stays
 
 | Group | TypeScript SDK surface | Docs verdict |
 | --- | --- | --- |
-| Frameworks | `langchain` (LangGraph included, via `integrations/langchain/langgraph-utils.ts`), `openai-agents`, `openai` | all 12 pages `[python]` — 4 are eligible and awaiting a rewrite, the other 8 permanently Python-only |
+| Frameworks | `openai`, `integrations/langchain` (LangGraph included, via `integrations/langchain/langgraph-utils.ts`), `integrations/openai-agents`, `integrations/mastra`, `integrations/ai-sdk`, `integrations/openinference` | **done bar one** — of 14 pages, 4 are bilingual (`langchain`, `langgraph`, `openai`, `openai-agents`), 2 are TypeScript-only (`mastra`, `ai-sdk`), 8 are permanently Python-only; only OpenInference has no page |
 | Models | every provider except LiteLLM — `LocalModel` covers both LM Studio and vLLM, `KimiModel` is Moonshot, `GeminiModel` takes `useVertexAI` | **done** — 14 of 16 pages bilingual, `ai-sdk` is TypeScript-only, `litellm` permanently Python-only |
 | Vector databases | none | all 6 permanently Python-only |
 
@@ -369,6 +383,26 @@ Frameworks group. Writing it meant the group could no longer be wrapped whole in
 `<Only id="python">` on the integrations index: the heading and intro are now
 shared and the card grid is a `<Switch>`, so a TypeScript reader gets a
 Frameworks section with Mastra in it rather than no section at all.
+`frameworks/ai-sdk` — the tracing exporter, distinct from the `models/ai-sdk`
+judge model — is the third.
+
+`frameworks/openai` and `frameworks/langgraph` were the last two rewrites, and
+both were written by reading `typescript/src` rather than from the Python page.
+Two things that surfaced doing so are on the pages themselves rather than
+smoothed over: `instrumentOpenAI` patches the *first* client it is given and
+returns early after that, which a reader constructing two clients would
+otherwise hit silently; and `LlmSpanContext` is scope-wide in TypeScript while
+`nextLlmSpan(...)` is the one-shot form, so the OpenAI page documents both
+rather than presenting `setTracingContext` as a straight translation of Python's
+`with trace(llm_span_context=...)`.
+
+Writing them also added a `./prompt` subpath export to `typescript/package.json`
+(mirrored into `typesVersions`). `Prompt` had been root-only, so
+`frameworks/openai-agents` was already documenting an
+`import { Prompt } from "deepeval/prompt"` that threw
+`ERR_PACKAGE_PATH_NOT_EXPORTED`. The subpath now exists and the root export
+stays for call sites that predate it; note `deepeval/test-case` exports an
+unrelated MCP `type Prompt`, which is why the specifier matters.
 
 Two things surfaced while writing it, both since fixed in the SDK rather than
 documented around. `DeepEvalExporter` disabled itself when `CONFIDENT_API_KEY`
@@ -381,36 +415,24 @@ staged by `next*Span(...)` or `updateCurrentSpan(...)`. See
 
 ### What blocks wider TypeScript coverage
 
-**Existing pages missing TypeScript examples.** The SDK already supports these,
-so the work is writing the `<Switch>` blocks and then widening `languages`.
+**Existing pages missing TypeScript examples.** None left in Frameworks. The
+four eligible pages — `langchain`, `openai-agents`, `openai`, `langgraph` — are
+all bilingual, each rewritten from `typescript/src` rather than patched snippet
+by snippet, on the reasoning that a plausible-looking `deepeval/integrations/*`
+import that does not resolve costs a reader more than an honest 501.
 
-- `frameworks/langchain`, `frameworks/openai` and `frameworks/openai-agents`.
-  These three were bilingual and have been taken back to `[python]`: their 15
-  `<Switch>` blocks were collapsed to their Python case and the TypeScript
-  cases deleted. The examples were written against the SDK rather than read off
-  it, so the whole framework story is being redocumented from scratch instead of
-  patched snippet by snippet. This is the one place where deleting working
-  content was the right call — a plausible-looking `deepeval/integrations/*`
-  import that does not resolve costs a reader more than an honest 501.
-- `frameworks/langgraph`, covered by `integrations/langchain/langgraph-utils.ts`.
-
-The shared component-level snippet
-([`snippets/evaluation/component-level-agent-framework-tabs.mdx`](snippets/evaluation/component-level-agent-framework-tabs.mdx))
-is where this gap is now visible to readers rather than only to us. Its Python
-case is the twelve-framework tab set; its TypeScript case is manual `observe`
-instrumentation plus a `<NotImplemented>` for `deepeval.integrations`, so a
-TypeScript reader on `getting-started` is told the adapters ship but their pages
-do not exist yet. Closing any of the four eligible framework pages above means
-filling that case in with real tabs. Note the snippet lives outside `content/`,
-so `validate-terms` does not scan it and its `<NotImplemented>` is not in the
-count the script prints.
+The four shared framework snippets under `snippets/evaluation/` used to be the
+place where the docs understated what ships — their TypeScript case was manual
+`observe` instrumentation plus a `<NotImplemented>` claiming the adapters had no
+pages. All four now carry real TypeScript tab sets; see the
+`getting-started-agents` notes above for what each includes and why the tab lists
+differ per language. Note the snippets live outside `content/`, so
+`validate-terms` does not scan them and any `<NotImplemented>` tags they carry
+are not in the count the script prints.
 
 **Integrations with no page at all.** These need writing from scratch; no amount
 of metadata helps.
 
-- **Vercel AI SDK as a framework** — `integrations/ai-sdk`, the tracing exporter.
-  Distinct from `models/ai-sdk`, which covers `AISDKModel` as a judge model and
-  is written.
 - **OpenInference** — `integrations/openinference`, present in both SDKs.
 
 ### Documented ahead of the SDK
@@ -472,12 +494,16 @@ the keyless path by default.
 
 Roughly in order of how much they hurt a TypeScript reader.
 
-1. **Prose identifiers.** The 1,188 spans above. The design question is
-   answered (see [Inline prose terms](#inline-prose-terms)); this is now a
-   page-by-page conversion job with no blocker in front of it.
+1. **Prose identifiers.** Hardcoded Python identifiers still sitting in prose a
+   TypeScript reader sees, on the pages `<Term>` has not reached. The design
+   question is answered (see [Inline prose terms](#inline-prose-terms)); this is
+   now a page-by-page conversion job with no blocker in front of it, and the
+   count wants re-running before it is quoted again.
 2. **Integrations, per [Integration coverage](#integration-coverage).** The
-   models half is now bilingual, so a TypeScript reader keeps Integrations'
-   largest section; frameworks and vector databases both vanish entirely.
+   models half is bilingual, the frameworks half now keeps six pages for a
+   TypeScript reader, and the four shared framework tab snippets have real
+   TypeScript tabs, so what is left is OpenInference (no page). Vector
+   databases vanish entirely and always will.
 3. **Partial gaps.** Roughly 116 unpaired ` ```python ` fences sit on 28
    otherwise bilingual pages, mostly framework integration tabs, the pytest and
    `deepeval test run` workflows, and Pydantic schemas. Each needs
@@ -491,10 +517,10 @@ Roughly in order of how much they hurt a TypeScript reader.
    but it is a convention rather than a check. Resolving each `ts` value
    against the SDK's exported type surface would close this; it was not
    possible against the old registry either, so nothing regressed.
-5. **TypeScript-only pages are barely exercised.** `models/ai-sdk` and
-   `frameworks/mastra` are the only two, and Mastra is the only one whose
-   sidebar group would otherwise be empty for a TypeScript reader. The Vercel AI
-   SDK as a *framework* is the natural third.
+5. **TypeScript-only pages are barely exercised.** Three now — `models/ai-sdk`,
+   `frameworks/mastra` and `frameworks/ai-sdk` — and none of them is load-bearing
+   for a sidebar group any more, since the Frameworks group holds six pages for
+   a TypeScript reader.
 6. **No preference persistence across visits.** The selection is `useState`
    with no cookie/localStorage, so a new tab or hard refresh does not remember
    the last pick. Mono-language pages now SSR and open in their only language
