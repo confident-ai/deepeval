@@ -500,11 +500,13 @@ export class EvaluationDataset {
     golden: GoldenUnion;
     finalized?: boolean;
     projectId?: string;
+    alias?: string;
   }): Promise<void> {
-    const { golden, finalized = true, projectId } = params;
-    if (!golden.id) {
+    const { golden, finalized = true, projectId, alias } = params;
+    const datasetAlias = alias ?? this._alias!;
+    if (!golden.id || !datasetAlias) {
       throw new Error(
-        "Cannot update a golden without an id. Pull the dataset first so its goldens carry the id assigned by Confident AI.",
+        "Cannot update a golden without an id and alias. Pull the dataset first so it carries alias and golden ids assigned by Confident AI, or pass the alias and golden id directly.",
       );
     }
     const api = new Api();
@@ -517,7 +519,7 @@ export class EvaluationDataset {
       body,
       undefined,
       undefined,
-      { goldenId: golden.id },
+      { goldenId: golden.id, alias: datasetAlias },
       projectId,
     );
     console.log("✅ Golden successfully updated on Confident AI!");
@@ -526,12 +528,14 @@ export class EvaluationDataset {
   async deleteGolden(params: {
     golden: GoldenUnion | string;
     projectId?: string;
+    alias?: string;
   }): Promise<void> {
-    const { golden, projectId } = params;
+    const { golden, projectId, alias } = params;
+    const datasetAlias = alias ?? this._alias!;
     const goldenId = typeof golden === "string" ? golden : golden.id;
-    if (!goldenId) {
+    if (!goldenId || !datasetAlias) {
       throw new Error(
-        "Cannot delete a golden without an id. Pull the dataset first so its goldens carry the id assigned by Confident AI, or pass the golden id directly.",
+        "Cannot delete a golden without an id and alias. Pull the dataset first so it carries alias and golden ids assigned by Confident AI, or pass the alias and golden id directly.",
       );
     }
     const api = new Api();
@@ -541,7 +545,7 @@ export class EvaluationDataset {
       undefined,
       undefined,
       undefined,
-      { goldenId },
+      { goldenId, alias: datasetAlias },
       projectId,
     );
     console.log("✅ Golden successfully deleted from Confident AI!");
