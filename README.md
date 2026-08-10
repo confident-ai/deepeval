@@ -63,7 +63,7 @@
 
 Whether you're building AI agents, RAG pipelines, or chatbots, implemented via LangChain or OpenAI, DeepEval has you covered. With it, you can easily evaluate:
 
-- **LLM applications end-to-end** as black boxes
+- **LLM apps end-to-end** as black boxes
 - **Complete agent trajectories** across every decision and action
 - **Individual agent steps** such as LLM calls, tool use, retrieval, and sub-agent handoffs
 
