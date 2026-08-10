@@ -143,6 +143,21 @@ class RetrievedContextData(BaseModel):
 
 The `role` parameter specifies whether a particular turn is by the `"user"` (end user) or `"assistant"` (LLM). This is similar to OpenAI's API.
 
+<Only id="python">
+
+For **voice conversations**, a `Turn` carries two additional fields that record what was actually spoken and when:
+
+```python
+class Turn:
+    ...
+    audio: Optional[Audio] = None
+    latency_ms: Optional[float] = None
+```
+
+The `audio` parameter holds the spoken audio for that turn as an `Audio` object, and `latency_ms` records the assistant's response time. A `ConversationalTestCase` whose turns carry audio has its `voice` flag set to `True` automatically. See [Voice](/docs/evaluation-voice) in concepts for what these fields mean and the `Audio` data model.
+
+</Only>
+
 ### Scenario
 
 The `scenario` parameter is an **optional** parameter that specifies the circumstances of which a conversation is taking place in.

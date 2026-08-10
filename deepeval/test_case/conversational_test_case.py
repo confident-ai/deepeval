@@ -11,11 +11,12 @@ from typing import List, Optional, Dict, Literal, Union
 from copy import deepcopy
 from enum import Enum
 
-from deepeval.test_case import (
+from deepeval.test_case.llm_test_case import (
     ToolCall,
     ToolCallType,
     MLLMImage,
     RetrievedContextData,
+    Audio,
 )
 from deepeval.test_case.mcp import (
     MCPServer,
@@ -57,11 +58,19 @@ def __getattr__(name: str):
 
 
 class Turn(BaseModel):
+    # Core
     role: Literal["user", "assistant"]
     content: str
     user_id: Optional[str] = Field(
         default=None, validation_alias=AliasChoices("userId", "user_id")
     )
+    # Voice
+    audio: Optional[Audio] = Field(default=None)
+    latency_ms: Optional[float] = Field(
+        default=None, validation_alias=AliasChoices("latencyMs", "latency_ms")
+    )
+    interrupted: Optional[bool] = Field(default=None)
+    # RAG & tools
     retrieval_context: Optional[List[Union[str, RetrievedContextData]]] = Field(
         default=None,
         validation_alias=AliasChoices("retrievalContext", "retrieval_context"),
@@ -70,9 +79,11 @@ class Turn(BaseModel):
         default=None,
         validation_alias=AliasChoices("toolsCalled", "tools_called"),
     )
+    # MCP
     mcp_tools_called: Optional[List[MCPToolCall]] = Field(default=None)
     mcp_resources_called: Optional[List[MCPResourceCall]] = Field(default=None)
     mcp_prompts_called: Optional[List[MCPPromptCall]] = Field(default=None)
+    # Metadata
     metadata: Optional[Dict] = Field(
         default=None,
         validation_alias=AliasChoices(
@@ -121,6 +132,12 @@ class Turn(BaseModel):
 
     def __repr__(self):
         attrs = [f"role={self.role!r}", f"content={self.content!r}"]
+        if self.audio is not None:
+            attrs.append(f"audio={self.audio!r}")
+        if self.latency_ms is not None:
+            attrs.append(f"latency_ms={self.latency_ms!r}")
+        if self.interrupted is not None:
+            attrs.append(f"interrupted={self.interrupted!r}")
         if self.user_id is not None:
             attrs.append(f"user_id={self.user_id!r}")
         if self.retrieval_context is not None:
@@ -188,6 +205,7 @@ class Turn(BaseModel):
 
 
 class ConversationalTestCase(BaseModel):
+    # Core
     turns: List[Turn]
     scenario: Optional[str] = Field(default=None)
     context: Optional[List[str]] = Field(default=None)
@@ -207,6 +225,7 @@ class ConversationalTestCase(BaseModel):
         serialization_alias="chatbotRole",
         validation_alias=AliasChoices("chatbotRole", "chatbot_role"),
     )
+    # Metadata
     metadata: Optional[Dict] = Field(
         default=None,
         validation_alias=AliasChoices(
@@ -216,8 +235,11 @@ class ConversationalTestCase(BaseModel):
     comments: Optional[str] = Field(default=None)
     tags: Optional[List[str]] = Field(default=None)
     flaky: bool = Field(default=False)
+    # MCP
     mcp_servers: Optional[List[MCPServer]] = Field(default=None)
+    # Modality flags
     multimodal: bool = False
+    voice: bool = False
 
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
@@ -240,6 +262,17 @@ class ConversationalTestCase(BaseModel):
             stacklevel=2,
         )
         self.metadata = value
+
+    @model_validator(mode="after")
+    def set_is_voice(self):
+        if self.voice is True:
+            return self
+        if self.turns:
+            for turn in self.turns:
+                if turn.audio is not None:
+                    self.voice = True
+                    break
+        return self
 
     @model_validator(mode="after")
     def set_is_multimodal(self):
