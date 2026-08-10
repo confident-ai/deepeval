@@ -61,7 +61,13 @@
 
 **DeepEval** is a simple-to-use, open-source LLM evaluation framework, for evaluating large-language model systems. It is similar to Pytest but specialized for unit testing LLM apps. DeepEval incorporates the latest research to run evals via metrics such as G-Eval, task completion, answer relevancy, hallucination, etc., which uses LLM-as-a-judge and other NLP models that run **locally on your machine**.
 
-Whether you're building AI agents, RAG pipelines, or chatbots, implemented via LangChain or OpenAI, DeepEval has you covered. With it, you can easily determine the optimal models, prompts, and architecture to improve your AI quality, prevent prompt drifting, or even transition from OpenAI to Claude with confidence.
+Whether you're building AI agents, RAG pipelines, or chatbots, implemented via LangChain or OpenAI, DeepEval has you covered. With it, you can easily evaluate:
+
+- **LLM applications end-to-end** as black boxes
+- **Complete agent trajectories** across every decision and action
+- **Individual agent steps** such as LLM calls, tool use, retrieval, and sub-agent handoffs
+
+Use these evaluations to determine the optimal models, prompts, and architecture to improve your AI quality, prevent prompt drifting, or even transition from OpenAI to Claude with confidence.
 
 > [!IMPORTANT]
 > Need a place for your DeepEval testing data to live 🏡❤️? [Sign up to Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=signup_callout) to compare iterations of your LLM app, generate & share testing reports, and more.
@@ -165,14 +171,17 @@ DeepEval plugs into any LLM framework — OpenAI Agents, LangChain, CrewAI, and 
 
 ## Frameworks
 
-- [OpenAI](https://www.deepeval.com/integrations/frameworks/openai?utm_source=GitHub) — evaluate and trace OpenAI applications via a client wrapper
-- [OpenAI Agents](https://www.deepeval.com/integrations/frameworks/openai-agents?utm_source=GitHub) — evaluate OpenAI Agents end-to-end in under a minute
 - [LangChain](https://www.deepeval.com/integrations/frameworks/langchain?utm_source=GitHub) — evaluate LangChain applications with a callback handler
 - [LangGraph](https://www.deepeval.com/integrations/frameworks/langgraph?utm_source=GitHub) — evaluate LangGraph agents with a callback handler
 - [Pydantic AI](https://www.deepeval.com/integrations/frameworks/pydanticai?utm_source=GitHub) — evaluate Pydantic AI agents with type-safe validation
 - [CrewAI](https://www.deepeval.com/integrations/frameworks/crewai?utm_source=GitHub) — evaluate CrewAI multi-agent systems
 - [Anthropic](https://www.deepeval.com/integrations/frameworks/anthropic?utm_source=GitHub) — evaluate and trace Claude applications via a client wrapper
 - [AWS AgentCore](https://www.deepeval.com/integrations/frameworks/agentcore?utm_source=GitHub) — evaluate agents deployed on Amazon AgentCore
+- [Google ADK](https://www.deepeval.com/integrations/frameworks/google-adk?utm_source=GitHub) — evaluate Google ADK agents and multi-agent workflows
+- [AI SDK](https://www.deepeval.com/integrations/frameworks/ai-sdk?utm_source=GitHub) — evaluate AI SDK generations and tool-loop trajectories
+- [Mastra](https://www.deepeval.com/integrations/frameworks/mastra?utm_source=GitHub) — evaluate Mastra agents and workflows with native tracing
+- [OpenAI](https://www.deepeval.com/integrations/frameworks/openai?utm_source=GitHub) — evaluate and trace OpenAI applications via a client wrapper
+- [OpenAI Agents](https://www.deepeval.com/integrations/frameworks/openai-agents?utm_source=GitHub) — evaluate OpenAI Agents end-to-end in under a minute
 - [LlamaIndex](https://www.deepeval.com/integrations/frameworks/llamaindex?utm_source=GitHub) — evaluate RAG applications built with LlamaIndex
 
 ## ☁️ Platform + Ecosystem
@@ -278,7 +287,7 @@ deepeval test run test_chatbot.py
 
 ## Evals With Full Traceability
 
-Use `evals_iterator()` to run the same dataset through your app, whether you instrument it manually or through one of DeepEval's framework integrations.
+Use `evals_iterator()` to run the same dataset through your app, whether you instrument it manually or through one of DeepEval's framework integrations. Because tracing captures the ordered sequence of model decisions, tool calls, and intermediate steps, you can run [trajectory-based evaluations](https://deepeval.com/docs/evaluation-trajectory-based-llm-evals?utm_source=GitHub) over the complete path your agent takes.
 
 Here's an example of manual instrumentation:
 
@@ -297,7 +306,7 @@ def inner_component(input: str):
 def app(input: str):
     return inner_component(input)
 
-# This metric will be run on your trace end to end.
+# This metric evaluates the complete trajectory captured for this run.
 for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     app(golden.input)
 ```
@@ -312,7 +321,7 @@ from deepeval.metrics import TaskCompletionMetric
 
 client = OpenAI()
 
-# This metric will be run on your trace end to end.
+# This metric evaluates the complete trajectory captured for this run.
 for golden in dataset.evals_iterator():
     with trace(metrics=[TaskCompletionMetric()]):
         client.chat.completions.create(
@@ -330,9 +339,64 @@ for golden in dataset.evals_iterator():
 from agents import Runner
 from deepeval.metrics import TaskCompletionMetric
 
-# This metric will be run on your trace end to end.
+# This metric evaluates the complete trajectory captured for this run.
 for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     Runner.run_sync(agent, golden.input)
+```
+
+</details>
+
+<details>
+<summary><b>AI SDK (TypeScript)</b></summary>
+
+```typescript
+import { generateText } from "ai";
+import { configureAiSdkTracing } from "deepeval/integrations/ai-sdk";
+import { TaskCompletionMetric } from "deepeval/metrics";
+
+const tracer = configureAiSdkTracing({ name: "my-agent" });
+
+const ask = (input: string) =>
+  generateText({
+    model,
+    prompt: input,
+    experimental_telemetry: { isEnabled: true, tracer },
+  });
+
+// This metric evaluates the complete trajectory captured for this run.
+for await (const golden of dataset.evalsIterator({
+  metrics: [new TaskCompletionMetric()],
+})) {
+  await ask(golden.input);
+}
+```
+
+</details>
+
+<details>
+<summary><b>Mastra (TypeScript)</b></summary>
+
+```typescript
+import { Mastra } from "@mastra/core/mastra";
+import { Observability } from "@mastra/observability";
+import { DeepEvalExporter } from "deepeval/integrations/mastra";
+import { TaskCompletionMetric } from "deepeval/metrics";
+
+const mastra = new Mastra({
+  agents: { agent },
+  observability: new Observability({
+    configs: {
+      deepeval: { exporters: [new DeepEvalExporter()] },
+    },
+  }),
+});
+
+// This metric evaluates the complete trajectory captured for this run.
+for await (const golden of dataset.evalsIterator({
+  metrics: [new TaskCompletionMetric()],
+})) {
+  await mastra.getAgent("agent").generate(golden.input);
+}
 ```
 
 </details>
@@ -347,7 +411,7 @@ from deepeval.metrics import TaskCompletionMetric
 
 client = Anthropic()
 
-# This metric will be run on your trace end to end.
+# This metric evaluates the complete trajectory captured for this run.
 for golden in dataset.evals_iterator():
     with trace(metrics=[TaskCompletionMetric()]):
         client.messages.create(
@@ -366,7 +430,7 @@ for golden in dataset.evals_iterator():
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.metrics import TaskCompletionMetric
 
-# This metric will be run on your trace end to end.
+# This metric evaluates the complete trajectory captured for this run.
 for golden in dataset.evals_iterator():
     llm.invoke(
         golden.input,
@@ -383,7 +447,7 @@ for golden in dataset.evals_iterator():
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.metrics import TaskCompletionMetric
 
-# This metric will be run on your trace end to end.
+# This metric evaluates the complete trajectory captured for this run.
 for golden in dataset.evals_iterator():
     agent.invoke(
         {"messages": [{"role": "user", "content": golden.input}]},
@@ -399,7 +463,7 @@ for golden in dataset.evals_iterator():
 ```python
 from deepeval.metrics import TaskCompletionMetric
 
-# This metric will be run on your trace end to end.
+# This metric evaluates the complete trajectory captured for this run.
 for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     agent.run_sync(golden.input)
 ```
@@ -415,7 +479,7 @@ from deepeval.metrics import TaskCompletionMetric
 
 instrument_crewai()
 
-# This metric will be run on your trace end to end.
+# This metric evaluates the complete trajectory captured for this run.
 for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     crew.kickoff({"input": golden.input})
 ```
@@ -431,7 +495,7 @@ from deepeval.metrics import TaskCompletionMetric
 
 instrument_agentcore()
 
-# This metric will be run on your trace end to end.
+# This metric evaluates the complete trajectory captured for this run.
 for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     invoke({"prompt": golden.input})
 ```
@@ -446,7 +510,7 @@ import asyncio
 from deepeval.evaluate.configs import AsyncConfig
 from deepeval.metrics import TaskCompletionMetric
 
-# This metric will be run on your trace end to end.
+# This metric evaluates the complete trajectory captured for this run.
 for golden in dataset.evals_iterator(
     async_config=AsyncConfig(run_async=True),
     metrics=[TaskCompletionMetric()],
@@ -468,7 +532,7 @@ from deepeval.metrics import TaskCompletionMetric
 
 instrument_google_adk()
 
-# This metric will be run on your trace end to end.
+# This metric evaluates the complete trajectory captured for this run.
 for golden in dataset.evals_iterator(
     async_config=AsyncConfig(run_async=True),
     metrics=[TaskCompletionMetric()],
@@ -488,7 +552,7 @@ from deepeval.metrics import TaskCompletionMetric
 
 instrument_strands()
 
-# This metric will be run on your trace end to end.
+# This metric evaluates the complete trajectory captured for this run.
 for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
     agent(golden.input)
 ```
