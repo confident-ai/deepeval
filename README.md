@@ -28,7 +28,7 @@
         <a href="#-metrics-and-features">Metrics and Features</a> |
         <a href="#-quickstart">Getting Started</a> |
         <a href="#-integrations">Integrations</a> |
-        <a href="https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=header_nav">Confident AI</a>
+        <a href="https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=header_nav&ref_page=github/readme">Confident AI</a>
     <p>
 </h4>
 
@@ -70,7 +70,7 @@ Whether you're building AI agents, RAG pipelines, or chatbots, implemented via L
 Use these evaluations to determine the optimal models, prompts, and architecture to improve your AI quality, prevent prompt drifting, or even transition from OpenAI to Claude with confidence.
 
 > [!IMPORTANT]
-> Need a place for your DeepEval testing data to live 🏡❤️? [Sign up to Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=signup_callout) to compare iterations of your LLM app, generate & share testing reports, and more.
+> Want to compare iterations, share evaluation reports, and monitor your AI in production? [Sign up for Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=signup_callout&ref_page=github/readme), the AI quality platform for enterprise teams.
 >
 > ![Demo GIF](assets/demo.gif)
 
@@ -167,7 +167,7 @@ Use these evaluations to determine the optimal models, prompts, and architecture
 
 # 🔌 Integrations
 
-DeepEval plugs into any LLM framework — OpenAI Agents, LangChain, CrewAI, and more. To scale evals across your team — or let anyone run them without writing code — **Confident AI** gives you a native platform integration.
+DeepEval plugs into any LLM framework — OpenAI Agents, LangChain, CrewAI, and more. For enterprise teams standardizing evals and observability across the organization, **Confident AI** provides a native DeepEval integration.
 
 ## Frameworks
 
@@ -186,10 +186,11 @@ DeepEval plugs into any LLM framework — OpenAI Agents, LangChain, CrewAI, and 
 
 ## ☁️ Platform + Ecosystem
 
-[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=platform_section) is an all-in-one platform that integrates natively with DeepEval.
+[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=platform_section&ref_page=github/readme) is the AI quality platform for enterprise teams to standardize evals and observability across the organization. It integrates natively with DeepEval while remaining model- and framework-agnostic.
 
-- Manage datasets, trace LLM applications, run evaluations, and monitor responses in production — all from one platform.
-- Don't need a UI? Confident AI can also be your data persistent layer - run evals, pull datasets, and inspect traces straight from claude code, cursor, via Confident AI's [MCP server](https://github.com/confident-ai/confident-mcp-server).
+- Product teams manage datasets, evaluate AI applications before launch, and monitor live traces with online evals and signals in production.
+- Platform teams define one organization-wide quality standard and enforce it through governance and native red teaming.
+- Don't need a UI? Use Confident AI as your persistence layer to run evals, pull datasets, and inspect traces from Claude Code or Cursor through Confident AI's [MCP server](https://github.com/confident-ai/confident-mcp-server).
 
 <p align="center">
   <img src="assets/confident-mcp-architecture.png" alt="Confident AI MCP Architecture" width="500">
@@ -619,7 +620,7 @@ cp .env.example .env.local
 
 # DeepEval With Confident AI
 
-[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=cli_login_section) is an all-in-one platform to manage datasets, trace LLM applications, and run evaluations in production. Log in from the CLI to get started:
+[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=cli_login_section&ref_page=github/readme) is the AI quality platform for enterprise teams to standardize evals and observability across the organization. Product teams can evaluate AI applications before launch and monitor them in production, while platform teams define and enforce a consistent quality standard. Log in from the CLI to get started:
 
 ```bash
 deepeval login
@@ -639,7 +640,7 @@ Prefer to stay in your IDE? Use DeepEval via [Confident AI's MCP server](https:/
   <img src="assets/confident-mcp-architecture.png" alt="Confident AI MCP Architecture" width="500">
 </p>
 
-Everything on Confident AI is available [here](https://www.confident-ai.com/docs?utm_source=deepeval&utm_medium=github&utm_content=cloud_docs).
+Learn more in the [Confident AI documentation](https://www.confident-ai.com/docs?utm_source=deepeval&utm_medium=github&utm_content=cloud_docs&ref_page=github/readme).
 
 <br />
 
