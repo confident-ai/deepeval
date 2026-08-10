@@ -70,7 +70,7 @@ Whether you're building AI agents, RAG pipelines, or chatbots, implemented via L
 Use these evaluations to determine the optimal models, prompts, and architecture to improve your AI quality, prevent prompt drifting, or even transition from OpenAI to Claude with confidence.
 
 > [!IMPORTANT]
-> Want to compare iterations, share evaluation reports, and monitor your AI in production? [Sign up for Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=signup_callout&ref_page=github/readme), the AI quality platform for enterprise teams.
+> Want to compare iterations, share evaluation reports, and monitor your AI in production? [Sign up for Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=signup_callout&ref_page=github/readme), the enterprise AI evals and observability platform.
 >
 > ![Demo GIF](assets/demo.gif)
 
@@ -186,7 +186,7 @@ DeepEval plugs into any LLM framework — OpenAI Agents, LangChain, CrewAI, and 
 
 ## ☁️ Platform + Ecosystem
 
-[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=platform_section&ref_page=github/readme) is the AI quality platform for enterprise teams to standardize evals and observability across the organization. It integrates natively with DeepEval while remaining model- and framework-agnostic.
+[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=platform_section&ref_page=github/readme) is the enterprise AI evals and observability platform. It gives organizations one consistent standard across product teams, integrates natively with DeepEval, and remains model- and framework-agnostic.
 
 - Product teams manage datasets, evaluate AI applications before launch, and monitor live traces with online evals and signals in production.
 - Platform teams define one organization-wide quality standard and enforce it through governance and native red teaming.
@@ -620,7 +620,7 @@ cp .env.example .env.local
 
 # DeepEval With Confident AI
 
-[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=cli_login_section&ref_page=github/readme) is the AI quality platform for enterprise teams to standardize evals and observability across the organization. Product teams can evaluate AI applications before launch and monitor them in production, while platform teams define and enforce a consistent quality standard. Log in from the CLI to get started:
+[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=cli_login_section&ref_page=github/readme) is the enterprise AI evals and observability platform. Product teams can evaluate AI applications before launch and monitor them in production, while platform teams define and enforce a consistent organization-wide standard. Log in from the CLI to get started:
 
 ```bash
 deepeval login
