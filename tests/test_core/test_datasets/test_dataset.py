@@ -240,6 +240,40 @@ class TestSaveAndLoad:
                     custom_obj = json.loads(vals[custom_idx])
                     assert custom_obj["col"] == "val"
 
+    def test_save_as_round_trips_annotations_and_custom_columns(self):
+        """A golden's annotations used to be dropped on the way back in: jsonl
+        never wrote them, and no loader read a custom column."""
+        golden = Golden(
+            input="q",
+            actual_output="a",
+            name="n",
+            comments="c",
+            source_file="src.txt",
+            additional_metadata={"flagged": True},
+            custom_column_key_values={"owner": "platform"},
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            for fmt, loader in (
+                ("json", "add_goldens_from_json_file"),
+                ("csv", "add_goldens_from_csv_file"),
+                ("jsonl", "add_goldens_from_jsonl_file"),
+            ):
+                path = EvaluationDataset([golden]).save_as(
+                    fmt, directory=tmpdir, file_name=f"annotated_{fmt}"
+                )
+                reloaded = EvaluationDataset()
+                getattr(reloaded, loader)(path)
+                loaded = reloaded.goldens[0]
+                assert loaded.name == "n", fmt
+                assert loaded.comments == "c", fmt
+                assert loaded.source_file == "src.txt", fmt
+                # json.dumps writes `true`, which ast.literal_eval cannot read
+                assert loaded.additional_metadata == {"flagged": True}, fmt
+                assert loaded.custom_column_key_values == {
+                    "owner": "platform"
+                }, fmt
+
     def test_save_as_round_trips_retrieval_context_data(self):
         """save_as serializes a RetrievedContextData (a type-allowed member of
         Golden.retrieval_context that used to crash the save) as a namespaced,
@@ -474,6 +508,47 @@ class TestSaveAndLoad:
                 match="You cannot add 'ConversationalGolden' to a single-turn dataset.",
             ):
                 dataset.add_goldens_from_csv_file(path)
+
+    def test_csv_leaves_absent_columns_as_none(self):
+        """A column the file doesn't have must stay None rather than becoming
+        an empty list, which reads as present to a metric's parameter check."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, "minimal.csv")
+            with open(path, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(["input", "actual_output"])
+                writer.writerow(["What is DeepEval?", "A framework."])
+
+            test_cases = EvaluationDataset()
+            test_cases.add_test_cases_from_csv_file(
+                path, "input", "actual_output"
+            )
+            test_case = test_cases.test_cases[0]
+            assert test_case.context is None
+            assert test_case.retrieval_context is None
+            assert test_case.tools_called is None
+            assert test_case.expected_tools is None
+
+            goldens = EvaluationDataset()
+            goldens.add_goldens_from_csv_file(path)
+            golden = goldens.goldens[0]
+            assert golden.context is None
+            assert golden.retrieval_context is None
+            assert golden.tools_called is None
+            assert golden.expected_tools is None
+
+    def test_csv_keeps_empty_cells_of_a_declared_column_empty(self):
+        """A column that exists but has an empty cell is an empty list, not None."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, "empty-cell.csv")
+            with open(path, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(["input", "actual_output", "context"])
+                writer.writerow(["What is DeepEval?", "A framework.", ""])
+
+            dataset = EvaluationDataset()
+            dataset.add_test_cases_from_csv_file(path, "input", "actual_output")
+            assert dataset.test_cases[0].context == []
 
     def test_add_goldens_from_jsonl_file_rejects_mixed_variations(self):
         dataset = EvaluationDataset()

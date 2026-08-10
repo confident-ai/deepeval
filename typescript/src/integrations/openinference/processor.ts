@@ -9,19 +9,16 @@ import {
   LlmSpan,
   ToolSpan,
   TraceSpanStatus,
-} from "../../tracing/tracing";
-import {
-  applyPendingToSpan,
-  popPendingFor,
-} from "../../tracing/pending-context";
+} from "@/tracing/tracing";
+import { applyPendingToSpan, popPendingFor } from "@/tracing/pending-context";
 import {
   ROUTE_TO_REST_ATTRIBUTE,
   endOtelImplicitTrace,
   resolveSpanRoute,
   resolveTraceForOtelSpan,
-} from "../../tracing/otel-routing";
-import { OpenInferenceInstrumentationOptions } from "./index";
-import { ToolCall } from "../../test-case";
+} from "@/tracing/otel-routing";
+import { OpenInferenceInstrumentationOptions } from "@/integrations/openinference/index";
+import { ToolCall } from "@/test-case";
 
 // ---------------------------------------------------------------------------
 // OI span kind -> internal SpanType mapping
@@ -225,12 +222,17 @@ function safeJsonParse(val: any): any {
 
 export class OpenInferenceSpanProcessor implements SpanProcessor {
   private options: OpenInferenceInstrumentationOptions;
+  private otlpEnabled: boolean;
   private oiSpanIds = new Set<string>();
   /** Span to restore as "current" when a span ends, keyed by OTel span id. */
   private previousSpans = new Map<string, BaseSpan | undefined>();
 
-  constructor(options?: OpenInferenceInstrumentationOptions) {
+  constructor(
+    options?: OpenInferenceInstrumentationOptions,
+    routing: { otlpEnabled?: boolean } = {},
+  ) {
     this.options = options || {};
+    this.otlpEnabled = routing.otlpEnabled ?? true;
   }
 
   forceFlush(): Promise<void> {
@@ -352,7 +354,10 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
 
     // Routing decision, stamped so `onEnd` and the export filter act on the same
     // answer even if the async context has moved on by then.
-    const route = resolveSpanRoute({ isTestMode: this.options.isTestMode });
+    const route = resolveSpanRoute({
+      isTestMode: this.options.isTestMode,
+      otlpEnabled: this.otlpEnabled,
+    });
     if (route === "rest") {
       span.setAttribute(ROUTE_TO_REST_ATTRIBUTE, true);
 
@@ -499,14 +504,18 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
       deepEvalSpan.status = TraceSpanStatus.ERRORED;
     }
 
-    deepEvalSpan.input = safeJsonParse(attributes["confident.span.input"]);
-    deepEvalSpan.output = safeJsonParse(attributes["confident.span.output"]);
     deepEvalSpan.error = attributes["error"]
       ? String(attributes["error"])
       : undefined;
-    // Assign only when the attribute carries something: this field can also have
-    // been set from user code (`next*Span`, `updateCurrentSpan`), and an absent
-    // attribute must not erase that.
+    // Assign only when the attribute carries something: these fields can also
+    // have been set from user code (`next*Span`, `updateCurrentSpan`), and an
+    // absent attribute must not erase that.
+    if (attributes["confident.span.input"] !== undefined) {
+      deepEvalSpan.input = safeJsonParse(attributes["confident.span.input"]);
+    }
+    if (attributes["confident.span.output"] !== undefined) {
+      deepEvalSpan.output = safeJsonParse(attributes["confident.span.output"]);
+    }
     if (attributes["confident.span.metric_collection"] !== undefined) {
       deepEvalSpan.metricCollection =
         attributes["confident.span.metric_collection"];

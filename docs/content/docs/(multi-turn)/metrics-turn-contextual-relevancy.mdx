@@ -2,6 +2,7 @@
 id: metrics-turn-contextual-relevancy
 title: Turn Contextual Relevancy
 sidebar_label: Turn Contextual Relevancy
+languages: [python, typescript]
 ---
 <MetricTagsDisplayer
   multiTurn={true}
@@ -18,16 +19,20 @@ To use the `TurnContextualRelevancyMetric`, you'll have to provide the following
 
 - `turns`
 
-You must provide the `role`, `content`, and `retrieval_context` for evaluation to happen. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+You must provide the `role`, `content`, and <Term py="retrieval_context" ts="retrievalContext"/> for evaluation to happen. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
 
 The `TurnContextualRelevancyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluation:
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval import evaluate
 from deepeval.test_case import Turn, ConversationalTestCase
 from deepeval.metrics import TurnContextualRelevancyMetric
+from deepeval import evaluate
 
 content = "We offer a 30-day full refund at no extra cost."
 retrieval_context = [
@@ -51,20 +56,75 @@ metric = TurnContextualRelevancyMetric(threshold=0.5)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { Turn, ConversationalTestCase } from "deepeval/test-case";
+import { TurnContextualRelevancyMetric } from "deepeval/metrics";
+import { evaluate } from "deepeval";
+
+const content = "We offer a 30-day full refund at no extra cost.";
+const retrievalContext = [
+  "All customers are eligible for a 30 day full refund at no extra cost.",
+];
+
+const convoTestCase = new ConversationalTestCase({
+  turns: [
+    new Turn({ role: "user", content: "What if these shoes don't fit?" }),
+    new Turn({ role: "assistant", content, retrievalContext }),
+  ],
+  expectedOutcome: "The chatbot must explain the store policies like refunds, discounts, ..etc.",
+});
+
+const metric = new TurnContextualRelevancyMetric({ threshold: 0.5 });
+
+// To run metric as a standalone
+// await metric.measure(convoTestCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([convoTestCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
+<Switch>
+
+<Case id="python">
+
 There are **EIGHT** optional parameters when creating a `TurnContextualRelevancyMetric`:
 
-- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+</Case>
+
+<Case id="typescript">
+
+There are **SEVEN** optional parameters when creating a `TurnContextualRelevancyMetric`:
+
+</Case>
+
+</Switch>
+
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
-- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `window_size`: an integer which defines the size of the sliding window of turns used during evaluation. Defaulted to `10`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="window_size" ts="windowSize"/>: an integer which defines the size of the sliding window of turns used during evaluation. Defaulted to `10`.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 ### As a standalone
 
 You can also run the `TurnContextualRelevancyMetric` on a single test case as a standalone, one-off execution.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -72,6 +132,21 @@ You can also run the `TurnContextualRelevancyMetric` on a single test case as a 
 metric.measure(convo_test_case)
 print(metric.score, metric.reason)
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+...
+
+await metric.measure(convoTestCase);
+console.log(metric.score, metric.reason);
+```
+
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
@@ -104,7 +179,7 @@ The final score is the average of all relevancy scores across the conversation. 
         <>
           When retrieval happens turn-by-turn in a{" "}
           <code>ConversationalTestCase</code> and you want each turn's{" "}
-          <code>retrieval_context</code> signal-to-noise measured in context.
+          <Term py="retrieval_context" ts="retrievalContext"/> signal-to-noise measured in context.
           The single-turn{" "}
           <a href="/docs/metrics-contextual-relevancy">
             ContextualRelevancyMetric
@@ -118,7 +193,7 @@ The final score is the average of all relevancy scores across the conversation. 
       answer: (
         <>
           A <strong>retriever</strong> metric. It only measures how much of each
-          turn's <code>retrieval_context</code> is relevant to the user's input
+          turn's <Term py="retrieval_context" ts="retrievalContext"/> is relevant to the user's input
           and never reads the answer — a low score points to a noisy retriever,
           not a bad generator.
         </>

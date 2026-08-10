@@ -2,6 +2,7 @@
 # id: gemini
 title: Gemini
 sidebar_label: Gemini
+languages: [python, typescript]
 ---
 
 `deepeval` allows you to directly integrate Gemini models into all available LLM-based metrics, either through the command line or directly within your python code.
@@ -29,16 +30,20 @@ You can persist CLI settings with the optional `--save` flag.
 See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
 :::
 
-### Python
+### In Code
 
-Alternatively, you can specify your model directly in code using `GeminiModel` from `deepeval`'s model collection. By default, `model` is set to `gemini-2.5-pro`.
+<Switch>
+
+<Case id="python">
+
+Alternatively, you can specify your model directly in code using `GeminiModel` from `deepeval`'s model collection. By default, `model` is set to <DefaultLLMModel provider="gemini" />.
 
 <Tabs items={["Python", "ENV"]}>
 <Tab value="Python">
 
 ```python
-from deepeval.models import GeminiModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import GeminiModel
 
 model = GeminiModel(
     model="gemini-2.5-pro",
@@ -83,6 +88,76 @@ Parameters may be explicitly passed to the model at initialization time, or conf
 :::note
 At runtime, you must provide an API key (via `api_key` or `GOOGLE_API_KEY`) unless you’re using Vertex AI. See [Vertex AI](/docs/integrations/models/vertex-ai).
 :::
+
+</Case>
+
+<Case id="typescript">
+
+Alternatively, you can specify your model directly in code using `GeminiModel` from `deepeval`'s model collection. By default, `model` is set to <DefaultLLMModel provider="gemini" />.
+
+<Tabs items={["TypeScript", "ENV"]}>
+<Tab value="TypeScript">
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { GeminiModel } from "deepeval/models";
+
+const model = new GeminiModel({
+  model: "gemini-2.5-pro",
+  apiKey: "Your Gemini API Key",
+  temperature: 0,
+  costPerInputToken: 0.00000125,
+  costPerOutputToken: 0.000005,
+});
+
+const answerRelevancy = new AnswerRelevancyMetric({ model });
+```
+
+</Tab>
+<Tab value="ENV">
+
+Every option is backed by an environment variable, so you can set `GEMINI_MODEL_NAME` and `GOOGLE_API_KEY` in your `env` and construct the model with no arguments:
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { GeminiModel } from "deepeval/models";
+
+const answerRelevancy = new AnswerRelevancyMetric({
+  model: new GeminiModel(),
+});
+```
+
+</Tab>
+</Tabs>
+
+There are **ZERO** mandatory and **EIGHT** optional parameters when creating a `GeminiModel`:
+
+- [Optional] `model`: A string specifying the name of the Gemini model to use. Defaults to `GEMINI_MODEL_NAME` if not passed; falls back to <DefaultLLMModel provider="gemini" /> if unset.
+- [Optional] `apiKey`: A string specifying the Google API key for authentication. Defaults to `GOOGLE_API_KEY`, then `GEMINI_API_KEY`, if not passed; raises an error at runtime if unset.
+- [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
+- [Optional] `useVertexAI`: A boolean routing requests through Vertex AI instead of the Gemini API. Defaults to `true` when `GOOGLE_GENAI_USE_VERTEXAI` is set to the exact string `true`, else `false`.
+- [Optional] `project`: A string specifying the Google Cloud project ID for Vertex AI. Defaults to `GOOGLE_CLOUD_PROJECT` if not passed.
+- [Optional] `location`: A string specifying the Google Cloud location for Vertex AI. Defaults to `GOOGLE_CLOUD_LOCATION` if not passed.
+- [Optional] `costPerInputToken`: A number specifying the cost per input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+- [Optional] `costPerOutputToken`: A number specifying the cost per output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+
+Any other key you pass is merged into the `generateContent` request `config`, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new GeminiModel({
+  model: "gemini-2.5-pro",
+  topP: 0.9,
+  maxOutputTokens: 512,
+});
+```
+
+:::note
+At runtime, you must provide an API key (via `apiKey`, `GOOGLE_API_KEY`, or `GEMINI_API_KEY`) unless you’re using Vertex AI. See [Vertex AI](/docs/integrations/models/vertex-ai).
+:::
+
+</Case>
+
+</Switch>
 
 ### Available Gemini Models
 

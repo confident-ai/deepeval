@@ -1,9 +1,9 @@
-import { Api, Endpoints, HttpMethods } from "../confident/api";
+import { Api, Endpoints, HttpMethods } from "@/confident/api";
 import {
   interpolateText,
   outputSchemaToJsonSchema,
   generateOutputSchema,
-} from "./utils";
+} from "@/prompt/utils";
 import {
   ToolMode,
   OutputType,
@@ -28,7 +28,7 @@ import {
   GetCommitsResponseSchema,
   CreateVersionResponseSchema,
   PromptResponseSchema,
-} from "./types";
+} from "@/prompt/types";
 
 export { ToolMode, OutputType, type ModelSettings, type SchemaDefinition };
 
@@ -108,7 +108,8 @@ export class Tool {
 
 export class Prompt {
   private alias: string;
-  private api: Api;
+  private confidentApiKey: string | undefined;
+  private _api: Api | null = null;
 
   // Class variables to store prompt data
   public hash: string = "latest";
@@ -139,7 +140,16 @@ export class Prompt {
     }
     this.alias = alias;
     this.branch = branch;
-    this.api = new Api(confidentApiKey);
+    // Match Python: construct Api only when pull/push (etc.) need it, so
+    // Prompt can be used as trace metadata without a Confident API key.
+    this.confidentApiKey = confidentApiKey;
+  }
+
+  private get api(): Api {
+    if (!this._api) {
+      this._api = new Api(this.confidentApiKey);
+    }
+    return this._api;
   }
 
   private _normalizeTools(toolsInput?: ToolData[] | Tool[]): Tool[] | null {

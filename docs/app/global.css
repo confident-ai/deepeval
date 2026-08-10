@@ -842,6 +842,22 @@ summary {
   color: hsl(0, 75%, 68%);
 }
 
+/* ------------------------------------------------------------------ */
+/* FAQ inline code — each `<details>` is `not-prose` so prose rules
+ * never leak into the accordion, which also drops the typography
+ * plugin's inline-code chip. Re-apply it to the question and the
+ * answer so `code` reads identically to the surrounding prose.
+ * `:not(pre) >` keeps fenced code blocks inside answers untouched. */
+.faq-item :not(pre) > code {
+  padding: 0 4px;
+  border: solid 1px var(--color-fd-border);
+  border-radius: 4px;
+  font-size: 0.8em;
+  font-weight: 400;
+  background: var(--color-fd-muted);
+  color: var(--color-fd-foreground);
+}
+
 html {
   scrollbar-gutter: stable;
 }
@@ -863,4 +879,15 @@ html > body[data-scroll-locked] {
 [data-paused="true"],
 [data-paused="true"] * {
   animation-play-state: paused !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* A page that cannot serve the reader's language renders only the     */
+/* <LanguageUnsupported> empty state. The table of contents lives      */
+/* outside that subtree and is built server-side from the page's       */
+/* headings, so it has to be hidden from here — otherwise it lists     */
+/* sections that are not on screen.                                    */
+/* ------------------------------------------------------------------ */
+#nd-page:has([data-language-unsupported]) #nd-toc {
+  display: none;
 }

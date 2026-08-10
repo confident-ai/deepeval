@@ -2,11 +2,12 @@
 id: metrics-answer-relevancy
 title: Answer Relevancy
 sidebar_label: Answer Relevancy
+languages: [python, typescript]
 ---
 
 <MetricTagsDisplayer singleTurn={true} referenceless={true} rag={true} />
 
-The answer relevancy metric uses LLM-as-a-judge to measure the quality of your RAG pipeline's generator by evaluating how relevant the `actual_output` of your LLM application is compared to the provided `input`. `deepeval`'s answer relevancy metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+The answer relevancy metric uses LLM-as-a-judge to measure the quality of your RAG pipeline's generator by evaluating how relevant the <Term py="actual_output" ts="actualOutput"/> of your LLM application is compared to the provided `input`. `deepeval`'s answer relevancy metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 :::tip
 Here is a detailed guide on [RAG evaluation](/guides/guides-rag-evaluation), which we highly recommend as it explains everything about `deepeval`'s RAG metrics.
@@ -17,21 +18,25 @@ Here is a detailed guide on [RAG evaluation](/guides/guides-rag-evaluation), whi
 To use the `AnswerRelevancyMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- <Term py="actual_output" ts="actualOutput" />
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
 
 ## Usage
 
-The `AnswerRelevancyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation of text-based and multimodal test cases:
+The `AnswerRelevancyMetric` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation of text-based and multimodal test cases:
 
 <Tabs items={["Text Based", "Multimodal"]}>
 <Tab value="Text Based">
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval import evaluate
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
 
 metric = AnswerRelevancyMetric(
     threshold=0.7,
@@ -51,13 +56,48 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+import { evaluate } from "deepeval";
+
+const metric = new AnswerRelevancyMetric({
+  threshold: 0.7,
+  model: "gpt-4.1",
+  includeReason: true,
+});
+const testCase = new LLMTestCase({
+  input: "What if these shoes don't fit?",
+  // Replace this with the output from your LLM app
+  actualOutput: "We offer a 30-day full refund at no extra cost.",
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
 </Tab>
 <Tab value="Multimodal">
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval import evaluate
-from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase, MLLMImage
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval import evaluate
 
 metric = AnswerRelevancyMetric(
     threshold=0.7,
@@ -77,23 +117,79 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { LLMTestCase, MLLMImage } from "deepeval/test-case";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { evaluate } from "deepeval";
+
+const metric = new AnswerRelevancyMetric({
+  threshold: 0.7,
+  model: "gpt-4.1",
+  includeReason: true,
+});
+const testCase = new LLMTestCase({
+  input: `Tell me about this landmark in France: ${new MLLMImage({
+    url: "...",
+  })}`,
+  // Replace this with the output from your LLM app
+  actualOutput: `This appears to be Eiffel Tower, which is a famous landmark in France`,
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
 </Tab>
 </Tabs>
 
+<Switch>
+
+<Case id="python">
+
 There are **EIGHT** optional parameters when creating an `AnswerRelevancyMetric`:
 
-- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+</Case>
+
+<Case id="typescript">
+
+There are **SEVEN** optional parameters when creating an `AnswerRelevancyMetric`:
+
+</Case>
+
+</Switch>
+
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
-- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `evaluation_template`: a class of type `AnswerRelevancyTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `AnswerRelevancyMetric` score. Defaulted to `deepeval`'s `AnswerRelevancyTemplate`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables
+    [concurrent execution within the `measure()`
+    method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted
+    to `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="evaluation_template" ts="evaluationTemplate"/>: of type <Term py="AnswerRelevancyTemplate" ts="AnswerRelevancyTemplateOverride"/>, which allows you to [override the default prompts](#customize-your-template) used to compute the `AnswerRelevancyMetric` score. Defaulted to `deepeval`'s default prompts.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 ### Within components
 
 You can also run the `AnswerRelevancyMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import Golden
@@ -116,9 +212,50 @@ def llm_app(input: str):
 evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+// ...
+
+const innerComponent = observe({
+  metrics: [metric],
+  fn: async () => {
+    // Set test case at runtime
+    const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
+    updateCurrentSpan({ testCase });
+  },
+});
+
+const llmApp = observe({
+  fn: async (input: string) => {
+    // Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    await innerComponent();
+  },
+});
+
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "Hi!" })],
+});
+for await (const golden of dataset.evalsIterator()) {
+  await llmApp((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
 ### As a standalone
 
 You can also run the `AnswerRelevancyMetric` on a single test case as a standalone, one-off execution.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -127,8 +264,23 @@ metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+await metric.measure(testCase);
+console.log(metric.score, metric.reason);
+```
+
+</Case>
+
+</Switch>
+
 :::caution
-This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or <Term py="deepeval test run" ts="npx deepeval test run"/> offers.
 :::
 
 ## How Is It Calculated?
@@ -137,10 +289,14 @@ The `AnswerRelevancyMetric` score is calculated according to the following equat
 
 <Equation formula="\text{Answer Relevancy} = \frac{\text{Number of Relevant Statements}}{\text{Total Number of Statements}}" />
 
-The `AnswerRelevancyMetric` first uses an LLM to extract all statements made in the `actual_output`, before using the same LLM to classify whether each statement is relevant to the `input`.
+The `AnswerRelevancyMetric` first uses an LLM to extract all statements made in the <Term py="actual_output" ts="actualOutput"/>, before using the same LLM to classify whether each statement is relevant to the `input`.
 
 :::note
-You can set the `verbose_mode` of **ANY** `deepeval` metric to `True` to debug the `measure()` method:
+You can set the <Term py="verbose_mode" ts="verboseMode"/> of **ANY** `deepeval` metric to <Term py="True" ts="true"/> to debug the <Term py="measure()" ts="await measure()"/> method:
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -149,6 +305,21 @@ metric = AnswerRelevancyMetric(verbose_mode=True)
 metric.measure(test_case)
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+const metric = new AnswerRelevancyMetric({ verboseMode: true });
+await metric.measure(testCase);
+```
+
+</Case>
+
+</Switch>
+
 :::
 
 ## Customize Your Template
@@ -156,17 +327,21 @@ metric.measure(test_case)
 Since `deepeval`'s `AnswerRelevancyMetric` is evaluated by LLM-as-a-judge, you can likely improve your metric accuracy by [overriding `deepeval`'s default prompt templates](/docs/metrics-introduction#customizing-metric-prompts). This is especially helpful if:
 
 - You're using a [custom evaluation LLM](/guides/guides-using-custom-llms), especially for smaller models that have weaker instruction following capabilities.
-- You want to customize the examples used in the default `AnswerRelevancyTemplate` to better align with your expectations.
+- You want to customize the examples used in the default prompts to better align with your expectations.
 
 :::tip
-You can learn what the default `AnswerRelevancyTemplate` looks like [here on GitHub](https://github.com/confident-ai/deepeval/blob/main/deepeval/metrics/answer_relevancy/template.py), and should read the [How Is It Calculated](#how-is-it-calculated) section above to understand how you can tailor it to your needs.
+You can learn what the default prompts look like [here on GitHub](https://github.com/confident-ai/deepeval/tree/main/deepeval/metrics/answer_relevancy/templates), and should read the [How Is It Calculated](#how-is-it-calculated) section above to understand how you can tailor it to your needs.
 :::
 
 Here's a quick example of how you can override the statement generation step of the `AnswerRelevancyMetric` algorithm:
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.metrics.answer_relevancy import AnswerRelevancyTemplate
+from deepeval.metrics import AnswerRelevancyMetric
 
 # Define custom template
 class CustomTemplate(AnswerRelevancyTemplate):
@@ -195,6 +370,54 @@ metric = AnswerRelevancyMetric(evaluation_template=CustomTemplate)
 metric.measure(...)
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+
+// Inject custom template to metric
+const metric = new AnswerRelevancyMetric({
+  evaluationTemplate: {
+    generateStatements: ({ actualOutput }) =>
+      `Given the text, breakdown and generate a list of statements presented.
+
+Example:
+Our new laptop model features a high-resolution Retina display for crystal-clear visuals.
+
+{
+    "statements": [
+        "The new laptop model has a high-resolution Retina display."
+    ]
+}
+===== END OF EXAMPLE ======
+
+Text:
+${actualOutput}
+
+JSON:
+`,
+  },
+});
+await metric.measure(testCase);
+```
+
+Each override receives the template's variables as its first argument, and the default renderer as its second, so you can extend a prompt instead of replacing it:
+
+```typescript
+const metric = new AnswerRelevancyMetric({
+  evaluationTemplate: {
+    generateStatements: (vars, renderDefault) =>
+      `${renderDefault(vars)}\n\nTreat each bullet point as its own statement.`,
+  },
+});
+```
+
+</Case>
+
+</Switch>
+
 ## FAQs
 
 <FAQs
@@ -204,11 +427,12 @@ metric.measure(...)
         "Does a high answer relevancy score mean my answer is factually correct?",
       answer: (
         <>
-          No. It only checks whether statements in <code>actual_output</code>{" "}
-          address the <code>input</code>, not whether they're grounded in
-          retrieved context — an answer can be on-topic and still hallucinate.
-          Pair it with <a href="/docs/metrics-faithfulness">Faithfulness</a> to
-          catch factual errors.
+          No. It only checks whether statements in{" "}
+          <Term py="actual_output" ts="actualOutput" /> address the{" "}
+          <code>input</code>, not whether they're grounded in retrieved context
+          — an answer can be on-topic and still hallucinate. Pair it with{" "}
+          <a href="/docs/metrics-faithfulness">Faithfulness</a> to catch factual
+          errors.
         </>
       ),
     },
@@ -217,20 +441,22 @@ metric.measure(...)
         "My answer relevancy is low — is this a retriever or a generator problem?",
       answer: (
         <>
-          Generator. It compares <code>actual_output</code> against the{" "}
-          <code>input</code> and never looks at <code>retrieval_context</code>,
-          so a low score points to a prompt or model rambling, hedging, or
-          drifting off-topic. Use the contextual metrics for retrieval.
+          Generator. It compares <Term py="actual_output" ts="actualOutput" />{" "}
+          against the <code>input</code> and never looks at{" "}
+          <Term py="retrieval_context" ts="retrievalContext" />, so a low score
+          points to a prompt or model rambling, hedging, or drifting off-topic.
+          Use the contextual metrics for retrieval.
         </>
       ),
     },
     {
-      question: "Do I need an `expected_output` or ground truth to use it?",
+      question: "Do I need a reference answer or ground truth to use it?",
       answer: (
         <>
           No. It's referenceless — only <code>input</code> and{" "}
-          <code>actual_output</code> are required, so you can run it on live
-          production traffic. See the{" "}
+          <Term py="actual_output" ts="actualOutput" /> are required, so there's
+          no <Term py="expected_output" ts="expectedOutput" /> to write and you
+          can run it on live production traffic. See the{" "}
           <a href="/docs/evaluation-test-cases#llm-test-case">test case docs</a>.
         </>
       ),
@@ -239,10 +465,12 @@ metric.measure(...)
       question: "Why is my score low when the answer looks fine to me?",
       answer: (
         <>
-          It counts how many statements in <code>actual_output</code> are
-          relevant to the <code>input</code>, so preamble, caveats, or tangents
-          drag the score down even when the core answer is correct. Set{" "}
-          <code>verbose_mode=True</code> to see which statements were flagged.
+          It counts how many statements in{" "}
+          <Term py="actual_output" ts="actualOutput" /> are relevant to the{" "}
+          <code>input</code>, so preamble, caveats, or tangents drag the score
+          down even when the core answer is correct. Set{" "}
+          <Term py="verbose_mode=True" ts="verboseMode: true" /> to see which
+          statements were flagged.
         </>
       ),
     },

@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Type
 from pydantic import BaseModel, ValidationError
 
 from deepeval.test_case import (
@@ -17,8 +17,12 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.json_correctness.schema import JsonCorrectnessScoreReason
 from deepeval.utils import get_or_create_event_loop, serialize_to_json
+from deepeval.templates import make_template_class
 
 DEFAULT_CORRECT_REASON = "The generated Json matches and is syntactically correct to the expected schema."
+
+
+JsonCorrectnessTemplate = make_template_class("JsonCorrectnessMetric")
 
 
 class JsonCorrectnessMetric(BaseMetric):
@@ -37,6 +41,9 @@ class JsonCorrectnessMetric(BaseMetric):
         strict_mode: bool = True,
         verbose_mode: bool = False,
         flaky: bool = False,
+        evaluation_template: Type[
+            JsonCorrectnessTemplate
+        ] = JsonCorrectnessTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -47,13 +54,13 @@ class JsonCorrectnessMetric(BaseMetric):
         self.flaky = flaky
         self.expected_schema = expected_schema
         self.evaluation_model = self.model.get_model_name()
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         multimodal = test_case.multimodal
@@ -80,7 +87,6 @@ class JsonCorrectnessMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -111,7 +117,6 @@ class JsonCorrectnessMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         multimodal = test_case.multimodal

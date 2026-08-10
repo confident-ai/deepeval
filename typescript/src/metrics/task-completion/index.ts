@@ -1,2 +1,6 @@
-export { TaskCompletionMetric, type TaskCompletionMetricOptions } from "./task-completion";
-export * from "./schema";
+export {
+  TaskCompletionMetric,
+  type TaskCompletionMetricOptions,
+  type TaskCompletionTemplateOverride,
+} from "@/metrics/task-completion/task-completion";
+export * from "@/metrics/task-completion/schema";

@@ -1,5 +1,5 @@
 /**
  * Exports for the confident module
  */
-export * from "./api";
-export * from "./types";
+export * from "@/confident/api";
+export * from "@/confident/types";

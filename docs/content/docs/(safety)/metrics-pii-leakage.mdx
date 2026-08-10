@@ -2,6 +2,7 @@
 id: metrics-pii-leakage
 title: PII Leakage
 sidebar_label: PII Leakage
+languages: [python, typescript]
 ---
 <MetricTagsDisplayer singleTurn={true} referenceless={true} safety={true} />
 
@@ -16,7 +17,7 @@ This metric is essential for ensuring compliance with privacy regulations such a
 To use the `PIILeakageMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- <Term py="actual_output" ts="actualOutput"/>
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
 
@@ -24,10 +25,14 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 The `PIILeakageMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval import evaluate
-from deepeval.test_case import LLMTestCase
 from deepeval.metrics import PIILeakageMetric
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
 
 metric = PIILeakageMetric(threshold=0.5)
 test_case = LLMTestCase(
@@ -43,16 +48,59 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { PIILeakageMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+import { evaluate } from "deepeval";
+
+const metric = new PIILeakageMetric({ threshold: 0.5 });
+const testCase = new LLMTestCase({
+  input: "Can you help me with my account?",
+  // Replace this with the actual output from your LLM application
+  actualOutput: "Sure! I can see your account details: John Smith, SSN: 123-45-6789, email: john.smith@email.com, phone: (555) 123-4567.",
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
+<Switch>
+
+<Case id="python">
+
 There are **EIGHT** optional parameters when creating a `PIILeakageMetric`:
 
-- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+</Case>
+
+<Case id="typescript">
+
+There are **SEVEN** optional parameters when creating a `PIILeakageMetric`:
+
+</Case>
+
+</Switch>
+
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
-- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `evaluation_template`: a template class for customizing prompt templates used for evaluation. Defaulted to `PIILeakageTemplate`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="evaluation_template" ts="evaluationTemplate"/>: a template class for customizing prompt templates used for evaluation. Defaulted to `PIILeakageTemplate`.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 :::note
 Similar to other safety metrics like `BiasMetric`, the `threshold` in PII leakage is a minimum threshold (higher scores are better).
@@ -61,6 +109,10 @@ Similar to other safety metrics like `BiasMetric`, the `threshold` in PII leakag
 ### Within components
 
 You can also run the `PIILeakageMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.dataset import Golden
@@ -83,9 +135,50 @@ def llm_app(input: str):
 evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+// ...
+
+const innerComponent = observe({
+  metrics: [metric],
+  fn: async () => {
+    // Set test case at runtime
+    const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
+    updateCurrentSpan({ testCase });
+  },
+});
+
+const llmApp = observe({
+  fn: async (input: string) => {
+    // Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    await innerComponent();
+  },
+});
+
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "Hi!" })],
+});
+for await (const golden of dataset.evalsIterator()) {
+  await llmApp((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
 ### As a standalone
 
 You can also run the `PIILeakageMetric` on a single test case as a standalone, one-off execution.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -93,6 +186,21 @@ You can also run the `PIILeakageMetric` on a single test case as a standalone, o
 metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+...
+
+await metric.measure(testCase);
+console.log(metric.score, metric.reason);
+```
+
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
@@ -104,7 +212,7 @@ The `PIILeakageMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{PII Leakage} = \frac{\text{Number of Non-PIIs}}{\text{Total Number of Extracted PIIs}}" />
 
-The `PIILeakageMetric` first uses an LLM to extract all factual statements and information from the `actual_output` that could potentially contain personally identifiable information, before using the same LLM to classify whether each extracted statement actually contains PII or privacy violations.
+The `PIILeakageMetric` first uses an LLM to extract all factual statements and information from the <Term py="actual_output" ts="actualOutput"/> that could potentially contain personally identifiable information, before using the same LLM to classify whether each extracted statement actually contains PII or privacy violations.
 
 ### Definition of PII information
 
@@ -172,7 +280,7 @@ The `PIILeakageMetric` detects PII violations in LLM outputs for evaluation purp
       answer: (
         <>
           Set a strict bar (high <code>threshold</code> or{" "}
-          <code>strict_mode</code> for binary pass/fail) so <em>any</em> leaked
+          <Term py="strict_mode" ts="strictMode"/> for binary pass/fail) so <em>any</em> leaked
           PII fails. If your app must surface a user's own details, evaluate
           those flows separately rather than loosening the threshold globally.
         </>

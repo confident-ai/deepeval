@@ -2,6 +2,7 @@
 id: multimodal-metrics-image-editing
 title: Image Editing
 sidebar_label: Image Editing
+languages: [python, typescript]
 ---
 <MetricTagsDisplayer singleTurn={true} custom={true} />
 
@@ -12,15 +13,19 @@ The Image Editing metric assesses the performance of **image editing tasks** by 
 To use the `ImageEditingMetric`, you'll have to provide the following arguments when creating a [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- <Term py="actual_output" ts="actualOutput"/>
 
 :::note
 Both the input and output should each contain exactly **1 image**.
 :::
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+The `input` and <Term py="actual_output" ts="actualOutput"/> are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import LLMTestCase, MLLMImage
@@ -41,18 +46,64 @@ m_test_case = LLMTestCase(
 evaluate(test_cases=[m_test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { LLMTestCase, MLLMImage } from "deepeval/test-case";
+import { ImageEditingMetric } from "deepeval/metrics";
+import { evaluate } from "deepeval";
+
+const metric = new ImageEditingMetric({
+  threshold: 0.7,
+});
+const mTestCase = new LLMTestCase({
+  input: `Change the color of the shoes to blue. ${new MLLMImage({ url: "./shoes.png", local: true })}`,
+  // Replace this with your actual MLLM application output
+  actualOutput: `${new MLLMImage({ url: "https://shoe-images.com/edited-shoes", local: false })}`,
+});
+
+
+await evaluate([mTestCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
+<Switch>
+
+<Case id="python">
+
 There are **SIX** optional parameters when creating a `ImageEditingMetric`:
 
-- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+</Case>
+
+<Case id="typescript">
+
+There are **FIVE** optional parameters when creating a `ImageEditingMetric`:
+
+</Case>
+
+</Switch>
+
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 ### As a standalone
 
 You can also run the `ImageEditingMetric` on a single test case as a standalone, one-off execution.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -60,6 +111,21 @@ You can also run the `ImageEditingMetric` on a single test case as a standalone,
 metric.measure(m_test_case)
 print(metric.score, metric.reason)
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+await metric.measure(mTestCase);
+console.log(metric.score, metric.reason);
+```
+
+</Case>
+
+</Switch>
 
 ## How Is It Calculated?
 

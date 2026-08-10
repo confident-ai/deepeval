@@ -23,6 +23,7 @@ from deepeval.metrics.retrieval_context_display import id_retrieval_context
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import MLLMImage
 import deepeval.metrics.contextual_precision.schema as cpschema
+from deepeval.templates import make_template_class
 
 
 def _contextual_precision_verdict_fields(
@@ -42,6 +43,9 @@ def _contextual_precision_verdict_fields(
     return document_count_str, context_to_display, multimodal_note
 
 
+ContextualPrecisionTemplate = make_template_class("ContextualPrecisionMetric")
+
+
 class ContextualPrecisionMetric(BaseMetric):
     _required_params: List[SingleTurnParams] = [
         SingleTurnParams.INPUT,
@@ -58,6 +62,9 @@ class ContextualPrecisionMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         flaky: bool = False,
+        evaluation_template: Type[
+            ContextualPrecisionTemplate
+        ] = ContextualPrecisionTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.include_reason = include_reason
@@ -67,13 +74,13 @@ class ContextualPrecisionMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         multimodal = test_case.multimodal
@@ -101,7 +108,6 @@ class ContextualPrecisionMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -136,7 +142,6 @@ class ContextualPrecisionMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         multimodal = test_case.multimodal

@@ -1,11 +1,12 @@
 {
   "uuid": "f1ea9fec-fa61-4c14-a5b8-03f95d222979",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019d050e-6f17-7392-adca-5edf447c98f2",
       "name": "summarize_chain",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "startTime": "2026-03-19T07:45:25.272Z",
       "endTime": "2026-03-19T07:45:29.864Z",
       "input": {
@@ -158,10 +159,11 @@
           }
         }
       ],
-      "integration": "LangChain"
+      "integration": "LangChain",
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019d050e-7cc9-78b2-9d46-69992efe0551",

@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List, Union
+from typing import Dict, Optional, List, Union, Type
 import asyncio
 import textwrap
 
@@ -24,6 +24,7 @@ from deepeval.metrics.contextual_relevancy.schema import (
     ContextualRelevancyVerdicts,
     ContextualRelevancyScoreReason,
 )
+from deepeval.templates import make_template_class
 
 
 def _contextual_relevancy_verdict_kwargs(multimodal: bool) -> Dict[str, str]:
@@ -56,6 +57,9 @@ def _contextual_relevancy_verdict_kwargs(multimodal: bool) -> Dict[str, str]:
     }
 
 
+ContextualRelevancyTemplate = make_template_class("ContextualRelevancyMetric")
+
+
 class ContextualRelevancyMetric(BaseMetric):
     _required_params: List[SingleTurnParams] = [
         SingleTurnParams.INPUT,
@@ -71,6 +75,9 @@ class ContextualRelevancyMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         flaky: bool = False,
+        evaluation_template: Type[
+            ContextualRelevancyTemplate
+        ] = ContextualRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -80,13 +87,13 @@ class ContextualRelevancyMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         multimodal = test_case.multimodal
@@ -114,7 +121,6 @@ class ContextualRelevancyMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -144,7 +150,6 @@ class ContextualRelevancyMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         multimodal = test_case.multimodal

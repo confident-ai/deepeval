@@ -1,4 +1,4 @@
-import { Api, Endpoints, HttpMethods } from "../confident/api";
+import { Api, Endpoints, HttpMethods } from "@/confident/api";
 
 export interface GovernancePolicyReference {
   id: string;

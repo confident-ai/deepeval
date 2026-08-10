@@ -2,6 +2,7 @@
 # id: ollama
 title: Ollama
 sidebar_label: Ollama
+languages: [python, typescript]
 ---
 
 DeepEval allows you to use any model served by Ollama to run evals, either through the CLI or directly in Python. Some capabilities, such as multimodal support, are detected from a known-model list.
@@ -40,7 +41,7 @@ deepeval set-ollama --model=deepseek-r1:1.5b \
 ```
 
 :::info
-The CLI command above sets Ollama as the default provider for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset Ollama:
+The CLI command above sets Ollama as the default provider for all metrics, unless overridden in code. To use a different default model provider, you must first unset Ollama:
 
 ```bash
 deepeval unset-ollama
@@ -53,16 +54,20 @@ You can persist CLI settings with the optional `--save` flag.
 See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
 :::
 
-### Python
+### In Code
 
 Alternatively, you can specify your model directly in code using `OllamaModel` from DeepEval's model collection.
+
+<Switch>
+
+<Case id="python">
 
 <Tabs items={["Python", "ENV"]}>
 <Tab value="Python">
 
 ```python
-from deepeval.models import OllamaModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import OllamaModel
 
 model = OllamaModel(
     model="deepseek-r1:1.5b",
@@ -96,8 +101,75 @@ There is **ONE** mandatory parameter and **THREE** optional parameters when crea
 - [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
 - [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to Ollama’s `chat(..., options={...})` call.
 
+</Case>
+
+<Case id="typescript">
+
+<Tabs items={["TypeScript", "ENV"]}>
+<Tab value="TypeScript">
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { OllamaModel } from "deepeval/models";
+
+const model = new OllamaModel({
+  model: "deepseek-r1:1.5b",
+  baseURL: "http://localhost:11434",
+  temperature: 0,
+});
+
+const answerRelevancy = new AnswerRelevancyMetric({ model });
+```
+
+</Tab>
+<Tab value="ENV">
+
+`deepeval` autoloads `.env.local` then `.env` at import time, so you can keep your Ollama configuration out of your code entirely:
+
+```bash
+# .env.local
+OLLAMA_MODEL_NAME=deepseek-r1:1.5b
+LOCAL_MODEL_BASE_URL=http://localhost:11434
+```
+
+Then create the model with no arguments and pass it to any metric:
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { OllamaModel } from "deepeval/models";
+
+const answerRelevancy = new AnswerRelevancyMetric({
+  model: new OllamaModel(),
+});
+```
+
+</Tab>
+</Tabs>
+
+There are **ZERO** mandatory and **FIVE** optional parameters when creating an `OllamaModel`:
+
+- [Optional] `model`: A string specifying the name of the Ollama model to use. Defaults to `OLLAMA_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `baseURL`: A string specifying the base URL of the Ollama server. Defaults to `LOCAL_MODEL_BASE_URL` if not passed; falls back to `http://localhost:11434` if unset.
+- [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
+- [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+- [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+
+Any other key you pass is merged into Ollama's `chat(..., options: {...})` call, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new OllamaModel({
+  model: "deepseek-r1:1.5b",
+  top_p: 0.9,
+  num_predict: 512,
+});
+```
+
+</Case>
+
+</Switch>
+
 :::tip
-Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://ollama.readthedocs.io/en/api/#parameters).
+Before passing additional generation parameters, we request you to double check the params supported by the model and your model provider in their [official docs](https://ollama.readthedocs.io/en/api/#parameters).
 :::
 
 ### Available Ollama Models

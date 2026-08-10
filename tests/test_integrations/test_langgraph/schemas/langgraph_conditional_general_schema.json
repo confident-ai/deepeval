@@ -2,85 +2,6 @@
   "uuid": "d27d2b3a-1d2c-465d-9c23-ca88049e05d9",
   "baseSpans": [
     {
-      "uuid": "019d0517-c815-7b22-afad-dadf65d14b76",
-      "name": "LangGraph",
-      "status": "SUCCESS",
-      "type": "base",
-      "startTime": "2026-03-19T07:55:37.877Z",
-      "endTime": "2026-03-19T07:55:39.665Z",
-      "input": {
-        "messages": [
-          {
-            "content": "Hello, how are you today?",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "118e37ee-7777-4167-8e88-c03a89d909ff"
-          }
-        ]
-      },
-      "output": {
-        "messages": [
-          {
-            "content": "Hello, how are you today?",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "118e37ee-7777-4167-8e88-c03a89d909ff"
-          },
-          {
-            "content": "I'm doing well, thanks — ready to help. How can I assist you today?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 26,
-                "prompt_tokens": 172,
-                "total_tokens": 198,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WAliYIxRo5ss4q6ducFEwB2vkW",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-c816-78e1-baf4-1dc09fa6e1fc-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 172,
-              "output_tokens": 26,
-              "total_tokens": 198,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          }
-        ],
-        "intent": "general"
-      },
-      "integration": "LangChain"
-    },
-    {
       "uuid": "019d0517-c816-78e1-baf4-1db241a4c452",
       "name": "general",
       "status": "SUCCESS",
@@ -103,7 +24,7 @@
       "output": {
         "messages": [
           {
-            "content": "I'm doing well, thanks — ready to help. How can I assist you today?",
+            "content": "I'm doing well, thanks \u2014 ready to help. How can I assist you today?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -171,7 +92,7 @@
             "id": "118e37ee-7777-4167-8e88-c03a89d909ff"
           },
           {
-            "content": "I'm doing well, thanks — ready to help. How can I assist you today?",
+            "content": "I'm doing well, thanks \u2014 ready to help. How can I assist you today?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -280,7 +201,89 @@
       "integration": "LangChain"
     }
   ],
-  "agentSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "019d0517-c815-7b22-afad-dadf65d14b76",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-19T07:55:37.877Z",
+      "endTime": "2026-03-19T07:55:39.665Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Hello, how are you today?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "118e37ee-7777-4167-8e88-c03a89d909ff"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Hello, how are you today?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "118e37ee-7777-4167-8e88-c03a89d909ff"
+          },
+          {
+            "content": "I'm doing well, thanks \u2014 ready to help. How can I assist you today?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 26,
+                "prompt_tokens": 172,
+                "total_tokens": 198,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5.4-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2WAliYIxRo5ss4q6ducFEwB2vkW",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0517-c816-78e1-baf4-1dc09fa6e1fc-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 172,
+              "output_tokens": 26,
+              "total_tokens": 198,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ],
+        "intent": "general"
+      },
+      "integration": "LangChain",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
   "llmSpans": [
     {
       "uuid": "019d0517-c816-78e1-baf4-1dc09fa6e1fc",
@@ -310,7 +313,7 @@
       ],
       "output": {
         "role": "AI",
-        "content": "I'm doing well, thanks — ready to help. How can I assist you today?",
+        "content": "I'm doing well, thanks \u2014 ready to help. How can I assist you today?",
         "tool_calls": []
       },
       "model": "gpt-5.4-mini-2025-08-07",
@@ -352,7 +355,7 @@
         "id": "118e37ee-7777-4167-8e88-c03a89d909ff"
       },
       {
-        "content": "I'm doing well, thanks — ready to help. How can I assist you today?",
+        "content": "I'm doing well, thanks \u2014 ready to help. How can I assist you today?",
         "additional_kwargs": {
           "refusal": null
         },

@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { traceManager } from "../../src/tracing/tracing";
+import { traceManager } from "@/tracing/tracing";
 
 function isUnorderedPath(pathStr: string): boolean {
   return (

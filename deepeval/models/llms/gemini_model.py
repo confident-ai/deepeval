@@ -17,12 +17,13 @@ from deepeval.utils import (
 )
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
-from deepeval.models.llms.constants import GEMINI_MODELS_DATA
+from deepeval.models.llms.constants import (
+    GEMINI_MODELS_DATA,
+    DEFAULT_GEMINI_MODEL,
+)
 
 if TYPE_CHECKING:
     from google.genai import Client
-
-default_gemini_model = "gemini-2.5-pro"
 
 # consistent retry rules
 retry_gemini = create_retry_decorator(PS.GOOGLE)
@@ -74,7 +75,7 @@ class GeminiModel(DeepEvalBaseLLM):
 
         settings = get_settings()
 
-        model = model or settings.GEMINI_MODEL_NAME or default_gemini_model
+        model = model or settings.GEMINI_MODEL_NAME or DEFAULT_GEMINI_MODEL
         self.model_data = GEMINI_MODELS_DATA.get(model)
 
         cost_per_input_token = (

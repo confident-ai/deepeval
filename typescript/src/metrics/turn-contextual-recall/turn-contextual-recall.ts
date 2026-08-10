@@ -1,40 +1,46 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
-import {
-  ConversationalTestCase,
-  MultiTurnParams,
-  Turn,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { resolveThreshold } from "@/metrics/base-metrics";
+import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
   resolveRetrievalContext,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
   getTurnsInSlidingWindow,
-} from "../conversational-utils";
+} from "@/metrics/conversational-utils";
 import {
   VerdictsSchema,
   ContextualRecallScoreReasonSchema,
   type ContextualRecallVerdict,
   type InteractionContextualRecallScore,
-} from "./schema";
+} from "@/metrics/turn-contextual-recall/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
+import {
+  contextualRecallVerdictVars,
+  contextualRecallReasonContentType,
+} from "@/metrics/retrieval-context-display";
 
 const TEMPLATE_CLASS = "TurnContextualRecallMetric";
 
+export type TurnContextualRecallTemplateOverride =
+  MetricTemplateOverride<"TurnContextualRecallMetric">;
+
 export interface TurnContextualRecallMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
   windowSize?: number;
+  evaluationTemplate?: TurnContextualRecallTemplateOverride;
 }
 
 /**
@@ -48,12 +54,16 @@ export class TurnContextualRecallMetric extends BaseConversationalMetric {
 
   constructor(options: TurnContextualRecallMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       MultiTurnParams.ROLE,
       MultiTurnParams.CONTENT,
@@ -84,7 +94,7 @@ export class TurnContextualRecallMetric extends BaseConversationalMetric {
         turnsWindows.map((w) => this.getInteractionScore(w, expectedOutcome)),
       );
       this.score = this.calculateScore();
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
       this.reason = await this.generateFinalReason();
 
       this.verboseLogs = constructVerboseLogs(this, [
@@ -105,7 +115,9 @@ export class TurnContextualRecallMetric extends BaseConversationalMetric {
     const retrievalContext: string[] = [];
     for (const turn of window) {
       if (turn.role !== "user" && turn.retrievalContext != null)
-        retrievalContext.push(...resolveRetrievalContext(turn.retrievalContext));
+        retrievalContext.push(
+          ...resolveRetrievalContext(turn.retrievalContext),
+        );
     }
 
     const verdicts = await this.generateVerdicts(
@@ -127,7 +139,7 @@ export class TurnContextualRecallMetric extends BaseConversationalMetric {
       verdicts,
     );
     return {
-      score: this.strictMode && score < this.threshold ? 0 : score,
+      score: this.applyStrictMode(score),
       reason,
       verdicts,
     };
@@ -138,13 +150,9 @@ export class TurnContextualRecallMetric extends BaseConversationalMetric {
     retrievalContext: string[],
   ): Promise<ContextualRecallVerdict[]> {
     if (retrievalContext.length === 0) return [];
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+    const prompt = this.getPrompt("generate_verdicts", {
       expected_outcome: expectedOutcome,
-      content_type: "sentence",
-      content_type_plural: "sentences",
-      content_or: "sentence",
-      context_to_display: retrievalContext,
-      node_instruction: "",
+      ...contextualRecallVerdictVars(retrievalContext, this.multimodal),
     });
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
@@ -162,12 +170,12 @@ export class TurnContextualRecallMetric extends BaseConversationalMetric {
       if (v.verdict.toLowerCase() === "yes") supportive.push(v.reason);
       else unsupportive.push(v.reason);
     }
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       expected_outcome: expectedOutcome,
       supportive_reasons: supportive,
       unsupportive_reasons: unsupportive,
       score: score.toFixed(2),
-      content_type: "sentence",
+      content_type: contextualRecallReasonContentType(this.multimodal),
     });
     const { reason } = await generateWithSchema(
       this,
@@ -196,7 +204,7 @@ export class TurnContextualRecallMetric extends BaseConversationalMetric {
     if (this.scores.length === 0) {
       return "There were no interactions with retrieval context to evaluate, hence the score is 1";
     }
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_final_reason", {
+    const prompt = this.getPrompt("generate_final_reason", {
       final_score: this.score,
       success: this.success,
       reasons: this.scores.map((s) => s.reason),
@@ -207,12 +215,6 @@ export class TurnContextualRecallMetric extends BaseConversationalMetric {
       ContextualRecallScoreReasonSchema,
     );
     return reason;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

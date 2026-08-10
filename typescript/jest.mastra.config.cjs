@@ -10,7 +10,7 @@
 //
 // Run:                 npx jest -c jest.mastra.config.cjs
 // Generate fixtures:   GENERATE_SCHEMAS=true npx jest -c jest.mastra.config.cjs
-// Both require OPENAI_API_KEY and CONFIDENT_API_KEY in the environment.
+// Live agent suites require OPENAI_API_KEY; no CONFIDENT_API_KEY needed.
 
 const babelConfig = {
   presets: [
@@ -24,6 +24,9 @@ module.exports = {
   testEnvironment: "node",
   testMatch: ["**/test/test-integrations/test-mastra/**/*.test.ts"],
   moduleFileExtensions: ["ts", "js", "mjs", "cjs", "json", "node"],
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
+  },
   transform: {
     "^.+\\.(tsx?|jsx?|mjs|cjs)$": ["babel-jest", babelConfig],
   },

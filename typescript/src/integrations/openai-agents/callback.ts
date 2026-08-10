@@ -9,18 +9,24 @@ import {
   AgentSpan,
   LlmSpan,
   ToolSpan,
-} from "../../tracing/tracing";
-import { getAgentContext, getLlmContext } from "../../tracing/trace-context";
-import { applyPendingToSpan, popPendingFor } from "../../tracing/pending-context";
+} from "@/tracing/tracing";
+import { getAgentContext, getLlmContext } from "@/tracing/trace-context";
+import { applyPendingToSpan, popPendingFor } from "@/tracing/pending-context";
 import {
   updateSpanProperties,
   updateTracePropertiesFromSpanData,
-} from "./extractors";
+} from "@/integrations/openai-agents/extractors";
+import { recordTracingIntegration } from "@/telemetry";
+import { Integration } from "@/tracing/integrations";
 
 export class DeepEvalTracingProcessor {
   private activeSpans: Map<string, BaseSpan> = new Map();
   private traceIdMapping: Map<string, string> = new Map();
   private previousSpans: Map<string, BaseSpan | undefined> = new Map();
+
+  constructor() {
+    recordTracingIntegration(Integration.OPENAI_AGENTS);
+  }
 
   public async onTraceStart(trace: any): Promise<void> {
     const traceDict = trace.export ? trace.export() : trace;

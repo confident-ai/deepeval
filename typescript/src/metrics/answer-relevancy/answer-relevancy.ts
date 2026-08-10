@@ -1,31 +1,36 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   StatementsSchema,
   VerdictsSchema,
   AnswerRelevancyScoreReasonSchema,
   type AnswerRelevancyVerdict,
-} from "./schema";
+} from "@/metrics/answer-relevancy/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 // Must match the key in templates.json (and the Python metric class name).
 const TEMPLATE_CLASS = "AnswerRelevancyMetric";
 
+export type AnswerRelevancyTemplateOverride =
+  MetricTemplateOverride<"AnswerRelevancyMetric">;
+
 export interface AnswerRelevancyMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: AnswerRelevancyTemplateOverride;
 }
 
 export class AnswerRelevancyMetric extends BaseMetric {
@@ -34,12 +39,16 @@ export class AnswerRelevancyMetric extends BaseMetric {
 
   constructor(options: AnswerRelevancyMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
@@ -61,7 +70,7 @@ export class AnswerRelevancyMetric extends BaseMetric {
       this.verdicts = await this.generateVerdicts(testCase.input);
       this.score = this.calculateScore();
       this.reason = await this.generateReason(testCase.input);
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Statements:\n${prettifyList(this.statements)}`,
@@ -75,7 +84,7 @@ export class AnswerRelevancyMetric extends BaseMetric {
   }
 
   private async generateStatements(actualOutput: string): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_statements", {
+    const prompt = this.getPrompt("generate_statements", {
       actual_output: actualOutput,
     });
     const { statements } = await generateWithSchema(
@@ -90,7 +99,7 @@ export class AnswerRelevancyMetric extends BaseMetric {
     input: string,
   ): Promise<AnswerRelevancyVerdict[]> {
     if (this.statements.length === 0) return [];
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+    const prompt = this.getPrompt("generate_verdicts", {
       input,
       statements: this.statements,
     });
@@ -103,7 +112,7 @@ export class AnswerRelevancyMetric extends BaseMetric {
     const irrelevantStatements = this.verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "no")
       .map((v) => v.reason);
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       irrelevant_statements: irrelevantStatements,
       input,
       score: (this.score ?? 0).toFixed(2),
@@ -124,13 +133,7 @@ export class AnswerRelevancyMetric extends BaseMetric {
       if (v.verdict.trim().toLowerCase() !== "no") relevant++;
     }
     const score = relevant / total;
-    return this.strictMode && score < this.threshold ? 0 : score;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
+    return this.applyStrictMode(score);
   }
 
   get name(): string {

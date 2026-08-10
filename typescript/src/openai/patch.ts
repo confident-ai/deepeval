@@ -1,19 +1,19 @@
 import { type OpenAI } from "openai";
 
-import { createChildToolSpans } from "./utils";
+import { createChildToolSpans } from "@/openai/utils";
 import {
   safeExtractInputParameters,
   safeExtractOutputParameters,
-} from "./extractor";
-import { getLlmContext } from "../tracing/trace-context";
+} from "@/openai/extractor";
+import { getLlmContext } from "@/tracing/trace-context";
 import {
   getCurrentTrace,
   observe,
   updateCurrentSpan,
   updateLlmSpan,
-} from "../tracing";
-import { InputParameters, OutputParameters } from "./types";
-import { ToolCall } from "../test-case";
+} from "@/tracing";
+import { InputParameters, OutputParameters } from "@/openai/types";
+import { ToolCall } from "@/test-case";
 
 type AnyFunction = (...args: any[]) => any;
 

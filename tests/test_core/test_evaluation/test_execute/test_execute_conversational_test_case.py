@@ -12,7 +12,7 @@ from deepeval.test_run.test_run import TestRun, TestRunManager
 from deepeval.metrics.conversational_g_eval.conversational_g_eval import (
     ConversationalGEval,
 )
-from deepeval.models.llms.openai_model import GPTModel
+from deepeval.models.llms.openai_model import OpenAIModel
 
 exec_mod = importlib.import_module("deepeval.evaluate.execute")
 _e2e_mod = importlib.import_module("deepeval.evaluate.execute.e2e")
@@ -37,7 +37,7 @@ async def test_conversational_async_persists_metric_on_cancel(
     metric = ConversationalGEval(
         name="Coherence",
         criteria="The assistant should respond coherently.",
-        model=GPTModel(model="gpt-5"),
+        model=OpenAIModel(model="gpt-5"),
         async_mode=False,  # ensure sync path
     )
 
@@ -118,7 +118,7 @@ def test_conversational_sync_persists_metric_on_timeout_ignore_errors_true(
     metric = ConversationalGEval(
         name="Coherence",
         criteria="The assistant should respond coherently.",
-        model=GPTModel(model="gpt-5"),
+        model=OpenAIModel(model="gpt-5"),
         async_mode=False,  # ensure sync path
     )
 
@@ -191,7 +191,7 @@ def test_conversational_sync_persists_metric_on_timeout_ignore_errors_false(
     metric = ConversationalGEval(
         name="Coherence",
         criteria="The assistant should respond coherently.",
-        model=GPTModel(model="gpt-5"),
+        model=OpenAIModel(model="gpt-5"),
         async_mode=False,  # ensure sync path
     )
 

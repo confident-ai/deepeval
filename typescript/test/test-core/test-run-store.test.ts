@@ -5,17 +5,14 @@ import {
   persistCase,
   readPersistedCases,
   wrapUpTestRun,
-} from "../../src/evaluate/test-run/store";
-import { _resetWorkerCaseCount } from "../../src/evaluate/test-run/store";
-import { runMetrics } from "../../src/evaluate/test-run";
-import { LLMTestCase, ConversationalTestCase, Turn } from "../../src/test-case";
-import { BaseMetric } from "../../src/metrics";
-import { EvaluatedCase, MetricData } from "../../src/evaluate/types";
-import {
-  getIsRunningDeepEval,
-  setIsRunningDeepEval,
-} from "../../src/utils";
-import { DEEPEVAL_RESULTS_DIR } from "../../src/constants";
+} from "@/evaluate/test-run/store";
+import { _resetWorkerCaseCount } from "@/evaluate/test-run/store";
+import { runMetrics } from "@/evaluate/test-run";
+import { LLMTestCase, ConversationalTestCase, Turn } from "@/test-case";
+import { BaseMetric } from "@/metrics";
+import { EvaluatedCase, MetricData } from "@/evaluate/types";
+import { getIsRunningDeepEval, setIsRunningDeepEval } from "@/utils";
+import { DEEPEVAL_RESULTS_DIR } from "@/constants";
 
 class FakeMetric extends BaseMetric {
   private readonly ok: boolean;
@@ -43,6 +40,7 @@ const metricData = (success: boolean): MetricData => ({
   score: success ? 0.9 : 0.1,
   strictMode: false,
   skipped: false,
+  flaky: false,
 });
 
 const llmCase = (success = true): EvaluatedCase => ({

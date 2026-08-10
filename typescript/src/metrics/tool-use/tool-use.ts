@@ -1,22 +1,22 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { resolveThreshold } from "@/metrics/base-metrics";
 import {
   ConversationalTestCase,
   MultiTurnParams,
   Turn,
   ToolCall,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+} from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   printToolsCalled,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
-} from "../conversational-utils";
+} from "@/metrics/conversational-utils";
 import {
   ToolSelectionScoreSchema,
   ArgumentCorrectnessScoreSchema,
@@ -24,19 +24,24 @@ import {
   type ToolSelectionScore,
   type ArgumentCorrectnessScore,
   type UserInputAndTools,
-} from "./schema";
+} from "@/metrics/tool-use/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "ToolUseMetric";
+
+export type ToolUseTemplateOverride = MetricTemplateOverride<"ToolUseMetric">;
 
 export interface ToolUseMetricOptions {
   /** The tools the agent had access to. Required. */
   availableTools: ToolCall[];
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: ToolUseTemplateOverride;
 }
 
 /**
@@ -50,12 +55,16 @@ export class ToolUseMetric extends BaseConversationalMetric {
 
   constructor(options: ToolUseMetricOptions) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [MultiTurnParams.ROLE, MultiTurnParams.CONTENT];
     this.availableTools = options.availableTools;
     const { model, usingNativeModel } = initializeModel(options.model);
@@ -87,7 +96,7 @@ export class ToolUseMetric extends BaseConversationalMetric {
         toolSelectionScores,
         argumentCorrectnessScores,
       );
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
       this.reason = [
         await this.generateFinalReason(toolSelectionScores),
         await this.generateFinalReason(argumentCorrectnessScores),
@@ -142,7 +151,7 @@ export class ToolUseMetric extends BaseConversationalMetric {
   private async getToolSelectionScore(
     u: UserInputAndTools,
   ): Promise<ToolSelectionScore> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "get_tool_selection_score", {
+    const prompt = this.getPrompt("get_tool_selection_score", {
       user_input: u.user_messages,
       assistant_messages: u.assistant_messages,
       tools_called: u.tools_called,
@@ -154,16 +163,12 @@ export class ToolUseMetric extends BaseConversationalMetric {
   private async getArgumentCorrectnessScore(
     u: UserInputAndTools,
   ): Promise<ArgumentCorrectnessScore> {
-    const prompt = resolveTemplate("metrics", 
-      TEMPLATE_CLASS,
-      "get_argument_correctness_score",
-      {
-        user_input: u.user_messages,
-        assistant_messages: u.assistant_messages,
-        tools_called: u.tools_called,
-        available_tools: u.available_tools,
-      },
-    );
+    const prompt = this.getPrompt("get_argument_correctness_score", {
+      user_input: u.user_messages,
+      assistant_messages: u.assistant_messages,
+      tools_called: u.tools_called,
+      available_tools: u.available_tools,
+    });
     return generateWithSchema(this, prompt, ArgumentCorrectnessScoreSchema);
   }
 
@@ -174,7 +179,7 @@ export class ToolUseMetric extends BaseConversationalMetric {
     const mean = (xs: { score: number }[]) =>
       xs.reduce((s, x) => s + x.score, 0) / Math.max(xs.length, 1);
     const score = Math.min(mean(toolScores), mean(argScores));
-    return this.strictMode && score < this.threshold ? 0 : score;
+    return this.applyStrictMode(score);
   }
 
   // Both reason types use the same template (mirrors Python; `get_tool_argument_final_reason` is unused).
@@ -184,23 +189,13 @@ export class ToolUseMetric extends BaseConversationalMetric {
     const allScoresAndReasons = scores
       .map((s) => `\nScore: ${s.score} \nReason: ${s.reason} \n`)
       .join("");
-    const prompt = resolveTemplate("metrics", 
-      TEMPLATE_CLASS,
-      "get_tool_selection_final_reason",
-      {
-        all_scores_and_reasons: allScoresAndReasons,
-        final_score: this.score,
-        threshold: this.threshold,
-      },
-    );
+    const prompt = this.getPrompt("get_tool_selection_final_reason", {
+      all_scores_and_reasons: allScoresAndReasons,
+      final_score: this.score,
+      threshold: this.threshold,
+    });
     const { reason } = await generateWithSchema(this, prompt, ReasonSchema);
     return reason;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

@@ -1,7 +1,8 @@
 import {
   DeepEvalOpenAICompatibleModel,
   type OpenAICompatibleModelOptions,
-} from "../openai-compatible-model";
+} from "@/models/openai-compatible-model";
+import type { ModelNamespace } from "@/models/registry";
 
 export type KimiModelOptions = OpenAICompatibleModelOptions;
 
@@ -16,13 +17,16 @@ const MOONSHOT_BASE_URL = "https://api.moonshot.cn/v1";
 export class KimiModel extends DeepEvalOpenAICompatibleModel {
   protected providerLabel = "Moonshot";
   protected apiKeyEnvVar = "MOONSHOT_API_KEY";
+  protected registryNamespace: ModelNamespace = "kimi";
 
   constructor(options: KimiModelOptions = {}) {
     super({
       ...options,
-      model: options.model ?? process.env.MOONSHOT_MODEL_NAME ?? DEFAULT_KIMI_MODEL,
+      model:
+        options.model ?? process.env.MOONSHOT_MODEL_NAME ?? DEFAULT_KIMI_MODEL,
       apiKey: options.apiKey ?? process.env.MOONSHOT_API_KEY,
-      baseURL: options.baseURL ?? process.env.MOONSHOT_BASE_URL ?? MOONSHOT_BASE_URL,
+      baseURL:
+        options.baseURL ?? process.env.MOONSHOT_BASE_URL ?? MOONSHOT_BASE_URL,
     });
   }
 }

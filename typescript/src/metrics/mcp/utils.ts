@@ -4,8 +4,8 @@ import {
   MCPToolCall,
   ToolCall,
   ToolCallType,
-} from "../../test-case";
-import { Task } from "./schema";
+} from "@/test-case";
+import { Task } from "@/metrics/mcp/schema";
 
 /** Stringify a value the way the prompts expect (plain strings pass through). */
 function toText(v: unknown): string {

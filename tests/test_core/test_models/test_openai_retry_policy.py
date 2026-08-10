@@ -2,7 +2,7 @@ import pytest
 import openai
 import httpx
 from tenacity import RetryError
-from deepeval.models.llms.openai_model import GPTModel
+from deepeval.models.llms.openai_model import OpenAIModel
 
 
 class AlwaysLengthLimitClient:
@@ -55,8 +55,8 @@ def gpt_model_retryable(monkeypatch):
     def _fake_loader(self, async_mode=False):
         return AlwaysRetryableClient(counter)
 
-    monkeypatch.setattr(GPTModel, "load_model", _fake_loader, raising=True)
-    return GPTModel(model="gpt-4o-mini"), counter
+    monkeypatch.setattr(OpenAIModel, "load_model", _fake_loader, raising=True)
+    return OpenAIModel(model="gpt-4o-mini"), counter
 
 
 @pytest.fixture
@@ -88,8 +88,8 @@ def gpt_model_length_limit(monkeypatch, settings):
         settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 5
         settings.DEEPEVAL_RETRY_CAP_SECONDS = 0
 
-    monkeypatch.setattr(GPTModel, "load_model", _fake_loader, raising=True)
-    return GPTModel(model="gpt-4o-mini"), counter
+    monkeypatch.setattr(OpenAIModel, "load_model", _fake_loader, raising=True)
+    return OpenAIModel(model="gpt-4o-mini"), counter
 
 
 def test_retry_respects_max_attempts(

@@ -1,41 +1,43 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
-import {
-  ConversationalTestCase,
-  MultiTurnParams,
-  Turn,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { resolveThreshold } from "@/metrics/base-metrics";
+import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
-} from "../conversational-utils";
+} from "@/metrics/conversational-utils";
 import {
   QAPairsSchema,
   RelevancyVerdictSchema,
   TopicAdherenceReasonSchema,
   type QAPair,
   type RelevancyVerdict,
-} from "./schema";
+} from "@/metrics/topic-adherence/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "TopicAdherenceMetric";
+
+export type TopicAdherenceTemplateOverride =
+  MetricTemplateOverride<"TopicAdherenceMetric">;
 type Verdict = RelevancyVerdict["verdict"];
 
 export interface TopicAdherenceMetricOptions {
   /** Topics the assistant is allowed to engage with. Required. */
   relevantTopics: string[];
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: TopicAdherenceTemplateOverride;
 }
 
 /**
@@ -48,12 +50,16 @@ export class TopicAdherenceMetric extends BaseConversationalMetric {
 
   constructor(options: TopicAdherenceMetricOptions) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [MultiTurnParams.ROLE, MultiTurnParams.CONTENT];
     this.relevantTopics = options.relevantTopics;
     const { model, usingNativeModel } = initializeModel(options.model);
@@ -77,11 +83,16 @@ export class TopicAdherenceMetric extends BaseConversationalMetric {
       const verdicts = await Promise.all(
         qaPairs.map((qa) => this.getQaVerdict(qa)),
       );
-      const tally: Record<Verdict, string[]> = { TP: [], TN: [], FP: [], FN: [] };
+      const tally: Record<Verdict, string[]> = {
+        TP: [],
+        TN: [],
+        FP: [],
+        FN: [],
+      };
       for (const v of verdicts) tally[v.verdict].push(v.reason);
 
       this.score = this.calculateScore(tally);
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
       this.reason = await this.generateReason(tally);
 
       this.verboseLogs = constructVerboseLogs(this, [
@@ -101,7 +112,7 @@ export class TopicAdherenceMetric extends BaseConversationalMetric {
       conversation += `${turn.role} \n`;
       conversation += `${turn.content} \n\n`;
     }
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "get_qa_pairs", {
+    const prompt = this.getPrompt("get_qa_pairs", {
       conversation,
     });
     const { qa_pairs } = await generateWithSchema(this, prompt, QAPairsSchema);
@@ -109,7 +120,7 @@ export class TopicAdherenceMetric extends BaseConversationalMetric {
   }
 
   private async getQaVerdict(qaPair: QAPair): Promise<RelevancyVerdict> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "get_qa_pair_verdict", {
+    const prompt = this.getPrompt("get_qa_pair_verdict", {
       relevant_topics: this.relevantTopics,
       question: qaPair.question,
       response: qaPair.response,
@@ -122,7 +133,7 @@ export class TopicAdherenceMetric extends BaseConversationalMetric {
     const total =
       tally.TP.length + tally.TN.length + tally.FP.length + tally.FN.length;
     const score = total <= 0 ? 0 : trueValues / total;
-    return this.strictMode && score < this.threshold ? 0 : score;
+    return this.applyStrictMode(score);
   }
 
   private async generateReason(
@@ -135,7 +146,7 @@ export class TopicAdherenceMetric extends BaseConversationalMetric {
     }
     const line = (reasons: string[]) =>
       reasons.length ? prettifyList(reasons) : "(none)";
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       success: this.success,
       score: this.score,
       threshold: this.threshold,
@@ -150,12 +161,6 @@ export class TopicAdherenceMetric extends BaseConversationalMetric {
       TopicAdherenceReasonSchema,
     );
     return reason;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

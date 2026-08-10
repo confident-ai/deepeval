@@ -268,11 +268,11 @@ class TestJudgeModel:
                 "GEval",
                 async_mode=False,
                 in_component=False,
-                model=shipped_model("GPTModel", "gpt-4o"),
+                model=shipped_model("OpenAIModel", "gpt-4o"),
             )
 
         props = backend.only()
-        assert props["judge.provider"] == "GPTModel"
+        assert props["judge.provider"] == "OpenAIModel"
         assert props["judge.model"] == "gpt-4o"
 
     def test_a_self_hosted_model_name_cannot_leak(self, backend):
@@ -301,11 +301,11 @@ class TestJudgeModel:
                 "GEval",
                 async_mode=False,
                 in_component=False,
-                model=shipped_model("GPTModel", "gpt-internal-finetune-42"),
+                model=shipped_model("OpenAIModel", "gpt-internal-finetune-42"),
             )
 
         props = backend.only()
-        assert props["judge.provider"] == "GPTModel"
+        assert props["judge.provider"] == "OpenAIModel"
         assert props["judge.model"] == "other"
 
     def test_a_subclass_of_a_shipped_model_is_not_treated_as_ours(
@@ -314,7 +314,7 @@ class TestJudgeModel:
         """Subclassing is how a user-defined class would otherwise inherit a
         provider it did not write."""
 
-        class InternalJudge(type(shipped_model("GPTModel", "gpt-4o"))):
+        class InternalJudge(type(shipped_model("OpenAIModel", "gpt-4o"))):
             name = "gpt-4o"
 
         with telemetry.capture_evaluation_run(Entrypoint.EVALUATE):
@@ -488,6 +488,55 @@ class TestTypeSafety:
             "Login Prompt Shown",
             "Login",
         }
+
+
+class TestTypeScriptParity:
+    """The TypeScript SDK reports into the same PostHog project as this one.
+
+    ``scripts/compile_telemetry_vocabulary.py`` projects this vocabulary into a
+    committed artifact the Jest suite asserts against, which drifts silently
+    whenever an enum here changes without a recompile.
+    """
+
+    @staticmethod
+    def _load_compiler():
+        import importlib.util
+
+        script = (
+            Path(__file__).resolve().parents[2]
+            / "scripts"
+            / "compile_telemetry_vocabulary.py"
+        )
+        spec = importlib.util.spec_from_file_location(
+            "_compile_telemetry_vocabulary", script
+        )
+        assert spec is not None and spec.loader is not None
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_the_committed_vocabulary_is_up_to_date(self):
+        compiler = self._load_compiler()
+
+        assert (
+            compiler.VOCABULARY_JSON.read_text(encoding="utf-8")
+            == compiler.render()
+        ), (
+            f"{compiler.VOCABULARY_JSON} is out of date with "
+            "deepeval/telemetry/. Re-run "
+            "`python scripts/compile_telemetry_vocabulary.py`."
+        )
+
+    def test_the_vocabulary_covers_every_wire_string(self):
+        """Adding an enum without exporting it would leave TS free to drift."""
+        from deepeval.telemetry.properties import Prop
+
+        compiler = self._load_compiler()
+        vocabulary = compiler.build()
+
+        assert vocabulary["props"] == sorted(prop.value for prop in Prop)
+        assert vocabulary["events"] == sorted(event.value for event in Event)
+        assert vocabulary["schemaVersion"] == 2
 
 
 class TestRuntime:

@@ -15,6 +15,7 @@
     "portkey",
     "vllm",
     "lmstudio",
-    "litellm"
+    "litellm",
+    "ai-sdk"
   ]
 }

@@ -1,15 +1,10 @@
-import {
-  runMetrics,
-  globalResultCollector,
-} from "../../src/evaluate/test-run";
-import { LLMTestCase } from "../../src/test-case";
-import { BaseMetric, BaseConversationalMetric } from "../../src/metrics";
-import { DeepEvalError, MissingTestCaseParamsError } from "../../src/errors";
-import { Golden } from "../../src/dataset";
-import {
-  getIsRunningDeepEval,
-  setIsRunningDeepEval,
-} from "../../src/utils";
+import { runMetrics, globalResultCollector } from "@/evaluate/test-run";
+import { LLMTestCase } from "@/test-case";
+import { BaseMetric, BaseConversationalMetric } from "@/metrics";
+import { DeepEvalError, MissingTestCaseParamsError } from "@/errors";
+import { Golden } from "@/dataset";
+import { getIsRunningDeepEval, setIsRunningDeepEval } from "@/utils";
+import { observe, updateCurrentTrace } from "@/tracing";
 
 // A deterministic single-turn metric. `impl` mutates the metric's result state
 // the way a real `measure()` would (runMetric reads score/success afterward).
@@ -89,9 +84,11 @@ const llmTestCase = () =>
 
 describe("toPass — explicit test case shape", () => {
   it("passes when the metric passes", async () => {
-    await expect(runMetrics(llmTestCase(), [passing()])).resolves.toMatchObject({
-      pass: true,
-    });
+    await expect(runMetrics(llmTestCase(), [passing()])).resolves.toMatchObject(
+      {
+        pass: true,
+      },
+    );
   });
 
   it("fails with a message naming the failing metric", async () => {
@@ -179,10 +176,25 @@ describe("toPass — callback (trace-scoped) shape", () => {
     ).rejects.toThrow(/received a promise/);
   });
 
-  it("rejects a golden receiver and points at the callback form", async () => {
+  it("rejects a golden without `task` and points at the golden subject form", async () => {
     await expect(
-      runMetrics(new Golden({ input: "hi" }) as never, [passing()]),
-    ).rejects.toThrow(/expect\(golden\)\.toPass\(\) is not supported/);
+      runMetrics(new Golden({ input: "hi" }), [passing()]),
+    ).rejects.toThrow(/needs a `task` callback/);
+  });
+
+  it("accepts a golden with `task` and evaluates the traces it produces", async () => {
+    const agent = observe({
+      type: "agent",
+      fn: async (query: string) => {
+        updateCurrentTrace({ input: query, output: "4" });
+        return "4";
+      },
+    });
+    const golden = new Golden({ input: "What is 2+2?" });
+    const outcome = await runMetrics(golden, [passing()], {
+      task: (g) => agent(g.input),
+    });
+    expect(outcome.pass).toBe(true);
   });
 });
 

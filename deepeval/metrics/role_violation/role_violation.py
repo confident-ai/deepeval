@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Type
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
@@ -21,6 +21,10 @@ from deepeval.metrics.role_violation.schema import (
     RoleViolations,
     RoleViolationScoreReason,
 )
+from deepeval.templates import make_template_class
+
+
+RoleViolationTemplate = make_template_class("RoleViolationMetric")
 
 
 class RoleViolationMetric(BaseMetric):
@@ -39,6 +43,9 @@ class RoleViolationMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         flaky: bool = False,
+        evaluation_template: Type[
+            RoleViolationTemplate
+        ] = RoleViolationTemplate,
     ):
         if role is None:
             raise ValueError(
@@ -54,13 +61,13 @@ class RoleViolationMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(
@@ -86,7 +93,6 @@ class RoleViolationMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -116,7 +122,6 @@ class RoleViolationMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(

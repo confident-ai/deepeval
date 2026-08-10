@@ -57,7 +57,6 @@ class ConversationalDAGMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         multimodal = test_case.multimodal
         check_conversational_test_case_params(
@@ -83,7 +82,6 @@ class ConversationalDAGMetric(BaseConversationalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -103,7 +101,6 @@ class ConversationalDAGMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         multimodal = test_case.multimodal
         check_conversational_test_case_params(

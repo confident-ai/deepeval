@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deepeval"
-version = "4.1.5"
+version = "4.1.7"
 description = "The LLM Evaluation Framework"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
@@ -25,7 +25,6 @@ pytest-repeat = "*"
 pytest-rerunfailures = "*"
 pytest-asyncio = "*"
 tabulate = "^0.9.0"
-sentry-sdk = "*"
 rich = ">=13.6.0, <15.0.0"
 portalocker = "*"
 openai = "*"

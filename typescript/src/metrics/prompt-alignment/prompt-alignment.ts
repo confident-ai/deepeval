@@ -1,31 +1,36 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   VerdictsSchema,
   PromptAlignmentScoreReasonSchema,
   type PromptAlignmentVerdict,
-} from "./schema";
+} from "@/metrics/prompt-alignment/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "PromptAlignmentMetric";
+
+export type PromptAlignmentTemplateOverride =
+  MetricTemplateOverride<"PromptAlignmentMetric">;
 
 export interface PromptAlignmentMetricOptions {
   /** The prompt instructions the output must follow. Required, non-empty. */
   promptInstructions: string[];
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: PromptAlignmentTemplateOverride;
 }
 
 /**
@@ -38,16 +43,22 @@ export class PromptAlignmentMetric extends BaseMetric {
   verdicts: PromptAlignmentVerdict[] = [];
 
   constructor(options: PromptAlignmentMetricOptions) {
-    if (!options.promptInstructions || options.promptInstructions.length === 0) {
+    if (
+      !options.promptInstructions ||
+      options.promptInstructions.length === 0
+    ) {
       throw new Error("'promptInstructions' must not be empty.");
     }
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
@@ -75,7 +86,7 @@ export class PromptAlignmentMetric extends BaseMetric {
         testCase.input,
         testCase.actualOutput,
       );
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Prompt Instructions:\n${prettifyList(this.promptInstructions)}`,
@@ -92,7 +103,7 @@ export class PromptAlignmentMetric extends BaseMetric {
     input: string,
     actualOutput: string,
   ): Promise<PromptAlignmentVerdict[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+    const prompt = this.getPrompt("generate_verdicts", {
       prompt_instructions: this.promptInstructions,
       input,
       actual_output: actualOutput,
@@ -109,7 +120,7 @@ export class PromptAlignmentMetric extends BaseMetric {
     const unalignmentReasons = this.verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "no")
       .map((v) => v.reason);
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       unalignment_reasons: unalignmentReasons,
       input,
       actual_output: actualOutput,
@@ -130,13 +141,7 @@ export class PromptAlignmentMetric extends BaseMetric {
       (v) => v.verdict.trim().toLowerCase() !== "no",
     ).length;
     const score = alignmentCount / total;
-    return this.strictMode && score < this.threshold ? 0 : score;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
+    return this.applyStrictMode(score);
   }
 
   get name(): string {

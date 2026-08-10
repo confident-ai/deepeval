@@ -1,0 +1,1261 @@
+{
+  "generatedAt": "2026-08-04",
+  "filter": "Pages carrying at least one <Switch>, <Term> or <Only> tag. A `languages` frontmatter declaration alone does not qualify — the page needs the tags.",
+  "totals": {
+    "pages": 78,
+    "bilingual": 78,
+    "pythonOnly": 0,
+    "typescriptOnly": 0,
+    "inherits": 0
+  },
+  "pages": [
+    {
+      "url": "/docs/command-line-interface",
+      "file": "content/docs/command-line-interface.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 14,
+      "only": 6,
+      "term": 11,
+      "pythonFences": 0,
+      "tsFences": 0,
+      "flags": []
+    },
+    {
+      "url": "/docs/environment-variables",
+      "file": "content/docs/environment-variables.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 3,
+      "only": 7,
+      "term": 3,
+      "pythonFences": 0,
+      "tsFences": 1,
+      "flags": []
+    },
+    {
+      "url": "/docs/evaluation-arena-test-cases",
+      "file": "content/docs/(concepts)/(test-cases)/evaluation-arena-test-cases.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 5,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 8,
+      "tsFences": 5,
+      "flags": []
+    },
+    {
+      "url": "/docs/evaluation-datasets",
+      "file": "content/docs/(concepts)/evaluation-datasets.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 13,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 26,
+      "tsFences": 12,
+      "flags": []
+    },
+    {
+      "url": "/docs/evaluation-llm-tracing",
+      "file": "content/docs/(concepts)/evaluation-llm-tracing.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 6,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 17,
+      "tsFences": 6,
+      "flags": []
+    },
+    {
+      "url": "/docs/evaluation-mcp",
+      "file": "content/docs/(concepts)/evaluation-mcp.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 8,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 8,
+      "tsFences": 8,
+      "flags": []
+    },
+    {
+      "url": "/docs/evaluation-multiturn-test-cases",
+      "file": "content/docs/(concepts)/(test-cases)/evaluation-multiturn-test-cases.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 10,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 16,
+      "tsFences": 10,
+      "flags": []
+    },
+    {
+      "url": "/docs/evaluation-prompts",
+      "file": "content/docs/(concepts)/evaluation-prompts.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 3,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 15,
+      "tsFences": 3,
+      "flags": []
+    },
+    {
+      "url": "/docs/evaluation-test-cases",
+      "file": "content/docs/(concepts)/(test-cases)/evaluation-test-cases.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 13,
+      "only": 0,
+      "term": 59,
+      "pythonFences": 20,
+      "tsFences": 13,
+      "flags": []
+    },
+    {
+      "url": "/docs/faq",
+      "file": "content/docs/faq.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 3,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 12,
+      "tsFences": 1,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-answer-relevancy",
+      "file": "content/docs/(rag)/metrics-answer-relevancy.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 7,
+      "only": 1,
+      "term": 28,
+      "pythonFences": 6,
+      "tsFences": 7,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-arena-g-eval",
+      "file": "content/docs/(custom)/metrics-arena-g-eval.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-argument-correctness",
+      "file": "content/docs/(agentic)/metrics-argument-correctness.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 4,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 4,
+      "tsFences": 4,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-bias",
+      "file": "content/docs/(safety)/metrics-bias.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 3,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-contextual-precision",
+      "file": "content/docs/(rag)/metrics-contextual-precision.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 4,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 5,
+      "tsFences": 4,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-contextual-recall",
+      "file": "content/docs/(rag)/metrics-contextual-recall.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 4,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 5,
+      "tsFences": 4,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-contextual-relevancy",
+      "file": "content/docs/(rag)/metrics-contextual-relevancy.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 4,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 5,
+      "tsFences": 4,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-conversation-completeness",
+      "file": "content/docs/(multi-turn)/metrics-conversation-completeness.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-conversational-dag",
+      "file": "content/docs/(custom)/metrics-conversational-dag.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 15,
+      "only": 0,
+      "term": 15,
+      "pythonFences": 13,
+      "tsFences": 13,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-conversational-g-eval",
+      "file": "content/docs/(custom)/metrics-conversational-g-eval.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 4,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-custom",
+      "file": "content/docs/(custom)/metrics-custom.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 11,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 16,
+      "tsFences": 11,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-dag",
+      "file": "content/docs/(custom)/metrics-dag.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 16,
+      "only": 0,
+      "term": 11,
+      "pythonFences": 14,
+      "tsFences": 14,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-exact-match",
+      "file": "content/docs/(non-llm)/metrics-exact-match.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-faithfulness",
+      "file": "content/docs/(rag)/metrics-faithfulness.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 4,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 5,
+      "tsFences": 4,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-goal-accuracy",
+      "file": "content/docs/(multi-turn)/metrics-goal-accuracy.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-hallucination",
+      "file": "content/docs/(metrics-others)/metrics-hallucination.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 3,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-introduction",
+      "file": "content/docs/metrics-introduction.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 13,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 20,
+      "tsFences": 13,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-json-correctness",
+      "file": "content/docs/(non-llm)/metrics-json-correctness.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 4,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 5,
+      "tsFences": 4,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-knowledge-retention",
+      "file": "content/docs/(multi-turn)/metrics-knowledge-retention.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-llm-evals",
+      "file": "content/docs/(custom)/metrics-llm-evals.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 10,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 14,
+      "tsFences": 10,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-mcp-task-completion",
+      "file": "content/docs/(mcp)/metrics-mcp-task-completion.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-mcp-use",
+      "file": "content/docs/(mcp)/metrics-mcp-use.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-misuse",
+      "file": "content/docs/(safety)/metrics-misuse.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 3,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-multi-turn-mcp-use",
+      "file": "content/docs/(mcp)/metrics-multi-turn-mcp-use.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-non-advice",
+      "file": "content/docs/(safety)/metrics-non-advice.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 3,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-pattern-match",
+      "file": "content/docs/(non-llm)/metrics-pattern-match.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-pii-leakage",
+      "file": "content/docs/(safety)/metrics-pii-leakage.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 3,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-plan-adherence",
+      "file": "content/docs/(agentic)/metrics-plan-adherence.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 1,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 1,
+      "tsFences": 1,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-plan-quality",
+      "file": "content/docs/(agentic)/metrics-plan-quality.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 1,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 1,
+      "tsFences": 1,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-prompt-alignment",
+      "file": "content/docs/(metrics-others)/metrics-prompt-alignment.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 3,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-role-adherence",
+      "file": "content/docs/(multi-turn)/metrics-role-adherence.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-role-violation",
+      "file": "content/docs/(safety)/metrics-role-violation.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 3,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-step-efficiency",
+      "file": "content/docs/(agentic)/metrics-step-efficiency.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 1,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 1,
+      "tsFences": 1,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-summarization",
+      "file": "content/docs/(metrics-others)/metrics-summarization.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 4,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 5,
+      "tsFences": 4,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-task-completion",
+      "file": "content/docs/(agentic)/metrics-task-completion.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 1,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 1,
+      "tsFences": 1,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-tool-correctness",
+      "file": "content/docs/(agentic)/metrics-tool-correctness.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 4,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 4,
+      "tsFences": 4,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-tool-use",
+      "file": "content/docs/(multi-turn)/metrics-tool-use.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-topic-adherence",
+      "file": "content/docs/(multi-turn)/metrics-topic-adherence.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-toxicity",
+      "file": "content/docs/(safety)/metrics-toxicity.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 3,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-turn-contextual-precision",
+      "file": "content/docs/(multi-turn)/metrics-turn-contextual-precision.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-turn-contextual-recall",
+      "file": "content/docs/(multi-turn)/metrics-turn-contextual-recall.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-turn-contextual-relevancy",
+      "file": "content/docs/(multi-turn)/metrics-turn-contextual-relevancy.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-turn-faithfulness",
+      "file": "content/docs/(multi-turn)/metrics-turn-faithfulness.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/metrics-turn-relevancy",
+      "file": "content/docs/(multi-turn)/metrics-turn-relevancy.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/multimodal-metrics-image-coherence",
+      "file": "content/docs/(images)/multimodal-metrics-image-coherence.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/multimodal-metrics-image-editing",
+      "file": "content/docs/(images)/multimodal-metrics-image-editing.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/multimodal-metrics-image-helpfulness",
+      "file": "content/docs/(images)/multimodal-metrics-image-helpfulness.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/multimodal-metrics-image-reference",
+      "file": "content/docs/(images)/multimodal-metrics-image-reference.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/multimodal-metrics-text-to-image",
+      "file": "content/docs/(images)/multimodal-metrics-text-to-image.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/docs/troubleshooting",
+      "file": "content/docs/troubleshooting.mdx",
+      "section": "docs",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 5,
+      "only": 2,
+      "term": 1,
+      "pythonFences": 3,
+      "tsFences": 0,
+      "flags": []
+    },
+    {
+      "url": "/integrations",
+      "file": "content/integrations/index.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 1,
+      "only": 5,
+      "term": 0,
+      "pythonFences": 0,
+      "tsFences": 0,
+      "flags": []
+    },
+    {
+      "url": "/integrations/frameworks/langchain",
+      "file": "content/integrations/frameworks/langchain.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 5,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 11,
+      "tsFences": 4,
+      "flags": []
+    },
+    {
+      "url": "/integrations/frameworks/openai",
+      "file": "content/integrations/frameworks/openai.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 7,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 10,
+      "tsFences": 6,
+      "flags": []
+    },
+    {
+      "url": "/integrations/frameworks/openai-agents",
+      "file": "content/integrations/frameworks/openai-agents.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 4,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 12,
+      "tsFences": 3,
+      "flags": []
+    },
+    {
+      "url": "/integrations/models/amazon-bedrock",
+      "file": "content/integrations/models/amazon-bedrock.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/integrations/models/anthropic",
+      "file": "content/integrations/models/anthropic.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 1,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/integrations/models/azure-openai",
+      "file": "content/integrations/models/azure-openai.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 1,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/integrations/models/deepseek",
+      "file": "content/integrations/models/deepseek.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 1,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/integrations/models/gemini",
+      "file": "content/integrations/models/gemini.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 1,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/integrations/models/grok",
+      "file": "content/integrations/models/grok.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/integrations/models/lmstudio",
+      "file": "content/integrations/models/lmstudio.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 1,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/integrations/models/moonshot",
+      "file": "content/integrations/models/moonshot.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 1,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/integrations/models/ollama",
+      "file": "content/integrations/models/ollama.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 1,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/integrations/models/openai",
+      "file": "content/integrations/models/openai.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 2,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/integrations/models/openrouter",
+      "file": "content/integrations/models/openrouter.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 1,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 3,
+      "tsFences": 3,
+      "flags": []
+    },
+    {
+      "url": "/integrations/models/portkey",
+      "file": "content/integrations/models/portkey.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 1,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    },
+    {
+      "url": "/integrations/models/vertex-ai",
+      "file": "content/integrations/models/vertex-ai.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 1,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 1,
+      "tsFences": 1,
+      "flags": []
+    },
+    {
+      "url": "/integrations/models/vllm",
+      "file": "content/integrations/models/vllm.mdx",
+      "section": "integrations",
+      "languages": [
+        "python",
+        "typescript"
+      ],
+      "status": "bilingual",
+      "switch": 1,
+      "only": 0,
+      "term": 0,
+      "pythonFences": 2,
+      "tsFences": 2,
+      "flags": []
+    }
+  ]
+}

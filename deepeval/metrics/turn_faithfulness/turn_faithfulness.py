@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Tuple
+from typing import List, Optional, Union, Tuple, Type
 import asyncio
 import itertools
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
@@ -26,6 +26,7 @@ from deepeval.metrics.turn_faithfulness.schema import (
     Claims,
     InteractionFaithfulnessScore,
 )
+from deepeval.templates import make_template_class
 
 
 def _turn_faithfulness_limit_description(
@@ -36,6 +37,9 @@ def _turn_faithfulness_limit_description(
     if extraction_limit == 1:
         return "one factual, explicit truth"
     return f"{extraction_limit} factual, explicit truths"
+
+
+TurnFaithfulnessTemplate = make_template_class("TurnFaithfulnessMetric")
 
 
 class TurnFaithfulnessMetric(BaseConversationalMetric):
@@ -57,6 +61,9 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         penalize_ambiguous_claims: bool = False,
         window_size: int = 10,
         flaky: bool = False,
+        evaluation_template: Type[
+            TurnFaithfulnessTemplate
+        ] = TurnFaithfulnessTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -72,13 +79,13 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         self.truths_extraction_limit = truths_extraction_limit
         if self.truths_extraction_limit is not None:
             self.truths_extraction_limit = max(self.truths_extraction_limit, 0)
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case,
@@ -104,7 +111,6 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -140,7 +146,6 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_conversational_test_case_params(
             test_case,

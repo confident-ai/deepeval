@@ -11,11 +11,14 @@ import {
   SpanExporter,
 } from "@opentelemetry/sdk-trace-base";
 import { Context } from "@opentelemetry/api";
-import { OpenInferenceSpanProcessor } from "./processor";
-import { getSettings } from "../../config/settings";
+import { OpenInferenceSpanProcessor } from "@/integrations/openinference/processor";
+import { getVersion } from "@/cli/version";
+import { getSettings } from "@/config/settings";
 import { ExportResult, ExportResultCode } from "@opentelemetry/core";
-import { Prompt } from "../../prompt";
-import { ROUTE_TO_REST_ATTRIBUTE } from "../../tracing/otel-routing";
+import { Prompt } from "@/prompt";
+import { recordTracingIntegration } from "@/telemetry";
+import { Integration } from "@/tracing/integrations";
+import { ROUTE_TO_REST_ATTRIBUTE } from "@/tracing/otel-routing";
 
 // OpenInference exporter filter to remove the parent Id for root spans
 class OpenInferenceExporterWrapper implements SpanExporter {
@@ -139,11 +142,11 @@ export function createOpenInferenceProcessors(
       ? process.env.CONFIDENT_API_KEY
       : undefined);
 
+  // The local processor is unconditional: it materialises spans in-process,
+  // which is what evals read. Only the OTLP exporter needs a key, so a keyless
+  // caller loses the export to Confident AI and nothing else.
   if (!apiKey) {
-    console.warn(
-      "DeepEval: No API Key found. OpenInference tracing will be disabled.",
-    );
-    return [];
+    return [new OpenInferenceSpanProcessor(options, { otlpEnabled: false })];
   }
 
   const baseUrl =
@@ -181,7 +184,6 @@ export function instrumentOpenInference(
   _currentOptions = options || {};
 
   const processors = createOpenInferenceProcessors(_currentOptions);
-  if (processors.length === 0) return;
 
   let environment = options?.environment;
   if (!environment && getSettings().CONFIDENT_TRACE_ENVIRONMENT) {
@@ -190,10 +192,13 @@ export function instrumentOpenInference(
     environment = "development";
   }
 
+  recordTracingIntegration(Integration.OPEN_INFERENCE);
+
   const provider = new NodeTracerProvider({
     resource: resourceFromAttributes({
       [ATTR_SERVICE_NAME]: "deepeval-ts-client",
-      "deepeval.sdk.version": "typescript",
+      "deepeval.sdk.language": "typescript",
+      "deepeval.sdk.version": getVersion(),
       "deepeval.environment": environment,
     }),
     spanProcessors: processors,

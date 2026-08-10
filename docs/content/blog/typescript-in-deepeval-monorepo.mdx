@@ -153,7 +153,7 @@ This is genuinely strong: a drift regression fails the build immediately. But th
 
 This is where we landed, and it's an option that didn't really exist a couple of years ago. It's Arrow's structure — one repo, clean per-language directories — minus the hand-maintained fixture contract. Two things hold the languages together instead.
 
-The first is docs. Prose is written once and rendered per-language: a shared [term-map](https://github.com/confident-ai/deepeval/blob/main/docs/lib/lang/terms.ts) pairs the Python and TypeScript spelling of every inline identifier — `test_case` ↔ `testCase`, `actual_output` ↔ `actualOutput` — so the documentation never silently describes one language while showing the other. An unknown term fails the build instead of being dropped silently.
+The first is docs. Prose is written once and rendered per-language: an [inline term component](https://github.com/confident-ai/deepeval/blob/main/docs/lib/lang/term.ts) carries the Python and TypeScript spelling of every code span side by side — `test_case` ↔ `testCase`, `actual_output` ↔ `actualOutput`, `touch test_example.py` ↔ `touch test_example.ts` — so the documentation never silently describes one language while showing the other.
 
 The second is code, and this is the part that wasn't possible before. Camp 2 failed because a framework's logic isn't describable by a spec — there was nothing to generate from. But you no longer need a rigid spec: an LLM can read the Python implementation of a metric — its judge prompts, scoring math, thresholds — and port that exact change into the TypeScript implementation.
 

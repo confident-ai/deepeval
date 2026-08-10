@@ -2,110 +2,6 @@
   "uuid": "b98552f6-33af-46ea-b837-3760e5ccec8e",
   "baseSpans": [
     {
-      "uuid": "019d0516-bcaf-7180-8987-866a7dd5fad5",
-      "name": "LangGraph",
-      "status": "SUCCESS",
-      "type": "base",
-      "startTime": "2026-03-19T07:54:29.423Z",
-      "endTime": "2026-03-19T07:54:34.439Z",
-      "input": {
-        "messages": [
-          {
-            "content": "What's the stock price of GOOGL?",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "bf9d0ea4-3561-4be9-abde-225cb239bfe3"
-          }
-        ]
-      },
-      "output": {
-        "messages": [
-          {
-            "content": "What's the stock price of GOOGL?",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "bf9d0ea4-3561-4be9-abde-225cb239bfe3"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {},
-            "response_metadata": {
-              "finish_reason": "tool_calls",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "service_tier": "default",
-              "model_provider": "openai"
-            },
-            "type": "ai",
-            "id": "lc_run--019d0516-bcb0-7371-bab7-fa1549d9702c",
-            "tool_calls": [
-              {
-                "name": "get_stock_price",
-                "args": {
-                  "symbol": "GOOGL"
-                },
-                "id": "call_4cBtEdosoGcSPs8h65YewvQe",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 161,
-              "output_tokens": 26,
-              "total_tokens": 187,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          },
-          {
-            "content": "$142.30 (-0.5%)",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_stock_price",
-            "id": "2f05a3b1-399e-4ae4-9e17-55d97a4436c7",
-            "tool_call_id": "call_4cBtEdosoGcSPs8h65YewvQe",
-            "status": "success"
-          },
-          {
-            "content": "The current stock price of GOOGL is $142.30 (down 0.5%).",
-            "additional_kwargs": {},
-            "response_metadata": {
-              "finish_reason": "stop",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "service_tier": "default",
-              "model_provider": "openai"
-            },
-            "type": "ai",
-            "id": "lc_run--019d0516-c462-7950-a8ab-028425a06127",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 202,
-              "output_tokens": 23,
-              "total_tokens": 225,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          }
-        ]
-      },
-      "integration": "LangChain"
-    },
-    {
       "uuid": "019d0516-c462-7950-a8ab-027e50a7d1cb",
       "name": "agent",
       "status": "SUCCESS",
@@ -508,7 +404,114 @@
       "integration": "LangChain"
     }
   ],
-  "agentSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "019d0516-bcaf-7180-8987-866a7dd5fad5",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-19T07:54:29.423Z",
+      "endTime": "2026-03-19T07:54:34.439Z",
+      "input": {
+        "messages": [
+          {
+            "content": "What's the stock price of GOOGL?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "bf9d0ea4-3561-4be9-abde-225cb239bfe3"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "What's the stock price of GOOGL?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "bf9d0ea4-3561-4be9-abde-225cb239bfe3"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {},
+            "response_metadata": {
+              "finish_reason": "tool_calls",
+              "model_name": "gpt-5.4-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
+            },
+            "type": "ai",
+            "id": "lc_run--019d0516-bcb0-7371-bab7-fa1549d9702c",
+            "tool_calls": [
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "GOOGL"
+                },
+                "id": "call_4cBtEdosoGcSPs8h65YewvQe",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 161,
+              "output_tokens": 26,
+              "total_tokens": 187,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "$142.30 (-0.5%)",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "id": "2f05a3b1-399e-4ae4-9e17-55d97a4436c7",
+            "tool_call_id": "call_4cBtEdosoGcSPs8h65YewvQe",
+            "status": "success"
+          },
+          {
+            "content": "The current stock price of GOOGL is $142.30 (down 0.5%).",
+            "additional_kwargs": {},
+            "response_metadata": {
+              "finish_reason": "stop",
+              "model_name": "gpt-5.4-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
+            },
+            "type": "ai",
+            "id": "lc_run--019d0516-c462-7950-a8ab-028425a06127",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 202,
+              "output_tokens": 23,
+              "total_tokens": 225,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      },
+      "integration": "LangChain",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
   "llmSpans": [
     {
       "uuid": "019d0516-c462-7950-a8ab-028425a06127",

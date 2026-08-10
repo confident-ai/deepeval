@@ -1,5 +1,5 @@
 /**
- * Component-level evals inside a test — `expect(callback).toPass(...)`.
+ * Component-level evals inside a test — `expect(golden).toPass(..., { task })`.
  *
  *   npx deepeval test run examples/component-evals/matcher.test.ts
  *
@@ -18,32 +18,33 @@ import { ask } from "./weather-agent";
 test("weather agent answers with the tool's data", async () => {
   const golden = new Golden({ input: "What's the weather in Tokyo?" });
 
-  // The call goes INSIDE expect, so `toPass` evaluates exactly the trace it
-  // produced — no ordering to get wrong. Metrics passed here are TRACE-level;
-  // the staged LLM metric and the tool metric are evaluated too.
-  // `{ golden }` is optional: supply it for expected values / dataset linkage.
-  await expect(() =>
-    nextLlmSpan({ metrics: [new metrics.AnswerRelevancyMetric()] }, () =>
-      ask(golden.input),
-    ),
-  ).toPass([new metrics.TaskCompletionMetric()], { golden });
+  // The golden is the subject; `task` produces the trace judged against it.
+  // Metrics passed here are TRACE-level; the staged LLM metric and the tool
+  // metric are evaluated too.
+  await expect(golden).toPass([new metrics.TaskCompletionMetric()], {
+    task: (g) =>
+      nextLlmSpan({ metrics: [new metrics.AnswerRelevancyMetric()] }, () =>
+        ask(g.input),
+      ),
+  });
 }, 120_000);
 
 /* ---------------------------------------------------------------------------
  * Other shapes.
  *
- * Async callback, and keeping the response for ordinary assertions — `toPass`
- * returns the verdict, not your value, so capture it inside the callback:
+ * Keeping the response for ordinary assertions — capture it inside `task`:
  *
  *   let answer = "";
- *   await expect(async () => {
- *     answer = (await ask(golden.input)).text;
- *   }).toPass([new metrics.TaskCompletionMetric()], { golden });
+ *   await expect(golden).toPass([new metrics.TaskCompletionMetric()], {
+ *     task: async (g) => {
+ *       answer = (await ask(g.input)).text;
+ *     },
+ *   });
  *   expect(answer.toLowerCase()).toContain("tokyo");
  *
- * Span metrics only — no trace-level metric, so no arguments at all:
+ * Span metrics only — empty metrics array, still pass `task`:
  *
- *   await expect(() => ask("What's the weather in Tokyo?")).toPass();
+ *   await expect(golden).toPass([], { task: (g) => ask(g.input) });
  *
  * A plain test case, with no app run involved:
  *
@@ -51,6 +52,6 @@ test("weather agent answers with the tool's data", async () => {
  *   await expect(tc).toPass([new metrics.AnswerRelevancyMetric()]);
  *
  * Rejected on purpose, each with a message telling you the fix:
- *   expect(ask(input))   — the call already started, so its trace is missed
- *   expect(golden)       — ambiguous: there is no way to know which trace
+ *   expect(ask(input))          — the call already started, so its trace is missed
+ *   expect(golden).toPass([...]) — missing `task`; no way to know which trace
  * ------------------------------------------------------------------------- */

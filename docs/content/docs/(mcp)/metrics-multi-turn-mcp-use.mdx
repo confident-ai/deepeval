@@ -2,6 +2,7 @@
 id: metrics-multi-turn-mcp-use
 title: Multi-Turn MCP-Use
 sidebar_label: Multi-Turn MCP-Use
+languages: [python, typescript]
 ---
 <MetricTagsDisplayer multiTurn={true} chatbot={true} referenceless={true} />
 
@@ -12,9 +13,9 @@ The Multi-Turn MCP Use metric is a conversational metric that uses LLM-as-a-judg
 To use the `MultiTurnMCPUseMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](https://www.deepeval.com/docs/evaluation-multiturn-test-cases):
 
 - `turns`
-- `mcp_servers`
+- <Term py="mcp_servers" ts="mcpServers"/>
 
-You will also need to provide `mcp_tools_called`, `mcp_resources_called` and `mcp_prompts_called` inside the turns whenever there is an MCP interaction in your agent's workflow. You can learn more about [creating MCP test cases here](https://www.deepeval.com/docs/evaluation-mcp).
+You will also need to provide <Term py="mcp_tools_called" ts="mcpToolsCalled"/>, <Term py="mcp_resources_called" ts="mcpResourcesCalled"/> and <Term py="mcp_prompts_called" ts="mcpPromptsCalled"/> inside the turns whenever there is an MCP interaction in your agent's workflow. You can learn more about [creating MCP test cases here](https://www.deepeval.com/docs/evaluation-mcp).
 
 You can learn more about how it is calculated [here](#how-is-it-calculated).
 
@@ -22,10 +23,14 @@ You can learn more about how it is calculated [here](#how-is-it-calculated).
 
 The `MultiTurnMCPUseMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluations of MCP based agents.
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval import evaluate
-from deepeval.metrics import MultiTurnMCPUseMetric
 from deepeval.test_case import Turn, ConversationalTestCase, MCPServer
+from deepeval.metrics import MultiTurnMCPUseMetric
+from deepeval import evaluate
 
 convo_test_case = ConversationalTestCase(
     turns=[Turn(role="...", content="..."), Turn(role="...", content="...")],
@@ -40,19 +45,65 @@ metric = MultiTurnMCPUseMetric(threshold=0.5)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { Turn, ConversationalTestCase, MCPServer } from "deepeval/test-case";
+import { MultiTurnMCPUseMetric } from "deepeval/metrics";
+import { evaluate } from "deepeval";
+
+const convoTestCase = new ConversationalTestCase({
+  turns: [new Turn({ role: "user", content: "..." }), new Turn({ role: "assistant", content: "..." })],
+  mcpServers: [new MCPServer({ serverName: "..." })],
+});
+const metric = new MultiTurnMCPUseMetric({ threshold: 0.5 });
+
+// To run metric as a standalone
+// await metric.measure(convoTestCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([convoTestCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
+<Switch>
+
+<Case id="python">
+
 There are **SEVEN** optional parameters when creating a `MultiTurnMCPUseMetric`:
 
-- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+</Case>
+
+<Case id="typescript">
+
+There are **SIX** optional parameters when creating a `MultiTurnMCPUseMetric`:
+
+</Case>
+
+</Switch>
+
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
-- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 ### As a standalone
 
 You can also run the `MultiTurnMCPUseMetric` on a single test case as a standalone, one-off execution.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -60,6 +111,21 @@ You can also run the `MultiTurnMCPUseMetric` on a single test case as a standalo
 metric.measure(convo_test_case)
 print(metric.score, metric.reason)
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+await metric.measure(convoTestCase);
+console.log(metric.score, metric.reason);
+```
+
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
@@ -85,7 +151,7 @@ The `MultiTurnMCPUseMetric` score is calculated according to the following equat
         <>
           Use <code>MultiTurnMCPUseMetric</code> for one score over MCP usage
           spanning several <code>turns</code>. For a single{" "}
-          <code>input</code>/<code>actual_output</code>, use single-turn{" "}
+          <code>input</code>/<Term py="actual_output" ts="actualOutput"/>, use single-turn{" "}
           <code>MCPUseMetric</code> on an <code>LLMTestCase</code>.
         </>
       ),
@@ -95,12 +161,12 @@ The `MultiTurnMCPUseMetric` score is calculated according to the following equat
         "Where do the called primitives go in a `ConversationalTestCase`?",
       answer: (
         <>
-          <code>turns</code> and <code>mcp_servers</code> go on the{" "}
+          <code>turns</code> and <Term py="mcp_servers" ts="mcpServers"/> go on the{" "}
           <a href="https://www.deepeval.com/docs/evaluation-multiturn-test-cases">
             ConversationalTestCase
           </a>
-          , but <code>mcp_tools_called</code>,{" "}
-          <code>mcp_resources_called</code>, and <code>mcp_prompts_called</code>{" "}
+          , but <Term py="mcp_tools_called" ts="mcpToolsCalled"/>,{" "}
+          <Term py="mcp_resources_called" ts="mcpResourcesCalled"/>, and <Term py="mcp_prompts_called" ts="mcpPromptsCalled"/>{" "}
           live <em>inside each turn</em>, not at the top level.
         </>
       ),
@@ -111,7 +177,7 @@ The `MultiTurnMCPUseMetric` score is calculated according to the following equat
       answer: (
         <>
           One bad call lowers the averaged score. Enable{" "}
-          <code>verbose_mode</code> to print per-interaction reasoning and
+          <Term py="verbose_mode" ts="verboseMode"/> to print per-interaction reasoning and
           pinpoint the offending turn.
         </>
       ),

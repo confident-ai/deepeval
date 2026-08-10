@@ -2,6 +2,7 @@
 id: integrations
 title: Integrations Overview
 sidebar_label: Overview
+languages: [python, typescript]
 ---
 
 import { OpenAIMark } from "@site/src/components/BrandMarks";
@@ -13,6 +14,8 @@ DeepEval integrates with the frameworks, model providers, and data stores teams 
 Framework integrations let DeepEval evaluate entire execution traces without manually orchestrating every intermediate step. Use these when you want traces, spans, and component-level evals to line up with the framework your agents, chains, tools, and workflows already run on.
 
 <Cards>
+<Switch>
+<Case id="python">
   <Card
     icon={
       <img
@@ -112,7 +115,12 @@ Framework integrations let DeepEval evaluate entire execution traces without man
   />
   <Card
     icon={
-      <img src="/icons/integrations/crewai.svg" alt="" width={20} height={20} />
+      <img
+        src="/icons/integrations/crewai.svg"
+        alt=""
+        width={20}
+        height={20}
+      />
     }
     title="CrewAI"
     href="/integrations/frameworks/crewai"
@@ -126,12 +134,77 @@ Framework integrations let DeepEval evaluate entire execution traces without man
   />
   <Card
     icon={
-      <img src="/icons/integrations/claude.svg" alt="" width={20} height={20} />
+      <img
+        src="/icons/integrations/claude.svg"
+        alt=""
+        width={20}
+        height={20}
+      />
     }
     title="Anthropic"
     href="/integrations/frameworks/anthropic"
     description="Trace Anthropic model calls inside DeepEval workflows."
   />
+</Case>
+<Case id="typescript">
+  <Card
+    icon={
+      <img
+        src="/icons/integrations/langchain.svg"
+        alt=""
+        width={20}
+        height={20}
+      />
+    }
+    title="LangChain"
+    href="/integrations/frameworks/langchain"
+    description="Trace and evaluate LangChain chains, tools, and agents."
+  />
+  <Card
+    icon={
+      <img
+        src="/icons/integrations/langgraph.svg"
+        alt=""
+        width={20}
+        height={20}
+      />
+    }
+    title="LangGraph"
+    href="/integrations/frameworks/langgraph"
+    description="Trace and evaluate graph-based agent workflows."
+  />
+  <Card
+    title="Mastra"
+    href="/integrations/frameworks/mastra"
+    description="Trace and evaluate Mastra agents, tools, and workflows."
+  />
+  <Card
+    icon={
+      <img
+        src="/icons/integrations/ai-sdk.svg"
+        alt=""
+        width={20}
+        height={20}
+      />
+    }
+    title="Vercel AI SDK"
+    href="/integrations/frameworks/ai-sdk"
+    description="Trace and evaluate generateText, tools, streaming, and embeddings."
+  />
+  <Card
+    icon={<OpenAIMark width={20} height={20} />}
+    title="OpenAI Agents"
+    href="/integrations/frameworks/openai-agents"
+    description="Evaluate workflows built with the OpenAI Agents SDK."
+  />
+  <Card
+    icon={<OpenAIMark width={20} height={20} />}
+    title="OpenAI"
+    href="/integrations/frameworks/openai"
+    description="Trace OpenAI SDK calls and evaluate OpenAI-powered apps."
+  />
+</Case>
+</Switch>
 </Cards>
 
 ## Evaluation Models
@@ -153,8 +226,17 @@ Evaluation model integrations configure the LLM provider DeepEval uses for LLM-a
   <Card title="Portkey" href="/integrations/models/portkey" />
   <Card title="vLLM" href="/integrations/models/vllm" />
   <Card title="LM Studio" href="/integrations/models/lmstudio" />
-  <Card title="LiteLLM" href="/integrations/models/litellm" />
+  <Switch>
+    <Case id="python">
+      <Card title="LiteLLM" href="/integrations/models/litellm" />
+    </Case>
+    <Case id="typescript">
+      <Card title="Vercel AI SDK" href="/integrations/models/ai-sdk" />
+    </Case>
+  </Switch>
 </Cards>
+
+<Only id="python">
 
 ## Vector DBs
 
@@ -172,6 +254,10 @@ Vector database integrations show how to connect retrieval systems to DeepEval s
   <Card title="PGVector" href="/integrations/vector-databases/pgvector" />
 </Cards>
 
+</Only>
+
+<Only id="python">
+
 ## Others
 
 Integrations that don't fit cleanly into the categories above — typically training/eval-time hooks rather than runtime tracing.
@@ -183,3 +269,5 @@ Integrations that don't fit cleanly into the categories above — typically trai
     description="Run DeepEval callbacks during Hugging Face training/evaluation."
   />
 </Cards>
+
+</Only>

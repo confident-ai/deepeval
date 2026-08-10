@@ -121,7 +121,6 @@ class VerdictNode(BaseNode):
         copied.measure(
             test_case=test_case,
             _show_indicator=False,
-            _log_metric_to_confident=False,
         )
         return copied
 
@@ -132,7 +131,6 @@ class VerdictNode(BaseNode):
         await copied.a_measure(
             test_case=test_case,
             _show_indicator=False,
-            _log_metric_to_confident=False,
         )
         return copied
 

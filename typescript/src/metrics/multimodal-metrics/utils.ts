@@ -1,4 +1,4 @@
-import { MLLMImage } from "../../test-case";
+import { MLLMImage } from "@/test-case";
 
 type Part = string | MLLMImage;
 

@@ -1,0 +1,22 @@
+// Compiles separately because Ink is ESM-only while the rest of the package
+// emits CommonJS. See scripts/mark-inspect-ui-esm.mjs.
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "declaration": false,
+    "rootDir": "./src/inspect/ui",
+    "outDir": "./dist/inspect/ui",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/inspect/ui"]
+}

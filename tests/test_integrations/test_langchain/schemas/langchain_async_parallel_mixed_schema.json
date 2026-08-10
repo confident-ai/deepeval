@@ -1,11 +1,12 @@
 {
   "uuid": "df5fe060-0594-44e3-ade5-8a9d9dca2ac4",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019d050e-c539-7751-9b3f-e899adc26031",
       "name": "parallel_mixed_chain",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "startTime": "2026-03-19T07:45:47.321Z",
       "endTime": "2026-03-19T07:45:50.157Z",
       "input": {
@@ -92,7 +93,7 @@
             "status": "success"
           },
           {
-            "content": "Partly cloudy, 65°F.",
+            "content": "Partly cloudy, 65\u00b0F.",
             "additional_kwargs": {
               "refusal": null
             },
@@ -158,10 +159,11 @@
           }
         }
       ],
-      "integration": "LangChain"
+      "integration": "LangChain",
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019d050e-cc40-7261-8186-0c01b9aa5dc5",
@@ -203,7 +205,7 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Partly cloudy, 65°F.",
+        "content": "Partly cloudy, 65\u00b0F.",
         "tool_calls": []
       },
       "model": "gpt-5.4-mini-2025-08-07",
@@ -381,7 +383,7 @@
         "status": "success"
       },
       {
-        "content": "Partly cloudy, 65°F.",
+        "content": "Partly cloudy, 65\u00b0F.",
         "additional_kwargs": {
           "refusal": null
         },

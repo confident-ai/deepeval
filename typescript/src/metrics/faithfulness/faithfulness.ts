@@ -1,7 +1,6 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
@@ -9,25 +8,42 @@ import {
   constructVerboseLogs,
   prettifyList,
   resolveRetrievalContext,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   TruthsSchema,
   ClaimsSchema,
   VerdictsSchema,
   FaithfulnessScoreReasonSchema,
   type FaithfulnessVerdict,
-} from "./schema";
+} from "@/metrics/faithfulness/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "FaithfulnessMetric";
 
+export type FaithfulnessTemplateOverride =
+  MetricTemplateOverride<"FaithfulnessMetric">;
+
 function truthsLimitPhrase(limit?: number): string {
   if (limit == null) return " FACTUAL, undisputed truths";
-  if (limit === 1) return " the single most important FACTUAL, undisputed truth";
+  if (limit === 1)
+    return " the single most important FACTUAL, undisputed truth";
   return ` the ${limit} most important FACTUAL, undisputed truths per document`;
 }
 
+function truthsMultimodalInstruction(multimodal: boolean): string {
+  return multimodal ? " The excerpt may contain both text and images." : "";
+}
+
+function claimsMultimodalInstruction(multimodal: boolean): string {
+  return multimodal
+    ? " The excerpt may contain both text and images, so extract claims from " +
+        "all provided content."
+    : "";
+}
+
 export interface FaithfulnessMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
@@ -35,6 +51,7 @@ export interface FaithfulnessMetricOptions {
   showIndicator?: boolean;
   truthsExtractionLimit?: number;
   penalizeAmbiguousClaims?: boolean;
+  evaluationTemplate?: FaithfulnessTemplateOverride;
 }
 
 /**
@@ -51,12 +68,16 @@ export class FaithfulnessMetric extends BaseMetric {
 
   constructor(options: FaithfulnessMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
@@ -88,7 +109,7 @@ export class FaithfulnessMetric extends BaseMetric {
       this.verdicts = await this.generateVerdicts();
       this.score = this.calculateScore();
       this.reason = await this.generateReason();
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Truths (limit=${this.truthsExtractionLimit}):\n${prettifyList(this.truths)}`,
@@ -103,19 +124,19 @@ export class FaithfulnessMetric extends BaseMetric {
   }
 
   private async generateTruths(retrievalContext: string[]): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_truths", {
+    const prompt = this.getPrompt("generate_truths", {
       retrieval_context: retrievalContext.join("\n\n"),
       limit: truthsLimitPhrase(this.truthsExtractionLimit),
-      multimodal_instruction: "",
+      multimodal_instruction: truthsMultimodalInstruction(this.multimodal),
     });
     const { truths } = await generateWithSchema(this, prompt, TruthsSchema);
     return truths;
   }
 
   private async generateClaims(actualOutput: string): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_claims", {
+    const prompt = this.getPrompt("generate_claims", {
       actual_output: actualOutput,
-      multimodal_instruction: "",
+      multimodal_instruction: claimsMultimodalInstruction(this.multimodal),
     });
     const { claims } = await generateWithSchema(this, prompt, ClaimsSchema);
     return claims;
@@ -123,7 +144,7 @@ export class FaithfulnessMetric extends BaseMetric {
 
   private async generateVerdicts(): Promise<FaithfulnessVerdict[]> {
     if (this.claims.length === 0) return [];
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+    const prompt = this.getPrompt("generate_verdicts", {
       claims: this.claims,
       retrieval_context: this.truths.join("\n\n"),
     });
@@ -140,7 +161,7 @@ export class FaithfulnessMetric extends BaseMetric {
       else if (vd === "idk" && this.penalizeAmbiguousClaims)
         contradictions.push(`(Ambiguous) ${v.reason}`);
     }
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       contradictions,
       score: (this.score ?? 0).toFixed(2),
     });
@@ -162,13 +183,7 @@ export class FaithfulnessMetric extends BaseMetric {
       if (this.penalizeAmbiguousClaims && vd === "idk") count--;
     }
     const score = count / total;
-    return this.strictMode && score < this.threshold ? 0 : score;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
+    return this.applyStrictMode(score);
   }
 
   get name(): string {

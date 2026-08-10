@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union, Tuple
+from typing import Dict, List, Optional, Union, Tuple, Type
 import asyncio
 import itertools
 import textwrap
@@ -25,6 +25,7 @@ from deepeval.metrics.turn_contextual_relevancy.schema import (
     ContextualRelevancyScoreReason,
     InteractionContextualRelevancyScore,
 )
+from deepeval.templates import make_template_class
 
 
 def _contextual_relevancy_verdict_kwargs(multimodal: bool) -> Dict[str, str]:
@@ -57,6 +58,11 @@ def _contextual_relevancy_verdict_kwargs(multimodal: bool) -> Dict[str, str]:
     }
 
 
+TurnContextualRelevancyTemplate = make_template_class(
+    "TurnContextualRelevancyMetric"
+)
+
+
 class TurnContextualRelevancyMetric(BaseConversationalMetric):
     _required_test_case_params: List[MultiTurnParams] = [
         MultiTurnParams.ROLE,
@@ -74,6 +80,9 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         verbose_mode: bool = False,
         window_size: int = 10,
         flaky: bool = False,
+        evaluation_template: Type[
+            TurnContextualRelevancyTemplate
+        ] = TurnContextualRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -84,13 +93,13 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         self.verbose_mode = verbose_mode
         self.flaky = flaky
         self.window_size = window_size
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case,
@@ -116,7 +125,6 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -154,7 +162,6 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_conversational_test_case_params(
             test_case,

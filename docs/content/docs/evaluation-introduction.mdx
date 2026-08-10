@@ -2,6 +2,7 @@
 id: evaluation-introduction
 title: Introduction to LLM Evals
 sidebar_label: Introduction
+languages: [python, typescript]
 ---
 
 ## Quick Summary
@@ -38,14 +39,30 @@ There are **TWO** types of LLM evaluations in `deepeval`:
 
 - [Component-level evaluation](/docs/evaluation-component-level-llm-evals): The individual inner workings of your LLM system.
 
-Both can be done using either `deepeval test run` in CI/CD pipelines, or via the `evaluate()` function in Python scripts.
+Both can be done using either <Term py="deepeval test run" ts="npx deepeval test run"/> in CI/CD pipelines, or via the `evaluate()` function in your scripts.
 
 :::note
-Your test cases will typically be in a single python file, and executing them will be as easy as running `deepeval test run`:
+Your test cases will typically be in a single <Term py="test_example.py" ts="example.test.ts"/> file, and executing them will be as easy as running one command:
 
-```
+<Switch>
+
+<Case id="python">
+
+```bash
 deepeval test run test_example.py
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+npx deepeval test run example.test.ts
+```
+
+</Case>
+
+</Switch>
 
 :::
 
@@ -57,17 +74,39 @@ Running an LLM evaluation creates a **test run** — a collection of test cases 
 
 `deepeval` offers 30+ evaluation metrics, most of which are evaluated using LLMs (visit the [metrics section](/docs/metrics-introduction#types-of-metrics) to learn why).
 
-```
+<Switch>
+
+<Case id="python">
+
+```python
 from deepeval.metrics import AnswerRelevancyMetric
 
 answer_relevancy_metric = AnswerRelevancyMetric()
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+
+const answerRelevancyMetric = new AnswerRelevancyMetric();
+```
+
+</Case>
+
+</Switch>
 
 You'll need to create a test case to run `deepeval`'s metrics.
 
 ## Test Cases
 
 In `deepeval`, a test case represents an [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) and allows you to use evaluation metrics you have defined to unit test LLM applications.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -79,7 +118,29 @@ test_case = LLMTestCase(
 )
 ```
 
-In this example, `input` mimics an user interaction with a RAG-based LLM application, where `actual_output` is the output of your LLM application and `retrieval_context` is the retrieved nodes in your RAG pipeline. Creating a test case allows you to evaluate using `deepeval`'s default metrics:
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { LLMTestCase } from "deepeval/test-case";
+
+const testCase = new LLMTestCase({
+  input: "Who is the current president of the United States of America?",
+  actualOutput: "Joe Biden",
+  retrievalContext: ["Joe Biden serves as the current president of America."],
+});
+```
+
+</Case>
+
+</Switch>
+
+In this example, `input` mimics an user interaction with a RAG-based LLM application, where <Term py="actual_output" ts="actualOutput"/> is the output of your LLM application and <Term py="retrieval_context" ts="retrievalContext"/> is the retrieved nodes in your RAG pipeline. Creating a test case allows you to evaluate using `deepeval`'s default metrics:
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -96,14 +157,41 @@ answer_relevancy_metric.measure(test_case)
 print(answer_relevancy_metric.score)
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+
+const answerRelevancyMetric = new AnswerRelevancyMetric();
+const testCase = new LLMTestCase({
+  input: "Who is the current president of the United States of America?",
+  actualOutput: "Joe Biden",
+  retrievalContext: ["Joe Biden serves as the current president of America."],
+});
+
+await answerRelevancyMetric.measure(testCase);
+console.log(answerRelevancyMetric.score);
+```
+
+</Case>
+
+</Switch>
+
 A test case **passes** only if every metric that carries a verdict succeeds. Two flags let you control which verdicts count:
 
-- **Metrics with `threshold=None`** still compute scores and reasons, but have no pass/fail opinion and never decide a test case's status. Because every test case must end up passing or failing, each evaluation requires at least one non-flaky metric with a `threshold`.
-- **Flaky test cases and metrics** (`flaky=True`) have their results recorded and reported as normal, but their failures don't block anything: a flaky metric's failure never fails its test case, and a failing flaky test case makes `assert_test()` print a warning instead of raising.
+- **Metrics with <Term py="threshold=None" ts="threshold: null"/>** still compute scores and reasons, but have no pass/fail opinion and never decide a test case's status. Because every test case must end up passing or failing, each evaluation requires at least one non-flaky metric with a `threshold`.
+- **Flaky test cases and metrics** (<Term py="flaky=True" ts="flaky: true"/>) have their results recorded and reported as normal, but their failures don't block anything: a flaky metric's failure never fails its test case, and a failing flaky test case makes <Term py="assert_test()" ts="expect(testCase).toPass()"/> print a warning instead of raising.
 
 ## Datasets
 
 Datasets in `deepeval` is a collection of goldens. It provides a centralized interface for you to evaluate a collection of test cases using one or multiple metrics.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -125,11 +213,50 @@ for golden in dataset.goldens:
 evaluate(test_cases=dataset.test_cases, metrics=[answer_relevancy_metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+import { evaluate } from "deepeval";
+
+const answerRelevancyMetric = new AnswerRelevancyMetric();
+const dataset = new EvaluationDataset({
+  goldens: [
+    new Golden({
+      input: "Who is the current president of the United States of America?",
+    }),
+  ],
+});
+
+for (const golden of dataset.goldens as Golden[]) {
+  dataset.addTestCase(
+    new LLMTestCase({
+      input: golden.input,
+      actualOutput: await yourLlmApp(golden.input),
+    }),
+  );
+}
+
+await evaluate(dataset.testCases, [answerRelevancyMetric]);
+```
+
+</Case>
+
+</Switch>
+
 :::note
 You don't need to create an evaluation dataset to evaluate individual test cases. Visit the [test cases section](/docs/evaluation-test-cases#assert-a-test-case) to learn how to assert individual test cases.
 :::
 
 ## Synthesizer
+
+<Switch>
+
+<Case id="python">
 
 In `deepeval`, the `Synthesizer` allows you to generate synthetic datasets. This is especially helpful if you don't have production data or you don't have a golden dataset to evaluate with.
 
@@ -149,7 +276,25 @@ dataset = EvaluationDataset(goldens=goldens)
 `deepeval`'s `Synthesizer` is highly customizable, and you can learn more about it [here.](/docs/golden-synthesizer)
 :::
 
-## Evaluating With Pytest
+</Case>
+
+<Case id="typescript">
+
+<NotImplemented id="typescript" feature="Synthesizer">
+
+It generates synthetic goldens for you when you have neither production data nor a golden dataset. Until it lands, build your `EvaluationDataset` from goldens you write by hand or [pull one from Confident AI](/docs/evaluation-datasets) — everything else on this page works the same.
+
+</NotImplemented>
+
+</Case>
+
+</Switch>
+
+## Unit Testing in CI/CD
+
+<Switch>
+
+<Case id="python">
 
 :::caution
 Although `deepeval` integrates with Pytest, we highly recommend you to **AVOID** executing `LLMTestCase`s directly via the `pytest` command to avoid any unexpected errors.
@@ -178,7 +323,7 @@ def test_customer_chatbot(test_case: LLMTestCase):
 
 And run the test file in the CLI using `deepeval test run`:
 
-```python
+```bash
 deepeval test run test_example.py
 ```
 
@@ -188,15 +333,70 @@ There are **TWO** mandatory and **ONE** optional parameter when calling the `ass
 - `metrics`: a list of metrics of type `BaseMetric`
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
 
-You can find the full documentation on `deepeval test run`, for both [end-to-end](/docs/evaluation-end-to-end-llm-evals#use-deepeval-test-run-in-cicd-pipelines) and [component-level](/docs/evaluation-component-level-llm-evals#use-deepeval-test-run-in-cicd-pipelines) evaluation by clicking on their respective links.
-
 :::info
 `@pytest.mark.parametrize` is a decorator offered by Pytest. It simply loops through your `EvaluationDataset` to evaluate each test case individually.
 :::
 
-You can include the `deepeval test run` command as a step in a `.yaml` file in your CI/CD workflows to run pre-deployment checks on your LLM application.
+</Case>
 
-## Evaluating Without Pytest
+<Case id="typescript">
+
+`deepeval` runs evaluations as Vitest tests through the `toPass()` matcher. Simply create a test file:
+
+```typescript title="example.test.ts"
+import { it, expect } from "vitest";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+import "deepeval/vitest";
+
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "..." })],
+});
+
+for (const golden of dataset.goldens as Golden[]) {
+  // convert golden to test case
+  dataset.addTestCase(
+    new LLMTestCase({ input: golden.input, actualOutput: "..." }),
+  );
+}
+
+it.each(dataset.testCases)("AI app stays relevant #%$", async (testCase) => {
+  await expect(testCase).toPass([new AnswerRelevancyMetric()]);
+});
+```
+
+And run the test file in the CLI using `npx deepeval test run`:
+
+```bash
+npx deepeval test run example.test.ts
+```
+
+The test case goes to `expect()`, and `toPass()` takes one argument:
+
+- `metrics`: an array of metrics of type `BaseMetric`, run concurrently against the test case
+
+:::info
+`it.each` is offered by Vitest. It loops through your `EvaluationDataset` to register one test per test case, and `%$` in the title interpolates that case's position in the dataset so each test is named uniquely.
+:::
+
+:::info
+Importing `deepeval/vitest` registers the `toPass()` matcher. `npx deepeval test run` injects it for you, so the import only matters when you run the same file with `vitest` directly.
+:::
+
+</Case>
+
+</Switch>
+
+You can find the full documentation on running evals in CI/CD, for both [end-to-end](/docs/evaluation-end-to-end-llm-evals#use-deepeval-test-run-in-cicd-pipelines) and [component-level](/docs/evaluation-component-level-llm-evals#use-deepeval-test-run-in-cicd-pipelines) evaluation by clicking on their respective links.
+
+You can include the command as a step in a `.yaml` file in your CI/CD workflows to run pre-deployment checks on your LLM application.
+
+## Evaluating In Scripts
+
+<Switch>
+
+<Case id="python">
 
 Alternately, you can use `deepeval`'s `evaluate` function. This approach avoids the CLI (if you're in a notebook environment), and allows for parallel test execution as well.
 
@@ -223,6 +423,46 @@ There are **TWO** mandatory and **SIX** optional parameters when calling the `ev
 - [Optional] `error_config`: an instance of type `ErrorConfig` that allows you to [customize how to handle errors](/docs/evaluation-flags-and-configs#error-configs) during evaluation. Defaulted to the default `ErrorConfig` values.
 - [Optional] `cache_config`: an instance of type `CacheConfig` that allows you to [customize the caching behavior](/docs/evaluation-flags-and-configs#cache-configs) during evaluation. Defaulted to the default `CacheConfig` values.
 
+</Case>
+
+<Case id="typescript">
+
+Alternately, you can use `deepeval`'s `evaluate` function. This approach avoids the CLI, and still runs your metrics concurrently.
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+import { evaluate } from "deepeval";
+
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "..." })],
+});
+
+for (const golden of dataset.goldens as Golden[]) {
+  // convert golden to test case
+  dataset.addTestCase(
+    new LLMTestCase({ input: golden.input, actualOutput: "..." }),
+  );
+}
+
+await evaluate(dataset.testCases, [new AnswerRelevancyMetric()]);
+```
+
+There are **TWO** mandatory arguments and **FIVE** optional options when calling the `evaluate()` function:
+
+- `testCases`: an array of `LLMTestCase`s **OR** `ConversationalTestCase`s. You cannot evaluate `LLMTestCase`s and `ConversationalTestCase`s in the same test run.
+- `metrics`: an array of metrics of type `BaseMetric`.
+- [Optional] `asyncConfig`: an object that lets you cap concurrency through `maxConcurrent`. Defaulted to `20`.
+- [Optional] `displayConfig`: an object that controls what is displayed to the console during evaluation, and whether the report is also written to a file.
+- [Optional] `errorConfig`: an object that controls how errors are handled, through `ignoreErrors` and `skipOnMissingParams`.
+- [Optional] `cacheConfig`: an object that controls caching, through `writeCache` and `useCache`.
+- [Optional] `official`: a boolean which when set to `true`, marks this as the official test run for the dataset on Confident AI.
+
+</Case>
+
+</Switch>
+
 You can find the full documentation on `evaluate()`, for both [end-to-end](/docs/evaluation-end-to-end-llm-evals#use-evaluate-in-python-scripts) and [component-level](/docs/evaluation-component-level-llm-evals#use-evaluate-in-python-scripts) evaluation by clicking on their respective links.
 
 :::tip
@@ -232,6 +472,10 @@ You can also replace `dataset` with a list of test cases, as shown in the [test 
 ## Evaluating Nested Components
 
 You can also run metrics on nested components by setting up tracing in `deepeval`, and requires under 10 lines of code:
+
+<Switch>
+
+<Case id="python">
 
 ```python showLineNumbers {8}
 from deepeval.test_case import LLMTestCase
@@ -246,10 +490,43 @@ def complete(query: str):
   response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message.content
 
   update_current_span(
-    test_case=LLMTestCase(input=query, output=response)
+    test_case=LLMTestCase(input=query, actual_output=response)
   )
   return response
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript showLineNumbers {8}
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+import OpenAI from "openai";
+
+const client = new OpenAI();
+
+const complete = observe({
+  metrics: [new AnswerRelevancyMetric()],
+  fn: async (query: string) => {
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: query }],
+    });
+    const response = completion.choices[0].message.content ?? "";
+
+    updateCurrentSpan({
+      testCase: new LLMTestCase({ input: query, actualOutput: response }),
+    });
+    return response;
+  },
+});
+```
+
+</Case>
+
+</Switch>
 
 This is very useful especially if you:
 
@@ -257,7 +534,7 @@ This is very useful especially if you:
 - Wish to evaluate multiple components at once
 - Don't want to rewrite your codebase just to bubble up returned variables to create an `LLMTestCase`
 
-By default, `deepeval` will not run any metrics when you're running your LLM application outside of `evaluate()` or `assert_test()`. For the full guide on evaluating with tracing, visit [this page.](/docs/evaluation-component-level-llm-evals)
+By default, `deepeval` will not run any metrics when you're running your LLM application outside of `evaluate()` or <Term py="assert_test()" ts="expect(testCase).toPass()"/>. For the full guide on evaluating with tracing, visit [this page.](/docs/evaluation-component-level-llm-evals)
 
 ## FAQs
 
@@ -268,7 +545,8 @@ By default, `deepeval` will not run any metrics when you're running your LLM app
       answer: (
         <>
           A <a href="/docs/evaluation-test-cases">test case</a> (the{" "}
-          <code>input</code> and <code>actual_output</code> to score), one or
+          <code>input</code> and{" "}
+          <Term py="actual_output" ts="actualOutput" /> to score), one or
           more <a href="/docs/metrics-introduction">metrics</a>, and optionally
           an <a href="/docs/evaluation-datasets">evaluation dataset</a> to run
           those metrics across many test cases at once.
@@ -286,9 +564,8 @@ By default, `deepeval` will not run any metrics when you're running your LLM app
           <a href="/docs/evaluation-component-level-llm-evals">
             component-level
           </a>{" "}
-          (via the <code>@observe</code> decorator) when you need to score
-          individual retrievers, tools, or agents to see exactly where things
-          break.
+          (via <code>observe</code>) when you need to score individual
+          retrievers, tools, or agents to see exactly where things break.
         </>
       ),
     },
@@ -307,25 +584,26 @@ By default, `deepeval` will not run any metrics when you're running your LLM app
     },
     {
       question:
-        "Should I run evals with `deepeval test run` or the `evaluate()` function?",
+        "Should I run evals in CI/CD or with the `evaluate()` function?",
       answer: (
         <>
-          Use <code>deepeval test run</code> with <code>pytest</code> when you
-          want evals gated in CI/CD, and <code>evaluate()</code> for scripts or
-          notebooks where you want parallel execution without the CLI. Both run
-          the same metrics on the same test cases.
+          Use{" "}
+          <Term py="deepeval test run" ts="npx deepeval test run" /> when you
+          want evals gated in CI/CD, and <code>evaluate()</code> for scripts
+          where you want parallel execution without the CLI. Both run the same
+          metrics on the same test cases.
         </>
       ),
     },
     {
       question:
-        "How does `deepeval` score outputs without an exact match to `expected_output`?",
+        "How does `deepeval` score outputs without an exact match to the expected output?",
       answer: (
         <>
           Most of <code>deepeval</code>'s 30+ metrics use an LLM judge with
           techniques like G-Eval, DAG, and QAG rather than string matching, so
-          a correct answer phrased differently from the <code>expected_output</code>{" "}
-          can still pass.
+          a correct answer phrased differently from the{" "}
+          <Term py="expected_output" ts="expectedOutput" /> can still pass.
         </>
       ),
     },

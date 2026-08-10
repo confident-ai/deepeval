@@ -1,11 +1,12 @@
 {
   "uuid": "3af5ac6a-53dc-48cf-a3a9-97a6855b0a15",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019d050e-189d-7823-bd09-bc78a9ebe110",
       "name": "single_tool_chain",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "startTime": "2026-03-19T07:45:03.134Z",
       "endTime": "2026-03-19T07:45:06.971Z",
       "input": {
@@ -92,7 +93,7 @@
             "status": "success"
           },
           {
-            "content": "San Francisco: Foggy, 58°F.",
+            "content": "San Francisco: Foggy, 58\u00b0F.",
             "additional_kwargs": {
               "refusal": null
             },
@@ -158,10 +159,11 @@
           }
         }
       ],
-      "integration": "LangChain"
+      "integration": "LangChain",
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019d050e-23ff-7493-9700-71c1398ea680",
@@ -191,7 +193,7 @@
       ],
       "output": {
         "role": "AI",
-        "content": "San Francisco: Foggy, 58°F.",
+        "content": "San Francisco: Foggy, 58\u00b0F.",
         "tool_calls": []
       },
       "model": "gpt-5.4-mini-2025-08-07",
@@ -361,7 +363,7 @@
         "status": "success"
       },
       {
-        "content": "San Francisco: Foggy, 58°F.",
+        "content": "San Francisco: Foggy, 58\u00b0F.",
         "additional_kwargs": {
           "refusal": null
         },

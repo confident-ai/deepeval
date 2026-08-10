@@ -1,7 +1,7 @@
 import {
   DeepEvalOpenAICompatibleModel,
   type OpenAICompatibleModelOptions,
-} from "../openai-compatible-model";
+} from "@/models/openai-compatible-model";
 
 export type LocalModelOptions = OpenAICompatibleModelOptions;
 

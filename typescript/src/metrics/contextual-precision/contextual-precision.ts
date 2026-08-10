@@ -1,25 +1,29 @@
-import { BaseMetric } from "../base-metrics";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import {
   LLMTestCase,
   SingleTurnParams,
   RetrievedContextData,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+} from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   VerdictsSchema,
   ContextualPrecisionScoreReasonSchema,
   type ContextualPrecisionVerdict,
-} from "./schema";
+} from "@/metrics/contextual-precision/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
+import { idRetrievalContext } from "@/metrics/retrieval-context-display";
 
 const TEMPLATE_CLASS = "ContextualPrecisionMetric";
+
+export type ContextualPrecisionTemplateOverride =
+  MetricTemplateOverride<"ContextualPrecisionMetric">;
 
 /**
  * Collapse a `retrievalContext` into evaluation documents: `RetrievedContextData`
@@ -56,12 +60,14 @@ function groupRetrievalContexts(
 }
 
 export interface ContextualPrecisionMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: ContextualPrecisionTemplateOverride;
 }
 
 /**
@@ -74,12 +80,16 @@ export class ContextualPrecisionMetric extends BaseMetric {
 
   constructor(options: ContextualPrecisionMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.RETRIEVAL_CONTEXT,
@@ -108,7 +118,7 @@ export class ContextualPrecisionMetric extends BaseMetric {
       );
       this.score = this.calculateScore();
       this.reason = await this.generateReason(testCase.input);
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Verdicts:\n${prettifyList(this.verdicts)}`,
@@ -126,12 +136,16 @@ export class ContextualPrecisionMetric extends BaseMetric {
     retrievalContext: string[],
   ): Promise<ContextualPrecisionVerdict[]> {
     const n = retrievalContext.length;
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+    const prompt = this.getPrompt("generate_verdicts", {
       input,
       expected_output: expectedOutput,
       document_count_str: ` (${n} document${n > 1 ? "s" : ""})`,
-      context_to_display: retrievalContext,
-      multimodal_note: "",
+      context_to_display: this.multimodal
+        ? idRetrievalContext(retrievalContext)
+        : retrievalContext,
+      multimodal_note: this.multimodal
+        ? " (which can be text or an image)"
+        : "",
     });
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
@@ -143,7 +157,7 @@ export class ContextualPrecisionMetric extends BaseMetric {
       verdict: v.verdict,
       reason: v.reason,
     }));
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       input,
       verdicts,
       score: (this.score ?? 0).toFixed(2),
@@ -173,13 +187,7 @@ export class ContextualPrecisionMetric extends BaseMetric {
     }
     if (relevantCount === 0) return 0;
     const score = sumWeightedPrecision / relevantCount;
-    return this.strictMode && score < this.threshold ? 0 : score;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
+    return this.applyStrictMode(score);
   }
 
   get name(): string {

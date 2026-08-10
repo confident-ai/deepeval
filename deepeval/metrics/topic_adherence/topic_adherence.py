@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Type
 
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -19,6 +19,10 @@ from deepeval.metrics.topic_adherence.schema import (
     QAPair,
     TopicAdherenceReason,
 )
+from deepeval.templates import make_template_class
+
+
+TopicAdherenceTemplate = make_template_class("TopicAdherenceMetric")
 
 
 class TopicAdherenceMetric(BaseConversationalMetric):
@@ -38,6 +42,9 @@ class TopicAdherenceMetric(BaseConversationalMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         flaky: bool = False,
+        evaluation_template: Type[
+            TopicAdherenceTemplate
+        ] = TopicAdherenceTemplate,
     ):
         self.relevant_topics = relevant_topics
         self.threshold = 1 if strict_mode else threshold
@@ -48,13 +55,13 @@ class TopicAdherenceMetric(BaseConversationalMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case,
@@ -77,7 +84,6 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -147,7 +153,6 @@ class TopicAdherenceMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case,

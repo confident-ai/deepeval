@@ -376,7 +376,7 @@ def stitch_truncated_title(title: str, body: str) -> str:
 
 
 def sanitize_for_multimodal_sentinel(prompt: str) -> str:
-    # DeepEval's GPTModel treats [DEEPEVAL:IMAGE:...] and [DEEPEVAL:PDF:...] tokens in a
+    # DeepEval's OpenAIModel treats [DEEPEVAL:IMAGE:...] and [DEEPEVAL:PDF:...] tokens in a
     # plain-text prompt as real image/PDF inputs (see check_if_multimodal). PR titles,
     # bodies, and diffs can contain these tokens literally, which makes the model try to
     # load a bogus URL. Break the sentinel so it can never be parsed as multimodal.
@@ -459,9 +459,9 @@ def fetch_user_display(login: str) -> Tuple[str, str]:
 
 
 def get_ai_model(model_name: str):
-    from deepeval.models import GPTModel
+    from deepeval.models import OpenAIModel
 
-    return GPTModel(model=model_name)
+    return OpenAIModel(model=model_name)
 
 
 def build_ai_prompt(*, title: str, body: str) -> str:
@@ -548,7 +548,7 @@ def ai_release_note_for_pr(
     )
     try:
         parsed, cost = model.generate(prompt, schema=AiReleaseNote)
-        # GPTModel returns (BaseModel, cost) when schema is provided
+        # OpenAIModel returns (BaseModel, cost) when schema is provided
         assert isinstance(parsed, AiReleaseNote)
     except Exception as e:
         raise RuntimeError(

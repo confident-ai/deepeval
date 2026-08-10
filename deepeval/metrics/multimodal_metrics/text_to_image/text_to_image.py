@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Tuple, Union, Type
 import math
 import textwrap
 
@@ -19,11 +19,15 @@ from deepeval.metrics.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.multimodal_metrics.text_to_image.schema import ReasonScore
 from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.templates import make_template_class
 
 required_params: List[SingleTurnParams] = [
     SingleTurnParams.INPUT,
     SingleTurnParams.ACTUAL_OUTPUT,
 ]
+
+
+TextToImageTemplate = make_template_class("TextToImageMetric")
 
 
 class TextToImageMetric(BaseMetric):
@@ -35,6 +39,7 @@ class TextToImageMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         flaky: bool = False,
+        evaluation_template: Type[TextToImageTemplate] = TextToImageTemplate,
     ):
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -43,6 +48,7 @@ class TextToImageMetric(BaseMetric):
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,

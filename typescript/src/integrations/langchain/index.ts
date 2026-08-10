@@ -1,1 +1,1 @@
-export { DeepEvalCallbackHandler } from "./callback-handler";
+export { DeepEvalCallbackHandler } from "@/integrations/langchain/callback-handler";

@@ -1,4 +1,4 @@
-import { ConversationalTestCase, MultiTurnParams } from "../../test-case";
+import { ConversationalTestCase, MultiTurnParams } from "@/test-case";
 
 /** Display labels for conversational eval params (Python CONVERSATIONAL_G_EVAL_PARAMS). */
 export const CONVERSATIONAL_G_EVAL_PARAMS: Partial<

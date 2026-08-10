@@ -1,0 +1,113 @@
+{
+  "$comment": [
+    "The known, deliberate differences between Python's Settings (deepeval/config/settings.py)",
+    "and the TypeScript Zod schema (typescript/src/config/schema.ts).",
+    "`npm run check:env-parity` recomputes the difference and fails when it stops matching this file,",
+    "so drifting apart is a CI failure rather than something discovered months later.",
+    "Adding a variable to one SDK means either adding it to the other or recording the reason here."
+  ],
+  "pythonOnly": {
+    "blockedOnSubsystem": {
+      "$comment": "Would be ported, but the feature they configure does not exist in TS yet.",
+      "embeddings": [
+        "AZURE_EMBEDDING_DEPLOYMENT_NAME",
+        "AZURE_EMBEDDING_MODEL_NAME",
+        "LOCAL_EMBEDDING_API_KEY",
+        "LOCAL_EMBEDDING_BASE_URL",
+        "LOCAL_EMBEDDING_MODEL_NAME",
+        "USE_AZURE_OPENAI_EMBEDDING",
+        "USE_LOCAL_EMBEDDINGS"
+      ],
+      "timeoutSystem": [
+        "DEEPEVAL_DISABLE_TIMEOUTS",
+        "DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE",
+        "DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE",
+        "DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE"
+      ],
+      "displayTruncation": [
+        "DEEPEVAL_MAXLEN_LONG",
+        "DEEPEVAL_MAXLEN_MEDIUM",
+        "DEEPEVAL_MAXLEN_SHORT",
+        "DEEPEVAL_MAXLEN_TINY",
+        "DEEPEVAL_SHORTEN_DEFAULT_MAXLEN",
+        "DEEPEVAL_SHORTEN_SUFFIX"
+      ],
+      "litellm": [
+        "LITELLM_API_BASE",
+        "LITELLM_API_KEY",
+        "LITELLM_MODEL_NAME",
+        "LITELLM_PROXY_API_BASE",
+        "LITELLM_PROXY_API_KEY",
+        "USE_LITELLM"
+      ],
+      "lmStudioAndVllm": {
+        "$comment": "Both are OpenAI-compatible servers already reachable through LOCAL_MODEL_BASE_URL. Kept listed so the decision is explicit rather than an oversight.",
+        "names": [
+          "LM_STUDIO_API_KEY",
+          "LM_STUDIO_MODEL_NAME",
+          "VLLM_API_KEY",
+          "VLLM_MODEL_NAME"
+        ]
+      },
+      "remoteImageFetching": {
+        "$comment": "TS never downloads remote images: mllm-image.ts leaves http(s) URLs unfetched and passes them straight to the provider, so there is nothing to time out.",
+        "names": [
+          "MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS",
+          "MEDIA_IMAGE_READ_TIMEOUT_SECONDS"
+        ]
+      },
+      "other": ["DEEPEVAL_MAX_CONCURRENT_DOC_PROCESSING"]
+    },
+    "neverPorting": {
+      "$comment": "Will not be ported. Each needs a reason, not just a listing.",
+      "retryPolicy": {
+        "$comment": "Python's knobs configure a retry layer wrapping LLM provider calls, built on tenacity plus 1000+ lines of per-provider exception taxonomy. TS delegates to each provider SDK's own retry (openai and @anthropic-ai/sdk default to 2), which is what Python does when a provider is listed in DEEPEVAL_SDK_RETRY_PROVIDERS. Adding a deepeval-level retry without also zeroing the SDK's would nest the two layers and multiply the attempt count.",
+        "names": [
+          "DEEPEVAL_RETRY_CAP_SECONDS",
+          "DEEPEVAL_RETRY_EXP_BASE",
+          "DEEPEVAL_RETRY_INITIAL_SECONDS",
+          "DEEPEVAL_RETRY_JITTER",
+          "DEEPEVAL_RETRY_MAX_ATTEMPTS",
+          "DEEPEVAL_SDK_RETRY_PROVIDERS"
+        ]
+      },
+      "pythonRuntimeSpecific": {
+        "$comment": "Configure CPython, CUDA, or HuggingFace behavior that has no Node equivalent.",
+        "names": [
+          "CUDA_LAUNCH_BLOCKING",
+          "CUDA_VISIBLE_DEVICES",
+          "DEEPEVAL_DEBUG_ASYNC",
+          "DEEPEVAL_TIMEOUT_SEMAPHORE_WARN_AFTER_SECONDS",
+          "DEEPEVAL_TIMEOUT_THREAD_LIMIT",
+          "PYTHONPATH",
+          "TOKENIZERS_PARALLELISM",
+          "TRANSFORMERS_NO_ADVISORY_WARNINGS"
+        ]
+      },
+      "noFeatureToOptOutOf": {
+        "$comment": "cli/version.ts only reads package.json, so there is no update check to suppress. Revisit if TS gains one.",
+        "names": ["DEEPEVAL_UPDATE_WARNING_OPT_IN"]
+      }
+    }
+  },
+  "typescriptOnly": {
+    "$comment": "Accepted by TS with no Python counterpart.",
+    "names": ["GEMINI_API_KEY", "MOONSHOT_BASE_URL"],
+    "reasons": {
+      "GEMINI_API_KEY": "Accepted as an alias of GOOGLE_API_KEY because the Google SDKs read both.",
+      "MOONSHOT_BASE_URL": "Python hardcodes Moonshot's base URL; TS lets it be overridden."
+    }
+  },
+  "outsideBothSchemas": {
+    "$comment": "Read directly from process.env rather than declared as settings, so they are invisible to `deepeval settings` and `deepeval diagnose` by design. Internal, run-scoped plumbing set by the CLI for its own workers, not intended for users.",
+    "typescript": [
+      "DEEPEVAL",
+      "DEEPEVAL_DISPLAY",
+      "DEEPEVAL_MAX_CONCURRENT",
+      "DEEPEVAL_OFFICIAL",
+      "DEEPEVAL_RESULTS_DIR",
+      "CONFIDENT_TRACING_ENABLED"
+    ],
+    "python": ["DEEPEVAL_DISABLE_LEGACY_KEYFILE", "DEEPEVAL_NO_INSPECT_PROMPT"]
+  }
+}

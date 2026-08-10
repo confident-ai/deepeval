@@ -1,15 +1,16 @@
-import { LLMTestCase } from "../test-case";
-import { asTestCaseString, asToolCalls } from "../test-case/utils";
-import { Golden } from "../dataset/golden";
+import { LLMTestCase } from "@/test-case";
+import { asTestCaseString, asToolCalls } from "@/test-case/utils";
+import { Golden } from "@/dataset/golden";
 import {
   BaseSpan,
   Trace,
   TraceSpanStatus,
   traceManager,
-} from "../tracing/tracing";
-import { MetricData, EvaluatedCase, TestResult } from "./types";
-import { ErrorConfig, DEFAULT_ERROR_CONFIG } from "./configs";
-import { runMetric } from "./evaluate";
+} from "@/tracing/tracing";
+import { MetricData, EvaluatedCase, TestResult } from "@/evaluate/types";
+import { ErrorConfig, DEFAULT_ERROR_CONFIG } from "@/evaluate/configs";
+import { runMetric } from "@/evaluate/evaluate";
+import { withComponentScope } from "@/telemetry";
 
 /** Stringify a span's input/output the way the metrics expect (objects → JSON). */
 const asString = asTestCaseString;
@@ -83,7 +84,6 @@ export function isDuplicateOfCase(
     );
   });
 }
-
 
 export function primaryTraceFor(traces: Trace[]): Trace | undefined {
   for (let i = traces.length - 1; i >= 0; i--) {
@@ -179,16 +179,21 @@ export async function evaluateTrace(
     }
 
     const metricsData: MetricData[] = [];
-    for (const metric of metrics) {
-      metricsData.push(
-        await runMetric(
-          metric,
-          testCase,
-          errorCfg,
-          options.onMetric ?? (() => {}),
-        ),
-      );
-    }
+    // Trace scopes count as component evaluation too, matching what Python's
+    // agentic executor passes for both scopes. Published rather than threaded
+    // through `runMetric`, which metric implementations reach with no arguments.
+    await withComponentScope(true, async () => {
+      for (const metric of metrics) {
+        metricsData.push(
+          await runMetric(
+            metric,
+            testCase,
+            errorCfg,
+            options.onMetric ?? (() => {}),
+          ),
+        );
+      }
+    });
     scope.metricsData = metricsData; // also attach to the span/trace
     cases.push({
       testCase,

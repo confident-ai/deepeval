@@ -1,11 +1,12 @@
 {
   "uuid": "dc542e29-bb3a-48e7-9513-d39683100019",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019d050e-27a1-7913-9b06-f6158778d319",
       "name": "city_info_chain",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "startTime": "2026-03-19T07:45:06.978Z",
       "endTime": "2026-03-19T07:45:11.236Z",
       "input": {
@@ -92,7 +93,7 @@
             "status": "success"
           },
           {
-            "content": "Weather in Tokyo: Cloudy, 68°F.",
+            "content": "Weather in Tokyo: Cloudy, 68\u00b0F.",
             "additional_kwargs": {
               "refusal": null
             },
@@ -158,10 +159,11 @@
           }
         }
       ],
-      "integration": "LangChain"
+      "integration": "LangChain",
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019d050e-331f-7321-b1db-cd7d7d4de250",
@@ -199,7 +201,7 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Weather in Tokyo: Cloudy, 68°F.",
+        "content": "Weather in Tokyo: Cloudy, 68\u00b0F.",
         "tool_calls": []
       },
       "model": "gpt-5.4-mini-2025-08-07",
@@ -377,7 +379,7 @@
         "status": "success"
       },
       {
-        "content": "Weather in Tokyo: Cloudy, 68°F.",
+        "content": "Weather in Tokyo: Cloudy, 68\u00b0F.",
         "additional_kwargs": {
           "refusal": null
         },

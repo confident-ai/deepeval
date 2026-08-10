@@ -1,4 +1,4 @@
-import { ConversationalGolden, Golden } from "./golden";
+import { ConversationalGolden, Golden } from "@/dataset/golden";
 
 export interface APIDataset {
   overwrite?: boolean;

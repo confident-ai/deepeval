@@ -1,7 +1,12 @@
-name: Lint Lint Lint
+name: Py Lint Lint Lint
 
 on:
   pull_request:
+    paths-ignore:
+      - 'typescript/**'
+  push:
+    branches:
+      - main
     paths-ignore:
       - 'typescript/**'
 
@@ -18,6 +23,5 @@ jobs:
           options: "--check --verbose"
           src: "."
           jupyter: true
-          # Match the version range pinned in pyproject.toml so CI and
-          # local formatting can't drift apart
-          version: "~= 25.1"
+          # Exact pin: match the Black used locally (`black --version`)
+          version: "25.12.0"
