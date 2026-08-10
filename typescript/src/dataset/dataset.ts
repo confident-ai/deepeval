@@ -752,6 +752,7 @@ export class EvaluationDataset {
     console.log("✅ Golden successfully deleted from Confident AI!");
   }
 
+  /** A column the file lacks stays unset, so a metric still reports it missing. */
   async addTestCasesFromCSV({
     filePath,
     inputCol = "input",
