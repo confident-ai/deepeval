@@ -190,7 +190,7 @@ from deepeval.metrics import TurnRelevancyMetric
 relevancy = TurnRelevancyMetric()
 ```
 
-Under-the-hood, the `TurnRelevancyMetric` loops through each assistant turn and uses a **sliding window approach** to construct a series of **"unit interactions" as historical context** for evaluation. [Click here](/docs/metrics-conversation-relevancy) to learn more about the `TurnRelevancyMetric` and how it is calculated.
+Under-the-hood, the `TurnRelevancyMetric` loops through each assistant turn and uses a **sliding window approach** to construct a series of **"unit interactions" as historical context** for evaluation. [Click here](/docs/metrics-turn-relevancy) to learn more about the `TurnRelevancyMetric` and how it is calculated.
 
 :::info
 Relevancy, both for single and multi-turn use cases, is by far the most common metric as it is extremely generic and useful as an evaluation criteria.
@@ -206,7 +206,7 @@ from deepeval.metrics import TurnFaithfulnessMetric
 faithfulness = TurnFaithfulnessMetric()
 ```
 
-[Click here](/docs/metrics-conversation-relevancy) to learn more about the `TurnRelevancyMetric` and how it is calculated.
+[Click here](/docs/metrics-turn-relevancy) to learn more about the `TurnRelevancyMetric` and how it is calculated.
 
 :::tip
 The faithfulness is a metric specifically for assessing whether there are any contradictions between the retrieval context in a turn to the generated assistant content.
