@@ -294,6 +294,14 @@ class ToolCorrectnessMetric(BaseMetric):
                     issues.append(f"missing tools {list(missing)}")
                 if out_of_order:
                     issues.append(f"out-of-order tools {list(out_of_order)}")
+                if not issues:
+                    # Every expected tool name was called, but a repeated tool
+                    # was called in the wrong order, so the weighted LCS dropped
+                    # an occurrence and the score fell below 1. The set-based
+                    # `missing`/`out_of_order` checks cannot see this, so fall
+                    # back to a generic ordering message instead of emitting an
+                    # empty "Incorrect tool usage: ;" reason.
+                    issues.append("tools were called in a different order than expected")
                 return f"Incorrect tool usage: {' and '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
         else:
             used_expected = set(self.tools_called).intersection(
