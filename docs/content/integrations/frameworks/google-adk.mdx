@@ -64,6 +64,7 @@ The `deepeval` integration auto-instruments Google ADK through OpenTelemetry and
 `deepeval`'s Google ADK integration enables you to:
 
 - **Auto-instrument every ADK agent run** — each `runner.run_async(...)` produces a trace, and each LLM, tool, and agent call becomes a component span.
+- **Evaluate the complete ordered [agent trajectory](/docs/evaluation-trajectory-based-llm-evals)** across its agent, LLM, and tool spans.
 - **Evaluate traces or model / agent components** with any `deepeval` metric.
 - **Run evals from scripts or CI/CD** — same metrics, different surfaces.
 - **Customize trace and span data at runtime** from tool bodies, wrappers, or staged span config.
@@ -212,6 +213,36 @@ for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True), m
     task = asyncio.create_task(run_agent(golden.input))
     dataset.evaluate(task)
 ```
+
+## Evaluate agent trajectories
+
+Trajectory evaluation scores the complete ordered trace: every agent decision, LLM call, and tool interaction in sequence across the applicable spans. This is distinct from output-only evaluation, which scores only the final response, and individual component evaluation, which scores one span at a time.
+
+```python title="google_adk_agent.py" showLineNumbers
+import asyncio
+from deepeval.integrations.google_adk import instrument_google_adk
+from deepeval.evaluate.configs import AsyncConfig
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric, StepEfficiencyMetric, PlanAdherenceMetric
+...
+
+instrument_google_adk()
+dataset = EvaluationDataset(goldens=[Golden(input="What is 7 multiplied by 8?")])
+trajectory_metrics = [
+    TaskCompletionMetric(),
+    StepEfficiencyMetric(),
+    PlanAdherenceMetric(),
+]
+
+for golden in dataset.evals_iterator(
+    async_config=AsyncConfig(run_async=True),
+    metrics=trajectory_metrics,
+):
+    task = asyncio.create_task(run_agent(golden.input))
+    dataset.evaluate(task)
+```
+
+See the full [trajectory evaluation guide](/docs/evaluation-trajectory-based-llm-evals) for metric details and trace requirements. Next, apply metrics to individual components when you need span-level diagnostics.
 
 ## Applying metrics to components
 

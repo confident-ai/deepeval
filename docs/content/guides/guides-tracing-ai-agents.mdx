@@ -10,6 +10,8 @@ import { ASSETS } from "@site/src/assets";
 
 **Agentic tracing** is the practice of tracking the non-deterministic execution paths of AI agents to monitor their reasoning steps, tool usage, and sub-agent handoffs. Unlike standard LLM applications where the execution path is linear and predefined, agents operate in dynamic loops—deciding *what* to do next based on the results of their previous actions. To debug and evaluate an agent, you must map out its entire execution tree to see not just the final output, but the exact sequence of decisions that led there.
 
+Tracing is therefore also the foundation for [trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals). An LLM judge can inspect the complete ordered trace—plans, model decisions, tool calls, and handoffs—to determine whether the agent completed the task efficiently and followed its plan. This catches cases where two runs return similar final answers but take very different paths.
+
 :::info
 To accurately map an agent's execution tree, `deepeval` utilizes four specialized span types: `"agent"` (for the orchestration layer), `"llm"` (for inference and decision making), `"tool"` (for external API or function executions), and `"retriever"` (for any context fetching steps).
 :::
@@ -250,41 +252,54 @@ By providing `expected_tools`, metrics like the `ToolCorrectnessMetric` can calc
 
 ## Attaching Evaluations
 
-Agent architectures require two distinct scopes of evaluation. You must evaluate the final outcome of the task, but you must also evaluate the individual reasoning steps that led there.
+Agent architectures support three complementary evaluation scopes:
 
-You enable these evaluations by attaching a `metric_collection` to the appropriate span. Both scopes can be active simultaneously in the same trace.
+- **End-to-end black-box evaluation** scores only the application's observable input and final output.
+- **Trajectory-based evaluation** scores the complete ordered trace as one unit, including plans, model decisions, tool calls, and handoffs.
+- **Component-level evaluation** scores one step or span, such as an LLM's tool selection.
+
+Use all three when both the result and the path matter. Trajectory metrics consume the complete trace, while component metrics attach to the specific spans they inspect.
 
 ### Evaluating Locally During Development
 
-During development, you can attach `deepeval` metrics directly to `@observe` using the `metrics` parameter. The metrics run synchronously when the function completes, giving you immediate per-span evaluation results in your terminal — no Confident AI connection needed.
+During development, attach component metrics directly to `@observe` using the `metrics` parameter. These metrics run synchronously when the function completes, giving you immediate per-span results in your terminal — no Confident AI connection needed.
 ```python title="agent.py"
 from deepeval.tracing import observe
-from deepeval.metrics import ToolCorrectnessMetric, TaskCompletionMetric
+from deepeval.metrics import ToolCorrectnessMetric
 
 tool_correctness = ToolCorrectnessMetric(threshold=0.8)
-task_completion = TaskCompletionMetric(threshold=0.7)
 
 # Component-level: evaluate tool selection on each reasoning step
 @observe(type="llm", metrics=[tool_correctness])
 def reason_and_plan(messages: list) -> str:
     response = client.chat.completions.create(model="gpt-4o", messages=messages)
     return response.choices[0].message.content
+```
 
-# End-to-end: evaluate task completion on the full agent trace
-@observe(
-    type="agent",
-    available_tools=["search_flights", "book_flight"],
-    metrics=[task_completion],
+For local trajectory evaluation, pass trace-level metrics to `evals_iterator()` and invoke the traced agent once per golden:
+
+```python title="evaluate_agent.py"
+from deepeval.metrics import (
+    TaskCompletionMetric,
+    StepEfficiencyMetric,
+    PlanAdherenceMetric,
 )
-def travel_agent(user_request: str) -> str:
-    ...
+
+metrics = [
+    TaskCompletionMetric(),
+    StepEfficiencyMetric(),
+    PlanAdherenceMetric(),
+]
+
+for golden in dataset.evals_iterator(metrics=metrics):
+    travel_agent(golden.input)
 ```
 
 :::note
 The `metrics` parameter runs LLM-as-a-judge evaluations synchronously and will add latency to your agent's execution. Use this exclusively during development and testing. For production, switch to `metric_collection` as shown in the sections below. It requires Confident AI so ensure you ran the `deepeval login` command and have a valid API key configured.
 :::
 
-### Component-Level (The LLM Span)
+### Component-Level (One LLM Span)
 
 Attach a metric collection to the `type="llm"` span to evaluate the isolated reasoning steps. This allows you to catch when an agent chooses the wrong tool or hallucinates arguments, even if it eventually fumbles its way to a correct final answer.
 
@@ -294,31 +309,38 @@ def reason_and_plan(messages: list) -> str:
     ...
 ```
 
-### End-to-End (The Agent Span)
+### Trajectory-Based (The Complete Ordered Trace)
 
-Attach a metric collection to the root `type="agent"` span to evaluate the final trajectory and output of the entire task.
+Evaluate the root `type="agent"` trace as a complete ordered trajectory. `TaskCompletionMetric` inspects the steps and their results to determine whether the task was achieved, while `StepEfficiencyMetric` checks whether those ordered steps were necessary and efficient. `PlanAdherenceMetric` can additionally compare the executed path with the agent's plan.
 
 ```python
 @observe(
     type="agent",
     available_tools=[...],
-    metric_collection="agent-task-completion-metrics"
+    metric_collection="agent-trajectory-metrics"
 )
 def travel_agent(user_request: str) -> str:
     ...
 ```
 
+In local dataset evaluations, use the `evals_iterator()` pattern above so the trajectory metrics receive the complete trace. In production, a trajectory metric collection on the root agent evaluates the completed trace asynchronously.
+
+### End-to-End Black-Box (Input and Output)
+
+End-to-end evaluation deliberately ignores the internal spans and scores only the input and final output. Use it for output quality criteria that do not depend on how the agent arrived at the answer. See [end-to-end evaluation](/docs/evaluation-end-to-end-llm-evals) for the black-box workflow.
+
 Here is a summary of how to map your metric collections:
 
-| Scope               | Set via                                 | Example Metrics                                      |
-| ------------------- | --------------------------------------- | ---------------------------------------------------- |
-| **End-to-end**      | `metric_collection` on the `agent` span | `TaskCompletionMetric`, `StepEfficiencyMetric`       |
-| **Component-level** | `metric_collection` on the `llm` span   | `ToolCorrectnessMetric`, `ArgumentCorrectnessMetric` |
+| Scope                    | What the metric sees                                  | Example Metrics                                                          |
+| ------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------ |
+| **End-to-end black-box** | Application input and final output                    | `AnswerRelevancyMetric`, custom `GEval`                                  |
+| **Trajectory-based**     | Complete ordered trace                                | `TaskCompletionMetric`, `StepEfficiencyMetric`, `PlanAdherenceMetric`    |
+| **Component-level**      | One LLM span and its tool calls or arguments          | `ToolCorrectnessMetric`, `ArgumentCorrectnessMetric`                     |
 
-Both scopes can be active on the same trace simultaneously. A single agent execution might have `ToolCorrectnessMetric` running on the LLM span (catching when the agent chose the wrong tool mid-task) while `TaskCompletionMetric` runs on the agent span (measuring whether the user's goal was ultimately achieved). This matters because an agent can make a bad tool selection in step 3, recover by step 5, and still complete the task — end-to-end metrics alone would miss the intermediate failure.
+All three scopes can be active on the same run. A single execution might use `ToolCorrectnessMetric` on each LLM span, trajectory metrics on the complete trace, and an output-quality metric on the black-box result. This matters because an agent can make a bad tool selection in step 3, recover by step 5, and still complete the task; only the combined view explains both the result and the route taken.
 
 :::tip
-For a comprehensive breakdown of the formulas and use cases for these metrics, read the [AI Agent Evaluation Metrics guide](/docs/guides/guides-ai-agent-evaluation-metrics).
+For a comprehensive breakdown of the formulas and use cases for these metrics, read the [AI Agent Evaluation Metrics guide](/guides/guides-ai-agent-evaluation-metrics).
 :::
 
 ## Framework Integrations
@@ -507,7 +529,7 @@ Confident AI renders the complex parent-child span relationships of your agents 
 ### Create agentic metric collections
 
 
-Log in to Confident AI and create metric collections tailored to your evaluation scope. For example, create an end-to-end collection (containing `TaskCompletionMetric`) and a component-level collection (containing `ToolCorrectnessMetric`).
+Log in to Confident AI and create metric collections tailored to your evaluation scope. For example, create a trajectory collection containing `TaskCompletionMetric`, `StepEfficiencyMetric`, and `PlanAdherenceMetric`, plus a component-level collection containing `ToolCorrectnessMetric` or `ArgumentCorrectnessMetric`. Keep tool and argument metrics on LLM spans, where they can inspect an individual decision.
 
 <VideoDisplayer
   src={ASSETS.metricsCreateCollection}
@@ -524,12 +546,12 @@ Log in to Confident AI and create metric collections tailored to your evaluation
 In your production code, attach the appropriate collection names to your `@observe` decorators. 
 
 ```python
-@observe(type="agent", metric_collection="agent-task-completion")
+@observe(type="agent", metric_collection="agent-trajectory-metrics")
 def travel_coordinator(user_request: str):
     ...
 ```
 
-When the trace is sent to Confident AI, the platform evaluates the entire execution tree asynchronously, ensuring your live agent experiences zero added latency.
+When the trace is sent to Confident AI, the trajectory collection evaluates the complete ordered execution tree asynchronously, ensuring your live agent experiences zero added latency. Attach a separate component collection to `type="llm"` spans when you also need per-step tool or argument checks.
 
 </Step>
 <Step>
@@ -556,13 +578,14 @@ In this guide, you learned how to instrument complex AI agents to capture their 
   - **`type="llm"`** captures the inference and decision-making steps.
   - **`type="tool"`** captures external executions, automatically propagating to the parent's `tools_called` attribute.
   - **`expected_tools`** provides the ground truth required to accurately evaluate an agent's tool selection process.
-  - **`metrics=[...]` on `@observe`** runs `ToolCorrectnessMetric`, `TaskCompletionMetric`, and other agent-specific metrics locally during development — no external platform required.
+  - **Trajectory-based evaluation** scores the complete ordered trace with metrics such as `TaskCompletionMetric`, `StepEfficiencyMetric`, and `PlanAdherenceMetric`.
+  - **`metrics=[...]` on an LLM `@observe` span** runs component metrics such as `ToolCorrectnessMetric` locally during development.
   - **`trace_manager.get_all_traces_dict()`** gives you raw access to the full execution tree — every reasoning step, tool argument, and tool output — as a Python dictionary for local inspection and logging.
 
 :::info[Development vs Production]
 
-- **Development** — Attach `metrics=[tool_correctness]` to your `llm` span and `metrics=[task_completion]` to your `agent` span to catch tool selection failures and task completion regressions instantly. Use `trace_manager.get_all_traces_dict()` to inspect the full execution tree as raw dictionaries without any external dependency.
-- **Production** — Export traces to Confident AI to visually debug complex execution graphs. Use asynchronous `metric_collection`s on both the agent and LLM spans to continuously monitor task completion and tool precision without blocking execution.
+- **Development** — Attach `metrics=[tool_correctness]` to your LLM span for component checks, and pass trajectory metrics to `evals_iterator()` to score the complete ordered trace. Use `trace_manager.get_all_traces_dict()` to inspect the execution tree without an external dependency.
+- **Production** — Export traces to Confident AI to visually debug execution graphs. Use an asynchronous trajectory metric collection on the root agent and component collections on LLM spans to monitor the complete path and individual tool decisions without blocking execution.
 
 :::
 
@@ -618,8 +641,10 @@ In this guide, you learned how to instrument complex AI agents to capture their 
           Yes. Pass <code>metrics=[...]</code> to <code>@observe</code>{" "}
           directly. For example, attach <code>ToolCorrectnessMetric</code> to
           the LLM span to evaluate tool selection at the component level, and{" "}
-          <code>TaskCompletionMetric</code> to the agent span for end-to-end
-          evaluation.
+          pass <code>TaskCompletionMetric</code>,{" "}
+          <code>StepEfficiencyMetric</code>, or{" "}
+          <code>PlanAdherenceMetric</code> to <code>evals_iterator()</code> for
+          trajectory-based evaluation of the complete trace.
         </>
       ),
     },
@@ -643,8 +668,10 @@ In this guide, you learned how to instrument complex AI agents to capture their 
           Define a metric collection on{" "}
           <a href="https://confident-ai.com">Confident AI</a> and pass{" "}
           <code>metric_collection</code> to your <code>@observe</code>{" "}
-          decorators. Traces are exported asynchronously and evaluated by
-          Confident AI without blocking your live agent.
+          decorators. Put trajectory metrics in the root agent's collection and
+          tool or argument metrics in an LLM-span collection. Traces are
+          exported asynchronously and evaluated without blocking your live
+          agent.
         </>
       ),
     },
@@ -655,9 +682,10 @@ In this guide, you learned how to instrument complex AI agents to capture their 
 
 Now that your agent is fully instrumented, you can establish a robust evaluation pipeline to measure its autonomous performance over time:
 
-1.  **Review Agent Metrics** — Understand the exact formulas for tool correctness and task completion in the [AI Agent Evaluation Metrics guide](/guides/guides-ai-agent-evaluation-metrics)
-2.  **Read the Evaluation Workflow** — See how these metrics fit into the broader testing lifecycle in the [AI Agent Evaluation guide](/guides/guides-ai-agent-evaluation)
-3.  **Curate Golden Datasets** — Export failing agent traces from production into your development testing bench using [Evaluation Datasets](/docs/evaluation-datasets)
-4.  **Join the community** — Have questions? Join the [DeepEval Discord](https://discord.com/invite/a3K9c8GRGt)—we're happy to help\!
+1.  **Evaluate Complete Trajectories** — Follow the [trajectory-based evaluation guide](/docs/evaluation-trajectory-based-llm-evals) to score ordered agent traces.
+2.  **Review Agent Metrics** — Understand the exact formulas for trajectory and component metrics in the [AI Agent Evaluation Metrics guide](/guides/guides-ai-agent-evaluation-metrics)
+3.  **Read the Evaluation Workflow** — See how these metrics fit into the broader testing lifecycle in the [AI Agent Evaluation guide](/guides/guides-ai-agent-evaluation)
+4.  **Curate Golden Datasets** — Export failing agent traces from production into your development testing bench using [Evaluation Datasets](/docs/evaluation-datasets)
+5.  **Join the community** — Have questions? Join the [DeepEval Discord](https://discord.com/invite/a3K9c8GRGt)—we're happy to help\!
 
 **Congratulations 🎉!** You now have the knowledge to instrument any AI agent—from single-loop scripts to complex multi-agent systems—with full span-level observability.

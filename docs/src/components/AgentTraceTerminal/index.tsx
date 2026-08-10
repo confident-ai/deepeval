@@ -11,6 +11,7 @@ export type TraceLine = {
   score?: string;
   duration?: string;
   pass?: boolean;
+  scope?: "start" | "middle" | "end";
 };
 
 export const DEFAULT_TRACE: TraceLine[] = [
@@ -200,7 +201,9 @@ const AgentTraceTerminal: React.FC<AgentTraceTerminalProps> = ({
         {lines.map((line, i) => (
           <div
             key={i}
-            className={`${styles.line} ${styles[`line_${line.kind}`]}`}
+            className={`${styles.line} ${styles[`line_${line.kind}`]} ${
+              line.scope ? styles.lineScope : ""
+            } ${line.scope ? styles[`scope_${line.scope}`] : ""}`}
             style={{ animationDelay: `${i * 0.11}s` } as React.CSSProperties}
           >
             {line.kind === "cmd" ? (
@@ -233,6 +236,30 @@ const AgentTraceTerminal: React.FC<AgentTraceTerminalProps> = ({
               <>
                 <span className={styles.rootDot}>{line.prefix}</span>
                 <span className={styles.rootName}>{line.name}</span>
+                {(line.metric || line.score) && (
+                  <span className={styles.meta}>
+                    <span className={styles.metric}>{line.metric}</span>
+                    {line.score !== undefined && (
+                      <span
+                        className={`${styles.score} ${
+                          line.pass ? styles.scorePass : styles.scoreFail
+                        }`}
+                      >
+                        {line.score}
+                      </span>
+                    )}
+                    {line.score !== undefined && line.pass !== undefined && (
+                      <span
+                        className={`${styles.status} ${
+                          line.pass ? styles.statusPass : styles.statusFail
+                        }`}
+                        aria-hidden
+                      >
+                        {line.pass ? "✓" : "✗"}
+                      </span>
+                    )}
+                  </span>
+                )}
               </>
             ) : (
               <>

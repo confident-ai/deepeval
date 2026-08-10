@@ -150,7 +150,7 @@ async def test_no_llmtestcase_skips_trace_and_span_metrics(
         input=None, output="trace-out", metrics=trace_metrics, root_span=root
     )
 
-    # run the internal async executor directly to avoid building an observed callback.
+    # Run the internal async executor directly to avoid setting up an evals iterator.
     results: list[TestResult] = []
     golden = Golden(input="golden-input")
     await exec_mod._a_execute_agentic_test_case(

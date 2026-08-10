@@ -182,7 +182,7 @@ def execute_agentic_test_cases_from_loop(
             # yield golden
             count += 1
             pbar_tags_id = add_pbar(
-                progress, f"\t⚡ Invoking observed callback (#{count})"
+                progress, f"\t⚡ Calling LLM app (#{count})"
             )
             with Observer(
                 "custom",

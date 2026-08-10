@@ -64,6 +64,7 @@ The `deepeval` integration auto-instruments to trace every call to your Pydantic
 `deepeval`'s Pydantic AI integration enables you to:
 
 - **Auto-instrument every `Agent`** — each `agent.run(...)` produces a trace, and each LLM, tool, and sub-agent call inside it becomes a component span.
+- **Evaluate the complete ordered [agent trajectory](/docs/evaluation-trajectory-based-llm-evals)** across its agent, LLM, and tool spans.
 - **Evaluate the trace end-to-end or target model / agent components** with any `deepeval` metric.
 - **Run evals from a script** (`evals_iterator`) **or from CI/CD** (`pytest` + `deepeval test run`) — same metrics, two surfaces.
 - **Customize trace and span data at runtime** from anywhere in the call stack — your tool bodies, post-processors, or the call site.
@@ -224,6 +225,30 @@ for golden in dataset.evals_iterator(
 ```
 
 `evals_iterator` is async-friendly; wrap each invocation in `asyncio.create_task` and pass it to `dataset.evaluate(...)` so multiple goldens run concurrently against the same dataset.
+
+## Evaluate agent trajectories
+
+Trajectory evaluation scores the complete ordered trace: every agent decision, LLM call, and tool interaction in sequence across the applicable spans. This is distinct from output-only evaluation, which scores only the final response, and individual component evaluation, which scores one span at a time.
+
+```python title="pydantic_ai_agent.py" showLineNumbers
+from pydantic_ai import Agent
+from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric, StepEfficiencyMetric, PlanAdherenceMetric
+
+agent = Agent("openai:gpt-5", instrument=DeepEvalInstrumentationSettings())
+dataset = EvaluationDataset(goldens=[Golden(input="What's the weather in Paris?")])
+trajectory_metrics = [
+    TaskCompletionMetric(),
+    StepEfficiencyMetric(),
+    PlanAdherenceMetric(),
+]
+
+for golden in dataset.evals_iterator(metrics=trajectory_metrics):
+    agent.run_sync(golden.input)
+```
+
+See the full [trajectory evaluation guide](/docs/evaluation-trajectory-based-llm-evals) for metric details and trace requirements. Next, apply metrics to individual components when you need span-level diagnostics.
 
 ## Applying metrics to components
 
