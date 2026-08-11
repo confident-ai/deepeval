@@ -14,10 +14,12 @@ import {
   Gauge,
   GitMerge,
   MessagesSquare,
+  Plug,
   Rocket,
   Route,
   ShieldCheck,
   Sparkles,
+  Workflow,
 } from "lucide-react";
 import VibeCodingLoop from "@site/src/sections/home/VibeCodingLoop";
 
@@ -28,7 +30,7 @@ import VibeCodingLoop from "@site/src/sections/home/VibeCodingLoop";
   conversational, safety, RAG, and multimodal metrics.
 - Evaluate AI agents, conversational agents (chatbots), RAG pipelines, MCP systems, and
   other custom workflows.
-- Run both end-to-end evals and component-level evals with tracing.
+- Run end-to-end, trajectory-based, and component-level evals.
 - Generate synthetic datasets for edge cases that are hard to collect manually.
 - Customize metrics, prompts, models, and evaluation templates when built-in
   behavior is not enough.
@@ -94,21 +96,26 @@ We highly recommend starting with either of these two quickstarts:
 
 Alternatively, if you already have a concrete use case - try out one of our use case specific quickstarts:
 
-<Card icon={<Bot />} title="AI Agents" href="/docs/getting-started-agents">
-  Set up tracing, evaluate end-to-end task completion, and score individual
-  agent components.
-</Card>
-<Card
-  icon={<MessagesSquare />}
-  title="Chatbots"
-  href="/docs/getting-started-chatbots"
->
-  Evaluate multi-turn conversations, turns, and simulated user interactions.
-</Card>
-<Card icon={<FileSearch />} title="RAG" href="/docs/getting-started-rag">
-  Evaluate RAG quality end-to-end, then test retrieval and generation
-  separately.
-</Card>
+<Cards>
+  <Card icon={<Bot />} title="AI Agents" href="/docs/getting-started-agents">
+    Set up tracing, evaluate end-to-end task completion, and score individual
+    agent components.
+  </Card>
+  <Card
+    icon={<MessagesSquare />}
+    title="Chatbots"
+    href="/docs/getting-started-chatbots"
+  >
+    Evaluate multi-turn conversations, turns, and simulated user interactions.
+  </Card>
+  <Card icon={<FileSearch />} title="RAG" href="/docs/getting-started-rag">
+    Evaluate RAG quality end-to-end, then test retrieval and generation
+    separately.
+  </Card>
+  <Card icon={<Plug />} title="MCP" href="/docs/getting-started-mcp">
+    Evaluate MCP clients across single-turn and multi-turn interactions.
+  </Card>
+</Cards>
 
 :::tip
 All quickstarts include a guide on how to bring evals to production near the end.
@@ -147,9 +154,9 @@ These concepts show up throughout DeepEval and learning these fundamentals are i
   />
 </Cards>
 
-### Two Modes of Evals
+### Three Modes of Evals
 
-DeepEval supports two complementary ways to evaluate your application, it's important to know which one(s) suit you:
+DeepEval supports three complementary ways to evaluate your application. Choose the scope that matches what you need to measure:
 
 <Cards>
   <Card
@@ -158,9 +165,10 @@ DeepEval supports two complementary ways to evaluate your application, it's impo
     description="Best for raw LLM APIs, simple apps, chatbots, and black-box quality checks."
     href="/docs/evaluation-end-to-end-llm-evals"
   >
-    <br />
-    Treat your LLM app as a black box. Provide inputs, outputs, expected behavior,
-    and metrics, then use DeepEval to detect quality regressions.
+    <div className="pt-2">
+      Treat your LLM app as a black box. Provide inputs, outputs, expected
+      behavior, and metrics, then use DeepEval to detect quality regressions.
+    </div>
   </Card>
   <Card
     icon={<GitMerge />}
@@ -168,14 +176,27 @@ DeepEval supports two complementary ways to evaluate your application, it's impo
     description="Best for agents, tool-using workflows, MCP systems, and complex multi-step applications."
     href="/docs/evaluation-component-level-llm-evals"
   >
-    <br />
-    Trace your app and evaluate individual spans, tools, planners, retrievers, generators,
-    or other internal components.
+    <div className="pt-2">
+      Trace your app and evaluate individual spans, tools, planners, retrievers,
+      generators, or other internal components.
+    </div>
+  </Card>
+  <Card
+    className="md:col-span-2"
+    icon={<Workflow />}
+    title="Trajectory-Based Evals"
+    description="Best for AI agents and long-horizon agents whose execution path affects quality."
+    href="/docs/evaluation-trajectory-based-llm-evals"
+  >
+    <div className="pt-2">
+      Trace your agent and evaluate its complete chain of plans, model calls,
+      tools, handoffs, and intermediate steps as one trajectory.
+    </div>
   </Card>
 </Cards>
 
-You can use either mode independently, or combine them: score the whole trace for
-overall task quality, then score individual spans to find where failures happen.
+Use any mode independently or combine all three: score the black-box result, evaluate
+the complete agent trajectory, then inspect individual spans to locate failures.
 
 ### DeepEval Ecosystem
 

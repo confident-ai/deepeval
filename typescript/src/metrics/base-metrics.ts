@@ -1,6 +1,7 @@
 import { isVerboseMode } from "@/env-flags";
 import { DeepEvalBaseLLM } from "@/models";
 import { SingleTurnParams } from "@/test-case";
+import { inComponentScope, recordMetric } from "@/telemetry";
 import { observeMethods } from "@/tracing/internal";
 import { resolveTemplate } from "@/templates";
 import {
@@ -177,6 +178,15 @@ export abstract class BaseMetricCore {
   }
 
   protected async startProgress(): Promise<void> {
+    // Before the indicator check, which a batch run turns off: this is the one
+    // call every metric makes on its way into `measure()`, bare or not.
+    recordMetric(this.name, {
+      // Every TypeScript metric is async; `describe()` reports the same.
+      asyncMode: true,
+      inComponent: inComponentScope(),
+      model: this.model,
+    });
+
     if (!this.showIndicator) return;
     const ora = (await import("ora")).default;
     const messageTail = this.describe();

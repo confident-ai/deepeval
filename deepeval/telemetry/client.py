@@ -7,18 +7,17 @@ class rather than a search-and-replace.
 """
 
 import logging
-import socket
-import sys
-from types import TracebackType
-from typing import Dict, List, Optional, Protocol, Set, Type
-
-import sentry_sdk
+from typing import Dict, List, Optional, Protocol, Set
 
 from deepeval._version import __version__ as DEEPEVAL_VERSION
 from deepeval.config.settings import get_settings
 from deepeval.telemetry.events import TELEMETRY_SCHEMA_VERSION, Event
 from deepeval.telemetry.identity import get_identity, is_logged_in
-from deepeval.telemetry.properties import EventProperties, PropValue
+from deepeval.telemetry.properties import (
+    EventProperties,
+    Language,
+    PropValue,
+)
 from deepeval.telemetry.runtime import detect_runtime
 
 logger = logging.getLogger(__name__)
@@ -26,20 +25,9 @@ logger = logging.getLogger(__name__)
 _POSTHOG_PROJECT_API_KEY = "phc_IXvGRcscJJoIb049PtjIZ65JnXQguOUZ5B5MncunFdB"
 _POSTHOG_HOST = "https://us.i.posthog.com"
 
-_SENTRY_DSN = "https://5ef587d58109ee45d6544f3657efdd1f@o4506098477236224.ingest.sentry.io/4506098479136768"
-
 
 def telemetry_opt_out() -> bool:
     return bool(get_settings().DEEPEVAL_TELEMETRY_OPT_OUT)
-
-
-def blocked_by_firewall() -> bool:
-    """Lazy on purpose: this used to open a socket at import time."""
-    try:
-        socket.create_connection(("www.google.com", 80), timeout=5).close()
-        return False
-    except OSError:
-        return True
 
 
 class TelemetryBackend(Protocol):
@@ -143,6 +131,7 @@ def base_properties() -> EventProperties:
     active = installed_integrations()
     return EventProperties(
         schema_version=TELEMETRY_SCHEMA_VERSION,
+        sdk_language=Language.PYTHON,
         sdk_version=DEEPEVAL_VERSION,
         runtime=detect_runtime(),
         user_status=identity.status,
@@ -175,36 +164,3 @@ def flush() -> None:
         get_backend().flush()
     except Exception:
         logger.debug("Failed to flush telemetry", exc_info=True)
-
-
-def _init_error_reporting() -> None:
-    if telemetry_opt_out() or not get_settings().ERROR_REPORTING:
-        return
-
-    sentry_sdk.init(
-        dsn=_SENTRY_DSN,
-        profiles_sample_rate=0.0,
-        traces_sample_rate=0.0,
-        send_default_pii=False,
-        attach_stacktrace=False,
-        default_integrations=False,
-    )
-
-    # Chain to the host's previous excepthook instead of clobbering it.
-    previous_excepthook = sys.excepthook
-
-    def handle_exception(
-        exc_type: Type[BaseException],
-        exc_value: BaseException,
-        exc_traceback: Optional[TracebackType],
-    ) -> None:
-        try:
-            sentry_sdk.capture_exception(exc_value)
-        except Exception:
-            pass
-        previous_excepthook(exc_type, exc_value, exc_traceback)
-
-    sys.excepthook = handle_exception
-
-
-_init_error_reporting()

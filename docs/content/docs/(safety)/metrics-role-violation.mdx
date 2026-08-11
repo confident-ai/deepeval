@@ -116,7 +116,7 @@ You can also run the `RoleViolationMetric` within nested components for [compone
 <Case id="python">
 
 ```python
-from deepeval.dataset import Golden
+from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.tracing import observe, update_current_span
 ...
 
@@ -133,7 +133,9 @@ def llm_app(input: str):
     inner_component()
     return
 
-evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
+dataset = EvaluationDataset(goldens=[Golden(input="Hi!")])
+for golden in dataset.evals_iterator():
+    llm_app(golden.input)
 ```
 
 </Case>

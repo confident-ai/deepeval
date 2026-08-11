@@ -26,6 +26,12 @@ import {
 } from "@/cli/utils";
 import { openBrowser, PROD, withUtm, WWW } from "@/cli/utm";
 import { normalizeSave } from "@/cli/commands/settings";
+import {
+  captureLoginEvent,
+  LoginMethod,
+  LoginOutcome,
+  type LoginSpan,
+} from "@/telemetry";
 
 const DEFAULT_SAVE = "dotenv:.env.local";
 
@@ -263,7 +269,10 @@ async function completeBrowserLogin(): Promise<string | null> {
   }
 }
 
-async function resolveLoginKey(save: string | undefined): Promise<string> {
+async function resolveLoginKey(
+  save: string | undefined,
+  span: LoginSpan,
+): Promise<string> {
   const method = await promptSelect(
     "How would you like to log in to Confident AI?",
     [
@@ -273,14 +282,18 @@ async function resolveLoginKey(save: string | undefined): Promise<string> {
   );
 
   if (method === "paste") {
+    span.setMethod(LoginMethod.PASTE);
     printApiKeyLocation();
     return promptPasteApiKey();
   }
 
+  span.setMethod(LoginMethod.BROWSER);
   await promptAndPersistRegion(save);
   const key = await completeBrowserLogin();
   if (key) return key;
 
+  // The browser path did not finish, so this login is a pasted key after all.
+  span.setMethod(LoginMethod.PASTE);
   console.log(
     "\nNo problem — paste a project API key from the platform instead.",
   );
@@ -305,55 +318,11 @@ export function registerAuthCommands(program: Command): void {
       "--api-key <key>",
       "Log in non-interactively with a project API key instead of the prompts.",
     )
-    .action(async (options) => {
-      const settings = getSettings();
-      const save =
-        normalizeSave(options.save) ??
-        settings.DEEPEVAL_DEFAULT_SAVE ??
-        DEFAULT_SAVE;
-
-      try {
-        const explicitKey = coerceBlankToNull(options.apiKey);
-        let key: string;
-        if (explicitKey) {
-          key = explicitKey;
-          warnForPastedApiKey(key);
-        } else {
-          key = await resolveLoginKey(save);
-        }
-
-        const result = editSettings(
-          (draft) => {
-            draft.CONFIDENT_API_KEY = key;
-          },
-          { save },
-        );
-
-        if (Object.keys(result.updated).length > 0) {
-          if (!result.handled) {
-            console.log("Unsupported --save option. Use --save=dotenv[:path].");
-          } else if (result.path) {
-            console.log(
-              `Saved environment variables to ${result.path} (ensure it's git-ignored).`,
-            );
-          }
-        }
-
-        const quickstartUrl = withUtm(`${WWW}/docs/llm-evaluation/quickstart`, {
-          content: "login_success_quickstart",
-        });
-        console.log(
-          "\n🎉🥳 Congratulations! You've successfully logged in! 🙌",
-        );
-        console.log(
-          "You're now using DeepEval with Confident AI. Follow our quickstart " +
-            `tutorial here: ${quickstartUrl}`,
-        );
-      } catch (error) {
-        console.log(`Login failed: ${(error as Error).message}`);
-        process.exitCode = 1;
-      }
-    });
+    .action(async (options) =>
+      captureLoginEvent(async (span) => {
+        await runLogin(options, span);
+      }),
+    );
 
   program
     .command("logout")
@@ -364,69 +333,122 @@ export function registerAuthCommands(program: Command): void {
         "keystore is always cleared.",
     )
     .option("-q, --quiet", QUIET_OPTION_HELP)
-    .action((options) => {
-      const settings = getSettings();
-      // Once the files are wiped we can no longer tell a shell export apart
-      // from a file-loaded value.
-      const keySource = getSettingSource("CONFIDENT_API_KEY");
-      const save =
-        normalizeSave(options.save) ??
-        settings.DEEPEVAL_DEFAULT_SAVE ??
-        DEFAULT_SAVE;
+    .action((options) => runLogout(options));
+}
 
-      const result = editSettings(
-        (draft) => {
-          draft.CONFIDENT_API_KEY = null;
-        },
-        { save },
-      );
+async function runLogin(
+  options: { save?: string; apiKey?: string },
+  span: LoginSpan,
+): Promise<void> {
+  const settings = getSettings();
+  const save =
+    normalizeSave(options.save) ??
+    settings.DEEPEVAL_DEFAULT_SAVE ??
+    DEFAULT_SAVE;
 
-      // Sweep the whole search path, or a lower-precedence file logs the user
-      // straight back in.
-      for (const file of [".env", ".env.local"]) {
-        const filePath = path.join(process.cwd(), file);
-        if (!fs.existsSync(filePath)) continue;
-        const contents = fs.readFileSync(filePath, "utf-8");
-        if (!/^\s*CONFIDENT_API_KEY\s*=/m.test(contents)) continue;
-        new DotenvHandler(filePath).unset(["CONFIDENT_API_KEY"]);
-        if (!options.quiet) {
-          console.log(`Removed Confident AI key(s) from ${file}.`);
-        }
-      }
+  try {
+    const explicitKey = coerceBlankToNull(options.apiKey);
+    let key: string;
+    if (explicitKey) {
+      span.setMethod(LoginMethod.API_KEY_FLAG);
+      key = explicitKey;
+      warnForPastedApiKey(key);
+    } else {
+      key = await resolveLoginKey(save, span);
+    }
 
-      const shellExport = keySource === "env";
-      if (
-        handleSaveResult({
-          result,
-          save,
-          quiet: options.quiet,
-          updatedMessage: "Removed Confident AI key(s) from {path}.",
-        }) &&
-        !shellExport
-      ) {
-        console.log("\n🎉🥳 You've successfully logged out! 🙌");
-      }
+    const result = editSettings(
+      (draft) => {
+        draft.CONFIDENT_API_KEY = key;
+      },
+      { save },
+    );
 
-      if (shellExport && !options.quiet) {
+    if (Object.keys(result.updated).length > 0) {
+      if (!result.handled) {
+        console.log("Unsupported --save option. Use --save=dotenv[:path].");
+      } else if (result.path) {
         console.log(
-          "\n⚠  CONFIDENT_API_KEY is exported by your shell, which deepeval " +
-            "cannot unset — this terminal will still be logged in.",
-        );
-        console.log(
-          "   Finish logging out with: unset CONFIDENT_API_KEY (and remove it " +
-            "from your shell profile if it's set there)",
+          `Saved environment variables to ${result.path} (ensure it's git-ignored).`,
         );
       }
+    }
 
-      const latestRun = path.join(
-        process.cwd(),
-        HIDDEN_DIR,
-        LATEST_TEST_RUN_FILE,
-      );
-      try {
-        fs.rmSync(latestRun, { force: true });
-      } catch {}
+    span.setOutcome(LoginOutcome.COMPLETED);
+    const quickstartUrl = withUtm(`${WWW}/docs/llm-evaluation/quickstart`, {
+      content: "login_success_quickstart",
     });
+    console.log("\n🎉🥳 Congratulations! You've successfully logged in! 🙌");
+    console.log(
+      "You're now using DeepEval with Confident AI. Follow our quickstart " +
+        `tutorial here: ${quickstartUrl}`,
+    );
+  } catch (error) {
+    // Handled rather than rethrown, so `captureLoginEvent` never sees it.
+    span.setOutcome(LoginOutcome.FAILED);
+    console.log(`Login failed: ${(error as Error).message}`);
+    process.exitCode = 1;
+  }
+}
+
+function runLogout(options: { save?: string; quiet?: boolean }): void {
+  const settings = getSettings();
+  // Once the files are wiped we can no longer tell a shell export apart from a
+  // file-loaded value.
+  const keySource = getSettingSource("CONFIDENT_API_KEY");
+  const save =
+    normalizeSave(options.save) ??
+    settings.DEEPEVAL_DEFAULT_SAVE ??
+    DEFAULT_SAVE;
+
+  const result = editSettings(
+    (draft) => {
+      draft.CONFIDENT_API_KEY = null;
+    },
+    { save },
+  );
+
+  // Sweep the whole search path, or a lower-precedence file logs the user
+  // straight back in.
+  for (const file of [".env", ".env.local"]) {
+    const filePath = path.join(process.cwd(), file);
+    if (!fs.existsSync(filePath)) continue;
+    const contents = fs.readFileSync(filePath, "utf-8");
+    if (!/^\s*CONFIDENT_API_KEY\s*=/m.test(contents)) continue;
+    new DotenvHandler(filePath).unset(["CONFIDENT_API_KEY"]);
+    if (!options.quiet) {
+      console.log(`Removed Confident AI key(s) from ${file}.`);
+    }
+  }
+
+  const shellExport = keySource === "env";
+  if (
+    handleSaveResult({
+      result,
+      save,
+      quiet: options.quiet,
+      updatedMessage: "Removed Confident AI key(s) from {path}.",
+    }) &&
+    !shellExport
+  ) {
+    console.log("\n🎉🥳 You've successfully logged out! 🙌");
+  }
+
+  if (shellExport && !options.quiet) {
+    console.log(
+      "\n⚠  CONFIDENT_API_KEY is exported by your shell, which deepeval " +
+        "cannot unset — this terminal will still be logged in.",
+    );
+    console.log(
+      "   Finish logging out with: unset CONFIDENT_API_KEY (and remove it " +
+        "from your shell profile if it's set there)",
+    );
+  }
+
+  const latestRun = path.join(process.cwd(), HIDDEN_DIR, LATEST_TEST_RUN_FILE);
+  try {
+    fs.rmSync(latestRun, { force: true });
+  } catch {}
 }
 
 export { openBrowser };

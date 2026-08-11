@@ -17,6 +17,7 @@ PropValue = Union[str, int, float, bool, List[str]]
 class Prop(str, Enum):
     # telemetry meta
     SCHEMA_VERSION = "telemetry.schema_version"
+    SDK_LANGUAGE = "sdk.language"
     SDK_VERSION = "deepeval.version"
     RUNTIME = "runtime.kind"
     # identity
@@ -67,6 +68,13 @@ class Prop(str, Enum):
     BENCHMARK_NUM_TASKS = "benchmark.num_tasks"
     # conversation simulator
     NUM_CONVERSATIONS = "simulator.num_conversations"
+
+
+class Language(str, Enum):
+    """Which SDK emitted the event. An absent value means Python."""
+
+    PYTHON = "python"
+    TYPESCRIPT = "typescript"
 
 
 class Runtime(str, Enum):
@@ -175,6 +183,7 @@ class EventProperties:
 
     # telemetry meta
     schema_version: Optional[int] = None
+    sdk_language: Optional[Language] = None
     sdk_version: Optional[str] = None
     runtime: Optional[Runtime] = None
     # identity
@@ -244,6 +253,7 @@ class EventProperties:
 
 _FIELD_TO_PROP: Dict[str, Prop] = {
     "schema_version": Prop.SCHEMA_VERSION,
+    "sdk_language": Prop.SDK_LANGUAGE,
     "sdk_version": Prop.SDK_VERSION,
     "runtime": Prop.RUNTIME,
     "user_status": Prop.USER_STATUS,

@@ -68,6 +68,7 @@ This page covers **tracing and evaluating** AI SDK apps. To use an AI SDK `Langu
 `deepeval`'s Vercel AI SDK integration enables you to:
 
 - **Trace every AI SDK call** — `configureAiSdkTracing(...)` once, then pass the tracer into `experimental_telemetry` on each call.
+- **Evaluate the complete ordered [generation/tool-loop trajectory](/docs/evaluation-trajectory-based-llm-evals)** across all applicable LLM, tool, and retriever spans.
 - **Evaluate traces or individual components** with any `deepeval` metric.
 - **Run evals from scripts or CI/CD** — same instrumentation, different surfaces.
 - **Customize trace and span data** through configure options, AI SDK telemetry metadata, and `deepeval`'s span-staging helpers.
@@ -230,6 +231,35 @@ for await (const golden of dataset.evalsIterator({
 :::note[Evals keep spans in-process automatically]
 While `evalsIterator()` or `toPass()` is running, the processor routes spans into `deepeval`'s in-process trace manager so metrics can read them — you do not need `isTestMode: true` for that. Pass `isTestMode: true` when you want the same local path **outside** an eval (for example, asserting on traces in a unit test). Outside evals with a `CONFIDENT_API_KEY`, spans export over OTLP to Confident AI by default.
 :::
+
+## Evaluate agent trajectories
+
+For AI SDK, trajectory evaluation scores the complete ordered generation/tool-loop trace: the root generation and every applicable model, tool, and retriever span in execution order. There is no separate agent span. This differs from output-only evaluation, which judges only the final response, and component evaluation, which scores one span without considering the full tool loop.
+
+Pass trajectory metrics to `evalsIterator(...)`, then call the instrumented `ask(...)` function from above once per golden. Its `experimental_telemetry` configuration keeps the generation and tool loop in one trace.
+
+```typescript title="ai-sdk-agent.ts" showLineNumbers
+import {
+  TaskCompletionMetric,
+  StepEfficiencyMetric,
+  PlanAdherenceMetric,
+} from "deepeval/metrics";
+...
+
+const trajectoryMetrics = [
+  new TaskCompletionMetric(),
+  new StepEfficiencyMetric(),
+  new PlanAdherenceMetric(),
+];
+
+for await (const golden of dataset.evalsIterator({
+  metrics: trajectoryMetrics,
+})) {
+  await ask((golden as Golden).input);
+}
+```
+
+See the [trajectory evaluation guide](/docs/evaluation-trajectory-based-llm-evals) for metric selection and CI/CD patterns. To diagnose a trajectory score at a narrower level, apply metrics to the individual components below.
 
 ## Applying metrics to components
 

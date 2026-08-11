@@ -536,6 +536,16 @@ This is very useful especially if you:
 
 By default, `deepeval` will not run any metrics when you're running your LLM application outside of `evaluate()` or <Term py="assert_test()" ts="expect(testCase).toPass()"/>. For the full guide on evaluating with tracing, visit [this page.](/docs/evaluation-component-level-llm-evals)
 
+## Framework Integrations
+
+Framework integrations capture your application's traces and spans so `deepeval` metrics can evaluate complete agent trajectories or individual components without you recreating the execution structure manually.
+
+Here are a few examples available for your selected SDK:
+
+<include cwd>snippets/integrations/framework-integration-card-examples.mdx</include>
+
+[Browse all framework integrations →](/integrations)
+
 ## FAQs
 
 <FAQs

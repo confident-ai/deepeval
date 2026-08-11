@@ -5,9 +5,8 @@ the model's own class name; the model name is checked against the registries in
 `deepeval.models.llms.constants` that the library already maintains.
 
 What is *not* taken from the model is `get_model_name()`. The base
-implementation returns `self.name`, so a custom `DeepEvalBaseLLM` subclass
-would emit an arbitrary user-defined string -- the same unbounded-cardinality
-leak that once turned GEval metric names into 35,100 distinct event names.
+implementation returns `self.name`, so a custom `DeepEvalBaseLLM` subclass would
+emit an arbitrary user-defined string -- an unbounded-cardinality leak.
 """
 
 from functools import lru_cache

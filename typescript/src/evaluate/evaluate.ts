@@ -40,6 +40,11 @@ import {
 } from "@/evaluate/hyperparameters";
 import { mapWithConcurrency, shouldUseCache } from "@/env-flags";
 import {
+  Entrypoint,
+  captureEvaluationRun,
+  recordTestCase,
+} from "@/telemetry";
+import {
   cacheMetricData,
   ensureCacheFlushedOnExit,
   getCachedMetricData,
@@ -85,6 +90,16 @@ export async function evaluate(
   testCases: AnyTestCase[],
   metrics: AnyMetric[],
   options: EvaluateOptions = {},
+): Promise<EvaluationResult> {
+  return captureEvaluationRun(Entrypoint.EVALUATE, () =>
+    runEvaluation(testCases, metrics, options),
+  );
+}
+
+async function runEvaluation(
+  testCases: AnyTestCase[],
+  metrics: AnyMetric[],
+  options: EvaluateOptions,
 ): Promise<EvaluationResult> {
   checkAtLeastOneMetricHasThreshold(metrics);
 
@@ -181,6 +196,7 @@ export async function evaluate(
     // matching metrics within a test case run concurrently (distinct instances).
     // TODO: parallelize across test cases by cloning metrics per case, honoring maxConcurrent.
     for (const { index, testCase, metrics: applicable } of work) {
+      recordTestCase(testCase);
       const caseBar = caseBars[index];
       const caseStart = Date.now();
       const metricsData = await mapWithConcurrency(

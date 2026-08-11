@@ -43,9 +43,29 @@ function rawValues(): Record<string, string> {
   return raw;
 }
 
+/**
+ * Fold the deprecated `DEEPEVAL_TELEMETRY_ENABLED` into the opt-out flag, as
+ * Python's `_apply_telemetry_enabled_alias` does: any OFF signal wins.
+ */
+function applyTelemetryOptOutAlias(settings: Settings): Settings {
+  const optOut = settings.DEEPEVAL_TELEMETRY_OPT_OUT;
+  const legacyEnabled = settings.DEEPEVAL_TELEMETRY_ENABLED;
+  const offSignal = optOut === true || legacyEnabled === false;
+  const onSignal = optOut === false || legacyEnabled === true;
+
+  if (offSignal && onSignal && settings.DEEPEVAL_VERBOSE_MODE) {
+    console.warn(
+      `Conflicting telemetry flags: DEEPEVAL_TELEMETRY_OPT_OUT=${optOut}, ` +
+        `DEEPEVAL_TELEMETRY_ENABLED=${legacyEnabled}. Defaulting to off.`,
+    );
+  }
+
+  return { ...settings, DEEPEVAL_TELEMETRY_OPT_OUT: offSignal };
+}
+
 function parseSettings(raw: Record<string, string>): Settings {
   const result = settingsSchema.safeParse(raw);
-  if (result.success) return result.data;
+  if (result.success) return applyTelemetryOptOutAlias(result.data);
 
   // A bad value in the environment shouldn't be fatal at import time.
   const bad = new Set<string>();
@@ -60,7 +80,7 @@ function parseSettings(raw: Record<string, string>): Settings {
     );
     delete raw[name];
   }
-  return settingsSchema.parse(raw);
+  return applyTelemetryOptOutAlias(settingsSchema.parse(raw));
 }
 
 export function getSettings(): Settings {
@@ -225,7 +245,7 @@ export function editSettings(
     if (removed.length > 0) dotenv.unset(removed);
   }
 
-  _settingsSingleton = validated.data;
+  _settingsSingleton = applyTelemetryOptOutAlias(validated.data);
   return { handled: handled || !target, path, updated, removed };
 }
 

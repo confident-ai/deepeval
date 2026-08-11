@@ -768,6 +768,14 @@ class Settings(BaseSettings):
         None,
         description="Opt out of DeepEval telemetry (OFF wins if conflicting legacy flags are set).",
     )
+    DEEPEVAL_TELEMETRY_ENABLED: Optional[bool] = Field(
+        None,
+        description="Deprecated alias of DEEPEVAL_TELEMETRY_OPT_OUT, inverted. Any OFF signal wins.",
+    )
+    DEEPEVAL_HOME: Optional[str] = Field(
+        None,
+        description="Directory holding DeepEval's local state, including the anonymous telemetry id (default: ~/.deepeval).",
+    )
     DEEPEVAL_UPDATE_WARNING_OPT_IN: Optional[bool] = Field(
         None,
         description="Opt in to update warnings in the CLI/runtime when new versions are available.",
@@ -781,10 +789,6 @@ class Settings(BaseSettings):
     )
     GRPC_TRACE: Optional[str] = Field(
         None, description="gRPC trace categories (grpc env var passthrough)."
-    )
-    ERROR_REPORTING: Optional[bool] = Field(
-        None,
-        description="Enable/disable error reporting (implementation/integration dependent).",
     )
     IGNORE_DEEPEVAL_ERRORS: Optional[bool] = Field(
         None,
@@ -1016,9 +1020,9 @@ class Settings(BaseSettings):
         "DEEPEVAL_GRPC_LOGGING",
         "DEEPEVAL_DISABLE_DOTENV",
         "DEEPEVAL_TELEMETRY_OPT_OUT",
+        "DEEPEVAL_TELEMETRY_ENABLED",
         "DEEPEVAL_UPDATE_WARNING_OPT_IN",
         "ENABLE_DEEPEVAL_CACHE",
-        "ERROR_REPORTING",
         "GOOGLE_GENAI_USE_VERTEXAI",
         "IGNORE_DEEPEVAL_ERRORS",
         "SKIP_DEEPEVAL_MISSING_PARAMS",

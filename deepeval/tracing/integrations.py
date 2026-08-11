@@ -16,6 +16,9 @@ class Integration(str, Enum):
     OTEL = "OpenTelemetry"
     OPEN_INFERENCE = "OpenInference"
     AGENTCORE = "AgentCore"
+    # TypeScript-only, but the vocabulary is shared across both SDKs.
+    AI_SDK = "AI SDK"
+    MASTRA = "Mastra"
 
 
 class Provider(str, Enum):

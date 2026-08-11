@@ -6,12 +6,12 @@ languages: [python, typescript]
 ---
 
 import { ASSETS } from "@site/src/assets";
-import { SendToBack, ArrowDownWideNarrow } from "lucide-react";
+import { SendToBack, ArrowDownWideNarrow, Workflow } from "lucide-react";
 import AgentTraceTerminal from "@site/src/components/AgentTraceTerminal";
 import ClaudeCodeTerminal from "@site/src/sections/home/ClaudeCodeTerminal";
 import TraceLoopConnector from "@site/src/sections/home/TraceLoopConnector";
 
-Tracing your LLM application helps you monitor its full execution from start to finish. With `deepeval`'s `@observe` decorator, you can trace and evaluate any [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) at any point in your app no matter how complex they may be.
+Tracing your LLM application records its full execution from start to finish. This makes it possible to evaluate the complete trajectory taken by an AI agent, debug individual components, and monitor any [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) no matter how complex the application becomes.
 
 ## Quick Summary
 
@@ -19,12 +19,12 @@ An LLM trace is made up of multiple individual spans. A **span** is a flexible, 
 
 <ImageDisplayer src={ASSETS.llmTrace} alt="LLM Trace" />
 
-The most important thing to understand is how traces and spans map to evaluation in `deepeval`:
+The most important thing to understand is how traces and spans map to evaluation scopes in `deepeval`:
 
-- A **trace** is the [`LLMTestCase`](/docs/evaluation-test-cases) for [end-to-end evals](/docs/evaluation-end-to-end-llm-evals) — its `input`, `actual_output`, `retrieval_context`, `tools_called`, and `expected_output` describe the whole run of your LLM app.
+- A **trace** captures the complete run. Its top-level [`LLMTestCase`](/docs/evaluation-test-cases) fields support [end-to-end evals](/docs/evaluation-end-to-end-llm-evals), while its ordered tree of spans supports [trajectory-based evals](/docs/evaluation-trajectory-based-llm-evals).
 - A **span** is the `LLMTestCase` for [component-level evals](/docs/evaluation-component-level-llm-evals) — the same parameters apply, but they describe what happened **inside that one component** (a retriever, a tool, an LLM call, an agent step).
 
-This means you don't need a separate concept to evaluate traces. The primitives (`LLMTestCase`, [metrics](/docs/metrics-introduction), goldens) you already use for unit-style evals all work on traces and spans too — you just attach them via `update_current_trace` and `update_current_span`.
+The same trace can therefore carry three scopes of evaluation: the observable result, the complete agent trajectory, and selected individual components. The primitives (`LLMTestCase`, [metrics](/docs/metrics-introduction), goldens) you already use for unit-style evals work across these scopes.
 
 <details>
 
@@ -113,13 +113,19 @@ Concretely, tracing your LLM application lets you:
 
 - **Run targeted metrics on specific components:** Attach `LLMTestCase`s to agents, tools, retrievers, or LLMs and apply metrics like answer relevancy or context precision — without needing to restructure your app.
 
-- **Run end-to-end evals with trace data:** Use the `evals_iterator` with `metrics` to perform comprehensive evaluations using your traces.
+- **Evaluate complete agent trajectories:** Pass trajectory metrics to <Term py="evals_iterator()" ts="evalsIterator()"/> to analyze how plans, model calls, tools, handoffs, and intermediate steps work together.
+
+- **Run end-to-end evals with trace data:** Use black-box metrics when you only need to score the trace's observable input and output.
+
+::::info[Tracing is required for trajectory-based evals]
+An output alone cannot show whether an agent followed its plan, chose an efficient path, or recovered from a failed step. Tracing preserves that ordered execution path so [trajectory metrics](/docs/evaluation-trajectory-based-llm-evals) can evaluate it after the run finishes.
+::::
 
 ## Setup Your First Trace
 
 To set up tracing in your LLM app, you need to understand two key concepts:
 
-- **Trace**: The full execution of your app, made up of one or more spans.
+- **Trace**: The full execution of your app, whose ordered spans form the trajectory taken through the run.
 - **Span**: A specific component or unit of work—like an LLM call, tool invocation, or document retrieval.
 
 You should login to see traces for free on Confident AI:
@@ -497,12 +503,12 @@ The examples on the rest of this documentation shows how to perform operations o
 
 ## Set test cases on traces and spans
 
-This is the **most important concept on this page**: traces and spans both map to `LLMTestCase`s, just at different scopes.
+This is the **most important concept on this page**: a trace preserves both the top-level test case and the ordered span tree, while every span can carry its own component test case.
 
-- **Trace = end-to-end `LLMTestCase`** — what the user asked, what your app finally answered, what context was retrieved overall, what tools ended up being called. Used for [end-to-end evals](/docs/evaluation-end-to-end-llm-evals). Set with `update_current_trace`.
+- **Trace = end-to-end result + agent trajectory** — the trace-level `LLMTestCase` describes what the user asked and what the app finally produced, while the nested spans preserve the path taken between them. Use the first for [end-to-end evals](/docs/evaluation-end-to-end-llm-evals) and the complete ordered trace for [trajectory-based evals](/docs/evaluation-trajectory-based-llm-evals). Set trace-level fields with `update_current_trace`.
 - **Span = component-level `LLMTestCase`** — the same parameters, but scoped to what happened **inside that one component** (a retriever, a tool, a single LLM call). Used for [component-level evals](/docs/evaluation-component-level-llm-evals). Set with `update_current_span`.
 
-Both functions accept the **same** `LLMTestCase` parameters, and both can be called from anywhere inside your `@observe`'d code. A typical pattern is to set span-level test cases inside the components you want to grade individually, and let trace-level data accumulate from those same spans:
+Both functions accept the **same** `LLMTestCase` parameters, and both can be called from anywhere inside your `@observe`'d code. A typical pattern is to set span-level test cases inside the components you want to grade individually, let trace-level data accumulate from those spans, and retain the complete span order for trajectory metrics:
 
 <Switch>
 
@@ -575,7 +581,7 @@ const llmApp = observe({
 
 You can call either function **multiple times** from different spans — values are merged across calls, with later calls overriding earlier ones.
 
-This is what lets the trace-level test case build up incrementally as data flows through your app: a retriever span contributes `retrieval_context`, a generator span contributes `output`, and you end up with a complete `LLMTestCase` on the trace by the time the run finishes.
+This is what lets the trace-level test case build up incrementally as data flows through your app: a retriever span contributes `retrieval_context`, a generator span contributes `output`, and you end up with a complete `LLMTestCase` plus an evaluable agent trajectory by the time the run finishes.
 
 ## Map test case parameters to traces and spans
 
@@ -770,24 +776,30 @@ You get this with **zero additional code** — just log in:
 deepeval login
 ```
 
-Once logged in, the same `@observe`-decorated app will also stream traces in real-time, let you run [online evaluations](https://www.confident-ai.com/docs/llm-tracing/online-evals) on production traffic, [log prompt versions](https://www.confident-ai.com/docs/llm-tracing/features/log-prompts) on LLM spans, and visualize [token costs](https://www.confident-ai.com/docs/llm-tracing/features/token-usage-cost) across runs.
+Once logged in, the same `@observe`-decorated app will also stream traces in real-time, let you run [online evaluations](https://www.confident-ai.com/docs/llm-tracing/online-evals) on complete trajectories or individual spans, [log prompt versions](https://www.confident-ai.com/docs/llm-tracing/features/log-prompts) on LLM spans, and visualize [token costs](https://www.confident-ai.com/docs/llm-tracing/features/token-usage-cost) across runs.
 
 ## Next Steps
 
-Now that you have your traces, you can run either end-to-end or component-level evals.
+Now that you have your traces, you can evaluate the observable result end-to-end, the complete agent trajectory, or individual components.
 
 <Cards>
   <Card
     icon={<SendToBack />}
     title="End-to-End Evals"
-    description="Learn how to run end-to-end evals with your trace data."
-    href="/docs/evaluation-end-to-end-llm-evals#use-evaluate-in-python-scripts"
+    description="Score the observable input and output as a black box."
+    href="/docs/evaluation-end-to-end-llm-evals"
+  />
+  <Card
+    icon={<Workflow />}
+    title="Trajectory-Based Evals"
+    description="Score the complete ordered path taken by an AI agent."
+    href="/docs/evaluation-trajectory-based-llm-evals"
   />
   <Card
     icon={<ArrowDownWideNarrow />}
     title="Component-Level Evals"
-    description="Learn how to run component-level evals using tracing."
-    href="/docs/evaluation-component-level-llm-evals#use-python-scripts"
+    description="Score selected spans inside the trace."
+    href="/docs/evaluation-component-level-llm-evals"
   />
 </Cards>
 
@@ -800,8 +812,11 @@ Now that you have your traces, you can run either end-to-end or component-level 
       answer: (
         <>
           Tracing records the execution of your LLM app as a tree of spans
-          (retrievers, tools, LLM calls, agents). It lets you attach metrics to
-          individual components for{" "}
+          (retrievers, tools, LLM calls, agents). That ordered tree enables{" "}
+          <a href="/docs/evaluation-trajectory-based-llm-evals">
+            trajectory-based evaluation
+          </a>{" "}
+          of the complete agent path, while individual spans support{" "}
           <a href="/docs/evaluation-component-level-llm-evals">
             component-level evaluation
           </a>{" "}
@@ -828,7 +843,8 @@ Now that you have your traces, you can run either end-to-end or component-level 
           <code>deepeval</code> ships native{" "}
           <a href="/integrations">integrations</a> for LangChain, LangGraph,
           LlamaIndex, Pydantic AI, CrewAI, and more that auto-trace the spans
-          your framework emits — typically just one setup call.
+          your framework emits. This preserves both the complete trajectory and
+          its individual components, typically with one setup call.
         </>
       ),
     },
