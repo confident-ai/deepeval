@@ -1,22 +1,51 @@
 from __future__ import annotations
 
+import copy
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Optional, Dict, List
+from typing import TYPE_CHECKING, Dict, List, Optional
 
-from deepeval.test_case import (
-    LLMTestCase,
-    ConversationalTestCase,
-    SingleTurnParams,
-    ArenaTestCase,
-)
 from deepeval.templates.resolver import (
     MetricTemplateMethod,
     resolve_template,
 )
 from deepeval.templates.template_class import filter_template_kwargs
+from deepeval.test_case import (
+    ArenaTestCase,
+    ConversationalTestCase,
+    LLMTestCase,
+    SingleTurnParams,
+)
 
 if TYPE_CHECKING:
     from deepeval.models import DeepEvalBaseLLM
+
+
+_RUN_STATE = {
+    "score",
+    "reason",
+    "success",
+    "error",
+    "verdicts",
+    "skipped",
+    "evaluation_cost",
+    "input_tokens",
+    "output_tokens",
+    "verbose_logs",
+}
+
+
+def _clone_metric(metric):
+    copied = copy.copy(metric)
+
+    for key, value in vars(copied).items():
+        if key not in _RUN_STATE and isinstance(value, (list, dict, set)):
+            setattr(copied, key, copy.copy(value))
+
+    for key in _RUN_STATE:
+        if hasattr(copied, key):
+            setattr(copied, key, None)
+
+    return copied
 
 
 class PromptMixin:
@@ -73,6 +102,10 @@ class BaseMetric(PromptMixin):
     requires_trace: bool = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
+
+    def clone(self) -> "BaseMetric":
+        """Return a per-test-case copy without duplicating the model client."""
+        return _clone_metric(self)
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -144,6 +177,10 @@ class BaseConversationalMetric(PromptMixin):
     flaky: bool = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
+
+    def clone(self) -> "BaseConversationalMetric":
+        """Return a per-test-case copy without duplicating the model client."""
+        return _clone_metric(self)
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
