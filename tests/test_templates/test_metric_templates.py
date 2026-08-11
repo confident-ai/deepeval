@@ -57,3 +57,14 @@ def test_templates_json_is_valid_and_nonempty():
         assert isinstance(methods, dict), class_name
         for method, body in methods.items():
             assert isinstance(body, str), f"{class_name}.{method}"
+
+
+def test_knowledge_retention_prompt_avoids_guardrail_triggers():
+    data = json.loads(PY_TEMPLATES_JSON.read_text(encoding="utf-8"))
+    prompt = data["KnowledgeRetentionMetric"]["generate_verdict"]
+
+    assert "user will die" not in prompt
+    assert '"Phone Number"' not in prompt
+    assert "555-1029" not in prompt
+    assert "must take precedence over conflicting heuristics" in prompt
+    assert '"Favorite Color": "Blue"' in prompt
