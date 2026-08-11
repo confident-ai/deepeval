@@ -108,6 +108,13 @@ class DeepAcyclicGraph:
         self.root_nodes = root_nodes
         self.indegree, self.parents = self._build_graph()
 
+        for root in self.root_nodes:
+            if self.indegree[root] > 0:
+                raise ValueError(
+                    "You cannot declare a node as a root node when it is "
+                    "also reachable from another root node."
+                )
+
     def _build_graph(self) -> Tuple[Dict[Node, int], Dict[Node, List[Node]]]:
         indegree: Dict[Node, int] = {}
         parents: Dict[Node, List[Node]] = {}

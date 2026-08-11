@@ -293,6 +293,22 @@ class TestDeepAcyclicGraph:
         dag = DeepAcyclicGraph(root_nodes=[node1, node2])
         assert is_valid_dag(dag, multiturn=False) is True
 
+    def test_disallow_root_that_is_a_child_of_another_root(self):
+        """A root with incoming edges is reached twice and runs twice."""
+        extract = TaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        summarise = TaskNode(
+            instructions="Summarise",
+            output_label="Y",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        extract.add_node(summarise)
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[extract, summarise])
+
     def test_copy_graph_isolated_and_deep(self):
         INSTRUCTIONS = "Instruction 1:"
         OUTPUT_LABEL = "Output label"
