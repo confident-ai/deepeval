@@ -98,10 +98,16 @@ def trace(
         expected_tools=expected_tools,
     )
 
-    if llm_span_context:
+    llm_context_token = (
         current_llm_context.set(llm_span_context)
-    if agent_span_context:
+        if llm_span_context is not None
+        else None
+    )
+    agent_context_token = (
         current_agent_context.set(agent_span_context)
+        if agent_span_context is not None
+        else None
+    )
     try:
         yield current_trace
     finally:
@@ -110,5 +116,7 @@ def trace(
 
         current_trace_context.reset(trace_ctx_token)
 
-        current_llm_context.set(LlmSpanContext())
-        current_agent_context.set(AgentSpanContext())
+        if llm_context_token is not None:
+            current_llm_context.reset(llm_context_token)
+        if agent_context_token is not None:
+            current_agent_context.reset(agent_context_token)
