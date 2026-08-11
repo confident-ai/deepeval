@@ -318,11 +318,6 @@ class AnswerRelevancyMetric(BaseMetric):
         if number_of_verdicts == 0:
             return 1
 
-    def _calculate_score(self):
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 1
-
         relevant_count = 0
         for verdict in self.verdicts:
             normalized_verdict = verdict.verdict.strip().lower()
