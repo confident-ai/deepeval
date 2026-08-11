@@ -234,6 +234,10 @@ class DeepEvalBaseSTT(ABC):
     ) -> Tuple[str, Optional[float]]:
         """Transcribes speech into text asynchronously.
 
+        Implementations that accept a `language` keyword should treat
+        `language="auto"` as a request to detect the language per utterance,
+        overriding any language the model was configured with.
+
         Returns:
             A tuple of (transcript, cost).
         """

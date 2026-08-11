@@ -5,7 +5,7 @@ import logging
 from typing import List, Optional
 
 from deepeval.test_case import ConversationalTestCase, Turn
-from deepeval.voice.connectors import audio_utils
+from deepeval.voice.timeline import render_timeline_wav
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ def save_conversation_audio(
     output_dir: str,
     run_label: str,
     conversation_id: Optional[str] = None,
-    combine_audio: bool = True,
+    combine_audio_files: bool = True,
 ) -> None:
     folder = os.path.join(output_dir, run_label)
     if conversation_id is not None:
@@ -34,7 +34,7 @@ def save_conversation_audio(
     os.makedirs(folder, exist_ok=True)
 
     _write_turn_files(test_case.turns, folder)
-    if combine_audio:
+    if combine_audio_files:
         _write_combined_file(test_case.turns, folder, run_label)
 
 
@@ -67,24 +67,13 @@ def _write_combined_file(
 
 
 def _concat_wav_turns(turns: List[Turn]) -> Optional[bytes]:
-    pcm_parts: List[bytes] = []
-    rate: Optional[int] = None
-    channels: Optional[int] = None
-    for turn in turns:
-        if turn.audio is None or _MIME_EXT.get(turn.audio.mimeType) != "wav":
-            return None
-        try:
-            pcm, turn_rate, turn_channels = audio_utils.wav_bytes_to_pcm16(
-                turn.audio.get_bytes()
-            )
-        except ValueError:
-            return None
-        if rate is None:
-            rate, channels = turn_rate, turn_channels
-        elif (turn_rate, turn_channels) != (rate, channels):
-            return None
-        pcm_parts.append(pcm)
-
-    if not pcm_parts:
-        return None
-    return audio_utils.pcm16_to_wav_bytes(b"".join(pcm_parts), rate, channels)
+    has_untimed_audio = any(
+        turn.audio is not None and turn.audio.start_time is None
+        for turn in turns
+    )
+    if has_untimed_audio:
+        logger.warning(
+            "Some turn audio has no start_time; placing untimed clips "
+            "sequentially in the combined WAV."
+        )
+    return render_timeline_wav(turns, require_start_times=False)

@@ -1,0 +1,138 @@
+---
+id: metrics-voice-naturalness
+title: Voice Naturalness
+sidebar_label: Voice Naturalness
+languages: [python]
+---
+<MetricTagsDisplayer multiTurn={true} chatbot={true} usesLLMs={false} referenceless={true} />
+
+The voice naturalness metric measures how naturally your voice agent speaks across a conversation. It analyzes the audio on each assistant turn and returns a score between 0 and 1, where a higher score indicates more natural-sounding speech.
+
+:::note
+`VoiceNaturalnessMetric` is a deterministic acoustic heuristic, not a human mean-opinion score (MOS). It is best used to catch regressions such as clipping, repeated audio, dropouts, excessive silence, or implausible speaking rates.
+:::
+
+## Usage
+
+Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then evaluate the returned test case:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import VoiceNaturalnessMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user wants to change a restaurant reservation.",
+    expected_outcome="The agent confirms the new reservation date.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_case = simulator.simulate([golden])[0]
+
+metric = VoiceNaturalnessMetric(threshold=0.7)
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+The simulator records the audio and transcript on each turn. You do not need to manually construct a `ConversationalTestCase` or `Audio` object.
+
+There are **FIVE** optional parameters when creating a `VoiceNaturalnessMetric`:
+
+- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+The metric's per-turn diagnostics include:
+
+```python
+{
+    "eligible_turns": 1,
+    "turns": [
+        {
+            "turn": 1,
+            "score": 0.91,
+            "speaking_rate_wpm": 154.3,
+            "silence_fraction": 0.08,
+            "pitch_variation_hz": 22.7,
+            "clipping_fraction": 0.0,
+            "dropout_events": 0,
+            "loop_events": 0,
+        }
+    ],
+}
+```
+
+## How Is It Calculated?
+
+`VoiceNaturalnessMetric` evaluates assistant turns only. For each decodable assistant audio clip, it:
+
+1. Decodes the clip to mono PCM samples.
+2. Measures clipping, short dropouts, repeated audio windows, silence, estimated signal-to-noise ratio, speaking rate, and pitch variation.
+3. Starts the turn at a score of 1 and applies bounded penalties for unnatural acoustic behavior.
+4. Clamps the turn score between 0 and 1.
+5. Averages all eligible assistant-turn scores.
+
+The largest clipping penalty is 0.35. Dropouts can subtract up to 0.25, and repeated audio can subtract up to 0.2. Smaller penalties apply to:
+
+- silence occupying more than 45% of the clip
+- an estimated signal-to-noise ratio below 15 dB
+- a speaking rate below 80 or above 240 words per minute
+- pitch variation below 4 Hz or above 90 Hz
+
+If an assistant turn has no audio, the metric skips that turn. If no assistant turn contains decodable audio, the metric returns no score and marks the evaluation as skipped.
+
+:::tip
+Use the overall score for regression thresholds and the per-turn breakdown to diagnose the cause. The raw measurements are evidence, not universal quality scores; speaking style, language, and use case can change what sounds natural.
+:::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Scoring is deterministic and runs locally over the audio samples,
+          so it has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Do I need a transcript?",
+      answer: (
+        <>
+          Yes. The assistant turn's <code>content</code> is used with the audio
+          duration and detected silence to estimate speaking rate.
+        </>
+      ),
+    },
+    {
+      question: "Does the metric evaluate user audio?",
+      answer: (
+        <>
+          No. Only turns whose <code>role</code> is{" "}
+          <code>"assistant"</code> contribute to the score.
+        </>
+      ),
+    },
+    {
+      question: "Is this a replacement for human listening tests?",
+      answer: (
+        <>
+          No. It is a fast regression signal for measurable acoustic defects.
+          Use representative human ratings when you need a perceptual quality
+          benchmark or must validate a new voice and speaking style.
+        </>
+      ),
+    },
+  ]}
+/>

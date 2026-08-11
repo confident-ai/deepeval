@@ -14,7 +14,7 @@ A **multi-turn test case** is a blueprint provided by `deepeval` to unit test a 
 - `turns`
 - [Optional] `scenario`
 - [Optional] `expected_outcome`
-- [Optional] `user_description`
+- <Switch><Case id="python">[Optional] `user_description`</Case><Case id="typescript">[Optional] `userDescription`</Case></Switch>
 - [Optional] `context`
 - [Optional] `chatbot_role`
 
@@ -145,16 +145,21 @@ The `role` parameter specifies whether a particular turn is by the `"user"` (end
 
 <Only id="python">
 
-For **voice conversations**, a `Turn` carries two additional fields that record what was actually spoken and when:
+For **voice conversations**, a `Turn` carries additional fields that record what was actually spoken, when, and whether the reply was cut short:
 
 ```python
 class Turn:
     ...
     audio: Optional[Audio] = None
     latency_ms: Optional[float] = None
+    interrupted: Optional[bool] = None
 ```
 
-The `audio` parameter holds the spoken audio for that turn as an `Audio` object, and `latency_ms` records the assistant's response time. A `ConversationalTestCase` whose turns carry audio has its `voice` flag set to `True` automatically. See [Voice](/docs/evaluation-voice) in concepts for what these fields mean and the `Audio` data model.
+- **`audio`** — the spoken audio for that turn as an [`Audio`](/docs/evaluation-voice#audio-data-model) object (clip length is `Audio.duration`).
+- **`latency_ms`** — how long the assistant took to start speaking after the user finished (assistant turns).
+- **`interrupted`** — `True` if a user barge-in cut this assistant reply short; `None` otherwise.
+
+A `ConversationalTestCase` whose turns carry audio has its `voice` flag set to `True` automatically. See [Voice](/docs/evaluation-voice) for what these fields mean in a simulation.
 
 </Only>
 
@@ -273,6 +278,10 @@ test_case = ConversationalTestCase(
 )
 ```
 
+:::tip
+If you are [simulating conversations](/docs/conversation-simulator), describe the user on the `ConversationalGolden` instead, using a [`Persona`](/docs/conversation-simulator-voice-personas) — it carries the same profile plus voice, background noise, and interruption behavior. The simulator flattens it onto the `user_description` of each test case it produces.
+:::
+
 </Case>
 
 <Case id="typescript">
@@ -337,7 +346,7 @@ By default `deepeval` supports passing both text and images inside your test cas
 <Case id="python">
 
 ```python
-from deepeval.test_case import ConversationalTestCase, Turn, MLLMImage
+from deepeval.test_case import ConversationalTestCase, MLLMImage, Turn
 
 shoes = MLLMImage(url='./shoes.png', local=True)
 

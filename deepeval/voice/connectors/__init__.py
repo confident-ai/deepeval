@@ -1,4 +1,4 @@
-from deepeval.voice.connectors.types import ConnectorTurn
+from deepeval.voice.connectors.types import ConnectorTurn, AgentEvent
 from deepeval.voice.connectors.transports import (
     BaseVoiceConnector,
     CallbackVoiceConnector,
@@ -13,6 +13,7 @@ from deepeval.voice.connectors.providers import (
 __all__ = [
     "BaseVoiceConnector",
     "ConnectorTurn",
+    "AgentEvent",
     "CallbackVoiceConnector",
     "LiveKitConnector",
     "BaseWebSocketConnector",

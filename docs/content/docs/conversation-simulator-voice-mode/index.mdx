@@ -3,34 +3,15 @@ id: conversation-simulator-voice-mode
 title: Voice Mode
 sidebar_label: Voice Mode
 languages: [python]
+beta: true
 ---
 
 Voice mode lets the `ConversationSimulator` talk to **voice agents** instead of text chatbots. Rather than wrapping your application in a `model_callback`, you pass a `VoiceConfig`: each simulated user turn is spoken aloud (text-to-speech), streamed to your agent over a live connection, and your agent's spoken reply is recorded and transcribed (speech-to-text) back into the conversation.
 
-```python title="main.py" showLineNumbers
-from deepeval.voice import VoiceConfig, ElevenLabsConnector
-from deepeval.simulator import ConversationSimulator
-from deepeval.dataset import ConversationalGolden
-
-conversation_golden = ConversationalGolden(
-    scenario="Andy Byron wants to purchase a VIP ticket to a cold play concert.",
-    expected_outcome="Successful purchase of a ticket.",
-    user_description="Andy Byron is the CEO of Astronomer.",
-)
-
-simulator = ConversationSimulator(
-    voice_config=VoiceConfig(
-        connector=ElevenLabsConnector(agent_id="your-agent-id"),
-    ),
-)
-conversational_test_cases = simulator.simulate(conversational_goldens=[conversation_golden])
-print(conversational_test_cases)
-```
-
 The result is the same list of `ConversationalTestCase`s you get from a text simulation — ready for `deepeval`'s multi-turn metrics — except every `Turn` also carries the actual audio that was spoken, and every assistant `Turn` records how long your agent took to respond.
 
 ::::tip
-New to voice evaluation? [Voice](/docs/evaluation-voice) in the concepts section explains the ideas this page builds on — speech models, transports, protocols, and the connector architecture.
+New to voice evaluation? [Voice](/docs/evaluation-voice) in the concepts section explains the ideas this page builds on — speech models, transports, connectors, voice fields on `ConversationalTestCase`s, and interruptions.
 ::::
 
 ## How It Works
@@ -53,7 +34,7 @@ sequenceDiagram
 
     Simulator->>TTS: simulated user message (text)
     TTS-->>Simulator: user audio
-    Simulator->>Connector: send_turn(user audio)
+    Simulator->>Connector: exchange_turn(user audio)
     Connector->>Agent: play audio over live call
     Agent-->>Connector: spoken reply
     Connector-->>Simulator: reply audio + latency_ms
@@ -61,17 +42,15 @@ sequenceDiagram
     STT-->>Simulator: assistant transcript
 ```
 
+By default this loop is **half-duplex** (`exchange_turn`). To exercise barge-in, see [Interruptions](/docs/conversation-simulator-voice-interruptions).
+
+Who does the talking on the simulated side — their voice, their temperament, the noise around them — comes from the golden's [`Persona`](/docs/conversation-simulator-voice-personas).
+
 Everything else about the simulation — scenario-driven user turns, [stopping logic](/docs/conversation-simulator-stopping-logic), [simulation graphs](/docs/conversation-simulator-simulation-graph), and [lifecycle hooks](/docs/conversation-simulator-lifecycle-hooks) — works exactly as in text mode.
 
-## Configure Voice Mode
+## Setup Voice Mode
 
-`voice_config` and `model_callback` are mutually exclusive: provide exactly one. There are **ONE** mandatory and **FOUR** optional parameters when creating a `VoiceConfig`:
-
-- `connector`: a `BaseVoiceConnector` that carries audio to and from your voice agent. See [protocols and connectors](#protocols) below.
-- [Optional] `tts_model`: a `DeepEvalBaseTTS` model that speaks the simulated user's messages. Defaulted to `OpenAITTSModel`. See [TTS and STT models](#tts-and-stt-models).
-- [Optional] `stt_model`: a `DeepEvalBaseSTT` model that transcribes your agent's spoken replies. Defaulted to `OpenAISTTModel`. See [TTS and STT models](#tts-and-stt-models).
-- [Optional] `output_dir`: the directory to save conversation audio files into, or `None` to skip writing audio to disk. Defaulted to `"voice_simulations"`.
-- [Optional] `combine_audio`: a boolean which when set to `True`, also writes a single stitched WAV file of the full conversation. Defaulted to `True`.
+In `deepeval`'s `ConversationSimulator`, `voice_config` and `model_callback` are mutually exclusive: provide exactly one.
 
 ```python
 from deepeval.voice import VoiceConfig, ElevenLabsConnector
@@ -80,10 +59,23 @@ from deepeval.simulator import ConversationSimulator
 voice_config = VoiceConfig(
     connector=ElevenLabsConnector(agent_id="your-agent-id"),
     output_dir="voice_simulations",
-    combine_audio=True,
+    combine_audio_files=True,
 )
 simulator = ConversationSimulator(voice_config=voice_config)
 ```
+
+There are **ONE** mandatory and **FIVE** optional parameters when creating a `VoiceConfig`:
+
+- `connector`: a [`BaseVoiceConnector`](/docs/conversation-simulator-voice-connectors) that carries audio to and from your voice agent.
+- [Optional] `tts_model`: a [`DeepEvalBaseTTS`](#tts-and-stt-models) that speaks the simulated user's messages. Defaulted to `OpenAITTSModel`.
+- [Optional] `stt_model`: a [`DeepEvalBaseSTT`](#tts-and-stt-models) that transcribes your agent's spoken replies. Defaulted to `OpenAISTTModel`.
+- [Optional] `output_dir`: a string directory to save conversation audio files into, or `None` to skip writing audio to disk. Defaulted to `"voice_simulations"`.
+- [Optional] `combine_audio_files`: a boolean which when set to `True` (and `output_dir` is set), also writes a single stitched WAV of the full conversation alongside the per-turn files. Has no effect when `output_dir` is `None`. Defaulted to `True`.
+- [Optional] `interruption_settings`: **deprecated** — set [`Persona(interruption_behavior=...)`](/docs/conversation-simulator-voice-personas#interruptions) on the golden instead. Defaulted to `None`.
+
+::::tip
+`VoiceConfig` is how you reach your agent; the [`Persona`](/docs/conversation-simulator-voice-personas) on each `ConversationalGolden` is who calls it — their voice, background noise, whether they interrupt, whether they speak first, and when they hang up.
+::::
 
 ::::note
 Voice mode requires `async_mode=True` (the default), and conversations run one at a time regardless of `max_concurrent` — a connector holds a single live call, and concurrent conversations would interleave audio on the same session.
@@ -94,7 +86,7 @@ Voice mode requires `async_mode=True` (the default), and conversations run one a
 Voice mode introduces two speech models that sit on opposite sides of the connector (see [Voice concepts](/docs/evaluation-voice#speech-models) for why these are separate model families from LLMs, with their own base classes):
 
 | Config field | Base class        | Role                                                            | Default                                       | Its quality affects                                                                                                             |
-| ------------ | ----------------- | --------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| ------------ | ----------------- | --------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `tts_model`  | `DeepEvalBaseTTS` | Speaks the **simulated user's** messages to your agent          | `OpenAITTSModel` (`gpt-4o-mini-tts`, `alloy`) | What your agent hears. Unclear or unnatural speech degrades your agent's own speech recognition and skews the whole simulation. |
 | `stt_model`  | `DeepEvalBaseSTT` | Transcribes **your agent's** spoken replies into `Turn.content` | `OpenAISTTModel` (`gpt-4o-transcribe`)        | Transcript fidelity. Every multi-turn metric judges this transcript, so STT accuracy directly bounds evaluation quality.        |
 
@@ -142,82 +134,16 @@ class MySTTModel(DeepEvalBaseSTT):
 
 Both `synthesize` and `transcribe` return a tuple of the result and an optional cost, which feeds `tts_cost` / `stt_cost` accounting. Pass instances to `VoiceConfig(tts_model=MyTTSModel(), stt_model=MySTTModel(), ...)`.
 
-## Connectors
-
-A connector manages the live call: it establishes the connection, plays the simulated user's audio to your agent, captures the spoken reply, and measures response latency. Every connector declares the transport it speaks via a `protocol` class variable of type `VoiceProtocol` — see [Voice concepts](/docs/evaluation-voice#transports) for the full transport landscape and how protocols define timing semantics.
-
-Pick the connector that matches where your agent is deployed:
-
-| Connector                | `VoiceProtocol` | Talks to                                                                     |
-| ------------------------ | --------------- | ---------------------------------------------------------------------------- |
-| `ElevenLabsConnector`    | `WEBSOCKET`     | ElevenLabs conversational agents, by `agent_id`.                              |
-| `LiveKitConnector`       | `WEBRTC`        | Agents deployed in LiveKit rooms.                                             |
-| `WebSocketConnector`     | `WEBSOCKET`     | Any custom agent that speaks raw audio over a WebSocket.                      |
-| `CallbackVoiceConnector` | `CALLBACK`      | An in-process Python callable — no network, ideal for testing your pipeline.  |
-
-### ElevenLabs
-
-Connects to an ElevenLabs conversational agent. Reads `ELEVENLABS_API_KEY` from the environment when `api_key` is not passed.
-
-```python
-from deepeval.voice import ElevenLabsConnector
-
-connector = ElevenLabsConnector(agent_id="your-agent-id")
-```
-
-### LiveKit
-
-Joins a LiveKit room as a participant and exchanges audio with your agent over WebRTC. Reads `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and `LIVEKIT_API_SECRET` from the environment when not passed. Requires the `livekit` extra:
-
-```bash
-pip install "deepeval[livekit]"
-```
-
-```python
-from deepeval.voice import LiveKitConnector
-
-connector = LiveKitConnector(agent_name="restaurant-agent")
-```
-
-### Generic WebSocket
-
-For custom agents that accept and emit raw audio over a WebSocket, `WebSocketConnector` lets you describe your agent's message shape — which JSON keys carry audio in and out, whether frames are binary, and what marks the end of a turn.
-
-```python
-from deepeval.voice import WebSocketConnector
-
-connector = WebSocketConnector(
-    url="wss://your-agent.example.com/audio",
-    send_key="audio",
-    receive_audio_key="audio",
-    turn_complete_type="turn_end",
-)
-```
-
-### Callback
-
-Wraps an in-process Python callable, so you can exercise the full TTS → agent → STT pipeline without any network transport — useful for testing your simulation setup before pointing it at a deployed agent.
-
-```python
-from deepeval.voice import CallbackVoiceConnector
-from deepeval.voice.connectors import ConnectorTurn
-
-async def my_agent(user_audio) -> ConnectorTurn:
-    reply_audio = await your_voice_agent(user_audio)
-    return ConnectorTurn(audio=reply_audio)
-
-connector = CallbackVoiceConnector(my_agent)
-```
-
 ## What A Voice Simulation Produces
 
 Each simulated conversation is returned as a regular `ConversationalTestCase`, enriched with voice data:
 
-- `voice` on the test case is set to `True`.
+- `voice` is set to `True`.
 - Every user `Turn` carries the synthesized `audio` that was played to your agent.
 - Every assistant `Turn` carries your agent's reply `audio`, the transcript as `content`, and the measured response time in `latency_ms`.
+- When [interruptions](/docs/conversation-simulator-voice-interruptions) are enabled, an assistant turn cut short by a barge-in gets `interrupted=True`. Frustrated barges can also surface on user turns via `metadata`.
 
-Unless `output_dir` is `None`, the audio is also written to disk — one file per turn, plus a combined recording of the whole conversation when `combine_audio=True`:
+Unless `output_dir` is `None`, the audio is also written to disk — one file per turn, plus a combined recording of the whole conversation when `combine_audio_files=True`:
 
 ```text
 voice_simulations/
@@ -243,9 +169,10 @@ Because the output is a standard `ConversationalTestCase`, you can evaluate simu
       question: "Do I still need a model callback in voice mode?",
       answer: (
         <>
-          No — <code>voice_config</code> replaces <code>model_callback</code>, and
-          providing both raises an error. In voice mode the simulator talks to your
-          agent through the <code>connector</code> instead of a Python callback.
+          No — <code>voice_config</code> replaces <code>model_callback</code>,
+          and providing both raises an error. In voice mode the simulator talks
+          to your agent through the <code>connector</code> instead of a Python
+          callback.
         </>
       ),
     },
@@ -254,10 +181,11 @@ Because the output is a standard `ConversationalTestCase`, you can evaluate simu
       answer: (
         <>
           OpenAI's — <code>OpenAITTSModel</code> speaks the simulated user and{" "}
-          <code>OpenAISTTModel</code> transcribes your agent's replies, both using
-          your <code>OPENAI_API_KEY</code>. Swap in any custom model by subclassing{" "}
-          <code>DeepEvalBaseTTS</code> or <code>DeepEvalBaseSTT</code> and passing it
-          to <code>VoiceConfig</code>.
+          <code>OpenAISTTModel</code> transcribes your agent's replies, both
+          using your <code>OPENAI_API_KEY</code>. Swap in any custom model by
+          subclassing <code>DeepEvalBaseTTS</code> or{" "}
+          <code>DeepEvalBaseSTT</code> and passing it to{" "}
+          <code>VoiceConfig</code>.
         </>
       ),
     },
@@ -265,8 +193,8 @@ Because the output is a standard `ConversationalTestCase`, you can evaluate simu
       question: "How is latency measured?",
       answer: (
         <>
-          The connector measures the time from sending the user's audio to
-          capturing the end of your agent's spoken reply, and records it as{" "}
+          The connector measures the time from sending the user's audio to the
+          agent's first non-silent audio, and records it as{" "}
           <code>latency_ms</code> on the assistant <code>Turn</code>. How
           end-of-turn is detected (silence thresholds, turn-complete events) is
           defined per <code>VoiceProtocol</code>, so latencies are comparable
@@ -287,14 +215,14 @@ Because the output is a standard `ConversationalTestCase`, you can evaluate simu
       ),
     },
     {
-      question: "My agent isn't on ElevenLabs or LiveKit — can I still simulate it?",
+      question:
+        "My agent isn't on ElevenLabs or LiveKit — can I still simulate it?",
       answer: (
         <>
-          Yes. If it accepts raw audio over a WebSocket, configure the generic{" "}
-          <code>WebSocketConnector</code> with your message shape. If it runs
-          in-process, wrap it in a <code>CallbackVoiceConnector</code>. For other
-          transports, subclass <code>BaseVoiceConnector</code> and declare its{" "}
-          <code>protocol</code>.
+          Yes. On the Voice Connectors page, use the generic{" "}
+          <code>WebSocketConnector</code> for raw-audio agents, wrap an
+          in-process callable with <code>CallbackVoiceConnector</code>, or
+          subclass <code>BaseVoiceConnector</code> for other transports.
         </>
       ),
     },

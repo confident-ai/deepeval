@@ -7,8 +7,9 @@ from pydantic import (
     model_validator,
     AliasChoices,
 )
-from typing import List, Optional, Dict, Literal, Union
+from typing import List, Optional, Dict, Literal, Tuple, Union
 from copy import deepcopy
+from dataclasses import dataclass
 from enum import Enum
 
 from deepeval.test_case.llm_test_case import (
@@ -90,6 +91,10 @@ class Turn(BaseModel):
             "metadata", "additionalMetadata", "additional_metadata"
         ),
     )
+
+    def model_dump_for_prompt(self) -> Dict:
+        """Return turn data suitable for LLM prompts, without audio bytes."""
+        return self.model_dump(exclude={"audio"})
 
     @property
     def additional_metadata(self) -> Optional[Dict]:
@@ -210,6 +215,8 @@ class ConversationalTestCase(BaseModel):
     scenario: Optional[str] = Field(default=None)
     context: Optional[List[str]] = Field(default=None)
     name: Optional[str] = Field(default=None)
+    # Simulations drive the user from `ConversationalGolden.persona`; this is
+    # the flattened text that survives onto the resulting test case.
     user_description: Optional[str] = Field(
         default=None,
         serialization_alias="userDescription",

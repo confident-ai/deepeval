@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import ClassVar, Tuple
+from typing import AsyncIterator, ClassVar, Tuple
 
 from deepeval.test_case import Audio
 from deepeval.voice.protocol import VoiceProtocol
-from deepeval.voice.connectors.types import ConnectorTurn
+from deepeval.voice.connectors.types import AgentEvent, ConnectorTurn
 
 
 class BaseVoiceConnector(ABC):
@@ -11,6 +11,9 @@ class BaseVoiceConnector(ABC):
 
     Every concrete connector must declare the transport protocol it speaks
     via the `protocol` class variable (a `VoiceProtocol` member).
+
+    Half-duplex simulations use `exchange_turn`. Duplex / barge-in simulations
+    use `stream_uplink`, `iter_agent_events`, and `stop_uplink`.
     """
 
     protocol: ClassVar[VoiceProtocol]
@@ -41,12 +44,45 @@ class BaseVoiceConnector(ABC):
         pass
 
     @abstractmethod
-    async def send_turn(self, audio: Audio) -> ConnectorTurn:
+    async def exchange_turn(self, audio: Audio) -> ConnectorTurn:
         pass
 
     @abstractmethod
     async def disconnect(self) -> None:
         pass
+
+    async def stream_uplink(
+        self, audio: Audio, *, trailing_silence: bool = True
+    ) -> None:
+        """Stream user audio uplink without waiting for the agent reply.
+
+        Used by duplex barge-in. Default raises; duplex-capable connectors
+        override this. `trailing_silence` pads the uplink for agent VAD on
+        full turns; barge attempts typically pass False.
+        """
+        raise NotImplementedError(
+            f"{type(self).__name__} does not support duplex stream_uplink(); "
+            "use exchange_turn() or a duplex-capable connector."
+        )
+
+    async def stop_uplink(self) -> None:
+        """Cancel in-flight user PCM from `stream_uplink` (floor-control yield)."""
+        raise NotImplementedError(
+            f"{type(self).__name__} does not support stop_uplink()."
+        )
+
+    def iter_agent_events(self) -> AsyncIterator[AgentEvent]:
+        """Yield downlink events until turn-complete or the iterator is closed.
+
+        Used by duplex barge-in. Default raises; duplex-capable connectors
+        override this.
+        """
+        raise NotImplementedError(
+            f"{type(self).__name__} does not support iter_agent_events()."
+        )
+        # pragma: no cover — make this an async generator for type checkers
+        if False:  # noqa: SIM223
+            yield AgentEvent()
 
     @property
     def audio_format(self) -> Tuple[int, str]:

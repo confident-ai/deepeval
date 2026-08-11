@@ -5,7 +5,7 @@ import asyncio
 import logging
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import ClassVar, List, Optional, Tuple, Union
+from typing import AsyncIterator, ClassVar, List, Optional, Tuple, Union
 
 import aiohttp
 from aiohttp import WSMsgType
@@ -15,7 +15,7 @@ from deepeval.test_case import Audio
 from deepeval.voice.protocol import VoiceProtocol
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.connectors.transports.base import BaseVoiceConnector
-from deepeval.voice.connectors.types import ConnectorTurn
+from deepeval.voice.connectors.types import AgentEvent, ConnectorTurn
 from deepeval.voice.connectors.turn_engine import collect_agent_turn
 
 logger = logging.getLogger(__name__)
@@ -65,10 +65,16 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         self._ready: Optional[asyncio.Event] = None
         self._current_transcript: Optional[str] = None
         self._interrupted: bool = False
+        self._uplink_cancel: Optional[asyncio.Event] = None
+        self._uplink_task: Optional[asyncio.Task] = None
 
     @property
     def audio_format(self) -> Tuple[int, str]:
         return (self.sample_rate, "wav")
+
+    @property
+    def recv_sample_rate(self) -> int:
+        return self._recv_rate
 
     @abstractmethod
     async def _open_session(self) -> str: ...
@@ -94,6 +100,7 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         self._loop = asyncio.get_event_loop()
         self._inbound = asyncio.Queue()
         self._ready = asyncio.Event()
+        self._uplink_cancel = asyncio.Event()
         self._current_transcript = None
         self._interrupted = False
 
@@ -142,10 +149,13 @@ class BaseWebSocketConnector(BaseVoiceConnector):
                         self._ready.set()
                     if event.transcript is not None:
                         self._current_transcript = event.transcript
+                        await self._inbound.put(
+                            AgentEvent(transcript=event.transcript)
+                        )
                     if event.audio is not None:
-                        await self._inbound.put(event.audio)
+                        await self._inbound.put(AgentEvent(audio=event.audio))
                     if event.turn_complete:
-                        await self._inbound.put(None)
+                        await self._inbound.put(AgentEvent(turn_complete=True))
                 elif msg.type in (
                     WSMsgType.CLOSED,
                     WSMsgType.CLOSING,
@@ -155,25 +165,93 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         except asyncio.CancelledError:
             raise
         finally:
+            await self._inbound.put(AgentEvent(turn_complete=True))
 
-            await self._inbound.put(None)
-
-    async def send_turn(self, audio: Audio) -> ConnectorTurn:
-        self._drain_stale_inbound()
-        self._current_transcript = None
-        self._interrupted = False
-
+    def _prepare_outbound_pcm(
+        self, audio: Audio, *, trailing_silence: bool
+    ) -> bytes:
         pcm, sample_rate, num_channels = audio_utils.wav_bytes_to_pcm16(
             audio.get_bytes()
         )
         pcm = audio_utils.downmix_to_mono(pcm, num_channels)
         pcm = audio_utils.resample_pcm16(pcm, sample_rate, self._send_rate)
-        if self.trailing_silence_ms > 0:
+        if trailing_silence and self.trailing_silence_ms > 0:
             silence_samples = int(
                 self._send_rate * self.trailing_silence_ms / 1000
             )
             pcm = pcm + b"\x00\x00" * silence_samples
+        return pcm
+
+    async def stream_uplink(
+        self, audio: Audio, *, trailing_silence: bool = True
+    ) -> None:
+        if self._uplink_cancel is None:
+            raise DeepEvalError(
+                f"{type(self).__name__}.stream_uplink() called before connect()."
+            )
+        # Cancel any prior uplink, then start a fresh one.
+        await self.stop_uplink()
+        if self._uplink_task is not None:
+            try:
+                await self._uplink_task
+            except Exception:
+                pass
+            self._uplink_task = None
+
+        self._uplink_cancel.clear()
+        pcm = self._prepare_outbound_pcm(
+            audio, trailing_silence=trailing_silence
+        )
+
+        async def _stream() -> None:
+            for chunk in audio_utils.iter_pcm16_frames(pcm, self._send_rate):
+                if self._uplink_cancel.is_set():
+                    break
+                await self._send(self._encode_outbound(chunk))
+
+        self._uplink_task = asyncio.create_task(_stream())
+        await self._uplink_task
+        self._uplink_task = None
+
+    async def stop_uplink(self) -> None:
+        if self._uplink_cancel is not None:
+            self._uplink_cancel.set()
+        if self._uplink_task is not None and not self._uplink_task.done():
+            self._uplink_task.cancel()
+            try:
+                await self._uplink_task
+            except (asyncio.CancelledError, Exception):
+                pass
+
+    async def iter_agent_events(self) -> AsyncIterator[AgentEvent]:
+        """Yield downlink events for as long as the connection is open.
+
+        `turn_complete` is signaled on individual events; the iterator itself
+        does not stop so a duplex loop can keep listening after a barge-in.
+        """
+        if self._inbound is None:
+            raise DeepEvalError(
+                f"{type(self).__name__}.iter_agent_events() called before "
+                "connect()."
+            )
+        while True:
+            item = await self._inbound.get()
+            if item is None:
+                yield AgentEvent(turn_complete=True)
+                continue
+            if isinstance(item, AgentEvent):
+                yield item
+            elif isinstance(item, (bytes, bytearray)):
+                yield AgentEvent(audio=bytes(item))
+
+    async def exchange_turn(self, audio: Audio) -> ConnectorTurn:
+        self._drain_stale_inbound()
+        self._current_transcript = None
+        self._interrupted = False
+
+        pcm = self._prepare_outbound_pcm(audio, trailing_silence=True)
         sent_chunks = 0
+        input_audio_started_at = time.perf_counter()
         for chunk in audio_utils.iter_pcm16_frames(pcm, self._send_rate):
             await self._send(self._encode_outbound(chunk))
             sent_chunks += 1
@@ -223,6 +301,9 @@ class BaseWebSocketConnector(BaseVoiceConnector):
             transcript=self._current_transcript,
             latency_ms=latency_ms,
             interrupted=self._interrupted,
+            input_audio_started_at=input_audio_started_at,
+            input_audio_ended_at=sent_at,
+            audio_started_at=first_audio_at,
         )
 
     def _drain_stale_inbound(self) -> None:
@@ -233,6 +314,7 @@ class BaseWebSocketConnector(BaseVoiceConnector):
                 break
 
     async def disconnect(self) -> None:
+        await self.stop_uplink()
         if self._reader_task is not None:
             self._reader_task.cancel()
             try:

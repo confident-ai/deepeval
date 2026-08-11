@@ -14,6 +14,7 @@ from pydantic import BaseModel
 import inspect
 import asyncio
 import logging
+import time
 import uuid
 import warnings
 
@@ -58,6 +59,24 @@ logger = logging.getLogger(__name__)
 
 _MISSING = object()
 
+# Length of the silent uplink used to hear the agent out without speaking.
+_SILENCE_PROBE_SECONDS = 1.0
+
+
+def _populate_audio_duration(audio) -> None:
+    if audio is None or audio.duration is not None:
+        return
+    try:
+        from deepeval.voice.connectors import audio_utils
+
+        pcm, sample_rate, channels = audio_utils.wav_bytes_to_pcm16(
+            audio.get_bytes()
+        )
+    except (TypeError, ValueError):
+        return
+    if sample_rate:
+        audio.duration = (len(pcm) / 2 / max(channels, 1)) / sample_rate
+
 
 class ConversationSimulator:
     def __init__(
@@ -98,11 +117,16 @@ class ConversationSimulator:
         self.stt_cost: float = 0.0
         self._voice_run_timestamp: Optional[str] = None
         self._voice_num_goldens: Optional[int] = None
+        self._voice_call_started_at: Optional[float] = None
+        # Rebuilt per conversation from the golden's persona; voice mode pins
+        # `max_concurrent` to 1, so a single active pair is safe.
+        self._interruption_policy = None
+        self._floor_controller = None
+        self._active_persona = None
+        self._duplex_barges = 0
         if voice_config is not None:
             if not async_mode:
-                raise ValueError(
-                    "Voice simulation requires `async_mode=True`."
-                )
+                raise ValueError("Voice simulation requires `async_mode=True`.")
             # A single connector holds a single live call; concurrent
             # conversations would interleave audio on the same session.
             max_concurrent = 1
@@ -113,6 +137,14 @@ class ConversationSimulator:
             self._tts_model = voice_config.tts_model or OpenAITTSModel()
             self._stt_model = voice_config.stt_model or OpenAISTTModel()
             model_callback = self._voice_model_callback
+            if voice_config.interruption_settings is not None:
+                warnings.warn(
+                    "`VoiceConfig.interruption_settings` is deprecated; set "
+                    "`Persona(interruption_behavior=...)` on the golden "
+                    "instead.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
 
         self.model_callback = model_callback
         self.is_callback_async = inspect.iscoroutinefunction(
@@ -296,7 +328,13 @@ class ConversationSimulator:
             total=max_user_simulations + 1,
         )
 
-        additional_metadata = {"User Description": golden.user_description}
+        additional_metadata = {
+            "Persona": (
+                golden.persona.characteristics
+                if golden.persona is not None
+                else None
+            )
+        }
         user_input = None
         thread_id = str(uuid.uuid4())
         turns: List[Turn] = []
@@ -419,7 +457,13 @@ class ConversationSimulator:
             total=max_user_simulations + 1,
         )
 
-        additional_metadata = {"User Description": golden.user_description}
+        additional_metadata = {
+            "Persona": (
+                golden.persona.characteristics
+                if golden.persona is not None
+                else None
+            )
+        }
         user_input = None
         thread_id = str(uuid.uuid4())
         turns: List[Turn] = []
@@ -430,19 +474,57 @@ class ConversationSimulator:
         if golden.turns is not None:
             turns.extend(golden.turns)
 
+        self._duplex_barges = 0
+        self._active_persona = golden.persona
+        if self.voice_connector is not None:
+            (
+                self._interruption_policy,
+                self._floor_controller,
+            ) = self._build_interruption(golden)
+
         async with AsyncExitStack() as stack:
             # Voice mode: one live call per conversation. The connector is
             # connected before the first turn and disconnected when the
             # conversation ends (or errors).
             if self.voice_connector is not None:
+                connect_started = time.perf_counter()
+                logger.debug(
+                    "Voice connector connect started: %s",
+                    type(self.voice_connector).__name__,
+                )
                 await stack.enter_async_context(self.voice_connector)
+                self._voice_call_started_at = time.perf_counter()
+                logger.debug(
+                    "Voice connector connected after %.2fs",
+                    time.perf_counter() - connect_started,
+                )
+
+            persona = golden.persona
+            voice_mode = self.voice_connector is not None
+            muted = voice_mode and persona is not None and persona.muted
+            hold_timeout = persona.hold_timeout if persona is not None else None
+            silent_for = 0.0
+
+            if voice_mode and persona is not None and not persona.speaks_first:
+                logger.debug("Persona waits to speak; listening for greeting")
+                turns.append(await self._voice_listen(turns))
 
             while True:
+                logger.debug(
+                    "Simulation loop started: conversation=%s user_turn=%d/%d total_turns=%d",
+                    index,
+                    simulation_counter + 1,
+                    max_user_simulations,
+                    len(turns),
+                )
                 if simulation_counter >= max_user_simulations:
+                    logger.debug("Maximum user simulations reached")
                     update_pbar(progress, pbar_max_user_simluations_id)
                     break
 
                 # Stop conversation if needed
+                controller_started = time.perf_counter()
+                logger.debug("Stopping controller started")
                 should_stop_simulation = await self.stopping_controller.a_run(
                     turns=turns,
                     golden=golden,
@@ -453,6 +535,11 @@ class ConversationSimulator:
                     progress=progress,
                     pbar_turns_id=pbar_max_user_simluations_id,
                 )
+                logger.debug(
+                    "Stopping controller finished after %.2fs: should_stop=%s",
+                    time.perf_counter() - controller_started,
+                    should_stop_simulation,
+                )
                 if should_stop_simulation:
                     break
 
@@ -460,7 +547,16 @@ class ConversationSimulator:
                 emission_end = False
                 if len(turns) > 0 and turns[-1].role == "user":
                     user_input = turns[-1].content
+                elif muted:
+                    # A muted caller never speaks; the empty turn keeps the
+                    # transcript alternating so the dead air is visible.
+                    turns.append(Turn(role="user", content=""))
+                    user_input = ""
+                    update_pbar(progress, pbar_max_user_simluations_id)
+                    simulation_counter += 1
                 else:
+                    user_started = time.perf_counter()
+                    logger.debug("Simulated user generation started")
                     emission = await self._graph_runner.a_run(
                         self,
                         graph_state,
@@ -469,23 +565,39 @@ class ConversationSimulator:
                         thread_id,
                         self.language,
                     )
+                    logger.debug(
+                        "Simulated user generation finished after %.2fs",
+                        time.perf_counter() - user_started,
+                    )
                     emission_end = emission.end
                     if emission.turn is None:
+                        logger.debug("Simulation graph emitted no user turn")
                         update_pbar(progress, pbar_max_user_simluations_id)
                         break
                     turns.append(emission.turn)
                     user_input = emission.turn.content
+                    logger.debug("Simulated user turn: %r", user_input)
                     update_pbar(progress, pbar_max_user_simluations_id)
                     simulation_counter += 1
 
-                # Generate turn from assistant
-                if self.is_callback_async:
+                # Generate turn from assistant (half-duplex or duplex barge-in)
+                assistant_started = time.perf_counter()
+                logger.debug("Assistant voice exchange started")
+                if muted:
+                    assistant_turn = await self._voice_listen(turns)
+                    turns.append(assistant_turn)
+                elif self._interruption_policy is not None:
+                    assistant_turn = await self._voice_duplex_exchange(
+                        user_input, turns, golden
+                    )
+                elif self.is_callback_async:
                     assistant_turn = await self.a_generate_turn_from_callback(
                         user_input,
                         model_callback=self.model_callback,
                         turns=turns,
                         thread_id=thread_id,
                     )
+                    turns.append(assistant_turn)
                 else:
                     assistant_turn = self.generate_turn_from_callback(
                         user_input,
@@ -493,11 +605,41 @@ class ConversationSimulator:
                         turns=turns,
                         thread_id=thread_id,
                     )
-                turns.append(assistant_turn)
+                    turns.append(assistant_turn)
+
+                exchange_seconds = time.perf_counter() - assistant_started
+                logger.debug(
+                    "Assistant voice exchange finished after %.2fs: transcript=%r latency_ms=%s",
+                    exchange_seconds,
+                    assistant_turn.content,
+                    assistant_turn.latency_ms,
+                )
+
+                # Hang up on hold music or dead air rather than waiting out
+                # the agent's own (usually much longer) timeout.
+                if hold_timeout is not None:
+                    if assistant_turn.content.strip():
+                        silent_for = 0.0
+                    else:
+                        silent_for += exchange_seconds
+                        if silent_for >= hold_timeout:
+                            logger.debug(
+                                "Hanging up after %.2fs without agent speech "
+                                "(hold_timeout=%.2fs)",
+                                silent_for,
+                                hold_timeout,
+                            )
+                            break
 
                 # Route to the next graph node based on the assistant reply.
+                route_started = time.perf_counter()
+                logger.debug("Simulation graph routing started")
                 await self._graph_runner.a_advance(
                     self, graph_state, assistant_turn.content
+                )
+                logger.debug(
+                    "Simulation graph routing finished after %.2fs",
+                    time.perf_counter() - route_started,
                 )
 
                 if emission_end:
@@ -524,10 +666,90 @@ class ConversationSimulator:
             self.voice_connector is not None
             and self.voice_config.output_dir is not None
         ):
+            save_started = time.perf_counter()
+            logger.debug(
+                "Saving voice audio to %s", self.voice_config.output_dir
+            )
             self._save_voice_audio(conversational_test_case, golden, index)
+            logger.debug(
+                "Voice audio saved after %.2fs",
+                time.perf_counter() - save_started,
+            )
         if on_simulation_complete:
             on_simulation_complete(conversational_test_case, index)
         return conversational_test_case
+
+    @staticmethod
+    def _persona_tts_kwargs(persona) -> dict:
+        return {} if persona is None else persona.tts_kwargs()
+
+    def _stt_kwargs(self) -> dict:
+        """Transcription kwargs for the active persona.
+
+        `language="auto"` tells the STT model to detect the language per
+        utterance instead of locking to the one it was configured with.
+        """
+        persona = self._active_persona
+        if persona is not None and persona.multilingual_stt:
+            return {"language": "auto"}
+        return {}
+
+    def _mix_background(self, audio: "Audio") -> "Audio":
+        """Lay the persona's ambience under one uplink utterance."""
+        persona = self._active_persona
+        if persona is None or persona.background_noise is None:
+            return audio
+        from deepeval.voice.background import mix_background
+
+        return mix_background(audio, persona.background_noise)
+
+    def _silence_audio(self, seconds: float) -> "Audio":
+        """Digital silence in the connector's uplink format."""
+        from deepeval.test_case import Audio
+        from deepeval.voice.connectors import audio_utils
+
+        sample_rate, _ = self.voice_connector.audio_format
+        pcm = b"\x00" * (int(sample_rate * seconds) * 2)
+        return Audio.from_bytes(
+            audio_utils.pcm16_to_wav_bytes(pcm, sample_rate, 1),
+            "audio/wav",
+            sampleRate=sample_rate,
+            encoding="wav",
+            duration=seconds,
+        )
+
+    async def _voice_listen(self, turns: List[Turn]) -> Turn:
+        """Say nothing and record whatever the agent says back."""
+        silence = self._mix_background(
+            self._silence_audio(_SILENCE_PROBE_SECONDS)
+        )
+        if turns and turns[-1].role == "user":
+            turns[-1].audio = silence
+        return await self._voice_exchange(silence, turns)
+
+    def _build_interruption(self, golden: ConversationalGolden):
+        """Build this conversation's barge-in policy and floor controller.
+
+        The golden's persona wins; `VoiceConfig.interruption_settings` is the
+        deprecated run-wide fallback. Returns `(None, None)` for half-duplex.
+        """
+        from deepeval.voice.floor_control import FloorController
+        from deepeval.voice.interruption import interruption_policy
+
+        behavior = (
+            golden.persona.interruption_behavior
+            if golden.persona is not None
+            else None
+        )
+        if behavior is None:
+            behavior = self.voice_config.interruption_settings
+        if behavior is None:
+            return None, None
+
+        policy = interruption_policy(behavior.frequency)
+        return policy, FloorController.from_overlap_behavior(
+            behavior.overlap, policy=policy
+        )
 
     def _save_voice_audio(
         self,
@@ -551,7 +773,7 @@ class ConversationSimulator:
             output_dir=self.voice_config.output_dir,
             run_label=f"simulation-{timestamp}",
             conversation_id=conversation_id,
-            combine_audio=self.voice_config.combine_audio,
+            combine_audio_files=self.voice_config.combine_audio_files,
         )
 
     ############################################
@@ -699,30 +921,89 @@ class ConversationSimulator:
     async def _voice_model_callback(
         self, input: str, turns: List[Turn]
     ) -> Turn:
-        """Callback used when a `voice_connector` is configured: speaks the
-        simulated user input (TTS), plays it to the agent over the connector,
-        and transcribes the spoken reply (STT).
+        """Half-duplex voice callback: TTS → exchange_turn → STT.
 
-        `turns` is the live conversation list, so the freshly generated user
-        turn (its last element) is enriched with the synthesized audio
-        in place.
+        Used when the persona has no `interruption_behavior`. Duplex barge-in
+        goes through `_voice_duplex_exchange` instead.
         """
-        user_audio, tts_cost = await self._tts_model.a_synthesize(input)
+        tts_started = time.perf_counter()
+        logger.debug("User TTS started: characters=%d", len(input))
+        user_audio, tts_cost = await self._tts_model.a_synthesize(
+            input, **self._persona_tts_kwargs(self._active_persona)
+        )
+        _populate_audio_duration(user_audio)
+        logger.debug(
+            "User TTS finished after %.2fs: bytes=%d",
+            time.perf_counter() - tts_started,
+            len(user_audio.get_bytes()),
+        )
         if tts_cost is not None:
             self.tts_cost += tts_cost
+        user_audio = self._mix_background(user_audio)
         if turns and turns[-1].role == "user":
             turns[-1].audio = user_audio
 
-        conn_turn = await self.voice_connector.send_turn(user_audio)
+        return await self._voice_exchange(user_audio, turns)
+
+    async def _voice_exchange(
+        self, user_audio: "Audio", turns: List[Turn]
+    ) -> Turn:
+        """Play `user_audio` to the agent and transcribe the reply.
+
+        Shared by the half-duplex callback and by silence-only exchanges (a
+        muted caller, or waiting out an agent that speaks first).
+        """
+        connector_started = time.perf_counter()
+        logger.debug(
+            "Connector exchange started: %s",
+            type(self.voice_connector).__name__,
+        )
+        conn_turn = await self.voice_connector.exchange_turn(user_audio)
+        _populate_audio_duration(conn_turn.audio)
+        call_started_at = self._voice_call_started_at or connector_started
+        user_audio.start_time = max(
+            0.0,
+            (conn_turn.input_audio_started_at or connector_started)
+            - call_started_at,
+        )
+        assistant_audio_started_at = conn_turn.audio_started_at
+        if assistant_audio_started_at is None:
+            input_ended_at = (
+                conn_turn.input_audio_ended_at or time.perf_counter()
+            )
+            if conn_turn.latency_ms is not None:
+                assistant_audio_started_at = (
+                    input_ended_at + conn_turn.latency_ms / 1000.0
+                )
+        if (
+            assistant_audio_started_at is not None
+            and conn_turn.audio is not None
+        ):
+            conn_turn.audio.start_time = max(
+                0.0, assistant_audio_started_at - call_started_at
+            )
+        logger.debug(
+            "Connector exchange finished after %.2fs: transcript=%s latency_ms=%s",
+            time.perf_counter() - connector_started,
+            bool(conn_turn.transcript),
+            conn_turn.latency_ms,
+        )
         has_audio = (
             conn_turn.audio is not None
             and len(conn_turn.audio.get_bytes()) > 44  # more than a WAV header
         )
         if conn_turn.transcript:
             agent_text = conn_turn.transcript
+            logger.debug("Connector transcript supplied; STT skipped")
         elif has_audio:
+            stt_started = time.perf_counter()
+            logger.debug("Agent STT started")
             agent_text, stt_cost = await self._stt_model.a_transcribe(
-                conn_turn.audio
+                conn_turn.audio, **self._stt_kwargs()
+            )
+            logger.debug(
+                "Agent STT finished after %.2fs",
+                time.perf_counter() - stt_started,
             )
             if stt_cost is not None:
                 self.stt_cost += stt_cost
@@ -735,18 +1016,89 @@ class ConversationSimulator:
                 len(turns),
             )
 
-        # Only latency is persisted. `interrupted` (barge-in) is a real-time
-        # duplex signal that a turn-based simulation can't measure honestly —
-        # providers fire spurious interruption events when the next user turn
-        # arrives while the previous reply is still "playing" server-side. So
-        # we leave Turn.interrupted unset (None). Revisit for a duplex
-        # connector.
+        # Half-duplex: leave Turn.interrupted unset. Provider interruption
+        # events are often spurious when the next user turn arrives while
+        # the previous reply is still playing server-side.
         return Turn(
             role="assistant",
             content=agent_text,
             audio=conn_turn.audio,
             latency_ms=conn_turn.latency_ms,
         )
+
+    async def _voice_duplex_exchange(
+        self,
+        input: str,
+        turns: List[Turn],
+        golden: ConversationalGolden,
+    ) -> Turn:
+        """Duplex voice exchange with mid-speech barge-in and floor control.
+
+        Appends barge user turns and assistant turns onto `turns` in place.
+        Returns the last assistant turn for simulation-graph routing.
+        """
+        import time
+
+        from deepeval.voice.duplex import DuplexExchange
+
+        user_audio, tts_cost = await self._tts_model.a_synthesize(
+            input, **self._persona_tts_kwargs(golden.persona)
+        )
+        _populate_audio_duration(user_audio)
+        if tts_cost is not None:
+            self.tts_cost += tts_cost
+        user_audio = self._mix_background(user_audio)
+        if turns and turns[-1].role == "user":
+            turns[-1].audio = user_audio
+
+        # Drain stale downlink before the new user utterance.
+        drain = getattr(self.voice_connector, "_drain_stale_inbound", None)
+        if callable(drain):
+            drain()
+        else:
+            drain_frames = getattr(
+                self.voice_connector, "_drain_stale_frames", None
+            )
+            if callable(drain_frames):
+                drain_frames()
+
+        call_started_at = self._voice_call_started_at or time.perf_counter()
+        user_audio.start_time = max(0.0, time.perf_counter() - call_started_at)
+        await self.voice_connector.stream_uplink(
+            user_audio, trailing_silence=True
+        )
+        sent_at = time.perf_counter()
+
+        exchange = DuplexExchange(
+            connector=self.voice_connector,
+            tts_model=self._tts_model,
+            stt_model=self._stt_model,
+            voice_config=self.voice_config,
+            policy=self._interruption_policy,
+            floor=self._floor_controller,
+            golden=golden,
+            language=self.language,
+            a_generate_schema=self.a_generate_schema,
+            call_started_at=call_started_at,
+        )
+        result = await exchange.run(
+            turns=turns,
+            sent_at=sent_at,
+            barges_this_conversation=self._duplex_barges,
+        )
+        self._duplex_barges += result.barges
+        self.tts_cost += result.tts_cost
+        self.stt_cost += result.stt_cost
+
+        for turn in reversed(result.turns):
+            if turn.role == "assistant":
+                return turn
+        logger.warning(
+            "Duplex exchange produced no assistant turn; inserting empty reply."
+        )
+        empty = Turn(role="assistant", content="")
+        turns.append(empty)
+        return empty
 
     ############################################
     ### Invoke Model Callback ##################
