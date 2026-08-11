@@ -895,12 +895,12 @@ class StrandsSpanInterceptor(SpanProcessor):
                     span, "confident.trace.output", output_text
                 )
 
-        input_tokens = attrs.get("gen_ai.usage.input_tokens") or attrs.get(
-            "gen_ai.usage.prompt_tokens"
-        )
-        output_tokens = attrs.get("gen_ai.usage.output_tokens") or attrs.get(
-            "gen_ai.usage.completion_tokens"
-        )
+        input_tokens = attrs.get("gen_ai.usage.input_tokens")
+        if input_tokens is None:
+            input_tokens = attrs.get("gen_ai.usage.prompt_tokens")
+        output_tokens = attrs.get("gen_ai.usage.output_tokens")
+        if output_tokens is None:
+            output_tokens = attrs.get("gen_ai.usage.completion_tokens")
         if input_tokens is not None:
             self._set_attr_post_end(
                 span, "confident.llm.input_token_count", int(input_tokens)
