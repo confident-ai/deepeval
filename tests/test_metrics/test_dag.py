@@ -977,21 +977,28 @@ class TestExclusiveVerdictSharedNode:
         assert len(set(step_counts)) == 1
 
     def test_root_verdict_keeps_its_own_edge(self):
-        """A verdict that is also a declared root is visited unconditionally.
+        """A declared root verdict is visited unconditionally.
 
-        Collapsing its edge would drop the count below the number of arrivals
-        and judge the node it points at twice.
+        Its edge into the shared node always arrives, on top of the one
+        arrival from the judgement's winning verdict, so it must keep its
+        own count. Folding it into the exclusive group would drop the count
+        below the number of arrivals and judge the node twice.
+
+        A root verdict that is itself a child of a judgement would exercise
+        the same guard, but a root reachable from another root is rejected
+        at construction, so the root here has no parents.
         """
         shared = _order_node()
-        reused = VerdictNode(verdict=True, child=shared)
-        other = VerdictNode(verdict=False, child=shared)
         judge = BinaryJudgementNode(
             criteria="All three headings present?",
-            children=[reused, other],
             evaluation_params=SHARED_NODE_PARAMS,
         )
+        judge.add_verdict(True, then=shared)
+        judge.add_verdict(False, then=shared)
         entry = VerdictNode(verdict=True, child=judge)
-        dag = DeepAcyclicGraph(root_nodes=[entry, reused])
+        root_verdict = VerdictNode(verdict=True, child=shared)
+        dag = DeepAcyclicGraph(root_nodes=[entry, root_verdict])
+        # one collapsed edge from the exclusive verdicts + the root's own
         assert dag.indegree[shared] == 2
 
         model = SharedNodeModel(binary_verdict=True)
