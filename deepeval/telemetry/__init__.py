@@ -10,6 +10,7 @@ Opt out with `DEEPEVAL_TELEMETRY_OPT_OUT=1`.
 
 import os
 
+from deepeval.config.settings import get_settings
 from deepeval.constants import HIDDEN_DIR, KEY_FILE
 from deepeval.telemetry.api import (
     LoginSpan,
@@ -89,7 +90,10 @@ from deepeval.telemetry.runtime import detect_runtime
 
 def _migrate_project_files() -> None:
     """Move stray project files into the hidden dir. Predates this package."""
-    if telemetry_opt_out():
+    if (
+        telemetry_opt_out()
+        or get_settings().DEEPEVAL_FILE_SYSTEM == "READ_ONLY"
+    ):
         return
     try:
         if os.path.exists(KEY_FILE) and not os.path.isdir(HIDDEN_DIR):

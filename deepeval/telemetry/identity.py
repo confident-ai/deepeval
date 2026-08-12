@@ -108,8 +108,12 @@ def _load() -> Dict[str, str]:
 
 def _persist(data: Dict[str, str]) -> None:
     from deepeval.telemetry.client import telemetry_opt_out
+    from deepeval.config.settings import get_settings
 
-    if telemetry_opt_out():
+    if (
+        telemetry_opt_out()
+        or get_settings().DEEPEVAL_FILE_SYSTEM == "READ_ONLY"
+    ):
         return
     try:
         path = telemetry_path()
