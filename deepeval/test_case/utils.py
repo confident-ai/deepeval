@@ -7,6 +7,7 @@ from deepeval.test_case import (
     ToolCallType,
     MCPServer,
     get_available_mcp_tool_names,
+    normalize_mcp_servers,
 )
 
 
@@ -40,6 +41,9 @@ def process_mcp_servers(
     test_cases: Union[List[LLMTestCase], List[ConversationalTestCase]],
     mcp_servers: Optional[List[MCPServer]] = None,
 ):
+    if mcp_servers is not None:
+        mcp_servers = normalize_mcp_servers(mcp_servers)
+
     for test_case in test_cases:
         servers = test_case.mcp_servers or mcp_servers
         if not servers:
