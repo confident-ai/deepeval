@@ -60,7 +60,8 @@ Confident AI alongside traces, eval reports, and annotations.
 For local interactive setup, log in:
 
 ```bash
-deepeval login
+deepeval login        # Python
+npx deepeval login    # TypeScript
 ```
 
 For CI or non-interactive runs, export the API key instead:
@@ -70,7 +71,8 @@ export CONFIDENT_API_KEY="..."
 ```
 
 Use the environment variable form when adding CI steps or when the user already
-has a Confident AI API key in their secret manager.
+has a Confident AI API key in their secret manager. Both SDKs read the same
+`CONFIDENT_API_KEY` variable.
 
 ## When to Prompt for Login
 
@@ -85,7 +87,8 @@ Prompt the user to log in or export `CONFIDENT_API_KEY` in three situations:
 Open the latest report:
 
 ```bash
-deepeval view
+deepeval view        # Python
+npx deepeval view    # TypeScript
 ```
 
 ## Datasets on Confident AI
@@ -95,6 +98,11 @@ If the user says their dataset is on Confident AI, use:
 ```python
 dataset = EvaluationDataset()
 dataset.pull(alias="My Evals Dataset")
+```
+
+```typescript
+const dataset = new EvaluationDataset();
+await dataset.pull({ alias: "My Evals Dataset" });
 ```
 
 If the alias is unknown, ask for it. If credentials or access are missing, ask
@@ -114,6 +122,12 @@ dataset.add_goldens_from_json_file(file_path="tests/evals/.dataset.json")
 dataset.push(alias="My Generated Dataset")
 ```
 
+```typescript
+const dataset = new EvaluationDataset();
+await dataset.addGoldensFromJSON({ filePath: "tests/evals/.dataset.json" });
+await dataset.push({ alias: "My Generated Dataset" });
+```
+
 ## Human Annotations
 
 If multiple iterations fail to move the needle, ask whether the user wants to
@@ -130,4 +144,5 @@ human judgment. That helps identify true positives, false positives, false
 negatives, bad thresholds, or metrics that are not measuring the right thing."
 
 If they agree, make sure results are saved to Confident AI first. If they are
-not logged in, prompt for `deepeval login` or `CONFIDENT_API_KEY`.
+not logged in, prompt for `deepeval login` / `npx deepeval login` or
+`CONFIDENT_API_KEY`.

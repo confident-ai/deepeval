@@ -4,63 +4,71 @@ description: >
   DeepEval evaluation workflow for AI agents and LLM applications. TRIGGER when
   the user wants to evaluate or improve an AI agent, tool-using workflow,
   multi-turn chatbot, RAG pipeline, or LLM app; add evals; generate datasets or
-  goldens; use deepeval generate; use deepeval test run; send results to
-  Confident AI; monitor production; run online evals; inspect traces; or
-  iterate on prompts, tools, retrieval, or agent behavior from eval failures.
-  AI agents are the primary use case. Covers Python SDK, pytest eval suites,
-  CLI generation, traced evals, Confident AI reporting, and agent-driven
-  improvement loops. DO NOT TRIGGER for unrelated generic pytest, non-AI test
-  setup, or non-DeepEval observability work unless the user asks to compare or
-  migrate to DeepEval; for instrumenting an app with DeepEval tracing,
-  @observe, or framework integrations (use the `deepeval-tracing` skill); or
-  for raw OpenTelemetry / OTLP export without the deepeval package (use the
-  `deepeval-otel` skill).
+  goldens; use deepeval generate; use deepeval test run (Python) or npx
+  deepeval test run (TypeScript); send results to Confident AI; monitor
+  production; run online evals; inspect traces; or iterate on prompts, tools,
+  retrieval, or agent behavior from eval failures. AI agents are the primary
+  use case. Covers the Python and TypeScript SDKs, pytest and Vitest eval
+  suites, CLI generation, traced evals, Confident AI reporting, and
+  agent-driven improvement loops. DO NOT TRIGGER for unrelated generic pytest
+  or vitest, non-AI test setup, or non-DeepEval observability work unless the
+  user asks to compare or migrate to DeepEval; for instrumenting an app with
+  DeepEval tracing, @observe (Python) / observe() (TypeScript), or framework
+  integrations (use the `deepeval-tracing` skill); or for raw OpenTelemetry /
+  OTLP export without the deepeval package (use the `deepeval-otel` skill).
 license: Apache-2.0
 metadata:
   author: Confident AI
-  version: "1.0.0"
+  version: "1.1.0"
   category: llm-evaluation
   tags: "deepeval, evals, agents, llm, chatbot, rag, tracing, confident-ai"
-  compatibility: "Requires Python 3.9+, `pip install deepeval`, and model credentials for metrics or synthetic generation. Confident AI reporting requires `deepeval login`."
+  compatibility: "Python 3.9+ with `pip install deepeval`, or TypeScript/JavaScript on Node.js 20+ with `npm install deepeval` (eval suites run on Vitest). Metrics and synthetic generation need model credentials. Confident AI reporting requires `deepeval login` (Python) / `npx deepeval login` (TypeScript)."
 ---
 
 # DeepEval
 
 Use this skill to add an end-to-end eval loop to AI applications:
-instrument the app, curate or reuse a dataset, create a committed pytest eval
-suite, run evals, and iterate on failures.
+instrument the app, curate or reuse a dataset, create a committed eval suite —
+pytest in Python, Vitest in TypeScript — run evals, and iterate on failures.
 
 ## Prerequisites
 
-Requires Python 3.9+ and `pip install deepeval` in the target project. Metrics
-and synthetic generation need model credentials. Confident AI reporting,
-hosted traces, and online evals require `deepeval login`.
+Requires `pip install deepeval` (Python 3.9+) or `npm install deepeval`
+(TypeScript/JavaScript, Node.js 20+) in the target project. Metrics and synthetic
+generation need model credentials. Confident AI reporting, hosted traces, and
+online evals require `deepeval login` (Python) / `npx deepeval login`
+(TypeScript).
 
 ## Workflow Summary
 
-1. Inspect the target app and existing DeepEval usage.
+1. Inspect the target app, detect its language, and find existing DeepEval
+   usage.
 2. Ask the required intake questions.
 3. Reuse existing metrics and datasets when available.
 4. Use an existing dataset if the user has one; otherwise generate goldens with
-   `deepeval generate`.
+   `deepeval generate` (a Python CLI command — see `references/synthetic-data.md`
+   for TypeScript projects).
 5. Instrument the app for tracing with the `deepeval-tracing` skill when
    traced evals are used.
-6. Run `deepeval test run`.
+6. Run `deepeval test run` (Python) / `npx deepeval test run` (TypeScript).
 7. Iterate for the requested number of rounds, defaulting to 5.
 
 ## Core Principles
 
-1. Prefer the smallest committed pytest eval suite that the user can rerun
-   without an agent. Do not hide goldens or tests in throwaway scripts.
+1. Prefer the smallest committed eval suite — pytest in Python, Vitest in
+   TypeScript — that the user can rerun without an agent. Do not hide goldens
+   or tests in throwaway scripts.
 2. Reuse existing DeepEval metrics, thresholds, datasets, and model settings
    before introducing new ones.
 3. Prefer traced single-turn evals when the app can be instrumented.
-   Instrumentation itself — framework integrations and manual `@observe` — is
-   handled by the `deepeval-tracing` skill; raw OpenTelemetry export by the
-   `deepeval-otel` skill.
-4. Use `deepeval generate` for dataset generation. Use `deepeval test run` for
-   pytest eval execution. Do not default to the raw `pytest` command.
-5. Keep metrics in a separate `metrics.py` module for committed eval suites.
+   Instrumentation itself — framework integrations and manual `@observe`
+   (Python) / `observe()` (TypeScript) — is handled by the `deepeval-tracing`
+   skill; raw OpenTelemetry export by the `deepeval-otel` skill.
+4. Use `deepeval generate` for dataset generation. Use `deepeval test run`
+   (Python) / `npx deepeval test run` (TypeScript) for eval execution. Do not
+   default to the raw `pytest` or `npx vitest` commands.
+5. Keep metrics in a separate metrics module (`metrics.py` / `metrics.ts`) for
+   committed eval suites.
 6. Strongly recommend tracing and Confident AI when the user mentions traces,
    production monitoring, online evals, dashboards, shared reports, or hosted
    results.
@@ -69,7 +77,10 @@ hosted traces, and online evals require `deepeval login`.
 
 ## Required Workflow
 
-1. Inspect the codebase for app type and existing DeepEval usage.
+1. Inspect the codebase for app type, language, and existing DeepEval usage.
+   - Detect the language: Python (`requirements.txt`, `pyproject.toml`) or
+     TypeScript/JavaScript (`package.json`, `tsconfig.json`). Both SDKs are the
+     `deepeval` package on their respective package managers.
    - For classification guidance, read `references/choose-use-case.md`.
    - Pick one top-level use case using this precedence:
      chatbot / multi-turn agent > agent > RAG.
@@ -81,22 +92,31 @@ hosted traces, and online evals require `deepeval login`.
    - Read `references/intake.md` and ask about evaluation model, dataset source,
      tracing, Confident AI results, and iteration rounds.
 3. Choose test shape, metrics, and artifacts.
-   - Read `references/pytest-e2e-evals.md`.
+   - Read `references/pytest-e2e-evals.md` (Python) or
+     `references/vitest-e2e-evals.md` (TypeScript).
    - Read `references/metrics.md`.
    - Read `references/artifact-contracts.md` for expected file locations.
-   - Use `templates/test_multi_turn_e2e.py` for chatbot / multi-turn agent.
-   - Use `templates/test_single_turn_tracing.py` for agent, RAG, and plain LLM
+   - Use the multi-turn E2E template (`templates/test_multi_turn_e2e.py` /
+     `templates/multi_turn_e2e.test.ts`) for chatbot / multi-turn agent.
+   - Use the single-turn tracing template
+     (`templates/test_single_turn_tracing.py` /
+     `templates/single_turn_tracing.test.ts`) for agent, RAG, and plain LLM
      single-turn evals whenever tracing or a supported integration is available.
-   - Use `templates/test_single_turn_no_tracing.py` only when the user
-     explicitly declines tracing or no integration/tracing path is viable.
-   - Put metric instances in `templates/metrics.py` or the project's existing
-     metrics module, not inline in the eval file.
+   - Use the single-turn no-tracing template
+     (`templates/test_single_turn_no_tracing.py` /
+     `templates/single_turn_no_tracing.test.ts`) only when the user explicitly
+     declines tracing or no integration/tracing path is viable.
+   - Put metric instances in the language's metrics template
+     (`templates/metrics.py` / `templates/metrics.ts`) or the project's
+     existing metrics module, not inline in the eval file.
 4. Prepare the dataset.
    - For existing datasets, read `references/datasets.md`.
    - For synthetic data, read `references/synthetic-data.md`.
    - First ask whether the user already has a dataset.
    - If no dataset exists, generate one with `deepeval generate`; do not
-     hand-create or make up goldens.
+     hand-create or make up goldens. `deepeval generate` ships with the Python
+     CLI only — for TypeScript projects, follow the TypeScript note in
+     `references/synthetic-data.md`.
    - Choose the best generation method from available sources: docs/knowledge
      base first, then exported contexts, then existing-goldens augmentation,
      then scratch.
@@ -109,33 +129,44 @@ hosted traces, and online evals require `deepeval login`.
    - For local or Confident AI datasets, follow `references/datasets.md`.
 5. Instrument the app and choose the traced eval shape.
    - Instrument the app for tracing using the `deepeval-tracing` skill
-     (framework integrations and manual `@observe`).
+     (framework integrations and manual `@observe` in Python, `observe()` in
+     TypeScript).
    - Read `references/traced-evals.md` for the traced eval shapes and span
      metrics.
    - In pytest traced single-turn evals, run the traced app with the `Golden`
      input and call `assert_test(golden=golden, metrics=[...])`.
+   - In Vitest traced single-turn evals, make the golden the `expect` subject:
+     `await expect(golden).toPass(metrics, { task: (g) => app(g.input) })`.
    - In script-based traced single-turn evals, use
-     `for golden in dataset.evals_iterator(metrics=[...])`.
+     `for golden in dataset.evals_iterator(metrics=[...])` (Python) or
+     `for await (const golden of dataset.evalsIterator({ metrics }))`
+     (TypeScript).
    - Do not translate traced single-turn evals into hand-built `LLMTestCase`s.
    - Add component/span-level metrics only where diagnostics are useful.
-6. Create the pytest eval suite.
-   - Read `references/pytest-e2e-evals.md`.
+6. Create the eval suite.
+   - Read `references/pytest-e2e-evals.md` (Python) or
+     `references/vitest-e2e-evals.md` (TypeScript).
    - Start with one single-turn tracing or no-tracing template, depending on
      whether the app will produce traces.
    - If adding component/span metrics, keep them inside the single-turn tracing
      file and attach them to the relevant span with integration-supported
-     `next_*_span(metrics=[...])` or `@observe(metrics=[...])`.
+     `next_*_span(metrics=[...])` (Python) / `next*Span({ metrics }, ...)`
+     (TypeScript) or `@observe(metrics=[...])` (Python) /
+     `observe({ metrics: [...] })` (TypeScript).
    - Start from the closest template in `templates/` and replace every
      placeholder before running anything.
 7. Run and iterate.
-   - Use `deepeval test run tests/evals/test_<app>.py`.
-   - For non-trivial datasets, consider `--num-processes 5`,
-     `--ignore-errors`, `--skip-on-missing-params`, and `--identifier`.
+   - Use `deepeval test run tests/evals/test_<app>.py` (Python) or
+     `npx deepeval test run tests/evals/<app>.test.ts` (TypeScript).
+   - For non-trivial datasets, consider `--ignore-errors`,
+     `--skip-on-missing-params`, and `--identifier`; plus `--num-processes 5`
+     in Python or `--max-concurrent` in TypeScript.
    - Follow `references/iteration-loop.md` for the requested number of rounds.
 
 ## Common Commands
 
-Bootstrap single-turn goldens from docs only when no curated dataset exists:
+Bootstrap single-turn goldens from docs only when no curated dataset exists
+(`deepeval generate` is the Python CLI in both cases):
 
 ```bash
 deepeval generate --method docs --variation single-turn --documents ./docs --output-dir ./tests/evals --file-name .dataset
@@ -144,35 +175,41 @@ deepeval generate --method docs --variation single-turn --documents ./docs --out
 Run the eval suite:
 
 ```bash
+# Python
 deepeval test run tests/evals/test_<app>.py --num-processes 5 --identifier "iterating-on-<purpose>-round-1"
+
+# TypeScript
+npx deepeval test run tests/evals/<app>.test.ts --identifier "iterating-on-<purpose>-round-1"
 ```
 
 Open the latest hosted report when Confident AI is enabled:
 
 ```bash
-deepeval view
+deepeval view        # Python
+npx deepeval view    # TypeScript
 ```
 
 ## References
 
-| Topic | File |
-| --- | --- |
-| Intake questions and branching | `references/intake.md` |
-| Use case selection | `references/choose-use-case.md` |
-| Dataset loading | `references/datasets.md` |
-| Synthetic data generation | `references/synthetic-data.md` |
-| Metrics | `references/metrics.md` |
-| Pytest E2E evals | `references/pytest-e2e-evals.md` |
-| Traced evals and span metrics | `references/traced-evals.md` |
-| Confident AI | `references/confident-ai.md` |
+| Topic                               | File                               |
+| ----------------------------------- | ---------------------------------- |
+| Intake questions and branching      | `references/intake.md`             |
+| Use case selection                  | `references/choose-use-case.md`    |
+| Dataset loading                     | `references/datasets.md`           |
+| Synthetic data generation           | `references/synthetic-data.md`     |
+| Metrics                             | `references/metrics.md`            |
+| Pytest E2E evals (Python)           | `references/pytest-e2e-evals.md`   |
+| Vitest E2E evals (TypeScript)       | `references/vitest-e2e-evals.md`   |
+| Traced evals and span metrics       | `references/traced-evals.md`       |
+| Confident AI                        | `references/confident-ai.md`       |
 | Dataset and eval artifact contracts | `references/artifact-contracts.md` |
-| Iteration loop | `references/iteration-loop.md` |
+| Iteration loop                      | `references/iteration-loop.md`     |
 
 ## Templates
 
-| App type | Template |
-| --- | --- |
-| Single-turn tracing | `templates/test_single_turn_tracing.py` |
-| Single-turn no tracing | `templates/test_single_turn_no_tracing.py` |
-| Multi-turn E2E | `templates/test_multi_turn_e2e.py` |
-| Shared metric lists | `templates/metrics.py` |
+| App type               | Python                                     | TypeScript                                 |
+| ---------------------- | ------------------------------------------ | ------------------------------------------ |
+| Single-turn tracing    | `templates/test_single_turn_tracing.py`    | `templates/single_turn_tracing.test.ts`    |
+| Single-turn no tracing | `templates/test_single_turn_no_tracing.py` | `templates/single_turn_no_tracing.test.ts` |
+| Multi-turn E2E         | `templates/test_multi_turn_e2e.py`         | `templates/multi_turn_e2e.test.ts`         |
+| Shared metric lists    | `templates/metrics.py`                     | `templates/metrics.ts`                     |

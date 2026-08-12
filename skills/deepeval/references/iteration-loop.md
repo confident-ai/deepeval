@@ -8,15 +8,25 @@ and use 5 rounds.
 1. Run the eval suite:
 
    ```bash
+   # Python
    deepeval test run tests/evals/test_<app>.py \
      --identifier "iterating-on-<purpose>-round-1" \
      --num-processes 5 \
      --ignore-errors \
      --skip-on-missing-params
+
+   # TypeScript
+   npx deepeval test run tests/evals/<app>.test.ts \
+     --identifier "iterating-on-<purpose>-round-1" \
+     --ignore-errors \
+     --skip-on-missing-params
    ```
 
-   Use `deepeval test run`, not raw `pytest`.
-   For small datasets or constrained machines, omit `--num-processes`.
+   Use `deepeval test run` / `npx deepeval test run`, not raw `pytest` or
+   `npx vitest`.
+   For small datasets or constrained machines, omit `--num-processes`
+   (Python). The TypeScript CLI has no `--num-processes` — Vitest parallelizes
+   by default; use `--max-concurrent` to bound metric concurrency instead.
    Replace `<purpose>` with the current iteration focus, such as `retrieval`,
    `tool-use`, `prompting`, or `conversation-flow`.
 
@@ -88,7 +98,8 @@ Human annotations are useful for:
 - finding product-specific issues metrics do not cover
 
 If Confident AI is not enabled, ask whether the user wants to save results to
-the cloud and log in with `deepeval login` or `CONFIDENT_API_KEY`.
+the cloud and log in with `deepeval login` / `npx deepeval login` or
+`CONFIDENT_API_KEY`.
 
 ## Progress Reporting
 

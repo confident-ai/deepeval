@@ -3,6 +3,12 @@
 Use documented `EvaluationDataset` APIs directly. Do not invent wrapper helpers
 for dataset loading in templates.
 
+The API is the same in both languages with different casing: Python loads with
+`add_goldens_from_*_file(file_path=...)`, TypeScript with
+`await addGoldensFrom*({ filePath })`. Dataset files themselves
+(`.json` / `.jsonl` / `.csv`) are language-neutral — a dataset generated or
+exported from either SDK loads into the other.
+
 Dataset source order is strict:
 
 1. Ask whether the user already has a dataset.
@@ -30,6 +36,13 @@ dataset = EvaluationDataset()
 dataset.add_goldens_from_json_file(file_path="tests/evals/.dataset.json")
 ```
 
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset();
+await dataset.addGoldensFromJSON({ filePath: "tests/evals/.dataset.json" });
+```
+
 ## Local JSONL
 
 ```python
@@ -37,11 +50,21 @@ dataset = EvaluationDataset()
 dataset.add_goldens_from_jsonl_file(file_path="tests/evals/.dataset.jsonl")
 ```
 
+```typescript
+const dataset = new EvaluationDataset();
+await dataset.addGoldensFromJSONL({ filePath: "tests/evals/.dataset.jsonl" });
+```
+
 ## Local CSV
 
 ```python
 dataset = EvaluationDataset()
 dataset.add_goldens_from_csv_file(file_path="tests/evals/.dataset.csv")
+```
+
+```typescript
+const dataset = new EvaluationDataset();
+await dataset.addGoldensFromCSV({ filePath: "tests/evals/.dataset.csv" });
 ```
 
 If the CSV uses custom column names, set the documented column arguments when
@@ -54,13 +77,19 @@ dataset = EvaluationDataset()
 dataset.pull(alias="My Evals Dataset")
 ```
 
+```typescript
+const dataset = new EvaluationDataset();
+await dataset.pull({ alias: "My Evals Dataset" });
+```
+
 Use this when the user says the dataset is on Confident AI and credentials or
 MCP/API access are available.
 
-## Pytest Convention
+## Test File Convention
 
 Load the dataset directly in the test file immediately before parametrization.
-Do not hide dataset loading in `conftest.py` or custom fixture wrappers:
+Do not hide dataset loading in `conftest.py` (Python), Vitest setup files
+(TypeScript), or custom fixture wrappers:
 
 ```python
 dataset = EvaluationDataset()
@@ -69,6 +98,15 @@ dataset.add_goldens_from_json_file(file_path="tests/evals/.dataset.json")
 @pytest.mark.parametrize("golden", dataset.goldens)
 def test_llm_app(golden):
     ...
+```
+
+```typescript
+const dataset = new EvaluationDataset();
+await dataset.addGoldensFromJSON({ filePath: "tests/evals/.dataset.json" });
+
+it.each(dataset.goldens as Golden[])("llm app: $input", async (golden) => {
+  // ...
+});
 ```
 
 For end-to-end test cases that are built before assertion, add them back to the

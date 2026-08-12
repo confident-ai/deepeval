@@ -1,9 +1,11 @@
-# Pytest End-to-End Evals
+# Pytest End-to-End Evals (Python)
 
-Use this for the default CI/CD path. End-to-end pytest evals run one golden
-through the real app per test. If tracing or a supported integration is
-available, pass the golden directly to DeepEval with
-`assert_test(golden=golden, metrics=...)`.
+Use this for the default CI/CD path in Python projects. For
+TypeScript/JavaScript projects, read `references/vitest-e2e-evals.md` instead.
+
+End-to-end pytest evals run one golden through the real app per test. If
+tracing or a supported integration is available, pass the golden directly to
+DeepEval with `assert_test(golden=golden, metrics=...)`.
 
 Use `templates/test_single_turn_tracing.py` for the default single-turn path.
 Use `templates/test_single_turn_no_tracing.py` only when the user explicitly

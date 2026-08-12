@@ -8,7 +8,7 @@ from deepeval.test_case import LLMTestCase
 
 from metrics import SINGLE_TURN_NO_TRACING_METRICS
 
-
+# PLACEHOLDER: import the real app entry point.
 ai_app = import_module("ai_app")
 
 
@@ -22,9 +22,9 @@ def test_single_turn_no_tracing(golden: Golden):
     test_case = LLMTestCase(
         input=golden.input,
         actual_output=actual_output,
-        expected_output=getattr(golden, "expected_output", None),
-        context=getattr(golden, "context", None),
-        retrieval_context=getattr(golden, "retrieval_context", None),
+        expected_output=golden.expected_output,
+        context=golden.context,
+        retrieval_context=golden.retrieval_context,
     )
     assert_test(
         test_case=test_case,

@@ -118,13 +118,16 @@ will use single-turn generation."
 
 Before asking unnecessary questions, search for existing DeepEval files:
 
-- imports from `deepeval`
-- `assert_test`
+- imports from `deepeval` (Python) or `"deepeval"` / `"deepeval/..."` module
+  specifiers (TypeScript)
+- `assert_test` (Python) or `.toPass(` and `import "deepeval/vitest"`
+  (TypeScript)
 - `evaluate(`
 - metric classes ending in `Metric`
 - `EvaluationDataset`
-- `@observe`
-- `deepeval test run`
+- `@observe` (Python) or `observe(` (TypeScript)
+- `evals_iterator` (Python) / `evalsIterator` (TypeScript)
+- `deepeval test run` (Python) / `npx deepeval test run` (TypeScript)
 - `deepeval generate`
 
 If found, summarize the existing metrics, thresholds, datasets, and model

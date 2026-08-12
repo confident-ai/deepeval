@@ -5,6 +5,8 @@ an agent.
 
 ## Preferred Layout
 
+Python:
+
 ```text
 tests/
   evals/
@@ -13,10 +15,21 @@ tests/
     .dataset.json
 ```
 
+TypeScript:
+
+```text
+tests/
+  evals/
+    <app>.test.ts
+    metrics.ts
+    .dataset.json
+```
+
 Use an existing eval directory if the project already has one.
 
 First look for an existing test folder. If one exists, put the eval suite there.
-If none exists, create `tests/evals/`.
+If none exists, create `tests/evals/`. TypeScript eval files must match the
+project's Vitest include pattern — `*.test.ts` by default.
 
 Prefer one eval test file for the first setup. Component/span metrics belong in
 the same single-turn tracing file. Add more files only for a clearly distinct
@@ -43,7 +56,7 @@ The dataset should contain the fields needed by the chosen template and metrics.
 For RAG, include context or enough information to reconstruct context from the
 app. For multi-turn evals, use conversational goldens.
 
-## Pytest Files
+## Eval Test Files
 
 Eval tests should:
 
@@ -51,20 +64,25 @@ Eval tests should:
 - call the real app entry point
 - prefer native DeepEval integrations and traced `Golden` assertions
 - build `LLMTestCase`s only in explicit no-tracing evals
-- import a small, explicit metric list from `metrics.py`
+- import a small, explicit metric list from `metrics.py` / `metrics.ts`
 - add span-level metrics only for useful component diagnostics
 - use existing metrics and thresholds when found
 - avoid network calls unrelated to the app or evaluation model
-- be run with `deepeval test run`, not the raw `pytest` command
+- be run with `deepeval test run` / `npx deepeval test run`, not the raw
+  `pytest` or `npx vitest` commands
+- in TypeScript, contain `import "deepeval/vitest"` so the `toPass` matcher
+  and its types are registered
 
 ## Placeholder Contract
 
 Templates intentionally contain placeholders:
 
-- dataset file paths in `add_goldens_from_*_file(...)`
+- dataset file paths in `add_goldens_from_*_file(...)` (Python) /
+  `addGoldensFrom*({ filePath })` (TypeScript)
 - AI app module/function names such as
-  `import_module("ai_app").run_traced_ai_app`
-- metric lists in `metrics.py`
+  `import_module("ai_app").run_traced_ai_app` or
+  `import { runTracedAiApp } from "./ai-app"`
+- metric lists in `metrics.py` / `metrics.ts`
 - integration callback/instrumentation setup when applicable
 
 Replace every placeholder before running evals. If a placeholder remains, stop

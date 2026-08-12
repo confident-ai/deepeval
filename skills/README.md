@@ -2,15 +2,16 @@
 
 Agent Skills that teach coding assistants how to add DeepEval evaluations,
 generate datasets, instrument applications with tracing, and iterate on AI
-applications using eval results.
+applications using eval results. All skills support Python and
+TypeScript/JavaScript.
 
 ## Skills
 
 | Skill | Description |
 | --- | --- |
-| [deepeval](./deepeval) | Main DeepEval skill for adding evals to AI apps, generating or reusing datasets, creating pytest eval suites, enabling tracing, sending results to Confident AI, and iterating on failures. |
-| [deepeval-otel](./deepeval-otel) | Instrument any app with raw OpenTelemetry so traces export to Confident AI's Observatory — no deepeval package required. Covers the confident.* span/trace attributes and the OTLP endpoint. |
-| [deepeval-tracing](./deepeval-tracing) | Instrument an AI app with DeepEval's native tracing — @observe, span types, tags/metadata, and the framework / model / vector-DB integration index — so traces reach Confident AI. |
+| [deepeval](./deepeval) | Main DeepEval skill for adding evals to AI apps, generating or reusing datasets, creating pytest (Python) or Vitest (TypeScript) eval suites, enabling tracing, sending results to Confident AI, and iterating on failures. |
+| [deepeval-otel](./deepeval-otel) | Instrument any app with raw OpenTelemetry so traces export to Confident AI's Observatory — no deepeval package required. Covers the confident.* span/trace attributes and the OTLP endpoint, with Python and Node.js/TypeScript templates. |
+| [deepeval-tracing](./deepeval-tracing) | Instrument an AI app with DeepEval's native tracing — @observe (Python) / observe() (TypeScript), span types, tags/metadata, and the framework / model / vector-DB integration index — so traces reach Confident AI. |
 
 ## Installation
 
@@ -52,12 +53,14 @@ Copy or symlink `skills/deepeval` into your agent's skills directory.
 For local evals, install DeepEval in the target project:
 
 ```bash
-pip install -U deepeval
+pip install -U deepeval    # Python
+npm install deepeval       # TypeScript/JavaScript
 ```
 
 For hosted reports, traces, production monitoring, or online evals, connect
 DeepEval to Confident AI:
 
 ```bash
-deepeval login
+deepeval login        # Python
+npx deepeval login    # TypeScript/JavaScript
 ```

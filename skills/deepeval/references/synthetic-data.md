@@ -5,6 +5,24 @@ to augment existing goldens. Do not hand-create or make up goldens. Generated
 files should be visible, editable, and committed with the eval suite when
 appropriate.
 
+## TypeScript Projects
+
+`deepeval generate` ships with the **Python CLI only** — the npm package has no
+generation command. For TypeScript projects, generation still works because
+dataset files are language-neutral:
+
+1. Install the Python CLI in an isolated environment (a `venv`, `pipx`, or
+   `uvx deepeval`) without touching the app's dependencies.
+2. Run the same `deepeval generate` commands below, writing the output to
+   `tests/evals/.dataset.json` as usual.
+3. Load the generated file with the TypeScript SDK:
+   `await dataset.addGoldensFromJSON({ filePath: "tests/evals/.dataset.json" })`.
+
+If installing Python tooling is not acceptable, fall back to pulling an
+existing dataset from Confident AI (`await dataset.pull({ alias: "..." })`) or
+ask the user for an exported dataset file. Do not hand-write goldens as a
+workaround.
+
 ## Choosing a Source
 
 Before generating, ask:
@@ -252,6 +270,11 @@ dataset = EvaluationDataset()
 dataset.add_goldens_from_json_file(file_path="tests/evals/.dataset.json")
 ```
 
+```typescript
+const dataset = new EvaluationDataset();
+await dataset.addGoldensFromJSON({ filePath: "tests/evals/.dataset.json" });
+```
+
 If the user is not already logged into Confident AI or does not have
 `CONFIDENT_API_KEY` exported, ask:
 
@@ -263,11 +286,16 @@ Options:
 - Yes, save it to Confident AI
 - Maybe later
 
-If they say yes, authenticate with `deepeval login` for local interactive setup
-or `CONFIDENT_API_KEY` for CI/non-interactive setup, then push the dataset:
+If they say yes, authenticate with `deepeval login` / `npx deepeval login` for
+local interactive setup or `CONFIDENT_API_KEY` for CI/non-interactive setup,
+then push the dataset:
 
 ```python
 dataset.push(alias="My Generated Dataset")
+```
+
+```typescript
+await dataset.push({ alias: "My Generated Dataset" });
 ```
 
 ## Output Contract

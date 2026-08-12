@@ -4,13 +4,43 @@ Use 3-5 metrics for the first eval suite when the user is unsure. More metrics
 make iteration slower and harder to interpret. Reuse existing project metrics
 and thresholds before adding new ones.
 
-Keep metric instances in a separate `metrics.py` module (or the project's
-existing metrics module). Eval test files should import metric lists rather than
-constructing several ad hoc metrics inline.
+Keep metric instances in a separate metrics module (`metrics.py` in Python,
+`metrics.ts` in TypeScript). Eval test files should import metric lists rather
+than constructing several ad hoc metrics inline.
 
 Name component/span metric lists after the exact component they evaluate. Avoid
 generic names like `COMPONENT_METRICS` because one suite can evaluate several
 components with different metric requirements.
+
+## TypeScript Naming
+
+Everything in this file applies to both SDKs. Metric class names are identical
+in TypeScript and imported from `deepeval/metrics`. Constructor options and
+test case fields are camelCase: `actual_output` becomes `actualOutput`,
+`retrieval_context` becomes `retrievalContext`, `evaluation_params` becomes
+`evaluationParams`, and so on. `GEval`'s `evaluationParams` take the
+`SingleTurnParams` enum from `deepeval/test-case`:
+
+```typescript
+import { GEval } from "deepeval/metrics";
+import { SingleTurnParams } from "deepeval/test-case";
+
+const correctness = new GEval({
+  name: "Correctness",
+  criteria: "Judge whether the output answers the input correctly.",
+  evaluationParams: [SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT],
+});
+```
+
+The tables below use Python snake_case field names; map them to camelCase for
+TypeScript.
+
+One constructor difference: TypeScript `GEval` and `ConversationalGEval`
+require `evaluationParams` at construction (`ConversationalGEval` takes a
+non-empty `MultiTurnParams` list from `deepeval/test-case`, e.g.
+`[MultiTurnParams.CONTENT]`). Python marks `evaluation_params` optional only so
+a metric saved on Confident AI can be fetched later with `metric.pull()`;
+evaluating without them raises in both SDKs.
 
 ## Required Rule
 
@@ -24,16 +54,16 @@ single-turn `LLMTestCase` metrics on multi-turn end-to-end evals.
 
 Choose metrics by what the user wants to measure, not only by app type.
 
-| Type | Use when | Examples |
-| --- | --- | --- |
-| Custom criteria | The success criteria is product- or domain-specific | `GEval`, `DAGMetric`, `ConversationalGEval`, `ConversationalDAGMetric` |
-| RAG retriever | You need to evaluate retrieved context quality | `ContextualRelevancyMetric`, `ContextualPrecisionMetric`, `ContextualRecallMetric` |
-| RAG generator | You need to evaluate the final answer against context | `AnswerRelevancyMetric`, `FaithfulnessMetric` |
-| Agentic flow | You need to evaluate task completion, plans, steps, tools, or arguments | `TaskCompletionMetric`, `ToolCorrectnessMetric`, `ArgumentCorrectnessMetric`, `PlanAdherenceMetric`, `PlanQualityMetric`, `StepEfficiencyMetric` |
-| Multi-turn chatbot | You need to evaluate an entire conversation | `ConversationCompletenessMetric`, `RoleAdherenceMetric`, `TurnRelevancyMetric`, `ConversationalGEval` |
-| Safety and compliance | You need to detect risky or policy-violating outputs | `BiasMetric`, `ToxicityMetric`, `PIILeakageMetric`, `MisuseMetric`, `RoleViolationMetric`, `NonAdviceMetric` |
-| Format / structure | You need output to match a schema or instruction set | `JsonCorrectnessMetric`, `PromptAlignmentMetric` |
-| Other task-specific quality | The app is summarization, hallucination-sensitive, image-based, or otherwise specialized | `SummarizationMetric`, `HallucinationMetric`, multimodal metrics |
+| Type                        | Use when                                                                                 | Examples                                                                                                                                         |
+| --------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Custom criteria             | The success criteria is product- or domain-specific                                      | `GEval`, `DAGMetric`, `ConversationalGEval`, `ConversationalDAGMetric`                                                                           |
+| RAG retriever               | You need to evaluate retrieved context quality                                           | `ContextualRelevancyMetric`, `ContextualPrecisionMetric`, `ContextualRecallMetric`                                                               |
+| RAG generator               | You need to evaluate the final answer against context                                    | `AnswerRelevancyMetric`, `FaithfulnessMetric`                                                                                                    |
+| Agentic flow                | You need to evaluate task completion, plans, steps, tools, or arguments                  | `TaskCompletionMetric`, `ToolCorrectnessMetric`, `ArgumentCorrectnessMetric`, `PlanAdherenceMetric`, `PlanQualityMetric`, `StepEfficiencyMetric` |
+| Multi-turn chatbot          | You need to evaluate an entire conversation                                              | `ConversationCompletenessMetric`, `RoleAdherenceMetric`, `TurnRelevancyMetric`, `ConversationalGEval`                                            |
+| Safety and compliance       | You need to detect risky or policy-violating outputs                                     | `BiasMetric`, `ToxicityMetric`, `PIILeakageMetric`, `MisuseMetric`, `RoleViolationMetric`, `NonAdviceMetric`                                     |
+| Format / structure          | You need output to match a schema or instruction set                                     | `JsonCorrectnessMetric`, `PromptAlignmentMetric`                                                                                                 |
+| Other task-specific quality | The app is summarization, hallucination-sensitive, image-based, or otherwise specialized | `SummarizationMetric`, `HallucinationMetric`, multimodal metrics                                                                                 |
 
 Aim to include at least one custom metric when the user's definition of success
 is not fully captured by a predefined metric. In practice, custom metrics should
@@ -118,33 +148,33 @@ available fields or update the dataset generation/loading plan first.
 
 ## Common Single-Turn Metrics
 
-| Metric | What it checks | Required test case fields |
-| --- | --- | --- |
-| `AnswerRelevancyMetric` | Output answers the input | `input`, `actual_output` |
-| `FaithfulnessMetric` | Output is grounded in retrieved context | `input`, `actual_output`, `retrieval_context` |
-| `ContextualRelevancyMetric` | Retrieved context is relevant to input | `input`, `retrieval_context` |
-| `ContextualPrecisionMetric` | Relevant context is ranked highly | `input`, `retrieval_context`, `expected_output` |
-| `ContextualRecallMetric` | Retrieved context covers expected answer | `input`, `retrieval_context`, `expected_output` |
-| `TaskCompletionMetric` | Agent/app completed the task | `input`, `actual_output` |
-| `StepEfficiencyMetric` | Agent/app completed the task efficiently without unnecessary steps | trace steps/tool activity |
-| `ToolCorrectnessMetric` | Called tools match expected tools | `input`, `tools_called`, `expected_tools` |
-| `ArgumentCorrectnessMetric` | Tool arguments are correct | `input`, `tools_called` |
-| `JsonCorrectnessMetric` | Output matches expected schema | `input`, `actual_output`; constructor needs `expected_schema` |
-| `PromptAlignmentMetric` | Output follows prompt instructions | `input`, `actual_output`; constructor needs `prompt_instructions` |
-| `GEval` | Custom single-turn criteria | constructor needs `name`, `criteria` or `evaluation_steps`, and `evaluation_params` |
+| Metric                      | What it checks                                                     | Required test case fields                                                           |
+| --------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `AnswerRelevancyMetric`     | Output answers the input                                           | `input`, `actual_output`                                                            |
+| `FaithfulnessMetric`        | Output is grounded in retrieved context                            | `input`, `actual_output`, `retrieval_context`                                       |
+| `ContextualRelevancyMetric` | Retrieved context is relevant to input                             | `input`, `retrieval_context`                                                        |
+| `ContextualPrecisionMetric` | Relevant context is ranked highly                                  | `input`, `retrieval_context`, `expected_output`                                     |
+| `ContextualRecallMetric`    | Retrieved context covers expected answer                           | `input`, `retrieval_context`, `expected_output`                                     |
+| `TaskCompletionMetric`      | Agent/app completed the task                                       | `input`, `actual_output`                                                            |
+| `StepEfficiencyMetric`      | Agent/app completed the task efficiently without unnecessary steps | trace steps/tool activity                                                           |
+| `ToolCorrectnessMetric`     | Called tools match expected tools                                  | `input`, `tools_called`, `expected_tools`                                           |
+| `ArgumentCorrectnessMetric` | Tool arguments are correct                                         | `input`, `tools_called`                                                             |
+| `JsonCorrectnessMetric`     | Output matches expected schema                                     | `input`, `actual_output`; constructor needs `expected_schema`                       |
+| `PromptAlignmentMetric`     | Output follows prompt instructions                                 | `input`, `actual_output`; constructor needs `prompt_instructions`                   |
+| `GEval`                     | Custom single-turn criteria                                        | constructor needs `name`, `criteria` or `evaluation_steps`, and `evaluation_params` |
 
 ## Common Multi-Turn Metrics
 
-| Metric | What it checks | Required test case fields |
-| --- | --- | --- |
-| `ConversationCompletenessMetric` | Conversation achieved the expected outcome | `turns` with `role`, `content` |
-| `RoleAdherenceMetric` | Assistant stayed in role across turns | `turns` with `role`, `content` |
-| `TurnRelevancyMetric` | Assistant turns are relevant | `turns` with `role`, `content` |
-| `TurnFaithfulnessMetric` | Turns are faithful to retrieval context | `turns` with `role`, `content`, `retrieval_context` |
-| `TurnContextualRelevancyMetric` | Turn retrieval context is relevant | `turns` with `role`, `content`, retrieval context |
-| `GoalAccuracyMetric` | Conversation achieved the user's goal | `turns` with `role`, `content` |
-| `TopicAdherenceMetric` | Conversation stayed on allowed topics | `turns` with `role`, `content`; constructor needs `relevant_topics` |
-| `ConversationalGEval` | Custom multi-turn criteria | constructor needs `name` and `criteria` or `evaluation_steps` |
+| Metric                           | What it checks                             | Required test case fields                                                                                  |
+| -------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| `ConversationCompletenessMetric` | Conversation achieved the expected outcome | `turns` with `role`, `content`                                                                             |
+| `RoleAdherenceMetric`            | Assistant stayed in role across turns      | `turns` with `role`, `content`                                                                             |
+| `TurnRelevancyMetric`            | Assistant turns are relevant               | `turns` with `role`, `content`                                                                             |
+| `TurnFaithfulnessMetric`         | Turns are faithful to retrieval context    | `turns` with `role`, `content`, `retrieval_context`                                                        |
+| `TurnContextualRelevancyMetric`  | Turn retrieval context is relevant         | `turns` with `role`, `content`, retrieval context                                                          |
+| `GoalAccuracyMetric`             | Conversation achieved the user's goal      | `turns` with `role`, `content`                                                                             |
+| `TopicAdherenceMetric`           | Conversation stayed on allowed topics      | `turns` with `role`, `content`; constructor needs `relevant_topics`                                        |
+| `ConversationalGEval`            | Custom multi-turn criteria                 | constructor needs `name` and `criteria` or `evaluation_steps`; TypeScript also requires `evaluationParams` |
 
 ## Choosing Metrics
 

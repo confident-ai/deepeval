@@ -9,6 +9,7 @@ from deepeval.simulator import ConversationSimulator
 from metrics import MULTI_TURN_METRICS
 
 MAX_TURNS = 10
+# PLACEHOLDER: import the real chatbot model callback.
 ai_app = import_module("ai_app")
 
 
