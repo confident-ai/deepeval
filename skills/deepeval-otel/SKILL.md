@@ -9,21 +9,22 @@ description: >
   the deepeval Python package; wire an OTLPSpanExporter, OpenTelemetry
   Collector, or vendor-neutral OTel SDK to Confident AI; or pick the US vs EU
   Confident AI OTLP endpoint. Language-agnostic — the mechanism is OTLP
-  attribute keys plus an exporter endpoint. DO NOT TRIGGER for building
-  DeepEval pytest eval suites, datasets, goldens, metrics, or deepeval test run
-  (use the `deepeval` skill); for instrumenting with the DeepEval SDK's
-  @observe decorator or framework integrations (use the `deepeval-tracing`
-  skill); or for instrumenting non-AI software such as web servers, CRUD
-  backends, or infrastructure — the confident.* attributes describe AI
-  components (agents, LLM calls, retrievers, tools) and apply to AI
-  applications only.
+  attribute keys plus an exporter endpoint, with ready-made templates for
+  Python and Node.js/TypeScript. DO NOT TRIGGER for building DeepEval eval
+  suites, datasets, goldens, metrics, or deepeval test run (use the `deepeval`
+  skill); for instrumenting with the DeepEval SDK's @observe decorator
+  (Python) / observe() wrapper (TypeScript) or framework integrations (use the
+  `deepeval-tracing` skill); or for instrumenting non-AI software such as web
+  servers, CRUD backends, or infrastructure — the confident.* attributes
+  describe AI components (agents, LLM calls, retrievers, tools) and apply to
+  AI applications only.
 license: Apache-2.0
 metadata:
   author: Confident AI
-  version: "1.0.0"
+  version: "1.1.0"
   category: observability
   tags: "opentelemetry, otel, otlp, tracing, confident-ai, observatory, spans"
-  compatibility: "Works with any OpenTelemetry SDK in any language. Requires a Confident AI account and `CONFIDENT_API_KEY`. Confident AI's OTLP endpoint is HTTP only — use OTLP/HTTP, not gRPC. Python examples assume `opentelemetry-sdk` and `opentelemetry-exporter-otlp-proto-http`."
+  compatibility: "Works with any OpenTelemetry SDK in any language. Requires a Confident AI account and `CONFIDENT_API_KEY`. Confident AI's OTLP endpoint is HTTP only — use OTLP/HTTP, not gRPC. Python examples assume `opentelemetry-sdk` and `opentelemetry-exporter-otlp-proto-http`; Node.js/TypeScript examples assume `@opentelemetry/sdk-trace-node` and `@opentelemetry/exporter-trace-otlp-proto` (OTel JS SDK 2.x requires Node.js 18.19+ or 20.6+)."
 ---
 
 # DeepEval OpenTelemetry Export
@@ -53,16 +54,19 @@ no LLM, agent, retrieval, or tool-calling component, this skill does not apply.
 Use **this skill** for vendor-neutral OTLP export to Confident AI — pointing an
 OpenTelemetry exporter at Confident AI and setting `confident.*` attributes.
 
-Use the **`deepeval` skill** when the user wants to build a Python pytest eval
-suite, generate datasets or goldens, write metrics, run `deepeval test run`, or
-instrument with the `deepeval` SDK's `@observe` decorator. The two skills are
+Use the **`deepeval` skill** when the user wants to build a pytest (Python) or
+Vitest (TypeScript) eval suite, generate datasets or goldens, write metrics,
+run `deepeval test run`, or instrument with the `deepeval` SDK's `@observe`
+decorator (Python) / `observe()` wrapper (TypeScript). The two skills are
 complementary, not alternatives.
 
 ## Prerequisites
 
 - A Confident AI account and a `CONFIDENT_API_KEY`.
 - An OpenTelemetry SDK for the application's language. For Python:
-  `opentelemetry-sdk` and `opentelemetry-exporter-otlp-proto-http`.
+  `opentelemetry-sdk` and `opentelemetry-exporter-otlp-proto-http`. For
+  Node.js/TypeScript: `@opentelemetry/api`, `@opentelemetry/sdk-trace-node`,
+  and `@opentelemetry/exporter-trace-otlp-proto`.
 - The Confident AI OTLP endpoint accepts **HTTP only** — never gRPC.
 
 ## How It Works
@@ -83,7 +87,8 @@ not from any attribute.
 2. Choose the endpoint from the API key's region prefix. Read
    `references/endpoint-and-exporter.md`.
 3. Wire (or repoint) an OTLP/HTTP span exporter with the `x-confident-api-key`
-   header. For Python, start from `templates/confident_otel_setup.py`.
+   header. For Python, start from `templates/confident_otel_setup.py`; for
+   Node.js/TypeScript, start from `templates/confident_otel_setup.ts`.
 4. If the process runs other OpenTelemetry instrumentation or an APM agent
    (auto-instrumentation for HTTP/DB, Datadog, etc.), isolate the Confident AI
    export so only AI spans reach it — a dedicated pipeline or a span filter.
@@ -117,15 +122,16 @@ not from any attribute.
 
 ## References
 
-| Topic | File |
-| --- | --- |
-| Endpoints, region selection, auth, exporter wiring | `references/endpoint-and-exporter.md` |
-| Trace-level `confident.trace.*` attributes | `references/trace-attributes.md` |
-| Span-level `confident.span.*` attributes and data-type rules | `references/span-attributes.md` |
-| Standard OTel `gen_ai.*` fallback behavior | `references/gen-ai-fallbacks.md` |
+| Topic                                                        | File                                  |
+| ------------------------------------------------------------ | ------------------------------------- |
+| Endpoints, region selection, auth, exporter wiring           | `references/endpoint-and-exporter.md` |
+| Trace-level `confident.trace.*` attributes                   | `references/trace-attributes.md`      |
+| Span-level `confident.span.*` attributes and data-type rules | `references/span-attributes.md`       |
+| Standard OTel `gen_ai.*` fallback behavior                   | `references/gen-ai-fallbacks.md`      |
 
 ## Templates
 
-| Purpose | Template |
-| --- | --- |
-| Minimal Python OTLP exporter setup + example trace | `templates/confident_otel_setup.py` |
+| Purpose                                                        | Template                            |
+| -------------------------------------------------------------- | ----------------------------------- |
+| Minimal Python OTLP exporter setup + example trace             | `templates/confident_otel_setup.py` |
+| Minimal Node.js/TypeScript OTLP exporter setup + example trace | `templates/confident_otel_setup.ts` |

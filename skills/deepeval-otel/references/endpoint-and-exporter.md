@@ -8,10 +8,10 @@ Confident AI's Observatory.
 Confident AI exposes one OTLP/HTTP traces endpoint per region. There are
 exactly two.
 
-| Region | Base endpoint | Traces are POSTed to |
-| --- | --- | --- |
-| Default (US/AU) | `https://otel.confident-ai.com` | `https://otel.confident-ai.com/v1/traces` |
-| EU | `https://eu.otel.confident-ai.com` | `https://eu.otel.confident-ai.com/v1/traces` |
+| Region          | Base endpoint                      | Traces are POSTed to                         |
+| --------------- | ---------------------------------- | -------------------------------------------- |
+| Default (US/AU) | `https://otel.confident-ai.com`    | `https://otel.confident-ai.com/v1/traces`    |
+| EU              | `https://eu.otel.confident-ai.com` | `https://eu.otel.confident-ai.com/v1/traces` |
 
 When configuring an OTLP/HTTP span exporter directly, the `endpoint` value must
 include the `/v1/traces` suffix. When configuring through the standard
@@ -23,14 +23,14 @@ endpoint — the SDK appends `/v1/traces` itself.
 Confident AI API keys are region-prefixed. Pick the endpoint from the prefix of
 the project's `CONFIDENT_API_KEY`:
 
-| API key prefix | Endpoint |
-| --- | --- |
+| API key prefix   | Endpoint                           |
+| ---------------- | ---------------------------------- |
 | `confident_eu_…` | `https://eu.otel.confident-ai.com` |
-| `confident_us_…` | `https://otel.confident-ai.com` |
-| anything else | `https://otel.confident-ai.com` |
+| `confident_us_…` | `https://otel.confident-ai.com`    |
+| anything else    | `https://otel.confident-ai.com`    |
 
-Only `confident_eu_…` keys use the EU endpoint. When in doubt, ask the user for project region 
-or use the default endpoint.
+Only `confident_eu_…` keys use the EU endpoint. When in doubt, ask the user
+for the project region or use the default endpoint.
 
 ## Authentication
 
@@ -51,6 +51,9 @@ Confident AI's OTLP endpoint accepts **OTLP/HTTP only — never gRPC.**
   `opentelemetry.exporter.otlp.proto.http.trace_exporter` (package
   `opentelemetry-exporter-otlp-proto-http`). Do not use the
   `opentelemetry.exporter.otlp.proto.grpc` variant.
+- Node.js/TypeScript: use `OTLPTraceExporter` from
+  `@opentelemetry/exporter-trace-otlp-proto` (OTLP/HTTP protobuf). Do not use
+  `@opentelemetry/exporter-trace-otlp-grpc`.
 - OpenTelemetry Collector: use the `otlphttp` exporter, not `otlp` (gRPC).
 - Other SDKs: choose the OTLP/HTTP exporter (`proto-http`, `HttpProtobuf`, or
   the language's equivalent).
@@ -111,6 +114,49 @@ with tracer.start_as_current_span("my-llm-app") as span:
 ```
 
 See `templates/confident_otel_setup.py` for the full runnable version.
+
+## Exporter Wiring (Node.js/TypeScript)
+
+The same shape with the Node SDK — construct the OTLP/HTTP exporter, register
+it through a batch span processor, then set `confident.*` attributes on spans:
+
+```typescript
+import { trace } from "@opentelemetry/api";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
+import {
+  BatchSpanProcessor,
+  NodeTracerProvider,
+} from "@opentelemetry/sdk-trace-node";
+
+const apiKey = process.env.CONFIDENT_API_KEY!;
+const endpoint = apiKey.startsWith("confident_eu_")
+  ? "https://eu.otel.confident-ai.com"
+  : "https://otel.confident-ai.com";
+
+const provider = new NodeTracerProvider({
+  spanProcessors: [
+    new BatchSpanProcessor(
+      new OTLPTraceExporter({
+        url: `${endpoint}/v1/traces`,
+        headers: { "x-confident-api-key": apiKey },
+      }),
+    ),
+  ],
+});
+provider.register();
+const tracer = trace.getTracer("my-llm-app");
+
+tracer.startActiveSpan("my-llm-app", (span) => {
+  span.setAttribute("confident.span.type", "agent");
+  span.setAttribute("confident.trace.name", "my-llm-app");
+  // ... see trace-attributes.md and span-attributes.md
+  span.end();
+});
+```
+
+Call `await provider.shutdown()` (or `forceFlush()`) before short-lived
+processes exit so batched spans are not lost. See
+`templates/confident_otel_setup.ts` for the full runnable version.
 
 ## Other Languages
 
@@ -176,8 +222,8 @@ Implement the filter as either:
 A working reference implementation is the deepeval TypeScript SDK's
 `DeepEvalBatchFilterProcessor` (a name-prefix span-processor filter) and
 `DeepEvalExporterWrapper` (an exporter wrapper) in
-`deepeval.ts/src/integrations/ai-sdk/index.ts`. Mirror that shape in whatever
-language and SDK the app uses.
+`typescript/src/integrations/ai-sdk/index.ts` of the deepeval repository.
+Mirror that shape in whatever language and SDK the app uses.
 
 **Caveat — preserve span nesting when filtering.** Dropping an intermediate
 non-AI span can orphan its AI child spans (their `parentSpanId` now points at a
