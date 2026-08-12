@@ -21,6 +21,7 @@ from .mcp import (
     MCPResourceCall,
     MCPToolCall,
     get_available_mcp_tool_names,
+    normalize_mcp_servers,
 )
 
 __all__ = [
@@ -37,6 +38,7 @@ __all__ = [
     "MCPResourceCall",
     "MCPToolCall",
     "get_available_mcp_tool_names",
+    "normalize_mcp_servers",
     "MLLMImage",
     "RetrievedContextData",
     "ArenaTestCase",
