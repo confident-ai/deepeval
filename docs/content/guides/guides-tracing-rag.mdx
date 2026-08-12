@@ -443,7 +443,7 @@ In production, the goal of observability shifts from local debugging to **contin
 Instead, Confident AI handles production observability and asynchronous evaluation seamlessly.
 
 :::note
-Traces are sent asynchronously in a background worker thread. For short-lived scripts that exit before the worker finishes, set the `CONFIDENT_TRACE_FLUSH=1` environment variable to ensure all traces are flushed before the process exits. For long-running servers (FastAPI, Django), this is not needed.
+Traces are sent asynchronously in a background worker thread. For short-lived scripts that exit before the worker finishes, set the `CONFIDENT_TRACE_FLUSH=1` environment variable to ensure all traces are flushed before the process exits. If you need to control when that happens, or to know whether it succeeded, call `deepeval.flush_traces()` (or `await deepeval.a_flush_traces()`) at your shutdown point instead. For long-running servers (FastAPI, Django), neither is needed.
 :::
 
 <Steps>
