@@ -115,7 +115,14 @@ class ConfidentSpanExporter(SpanExporter):
         pass
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
-        return True
+        """Wait for the REST traces this exporter handed to ``trace_manager``.
+
+        ``export`` does not perform any I/O itself — it translates spans and
+        enqueues the resulting traces onto the trace worker. Returning ``True``
+        unconditionally would tell OTel the spans are safely delivered while
+        they are still sitting in that queue.
+        """
+        return trace_manager.flush(timeout=timeout_millis / 1000)
 
     def export(
         self,
