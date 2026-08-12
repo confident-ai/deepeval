@@ -966,3 +966,23 @@ def require_dependency(
         raise DeepEvalError(
             f"{provider_label} requires the `{module_name}` package. {hint}"
         ) from exc
+
+def generate_metric_hash(metric: "BaseMetric") -> str:
+    import hashlib
+    import inspect
+    import json
+    
+    config_data = {
+        "name": metric.__class__.__name__,
+        "threshold": getattr(metric, "threshold", None),
+        "strict_mode": getattr(metric, "strict_mode", False),
+        "evaluation_model": getattr(metric, "evaluation_model", None),
+    }
+    
+    try:
+        source_code = inspect.getsource(metric.__class__)
+    except Exception:
+        source_code = ""
+
+    hash_payload = f"{json.dumps(config_data, sort_keys=True)}|{source_code}"
+    return hashlib.sha256(hash_payload.encode('utf-8')).hexdigest()
