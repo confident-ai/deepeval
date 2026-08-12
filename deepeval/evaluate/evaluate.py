@@ -1,5 +1,6 @@
 import warnings
 from typing import (
+    TYPE_CHECKING,
     List,
     Optional,
     Union,
@@ -56,7 +57,10 @@ from deepeval.test_case import (
     ConversationalTestCase,
     MCPServer,
 )
-from deepeval.test_case.mcp import validate_mcp_servers
+from deepeval.test_case.mcp import (
+    normalize_mcp_servers,
+    validate_mcp_servers,
+)
 from deepeval.test_run import (
     global_test_run_manager,
     MetricData,
@@ -68,6 +72,9 @@ from deepeval.evaluate.execute import (
     _assert_test_from_current_trace,
     execute_test_cases,
 )
+
+if TYPE_CHECKING:
+    from mcp.server import MCPServer as OfficialMCPServer
 
 
 def assert_test(
@@ -182,7 +189,7 @@ def evaluate(
     metric_collection: Optional[str] = None,
     hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
     # agnostic
-    mcp_servers: Optional[List[MCPServer]] = None,
+    mcp_servers: Optional[List[Union[MCPServer, "OfficialMCPServer"]]] = None,
     identifier: Optional[str] = None,
     official: bool = False,
     _skip_reset: bool = False,
@@ -200,6 +207,7 @@ def evaluate(
     check_valid_test_cases_type(test_cases)
 
     if mcp_servers is not None:
+        mcp_servers = normalize_mcp_servers(mcp_servers)
         validate_mcp_servers(mcp_servers)
     process_mcp_servers(test_cases, mcp_servers)
 
