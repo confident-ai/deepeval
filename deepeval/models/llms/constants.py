@@ -561,29 +561,13 @@ ANTHROPIC_MODELS_DATA = ModelDataRegistry(
             input_price=1.00 / 1e6,
             output_price=5.00 / 1e6,
         ),
-        "claude-opus-4-5-20251124": make_model_data(
+        "claude-opus-4-5-20251101": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
             supports_structured_outputs=True,
             supports_json=True,
             input_price=5.00 / 1e6,
             output_price=25.00 / 1e6,
-        ),
-        "claude-opus-4-6-20250610": make_model_data(
-            supports_log_probs=False,
-            supports_multimodal=True,
-            supports_structured_outputs=True,
-            supports_json=True,
-            input_price=5.00 / 1e6,
-            output_price=25.00 / 1e6,
-        ),
-        "claude-sonnet-4-6-20250514": make_model_data(
-            supports_log_probs=False,
-            supports_multimodal=True,
-            supports_structured_outputs=True,
-            supports_json=True,
-            input_price=3.00 / 1e6,
-            output_price=15.00 / 1e6,
         ),
         "claude-3-opus": make_model_data(
             supports_log_probs=False,

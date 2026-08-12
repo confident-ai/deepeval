@@ -311,3 +311,38 @@ def test_anthropic_calculate_cost_with_zero_tokens(mock_require_dep, settings):
     model = AnthropicModel(model="claude-3-7-sonnet-latest")
     cost = model.calculate_cost(input_tokens=0, output_tokens=0)
     assert cost == 0.0
+
+
+########################################################
+# Default model / registry ID validity                 #
+########################################################
+
+
+def test_no_dated_ids_for_dateless_claude_generations():
+    """From the 4.6 generation on, Anthropic publishes dateless pinned IDs
+    only, so a date-suffixed 4.6+ ID 404s on the first messages.create call.
+
+    Regression test for the fabricated "claude-opus-4-6-20250610" and
+    "claude-sonnet-4-6-20250514" registry entries.
+    """
+    import re
+
+    from deepeval.models.llms.constants import (
+        ANTHROPIC_MODELS_DATA,
+        DEFAULT_ANTHROPIC_MODEL,
+    )
+
+    # claude-{family}-{major}-{minor}-{date} where the generation is 4.6+
+    dated_dateless_gen = re.compile(
+        r"claude-(?:opus|sonnet|haiku|fable|mythos)"
+        r"-(?:4-[6-9]|[5-9](?:-\d+)?)-\d{8}$"
+    )
+
+    offenders = [
+        model_id
+        for model_id in ANTHROPIC_MODELS_DATA
+        if dated_dateless_gen.search(model_id)
+    ]
+    assert offenders == []
+    assert not dated_dateless_gen.search(DEFAULT_ANTHROPIC_MODEL)
+    assert DEFAULT_ANTHROPIC_MODEL in ANTHROPIC_MODELS_DATA
