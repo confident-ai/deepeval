@@ -1,6 +1,6 @@
 from pydantic import BaseModel, AnyUrl
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Literal
+from typing import Dict, List, Optional, Literal, Set
 
 
 class MCPToolCall(BaseModel):
@@ -55,3 +55,17 @@ def validate_mcp_servers(mcp_servers: List[MCPServer]):
             mcp_server.available_resources, "available_resources", Resource
         )
         _validate(mcp_server.available_prompts, "available_prompts", Prompt)
+
+
+def get_available_mcp_tool_names(mcp_servers: List[MCPServer]) -> Set[str]:
+    tool_names = set()
+    for mcp_server in mcp_servers:
+        for tool in mcp_server.available_tools or []:
+            name = (
+                tool.get("name")
+                if isinstance(tool, dict)
+                else getattr(tool, "name", None)
+            )
+            if name:
+                tool_names.add(name)
+    return tool_names
