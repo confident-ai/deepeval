@@ -218,7 +218,7 @@ class TraceManager:
 
         if not self._flush_enabled and remaining_tasks > 0:
             self._print_trace_status(
-                message=f"WARNING: Exiting with {queue_size + in_flight} abaonded trace(s).",
+                message=f"WARNING: Exiting with {queue_size + in_flight} abandoned trace(s).",
                 trace_worker_status=TraceWorkerStatus.WARNING,
                 description=f"Set {CONFIDENT_TRACE_FLUSH}=1 as an environment variable to flush remaining traces to Confident AI.",
             )
