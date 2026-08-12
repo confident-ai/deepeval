@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Tuple
 
 from deepeval.confident.api import get_confident_api_key
 from deepeval.telemetry import capture_tracing_integration
+from deepeval.tracing.integrations import Integration
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,9 @@ def instrument_microsoft_agent_framework(
     observability API. Prompt, response, and tool content remains disabled
     unless ``capture_content=True`` is explicitly requested.
     """
-    with capture_tracing_integration("microsoft_agent_framework"):
+    with capture_tracing_integration(
+        Integration.MICROSOFT_AGENT_FRAMEWORK
+    ):
         _require_dependencies()
 
         if not api_key:
