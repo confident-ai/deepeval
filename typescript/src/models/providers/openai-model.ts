@@ -1,11 +1,10 @@
 import {
   DeepEvalOpenAICompatibleModel,
   type OpenAICompatibleModelOptions,
-} from "../openai-compatible-model";
+} from "@/models/openai-compatible-model";
+import { defaultModelName, type ModelNamespace } from "@/models/registry";
 
 export type OpenAIModelOptions = OpenAICompatibleModelOptions;
-
-const DEFAULT_OPENAI_MODEL = "gpt-4.1";
 
 /**
  * OpenAI evaluation model, backed by the official `openai` SDK. The canonical
@@ -15,11 +14,15 @@ const DEFAULT_OPENAI_MODEL = "gpt-4.1";
 export class OpenAIModel extends DeepEvalOpenAICompatibleModel {
   protected providerLabel = "OpenAI";
   protected apiKeyEnvVar = "OPENAI_API_KEY";
+  protected registryNamespace: ModelNamespace = "openai";
 
   constructor(options: OpenAIModelOptions = {}) {
     super({
       ...options,
-      model: options.model ?? process.env.OPENAI_MODEL_NAME ?? DEFAULT_OPENAI_MODEL,
+      model:
+        options.model ??
+        process.env.OPENAI_MODEL_NAME ??
+        defaultModelName("openai"),
       apiKey: options.apiKey ?? process.env.OPENAI_API_KEY,
     });
   }

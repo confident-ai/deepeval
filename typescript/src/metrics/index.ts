@@ -1,5 +1,5 @@
-export { BaseMetric, BaseMetricCore } from "./base-metrics";
-export { BaseConversationalMetric } from "./base-conversational-metric";
+export { BaseMetric, BaseMetricCore } from "@/metrics/base-metrics";
+export { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 export {
   initializeModel,
   generateWithSchema,
@@ -8,152 +8,260 @@ export {
   prettifyList,
   resolveRetrievalContext,
   printToolsCalled,
-} from "./utils";
+} from "@/metrics/utils";
 export {
   checkConversationalTestCaseParams,
   getTurnsInSlidingWindow,
   getUnitInteractions,
   convertTurnToDict,
-} from "./conversational-utils";
+} from "@/metrics/conversational-utils";
 export {
   TurnRelevancyMetric,
   type TurnRelevancyMetricOptions,
-} from "./turn-relevancy";
+  type TurnRelevancyTemplateOverride,
+} from "@/metrics/turn-relevancy";
 export {
   TurnFaithfulnessMetric,
   type TurnFaithfulnessMetricOptions,
-} from "./turn-faithfulness";
+  type TurnFaithfulnessTemplateOverride,
+} from "@/metrics/turn-faithfulness";
 export {
   TurnContextualPrecisionMetric,
   type TurnContextualPrecisionMetricOptions,
-} from "./turn-contextual-precision";
+  type TurnContextualPrecisionTemplateOverride,
+} from "@/metrics/turn-contextual-precision";
 export {
   TurnContextualRecallMetric,
   type TurnContextualRecallMetricOptions,
-} from "./turn-contextual-recall";
+  type TurnContextualRecallTemplateOverride,
+} from "@/metrics/turn-contextual-recall";
 export {
   TurnContextualRelevancyMetric,
   type TurnContextualRelevancyMetricOptions,
-} from "./turn-contextual-relevancy";
+  type TurnContextualRelevancyTemplateOverride,
+} from "@/metrics/turn-contextual-relevancy";
 export {
   ConversationCompletenessMetric,
   type ConversationCompletenessMetricOptions,
-} from "./conversation-completeness";
+  type ConversationCompletenessTemplateOverride,
+} from "@/metrics/conversation-completeness";
 export {
   KnowledgeRetentionMetric,
   type KnowledgeRetentionMetricOptions,
-} from "./knowledge-retention";
+  type KnowledgeRetentionTemplateOverride,
+} from "@/metrics/knowledge-retention";
 export {
   RoleAdherenceMetric,
   type RoleAdherenceMetricOptions,
-} from "./role-adherence";
+  type RoleAdherenceTemplateOverride,
+} from "@/metrics/role-adherence";
 export {
   TopicAdherenceMetric,
   type TopicAdherenceMetricOptions,
-} from "./topic-adherence";
+  type TopicAdherenceTemplateOverride,
+} from "@/metrics/topic-adherence";
 export {
   GoalAccuracyMetric,
   type GoalAccuracyMetricOptions,
-} from "./goal-accuracy";
+  type GoalAccuracyTemplateOverride,
+} from "@/metrics/goal-accuracy";
 export {
   ConversationalGEval,
   type ConversationalGEvalMetricOptions,
-} from "./conversational-g-eval";
-export { ToolUseMetric, type ToolUseMetricOptions } from "./tool-use";
+  type ConversationalGEvalTemplateOverride,
+} from "@/metrics/conversational-g-eval";
+export {
+  ToolUseMetric,
+  type ToolUseMetricOptions,
+  type ToolUseTemplateOverride,
+} from "@/metrics/tool-use";
 export {
   TaskCompletionMetric,
   type TaskCompletionMetricOptions,
-} from "./task-completion";
+  type TaskCompletionTemplateOverride,
+} from "@/metrics/task-completion";
 export {
   PlanAdherenceMetric,
   type PlanAdherenceMetricOptions,
-} from "./plan-adherence";
+  type PlanAdherenceTemplateOverride,
+} from "@/metrics/plan-adherence";
 export {
   PlanQualityMetric,
   type PlanQualityMetricOptions,
-} from "./plan-quality";
+  type PlanQualityTemplateOverride,
+} from "@/metrics/plan-quality";
 export {
   StepEfficiencyMetric,
   type StepEfficiencyMetricOptions,
-} from "./step-efficiency";
+  type StepEfficiencyTemplateOverride,
+} from "@/metrics/step-efficiency";
 export {
   ImageCoherenceMetric,
   type ImageCoherenceMetricOptions,
+  type ImageCoherenceTemplateOverride,
   ImageHelpfulnessMetric,
   type ImageHelpfulnessMetricOptions,
+  type ImageHelpfulnessTemplateOverride,
   ImageReferenceMetric,
   type ImageReferenceMetricOptions,
+  type ImageReferenceTemplateOverride,
   TextToImageMetric,
   type TextToImageMetricOptions,
+  type TextToImageTemplateOverride,
   ImageEditingMetric,
   type ImageEditingMetricOptions,
-} from "./multimodal-metrics";
-export { BaseArenaMetric } from "./base-arena-metric";
-export { ArenaGEval, type ArenaGEvalMetricOptions } from "./arena-g-eval";
-export { MCPUseMetric, type MCPUseMetricOptions } from "./mcp-use-metric";
+  type ImageEditingTemplateOverride,
+} from "@/metrics/multimodal-metrics";
+export { BaseArenaMetric } from "@/metrics/base-arena-metric";
+export {
+  ArenaGEval,
+  type ArenaGEvalMetricOptions,
+  type ArenaGEvalTemplateOverride,
+} from "@/metrics/arena-g-eval";
+export {
+  MCPUseMetric,
+  type MCPUseMetricOptions,
+  type MCPUseTemplateOverride,
+} from "@/metrics/mcp-use-metric";
 export {
   MCPTaskCompletionMetric,
   type MCPTaskCompletionMetricOptions,
   MultiTurnMCPUseMetric,
   type MultiTurnMCPUseMetricOptions,
-} from "./mcp";
-export { DeepEvalError, MissingTestCaseParamsError } from "../errors";
+  type MCPTaskCompletionTemplateOverride,
+} from "@/metrics/mcp";
+export { DeepEvalError, MissingTestCaseParamsError } from "@/errors";
 export {
   AnswerRelevancyMetric,
   type AnswerRelevancyMetricOptions,
-} from "./answer-relevancy";
+  type AnswerRelevancyTemplateOverride,
+} from "@/metrics/answer-relevancy";
 export {
   FaithfulnessMetric,
   type FaithfulnessMetricOptions,
-} from "./faithfulness";
-export { BiasMetric, type BiasMetricOptions } from "./bias";
+  type FaithfulnessTemplateOverride,
+} from "@/metrics/faithfulness";
+export {
+  BiasMetric,
+  type BiasMetricOptions,
+  type BiasTemplateOverride,
+} from "@/metrics/bias";
 export {
   ContextualPrecisionMetric,
   type ContextualPrecisionMetricOptions,
-} from "./contextual-precision";
+  type ContextualPrecisionTemplateOverride,
+} from "@/metrics/contextual-precision";
 export {
   ContextualRecallMetric,
   type ContextualRecallMetricOptions,
-} from "./contextual-recall";
+  type ContextualRecallTemplateOverride,
+} from "@/metrics/contextual-recall";
 export {
   ContextualRelevancyMetric,
   type ContextualRelevancyMetricOptions,
-} from "./contextual-relevancy";
-export { ToxicityMetric, type ToxicityMetricOptions } from "./toxicity";
-export { PIILeakageMetric, type PIILeakageMetricOptions } from "./pii-leakage";
-export { NonAdviceMetric, type NonAdviceMetricOptions } from "./non-advice";
-export { MisuseMetric, type MisuseMetricOptions } from "./misuse";
+  type ContextualRelevancyTemplateOverride,
+} from "@/metrics/contextual-relevancy";
+export {
+  ToxicityMetric,
+  type ToxicityMetricOptions,
+  type ToxicityTemplateOverride,
+} from "@/metrics/toxicity";
+export {
+  PIILeakageMetric,
+  type PIILeakageMetricOptions,
+  type PIILeakageTemplateOverride,
+} from "@/metrics/pii-leakage";
+export {
+  NonAdviceMetric,
+  type NonAdviceMetricOptions,
+  type NonAdviceTemplateOverride,
+} from "@/metrics/non-advice";
+export {
+  MisuseMetric,
+  type MisuseMetricOptions,
+  type MisuseTemplateOverride,
+} from "@/metrics/misuse";
 export {
   RoleViolationMetric,
   type RoleViolationMetricOptions,
-} from "./role-violation";
+  type RoleViolationTemplateOverride,
+} from "@/metrics/role-violation";
 export {
   HallucinationMetric,
   type HallucinationMetricOptions,
-} from "./hallucination";
+  type HallucinationTemplateOverride,
+} from "@/metrics/hallucination";
 export {
   PromptAlignmentMetric,
   type PromptAlignmentMetricOptions,
-} from "./prompt-alignment";
+  type PromptAlignmentTemplateOverride,
+} from "@/metrics/prompt-alignment";
 export {
   SummarizationMetric,
   type SummarizationMetricOptions,
-} from "./summarization";
-export { GEval, type GEvalMetricOptions, type Rubric } from "./g-eval";
+  type SummarizationTemplateOverride,
+} from "@/metrics/summarization";
+export {
+  GEval,
+  type GEvalMetricOptions,
+  type GEvalTemplateOverride,
+  type Rubric,
+} from "@/metrics/g-eval";
 export {
   JsonCorrectnessMetric,
   type JsonCorrectnessMetricOptions,
-} from "./json-correctness";
-export { ExactMatchMetric, type ExactMatchMetricOptions } from "./exact-match";
+  type JsonCorrectnessTemplateOverride,
+} from "@/metrics/json-correctness";
+export {
+  ExactMatchMetric,
+  type ExactMatchMetricOptions,
+} from "@/metrics/exact-match";
 export {
   PatternMatchMetric,
   type PatternMatchMetricOptions,
-} from "./pattern-match";
+} from "@/metrics/pattern-match";
 export {
   ToolCorrectnessMetric,
   type ToolCorrectnessMetricOptions,
-} from "./tool-correctness";
+  type ToolCorrectnessTemplateOverride,
+} from "@/metrics/tool-correctness";
 export {
   ArgumentCorrectnessMetric,
   type ArgumentCorrectnessMetricOptions,
-} from "./argument-correctness";
+  type ArgumentCorrectnessTemplateOverride,
+} from "@/metrics/argument-correctness";
+export {
+  DAGMetric,
+  type DAGMetricOptions,
+  DeepAcyclicGraph,
+  type DeepAcyclicGraphOptions,
+  TaskNode,
+  BinaryJudgementNode,
+  NonBinaryJudgementNode,
+  VerdictNode,
+  type TaskNodeOptions,
+  type JudgementNodeOptions,
+  type VerdictNodeOptions,
+  type AddVerdictOptions,
+  NodeType,
+  ChildType,
+  dagToDict,
+  dagToJson,
+  dagFromDict,
+  dagFromJson,
+  registerMetricClass,
+} from "@/metrics/dag";
+export {
+  ConversationalDAGMetric,
+  type ConversationalDAGMetricOptions,
+  ConversationalTaskNode,
+  ConversationalBinaryJudgementNode,
+  ConversationalNonBinaryJudgementNode,
+  ConversationalVerdictNode,
+  isValidTurnWindow,
+  type ConversationalTaskNodeOptions,
+  type ConversationalJudgementNodeOptions,
+  type ConversationalVerdictNodeOptions,
+  type ConversationalAddVerdictOptions,
+  type TurnWindow,
+} from "@/metrics/conversational-dag";

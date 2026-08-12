@@ -2,6 +2,7 @@
 id: openrouter
 title: OpenRouter
 sidebar_label: OpenRouter
+languages: [python, typescript]
 ---
 
 `deepeval`'s integration with OpenRouter allows you to use the OpenRouter gateway, connecting any [OpenRouter supported model](https://openrouter.ai/models) to power all of `deepeval`'s metrics.
@@ -19,7 +20,7 @@ deepeval set-openrouter \
 ```
 
 :::info
-The CLI command above sets OpenRouter as the default provider for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset OpenRouter:
+The CLI command above sets OpenRouter as the default provider for all metrics, unless overridden in code. To use a different default model provider, you must first unset OpenRouter:
 
 ```bash
 deepeval unset-openrouter
@@ -31,16 +32,20 @@ You can persist CLI settings with the optional `--save` flag.
 See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
 :::
 
-### Python
+### In Code
 
-Alternatively, you can define `OpenRouterModel` directly in Python code:
+Alternatively, you can define `OpenRouterModel` directly in code:
+
+<Switch>
+
+<Case id="python">
 
 <Tabs items={["Python", "ENV"]}>
 <Tab value="Python">
 
 ```python
-from deepeval.models import OpenRouterModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import OpenRouterModel
 
 model = OpenRouterModel(
     model="openai/gpt-4.1",
@@ -77,7 +82,7 @@ You should also set the other necessary vars like `OPENROUTER_API_KEY` to be abl
 
 There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `OpenRouterModel`:
 
-- [Optional] `model`: A string specifying the OpenRouter model to use. Defaults to `OPENROUTER_MODEL_NAME` if set; otherwise falls back to "openai/gpt-4.1".
+- [Optional] `model`: A string specifying the OpenRouter model to use. Defaults to `OPENROUTER_MODEL_NAME` if set; otherwise falls back to <DefaultLLMModel provider="openrouter" />.
 - [Optional] `api_key`: A string specifying your OpenRouter API key for authentication. Defaults to `OPENROUTER_API_KEY` if not passed; raises an error at runtime if unset.
 - [Optional] `base_url`: A string specifying the base URL for the OpenRouter API endpoint. Defaults to `OPENROUTER_BASE_URL` if set; otherwise falls back to "https://openrouter.ai/api/v1".
 - [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
@@ -101,3 +106,87 @@ model = OpenRouterModel(
 )
 ```
 :::
+
+</Case>
+
+<Case id="typescript">
+
+<Tabs items={["TypeScript", "ENV"]}>
+<Tab value="TypeScript">
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { OpenRouterModel } from "deepeval/models";
+
+const model = new OpenRouterModel({
+  model: "openai/gpt-4.1",
+  apiKey: "your-openrouter-api-key",
+  // Optional: override the default OpenRouter endpoint
+  baseURL: "https://openrouter.ai/api/v1",
+  // Optional: pass OpenRouter headers via defaultHeaders
+  defaultHeaders: {
+    "HTTP-Referer": "https://your-site.com",
+    "X-Title": "My eval pipeline",
+  },
+});
+
+const answerRelevancy = new AnswerRelevancyMetric({ model });
+```
+
+</Tab>
+<Tab value="ENV">
+
+To use any OpenRouter model directly in `deepeval`, set `OPENROUTER_MODEL_NAME` and `OPENROUTER_API_KEY` in your `env` and create an `OpenRouterModel` with no arguments:
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { OpenRouterModel } from "deepeval/models";
+
+const answerRelevancy = new AnswerRelevancyMetric({
+  model: new OpenRouterModel(),
+});
+```
+
+</Tab>
+</Tabs>
+
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `OpenRouterModel`:
+
+- [Optional] `model`: A string specifying the OpenRouter model to use. Defaults to `OPENROUTER_MODEL_NAME` if set; otherwise falls back to <DefaultLLMModel provider="openrouter" />.
+- [Optional] `apiKey`: A string specifying your OpenRouter API key for authentication. Defaults to `OPENROUTER_API_KEY` if not passed; raises an error at runtime if unset.
+- [Optional] `baseURL`: A string specifying the base URL for the OpenRouter API endpoint. Defaults to `OPENROUTER_BASE_URL` if set; otherwise falls back to "https://openrouter.ai/api/v1".
+- [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
+- [Optional] `defaultHeaders`: An object of extra HTTP headers sent with every request, such as OpenRouter's `HTTP-Referer` and `X-Title` ranking headers.
+- [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+- [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+
+Any other key you pass is forwarded as-is to OpenRouter's `chat.completions.create(...)` call, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new OpenRouterModel({
+  model: "openai/gpt-4.1",
+  top_p: 0.9,
+  seed: 42,
+});
+```
+
+We recommend double-checking the parameters and headers supported by your chosen model in the [official OpenRouter docs](https://openrouter.ai/docs).
+
+:::tip
+Pass headers specific to OpenRouter via `defaultHeaders`:
+
+```typescript
+const model = new OpenRouterModel({
+  model: "openai/gpt-4.1",
+  apiKey: "your-openrouter-api-key",
+  defaultHeaders: {
+    "HTTP-Referer": "https://your-site.com",
+    "X-Title": "My eval pipeline",
+  },
+});
+```
+:::
+
+</Case>
+
+</Switch>

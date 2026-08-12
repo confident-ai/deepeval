@@ -1,0 +1,15 @@
+.canvas {
+  display: block;
+  width: 100%;
+  height: 190px;
+  // The canvas reads this to pick its pixel colour, so it tracks the theme.
+  color: var(--color-fd-muted-foreground);
+  touch-action: manipulation;
+  cursor: pointer;
+  outline: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-fd-primary);
+    outline-offset: 4px;
+  }
+}

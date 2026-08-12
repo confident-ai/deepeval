@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 import Papa from "papaparse";
 
 import {
@@ -7,37 +8,213 @@ import {
   stripPrivateFields,
   parseDelimited,
   safeJsonParse,
-} from "./utils";
-import { isConfident } from "../utils";
+  convertConvoTestCasesToConvoGoldens,
+  convertTestCasesToGoldens,
+  formatTurns,
+  goldenFromRecord,
+  joinRetrievalContext,
+  parseToolCalls,
+  parseTurns,
+  pickKey,
+  reconstructRetrievalContext,
+  serializeModels,
+  serializeRetrievalContext,
+  trimAndLoadJson,
+  DEFAULT_GOLDEN_KEY_NAMES,
+  type GoldenKeyNames,
+} from "@/dataset/utils";
+import { isConfident } from "@/utils";
 
-import { Api, Endpoints, HttpMethods } from "../confident/api";
+import { Api, Endpoints, HttpMethods } from "@/confident/api";
 import {
   CreateDatasetVersionResponse,
   DatasetHttpResponse,
   DatasetVersion,
   GetDatasetVersionsResponse,
-} from "./api";
-import { ConversationalGolden, Golden } from "./golden";
-import { ConversationalTestCase, LLMTestCase } from "../test-case";
+} from "@/dataset/api";
+import { ConversationalGolden, Golden } from "@/dataset/golden";
+import { ConversationalTestCase, LLMTestCase } from "@/test-case";
+import { asTestCaseString, asToolCalls } from "@/test-case/utils";
 import type { MultiBar, SingleBar } from "cli-progress";
-import { traceManager, Trace, BaseSpan } from "../tracing/tracing";
-import { evaluateTrace, countTraceMetrics } from "../evaluate/trace-eval";
-import { buildTestResult } from "../evaluate/evaluate";
-import { postTestRun } from "../evaluate/confident";
+import { traceManager, Trace, BaseSpan } from "@/tracing/tracing";
+import {
+  evaluateTrace,
+  countTraceMetrics,
+  isDuplicateOfCase,
+  primaryTraceFor,
+} from "@/evaluate/trace-eval";
+import { buildTestResult } from "@/evaluate/evaluate";
+import { postTestRun } from "@/evaluate/confident";
+import {
+  processHyperparameters,
+  type Hyperparameters,
+} from "@/evaluate/hyperparameters";
 import {
   printResultsTable,
   printCompletionSummary,
   printHyperparametersWarning,
   newProgressMultiBar,
-} from "../evaluate/console-report";
-import type { TestResult, EvaluatedCase } from "../evaluate/types";
-import type { ErrorConfig, DisplayConfig } from "../evaluate/configs";
-import type { BaseMetric } from "../metrics/base-metrics";
+} from "@/evaluate/console-report";
+import type { TestResult, EvaluatedCase } from "@/evaluate/types";
+import type { ErrorConfig, DisplayConfig } from "@/evaluate/configs";
+import type { BaseMetric } from "@/metrics/base-metrics";
+import { Entrypoint, beginEvaluationRun, recordGolden } from "@/telemetry";
 
 export type GoldenUnion = Golden | ConversationalGolden;
 export type GoldenUnionArray = Golden[] | ConversationalGolden[];
 export type TestCaseUnion = LLMTestCase | ConversationalTestCase;
 export type TestCaseUnionArray = LLMTestCase[] | ConversationalTestCase[];
+
+export interface LoadGoldensOptions {
+  filePath: string;
+  /** Anything left out keeps its {@link DEFAULT_GOLDEN_KEY_NAMES} default. */
+  keys?: Partial<GoldenKeyNames>;
+  /** Splits a `context` written as one delimited string rather than an array. */
+  contextDelimiter?: string;
+  retrievalContextDelimiter?: string;
+  encoding?: BufferEncoding;
+}
+
+export const VALID_FILE_TYPES = ["csv", "json", "jsonl"] as const;
+export type DatasetFileType = (typeof VALID_FILE_TYPES)[number];
+
+const SINGLE_TURN_COLUMNS = [
+  "input",
+  "actual_output",
+  "expected_output",
+  "retrieval_context",
+  "context",
+  "name",
+  "comments",
+  "source_file",
+  "tools_called",
+  "expected_tools",
+  "additional_metadata",
+  "custom_column_key_values",
+];
+
+const MULTI_TURN_COLUMNS = [
+  "scenario",
+  "turns",
+  "expected_outcome",
+  "user_description",
+  "context",
+  "name",
+  "comments",
+  "additional_metadata",
+  "custom_column_key_values",
+];
+
+/** Local-time `YYYYMMDD_HHMMSS`, matching Python's default file name. */
+function fileTimestamp(): string {
+  const now = new Date();
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return (
+    `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}` +
+    `_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`
+  );
+}
+
+const asJsonCell = (value: unknown): string | null =>
+  value == null ? null : JSON.stringify(value);
+
+function singleTurnRecord(
+  golden: Golden,
+  fileType: DatasetFileType,
+): Record<string, unknown> {
+  return {
+    input: golden.input ?? null,
+    actual_output: golden.actualOutput ?? null,
+    expected_output: golden.expectedOutput ?? null,
+    // jsonl flattens the list fields to delimited strings, as Python's does.
+    retrieval_context:
+      (fileType === "jsonl"
+        ? joinRetrievalContext(golden.retrievalContext)
+        : serializeRetrievalContext(golden.retrievalContext)) ?? null,
+    context:
+      (fileType === "jsonl" ? golden.context?.join("|") : golden.context) ??
+      null,
+    name: golden.name ?? null,
+    comments: golden.comments ?? null,
+    source_file: golden.sourceFile ?? null,
+    tools_called: serializeModels(golden.toolsCalled) ?? null,
+    expected_tools: serializeModels(golden.expectedTools) ?? null,
+    additional_metadata: golden.additionalMetadata ?? null,
+    custom_column_key_values: golden.customColumnKeyValues ?? null,
+  };
+}
+
+function multiTurnRecord(
+  golden: ConversationalGolden,
+): Record<string, unknown> {
+  return {
+    scenario: golden.scenario ?? null,
+    turns: golden.turns?.length ? JSON.parse(formatTurns(golden.turns)) : null,
+    expected_outcome: golden.expectedOutcome ?? null,
+    user_description: golden.userDescription ?? null,
+    context: golden.context ?? null,
+    name: golden.name ?? null,
+    comments: golden.comments ?? null,
+    additional_metadata: golden.additionalMetadata ?? null,
+    custom_column_key_values: golden.customColumnKeyValues ?? null,
+  };
+}
+
+function singleTurnCsvRow(golden: Golden): (string | null)[] {
+  return [
+    golden.input ?? null,
+    golden.actualOutput ?? null,
+    golden.expectedOutput ?? null,
+    joinRetrievalContext(golden.retrievalContext) ?? null,
+    golden.context?.join("|") ?? null,
+    golden.name ?? null,
+    golden.comments ?? null,
+    golden.sourceFile ?? null,
+    asJsonCell(serializeModels(golden.toolsCalled)),
+    asJsonCell(serializeModels(golden.expectedTools)),
+    asJsonCell(golden.additionalMetadata),
+    asJsonCell(golden.customColumnKeyValues),
+  ];
+}
+
+function multiTurnCsvRow(golden: ConversationalGolden): (string | null)[] {
+  return [
+    golden.scenario ?? null,
+    golden.turns ? formatTurns(golden.turns) : null,
+    golden.expectedOutcome ?? null,
+    golden.userDescription ?? null,
+    golden.context?.join("|") ?? null,
+    golden.name ?? null,
+    golden.comments ?? null,
+    asJsonCell(golden.additionalMetadata),
+    asJsonCell(golden.customColumnKeyValues),
+  ];
+}
+
+async function readJsonArray(
+  filePath: string,
+  encoding: BufferEncoding,
+): Promise<Record<string, unknown>[]> {
+  let contents: string;
+  try {
+    contents = await fs.promises.readFile(filePath, encoding);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      throw new Error(`The file ${filePath} was not found.`);
+    }
+    throw error;
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(contents);
+  } catch {
+    throw new Error(`The file ${filePath} is not a valid JSON file.`);
+  }
+  if (!Array.isArray(parsed)) {
+    throw new Error(`The file ${filePath} must contain an array of objects.`);
+  }
+  return parsed as Record<string, unknown>[];
+}
 
 export class EvaluationDataset {
   private _multiTurn: boolean | null = null;
@@ -122,13 +299,23 @@ export class EvaluationDataset {
   }
 
   addGolden(golden: GoldenUnion): void {
-    if (this._multiTurn === null) {
-      this._multiTurn = golden instanceof ConversationalGolden;
-    }
-    if (this._multiTurn) {
-      this._addConversationalGolden(golden);
-    } else {
+    if (golden instanceof Golden) {
+      if (
+        this._conversationalGoldens.length > 0 ||
+        this._conversationalTestCases.length > 0
+      ) {
+        throw new TypeError("You cannot add 'Golden' to a multi-turn dataset.");
+      }
+      this._multiTurn = false;
       this._addGolden(golden);
+    } else {
+      if (this._goldens.length > 0 || this._llmTestCases.length > 0) {
+        throw new TypeError(
+          "You cannot add 'ConversationalGolden' to a single-turn dataset.",
+        );
+      }
+      this._multiTurn = true;
+      this._addConversationalGolden(golden);
     }
   }
 
@@ -192,9 +379,23 @@ export class EvaluationDataset {
     testCase._datasetAlias = this._alias ?? undefined;
     testCase._datasetId = this._id ?? undefined;
     if (testCase instanceof LLMTestCase) {
+      if (
+        this._conversationalGoldens.length > 0 ||
+        this._conversationalTestCases.length > 0
+      ) {
+        throw new TypeError(
+          "You cannot add 'LLMTestCase' to a multi-turn dataset.",
+        );
+      }
       testCase._datasetRank = this._llmTestCases.length;
       this._llmTestCases.push(testCase);
     } else if (testCase instanceof ConversationalTestCase) {
+      if (this._goldens.length > 0 || this._llmTestCases.length > 0) {
+        throw new TypeError(
+          "You cannot add 'ConversationalTestCase' to a single-turn dataset.",
+        );
+      }
+      this._multiTurn = true;
       testCase._datasetRank = this._conversationalTestCases.length;
       this._conversationalTestCases.push(testCase);
     }
@@ -248,16 +449,21 @@ export class EvaluationDataset {
         ? datasetData.goldens.map(
             (goldenData: any) =>
               new Golden({
+                id: goldenData.id,
                 input: goldenData.input,
                 actualOutput: goldenData.actualOutput,
                 expectedOutput: goldenData.expectedOutput,
                 context: goldenData.context,
-                retrievalContext: goldenData.retrievalContext,
-                toolsCalled: goldenData.toolsCalled,
-                expectedTools: goldenData.expectedTools,
+                retrievalContext: reconstructRetrievalContext(
+                  goldenData.retrievalContext,
+                ),
+                toolsCalled: parseToolCalls(goldenData.toolsCalled),
+                expectedTools: parseToolCalls(goldenData.expectedTools),
                 additionalMetadata: goldenData.additionalMetadata,
                 sourceFile: goldenData.sourceFile,
                 comments: goldenData.comments,
+                name: goldenData.name,
+                customColumnKeyValues: goldenData.customColumnKeyValues,
               }),
           )
         : undefined,
@@ -265,6 +471,7 @@ export class EvaluationDataset {
         ? datasetData.conversationalGoldens.map(
             (goldenData: any) =>
               new ConversationalGolden({
+                id: goldenData.id,
                 scenario: goldenData.scenario,
                 expectedOutcome: goldenData.expectedOutcome,
                 userDescription: goldenData.userDescription,
@@ -273,7 +480,9 @@ export class EvaluationDataset {
                 comments: goldenData.comments,
                 name: goldenData.name,
                 customColumnKeyValues: goldenData.customColumnKeyValues,
-                turns: goldenData.turns,
+                turns: goldenData.turns
+                  ? parseTurns(goldenData.turns)
+                  : undefined,
                 _datasetRank: goldenData._datasetRank,
                 _datasetAlias: goldenData._datasetAlias,
                 _datasetId: goldenData._datasetId,
@@ -346,6 +555,7 @@ export class EvaluationDataset {
       apiDataset.version = version;
     }
     const body = stripPrivateFields(JSON.parse(JSON.stringify(apiDataset)));
+    this.stripGoldenIds(body);
     console.log(`Pushing '${alias}' to Confident AI...`);
     const result = await api.sendRequest(
       HttpMethods.POST,
@@ -434,6 +644,7 @@ export class EvaluationDataset {
       conversationalGoldens: isMultiTurn ? goldens : undefined,
     };
     const body = stripPrivateFields(apiDataset);
+    this.stripGoldenIds(body);
 
     console.log(
       `Queueing ${goldens.length} golden(s) to '${alias}' on Confident AI...`,
@@ -471,22 +682,39 @@ export class EvaluationDataset {
     console.log("✅ Dataset successfully deleted from Confident AI!");
   }
 
+  ////////////////////////////////////////////////////////
+  // Golden Mutation Methods
+  ////////////////////////////////////////////////////////
+
+  private stripGoldenIds(body: any): void {
+    for (const key of ["goldens", "conversationalGoldens"]) {
+      const goldens = body?.[key];
+      if (Array.isArray(goldens)) {
+        for (const golden of goldens) {
+          if (golden && typeof golden === "object") delete golden.id;
+        }
+      }
+    }
+  }
+
+  /** A column the file lacks stays unset, so a metric still reports it missing. */
   async addTestCasesFromCSV({
     filePath,
-    inputCol,
-    actualOutputCol,
-    expectedOutputCol,
-    contextCol,
+    inputCol = "input",
+    actualOutputCol = "actual_output",
+    expectedOutputCol = "expected_output",
+    contextCol = "context",
     contextDelimiter = ";",
-    retrievalContextCol,
+    retrievalContextCol = "retrieval_context",
     retrievalContextDelimiter = ";",
-    toolsCalledCol,
-    expectedToolsCol,
-    additionalMetadataCol,
+    toolsCalledCol = "tools_called",
+    expectedToolsCol = "expected_tools",
+    additionalMetadataCol = "additional_metadata",
+    encoding = "utf-8",
   }: {
     filePath: string;
-    inputCol: string;
-    actualOutputCol: string;
+    inputCol?: string;
+    actualOutputCol?: string;
     expectedOutputCol?: string;
     contextCol?: string;
     contextDelimiter?: string;
@@ -495,9 +723,10 @@ export class EvaluationDataset {
     toolsCalledCol?: string;
     expectedToolsCol?: string;
     additionalMetadataCol?: string;
-  }) {
-    const csvData = fs.readFileSync(filePath, "utf8");
-    const { data, errors } = Papa.parse<Record<string, string>>(csvData, {
+    encoding?: BufferEncoding;
+  }): Promise<LLMTestCase[]> {
+    const csvData = await fs.promises.readFile(filePath, encoding);
+    const { data, errors, meta } = Papa.parse<Record<string, string>>(csvData, {
       header: true,
       skipEmptyLines: true,
     });
@@ -505,27 +734,224 @@ export class EvaluationDataset {
       throw new Error(`CSV parse error: ${errors[0].message}`);
     }
 
-    return data.map(
-      (row) =>
-        new LLMTestCase({
-          input: row[inputCol],
-          actualOutput: row[actualOutputCol],
-          expectedOutput: expectedOutputCol
-            ? row[expectedOutputCol]
-            : undefined,
-          context: parseDelimited(row[contextCol!], contextDelimiter),
-          retrievalContext: parseDelimited(
-            row[retrievalContextCol!],
-            retrievalContextDelimiter,
-          ),
-          toolsCalled: safeJsonParse(row[toolsCalledCol!], []),
-          expectedTools: safeJsonParse(row[expectedToolsCol!], []),
-          additionalMetadata: safeJsonParse(
-            row[additionalMetadataCol!],
-            undefined,
-          ),
-        }),
+    const columns = new Set(meta.fields ?? []);
+    /** Undefined when the file has no such column at all. */
+    const cell = (row: Record<string, string>, col: string) =>
+      columns.has(col) ? row[col] : undefined;
+
+    const testCases = data.map((row) => {
+      const context = cell(row, contextCol);
+      const retrievalContext = cell(row, retrievalContextCol);
+      return new LLMTestCase({
+        input: row[inputCol],
+        actualOutput: row[actualOutputCol],
+        expectedOutput: cell(row, expectedOutputCol),
+        context:
+          context === undefined
+            ? undefined
+            : parseDelimited(context, contextDelimiter),
+        retrievalContext: reconstructRetrievalContext(
+          retrievalContext === undefined
+            ? undefined
+            : parseDelimited(retrievalContext, retrievalContextDelimiter),
+        ),
+        toolsCalled: parseToolCalls(cell(row, toolsCalledCol) || undefined),
+        expectedTools: parseToolCalls(cell(row, expectedToolsCol) || undefined),
+        additionalMetadata: safeJsonParse(
+          cell(row, additionalMetadataCol),
+          undefined,
+        ),
+      });
+    });
+
+    for (const testCase of testCases) {
+      this.addTestCase(testCase);
+    }
+    return testCases;
+  }
+
+  async addGoldensFromJSON(
+    options: LoadGoldensOptions,
+  ): Promise<GoldenUnionArray> {
+    const records = await readJsonArray(
+      options.filePath,
+      options.encoding ?? "utf-8",
     );
+    return this._addGoldensFromRecords(records, options);
+  }
+
+  /** Blank lines are skipped; any other bad line fails with its number. */
+  async addGoldensFromJSONL(
+    options: LoadGoldensOptions,
+  ): Promise<GoldenUnionArray> {
+    const contents = await fs.promises.readFile(
+      options.filePath,
+      options.encoding ?? "utf-8",
+    );
+    const records = contents
+      .split("\n")
+      .map((line, index) => ({ line: line.trim(), lineNumber: index + 1 }))
+      .filter(({ line }) => line.length > 0)
+      .map(({ line, lineNumber }) => {
+        try {
+          return JSON.parse(line) as Record<string, unknown>;
+        } catch {
+          throw new Error(
+            `The file ${options.filePath} contains invalid JSON on line ${lineNumber}.`,
+          );
+        }
+      });
+    return this._addGoldensFromRecords(records, options);
+  }
+
+  private _addGoldensFromRecords(
+    records: Record<string, unknown>[],
+    options: LoadGoldensOptions,
+  ): GoldenUnionArray {
+    const keys = { ...DEFAULT_GOLDEN_KEY_NAMES, ...options.keys };
+    const delimiters = {
+      context: options.contextDelimiter ?? "|",
+      retrievalContext: options.retrievalContextDelimiter ?? "|",
+    };
+    const goldens = records.map((record) =>
+      goldenFromRecord(record, keys, delimiters),
+    );
+    for (const golden of goldens) {
+      this.addGolden(golden);
+    }
+    return goldens as GoldenUnionArray;
+  }
+
+  /** Cells holding a list are split on their delimiter, defaulting to `|`. */
+  async addGoldensFromCSV(
+    options: LoadGoldensOptions,
+  ): Promise<GoldenUnionArray> {
+    const keys = { ...DEFAULT_GOLDEN_KEY_NAMES, ...options.keys };
+    const csvData = await fs.promises.readFile(
+      options.filePath,
+      options.encoding ?? "utf-8",
+    );
+    const { data, errors, meta } = Papa.parse<Record<string, string>>(csvData, {
+      header: true,
+      skipEmptyLines: true,
+    });
+    if (errors.length) {
+      throw new Error(`CSV parse error: ${errors[0].message}`);
+    }
+
+    // An empty cell reads as unset, except in a list column, where it is [].
+    const listColumns = new Set([keys.context, keys.retrievalContext]);
+    const jsonColumns = new Set([
+      keys.additionalMetadata,
+      keys.customColumnKeyValues,
+    ]);
+    const records = data.map((row) => {
+      const record: Record<string, unknown> = {};
+      for (const column of meta.fields ?? []) {
+        const value = row[column];
+        if (value === "" && !listColumns.has(column)) continue;
+        record[column] =
+          jsonColumns.has(column) && value ? trimAndLoadJson(value) : value;
+      }
+      return record;
+    });
+
+    return this._addGoldensFromRecords(records, options);
+  }
+
+  /** Every object needs an input and an actual output, unlike a golden. */
+  async addTestCasesFromJSON(
+    options: LoadGoldensOptions,
+  ): Promise<LLMTestCase[]> {
+    const keys = { ...DEFAULT_GOLDEN_KEY_NAMES, ...options.keys };
+    const delimiters = {
+      context: options.contextDelimiter ?? "|",
+      retrievalContext: options.retrievalContextDelimiter ?? "|",
+    };
+    const records = await readJsonArray(
+      options.filePath,
+      options.encoding ?? "utf-8",
+    );
+
+    const goldens = records.map((record) => {
+      if (
+        pickKey(record, keys.input) === undefined ||
+        pickKey(record, keys.actualOutput) === undefined
+      ) {
+        throw new Error(
+          `Required keys '${keys.input}' and '${keys.actualOutput}' are missing in one or more JSON objects.`,
+        );
+      }
+      return goldenFromRecord(record, keys, delimiters) as Golden;
+    });
+
+    const testCases = convertGoldensToTestCases(goldens);
+    for (const testCase of testCases) {
+      this.addTestCase(testCase);
+    }
+    return testCases;
+  }
+
+  /** Returns the path written. The layout matches Python's `save_as`. */
+  async saveAs(options: {
+    fileType: DatasetFileType;
+    directory: string;
+    fileName?: string;
+    /** Also write the dataset's test cases, converted to goldens. */
+    includeTestCases?: boolean;
+  }): Promise<string> {
+    const { fileType, directory, fileName, includeTestCases = false } = options;
+    if (!VALID_FILE_TYPES.includes(fileType)) {
+      throw new Error(
+        `Invalid file type. Available file types to save as: ${VALID_FILE_TYPES.join(", ")}`,
+      );
+    }
+
+    const goldens: GoldenUnion[] = [...this.goldens];
+    if (includeTestCases) {
+      goldens.push(
+        ...(this._multiTurn
+          ? convertConvoTestCasesToConvoGoldens(this._conversationalTestCases)
+          : convertTestCasesToGoldens(this._llmTestCases)),
+      );
+    }
+    if (goldens.length === 0) {
+      throw new Error(
+        `No goldens found. Please generate goldens before attempting to save data as ${fileType}`,
+      );
+    }
+
+    await fs.promises.mkdir(directory, { recursive: true });
+    const fullFilePath = path.join(
+      directory,
+      `${fileName ?? fileTimestamp()}.${fileType}`,
+    );
+
+    let contents: string;
+    if (fileType === "csv") {
+      contents = Papa.unparse({
+        fields: this._multiTurn ? MULTI_TURN_COLUMNS : SINGLE_TURN_COLUMNS,
+        data: goldens.map((golden) =>
+          this._multiTurn
+            ? multiTurnCsvRow(golden as ConversationalGolden)
+            : singleTurnCsvRow(golden as Golden),
+        ),
+      });
+    } else {
+      const records = goldens.map((golden) =>
+        this._multiTurn
+          ? multiTurnRecord(golden as ConversationalGolden)
+          : singleTurnRecord(golden as Golden, fileType),
+      );
+      contents =
+        fileType === "jsonl"
+          ? records.map((record) => JSON.stringify(record)).join("\n") + "\n"
+          : JSON.stringify(records, null, 4);
+    }
+
+    await fs.promises.writeFile(fullFilePath, contents, "utf-8");
+    console.log(`Evaluation dataset saved at ${fullFilePath}!`);
+    return fullFilePath;
   }
 
   get evalResults(): TestResult[] {
@@ -549,6 +975,8 @@ export class EvaluationDataset {
       metrics?: BaseMetric[];
       errorConfig?: ErrorConfig;
       displayConfig?: DisplayConfig;
+      identifier?: string;
+      hyperparameters?: Hyperparameters;
     } = {},
   ): AsyncGenerator<GoldenUnion> {
     const goldens = this.goldens;
@@ -577,56 +1005,93 @@ export class EvaluationDataset {
     };
 
     const captured: Trace[] = [];
-    traceManager.setTraceCaptureSink((t) => captured.push(t));
+    const unsubscribe = traceManager.addTraceCaptureSink((t) =>
+      captured.push(t),
+    );
+    // Tells integrations that spans must be materialised in-process for this run
+    // instead of being exported straight to Confident AI.
+    const endEvaluation = traceManager.beginEvaluation();
     const allCases: EvaluatedCase[] = [];
+    /** Span-level cases for the local report, paired with their golden's case. */
+    const componentCases: Array<{ case: EvaluatedCase; parentIndex: number }> =
+      [];
     const startTime = Date.now();
     let count = 0;
+    // Ambient rather than callback-scoped: the loop body runs in the consumer's
+    // async context, which an `AsyncLocalStorage` scope here would not cover.
+    const run = beginEvaluationRun(Entrypoint.EVALS_ITERATOR);
     try {
       for (const golden of goldens) {
+        recordGolden(golden);
         const start = captured.length;
         yield golden;
         // Resumed: the agent ran in the loop body — evaluate the traces it produced.
+        await traceManager.awaitSettled();
         callbackBar?.increment();
         count += 1;
         const newTraces = captured.slice(start);
+        const traceGolden = golden as Golden;
+
+        const primary = primaryTraceFor(newTraces);
+
         for (const trace of newTraces) {
-          if (metrics.length > 0) {
+          // Trace-level metrics judge the turn, so they belong to the reported
+          // trace only — attaching them to every trace would score fragments and
+          // multiply the metric runs.
+          if (metrics.length > 0 && trace === primary) {
             metrics.forEach((m) => (m.showIndicator = false));
             trace.metrics = [...(trace.metrics ?? []), ...metrics];
           }
           suppressSpinners(trace.rootSpans);
         }
-        const total = newTraces.reduce((s, t) => s + countTraceMetrics(t), 0);
+        const total = newTraces.reduce(
+          (s, t) =>
+            s + countTraceMetrics(t, t === primary ? traceGolden : undefined),
+          0,
+        );
         const evalBar = multibar?.create(Math.max(total, 1), 0, {
           label: `     🎯 Evaluating component(s) (#${count})`,
         });
+        const parentIndex = allCases.length;
         for (const trace of newTraces) {
           // Run all metrics (span + trace); attaches metricsData to each scope.
-          await evaluateTrace(trace, {
+          const evaluated = await evaluateTrace(trace, {
             errorConfig: options.errorConfig,
             onMetric: () => evalBar?.increment(),
+            golden: trace === primary ? traceGolden : undefined,
           });
-          // One golden-based test case per trace, with the trace embedded — so
-          // the platform shows the I/O and links to the trace (mirrors Python).
-          const g = golden as Golden;
-          const rootOutput = trace.output ?? trace.rootSpans?.[0]?.output;
+          // Span-level results are reported locally only — the posted test run
+          // keeps one case per golden, with the per-span scores riding along
+          // inside the embedded trace (mirrors Python).
+          for (const _case of evaluated) {
+            if (_case.isTraceScope || _case.metricsData.length === 0) continue;
+            componentCases.push({ case: _case, parentIndex });
+          }
+        }
+
+        if (primary) {
+          const rootOutput = primary.output ?? primary.rootSpans?.[0]?.output;
           const testCase = new LLMTestCase({
-            input: g.input,
+            input: traceGolden.input,
             actualOutput:
               rootOutput != null
-                ? String(rootOutput)
-                : (g.actualOutput ?? "None"),
-            expectedOutput: trace.expectedOutput,
-            context: trace.context,
-            retrievalContext: trace.retrievalContext,
-            toolsCalled: trace.toolsCalled,
-            expectedTools: trace.expectedTools,
+                ? asTestCaseString(rootOutput)
+                : (traceGolden.actualOutput ?? "None"),
+            expectedOutput: primary.expectedOutput,
+            context: primary.context,
+            retrievalContext: primary.retrievalContext,
+            toolsCalled: asToolCalls(primary.toolsCalled),
+            expectedTools: asToolCalls(primary.expectedTools),
+            // Links the posted run back to the dataset these goldens came from.
+            _datasetAlias: traceGolden._datasetAlias,
+            _datasetId: traceGolden._datasetId,
+            _datasetRank: traceGolden._datasetRank,
           });
           const { confidentApiKey: _omit, ...traceApi } =
-            traceManager.createTraceApi(trace);
+            traceManager.createTraceApi(primary);
           allCases.push({
             testCase,
-            metricsData: trace.metricsData ?? [],
+            metricsData: primary.metricsData ?? [],
             runDuration: 0,
             trace: traceApi,
           });
@@ -634,27 +1099,49 @@ export class EvaluationDataset {
         evalBar?.update(Math.max(total, 1));
         mainBar?.increment();
       }
+    } catch (error) {
+      run.finish(error);
+      throw error;
     } finally {
-      traceManager.setTraceCaptureSink(undefined);
+      run.finish();
+      unsubscribe();
+      endEvaluation();
       multibar?.stop();
     }
     const runDuration = (Date.now() - startTime) / 1000;
-    const results: TestResult[] = allCases.map((c, i) =>
+    const goldenResults: TestResult[] = allCases.map((c, i) =>
       buildTestResult(i, c.testCase, c.metricsData),
     );
+    const componentResults: TestResult[] = [];
+    for (const { case: c, parentIndex } of componentCases) {
+      const result = buildTestResult(
+        goldenResults.length + componentResults.length,
+        c.testCase,
+        c.metricsData,
+      );
+      if (!isDuplicateOfCase(result, goldenResults[parentIndex])) {
+        componentResults.push(result);
+      }
+    }
+    const results: TestResult[] = [...goldenResults, ...componentResults];
     this._evalResults = results;
 
+    const hyperparameters = processHyperparameters(options.hyperparameters);
     const printResults = options.displayConfig?.printResults ?? true;
     if (printResults && results.length > 0) {
       printResultsTable(results, {
         truncatePassing: options.displayConfig?.truncatePassingCases ?? true,
       });
-      printHyperparametersWarning();
+      printHyperparametersWarning(hyperparameters);
     }
 
     // Post a TestRun to Confident AI (mirrors Python's evals_iterator); silent so
     // we control the wrap-up message below.
-    const { link } = await postTestRun(allCases, runDuration, false, true);
+    const { link } = await postTestRun(allCases, runDuration, {
+      silent: true,
+      identifier: options.identifier,
+      hyperparameters,
+    });
 
     if (printResults && results.length > 0) {
       if (link) {

@@ -1,22 +1,28 @@
-import { BaseMetric } from "../base-metrics";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import {
   LLMTestCase,
   SingleTurnParams,
   ToolCallParams,
   ToolCall,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+} from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   printToolsCalled,
-} from "../utils";
-import { ToolSelectionScoreSchema, type ToolSelectionScore } from "./schema";
+} from "@/metrics/utils";
+import {
+  ToolSelectionScoreSchema,
+  type ToolSelectionScore,
+} from "@/metrics/tool-correctness/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "ToolCorrectnessMetric";
+
+export type ToolCorrectnessTemplateOverride =
+  MetricTemplateOverride<"ToolCorrectnessMetric">;
 
 /** Order-insensitive deep equality (matches Python `==` on dicts/values). */
 function deepEqual(a: unknown, b: unknown): boolean {
@@ -58,7 +64,8 @@ function uniqueMissing(expected: string[], called: string[]): string[] {
 export interface ToolCorrectnessMetricOptions {
   /** If provided (and non-empty), an LLM also judges tool *selection*. */
   availableTools?: ToolCall[];
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   /** Which `ToolCall` fields to compare (input parameters / output). */
   evaluationParams?: ToolCallParams[];
   model?: DeepEvalBaseLLM | string;
@@ -68,6 +75,7 @@ export interface ToolCorrectnessMetricOptions {
   showIndicator?: boolean;
   shouldExactMatch?: boolean;
   shouldConsiderOrdering?: boolean;
+  evaluationTemplate?: ToolCorrectnessTemplateOverride;
 }
 
 /**
@@ -85,12 +93,16 @@ export class ToolCorrectnessMetric extends BaseMetric {
 
   constructor(options: ToolCorrectnessMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.TOOLS_CALLED,
@@ -127,13 +139,12 @@ export class ToolCorrectnessMetric extends BaseMetric {
             };
 
       const combined = Math.min(toolCallingScore, toolSelectionScore.score);
-      this.score =
-        this.strictMode && combined < this.threshold ? 0 : combined;
+      this.score = this.applyStrictMode(combined);
       this.reason = this.constructFinalReason(
         this.generateReason(),
         toolSelectionScore.reason,
       );
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Expected Tools:\n${printToolsCalled(this.expectedTools)}`,
@@ -152,7 +163,7 @@ export class ToolCorrectnessMetric extends BaseMetric {
   private async getToolSelectionScore(
     userInput: string,
   ): Promise<ToolSelectionScore> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "get_tool_selection_score", {
+    const prompt = this.getPrompt("get_tool_selection_score", {
       user_input: userInput,
       tools_called: printToolsCalled(this.toolsCalled),
       available_tools: printToolsCalled(this.availableTools ?? []),
@@ -178,7 +189,7 @@ export class ToolCorrectnessMetric extends BaseMetric {
     } else {
       score = this.calculateNonExactMatchScore();
     }
-    return this.strictMode && score < this.threshold ? 0 : score;
+    return this.applyStrictMode(score);
   }
 
   private calculateExactMatchScore(): number {
@@ -360,7 +371,8 @@ export class ToolCorrectnessMetric extends BaseMetric {
         lcs.map((t) => t.name),
       );
       const issues: string[] = [];
-      if (missing.length) issues.push(`missing tools ${JSON.stringify(missing)}`);
+      if (missing.length)
+        issues.push(`missing tools ${JSON.stringify(missing)}`);
       if (outOfOrder.length)
         issues.push(`out-of-order tools ${JSON.stringify(outOfOrder)}`);
       return `Incorrect tool usage: ${issues.join(" and ")}; expected ${JSON.stringify(expectedNames)}, called ${JSON.stringify(calledNames)}. See more details above.`;
@@ -389,12 +401,6 @@ export class ToolCorrectnessMetric extends BaseMetric {
       "\n" +
       "]\n"
     );
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

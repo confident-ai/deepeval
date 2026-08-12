@@ -1,7 +1,7 @@
 /**
  * Exports for the dataset module
  */
-export * from "./dataset";
-export * from "./api";
-export * from "./golden";
-export * from "./utils";
+export * from "@/dataset/dataset";
+export * from "@/dataset/api";
+export * from "@/dataset/golden";
+export * from "@/dataset/utils";

@@ -1,3 +1,6 @@
-from .contextual_precision import ContextualPrecisionMetric
+from .contextual_precision import (
+    ContextualPrecisionMetric,
+    ContextualPrecisionTemplate,
+)
 
-__all__ = ["ContextualPrecisionMetric"]
+__all__ = ["ContextualPrecisionMetric", "ContextualPrecisionTemplate"]

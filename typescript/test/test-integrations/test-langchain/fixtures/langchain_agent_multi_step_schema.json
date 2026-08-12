@@ -1,12 +1,13 @@
 {
   "name": "langchain-agent-test",
   "uuid": "16e5f132-4f15-4609-b392-e6fdfd06264f",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019ed9d8-d679-742b-8e17-7dc49eca3bb7",
       "name": "multi_step_agent",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "traceUuid": "16e5f132-4f15-4609-b392-e6fdfd06264f",
       "startTime": "2026-06-18T08:28:47.097Z",
       "endTime": "2026-06-18T08:28:51.600Z",
@@ -172,10 +173,11 @@
             }
           }
         ]
-      }
+      },
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019ed9d8-d67a-715c-9338-fba7b052d136",

@@ -1,4 +1,4 @@
-from typing import Optional, List, Tuple, Union, Dict
+from typing import Optional, List, Tuple, Union, Dict, Type
 
 from deepeval.utils import get_or_create_event_loop, serialize_to_json
 from deepeval.metrics.utils import (
@@ -20,6 +20,10 @@ from deepeval.metrics.task_completion.schema import (
     TaskAndOutcome,
     TaskCompletionVerdict,
 )
+from deepeval.templates import make_template_class
+
+
+TaskCompletionTemplate = make_template_class("TaskCompletionMetric")
 
 
 class TaskCompletionMetric(BaseMetric):
@@ -39,6 +43,9 @@ class TaskCompletionMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         flaky: bool = False,
+        evaluation_template: Type[
+            TaskCompletionTemplate
+        ] = TaskCompletionTemplate,
     ):
         if task is None:
             self._is_task_provided = False
@@ -55,13 +62,13 @@ class TaskCompletionMetric(BaseMetric):
         self.verbose_mode = verbose_mode
         self.flaky = flaky
         self.requires_trace = True
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
             test_case,
@@ -86,7 +93,6 @@ class TaskCompletionMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -112,7 +118,6 @@ class TaskCompletionMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
             test_case,

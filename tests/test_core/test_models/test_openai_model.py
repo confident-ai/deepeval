@@ -1,4 +1,4 @@
-"""Tests for GPTModel generation_kwargs parameter"""
+"""Tests for OpenAIModel generation_kwargs parameter"""
 
 import uuid as _uuid
 import time as _time
@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch, MagicMock
 from pydantic import BaseModel, SecretStr
 from deepeval.config.settings import get_settings, reset_settings
-from deepeval.models.llms.openai_model import GPTModel
+from deepeval.models.llms.openai_model import OpenAIModel
 from deepeval.tracing.patchers import patch_openai_client
 from deepeval.tracing.types import LlmSpan, TraceSpanStatus
 from deepeval.models.llms.constants import DEFAULT_GPT_MODEL, OPENAI_MODELS_DATA
@@ -42,14 +42,14 @@ class SampleSchema(BaseModel):
     field2: int
 
 
-class TestGPTModelCompletionKwargs:
-    """Test suite for GPTModel generation_kwargs functionality"""
+class TestOpenAIModelCompletionKwargs:
+    """Test suite for OpenAIModel generation_kwargs functionality"""
 
     def test_init_without_generation_kwargs(self, settings):
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
 
-        model = GPTModel(model="gpt-4o")
+        model = OpenAIModel(model="gpt-4o")
         assert model.generation_kwargs == {}
         assert model.name == "gpt-4o"
 
@@ -62,7 +62,7 @@ class TestGPTModelCompletionKwargs:
             "max_tokens": 2000,
             "seed": 42,
         }
-        model = GPTModel(
+        model = OpenAIModel(
             model="gpt-5-mini", generation_kwargs=generation_kwargs
         )
         assert model.generation_kwargs == generation_kwargs
@@ -73,7 +73,7 @@ class TestGPTModelCompletionKwargs:
             settings.OPENAI_API_KEY = "test-key"
 
         generation_kwargs = {"reasoning_effort": "medium"}
-        model = GPTModel(
+        model = OpenAIModel(
             model="gpt-4o",
             timeout=30,  # client kwarg
             max_retries=5,  # client kwarg
@@ -96,7 +96,7 @@ class TestGPTModelCompletionKwargs:
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
 
-        model = GPTModel(
+        model = OpenAIModel(
             model="gpt-5",
             generation_kwargs={"reasoning_effort": "high", "seed": 123},
         )
@@ -135,7 +135,7 @@ class TestGPTModelCompletionKwargs:
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
 
-        model = GPTModel(model="gpt-4o")
+        model = OpenAIModel(model="gpt-4o")
 
         # Call generate without generation_kwargs
         output, cost = model.generate("test prompt")
@@ -174,7 +174,7 @@ class TestGPTModelCompletionKwargs:
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
 
-        model = GPTModel(
+        model = OpenAIModel(
             model="gpt-4o",  # Supports structured output
             generation_kwargs={"reasoning_effort": "low", "top_p": 0.9},
         )
@@ -224,7 +224,7 @@ class TestGPTModelCompletionKwargs:
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
 
-        model = GPTModel(
+        model = OpenAIModel(
             model="gpt-5-nano",
             generation_kwargs={
                 "reasoning_effort": "medium",
@@ -279,7 +279,7 @@ class TestGPTModelCompletionKwargs:
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
 
-        model = GPTModel(
+        model = OpenAIModel(
             model="gpt-4o",  # Supports structured output
             generation_kwargs={"reasoning_effort": "high", "seed": 42},
         )
@@ -319,7 +319,7 @@ class TestGPTModelCompletionKwargs:
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
 
-        model = GPTModel(
+        model = OpenAIModel(
             model="gpt-4o",
             generation_kwargs={
                 "reasoning_effort": "high",
@@ -365,7 +365,7 @@ class TestGPTModelCompletionKwargs:
 
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
-        model = GPTModel(
+        model = OpenAIModel(
             model="gpt-4o", generation_kwargs={"reasoning_effort": "low"}
         )
 
@@ -392,7 +392,7 @@ class TestGPTModelCompletionKwargs:
             settings.OPENAI_API_KEY = "test-key"
 
         # This should work exactly as before
-        model = GPTModel(
+        model = OpenAIModel(
             model="gpt-4o", temperature=0.5, timeout=30  # client kwarg
         )
         assert model.name == "gpt-4o"
@@ -409,7 +409,7 @@ class TestGPTModelCompletionKwargs:
         gpt5_models = ["gpt-5", "gpt-5-mini", "gpt-5-nano"]
 
         for model_name in gpt5_models:
-            model = GPTModel(
+            model = OpenAIModel(
                 model=model_name,
                 temperature=0,  # Should be auto-adjusted to 1
                 generation_kwargs={"reasoning_effort": "high"},
@@ -422,13 +422,13 @@ class TestGPTModelCompletionKwargs:
     def test_empty_generation_kwargs(self, settings):
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
-        model = GPTModel(model="gpt-4o", generation_kwargs={})
+        model = OpenAIModel(model="gpt-4o", generation_kwargs={})
         assert model.generation_kwargs == {}
 
     def test_none_generation_kwargs(self, settings):
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
-        model = GPTModel(model="gpt-4o", generation_kwargs=None)
+        model = OpenAIModel(model="gpt-4o", generation_kwargs=None)
         assert model.generation_kwargs == {}
 
 
@@ -448,7 +448,7 @@ def test_openai_model_accepts_legacy_model_keyword_and_maps_to_model(
     with settings.edit(persist=False):
         settings.OPENAI_API_KEY = "test-key"
 
-    model = GPTModel(model="gpt-4o")
+    model = OpenAIModel(model="gpt-4o")
 
     # legacy keyword mapped to canonical parameter
     assert model.name == "gpt-4o"
@@ -480,8 +480,8 @@ def test_openai_model_accepts_legacy_openai_api_key_keyword_and_uses_it(
         openai_mod, "AsyncOpenAI", _RecordingClient, raising=True
     )
 
-    # Construct GPTModel with the legacy key name
-    model = GPTModel(
+    # Construct OpenAIModel with the legacy key name
+    model = OpenAIModel(
         model="gpt-4.1",
         api_key="constructor-key",
     )
@@ -522,8 +522,8 @@ def test_openai_model_uses_explicit_key_over_settings_and_strips_secret(
         openai_mod, "AsyncOpenAI", _RecordingClient, raising=True
     )
 
-    # Construct GPTModel with an explicit key
-    model = GPTModel(
+    # Construct OpenAIModel with an explicit key
+    model = OpenAIModel(
         model="gpt-4.1",
         api_key="constructor-key",
     )
@@ -543,14 +543,14 @@ def test_openai_model_uses_explicit_key_over_settings_and_strips_secret(
 
 def test_openai_model_defaults_model_from_settings_when_no_ctor_model(settings):
     """
-    When no `model` is provided, GPTModel should fall back to
+    When no `model` is provided, OpenAIModel should fall back to
     Settings.OPENAI_MODEL_NAME (instead of the legacy key file).
     """
     with settings.edit(persist=False):
         settings.OPENAI_API_KEY = "test-key"
         settings.OPENAI_MODEL_NAME = "gpt-4o-mini"
 
-    model = GPTModel()
+    model = OpenAIModel()
     assert model.name == "gpt-4o-mini"
 
 
@@ -559,7 +559,7 @@ def test_openai_model_defaults_to_shared_default_when_no_setting(settings):
         settings.OPENAI_API_KEY = "test-key"
         settings.OPENAI_MODEL_NAME = None
 
-    model = GPTModel()
+    model = OpenAIModel()
     assert model.name == DEFAULT_GPT_MODEL
 
 
@@ -567,7 +567,7 @@ def test_openai_model_costs_defaults_from_settings_for_missing_pricing(
     settings,
 ):
     """
-    When a model is missing from `model_pricing`, GPTModel should populate
+    When a model is missing from `model_pricing`, OpenAIModel should populate
     pricing from Settings.OPENAI_COST_PER_INPUT_TOKEN and
     Settings.OPENAI_COST_PER_OUTPUT_TOKEN instead of the legacy key file.
     """
@@ -577,7 +577,7 @@ def test_openai_model_costs_defaults_from_settings_for_missing_pricing(
         settings.OPENAI_COST_PER_INPUT_TOKEN = 0.123
         settings.OPENAI_COST_PER_OUTPUT_TOKEN = 0.456
 
-    model = GPTModel()  # Uses Settings.OPENAI_MODEL_NAME + Settings pricing
+    model = OpenAIModel()  # Uses Settings.OPENAI_MODEL_NAME + Settings pricing
     assert model.name == "model-not-yet-in-our-registry"
     assert model.model_data.input_price == 0.123
     assert model.model_data.output_price == 0.456
@@ -589,9 +589,9 @@ def test_openai_model_costs_defaults_from_settings_for_missing_pricing(
 #############################################################
 
 
-class TestGPTModelUpdateLlmSpanTokenFields:
+class TestOpenAIModelUpdateLlmSpanTokenFields:
     """
-    Unit-tests for GPTModel._update_llm_span_from_completion.
+    Unit-tests for OpenAIModel._update_llm_span_from_completion.
 
     Verifies that both the classic (prompt_tokens/completion_tokens) and
     the newer Responses-API (input_tokens/output_tokens) field names are read
@@ -605,7 +605,7 @@ class TestGPTModelUpdateLlmSpanTokenFields:
         """prompt_tokens / completion_tokens (classic chat-completions style) must be read."""
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
-        model = GPTModel(model="gpt-4.1")
+        model = OpenAIModel(model="gpt-4.1")
         completion = _make_completion(
             _make_usage(prompt_tokens=10, completion_tokens=20)
         )
@@ -622,7 +622,7 @@ class TestGPTModelUpdateLlmSpanTokenFields:
         """input_tokens / output_tokens (Responses API / gpt-5.x style) must be read."""
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
-        model = GPTModel(model="gpt-5.2")
+        model = OpenAIModel(model="gpt-5.2")
         completion = _make_completion(
             _make_usage(input_tokens=15, output_tokens=30)
         )
@@ -639,7 +639,7 @@ class TestGPTModelUpdateLlmSpanTokenFields:
         """cost_per_input_token and cost_per_output_token must be non-None for gpt-5.2."""
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
-        model = GPTModel(model="gpt-5.2")
+        model = OpenAIModel(model="gpt-5.2")
         completion = _make_completion(
             _make_usage(input_tokens=5, output_tokens=10)
         )
@@ -654,7 +654,7 @@ class TestGPTModelUpdateLlmSpanTokenFields:
         """gpt-4.1 with classic field names must still produce correct counts and costs."""
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
-        model = GPTModel(model="gpt-4.1")
+        model = OpenAIModel(model="gpt-4.1")
         completion = _make_completion(
             _make_usage(prompt_tokens=7, completion_tokens=14)
         )
@@ -673,7 +673,7 @@ class TestGPTModelUpdateLlmSpanTokenFields:
         """prompt_tokens=0 must be preserved, not replaced by input_tokens fallback."""
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
-        model = GPTModel(model="gpt-4.1")
+        model = OpenAIModel(model="gpt-4.1")
         completion = _make_completion(
             _make_usage(
                 prompt_tokens=0,
@@ -865,7 +865,7 @@ def test_openai_calculate_cost_returns_correct_value(settings):
         settings.OPENAI_COST_PER_INPUT_TOKEN = 0.005
         settings.OPENAI_COST_PER_OUTPUT_TOKEN = 0.015
 
-    model = GPTModel(model="model-not-in-registry")
+    model = OpenAIModel(model="model-not-in-registry")
 
     cost = model.calculate_cost(input_tokens=100, output_tokens=50)
     expected = 100 * 0.005 + 50 * 0.015
@@ -876,7 +876,7 @@ def test_openai_calculate_cost_returns_none_when_prices_missing(settings):
     with settings.edit(persist=False):
         settings.OPENAI_API_KEY = "test-key"
 
-    model = GPTModel(model="model-not-in-registry")
+    model = OpenAIModel(model="model-not-in-registry")
     assert model.model_data.input_price is None
     assert model.model_data.output_price is None
 
@@ -890,7 +890,7 @@ def test_openai_calculate_cost_with_zero_tokens(settings):
         settings.OPENAI_COST_PER_INPUT_TOKEN = 0.005
         settings.OPENAI_COST_PER_OUTPUT_TOKEN = 0.015
 
-    model = GPTModel(model="model-not-in-registry")
+    model = OpenAIModel(model="model-not-in-registry")
 
     cost = model.calculate_cost(input_tokens=0, output_tokens=0)
     assert cost == 0.0

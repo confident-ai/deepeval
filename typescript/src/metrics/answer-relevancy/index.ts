@@ -1,5 +1,6 @@
 export {
   AnswerRelevancyMetric,
   type AnswerRelevancyMetricOptions,
-} from "./answer-relevancy";
-export * from "./schema";
+  type AnswerRelevancyTemplateOverride,
+} from "@/metrics/answer-relevancy/answer-relevancy";
+export * from "@/metrics/answer-relevancy/schema";

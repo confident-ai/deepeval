@@ -12,7 +12,7 @@ multi-node graphs that fire the LLM callback more than once per
 need a regression guard for.
 """
 
-from typing import List
+from typing import List, Optional
 from unittest.mock import MagicMock
 
 import pytest
@@ -28,7 +28,7 @@ from deepeval.tracing import (
     next_tool_span,
     trace_manager,
 )
-from deepeval.tracing.types import LlmSpan, ToolSpan
+from deepeval.tracing.types import BaseSpan, LlmSpan, ToolSpan
 
 
 # ---------------------------------------------------------------------------
@@ -46,6 +46,7 @@ class _RecordingCallbackHandler(CallbackHandler):
         super().__init__(*args, **kwargs)
         self.llm_spans: List[LlmSpan] = []
         self.tool_spans: List[ToolSpan] = []
+        self.root_span: Optional[BaseSpan] = None
 
     def on_chat_model_start(self, serialized, messages, *, run_id, **kwargs):
         res = super().on_chat_model_start(
@@ -61,6 +62,20 @@ class _RecordingCallbackHandler(CallbackHandler):
         span = trace_manager.get_span_by_uuid(str(run_id))
         if span is not None:
             self.llm_spans.append(span)
+        return res
+
+    def on_chain_start(
+        self, serialized, inputs, *, run_id, parent_run_id=None, **kwargs
+    ):
+        res = super().on_chain_start(
+            serialized,
+            inputs,
+            run_id=run_id,
+            parent_run_id=parent_run_id,
+            **kwargs,
+        )
+        if parent_run_id is None:
+            self.root_span = trace_manager.get_span_by_uuid(str(run_id))
         return res
 
 
@@ -227,7 +242,9 @@ async def test_next_tool_span_does_not_leak_to_llm_span_in_graph():
 
 
 # ---------------------------------------------------------------------------
-# Base ``next_span`` slot via StateGraph
+# Base ``next_span`` slot via StateGraph — consumed by the root agent
+# span the handler opens for ``ainvoke``, since the base slot matches
+# a span of ANY type and that one comes first.
 # ---------------------------------------------------------------------------
 
 
@@ -235,10 +252,12 @@ async def test_next_tool_span_does_not_leak_to_llm_span_in_graph():
 @pytest.mark.filterwarnings(
     "ignore:The 'config' parameter should be typed as 'RunnableConfig' or 'RunnableConfig \\| None'"
 )
-async def test_base_next_span_lands_on_first_llm_span_in_graph():
-    """``next_span(...)`` is "next of any type" — base slot also
-    plumbs through the handler's ``pop_pending_for(...)`` merge for
-    LLM spans inside a ``StateGraph`` node."""
+async def test_base_next_span_lands_on_root_agent_span_in_graph():
+    """``next_span(...)`` is "next of any type", and in a graph the
+    first span the handler opens is the root ``agent`` span for
+    ``ainvoke`` itself — not the LLM span inside the node. The root's
+    ``pop_pending_for("agent")`` drains the base slot, so the LLM span
+    downstream sees an empty slot."""
     callback = _RecordingCallbackHandler()
     llm = FakeListLLM(responses=["pong"])
     graph = _build_single_llm_graph(llm)
@@ -248,7 +267,9 @@ async def test_base_next_span_lands_on_first_llm_span_in_graph():
             {"prompt": "ping"}, config={"callbacks": [callback]}
         )
 
-    assert callback.llm_spans[0].metric_collection == "from_base_in_graph"
+    assert callback.root_span is not None
+    assert callback.root_span.metric_collection == "from_base_in_graph"
+    assert callback.llm_spans[0].metric_collection is None
 
 
 # ---------------------------------------------------------------------------

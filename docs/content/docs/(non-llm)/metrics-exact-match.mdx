@@ -2,10 +2,11 @@
 id: metrics-exact-match
 title: Exact Match
 sidebar_label: Exact Match
+languages: [python, typescript]
 ---
 <MetricTagsDisplayer singleTurn={true} usesLLMs={false} referenceless={false} />
 
-The Exact Match metric measures whether your LLM application's `actual_output` matches the `expected_output` exactly.
+The Exact Match metric measures whether your LLM application's <Term py="actual_output" ts="actualOutput"/> matches the <Term py="expected_output" ts="expectedOutput"/> exactly.
 
 :::note
 The `ExactMatchMetric` does **not** rely on an LLM for evaluation. It purely performs a **string-level equality check** between the outputs.
@@ -16,17 +17,21 @@ The `ExactMatchMetric` does **not** rely on an LLM for evaluation. It purely per
 To use the `ExactMatchMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
-- `expected_output`
+- <Term py="actual_output" ts="actualOutput"/>
+- <Term py="expected_output" ts="expectedOutput"/>
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
 
 ## Usage
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval import evaluate
 from deepeval.metrics import ExactMatchMetric
 from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
 
 metric = ExactMatchMetric(
     threshold=1.0,
@@ -46,15 +51,50 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { ExactMatchMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+import { evaluate } from "deepeval";
+
+const metric = new ExactMatchMetric({
+  threshold: 1.0,
+  verboseMode: true,
+});
+
+const testCase = new LLMTestCase({
+  input: "Translate 'Hello, how are you?' in french",
+  actualOutput: "Bonjour, comment ça va ?",
+  expectedOutput: "Bonjour, comment allez-vous ?",
+});
+
+// To run metric as a standalone
+// await metric.measure(testCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([testCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
 There are **THREE** optional parameters when creating an `ExactMatchMetric`:
 
-- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `1.0`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `1.0`.
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 ### As a Standalone
 
 You can also run the `ExactMatchMetric` on a single test case as a standalone, one-off execution.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -62,6 +102,21 @@ You can also run the `ExactMatchMetric` on a single test case as a standalone, o
 metric.measure(test_case)
 print(metric.score, metric.reason)
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+await metric.measure(testCase);
+console.log(metric.score, metric.reason);
+```
+
+</Case>
+
+</Switch>
 
 ## How Is It Calculated?
 
@@ -75,7 +130,7 @@ The `ExactMatchMetric` score is calculated according to the following equation:
  \end{cases}"
 />
 
-The `ExactMatchMetric` performs a strict equality check to determine if the `actual_output` matches the `expected_output`.
+The `ExactMatchMetric` performs a strict equality check to determine if the <Term py="actual_output" ts="actualOutput"/> matches the <Term py="expected_output" ts="expectedOutput"/>.
 
 ## FAQs
 
@@ -86,7 +141,7 @@ The `ExactMatchMetric` performs a strict equality check to determine if the `act
       answer: (
         <>
           No. The <code>ExactMatchMetric</code> is a plain string equality check
-          between <code>actual_output</code> and <code>expected_output</code> —
+          between <Term py="actual_output" ts="actualOutput"/> and <Term py="expected_output" ts="expectedOutput"/> —
           no model, no API key, zero token cost, fully deterministic.
         </>
       ),
@@ -118,7 +173,7 @@ The `ExactMatchMetric` performs a strict equality check to determine if the `act
       answer: (
         <>
           It requires a character-for-character match. Set{" "}
-          <code>verbose_mode=True</code> to print the compared strings and spot
+          <Term py="verbose_mode=True" ts="verboseMode: true"/> to print the compared strings and spot
           invisible differences like trailing newlines, smart quotes, or leading
           whitespace.
         </>

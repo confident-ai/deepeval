@@ -22,9 +22,14 @@ from typing import (
     get_origin,
     Union,
 )
-from opentelemetry.trace import Span
-
 from deepeval.config.settings import Settings, get_settings
+from deepeval.telemetry import (
+    LoginOutcome,
+    LoginPromptSurface,
+    LoginSpan,
+    capture_login_prompt_shown,
+    record_login_completed,
+)
 from deepeval.key_handler import (
     KEY_FILE_HANDLER,
     ModelKeyValues,
@@ -152,11 +157,12 @@ def render_login_message():
     render_confident_banner()
 
 
-def upload_and_open_link(_span: Optional[Span] = None):
+def upload_and_open_link(_span: Optional[LoginSpan] = None):
     last_test_run_data = global_test_run_manager.get_latest_test_run_data()
     if last_test_run_data:
         confident_api_key = get_confident_api_key()
         if confident_api_key == "" or confident_api_key is None:
+            capture_login_prompt_shown(LoginPromptSurface.CLI_VIEW)
             render_login_message()
 
             login_url = with_utm(
@@ -174,7 +180,9 @@ def upload_and_open_link(_span: Optional[Span] = None):
                         "\n🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
                     )
                     if _span is not None:
-                        _span.set_attribute("completed", True)
+                        _span.set_outcome(LoginOutcome.COMPLETED)
+                    else:
+                        record_login_completed(LoginPromptSurface.CLI_VIEW)
                     break
                 else:
                     print("❌ API Key cannot be empty. Please try again.\n")
@@ -182,6 +190,7 @@ def upload_and_open_link(_span: Optional[Span] = None):
         print("📤 Uploading test run to Confident AI...")
         global_test_run_manager.post_test_run(last_test_run_data)
     else:
+        capture_login_prompt_shown(LoginPromptSurface.CLI_VIEW_NO_RUN)
         print(
             "❌ No test run found in cache. Run 'deepeval login' + an evaluation to get started 🚀."
         )

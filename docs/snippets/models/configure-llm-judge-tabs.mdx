@@ -1,0 +1,411 @@
+<Switch>
+
+<Case id="python">
+
+<Tabs items={["Open AI", "Azure Open AI", "Ollama", "Gemini", "Custom LLM example"]}>
+<Tab value="Open AI">
+
+To use OpenAI for `deepeval`'s LLM metrics, supply your `OPENAI_API_KEY` in the CLI:
+
+```bash
+export OPENAI_API_KEY=<your-openai-api-key>
+```
+
+Alternatively, if you're working in a notebook environment (Jupyter or Colab), set your `OPENAI_API_KEY` in a cell:
+
+```bash
+%env OPENAI_API_KEY=<your-openai-api-key>
+```
+
+:::caution
+Please **do not include** quotation marks when setting your `API_KEYS` as environment variables if you're working in a notebook environment.
+:::
+
+</Tab>
+<Tab value="Azure Open AI">
+
+`deepeval` also allows you to use Azure OpenAI for metrics that are evaluated using an LLM. Run the following command in the CLI to configure your `deepeval` environment to use Azure OpenAI for **all** LLM-based metrics.
+
+```bash
+deepeval set-azure-openai \
+    --base-url=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
+    --model=<model_name> \ # e.g. gpt-4.1
+    --deployment-name=<deployment_name> \  # e.g. Test Deployment
+    --api-version=<api_version> \ # e.g. 2025-01-01-preview
+    --model-version=<model_version> # e.g. 2024-11-20
+```
+
+:::info
+Your OpenAI API version must be at least `2024-08-01-preview`, when structured output was released.
+:::
+
+Note that the `model-version` is **optional**. If you ever wish to stop using Azure OpenAI and move back to regular OpenAI, simply run:
+
+```bash
+deepeval unset-azure-openai
+```
+
+</Tab>
+<Tab value="Ollama">
+
+:::note
+Before getting started, make sure your [Ollama model](https://ollama.com/search) is installed and running. You can also see the full list of available models by clicking on the previous link.
+
+```bash
+ollama run deepseek-r1:1.5b
+```
+
+:::
+
+To use **Ollama** models for your metrics, run `deepeval set-ollama --model=<model>` in your CLI. For example:
+
+```bash
+deepeval set-ollama --model=deepseek-r1:1.5b
+```
+
+Optionally, you can specify the **base URL** of your local Ollama model instance if you've defined a custom port. The default base URL is set to `http://localhost:11434`.
+
+```bash
+deepeval set-ollama --model=deepseek-r1:1.5b \
+    --base-url="http://localhost:11434"
+```
+
+To stop using your local Ollama model and move back to OpenAI, run:
+
+```bash
+deepeval unset-ollama
+```
+
+:::caution
+The `deepeval set-ollama` command is used exclusively to configure LLM models. If you intend to use a custom embedding model from Ollama with the synthesizer, please [refer to this section of the guide](/guides/guides-using-custom-embedding-models).
+:::
+
+</Tab>
+<Tab value="Gemini">
+
+To use Gemini models with `deepeval`, run the following command in your CLI.
+
+```bash
+deepeval set-gemini \
+    --model=<model_name> # e.g. "gemini-2.0-flash-001"
+```
+
+</Tab>
+<Tab value="Custom LLM example">
+
+`deepeval` allows you to use **ANY** custom LLM for evaluation. This includes LLMs from langchain's chat model integrations, Hugging Face's `transformers` library, or even LLMs in GGML format.
+
+This includes any of your favorite models such as:
+
+- Azure OpenAI
+- Claude via AWS Bedrock
+- Google Vertex AI
+- Mistral 7B
+
+All the examples can be [found here](/guides/guides-using-custom-llms#more-examples), but down below is a quick example of a custom Azure OpenAI model through langchain's `AzureChatOpenAI` module for evaluation:
+
+```python
+from langchain_openai import AzureChatOpenAI
+from deepeval.models.base_model import DeepEvalBaseLLM
+
+class AzureOpenAI(DeepEvalBaseLLM):
+    def __init__(
+        self,
+        model
+    ):
+        self.model = model
+
+    def load_model(self):
+        return self.model
+
+    def generate(self, prompt: str) -> str:
+        chat_model = self.load_model()
+        return chat_model.invoke(prompt).content
+
+    async def a_generate(self, prompt: str) -> str:
+        chat_model = self.load_model()
+        res = await chat_model.ainvoke(prompt)
+        return res.content
+
+    def get_model_name(self):
+        return "Custom Azure OpenAI Model"
+
+# Replace these with real values
+custom_model = AzureChatOpenAI(
+    openai_api_version=api_version,
+    azure_deployment=azure_deployment,
+    azure_endpoint=azure_endpoint,
+    openai_api_key=openai_api_key,
+)
+azure_openai = AzureOpenAI(model=custom_model)
+print(azure_openai.generate("Write me a joke"))
+```
+
+When creating a custom LLM evaluation model you should **ALWAYS**:
+
+- inherit `DeepEvalBaseLLM`.
+- implement the `get_model_name()` method, which simply returns a string representing your custom model name.
+- implement the `load_model()` method, which will be responsible for returning a model object.
+- implement the `generate()` method with **one and only one** parameter of type string that acts as the prompt to your custom LLM.
+- the `generate()` method should return the final output string of your custom LLM. Note that we called `chat_model.invoke(prompt).content` to access the model generations in this particular example, but this could be different depending on the implementation of your custom model object.
+- implement the `a_generate()` method, with the same function signature as `generate()`. **Note that this is an async method**. In this example, we called `await chat_model.ainvoke(prompt)`, which is an asynchronous wrapper provided by LangChain's chat models.
+
+:::tip
+The `a_generate()` method is what `deepeval` uses to generate LLM outputs when you execute metrics / run evaluations asynchronously.
+
+If your custom model object does not have an asynchronous interface, simply reuse the same code from `generate()` (scroll down to the `Mistral7B` example for more details). However, this would make `a_generate()` a blocking process, regardless of whether you've turned on `async_mode` for a metric or not.
+:::
+
+Lastly, to use it for evaluation for an LLM-Eval:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+metric = AnswerRelevancyMetric(model=azure_openai)
+```
+
+:::note
+While the Azure OpenAI command configures `deepeval` to use Azure OpenAI globally for all LLM-Evals, a custom LLM has to be set each time you instantiate a metric. Remember to provide your custom LLM instance through the `model` parameter for metrics you wish to use it for.
+:::
+
+:::caution
+We **CANNOT** guarantee that evaluations will work as expected when using a custom model. This is because evaluation requires high levels of reasoning and the ability to follow instructions such as outputting responses in valid JSON formats. [**To better enable custom LLMs output valid JSONs, read this guide**](/guides/guides-using-custom-llms).
+
+Alternatively, if you find yourself running into JSON errors and would like to ignore it, use the [`-c` and `-i` flag during test run](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run):
+
+```bash
+deepeval test run test_example.py -i -c
+```
+
+The `-i` flag ignores errors while the `-c` flag utilizes the local `deepeval` cache, so for a partially successful test run you don't have to rerun test cases that didn't error.
+
+:::
+
+</Tab>
+</Tabs>
+
+</Case>
+
+<Case id="typescript">
+
+<Tabs items={["Open AI", "Vercel AI SDK", "Anthropic", "Azure Open AI", "Ollama", "Custom LLM example"]}>
+<Tab value="Open AI">
+
+To use OpenAI for `deepeval`'s LLM metrics, supply your `OPENAI_API_KEY` in the CLI:
+
+```bash
+export OPENAI_API_KEY=<your-openai-api-key>
+```
+
+Alternatively, `deepeval` autoloads `.env.local` then `.env` at import time, so you can keep the key out of your shell entirely:
+
+```bash
+# .env.local
+OPENAI_API_KEY=<your-openai-api-key>
+```
+
+</Tab>
+<Tab value="Vercel AI SDK">
+
+The [Vercel AI SDK](/integrations/models/ai-sdk) is configured in code rather than through a `set-*` command, by wrapping any AI SDK `LanguageModel` in an `AISDKModel`. Install the AI SDK core package alongside the provider you want to evaluate with:
+
+```bash
+npm install ai @ai-sdk/openai
+```
+
+Each AI SDK provider reads its own API key from the environment, following that provider's convention:
+
+```bash
+# .env.local
+OPENAI_API_KEY=<your-openai-api-key>
+```
+
+Then pass the wrapped model to any metric:
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { AISDKModel } from "deepeval/models";
+import { openai } from "@ai-sdk/openai";
+
+const model = new AISDKModel({ model: openai("gpt-4o"), temperature: 0 });
+const answerRelevancy = new AnswerRelevancyMetric({ model });
+```
+
+:::tip
+`deepeval` has a ready-made model class for OpenAI, Anthropic, Gemini and a handful of others, but not for every provider out there. If the one you want to judge with is missing — Mistral, Cohere, Groq, Together — install its AI SDK package and wrap it in an `AISDKModel` to use it anyway.
+:::
+
+</Tab>
+<Tab value="Anthropic">
+
+To use Anthropic models for `deepeval`'s LLM metrics, supply your `ANTHROPIC_API_KEY` in the CLI:
+
+```bash
+export ANTHROPIC_API_KEY=<your-anthropic-api-key>
+```
+
+Then select the Claude model you want to judge with for **all** LLM-based metrics:
+
+```bash
+npx deepeval set-anthropic --model=claude-sonnet-4-6
+```
+
+To stop using Anthropic and move back to OpenAI, run:
+
+```bash
+npx deepeval unset-anthropic
+```
+
+</Tab>
+<Tab value="Azure Open AI">
+
+`deepeval` also allows you to use Azure OpenAI for metrics that are evaluated using an LLM. Run the following command in the CLI to configure your `deepeval` environment to use Azure OpenAI for **all** LLM-based metrics.
+
+```bash
+npx deepeval set-azure-openai \
+    --base-url=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
+    --model=<model_name> \ # e.g. gpt-4.1
+    --deployment-name=<deployment_name> \  # e.g. Test Deployment
+    --api-version=<api_version> \ # e.g. 2025-01-01-preview
+    --model-version=<model_version> # e.g. 2024-11-20
+```
+
+:::info
+Your OpenAI API version must be at least `2024-08-01-preview`, when structured output was released.
+:::
+
+Note that the `model-version` is **optional**. If you ever wish to stop using Azure OpenAI and move back to regular OpenAI, simply run:
+
+```bash
+npx deepeval unset-azure-openai
+```
+
+</Tab>
+<Tab value="Ollama">
+
+:::note
+Before getting started, make sure your [Ollama model](https://ollama.com/search) is installed and running. You can also see the full list of available models by clicking on the previous link.
+
+```bash
+ollama run deepseek-r1:1.5b
+```
+
+:::
+
+To use **Ollama** models for your metrics, run `npx deepeval set-ollama --model=<model>` in your CLI. For example:
+
+```bash
+npx deepeval set-ollama --model=deepseek-r1:1.5b
+```
+
+Optionally, you can specify the **base URL** of your local Ollama model instance if you've defined a custom port. The default base URL is set to `http://localhost:11434`.
+
+```bash
+npx deepeval set-ollama --model=deepseek-r1:1.5b \
+    --base-url="http://localhost:11434"
+```
+
+To stop using your local Ollama model and move back to OpenAI, run:
+
+```bash
+npx deepeval unset-ollama
+```
+
+</Tab>
+<Tab value="Custom LLM example">
+
+`deepeval` allows you to use **ANY** custom LLM for evaluation. This includes LLMs from LangChain's chat model integrations, any provider reachable through the Vercel AI SDK, or a model you serve yourself.
+
+This includes any of your favorite models such as:
+
+- Azure OpenAI
+- Claude via AWS Bedrock
+- Google Vertex AI
+- Mistral 7B
+
+All the examples can be [found here](/guides/guides-using-custom-llms#more-examples), but down below is a quick example of a custom Azure OpenAI model through LangChain's `AzureChatOpenAI` module for evaluation:
+
+```typescript
+import { DeepEvalBaseLLM, type GenerationResult } from "deepeval/models";
+import { AzureChatOpenAI } from "@langchain/openai";
+import type { ZodType } from "zod";
+
+class AzureOpenAI extends DeepEvalBaseLLM {
+  constructor(private model: AzureChatOpenAI) {
+    super();
+  }
+
+  async generate<T = string>(
+    prompt: string,
+    schema?: ZodType<T>,
+  ): Promise<GenerationResult<T>> {
+    // A schema is passed whenever the metric needs structured output
+    if (schema) {
+      const structured = this.model.withStructuredOutput(schema);
+      return { output: (await structured.invoke(prompt)) as T, cost: null };
+    }
+    const response = await this.model.invoke(prompt);
+    return { output: String(response.content) as T, cost: null };
+  }
+
+  getModelName(): string {
+    return "Custom Azure OpenAI Model";
+  }
+}
+
+// Replace these with real values
+const customModel = new AzureChatOpenAI({
+  azureOpenAIApiVersion: apiVersion,
+  azureOpenAIApiDeploymentName: azureDeployment,
+  azureOpenAIEndpoint: azureEndpoint,
+  azureOpenAIApiKey: openaiApiKey,
+});
+const azureOpenAI = new AzureOpenAI(customModel);
+console.log(await azureOpenAI.generate("Write me a joke"));
+```
+
+When creating a custom LLM evaluation model you should **ALWAYS**:
+
+- extend `DeepEvalBaseLLM`.
+- implement the `getModelName()` method, which simply returns a string representing your custom model name.
+- implement the `generate()` method, which is always `async` — there is no `generate()` / `a_generate()` split to mirror, and no `loadModel()` to implement.
+- return `{ output, cost }` from `generate()`, where `cost` may be `null` if your provider doesn't report one.
+- respect the optional `schema` argument. Metrics pass a zod schema whenever they need structured output, and expect `output` to be the parsed object rather than a string.
+
+:::tip
+If your provider can't produce structured output natively, ask for JSON in the prompt and run the response through `schema.parse()` yourself — that is exactly what `deepeval`'s built-in models do.
+:::
+
+Lastly, to use it for evaluation for an LLM-Eval:
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+// ...
+
+const metric = new AnswerRelevancyMetric({ model: azureOpenAI });
+```
+
+:::note
+While the Azure OpenAI command configures `deepeval` to use Azure OpenAI globally for all LLM-Evals, a custom LLM has to be set each time you instantiate a metric. Remember to provide your custom LLM instance through the `model` parameter for metrics you wish to use it for.
+:::
+
+:::caution
+We **CANNOT** guarantee that evaluations will work as expected when using a custom model. This is because evaluation requires high levels of reasoning and the ability to follow instructions such as outputting responses in valid JSON formats. [**To better enable custom LLMs output valid JSONs, read this guide**](/guides/guides-using-custom-llms).
+
+Alternatively, if you find yourself running into JSON errors and would like to ignore it, use the [`-c` and `-i` flag during test run](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run):
+
+```bash
+npx deepeval test run chatbot.test.ts -i -c
+```
+
+The `-i` flag ignores errors while the `-c` flag utilizes the local `deepeval` cache, so for a partially successful test run you don't have to rerun test cases that didn't error.
+
+:::
+
+</Tab>
+</Tabs>
+
+</Case>
+
+</Switch>

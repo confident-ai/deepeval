@@ -3,11 +3,11 @@ process.env.NODE_ENV = "development";
 
 import * as path from "path";
 import { run, addTraceProcessor } from "@openai/agents";
-import { DeepEvalTracingProcessor } from "../../../src/integrations/openai-agents";
-import { traceManager } from "../../../src/tracing/tracing";
-import { setTracingContext } from "../../../src/tracing/trace-context";
-import { Prompt } from "../../../src/prompt";
-import { Environment } from "../../../src/tracing/utils";
+import { DeepEvalTracingProcessor } from "@/integrations/openai-agents";
+import { traceManager } from "@/tracing/tracing";
+import { setTracingContext } from "@/tracing/trace-context";
+import { Prompt } from "@/prompt";
+import { Environment } from "@/tracing/utils";
 import { generateTraceJson, assertTraceJson } from "../utils";
 
 // App Imports

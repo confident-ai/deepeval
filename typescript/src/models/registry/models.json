@@ -1,0 +1,1891 @@
+{
+  "_meta": {
+    "generatedBy": "scripts/compile_model_registry.py",
+    "source": "deepeval/models/llms/constants.py",
+    "doNotEdit": true
+  },
+  "openai": {
+    "gpt-3.5-turbo": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": false,
+      "supportsJson": true,
+      "inputPrice": 5e-07,
+      "outputPrice": 1.5e-06
+    },
+    "gpt-3.5-turbo-0125": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": false,
+      "supportsJson": true,
+      "inputPrice": 5e-07,
+      "outputPrice": 1.5e-06
+    },
+    "gpt-3.5-turbo-1106": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": false,
+      "supportsJson": true,
+      "inputPrice": 1e-06,
+      "outputPrice": 2e-06
+    },
+    "gpt-4-0125-preview": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": false,
+      "supportsJson": true,
+      "inputPrice": 1e-05,
+      "outputPrice": 3e-05
+    },
+    "gpt-4-1106-preview": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": false,
+      "supportsJson": true,
+      "inputPrice": 1e-05,
+      "outputPrice": 3e-05
+    },
+    "gpt-4-turbo": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": false,
+      "supportsJson": true,
+      "inputPrice": 1e-05,
+      "outputPrice": 3e-05
+    },
+    "gpt-4-turbo-2024-04-09": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": false,
+      "supportsJson": true,
+      "inputPrice": 1e-05,
+      "outputPrice": 3e-05
+    },
+    "gpt-4-turbo-preview": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": false,
+      "supportsJson": true,
+      "inputPrice": 1e-05,
+      "outputPrice": 3e-05
+    },
+    "gpt-4o": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 2.5e-06,
+      "outputPrice": 1e-05
+    },
+    "gpt-4": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-05,
+      "outputPrice": 6e-05
+    },
+    "gpt-4o-2024-05-13": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 2.5e-06,
+      "outputPrice": 1e-05
+    },
+    "gpt-4o-2024-08-06": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 2.5e-06,
+      "outputPrice": 1e-05
+    },
+    "gpt-4o-2024-11-20": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 2.5e-06,
+      "outputPrice": 1e-05
+    },
+    "gpt-4o-mini": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 1.5e-07,
+      "outputPrice": 6e-07
+    },
+    "gpt-4o-mini-2024-07-18": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 1.5e-07,
+      "outputPrice": 6e-07
+    },
+    "gpt-4-32k": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": false,
+      "supportsJson": true,
+      "inputPrice": 6e-05,
+      "outputPrice": 0.00012
+    },
+    "gpt-4-32k-0613": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": false,
+      "supportsJson": false,
+      "inputPrice": 6e-05,
+      "outputPrice": 0.00012
+    },
+    "gpt-4.1": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 2e-06,
+      "outputPrice": 8e-06
+    },
+    "gpt-4.1-mini": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 4.0000000000000003e-07,
+      "outputPrice": 1.6000000000000001e-06
+    },
+    "gpt-4.1-nano": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 1.0000000000000001e-07,
+      "outputPrice": 4.0000000000000003e-07
+    },
+    "gpt-4.5-preview": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": false,
+      "supportsJson": false,
+      "inputPrice": 7.5e-05,
+      "outputPrice": 0.00015
+    },
+    "gpt-4.5-preview-2025-02-27": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 7.5e-05,
+      "outputPrice": 0.00015
+    },
+    "o1": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 1.5e-05,
+      "outputPrice": 6e-05,
+      "supportsTemperature": false
+    },
+    "o1-preview": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 1.5e-05,
+      "outputPrice": 6e-05
+    },
+    "o1-2024-12-17": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 1.5e-05,
+      "outputPrice": 6e-05,
+      "supportsTemperature": false
+    },
+    "o1-preview-2024-09-12": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": false,
+      "supportsJson": false,
+      "inputPrice": 1.5e-05,
+      "outputPrice": 6e-05
+    },
+    "o1-mini": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": false,
+      "supportsJson": false,
+      "supportsTemperature": false
+    },
+    "o1-mini-2024-09-12": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": false,
+      "supportsJson": false,
+      "supportsTemperature": false
+    },
+    "o3-mini": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 1.1e-06,
+      "outputPrice": 4.4e-06,
+      "supportsTemperature": false
+    },
+    "o3-mini-2025-01-31": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 1.1e-06,
+      "outputPrice": 4.4e-06,
+      "supportsTemperature": false
+    },
+    "o4-mini": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 1.1e-06,
+      "outputPrice": 4.4e-06,
+      "supportsTemperature": false
+    },
+    "o4-mini-2025-04-16": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 1.1e-06,
+      "outputPrice": 4.4e-06,
+      "supportsTemperature": false
+    },
+    "gpt-5": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 1.25e-06,
+      "outputPrice": 1e-05,
+      "supportsTemperature": false
+    },
+    "gpt-5-2025-08-07": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 1.25e-06,
+      "outputPrice": 1e-05,
+      "supportsTemperature": false
+    },
+    "gpt-5-mini": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 2.5e-07,
+      "outputPrice": 2e-06,
+      "supportsTemperature": false
+    },
+    "gpt-5-mini-2025-08-07": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 2.5e-07,
+      "outputPrice": 2e-06,
+      "supportsTemperature": false
+    },
+    "gpt-5-nano": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 5.0000000000000004e-08,
+      "outputPrice": 4.0000000000000003e-07,
+      "supportsTemperature": false
+    },
+    "gpt-5-nano-2025-08-07": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 5.0000000000000004e-08,
+      "outputPrice": 4.0000000000000003e-07,
+      "supportsTemperature": false
+    },
+    "gpt-5-chat-latest": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": false,
+      "supportsJson": false,
+      "inputPrice": 1.25e-06,
+      "outputPrice": 1e-05
+    },
+    "gpt-5.1": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 1.25e-06,
+      "outputPrice": 1e-05,
+      "supportsTemperature": false
+    },
+    "gpt-5.2": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 1.75e-06,
+      "outputPrice": 1.4e-05,
+      "supportsTemperature": false
+    },
+    "gpt-5.4": {
+      "supportsLogProbs": true,
+      "maxLogProbs": 5,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 2.5e-06,
+      "outputPrice": 1.5e-05,
+      "supportsTemperature": false
+    },
+    "gpt-5.4-2026-03-05": {
+      "supportsLogProbs": true,
+      "maxLogProbs": 5,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 2.5e-06,
+      "outputPrice": 1.5e-05,
+      "supportsTemperature": false
+    },
+    "gpt-5.4-mini": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false,
+      "inputPrice": 7.5e-07,
+      "outputPrice": 4.5e-06,
+      "supportsTemperature": false
+    },
+    "gpt-5.5": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5e-06,
+      "outputPrice": 3e-05,
+      "supportsTemperature": false
+    },
+    "gpt-5.5-2026-04-23": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5e-06,
+      "outputPrice": 3e-05,
+      "supportsTemperature": false
+    }
+  },
+  "anthropic": {
+    "claude-3-opus-20240229": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": false,
+      "supportsJson": true,
+      "inputPrice": 1.5e-05,
+      "outputPrice": 7.5e-05
+    },
+    "claude-3-sonnet-20240229": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": false,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05
+    },
+    "claude-3-haiku-20240307": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": false,
+      "supportsJson": true,
+      "inputPrice": 2.5e-07,
+      "outputPrice": 1.25e-06
+    },
+    "claude-3-5-sonnet-20240620": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05
+    },
+    "claude-3-5-sonnet-20241022": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05
+    },
+    "claude-3-5-haiku-20241022": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1e-06,
+      "outputPrice": 5e-06
+    },
+    "claude-3-7-sonnet-20250219": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05
+    },
+    "claude-opus-4-20250514": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.5e-05,
+      "outputPrice": 7.5e-05
+    },
+    "claude-opus-4-1-20250805": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.5e-05,
+      "outputPrice": 7.5e-05
+    },
+    "claude-sonnet-4-20250514": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05
+    },
+    "claude-sonnet-4-5-20250929": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05
+    },
+    "claude-haiku-4-5-20251001": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1e-06,
+      "outputPrice": 5e-06
+    },
+    "claude-opus-4-5-20251124": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5e-06,
+      "outputPrice": 2.5e-05
+    },
+    "claude-opus-4-6-20250610": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5e-06,
+      "outputPrice": 2.5e-05
+    },
+    "claude-sonnet-4-6-20250514": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05
+    },
+    "claude-3-opus": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": false,
+      "supportsJson": true,
+      "inputPrice": 1.5e-05,
+      "outputPrice": 7.5e-05
+    },
+    "claude-3-sonnet": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": false,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05
+    },
+    "claude-3-haiku": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": false,
+      "supportsJson": true,
+      "inputPrice": 2.5e-07,
+      "outputPrice": 1.25e-06
+    },
+    "claude-3-5-sonnet": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05
+    },
+    "claude-3-5-haiku": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1e-06,
+      "outputPrice": 5e-06
+    },
+    "claude-opus-4": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.5e-05,
+      "outputPrice": 7.5e-05
+    },
+    "claude-sonnet-4": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05
+    },
+    "claude-sonnet-4-5": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05
+    },
+    "claude-haiku-4-5": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1e-06,
+      "outputPrice": 5e-06
+    },
+    "claude-opus-4-5": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5e-06,
+      "outputPrice": 2.5e-05
+    },
+    "claude-opus-4-7": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5e-06,
+      "outputPrice": 2.5e-05,
+      "supportsTemperature": false
+    },
+    "claude-opus-4-8": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5e-06,
+      "outputPrice": 2.5e-05,
+      "supportsTemperature": false
+    },
+    "claude-opus-5": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5e-06,
+      "outputPrice": 2.5e-05,
+      "supportsTemperature": false
+    },
+    "claude-sonnet-5": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05,
+      "supportsTemperature": false
+    },
+    "claude-fable-5": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1e-05,
+      "outputPrice": 5e-05,
+      "supportsTemperature": false
+    },
+    "claude-opus-4-6": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5e-06,
+      "outputPrice": 2.5e-05
+    },
+    "claude-sonnet-4-6": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05
+    },
+    "claude-3-7-sonnet-latest": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05
+    },
+    "claude-3-5-sonnet-latest": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05
+    },
+    "claude-3-5-haiku-latest": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1e-06,
+      "outputPrice": 5e-06
+    },
+    "claude-3-opus-latest": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": false,
+      "supportsJson": true,
+      "inputPrice": 1.5e-05,
+      "outputPrice": 7.5e-05
+    }
+  },
+  "gemini": {
+    "gemini-1.5-pro": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.25e-06,
+      "outputPrice": 5e-06
+    },
+    "gemini-1.5-pro-002": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.25e-06,
+      "outputPrice": 5e-06
+    },
+    "gemini-1.5-flash": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 7.5e-08,
+      "outputPrice": 3e-07
+    },
+    "gemini-1.5-flash-002": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 7.5e-08,
+      "outputPrice": 3e-07
+    },
+    "gemini-1.5-flash-8b": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3.75e-08,
+      "outputPrice": 1.5e-07
+    },
+    "gemini-2.0-flash": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.5e-07,
+      "outputPrice": 6e-07
+    },
+    "gemini-2.0-flash-lite": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 7.5e-08,
+      "outputPrice": 3e-07
+    },
+    "gemini-2.5-pro": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.25e-06,
+      "outputPrice": 1e-05
+    },
+    "gemini-2.5-flash": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.5e-07,
+      "outputPrice": 6e-07
+    },
+    "gemini-2.5-flash-lite": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 7.5e-08,
+      "outputPrice": 3e-07
+    },
+    "gemini-3-pro": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.25e-06,
+      "outputPrice": 1e-05
+    },
+    "gemini-3-pro-preview": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.25e-06,
+      "outputPrice": 1e-05
+    },
+    "gemini-3.1-pro-preview": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 2e-06,
+      "outputPrice": 1.2e-05
+    },
+    "gemini-3.6-flash": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.5e-06,
+      "outputPrice": 7.5e-06
+    },
+    "gemini-3.5-flash": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.5e-06,
+      "outputPrice": 9e-06
+    },
+    "gemini-3.5-flash-lite": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-07,
+      "outputPrice": 2.5e-06
+    },
+    "gemini-3-flash-preview": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5e-07,
+      "outputPrice": 3e-06
+    },
+    "gemini-3.1-flash-lite": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 2.5e-07,
+      "outputPrice": 1.5e-06
+    },
+    "gemini-pro": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5e-07,
+      "outputPrice": 1.5e-06
+    },
+    "gemini-pro-vision": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5e-07,
+      "outputPrice": 1.5e-06
+    }
+  },
+  "grok": {
+    "grok-3": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "grok-4": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05
+    },
+    "grok-4-fast": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 2.0000000000000002e-07,
+      "outputPrice": 5e-07
+    },
+    "grok-4-heavy": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05
+    },
+    "grok-4.1": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 3e-06,
+      "outputPrice": 1.5e-05
+    },
+    "grok-beta": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5e-06,
+      "outputPrice": 1.5e-05
+    },
+    "grok-2": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 2e-06,
+      "outputPrice": 1e-05
+    },
+    "grok-2-mini": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5e-07,
+      "outputPrice": 2e-06
+    },
+    "grok-code-fast-1": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 2.0000000000000002e-07,
+      "outputPrice": 1.5e-06
+    }
+  },
+  "kimi": {
+    "kimi-k2": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5.8e-07,
+      "outputPrice": 2.29e-06
+    },
+    "kimi-k2-instruct": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5.8e-07,
+      "outputPrice": 2.29e-06
+    },
+    "kimi-k2-base": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "moonshot-v1-8k": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.5e-07,
+      "outputPrice": 2.5e-06
+    },
+    "moonshot-v1-32k": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.5e-07,
+      "outputPrice": 2.5e-06
+    },
+    "moonshot-v1-128k": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.5e-07,
+      "outputPrice": 2.5e-06
+    }
+  },
+  "deepseek": {
+    "deepseek-chat": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 2.8e-08,
+      "outputPrice": 4.2e-07
+    },
+    "deepseek-v3.2": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 2.8e-08,
+      "outputPrice": 4.2e-07
+    },
+    "deepseek-v3.2-exp": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 2.8e-08,
+      "outputPrice": 4.2e-07
+    },
+    "deepseek-v3.1": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.4e-07,
+      "outputPrice": 2.8e-07
+    },
+    "deepseek-v3": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.4e-07,
+      "outputPrice": 2.8e-07
+    },
+    "deepseek-reasoner": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.4e-07,
+      "outputPrice": 2.1899999999999998e-06
+    },
+    "deepseek-r1": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.4e-07,
+      "outputPrice": 2.1899999999999998e-06
+    },
+    "deepseek-r1-lite": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 5.5e-08,
+      "outputPrice": 2.8e-07
+    },
+    "deepseek-v2.5": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.4e-07,
+      "outputPrice": 2.8e-07
+    },
+    "deepseek-coder": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.4e-07,
+      "outputPrice": 2.8e-07
+    },
+    "deepseek-coder-6.7b": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 2.0000000000000002e-07,
+      "outputPrice": 4.0000000000000003e-07
+    },
+    "deepseek-coder-33b": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1e-06,
+      "outputPrice": 2e-06
+    }
+  },
+  "ollama": {
+    "qwen3": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "qwen3:8b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "qwen3:14b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "qwen3:30b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "qwen3-vl": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "qwen3-coder": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "qwen2.5": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "qwen2.5:7b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "qwen2.5:14b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "qwen2.5:32b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "qwen2.5:72b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "qwen2.5-coder": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "deepseek-r1": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "deepseek-r1:7b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "deepseek-r1:14b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "deepseek-r1:32b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "deepseek-r1:70b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "deepseek-r1:671b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "deepseek-v3.1": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "deepseek-v3": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "deepseek-coder": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "deepseek-coder:6.7b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "deepseek-coder:33b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "deepseek-coder-v2": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "gemma3": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "gemma3:1b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "gemma3:4b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "gemma3:12b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "gemma3:27b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "gemma2": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "gemma2:2b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "gemma2:9b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "gemma2:27b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama3.3": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama3.3:70b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama3.2": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama3.2:1b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama3.2:3b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama3.2-vision": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama3.2-vision:11b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama3.2-vision:90b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama3.1": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama3.1:8b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama3.1:70b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama3.1:405b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama3": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama3:8b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama3:70b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama2": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama2:7b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama2:13b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama2:70b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llama4": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "mistral": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "mistral:7b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "mistral-nemo": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "mistral-small": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "mistral-large": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "mixtral": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "mixtral:8x7b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "mixtral:8x22b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "ministral-3": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "codestral": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "phi4": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "phi4:14b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "phi3": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "phi3:3.8b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "phi3:14b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llava": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llava:7b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llava:13b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "llava:34b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "minicpm-v": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "moondream": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "codellama": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "codellama:7b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "codellama:13b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "codellama:34b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "codellama:70b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "starcoder2": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "starcoder2:3b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "starcoder2:7b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "starcoder2:15b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "codegemma": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "codegemma:2b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "codegemma:7b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "tinyllama": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "tinyllama:1.1b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "smollm2": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "smollm2:135m": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "smollm2:360m": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "smollm2:1.7b": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "granite4": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "granite3.3": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "granite3.1-moe": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "granite-code": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "nomic-embed-text": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": false,
+      "supportsJson": false
+    },
+    "mxbai-embed-large": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": false,
+      "supportsJson": false
+    },
+    "bge-m3": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": false,
+      "supportsJson": false
+    },
+    "bge-large": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": false,
+      "supportsJson": false
+    },
+    "all-minilm": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": false,
+      "supportsJson": false
+    },
+    "snowflake-arctic-embed": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": false,
+      "supportsJson": false
+    },
+    "dolphin3": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "dolphin-llama3": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "dolphin-mixtral": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "orca-mini": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "orca2": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "vicuna": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "nous-hermes2": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "command-r": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    },
+    "command-r-plus": {
+      "supportsLogProbs": true,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true
+    }
+  },
+  "bedrock": {
+    "anthropic.claude-3-opus-20240229-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "anthropic.claude-3-sonnet-20240229-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "anthropic.claude-opus-4-20250514-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "anthropic.claude-opus-4-1-20250805-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "anthropic.claude-sonnet-4-20250514-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "anthropic.claude-sonnet-4-5-20250929-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "anthropic.claude-haiku-4-5-20251001-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "amazon.titan-text-express-v1": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "amazon.titan-text-premier-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "amazon.nova-micro-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "amazon.nova-lite-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "amazon.nova-pro-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "amazon.nova-premier-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "meta.llama4-maverick-17b-instruct-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "meta.llama4-maverick-17b-instruct-128k-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "meta.llama4-scout-17b-instruct-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "meta.llama4-scout-17b-instruct-128k-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "mistral.mistral-large-2407-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "mistral.mistral-large-2411-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "mistral.pixtral-large-2411-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "mistral.pixtral-large-2502-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "mistral.pixtral-large-2511-v1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "openai.gpt-oss-20b-1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    },
+    "openai.gpt-oss-120b-1:0": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": false,
+      "supportsStructuredOutputs": true,
+      "supportsJson": false
+    }
+  },
+  "_defaults": {
+    "anthropic": "claude-opus-5",
+    "gemini": "gemini-3.6-flash",
+    "openai": "gpt-5.4",
+    "openrouter": "openai/gpt-5.4"
+  }
+}

@@ -1,0 +1,51 @@
+name: Model Registry Sync
+
+# Guards that the TypeScript model registry (`typescript/src/models/registry/models.json`)
+# stays in sync with its Python source of truth, `deepeval/models/llms/constants.py`
+# — both the per-model pricing/capability data and the default model each provider
+# falls back to. The check spans both packages, so it lives in its own workflow
+# rather than a language-specific test workflow.
+#
+# `deepeval/models/llms/*_model.py` is watched because one test asserts that no
+# provider module declares its own default, which is how the two SDKs drifted apart.
+
+on:
+  pull_request:
+    paths:
+      - 'deepeval/models/llms/*.py'
+      - 'deepeval/models/base_model.py'
+      - 'typescript/src/models/**'
+      - 'scripts/compile_model_registry.py'
+      - 'tests/test_models/test_model_registry.py'
+      - '.github/workflows/test_model_registry.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'deepeval/models/llms/*.py'
+      - 'deepeval/models/base_model.py'
+      - 'typescript/src/models/**'
+      - 'scripts/compile_model_registry.py'
+      - 'tests/test_models/test_model_registry.py'
+      - '.github/workflows/test_model_registry.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      # The test only uses the standard library + the compile script, which loads
+      # constants.py in isolation, so no project install is needed — just pytest.
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Check models.json is in sync with constants.py
+        run: pytest -vv -rA tests/test_models/test_model_registry.py

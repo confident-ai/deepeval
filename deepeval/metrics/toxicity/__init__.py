@@ -1,3 +1,3 @@
-from .toxicity import ToxicityMetric
+from .toxicity import ToxicityMetric, ToxicityTemplate
 
-__all__ = ["ToxicityMetric"]
+__all__ = ["ToxicityMetric", "ToxicityTemplate"]

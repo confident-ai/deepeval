@@ -1,11 +1,12 @@
 {
   "uuid": "377d3a07-f574-40a3-b039-8ff3cbc13696",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019d0510-15a3-7c63-b4fb-f159a9d172ec",
       "name": "parallel_stocks_chain",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "startTime": "2026-03-19T07:47:13.443Z",
       "endTime": "2026-03-19T07:47:17.601Z",
       "input": {
@@ -158,10 +159,11 @@
           }
         }
       ],
-      "integration": "LangChain"
+      "integration": "LangChain",
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019d0510-1d4f-7a13-a35e-f187b31bcc17",

@@ -2,6 +2,7 @@
 id: guides-rag-evaluation
 title: RAG Evaluation
 sidebar_label: RAG Evaluation
+languages: [python]
 ---
 
 
@@ -305,7 +306,7 @@ def test_rag(test_case: LLMTestCase):
     assert_test(test_case, metrics)
 ```
 
-Then, simply execute `deepeval test run` in the CLI:
+Then, simply execute `deepeval test run` in the CLI (or run the script directly for TypeScript):
 
 ```bash
 deepeval test run test_rag.py

@@ -1,12 +1,12 @@
 import { OpenAI } from "openai";
 import * as path from "path";
 
-import { Prompt } from "../../../src/prompt";
-import { setTracingContext } from "../../../src/tracing/trace-context";
-import { traceManager } from "../../../src/tracing/tracing";
-import { Environment } from "../../../src/tracing/utils";
-import { instrumentOpenAI } from "../../../src/openai";
-import { unpatchOpenAI } from "../../../src/openai/patch";
+import { Prompt } from "@/prompt";
+import { setTracingContext } from "@/tracing/trace-context";
+import { traceManager } from "@/tracing/tracing";
+import { Environment } from "@/tracing/utils";
+import { instrumentOpenAI } from "@/openai";
+import { unpatchOpenAI } from "@/openai/patch";
 
 import { generateTraceJson, assertTraceJson } from "../utils";
 

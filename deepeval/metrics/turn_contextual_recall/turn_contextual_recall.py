@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Union, Tuple
+from typing import Any, Dict, List, Optional, Union, Tuple, Type
 import asyncio
 import itertools
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
@@ -25,6 +25,7 @@ from deepeval.metrics.turn_contextual_recall.schema import (
     ContextualRecallScoreReason,
     InteractionContextualRecallScore,
 )
+from deepeval.templates import make_template_class
 
 
 def _contextual_recall_verdict_kwargs(
@@ -54,6 +55,9 @@ def _contextual_recall_verdict_kwargs(
     }
 
 
+TurnContextualRecallTemplate = make_template_class("TurnContextualRecallMetric")
+
+
 class TurnContextualRecallMetric(BaseConversationalMetric):
     _required_test_case_params: List[MultiTurnParams] = [
         MultiTurnParams.ROLE,
@@ -72,6 +76,9 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         verbose_mode: bool = False,
         window_size: int = 10,
         flaky: bool = False,
+        evaluation_template: Type[
+            TurnContextualRecallTemplate
+        ] = TurnContextualRecallTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -82,13 +89,13 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         self.verbose_mode = verbose_mode
         self.flaky = flaky
         self.window_size = window_size
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case,
@@ -114,7 +121,6 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -152,7 +158,6 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_conversational_test_case_params(
             test_case,

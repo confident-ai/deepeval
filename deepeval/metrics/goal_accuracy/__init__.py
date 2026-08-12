@@ -1,1 +1,3 @@
-from .goal_accuracy import GoalAccuracyMetric
+from .goal_accuracy import GoalAccuracyMetric, GoalAccuracyTemplate
+
+__all__ = ["GoalAccuracyMetric", "GoalAccuracyTemplate"]

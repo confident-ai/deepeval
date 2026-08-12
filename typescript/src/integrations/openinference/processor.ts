@@ -2,15 +2,23 @@ import { SpanProcessor, ReadableSpan } from "@opentelemetry/sdk-trace-base";
 import { Context, Span } from "@opentelemetry/api";
 import {
   SpanType,
-  getCurrentTrace,
+  getCurrentSpan,
+  setCurrentSpan,
   traceManager,
   BaseSpan,
   LlmSpan,
   ToolSpan,
   TraceSpanStatus,
-} from "../../tracing/tracing";
-import { OpenInferenceInstrumentationOptions } from "./index";
-import { ToolCall } from "../../test-case";
+} from "@/tracing/tracing";
+import { applyPendingToSpan, popPendingFor } from "@/tracing/pending-context";
+import {
+  ROUTE_TO_REST_ATTRIBUTE,
+  endOtelImplicitTrace,
+  resolveSpanRoute,
+  resolveTraceForOtelSpan,
+} from "@/tracing/otel-routing";
+import { OpenInferenceInstrumentationOptions } from "@/integrations/openinference/index";
+import { ToolCall } from "@/test-case";
 
 // ---------------------------------------------------------------------------
 // OI span kind -> internal SpanType mapping
@@ -214,10 +222,17 @@ function safeJsonParse(val: any): any {
 
 export class OpenInferenceSpanProcessor implements SpanProcessor {
   private options: OpenInferenceInstrumentationOptions;
+  private otlpEnabled: boolean;
   private oiSpanIds = new Set<string>();
+  /** Span to restore as "current" when a span ends, keyed by OTel span id. */
+  private previousSpans = new Map<string, BaseSpan | undefined>();
 
-  constructor(options?: OpenInferenceInstrumentationOptions) {
+  constructor(
+    options?: OpenInferenceInstrumentationOptions,
+    routing: { otlpEnabled?: boolean } = {},
+  ) {
     this.options = options || {};
+    this.otlpEnabled = routing.otlpEnabled ?? true;
   }
 
   forceFlush(): Promise<void> {
@@ -337,15 +352,25 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
       }
     }
 
-    // Test mode: register span with traceManager
-    if (this.options.isTestMode) {
-      const currentTrace = getCurrentTrace();
+    // Routing decision, stamped so `onEnd` and the export filter act on the same
+    // answer even if the async context has moved on by then.
+    const route = resolveSpanRoute({
+      isTestMode: this.options.isTestMode,
+      otlpEnabled: this.otlpEnabled,
+    });
+    if (route === "rest") {
+      span.setAttribute(ROUTE_TO_REST_ATTRIBUTE, true);
+
+      const parentId =
+        (span as any).parentSpanId || (span as any).parentSpanContext?.spanId;
+      const isOiRoot = !parentId || !this.oiSpanIds.has(parentId);
+
+      // A bare caller has no trace of their own; open one implicitly for the
+      // root so the spans have somewhere to live.
+      const currentTrace = resolveTraceForOtelSpan(isOiRoot);
       if (currentTrace) {
         const traceId = currentTrace.uuid;
         span.setAttribute("confident.internal.trace_uuid", traceId);
-
-        const parentId =
-          (span as any).parentSpanId || (span as any).parentSpanContext?.spanId;
 
         const commonParams = {
           uuid: spanId,
@@ -365,6 +390,7 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
         } else {
           deepEvalSpan = new BaseSpan(commonParams);
         }
+        applyPendingToSpan(deepEvalSpan, popPendingFor(spanType ?? undefined));
 
         traceManager.addSpan(deepEvalSpan);
         try {
@@ -373,7 +399,20 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
           deepEvalSpan.parentUuid = undefined;
           traceManager.addSpanToTrace(deepEvalSpan);
         }
+
+        this.previousSpans.set(spanId, getCurrentSpan());
+        setCurrentSpan(deepEvalSpan);
       }
+    }
+  }
+
+  /** Restore the span that was current before `spanId` started. */
+  private popSpanContext(spanId: string): void {
+    if (!this.previousSpans.has(spanId)) return;
+    const previous = this.previousSpans.get(spanId);
+    this.previousSpans.delete(spanId);
+    if (getCurrentSpan()?.uuid === spanId) {
+      setCurrentSpan(previous ?? null);
     }
   }
 
@@ -431,11 +470,13 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
       }
     }
 
-    // Test mode: update the span registered in onStart and finalise trace
-    if (this.options.isTestMode) {
+    // Update the span registered in onStart and finalise the trace, for spans the
+    // interceptor routed to REST.
+    if (attributes[ROUTE_TO_REST_ATTRIBUTE]) {
       this.updateAndEndSpan(span, attributes);
     }
 
+    this.popSpanContext(span.spanContext().spanId);
     this.oiSpanIds.delete(span.spanContext().spanId);
   }
 
@@ -463,13 +504,22 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
       deepEvalSpan.status = TraceSpanStatus.ERRORED;
     }
 
-    deepEvalSpan.input = safeJsonParse(attributes["confident.span.input"]);
-    deepEvalSpan.output = safeJsonParse(attributes["confident.span.output"]);
     deepEvalSpan.error = attributes["error"]
       ? String(attributes["error"])
       : undefined;
-    deepEvalSpan.metricCollection =
-      attributes["confident.span.metric_collection"];
+    // Assign only when the attribute carries something: these fields can also
+    // have been set from user code (`next*Span`, `updateCurrentSpan`), and an
+    // absent attribute must not erase that.
+    if (attributes["confident.span.input"] !== undefined) {
+      deepEvalSpan.input = safeJsonParse(attributes["confident.span.input"]);
+    }
+    if (attributes["confident.span.output"] !== undefined) {
+      deepEvalSpan.output = safeJsonParse(attributes["confident.span.output"]);
+    }
+    if (attributes["confident.span.metric_collection"] !== undefined) {
+      deepEvalSpan.metricCollection =
+        attributes["confident.span.metric_collection"];
+    }
 
     if (attributes["confident.span.metadata"]) {
       try {
@@ -534,6 +584,12 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
       if (!parentId) {
         traceManager.endTrace(traceId);
       }
+    }
+
+    const rootParentId =
+      (span as any).parentSpanId || (span as any).parentSpanContext?.spanId;
+    if (!rootParentId) {
+      endOtelImplicitTrace(traceId);
     }
   }
 }

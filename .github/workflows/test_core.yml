@@ -1,10 +1,12 @@
-name: Core Tests
+name: Py Core Tests
 
 on:
-  push:
+  pull_request:
     paths-ignore:
       - 'typescript/**'
-  pull_request:
+  push:
+    branches:
+      - main
     paths-ignore:
       - 'typescript/**'
   workflow_dispatch:

@@ -1,12 +1,13 @@
 {
   "name": "langchain-simple-test",
   "uuid": "01a731b6-7a78-44ef-813c-696286fa2d9c",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019ed9d8-931e-70e9-8e90-f6974f199652",
       "name": "simple_chain",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "traceUuid": "01a731b6-7a78-44ef-813c-696286fa2d9c",
       "startTime": "2026-06-18T08:28:29.855Z",
       "endTime": "2026-06-18T08:28:31.938Z",
@@ -81,10 +82,11 @@
             }
           }
         ]
-      }
+      },
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019ed9d8-9323-734c-aec2-43243240f84b",

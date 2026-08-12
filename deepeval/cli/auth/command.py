@@ -37,7 +37,12 @@ from deepeval.cli.utils import (
 )
 from deepeval.config.settings import dotenv_search_paths, get_settings
 from deepeval.config.utils import read_dotenv_file
-from deepeval.telemetry import capture_login_event
+from deepeval.telemetry import (
+    LoginMethod,
+    LoginOutcome,
+    LoginSpan,
+    capture_login_event,
+)
 from deepeval.test_run.test_run import LATEST_TEST_RUN_FILE_PATH
 from deepeval.utils import delete_file_if_exists
 
@@ -300,8 +305,9 @@ def _complete_browser_cli_login() -> Optional[str]:
         return None
 
 
-def _resolve_login_key(save: Optional[str]) -> str:
+def _resolve_login_key(save: Optional[str], span: LoginSpan) -> str:
     if not USE_BROWSER_PAIRING_LOGIN:
+        span.set_method(LoginMethod.PASTE)
         return _open_platform_and_prompt_api_key()
 
     method = prompt_select(
@@ -313,13 +319,17 @@ def _resolve_login_key(save: Optional[str]) -> str:
     )
 
     if method == "paste":
+        span.set_method(LoginMethod.PASTE)
         _print_api_key_location()
         return _prompt_paste_api_key()
 
     _prompt_and_persist_region(save)
     key = _complete_browser_cli_login()
     if key:
+        span.set_method(LoginMethod.BROWSER)
         return key
+    # Browser pairing did not complete; the user falls back to pasting.
+    span.set_method(LoginMethod.PASTE)
     print("\nNo problem — paste a project API key from the platform instead.")
     _print_api_key_location()
     return _prompt_paste_api_key()
@@ -341,17 +351,17 @@ def login_command(
     api_key = coerce_blank_to_none(api_key)
 
     with capture_login_event() as span:
-        completed = False
         try:
             settings = get_settings()
             save = save or settings.DEEPEVAL_DEFAULT_SAVE or "dotenv:.env.local"
 
             # Resolve the key from the CLI flag or the active interactive flow.
             if api_key is not None:
+                span.set_method(LoginMethod.API_KEY_FLAG)
                 key = api_key
                 _warn_for_pasted_api_key(key)
             else:
-                key = _resolve_login_key(save)
+                key = _resolve_login_key(save, span)
 
             with settings.edit(save=save) as edit_ctx:
                 settings.CONFIDENT_API_KEY = key
@@ -370,7 +380,7 @@ def login_command(
                         f"Saved environment variables to {path} (ensure it's git-ignored)."
                     )
 
-            completed = True
+            span.set_outcome(LoginOutcome.COMPLETED)
             print("\n[bold]Welcome to[/bold]")
             render_confident_banner()
             print(
@@ -387,11 +397,8 @@ def login_command(
                 f"[bold][link={quickstart_url}]{quickstart_url}[/link][/bold]"
             )
         except Exception as e:
-            completed = False
+            span.set_outcome(LoginOutcome.FAILED)
             print(f"Login failed: {e}")
-        finally:
-            if getattr(span, "set_attribute", None):
-                span.set_attribute("completed", completed)
 
 
 def logout_command(

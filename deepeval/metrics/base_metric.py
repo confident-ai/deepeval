@@ -13,6 +13,7 @@ from deepeval.templates.resolver import (
     MetricTemplateMethod,
     resolve_template,
 )
+from deepeval.templates.template_class import filter_template_kwargs
 
 if TYPE_CHECKING:
     from deepeval.models import DeepEvalBaseLLM
@@ -31,13 +32,22 @@ class PromptMixin:
         strict: bool = True,
         **kwargs,
     ) -> str:
+        context = {**kwargs, "multimodal": multimodal, "strict": strict}
+
+        # An explicit `template_class` borrows another class's templates, so an
+        # `evaluation_template` set for this metric must not hijack it.
+        if template_class is None:
+            render = getattr(
+                getattr(self, "evaluation_template", None), method, None
+            )
+            if render is not None:
+                return render(**filter_template_kwargs(render, context))
+
         return resolve_template(
             "metrics",
             template_class or self.__class__.__name__,
             method,
-            multimodal=multimodal,
-            strict=strict,
-            **kwargs,
+            **context,
         )
 
 

@@ -1,7 +1,6 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams, ToolCall } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams, ToolCall } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
@@ -9,22 +8,28 @@ import {
   constructVerboseLogs,
   prettifyList,
   printToolsCalled,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   VerdictsSchema,
   ArgumentCorrectnessScoreReasonSchema,
   type ArgumentCorrectnessVerdict,
-} from "./schema";
+} from "@/metrics/argument-correctness/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "ArgumentCorrectnessMetric";
 
+export type ArgumentCorrectnessTemplateOverride =
+  MetricTemplateOverride<"ArgumentCorrectnessMetric">;
+
 export interface ArgumentCorrectnessMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: ArgumentCorrectnessTemplateOverride;
 }
 
 /**
@@ -37,12 +42,16 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
 
   constructor(options: ArgumentCorrectnessMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.TOOLS_CALLED,
@@ -66,11 +75,14 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
         this.score = 1;
         this.reason = "No tool calls provided";
       } else {
-        this.verdicts = await this.generateVerdicts(testCase.input, toolsCalled);
+        this.verdicts = await this.generateVerdicts(
+          testCase.input,
+          toolsCalled,
+        );
         this.score = this.calculateScore();
         this.reason = await this.generateReason(testCase.input);
       }
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Verdicts:\n${prettifyList(this.verdicts)}`,
@@ -86,7 +98,7 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
     input: string,
     toolsCalled: ToolCall[],
   ): Promise<ArgumentCorrectnessVerdict[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+    const prompt = this.getPrompt("generate_verdicts", {
       input,
       stringified_tools_called: printToolsCalled(toolsCalled),
     });
@@ -99,7 +111,7 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
     const incorrectToolCallsReasons = this.verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "no")
       .map((v) => v.reason);
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       incorrect_tool_calls_reasons: incorrectToolCallsReasons,
       input,
       score: (this.score ?? 0).toFixed(2),
@@ -119,13 +131,7 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
       (v) => v.verdict.trim().toLowerCase() !== "no",
     ).length;
     const score = correctCount / total;
-    return this.strictMode && score < this.threshold ? 0 : score;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
+    return this.applyStrictMode(score);
   }
 
   get name(): string {

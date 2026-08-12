@@ -41,7 +41,6 @@ from deepeval.tracing.api import (
     TraceSpanApiStatus,
     AttachmentApi,
 )
-from deepeval.telemetry import capture_send_trace
 from deepeval.tracing.patchers import (
     patch_anthropic_client,
     patch_openai_client,
@@ -86,8 +85,6 @@ from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden
     from anthropic import Anthropic
-
-EVAL_DUMMY_SPAN_NAME = "evals_iterator"
 
 
 class _ObservedAsyncGenIter:
@@ -418,16 +415,6 @@ class TraceManager:
             # This is a child span, find its parent and add it to the parent's children
             parent_span = self.get_span_by_uuid(span.parent_uuid)
             if parent_span:
-
-                if (
-                    parent_span.name == EVAL_DUMMY_SPAN_NAME
-                ):  # ignored span for evaluation
-                    span.parent_uuid = None
-                    trace.root_spans.remove(parent_span)
-                    trace.root_spans.append(span)
-                    self._reparent_orphan_roots(trace, span)
-                    return
-
                 parent_span.children.append(span)
             else:
                 trace.root_spans.append(span)
@@ -707,43 +694,42 @@ class TraceManager:
             message=f"Flushing {len(remaining_traces)} remaining trace(s)",
         )
         for trace_api in remaining_traces:
-            with capture_send_trace():
+            try:
+                normalize_trace_api_span_providers(trace_api)
                 try:
-                    normalize_trace_api_span_providers(trace_api)
-                    try:
-                        body = trace_api.model_dump(
-                            by_alias=True,
-                            exclude_none=True,
-                        )
-                    except AttributeError:
-                        # Pydantic version below 2.0
-                        body = trace_api.dict(by_alias=True, exclude_none=True)
+                    body = trace_api.model_dump(
+                        by_alias=True,
+                        exclude_none=True,
+                    )
+                except AttributeError:
+                    # Pydantic version below 2.0
+                    body = trace_api.dict(by_alias=True, exclude_none=True)
 
-                    body = make_json_serializable(body)
-                    if trace_api.confident_api_key:
-                        api = Api(api_key=trace_api.confident_api_key)
-                    else:
-                        api = Api(api_key=self.confident_api_key)
+                body = make_json_serializable(body)
+                if trace_api.confident_api_key:
+                    api = Api(api_key=trace_api.confident_api_key)
+                else:
+                    api = Api(api_key=self.confident_api_key)
 
-                    _, link = api.send_request(
-                        method=HttpMethods.POST,
-                        endpoint=Endpoints.TRACES_ENDPOINT,
-                        body=body,
-                    )
-                    qs = self._trace_queue.qsize()
-                    self._print_trace_status(
-                        trace_worker_status=TraceWorkerStatus.SUCCESS,
-                        message=f"Successfully posted trace ({qs} traces remaining in queue, 1 in flight)",
-                        description=link,
-                        environment=self.environment,
-                    )
-                except Exception as e:
-                    qs = self._trace_queue.qsize()
-                    self._print_trace_status(
-                        trace_worker_status=TraceWorkerStatus.FAILURE,
-                        message="Error flushing remaining trace(s)",
-                        description=str(e),
-                    )
+                _, link = api.send_request(
+                    method=HttpMethods.POST,
+                    endpoint=Endpoints.TRACES_ENDPOINT,
+                    body=body,
+                )
+                qs = self._trace_queue.qsize()
+                self._print_trace_status(
+                    trace_worker_status=TraceWorkerStatus.SUCCESS,
+                    message=f"Successfully posted trace ({qs} traces remaining in queue, 1 in flight)",
+                    description=link,
+                    environment=self.environment,
+                )
+            except Exception as e:
+                qs = self._trace_queue.qsize()
+                self._print_trace_status(
+                    trace_worker_status=TraceWorkerStatus.FAILURE,
+                    message="Error flushing remaining trace(s)",
+                    description=str(e),
+                )
 
     def create_nested_spans_dict(self, span: BaseSpan) -> Dict[str, Any]:
         api_span = self._convert_span_to_api_span(span)

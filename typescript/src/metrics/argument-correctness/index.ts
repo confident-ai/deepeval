@@ -1,5 +1,6 @@
 export {
   ArgumentCorrectnessMetric,
   type ArgumentCorrectnessMetricOptions,
-} from "./argument-correctness";
-export * from "./schema";
+  type ArgumentCorrectnessTemplateOverride,
+} from "@/metrics/argument-correctness/argument-correctness";
+export * from "@/metrics/argument-correctness/schema";

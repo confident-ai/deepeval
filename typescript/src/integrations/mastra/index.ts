@@ -1,2 +1,2 @@
-export { DeepEvalExporter } from "./exporter";
-export type { DeepEvalExporterConfig } from "./exporter";
+export { DeepEvalExporter } from "@/integrations/mastra/exporter";
+export type { DeepEvalExporterConfig } from "@/integrations/mastra/exporter";

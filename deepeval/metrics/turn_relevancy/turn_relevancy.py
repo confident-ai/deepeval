@@ -1,6 +1,6 @@
 import asyncio
 import itertools
-from typing import Optional, Union, Dict, List
+from typing import Optional, Union, Dict, List, Type
 
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.utils import (
@@ -22,6 +22,10 @@ from deepeval.metrics.turn_relevancy.schema import (
     TurnRelevancyVerdict,
     TurnRelevancyScoreReason,
 )
+from deepeval.templates import make_template_class
+
+
+TurnRelevancyTemplate = make_template_class("TurnRelevancyMetric")
 
 
 class TurnRelevancyMetric(BaseConversationalMetric):
@@ -38,6 +42,9 @@ class TurnRelevancyMetric(BaseConversationalMetric):
         window_size: int = 10,
         template_class: Optional[str] = None,
         flaky: bool = False,
+        evaluation_template: Type[
+            TurnRelevancyTemplate
+        ] = TurnRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -49,13 +56,13 @@ class TurnRelevancyMetric(BaseConversationalMetric):
         self.flaky = flaky
         self.window_size = window_size
         self.template_class = template_class
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case,
@@ -79,7 +86,6 @@ class TurnRelevancyMetric(BaseConversationalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -113,7 +119,6 @@ class TurnRelevancyMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_conversational_test_case_params(
             test_case,

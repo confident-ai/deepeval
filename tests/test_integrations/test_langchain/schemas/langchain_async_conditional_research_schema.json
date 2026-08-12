@@ -1,11 +1,12 @@
 {
   "uuid": "371828ce-a7f2-4ccd-9751-86487c8edc5e",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019d050e-62b2-7493-97ad-30a106b89403",
       "name": "research_chain",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "startTime": "2026-03-19T07:45:22.099Z",
       "endTime": "2026-03-19T07:45:25.266Z",
       "input": {
@@ -158,10 +159,11 @@
           }
         }
       ],
-      "integration": "LangChain"
+      "integration": "LangChain",
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019d050e-69be-7b13-9459-a05270d5de61",

@@ -8,7 +8,6 @@ import typer
 from typing_extensions import Annotated
 
 from deepeval.config.settings import get_settings
-from deepeval.telemetry import capture_evaluation_run
 from deepeval.test_run import (
     TEMP_FILE_PATH,
     global_test_run_manager,
@@ -180,8 +179,9 @@ def run(
         pytest_args.extend(ctx.args)
 
     start_time = time.perf_counter()
-    with capture_evaluation_run("deepeval test run"):
-        pytest_retcode = pytest.main(pytest_args)
+    # Telemetry for the run is opened by the pytest plugin, in whichever
+    # process actually executes the tests. Under `-n` that is not this one.
+    pytest_retcode = pytest.main(pytest_args)
     end_time = time.perf_counter()
     run_duration = end_time - start_time
     global_test_run_manager.wrap_up_test_run(run_duration, True, display)

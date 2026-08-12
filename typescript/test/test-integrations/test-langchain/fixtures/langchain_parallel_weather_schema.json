@@ -1,12 +1,13 @@
 {
   "name": "langchain-parallel-test",
   "uuid": "e163898a-d94e-4164-b41b-8f33fb8df63e",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019ed9d8-c67f-767d-967d-e3439c8dae5d",
       "name": "parallel_weather_chain",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "traceUuid": "e163898a-d94e-4164-b41b-8f33fb8df63e",
       "startTime": "2026-06-18T08:28:43.007Z",
       "endTime": "2026-06-18T08:28:45.885Z",
@@ -156,7 +157,7 @@
             ],
             "kwargs": {
               "id": "chatcmpl-Ds2P6yIkKiwcNuXTdnmwLzQL5Rl5d",
-              "content": "The current weather is as follows:\n\n- **Tokyo**: Sunny, 72°F\n- **New York**: Cloudy, 58°F",
+              "content": "The current weather is as follows:\n\n- **Tokyo**: Sunny, 72\u00b0F\n- **New York**: Cloudy, 58\u00b0F",
               "additional_kwargs": {},
               "response_metadata": {
                 "tokenUsage": {
@@ -203,10 +204,11 @@
             }
           }
         ]
-      }
+      },
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019ed9d8-c681-7698-9673-6e419d033ebf",
@@ -278,7 +280,7 @@
       ],
       "output": {
         "role": "AI",
-        "content": "The current weather is as follows:\n\n- **Tokyo**: Sunny, 72°F\n- **New York**: Cloudy, 58°F",
+        "content": "The current weather is as follows:\n\n- **Tokyo**: Sunny, 72\u00b0F\n- **New York**: Cloudy, 58\u00b0F",
         "toolCalls": []
       },
       "model": "gpt-4o-mini-2024-07-18",
@@ -510,7 +512,7 @@
         ],
         "kwargs": {
           "id": "chatcmpl-Ds2P6yIkKiwcNuXTdnmwLzQL5Rl5d",
-          "content": "The current weather is as follows:\n\n- **Tokyo**: Sunny, 72°F\n- **New York**: Cloudy, 58°F",
+          "content": "The current weather is as follows:\n\n- **Tokyo**: Sunny, 72\u00b0F\n- **New York**: Cloudy, 58\u00b0F",
           "additional_kwargs": {},
           "response_metadata": {
             "tokenUsage": {

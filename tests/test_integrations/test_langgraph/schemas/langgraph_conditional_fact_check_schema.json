@@ -2,151 +2,6 @@
   "uuid": "554b955e-d9f5-445e-b921-5c0d75d4af52",
   "baseSpans": [
     {
-      "uuid": "019d0517-b66a-7e23-9509-243bbd9f3797",
-      "name": "LangGraph",
-      "status": "SUCCESS",
-      "type": "base",
-      "startTime": "2026-03-19T07:55:33.354Z",
-      "endTime": "2026-03-19T07:55:37.871Z",
-      "input": {
-        "messages": [
-          {
-            "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "69e8032b-f964-4a2d-be47-6d9372194437"
-          }
-        ]
-      },
-      "output": {
-        "messages": [
-          {
-            "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "69e8032b-f964-4a2d-be47-6d9372194437"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 27,
-                "prompt_tokens": 219,
-                "total_tokens": 246,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-b66b-7491-b057-292d7134c72d-0",
-            "tool_calls": [
-              {
-                "name": "fact_check",
-                "args": {
-                  "claim": "The earth is round."
-                },
-                "id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 219,
-              "output_tokens": 27,
-              "total_tokens": 246,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          },
-          {
-            "content": "Fact check: UNVERIFIED - Unable to confirm this claim.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "fact_check",
-            "id": "ae34b5c9-3fd2-475f-bec7-41ae52c2370c",
-            "tool_call_id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
-            "status": "success"
-          },
-          {
-            "content": "Verdict: UNVERIFIED — the fact-check tool was unable to confirm the claim \"The earth is round.\"",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 224,
-                "prompt_tokens": 264,
-                "total_tokens": 488,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 192,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2W75zlffSvMZ1UZIOU6Fxlvb2k2",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-bbd1-7160-bb03-0f9a8048156b-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 264,
-              "output_tokens": 224,
-              "total_tokens": 488,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 192
-              }
-            }
-          }
-        ],
-        "intent": "fact_check"
-      },
-      "integration": "LangChain"
-    },
-    {
       "uuid": "019d0517-bbd0-7690-a238-1813f4096258",
       "name": "fact_check",
       "status": "SUCCESS",
@@ -235,7 +90,7 @@
       "output": {
         "messages": [
           {
-            "content": "Verdict: UNVERIFIED — the fact-check tool was unable to confirm the claim \"The earth is round.\"",
+            "content": "Verdict: UNVERIFIED \u2014 the fact-check tool was unable to confirm the claim \"The earth is round.\"",
             "additional_kwargs": {
               "refusal": null
             },
@@ -369,7 +224,7 @@
             "status": "success"
           },
           {
-            "content": "Verdict: UNVERIFIED — the fact-check tool was unable to confirm the claim \"The earth is round.\"",
+            "content": "Verdict: UNVERIFIED \u2014 the fact-check tool was unable to confirm the claim \"The earth is round.\"",
             "additional_kwargs": {
               "refusal": null
             },
@@ -839,7 +694,155 @@
       "integration": "LangChain"
     }
   ],
-  "agentSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "019d0517-b66a-7e23-9509-243bbd9f3797",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-19T07:55:33.354Z",
+      "endTime": "2026-03-19T07:55:37.871Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "69e8032b-f964-4a2d-be47-6d9372194437"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "69e8032b-f964-4a2d-be47-6d9372194437"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 27,
+                "prompt_tokens": 219,
+                "total_tokens": 246,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5.4-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0517-b66b-7491-b057-292d7134c72d-0",
+            "tool_calls": [
+              {
+                "name": "fact_check",
+                "args": {
+                  "claim": "The earth is round."
+                },
+                "id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 219,
+              "output_tokens": 27,
+              "total_tokens": 246,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Fact check: UNVERIFIED - Unable to confirm this claim.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "fact_check",
+            "id": "ae34b5c9-3fd2-475f-bec7-41ae52c2370c",
+            "tool_call_id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
+            "status": "success"
+          },
+          {
+            "content": "Verdict: UNVERIFIED \u2014 the fact-check tool was unable to confirm the claim \"The earth is round.\"",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 224,
+                "prompt_tokens": 264,
+                "total_tokens": 488,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 192,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5.4-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-DL2W75zlffSvMZ1UZIOU6Fxlvb2k2",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0517-bbd1-7160-bb03-0f9a8048156b-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 264,
+              "output_tokens": 224,
+              "total_tokens": 488,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 192
+              }
+            }
+          }
+        ],
+        "intent": "fact_check"
+      },
+      "integration": "LangChain",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
   "llmSpans": [
     {
       "uuid": "019d0517-bbd1-7160-bb03-0f9a8048156b",
@@ -881,7 +884,7 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Verdict: UNVERIFIED — the fact-check tool was unable to confirm the claim \"The earth is round.\"",
+        "content": "Verdict: UNVERIFIED \u2014 the fact-check tool was unable to confirm the claim \"The earth is round.\"",
         "tool_calls": []
       },
       "model": "gpt-5.4-mini-2025-08-07",
@@ -1062,7 +1065,7 @@
         "status": "success"
       },
       {
-        "content": "Verdict: UNVERIFIED — the fact-check tool was unable to confirm the claim \"The earth is round.\"",
+        "content": "Verdict: UNVERIFIED \u2014 the fact-check tool was unable to confirm the claim \"The earth is round.\"",
         "additional_kwargs": {
           "refusal": null
         },

@@ -2,6 +2,7 @@
 id: metrics-topic-adherence
 title: Topic Adherence
 sidebar_label: Topic Adherence
+languages: [python, typescript]
 ---
 <MetricTagsDisplayer usesLLMs={true} multiTurn={true} agent={true} referenceless={true} />
 
@@ -19,10 +20,14 @@ You can learn more about how it is calculated [here](#how-is-it-calculated).
 
 The `TopicAdherenceMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluations of agents.
 
+<Switch>
+
+<Case id="python">
+
 ```python
-from deepeval import evaluate
-from deepeval.metrics import TopicAdherenceMetric
 from deepeval.test_case import Turn, ConversationalTestCase, ToolCall
+from deepeval.metrics import TopicAdherenceMetric
+from deepeval import evaluate
 
 convo_test_case = ConversationalTestCase(
     turns=[
@@ -39,20 +44,68 @@ metric = TopicAdherenceMetric(threshold=0.5)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { Turn, ConversationalTestCase, ToolCall } from "deepeval/test-case";
+import { TopicAdherenceMetric } from "deepeval/metrics";
+import { evaluate } from "deepeval";
+
+const convoTestCase = new ConversationalTestCase({
+  turns: [
+    new Turn({ role: "user", content: "..." }),
+    new Turn({ role: "assistant", content: "...", toolsCalled: [new ToolCall({ name: "..." })] }),
+  ],
+});
+const metric = new TopicAdherenceMetric({ relevantTopics: ["..."], threshold: 0.5 });
+
+// To run metric as a standalone
+// await metric.measure(convoTestCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([convoTestCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
+<Switch>
+
+<Case id="python">
+
 There is **ONE** mandatory and **SEVEN** optional parameters when creating a `TopicAdherenceMetric`:
 
-- `relevant_topics`: a list of strings that define what topics your LLM agent can answer. Any answers that don't adhere to this topic will penalise the score this metric.
-- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+</Case>
+
+<Case id="typescript">
+
+There is **ONE** mandatory and **SIX** optional parameters when creating a `TopicAdherenceMetric`:
+
+</Case>
+
+</Switch>
+
+- <Term py="relevant_topics" ts="relevantTopics"/>: a list of strings that define what topics your LLM agent can answer. Any answers that don't adhere to this topic will penalise the score this metric.
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
-- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 ### As a standalone
 
 You can also run the `TopicAdherenceMetric` on a single test case as a standalone, one-off execution.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 ...
@@ -60,6 +113,21 @@ You can also run the `TopicAdherenceMetric` on a single test case as a standalon
 metric.measure(convo_test_case)
 print(metric.score, metric.reason)
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+...
+
+await metric.measure(convoTestCase);
+console.log(metric.score, metric.reason);
+```
+
+</Case>
+
+</Switch>
 
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
@@ -90,7 +158,7 @@ The `TopicAdherenceMetric` converts turns into individual unit interactions and 
       question: "How do I stop my support bot from drifting off-topic?",
       answer: (
         <>
-          Define allowed topics in <code>relevant_topics</code> and run{" "}
+          Define allowed topics in <Term py="relevant_topics" ts="relevantTopics"/> and run{" "}
           <code>TopicAdherenceMetric</code>. Any turn answering a question
           outside those topics is penalized, pinpointing where the bot wandered
           off-script.
@@ -112,14 +180,14 @@ The `TopicAdherenceMetric` converts turns into individual unit interactions and 
       question: "Will my agent be penalized for refusing irrelevant questions?",
       answer: (
         <>
-          No — refusing a question outside <code>relevant_topics</code> is a
+          No — refusing a question outside <Term py="relevant_topics" ts="relevantTopics"/> is a
           true negative that <em>helps</em> the score. You're only penalized for
           answering off-topic questions or refusing on-topic ones.
         </>
       ),
     },
     {
-      question: "What should I put in `relevant_topics`?",
+      question: "What should I put in relevant topics?",
       answer: (
         <>
           A list of strings describing the subject areas your agent covers (for
