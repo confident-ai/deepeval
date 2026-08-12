@@ -117,8 +117,11 @@ export function createSection(config: SectionConfig) {
     return (
       <>
         <Banner id="docs-announcement" height="30px">
-          🔥 DeepEval 4.0 just got released.{" "}
-          <Link href="/blog/introducing-deepeval-4">Read the announcement</Link>.
+          🔥 DeepEval for TypeScript is now in beta.{" "}
+          <Link href="/blog/introducing-deepeval-typescript">
+            Read the announcement
+          </Link>
+          .
         </Banner>
         <LanguageScopedDocsLayout
           {...rest}
