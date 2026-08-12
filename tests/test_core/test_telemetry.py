@@ -59,6 +59,25 @@ class TestIdentity:
         stored = (tmp_path / "home" / telemetry.TELEMETRY_DATA_FILE).read_text()
         assert f"{TelemetryKey.ID.value}={unique_id}" in stored
 
+    def test_id_is_not_written_in_read_only_mode(
+        self, backend, tmp_path, monkeypatch
+    ):
+        monkeypatch.setenv("DEEPEVAL_FILE_SYSTEM", "READ_ONLY")
+
+        assert telemetry.get_unique_id()
+        assert not (tmp_path / "home" / telemetry.TELEMETRY_DATA_FILE).exists()
+
+    def test_project_store_is_not_created_in_read_only_mode(
+        self, backend, tmp_path, monkeypatch
+    ):
+        project_store = tmp_path / "project-store"
+        monkeypatch.setenv("DEEPEVAL_FILE_SYSTEM", "READ_ONLY")
+        monkeypatch.setattr(telemetry, "HIDDEN_DIR", str(project_store))
+
+        telemetry._migrate_project_files()
+
+        assert not project_store.exists()
+
     def test_id_survives_a_change_of_working_directory(
         self, backend, tmp_path, monkeypatch
     ):
