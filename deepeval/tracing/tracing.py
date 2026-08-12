@@ -180,16 +180,9 @@ class TraceManager:
         self._trace_queue = queue.Queue()
         self._worker_thread = None
         self._min_interval = 0.2  # Minimum time between API calls (seconds)
-        self._flush_poll_interval = 0.05  # How often flush() re-checks
+        self._flush_poll_interval = 0.05
         self._last_post_time = 0
         self._in_flight_tasks: Set[asyncio.Task[Any]] = set()
-        # Counts traces from the moment they are enqueued until their send
-        # task finishes. Neither the queue size nor the in-flight task set is
-        # enough on its own: the worker dequeues a trace, awaits the
-        # rate-limit sleep, and only then registers a task, so there is a
-        # window where a trace belongs to neither. Callers of `flush` would
-        # otherwise see an idle manager and return while a trace is still
-        # waiting to be posted.
         self._outstanding_traces = 0
         self._outstanding_lock = threading.Lock()
         self.task_bindings: "weakref.WeakKeyDictionary[asyncio.Task, dict]" = (
@@ -226,7 +219,15 @@ class TraceManager:
 
     @property
     def outstanding_traces(self) -> int:
-        """Number of traces that are queued, being handed off, or in flight."""
+        """Number of traces that are queued, being handed off, or in flight.
+
+        Counted from the moment a trace is enqueued until its send task
+        finishes. Neither the queue size nor the in-flight task set is enough
+        on its own: the worker dequeues a trace, awaits the rate-limit sleep,
+        and only then registers a task, so there is a window where a trace
+        belongs to neither and the manager looks idle while a trace is still
+        waiting to be posted.
+        """
         with self._outstanding_lock:
             return self._outstanding_traces
 
@@ -694,8 +695,6 @@ class TraceManager:
                     self._in_flight_tasks.add(task)
 
                 except Exception as e:
-                    # The send task never started, so nothing will release
-                    # this trace's slot on its behalf.
                     self._untrack_outstanding_trace()
                     self._print_trace_status(
                         message="Error in worker",
