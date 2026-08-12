@@ -681,11 +681,18 @@ class TraceManager:
                 loop.run_until_complete(
                     asyncio.gather(*pending, return_exceptions=True)
                 )
-            self.flush_traces(remaining_traces)
+            self._post_remaining_traces(remaining_traces)
             loop.run_until_complete(loop.shutdown_asyncgens())
             loop.close()
 
-    def flush_traces(self, remaining_traces: List[TraceApi]):
+    def _post_remaining_traces(self, remaining_traces: List[TraceApi]):
+        """Synchronously post traces buffered after the main thread exited.
+
+        Only reachable from the worker thread's teardown path, where the
+        event loop is already shutting down and ``a_send_request`` is no
+        longer an option. Distinct from :meth:`flush`, which waits for the
+        normal async pipeline to drain.
+        """
         if not tracing_enabled() or not self.tracing_enabled:
             return
 
