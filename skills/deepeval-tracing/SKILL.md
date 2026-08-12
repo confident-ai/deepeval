@@ -19,7 +19,7 @@ metadata:
   author: Confident AI
   version: "1.1.0"
   category: observability
-  tags: "deepeval, tracing, observe, instrumentation, integrations, spans, confident-ai, typescript"
+  tags: "deepeval, tracing, observe, instrumentation, integrations, spans, confident-ai"
   compatibility: "Python 3.9+ with `pip install deepeval`, or TypeScript/JavaScript on Node.js 20+ with `npm install deepeval`. Instrumentation uses the DeepEval SDK (`deepeval.tracing` in Python, `deepeval/tracing` in TypeScript). Sending traces to Confident AI requires `deepeval login` (Python) / `npx deepeval login` (TypeScript) or an exported `CONFIDENT_API_KEY`."
 ---
 
