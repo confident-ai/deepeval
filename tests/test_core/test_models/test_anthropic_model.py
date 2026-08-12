@@ -5,7 +5,7 @@ from unittest.mock import patch
 from deepeval.errors import DeepEvalError
 from deepeval.models.llms.anthropic_model import AnthropicModel
 from deepeval.config.settings import reset_settings, get_settings
-from pydantic import SecretStr
+from pydantic import BaseModel, SecretStr
 
 from tests.test_core.stubs import _RecordingClient
 
@@ -318,7 +318,11 @@ def test_anthropic_calculate_cost_with_zero_tokens(mock_require_dep, settings):
 #####################################################
 
 
-def _make_thinking_first_message():
+class _Verdict(BaseModel):
+    verdict: str
+
+
+def _make_thinking_first_message(text="final answer"):
     from anthropic.types import Message, TextBlock, ThinkingBlock, Usage
 
     return Message(
@@ -334,27 +338,33 @@ def _make_thinking_first_message():
                 thinking="Reasoning about the answer...",
                 signature="sig",
             ),
-            TextBlock(type="text", text="final answer"),
+            TextBlock(type="text", text=text),
         ],
     )
 
 
 class _ThinkingResponseClient(_RecordingClient):
+    text = "final answer"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.messages = SimpleNamespace(create=self._create)
 
     def _create(self, **kwargs):
-        return _make_thinking_first_message()
+        return _make_thinking_first_message(self.text)
 
 
-class _AsyncThinkingResponseClient(_RecordingClient):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.messages = SimpleNamespace(create=self._create)
-
+class _AsyncThinkingResponseClient(_ThinkingResponseClient):
     async def _create(self, **kwargs):
-        return _make_thinking_first_message()
+        return _make_thinking_first_message(self.text)
+
+
+class _ThinkingJSONResponseClient(_ThinkingResponseClient):
+    text = '{"verdict": "yes"}'
+
+
+class _AsyncThinkingJSONResponseClient(_AsyncThinkingResponseClient):
+    text = '{"verdict": "yes"}'
 
 
 @patch("deepeval.models.llms.anthropic_model.require_dependency")
@@ -380,6 +390,7 @@ def test_anthropic_model_generate_returns_text_when_thinking_block_first(
 
     model = AnthropicModel(
         model="claude-3-7-sonnet-latest",
+        max_tokens=2048,
         generation_kwargs={
             "thinking": {"type": "enabled", "budget_tokens": 1024}
         },
@@ -408,6 +419,7 @@ async def test_anthropic_model_a_generate_returns_text_when_thinking_block_first
 
     model = AnthropicModel(
         model="claude-3-7-sonnet-latest",
+        max_tokens=2048,
         generation_kwargs={
             "thinking": {"type": "enabled", "budget_tokens": 1024}
         },
@@ -415,3 +427,65 @@ async def test_anthropic_model_a_generate_returns_text_when_thinking_block_first
 
     output, _ = await model.a_generate("what is the answer?")
     assert output == "final answer"
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_model_generate_parses_schema_when_thinking_block_first(
+    mock_require_dep,
+    settings,
+):
+    """
+    Metrics call generate() with a schema, so the JSON branch is the one
+    scoring depends on. A fix that only repaired the schema-less return
+    would leave every metric crashing.
+    """
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "test-key"
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    fake_anthropic_module = SimpleNamespace(
+        Anthropic=_ThinkingJSONResponseClient,
+        AsyncAnthropic=_AsyncThinkingJSONResponseClient,
+    )
+    mock_require_dep.return_value = fake_anthropic_module
+
+    model = AnthropicModel(
+        model="claude-3-7-sonnet-latest",
+        max_tokens=2048,
+        generation_kwargs={
+            "thinking": {"type": "enabled", "budget_tokens": 1024}
+        },
+    )
+
+    output, _ = model.generate("what is the answer?", schema=_Verdict)
+    assert output == _Verdict(verdict="yes")
+
+
+@pytest.mark.asyncio
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+async def test_anthropic_model_a_generate_parses_schema_when_thinking_block_first(
+    mock_require_dep,
+    settings,
+):
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "test-key"
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    fake_anthropic_module = SimpleNamespace(
+        Anthropic=_ThinkingJSONResponseClient,
+        AsyncAnthropic=_AsyncThinkingJSONResponseClient,
+    )
+    mock_require_dep.return_value = fake_anthropic_module
+
+    model = AnthropicModel(
+        model="claude-3-7-sonnet-latest",
+        max_tokens=2048,
+        generation_kwargs={
+            "thinking": {"type": "enabled", "budget_tokens": 1024}
+        },
+    )
+
+    output, _ = await model.a_generate("what is the answer?", schema=_Verdict)
+    assert output == _Verdict(verdict="yes")
