@@ -1,6 +1,6 @@
-# Tracing
+# Tracing (Python)
 
-This reference covers how to instrument an AI application with DeepEval
+This reference covers how to instrument a Python AI application with DeepEval
 tracing — adding spans, capturing inputs and outputs, and attaching tags and
 metadata so the app's behavior is visible in Confident AI.
 
@@ -50,10 +50,11 @@ def run_my_ai_app(user_input: str):
 
 ## Manual Instrumentation Types
 
-When the app is not using a supported integration, or when adding spans around
-app-owned components, use manual `@observe` decorators with meaningful `type=`
-values. The type helps future metric selection and makes the trace easier for an
-agent to reason about.
+When the app is not using a supported integration, or when the app's own
+components — retrieval, tool, or planning functions an integration does not
+trace — need spans of their own, use manual `@observe` decorators with
+meaningful `type=` values. The type helps future metric selection and makes
+the trace easier for an agent to reason about.
 
 Use common types deliberately:
 
