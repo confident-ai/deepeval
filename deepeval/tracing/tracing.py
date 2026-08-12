@@ -1084,6 +1084,43 @@ class TraceManager:
 trace_manager = TraceManager()
 
 ########################################################
+### Flushing #############################################
+########################################################
+
+
+def flush_traces(timeout: float = DEFAULT_TRACE_FLUSH_TIMEOUT) -> bool:
+    """Block until all pending traces have been sent to Confident AI.
+
+    Traces are posted from a background worker thread, so a process that
+    tears down right after its last traced call can drop them. Call this
+    first to hand the worker a chance to finish.
+
+    Args:
+        timeout: Maximum number of seconds to wait.
+
+    Returns:
+        ``True`` if every pending trace was sent within ``timeout``,
+        ``False`` if traces were still outstanding when it expired.
+    """
+    return trace_manager.flush(timeout=timeout)
+
+
+async def a_flush_traces(
+    timeout: float = DEFAULT_TRACE_FLUSH_TIMEOUT,
+) -> bool:
+    """Async counterpart of :func:`flush_traces` that yields instead of blocking.
+
+    Args:
+        timeout: Maximum number of seconds to wait.
+
+    Returns:
+        ``True`` if every pending trace was sent within ``timeout``,
+        ``False`` if traces were still outstanding when it expired.
+    """
+    return await trace_manager.a_flush(timeout=timeout)
+
+
+########################################################
 ### Observer #############################################
 ########################################################
 
