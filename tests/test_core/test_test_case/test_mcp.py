@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+import pytest
+
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
@@ -8,10 +10,30 @@ from deepeval.test_case import (
     ToolCallType,
     MCPServer,
     get_available_mcp_tool_names,
+    normalize_mcp_servers,
 )
 from deepeval.evaluate.api import APIEvaluate
 from deepeval.test_case.api import create_api_test_case
 from deepeval.test_case.utils import process_mcp_servers
+
+
+def make_official_server(name: str = "GitHub"):
+    official = pytest.importorskip("mcp.server")
+    server = official.MCPServer(name=name)
+
+    @server.tool()
+    def search_issues(query: str) -> str:
+        return "issue #42"
+
+    @server.resource("file://readme")
+    def readme() -> str:
+        return "readme contents"
+
+    @server.prompt()
+    def triage() -> str:
+        return "triage this"
+
+    return server
 
 
 class TestGetAvailableMCPToolNames:
@@ -269,3 +291,85 @@ class TestMCPToolCallTypeSerialization:
             {"name": "search", "type": "MCP"},
             {"name": "local_fn", "type": "FUNCTION"},
         ]
+
+
+class TestNormalizeMCPServers:
+
+    def test_converts_official_mcp_server(self):
+        normalized = normalize_mcp_servers([make_official_server()])
+
+        assert len(normalized) == 1
+        converted = normalized[0]
+        assert isinstance(converted, MCPServer)
+        assert converted.server_name == "GitHub"
+        assert [t.name for t in converted.available_tools] == ["search_issues"]
+        assert len(converted.available_resources) == 1
+        assert len(converted.available_prompts) == 1
+
+    def test_leaves_deepeval_mcp_server_untouched(self):
+        mcp_server = MCPServer(
+            server_name="Internal",
+            available_tools=[{"name": "internal_lookup"}],
+        )
+
+        normalized = normalize_mcp_servers([mcp_server])
+
+        assert normalized[0] is mcp_server
+
+    def test_normalizes_a_mixed_list(self):
+        ours = MCPServer(server_name="Internal")
+
+        normalized = normalize_mcp_servers([make_official_server(), ours])
+
+        assert [s.server_name for s in normalized] == ["GitHub", "Internal"]
+        assert all(isinstance(s, MCPServer) for s in normalized)
+
+    def test_official_server_tool_names_are_resolved(self):
+        normalized = normalize_mcp_servers([make_official_server()])
+
+        assert get_available_mcp_tool_names(normalized) == {"search_issues"}
+
+
+class TestOfficialMCPServerOnTestCases:
+
+    def test_llm_test_case_accepts_official_mcp_server(self):
+        test_case = LLMTestCase(
+            input="Find the issue",
+            actual_output="Found it",
+            mcp_servers=[make_official_server()],
+        )
+
+        assert isinstance(test_case.mcp_servers[0], MCPServer)
+        assert test_case.mcp_servers[0].server_name == "GitHub"
+
+    def test_conversational_test_case_accepts_official_mcp_server(self):
+        test_case = ConversationalTestCase(
+            turns=[Turn(role="user", content="Find the issue")],
+            mcp_servers=[make_official_server()],
+        )
+
+        assert isinstance(test_case.mcp_servers[0], MCPServer)
+        assert test_case.mcp_servers[0].server_name == "GitHub"
+
+    def test_official_mcp_server_drives_classification(self):
+        test_case = LLMTestCase(
+            input="Find the issue",
+            actual_output="Found it",
+            tools_called=[
+                ToolCall(name="search_issues"),
+                ToolCall(name="my_local_helper"),
+            ],
+        )
+
+        process_mcp_servers([test_case], [make_official_server()])
+
+        assert test_case.tools_called[0].type == ToolCallType.MCP
+        assert test_case.tools_called[1].type == ToolCallType.FUNCTION
+
+    def test_rejects_unsupported_mcp_server_values(self):
+        with pytest.raises(TypeError):
+            LLMTestCase(
+                input="Find the issue",
+                actual_output="Found it",
+                mcp_servers=["not-a-server"],
+            )
