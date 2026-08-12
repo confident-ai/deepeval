@@ -36,7 +36,7 @@ def classify_tool_call_types(
             tool_called.type = ToolCallType.MCP
 
 
-def classify_mcp_tool_calls(
+def process_mcp_servers(
     test_cases: Union[List[LLMTestCase], List[ConversationalTestCase]],
     mcp_servers: Optional[List[MCPServer]] = None,
 ):
@@ -45,6 +45,7 @@ def classify_mcp_tool_calls(
         if not servers:
             continue
 
+        test_case.mcp_servers = servers
         mcp_tool_names = get_available_mcp_tool_names(servers)
         if not mcp_tool_names:
             continue
