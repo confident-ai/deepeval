@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
@@ -40,6 +42,16 @@ class TestGetAvailableMCPToolNames:
             "search",
             "post_message",
         }
+
+    def test_returns_names_from_objects(self):
+        mcp_servers = [
+            MCPServer(
+                server_name="GitHub",
+                available_tools=[SimpleNamespace(name="search")],
+            )
+        ]
+
+        assert get_available_mcp_tool_names(mcp_servers) == {"search"}
 
     def test_returns_empty_set_when_no_available_tools(self):
         mcp_servers = [MCPServer(server_name="GitHub")]
