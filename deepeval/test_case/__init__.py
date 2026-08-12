@@ -20,6 +20,7 @@ from .mcp import (
     MCPPromptCall,
     MCPResourceCall,
     MCPToolCall,
+    get_available_mcp_tool_names,
 )
 
 __all__ = [
@@ -35,6 +36,7 @@ __all__ = [
     "MCPPromptCall",
     "MCPResourceCall",
     "MCPToolCall",
+    "get_available_mcp_tool_names",
     "MLLMImage",
     "RetrievedContextData",
     "ArenaTestCase",
