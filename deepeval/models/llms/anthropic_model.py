@@ -118,7 +118,12 @@ class AnthropicModel(DeepEvalBaseLLM):
         self.generation_kwargs.pop(
             "temperature", None
         )  # to avoid duplicate with self.temperature
-        default_max_tokens = 1024 if max_tokens is None else max_tokens
+        # On current Claude models (claude-opus-5, claude-sonnet-5,
+        # claude-fable-5) thinking runs by default and max_tokens caps
+        # thinking + response text combined, so 1024 starves the visible
+        # output. 8192 leaves room for both; an explicit max_tokens from
+        # the constructor or generation_kwargs still wins.
+        default_max_tokens = 8192 if max_tokens is None else max_tokens
         self._max_tokens = int(
             self.generation_kwargs.pop("max_tokens", default_max_tokens)
         )
@@ -128,6 +133,31 @@ class AnthropicModel(DeepEvalBaseLLM):
     ###############################################
     # Generate functions
     ###############################################
+
+    def _raise_if_truncated(
+        self, message, schema: Optional[BaseModel] = None
+    ) -> None:
+        """Fail loudly when the response was cut off at max_tokens.
+
+        A truncated response otherwise surfaces downstream as an
+        invalid-JSON error from `trim_and_load_json`, hiding the real
+        cause. On models that think by default (e.g. claude-opus-5),
+        max_tokens caps thinking + output combined, so truncation can
+        happen well before the visible output reaches max_tokens.
+        """
+        if getattr(message, "stop_reason", None) != "max_tokens":
+            return
+        if schema is None:
+            content = getattr(message, "content", None) or []
+            if any(getattr(block, "text", None) for block in content):
+                return
+        raise DeepEvalError(
+            "Anthropic response was truncated (stop_reason='max_tokens', "
+            f"max_tokens={self._max_tokens}). On models that think by "
+            "default (e.g. claude-opus-5), max_tokens covers thinking and "
+            "output combined. Raise it via AnthropicModel(..., "
+            "max_tokens=...) or generation_kwargs={'max_tokens': ...}."
+        )
 
     @retry_anthropic
     def generate(
@@ -160,6 +190,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         ):
             create_kwargs["temperature"] = self.temperature
         message = chat_model.messages.create(**create_kwargs)
+        self._raise_if_truncated(message, schema)
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens
         )
@@ -200,6 +231,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         ):
             create_kwargs["temperature"] = self.temperature
         message = await chat_model.messages.create(**create_kwargs)
+        self._raise_if_truncated(message, schema)
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens
         )
