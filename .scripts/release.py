@@ -48,7 +48,9 @@ class Edit:
     file: str
     pattern: str
     value: Callable[[str], str]  # new version -> replacement text
-    is_version: bool = True  # False for fields that travel with a release, e.g. a date
+    is_version: bool = (
+        True  # False for fields that travel with a release, e.g. a date
+    )
 
 
 def _version_edit(file: str, pattern: str) -> Edit:
@@ -68,7 +70,9 @@ TARGETS: Dict[str, Target] = {
         name="python",
         edits=[
             _version_edit("pyproject.toml", r'^version\s*=\s*"([^"]+)"'),
-            _version_edit("deepeval/_version.py", r'__version__[^=]*=\s*"([^"]+)"'),
+            _version_edit(
+                "deepeval/_version.py", r'__version__[^=]*=\s*"([^"]+)"'
+            ),
             _version_edit("CITATION.cff", r"^version:\s*(\S+)"),
             Edit(
                 file="CITATION.cff",
@@ -82,7 +86,9 @@ TARGETS: Dict[str, Target] = {
     ),
     "typescript": Target(
         name="typescript",
-        edits=[_version_edit("typescript/package.json", r'"version":\s*"([^"]+)"')],
+        edits=[
+            _version_edit("typescript/package.json", r'"version":\s*"([^"]+)"')
+        ],
         json_key="typescript",
         publish_commands=["cd typescript && npm publish"],
     ),
@@ -125,7 +131,9 @@ def read_version(edit: Edit) -> str:
         fail(f"{edit.file} is missing — run this from a full checkout.")
     match = re.search(edit.pattern, path.read_text(), re.MULTILINE)
     if not match:
-        fail(f"could not find a version in {edit.file} (pattern: {edit.pattern})")
+        fail(
+            f"could not find a version in {edit.file} (pattern: {edit.pattern})"
+        )
     return match.group(1)
 
 
@@ -163,7 +171,9 @@ def write_json_version(key: str, version: str) -> None:
 def current_version(target: Target) -> str:
     """Every declaration must already agree, or the bump would paper over drift."""
     found = [
-        (edit.file, read_version(edit)) for edit in target.edits if edit.is_version
+        (edit.file, read_version(edit))
+        for edit in target.edits
+        if edit.is_version
     ]
     versions = {version for _, version in found}
     if len(versions) > 1:
@@ -189,7 +199,9 @@ def next_version(current: str, bump: str) -> str:
         return f"{major}.{minor}.{patch + 1}"
 
     if not SEMVER.match(bump):
-        raise ValueError(f"'{bump}' is neither major/minor/patch nor a version number.")
+        raise ValueError(
+            f"'{bump}' is neither major/minor/patch nor a version number."
+        )
     return bump
 
 
@@ -198,12 +210,16 @@ def prompt_version(target: Target, current: str) -> Optional[str]:
     try:
         default = next_version(current, "patch")
     except ValueError:
-        default = None  # non-semver current: no bump to offer, so require an answer
+        default = (
+            None  # non-semver current: no bump to offer, so require an answer
+        )
 
     suggestion = f" [{default}]" if default else ""
     while True:
         try:
-            answer = input(f"  {target.name}: {current} ->{suggestion} ").strip()
+            answer = input(
+                f"  {target.name}: {current} ->{suggestion} "
+            ).strip()
         except EOFError:
             raise SystemExit(1)
 
@@ -221,7 +237,9 @@ def prompt_version(target: Target, current: str) -> Optional[str]:
             print(f"    {error}")
             continue
         if version == current:
-            print(f"    {target.name} is already at {version} — pick a higher one.")
+            print(
+                f"    {target.name} is already at {version} — pick a higher one."
+            )
             continue
         return version
 
@@ -277,9 +295,13 @@ def main() -> None:
 
     if not args.dry_run:
         check_clean_tree()
-    currents = {name: current_version(target) for name, target in TARGETS.items()}
+    currents = {
+        name: current_version(target) for name, target in TARGETS.items()
+    }
 
-    say("version to release (enter for the patch bump, or major/minor/patch/skip):")
+    say(
+        "version to release (enter for the patch bump, or major/minor/patch/skip):"
+    )
     plan: Dict[str, str] = {}
     for name, target in TARGETS.items():
         chosen = prompt_version(target, currents[name])
