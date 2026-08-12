@@ -179,6 +179,15 @@ class TraceManager:
         self._min_interval = 0.2  # Minimum time between API calls (seconds)
         self._last_post_time = 0
         self._in_flight_tasks: Set[asyncio.Task[Any]] = set()
+        # Counts traces from the moment they are enqueued until their send
+        # task finishes. Neither the queue size nor the in-flight task set is
+        # enough on its own: the worker dequeues a trace, awaits the
+        # rate-limit sleep, and only then registers a task, so there is a
+        # window where a trace belongs to neither. Callers of `flush` would
+        # otherwise see an idle manager and return while a trace is still
+        # waiting to be posted.
+        self._outstanding_traces = 0
+        self._outstanding_lock = threading.Lock()
         self.task_bindings: "weakref.WeakKeyDictionary[asyncio.Task, dict]" = (
             weakref.WeakKeyDictionary()
         )
@@ -211,14 +220,27 @@ class TraceManager:
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
 
+    @property
+    def outstanding_traces(self) -> int:
+        """Number of traces that are queued, being handed off, or in flight."""
+        with self._outstanding_lock:
+            return self._outstanding_traces
+
+    def _track_outstanding_trace(self) -> None:
+        with self._outstanding_lock:
+            self._outstanding_traces += 1
+
+    def _untrack_outstanding_trace(self) -> None:
+        with self._outstanding_lock:
+            if self._outstanding_traces > 0:
+                self._outstanding_traces -= 1
+
     def _warn_on_exit(self):
-        queue_size = self._trace_queue.qsize()
-        in_flight = len(self._in_flight_tasks)
-        remaining_tasks = queue_size + in_flight
+        remaining_tasks = self.outstanding_traces
 
         if not self._flush_enabled and remaining_tasks > 0:
             self._print_trace_status(
-                message=f"WARNING: Exiting with {queue_size + in_flight} abandoned trace(s).",
+                message=f"WARNING: Exiting with {remaining_tasks} abandoned trace(s).",
                 trace_worker_status=TraceWorkerStatus.WARNING,
                 description=f"Set {CONFIDENT_TRACE_FLUSH}=1 as an environment variable to flush remaining traces to Confident AI.",
             )
@@ -540,6 +562,7 @@ class TraceManager:
             return None
 
         self._ensure_worker_thread_running()
+        self._track_outstanding_trace()
         self._trace_queue.put(trace_api)
 
         return
@@ -560,6 +583,7 @@ class TraceManager:
             return None
 
         # Add the trace to the queue
+        self._track_outstanding_trace()
         self._trace_queue.put(trace)
 
         # Start the worker thread if it's not already running
@@ -638,6 +662,7 @@ class TraceManager:
                 task = asyncio.current_task()
                 if task:
                     self._in_flight_tasks.discard(task)
+                self._untrack_outstanding_trace()
 
         async def async_worker():
             # Continue while user code is running or work remains
@@ -648,7 +673,11 @@ class TraceManager:
             ):
                 try:
                     trace = self._trace_queue.get(block=True, timeout=1.0)
+                except queue.Empty:
+                    await asyncio.sleep(0.1)
+                    continue
 
+                try:
                     # rate-limit
                     now = perf_counter()
                     elapsed = now - self._last_post_time
@@ -659,18 +688,19 @@ class TraceManager:
                     # schedule async send
                     task = asyncio.create_task(_a_send_trace(trace))
                     self._in_flight_tasks.add(task)
-                    self._trace_queue.task_done()
 
-                except queue.Empty:
-                    await asyncio.sleep(0.1)
-                    continue
                 except Exception as e:
+                    # The send task never started, so nothing will release
+                    # this trace's slot on its behalf.
+                    self._untrack_outstanding_trace()
                     self._print_trace_status(
                         message="Error in worker",
                         trace_worker_status=TraceWorkerStatus.FAILURE,
                         description=str(e),
                     )
                     await asyncio.sleep(1.0)
+                finally:
+                    self._trace_queue.task_done()
 
         try:
             loop.run_until_complete(async_worker())
