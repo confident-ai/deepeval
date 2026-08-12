@@ -47,7 +47,6 @@ class MetricConfiguration(BaseModel):
     n: Optional[int] = None
     metric_hash: Optional[str] = None
 
-
     ##### Optional fields #####
     evaluation_steps: Optional[List[str]] = None
     assessment_questions: Optional[List[str]] = None
@@ -335,9 +334,10 @@ class Cache:
         metric: BaseMetric,
         metric_configuration: MetricConfiguration,
     ) -> bool:
-        
+
         if metric_configuration.metric_hash:
             from deepeval.utils import generate_metric_hash
+
             current_hash = generate_metric_hash(metric)
             return current_hash == metric_configuration.metric_hash
 
@@ -410,6 +410,7 @@ class Cache:
             config_kwargs[field] = value
 
         from deepeval.utils import generate_metric_hash
+
         config_kwargs["metric_hash"] = generate_metric_hash(metric)
 
         return MetricConfiguration(**config_kwargs)
