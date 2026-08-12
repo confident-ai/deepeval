@@ -489,10 +489,10 @@ The <Term py="tools_called" ts="toolsCalled"/> parameter accepts a list of `Tool
 ```python
 class ToolCall(BaseModel):
     name: str
-    type: ToolCallType = ToolCallType.FUNCTION
     description: Optional[str] = None
     reasoning: Optional[str] = None
     output: Optional[Any] = None
+    type: ToolCallType = ToolCallType.FUNCTION
     input_parameters: Optional[Dict[str, Any]] = None
 ```
 
