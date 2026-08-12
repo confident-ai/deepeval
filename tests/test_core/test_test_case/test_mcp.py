@@ -7,6 +7,7 @@ from deepeval.test_case import (
     MCPServer,
     get_available_mcp_tool_names,
 )
+from deepeval.test_case.api import create_api_test_case
 from deepeval.test_case.utils import process_mcp_servers
 
 
@@ -175,3 +176,57 @@ class TestProcessMCPServers:
 
         assert test_case.mcp_servers is None
         assert test_case.tools_called[0].type == ToolCallType.FUNCTION
+
+
+class TestMCPToolCallTypeSerialization:
+
+    def test_tool_call_type_is_sent_for_llm_test_case(self):
+        test_case = LLMTestCase(
+            input="Find the issue",
+            actual_output="Found it",
+            tools_called=[ToolCall(name="search"), ToolCall(name="local_fn")],
+        )
+
+        process_mcp_servers(
+            [test_case],
+            [
+                MCPServer(
+                    server_name="GitHub", available_tools=[{"name": "search"}]
+                )
+            ],
+        )
+        body = create_api_test_case(test_case).model_dump(
+            by_alias=True, exclude_none=True
+        )
+
+        assert body["toolsCalled"] == [
+            {"name": "search", "type": "MCP"},
+            {"name": "local_fn", "type": "FUNCTION"},
+        ]
+
+    def test_tool_call_type_is_sent_for_conversational_test_case(self):
+        test_case = ConversationalTestCase(
+            turns=[
+                Turn(
+                    role="assistant",
+                    content="Found it",
+                    tools_called=[ToolCall(name="search")],
+                )
+            ]
+        )
+
+        process_mcp_servers(
+            [test_case],
+            [
+                MCPServer(
+                    server_name="GitHub", available_tools=[{"name": "search"}]
+                )
+            ],
+        )
+        body = create_api_test_case(test_case).model_dump(
+            by_alias=True, exclude_none=True
+        )
+
+        assert body["turns"][0]["toolsCalled"] == [
+            {"name": "search", "type": "MCP"}
+        ]
