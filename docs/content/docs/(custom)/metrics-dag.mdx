@@ -169,7 +169,7 @@ You can run a `DAGMetric` within nested components for [component-level evaluati
 <Case id="python">
 
 ```python
-from deepeval.dataset import Golden
+from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.tracing import observe, update_current_span
 
 @observe(metrics=[metric])
@@ -184,7 +184,9 @@ def inner_component():
 def llm_app(input: str):
     inner_component()
 
-evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
+dataset = EvaluationDataset(goldens=[Golden(input="Hi!")])
+for golden in dataset.evals_iterator():
+    llm_app(golden.input)
 ```
 
 </Case>

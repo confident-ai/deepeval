@@ -7,11 +7,11 @@ languages: [python, typescript]
 
 import { ASSETS } from "@site/src/assets";
 
-Component-level evaluation grades **internal components** of your LLM app — retrievers, tool calls, LLM generations, sub-agents — instead of treating the whole system as a black box. The unit of evaluation is still an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-cases), but it's attached to a span (an <Term py="@observe" ts="observe()"/>'d function or a framework-emitted span) rather than the whole trace.
+Component-level evaluation (sometimes also known as **step-wise evals**) grades **internal components** of your LLM app — retrievers, tool calls, LLM generations, sub-agents — instead of treating the whole system as a black box. The unit of evaluation is still an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-cases), but it's attached to a span (an <Term py="@observe" ts="observe()"/>'d function or a framework-emitted span) rather than the whole trace.
 
 <ImageDisplayer src={ASSETS.componentLevelEvals} alt="component level evals" />
 
-If you haven't already, read the [end-to-end overview](/docs/evaluation-end-to-end-llm-evals) for the concepts and how component-level compares to end-to-end.
+If you haven't already, read the [end-to-end overview](/docs/evaluation-end-to-end-llm-evals) for black-box evaluation and [trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals) for scoring an agent's complete chain of steps.
 
 :::caution[Single-turn only]
 Component-level evaluation is currently single-turn only. Multi-turn component-level evaluation is on the roadmap.
@@ -49,7 +49,7 @@ sequenceDiagram
     Eval-->>You: upload test run with traces + scores
 ```
 
-You can mix component-level and end-to-end in the same loop: pass <Term py="metrics=[...]" ts="metrics: [...]"/> to the iterator to score the trace itself, and attach metrics on individual spans to score components. Both flow into the same test run.
+You can mix scopes in the same loop: pass [trajectory metrics](/docs/evaluation-trajectory-based-llm-evals) to <Term py="metrics=[...]" ts="metrics: [...]"/> to score the complete agent path, and attach metrics to individual spans to score components. Both flow into the same test run.
 
 ## Step-by-Step Guide
 
@@ -91,7 +91,7 @@ Each integration ships **Async** (default — fastest) and **Sync** variants:
 
 There are **SIX** optional parameters on `evals_iterator()`:
 
-- [Optional] `metrics`: a list of `BaseMetric`s applied at the **trace** level. Leave empty for pure component-level runs — your component metrics already live on the spans. Pass trace-level metrics here to score end-to-end _and_ component-level in the same run.
+- [Optional] `metrics`: a list of `BaseMetric`s applied at the **trace** level. Leave empty for pure component-level runs — your component metrics already live on the spans. Pass [trajectory metrics](/docs/evaluation-trajectory-based-llm-evals) here to also score the complete agent path.
 - [Optional] `identifier`: a string label for this test run on Confident AI.
 - [Optional] `async_config`: an `AsyncConfig` controlling concurrency. See [async configs](/docs/evaluation-flags-and-configs#async-configs).
 - [Optional] `display_config`: a `DisplayConfig` controlling console output. See [display configs](/docs/evaluation-flags-and-configs#display-configs).
@@ -104,7 +104,7 @@ There are **SIX** optional parameters on `evals_iterator()`:
 
 There are **FIVE** optional parameters on `evalsIterator()`, all passed in a single options object:
 
-- [Optional] `metrics`: an array of `BaseMetric`s applied at the **trace** level. Leave empty for pure component-level runs — your component metrics already live on the spans. Pass trace-level metrics here to score end-to-end _and_ component-level in the same run.
+- [Optional] `metrics`: an array of `BaseMetric`s applied at the **trace** level. Leave empty for pure component-level runs — your component metrics already live on the spans. Pass [trajectory metrics](/docs/evaluation-trajectory-based-llm-evals) here to also score the complete agent path.
 - [Optional] `identifier`: a string label for this test run on Confident AI.
 - [Optional] `hyperparameters`: the model, prompt, and settings that produced these outputs. See [hyperparameters](#hyperparameters).
 - [Optional] `displayConfig`: a `DisplayConfig` controlling console output. See [display configs](/docs/evaluation-flags-and-configs#display-configs).
@@ -152,7 +152,7 @@ npx deepeval login
 
 :::tip[Go further]
 
-- **Trace-level scoring too?** Component metrics live on **spans**. Pass <Term py="metrics=[...]" ts="metrics: [...]"/> to the iterator to _also_ grade the whole trace end-to-end — both kinds of scores coexist in the same test run.
+- **Score the complete trajectory too?** Component metrics live on **spans**. Pass [trajectory metrics](/docs/evaluation-trajectory-based-llm-evals) to <Term py="metrics=[...]" ts="metrics: [...]"/> to also grade the full chain — both scopes coexist in the same test run.
 - **Deeper integration API.** Each integration exposes more (sub-agent handoffs, retriever scoring, span context customization). Read the [integration docs](/integrations/frameworks/openai) for your stack to see what else is available.
   :::
 

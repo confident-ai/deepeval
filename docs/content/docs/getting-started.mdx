@@ -15,7 +15,7 @@ minutes. You'll create a small test case, choose a metric, and run it with
 By the end of this quickstart, you should be able to:
 
 - Run your first local eval with a test case, metric, and <Term py="deepeval test run" ts="npx deepeval test run"/>.
-- Add tracing when you want to evaluate an AI agent or its internal components.
+- Evaluate an AI agent's complete trajectory and diagnose its internal components with tracing.
 - Know where to go next for datasets, integrations, and the Confident AI
   platform.
 
@@ -476,13 +476,18 @@ set DEEPEVAL_RESULTS_FOLDER=.\data
 </Tab>
 </Tabs>
 
-## Evals With LLM Tracing
+<span id="evals-with-llm-tracing" />
 
-While end-to-end evals treat your LLM app as a black-box, you also evaluate **individual components** within your LLM app through **LLM tracing**. This is the recommended way to evaluate AI agents.
+## Evaluate an AI Agent
 
-<ImageDisplayer src={ASSETS.componentLevelEvals} alt="component level evals" />
+AI agents often take many steps before producing a result. To evaluate whether an agent completed its task and how it got there, first instrument it with [LLM tracing](/docs/evaluation-llm-tracing), then score its complete trajectory.
 
-First, create a small dataset to evaluate against:
+<Steps>
+<Step>
+
+### Build Dataset
+
+Create a small dataset of representative tasks for your agent:
 
 <Switch>
 
@@ -491,7 +496,7 @@ First, create a small dataset to evaluate against:
 ```python
 from deepeval.dataset import EvaluationDataset, Golden
 
-dataset = EvaluationDataset(goldens=[Golden(input="Why is the sky blue?")])
+dataset = EvaluationDataset(goldens=[Golden(input="Plan a three-day trip to Paris")])
 ```
 
 </Case>
@@ -502,13 +507,20 @@ dataset = EvaluationDataset(goldens=[Golden(input="Why is the sky blue?")])
 import { EvaluationDataset, Golden } from "deepeval/dataset";
 
 const dataset = new EvaluationDataset({
-  goldens: [new Golden({ input: "Why is the sky blue?" })],
+  goldens: [new Golden({ input: "Plan a three-day trip to Paris" })],
 });
 ```
 
 </Case>
 
 </Switch>
+
+</Step>
+<Step>
+
+### Instrument and Evaluate Trajectory
+
+Each example instruments the agent, captures one complete trace per golden, and applies `TaskCompletionMetric` to the full trajectory.
 
 <Switch>
 
@@ -526,7 +538,7 @@ Paste the snippet below and run it — goldens are evaluated concurrently as you
 
 </Switch>
 
-<include cwd>snippets/evaluation/component-level-agent-framework-tabs.mdx</include>
+<include cwd>snippets/evaluation/end-to-end-agent-framework-tabs.mdx</include>
 
 Then run the file:
 
@@ -553,30 +565,43 @@ npx tsx main.ts
 🎉 Congratulations! Your eval should have run ✅ A quick recap of what happened:
 
 - <Term py="evals_iterator()" ts="evalsIterator()"/> looped through your dataset, capturing one trace per golden.
-- <Switch><Case id="python">Your integration's adapter (or `@observe`) created spans</Case><Case id="typescript">`observe` created spans</Case></Switch> for the components inside the trace.
-- The <Term py="metrics=[...]" ts="metrics: [...]"/> you attached to one of those spans scored it once the trace finished.
+- <Switch><Case id="python">Your integration's adapter (or `@observe`) created spans</Case><Case id="typescript">Your integration (or `observe`)</Case></Switch> recorded the agent's internal steps.
+- `TaskCompletionMetric` analyzed the complete ordered trace after the agent finished.
 - DeepEval aggregated everything into one test run.
 
-For sub-agents, retriever scoring, span context customization, and more, see [component-level evaluation](/docs/evaluation-component-level-llm-evals).
+</Step>
+<Step>
 
-To do the same thing inside your test suite instead of a standalone script, invoke your app and hand the golden to the assertion. The trace your app just produced is scored against the metrics on its spans, and any gaps in it are filled from the golden:
+### Evaluate Individual Components
+
+Trajectory-based evaluation tells you whether the complete path was effective. [Component-level evaluation](/docs/evaluation-component-level-llm-evals) uses the same trace to score one span at a time, helping you identify which planner, retriever, tool call, LLM generation, or sub-agent caused a failure.
+
+<ImageDisplayer src={ASSETS.componentLevelEvals} alt="component-level metrics attached to individual spans within an agent trace" />
+
+Once your agent is traced, attach component metrics only to the spans you need to diagnose. Trajectory and component scores can run together in the same test run. See the [component-level guide](/docs/evaluation-component-level-llm-evals) for stack-specific examples, sub-agent evaluation, retriever scoring, and span customization.
+
+</Step>
+</Steps>
+
+To run the trajectory eval inside your test suite, invoke the traced agent from the assertion and pass the trajectory metric. Any component metrics attached to its spans run during the same test:
 
 <Switch>
 
 <Case id="python">
 
 ```python title="test_agent.py"
-import pytest
-from deepeval import assert_test
+from deepeval.metrics import TaskCompletionMetric
 from deepeval.dataset import Golden
+from deepeval import assert_test
 from agent import my_agent
+import pytest
 
-goldens = [Golden(input="Why is the sky blue?")]
+goldens = [Golden(input="Plan a three-day trip to Paris")]
 
 @pytest.mark.parametrize("golden", goldens)
 def test_agent(golden: Golden):
     my_agent(golden.input)
-    assert_test(golden=golden)
+    assert_test(golden=golden, metrics=[TaskCompletionMetric()])
 ```
 
 </Case>
@@ -584,16 +609,18 @@ def test_agent(golden: Golden):
 <Case id="typescript">
 
 ```typescript title="agent.test.ts"
-import { it, expect } from "vitest";
+import { TaskCompletionMetric } from "deepeval/metrics";
 import { Golden } from "deepeval/dataset";
 import { myAgent } from "./agent";
+import { expect, it } from "vitest";
 import "deepeval/vitest";
 
-const goldens = [new Golden({ input: "Why is the sky blue?" })];
+const goldens = [new Golden({ input: "Plan a three-day trip to Paris" })];
 
-it.each(goldens)("answers the user's question #%$", async (golden) => {
-  await myAgent(golden.input);
-  await expect(golden).toPass();
+it.each(goldens)("completes the agent trajectory #%$", async (golden) => {
+  await expect(golden).toPass([new TaskCompletionMetric()], {
+    task: (g) => myAgent(g.input),
+  });
 });
 ```
 
@@ -604,7 +631,7 @@ it.each(goldens)("answers the user's question #%$", async (golden) => {
 Either way, run it with <Term py="deepeval test run" ts="npx deepeval test run"/> like any other test file.
 
 :::tip
-Every <Term py="evals_iterator()" ts="evalsIterator()"/> run is snapshotted to disk, so you can open it in a trace-tree TUI — with per-span scores and metric reasons — by running bare <Term py="deepeval inspect" ts="npx deepeval inspect"/>. See the [`deepeval inspect` reference](/docs/command-line-interface#inspect) for full details.
+Every <Term py="evals_iterator()" ts="evalsIterator()"/> run is snapshotted to disk, so you can open it in a trace-tree TUI — with trajectory scores, per-span scores, and metric reasons — by running bare <Term py="deepeval inspect" ts="npx deepeval inspect"/>. See the [`deepeval inspect` reference](/docs/command-line-interface#inspect) for full details.
 
 <ImageDisplayer
   src={ASSETS.deepevalTuiInspect}
@@ -670,16 +697,16 @@ To learn more on what a "metric collection" is, and how to pair observability wi
 
 `deepeval`'s LLM tracing implementation is **non-instrusive**, meaning it will not affect any part of your code.
 
-<Tabs items={["Trace (end-to-end) Evals in Prod", "Span (component-level) Evals in Prod", "Thread (conversation) Evals in Prod"]}>
-<Tab value="Trace (end-to-end) Evals in Prod">
+<Tabs items={["Trace-Level Evals in Prod", "Span (component-level) Evals in Prod", "Thread (conversation) Evals in Prod"]}>
+<Tab value="Trace-Level Evals in Prod">
 
-Evals on traces are [end-to-end evaluations](/docs/evaluation-end-to-end-llm-evals), where a single LLM interaction is being evaluated.
+Trace-level evals can score the observable result with [end-to-end evaluation](/docs/evaluation-end-to-end-llm-evals) or analyze an agent's complete internal path with [trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals).
 
 <VideoDisplayer
   src={ASSETS.tracingTraces}
   confidentUrl="/docs/llm-tracing/introduction"
   label="Trace-level evals in production"
-  description="Score entire executions end-to-end on live traffic."
+  description="Score complete results or agent trajectories on live traffic."
 />
 
 </Tab>
@@ -708,6 +735,16 @@ Threads are made up of **one or more traces**, and represents a multi-turn inter
 
 </Tab>
 </Tabs>
+
+## Framework Integrations
+
+Already building with an agent framework? DeepEval integrations capture its traces and spans so the same metrics can evaluate complete trajectories and individual components with minimal instrumentation.
+
+Here are a few examples available for your selected SDK:
+
+<include cwd>snippets/integrations/framework-integration-card-examples.mdx</include>
+
+[Browse all framework integrations →](/integrations)
 
 ## Next Steps
 

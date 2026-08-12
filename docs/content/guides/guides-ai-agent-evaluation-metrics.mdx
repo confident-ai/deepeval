@@ -4,35 +4,35 @@ title: AI Agent Evaluation Metrics
 sidebar_label: AI Agent Evaluation Metrics
 languages: [python]
 ---
-**AI agent evaluation metrics** are purpose-built measurements that assess how well autonomous LLM systems reason, plan, execute tools, and complete tasks. Unlike traditional LLM metrics that evaluate single input-output pairs, AI agent evaluation metrics analyze the entire execution trace—capturing every reasoning step, tool call, and intermediate decision your agent makes.
+**AI agent evaluation metrics** are purpose-built measurements that assess how well autonomous LLM systems reason, plan, execute tools, and complete tasks. They can evaluate the final black-box output, the complete ordered trajectory of reasoning and actions, or a single component span.
 
 These metrics matter because AI agents fail in fundamentally different ways than simple LLM applications. An agent might select the right tool but pass wrong arguments. It might create a brilliant plan but fail to follow it. It might complete the task but waste resources on redundant steps. AI agent evaluation metrics give you the granularity to pinpoint exactly where things go wrong.
 
-For a broader overview of AI agent evaluation concepts and strategies, see the [AI Agent Evaluation guide](/guides/guides-ai-agent-evaluation). For the bigger picture of how these metrics fit into the validation layer of an agent, see [what an eval harness is](/blog/what-is-an-eval-harness).
+For a broader overview of AI agent evaluation concepts and strategies, see the [AI Agent Evaluation guide](/guides/guides-ai-agent-evaluation). For a focused explanation of metrics that score complete ordered traces, see [trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals). For the bigger picture of how these metrics fit into the validation layer of an agent, see [what an eval harness is](/blog/what-is-an-eval-harness).
 
 :::info
-AI agent evaluation metrics in `deepeval` operate on **execution traces**—the full record of your agent's reasoning and actions. This requires [setting up tracing](/docs/evaluation-llm-tracing) to capture your agent's behavior.
+The metrics in this guide use [tracing](/docs/evaluation-llm-tracing), but at different scopes. `PlanQualityMetric`, `PlanAdherenceMetric`, `TaskCompletionMetric`, and `StepEfficiencyMetric` are **trajectory metrics** that score the complete ordered trace. `ToolCorrectnessMetric` and `ArgumentCorrectnessMetric` are **component-level metrics** that score the individual LLM span where a tool-calling decision is made.
 :::
 
 ## The Three Layers of AI Agent Evaluation
 
 AI agents consist of interconnected layers that each require distinct evaluation approaches:
 
-| Layer               | What It Does                                        | Key Metrics                                          |
-| ------------------- | --------------------------------------------------- | ---------------------------------------------------- |
-| **Reasoning Layer** | Plans tasks, creates strategies, decides what to do | `PlanQualityMetric`, `PlanAdherenceMetric`           |
-| **Action Layer**    | Selects tools, generates arguments, executes calls  | `ToolCorrectnessMetric`, `ArgumentCorrectnessMetric` |
-| **Execution Layer** | Orchestrates the full loop, completes objectives    | `TaskCompletionMetric`, `StepEfficiencyMetric`       |
+| Layer               | What It Does                                        | Evaluation Scope | Key Metrics                                          |
+| ------------------- | --------------------------------------------------- | ---------------- | ---------------------------------------------------- |
+| **Reasoning Layer** | Plans tasks, creates strategies, decides what to do | Trajectory       | `PlanQualityMetric`, `PlanAdherenceMetric`           |
+| **Action Layer**    | Selects tools, generates arguments, executes calls  | Component-level  | `ToolCorrectnessMetric`, `ArgumentCorrectnessMetric` |
+| **Execution Layer** | Orchestrates the full loop, completes objectives    | Trajectory       | `TaskCompletionMetric`, `StepEfficiencyMetric`       |
 
 Each metric targets a specific failure mode. Together, they provide comprehensive coverage of everything that can go wrong in an AI agent pipeline.
 
 ## Reasoning Layer Metrics
 
-The reasoning layer is where your agent analyzes tasks, formulates plans, and decides on strategies. Poor reasoning leads to cascade failures—even perfect tool execution can't save an agent with a flawed plan.
+The reasoning layer is where your agent analyzes tasks, formulates plans, and decides on strategies. Poor reasoning leads to cascade failures—even perfect tool execution can't save an agent with a flawed plan. The metrics in this section are trajectory metrics: they require tracing and inspect planning in the context of the complete ordered trace.
 
 ### Plan Quality Metric
 
-The `PlanQualityMetric` evaluates whether the **plan your agent generates is logical, complete, and efficient** for accomplishing the given task. It extracts the task and plan from your agent's trace and uses an LLM judge to assess plan quality.
+The `PlanQualityMetric` is a trajectory metric that evaluates whether the **plan your agent generates is logical, complete, and efficient** for accomplishing the given task. It extracts the task and plan from the complete ordered trace and uses an LLM judge to assess plan quality.
 
 ```python
 from deepeval.tracing import observe
@@ -75,7 +75,7 @@ If no plan is detectable in the trace—meaning the agent doesn't explicitly rea
 
 ### Plan Adherence Metric
 
-The `PlanAdherenceMetric` evaluates whether your agent **follows its own plan** during execution. Creating a good plan is only half the battle—an agent that deviates from its strategy mid-execution undermines its own reasoning.
+The `PlanAdherenceMetric` is a trajectory metric that evaluates whether your agent **follows its own plan** during execution. Creating a good plan is only half the battle—an agent that deviates from its strategy mid-execution undermines its own reasoning.
 
 ```python
 from deepeval.tracing import observe
@@ -123,11 +123,11 @@ Combine `PlanQualityMetric` and `PlanAdherenceMetric` together—a high-quality 
 
 ## Action Layer Metrics
 
-The action layer is where your agent interacts with external systems through tool calls. This is often where things go wrong—even state-of-the-art LLMs struggle with tool selection, argument generation, and call ordering.
+The action layer is where your agent interacts with external systems through tool calls. This is often where things go wrong—even state-of-the-art LLMs struggle with tool selection, argument generation, and call ordering. `ToolCorrectnessMetric` and `ArgumentCorrectnessMetric` are component-level metrics: attach them to the individual LLM span that selects a tool and generates its arguments.
 
 ### Tool Correctness Metric
 
-The `ToolCorrectnessMetric` evaluates whether your agent **selects the right tools** and calls them correctly. It compares the tools your agent actually called against a list of expected tools.
+The `ToolCorrectnessMetric` is a component-level metric that evaluates whether your agent **selects the right tools** and calls them correctly. It compares the tools selected by the LLM span against a list of expected tools.
 
 ```python
 from deepeval.tracing import observe, update_current_span
@@ -188,7 +188,7 @@ When `available_tools` is provided, the metric also uses an LLM to evaluate whet
 
 ### Argument Correctness Metric
 
-The `ArgumentCorrectnessMetric` evaluates whether your agent **generates correct arguments** for each tool call. Selecting the right tool with wrong arguments is as problematic as selecting the wrong tool entirely.
+The `ArgumentCorrectnessMetric` is a component-level metric that evaluates whether your agent **generates correct arguments** for each tool call. Selecting the right tool with wrong arguments is as problematic as selecting the wrong tool entirely.
 
 ```python
 from deepeval.tracing import observe, update_current_span
@@ -243,13 +243,13 @@ The `ArgumentCorrectnessMetric` uses an LLM to determine correctness, making it 
 
 **→ [Full Argument Correctness documentation](/docs/metrics-argument-correctness)**
 
-## Execution Layer Metrics
+## Execution Layer Trajectory Metrics
 
-The execution layer encompasses the full agent loop—reasoning, acting, observing, and iterating until task completion. These metrics assess the end-to-end quality of your agent's behavior.
+The execution layer encompasses the full agent loop—reasoning, acting, observing, and iterating until task completion. These trajectory metrics require tracing and assess the complete ordered sequence of steps, rather than treating the agent as a black box.
 
 ### Task Completion Metric
 
-The `TaskCompletionMetric` evaluates whether your agent **successfully accomplishes the intended task**. This is the ultimate measure of agent success—did it do what the user asked?
+The `TaskCompletionMetric` is a trajectory metric that evaluates whether your agent **successfully accomplishes the intended task** from the complete ordered trace. This is the ultimate measure of agent success—did it do what the user asked?
 
 ```python
 from deepeval.tracing import observe
@@ -274,7 +274,7 @@ def travel_agent(user_input):
 # Initialize metric - task can be auto-inferred or explicitly provided
 task_completion = TaskCompletionMetric(threshold=0.7, model="gpt-4o")
 
-# Evaluate whether agent completed the task
+# Evaluate task completion across the complete trajectory
 dataset = EvaluationDataset(goldens=[
     Golden(input="Book the cheapest flight from NYC to LA for tomorrow")
 ])
@@ -294,7 +294,7 @@ The metric extracts the task (either user-provided or inferred from the trace) a
 
 ### Step Efficiency Metric
 
-The `StepEfficiencyMetric` evaluates whether your agent **completes tasks without unnecessary steps**. An agent might complete a task but waste tokens, time, and resources on redundant or circuitous actions.
+The `StepEfficiencyMetric` is a trajectory metric that evaluates whether your agent **completes tasks without unnecessary steps**. It scores the complete ordered trace, where redundant or circuitous actions are visible.
 
 ```python
 from deepeval.tracing import observe
@@ -321,7 +321,7 @@ def inefficient_agent(user_input):
 # Initialize metric
 step_efficiency = StepEfficiencyMetric(threshold=0.7, model="gpt-4o")
 
-# Evaluate - metric will penalize the redundant search_flights call
+# Evaluate the trajectory - metric will penalize the redundant search_flights call
 dataset = EvaluationDataset(goldens=[
     Golden(input="Book the cheapest flight from NYC to LA")
 ])
@@ -345,7 +345,7 @@ A high `TaskCompletionMetric` score with a low `StepEfficiencyMetric` score indi
 
 ## Putting It All Together
 
-Here's a complete example showing how to use AI agent evaluation metrics across all three layers:
+Here's a complete example showing trajectory metrics across the reasoning and execution layers, plus component-level metrics on the LLM tool-calling decision:
 
 ```python
 from deepeval.tracing import observe, update_current_span
@@ -360,13 +360,13 @@ from deepeval.metrics import (
     ArgumentCorrectnessMetric
 )
 
-# End-to-end metrics (analyze full agent trace)
+# Trajectory metrics (analyze the complete ordered agent trace)
 task_completion = TaskCompletionMetric()
 step_efficiency = StepEfficiencyMetric()
 plan_quality = PlanQualityMetric()
 plan_adherence = PlanAdherenceMetric()
 
-# Component-level metrics (analyze specific components)
+# Component-level metrics (analyze the LLM tool-calling decision)
 tool_correctness = ToolCorrectnessMetric()
 argument_correctness = ArgumentCorrectnessMetric()
 
@@ -406,7 +406,7 @@ dataset = EvaluationDataset(goldens=[
     Golden(input="Book a flight from NYC to Paris for next Tuesday", expected_tools=[ToolCall(name="search_flights"), ToolCall(name="book_flight")])
 ])
 
-# Run evaluation with end-to-end metrics
+# Run evaluation with trajectory metrics
 for golden in dataset.evals_iterator(
     metrics=[task_completion, step_efficiency, plan_quality, plan_adherence]
 ):
@@ -417,13 +417,13 @@ for golden in dataset.evals_iterator(
 
 Not every agent needs every metric. Here's a decision framework:
 
-| If Your Agent...                    | Prioritize These Metrics                             |
-| ----------------------------------- | ---------------------------------------------------- |
-| Uses explicit planning/reasoning    | `PlanQualityMetric`, `PlanAdherenceMetric`           |
-| Calls multiple tools                | `ToolCorrectnessMetric`, `ArgumentCorrectnessMetric` |
-| Has complex multi-step workflows    | `StepEfficiencyMetric`, `TaskCompletionMetric`       |
-| Runs in production (cost-sensitive) | `StepEfficiencyMetric`                               |
-| Is task-critical (must succeed)     | `TaskCompletionMetric`                               |
+| If Your Agent...                    | Evaluation Scope | Prioritize These Metrics                             |
+| ----------------------------------- | ---------------- | ---------------------------------------------------- |
+| Uses explicit planning/reasoning    | Trajectory       | `PlanQualityMetric`, `PlanAdherenceMetric`           |
+| Calls multiple tools                | Component-level  | `ToolCorrectnessMetric`, `ArgumentCorrectnessMetric` |
+| Has complex multi-step workflows    | Trajectory       | `StepEfficiencyMetric`, `TaskCompletionMetric`       |
+| Runs in production (cost-sensitive) | Trajectory       | `StepEfficiencyMetric`                               |
+| Is task-critical (must succeed)     | Trajectory       | `TaskCompletionMetric`                               |
 
 :::info
 All AI agent evaluation metrics in `deepeval` support custom LLM judges, configurable thresholds, strict mode for binary scoring, and detailed reasoning explanations. See each metric's documentation for full configuration options.
@@ -442,8 +442,9 @@ All AI agent evaluation metrics in `deepeval` support custom LLM judges, configu
           action (<code>ToolCorrectnessMetric</code>,{" "}
           <code>ArgumentCorrectnessMetric</code>), and execution (
           <code>TaskCompletionMetric</code>, <code>StepEfficiencyMetric</code>).
-          You can also build custom metrics with <code>GEval</code> or{" "}
-          <code>DAGMetric</code>.
+          The reasoning and execution metrics are trajectory metrics, while the
+          action metrics are component-level. You can also build custom metrics
+          with <code>GEval</code> or <code>DAGMetric</code>.
         </>
       ),
     },
@@ -466,7 +467,8 @@ All AI agent evaluation metrics in `deepeval` support custom LLM judges, configu
           <code>PlanQualityMetric</code> evaluates whether the agent's plan is
           logical and complete given the task.{" "}
           <code>PlanAdherenceMetric</code> evaluates whether the agent then
-          actually followed that plan during execution.
+          actually followed that plan during execution. Both are trajectory
+          metrics that require tracing and score the complete ordered trace.
         </>
       ),
     },
@@ -474,10 +476,10 @@ All AI agent evaluation metrics in `deepeval` support custom LLM judges, configu
       question: "How does `TaskCompletionMetric` work?",
       answer: (
         <>
-          <code>TaskCompletionMetric</code> reads the full trace, extracts the
-          user's goal, and uses an LLM judge to score whether the agent
-          completed it. It's the best end-to-end metric for task-critical
-          agents.
+          <code>TaskCompletionMetric</code> reads the complete ordered trace,
+          extracts the user's goal, and uses an LLM judge to score whether the
+          agent completed it. It is a trajectory metric for task-critical
+          agents, not a black-box end-to-end metric.
         </>
       ),
     },
@@ -494,14 +496,16 @@ All AI agent evaluation metrics in `deepeval` support custom LLM judges, configu
       ),
     },
     {
-      question: "Should I attach agent metrics end-to-end or component-level?",
+      question: "Should I use trajectory or component-level agent metrics?",
       answer: (
         <>
-          Reasoning and execution metrics need the full trace, so attach them
-          end-to-end via <code>evals_iterator(metrics=[...])</code>. Action
-          layer metrics evaluate a specific decision, so attach them
-          component-level via <code>@observe(metrics=[...])</code> on the LLM
-          span.
+          Plan quality, plan adherence, task completion, and step efficiency
+          need the complete ordered trace, so run them as trajectory metrics
+          via <code>evals_iterator(metrics=[...])</code>. Tool correctness and
+          argument correctness evaluate one tool-calling decision, so attach
+          them component-level via <code>@observe(metrics=[...])</code> on the
+          LLM span. Use black-box end-to-end metrics when only the final input
+          and output should matter.
         </>
       ),
     },
@@ -525,6 +529,7 @@ All AI agent evaluation metrics in `deepeval` support custom LLM judges, configu
 Now that you understand the available AI agent evaluation metrics, here's where to go next:
 
 - [Set up tracing](/docs/evaluation-llm-tracing) — Required for all agent metrics to capture execution traces
-- [AI Agent Evaluation Guide](/docs/guides-ai-agent-evaluation) — Deep dive into evaluation strategies for development and production
-- [End-to-end Evals](/docs/evaluation-end-to-end-llm-evals) — Learn how to run metrics on full agent traces
+- [AI Agent Evaluation Guide](/guides/guides-ai-agent-evaluation) — Deep dive into evaluation strategies for development and production
+- [Trajectory-based Evals](/docs/evaluation-trajectory-based-llm-evals) — Learn how to evaluate complete ordered agent traces
+- [End-to-end Evals](/docs/evaluation-end-to-end-llm-evals) — Learn how to evaluate final black-box outputs
 - [Component-level Evals](/docs/evaluation-component-level-llm-evals) — Learn how to attach metrics to specific components

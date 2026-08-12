@@ -7,11 +7,11 @@ languages: [python, typescript]
 
 import { ASSETS } from "@site/src/assets";
 
-`deepeval` offers 50+ SOTA, ready-to-use metrics for you to quickly get started with. Essentially, while a test case represents the thing you're trying to measur, the metric acts as the ruler based on a specific criteria of interest.
+`deepeval` offers 50+ SOTA, ready-to-use metrics for you to quickly get started with. Essentially, while a test case represents the thing you're trying to measure, the metric acts as the ruler for specific criteria of interest.
 
 ## Quick Summary
 
-Almost all predefined metrics on `deepeval` uses **LLM-as-a-judge**, with various techniques such as **QAG** (question-answer-generation), **DAG** (deep acyclic graphs), and **G-Eval** to score [test cases](/docs/evaluation-test-cases), which represents atomic interactions with your LLM app.
+Almost all predefined metrics on `deepeval` use **LLM-as-a-judge**, with techniques such as **QAG** (question-answer-generation), **DAG** (deep acyclic graphs), and **G-Eval**. Most score [test cases](/docs/evaluation-test-cases) representing atomic interactions, while [trajectory metrics](/docs/evaluation-trajectory-based-llm-evals) score the complete ordered trace produced by an AI agent.
 
 All of `deepeval`'s metrics output a **score between 0-1** based on its corresponding equation, as well as score **reasoning**. A metric is only successful if the evaluation score is equal to or greater than `threshold`, which is defaulted to `0.5` for all metrics.
 
@@ -32,16 +32,21 @@ You should aim to have **at least one** custom metric in your LLM evals pipeline
 </Tab>
 <Tab value="AI Agents">
 
-Agentic metrics evaluates the **overall execution flow** of your agent. In `deepeval`, there are six main agentic metrics:
+Agentic metrics evaluate AI agents at two different scopes:
 
-- Task Completion
-- Argument Correctness
-- Tool Correctness
-- Step Efficiency
-- Plan Adherence
-- Plan Quality
+**Trajectory metrics** analyze the complete ordered chain of decisions and actions captured through [LLM tracing](/docs/evaluation-llm-tracing):
 
-The task completion metric does not require a test case and will take an LLM trace to evaluate task completion (i.e. you'll have to [setup LLM tracing](/docs/evaluation-llm-tracing)).
+- Task Completion — whether the agent successfully accomplished its task.
+- Step Efficiency — whether the agent avoided unnecessary or redundant steps.
+- Plan Adherence — whether the agent followed its generated plan.
+- Plan Quality — whether the generated plan was logical, complete, and efficient.
+
+**Component-level action metrics** evaluate one LLM decision about tool selection and arguments inside that trajectory:
+
+- Tool Correctness — whether the agent selected the correct tools.
+- Argument Correctness — whether it supplied the correct arguments to those tools.
+
+Use [trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals) for overall execution quality and [component-level evaluation](/docs/evaluation-component-level-llm-evals) to diagnose individual actions.
 
 </Tab>
 <Tab value="RAG">
@@ -114,7 +119,7 @@ Not use case specific, but still useful for some use cases:
 **Most metrics only require 1-2 parameters** in a test case, so it's important that you visit each metric's documentation pages to learn what's required.
 :::
 
-Your LLM app can be evaluated **end-to-end** (component-level example further below) by providing a list of metrics and test cases:
+Metrics can score your app's black-box result, an agent's complete trajectory, or an individual component. This first example runs an **end-to-end** evaluation by providing metrics and test cases:
 
 <Switch>
 
@@ -308,7 +313,83 @@ If you're looking for decision-tree based LLM-as-a-Judge, checkout the [Deep Acy
 
 ### Default Metrics
 
-<Tabs items={["RAG", "Agents", "Chatbots", "Images", "Safety"]}>
+<Tabs items={["AI Agents", "RAG", "Chatbots", "Images", "Safety"]}>
+<Tab value="AI Agents">
+
+`deepeval` includes six metrics for evaluating AI agents. Choose them based on the scope you need:
+
+**Trajectory metrics** evaluate how the full execution works together:
+
+- **Task Completion:** Assesses whether the agent successfully completed its task.
+- **Step Efficiency:** Assesses whether the agent completed the task without unnecessary or redundant steps.
+- **Plan Adherence:** Assesses whether the agent followed its generated plan during execution.
+- **Plan Quality:** Assesses whether the generated plan was logical, complete, and efficient.
+
+**Component-level action metrics** evaluate individual LLM tool-calling decisions:
+
+- **Tool Correctness:** Assesses whether the agent selected the correct tools.
+- **Argument Correctness:** Assesses whether the agent supplied the correct arguments to those tools.
+
+Trajectory metrics require [tracing](/docs/evaluation-llm-tracing) because they analyze the complete ordered trace. Pass them to <Term py="evals_iterator()" ts="evalsIterator()"/> when running the agent:
+
+<Switch>
+
+<Case id="python">
+
+```python title="main.py" {16}
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.tracing import observe
+
+@observe()
+def trip_planner_agent(input):
+
+    @observe()
+    def itinerary_generator(destination, days):
+        return ["Eiffel Tower", "Louvre Museum", "Montmartre"][:days]
+
+    return itinerary_generator("Paris", 2)
+
+dataset = EvaluationDataset(goldens=[Golden(input="Plan a two-day trip to Paris")])
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric(threshold=0.5)]):
+    trip_planner_agent(golden.input)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript title="main.ts" {18}
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { TaskCompletionMetric } from "deepeval/metrics";
+import { observe } from "deepeval/tracing";
+
+const itineraryGenerator = observe({
+  fn: async (destination: string, days: number) =>
+    ["Eiffel Tower", "Louvre Museum", "Montmartre"].slice(0, days),
+});
+
+const tripPlannerAgent = observe({
+  fn: async (input: string) => await itineraryGenerator("Paris", 2),
+});
+
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "Plan a two-day trip to Paris" })],
+});
+
+for await (const golden of dataset.evalsIterator({
+  metrics: [new TaskCompletionMetric({ threshold: 0.5 })],
+})) {
+  await tripPlannerAgent((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
+</Tab>
 <Tab value="RAG">
 
 The most used RAG metrics include:
@@ -349,73 +430,6 @@ const relevancy = new AnswerRelevancyMetric({ threshold: 0.5 });
 
 await relevancy.measure(testCase);
 console.log(relevancy.score, relevancy.reason);
-```
-
-</Case>
-
-</Switch>
-
-</Tab>
-<Tab value="Agents">
-
-The most used agentic metrics include:
-
-- **Task Completion:** Assesses if the agent successfully completed a given task for a given LLM trace
-- **Tool Correctness:** Evaluates if tools were called and used correctly
-
-There's not a lot of metrics required for agents since most is taken care of by task completion. To use the task completion metric, you have to [setup tracing](/docs/evaluation-llm-tracing) (just like for component-level evals shown above):
-
-<Switch>
-
-<Case id="python">
-
-```python title="main.py" {8,11}
-from deepeval.metrics import TaskCompletionMetric
-from deepeval.tracing import observe
-from deepeval.dataset import Golden
-from deepeval import evaluate
-
-task_completion = TaskCompletionMetric(threshold=0.5)
-
-@observe(metrics=[task_completion])
-def trip_planner_agent(input):
-
-    @observe()
-    def itinerary_generator(destination, days):
-        return ["Eiffel Tower", "Louvre Museum", "Montmartre"][:days]
-
-    return itinerary_generator("Paris", 2)
-
-evaluate(observed_callback=trip_planner_agent, goldens=[Golden(input="Paris, 2")])
-```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript title="main.ts" {7,12}
-import { EvaluationDataset, Golden } from "deepeval/dataset";
-import { TaskCompletionMetric } from "deepeval/metrics";
-import { observe } from "deepeval/tracing";
-
-const taskCompletion = new TaskCompletionMetric({ threshold: 0.5 });
-
-const itineraryGenerator = observe({
-  fn: async (destination: string, days: number) =>
-    ["Eiffel Tower", "Louvre Museum", "Montmartre"].slice(0, days),
-});
-
-const tripPlannerAgent = observe({
-  metrics: [taskCompletion],
-  fn: async (input: string) => await itineraryGenerator("Paris", 2),
-});
-
-const dataset = new EvaluationDataset({
-  goldens: [new Golden({ input: "Paris, 2" })],
-});
-for await (const golden of dataset.evalsIterator()) {
-  await tripPlannerAgent((golden as Golden).input);
-}
 ```
 
 </Case>
@@ -562,8 +576,9 @@ These are the metric categories to consider when choosing your metrics:
   - DAG – **decision-tree** metric for **objective or mixed** criteria (e.g., verify format before tone).
   - Start with G-Eval for simplicity; use DAG for more control. You can also subclass `BaseMetric` to create your own.
 - **Generic metrics** are system specific and use case agnostic:
+  - Agent trajectory metrics: evaluate task completion, execution efficiency, planning, and plan adherence across the complete trace
+  - Agent component metrics: evaluate tool selection and argument generation at individual action steps
   - RAG metrics: measures retriever and generator separately
-  - Agent metrics: evaluate tool usage and task completion
   - Multi-turn metrics: measure overall dialogue quality
   - Combine these for multi-component LLM systems.
 - **Reference vs. Referenceless**:
@@ -577,7 +592,7 @@ If you're running metrics in production, you _must_ choose a referenceless metri
 
 When deciding on metrics, no matter how tempting, try to limit yourself to **no more than 5 metrics**, with this breakdown:
 
-- **2-3** generic, system-specific metrics (e.g. contextual precision for RAG, tool correctness for agents)
+- **2-3** generic, system-specific metrics (e.g. task completion for agents, contextual precision for RAG)
 - **1-2** custom, use case-specific metrics (e.g. helpfulness for a medical chatbot, format correctness for summarization)
 
 The goal is to force yourself to prioritize and clearly define your evaluation criteria. This will not only help you use `deepeval`, but also help you understand what you care most about in your LLM application.
@@ -600,8 +615,8 @@ graph TD
 
 Here are some additional ideas if you're not sure:
 
+- **AI agents**: Start with `TaskCompletionMetric` for overall trajectory quality, add `StepEfficiencyMetric`, `PlanAdherenceMetric`, or `PlanQualityMetric` when the execution path matters, and use `ToolCorrectnessMetric` or `ArgumentCorrectnessMetric` to diagnose individual LLM tool-calling decisions
 - **RAG**: Focus on the `AnswerRelevancyMetric` (evaluates <Term py="actual_output" ts="actualOutput"/> alignment with the `input`) and `FaithfulnessMetric` (checks for hallucinations against <Term py="retrieval_context" ts="retrievalContext"/>)
-- **Agents**: Use the `ToolCorrectnessMetric` to verify proper tool selection and usage
 - **Chatbots**: Implement a `ConversationCompletenessMetric` to assess overall conversation quality
 - **Custom Requirements**: When standard metrics don't fit your needs, create custom evaluations with `G-Eval` or `DAG` frameworks
 
@@ -615,15 +630,16 @@ You can use **ANY** LLM judge in `deepeval`, including OpenAI, Azure OpenAI, Oll
 
 ## Using Metrics
 
-There are three ways you can use metrics:
+There are four ways you can use metrics:
 
 1. [End-to-end](/docs/evaluation-end-to-end-llm-evals) evals, treating your LLM system as a black-box and evaluating the system inputs and outputs.
-2. [Component-level](/docs/evaluation-component-level-llm-evals) evals, placing metrics on individual components in your LLM app instead.
-3. One-off (or standalone) evals, where you would use a metric to execute it individually.
+2. [Trajectory-based](/docs/evaluation-trajectory-based-llm-evals) evals, evaluating the complete ordered chain of steps taken by an AI agent.
+3. [Component-level](/docs/evaluation-component-level-llm-evals) evals, placing metrics on individual components in your LLM app instead.
+4. One-off (or standalone) evals, where you would use a metric to execute it individually.
 
 ### For End-to-End Evals
 
-To run end-to-end evaluations of your LLM system using any metric of your choice, simply provide a list of [test cases](/docs/evaluation-test-cases) to evaluate your metrics against:
+To run end-to-end evaluations of your LLM system, provide black-box metrics with a list of [test cases](/docs/evaluation-test-cases):
 
 <Switch>
 
@@ -662,6 +678,55 @@ The [`evaluate()` function](/docs/evaluation-introduction#evaluating-without-pyt
 :::tip
 [`deepeval test run`](/docs/evaluation-introduction#evaluating-with-pytest) is `deepeval`'s native Pytest integration, which allows you to run evals in CI/CD pipelines.
 :::
+
+### For Trajectory-Based Evals
+
+Trajectory metrics analyze relationships between the plans, model calls, tools, handoffs, and intermediate steps in an agent's complete trace. Metrics carrying the **Trajectory** tag—Task Completion, Step Efficiency, Plan Adherence, and Plan Quality—require [LLM tracing](/docs/evaluation-llm-tracing).
+
+Pass trajectory metrics to <Term py="evals_iterator()" ts="evalsIterator()"/>, then invoke your traced agent once for each golden:
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+from app import my_agent
+
+dataset = EvaluationDataset(
+    goldens=[Golden(input="Plan a three-day trip to Paris")]
+)
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    my_agent(golden.input)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { TaskCompletionMetric } from "deepeval/metrics";
+import { myAgent } from "./app";
+
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "Plan a three-day trip to Paris" })],
+});
+
+for await (const golden of dataset.evalsIterator({
+  metrics: [new TaskCompletionMetric()],
+})) {
+  await myAgent((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
+Each metric receives the complete ordered trace after the agent finishes. See [trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals) for instrumentation examples, CI/CD usage, and guidance on combining trajectory and component metrics.
 
 ### For Component-Level Evals
 
@@ -740,6 +805,18 @@ for await (const golden of dataset.evalsIterator()) {
 </Case>
 
 </Switch>
+
+### Use Metrics with Integrations
+
+`deepeval`'s framework integrations capture the traces and spans that metrics evaluate, so you can score complete agent trajectories or individual framework-emitted components without recreating the execution structure yourself.
+
+Here are a few examples available for your selected SDK:
+
+<include cwd>snippets/integrations/framework-integration-card-examples.mdx</include>
+
+Pass metrics to <Term py="evals_iterator()" ts="evalsIterator()"/> for end-to-end or trajectory-based evaluation. Attach or stage metrics on framework-emitted spans for component-level evaluation. Each integration guide shows the supported patterns for that framework.
+
+[Browse all framework integrations →](/integrations)
 
 ### For One-Off Evals
 
@@ -1163,7 +1240,7 @@ The [`scorer` module](https://github.com/confident-ai/deepeval/blob/main/deepeva
       answer: (
         <>
           No more than 5: roughly <strong>2-3</strong> generic system metrics
-          (e.g. RAG or agent metrics) and <strong>1-2</strong> custom use-case
+          (e.g. agent or RAG metrics) and <strong>1-2</strong> custom use-case
           metrics. Capping forces you to prioritize what you actually care
           about.
         </>
@@ -1221,9 +1298,11 @@ The [`scorer` module](https://github.com/confident-ai/deepeval/blob/main/deepeva
       answer: (
         <>
           In production you run <strong>referenceless</strong> metrics on your
-          live LLM <a href="/docs/evaluation-llm-tracing">traces</a> rather than
-          test cases. For continuous online evals, dashboards, and alerts on
-          live traffic, run them on{" "}
+          live LLM <a href="/docs/evaluation-llm-tracing">traces</a> and spans
+          rather than prebuilt test cases. Trajectory metrics can score the
+          complete agent path, while component metrics can score selected spans.
+          For continuous online evals, dashboards, and alerts on live traffic,
+          run them on{" "}
           <a href="https://confident-ai.com">Confident AI</a>, the enterprise
           platform for all-in-one evals, observability, and red teaming.
         </>
@@ -1235,9 +1314,28 @@ The [`scorer` module](https://github.com/confident-ai/deepeval/blob/main/deepeva
         <>
           Yes. Once you{" "}
           <a href="/docs/evaluation-llm-tracing">set up tracing</a>, metrics can
-          score spans and traces automatically. Wire them up on{" "}
+          score spans and traces automatically. Metrics on the complete ordered
+          trace are <a href="/docs/evaluation-trajectory-based-llm-evals">
+            trajectory-based
+          </a>, while metrics on individual spans are{" "}
+          <a href="/docs/evaluation-component-level-llm-evals">
+            component-level
+          </a>. Wire them up on{" "}
           <a href="https://confident-ai.com">Confident AI</a> to track metric
           scores on production traffic over time.
+        </>
+      ),
+    },
+    {
+      question: "Which metrics evaluate a complete agent trajectory?",
+      answer: (
+        <>
+          Metrics carrying the <strong>Trajectory</strong> tag evaluate the
+          complete ordered trace. These are <code>TaskCompletionMetric</code>,{" "}
+          <code>StepEfficiencyMetric</code>,{" "}
+          <code>PlanAdherenceMetric</code>, and <code>PlanQualityMetric</code>.
+          They require tracing and are passed to the evals iterator or test
+          assertion rather than measured against one isolated component.
         </>
       ),
     },

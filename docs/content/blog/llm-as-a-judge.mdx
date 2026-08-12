@@ -16,7 +16,7 @@ This guide explains what LLM-as-a-Judge is, and how to use it in an open-source 
 | DAG               | Deterministic, branching, multi-condition criteria                  | [`DAGMetric`](/docs/metrics-dag)                                                                                               |
 | QAG-style metrics | Built-in metrics that decompose evaluation into closed-ended checks | [RAG metrics](/guides/guides-rag-evaluation), [agent metrics](/guides/guides-ai-agent-evaluation-metrics), and other built-ins |
 
-These three techniques all score a single output. A fourth pattern, pairwise comparison, judges two or more outputs against each other instead, which is useful when you want to know which prompt or model version is better rather than how good one output is on its own.
+These techniques can judge different scopes. Most score one output, component, or interaction, while trajectory-based agent metrics inspect a complete ordered trace. A separate pattern, pairwise comparison, judges two or more outputs against each other, which is useful when you want to know which prompt or model version is better rather than how good one output is on its own.
 
 But before we dive too deep, let's go through the fundamentals of what LLM-as-a-judge is.
 
@@ -31,9 +31,10 @@ An LLM judge can answer questions that are difficult to capture with exact match
 - Did the model follow the expected format? This is usually measured as format correctness.
 - Is the tone appropriate for the use case? This can cover professionalism, empathy, or brand voice.
 - Did the agent complete the task? This is usually measured as task completion.
+- Did the agent follow a sound and efficient path through its plan, model decisions, tool calls, and handoffs? This requires trajectory-based evaluation.
 - Which prompt or model version performed better? This is usually measured with pairwise preference.
 
-This makes LLM-as-a-Judge especially useful for evaluating LLM applications where quality is semantic, subjective, or context-dependent. A customer support answer can be factually correct but too vague. A RAG answer can sound fluent while hallucinating. An AI agent can call tools successfully but still fail the user task. These are the kinds of failures that traditional exact-match metrics usually miss.
+This makes LLM-as-a-Judge especially useful for evaluating LLM applications where quality is semantic, subjective, or context-dependent. A customer support answer can be factually correct but too vague. A RAG answer can sound fluent while hallucinating. An AI agent can call tools successfully but still fail the user task—or reach the right answer through a wasteful or plan-breaking sequence. These are the kinds of failures that traditional exact-match metrics usually miss.
 
 In DeepEval, an LLM judge takes the data in a test case, applies a judging criterion, and returns a score, reason, verdict, or winner.
 
@@ -89,7 +90,7 @@ DeepEval makes this practical by giving you reusable LLM judge implementations i
 - Use `GEval` for custom quality criteria.
 - Use `DAGMetric` for strict multi-step scoring logic.
 - Use built-in RAG metrics for grounding and retrieval quality.
-- Use built-in agentic metrics for task completion and tool use.
+- Use built-in agentic metrics for complete trajectories and component-level tool use.
 - Use `ArenaGEval` for prompt or model comparisons.
 
 ## Single-Output vs Pairwise LLM Judges
@@ -198,7 +199,7 @@ If you are running online or production evaluation, you usually need referencele
 
 ## The Three Main LLM Judge Techniques
 
-DeepEval gives you multiple ways to turn LLM-as-a-Judge from a broad idea into a repeatable evaluation metric.
+DeepEval gives you multiple ways to turn LLM-as-a-Judge from a broad idea into a repeatable evaluation metric. The judging technique and evaluation scope are separate choices: a judge may inspect final output, one span, or an agent's complete ordered trajectory.
 
 | Technique           | Best for                                                                  | Strength                              | Tradeoff                                                    |
 | ------------------- | ------------------------------------------------------------------------- | ------------------------------------- | ----------------------------------------------------------- |
@@ -334,14 +335,18 @@ QAG stands for question-answer generation. In LLM evaluation, QAG-style metrics 
 
 You usually do not need to implement QAG yourself. DeepEval uses QAG-style algorithms in many built-in metrics so you can evaluate common LLM app patterns without designing every judge prompt from scratch.
 
-| Metric                                                            | What the judge checks                                          | Reference-based?    | Required reference-like field          |
+| Metric                                                            | What the judge checks                                          | Evaluation scope    | Required reference-like field          |
 | ----------------------------------------------------------------- | -------------------------------------------------------------- | ------------------- | -------------------------------------- |
-| [`AnswerRelevancyMetric`](/docs/metrics-answer-relevancy)         | Whether `actual_output` answers the `input`                    | Referenceless       | None                                   |
-| [`FaithfulnessMetric`](/docs/metrics-faithfulness)                | Whether `actual_output` is grounded in retrieved context       | Reference-based     | `retrieval_context`                    |
-| [`ContextualRelevancyMetric`](/docs/metrics-contextual-relevancy) | Whether retrieved chunks are relevant to the input             | Reference-based     | `retrieval_context`                    |
-| [`ContextualRecallMetric`](/docs/metrics-contextual-recall)       | Whether retrieval captured facts needed by the expected answer | Reference-based     | `expected_output`, `retrieval_context` |
-| [`ToolCorrectnessMetric`](/docs/metrics-tool-correctness)         | Whether the right tools were called                            | Reference-based     | `expected_tools`                       |
-| [`TaskCompletionMetric`](/docs/metrics-task-completion)           | Whether an agent completed the task                            | Often referenceless | Depends on metric setup                |
+| [`AnswerRelevancyMetric`](/docs/metrics-answer-relevancy)         | Whether `actual_output` answers the `input`                    | Output              | None                                   |
+| [`FaithfulnessMetric`](/docs/metrics-faithfulness)                | Whether `actual_output` is grounded in retrieved context       | Output              | `retrieval_context`                    |
+| [`ContextualRelevancyMetric`](/docs/metrics-contextual-relevancy) | Whether retrieved chunks are relevant to the input             | Component/output    | `retrieval_context`                    |
+| [`ContextualRecallMetric`](/docs/metrics-contextual-recall)       | Whether retrieval captured facts needed by the expected answer | Component/output    | `expected_output`, `retrieval_context` |
+| [`TaskCompletionMetric`](/docs/metrics-task-completion)           | Whether the ordered agent execution achieved the task          | Trajectory          | Depends on metric setup                |
+| [`StepEfficiencyMetric`](/docs/metrics-step-efficiency)           | Whether the agent avoided unnecessary steps                    | Trajectory          | None                                   |
+| [`PlanAdherenceMetric`](/docs/metrics-plan-adherence)             | Whether execution followed the agent's plan                    | Trajectory          | Agent plan captured in trace           |
+| [`PlanQualityMetric`](/docs/metrics-plan-quality)                 | Whether the agent's plan was suitable for the task              | Trajectory          | Agent plan captured in trace           |
+| [`ToolCorrectnessMetric`](/docs/metrics-tool-correctness)         | Whether one decision selected the right tools                  | Component-level     | `expected_tools`                       |
+| [`ArgumentCorrectnessMetric`](/docs/metrics-argument-correctness) | Whether one decision supplied correct tool arguments           | Component-level     | Expected tool arguments                |
 
 For example, answer relevancy is referenceless:
 
@@ -376,7 +381,7 @@ metric = FaithfulnessMetric(threshold=0.7)
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
-Use built-in QAG-style metrics when your evaluation target is already covered by DeepEval. They give you stronger defaults than a one-sentence custom judge.
+Use built-in QAG-style metrics when your evaluation target is already covered by DeepEval. They give you stronger defaults than a one-sentence custom judge. For agents, `TaskCompletionMetric`, `StepEfficiencyMetric`, `PlanAdherenceMetric`, and `PlanQualityMetric` judge the complete trajectory; tool and argument metrics remain component-level checks on individual LLM spans.
 
 ## Choosing Between G-Eval, DAG, and QAG
 
@@ -386,7 +391,8 @@ Use built-in QAG-style metrics when your evaluation target is already covered by
 | Turn a subjective metric into a stable production metric | `GEval` with `evaluation_steps` | Explicit steps reduce ambiguity                                        |
 | Enforce hard requirements before subjective scoring      | `DAGMetric`                     | Branches make failures deterministic                                   |
 | Evaluate standard RAG quality                            | Built-in RAG metrics            | DeepEval already implements the QAG-style algorithm                    |
-| Evaluate agent tool use                                  | Built-in agent metrics          | Tool-specific metrics understand `tools_called` and `expected_tools`   |
+| Evaluate a complete agent trajectory                     | Built-in trajectory metrics     | They inspect ordered plans, decisions, calls, and handoffs             |
+| Evaluate one agent tool-use decision                     | Built-in component metrics      | Tool-specific metrics understand `tools_called` and `expected_tools`   |
 | Compare prompt or model versions                         | `ArenaGEval`                    | Pairwise judging chooses a winner instead of assigning isolated scores |
 
 In practice, most projects use a small mix: two or three built-in metrics for system-specific quality, plus one or two custom `GEval` or `DAGMetric` metrics for product-specific expectations.
@@ -426,7 +432,7 @@ If you see too many false positives or false negatives, adjust the metric before
 
 ## Common LLM-as-a-Judge Workflows
 
-LLM-as-a-Judge can be used anywhere you need repeatable quality checks. The most common workflows are regression testing before deployment, component-level evaluation on traces, and production monitoring after release.
+LLM-as-a-Judge can be used anywhere you need repeatable quality checks. The most common workflows are regression testing before deployment, trajectory-based evaluation of complete agent traces, component-level evaluation of individual spans, and production monitoring after release.
 
 ### Regression Testing in CI/CD
 
@@ -463,7 +469,7 @@ deepeval test run test_refund_answer.py
 
 For a full workflow, see the [CI/CD regression testing guide](/guides/guides-regression-testing-in-cicd).
 
-### Trace and Component-Level Evaluation
+### Component-Level Evaluation on Traces
 
 You can also run LLM judges on components inside your application. This is useful when you want to evaluate a retriever, generator, agent, or tool-calling step separately.
 
@@ -492,6 +498,29 @@ For deeper examples, see [LLM tracing](/docs/evaluation-llm-tracing) and the tra
   src="/img/confident-tracing-observability.png"
   alt="Confident AI tracing and observability workflow for evaluating LLM application components"
 />
+
+### Trajectory-Based Agent Evaluation
+
+A component judge sees one span. A [trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals) instead gives the judge the complete ordered agent trace: plans, model decisions, tool calls, results, and sub-agent handoffs. This lets it assess whether the agent completed the task, followed its plan, and avoided unnecessary steps—not merely whether the final response looks correct.
+
+```python
+from deepeval.metrics import (
+    TaskCompletionMetric,
+    StepEfficiencyMetric,
+    PlanAdherenceMetric,
+)
+
+trajectory_metrics = [
+    TaskCompletionMetric(),
+    StepEfficiencyMetric(),
+    PlanAdherenceMetric(),
+]
+
+for golden in dataset.evals_iterator(metrics=trajectory_metrics):
+    my_ai_agent(golden.input)
+```
+
+Keep `ToolCorrectnessMetric` and `ArgumentCorrectnessMetric` on the relevant LLM span when you need to judge a single tool-use decision.
 
 ### Production Monitoring
 
@@ -564,8 +593,23 @@ If the score looks wrong, check three things first:
         <>
           Use <code>GEval</code> for custom LLM judge metrics,{" "}
           <code>DAGMetric</code> for deterministic decision-tree evaluation,
-          built-in metrics for common RAG or agent workflows, and{" "}
+          built-in metrics for common RAG, agent trajectory, or component
+          workflows, and{" "}
           <code>ArenaGEval</code> for pairwise prompt or model comparisons.
+        </>
+      ),
+    },
+    {
+      question: "Can an LLM judge evaluate an AI agent's trajectory?",
+      answer: (
+        <>
+          Yes. Trajectory metrics inspect the complete ordered trace, including
+          plans, model decisions, tool calls, and handoffs. Use{" "}
+          <code>TaskCompletionMetric</code>,{" "}
+          <code>StepEfficiencyMetric</code>,{" "}
+          <code>PlanAdherenceMetric</code>, or <code>PlanQualityMetric</code>{" "}
+          for this scope; keep tool and argument metrics on individual LLM
+          spans.
         </>
       ),
     },
@@ -617,6 +661,7 @@ If the score looks wrong, check three things first:
 - Use [`GEval`](/docs/metrics-llm-evals) to build custom LLM judges.
 - Use [`DAGMetric`](/docs/metrics-dag) for deterministic LLM judge workflows.
 - Use [`ArenaGEval`](/docs/metrics-arena-g-eval) for pairwise prompt or model comparisons.
+- Use [trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals) to judge complete ordered agent traces.
 - Use the [metrics introduction](/docs/metrics-introduction) to choose built-in metrics.
 - Use [custom LLMs](/guides/guides-using-custom-llms) to configure your judge model.
 - Use [CI/CD regression testing](/guides/guides-regression-testing-in-cicd) to run judges before deployment.
