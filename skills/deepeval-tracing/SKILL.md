@@ -20,7 +20,7 @@ metadata:
   version: "1.1.0"
   category: observability
   tags: "deepeval, tracing, observe, instrumentation, integrations, spans, confident-ai, typescript"
-  compatibility: "Python with `pip install deepeval`, or TypeScript/JavaScript with `npm install deepeval`. Instrumentation uses the DeepEval SDK (`deepeval.tracing` in Python, `deepeval/tracing` in TypeScript). Sending traces to Confident AI requires `deepeval login` (Python) / `npx deepeval login` (TypeScript) or an exported `CONFIDENT_API_KEY`."
+  compatibility: "Python 3.9+ with `pip install deepeval`, or TypeScript/JavaScript on Node.js 20+ with `npm install deepeval`. Instrumentation uses the DeepEval SDK (`deepeval.tracing` in Python, `deepeval/tracing` in TypeScript). Sending traces to Confident AI requires `deepeval login` (Python) / `npx deepeval login` (TypeScript) or an exported `CONFIDENT_API_KEY`."
 ---
 
 # DeepEval Tracing
@@ -46,9 +46,9 @@ LLM, agent, retrieval, or tool-calling component, this skill does not apply.
 ## When to Use vs the `deepeval` and `deepeval-otel` Skills
 
 - **This skill (`deepeval-tracing`)** — instrument an app with the DeepEval SDK
-  (`@observe` / `observe()`, framework integrations) so traces reach Confident
-  AI. Supports Python (`pip install deepeval`) and TypeScript/JavaScript
-  (`npm install deepeval`).
+  (`@observe` in Python, `observe()` in TypeScript, framework integrations) so
+  traces reach Confident AI. Supports Python (`pip install deepeval`) and
+  TypeScript/JavaScript (`npm install deepeval`).
 - **`deepeval` skill** — build eval suites: datasets, metrics, traced evals,
   `deepeval test run`, iteration. It runs evals *against* an app this skill
   instrumented.
@@ -63,8 +63,8 @@ SDK for.
 
 ## Prerequisites
 
-- An AI application in Python with `pip install deepeval`, or in
-  TypeScript/JavaScript with `npm install deepeval`.
+- An AI application in Python (3.9+) with `pip install deepeval`, or in
+  TypeScript/JavaScript (Node.js 20+) with `npm install deepeval`.
 - For traces to reach Confident AI: `deepeval login` (Python) /
   `npx deepeval login` (TypeScript), or an exported `CONFIDENT_API_KEY`
   (preferred for CI and non-interactive runs).
@@ -102,8 +102,9 @@ SDK for.
    boundaries.
 3. Read the exact integration doc before writing tracing code, and check it
    covers the app's language.
-4. Give spans meaningful types; let names default to function names unless
-   there is a strong reason to override.
+4. Give spans meaningful types. In Python, let names default to function
+   names unless there is a strong reason to override. In TypeScript, pass
+   `name` explicitly — inline `fn:` arrows carry no usable function name.
 5. Never trace secrets, credentials, API keys, or raw sensitive user data.
 6. Producing traces is the scope. Attaching metrics and running evals belong to
    the `deepeval` skill; raw OpenTelemetry export belongs to `deepeval-otel`.

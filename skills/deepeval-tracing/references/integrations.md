@@ -22,7 +22,8 @@ following it.
 4. Follow the integration doc's tracing setup exactly.
 
 For example, LangGraph apps should use the LangGraph/LangChain callback
-integration (`CallbackHandler`) before adding manual instrumentation. Manual
+integration (`CallbackHandler` in Python, `DeepEvalCallbackHandler` in
+TypeScript) before adding manual instrumentation. Manual
 tracing is useful around an outer app function or unsupported component, not
 as the first choice for the graph itself.
 
@@ -86,5 +87,5 @@ Vector database integrations are Python only.
 For raw OpenTelemetry / OTLP export — instrumenting with the vendor-neutral
 OpenTelemetry SDK instead of the DeepEval SDK, including apps in languages
 DeepEval has no SDK for — use the `deepeval-otel` skill. This skill
-(`deepeval-tracing`) covers DeepEval's native tracing (`@observe` /
-`observe()`) and the integrations listed above.
+(`deepeval-tracing`) covers DeepEval's native tracing (`@observe` in Python,
+`observe()` in TypeScript) and the integrations listed above.

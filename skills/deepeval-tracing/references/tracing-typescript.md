@@ -36,13 +36,16 @@ and final output."
 Unlike Python's `@observe` decorator, the TypeScript SDK's `observe()` is a
 wrapper: it takes an options object with an `fn` property and returns an async
 function. Use this only when no native integration is available, or when
-wrapping an outer app-owned function around an integration-traced run. Let the
-span name default to the function name:
+wrapping an outer app-owned function around an integration-traced run. Always
+pass `name` — JavaScript gives an inline `fn:` arrow function no usable name,
+so without it the span falls back to a generic label (the span type, such as
+"llm" or "base") instead of the wrapper's variable name:
 
 ```typescript
 import { observe, updateCurrentTrace } from "deepeval/tracing";
 
 const runMyAiApp = observe({
+  name: "runMyAiApp",
   fn: async (userInput: string) => {
     const output = await myAiApp(userInput);
     updateCurrentTrace({ input: userInput, output });
@@ -53,10 +56,11 @@ const runMyAiApp = observe({
 
 ## Manual Instrumentation Types
 
-When the app is not using a supported integration, or when adding spans around
-app-owned components, wrap functions with `observe()` and meaningful `type`
-values. The type helps future metric selection and makes the trace easier for
-an agent to reason about.
+When the app is not using a supported integration, or when the app's own
+components — retrieval, tool, or planning functions an integration does not
+trace — need spans of their own, wrap them with `observe()` and meaningful
+`type` values. The type helps future metric selection and makes the trace
+easier for an agent to reason about.
 
 Use common types deliberately:
 
@@ -65,8 +69,10 @@ Use common types deliberately:
 - `type: "tool"` for tool or function calls used by an agent
 - `type: "agent"` for agent entry points or planning loops
 
-Do not set custom `name` values unless there is a strong reason. Function names
-are usually better anchors for iteration.
+Set each span's `name` to the name of the function it wraps (for example
+`name: "retrieveContext"` on the `retrieveContext` wrapper). Do not invent
+display names that differ from the code — function names are the anchors for
+iteration, and inline `fn:` arrows carry no usable name of their own.
 
 ## LLM Calls
 
@@ -84,6 +90,7 @@ const client = new OpenAI();
 
 const callModel = observe({
   type: "llm",
+  name: "callModel",
   fn: async (messages: { role: string; content: string }[]) => {
     const response = await client.chat.completions.create({
       model: "gpt-4.1",
@@ -105,6 +112,7 @@ assistant output instead:
 ```typescript
 const callModel = observe({
   type: "llm",
+  name: "callModel",
   fn: async (prompt: string) => {
     const output = await llm.invoke(prompt);
     updateCurrentSpan({ input: prompt, output });
@@ -121,6 +129,7 @@ needed:
 ```typescript
 const retrieveContext = observe({
   type: "retriever",
+  name: "retrieveContext",
   fn: async (query: string) => {
     const documents = await retriever.invoke(query);
     updateCurrentSpan({ input: query, output: documents });
@@ -134,6 +143,7 @@ Use tool spans so tool-calling metrics are discoverable:
 ```typescript
 const lookupOrder = observe({
   type: "tool",
+  name: "lookupOrder",
   fn: async (orderId: string) => {
     const result = await ordersApi.lookup(orderId);
     updateCurrentSpan({ input: { orderId }, output: result });
@@ -154,6 +164,7 @@ spans:
 ```typescript
 const runMyAiApp = observe({
   type: "agent",
+  name: "runMyAiApp",
   fn: async (userInput: string) => {
     updateCurrentTrace({ tags: ["rag", "support-chat"] });
     return myAiApp(userInput);
@@ -178,6 +189,7 @@ Use span-level metadata for component facts that help diagnose failures:
 ```typescript
 const retrieveContext = observe({
   type: "retriever",
+  name: "retrieveContext",
   fn: async (query: string) => {
     const documents = await retriever.invoke(query);
     updateCurrentSpan({
