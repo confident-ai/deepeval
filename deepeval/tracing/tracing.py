@@ -12,7 +12,7 @@ from typing import (
     Set,
     Union,
 )
-from time import perf_counter
+from time import perf_counter, sleep
 import threading
 import functools
 import inspect
@@ -85,6 +85,9 @@ from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden
     from anthropic import Anthropic
+
+
+DEFAULT_TRACE_FLUSH_TIMEOUT = 30.0
 
 
 class _ObservedAsyncGenIter:
@@ -177,6 +180,7 @@ class TraceManager:
         self._trace_queue = queue.Queue()
         self._worker_thread = None
         self._min_interval = 0.2  # Minimum time between API calls (seconds)
+        self._flush_poll_interval = 0.05  # How often flush() re-checks
         self._last_post_time = 0
         self._in_flight_tasks: Set[asyncio.Task[Any]] = set()
         # Counts traces from the moment they are enqueued until their send
@@ -714,6 +718,33 @@ class TraceManager:
             self._post_remaining_traces(remaining_traces)
             loop.run_until_complete(loop.shutdown_asyncgens())
             loop.close()
+
+    def flush(self, timeout: float = DEFAULT_TRACE_FLUSH_TIMEOUT) -> bool:
+        """Wait until every posted trace has been sent, or ``timeout`` elapses.
+
+        Returns ``True`` once nothing is outstanding, ``False`` if the timeout
+        expired with traces still queued or in flight. The sending itself
+        happens on the trace worker thread, so this only sleeps — call it
+        before tearing down a short-lived process to avoid abandoning traces.
+        """
+        deadline = perf_counter() + timeout
+        while self.outstanding_traces:
+            if perf_counter() >= deadline:
+                return False
+            sleep(self._flush_poll_interval)
+        return True
+
+    async def a_flush(
+        self, timeout: float = DEFAULT_TRACE_FLUSH_TIMEOUT
+    ) -> bool:
+        """Async counterpart of :meth:`flush` that yields instead of blocking."""
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + timeout
+        while self.outstanding_traces:
+            if loop.time() >= deadline:
+                return False
+            await asyncio.sleep(self._flush_poll_interval)
+        return True
 
     def _post_remaining_traces(self, remaining_traces: List[TraceApi]):
         """Synchronously post traces buffered after the main thread exited.
