@@ -58,9 +58,7 @@ def instrument_microsoft_agent_framework(
     observability API. Prompt, response, and tool content remains disabled
     unless ``capture_content=True`` is explicitly requested.
     """
-    with capture_tracing_integration(
-        Integration.MICROSOFT_AGENT_FRAMEWORK
-    ):
+    with capture_tracing_integration(Integration.MICROSOFT_AGENT_FRAMEWORK):
         _require_dependencies()
 
         if not api_key:
