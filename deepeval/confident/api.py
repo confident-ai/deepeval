@@ -78,6 +78,14 @@ def resolve_backend() -> BackendResolution:
         )
 
     # If the user has explicitly set a region, respect it.
+    region = getattr(s, "CONFIDENT_REGION", None)
+    if region:
+        return BackendResolution(
+            _api_url_for_region(region), region, "explicit_region"
+        )
+
+    # Fall back to the legacy JSON keystore region (covers keystore-only
+    # setups and settings where CONFIDENT_REGION is unset/empty).
     region = KEY_FILE_HANDLER.fetch_data(KeyValues.CONFIDENT_REGION)
     if region:
         return BackendResolution(
