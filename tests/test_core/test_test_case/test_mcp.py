@@ -9,6 +9,7 @@ from deepeval.test_case import (
     MCPServer,
     get_available_mcp_tool_names,
 )
+from deepeval.evaluate.api import APIEvaluate
 from deepeval.test_case.api import create_api_test_case
 from deepeval.test_case.utils import process_mcp_servers
 
@@ -241,4 +242,30 @@ class TestMCPToolCallTypeSerialization:
 
         assert body["turns"][0]["toolsCalled"] == [
             {"name": "search", "type": "MCP"}
+        ]
+
+    def test_tool_call_type_is_sent_for_metric_collection(self):
+        test_case = LLMTestCase(
+            input="Find the issue",
+            actual_output="Found it",
+            tools_called=[ToolCall(name="search"), ToolCall(name="local_fn")],
+        )
+
+        process_mcp_servers(
+            [test_case],
+            [
+                MCPServer(
+                    server_name="GitHub", available_tools=[{"name": "search"}]
+                )
+            ],
+        )
+        body = APIEvaluate(
+            metricCollection="My Collection",
+            llmTestCases=[test_case],
+            conversationalTestCases=None,
+        ).model_dump(by_alias=True, exclude_none=True)
+
+        assert body["llmTestCases"][0]["toolsCalled"] == [
+            {"name": "search", "type": "MCP"},
+            {"name": "local_fn", "type": "FUNCTION"},
         ]
