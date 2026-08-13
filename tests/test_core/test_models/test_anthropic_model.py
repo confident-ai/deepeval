@@ -320,7 +320,7 @@ def test_anthropic_calculate_cost_with_zero_tokens(mock_require_dep, settings):
 ########################################################
 
 
-class _Verdict(BaseModel):
+class _TruncationVerdict(BaseModel):
     reason: str
 
 
@@ -415,7 +415,7 @@ def test_anthropic_generate_raises_clear_error_when_truncated_with_schema(
 
     model = AnthropicModel(model="claude-opus-5")
     with pytest.raises(DeepEvalError, match="max_tokens"):
-        model.generate("judge this", schema=_Verdict)
+        model.generate("judge this", schema=_TruncationVerdict)
 
 
 @patch("deepeval.models.llms.anthropic_model.require_dependency")
@@ -433,7 +433,7 @@ def test_anthropic_a_generate_raises_clear_error_when_truncated_with_schema(
 
     model = AnthropicModel(model="claude-opus-5")
     with pytest.raises(DeepEvalError, match="max_tokens"):
-        asyncio.run(model.a_generate("judge this", schema=_Verdict))
+        asyncio.run(model.a_generate("judge this", schema=_TruncationVerdict))
 
 
 @patch("deepeval.models.llms.anthropic_model.require_dependency")
