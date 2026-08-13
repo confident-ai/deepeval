@@ -58,6 +58,17 @@ class NarrowConversationalMetric(BaseConversationalMetric):
         return 1
 
 
+class FixedThresholdMetric(BaseMetric):
+    def __init__(self):
+        self.threshold = 0.8
+
+    def measure(self, test_case, *args, **kwargs):
+        return 1
+
+    async def a_measure(self, test_case, *args, **kwargs):
+        return 1
+
+
 def test_metric_data_threshold_defaults_to_none():
     metric_data = MetricData(name="Metric")
 
@@ -100,6 +111,7 @@ def test_copy_metrics_preserves_flaky():
         NarrowToolPermissionMetric(),
         KwargsExactMatchMetric(threshold=0.8),
         NarrowConversationalMetric(),
+        FixedThresholdMetric(),
     ],
 )
 def test_copy_metrics_clones_custom_metrics_without_reconstructing(
@@ -125,6 +137,7 @@ def test_copy_metrics_clones_custom_metrics_without_reconstructing(
     assert copied_metric.custom_config == metric.custom_config
     assert copied_metric.custom_config is not metric.custom_config
     assert copied_metric.model is metric.model
+    assert copied_metric.threshold == metric.threshold
     for field in (
         "score",
         "reason",
