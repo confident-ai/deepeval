@@ -353,8 +353,10 @@ def check_llm_test_case_params(
         metric.error = error_str
         raise ValueError(error_str)
 
-    # Centralized: if a metric requires actual_output, reject empty/whitespace
-    # (including empty multimodal outputs) as "missing params".
+    # Centralized: if a metric requires actual_output, reject an empty string
+    # as "missing params". Whitespace-only strings are intentionally accepted
+    # (see test_answer_relevancy_whitespace_actual_output_does_not_raise_validation),
+    # and non-string (e.g. multimodal) outputs are not checked for emptiness here.
     if SingleTurnParams.ACTUAL_OUTPUT in test_case_params:
         actual_output = getattr(test_case, SingleTurnParams.ACTUAL_OUTPUT.value)
         if isinstance(actual_output, str) and actual_output == "":
