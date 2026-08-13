@@ -54,6 +54,10 @@ const cornerBrackets = (
 const LanguageSelectorHint = () => {
   const pathname = usePathname();
   const overlayRef = useRef<HTMLButtonElement>(null);
+  // The resize/scroll listeners outlive a dismissal, so they need their own
+  // record of it — re-reading storage on every frame would be wasteful, and
+  // storage may be blocked entirely.
+  const dismissedRef = useRef(false);
   const [layout, setLayout] = useState<HintLayout | null>(null);
   const isVisible = layout !== null;
 
@@ -71,6 +75,7 @@ const LanguageSelectorHint = () => {
       // Storage can be unavailable in privacy modes; dismissal still works
       // for the current page.
     }
+    dismissedRef.current = true;
     setLayout(null);
   }, []);
 
@@ -80,8 +85,14 @@ const LanguageSelectorHint = () => {
       return;
     }
 
+    if (dismissedRef.current) {
+      setLayout(null);
+      return;
+    }
+
     try {
       if (window.localStorage.getItem(LANGUAGE_SELECTOR_HINT_STORAGE_KEY)) {
+        dismissedRef.current = true;
         setLayout(null);
         return;
       }
@@ -92,6 +103,11 @@ const LanguageSelectorHint = () => {
     const mediaQuery = window.matchMedia(DESKTOP_QUERY);
 
     const updateLayout = () => {
+      if (dismissedRef.current) {
+        setLayout(null);
+        return;
+      }
+
       if (!mediaQuery.matches) {
         setLayout(null);
         return;
@@ -194,7 +210,10 @@ const LanguageSelectorHint = () => {
   }, [eligible, pathname]);
 
   useEffect(() => {
-    const dismissFromSelector = () => setLayout(null);
+    const dismissFromSelector = () => {
+      dismissedRef.current = true;
+      setLayout(null);
+    };
     window.addEventListener(
       LANGUAGE_SELECTOR_HINT_DISMISSED_EVENT,
       dismissFromSelector
