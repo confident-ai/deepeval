@@ -22,6 +22,7 @@ import NavHeader from "@/src/layouts/NavHeader";
 import TocFooter from "@/src/components/TocFooter";
 import SidebarSearch from "@/src/layouts/SidebarSearch";
 import LanguageSelector from "@/components/language-selector/language-selector";
+import LanguageSelectorHint from "@/components/language-selector/language-selector-hint";
 import { PageLanguageScope } from "@/components/lang/page-language-scope";
 import { TocLanguageSync } from "@/components/lang/toc-language-sync";
 import { LanguageScopedDocsLayout } from "@/components/lang/language-scoped-docs-layout";
@@ -150,6 +151,7 @@ export function createSection(config: SectionConfig) {
         >
           {children}
         </LanguageScopedDocsLayout>
+        <LanguageSelectorHint />
         <Footer />
       </>
     );

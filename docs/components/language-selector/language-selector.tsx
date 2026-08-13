@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Check, ChevronsUpDown } from "lucide-react";
 import {
@@ -16,6 +16,10 @@ import {
   type LanguageMeta,
 } from "@/lib/lang/languages";
 import { SDK_VERSIONS } from "@/lib/lang/versions";
+import {
+  LANGUAGE_SELECTOR_HINT_DISMISSED_EVENT,
+  LANGUAGE_SELECTOR_HINT_STORAGE_KEY,
+} from "./language-selector-hint";
 import styles from "./language-selector.module.scss";
 
 const badge = (src: string, label: string) => (
@@ -46,10 +50,33 @@ const LanguageSelector = () => {
   const { language, setLanguage } = useLanguage();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const showSelector = SECTIONS.some(
     (section) => pathname === section || pathname.startsWith(`${section}/`),
   );
+
+  useEffect(() => {
+    if (!showSelector || !window.matchMedia("(min-width: 768px)").matches) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      if (!triggerRef.current?.closest("#nd-sidebar")) return;
+
+      try {
+        if (window.localStorage.getItem(LANGUAGE_SELECTOR_HINT_STORAGE_KEY)) {
+          return;
+        }
+      } catch {
+        // Keep the first-visit experience available when storage is blocked.
+      }
+
+      setOpen(true);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [showSelector]);
 
   if (!showSelector) {
     return null;
@@ -60,18 +87,36 @@ const LanguageSelector = () => {
   const select = (option: LanguageOption) => {
     setLanguage(option.id);
     setOpen(false);
+    try {
+      window.localStorage.setItem(
+        LANGUAGE_SELECTOR_HINT_STORAGE_KEY,
+        "dismissed",
+      );
+    } catch {
+      // Selection still dismisses the hint for the current page.
+    }
+    window.dispatchEvent(new Event(LANGUAGE_SELECTOR_HINT_DISMISSED_EVENT));
   };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger aria-label="Select language" className={styles.trigger}>
+      <PopoverTrigger
+        ref={triggerRef}
+        aria-label="Select language"
+        className={styles.trigger}
+        data-language-selector=""
+      >
         {badge(active.icon, active.label)}
         <span className={styles.label}>{active.label}</span>
         {tag(active.tag)}
         <span className={styles.version}>{`v${SDK_VERSIONS[active.id]}`}</span>
         <ChevronsUpDown className={styles.chevron} />
       </PopoverTrigger>
-      <PopoverContent align="start" className={styles.content}>
+      <PopoverContent
+        align="start"
+        className={`${styles.content} z-[110]`}
+        data-language-selector-dropdown=""
+      >
         {OPTIONS.map((option) => (
           <button
             key={option.id}

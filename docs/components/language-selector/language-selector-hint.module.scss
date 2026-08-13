@@ -1,0 +1,114 @@
+.overlay {
+  // The veil follows the theme background, so the ink drawn on top of it
+  // has to follow the theme foreground: black on the light veil, white on
+  // the dark one.
+  --hint-ink: var(--color-fd-foreground);
+  --hint-veil: color-mix(in oklab, var(--color-fd-background) 78%, transparent);
+
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: block;
+  width: 100vw;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--hint-ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  animation: hintFadeIn 180ms ease-out;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible .callout {
+    outline: 2px solid currentColor;
+    outline-offset: 6px;
+  }
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.backdrop {
+  fill: var(--hint-veil);
+}
+
+.spotlight {
+  fill: none;
+  stroke: var(--hint-ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.arrow {
+  fill: none;
+  stroke: var(--hint-ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.arrowHead {
+  fill: none;
+  stroke: var(--hint-ink);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.callout {
+  position: absolute;
+  width: min(300px, calc(100vw - 48px));
+  color: var(--hint-ink);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  text-shadow: 0 1px 12px var(--color-fd-background);
+  pointer-events: none;
+}
+
+.dismissal {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 1.25rem;
+  color: var(--color-fd-muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+}
+
+@keyframes hintFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 767px) {
+  .overlay {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay {
+    animation: none;
+  }
+}

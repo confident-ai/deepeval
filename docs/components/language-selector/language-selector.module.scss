@@ -107,6 +107,11 @@
       color: var(--color-fd-accent-foreground);
     }
 
+    &:focus,
+    &:focus-visible {
+      outline: none;
+    }
+
     .text {
       display: flex;
       flex-direction: column;
