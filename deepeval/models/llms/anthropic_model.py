@@ -27,6 +27,13 @@ from deepeval.models.llms.constants import (
 # consistent retry rules
 retry_anthropic = create_retry_decorator(PS.ANTHROPIC)
 
+# Anthropic's ``max_tokens`` caps thinking *plus* response text. The current
+# default judge (``claude-opus-5``) thinks by default when no ``thinking``
+# parameter is sent, so a budget sized for the response alone gets eaten by
+# reasoning and the verdict is cut off mid-JSON. This is a ceiling, not a spend:
+# raising it costs nothing on responses that stay small.
+DEFAULT_MAX_TOKENS = 8192
+
 _ALIAS_MAP = {
     "api_key": ["_anthropic_api_key"],
 }
@@ -118,7 +125,9 @@ class AnthropicModel(DeepEvalBaseLLM):
         self.generation_kwargs.pop(
             "temperature", None
         )  # to avoid duplicate with self.temperature
-        default_max_tokens = 1024 if max_tokens is None else max_tokens
+        default_max_tokens = (
+            DEFAULT_MAX_TOKENS if max_tokens is None else max_tokens
+        )
         self._max_tokens = int(
             self.generation_kwargs.pop("max_tokens", default_max_tokens)
         )
@@ -160,6 +169,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         ):
             create_kwargs["temperature"] = self.temperature
         message = chat_model.messages.create(**create_kwargs)
+        self._raise_if_truncated(message, max_tokens, schema)
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens
         )
@@ -200,6 +210,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         ):
             create_kwargs["temperature"] = self.temperature
         message = await chat_model.messages.create(**create_kwargs)
+        self._raise_if_truncated(message, max_tokens, schema)
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens
         )
@@ -209,6 +220,34 @@ class AnthropicModel(DeepEvalBaseLLM):
             json_output = trim_and_load_json(message.content[0].text)
 
             return schema.model_validate(json_output), cost
+
+    @staticmethod
+    def _raise_if_truncated(
+        message, max_tokens: int, schema: Optional[BaseModel]
+    ) -> None:
+        """Fail loudly when the response was cut off by the token budget.
+
+        Anthropic's ``max_tokens`` caps thinking and response text together, so a
+        thinking-by-default model can spend the whole budget reasoning and return
+        truncated (or empty) text. Without this check the caller sees a generic
+        "invalid JSON" error from ``trim_and_load_json`` and has no way to tell a
+        model-quality problem from a budget one.
+        """
+        if getattr(message, "stop_reason", None) != "max_tokens":
+            return
+        if schema is None:
+            # Free-form text: a truncated answer is still an answer.
+            return
+        raise DeepEvalError(
+            f"Anthropic stopped generating because it hit max_tokens "
+            f"({max_tokens}), so the structured output is truncated and cannot "
+            f"be parsed. `max_tokens` caps thinking and response tokens "
+            f"together, and models such as "
+            f"{DEFAULT_ANTHROPIC_MODEL} think by default, so reasoning can "
+            f"consume the whole budget. Raise it, e.g. "
+            f"`AnthropicModel(generation_kwargs={{'max_tokens': "
+            f"{max_tokens * 2}}})`."
+        )
 
     def generate_content(self, multimodal_input: List[Union[str, MLLMImage]]):
         content = []

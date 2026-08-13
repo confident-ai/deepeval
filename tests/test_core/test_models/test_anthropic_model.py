@@ -3,9 +3,12 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from deepeval.errors import DeepEvalError
-from deepeval.models.llms.anthropic_model import AnthropicModel
+from deepeval.models.llms.anthropic_model import (
+    AnthropicModel,
+    DEFAULT_MAX_TOKENS,
+)
 from deepeval.config.settings import reset_settings, get_settings
-from pydantic import SecretStr
+from pydantic import BaseModel, SecretStr
 
 from tests.test_core.stubs import _RecordingClient
 
@@ -311,3 +314,125 @@ def test_anthropic_calculate_cost_with_zero_tokens(mock_require_dep, settings):
     model = AnthropicModel(model="claude-3-7-sonnet-latest")
     cost = model.calculate_cost(input_tokens=0, output_tokens=0)
     assert cost == 0.0
+
+
+###########################################
+# max_tokens budget / truncation (#3042)  #
+###########################################
+
+
+class _FakeMessagesClient:
+    """Anthropic-shaped client that returns a canned `messages.create` result."""
+
+    def __init__(self, *args, stop_reason="end_turn", text="{}", **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.create_kwargs = None
+        self.messages = SimpleNamespace(create=self._create)
+        self._stop_reason = stop_reason
+        self._text = text
+
+    def _create(self, **kwargs):
+        self.create_kwargs = kwargs
+        return SimpleNamespace(
+            content=[SimpleNamespace(type="text", text=self._text)],
+            stop_reason=self._stop_reason,
+            usage=SimpleNamespace(input_tokens=10, output_tokens=20),
+        )
+
+
+class _FakeAsyncMessagesClient(_FakeMessagesClient):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.messages = SimpleNamespace(create=self._acreate)
+
+    async def _acreate(self, **kwargs):
+        return self._create(**kwargs)
+
+
+class _Verdict(BaseModel):
+    verdict: str
+
+
+def _anthropic_model(mock_require_dep, settings, client, **model_kwargs):
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "test-key"
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    mock_require_dep.return_value = SimpleNamespace(
+        Anthropic=lambda *a, **kw: client,
+        AsyncAnthropic=lambda *a, **kw: client,
+    )
+    return AnthropicModel(model="claude-3-7-sonnet-latest", **model_kwargs)
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_default_max_tokens_leaves_room_for_thinking(
+    mock_require_dep, settings
+):
+    """`max_tokens` caps thinking plus response text, so 1024 truncated judges
+    running on thinking-by-default models. See issue #3042."""
+    client = _FakeMessagesClient(text='{"verdict": "yes"}')
+    model = _anthropic_model(mock_require_dep, settings, client)
+
+    assert model._max_tokens == DEFAULT_MAX_TOKENS
+    assert DEFAULT_MAX_TOKENS > 1024
+
+    model.generate("prompt", schema=_Verdict)
+    assert client.create_kwargs["max_tokens"] == DEFAULT_MAX_TOKENS
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_explicit_max_tokens_still_wins(mock_require_dep, settings):
+    client = _FakeMessagesClient(text='{"verdict": "yes"}')
+    model = _anthropic_model(
+        mock_require_dep,
+        settings,
+        client,
+        generation_kwargs={"max_tokens": 256},
+    )
+
+    assert model._max_tokens == 256
+    model.generate("prompt", schema=_Verdict)
+    assert client.create_kwargs["max_tokens"] == 256
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_truncated_structured_output_names_max_tokens(
+    mock_require_dep, settings
+):
+    """A budget-exhausted structured response must not surface as invalid JSON."""
+    client = _FakeMessagesClient(
+        stop_reason="max_tokens", text='{"verdict": "ye'
+    )
+    model = _anthropic_model(mock_require_dep, settings, client)
+
+    with pytest.raises(DeepEvalError, match="max_tokens"):
+        model.generate("prompt", schema=_Verdict)
+
+
+@pytest.mark.asyncio
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+async def test_anthropic_truncated_structured_output_async(
+    mock_require_dep, settings
+):
+    client = _FakeAsyncMessagesClient(
+        stop_reason="max_tokens", text='{"verdict": "ye'
+    )
+    model = _anthropic_model(mock_require_dep, settings, client)
+
+    with pytest.raises(DeepEvalError, match="max_tokens"):
+        await model.a_generate("prompt", schema=_Verdict)
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_truncated_free_text_is_returned_as_is(
+    mock_require_dep, settings
+):
+    """Without a schema a truncated answer is still usable, so don't raise."""
+    client = _FakeMessagesClient(stop_reason="max_tokens", text="partial answ")
+    model = _anthropic_model(mock_require_dep, settings, client)
+
+    text, _ = model.generate("prompt")
+    assert text == "partial answ"
