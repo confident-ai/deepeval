@@ -39,7 +39,10 @@ def test_reordered_repeated_tool_reason_is_not_empty():
         ["WebSearch", "WebSearch", "ToolQuery"],
     )
     assert "Incorrect tool usage: ;" not in reason
-    assert "different order" in reason
+    # The reason names the repeated tool the LCS could not line up, so the
+    # message stays actionable when a long trace has several repeated tools.
+    assert "repeated tools ['WebSearch'] called in the wrong order" in reason
+    assert "ToolQuery" not in reason.split(";")[0]
 
 
 def test_out_of_order_tool_reason_still_reported():
