@@ -159,12 +159,12 @@ There are **NINE** optional parameters when creating a `ToolCorrectnessMetric`:
 
 - [Optional] <Term py="available_tools" ts="availableTools"/>: a list of `ToolCall`s that give context on all the tools that were available to your LLM agent. This list is used to evaluate your agent's tool selection capability.
 - [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] <Term py="evaluation_params" ts="evaluationParams"/>: A list of `ToolCallParams` indicating the strictness of the correctness criteria, available options are `ToolCallParams.INPUT_PARAMETERS`, `ToolCallParams.OUTPUT`, and `ToolCallParams.TYPE`. For example, supplying a list containing `ToolCallParams.INPUT_PARAMETERS` but excluding `ToolCallParams.OUTPUT`, will deem a tool correct if the tool name and input parameters match, even if the output does not. Including `ToolCallParams.TYPE` additionally requires the <Term py="type" ts="type"/> of each `ToolCall` to match, so an `MCP` tool call is no longer deemed correct against an expected `FUNCTION` tool call. Defaults to a an empty list.
+- [Optional] <Term py="evaluation_params" ts="evaluationParams"/>: A list of `ToolCallParams` indicating the strictness of the correctness criteria, available options are `ToolCallParams.INPUT_PARAMETERS` and `ToolCallParams.OUTPUT`. For example, supplying a list containing `ToolCallParams.INPUT_PARAMETERS` but excluding `ToolCallParams.OUTPUT`, will deem a tool correct if the tool name and input parameters match, even if the output does not. Defaults to a an empty list.
 - [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
 - [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="should_consider_ordering" ts="shouldConsiderOrdering"/>: a boolean which when set to <Term py="True" ts="true"/>, will consider the ordering in which the tools were called in. For example, if `expected_tools=[ToolCall(name="WebSearch"), ToolCall(name="ToolQuery"), ToolCall(name="WebSearch")]` and `tools_called=[ToolCall(name="WebSearch"), ToolCall(name="WebSearch"),  ToolCall(name="ToolQuery")]`, the metric will consider the tool calling to be correct. Applies to the tool name matching that is always performed, and defaulted to <Term py="False" ts="false"/>.
-- [Optional] <Term py="should_exact_match" ts="shouldExactMatch"/>: a boolean which when set to <Term py="True" ts="true"/>, will required the <Term py="tools_called" ts="toolsCalled"/> and <Term py="expected_tools" ts="expectedTools"/> to be exactly the same. Applies to the tool name matching that is always performed, and additionally checks `ToolCallParams.INPUT_PARAMETERS`, `ToolCallParams.OUTPUT`, and `ToolCallParams.TYPE` when they are included in <Term py="evaluation_params" ts="evaluationParams"/>. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="should_exact_match" ts="shouldExactMatch"/>: a boolean which when set to <Term py="True" ts="true"/>, will required the <Term py="tools_called" ts="toolsCalled"/> and <Term py="expected_tools" ts="expectedTools"/> to be exactly the same. Applies to the tool name and type matching that is always performed, and additionally checks `ToolCallParams.INPUT_PARAMETERS` and `ToolCallParams.OUTPUT` when they are included in <Term py="evaluation_params" ts="evaluationParams"/>. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 :::info
@@ -313,11 +313,9 @@ If <Term py="should_exact_match" ts="shouldExactMatch"/> is not specified and `T
       question: "How do I make matching stricter than just tool names?",
       answer: (
         <>
-          Add <code>ToolCallParams.INPUT_PARAMETERS</code>,{" "}
-          <code>ToolCallParams.OUTPUT</code>, or <code>ToolCallParams.TYPE</code> to{" "}
-          <Term py="evaluation_params" ts="evaluationParams"/> to also match
-          inputs/outputs, or to require an <code>MCP</code> tool call to match an
-          expected <code>MCP</code> tool call. Use{" "}
+          Add <code>ToolCallParams.INPUT_PARAMETERS</code> or{" "}
+          <code>ToolCallParams.OUTPUT</code> to <Term py="evaluation_params" ts="evaluationParams"/> to
+          also match inputs/outputs. Use{" "}
           <Term py="should_consider_ordering=True" ts="shouldConsiderOrdering: true"/> for call order, or{" "}
           <Term py="should_exact_match=True" ts="shouldExactMatch: true"/> for identical lists (overrides
           ordering).
