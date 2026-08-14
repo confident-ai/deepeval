@@ -414,6 +414,9 @@ class ToolCorrectnessMetric(BaseMetric):
             if ToolCallParams.OUTPUT in self.evaluation_params:
                 if self.tools_called[i].output != self.expected_tools[i].output:
                     return 0.0
+            if ToolCallParams.TYPE in self.evaluation_params:
+                if self.tools_called[i].type != self.expected_tools[i].type:
+                    return 0.0
         return 1.0
 
     # Non exact matching score
