@@ -6,6 +6,7 @@ from deepeval.evaluate.console_report import _format_pass_rate
 from deepeval.evaluate.statistics import (
     format_pass_rate_with_interval,
     wilson_score_interval,
+    z_for_confidence,
 )
 
 
@@ -38,10 +39,11 @@ def test_all_pass_and_all_fail_still_have_width():
     """The Wald interval collapses to zero width here; Wilson must not.
 
     The touching bound is exact in algebra but lands one ulp away in floating
-    point (0.999999999999999... for 10/10), so it is compared with a tolerance.
+    point (0.999999999999999... for 10/10, 2.8e-17 for 0/10), so both are
+    compared with a tolerance rather than by equality.
     """
     low, high = wilson_score_interval(0, 10)
-    assert low == 0.0 and high > 0.25
+    assert math.isclose(low, 0.0, abs_tol=1e-12) and high > 0.25
 
     low, high = wilson_score_interval(10, 10)
     assert math.isclose(high, 1.0, abs_tol=1e-12) and low < 0.75
@@ -69,8 +71,43 @@ def test_invalid_inputs_raise(successes, total):
         wilson_score_interval(successes, total)
 
 
+def test_z_for_confidence_reproduces_the_familiar_quantiles():
+    assert math.isclose(z_for_confidence(0.95), 1.959963984540054, abs_tol=1e-9)
+    assert math.isclose(
+        z_for_confidence(0.99), 2.5758293035489004, abs_tol=1e-9
+    )
+
+
+@pytest.mark.parametrize("confidence", [0.0, 1.0, -0.5, 1.5])
+def test_invalid_confidence_raises(confidence):
+    with pytest.raises(ValueError):
+        z_for_confidence(confidence)
+    with pytest.raises(ValueError):
+        wilson_score_interval(4, 5, confidence)
+
+
+def test_higher_confidence_gives_a_wider_interval():
+    low_95, high_95 = wilson_score_interval(50, 100, 0.95)
+    low_99, high_99 = wilson_score_interval(50, 100, 0.99)
+    assert low_99 < low_95 and high_99 > high_95
+
+
 def test_formatted_string_shape():
     assert format_pass_rate_with_interval(4, 5) == "80.00% (95% CI 37.6-96.4%)"
+
+
+def test_label_reports_the_level_the_interval_was_computed_at():
+    """The stated level and the arithmetic behind it must not drift apart."""
+    rendered = format_pass_rate_with_interval(4, 5, confidence=0.99)
+    assert rendered.startswith("80.00% (99% CI ")
+
+    low, high = wilson_score_interval(4, 5, confidence=0.99)
+    assert f"{low * 100:.1f}-{high * 100:.1f}%" in rendered
+
+    # A non-integer level keeps its precision rather than rounding to "100%".
+    assert format_pass_rate_with_interval(4, 5, confidence=0.999).startswith(
+        "80.00% (99.9% CI "
+    )
 
 
 def test_console_pass_rate_reports_the_interval():
