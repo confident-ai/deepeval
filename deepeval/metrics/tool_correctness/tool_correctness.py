@@ -488,6 +488,11 @@ class ToolCorrectnessMetric(BaseMetric):
                     and expected_tool.output != called_tool.output
                 ):
                     score = 0.0
+                if (
+                    ToolCallParams.TYPE in self.evaluation_params
+                    and expected_tool.type != called_tool.type
+                ):
+                    score = 0.0
                 dp[i][j] = max(
                     dp[i - 1][j],
                     dp[i][j - 1],
