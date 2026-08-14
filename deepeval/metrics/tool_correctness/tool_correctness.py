@@ -335,8 +335,6 @@ class ToolCorrectnessMetric(BaseMetric):
                 return f"Incomplete tool usage: {'; '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
 
     def _get_type_mismatches(self) -> List[str]:
-        if ToolCallParams.TYPE not in self.evaluation_params:
-            return []
         mismatches = []
         for expected_tool in self.expected_tools:
             for called_tool in self.tools_called:
@@ -438,6 +436,8 @@ class ToolCorrectnessMetric(BaseMetric):
         for i in range(len(self.tools_called)):
             if self.tools_called[i].name != self.expected_tools[i].name:
                 return 0.0
+            if self.tools_called[i].type != self.expected_tools[i].type:
+                return 0.0
             if ToolCallParams.INPUT_PARAMETERS in self.evaluation_params:
                 if (
                     self.tools_called[i].input_parameters
@@ -446,9 +446,6 @@ class ToolCorrectnessMetric(BaseMetric):
                     return 0.0
             if ToolCallParams.OUTPUT in self.evaluation_params:
                 if self.tools_called[i].output != self.expected_tools[i].output:
-                    return 0.0
-            if ToolCallParams.TYPE in self.evaluation_params:
-                if self.tools_called[i].type != self.expected_tools[i].type:
                     return 0.0
         return 1.0
 
@@ -461,7 +458,10 @@ class ToolCorrectnessMetric(BaseMetric):
             for called_tool in self.tools_called:
                 if called_tool in matched_called_tools:
                     continue
-                if expected_tool.name == called_tool.name:
+                if (
+                    expected_tool.name == called_tool.name
+                    and expected_tool.type == called_tool.type
+                ):
                     match_score = 1.0
                     if (
                         ToolCallParams.INPUT_PARAMETERS
@@ -474,11 +474,6 @@ class ToolCorrectnessMetric(BaseMetric):
                     if (
                         ToolCallParams.OUTPUT in self.evaluation_params
                         and expected_tool.output != called_tool.output
-                    ):
-                        match_score = 0.0
-                    if (
-                        ToolCallParams.TYPE in self.evaluation_params
-                        and expected_tool.type != called_tool.type
                     ):
                         match_score = 0.0
                     if match_score > best_score:
@@ -507,7 +502,10 @@ class ToolCorrectnessMetric(BaseMetric):
                     self.expected_tools[i - 1],
                     self.tools_called[j - 1],
                 )
-                if expected_tool.name != called_tool.name:
+                if (
+                    expected_tool.name != called_tool.name
+                    or expected_tool.type != called_tool.type
+                ):
                     dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
                     continue
                 score = 1.0
@@ -519,11 +517,6 @@ class ToolCorrectnessMetric(BaseMetric):
                 if (
                     ToolCallParams.OUTPUT in self.evaluation_params
                     and expected_tool.output != called_tool.output
-                ):
-                    score = 0.0
-                if (
-                    ToolCallParams.TYPE in self.evaluation_params
-                    and expected_tool.type != called_tool.type
                 ):
                     score = 0.0
                 dp[i][j] = max(
