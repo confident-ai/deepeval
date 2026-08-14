@@ -3,6 +3,7 @@ import {
   LLMTestCase,
   SingleTurnParams,
   ToolCallParams,
+  ToolCallType,
   ToolCall,
 } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
@@ -53,6 +54,10 @@ function toolCallEquals(a: ToolCall, b: ToolCall): boolean {
     deepEqual(a.inputParameters, b.inputParameters) &&
     deepEqual(a.output, b.output)
   );
+}
+
+function toolCallType(tool: ToolCall): ToolCallType {
+  return tool.type ?? ToolCallType.FUNCTION;
 }
 
 /** Dedup a list of names, preserving Python `set()`-style membership. */
@@ -211,6 +216,12 @@ export class ToolCorrectnessMetric extends BaseMetric {
       ) {
         return 0;
       }
+      if (
+        this.evaluationParams.includes(ToolCallParams.TYPE) &&
+        toolCallType(called) !== toolCallType(expected)
+      ) {
+        return 0;
+      }
     }
     return 1;
   }
@@ -235,6 +246,12 @@ export class ToolCorrectnessMetric extends BaseMetric {
         if (
           this.evaluationParams.includes(ToolCallParams.OUTPUT) &&
           !deepEqual(expected.output, called.output)
+        ) {
+          matchScore = 0;
+        }
+        if (
+          this.evaluationParams.includes(ToolCallParams.TYPE) &&
+          toolCallType(expected) !== toolCallType(called)
         ) {
           matchScore = 0;
         }
@@ -280,6 +297,12 @@ export class ToolCorrectnessMetric extends BaseMetric {
         if (
           this.evaluationParams.includes(ToolCallParams.OUTPUT) &&
           !deepEqual(e.output, c.output)
+        ) {
+          score = 0;
+        }
+        if (
+          this.evaluationParams.includes(ToolCallParams.TYPE) &&
+          toolCallType(e) !== toolCallType(c)
         ) {
           score = 0;
         }
