@@ -599,7 +599,7 @@ Tool calls are matched **by name**. A regular function that shares its name with
 :::
 
 :::tip
-Metrics ignore the type by default, so an `MCP` tool call still matches an expected `FUNCTION` tool call of the same name. Add `ToolCallParams.TYPE` to the [`ToolCorrectnessMetric`](/docs/metrics-tool-correctness)'s `evaluation_params` to make the type part of the correctness criteria.
+The [`ToolCorrectnessMetric`](/docs/metrics-tool-correctness) matches on the type alongside the name, so an `MCP` tool call is not deemed correct against an expected `FUNCTION` tool call of the same name.
 :::
 
 ✅ Done. You can now use the [MCP metrics](/docs/metrics-multi-turn-mcp-use) to run evaluations on your MCP based application.
