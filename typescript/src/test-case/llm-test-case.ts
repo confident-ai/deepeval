@@ -31,6 +31,7 @@ export enum SingleTurnParams {
 export enum ToolCallParams {
   INPUT_PARAMETERS = "inputParameters",
   OUTPUT = "output",
+  TYPE = "type",
 }
 
 export enum ToolCallType {
