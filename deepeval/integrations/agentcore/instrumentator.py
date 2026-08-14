@@ -30,6 +30,7 @@ from deepeval.tracing.context import (
     pop_pending_for,
 )
 from deepeval.tracing.otel.utils import (
+    set_span_attribute_post_end,
     stash_pending_metrics,
     to_hex_string,
 )
@@ -702,26 +703,12 @@ class AgentCoreSpanInterceptor(SpanProcessor):
     def _set_attr_post_end(span, key: str, value: Any) -> None:
         """Write to a span that may have ended.
 
-        ``Span.set_attribute`` is a no-op after ``Span.end()``, so we write
-        directly through ``_attributes`` (mutable while processors are
-        running) and fall back to ``set_attribute`` if that fails.
+        ``Span.set_attribute`` is a no-op after ``Span.end()`` and ``on_end``
+        receives a ``ReadableSpan`` that has no such method, so the write goes
+        through the span's ``_attributes`` mapping — see
+        ``set_span_attribute_post_end``.
         """
-        try:
-            attrs = getattr(span, "_attributes", None)
-            if attrs is not None:
-                attrs[key] = value
-                return
-        except Exception as exc:
-            logger.debug(
-                "Direct _attributes write failed for %s; "
-                "falling back to set_attribute (may be dropped): %s",
-                key,
-                exc,
-            )
-        try:
-            span.set_attribute(key, value)
-        except Exception as exc:
-            logger.debug("set_attribute fallback failed for %s: %s", key, exc)
+        set_span_attribute_post_end(span, key, value)
 
     @classmethod
     def _serialize_placeholder_to_otel_attrs(

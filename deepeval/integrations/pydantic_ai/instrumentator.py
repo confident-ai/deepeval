@@ -19,6 +19,7 @@ from deepeval.tracing.otel.context_aware_processor import (
     ContextAwareSpanProcessor,
 )
 from deepeval.tracing.otel.utils import (
+    set_span_attribute_post_end,
     stash_pending_metrics,
     to_hex_string,
 )
@@ -639,40 +640,13 @@ class SpanInterceptor(SpanProcessor):
         """Write an attribute onto a span that may already have ended.
 
         ``Span.set_attribute`` becomes a silent no-op once ``Span.end()`` has
-        been called (the SDK guards on ``self._end_time is not None`` and just
-        logs a warning), and the SDK invokes ``on_end`` AFTER setting
-        ``_end_time`` — so the obvious ``span.set_attribute(...)`` from inside
-        ``SpanInterceptor.on_end`` never lands.
-
-        However the live span constructs its ``_attributes`` as a
-        ``BoundedAttributes`` with ``immutable=False`` and passes that same
-        dict by reference into ``_readable_span()`` (the ReadableSpan passed to
-        all processors). Writing through the mapping's ``__setitem__``
-        bypasses the ended-span guard while still respecting the bounded-size
-        limits. SpanProcessors fire in registration order, so writes from
-        ``SpanInterceptor.on_end`` are visible to ``ConfidentSpanExporter``
-        downstream.
-
-        We fall back to ``span.set_attribute`` if the private API ever
-        disappears — that path will warn-and-drop, but at least it won't
-        crash.
+        been called, and ``on_end`` receives a ``ReadableSpan`` that has no
+        such method — so the write goes through the span's ``_attributes``
+        mapping, which every processor in the chain shares by reference.
+        opentelemetry-sdk 1.43.0 made that mapping immutable before dispatching
+        ``on_end`` — see ``set_span_attribute_post_end``.
         """
-        try:
-            attrs = getattr(span, "_attributes", None)
-            if attrs is not None:
-                attrs[key] = value
-                return
-        except Exception as exc:
-            logger.debug(
-                "Direct _attributes write failed for %s; "
-                "falling back to set_attribute (may be dropped): %s",
-                key,
-                exc,
-            )
-        try:
-            span.set_attribute(key, value)
-        except Exception as exc:
-            logger.debug("set_attribute fallback failed for %s: %s", key, exc)
+        set_span_attribute_post_end(span, key, value)
 
     @classmethod
     def _serialize_placeholder_to_otel_attrs(
