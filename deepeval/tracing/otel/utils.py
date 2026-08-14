@@ -4,6 +4,11 @@ from threading import Lock
 from typing import Dict, List, Optional, Tuple, Any
 from opentelemetry.sdk.trace.export import ReadableSpan
 
+try:
+    from opentelemetry.attributes import BoundedAttributes
+except ImportError:  # pragma: no cover - not present on very old SDKs
+    BoundedAttributes = None
+
 from deepeval.test_case.api import create_api_test_case
 from deepeval.test_run.api import LLMApiTestCase
 from deepeval.test_run.test_run import global_test_run_manager
@@ -12,6 +17,71 @@ from deepeval.tracing import trace_manager, BaseSpan
 from deepeval.tracing.utils import make_json_serializable
 
 GEN_AI_OPERATION_NAMES = ["chat", "generate_content", "text_completion"]
+
+
+# Integrations derive attributes at ``on_end`` (output, token counts, resolved
+# prompt) that must land on an already-ended span, and OTel offers no supported
+# seam for that: ``on_end`` receives a ``ReadableSpan`` with no
+# ``set_attribute``, and the spec's ``OnEnding`` hook is private in Python and
+# fires after the ended-span guard. So we write through ``_attributes``, the
+# mapping every processor shares by reference. opentelemetry-sdk 1.43.0 froze
+# that mapping in ``Span.end()`` before dispatching ``on_end``, silently
+# dropping every write; replacing it with a mutable ``BoundedAttributes``
+# restores the old behaviour.
+
+
+def _writable_attributes(span: Any) -> Optional[Any]:
+    """Return ``span``'s attribute mapping, making it writable if it is frozen.
+
+    Installs the replacement on the span so later processors write into the
+    same mapping. Returns ``None`` if no writable mapping were obtained.
+    """
+    attrs = getattr(span, "_attributes", None)
+    if attrs is None or not getattr(attrs, "_immutable", False):
+        return attrs
+    if BoundedAttributes is None:
+        return None
+
+    kwargs: Dict[str, Any] = {
+        "maxlen": getattr(attrs, "maxlen", None),
+        "attributes": dict(attrs),
+        "immutable": False,
+        "max_value_len": getattr(attrs, "max_value_len", None),
+    }
+    # Only forward what this SDK's BoundedAttributes accepts.
+    if hasattr(attrs, "_extended_attributes"):
+        kwargs["extended_attributes"] = attrs._extended_attributes
+
+    try:
+        replacement = BoundedAttributes(**kwargs)
+        # Re-adding the entries recounts from zero; keep the original tally.
+        replacement.dropped = getattr(attrs, "dropped", 0)
+        span._attributes = replacement
+    except Exception:
+        return None
+    return replacement
+
+
+def set_span_attribute_post_end(span: Any, key: str, value: Any) -> None:
+    """Write ``key``/``value`` onto a span that may already have ended.
+
+    Shared by every OTel integration's ``_set_attr_post_end``; see the comment
+    above for why this can't just call ``span.set_attribute``.
+    """
+    attrs = _writable_attributes(span)
+    if attrs is not None:
+        try:
+            attrs[key] = value
+            return
+        except Exception:
+            pass
+
+    # Last resort: works on a still-recording span, drops on an ended one.
+    try:
+        span.set_attribute(key, value)
+    except Exception:
+        pass
+
 
 # Pending-metrics overlay: in-process side-channel for ``List[BaseMetric]``,
 # which can't fit in OTel attrs (primitives only). Writer is
