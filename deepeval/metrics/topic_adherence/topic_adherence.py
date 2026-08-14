@@ -232,6 +232,9 @@ class TopicAdherenceMetric(BaseConversationalMetric):
             return self.score
 
     def _generate_reason(self, TP, TN, FP, FN, *, multimodal: bool):
+        if self.include_reason is False:
+            return None
+
         total = TP[0] + TN[0] + FP[0] + FN[0]
         if total <= 0:
             return "There were no question-answer pairs to evaluate. Please enable verbose logs to look at the evaluation steps taken"
@@ -259,6 +262,12 @@ class TopicAdherenceMetric(BaseConversationalMetric):
         )
 
     async def _a_generate_reason(self, TP, TN, FP, FN, *, multimodal: bool):
+        if self.include_reason is False:
+            return None
+
+        total = TP[0] + TN[0] + FP[0] + FN[0]
+        if total <= 0:
+            return "There were no question-answer pairs to evaluate. Please enable verbose logs to look at the evaluation steps taken"
         tp_line = prettify_list(TP[1]) if TP[1] else "(none)"
         tn_line = prettify_list(TN[1]) if TN[1] else "(none)"
         fp_line = prettify_list(FP[1]) if FP[1] else "(none)"
