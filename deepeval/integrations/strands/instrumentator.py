@@ -47,6 +47,7 @@ from deepeval.tracing.tracing import trace_manager
 from deepeval.tracing.types import (
     AgentSpan,
     BaseSpan,
+    LlmSpan,
     Trace,
     TraceSpanStatus,
     ToolCall,
@@ -579,7 +580,7 @@ class StrandsSpanInterceptor(SpanProcessor):
         self._maybe_pop_implicit_trace_context(span)
 
     def _push_span_context(self, span, span_type: Optional[str]) -> None:
-        """Push a ``BaseSpan`` / ``AgentSpan`` placeholder onto the contextvar.
+        """Push a typed placeholder span onto the contextvar.
 
         Consumes ``next_*_span(...)`` defaults BEFORE the push so user code
         sees the staged values.
@@ -609,6 +610,8 @@ class StrandsSpanInterceptor(SpanProcessor):
                     ),
                     **kwargs,
                 )
+            elif span_type == "llm":
+                placeholder = LlmSpan(**kwargs)
             else:
                 placeholder = BaseSpan(**kwargs)
 
@@ -787,6 +790,49 @@ class StrandsSpanInterceptor(SpanProcessor):
                 span, "confident.span.name", placeholder.name
             )
 
+        if isinstance(placeholder, LlmSpan):
+            cls._serialize_llm_placeholder_to_otel_attrs(placeholder, span)
+
+    @classmethod
+    def _serialize_llm_placeholder_to_otel_attrs(
+        cls, placeholder: LlmSpan, span
+    ) -> None:
+        """Mirror LLM-specific placeholder writes onto ``confident.*`` attrs.
+
+        A staged ``Prompt`` can't ride in OTel attrs (primitives only), so
+        it's flattened into the four ``confident.span.prompt_*`` scalars the
+        exporter reads back — that's what links the span to its prompt
+        version on the UI. Explicit ``prompt_*`` fields (set by
+        ``update_llm_span``) win over the ``Prompt`` object they were
+        derived from.
+        """
+        prompt = placeholder.prompt
+
+        prompt_attrs = {
+            "confident.span.prompt_alias": placeholder.prompt_alias
+            or (prompt.alias if prompt else None),
+            "confident.span.prompt_commit_hash": placeholder.prompt_commit_hash
+            or (prompt.hash if prompt else None),
+            "confident.span.prompt_label": placeholder.prompt_label
+            or (prompt.label if prompt else None),
+            "confident.span.prompt_version": placeholder.prompt_version
+            or (prompt.version if prompt else None),
+        }
+        for key, value in prompt_attrs.items():
+            if value:
+                cls._set_attr_post_end(span, key, value)
+
+        llm_attrs = {
+            "confident.llm.model": placeholder.model,
+            "confident.llm.input_token_count": placeholder.input_token_count,
+            "confident.llm.output_token_count": placeholder.output_token_count,
+            "confident.llm.cost_per_input_token": placeholder.cost_per_input_token,
+            "confident.llm.cost_per_output_token": placeholder.cost_per_output_token,
+        }
+        for key, value in llm_attrs.items():
+            if value is not None:
+                cls._set_attr_post_end(span, key, value)
+
     def _serialize_trace_context_to_otel_attrs(self, span) -> None:
         """Resolve trace attrs FRESH and write to ``confident.trace.*``.
 
@@ -901,11 +947,15 @@ class StrandsSpanInterceptor(SpanProcessor):
         output_tokens = attrs.get("gen_ai.usage.output_tokens") or attrs.get(
             "gen_ai.usage.completion_tokens"
         )
-        if input_tokens is not None:
+        if input_tokens is not None and not attrs.get(
+            "confident.llm.input_token_count"
+        ):
             self._set_attr_post_end(
                 span, "confident.llm.input_token_count", int(input_tokens)
             )
-        if output_tokens is not None:
+        if output_tokens is not None and not attrs.get(
+            "confident.llm.output_token_count"
+        ):
             self._set_attr_post_end(
                 span, "confident.llm.output_token_count", int(output_tokens)
             )
@@ -916,7 +966,8 @@ class StrandsSpanInterceptor(SpanProcessor):
             "gen_ai.request.model",
         )
         if model:
-            self._set_attr_post_end(span, "confident.llm.model", model)
+            if not attrs.get("confident.llm.model"):
+                self._set_attr_post_end(span, "confident.llm.model", model)
             if span_type == "llm" and not attrs.get("confident.span.provider"):
                 provider = _get_attr(span, "gen_ai.response.provider")
                 if not provider:

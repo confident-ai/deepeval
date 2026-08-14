@@ -27,6 +27,7 @@ from deepeval.tracing.tracing import trace_manager
 from deepeval.tracing.types import (
     AgentSpan,
     BaseSpan,
+    LlmSpan,
     Trace,
     TraceSpanStatus,
 )
@@ -463,7 +464,7 @@ class SpanInterceptor(SpanProcessor):
         agent_name: Optional[str],
         operation_name: Optional[str],
     ) -> None:
-        """Create a placeholder BaseSpan and push it onto current_span_context.
+        """Create a typed placeholder span and push it onto current_span_context.
 
         The placeholder is only used as a write target for
         ``update_current_span(...)``. Its fields are serialized back into
@@ -494,6 +495,8 @@ class SpanInterceptor(SpanProcessor):
                     ),
                     **kwargs,
                 )
+            elif span_type == "llm":
+                placeholder = LlmSpan(**kwargs)
             else:
                 placeholder = BaseSpan(**kwargs)
 
@@ -728,6 +731,49 @@ class SpanInterceptor(SpanProcessor):
             cls._set_attr_post_end(
                 span, "confident.span.name", placeholder.name
             )
+
+        if isinstance(placeholder, LlmSpan):
+            cls._serialize_llm_placeholder_to_otel_attrs(placeholder, span)
+
+    @classmethod
+    def _serialize_llm_placeholder_to_otel_attrs(
+        cls, placeholder: LlmSpan, span
+    ) -> None:
+        """Mirror LLM-specific placeholder writes onto ``confident.*`` attrs.
+
+        A staged ``Prompt`` can't ride in OTel attrs (primitives only), so
+        it's flattened into the four ``confident.span.prompt_*`` scalars the
+        exporter reads back — that's what links the span to its prompt
+        version on the UI. Explicit ``prompt_*`` fields (set by
+        ``update_llm_span``) win over the ``Prompt`` object they were
+        derived from.
+        """
+        prompt = placeholder.prompt
+
+        prompt_attrs = {
+            "confident.span.prompt_alias": placeholder.prompt_alias
+            or (prompt.alias if prompt else None),
+            "confident.span.prompt_commit_hash": placeholder.prompt_commit_hash
+            or (prompt.hash if prompt else None),
+            "confident.span.prompt_label": placeholder.prompt_label
+            or (prompt.label if prompt else None),
+            "confident.span.prompt_version": placeholder.prompt_version
+            or (prompt.version if prompt else None),
+        }
+        for key, value in prompt_attrs.items():
+            if value:
+                cls._set_attr_post_end(span, key, value)
+
+        llm_attrs = {
+            "confident.llm.model": placeholder.model,
+            "confident.llm.input_token_count": placeholder.input_token_count,
+            "confident.llm.output_token_count": placeholder.output_token_count,
+            "confident.llm.cost_per_input_token": placeholder.cost_per_input_token,
+            "confident.llm.cost_per_output_token": placeholder.cost_per_output_token,
+        }
+        for key, value in llm_attrs.items():
+            if value is not None:
+                cls._set_attr_post_end(span, key, value)
 
     def _serialize_trace_context_to_otel_attrs(self, span) -> None:
         """Resolve trace-level attrs FRESH and write to ``confident.trace.*``.
