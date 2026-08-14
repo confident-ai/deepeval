@@ -366,15 +366,37 @@ export class ToolCorrectnessMetric extends BaseMetric {
 
   // --- deterministic tool-calling reason ---
 
+  private getTypeMismatches(): string[] {
+    if (!this.evaluationParams.includes(ToolCallParams.TYPE)) return [];
+    const mismatches: string[] = [];
+    for (const expected of this.expectedTools) {
+      const called = this.toolsCalled.find(
+        (c) =>
+          c.name === expected.name &&
+          toolCallType(c) !== toolCallType(expected),
+      );
+      if (called) {
+        mismatches.push(
+          `${expected.name} (expected ${toolCallType(expected)}, called ${toolCallType(called)})`,
+        );
+      }
+    }
+    return mismatches;
+  }
+
   private generateReason(): string {
     const calledNames = this.toolsCalled.map((t) => t.name);
     const expectedNames = this.expectedTools.map((t) => t.name);
+    const typeMismatches = this.getTypeMismatches();
 
     if (this.shouldExactMatch) {
       const label = this.calculateExactMatchScore()
         ? "Exact match"
         : "Not an exact match";
-      return `${label}: expected ${JSON.stringify(expectedNames)}, called ${JSON.stringify(calledNames)}. See details above.`;
+      const mismatchClause = typeMismatches.length
+        ? ` Tool type mismatches: ${JSON.stringify(typeMismatches)}.`
+        : "";
+      return `${label}: expected ${JSON.stringify(expectedNames)}, called ${JSON.stringify(calledNames)}.${mismatchClause} See details above.`;
     }
 
     if (this.shouldConsiderOrdering) {
@@ -398,6 +420,8 @@ export class ToolCorrectnessMetric extends BaseMetric {
         issues.push(`missing tools ${JSON.stringify(missing)}`);
       if (outOfOrder.length)
         issues.push(`out-of-order tools ${JSON.stringify(outOfOrder)}`);
+      if (typeMismatches.length)
+        issues.push(`tool type mismatches ${JSON.stringify(typeMismatches)}`);
       return `Incorrect tool usage: ${issues.join(" and ")}; expected ${JSON.stringify(expectedNames)}, called ${JSON.stringify(calledNames)}. See more details above.`;
     }
 
@@ -407,7 +431,12 @@ export class ToolCorrectnessMetric extends BaseMetric {
     const missing = this.expectedTools
       .filter((e) => !this.toolsCalled.some((c) => toolCallEquals(c, e)))
       .map((t) => t.name);
-    return `Incomplete tool usage: missing tools ${JSON.stringify(missing)}; expected ${JSON.stringify(expectedNames)}, called ${JSON.stringify(calledNames)}. See more details above.`;
+    const issues: string[] = [];
+    if (missing.length || !typeMismatches.length)
+      issues.push(`missing tools ${JSON.stringify(missing)}`);
+    if (typeMismatches.length)
+      issues.push(`tool type mismatches ${JSON.stringify(typeMismatches)}`);
+    return `Incomplete tool usage: ${issues.join("; ")}; expected ${JSON.stringify(expectedNames)}, called ${JSON.stringify(calledNames)}. See more details above.`;
   }
 
   private constructFinalReason(
