@@ -204,6 +204,7 @@ export class ToolCorrectnessMetric extends BaseMetric {
       const called = this.toolsCalled[i];
       const expected = this.expectedTools[i];
       if (called.name !== expected.name) return 0;
+      if (toolCallType(called) !== toolCallType(expected)) return 0;
       if (
         this.evaluationParams.includes(ToolCallParams.INPUT_PARAMETERS) &&
         !deepEqual(called.inputParameters, expected.inputParameters)
@@ -213,12 +214,6 @@ export class ToolCorrectnessMetric extends BaseMetric {
       if (
         this.evaluationParams.includes(ToolCallParams.OUTPUT) &&
         !deepEqual(called.output, expected.output)
-      ) {
-        return 0;
-      }
-      if (
-        this.evaluationParams.includes(ToolCallParams.TYPE) &&
-        toolCallType(called) !== toolCallType(expected)
       ) {
         return 0;
       }
@@ -236,6 +231,7 @@ export class ToolCorrectnessMetric extends BaseMetric {
         if (matchedCalled.has(j)) continue;
         const called = this.toolsCalled[j];
         if (expected.name !== called.name) continue;
+        if (toolCallType(expected) !== toolCallType(called)) continue;
         let matchScore = 1;
         if (this.evaluationParams.includes(ToolCallParams.INPUT_PARAMETERS)) {
           matchScore *= this.compareDicts(
@@ -246,12 +242,6 @@ export class ToolCorrectnessMetric extends BaseMetric {
         if (
           this.evaluationParams.includes(ToolCallParams.OUTPUT) &&
           !deepEqual(expected.output, called.output)
-        ) {
-          matchScore = 0;
-        }
-        if (
-          this.evaluationParams.includes(ToolCallParams.TYPE) &&
-          toolCallType(expected) !== toolCallType(called)
         ) {
           matchScore = 0;
         }
@@ -283,7 +273,7 @@ export class ToolCorrectnessMetric extends BaseMetric {
       for (let j = 1; j <= n; j++) {
         const e = expected[i - 1];
         const c = called[j - 1];
-        if (e.name !== c.name) {
+        if (e.name !== c.name || toolCallType(e) !== toolCallType(c)) {
           dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
           continue;
         }
@@ -297,12 +287,6 @@ export class ToolCorrectnessMetric extends BaseMetric {
         if (
           this.evaluationParams.includes(ToolCallParams.OUTPUT) &&
           !deepEqual(e.output, c.output)
-        ) {
-          score = 0;
-        }
-        if (
-          this.evaluationParams.includes(ToolCallParams.TYPE) &&
-          toolCallType(e) !== toolCallType(c)
         ) {
           score = 0;
         }
@@ -367,7 +351,6 @@ export class ToolCorrectnessMetric extends BaseMetric {
   // --- deterministic tool-calling reason ---
 
   private getTypeMismatches(): string[] {
-    if (!this.evaluationParams.includes(ToolCallParams.TYPE)) return [];
     const mismatches: string[] = [];
     for (const expected of this.expectedTools) {
       const called = this.toolsCalled.find(
