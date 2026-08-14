@@ -265,6 +265,58 @@ export function applyPendingToSpan(
   }
 }
 
+/**
+ * Flatten a popped payload into `confident.*` OTel attributes.
+ *
+ * The OTLP counterpart to {@link applyPendingToSpan}: on that route no local
+ * span object is ever built, so the attributes are the only carrier for
+ * anything staged with `next*Span(...)`. A `Prompt` in particular cannot ride
+ * in OTel attributes (primitives only), so it is flattened into the four
+ * `confident.span.prompt_*` scalars the backend reads back to link the span to
+ * its prompt version.
+ */
+export function pendingToOtelAttributes(
+  payload: PendingPayload | undefined,
+  spanType: string | undefined,
+): Record<string, string | number> {
+  const attrs: Record<string, string | number> = {};
+  if (!payload) return attrs;
+
+  if (payload.metricCollection) {
+    attrs["confident.span.metric_collection"] = String(
+      payload.metricCollection,
+    );
+  }
+
+  if (slotKindForSpanType(spanType) !== "llm") return attrs;
+
+  const prompt = payload.prompt as Prompt | undefined;
+  if (prompt) {
+    if (prompt._alias) attrs["confident.span.prompt_alias"] = prompt._alias;
+    if (prompt.hash) attrs["confident.span.prompt_commit_hash"] = prompt.hash;
+    if (prompt.label) attrs["confident.span.prompt_label"] = prompt.label;
+    if (prompt.version) attrs["confident.span.prompt_version"] = prompt.version;
+  }
+
+  if (payload.model) attrs["confident.llm.model"] = String(payload.model);
+  if (payload.inputTokenCount != null)
+    attrs["confident.llm.input_token_count"] = Number(payload.inputTokenCount);
+  if (payload.outputTokenCount != null)
+    attrs["confident.llm.output_token_count"] = Number(
+      payload.outputTokenCount,
+    );
+  if (payload.costPerInputToken != null)
+    attrs["confident.llm.cost_per_input_token"] = Number(
+      payload.costPerInputToken,
+    );
+  if (payload.costPerOutputToken != null)
+    attrs["confident.llm.cost_per_output_token"] = Number(
+      payload.costPerOutputToken,
+    );
+
+  return attrs;
+}
+
 /** Test seam: drop every staged payload in the current scope. */
 export function _clearPendingSlots(): void {
   const store = pendingStore.getStore();

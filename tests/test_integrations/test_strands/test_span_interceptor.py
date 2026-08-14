@@ -603,7 +603,7 @@ class TestNextSpanInterceptorIntegration:
         interceptor = StrandsSpanInterceptor(settings)
         llm_span = _make_mock_span(operation_name="chat")
 
-        prompt = Prompt(alias="Red team prompt")
+        prompt = Prompt(alias="Test prompt")
         prompt.hash = "abc123"
         prompt.version = "00.00.01"
         prompt.label = "production"
@@ -613,7 +613,7 @@ class TestNextSpanInterceptorIntegration:
             interceptor.on_end(llm_span)
 
         attrs = llm_span.attributes
-        assert attrs.get("confident.span.prompt_alias") == "Red team prompt"
+        assert attrs.get("confident.span.prompt_alias") == "Test prompt"
         assert attrs.get("confident.span.prompt_commit_hash") == "abc123"
         assert attrs.get("confident.span.prompt_version") == "00.00.01"
         assert attrs.get("confident.span.prompt_label") == "production"
@@ -627,7 +627,7 @@ class TestNextSpanInterceptorIntegration:
             operation_name="execute_tool", tool_name="calculate"
         )
 
-        prompt = Prompt(alias="Red team prompt")
+        prompt = Prompt(alias="Test prompt")
         prompt.hash = "abc123"
 
         with next_llm_span(prompt=prompt):

@@ -10,7 +10,11 @@ import {
   ToolSpan,
   TraceSpanStatus,
 } from "@/tracing/tracing";
-import { applyPendingToSpan, popPendingFor } from "@/tracing/pending-context";
+import {
+  applyPendingToSpan,
+  pendingToOtelAttributes,
+  popPendingFor,
+} from "@/tracing/pending-context";
 import {
   ROUTE_TO_REST_ATTRIBUTE,
   endOtelImplicitTrace,
@@ -402,6 +406,14 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
 
         this.previousSpans.set(spanId, getCurrentSpan());
         setCurrentSpan(deepEvalSpan);
+      }
+    } else {
+      const staged = pendingToOtelAttributes(
+        popPendingFor(spanType ?? undefined),
+        spanType ?? undefined,
+      );
+      for (const [key, value] of Object.entries(staged)) {
+        span.setAttribute(key, value);
       }
     }
   }
