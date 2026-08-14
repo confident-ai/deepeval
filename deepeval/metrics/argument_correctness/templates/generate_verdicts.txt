@@ -18,6 +18,7 @@ Example tool calls:
 [
   ToolCall(
     name="WeatherHistoryAPI",
+    type="FUNCTION",
     description="Fetches historical weather data for a given city and date range",
     reasoning="I need to check all 2023 temperature records for Paris to find the highest one.",
     input_parameters={
@@ -30,6 +31,7 @@ Example tool calls:
   ),
   ToolCall(
     name="MathAnalyzer",
+    type="MCP",
     description="Performs statistical calculations on numeric datasets",
     reasoning="I will calculate the maximum temperature value from the daily dataset.",
     input_parameters={
@@ -40,6 +42,7 @@ Example tool calls:
   ),
   ToolCall(
     name="MovieRecommender",
+    type="FUNCTION",
     description="Recommends movies based on user mood or location",
     reasoning="I thought Paris movies might be fun to suggest, but this is unrelated to the question.",
     input_parameters={
