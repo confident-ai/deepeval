@@ -443,6 +443,11 @@ class ToolCorrectnessMetric(BaseMetric):
                         and expected_tool.output != called_tool.output
                     ):
                         match_score = 0.0
+                    if (
+                        ToolCallParams.TYPE in self.evaluation_params
+                        and expected_tool.type != called_tool.type
+                    ):
+                        match_score = 0.0
                     if match_score > best_score:
                         best_score = match_score
                         best_called_tool = called_tool
