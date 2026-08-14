@@ -208,6 +208,7 @@ def __getattr__(name: str):
 class ToolCallParams(Enum):
     INPUT_PARAMETERS = "input_parameters"
     OUTPUT = "output"
+    TYPE = "type"
 
 
 def _make_hashable(obj):
