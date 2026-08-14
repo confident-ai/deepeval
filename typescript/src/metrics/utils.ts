@@ -19,7 +19,6 @@ import {
   LLMTestCase,
   SingleTurnParams,
   ToolCall,
-  ToolCallType,
   ArenaTestCase,
 } from "@/test-case";
 import { DeepEvalError, MissingTestCaseParamsError } from "@/errors";
@@ -247,7 +246,6 @@ export function printToolsCalled(tools: ToolCall[]): string {
     const json = JSON.stringify(
       {
         name: t.name,
-        type: t.type ?? ToolCallType.FUNCTION,
         description: t.description,
         reasoning: t.reasoning,
         output: t.output,
