@@ -64,7 +64,7 @@ print(metric.alignment_result.first_divergence)  # 1
 print(metric.alignment_result.resync_at)  # 2
 ```
 
-The score is `1.0 - divergence_ratio`, so `1.0` means fully aligned and `0.0` means nothing after the matched prefix could be aligned. The full localization is available on `metric.alignment_result`:
+The score is `1.0 - divergence_ratio`, so `1.0` means fully aligned and `0.0` means nothing after the matched prefix could be aligned. The full localization is available on `metric.alignment_result` (the raw alignment result) and `metric.score_breakdown` (the same fields as typed, JSON-serializable data):
 
 - `matched_prefix_len`: steps that matched in order.
 - `first_divergence`: zero-based index where the traces first differ (`None` when aligned).
@@ -72,6 +72,7 @@ The score is `1.0 - divergence_ratio`, so `1.0` means fully aligned and `0.0` me
 - `resync_at`: step where the trajectories realign (`None` for an unrecovered fork).
 - `unmatched_baseline` / `unmatched_candidate`: step IDs that could not be matched.
 - `reordered`: `(baseline_id, candidate_id)` pairs swapped when the kind is `order_change`.
+- `divergence_ratio`: the divergent fraction of the longer trace (stopping at `resync_at`).
 
 ## Optional Parameters
 
