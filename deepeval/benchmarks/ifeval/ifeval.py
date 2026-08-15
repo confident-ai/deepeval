@@ -1,17 +1,16 @@
-from deepeval.benchmarks.base_benchmark import (
-    DeepEvalBaseBenchmark,
-    DeepEvalBaseBenchmarkResult,
-)
-from deepeval.utils import make_model_config
-from typing import List, Optional, Dict, Any, Tuple
-from tqdm import tqdm
-import re
 import json
+import re
+from typing import Any, Dict, List, Optional, Tuple
 
+from tqdm import tqdm
+
+from deepeval.benchmarks.base_benchmark import (DeepEvalBaseBenchmark,
+                                                DeepEvalBaseBenchmarkResult)
+from deepeval.benchmarks.schema import StringSchema
 from deepeval.dataset import Golden
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.benchmarks.schema import StringSchema
 from deepeval.telemetry import capture_benchmark_run
+from deepeval.utils import make_model_config
 
 
 class IFEvalResult(DeepEvalBaseBenchmarkResult):
@@ -384,6 +383,7 @@ class IFEvalResult(DeepEvalBaseBenchmarkResult):
 #                 f"Error verifying instruction '{instruction_id}': {str(e)}",
 #             )
 
+
 class IFEvalInstructionVerifier:
     """
     Verifier for Google IFEval instruction compliance.
@@ -392,37 +392,65 @@ class IFEvalInstructionVerifier:
 
     # --- 1. Keywords Constraints ---
     @staticmethod
-    def verify_keywords_existence(response: str, kwargs: Dict[str, Any]) -> Tuple[bool, str]:
+    def verify_keywords_existence(
+        response: str, kwargs: Dict[str, Any]
+    ) -> Tuple[bool, str]:
         for kw in kwargs.get("keywords", []):
             if not re.search(rf"\b{re.escape(kw)}\b", response, re.IGNORECASE):
                 return False, f"Missing required keyword: '{kw}'"
         return True, "Instruction 'keywords:existence' PASSED"
 
     @staticmethod
-    def verify_keywords_frequency(response: str, kwargs: Dict[str, Any]) -> Tuple[bool, str]:
-        kw, freq, rel = kwargs.get("keyword", ""), kwargs.get("frequency", 0), kwargs.get("relation", "gte")
-        count = len(re.findall(rf"\b{re.escape(kw)}\b", response, re.IGNORECASE))
-        if (rel == "gte" and count >= freq) or (rel == "lte" and count <= freq) or (rel == "eq" and count == freq):
+    def verify_keywords_frequency(
+        response: str, kwargs: Dict[str, Any]
+    ) -> Tuple[bool, str]:
+        kw, freq, rel = (
+            kwargs.get("keyword", ""),
+            kwargs.get("frequency", 0),
+            kwargs.get("relation", "gte"),
+        )
+        count = len(
+            re.findall(rf"\b{re.escape(kw)}\b", response, re.IGNORECASE)
+        )
+        if (
+            (rel == "gte" and count >= freq)
+            or (rel == "lte" and count <= freq)
+            or (rel == "eq" and count == freq)
+        ):
             return True, f"Instruction 'keywords:frequency' PASSED"
         return False, f"Keyword '{kw}' count {count}, expected {rel} {freq}"
 
     @staticmethod
-    def verify_forbidden_words(response: str, kwargs: Dict[str, Any]) -> Tuple[bool, str]:
+    def verify_forbidden_words(
+        response: str, kwargs: Dict[str, Any]
+    ) -> Tuple[bool, str]:
         for word in kwargs.get("forbidden_words", []):
             if re.search(rf"\b{re.escape(word)}\b", response, re.IGNORECASE):
                 return False, f"Forbidden word found: '{word}'"
         return True, "Instruction 'keywords:forbidden_words' PASSED"
 
     @staticmethod
-    def verify_letter_frequency(response: str, kwargs: Dict[str, Any]) -> Tuple[bool, str]:
-        let, freq, rel = kwargs.get("letter", ""), kwargs.get("let_frequency", 0), kwargs.get("let_relation", "gte")
+    def verify_letter_frequency(
+        response: str, kwargs: Dict[str, Any]
+    ) -> Tuple[bool, str]:
+        let, freq, rel = (
+            kwargs.get("letter", ""),
+            kwargs.get("let_frequency", 0),
+            kwargs.get("let_relation", "gte"),
+        )
         count = response.lower().count(let.lower())
-        if (rel in ("at least", "gte") and count >= freq) or (rel in ("less than", "lte") and count < freq) or (rel in ("equals", "eq") and count == freq):
+        if (
+            (rel in ("at least", "gte") and count >= freq)
+            or (rel in ("less than", "lte") and count < freq)
+            or (rel in ("equals", "eq") and count == freq)
+        ):
             return True, f"Instruction 'keywords:letter_frequency' PASSED"
         return False, f"Letter '{let}' count {count}, expected {rel} {freq}"
 
     @staticmethod
-    def verify_key_sentences(response: str, kwargs: Dict[str, Any]) -> Tuple[bool, str]:
+    def verify_key_sentences(
+        response: str, kwargs: Dict[str, Any]
+    ) -> Tuple[bool, str]:
         sentences = kwargs.get("key_sentences", [])
         num_req = kwargs.get("num_sentences", len(sentences))
         count = sum(1 for sent in sentences if sent.strip() in response)
@@ -432,15 +460,27 @@ class IFEvalInstructionVerifier:
 
     # --- 2. Format Constraints ---
     @staticmethod
-    def verify_number_bullet_lists(response: str, kwargs: Dict[str, Any]) -> Tuple[bool, str]:
+    def verify_number_bullet_lists(
+        response: str, kwargs: Dict[str, Any]
+    ) -> Tuple[bool, str]:
         req = kwargs.get("num_bullet_lists", 0)
         count = len(re.findall(r"(?m)^\s*(?:[\*\-\•]|\d+\.)\s+", response))
-        return (True, "PASSED") if count >= req else (False, f"Found {count} bullets, expected >= {req}")
+        return (
+            (True, "PASSED")
+            if count >= req
+            else (False, f"Found {count} bullets, expected >= {req}")
+        )
 
     @staticmethod
-    def verify_json_format(response: str, kwargs: Dict[str, Any]) -> Tuple[bool, str]:
-        clean_text = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", response.strip())
-        clean_text = clean_text.group(1).strip() if clean_text else response.strip()
+    def verify_json_format(
+        response: str, kwargs: Dict[str, Any]
+    ) -> Tuple[bool, str]:
+        clean_text = re.search(
+            r"```(?:json)?\s*([\s\S]*?)\s*```", response.strip()
+        )
+        clean_text = (
+            clean_text.group(1).strip() if clean_text else response.strip()
+        )
         try:
             json.loads(clean_text)
             return True, "Instruction 'detectable_format:json_format' PASSED"
@@ -448,59 +488,132 @@ class IFEvalInstructionVerifier:
             return False, f"Invalid JSON: {str(e)}"
 
     @staticmethod
-    def verify_multiple_sections(response: str, kwargs: Dict[str, Any]) -> Tuple[bool, str]:
-        req, sep = kwargs.get("num_sections", 0), kwargs.get("section_spliter", "Section")
-        count = len(re.findall(rf"(?i)(?:^|\n)\s*(?:#+\s*)?{re.escape(sep)}\s+[\w\d]+", response))
-        return (True, "PASSED") if count >= req else (False, f"Found {count} sections, expected {req}")
+    def verify_multiple_sections(
+        response: str, kwargs: Dict[str, Any]
+    ) -> Tuple[bool, str]:
+        req, sep = kwargs.get("num_sections", 0), kwargs.get(
+            "section_spliter", "Section"
+        )
+        count = len(
+            re.findall(
+                rf"(?i)(?:^|\n)\s*(?:#+\s*)?{re.escape(sep)}\s+[\w\d]+",
+                response,
+            )
+        )
+        return (
+            (True, "PASSED")
+            if count >= req
+            else (False, f"Found {count} sections, expected {req}")
+        )
 
     @staticmethod
-    def verify_constrained_response(response: str, kwargs: Dict[str, Any]) -> Tuple[bool, str]:
+    def verify_constrained_response(
+        response: str, kwargs: Dict[str, Any]
+    ) -> Tuple[bool, str]:
         candidates = [c.strip().lower() for c in kwargs.get("candidates", [])]
-        return (True, "PASSED") if response.strip().lower() in candidates else (False, "Response not in allowed candidates")
+        return (
+            (True, "PASSED")
+            if response.strip().lower() in candidates
+            else (False, "Response not in allowed candidates")
+        )
 
     # --- 3. Case & Length Constraints ---
     @staticmethod
-    def verify_english_capital(response: str, kwargs: Dict[str, Any]) -> Tuple[bool, str]:
+    def verify_english_capital(
+        response: str, kwargs: Dict[str, Any]
+    ) -> Tuple[bool, str]:
         letters = re.findall(r"[a-zA-Z]", response)
-        return (True, "PASSED") if letters and all(c.isupper() for c in letters) else (False, "Contains non-capital characters")
+        return (
+            (True, "PASSED")
+            if letters and all(c.isupper() for c in letters)
+            else (False, "Contains non-capital characters")
+        )
 
     @staticmethod
-    def verify_english_lowercase(response: str, kwargs: Dict[str, Any]) -> Tuple[bool, str]:
+    def verify_english_lowercase(
+        response: str, kwargs: Dict[str, Any]
+    ) -> Tuple[bool, str]:
         letters = re.findall(r"[a-zA-Z]", response)
-        return (True, "PASSED") if letters and all(c.islower() for c in letters) else (False, "Contains uppercase characters")
+        return (
+            (True, "PASSED")
+            if letters and all(c.islower() for c in letters)
+            else (False, "Contains uppercase characters")
+        )
 
     @staticmethod
-    def verify_number_paragraphs(response: str, kwargs: Dict[str, Any]) -> Tuple[bool, str]:
+    def verify_number_paragraphs(
+        response: str, kwargs: Dict[str, Any]
+    ) -> Tuple[bool, str]:
         req = kwargs.get("num_paragraphs", 0)
-        count = len([p for p in re.split(r"\n\s*\n", response.strip()) if p.strip()])
-        return (True, "PASSED") if count == req else (False, f"Found {count} paragraphs, expected {req}")
+        count = len(
+            [p for p in re.split(r"\n\s*\n", response.strip()) if p.strip()]
+        )
+        return (
+            (True, "PASSED")
+            if count == req
+            else (False, f"Found {count} paragraphs, expected {req}")
+        )
 
     @staticmethod
-    def verify_nth_paragraph_first_word(response: str, kwargs: Dict[str, Any]) -> Tuple[bool, str]:
-        nth, word = kwargs.get("nth_paragraph", 1), kwargs.get("first_word", "").strip().lower()
-        paras = [p.strip() for p in re.split(r"\n\s*\n", response.strip()) if p.strip()]
-        if len(paras) < nth: return False, f"Paragraph {nth} missing"
+    def verify_nth_paragraph_first_word(
+        response: str, kwargs: Dict[str, Any]
+    ) -> Tuple[bool, str]:
+        nth, word = (
+            kwargs.get("nth_paragraph", 1),
+            kwargs.get("first_word", "").strip().lower(),
+        )
+        paras = [
+            p.strip()
+            for p in re.split(r"\n\s*\n", response.strip())
+            if p.strip()
+        ]
+        if len(paras) < nth:
+            return False, f"Paragraph {nth} missing"
         first_match = re.findall(r"\b\w+\b", paras[nth - 1])
-        return (True, "PASSED") if first_match and first_match[0].lower() == word else (False, "First word mismatch")
+        return (
+            (True, "PASSED")
+            if first_match and first_match[0].lower() == word
+            else (False, "First word mismatch")
+        )
 
     # --- 4. Start/End & Quoting ---
     @staticmethod
-    def verify_end_checker(response: str, kwargs: Dict[str, Any]) -> Tuple[bool, str]:
+    def verify_end_checker(
+        response: str, kwargs: Dict[str, Any]
+    ) -> Tuple[bool, str]:
         phrase = kwargs.get("end_phrase", "").strip()
-        return (True, "PASSED") if response.strip().endswith(phrase) else (False, "End phrase mismatch")
+        return (
+            (True, "PASSED")
+            if response.strip().endswith(phrase)
+            else (False, "End phrase mismatch")
+        )
 
     @staticmethod
-    def verify_quotation(response: str, kwargs: Dict[str, Any]) -> Tuple[bool, str]:
+    def verify_quotation(
+        response: str, kwargs: Dict[str, Any]
+    ) -> Tuple[bool, str]:
         c = response.strip()
-        return (True, "PASSED") if (c.startswith('"') and c.endswith('"')) or (c.startswith("'") and c.endswith("'")) else (False, "Not wrapped in quotes")
+        return (
+            (True, "PASSED")
+            if (c.startswith('"') and c.endswith('"'))
+            or (c.startswith("'") and c.endswith("'"))
+            else (False, "Not wrapped in quotes")
+        )
 
     # --- 5. Language ---
     @staticmethod
-    def verify_response_language(response: str, kwargs: Dict[str, Any]) -> Tuple[bool, str]:
+    def verify_response_language(
+        response: str, kwargs: Dict[str, Any]
+    ) -> Tuple[bool, str]:
         target = kwargs.get("language", "en").lower()
         try:
             from langdetect import detect
-            return (True, "PASSED") if detect(response) == target else (False, "Language mismatch")
+
+            return (
+                (True, "PASSED")
+                if detect(response) == target
+                else (False, "Language mismatch")
+            )
         except ImportError:
             return True, "Passed (langdetect missing)"
 
@@ -513,9 +626,13 @@ class IFEvalInstructionVerifier:
         handler = IFEVAL_DISPATCH_MAP.get(instruction_id)
 
         if handler is None:
-            return False, f"Unknown or unsupported instruction ID: '{instruction_id}'"
+            return (
+                False,
+                f"Unknown or unsupported instruction ID: '{instruction_id}'",
+            )
 
         return handler(response, kwargs)
+
 
 # Module-level dispatch map with plain callables to avoid staticmethod descriptor issues
 IFEVAL_DISPATCH_MAP = {
@@ -537,6 +654,7 @@ IFEVAL_DISPATCH_MAP = {
     "language:response_language": IFEvalInstructionVerifier.verify_response_language,
 }
 
+
 class IFEval(DeepEvalBaseBenchmark):
     """
     IFEval (Instruction Following Evaluation) benchmark implementation.
@@ -555,8 +673,9 @@ class IFEval(DeepEvalBaseBenchmark):
         verbose_mode: bool = False,
         **kwargs,
     ):
-        from deepeval.scorer import Scorer
         import pandas as pd
+
+        from deepeval.scorer import Scorer
 
         super().__init__(**kwargs)
         self.scorer = Scorer()
