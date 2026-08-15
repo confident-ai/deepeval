@@ -182,6 +182,30 @@ def test_alignment_result_is_exposed_for_localization():
     assert result.candidate_len == 4
 
 
+def test_score_breakdown_is_populated_from_schema():
+    metric = TrajectoryDivergenceMetric(
+        [SEARCH, OPEN, SUMMARIZE, EMAIL],
+        [SEARCH, step("open_document", document_id=99), SUMMARIZE, EMAIL],
+    )
+    metric.measure(_make_test_case())
+    assert metric.result is not None
+    breakdown = metric.score_breakdown
+    assert breakdown["first_divergence"] == 1
+    assert breakdown["divergence_kind"] == "arg_change"
+    assert breakdown["resync_at"] is None
+    assert breakdown["divergence_ratio"] == 0.75
+    assert breakdown["matched_prefix_len"] == 1
+
+
+def test_aligned_score_breakdown_has_no_divergence():
+    metric = TrajectoryDivergenceMetric(*aligned_traces())
+    metric.measure(_make_test_case())
+    assert metric.result.first_divergence is None
+    assert metric.result.divergence_kind is None
+    assert metric.result.divergence_ratio == 0.0
+    assert metric.score_breakdown["divergence_kind"] is None
+
+
 def test_verbose_logs_are_populated():
     metric = TrajectoryDivergenceMetric(*aligned_traces())
     metric.measure(_make_test_case())

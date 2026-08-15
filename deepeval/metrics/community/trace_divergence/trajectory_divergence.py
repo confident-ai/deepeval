@@ -19,6 +19,9 @@ from deepeval.metrics.community.trace_divergence.alignment import (
     align,
     project,
 )
+from deepeval.metrics.community.trace_divergence.schema import (
+    TrajectoryDivergenceResult,
+)
 from deepeval.metrics.community.trace_divergence.template import (
     TrajectoryDivergenceTemplate,
 )
@@ -71,6 +74,7 @@ class TrajectoryDivergenceMetric(BaseMetric):
         self.using_native_model = True
         self.evaluation_model = None
         self.alignment_result: Optional[AlignmentResult] = None
+        self.result: Optional[TrajectoryDivergenceResult] = None
 
     def measure(
         self,
@@ -118,6 +122,17 @@ class TrajectoryDivergenceMetric(BaseMetric):
         candidate_events = project(self.candidate_trace)
         result = align(baseline_events, candidate_events)
         self.alignment_result = result
+        self.result = TrajectoryDivergenceResult(
+            matched_prefix_len=result.matched_prefix_len,
+            first_divergence=result.first_divergence,
+            divergence_kind=result.divergence_kind,
+            resync_at=result.resync_at,
+            unmatched_baseline=result.unmatched_baseline,
+            unmatched_candidate=result.unmatched_candidate,
+            reordered=result.reordered,
+            divergence_ratio=result.divergence_ratio,
+        )
+        self.score_breakdown = self.result.model_dump()
         self.score = self._calculate_score(result)
         self.reason = self._generate_reason(
             result, baseline_events, candidate_events
