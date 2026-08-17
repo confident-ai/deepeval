@@ -200,7 +200,7 @@ class ContextualRecallMetric(BaseMetric):
         supportive_reasons = []
         unsupportive_reasons = []
         for verdict in self.verdicts:
-            if verdict.verdict.lower() == "yes":
+            if verdict.verdict.strip().lower() == "yes":
                 supportive_reasons.append(verdict.reason)
             else:
                 unsupportive_reasons.append(verdict.reason)
@@ -230,7 +230,7 @@ class ContextualRecallMetric(BaseMetric):
         supportive_reasons = []
         unsupportive_reasons = []
         for verdict in self.verdicts:
-            if verdict.verdict.lower() == "yes":
+            if verdict.verdict.strip().lower() == "yes":
                 supportive_reasons.append(verdict.reason)
             else:
                 unsupportive_reasons.append(verdict.reason)
@@ -260,7 +260,7 @@ class ContextualRecallMetric(BaseMetric):
 
         justified_sentences = 0
         for verdict in self.verdicts:
-            if verdict.verdict.lower() == "yes":
+            if verdict.verdict.strip().lower() == "yes":
                 justified_sentences += 1
 
         score = justified_sentences / number_of_verdicts
