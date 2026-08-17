@@ -1,5 +1,6 @@
 import logging
 import os
+import textwrap
 import time
 from collections import defaultdict
 from contextlib import contextmanager
@@ -175,6 +176,14 @@ def main() -> None:
         tts=agent_tts_model,
         stt=caller_stt_model,
         voice="onyx",
+        # Walter is deliberately a rambler with reflective pauses, and the
+        # default 800ms end-of-turn window fires on one of those pauses:
+        # his turn is finalized after ~2s and the rest of the reply is
+        # dropped, even though the transcript arrives complete.
+        end_of_turn_silence_ms=2500,
+        # A full Walter reply is ~11s to generate plus ~33s to play back at
+        # real time, which overruns the default 30s cap on one exchange.
+        max_turn_timeout_s=120.0,
     )
     simulator = ConversationSimulator(
         simulator_model=TimedSimulatorModel(),
@@ -220,12 +229,8 @@ def main() -> None:
     wall_seconds = time.perf_counter() - started
     logger.info("Simulation finished after %.2fs", wall_seconds)
 
-    print("\nCompleted conversation:")
-    for turn in conversations[0].turns:
-        print(f"{turn.role}: {turn.content}")
-
     print_stage_breakdown(wall_seconds)
-    print_timeline(conversations[0].turns)
+    print_transcript(conversations[0].turns)
     print("\nAudio saved under ./voice_simulations/")
 
 
@@ -260,22 +265,57 @@ def print_stage_breakdown(wall_seconds: float) -> None:
         print(f"{'stage overlap':<24}{-unaccounted:>8.1f}s")
 
 
-def print_timeline(turns) -> None:
-    entries = build_audio_timeline(turns, require_start_times=False)
-    if not entries:
-        return
-    print("\nRecorded timeline (gaps are what you hear as silence)")
+def print_transcript(turns) -> None:
+    """Print what was said against when it was heard.
+
+    The transcript and the timeline are the same story, so they are printed
+    as one: a barge that reads as an interruption in the text but sits in a
+    gap in the timing is only visible when the two are side by side.
+    """
+    entries = {
+        entry.turn_index: entry
+        for entry in build_audio_timeline(turns, require_start_times=False)
+    }
+    print("\nAnnotated transcript (gaps are what you hear as silence)")
     cursor = 0.0
-    for entry in entries:
-        gap = entry.start_time - cursor
-        marker = "overlap" if gap < 0 else "gap"
-        print(
-            f"{entry.role:<10}{entry.start_time:>7.1f}s -"
-            f"{entry.end_time:>7.1f}s   {marker} {abs(gap):>5.1f}s"
-        )
-        cursor = max(cursor, entry.end_time)
-    speech = sum(entry.duration for entry in entries)
-    print(f"\nspeech {speech:.1f}s of {cursor:.1f}s recorded")
+    for index, turn in enumerate(turns):
+        entry = entries.get(index)
+        if entry is None:
+            timing = "        no audio recorded         "
+        else:
+            gap = entry.start_time - cursor
+            marker = "overlap" if gap < 0 else "gap"
+            timing = (
+                f"{entry.start_time:>7.1f}s -{entry.end_time:>7.1f}s"
+                f" ({entry.duration:>4.1f}s)  {marker}{abs(gap):>5.1f}s"
+            )
+            cursor = max(cursor, entry.end_time)
+
+        metadata = turn.metadata or {}
+        flags = []
+        if turn.interrupted:
+            flags.append("CUT SHORT BY BARGE")
+        if metadata.get("barge_in"):
+            flags.append("BARGE-IN")
+        if metadata.get("frustrated"):
+            flags.append("FRUSTRATED")
+        if metadata.get("grace_missed_ms") is not None:
+            flags.append(f"grace missed {metadata['grace_missed_ms']:.0f}ms")
+        if turn.latency_ms is not None:
+            flags.append(f"latency {turn.latency_ms / 1000:.1f}s")
+
+        suffix = f"   {' | '.join(flags)}" if flags else ""
+        print(f"\n[{index + 1}] {turn.role:<10}{timing}{suffix}")
+        for line in textwrap.wrap(turn.content or "(no speech)", width=88):
+            print(f"    {line}")
+
+    speech = sum(entry.duration for entry in entries.values())
+    barges = sum(1 for turn in turns if (turn.metadata or {}).get("barge_in"))
+    cut_short = sum(1 for turn in turns if turn.interrupted)
+    print(
+        f"\nspeech {speech:.1f}s of {cursor:.1f}s recorded | "
+        f"{barges} barge attempt(s) | {cut_short} agent turn(s) cut short"
+    )
 
 
 if __name__ == "__main__":

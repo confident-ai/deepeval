@@ -34,10 +34,18 @@ class CallbackVoiceConnector(BaseVoiceConnector):
         *,
         sample_rate: int = 24000,
         encoding: str = "wav",
+        end_of_turn_silence_ms: int = 800,
+        max_turn_timeout_s: float = 30.0,
     ):
         self.agent = agent
         self._is_async = inspect.iscoroutinefunction(agent)
         self._format = (sample_rate, encoding)
+        # Duplex only: `exchange_turn` gets the reply whole, so these bound
+        # the barge-in loop. Raise `end_of_turn_silence_ms` past the longest
+        # pause in the agent's speech, or its turn is finalized mid-sentence
+        # and the frames still queued behind that pause are dropped.
+        self.end_of_turn_silence_ms = end_of_turn_silence_ms
+        self.max_turn_timeout_s = max_turn_timeout_s
         self._events: Optional[asyncio.Queue] = None
         self._uplink_cancel: Optional[asyncio.Event] = None
         self._reply_task: Optional[asyncio.Task] = None
@@ -218,6 +226,7 @@ class CallbackVoiceConnector(BaseVoiceConnector):
         tts: DeepEvalBaseTTS,
         stt: DeepEvalBaseSTT,
         voice: Optional[str] = None,
+        **kwargs,
     ) -> "CallbackVoiceConnector":
 
         async def agent(user_audio: Audio) -> ConnectorTurn:
@@ -227,4 +236,4 @@ class CallbackVoiceConnector(BaseVoiceConnector):
             return ConnectorTurn(audio=agent_audio, transcript=reply)
 
         sample_rate = getattr(tts, "sample_rate", 24000)
-        return cls(agent, sample_rate=sample_rate)
+        return cls(agent, sample_rate=sample_rate, **kwargs)
