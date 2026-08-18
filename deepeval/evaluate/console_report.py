@@ -11,6 +11,7 @@ from rich.terminal_theme import TerminalTheme
 
 from deepeval.evaluate.types import TestResult
 from deepeval.test_run.test_run import TestRunResultDisplay
+from deepeval.evaluate.statistics import wilson_interval
 
 LIGHT_THEME = TerminalTheme(
     background=(0, 0, 0),
@@ -51,10 +52,16 @@ def _natural_sort_key(s: str):
     ]
 
 
-def _format_pass_rate(agg: dict) -> str:
+def _format_pass_rate(agg: dict, show_interval: bool = False) -> str:
     """Format pass rate with pass/fail counts, each with its flaky sub-count."""
     verdicts = agg["passes"] + agg["fails"]
     rate = f"{(agg['passes'] / verdicts) * 100:.2f}%" if verdicts > 0 else "N/A"
+
+    if show_interval and verdicts > 0:
+        ci = wilson_interval(agg["passes"], verdicts)
+        if ci is not None:
+            rate += f" [{ci[0] * 100:.1f}–{ci[1] * 100:.1f}]"
+
     passed = f"passed={agg['passes']}"
     if agg["flaky_passes"] > 0:
         passed += f" (flaky={agg['flaky_passes']})"
@@ -90,6 +97,7 @@ class EvaluationConsoleReport:
         self,
         truncate: bool = True,
         display_option: TestRunResultDisplay = TestRunResultDisplay.ALL,
+        show_confidence_intervals: bool = False,
     ) -> Group:
 
         renderables = [
@@ -259,7 +267,7 @@ class EvaluationConsoleReport:
                     if agg["score_count"] > 0
                     else "N/A"
                 )
-                pass_rate = _format_pass_rate(agg)
+                pass_rate = _format_pass_rate(agg, show_confidence_intervals)
                 agg_table.add_row(
                     metric_name, avg_score, pass_rate, str(agg["total"])
                 )
@@ -274,12 +282,14 @@ class EvaluationConsoleReport:
         self,
         truncate_passing_cases: bool = True,
         display_option: TestRunResultDisplay = TestRunResultDisplay.ALL,
+        show_confidence_intervals: bool = False,
     ):
         self.console.print()
         self.console.print(
             self._build_display_elements(
                 truncate=truncate_passing_cases,
                 display_option=display_option,
+                show_confidence_intervals=show_confidence_intervals,
             )
         )
         self.console.print()

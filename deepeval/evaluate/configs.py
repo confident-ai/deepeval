@@ -27,6 +27,9 @@ class DisplayConfig:
     results_folder: Optional[str] = None
     results_subfolder: Optional[str] = None
     truncate_passing_cases: bool = True
+    # Append a 95% Wilson score interval to per-metric pass rates. Helpful
+    # for small suites, where a bare percentage hides sampling noise.
+    show_confidence_intervals: bool = False
     # Offer `deepeval inspect` after the run. Honors `DEEPEVAL_NO_INSPECT_PROMPT=1`.
     inspect_after_run: bool = True
     # Deprecated: writes one .log per TestResult. Prefer `results_folder`, which

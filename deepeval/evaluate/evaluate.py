@@ -258,6 +258,7 @@ def evaluate(
             console_report = EvaluationConsoleReport(test_results)
             console_report.render_to_terminal(
                 truncate_passing_cases=display_config.truncate_passing_cases,
+                show_confidence_intervals=display_config.show_confidence_intervals,
                 display_option=display_config.display_option,
             )
 
