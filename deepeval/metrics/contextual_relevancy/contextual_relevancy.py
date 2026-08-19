@@ -27,6 +27,23 @@ from deepeval.metrics.contextual_relevancy.schema import (
 from deepeval.templates import make_template_class
 
 
+def _verdict_is_relevant(verdict: str) -> bool:
+    """Classify a raw verdict string as relevant ("yes") or not.
+
+    This is the single source of truth for what counts as a "yes" verdict.
+    It is used by both `_calculate_score` and the reason-generation methods
+    so that the reported score and the accompanying reason can never
+    disagree about how a given verdict was classified.
+
+    LLM judges do not always return the exact literal "yes"/"no" token: the
+    response can be padded with whitespace, trailing punctuation, or (rarely)
+    stray/garbled text appended to an otherwise-clear "yes". Comparing with
+    `.strip().lower().startswith("yes")` treats all of these as relevant,
+    the same way a human reading "yes." or "yes " would.
+    """
+    return verdict.strip().lower().startswith("yes")
+
+
 def _contextual_relevancy_verdict_kwargs(multimodal: bool) -> Dict[str, str]:
     context_type = "context (image or string)" if multimodal else "context"
     statement_or_image = "statement or image" if multimodal else "statement"
@@ -204,10 +221,10 @@ class ContextualRelevancyMetric(BaseMetric):
         relevant_statements = []
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
-                if verdict.verdict.lower() == "no":
-                    irrelevant_statements.append(verdict.reason)
-                else:
+                if _verdict_is_relevant(verdict.verdict):
                     relevant_statements.append(verdict.statement)
+                else:
+                    irrelevant_statements.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
             "generate_reason",
@@ -234,10 +251,10 @@ class ContextualRelevancyMetric(BaseMetric):
         relevant_statements = []
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
-                if verdict.verdict.lower() == "no":
-                    irrelevant_statements.append(verdict.reason)
-                else:
+                if _verdict_is_relevant(verdict.verdict):
                     relevant_statements.append(verdict.statement)
+                else:
+                    irrelevant_statements.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
             "generate_reason",
@@ -262,7 +279,7 @@ class ContextualRelevancyMetric(BaseMetric):
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
                 total_verdicts += 1
-                if verdict.verdict.lower() == "yes":
+                if _verdict_is_relevant(verdict.verdict):
                     relevant_statements += 1
 
         if total_verdicts == 0:
