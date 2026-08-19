@@ -67,7 +67,7 @@ Example JSON:
 }
 ===== END OF EXAMPLE ======
 
-Since you are going to generate a verdict for each statement, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to the number of `statements`.
+Since you are going to generate a verdict for each tool call, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to the number of tool calls.
 **          
 
 Input:
