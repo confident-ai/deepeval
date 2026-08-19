@@ -8,7 +8,7 @@ from deepeval.openai.extractors import (
     InputParameters,
     OutputParameters,
 )
-from deepeval.model_integrations.openrouter import (
+from deepeval.model_integrations.utils import (
     OPENROUTER_METADATA_KEY,
     detect_provider_from_base_url,
     extract_openrouter_metadata,

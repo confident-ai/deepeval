@@ -18,3 +18,4 @@ class OutputParameters(BaseModel):
     prompt_tokens: Optional[int] = None
     completion_tokens: Optional[int] = None
     tools_called: Optional[List[ToolCall]] = None
+    metadata: Optional[Dict[str, Any]] = None
