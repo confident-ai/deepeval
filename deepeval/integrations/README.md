@@ -50,7 +50,7 @@ says nothing about the provider — only the client's base URL does.
 
 1. An explicit `LlmSpanContext(provider=...)` set by the user.
 2. A recognized gateway host, from the table in
-   `deepeval/model_integrations/openrouter.py` (`openrouter.ai` today).
+   `deepeval/model_integrations/utils.py` (`openrouter.ai` today).
 3. `Provider.OPEN_AI`.
 
 So a call to `anthropic/claude-sonnet-4.5` routed through OpenRouter records

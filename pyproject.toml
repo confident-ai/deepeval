@@ -74,6 +74,7 @@ pre-commit = "^4.3.0"
 ruff = "^0.13.0"
 ollama = "*"
 anthropic = "*"
+openrouter = { version = "*", python = ">=3.10" }
 google-genai = "^1.9.0"
 
 [tool.black]
