@@ -24,6 +24,7 @@ from deepeval.tracing.types import (
     LlmSpan,
     ToolSpan,
 )
+from deepeval.tracing.otel.attributes import ConfidentAttr
 from deepeval.tracing.otel.utils import (
     check_pydantic_ai_agent_input_output,
     check_pydantic_ai_tools_called,
@@ -66,7 +67,7 @@ def _resolve_parent_uuid(span: ReadableSpan) -> Optional[str]:
     """
     if span.parent is not None:
         return to_hex_string(span.parent.span_id, 16)
-    override = span.attributes.get("confident.span.parent_uuid")
+    override = span.attributes.get(ConfidentAttr.SPAN_PARENT_UUID)
     if isinstance(override, str) and override:
         return override
     return None
@@ -416,40 +417,42 @@ class ConfidentSpanExporter(SpanExporter):
         self, base_span_wrapper: BaseSpanWrapper, span: ReadableSpan
     ):
         # Extract Trace Attributes
-        trace_name = span.attributes.get("confident.trace.name")
-        trace_thread_id = span.attributes.get("confident.trace.thread_id")
-        trace_user_id = span.attributes.get("confident.trace.user_id")
+        trace_name = span.attributes.get(ConfidentAttr.TRACE_NAME)
+        trace_thread_id = span.attributes.get(ConfidentAttr.TRACE_THREAD_ID)
+        trace_user_id = span.attributes.get(ConfidentAttr.TRACE_USER_ID)
         trace_environment = span.attributes.get(
-            "confident.trace.environment", "production"
+            ConfidentAttr.TRACE_ENVIRONMENT, "production"
         )
-        trace_input = span.attributes.get("confident.trace.input")
-        trace_output = span.attributes.get("confident.trace.output")
-        raw_trace_tags = span.attributes.get("confident.trace.tags")
-        raw_trace_metadata = span.attributes.get("confident.trace.metadata")
+        trace_input = span.attributes.get(ConfidentAttr.TRACE_INPUT)
+        trace_output = span.attributes.get(ConfidentAttr.TRACE_OUTPUT)
+        raw_trace_tags = span.attributes.get(ConfidentAttr.TRACE_TAGS)
+        raw_trace_metadata = span.attributes.get(ConfidentAttr.TRACE_METADATA)
         raw_trace_retrieval_context = span.attributes.get(
-            "confident.trace.retrieval_context"
+            ConfidentAttr.TRACE_RETRIEVAL_CONTEXT
         )
-        raw_trace_context = span.attributes.get("confident.trace.context")
+        raw_trace_context = span.attributes.get(ConfidentAttr.TRACE_CONTEXT)
         raw_trace_tools_called = span.attributes.get(
-            "confident.trace.tools_called"
+            ConfidentAttr.TRACE_TOOLS_CALLED
         )
         if raw_trace_tools_called and isinstance(raw_trace_tools_called, tuple):
             raw_trace_tools_called = list(raw_trace_tools_called)
 
         raw_trace_expected_tools = span.attributes.get(
-            "confident.trace.expected_tools"
+            ConfidentAttr.TRACE_EXPECTED_TOOLS
         )
         if raw_trace_expected_tools and isinstance(
             raw_trace_expected_tools, tuple
         ):
             raw_trace_expected_tools = list(raw_trace_expected_tools)
 
-        trace_test_case_id = span.attributes.get("confident.trace.test_case_id")
-        trace_test_run_id = span.attributes.get("confident.trace.test_run_id")
-        trace_turn_id = span.attributes.get("confident.trace.turn_id")
+        trace_test_case_id = span.attributes.get(
+            ConfidentAttr.TRACE_TEST_CASE_ID
+        )
+        trace_test_run_id = span.attributes.get(ConfidentAttr.TRACE_TEST_RUN_ID)
+        trace_turn_id = span.attributes.get(ConfidentAttr.TRACE_TURN_ID)
 
         raw_trace_metric_collection = span.attributes.get(
-            "confident.trace.metric_collection"
+            ConfidentAttr.TRACE_METRIC_COLLECTION
         )
 
         # Validate Trace Attributes
@@ -487,7 +490,9 @@ class ConfidentSpanExporter(SpanExporter):
         # Resource attributes
         resource_attributes = span.resource.attributes
         if resource_attributes:
-            environment = resource_attributes.get("confident.trace.environment")
+            environment = resource_attributes.get(
+                ConfidentAttr.TRACE_ENVIRONMENT
+            )
             if environment and isinstance(environment, str):
                 base_span_wrapper.trace_environment = environment
 
@@ -498,34 +503,36 @@ class ConfidentSpanExporter(SpanExporter):
         base_span_status: TraceSpanStatus,
         base_span_error: Optional[str],
     ):
-        span_input = span.attributes.get("confident.span.input")
-        span_output = span.attributes.get("confident.span.output")
+        span_input = span.attributes.get(ConfidentAttr.SPAN_INPUT)
+        span_output = span.attributes.get(ConfidentAttr.SPAN_OUTPUT)
 
-        span_name = span.attributes.get("confident.span.name")
+        span_name = span.attributes.get(ConfidentAttr.SPAN_NAME)
 
         raw_span_metric_collection = span.attributes.get(
-            "confident.span.metric_collection"
+            ConfidentAttr.SPAN_METRIC_COLLECTION
         )
-        raw_span_context = span.attributes.get("confident.span.context")
+        raw_span_context = span.attributes.get(ConfidentAttr.SPAN_CONTEXT)
         raw_span_retrieval_context = span.attributes.get(
-            "confident.span.retrieval_context"
+            ConfidentAttr.SPAN_RETRIEVAL_CONTEXT
         )
         raw_span_tools_called = span.attributes.get(
-            "confident.span.tools_called"
+            ConfidentAttr.SPAN_TOOLS_CALLED
         )
         if raw_span_tools_called and isinstance(raw_span_tools_called, tuple):
             raw_span_tools_called = list(raw_span_tools_called)
 
         raw_span_expected_tools = span.attributes.get(
-            "confident.span.expected_tools"
+            ConfidentAttr.SPAN_EXPECTED_TOOLS
         )
         if raw_span_expected_tools and isinstance(
             raw_span_expected_tools, tuple
         ):
             raw_span_expected_tools = list(raw_span_expected_tools)
 
-        raw_span_metadata = span.attributes.get("confident.span.metadata")
-        raw_span_integration = span.attributes.get("confident.span.integration")
+        raw_span_metadata = span.attributes.get(ConfidentAttr.SPAN_METADATA)
+        raw_span_integration = span.attributes.get(
+            ConfidentAttr.SPAN_INTEGRATION
+        )
 
         # Validate Span Attributes
         span_retrieval_context = parse_list_of_strings(
@@ -577,7 +584,7 @@ class ConfidentSpanExporter(SpanExporter):
     def prepare_boilerplate_base_span(span: ReadableSpan) -> Optional[BaseSpan]:
 
         ################ Get Span Type ################
-        span_type = span.attributes.get("confident.span.type")
+        span_type = span.attributes.get(ConfidentAttr.SPAN_TYPE)
         if not span_type:
             span_type = check_span_type_from_gen_ai_attributes(span)
 
@@ -601,20 +608,20 @@ class ConfidentSpanExporter(SpanExporter):
         #######################################################
 
         if span_type == "llm":
-            model = span.attributes.get("confident.llm.model")
+            model = span.attributes.get(ConfidentAttr.LLM_MODEL)
             if not model:
                 model = check_model_from_gen_ai_attributes(span)
-            # prompt = span.attributes.get("confident.llm.prompt")
+            # prompt = span.attributes.get(ConfidentAttr.LLM_PROMPT)
             input_token_count = span.attributes.get(
-                "confident.llm.input_token_count"
+                ConfidentAttr.LLM_INPUT_TOKEN_COUNT
             )
-            provider = span.attributes.get("confident.span.provider")
+            provider = span.attributes.get(ConfidentAttr.SPAN_PROVIDER)
             if not provider:
                 provider = infer_provider_from_model(model)
             if provider:
                 provider = normalize_span_provider_for_platform(provider)
             output_token_count = span.attributes.get(
-                "confident.llm.output_token_count"
+                ConfidentAttr.LLM_OUTPUT_TOKEN_COUNT
             )
 
             # fallback to gen ai attributes if not found in confident attributes
@@ -628,10 +635,10 @@ class ConfidentSpanExporter(SpanExporter):
                 )
 
             cost_per_input_token = span.attributes.get(
-                "confident.llm.cost_per_input_token"
+                ConfidentAttr.LLM_COST_PER_INPUT_TOKEN
             )
             cost_per_output_token = span.attributes.get(
-                "confident.llm.cost_per_output_token"
+                ConfidentAttr.LLM_COST_PER_OUTPUT_TOKEN
             )
             input, output = check_llm_input_from_gen_ai_attributes(span)
             if isinstance(input, tuple):
@@ -646,14 +653,14 @@ class ConfidentSpanExporter(SpanExporter):
                     output = [json.loads(o) for o in output]
                 except Exception:
                     pass
-            prompt = span.attributes.get("confident.span.prompt")
-            prompt_alias = span.attributes.get("confident.span.prompt_alias")
+            prompt = span.attributes.get(ConfidentAttr.SPAN_PROMPT)
+            prompt_alias = span.attributes.get(ConfidentAttr.SPAN_PROMPT_ALIAS)
             prompt_commit_hash = span.attributes.get(
-                "confident.span.prompt_commit_hash"
+                ConfidentAttr.SPAN_PROMPT_COMMIT_HASH
             )
-            prompt_label = span.attributes.get("confident.span.prompt_label")
+            prompt_label = span.attributes.get(ConfidentAttr.SPAN_PROMPT_LABEL)
             prompt_version = span.attributes.get(
-                "confident.span.prompt_version"
+                ConfidentAttr.SPAN_PROMPT_VERSION
             )
             confident_prompt = None
             if prompt and isinstance(prompt, str):
@@ -696,12 +703,12 @@ class ConfidentSpanExporter(SpanExporter):
         #######################################################
 
         elif span_type == "agent":
-            name = span.attributes.get("confident.agent.name")
+            name = span.attributes.get(ConfidentAttr.AGENT_NAME)
             available_tools_attr = span.attributes.get(
-                "confident.agent.available_tools"
+                ConfidentAttr.AGENT_AVAILABLE_TOOLS
             )
             agent_handoffs_attr = span.attributes.get(
-                "confident.agent.agent_handoffs"
+                ConfidentAttr.AGENT_AGENT_HANDOFFS
             )
             available_tools: List[str] = []
             if available_tools_attr:
@@ -743,9 +750,9 @@ class ConfidentSpanExporter(SpanExporter):
         #######################################################
 
         elif span_type == "retriever":
-            embedder = span.attributes.get("confident.retriever.embedder")
-            top_k = span.attributes.get("confident.retriever.top_k")
-            chunk_size = span.attributes.get("confident.retriever.chunk_size")
+            embedder = span.attributes.get(ConfidentAttr.RETRIEVER_EMBEDDER)
+            top_k = span.attributes.get(ConfidentAttr.RETRIEVER_TOP_K)
+            chunk_size = span.attributes.get(ConfidentAttr.RETRIEVER_CHUNK_SIZE)
             retriever_span = RetrieverSpan(
                 uuid=uuid,
                 status=status,
@@ -766,10 +773,10 @@ class ConfidentSpanExporter(SpanExporter):
         #######################################################
 
         elif span_type == "tool":
-            name = span.attributes.get("confident.tool.name")
+            name = span.attributes.get(ConfidentAttr.TOOL_NAME)
             if not name:
                 name = check_tool_name_from_gen_ai_attributes(span)
-            description = span.attributes.get("confident.tool.description")
+            description = span.attributes.get(ConfidentAttr.TOOL_DESCRIPTION)
             input = check_tool_input_parameters_from_gen_ai_attributes(span)
             output = check_tool_output(span)
 
