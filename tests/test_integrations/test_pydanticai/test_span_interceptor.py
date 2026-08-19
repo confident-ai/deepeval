@@ -38,6 +38,7 @@ from deepeval.tracing.context import (
     update_current_span,
     update_current_trace,
 )
+from deepeval.prompt import Prompt
 from deepeval.tracing.types import AgentSpan, BaseSpan, TraceSpanStatus
 from deepeval.tracing.otel.context_aware_processor import (
     ContextAwareSpanProcessor,
@@ -1197,6 +1198,33 @@ class TestNextSpanInterceptorIntegration:
             == "only-first"
         )
         assert second.attributes.get("confident.span.metric_collection") is None
+
+    def test_next_llm_span_prompt_lands_on_llm_otel_attrs(self):
+        """``with next_llm_span(prompt=...)`` flattens the ``Prompt`` into
+        the ``confident.span.prompt_*`` attrs the exporter reads back to
+        link the span to its prompt version on the UI.
+
+        Regression: the LLM placeholder used to be a plain ``BaseSpan``,
+        which has no ``prompt`` field — ``apply_pending_to_span`` dropped
+        the staged ``Prompt`` before it could be serialized."""
+        settings = _make_settings()
+        interceptor = SpanInterceptor(settings)
+        llm_span = _make_mock_span(operation_name="chat")
+
+        prompt = Prompt(alias="Test prompt")
+        prompt.hash = "abc123"
+        prompt.version = "00.00.01"
+        prompt.label = "production"
+
+        with next_llm_span(prompt=prompt):
+            interceptor.on_start(llm_span, None)
+            interceptor.on_end(llm_span)
+
+        attrs = llm_span.attributes
+        assert attrs.get("confident.span.prompt_alias") == "Test prompt"
+        assert attrs.get("confident.span.prompt_commit_hash") == "abc123"
+        assert attrs.get("confident.span.prompt_version") == "00.00.01"
+        assert attrs.get("confident.span.prompt_label") == "production"
 
     def test_next_agent_span_does_not_affect_non_agent_span(self):
         """Typed slot is NOT consumed by spans of a different type. An

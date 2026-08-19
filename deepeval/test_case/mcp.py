@@ -1,6 +1,8 @@
 from pydantic import BaseModel, AnyUrl
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Literal
+from typing import Any, Dict, List, Optional, Literal, Set
+
+from deepeval.utils import get_or_create_event_loop
 
 
 class MCPToolCall(BaseModel):
@@ -55,3 +57,44 @@ def validate_mcp_servers(mcp_servers: List[MCPServer]):
             mcp_server.available_resources, "available_resources", Resource
         )
         _validate(mcp_server.available_prompts, "available_prompts", Prompt)
+
+
+def normalize_mcp_servers(mcp_servers: List[Any]) -> List[Any]:
+    try:
+        from mcp.server import MCPServer as OfficialMCPServer
+    except ImportError:
+        return list(mcp_servers)
+
+    normalized = []
+    for mcp_server in mcp_servers:
+        if isinstance(mcp_server, OfficialMCPServer):
+            normalized.append(_from_official_mcp_server(mcp_server))
+        else:
+            normalized.append(mcp_server)
+    return normalized
+
+
+def _from_official_mcp_server(mcp_server) -> MCPServer:
+    loop = get_or_create_event_loop()
+    return MCPServer(
+        server_name=mcp_server.name,
+        available_tools=loop.run_until_complete(mcp_server.list_tools()),
+        available_resources=loop.run_until_complete(
+            mcp_server.list_resources()
+        ),
+        available_prompts=loop.run_until_complete(mcp_server.list_prompts()),
+    )
+
+
+def get_available_mcp_tool_names(mcp_servers: List[MCPServer]) -> Set[str]:
+    tool_names = set()
+    for mcp_server in mcp_servers:
+        for tool in mcp_server.available_tools or []:
+            name = (
+                tool.get("name")
+                if isinstance(tool, dict)
+                else getattr(tool, "name", None)
+            )
+            if name:
+                tool_names.add(name)
+    return tool_names

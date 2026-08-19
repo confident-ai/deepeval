@@ -34,7 +34,10 @@ from deepeval.tracing.context import (
     current_trace_context,
     pop_pending_for,
 )
+from deepeval.tracing.otel.attributes import ConfidentAttr
 from deepeval.tracing.otel.utils import (
+    serialize_placeholder_to_otel_attrs,
+    set_span_attribute_post_end,
     stash_pending_metrics,
     to_hex_string,
 )
@@ -43,6 +46,8 @@ from deepeval.tracing.tracing import trace_manager
 from deepeval.tracing.types import (
     AgentSpan,
     BaseSpan,
+    LlmSpan,
+    SpanType,
     Trace,
     TraceSpanStatus,
     ToolCall,
@@ -124,13 +129,13 @@ def _get_span_kind(span) -> Optional[str]:
         return None
 
     if kind in ("AGENT", "CHAIN"):
-        return "agent"
+        return SpanType.AGENT.value
     if kind == "LLM":
-        return "llm"
+        return SpanType.LLM.value
     if kind == "TOOL":
-        return "tool"
+        return SpanType.TOOL.value
     if kind == "RETRIEVER":
-        return "retriever"
+        return SpanType.RETRIEVER.value
 
     return "custom"
 
@@ -453,26 +458,26 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
         span_type = _get_span_kind(span)
         if span_type:
             try:
-                span.set_attribute("confident.span.type", span_type)
+                span.set_attribute(ConfidentAttr.SPAN_TYPE, span_type)
                 span.set_attribute(
-                    "confident.span.integration", self.settings.integration
+                    ConfidentAttr.SPAN_INTEGRATION, self.settings.integration
                 )
             except Exception:
                 pass
 
         # Stamp name at on_start because the placeholder subclass depends on it.
-        if span_type == "agent":
+        if span_type == SpanType.AGENT.value:
             agent_name = _get_agent_name(span)
             if agent_name:
                 try:
-                    span.set_attribute("confident.span.name", agent_name)
+                    span.set_attribute(ConfidentAttr.SPAN_NAME, agent_name)
                 except Exception:
                     pass
-        elif span_type == "tool":
+        elif span_type == SpanType.TOOL.value:
             tool_name = _get_tool_name(span)
             if tool_name:
                 try:
-                    span.set_attribute("confident.span.name", tool_name)
+                    span.set_attribute(ConfidentAttr.SPAN_NAME, tool_name)
                 except Exception:
                     pass
 
@@ -504,7 +509,7 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
                 )
         if placeholder is not None:
             try:
-                self._serialize_placeholder_to_otel_attrs(placeholder, span)
+                serialize_placeholder_to_otel_attrs(span, placeholder)
             except Exception as exc:
                 logger.debug(
                     "Failed to serialize span placeholder for span_id=%s: %s",
@@ -539,7 +544,7 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
         self._maybe_pop_implicit_trace_context(span)
 
     def _push_span_context(self, span, span_type: Optional[str]) -> None:
-        """Push a ``BaseSpan`` / ``AgentSpan`` placeholder onto the contextvar.
+        """Push a typed placeholder span onto the contextvar.
 
         Consumes ``next_*_span(...)`` defaults BEFORE the push so user code
         sees the staged values.
@@ -558,7 +563,7 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
                 status=TraceSpanStatus.IN_PROGRESS,
                 start_time=start_time,
             )
-            if span_type == "agent":
+            if span_type == SpanType.AGENT.value:
                 # Reuse the on_start-stamped name to skip a duplicate lookup.
                 attrs = (
                     getattr(span, "attributes", None)
@@ -567,12 +572,14 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
                 )
                 placeholder = AgentSpan(
                     name=(
-                        attrs.get("confident.span.name")
+                        attrs.get(ConfidentAttr.SPAN_NAME)
                         or _get_agent_name(span)
                         or "agent"
                     ),
                     **kwargs,
                 )
+            elif span_type == SpanType.LLM.value:
+                placeholder = LlmSpan(**kwargs)
             else:
                 placeholder = BaseSpan(**kwargs)
 
@@ -640,7 +647,7 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
             return
         try:
             self._set_attr_post_end(
-                span, "confident.span.parent_uuid", parent_uuid
+                span, ConfidentAttr.SPAN_PARENT_UUID, parent_uuid
             )
         except Exception as exc:
             logger.debug(
@@ -673,87 +680,12 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
     def _set_attr_post_end(span, key: str, value: Any) -> None:
         """Write to a span that may have ended.
 
-        ``Span.set_attribute`` is a no-op after ``Span.end()``, so we write
-        directly through ``_attributes`` (mutable while processors are
-        running) and fall back to ``set_attribute`` if that fails.
+        ``Span.set_attribute`` is a no-op after ``Span.end()`` and ``on_end``
+        receives a ``ReadableSpan`` that has no such method, so the write goes
+        through the span's ``_attributes`` mapping — see
+        ``set_span_attribute_post_end``.
         """
-        try:
-            attrs = getattr(span, "_attributes", None)
-            if attrs is not None:
-                attrs[key] = value
-                return
-        except Exception as exc:
-            logger.debug(
-                "Direct _attributes write failed for %s; "
-                "falling back to set_attribute (may be dropped): %s",
-                key,
-                exc,
-            )
-        try:
-            span.set_attribute(key, value)
-        except Exception as exc:
-            logger.debug("set_attribute fallback failed for %s: %s", key, exc)
-
-    @classmethod
-    def _serialize_placeholder_to_otel_attrs(
-        cls, placeholder: BaseSpan, span
-    ) -> None:
-        """Mirror ``update_current_span`` writes onto ``confident.span.*``.
-
-        Only writes user-set fields; doesn't overwrite on_start-stamped attrs.
-        """
-        existing = (
-            getattr(span, "attributes", None)
-            or getattr(span, "_attributes", None)
-            or {}
-        )
-
-        if placeholder.metadata:
-            cls._set_attr_post_end(
-                span,
-                "confident.span.metadata",
-                serialize_to_json(placeholder.metadata),
-            )
-        if placeholder.input is not None:
-            cls._set_attr_post_end(
-                span,
-                "confident.span.input",
-                serialize_to_json(placeholder.input),
-            )
-        if placeholder.output is not None:
-            cls._set_attr_post_end(
-                span,
-                "confident.span.output",
-                serialize_to_json(placeholder.output),
-            )
-        if placeholder.metric_collection:
-            cls._set_attr_post_end(
-                span,
-                "confident.span.metric_collection",
-                placeholder.metric_collection,
-            )
-        if placeholder.retrieval_context:
-            cls._set_attr_post_end(
-                span,
-                "confident.span.retrieval_context",
-                serialize_to_json(placeholder.retrieval_context),
-            )
-        if placeholder.context:
-            cls._set_attr_post_end(
-                span,
-                "confident.span.context",
-                serialize_to_json(placeholder.context),
-            )
-        if placeholder.expected_output:
-            cls._set_attr_post_end(
-                span,
-                "confident.span.expected_output",
-                placeholder.expected_output,
-            )
-        if placeholder.name and not existing.get("confident.span.name"):
-            cls._set_attr_post_end(
-                span, "confident.span.name", placeholder.name
-            )
+        set_span_attribute_post_end(span, key, value)
 
     def _serialize_trace_context_to_otel_attrs(self, span) -> None:
         """Resolve trace attrs FRESH and write to ``confident.trace.*``.
@@ -788,37 +720,37 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
         }
 
         if _name:
-            self._set_attr_post_end(span, "confident.trace.name", _name)
+            self._set_attr_post_end(span, ConfidentAttr.TRACE_NAME, _name)
         if _thread_id:
             self._set_attr_post_end(
-                span, "confident.trace.thread_id", _thread_id
+                span, ConfidentAttr.TRACE_THREAD_ID, _thread_id
             )
         if _user_id:
-            self._set_attr_post_end(span, "confident.trace.user_id", _user_id)
+            self._set_attr_post_end(span, ConfidentAttr.TRACE_USER_ID, _user_id)
         if _tags:
-            self._set_attr_post_end(span, "confident.trace.tags", _tags)
+            self._set_attr_post_end(span, ConfidentAttr.TRACE_TAGS, _tags)
         if _metadata:
             self._set_attr_post_end(
                 span,
-                "confident.trace.metadata",
+                ConfidentAttr.TRACE_METADATA,
                 serialize_to_json(_metadata),
             )
         if _trace_metric_collection:
             self._set_attr_post_end(
                 span,
-                "confident.trace.metric_collection",
+                ConfidentAttr.TRACE_METRIC_COLLECTION,
                 _trace_metric_collection,
             )
         if _test_case_id:
             self._set_attr_post_end(
-                span, "confident.trace.test_case_id", _test_case_id
+                span, ConfidentAttr.TRACE_TEST_CASE_ID, _test_case_id
             )
         if _turn_id:
-            self._set_attr_post_end(span, "confident.trace.turn_id", _turn_id)
+            self._set_attr_post_end(span, ConfidentAttr.TRACE_TURN_ID, _turn_id)
         if self.settings.environment:
             self._set_attr_post_end(
                 span,
-                "confident.trace.environment",
+                ConfidentAttr.TRACE_ENVIRONMENT,
                 self.settings.environment,
             )
 
@@ -833,85 +765,101 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
             or getattr(span, "_attributes", None)
             or {}
         )
-        span_type = attrs.get("confident.span.type") or _get_span_kind(span)
-        if span_type and "confident.span.type" not in attrs:
-            self._set_attr_post_end(span, "confident.span.type", span_type)
+        span_type = attrs.get(ConfidentAttr.SPAN_TYPE) or _get_span_kind(span)
+        if span_type and ConfidentAttr.SPAN_TYPE not in attrs:
+            self._set_attr_post_end(span, ConfidentAttr.SPAN_TYPE, span_type)
         if (
             self.settings.integration
-            and "confident.span.integration" not in attrs
+            and ConfidentAttr.SPAN_INTEGRATION not in attrs
         ):
             self._set_attr_post_end(
                 span,
-                "confident.span.integration",
+                ConfidentAttr.SPAN_INTEGRATION,
                 self.settings.integration,
             )
 
         input_text, output_text = _extract_messages(span)
 
-        if input_text and "confident.span.input" not in attrs:
-            self._set_attr_post_end(span, "confident.span.input", input_text)
-            if span_type == "agent":
+        if input_text and ConfidentAttr.SPAN_INPUT not in attrs:
+            self._set_attr_post_end(span, ConfidentAttr.SPAN_INPUT, input_text)
+            if span_type == SpanType.AGENT.value:
                 self._set_attr_post_end(
-                    span, "confident.trace.input", input_text
+                    span, ConfidentAttr.TRACE_INPUT, input_text
                 )
 
-        if output_text and "confident.span.output" not in attrs:
-            self._set_attr_post_end(span, "confident.span.output", output_text)
-            if span_type == "agent":
+        if output_text and ConfidentAttr.SPAN_OUTPUT not in attrs:
+            self._set_attr_post_end(
+                span, ConfidentAttr.SPAN_OUTPUT, output_text
+            )
+            if span_type == SpanType.AGENT.value:
                 self._set_attr_post_end(
-                    span, "confident.trace.output", output_text
+                    span, ConfidentAttr.TRACE_OUTPUT, output_text
                 )
 
         # Token usage — OpenInference uses ``llm.token_count.{prompt,completion}``.
         input_tokens = attrs.get("llm.token_count.prompt")
         output_tokens = attrs.get("llm.token_count.completion")
-        if input_tokens is not None:
+        if input_tokens is not None and not attrs.get(
+            ConfidentAttr.LLM_INPUT_TOKEN_COUNT
+        ):
             self._set_attr_post_end(
-                span, "confident.llm.input_token_count", int(input_tokens)
+                span, ConfidentAttr.LLM_INPUT_TOKEN_COUNT, int(input_tokens)
             )
-        if output_tokens is not None:
+        if output_tokens is not None and not attrs.get(
+            ConfidentAttr.LLM_OUTPUT_TOKEN_COUNT
+        ):
             self._set_attr_post_end(
-                span, "confident.llm.output_token_count", int(output_tokens)
+                span, ConfidentAttr.LLM_OUTPUT_TOKEN_COUNT, int(output_tokens)
             )
 
         model = attrs.get("llm.model_name")
-        if model:
-            self._set_attr_post_end(span, "confident.llm.model", str(model))
-        if span_type == "llm" and not attrs.get("confident.span.provider"):
+        if model and not attrs.get(ConfidentAttr.LLM_MODEL):
+            self._set_attr_post_end(span, ConfidentAttr.LLM_MODEL, str(model))
+        if span_type == SpanType.LLM.value and not attrs.get(
+            ConfidentAttr.SPAN_PROVIDER
+        ):
             provider = attrs.get("llm.provider")
             if not provider and model:
                 provider = infer_provider_from_model(str(model))
             if provider:
                 provider = normalize_span_provider_for_platform(provider)
                 self._set_attr_post_end(
-                    span, "confident.span.provider", str(provider)
+                    span, ConfidentAttr.SPAN_PROVIDER, str(provider)
                 )
 
         tools_called: List[ToolCall] = []
 
-        if span_type == "tool":
+        if span_type == SpanType.TOOL.value:
             tc = _extract_tool_call_from_tool_span(span)
             if tc:
                 tools_called = [tc]
 
-                if tc.input_parameters and "confident.span.input" not in attrs:
+                if (
+                    tc.input_parameters
+                    and ConfidentAttr.SPAN_INPUT not in attrs
+                ):
                     self._set_attr_post_end(
                         span,
-                        "confident.span.input",
+                        ConfidentAttr.SPAN_INPUT,
                         serialize_to_json(tc.input_parameters),
                     )
 
-        elif span_type in ("agent", "llm"):
+        elif span_type in (SpanType.AGENT.value, SpanType.LLM.value):
             tools_called = _extract_tool_calls(span)
 
         if tools_called:
             self._set_attr_post_end(
                 span,
-                "confident.span.tools_called",
+                ConfidentAttr.SPAN_TOOLS_CALLED,
                 [t.model_dump_json() for t in tools_called],
             )
 
-        if span_type == "agent" and "confident.span.name" not in attrs:
+        if (
+            span_type == SpanType.AGENT.value
+            and ConfidentAttr.SPAN_NAME not in attrs
+        ):
             agent_name = _get_agent_name(span)
             if agent_name:
-                self._set_attr_post_end(span, "confident.span.name", agent_name)
+                self._set_attr_post_end(
+                    span, ConfidentAttr.SPAN_NAME, agent_name
+                )

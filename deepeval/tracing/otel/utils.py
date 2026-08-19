@@ -4,14 +4,188 @@ from threading import Lock
 from typing import Dict, List, Optional, Tuple, Any
 from opentelemetry.sdk.trace.export import ReadableSpan
 
+try:
+    from opentelemetry.attributes import BoundedAttributes
+except ImportError:  # pragma: no cover - not present on very old SDKs
+    BoundedAttributes = None
+
 from deepeval.test_case.api import create_api_test_case
 from deepeval.test_run.api import LLMApiTestCase
 from deepeval.test_run.test_run import global_test_run_manager
-from deepeval.tracing.types import Trace, LLMTestCase, ToolCall
+from deepeval.tracing.otel.attributes import ConfidentAttr
+from deepeval.tracing.types import Trace, LLMTestCase, LlmSpan, ToolCall
 from deepeval.tracing import trace_manager, BaseSpan
 from deepeval.tracing.utils import make_json_serializable
+from deepeval.utils import serialize_to_json
 
 GEN_AI_OPERATION_NAMES = ["chat", "generate_content", "text_completion"]
+
+
+# Integrations derive attributes at ``on_end`` (output, token counts, resolved
+# prompt) that must land on an already-ended span, and OTel offers no supported
+# seam for that: ``on_end`` receives a ``ReadableSpan`` with no
+# ``set_attribute``, and the spec's ``OnEnding`` hook is private in Python and
+# fires after the ended-span guard. So we write through ``_attributes``, the
+# mapping every processor shares by reference. opentelemetry-sdk 1.43.0 froze
+# that mapping in ``Span.end()`` before dispatching ``on_end``, silently
+# dropping every write; replacing it with a mutable ``BoundedAttributes``
+# restores the old behaviour.
+
+
+def _writable_attributes(span: Any) -> Optional[Any]:
+    """Return ``span``'s attribute mapping, making it writable if it is frozen.
+
+    Installs the replacement on the span so later processors write into the
+    same mapping. Returns ``None`` if no writable mapping were obtained.
+    """
+    attrs = getattr(span, "_attributes", None)
+    if attrs is None or not getattr(attrs, "_immutable", False):
+        return attrs
+    if BoundedAttributes is None:
+        return None
+
+    kwargs: Dict[str, Any] = {
+        "maxlen": getattr(attrs, "maxlen", None),
+        "attributes": dict(attrs),
+        "immutable": False,
+        "max_value_len": getattr(attrs, "max_value_len", None),
+    }
+    # Only forward what this SDK's BoundedAttributes accepts.
+    if hasattr(attrs, "_extended_attributes"):
+        kwargs["extended_attributes"] = attrs._extended_attributes
+
+    try:
+        replacement = BoundedAttributes(**kwargs)
+        # Re-adding the entries recounts from zero; keep the original tally.
+        replacement.dropped = getattr(attrs, "dropped", 0)
+        span._attributes = replacement
+    except Exception:
+        return None
+    return replacement
+
+
+def set_span_attribute_post_end(span: Any, key: str, value: Any) -> None:
+    """Write ``key``/``value`` onto a span that may already have ended.
+
+    Shared by every OTel integration's ``_set_attr_post_end``; see the comment
+    above for why this can't just call ``span.set_attribute``.
+    """
+    attrs = _writable_attributes(span)
+    if attrs is not None:
+        try:
+            attrs[key] = value
+            return
+        except Exception:
+            pass
+
+    # Last resort: works on a still-recording span, drops on an ended one.
+    try:
+        span.set_attribute(key, value)
+    except Exception:
+        pass
+
+
+def serialize_placeholder_to_otel_attrs(
+    span: Any, placeholder: BaseSpan
+) -> None:
+    """Mirror ``update_current_span`` writes onto ``confident.span.*``.
+
+    Presence, not truthiness, decides what counts as user-set: an empty
+    ``retrieval_context`` or ``expected_output`` is a deliberate statement
+    about the span, and dropping it silently changes what the metrics see.
+    ``name`` is the exception, since blanking a span's label has no upside, and
+    it also yields to whatever ``on_start`` already stamped.
+    """
+    if placeholder.metadata is not None:
+        set_span_attribute_post_end(
+            span,
+            ConfidentAttr.SPAN_METADATA,
+            serialize_to_json(placeholder.metadata),
+        )
+    if placeholder.input is not None:
+        set_span_attribute_post_end(
+            span,
+            ConfidentAttr.SPAN_INPUT,
+            serialize_to_json(placeholder.input),
+        )
+    if placeholder.output is not None:
+        set_span_attribute_post_end(
+            span,
+            ConfidentAttr.SPAN_OUTPUT,
+            serialize_to_json(placeholder.output),
+        )
+    if placeholder.metric_collection is not None:
+        set_span_attribute_post_end(
+            span,
+            ConfidentAttr.SPAN_METRIC_COLLECTION,
+            placeholder.metric_collection,
+        )
+    if placeholder.retrieval_context is not None:
+        set_span_attribute_post_end(
+            span,
+            ConfidentAttr.SPAN_RETRIEVAL_CONTEXT,
+            serialize_to_json(placeholder.retrieval_context),
+        )
+    if placeholder.context is not None:
+        set_span_attribute_post_end(
+            span,
+            ConfidentAttr.SPAN_CONTEXT,
+            serialize_to_json(placeholder.context),
+        )
+    if placeholder.expected_output is not None:
+        set_span_attribute_post_end(
+            span,
+            ConfidentAttr.SPAN_EXPECTED_OUTPUT,
+            placeholder.expected_output,
+        )
+
+    existing = (
+        getattr(span, "attributes", None)
+        or getattr(span, "_attributes", None)
+        or {}
+    )
+    if placeholder.name and not existing.get(ConfidentAttr.SPAN_NAME):
+        set_span_attribute_post_end(
+            span, ConfidentAttr.SPAN_NAME, placeholder.name
+        )
+
+    if isinstance(placeholder, LlmSpan):
+        serialize_llm_span_to_otel_attrs(span, placeholder)
+
+
+def serialize_llm_span_to_otel_attrs(span: Any, placeholder: LlmSpan) -> None:
+    """Mirror LLM-specific placeholder values onto ``confident.*`` attrs.
+
+    A staged ``Prompt`` cannot ride in OTel attrs (primitives only), so flatten
+    it into the four prompt scalars consumed by the exporter. Explicit prompt
+    fields win over the ``Prompt`` object they were derived from.
+    """
+    prompt = placeholder.prompt
+    prompt_attrs = {
+        ConfidentAttr.SPAN_PROMPT_ALIAS: placeholder.prompt_alias
+        or (prompt.alias if prompt else None),
+        ConfidentAttr.SPAN_PROMPT_COMMIT_HASH: placeholder.prompt_commit_hash
+        or (prompt.hash if prompt else None),
+        ConfidentAttr.SPAN_PROMPT_LABEL: placeholder.prompt_label
+        or (prompt.label if prompt else None),
+        ConfidentAttr.SPAN_PROMPT_VERSION: placeholder.prompt_version
+        or (prompt.version if prompt else None),
+    }
+    for key, value in prompt_attrs.items():
+        if value:
+            set_span_attribute_post_end(span, key, value)
+
+    llm_attrs = {
+        ConfidentAttr.LLM_MODEL: placeholder.model,
+        ConfidentAttr.LLM_INPUT_TOKEN_COUNT: placeholder.input_token_count,
+        ConfidentAttr.LLM_OUTPUT_TOKEN_COUNT: placeholder.output_token_count,
+        ConfidentAttr.LLM_COST_PER_INPUT_TOKEN: placeholder.cost_per_input_token,
+        ConfidentAttr.LLM_COST_PER_OUTPUT_TOKEN: placeholder.cost_per_output_token,
+    }
+    for key, value in llm_attrs.items():
+        if value is not None:
+            set_span_attribute_post_end(span, key, value)
+
 
 # Pending-metrics overlay: in-process side-channel for ``List[BaseMetric]``,
 # which can't fit in OTel attrs (primitives only). Writer is
@@ -308,29 +482,29 @@ def prepare_trace_llm_test_case(span: ReadableSpan) -> Optional[LLMTestCase]:
 
     test_case = LLMTestCase(input="")
 
-    _input = span.attributes.get("confident.trace.llm_test_case.input")
+    _input = span.attributes.get(ConfidentAttr.TRACE_LLM_TEST_CASE_INPUT)
     if isinstance(_input, str):
         test_case.input = _input
 
     _actual_output = span.attributes.get(
-        "confident.trace.llm_test_case.actual_output"
+        ConfidentAttr.TRACE_LLM_TEST_CASE_ACTUAL_OUTPUT
     )
     if isinstance(_actual_output, str):
         test_case.actual_output = _actual_output
 
     _expected_output = span.attributes.get(
-        "confident.trace.llm_test_case.expected_output"
+        ConfidentAttr.TRACE_LLM_TEST_CASE_EXPECTED_OUTPUT
     )
     if isinstance(_expected_output, str):
         test_case.expected_output = _expected_output
 
-    _context = span.attributes.get("confident.trace.llm_test_case.context")
+    _context = span.attributes.get(ConfidentAttr.TRACE_LLM_TEST_CASE_CONTEXT)
     if isinstance(_context, list):
         if all(isinstance(item, str) for item in _context):
             test_case.context = _context
 
     _retrieval_context = span.attributes.get(
-        "confident.trace.llm_test_case.retrieval_context"
+        ConfidentAttr.TRACE_LLM_TEST_CASE_RETRIEVAL_CONTEXT
     )
     if isinstance(_retrieval_context, list):
         if all(isinstance(item, str) for item in _retrieval_context):
@@ -340,7 +514,7 @@ def prepare_trace_llm_test_case(span: ReadableSpan) -> Optional[LLMTestCase]:
     expected_tools: List[ToolCall] = []
 
     _tools_called = span.attributes.get(
-        "confident.trace.llm_test_case.tools_called"
+        ConfidentAttr.TRACE_LLM_TEST_CASE_TOOLS_CALLED
     )
     if isinstance(_tools_called, list):
         for tool_call_json_str in _tools_called:
@@ -353,7 +527,7 @@ def prepare_trace_llm_test_case(span: ReadableSpan) -> Optional[LLMTestCase]:
                     pass
 
     _expected_tools = span.attributes.get(
-        "confident.trace.llm_test_case.expected_tools"
+        ConfidentAttr.TRACE_LLM_TEST_CASE_EXPECTED_TOOLS
     )
     if isinstance(_expected_tools, list):
         for tool_call_json_str in _expected_tools:
@@ -537,7 +711,7 @@ def check_pydantic_ai_agent_input_output(
 
     # Output (agent final_result)
     try:
-        if span.attributes.get("confident.span.type") == "agent":
+        if span.attributes.get(ConfidentAttr.SPAN_TYPE) == "agent":
             output_val = span.attributes.get("final_result")
             if not output_val and normalized:
                 output_val = _extract_non_thinking_part_of_last_message(
