@@ -2,6 +2,7 @@
 id: prompt-optimization-copro
 title: COPRO
 sidebar_label: COPRO
+languages: [python]
 ---
 
 **COPRO (Co-operative Prompt Optimizer)** is a prompt optimization algorithm within `deepeval` adapted from the DSPy optimizer of the same name. It uses **Coordinate Ascent** to iteratively improve a prompt — evaluating a batch of candidates at each depth step, committing the best performer as the new baseline, and using the scored history plus metric feedback to generate an increasingly targeted next batch.

@@ -2,19 +2,49 @@
 id: evaluation-flags-and-configs
 title: Flags and Configs
 sidebar_label: Flags and Configs
+languages: [python, typescript]
 ---
 
-Sometimes you might want to customize the behavior of different settings for `evaluate()` and `assert_test()`, and this can be done using "configs" (short for configurations) and "flags".
+Sometimes you might want to customize the behavior of different settings for `evaluate()` and <Term py="assert_test()" ts="expect(testCase).toPass()"/>, and this can be done using "configs" (short for configurations) and "flags".
 
 :::note
-For example, if you're using a [custom LLM judge for evaluation](/guides/guides-using-custom-llms), you may wish to `ignore_errors` to not interrupt evaluations whenever your model fails to produce a valid JSON, or avoid rate limit errors entirely by lowering the `max_concurrent` value.
+For example, if you're using a custom LLM judge for evaluation, you may wish to ignore errors so that a model failing to produce a valid JSON doesn't interrupt the whole run — or avoid rate limit errors entirely by lowering the maximum concurrency.
 :::
 
 ## Configs for `evaluate()`
 
+<Switch>
+
+<Case id="python">
+
+Each config is a dataclass imported from `deepeval.evaluate`, and each is passed to `evaluate()` under its own keyword argument.
+
+</Case>
+
+<Case id="typescript">
+
+The configs are the third argument to `evaluate()`, which is a plain options object — there are no classes to import, and every field is optional.
+
+```typescript
+import { evaluate } from "deepeval";
+
+await evaluate(testCases, metrics, {
+  asyncConfig: { maxConcurrent: 10 },
+  errorConfig: { ignoreErrors: true },
+});
+```
+
+</Case>
+
+</Switch>
+
 ### Async Configs
 
-The `AsyncConfig` controls how concurrently `metrics`, `observed_callback`, and `test_cases` will be evaluated during `evaluate()`.
+The `AsyncConfig` controls how concurrently work is dispatched during `evaluate()`.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.evaluate import AsyncConfig
@@ -31,9 +61,33 @@ There are **THREE** optional parameters when creating an `AsyncConfig`:
 
 The `throttle_value` and `max_concurrent` parameter is only used when `run_async` is set to `True`. A combination of a `throttle_value` and `max_concurrent` is the best way to handle rate limiting errors, either in your LLM judge or LLM application, when running evaluations.
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { evaluate } from "deepeval";
+
+await evaluate(testCases, metrics, { asyncConfig: { maxConcurrent: 20 } });
+```
+
+There is **ONE** optional field on `asyncConfig`:
+
+- [Optional] `maxConcurrent`: a number that determines the maximum number of metrics evaluated at once. You can decrease this value if your evaluation model is running into rate limit errors. Defaulted to `20`.
+
+Metrics for a given test case are dispatched concurrently up to `maxConcurrent`, while the test cases themselves are evaluated one at a time.
+
+</Case>
+
+</Switch>
+
 ### Display Configs
 
 The `DisplayConfig` controls how results and intermediate execution steps are displayed during `evaluate()`.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.evaluate import DisplayConfig
@@ -55,9 +109,40 @@ There are **TEN** optional parameters when creating a `DisplayConfig`:
 - [Optional] `file_type`: a string of either `"html"` or `"md"`, which allows you to export the evaluation dashboard to a file. Defaulted to `None`.
 - [Optional] `file_output_dir`: a string which when set, writes the evaluation dashboard to the specified directory using the format specified in `file_type`. Defaulted to `None`.
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { evaluate } from "deepeval";
+
+await evaluate(testCases, metrics, {
+  displayConfig: { truncatePassingCases: false },
+});
+```
+
+There are **SIX** optional fields on `displayConfig`:
+
+- [Optional] `verboseMode`: a boolean which when set, overrides each [metric's `verboseMode` value](/docs/metrics-introduction#debugging-a-metric). Omit it to leave each metric on the value it was constructed with.
+- [Optional] `showIndicator`: a boolean which when set to `true`, shows the evaluation progress indicator for each individual metric. Defaulted to `true`.
+- [Optional] `printResults`: a boolean which when set to `true`, prints the result of each evaluation. Defaulted to `true`.
+- [Optional] `truncatePassingCases`: a boolean which when set to `true`, truncates the terminal output of passing test cases. Defaulted to `true`.
+- [Optional] `fileOutputDir`: a string which when set, writes the evaluation report to the specified directory using the format specified in `fileType`.
+- [Optional] `fileType`: a string of either `"md"` or `"mdx"`, which sets the format used by `fileOutputDir`. Defaulted to `"md"`.
+
+</Case>
+
+</Switch>
+
 #### Saving test runs locally
 
-Set `results_folder` to persist each `evaluate()` call to disk as a structured `TestRun` JSON. Hyperparameters, per-test-case scores, and metric reasons are all serialized into each file via the same schema that Confident AI uses — no extra setup required.
+<Switch>
+
+Runs can be persisted to disk as a structured `TestRun` JSON. Hyperparameters, per-test-case scores, and metric reasons are all serialized into each file via the same schema that Confident AI uses — no extra setup required.
+
+<Case id="python">
+
+Set `results_folder` to persist every `evaluate()` (or `evals_iterator()`) call:
 
 ```python
 from deepeval import evaluate
@@ -72,7 +157,23 @@ for temp in [0.0, 0.4, 0.8]:
     )
 ```
 
-After the loop, the folder is flat — just the raw test runs:
+</Case>
+
+<Case id="typescript">
+
+Set the `DEEPEVAL_RESULTS_FOLDER` environment variable to persist every `npx deepeval test run`:
+
+```bash
+DEEPEVAL_RESULTS_FOLDER=./evals/prompt-v3 npx deepeval test run llm_app.test.ts
+```
+
+Each run is also written to `.deepeval/.latest_test_run.json` regardless, which is what `npx deepeval view` uploads and `npx deepeval inspect` reads.
+
+</Case>
+
+</Switch>
+
+After a few runs, the folder is flat — just the raw test runs:
 
 ```
 ./evals/prompt-v3/
@@ -81,7 +182,11 @@ After the loop, the folder is flat — just the raw test runs:
   test_run_20260421_140151.json
 ```
 
-The timestamp prefix makes `ls` order match chronological order, so an AI agent (Cursor, Claude Code) can iterate over the folder in the order runs happened. If two runs finish within the same second, the writer appends `_2`, `_3`, … to the filename so nothing is ever overwritten.
+The timestamp prefix makes `ls` order match chronological order, so an AI agent (Cursor, Claude Code) can iterate over the folder in the order runs happened.
+
+<Only id="python">
+
+If two runs finish within the same second, the writer appends `_2`, `_3`, … to the filename so nothing is ever overwritten.
 
 Set `results_subfolder` to nest the runs under an extra directory — useful when the parent folder already holds other artifacts:
 
@@ -96,17 +201,23 @@ DisplayConfig(results_folder="./evals/prompt-v3", results_subfolder="test_runs")
     test_run_20260421_140132.json
 ```
 
+If `results_folder` is unset but the `DEEPEVAL_RESULTS_FOLDER` environment variable is present, `deepeval` falls back to that path for backwards compatibility.
+
+</Only>
+
 :::info[Reading results with Cursor / Claude Code]
 Point the agent at the folder and ask it to `ls` and open the `test_run_*.json` files directly. Everything an agent needs — hyperparameters, prompts, metric scores, and failure reasons — is inside each file, so no extra index or summary is required.
 
-Note that a **test run** is a single `evaluate()` call. An [Experiment](/docs/evaluation-introduction) is formed later by _comparing_ multiple test runs, e.g. across different prompts or models.
+Note that a **test run** is one evaluation run. An [Experiment](/docs/evaluation-introduction) is formed later by _comparing_ multiple test runs, e.g. across different prompts or models.
 :::
-
-If `results_folder` is unset but the `DEEPEVAL_RESULTS_FOLDER` environment variable is present, `deepeval` falls back to that path for backwards compatibility.
 
 ### Error Configs
 
-The `ErrorConfig` controls how error is handled in `evaluate()`.
+The `ErrorConfig` controls how errors are handled in `evaluate()`.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.evaluate import ErrorConfig
@@ -115,16 +226,36 @@ from deepeval import evaluate
 evaluate(error_config=ErrorConfig(), ...)
 ```
 
-There are **TWO** optional parameters when creating an `ErrorConfig`:
+</Case>
 
-- [Optional] `skip_on_missing_params`: a boolean which when set to `True`, skips all metric executions for test cases with missing parameters. Defaulted to `False`.
-- [Optional] `ignore_errors`: a boolean which when set to `True`, ignores all exceptions raised during metrics execution for each test case. Defaulted to `False`.
+<Case id="typescript">
 
-If both `skip_on_missing_params` and `ignore_errors` are set to `True`, `skip_on_missing_params` takes precedence. This means that if a metric is missing required test case parameters, it will be skipped (and the result will be missing) rather than appearing as an ignored error in the final test run.
+```typescript
+import { evaluate } from "deepeval";
+
+await evaluate(testCases, metrics, {
+  errorConfig: { ignoreErrors: true },
+});
+```
+
+</Case>
+
+</Switch>
+
+There are **TWO** optional parameters:
+
+- [Optional] <Term py="skip_on_missing_params" ts="skipOnMissingParams"/>: a boolean which when enabled, skips all metric executions for test cases with missing parameters. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="ignore_errors" ts="ignoreErrors"/>: a boolean which when enabled, ignores all exceptions raised during metrics execution for each test case. Defaulted to <Term py="False" ts="false"/>.
+
+If both are enabled, <Term py="skip_on_missing_params" ts="skipOnMissingParams"/> takes precedence. This means that if a metric is missing required test case parameters, it will be skipped (and the result will be missing) rather than appearing as an ignored error in the final test run.
 
 ### Cache Configs
 
 The `CacheConfig` controls the caching behavior of `evaluate()`.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.evaluate import CacheConfig
@@ -133,16 +264,96 @@ from deepeval import evaluate
 evaluate(cache_config=CacheConfig(), ...)
 ```
 
-There are **TWO** optional parameters when creating an `CacheConfig`:
+</Case>
 
-- [Optional] `use_cache`: a boolean which when set to `True`, uses cached test run results instead. Defaulted to `False`.
-- [Optional] `write_cache`: a boolean which when set to `True`, uses writes test run results to **DISK**. Defaulted to `True`.
+<Case id="typescript">
 
-The `write_cache` parameter writes to disk and so you should disable it if that is causing any errors in your environment.
+```typescript
+import { evaluate } from "deepeval";
 
-## Flags for `deepeval test run`:
+await evaluate(testCases, metrics, {
+  cacheConfig: { useCache: true },
+});
+```
+
+</Case>
+
+</Switch>
+
+There are **TWO** optional parameters:
+
+- [Optional] <Term py="use_cache" ts="useCache"/>: a boolean which when enabled, uses cached test run results instead. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="write_cache" ts="writeCache"/>: a boolean which when enabled, writes test run results to **DISK**. Defaulted to <Term py="True" ts="true"/>.
+
+Results are keyed by test case content plus metric configuration, so a cached result is only reused when both are unchanged. The <Term py="write_cache" ts="writeCache"/> parameter writes to disk and so you should disable it if that is causing any errors in your environment.
+
+## Hyperparameters
+
+Log the model, prompt, and other configuration values with each test run so you can compare runs side-by-side on Confident AI and identify the best combination.
+
+<Switch>
+
+<Case id="python">
+
+Pass them to `evaluate()` directly, as a dict of `str | int | float` or [`Prompt`](/docs/evaluation-prompts) values:
+
+```python
+from deepeval import evaluate
+
+evaluate(
+    test_cases=test_cases,
+    metrics=metrics,
+    hyperparameters={"model": "gpt-4.1", "temperature": 0.7, "prompt": prompt},
+)
+```
+
+Under `deepeval test run` there is no `evaluate()` call to pass them to, so use the `@deepeval.log_hyperparameters` decorator anywhere in your test file instead:
+
+```python title="test_llm_app.py"
+import deepeval
+
+@deepeval.log_hyperparameters
+def hyperparameters():
+    return {"model": "gpt-4.1", "temperature": 0.7}
+```
+
+</Case>
+
+<Case id="typescript">
+
+Pass them to `evaluate()` directly, as an object of `string | number | boolean` or `Prompt` values:
+
+```typescript
+import { evaluate } from "deepeval";
+
+await evaluate(testCases, metrics, {
+  hyperparameters: { model: "gpt-4.1", temperature: 0.7, prompt },
+});
+```
+
+Under `npx deepeval test run` there is no `evaluate()` call to pass them to, so call `logHyperparameters()` anywhere in your test file instead:
+
+```typescript title="llm_app.test.ts"
+import { logHyperparameters } from "deepeval";
+
+logHyperparameters({ model: "gpt-4.1", temperature: 0.7 });
+```
+
+A `Prompt` is logged by reference, so pull it before passing it as a hyperparameter — an unpulled prompt has no version for the platform to point at, and is skipped with a warning.
+
+</Case>
+
+</Switch>
+
+Non-string values are stringified, and any key with an empty value is dropped. On Confident AI the logged values become filterable axes for comparing test runs and surfacing the configuration that performs best.
+
+## Flags for `deepeval test run`
 
 ### Parallelization
+
+<Switch>
+
+<Case id="python">
 
 Evaluate each test case in parallel by providing a number to the `-n` flag to specify how many processes to use.
 
@@ -150,21 +361,61 @@ Evaluate each test case in parallel by providing a number to the `-n` flag to sp
 deepeval test run test_example.py -n 4
 ```
 
+</Case>
+
+<Case id="typescript">
+
+Vitest runs test files in parallel by default, so there is no flag to turn it on. Use Vitest's own [pool options](https://vitest.dev/config/#pooloptions) to change how many workers it uses.
+
+To cap how many metrics are evaluated at once within a worker, use `--max-concurrent`:
+
+```
+npx deepeval test run llm_app.test.ts --max-concurrent 4
+```
+
+Defaulted to `100`.
+
+</Case>
+
+</Switch>
+
 ### Cache
 
 Provide the `-c` flag (with no arguments) to read from the local `deepeval` cache instead of re-evaluating test cases on the same metrics.
+
+<Switch>
+
+<Case id="python">
 
 ```
 deepeval test run test_example.py -c
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```
+npx deepeval test run llm_app.test.ts -c
+```
+
+</Case>
+
+</Switch>
+
 :::info
-This is extremely useful if you're running large amounts of test cases. For example, lets say you're running 1000 test cases using `deepeval test run`, but you encounter an error on the 999th test case. The cache functionality would allow you to skip all the previously evaluated 999 test cases, and just evaluate the remaining one.
+This is extremely useful if you're running large amounts of test cases. For example, lets say you're running 1000 test cases, but you encounter an error on the 999th test case. The cache functionality would allow you to skip all the previously evaluated 999 test cases, and just evaluate the remaining one.
 :::
 
 ### Ignore Errors
 
-The `-i` flag (with no arguments) allows you to ignore errors for metrics executions during a test run. An example of where this is helpful is if you're using a custom LLM and often find it generating invalid JSONs that will stop the execution of the entire test run.
+Ignore errors for metric executions during a test run. An example of where this is helpful is if you're using a custom LLM and often find it generating invalid JSONs that will stop the execution of the entire test run.
+
+<Switch>
+
+<Case id="python">
+
+The `-i` flag (with no arguments):
 
 ```
 deepeval test run test_example.py -i
@@ -173,47 +424,153 @@ deepeval test run test_example.py -i
 :::tip
 You can combine different flags, such as the `-i`, `-c`, and `-n` flag to execute any uncached test cases in parallel while ignoring any errors along the way:
 
-```python
+```
 deepeval test run test_example.py -i -c -n 2
 ```
 
 :::
 
-### Verbose Mode
+</Case>
 
-The `-v` flag (with no arguments) allows you to turn on [`verbose_mode` for all metrics](/docs/metrics-introduction#debugging-a-metric) ran using `deepeval test run`. Not supplying the `-v` flag will default each metric's `verbose_mode` to its value at instantiation.
+<Case id="typescript">
 
-```python
-deepeval test run test_example.py -v
+The `--ignore-errors` flag (with no arguments):
+
+```
+npx deepeval test run llm_app.test.ts --ignore-errors
 ```
 
 :::note
-When a metric's `verbose_mode` is `True`, it prints the intermediate steps used to calculate said metric to the console during evaluation.
+There is no short form for `--ignore-errors`, because `-i` is bound to `--identifier`.
+:::
+
+</Case>
+
+</Switch>
+
+### Verbose Mode
+
+The `-v` flag (with no arguments) allows you to turn on [`verboseMode` for all metrics](/docs/metrics-introduction#debugging-a-metric). Not supplying the `-v` flag will default each metric's `verboseMode` to its value at instantiation.
+
+<Switch>
+
+<Case id="python">
+
+```
+deepeval test run test_example.py -v
+```
+
+</Case>
+
+<Case id="typescript">
+
+```
+npx deepeval test run llm_app.test.ts -v
+```
+
+</Case>
+
+</Switch>
+
+:::note
+When a metric's `verboseMode` is enabled, it prints the intermediate steps used to calculate said metric to the console during evaluation.
 :::
 
 ### Skip Test Cases
 
-The `-s` flag (with no arguments) allows you to skip metric executions where the test case has missing//insufficient parameters (such as `retrieval_context`) that is required for evaluation. An example of where this is helpful is if you're using a metric such as the `ContextualPrecisionMetric` but don't want to apply it when the `retrieval_context` is `None`.
+The `-s` flag (with no arguments) allows you to skip metric executions where the test case has missing/insufficient parameters (such as <Term py="retrieval_context" ts="retrievalContext"/>) that is required for evaluation. An example of where this is helpful is if you're using a metric such as the `ContextualPrecisionMetric` but don't want to apply it when the retrieval context is empty.
+
+<Switch>
+
+<Case id="python">
 
 ```
 deepeval test run test_example.py -s
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```
+npx deepeval test run llm_app.test.ts -s
+```
+
+</Case>
+
+</Switch>
+
 ### Identifier
 
-The `-id` flag followed by a string allows you to name test runs and better identify them on [Confident AI](https://confident-ai.com). An example of where this is helpful is if you're running automated deployment pipelines, have deployment IDs, or just want a way to identify which test run is which for comparison purposes.
+Name test runs to better identify them on [Confident AI](https://confident-ai.com). An example of where this is helpful is if you're running automated deployment pipelines, have deployment IDs, or just want a way to identify which test run is which for comparison purposes.
+
+<Switch>
+
+<Case id="python">
+
+The `-id` flag, followed by a string:
 
 ```
 deepeval test run test_example.py -id "My Latest Test Run"
 ```
 
+When evaluating with `evaluate()` instead, pass `identifier` to achieve the same:
+
+```python
+from deepeval import evaluate
+
+evaluate(test_cases=[...], metrics=[...], identifier="My Latest Test Run")
+```
+
+</Case>
+
+<Case id="typescript">
+
+The `-i` flag, followed by a string:
+
+```
+npx deepeval test run llm_app.test.ts -i "My Latest Test Run"
+```
+
+When evaluating with `evaluate()` instead, pass `identifier` to achieve the same:
+
+```typescript
+import { evaluate } from "deepeval";
+
+await evaluate(testCases, metrics, { identifier: "My Latest Test Run" });
+```
+
+</Case>
+
+</Switch>
+
 ### Display Mode
 
 The `-d` flag followed by a string of "all", "passing", or "failing" allows you to display only certain test cases in the terminal. For example, you can display "failing" only if you only care about the failing test cases.
 
+<Switch>
+
+<Case id="python">
+
 ```
 deepeval test run test_example.py -d "failing"
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```
+npx deepeval test run llm_app.test.ts -d "failing"
+```
+
+Every test case is still posted to Confident AI — `-d` only filters the terminal output.
+
+</Case>
+
+</Switch>
+
+<Only id="python">
 
 ### Repeats
 
@@ -223,21 +580,49 @@ Repeat each test case by providing a number to the `-r` flag to specify how many
 deepeval test run test_example.py -r 2
 ```
 
+</Only>
+
 ### Official Test Runs
 
 The `--official` flag (or `-o`) marks the resulting test run as the **official test run** on [Confident AI](https://confident-ai.com). The official run is used as the point of comparison for regression testing. This requires a `CONFIDENT_API_KEY`.
+
+<Switch>
+
+<Case id="python">
 
 ```
 deepeval test run test_example.py --official
 ```
 
-When evaluating with `evaluate()` instead of `deepeval test run`, pass `official=True` to achieve the same:
+When evaluating with `evaluate()` instead, pass `official=True` to achieve the same:
 
 ```python
 from deepeval import evaluate
 
 evaluate(test_cases=[...], metrics=[...], official=True)
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```
+npx deepeval test run llm_app.test.ts --official
+```
+
+When evaluating with `evaluate()` instead, pass `official` to achieve the same:
+
+```typescript
+import { evaluate } from "deepeval";
+
+await evaluate(testCases, metrics, { official: true });
+```
+
+</Case>
+
+</Switch>
+
+<Only id="python">
 
 ### Hooks
 
@@ -251,21 +636,23 @@ def function_to_be_called_after_test_run():
     print("Test finished!")
 ```
 
+</Only>
+
 ## FAQs
 
 <FAQs
   qas={[
     {
       question:
-        "What's the difference between configs for `evaluate()` and flags for `deepeval test run`?",
+        "What's the difference between configs for `evaluate()` and flags for the test runner?",
       answer: (
         <>
-          Configs are Python objects (<code>AsyncConfig</code>,{" "}
-          <code>DisplayConfig</code>, <code>ErrorConfig</code>,{" "}
-          <code>CacheConfig</code>) passed to <code>evaluate()</code>. Flags are
-          command-line options passed to <code>deepeval test run</code>. They
-          control the same behaviors — concurrency, display, errors, caching —
-          for the two ways of running evals.
+          Configs are passed to <code>evaluate()</code> in code (
+          <code>AsyncConfig</code>, <code>DisplayConfig</code>,{" "}
+          <code>ErrorConfig</code>, <code>CacheConfig</code>). Flags are
+          command-line options passed to the <code>deepeval test run</code>{" "}
+          command. They control the same behaviors — concurrency, display,
+          errors, caching — for the two ways of running evals.
         </>
       ),
     },
@@ -274,19 +661,20 @@ def function_to_be_called_after_test_run():
       answer: (
         <>
           Use <code>AsyncConfig</code> to raise concurrency in{" "}
-          <code>evaluate()</code>, or the parallelization flag with{" "}
-          <code>deepeval test run</code>. Caching avoids re-running metrics on
-          unchanged test cases.
+          <code>evaluate()</code>, or run your test files in parallel with the
+          test runner. Caching avoids re-running metrics on unchanged test
+          cases.
         </>
       ),
     },
     {
-      question: "How do I stop a single failing test case from aborting the whole run?",
+      question:
+        "How do I stop a single failing test case from aborting the whole run?",
       answer: (
         <>
           Use <code>ErrorConfig</code> (for <code>evaluate()</code>) or the
-          ignore-errors flag (for <code>deepeval test run</code>) so errored
-          test cases are skipped and reported instead of halting the run.
+          ignore-errors flag (for the test runner) so errored test cases are
+          skipped and reported instead of halting the run.
         </>
       ),
     },
@@ -295,21 +683,15 @@ def function_to_be_called_after_test_run():
       answer: (
         <>
           With <code>CacheConfig</code> or the cache flag, <code>deepeval</code>{" "}
-          reuses prior
-          metric results for identical test cases, which saves time and LLM cost
-          when re-running an evaluation you've already executed.
+          reuses prior metric results for identical test cases, which saves time
+          and LLM cost when re-running an evaluation you've already executed.
         </>
       ),
     },
     {
-      question: "Can I run custom code after a test run finishes?",
-      answer: (
-        <>
-          Yes. Use the <code>@deepeval.on_test_run_end</code> hook to run any
-          custom logic — notifications, exports, cleanup — at the end of a{" "}
-          <code>deepeval test run</code>.
-        </>
-      ),
+      question: "What are hyperparameters used for?",
+      answer:
+        "They let you log arbitrary settings like model name, prompt template, and temperature alongside a test run, so you can compare which configuration produced the best scores.",
     },
     {
       question:
@@ -318,12 +700,10 @@ def function_to_be_called_after_test_run():
         <>
           Yes. The <code>identifier</code> config (and flag) labels a test run
           so it's easy to locate. That's especially handy when results are sent
-          to{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
-          from the <code>deepeval</code> team), where your team can browse
-          identified runs in
-          a shared cloud UI and compare them over time. Sending results there is
-          optional — runs work the same locally.
+          to <a href="https://www.confident-ai.com">Confident AI</a> (the
+          platform from the <code>deepeval</code> team), where your team can
+          browse identified runs in a shared cloud UI and compare them over
+          time. Sending results there is optional — runs work the same locally.
         </>
       ),
     },

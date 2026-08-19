@@ -2,6 +2,7 @@
 id: metrics-agent-loop-detection
 title: Agent Loop Detection
 sidebar_label: Agent Loop Detection
+languages: [python]
 ---
 
 <MetricTagsDisplayer community={true} singleTurn={true} agent={true} referenceless={true} />
@@ -53,9 +54,9 @@ for golden in dataset.evals_iterator(metrics=[loop_metric]):
     my_agent(golden.input)
 ```
 
-There are **EIGHT** optional parameters when creating an `AgentLoopDetectionMetric`:
+There are **NINE** optional parameters when creating an `AgentLoopDetectionMetric`:
 
-- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to `0.5`.
+- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `repetition_threshold`: an integer representing how many identical tool calls (same name + same arguments) must occur before flagging repetition. Defaulted to `3`.
 - [Optional] `similarity_threshold`: a float representing the minimum similarity score between consecutive LLM outputs to flag as stagnating. The metric uses the maximum of bigram Jaccard similarity and `SequenceMatcher` ratio. Defaulted to `0.85`.
 - [Optional] `check_tool_repetition`: a boolean — when `True`, enables the tool repetition sub-signal. Defaulted to `True`.
@@ -63,6 +64,7 @@ There are **EIGHT** optional parameters when creating an `AgentLoopDetectionMetr
 - [Optional] `check_call_graph_cycles`: a boolean — when `True`, enables the call graph cycle sub-signal. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 ::::info
 The `AgentLoopDetectionMetric` does **not** accept a `model` parameter. All three sub-signals are computed deterministically (hashing, n-gram set operations, DFS) — no LLM is involved. See [Why no `model` parameter?](#why-no-model-parameter) for the design rationale.

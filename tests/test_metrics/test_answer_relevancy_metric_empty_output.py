@@ -36,9 +36,7 @@ def test_answer_relevancy_none_actual_output_raises_sync():
     tc = LLMTestCase(input="hi", actual_output=None)
 
     with pytest.raises(MissingTestCaseParamsError) as exc_info:
-        metric.measure(
-            tc, _show_indicator=False, _log_metric_to_confident=False
-        )
+        metric.measure(tc, _show_indicator=False)
 
     msg = str(exc_info.value).lower()
     assert "actual_output" in msg
@@ -50,9 +48,7 @@ def test_answer_relevancy_empty_actual_output_raises_sync():
     tc = LLMTestCase(input="What if these shoes don't fit?", actual_output="")
 
     with pytest.raises(MissingTestCaseParamsError) as exc_info:
-        metric.measure(
-            tc, _show_indicator=False, _log_metric_to_confident=False
-        )
+        metric.measure(tc, _show_indicator=False)
 
     msg = str(exc_info.value).lower()
     assert "cannot be empty" in msg or "actual_output" in msg

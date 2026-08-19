@@ -1,38 +1,40 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
-import {
-  ConversationalTestCase,
-  MultiTurnParams,
-  Turn,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { resolveThreshold } from "@/metrics/base-metrics";
+import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   printToolsCalled,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
-} from "../conversational-utils";
+} from "@/metrics/conversational-utils";
 import {
   GoalScoreSchema,
   PlanScoreSchema,
   type GoalScore,
   type PlanScore,
   type GoalSteps,
-} from "./schema";
+} from "@/metrics/goal-accuracy/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "GoalAccuracyMetric";
 
+export type GoalAccuracyTemplateOverride =
+  MetricTemplateOverride<"GoalAccuracyMetric">;
+
 export interface GoalAccuracyMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: GoalAccuracyTemplateOverride;
 }
 
 /**
@@ -46,12 +48,16 @@ export class GoalAccuracyMetric extends BaseConversationalMetric {
 
   constructor(options: GoalAccuracyMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [MultiTurnParams.ROLE, MultiTurnParams.CONTENT];
     const { model, usingNativeModel } = initializeModel(options.model);
     this.model = model;
@@ -66,9 +72,7 @@ export class GoalAccuracyMetric extends BaseConversationalMetric {
       checkConversationalTestCaseParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
 
-      const tasks = this.goalAndStepsTaken(
-        getUnitInteractions(testCase.turns),
-      );
+      const tasks = this.goalAndStepsTaken(getUnitInteractions(testCase.turns));
       [this.goalScores, this.planScores] = await Promise.all([
         Promise.all(
           tasks.map((t) =>
@@ -82,7 +86,7 @@ export class GoalAccuracyMetric extends BaseConversationalMetric {
         ),
       ]);
       this.score = this.calculateScore();
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
       this.reason = await this.generateFinalReason();
 
       this.verboseLogs = constructVerboseLogs(this, [
@@ -125,7 +129,7 @@ export class GoalAccuracyMetric extends BaseConversationalMetric {
     task: GoalSteps,
     schema: typeof GoalScoreSchema | typeof PlanScoreSchema,
   ): Promise<T> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, method, {
+    const prompt = this.getPrompt(method, {
       task: task.user_goal,
       steps_taken: task.steps_taken.join("\n"),
     });
@@ -140,7 +144,7 @@ export class GoalAccuracyMetric extends BaseConversationalMetric {
       this.planScores.reduce((s, p) => s + p.score, 0) /
       Math.max(this.planScores.length, 1);
     const score = (goalAvg + planAvg) / 2;
-    return this.strictMode && score < this.threshold ? 0 : score;
+    return this.applyStrictMode(score);
   }
 
   private async generateFinalReason(): Promise<string> {
@@ -150,7 +154,7 @@ export class GoalAccuracyMetric extends BaseConversationalMetric {
     const planEvaluations = this.planScores
       .map((p) => `Score: ${p.score}, Reason: ${p.reason} \n`)
       .join("");
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "get_final_reason", {
+    const prompt = this.getPrompt("get_final_reason", {
       final_score: this.score,
       threshold: this.threshold,
       goal_evaluations: goalEvaluations,
@@ -161,12 +165,6 @@ export class GoalAccuracyMetric extends BaseConversationalMetric {
     const { output, cost } = await this.model!.generate(prompt);
     this.accrueCost(cost);
     return output;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

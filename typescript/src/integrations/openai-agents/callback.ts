@@ -2,21 +2,31 @@ import {
   traceManager,
   BaseSpan,
   getCurrentTrace,
+  getCurrentSpan,
+  setCurrentSpan,
   TraceSpanStatus,
   SpanType,
   AgentSpan,
   LlmSpan,
   ToolSpan,
-} from "../../tracing/tracing";
-import { getAgentContext, getLlmContext } from "../../tracing/trace-context";
+} from "@/tracing/tracing";
+import { getAgentContext, getLlmContext } from "@/tracing/trace-context";
+import { applyPendingToSpan, popPendingFor } from "@/tracing/pending-context";
 import {
   updateSpanProperties,
   updateTracePropertiesFromSpanData,
-} from "./extractors";
+} from "@/integrations/openai-agents/extractors";
+import { recordTracingIntegration } from "@/telemetry";
+import { Integration } from "@/tracing/integrations";
 
 export class DeepEvalTracingProcessor {
   private activeSpans: Map<string, BaseSpan> = new Map();
   private traceIdMapping: Map<string, string> = new Map();
+  private previousSpans: Map<string, BaseSpan | undefined> = new Map();
+
+  constructor() {
+    recordTracingIntegration(Integration.OPENAI_AGENTS);
+  }
 
   public async onTraceStart(trace: any): Promise<void> {
     const traceDict = trace.export ? trace.export() : trace;
@@ -116,9 +126,14 @@ export class DeepEvalTracingProcessor {
       newSpan = new BaseSpan(baseParams);
     }
 
+    applyPendingToSpan(newSpan, popPendingFor(newSpan.type));
+
     traceManager.addSpan(newSpan);
     traceManager.addSpanToTrace(newSpan);
     this.activeSpans.set(spanId, newSpan);
+
+    this.previousSpans.set(spanId, getCurrentSpan());
+    setCurrentSpan(newSpan);
   }
 
   public async onSpanEnd(span: any): Promise<void> {
@@ -169,6 +184,16 @@ export class DeepEvalTracingProcessor {
     traceManager.updateSpanInTrace(deSpan);
     traceManager.removeSpan(deSpan.uuid);
     this.activeSpans.delete(spanId);
+    this.popSpanContext(spanId);
+  }
+
+  private popSpanContext(spanId: string): void {
+    if (!this.previousSpans.has(spanId)) return;
+    const previous = this.previousSpans.get(spanId);
+    this.previousSpans.delete(spanId);
+    if (getCurrentSpan()?.uuid === spanId) {
+      setCurrentSpan(previous ?? null);
+    }
   }
 
   private getSpanKind(spanData: any): SpanType | string {

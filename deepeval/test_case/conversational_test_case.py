@@ -22,6 +22,7 @@ from deepeval.test_case.mcp import (
     MCPPromptCall,
     MCPResourceCall,
     MCPToolCall,
+    normalize_mcp_servers,
     validate_mcp_servers,
 )
 from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
@@ -215,6 +216,7 @@ class ConversationalTestCase(BaseModel):
     )
     comments: Optional[str] = Field(default=None)
     tags: Optional[List[str]] = Field(default=None)
+    flaky: bool = Field(default=False)
     mcp_servers: Optional[List[MCPServer]] = Field(default=None)
     multimodal: bool = False
 
@@ -301,6 +303,9 @@ class ConversationalTestCase(BaseModel):
                 )
 
         if mcp_servers is not None:
+            if isinstance(mcp_servers, list):
+                mcp_servers = normalize_mcp_servers(mcp_servers)
+                data["mcp_servers"] = mcp_servers
             validate_mcp_servers(mcp_servers)
 
         copied_turns = []

@@ -1,4 +1,4 @@
-import { patchOpenAI } from "./patch";
+import { patchOpenAI } from "@/openai/patch";
 
 let registered = false;
 

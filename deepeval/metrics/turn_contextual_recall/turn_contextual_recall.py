@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Union, Tuple
+from typing import Any, Dict, List, Optional, Union, Tuple, Type
 import asyncio
 import itertools
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
@@ -25,6 +25,7 @@ from deepeval.metrics.turn_contextual_recall.schema import (
     ContextualRecallScoreReason,
     InteractionContextualRecallScore,
 )
+from deepeval.templates import make_template_class
 
 
 def _contextual_recall_verdict_kwargs(
@@ -54,6 +55,9 @@ def _contextual_recall_verdict_kwargs(
     }
 
 
+TurnContextualRecallTemplate = make_template_class("TurnContextualRecallMetric")
+
+
 class TurnContextualRecallMetric(BaseConversationalMetric):
     _required_test_case_params: List[MultiTurnParams] = [
         MultiTurnParams.ROLE,
@@ -64,13 +68,17 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
         window_size: int = 10,
+        flaky: bool = False,
+        evaluation_template: Type[
+            TurnContextualRecallTemplate
+        ] = TurnContextualRecallTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -79,14 +87,15 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self.window_size = window_size
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case,
@@ -112,7 +121,6 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -131,7 +139,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
                         )
                     )
                 self.score = self._calculate_score(scores)
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.reason = self._generate_reason(scores)
                 verbose_steps = self._get_verbose_steps(scores)
                 self.verbose_logs = construct_verbose_logs(
@@ -150,7 +158,6 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_conversational_test_case_params(
             test_case,
@@ -193,7 +200,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
                 tasks.append(get_individual_scores(window))
             await asyncio.gather(*tasks)
             self.score = self._calculate_score(scores)
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.reason = await self._a_generate_reason(scores)
             verbose_steps = self._get_verbose_steps(scores)
             self.verbose_logs = construct_verbose_logs(
@@ -536,16 +543,6 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         for score in scores:
             total_score += score.score
         return total_score / number_of_scores
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

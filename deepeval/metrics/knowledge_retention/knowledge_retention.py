@@ -1,4 +1,4 @@
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Type
 
 from deepeval.test_case import ConversationalTestCase, Turn, MultiTurnParams
 from deepeval.metrics import BaseConversationalMetric
@@ -18,6 +18,10 @@ from deepeval.metrics.knowledge_retention.schema import (
     KnowledgeRetentionScoreReason,
 )
 from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.templates import make_template_class
+
+
+KnowledgeRetentionTemplate = make_template_class("KnowledgeRetentionMetric")
 
 
 class KnowledgeRetentionMetric(BaseConversationalMetric):
@@ -25,12 +29,16 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
+        evaluation_template: Type[
+            KnowledgeRetentionTemplate
+        ] = KnowledgeRetentionTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -39,13 +47,14 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case,
@@ -69,7 +78,6 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -81,7 +89,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -98,7 +106,6 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_conversational_test_case_params(
             test_case,
@@ -126,7 +133,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -316,16 +323,6 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         score = retention_count / number_of_verdicts
 
         return 0 if self.strict_mode and score < self.threshold else score
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

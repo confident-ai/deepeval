@@ -1,29 +1,34 @@
-import { BaseMetric } from "../../base-metrics";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import {
   LLMTestCase,
   SingleTurnParams,
   MLLMImage,
   convertToMultiModalArray,
-} from "../../../test-case";
-import { DeepEvalBaseLLM } from "../../../models";
-import { resolveTemplate } from "../../../templates";
+} from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
-} from "../../utils";
-import { separateImagesFromText } from "../utils";
-import { ListReasonScoreSchema } from "../schema";
+} from "@/metrics/utils";
+import { separateImagesFromText } from "@/metrics/multimodal-metrics/utils";
+import { ListReasonScoreSchema } from "@/metrics/multimodal-metrics/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "ImageEditingMetric";
 
+export type ImageEditingTemplateOverride =
+  MetricTemplateOverride<"ImageEditingMetric">;
+
 export interface ImageEditingMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: ImageEditingTemplateOverride;
 }
 
 /**
@@ -35,11 +40,14 @@ export interface ImageEditingMetricOptions {
 export class ImageEditingMetric extends BaseMetric {
   constructor(options: ImageEditingMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
@@ -83,13 +91,13 @@ export class ImageEditingMetric extends BaseMetric {
 
       const score =
         Math.sqrt(Math.min(...scScores) * Math.min(...pqScores)) / 10;
-      this.score = this.strictMode && score < this.threshold ? 0 : score;
+      this.score = this.applyStrictMode(score);
       this.reason =
         `The overall score is ${this.score.toFixed(2)} because the lowest semantic consistency score was ` +
         `${Math.min(...scScores)} and the lowest perceptual quality score was ${Math.min(...pqScores)}.\n` +
         `Reason for Semantic Consistency score: ${scReasoning}\n` +
         `Reason for Perceptual Quality score: ${pqReasoning}`;
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Semantic Consistency Scores:\n${scScores.join(", ")}`,
@@ -108,9 +116,7 @@ export class ImageEditingMetric extends BaseMetric {
     textPrompt: string,
     images: MLLMImage[],
   ): Promise<[number[], string]> {
-    const instructions = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
+    const instructions = this.getPrompt(
       "generate_semantic_consistency_evaluation_results",
       { text_prompt: textPrompt },
     );
@@ -125,9 +131,7 @@ export class ImageEditingMetric extends BaseMetric {
   private async evaluatePerceptualQuality(
     outputImage: MLLMImage,
   ): Promise<[number[], string]> {
-    const instructions = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
+    const instructions = this.getPrompt(
       "generate_perceptual_quality_evaluation_results",
       {},
     );
@@ -137,12 +141,6 @@ export class ImageEditingMetric extends BaseMetric {
       ListReasonScoreSchema,
     );
     return [score, reasoning];
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

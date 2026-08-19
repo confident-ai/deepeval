@@ -1,28 +1,34 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { resolveThreshold } from "@/metrics/base-metrics";
+import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
-  ConversationalTestCase,
-  MultiTurnParams,
-  Turn,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
-import { initializeModel, generateWithSchema, constructVerboseLogs, prettifyList } from "../utils";
+  initializeModel,
+  generateWithSchema,
+  constructVerboseLogs,
+  prettifyList,
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
   getTurnsInSlidingWindow,
   convertTurnToDict,
-} from "../conversational-utils";
+} from "@/metrics/conversational-utils";
 import {
   TurnRelevancyVerdictSchema,
   TurnRelevancyScoreReasonSchema,
   type TurnRelevancyVerdict,
-} from "./schema";
+} from "@/metrics/turn-relevancy/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "TurnRelevancyMetric";
 
+export type TurnRelevancyTemplateOverride =
+  MetricTemplateOverride<"TurnRelevancyMetric">;
+
 export interface TurnRelevancyMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
@@ -30,6 +36,7 @@ export interface TurnRelevancyMetricOptions {
   showIndicator?: boolean;
   /** Sliding-window size over unit-interactions (default 10). */
   windowSize?: number;
+  evaluationTemplate?: TurnRelevancyTemplateOverride;
 }
 
 /**
@@ -43,12 +50,15 @@ export class TurnRelevancyMetric extends BaseConversationalMetric {
 
   constructor(options: TurnRelevancyMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE];
     this.windowSize = options.windowSize ?? 10;
     const { model, usingNativeModel } = initializeModel(options.model);
@@ -75,7 +85,7 @@ export class TurnRelevancyMetric extends BaseConversationalMetric {
       );
       this.score = this.calculateScore();
       this.reason = await this.generateReason();
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Turns Sliding Windows (size=${this.windowSize}):\n${prettifyList(turnsWindows)}`,
@@ -89,7 +99,7 @@ export class TurnRelevancyMetric extends BaseConversationalMetric {
   }
 
   private async generateVerdict(window: Turn[]): Promise<TurnRelevancyVerdict> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+    const prompt = this.getPrompt("generate_verdicts", {
       sliding_window: window.map((turn) => convertTurnToDict(turn)),
     });
     return generateWithSchema(this, prompt, TurnRelevancyVerdictSchema);
@@ -108,7 +118,7 @@ export class TurnRelevancyMetric extends BaseConversationalMetric {
         "message number": `${index + 1}`,
         reason: verdict.reason,
       }));
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       score: this.score,
       irrelevancies,
     });
@@ -128,13 +138,7 @@ export class TurnRelevancyMetric extends BaseConversationalMetric {
       (v) => v.verdict.trim().toLowerCase() !== "no",
     ).length;
     const score = relevant / total;
-    return this.strictMode && score < this.threshold ? 0 : score;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
+    return this.applyStrictMode(score);
   }
 
   get name(): string {

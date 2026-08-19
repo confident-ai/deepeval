@@ -1,38 +1,40 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
-import {
-  ConversationalTestCase,
-  MultiTurnParams,
-  Turn,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { resolveThreshold } from "@/metrics/base-metrics";
+import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   convertTurnToDict,
-} from "../conversational-utils";
+} from "@/metrics/conversational-utils";
 import {
   KnowledgeSchema,
   KnowledgeRetentionVerdictSchema,
   KnowledgeRetentionScoreReasonSchema,
   type Knowledge,
   type KnowledgeRetentionVerdict,
-} from "./schema";
+} from "@/metrics/knowledge-retention/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "KnowledgeRetentionMetric";
 
+export type KnowledgeRetentionTemplateOverride =
+  MetricTemplateOverride<"KnowledgeRetentionMetric">;
+
 export interface KnowledgeRetentionMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: KnowledgeRetentionTemplateOverride;
 }
 
 /**
@@ -47,12 +49,15 @@ export class KnowledgeRetentionMetric extends BaseConversationalMetric {
 
   constructor(options: KnowledgeRetentionMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE];
     const { model, usingNativeModel } = initializeModel(options.model);
     this.model = model;
@@ -71,7 +76,7 @@ export class KnowledgeRetentionMetric extends BaseConversationalMetric {
       this.verdicts = await this.generateVerdicts(testCase.turns);
       this.score = this.calculateScore();
       this.reason = await this.generateReason();
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Knowledges:\n${prettifyList(this.knowledges)}`,
@@ -85,12 +90,14 @@ export class KnowledgeRetentionMetric extends BaseConversationalMetric {
   }
 
   /** Extract knowledge from each user turn (assistant turns get `null`). */
-  private async generateKnowledges(turns: Turn[]): Promise<(Knowledge | null)[]> {
+  private async generateKnowledges(
+    turns: Turn[],
+  ): Promise<(Knowledge | null)[]> {
     const knowledges: (Knowledge | null)[] = new Array(turns.length).fill(null);
     const extracted = await Promise.all(
       turns.map(async (turn, i) => {
         if (turn.role === "assistant") return null;
-        const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "extract_data", {
+        const prompt = this.getPrompt("extract_data", {
           user_message: turn.content,
           previous_turns: turns.slice(0, i).map((t) => convertTurnToDict(t)),
         });
@@ -115,11 +122,15 @@ export class KnowledgeRetentionMetric extends BaseConversationalMetric {
           .filter((k): k is Knowledge => k != null && k.data != null)
           .map((k) => k.data);
         if (accumulatedKnowledge.length === 0) return null;
-        const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdict", {
+        const prompt = this.getPrompt("generate_verdict", {
           llm_message: turn.content,
           accumulated_knowledge: accumulatedKnowledge,
         });
-        return generateWithSchema(this, prompt, KnowledgeRetentionVerdictSchema);
+        return generateWithSchema(
+          this,
+          prompt,
+          KnowledgeRetentionVerdictSchema,
+        );
       }),
     );
     return results.filter((v): v is KnowledgeRetentionVerdict => v != null);
@@ -130,7 +141,7 @@ export class KnowledgeRetentionMetric extends BaseConversationalMetric {
     const attritions = this.verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "yes")
       .map((v) => v.reason);
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       attritions,
       score: (this.score ?? 0).toFixed(2),
     });
@@ -150,13 +161,7 @@ export class KnowledgeRetentionMetric extends BaseConversationalMetric {
       (v) => v.verdict.trim().toLowerCase() === "no",
     ).length;
     const score = retained / total;
-    return this.strictMode && score < this.threshold ? 0 : score;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
+    return this.applyStrictMode(score);
   }
 
   get name(): string {

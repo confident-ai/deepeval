@@ -1,5 +1,6 @@
 export {
   TurnFaithfulnessMetric,
   type TurnFaithfulnessMetricOptions,
-} from "./turn-faithfulness";
-export * from "./schema";
+  type TurnFaithfulnessTemplateOverride,
+} from "@/metrics/turn-faithfulness/turn-faithfulness";
+export * from "@/metrics/turn-faithfulness/schema";

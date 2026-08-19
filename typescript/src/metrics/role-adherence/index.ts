@@ -1,5 +1,6 @@
 export {
   RoleAdherenceMetric,
   type RoleAdherenceMetricOptions,
-} from "./role-adherence";
-export * from "./schema";
+  type RoleAdherenceTemplateOverride,
+} from "@/metrics/role-adherence/role-adherence";
+export * from "@/metrics/role-adherence/schema";

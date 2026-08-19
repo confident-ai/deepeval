@@ -5,6 +5,7 @@ from pydantic import (
     PrivateAttr,
     AliasChoices,
     model_serializer,
+    field_serializer,
 )
 from typing import List, Optional, Dict, Any, Union
 from enum import Enum
@@ -14,7 +15,6 @@ import re
 import os
 import mimetypes
 import base64
-import weakref
 import warnings
 from dataclasses import dataclass, field
 from urllib.parse import urlparse, unquote
@@ -25,6 +25,7 @@ from deepeval.test_case.mcp import (
     MCPPromptCall,
     MCPResourceCall,
     MCPToolCall,
+    normalize_mcp_servers,
     validate_mcp_servers,
 )
 
@@ -256,6 +257,10 @@ class ToolCall(BaseModel):
         validation_alias=AliasChoices("inputParameters", "input_parameters"),
     )
 
+    @field_serializer("type")
+    def serialize_type(self, value: ToolCallType) -> str:
+        return value.value
+
     def __eq__(self, other):
         if not isinstance(other, ToolCall):
             return False
@@ -392,6 +397,7 @@ class LLMTestCase(BaseModel):
         serialization_alias="completionTime",
         validation_alias=AliasChoices("completionTime", "completion_time"),
     )
+    flaky: bool = Field(default=False)
     multimodal: bool = Field(default=False)
     name: Optional[str] = Field(default=None)
     tags: Optional[List[str]] = Field(default=None)
@@ -535,11 +541,14 @@ class LLMTestCase(BaseModel):
 
         # Ensure `mcp_server` is None or a list of `MCPServer`
         if mcp_servers is not None:
+            if isinstance(mcp_servers, list):
+                mcp_servers = normalize_mcp_servers(mcp_servers)
+                data["mcp_servers"] = mcp_servers
             if not isinstance(mcp_servers, list) or not all(
                 isinstance(item, MCPServer) for item in mcp_servers
             ):
                 raise TypeError(
-                    "'mcp_server' must be None or a list of 'MCPServer'"
+                    "'mcp_server' must be None or a list of 'MCPServer', either from 'deepeval.test_case' or 'mcp.server'"
                 )
             else:
                 validate_mcp_servers(mcp_servers)

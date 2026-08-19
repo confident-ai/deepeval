@@ -6,29 +6,26 @@ export {
   ToolCall,
   ToolCallParams,
   ToolCallType,
-} from "./llm-test-case";
+} from "@/test-case/llm-test-case";
 export {
   ConversationalTestCase,
   Turn,
   MultiTurnParams,
   TurnParams,
-} from "./conversational-test-case";
+} from "@/test-case/conversational-test-case";
 export {
   MCPServer,
   MCPToolCall,
   MCPResourceCall,
   MCPPromptCall,
   validateMcpServers,
-  type Tool,
-  type Resource,
-  type Prompt,
   type MCPTransport,
-} from "./mcp";
-export { ArenaTestCase, Contestant } from "./arena-test-case";
+} from "@/test-case/mcp";
+export { ArenaTestCase, Contestant } from "@/test-case/arena-test-case";
 export {
   MLLMImage,
   MLLM_IMAGE_REGISTRY,
   checkIfMultimodal,
   convertToMultiModalArray,
   type MLLMImageParams,
-} from "./mllm-image";
+} from "@/test-case/mllm-image";

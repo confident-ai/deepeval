@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Check, ChevronsUpDown } from "lucide-react";
 import {
@@ -9,55 +9,74 @@ import {
   PopoverTrigger,
 } from "fumadocs-ui/components/ui/popover";
 import { useLanguage } from "@/components/lang/language-provider";
-import type { Language } from "@/lib/lang/terms";
+import {
+  LANGUAGES,
+  LANGUAGE_IDS,
+  type Language,
+  type LanguageMeta,
+} from "@/lib/lang/languages";
+import { SDK_VERSIONS } from "@/lib/lang/versions";
+import {
+  LANGUAGE_SELECTOR_HINT_DISMISSED_EVENT,
+  LANGUAGE_SELECTOR_HINT_STORAGE_KEY,
+} from "./language-selector-hint";
 import styles from "./language-selector.module.scss";
 
-function badge(id: Language, src: string, label: string) {
-  return (
-    <img
-      className={styles.icon}
-      src={src}
-      alt={`${label} logo`}
-      width={20}
-      height={20}
-    />
-  );
-}
+const badge = (src: string, label: string) => (
+  <img
+    className={styles.icon}
+    src={src}
+    alt={`${label} logo`}
+    width={20}
+    height={20}
+  />
+);
 
-interface LanguageOption {
-  id: Language;
-  label: string;
-  icon: ReactNode;
-  description?: string;
-  disabled?: boolean;
-}
+const tag = (text: string | undefined) =>
+  text ? <span className={styles.tag}>{text}</span> : null;
 
-const OPTIONS: LanguageOption[] = [
-  {
-    id: "python",
-    label: "Python",
-    icon: badge("python", "/icons/python.svg", "Python"),
-    description: "First class support",
-  },
-  {
-    id: "typescript",
-    label: "TypeScript",
-    icon: badge("typescript", "/icons/typescript.svg", "TypeScript"),
-    description: "Coming soon on July 20th",
-    disabled: true,
-  },
-];
+type LanguageOption = { id: Language } & LanguageMeta;
 
-export default function LanguageSelector() {
+const OPTIONS: LanguageOption[] = LANGUAGE_IDS.map((id) => ({
+  id,
+  ...LANGUAGES[id],
+}));
+
+// The reference surfaces. Guides and tutorials still honour the selection made
+// here, they just don't offer their own control.
+const SECTIONS = ["/docs", "/integrations"];
+
+const LanguageSelector = () => {
   const { language, setLanguage } = useLanguage();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
-  const showSelector =
-    pathname === "/docs" ||
-    pathname.startsWith("/docs/") ||
-    pathname === "/integrations" ||
-    pathname.startsWith("/integrations/");
+  const showSelector = SECTIONS.some(
+    (section) => pathname === section || pathname.startsWith(`${section}/`),
+  );
+
+  useEffect(() => {
+    if (!showSelector || !window.matchMedia("(min-width: 768px)").matches) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      if (!triggerRef.current?.closest("#nd-sidebar")) return;
+
+      try {
+        if (window.localStorage.getItem(LANGUAGE_SELECTOR_HINT_STORAGE_KEY)) {
+          return;
+        }
+      } catch {
+        // Keep the first-visit experience available when storage is blocked.
+      }
+
+      setOpen(true);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [showSelector]);
 
   if (!showSelector) {
     return null;
@@ -65,42 +84,57 @@ export default function LanguageSelector() {
 
   const active = OPTIONS.find((o) => o.id === language) ?? OPTIONS[0];
 
-  // TypeScript (and any disabled option) is a no-op for now.
   const select = (option: LanguageOption) => {
-    if (option.disabled) return;
     setLanguage(option.id);
     setOpen(false);
+    try {
+      window.localStorage.setItem(
+        LANGUAGE_SELECTOR_HINT_STORAGE_KEY,
+        "dismissed",
+      );
+    } catch {
+      // Selection still dismisses the hint for the current page.
+    }
+    window.dispatchEvent(new Event(LANGUAGE_SELECTOR_HINT_DISMISSED_EVENT));
   };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger aria-label="Select language" className={styles.trigger}>
-        {active.icon}
+      <PopoverTrigger
+        ref={triggerRef}
+        aria-label="Select language"
+        className={styles.trigger}
+        data-language-selector=""
+      >
+        {badge(active.icon, active.label)}
         <span className={styles.label}>{active.label}</span>
+        {tag(active.tag)}
+        <span className={styles.version}>{`v${SDK_VERSIONS[active.id]}`}</span>
         <ChevronsUpDown className={styles.chevron} />
       </PopoverTrigger>
-      <PopoverContent align="start" className={styles.content}>
+      <PopoverContent
+        align="start"
+        className={`${styles.content} z-[110]`}
+        data-language-selector-dropdown=""
+      >
         {OPTIONS.map((option) => (
           <button
             key={option.id}
             type="button"
             onClick={() => select(option)}
-            aria-disabled={option.disabled}
-            className={`${styles.item} ${
-              option.disabled ? styles.disabled : ""
-            }`}
+            className={styles.item}
           >
             <div className={styles.itemContent}>
-              {option.icon}
+              {badge(option.icon, option.label)}
               <span className={styles.text}>
-                <span className={styles.label}>{option.label}</span>
-                {option.description ? (
-                  <span className={styles.description}>
-                    {option.description}
-                  </span>
-                ) : null}
+                <span className={styles.labelRow}>
+                  <span className={styles.label}>{option.label}</span>
+                  {tag(option.tag)}
+                </span>
+                <span className={styles.description}>{option.description}</span>
               </span>
             </div>
+            <span className={styles.version}>{`v${SDK_VERSIONS[option.id]}`}</span>
             <Check
               className={`${styles.check} ${
                 option.id === active.id ? "" : styles.hidden
@@ -111,4 +145,6 @@ export default function LanguageSelector() {
       </PopoverContent>
     </Popover>
   );
-}
+};
+
+export default LanguageSelector;

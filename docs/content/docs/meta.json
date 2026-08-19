@@ -15,6 +15,7 @@
     "evaluation-introduction",
     "(concepts)",
     "evaluation-end-to-end-llm-evals",
+    "evaluation-trajectory-based-llm-evals",
     "evaluation-component-level-llm-evals",
     "evaluation-unit-testing-in-ci-cd",
     "evaluation-flags-and-configs",

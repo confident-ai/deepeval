@@ -1,16 +1,52 @@
 import type { ZodType } from "zod";
-import { DeepEvalBaseLLM, type GenerationResult } from "../base-model";
-import { computeCost } from "../utils";
-import { aiSdkContent } from "../multimodal";
-import { checkIfMultimodal } from "../../test-case/mllm-image";
+import {
+  DeepEvalBaseLLM,
+  type ExtraGenerationParams,
+  type GenerationResult,
+} from "@/models/base-model";
+import { aiSdkContent } from "@/models/multimodal";
+import { checkIfMultimodal } from "@/test-case/mllm-image";
+import type { ModelNamespace } from "@/models/registry";
 
-export interface AISDKModelOptions {
-  /**
-   * A Vercel AI SDK `LanguageModel` instance, e.g. `openai("gpt-4o")` from
-   * `@ai-sdk/openai` or any other AI SDK provider model.
-   */
+// Keyed by the segment before the first dot of an AI SDK provider id, which
+// looks like `openai.chat` or `google.generative-ai`.
+const NAMESPACE_BY_PROVIDER_ID: Record<string, ModelNamespace> = {
+  openai: "openai",
+  azure: "openai",
+  anthropic: "anthropic",
+  google: "gemini",
+  "google-vertex": "gemini",
+  gemini: "gemini",
+  xai: "grok",
+  grok: "grok",
+  deepseek: "deepseek",
+  moonshot: "kimi",
+  kimi: "kimi",
+  "amazon-bedrock": "bedrock",
+  bedrock: "bedrock",
+  ollama: "ollama",
+};
+
+/** `undefined` for providers Python has no data for, e.g. Mistral. */
+export function resolveAiSdkNamespace(
+  model: unknown,
+): ModelNamespace | undefined {
+  const provider =
+    typeof model === "object" && model !== null
+      ? (model as { provider?: unknown }).provider
+      : undefined;
+  if (typeof provider !== "string") {
+    return undefined;
+  }
+  return NAMESPACE_BY_PROVIDER_ID[provider.split(".")[0]];
+}
+
+/** Any other key is forwarded to `generateText(...)` / `generateObject(...)`. */
+export interface AISDKModelOptions extends ExtraGenerationParams {
+  /** A Vercel AI SDK `LanguageModel`, e.g. `openai("gpt-4o")`. */
   model: any;
-  temperature?: number;
+  /** Defaults to `0`. Pass `null` to omit it from the request entirely. */
+  temperature?: number | null;
   maxOutputTokens?: number;
   costPerInputToken?: number;
   costPerOutputToken?: number;
@@ -18,68 +54,63 @@ export interface AISDKModelOptions {
 
 export class AISDKModel extends DeepEvalBaseLLM {
   private readonly aiModel: any;
-  private readonly temperature?: number;
   private readonly maxOutputTokens?: number;
-  private readonly costPerInputToken?: number;
-  private readonly costPerOutputToken?: number;
+  private readonly extraParams: ExtraGenerationParams;
 
   constructor(options: AISDKModelOptions) {
-    super(
-      typeof options.model === "string"
-        ? options.model
-        : options.model?.modelId,
-    );
-    this.aiModel = options.model;
-    this.temperature = options.temperature;
-    this.maxOutputTokens = options.maxOutputTokens;
-    this.costPerInputToken = options.costPerInputToken;
-    this.costPerOutputToken = options.costPerOutputToken;
+    const {
+      model,
+      temperature,
+      maxOutputTokens,
+      costPerInputToken,
+      costPerOutputToken,
+      ...extraParams
+    } = options;
+
+    super(typeof model === "string" ? model : model?.modelId);
+    this.aiModel = model;
+    this.temperature = temperature;
+    this.maxOutputTokens = maxOutputTokens;
+    this.costPerInputToken = costPerInputToken;
+    this.costPerOutputToken = costPerOutputToken;
+    this.extraParams = extraParams;
+    this.registryNamespace = resolveAiSdkNamespace(model);
   }
 
   async generate<T = string>(
     prompt: string,
     schema?: ZodType<T>,
   ): Promise<GenerationResult<T>> {
-    // `ai` is an optional peer dependency; typed loosely to avoid coupling to
-    // its generics. The runtime call shape matches AI SDK v5/v6.
+    // Optional peer dependency, typed loosely to avoid coupling to its
+    // generics. Call shape matches AI SDK v5/v6.
     const ai: any = await import("ai");
 
-    // Plain `prompt` for text; AI SDK `messages` (text + image parts) for multimodal.
     const input = checkIfMultimodal(prompt)
       ? { messages: [{ role: "user", content: aiSdkContent(prompt) }] }
       : { prompt };
+    const temperature = this.resolveTemperature();
 
     if (schema) {
       const { object, usage } = await ai.generateObject({
         model: this.aiModel,
         schema,
         ...input,
-        ...(this.temperature !== undefined && {
-          temperature: this.temperature,
-        }),
+        ...(temperature !== undefined && { temperature }),
         maxOutputTokens: this.maxOutputTokens,
+        ...this.extraParams,
       });
-      const cost = computeCost(
-        usage?.inputTokens,
-        usage?.outputTokens,
-        this.costPerInputToken,
-        this.costPerOutputToken,
-      );
+      const cost = this.resolveCost(usage?.inputTokens, usage?.outputTokens);
       return { output: object as T, cost };
     }
 
     const { text, usage } = await ai.generateText({
       model: this.aiModel,
       ...input,
-      ...(this.temperature !== undefined && { temperature: this.temperature }),
+      ...(temperature !== undefined && { temperature }),
       maxOutputTokens: this.maxOutputTokens,
+      ...this.extraParams,
     });
-    const cost = computeCost(
-      usage?.inputTokens,
-      usage?.outputTokens,
-      this.costPerInputToken,
-      this.costPerOutputToken,
-    );
+    const cost = this.resolveCost(usage?.inputTokens, usage?.outputTokens);
     return { output: text as T, cost };
   }
 
@@ -88,10 +119,10 @@ export class AISDKModel extends DeepEvalBaseLLM {
   }
 
   supportsStructuredOutputs(): boolean {
-    return true;
+    return this.modelData.supportsStructuredOutputs ?? true;
   }
 
   supportsMultimodal(): boolean {
-    return true;
+    return this.modelData.supportsMultimodal ?? true;
   }
 }

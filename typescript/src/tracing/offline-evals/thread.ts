@@ -1,9 +1,9 @@
-import { Api, Endpoints, HttpMethods } from "../../confident/api";
-import { getCurrentTrace } from "../tracing";
+import { Api, Endpoints, HttpMethods } from "@/confident/api";
+import { getCurrentTrace } from "@/tracing/tracing";
 import {
   EvaluateThreadRequestBody,
   EvaluateThreadRequestBodySchema,
-} from "./api";
+} from "@/tracing/offline-evals/api";
 
 function getApi(): Api {
   const trace = getCurrentTrace();

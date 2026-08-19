@@ -1,0 +1,639 @@
+{
+  "name": "mastra-multi-tool-test",
+  "uuid": "dde812be-e8fb-476c-a9c8-bc6032be4fac",
+  "baseSpans": [
+    {
+      "uuid": "7d0632f8d45b1a92",
+      "name": "step: 0",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "dde812be-e8fb-476c-a9c8-bc6032be4fac",
+      "parentUuid": "78efc97d91c542b9",
+      "startTime": "2026-07-19T13:42:56.537Z",
+      "endTime": "2026-07-19T13:43:01.469Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "Use the get_weather tool for weather and the calculate tool for math. Do not answer from memory."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather in Tokyo, and what is 125 * 5?"
+        }
+      ],
+      "output": {
+        "text": "",
+        "toolCalls": [
+          {
+            "toolCallId": "call_knUwdkhkfdql1ptpuyCptIti",
+            "toolName": "get_weather",
+            "args": {
+              "city": "Tokyo"
+            }
+          },
+          {
+            "toolCallId": "call_s9lXyUepeK4Rh8G9G1i8O2MU",
+            "toolName": "calculate",
+            "args": {
+              "expression": "125 * 5"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "runId": "c06ce7b2-64aa-466c-89e8-05fcecf3d7c9",
+        "environment": "test",
+        "headers": {
+          "access-control-expose-headers": "X-Request-ID, CF-Ray, CF-Ray",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "cf-cache-status": "DYNAMIC",
+          "cf-ray": "a1da26fc3caa70aa-NAG",
+          "connection": "keep-alive",
+          "content-encoding": "br",
+          "content-type": "application/json",
+          "date": "Sun, 19 Jul 2026 13:43:01 GMT",
+          "openai-organization": "confident-ai",
+          "openai-processing-ms": "4489",
+          "openai-project": "proj_A9bfPs3IllEZNkmbL6kztWbs",
+          "openai-version": "2020-10-01",
+          "server": "cloudflare",
+          "set-cookie": "__cf_bm=FRQKmPhFUw.LNT5xpTc0W6XR7bFUxswbgpjANfsBzmg-1784468576.6737514-1.0.1.1-MVjy6paJ2kpph8iGvBBt0vlsYpRKUX5nKam45ze2vsX8jAe6HwkbtVrb.XtBa_Zop3eBslwaTaBxhQ_I14XQBLjKJFksOghQziH3pd3hhW68JvD1nOfq9PW_HQOgg95f; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com; Expires=Sun, 19 Jul 2026 14:13:01 GMT",
+          "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+          "transfer-encoding": "chunked",
+          "x-content-type-options": "nosniff",
+          "x-ratelimit-limit-requests": "30000",
+          "x-ratelimit-limit-tokens": "150000000",
+          "x-ratelimit-remaining-requests": "29999",
+          "x-ratelimit-remaining-tokens": "149999682",
+          "x-ratelimit-reset-requests": "2ms",
+          "x-ratelimit-reset-tokens": "0s",
+          "x-request-id": "req_25924b108217464e82664dc28d7132f9"
+        },
+        "body": {
+          "id": "resp_0409c8b660934227006a5cd460fd1c819b92605c83b185e390",
+          "object": "response",
+          "created_at": 1784468577,
+          "status": "completed",
+          "background": false,
+          "billing": {
+            "payer": "developer"
+          },
+          "completed_at": 1784468581,
+          "error": null,
+          "frequency_penalty": 0,
+          "incomplete_details": null,
+          "instructions": null,
+          "max_output_tokens": null,
+          "max_tool_calls": null,
+          "model": "gpt-4o-mini-2024-07-18",
+          "moderation": null,
+          "output": [
+            {
+              "id": "fc_0409c8b660934227006a5cd4652778819b8367eaab60172db2",
+              "type": "function_call",
+              "status": "completed",
+              "arguments": "{\"city\":\"Tokyo\"}",
+              "call_id": "call_knUwdkhkfdql1ptpuyCptIti",
+              "name": "get_weather"
+            },
+            {
+              "id": "fc_0409c8b660934227006a5cd4652794819b90f6b512eee3e5f5",
+              "type": "function_call",
+              "status": "completed",
+              "arguments": "{\"expression\":\"125 * 5\"}",
+              "call_id": "call_s9lXyUepeK4Rh8G9G1i8O2MU",
+              "name": "calculate"
+            }
+          ],
+          "parallel_tool_calls": true,
+          "presence_penalty": 0,
+          "previous_response_id": null,
+          "prompt_cache_key": null,
+          "prompt_cache_retention": "in_memory",
+          "reasoning": {
+            "context": null,
+            "effort": null,
+            "summary": null
+          },
+          "safety_identifier": null,
+          "service_tier": "default",
+          "store": true,
+          "temperature": 1,
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "tool_choice": "auto",
+          "tool_usage": {
+            "image_gen": {
+              "input_tokens": 0,
+              "input_tokens_details": {
+                "image_tokens": 0,
+                "text_tokens": 0
+              },
+              "output_tokens": 0,
+              "output_tokens_details": {
+                "image_tokens": 0,
+                "text_tokens": 0
+              },
+              "total_tokens": 0
+            },
+            "web_search": {
+              "num_requests": 0
+            }
+          },
+          "tools": [
+            {
+              "type": "function",
+              "description": "Returns the current weather in a city.",
+              "name": "get_weather",
+              "output_schema": null,
+              "parameters": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                  "city": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "additionalProperties": false
+              },
+              "strict": true
+            },
+            {
+              "type": "function",
+              "description": "Evaluates a simple arithmetic expression.",
+              "name": "calculate",
+              "output_schema": null,
+              "parameters": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                  "expression": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "expression"
+                ],
+                "additionalProperties": false
+              },
+              "strict": true
+            }
+          ],
+          "top_logprobs": 0,
+          "top_p": 1,
+          "truncation": "disabled",
+          "usage": {
+            "input_tokens": 99,
+            "input_tokens_details": {
+              "cache_write_tokens": 0,
+              "cached_tokens": 0
+            },
+            "output_tokens": 47,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 146
+          },
+          "user": null,
+          "metadata": {}
+        },
+        "modelMetadata": {
+          "modelId": "gpt-4o-mini",
+          "modelVersion": "v2",
+          "modelProvider": "openai"
+        },
+        "mastraSpanType": "model_step"
+      }
+    },
+    {
+      "uuid": "ff8bba15808cded5",
+      "name": "inference: 0",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "dde812be-e8fb-476c-a9c8-bc6032be4fac",
+      "parentUuid": "7d0632f8d45b1a92",
+      "startTime": "2026-07-19T13:42:56.537Z",
+      "endTime": "2026-07-19T13:43:01.468Z",
+      "output": {
+        "text": "",
+        "toolCalls": [
+          {
+            "toolCallId": "call_knUwdkhkfdql1ptpuyCptIti",
+            "toolName": "get_weather",
+            "args": {
+              "city": "Tokyo"
+            }
+          },
+          {
+            "toolCallId": "call_s9lXyUepeK4Rh8G9G1i8O2MU",
+            "toolName": "calculate",
+            "args": {
+              "expression": "125 * 5"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "runId": "c06ce7b2-64aa-466c-89e8-05fcecf3d7c9",
+        "environment": "test",
+        "mastraSpanType": "model_inference"
+      }
+    },
+    {
+      "uuid": "950c0db0c8aa80f3",
+      "name": "step: 1",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "dde812be-e8fb-476c-a9c8-bc6032be4fac",
+      "parentUuid": "78efc97d91c542b9",
+      "startTime": "2026-07-19T13:43:01.471Z",
+      "endTime": "2026-07-19T13:43:02.797Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "Use the get_weather tool for weather and the calculate tool for math. Do not answer from memory."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather in Tokyo, and what is 125 * 5?"
+        },
+        {
+          "role": "assistant",
+          "content": "[tool: get_weather][tool: calculate]"
+        },
+        {
+          "role": "tool",
+          "content": "[tool-result: get_weather][tool-result: calculate]"
+        }
+      ],
+      "output": {
+        "text": "The current weather in Tokyo is cloudy with a temperature of 68°F. Also, \\( 125 \\times 5 = 625 \\).",
+        "toolCalls": []
+      },
+      "metadata": {
+        "runId": "c06ce7b2-64aa-466c-89e8-05fcecf3d7c9",
+        "environment": "test",
+        "headers": {
+          "access-control-expose-headers": "X-Request-ID, CF-Ray, CF-Ray",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "cf-cache-status": "DYNAMIC",
+          "cf-ray": "a1da271bc98c70aa-NAG",
+          "connection": "keep-alive",
+          "content-encoding": "br",
+          "content-type": "application/json",
+          "date": "Sun, 19 Jul 2026 13:43:02 GMT",
+          "openai-organization": "confident-ai",
+          "openai-processing-ms": "814",
+          "openai-project": "proj_A9bfPs3IllEZNkmbL6kztWbs",
+          "openai-version": "2020-10-01",
+          "server": "cloudflare",
+          "set-cookie": "__cf_bm=eYNvjGom3j6r146CJ8mEeO6XK43zYZoDq0brlnnrTek-1784468581.7271872-1.0.1.1-Kl.4ObOzlbGvNAPeWIwMn721okZRlsMDiqzHSKS8VLkS9ySOEvjre7ML8fPVW7ZBhh1cqa5se2EQrkH8Ik4qUn95f30x5.UwBeYVVV_l6bK2i.WYAi0aktr1dbUPMaLz; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com; Expires=Sun, 19 Jul 2026 14:13:02 GMT",
+          "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+          "transfer-encoding": "chunked",
+          "x-content-type-options": "nosniff",
+          "x-ratelimit-limit-requests": "30000",
+          "x-ratelimit-limit-tokens": "150000000",
+          "x-ratelimit-remaining-requests": "29999",
+          "x-ratelimit-remaining-tokens": "149999622",
+          "x-ratelimit-reset-requests": "2ms",
+          "x-ratelimit-reset-tokens": "0s",
+          "x-request-id": "req_05069b5f31524965b82c150505d9faed"
+        },
+        "body": {
+          "id": "resp_0eae39f8b916d689006a5cd465e0b48198a4d797fcc5fc8bb1",
+          "object": "response",
+          "created_at": 1784468581,
+          "status": "completed",
+          "background": false,
+          "billing": {
+            "payer": "developer"
+          },
+          "completed_at": 1784468582,
+          "error": null,
+          "frequency_penalty": 0,
+          "incomplete_details": null,
+          "instructions": null,
+          "max_output_tokens": null,
+          "max_tool_calls": null,
+          "model": "gpt-4o-mini-2024-07-18",
+          "moderation": null,
+          "output": [
+            {
+              "id": "msg_0eae39f8b916d689006a5cd46653a08198893dad21ab8adcee",
+              "type": "message",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "annotations": [],
+                  "logprobs": [],
+                  "text": "The current weather in Tokyo is cloudy with a temperature of 68°F. Also, \\( 125 \\times 5 = 625 \\)."
+                }
+              ],
+              "role": "assistant"
+            }
+          ],
+          "parallel_tool_calls": true,
+          "presence_penalty": 0,
+          "previous_response_id": null,
+          "prompt_cache_key": null,
+          "prompt_cache_retention": "in_memory",
+          "reasoning": {
+            "context": null,
+            "effort": null,
+            "summary": null
+          },
+          "safety_identifier": null,
+          "service_tier": "default",
+          "store": true,
+          "temperature": 1,
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "tool_choice": "auto",
+          "tool_usage": {
+            "image_gen": {
+              "input_tokens": 0,
+              "input_tokens_details": {
+                "image_tokens": 0,
+                "text_tokens": 0
+              },
+              "output_tokens": 0,
+              "output_tokens_details": {
+                "image_tokens": 0,
+                "text_tokens": 0
+              },
+              "total_tokens": 0
+            },
+            "web_search": {
+              "num_requests": 0
+            }
+          },
+          "tools": [
+            {
+              "type": "function",
+              "description": "Returns the current weather in a city.",
+              "name": "get_weather",
+              "output_schema": null,
+              "parameters": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                  "city": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "additionalProperties": false
+              },
+              "strict": true
+            },
+            {
+              "type": "function",
+              "description": "Evaluates a simple arithmetic expression.",
+              "name": "calculate",
+              "output_schema": null,
+              "parameters": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                  "expression": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "expression"
+                ],
+                "additionalProperties": false
+              },
+              "strict": true
+            }
+          ],
+          "top_logprobs": 0,
+          "top_p": 1,
+          "truncation": "disabled",
+          "usage": {
+            "input_tokens": 161,
+            "input_tokens_details": {
+              "cache_write_tokens": 0,
+              "cached_tokens": 0
+            },
+            "output_tokens": 31,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 192
+          },
+          "user": null,
+          "metadata": {}
+        },
+        "modelMetadata": {
+          "modelId": "gpt-4o-mini",
+          "modelVersion": "v2",
+          "modelProvider": "openai"
+        },
+        "mastraSpanType": "model_step"
+      }
+    },
+    {
+      "uuid": "49f24ad16f299c9d",
+      "name": "inference: 1",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "dde812be-e8fb-476c-a9c8-bc6032be4fac",
+      "parentUuid": "950c0db0c8aa80f3",
+      "startTime": "2026-07-19T13:43:01.472Z",
+      "endTime": "2026-07-19T13:43:02.796Z",
+      "output": {
+        "text": "The current weather in Tokyo is cloudy with a temperature of 68°F. Also, \\( 125 \\times 5 = 625 \\).",
+        "toolCalls": []
+      },
+      "metadata": {
+        "runId": "c06ce7b2-64aa-466c-89e8-05fcecf3d7c9",
+        "environment": "test",
+        "mastraSpanType": "model_inference"
+      }
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "6c8d7416102674ce",
+      "name": "agent run: 'assistant-agent'",
+      "status": "SUCCESS",
+      "type": "agent",
+      "traceUuid": "dde812be-e8fb-476c-a9c8-bc6032be4fac",
+      "startTime": "2026-07-19T13:42:56.527Z",
+      "endTime": "2026-07-19T13:43:02.800Z",
+      "input": "What is the weather in Tokyo, and what is 125 * 5?",
+      "output": {
+        "text": "The current weather in Tokyo is cloudy with a temperature of 68°F. Also, \\( 125 \\times 5 = 625 \\).",
+        "files": []
+      },
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metadata": {
+        "runId": "c06ce7b2-64aa-466c-89e8-05fcecf3d7c9",
+        "environment": "test",
+        "mastraSpanType": "agent_run"
+      }
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "78efc97d91c542b9",
+      "name": "llm: 'gpt-4o-mini'",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "dde812be-e8fb-476c-a9c8-bc6032be4fac",
+      "parentUuid": "6c8d7416102674ce",
+      "startTime": "2026-07-19T13:42:56.535Z",
+      "endTime": "2026-07-19T13:43:02.798Z",
+      "input": {
+        "messages": [
+          {
+            "role": "system",
+            "content": "Use the get_weather tool for weather and the calculate tool for math. Do not answer from memory."
+          },
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "What is the weather in Tokyo, and what is 125 * 5?",
+                "providerOptions": {
+                  "mastra": {
+                    "createdAt": 1784468576528
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "output": {
+        "files": [],
+        "reasoning": [],
+        "sources": [],
+        "text": "The current weather in Tokyo is cloudy with a temperature of 68°F. Also, \\( 125 \\times 5 = 625 \\).",
+        "warnings": []
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "inputTokenCount": 260,
+      "outputTokenCount": 78,
+      "metadata": {
+        "runId": "c06ce7b2-64aa-466c-89e8-05fcecf3d7c9",
+        "environment": "test",
+        "mastraSpanType": "model_generation",
+        "provider": "openai",
+        "finishReason": "stop",
+        "responseId": "resp_0eae39f8b916d689006a5cd465e0b48198a4d797fcc5fc8bb1",
+        "streaming": true,
+        "completionStartTime": "2026-07-19T13:43:01.454Z",
+        "modelParameters": {},
+        "cacheReadInputTokens": 0,
+        "cacheWriteInputTokens": 0,
+        "reasoningTokens": 0
+      }
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "7409a466b5edcc42",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "traceUuid": "dde812be-e8fb-476c-a9c8-bc6032be4fac",
+      "parentUuid": "7d0632f8d45b1a92",
+      "startTime": "2026-07-19T13:43:01.462Z",
+      "endTime": "2026-07-19T13:43:01.464Z",
+      "input": {
+        "city": "Tokyo"
+      },
+      "output": {
+        "weather": "Cloudy, 68F"
+      },
+      "description": "Returns the current weather in a city.",
+      "metadata": {
+        "runId": "c06ce7b2-64aa-466c-89e8-05fcecf3d7c9",
+        "environment": "test",
+        "mastraSpanType": "tool_call",
+        "success": true
+      }
+    },
+    {
+      "uuid": "d38e5b4fa8c326a2",
+      "name": "calculate",
+      "status": "SUCCESS",
+      "type": "tool",
+      "traceUuid": "dde812be-e8fb-476c-a9c8-bc6032be4fac",
+      "parentUuid": "7d0632f8d45b1a92",
+      "startTime": "2026-07-19T13:43:01.463Z",
+      "endTime": "2026-07-19T13:43:01.465Z",
+      "input": {
+        "expression": "125 * 5"
+      },
+      "output": {
+        "result": "125 * 5 = 625"
+      },
+      "description": "Evaluates a simple arithmetic expression.",
+      "metadata": {
+        "runId": "c06ce7b2-64aa-466c-89e8-05fcecf3d7c9",
+        "environment": "test",
+        "mastraSpanType": "tool_call",
+        "success": true
+      }
+    }
+  ],
+  "startTime": "2026-07-19T13:42:56.527Z",
+  "endTime": "2026-07-19T13:43:02.800Z",
+  "environment": "testing",
+  "metadata": {
+    "runId": "c06ce7b2-64aa-466c-89e8-05fcecf3d7c9",
+    "environment": "test"
+  },
+  "tags": [
+    "mastra",
+    "multi-tool"
+  ],
+  "input": "What is the weather in Tokyo, and what is 125 * 5?",
+  "output": {
+    "text": "The current weather in Tokyo is cloudy with a temperature of 68°F. Also, \\( 125 \\times 5 = 625 \\).",
+    "files": []
+  },
+  "toolsCalled": [
+    {
+      "name": "get_weather",
+      "description": "Returns the current weather in a city.",
+      "output": {
+        "weather": "Cloudy, 68F"
+      },
+      "inputParameters": {
+        "city": "Tokyo"
+      }
+    },
+    {
+      "name": "calculate",
+      "description": "Evaluates a simple arithmetic expression.",
+      "output": {
+        "result": "125 * 5 = 625"
+      },
+      "inputParameters": {
+        "expression": "125 * 5"
+      }
+    }
+  ],
+  "status": "SUCCESS"
+}

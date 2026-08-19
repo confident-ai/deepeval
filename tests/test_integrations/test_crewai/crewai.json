@@ -30,6 +30,7 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": "Weather in London: 60\u00b0F, Rainy, Humidity: 80%",
           "inputParameters": {
             "city": "London"

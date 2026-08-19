@@ -1,12 +1,13 @@
 {
   "name": "LangChain Full Attributes Trace",
   "uuid": "844ff542-147a-4475-b683-5cb662f80451",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019ed9d8-e817-739f-83f9-8fff5c657fb9",
       "name": "metric_collection_chain",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "traceUuid": "844ff542-147a-4475-b683-5cb662f80451",
       "startTime": "2026-06-18T08:28:51.607Z",
       "endTime": "2026-06-18T08:28:55.895Z",
@@ -173,10 +174,10 @@
           }
         ]
       },
-      "metricCollection": "root-trace-evals"
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019ed9d8-e818-720e-a1f9-d6f2556542fa",
@@ -508,5 +509,6 @@
       }
     }
   ],
+  "metricCollection": "root-trace-evals",
   "status": "SUCCESS"
 }

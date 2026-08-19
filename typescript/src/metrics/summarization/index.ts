@@ -1,5 +1,6 @@
 export {
   SummarizationMetric,
   type SummarizationMetricOptions,
-} from "./summarization";
-export * from "./schema";
+  type SummarizationTemplateOverride,
+} from "@/metrics/summarization/summarization";
+export * from "@/metrics/summarization/schema";

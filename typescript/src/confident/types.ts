@@ -1,4 +1,4 @@
-import { ConversationalTestCase, LLMTestCase } from "../test-case";
+import { ConversationalTestCase, LLMTestCase } from "@/test-case";
 
 export interface ConfidentEvaluateRequestData {
   metricCollection: string;

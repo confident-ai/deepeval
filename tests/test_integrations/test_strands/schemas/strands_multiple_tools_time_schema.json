@@ -89,6 +89,7 @@
       "toolsCalled": [
         {
           "name": "get_time",
+          "type": "FUNCTION",
           "inputParameters": {}
         }
       ],

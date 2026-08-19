@@ -1,18 +1,20 @@
-name: Metric Templates
+name: Metric Templates Sync
 
 # Guards that the compiled `templates.json` bundles (Python + TypeScript) stay in
 # sync with the metric template `.txt` sources. The check spans both packages, so
-# it lives in its own workflow rather than the Python-only Core Tests workflow.
+# it lives in its own workflow rather than a language-specific test workflow.
 
 on:
-  push:
+  pull_request:
     paths:
       - 'deepeval/**/templates/**'
       - 'typescript/src/templates/metrics/**'
       - 'scripts/compile_metric_templates.py'
       - 'tests/test_templates/test_metric_templates.py'
       - '.github/workflows/test_metric_templates.yml'
-  pull_request:
+  push:
+    branches:
+      - main
     paths:
       - 'deepeval/**/templates/**'
       - 'typescript/src/templates/metrics/**'

@@ -2,6 +2,7 @@
 id: evaluation-end-to-end-llm-evals
 title: End-to-End LLM Evaluation
 sidebar_label: End-to-End Evals
+languages: [python, typescript]
 ---
 
 import { ASSETS } from "@site/src/assets";
@@ -22,6 +23,8 @@ This page explains the **concepts** behind end-to-end evaluation. For the actual
 - [**Single-Turn End-to-End Evals**](/docs/evaluation-end-to-end-single-turn) — for any LLM app where one input maps to one output (agents treated as a black box, RAG / QA, summarization, classifiers, etc.).
 - [**Multi-Turn End-to-End Evals**](/docs/evaluation-end-to-end-multi-turn) — for chatbots and conversational agents where the unit of evaluation is the _whole conversation_.
 
+If you need to evaluate the internal path taken by an AI agent or long-horizon agent, use [trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals) instead.
+
 ## Treating Your App as a Black Box
 
 In end-to-end evaluation, you only describe **what's observable from outside** your LLM application — the input you sent, the output that came back, and any context that was used along the way. You do not describe the retrieval algorithm, the chain of LLM calls inside an agent, or any internal reasoning steps. That's the whole point of "end-to-end": you're grading the _result_, not the _path the system took to get there_.
@@ -31,23 +34,23 @@ Concretely, the parameters you populate on a test case are the entire surface yo
 For **single-turn** apps, you populate fields on an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-cases):
 
 - `input` — what you sent into your app (the question, document, draft, task, etc.).
-- `actual_output` — what your app produced (the answer, summary, label, rewritten text, agent's final reply).
-- `retrieval_context` — for RAG-style apps, the chunks your retriever returned. Required by metrics like `FaithfulnessMetric` and `ContextualRelevancyMetric`.
-- `tools_called` — for agentic apps, the tools the agent invoked. Required by metrics like `ToolCorrectnessMetric` and `ArgumentCorrectnessMetric`.
-- `expected_output` / `expected_tools` — optional gold references, used by reference-based metrics.
+- <Term py="actual_output" ts="actualOutput"/> — what your app produced (the answer, summary, label, rewritten text, agent's final reply).
+- <Term py="retrieval_context" ts="retrievalContext"/> — for RAG-style apps, the chunks your retriever returned. Required by metrics like `FaithfulnessMetric` and `ContextualRelevancyMetric`.
+- <Term py="tools_called" ts="toolsCalled"/> — for agentic apps, the tools the agent invoked. Required by metrics like `ToolCorrectnessMetric` and `ArgumentCorrectnessMetric`.
+- <Term py="expected_output" ts="expectedOutput"/> / <Term py="expected_tools" ts="expectedTools"/> — optional gold references, used by reference-based metrics.
 - `context` — optional extra background, used by some reference-based metrics.
 
 For **multi-turn** apps, you populate fields on a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases):
 
 - `scenario` — what the simulated user is trying to do.
-- `expected_outcome` — what success looks like.
-- `user_description` — who the user is (persona, role, constraints).
-- `turns` — the sequence of `Turn(role, content)` objects that make up the conversation.
+- <Term py="expected_outcome" ts="expectedOutcome"/> — what success looks like.
+- <Term py="user_description" ts="userDescription"/> — who the user is (persona, role, constraints).
+- `turns` — the sequence of `Turn` objects (each with a `role` and `content`) that make up the conversation.
 
 Notice what's _not_ there: there's no place to describe "the retriever's prompt", "the tool argument schema", or "the inner LLM call that produced this answer." If a metric needs to score one of those things in isolation, end-to-end isn't the right fit.
 
 :::tip
-End-to-end means **black box, by design**. If you want to score what's happening _inside_ your agent — the retriever as its own thing, individual tool calls, sub-agent reasoning — use [component-level evaluation](/docs/evaluation-component-level-llm-evals) instead. Component-level uses `@observe(metrics=[...])` on each span, so different parts of your agent can be graded with different metrics. Many real applications run both.
+End-to-end means **black box, by design**. To score the complete chain of decisions and actions inside an agent, use [trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals). To score one retriever, tool call, LLM generation, or sub-agent in isolation, use [component-level evaluation](/docs/evaluation-component-level-llm-evals). Many real applications combine all three scopes.
 :::
 
 ## Single-Turn vs Multi-Turn
@@ -66,23 +69,24 @@ Pick the flavor that matches your application:
 
 The two flavors live on **different test case classes** because the unit of evaluation is genuinely different (one exchange vs many), and `deepeval` will refuse to mix them in the same test run.
 
-## End-to-End vs Component-Level
+## End-to-End vs Trajectory-Based vs Component-Level
 
-End-to-end and [component-level evaluation](/docs/evaluation-component-level-llm-evals) are not two separate workflows — they're the same workflow at different granularities. **End-to-end evaluation is just component-level evaluation where the entire system is treated as one component with no internal steps.** That's the only real difference.
+End-to-end, [trajectory-based](/docs/evaluation-trajectory-based-llm-evals), and [component-level evaluation](/docs/evaluation-component-level-llm-evals) use different scopes. End-to-end sees the system as a black box, trajectory-based sees the complete chain inside an agent, and component-level isolates one internal span.
 
-In both cases you're attaching metrics to a unit of work and scoring the input/output of that unit:
+In each case, you attach metrics to a different unit of work:
 
 - **End-to-end** — the unit is the whole app. One test case per run of your app, scoring the final input → final output.
-- **Component-level** — the unit is each `@observe`'d span. Many test cases per run of your app — one per span you've chosen to grade — each scoring the input → output of _that_ span.
+- **Trajectory-based** — the unit is the agent's complete ordered execution path, scoring how its internal steps work together.
+- **Component-level** — the unit is each <Term py="@observe" ts="observe()"/>'d span. Many test cases per run of your app — one per span you've chosen to grade — each scoring the input → output of _that_ span.
 
-|                              | End-to-End                                                                   | [Component-Level](/docs/evaluation-component-level-llm-evals)                              |
-| ---------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| **What you score**           | The final user-visible output (the system as one black-box component)        | Individual internal spans (retriever, tool call, sub-agent, etc.)                          |
-| **How metrics are attached** | To the test case (or to the trace as a whole)                                | To `@observe(metrics=[...])` on each span                                                  |
-| **Best for**                 | Anything with a "flat" architecture, or where you only care about the result | Complex agents, multi-step pipelines, anywhere different components need different metrics |
-| **Multi-turn supported**     | Yes                                                                          | Single-turn only today                                                                     |
+|                              | End-to-End                                                                   | [Trajectory-Based](/docs/evaluation-trajectory-based-llm-evals)                     | [Component-Level](/docs/evaluation-component-level-llm-evals)                              |
+| ---------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **What you score**           | The final user-visible output (the system as one black-box component)        | The complete ordered chain of decisions, tool calls, and intermediate steps         | Individual internal spans (retriever, tool call, sub-agent, etc.)                          |
+| **How metrics are attached** | To a test case or as black-box metrics on the trace                          | To the complete trace through <Term py="evals_iterator()" ts="evalsIterator()"/>     | To each span, via <Term py="@observe(metrics=[...])" ts="observe({ metrics: [...] })"/>    |
+| **Best for**                 | Flat applications, multi-turn conversations, or final-output quality checks  | AI agents and long-horizon agents where the execution path affects quality          | Complex applications where individual components need to be diagnosed or graded           |
+| **Tracing required**         | No                                                                           | Yes                                                                                 | Yes                                                                                        |
 
-You don't have to choose just one — and in fact, when you use the [recommended `evals_iterator()` path](/docs/evaluation-end-to-end-single-turn#approach-2-evals_iterator-with-tracing-recommended), end-to-end and component-level run **in the same loop**: the metrics you pass to `evals_iterator(metrics=[...])` are scored end-to-end, while any metrics you've attached to `@observe(metrics=[...])` on individual spans are scored component-level. Many real applications run both, with end-to-end on the final answer and component-level on a few critical spans.
+You don't have to choose just one. With the [recommended evals iterator path](/docs/evaluation-end-to-end-single-turn#approach-1-evals_iterator-with-tracing-recommended), black-box metrics can score the final result, [trajectory metrics](/docs/evaluation-trajectory-based-llm-evals) can score the complete agent path, and metrics attached to individual spans with <Term py="@observe(metrics=[...])" ts="observe({ metrics: [...] })"/> can score components in the same traced run.
 
 <details>
 <summary><strong>When should you choose end-to-end?</strong></summary>
@@ -101,22 +105,23 @@ In short: **you care about the result, not the path the system took to get there
 
 Both single-turn and (for `evaluate()`) multi-turn give you a choice between two equivalent code paths:
 
-| Approach                                                                            | What it looks like                                                                                                                                   | When to choose it                                                                                                                                          |
-| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`evaluate(test_cases=...)`**                                                      | Build a list of `LLMTestCase`s (or `ConversationalTestCase`s) up front, hand them to a single `evaluate()` call.                                     | You want a self-contained script with no tracing dependency.                                                                                               |
-| **`dataset.evals_iterator()` with `@observe`** **— recommended (single-turn only)** | Decorate your app with `@observe`, loop over goldens with `evals_iterator(metrics=[...])`. `deepeval` builds the test cases from the captured trace. | Your app is (or will be) instrumented with [tracing](/docs/evaluation-llm-tracing). You also get a full per-test-case trace view on Confident AI for free. |
+| Approach                                                                                                                       | What it looks like                                                                                                                                                                             | When to choose it                                                                                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`evaluate()`**                                                                                                               | Build a list of `LLMTestCase`s (or `ConversationalTestCase`s) up front, hand them to a single `evaluate()` call.                                                                               | You want a self-contained script with no tracing dependency.                                                                                               |
+| **<Term py="dataset.evals_iterator()" ts="dataset.evalsIterator()"/> with tracing** **— recommended (single-turn only)** | Instrument your app with <Term py="@observe" ts="observe()"/>, then loop over goldens with the iterator, passing <Term py="metrics=[...]" ts="metrics: [...]"/>. `deepeval` builds the test cases from the captured trace. | Your app is (or will be) instrumented with [tracing](/docs/evaluation-llm-tracing). You also get a full per-test-case trace view on Confident AI for free. |
 
-For new single-turn projects we recommend `evals_iterator()` — same amount of code, plus traces, plus the same setup carries over to [component-level evaluation](/docs/evaluation-component-level-llm-evals) later.
+For new single-turn projects we recommend the iterator — same amount of code, plus traces, plus the same setup carries over to [component-level evaluation](/docs/evaluation-component-level-llm-evals) later.
 
-Multi-turn end-to-end evaluation only uses `evaluate()` today; the `evals_iterator()` form is single-turn only.
+Multi-turn end-to-end evaluation only uses `evaluate()` today; the iterator form is single-turn only.
 
 :::info
-Passing `metrics=[...]` to `evals_iterator()` attaches metrics at the **trace** level — i.e. end-to-end. If you want to grade **individual components** (the retriever, a tool call, an inner LLM call), attach metrics on the `@observe(metrics=[...])` decorator of that span instead — that's [component-level evaluation](/docs/evaluation-component-level-llm-evals), not end-to-end.
+Passing <Term py="metrics=[...]" ts="metrics: [...]"/> to the iterator attaches metrics at the **trace** level. A metric that judges only the observable result is end-to-end; a metric that analyzes the ordered internal spans is [trajectory-based](/docs/evaluation-trajectory-based-llm-evals). To grade one retriever, tool call, or inner LLM call, attach the metric to that span for [component-level evaluation](/docs/evaluation-component-level-llm-evals).
 :::
 
 ## What's Next
 
 - Walk through a [single-turn end-to-end evaluation](/docs/evaluation-end-to-end-single-turn).
 - Walk through a [multi-turn end-to-end evaluation](/docs/evaluation-end-to-end-multi-turn) using the `ConversationSimulator`.
-- Run end-to-end evals in [CI/CD pipelines](/docs/evaluation-unit-testing-in-ci-cd) using `assert_test()` and `deepeval test run`.
+- Evaluate the complete internal path of an agent with [trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals).
+- Run end-to-end evals in [CI/CD pipelines](/docs/evaluation-unit-testing-in-ci-cd) using <Term py="pytest" ts="vitest"/> and <Term py="deepeval test run" ts="npx deepeval test run"/>.
 - Compare with [component-level evaluation](/docs/evaluation-component-level-llm-evals) if your app has internal structure worth grading.

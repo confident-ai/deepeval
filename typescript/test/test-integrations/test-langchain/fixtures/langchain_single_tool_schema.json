@@ -1,12 +1,13 @@
 {
   "name": "langchain-single-tool-test",
   "uuid": "e06544e1-8fa5-4652-b6a5-8e2f1429b91b",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019ed9d8-9b50-74be-91db-a029a4236990",
       "name": "single_tool_chain",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "traceUuid": "e06544e1-8fa5-4652-b6a5-8e2f1429b91b",
       "startTime": "2026-06-18T08:28:31.952Z",
       "endTime": "2026-06-18T08:28:34.342Z",
@@ -125,7 +126,7 @@
             ],
             "kwargs": {
               "id": "chatcmpl-Ds2OvhldhK2VJxGLRwhWm8ZpH19wX",
-              "content": "The current weather in San Francisco is foggy with a temperature of 58°F.",
+              "content": "The current weather in San Francisco is foggy with a temperature of 58\u00b0F.",
               "additional_kwargs": {},
               "response_metadata": {
                 "tokenUsage": {
@@ -172,10 +173,11 @@
             }
           }
         ]
-      }
+      },
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019ed9d8-9b51-717c-b2a9-99b20465c2f3",
@@ -236,7 +238,7 @@
       ],
       "output": {
         "role": "AI",
-        "content": "The current weather in San Francisco is foggy with a temperature of 58°F.",
+        "content": "The current weather in San Francisco is foggy with a temperature of 58\u00b0F.",
         "toolCalls": []
       },
       "model": "gpt-4o-mini-2024-07-18",
@@ -405,7 +407,7 @@
         ],
         "kwargs": {
           "id": "chatcmpl-Ds2OvhldhK2VJxGLRwhWm8ZpH19wX",
-          "content": "The current weather in San Francisco is foggy with a temperature of 58°F.",
+          "content": "The current weather in San Francisco is foggy with a temperature of 58\u00b0F.",
           "additional_kwargs": {},
           "response_metadata": {
             "tokenUsage": {

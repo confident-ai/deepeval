@@ -40,7 +40,11 @@ class TrinaryChoiceSchema(BaseModel):
 
 
 class MultipleChoiceSchemaLower(BaseModel):
-    answer: Literal["a", "b", "c", "d"]
+    # MathQA (AQuA-RAT) questions always have five options, a-e (option "e" is
+    # frequently "none of these"). Omitting "e" made every question whose answer
+    # is "e" unrepresentable, so schema-constrained models could never emit it
+    # and those items were always scored 0.
+    answer: Literal["a", "b", "c", "d", "e"]
 
 
 # DROP Models #############################

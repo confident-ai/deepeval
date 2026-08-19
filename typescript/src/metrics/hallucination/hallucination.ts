@@ -1,29 +1,34 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   VerdictsSchema,
   HallucinationScoreReasonSchema,
   type HallucinationVerdict,
-} from "./schema";
+} from "@/metrics/hallucination/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "HallucinationMetric";
 
+export type HallucinationTemplateOverride =
+  MetricTemplateOverride<"HallucinationMetric">;
+
 export interface HallucinationMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: HallucinationTemplateOverride;
 }
 
 /**
@@ -34,14 +39,19 @@ export interface HallucinationMetricOptions {
 export class HallucinationMetric extends BaseMetric {
   verdicts: HallucinationVerdict[] = [];
 
+  protected higherIsBetter = false;
+
   constructor(options: HallucinationMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 0 : (options.threshold ?? 0.5), {
+    super(strictMode ? 0 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
@@ -66,7 +76,7 @@ export class HallucinationMetric extends BaseMetric {
       );
       this.score = this.calculateScore();
       this.reason = await this.generateReason();
-      this.success = this.score <= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Verdicts:\n${prettifyList(this.verdicts)}`,
@@ -82,7 +92,7 @@ export class HallucinationMetric extends BaseMetric {
     actualOutput: string,
     contexts: string[],
   ): Promise<HallucinationVerdict[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+    const prompt = this.getPrompt("generate_verdicts", {
       actual_output: actualOutput,
       contexts,
       contexts_count: contexts.length,
@@ -100,7 +110,7 @@ export class HallucinationMetric extends BaseMetric {
         factualAlignments.push(v.reason);
       else contradictions.push(v.reason);
     }
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       factual_alignments: factualAlignments,
       contradictions,
       score: (this.score ?? 0).toFixed(2),
@@ -120,13 +130,7 @@ export class HallucinationMetric extends BaseMetric {
       (v) => v.verdict.trim().toLowerCase() === "no",
     ).length;
     const score = hallucinationCount / total;
-    return this.strictMode && score > this.threshold ? 1 : score;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 1) <= this.threshold;
-    this.success = ok;
-    return ok;
+    return this.applyStrictMode(score);
   }
 
   get name(): string {

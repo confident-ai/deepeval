@@ -1,5 +1,6 @@
-import os
+import warnings
 from typing import (
+    TYPE_CHECKING,
     List,
     Optional,
     Union,
@@ -23,7 +24,10 @@ from deepeval.evaluate.utils import (
 from deepeval.evaluate.console_report import EvaluationConsoleReport
 from deepeval.dataset import Golden
 from deepeval.prompt import Prompt
-from deepeval.test_case.utils import check_valid_test_cases_type
+from deepeval.test_case.utils import (
+    check_valid_test_cases_type,
+    process_mcp_servers,
+)
 from deepeval.test_run.hyperparameters import (
     process_hyperparameters,
     process_prompts,
@@ -39,17 +43,23 @@ from deepeval.utils import (
     should_verbose_print,
     get_identifier,
 )
-from deepeval.telemetry import capture_evaluation_run
+from deepeval.telemetry import Entrypoint, capture_evaluation_run
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
 )
+from deepeval.metrics.utils import check_at_least_one_metric_has_threshold
 from deepeval.metrics.indicator import (
     format_metric_description,
 )
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
+    MCPServer,
+)
+from deepeval.test_case.mcp import (
+    normalize_mcp_servers,
+    validate_mcp_servers,
 )
 from deepeval.test_run import (
     global_test_run_manager,
@@ -62,6 +72,9 @@ from deepeval.evaluate.execute import (
     _assert_test_from_current_trace,
     execute_test_cases,
 )
+
+if TYPE_CHECKING:
+    from mcp.server import MCPServer as OfficialMCPServer
 
 
 def assert_test(
@@ -103,6 +116,7 @@ def assert_test(
         )
 
     elif test_case and metrics:
+        check_at_least_one_metric_has_threshold(metrics)
         if run_async:
             loop = get_or_create_event_loop()
             test_result = loop.run_until_complete(
@@ -152,7 +166,15 @@ def assert_test(
                 for metrics_data in failed_metrics_data
             ]
         )
-        raise AssertionError(f"Metrics: {failed_metrics_str} failed.")
+        if test_case is not None and test_case.flaky:
+            # Flaky test cases don't block CI: warn (shows up in pytest's
+            # warnings summary) but don't raise
+            warnings.warn(
+                f"Flaky test case failed (no assertion raised): "
+                f"Metrics: {failed_metrics_str} failed."
+            )
+        else:
+            raise AssertionError(f"Metrics: {failed_metrics_str} failed.")
 
 
 def evaluate(
@@ -167,6 +189,7 @@ def evaluate(
     metric_collection: Optional[str] = None,
     hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
     # agnostic
+    mcp_servers: Optional[List[Union[MCPServer, "OfficialMCPServer"]]] = None,
     identifier: Optional[str] = None,
     official: bool = False,
     _skip_reset: bool = False,
@@ -183,7 +206,13 @@ def evaluate(
     )
     check_valid_test_cases_type(test_cases)
 
+    if mcp_servers is not None:
+        mcp_servers = normalize_mcp_servers(mcp_servers)
+        validate_mcp_servers(mcp_servers)
+    process_mcp_servers(test_cases, mcp_servers)
+
     if metrics:
+        check_at_least_one_metric_has_threshold(metrics)
 
         if not _skip_reset and not get_is_running_deepeval():
             global_test_run_manager.reset()
@@ -199,7 +228,7 @@ def evaluate(
                     )
                 )
 
-        with capture_evaluation_run("evaluate()"):
+        with capture_evaluation_run(Entrypoint.EVALUATE):
             if async_config.run_async:
                 loop = get_or_create_event_loop()
                 test_results = loop.run_until_complete(

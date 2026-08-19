@@ -12,7 +12,7 @@ from typing import (
     Set,
     Union,
 )
-from time import perf_counter
+from time import perf_counter, sleep
 import threading
 import functools
 import inspect
@@ -41,7 +41,6 @@ from deepeval.tracing.api import (
     TraceSpanApiStatus,
     AttachmentApi,
 )
-from deepeval.telemetry import capture_send_trace
 from deepeval.tracing.patchers import (
     patch_anthropic_client,
     patch_openai_client,
@@ -87,7 +86,8 @@ if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden
     from anthropic import Anthropic
 
-EVAL_DUMMY_SPAN_NAME = "evals_iterator"
+
+DEFAULT_TRACE_FLUSH_TIMEOUT = 30.0
 
 
 class _ObservedAsyncGenIter:
@@ -180,8 +180,11 @@ class TraceManager:
         self._trace_queue = queue.Queue()
         self._worker_thread = None
         self._min_interval = 0.2  # Minimum time between API calls (seconds)
+        self._flush_poll_interval = 0.05
         self._last_post_time = 0
         self._in_flight_tasks: Set[asyncio.Task[Any]] = set()
+        self._outstanding_traces = 0
+        self._outstanding_lock = threading.Lock()
         self.task_bindings: "weakref.WeakKeyDictionary[asyncio.Task, dict]" = (
             weakref.WeakKeyDictionary()
         )
@@ -214,14 +217,35 @@ class TraceManager:
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
 
+    @property
+    def outstanding_traces(self) -> int:
+        """Number of traces that are queued, being handed off, or in flight.
+
+        Counted from the moment a trace is enqueued until its send task
+        finishes. Neither the queue size nor the in-flight task set is enough
+        on its own: the worker dequeues a trace, awaits the rate-limit sleep,
+        and only then registers a task, so there is a window where a trace
+        belongs to neither and the manager looks idle while a trace is still
+        waiting to be posted.
+        """
+        with self._outstanding_lock:
+            return self._outstanding_traces
+
+    def _track_outstanding_trace(self) -> None:
+        with self._outstanding_lock:
+            self._outstanding_traces += 1
+
+    def _untrack_outstanding_trace(self) -> None:
+        with self._outstanding_lock:
+            if self._outstanding_traces > 0:
+                self._outstanding_traces -= 1
+
     def _warn_on_exit(self):
-        queue_size = self._trace_queue.qsize()
-        in_flight = len(self._in_flight_tasks)
-        remaining_tasks = queue_size + in_flight
+        remaining_tasks = self.outstanding_traces
 
         if not self._flush_enabled and remaining_tasks > 0:
             self._print_trace_status(
-                message=f"WARNING: Exiting with {queue_size + in_flight} abaonded trace(s).",
+                message=f"WARNING: Exiting with {remaining_tasks} abandoned trace(s).",
                 trace_worker_status=TraceWorkerStatus.WARNING,
                 description=f"Set {CONFIDENT_TRACE_FLUSH}=1 as an environment variable to flush remaining traces to Confident AI.",
             )
@@ -418,16 +442,6 @@ class TraceManager:
             # This is a child span, find its parent and add it to the parent's children
             parent_span = self.get_span_by_uuid(span.parent_uuid)
             if parent_span:
-
-                if (
-                    parent_span.name == EVAL_DUMMY_SPAN_NAME
-                ):  # ignored span for evaluation
-                    span.parent_uuid = None
-                    trace.root_spans.remove(parent_span)
-                    trace.root_spans.append(span)
-                    self._reparent_orphan_roots(trace, span)
-                    return
-
                 parent_span.children.append(span)
             else:
                 trace.root_spans.append(span)
@@ -553,6 +567,7 @@ class TraceManager:
             return None
 
         self._ensure_worker_thread_running()
+        self._track_outstanding_trace()
         self._trace_queue.put(trace_api)
 
         return
@@ -573,6 +588,7 @@ class TraceManager:
             return None
 
         # Add the trace to the queue
+        self._track_outstanding_trace()
         self._trace_queue.put(trace)
 
         # Start the worker thread if it's not already running
@@ -651,6 +667,7 @@ class TraceManager:
                 task = asyncio.current_task()
                 if task:
                     self._in_flight_tasks.discard(task)
+                self._untrack_outstanding_trace()
 
         async def async_worker():
             # Continue while user code is running or work remains
@@ -661,7 +678,11 @@ class TraceManager:
             ):
                 try:
                     trace = self._trace_queue.get(block=True, timeout=1.0)
+                except queue.Empty:
+                    await asyncio.sleep(0.1)
+                    continue
 
+                try:
                     # rate-limit
                     now = perf_counter()
                     elapsed = now - self._last_post_time
@@ -672,18 +693,17 @@ class TraceManager:
                     # schedule async send
                     task = asyncio.create_task(_a_send_trace(trace))
                     self._in_flight_tasks.add(task)
-                    self._trace_queue.task_done()
 
-                except queue.Empty:
-                    await asyncio.sleep(0.1)
-                    continue
                 except Exception as e:
+                    self._untrack_outstanding_trace()
                     self._print_trace_status(
                         message="Error in worker",
                         trace_worker_status=TraceWorkerStatus.FAILURE,
                         description=str(e),
                     )
                     await asyncio.sleep(1.0)
+                finally:
+                    self._trace_queue.task_done()
 
         try:
             loop.run_until_complete(async_worker())
@@ -694,11 +714,45 @@ class TraceManager:
                 loop.run_until_complete(
                     asyncio.gather(*pending, return_exceptions=True)
                 )
-            self.flush_traces(remaining_traces)
+            self._post_remaining_traces(remaining_traces)
             loop.run_until_complete(loop.shutdown_asyncgens())
             loop.close()
 
-    def flush_traces(self, remaining_traces: List[TraceApi]):
+    def flush(self, timeout: float = DEFAULT_TRACE_FLUSH_TIMEOUT) -> bool:
+        """Wait until every posted trace has been sent, or ``timeout`` elapses.
+
+        Returns ``True`` once nothing is outstanding, ``False`` if the timeout
+        expired with traces still queued or in flight. The sending itself
+        happens on the trace worker thread, so this only sleeps — call it
+        before tearing down a short-lived process to avoid abandoning traces.
+        """
+        deadline = perf_counter() + timeout
+        while self.outstanding_traces:
+            if perf_counter() >= deadline:
+                return False
+            sleep(self._flush_poll_interval)
+        return True
+
+    async def a_flush(
+        self, timeout: float = DEFAULT_TRACE_FLUSH_TIMEOUT
+    ) -> bool:
+        """Async counterpart of :meth:`flush` that yields instead of blocking."""
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + timeout
+        while self.outstanding_traces:
+            if loop.time() >= deadline:
+                return False
+            await asyncio.sleep(self._flush_poll_interval)
+        return True
+
+    def _post_remaining_traces(self, remaining_traces: List[TraceApi]):
+        """Synchronously post traces buffered after the main thread exited.
+
+        Only reachable from the worker thread's teardown path, where the
+        event loop is already shutting down and ``a_send_request`` is no
+        longer an option. Distinct from :meth:`flush`, which waits for the
+        normal async pipeline to drain.
+        """
         if not tracing_enabled() or not self.tracing_enabled:
             return
 
@@ -707,43 +761,42 @@ class TraceManager:
             message=f"Flushing {len(remaining_traces)} remaining trace(s)",
         )
         for trace_api in remaining_traces:
-            with capture_send_trace():
+            try:
+                normalize_trace_api_span_providers(trace_api)
                 try:
-                    normalize_trace_api_span_providers(trace_api)
-                    try:
-                        body = trace_api.model_dump(
-                            by_alias=True,
-                            exclude_none=True,
-                        )
-                    except AttributeError:
-                        # Pydantic version below 2.0
-                        body = trace_api.dict(by_alias=True, exclude_none=True)
+                    body = trace_api.model_dump(
+                        by_alias=True,
+                        exclude_none=True,
+                    )
+                except AttributeError:
+                    # Pydantic version below 2.0
+                    body = trace_api.dict(by_alias=True, exclude_none=True)
 
-                    body = make_json_serializable(body)
-                    if trace_api.confident_api_key:
-                        api = Api(api_key=trace_api.confident_api_key)
-                    else:
-                        api = Api(api_key=self.confident_api_key)
+                body = make_json_serializable(body)
+                if trace_api.confident_api_key:
+                    api = Api(api_key=trace_api.confident_api_key)
+                else:
+                    api = Api(api_key=self.confident_api_key)
 
-                    _, link = api.send_request(
-                        method=HttpMethods.POST,
-                        endpoint=Endpoints.TRACES_ENDPOINT,
-                        body=body,
-                    )
-                    qs = self._trace_queue.qsize()
-                    self._print_trace_status(
-                        trace_worker_status=TraceWorkerStatus.SUCCESS,
-                        message=f"Successfully posted trace ({qs} traces remaining in queue, 1 in flight)",
-                        description=link,
-                        environment=self.environment,
-                    )
-                except Exception as e:
-                    qs = self._trace_queue.qsize()
-                    self._print_trace_status(
-                        trace_worker_status=TraceWorkerStatus.FAILURE,
-                        message="Error flushing remaining trace(s)",
-                        description=str(e),
-                    )
+                _, link = api.send_request(
+                    method=HttpMethods.POST,
+                    endpoint=Endpoints.TRACES_ENDPOINT,
+                    body=body,
+                )
+                qs = self._trace_queue.qsize()
+                self._print_trace_status(
+                    trace_worker_status=TraceWorkerStatus.SUCCESS,
+                    message=f"Successfully posted trace ({qs} traces remaining in queue, 1 in flight)",
+                    description=link,
+                    environment=self.environment,
+                )
+            except Exception as e:
+                qs = self._trace_queue.qsize()
+                self._print_trace_status(
+                    trace_worker_status=TraceWorkerStatus.FAILURE,
+                    message="Error flushing remaining trace(s)",
+                    description=str(e),
+                )
 
     def create_nested_spans_dict(self, span: BaseSpan) -> Dict[str, Any]:
         api_span = self._convert_span_to_api_span(span)
@@ -1028,6 +1081,43 @@ class TraceManager:
 
 
 trace_manager = TraceManager()
+
+########################################################
+### Flushing #############################################
+########################################################
+
+
+def flush_traces(timeout: float = DEFAULT_TRACE_FLUSH_TIMEOUT) -> bool:
+    """Block until all pending traces have been sent to Confident AI.
+
+    Traces are posted from a background worker thread, so a process that
+    tears down right after its last traced call can drop them. Call this
+    first to hand the worker a chance to finish.
+
+    Args:
+        timeout: Maximum number of seconds to wait.
+
+    Returns:
+        ``True`` if every pending trace was sent within ``timeout``,
+        ``False`` if traces were still outstanding when it expired.
+    """
+    return trace_manager.flush(timeout=timeout)
+
+
+async def a_flush_traces(
+    timeout: float = DEFAULT_TRACE_FLUSH_TIMEOUT,
+) -> bool:
+    """Async counterpart of :func:`flush_traces` that yields instead of blocking.
+
+    Args:
+        timeout: Maximum number of seconds to wait.
+
+    Returns:
+        ``True`` if every pending trace was sent within ``timeout``,
+        ``False`` if traces were still outstanding when it expired.
+    """
+    return await trace_manager.a_flush(timeout=timeout)
+
 
 ########################################################
 ### Observer #############################################

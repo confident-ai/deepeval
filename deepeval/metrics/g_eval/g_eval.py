@@ -2,7 +2,7 @@
 
 import asyncio
 from rich.console import Console
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Tuple, Union, Type
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
     LLMTestCase,
@@ -40,6 +40,10 @@ from deepeval.metrics.g_eval.utils import (
 )
 from deepeval.config.settings import get_settings
 from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.templates import make_template_class
+
+
+GEvalTemplate = make_template_class("GEval")
 
 
 class GEval(BaseMetric):
@@ -51,12 +55,14 @@ class GEval(BaseMetric):
         evaluation_steps: Optional[List[str]] = None,
         rubric: Optional[List[Rubric]] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         top_logprobs: int = 20,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
         _include_g_eval_suffix: bool = True,
+        flaky: bool = False,
+        evaluation_template: Type[GEvalTemplate] = GEvalTemplate,
     ):
         if evaluation_params is not None and len(evaluation_params) == 0:
             raise ValueError("evaluation_params cannot be an empty list.")
@@ -82,14 +88,15 @@ class GEval(BaseMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self._include_g_eval_suffix = _include_g_eval_suffix
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
         _additional_context: Optional[str] = None,
     ) -> float:
 
@@ -149,7 +156,7 @@ class GEval(BaseMetric):
                     if not self.strict_mode
                     else int(g_score)
                 )
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
 
                 self.reason = reason
                 self.verbose_logs = construct_verbose_logs(
@@ -170,7 +177,6 @@ class GEval(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
         _additional_context: Optional[str] = None,
     ) -> float:
 
@@ -211,7 +217,7 @@ class GEval(BaseMetric):
                 if not self.strict_mode
                 else int(g_score)
             )
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
 
             self.reason = reason
             self.verbose_logs = construct_verbose_logs(
@@ -407,16 +413,6 @@ class GEval(BaseMetric):
                 extract_schema=lambda s: (s.score, s.reason),
                 extract_json=lambda d: (d["score"], d["reason"]),
             )
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     def upload(self):
         ensure_required_params(

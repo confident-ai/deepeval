@@ -1,12 +1,13 @@
 {
   "name": "langchain-rag-test",
   "uuid": "436ed716-4d85-4a90-95c3-2c7254f8c760",
-  "baseSpans": [
+  "baseSpans": [],
+  "agentSpans": [
     {
       "uuid": "019ed9d8-d1c0-7183-810e-442429f4b96d",
       "name": "rag_chain",
       "status": "SUCCESS",
-      "type": "base",
+      "type": "agent",
       "traceUuid": "436ed716-4d85-4a90-95c3-2c7254f8c760",
       "startTime": "2026-06-18T08:28:45.888Z",
       "endTime": "2026-06-18T08:28:47.093Z",
@@ -96,10 +97,11 @@
             }
           }
         ]
-      }
+      },
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
-  "agentSpans": [],
   "llmSpans": [
     {
       "uuid": "019ed9d8-d1c3-7107-9720-11eb02914b8b",

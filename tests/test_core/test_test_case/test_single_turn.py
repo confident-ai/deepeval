@@ -681,6 +681,17 @@ class TestSerialization:
         assert model_dict["metadata"] == metadata
         assert "additionalMetadata" not in model_dict
 
+    def test_flaky_propagates_to_api_test_case(self):
+        default_test_case = LLMTestCase(input="test")
+        flaky_test_case = LLMTestCase(input="test", flaky=True)
+
+        assert default_test_case.flaky is False
+        assert create_api_test_case(default_test_case).flaky is False
+
+        api_test_case = create_api_test_case(flaky_test_case)
+        assert api_test_case.flaky is True
+        assert api_test_case.model_dump(by_alias=True)["flaky"] is True
+
 
 class TestLLMTestCaseParams:
     def test_enum_values(self):

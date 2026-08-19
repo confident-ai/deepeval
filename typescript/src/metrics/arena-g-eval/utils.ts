@@ -4,7 +4,7 @@ import {
   LLMTestCase,
   ToolCall,
   resolveRetrievalContext,
-} from "../../test-case";
+} from "@/test-case";
 
 // Fake names for masking contestant identities before judging (avoids name bias).
 const FAKE_NAMES = [
@@ -36,7 +36,10 @@ function formattedLLMTestCase(
   tc: LLMTestCase,
 ): string {
   const data: Record<string, unknown> = {};
-  if (params.includes(SingleTurnParams.ACTUAL_OUTPUT) && tc.actualOutput != null)
+  if (
+    params.includes(SingleTurnParams.ACTUAL_OUTPUT) &&
+    tc.actualOutput != null
+  )
     data.actual_output = tc.actualOutput;
   if (params.includes(SingleTurnParams.CONTEXT) && tc.context != null)
     data.context = tc.context;

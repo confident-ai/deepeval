@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Tuple, Union, Type
 import math
 import textwrap
 
@@ -19,6 +19,7 @@ from deepeval.metrics.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.multimodal_metrics.text_to_image.schema import ReasonScore
 from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.templates import make_template_class
 
 required_params: List[SingleTurnParams] = [
     SingleTurnParams.INPUT,
@@ -26,14 +27,19 @@ required_params: List[SingleTurnParams] = [
 ]
 
 
+TextToImageTemplate = make_template_class("TextToImageMetric")
+
+
 class TextToImageMetric(BaseMetric):
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
+        evaluation_template: Type[TextToImageTemplate] = TextToImageTemplate,
     ):
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -41,6 +47,8 @@ class TextToImageMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -97,7 +105,7 @@ class TextToImageMetric(BaseMetric):
                     else self.score
                 )
                 self.reason = self._generate_reason()
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -158,7 +166,7 @@ class TextToImageMetric(BaseMetric):
                 else self.score
             )
             self.reason = self._generate_reason()
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -277,16 +285,6 @@ class TextToImageMetric(BaseMetric):
         min_SC_score = min(self.SC_scores)
         min_PQ_score = min(self.PQ_scores)
         return math.sqrt(min_SC_score * min_PQ_score) / 10
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     def _generate_reason(self) -> str:
         return textwrap.dedent(

@@ -3,36 +3,57 @@
 import {
   createContext,
   useContext,
+  useMemo,
   useState,
   type ReactNode,
 } from "react";
-import type { Language } from "@/lib/lang/terms";
+import { usePathname } from "next/navigation";
+import {
+  DEFAULT_LANGUAGE,
+  resolveInitialLanguage,
+  type Language,
+} from "@/lib/lang/languages";
+import { getPageLanguages } from "@/lib/lang/page-languages";
 
-/**
- * Single shared source of truth for the active code language.
- *
- * Deliberately does NOT read the URL, pathname, or any route param —
- * routing is a separate decision for later. For now it just holds state
- * defaulting to Python; the `setLanguage` setter exists so a future
- * language dropdown can flip it, but nothing toggles it yet.
- */
 const LanguageContext = createContext<{
   language: Language;
   setLanguage: (lang: Language) => void;
 }>({
-  language: "python",
+  language: DEFAULT_LANGUAGE,
   setLanguage: () => {},
 });
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>("python");
+/**
+ * Holds the reader's language selection for the session.
+ *
+ * Initial value (and SSR HTML) comes from the current page's `languages`
+ * frontmatter: mono-language pages open in their only language so a TS-only
+ * URL never paints a Python 501 for crawlers. Bilingual / undeclared pages
+ * still default to Python. Soft-navigating onto a mono-language page adopts
+ * that language; bilingual pages keep the current preference.
+ */
+export const LanguageProvider = ({ children }: { children: ReactNode }) => {
+  const pathname = usePathname();
+  const pageLangs = getPageLanguages(pathname);
+  const pageDefault = resolveInitialLanguage(pageLangs);
+
+  const [language, setLanguage] = useState<Language>(pageDefault);
+  const [prevPathname, setPrevPathname] = useState(pathname);
+
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    const nextLangs = getPageLanguages(pathname);
+    if (nextLangs?.length === 1) {
+      setLanguage(nextLangs[0]);
+    }
+  }
+
+  const value = useMemo(() => ({ language, setLanguage }), [language]);
   return (
-    <LanguageContext.Provider value={{ language, setLanguage }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );
-}
+};
 
-export function useLanguage() {
-  return useContext(LanguageContext);
-}
+export const useLanguage = () => useContext(LanguageContext);

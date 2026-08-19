@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Type
 
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -21,6 +21,10 @@ from deepeval.metrics.plan_adherence.schema import (
     AgentPlan,
     PlanAdherenceScore,
 )
+from deepeval.templates import make_template_class
+
+
+PlanAdherenceTemplate = make_template_class("PlanAdherenceMetric")
 
 
 class PlanAdherenceMetric(BaseMetric):
@@ -32,12 +36,16 @@ class PlanAdherenceMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
+        evaluation_template: Type[
+            PlanAdherenceTemplate
+        ] = PlanAdherenceTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -46,14 +54,15 @@ class PlanAdherenceMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self.requires_trace = True
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         check_llm_test_case_params(
             test_case,
@@ -78,7 +87,6 @@ class PlanAdherenceMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -98,7 +106,7 @@ class PlanAdherenceMetric(BaseMetric):
                         else plan_adherence_score.score
                     )
                     self.reason = plan_adherence_score.reason
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -116,7 +124,6 @@ class PlanAdherenceMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         check_llm_test_case_params(
             test_case,
@@ -154,7 +161,7 @@ class PlanAdherenceMetric(BaseMetric):
                     else plan_adherence_score.score
                 )
                 self.reason = plan_adherence_score.reason
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
 
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -273,16 +280,6 @@ class PlanAdherenceMetric(BaseMetric):
             extract_schema=lambda s: s.task,
             extract_json=lambda data: data["task"],
         )
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

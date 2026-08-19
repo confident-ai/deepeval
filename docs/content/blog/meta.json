@@ -4,6 +4,7 @@
     "index",
 
     "---[Megaphone]Announcements---",
+    "introducing-deepeval-typescript",
     "typescript-in-deepeval-monorepo",
     "introducing-deepeval-4",
     "deepeval-got-a-new-look",
@@ -18,10 +19,12 @@
     "top-5-geval-use-cases",
 
     "---[Scale]Comparisons---",
+    "top-5-llm-evaluation-frameworks",
     "deepeval-alternatives-compared",
     "deepeval-vs-arize",
     "deepeval-vs-langfuse",
     "deepeval-vs-ragas",
-    "deepeval-vs-trulens"
+    "deepeval-vs-trulens",
+    "best-llm-evaluation-platforms"
   ]
 }

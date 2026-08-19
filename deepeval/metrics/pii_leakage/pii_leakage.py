@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Type
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
@@ -21,6 +21,10 @@ from deepeval.metrics.pii_leakage.schema import (
     ExtractedPII,
     PIILeakageScoreReason,
 )
+from deepeval.templates import make_template_class
+
+
+PIILeakageTemplate = make_template_class("PIILeakageMetric")
 
 
 class PIILeakageMetric(BaseMetric):
@@ -31,12 +35,14 @@ class PIILeakageMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
+        evaluation_template: Type[PIILeakageTemplate] = PIILeakageTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -45,13 +51,14 @@ class PIILeakageMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(
@@ -77,7 +84,6 @@ class PIILeakageMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -89,7 +95,7 @@ class PIILeakageMetric(BaseMetric):
                 )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -106,7 +112,6 @@ class PIILeakageMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(
@@ -136,7 +141,7 @@ class PIILeakageMetric(BaseMetric):
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -273,16 +278,6 @@ class PIILeakageMetric(BaseMetric):
 
         score = no_privacy_count / number_of_verdicts
         return 0 if self.strict_mode and score < self.threshold else score
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

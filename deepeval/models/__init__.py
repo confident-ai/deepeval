@@ -4,7 +4,7 @@ from deepeval.models.base_model import (
     DeepEvalBaseEmbeddingModel,
 )
 from deepeval.models.llms import (
-    GPTModel,
+    OpenAIModel,
     AzureOpenAIModel,
     LocalModel,
     OllamaModel,
@@ -29,7 +29,7 @@ __all__ = [
     "DeepEvalBaseModel",
     "DeepEvalBaseLLM",
     "DeepEvalBaseEmbeddingModel",
-    "GPTModel",
+    "OpenAIModel",
     "AzureOpenAIModel",
     "LocalModel",
     "OllamaModel",
@@ -47,3 +47,12 @@ __all__ = [
     "PortkeyModel",
     "OpenRouterModel",
 ]
+
+
+def __getattr__(name: str):
+    if name == "GPTModel":
+        from deepeval.models.llms.openai_model import warn_gpt_model_deprecated
+
+        warn_gpt_model_deprecated()
+        return OpenAIModel
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

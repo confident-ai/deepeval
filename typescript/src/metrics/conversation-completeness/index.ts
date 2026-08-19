@@ -1,5 +1,6 @@
 export {
   ConversationCompletenessMetric,
   type ConversationCompletenessMetricOptions,
-} from "./conversation-completeness";
-export * from "./schema";
+  type ConversationCompletenessTemplateOverride,
+} from "@/metrics/conversation-completeness/conversation-completeness";
+export * from "@/metrics/conversation-completeness/schema";

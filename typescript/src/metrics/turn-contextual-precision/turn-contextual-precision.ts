@@ -1,40 +1,43 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
-import {
-  ConversationalTestCase,
-  MultiTurnParams,
-  Turn,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { resolveThreshold } from "@/metrics/base-metrics";
+import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
   resolveRetrievalContext,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
   getTurnsInSlidingWindow,
-} from "../conversational-utils";
+} from "@/metrics/conversational-utils";
 import {
   VerdictsSchema,
   ContextualPrecisionScoreReasonSchema,
   type ContextualPrecisionVerdict,
   type InteractionContextualPrecisionScore,
-} from "./schema";
+} from "@/metrics/turn-contextual-precision/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
+import { idRetrievalContext } from "@/metrics/retrieval-context-display";
 
 const TEMPLATE_CLASS = "TurnContextualPrecisionMetric";
 
+export type TurnContextualPrecisionTemplateOverride =
+  MetricTemplateOverride<"TurnContextualPrecisionMetric">;
+
 export interface TurnContextualPrecisionMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
   windowSize?: number;
+  evaluationTemplate?: TurnContextualPrecisionTemplateOverride;
 }
 
 /**
@@ -48,12 +51,16 @@ export class TurnContextualPrecisionMetric extends BaseConversationalMetric {
 
   constructor(options: TurnContextualPrecisionMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       MultiTurnParams.ROLE,
       MultiTurnParams.CONTENT,
@@ -84,7 +91,7 @@ export class TurnContextualPrecisionMetric extends BaseConversationalMetric {
         turnsWindows.map((w) => this.getInteractionScore(w, expectedOutcome)),
       );
       this.score = this.calculateScore();
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
       this.reason = await this.generateFinalReason();
 
       this.verboseLogs = constructVerboseLogs(this, [
@@ -107,7 +114,9 @@ export class TurnContextualPrecisionMetric extends BaseConversationalMetric {
     for (const turn of window) {
       if (turn.role === "user") userContent += `\n${turn.content} `;
       else if (turn.retrievalContext != null)
-        retrievalContext.push(...resolveRetrievalContext(turn.retrievalContext));
+        retrievalContext.push(
+          ...resolveRetrievalContext(turn.retrievalContext),
+        );
     }
 
     const verdicts = await this.generateVerdicts(
@@ -124,9 +133,13 @@ export class TurnContextualPrecisionMetric extends BaseConversationalMetric {
       };
     }
     const score = this.calculateInteractionScore(verdicts);
-    const reason = await this.getInteractionReason(userContent, score, verdicts);
+    const reason = await this.getInteractionReason(
+      userContent,
+      score,
+      verdicts,
+    );
     return {
-      score: this.strictMode && score < this.threshold ? 0 : score,
+      score: this.applyStrictMode(score),
       reason,
       verdicts,
     };
@@ -139,12 +152,16 @@ export class TurnContextualPrecisionMetric extends BaseConversationalMetric {
   ): Promise<ContextualPrecisionVerdict[]> {
     if (retrievalContext.length === 0) return [];
     const n = retrievalContext.length;
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+    const prompt = this.getPrompt("generate_verdicts", {
       input,
       expected_outcome: expectedOutcome,
       document_count_str: ` (${n} document${n > 1 ? "s" : ""})`,
-      context_to_display: retrievalContext,
-      multimodal_note: "",
+      context_to_display: this.multimodal
+        ? idRetrievalContext(retrievalContext)
+        : retrievalContext,
+      multimodal_note: this.multimodal
+        ? " (which can be text or an image)"
+        : "",
     });
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
@@ -156,9 +173,12 @@ export class TurnContextualPrecisionMetric extends BaseConversationalMetric {
     verdicts: ContextualPrecisionVerdict[],
   ): Promise<string | undefined> {
     if (!this.includeReason) return undefined;
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       input,
-      verdicts: verdicts.map((v) => ({ verdict: v.verdict, reason: v.reason })),
+      verdicts: verdicts.map((v) => ({
+        verdict: v.verdict,
+        reason: v.reason,
+      })),
       score: score.toFixed(2),
     });
     const { reason } = await generateWithSchema(
@@ -197,7 +217,7 @@ export class TurnContextualPrecisionMetric extends BaseConversationalMetric {
     if (this.scores.length === 0) {
       return "There were no interactions with retrieval context to evaluate, hence the score is 1";
     }
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_final_reason", {
+    const prompt = this.getPrompt("generate_final_reason", {
       final_score: this.score,
       success: this.success,
       reasons: this.scores.map((s) => s.reason),
@@ -208,12 +228,6 @@ export class TurnContextualPrecisionMetric extends BaseConversationalMetric {
       ContextualPrecisionScoreReasonSchema,
     );
     return reason;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

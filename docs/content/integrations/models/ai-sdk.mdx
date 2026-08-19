@@ -1,0 +1,94 @@
+---
+# id: ai-sdk
+title: Vercel AI SDK
+sidebar_label: Vercel AI SDK
+languages: [typescript]
+---
+
+`deepeval` supports using any [Vercel AI SDK](https://ai-sdk.dev/) `LanguageModel` to power its evaluation metrics. This lets you evaluate with the exact same model instance your application already generates with, including providers that have no dedicated `deepeval` class of their own.
+
+:::tip[Tracing your AI SDK app]
+This page covers **judge models** (`AISDKModel`). To trace and evaluate `generateText`, tools, streaming, and embeddings, see the [Vercel AI SDK framework integration](/integrations/frameworks/ai-sdk).
+:::
+
+### Setting Up Your Environment
+
+Install the AI SDK core package alongside the provider you want to evaluate with:
+
+```bash
+npm install ai @ai-sdk/openai
+```
+
+Each AI SDK provider reads its own API key from the environment, following that provider's convention:
+
+```bash
+# .env.local
+OPENAI_API_KEY=<your-openai-api-key>
+```
+
+### In Code
+
+Wrap any AI SDK `LanguageModel` in an `AISDKModel` and pass it to a metric.
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { AISDKModel } from "deepeval/models";
+import { openai } from "@ai-sdk/openai";
+
+const model = new AISDKModel({
+  model: openai("gpt-4o"),
+  temperature: 0,
+});
+const answerRelevancy = new AnswerRelevancyMetric({ model });
+```
+
+There are **ONE** mandatory and **FOUR** optional parameters when creating an `AISDKModel`:
+
+- [Mandatory] `model`: A Vercel AI SDK `LanguageModel` instance, such as `openai("gpt-4o")` from `@ai-sdk/openai`.
+- [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
+- [Optional] `maxOutputTokens`: A number specifying the maximum number of tokens to generate.
+- [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+- [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+
+Any other key you pass is forwarded as-is to the underlying `generateText(...)` and `generateObject(...)` calls, so parameters the AI SDK accepts but `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new AISDKModel({
+  model: openai("gpt-4o"),
+  topP: 0.9,
+  seed: 42,
+  presencePenalty: 0.5,
+});
+```
+
+### Pricing
+
+Models reached through the AI SDK are priced from `deepeval`'s model cost registry, so `gpt-4o` costs the same whether you reach it through `AISDKModel` or `OpenAIModel`. Providers the registry does not cover report a `null` cost until you supply `costPerInputToken` and `costPerOutputToken` yourself:
+
+```typescript
+import { mistral } from "@ai-sdk/mistral";
+import { AISDKModel } from "deepeval/models";
+
+const model = new AISDKModel({
+  model: mistral("mistral-large-latest"),
+  costPerInputToken: 2 / 1e6,
+  costPerOutputToken: 6 / 1e6,
+});
+```
+
+### Supported Providers
+
+Any AI SDK provider works. Pricing is resolved automatically for these:
+
+- `@ai-sdk/openai`
+- `@ai-sdk/azure`
+- `@ai-sdk/anthropic`
+- `@ai-sdk/google` and `@ai-sdk/google-vertex`
+- `@ai-sdk/xai`
+- `@ai-sdk/deepseek`
+- `@ai-sdk/amazon-bedrock`
+- `ollama-ai-provider`
+
+:::note
+Every other AI SDK provider — Mistral, Cohere, Groq, Together and the rest — evaluates normally; only the automatic pricing is unavailable.
+:::

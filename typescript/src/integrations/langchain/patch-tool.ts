@@ -1,7 +1,7 @@
 // import { tool as originalTool } from "@langchain/core/tools";
 
-// import { getCurrentSpan } from "../../tracing/tracing";
-// import { BaseMetric } from "../../metrics/base-metrics";
+// import { getCurrentSpan } from "@/tracing/tracing";
+// import { BaseMetric } from "@/metrics/base-metrics";
 
 // type AnyFunc = (...args: any[]) => any;
 

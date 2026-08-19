@@ -1,7 +1,12 @@
-name: Lint Lint Lint
+name: Py Lint Lint Lint
 
 on:
   pull_request:
+    paths-ignore:
+      - 'typescript/**'
+  push:
+    branches:
+      - main
     paths-ignore:
       - 'typescript/**'
 
@@ -18,3 +23,5 @@ jobs:
           options: "--check --verbose"
           src: "."
           jupyter: true
+          # Exact pin: match the Black used locally (`black --version`)
+          version: "25.12.0"

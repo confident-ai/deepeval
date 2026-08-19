@@ -51,6 +51,19 @@ def _natural_sort_key(s: str):
     ]
 
 
+def _format_pass_rate(agg: dict) -> str:
+    """Format pass rate with pass/fail counts, each with its flaky sub-count."""
+    verdicts = agg["passes"] + agg["fails"]
+    rate = f"{(agg['passes'] / verdicts) * 100:.2f}%" if verdicts > 0 else "N/A"
+    passed = f"passed={agg['passes']}"
+    if agg["flaky_passes"] > 0:
+        passed += f" (flaky={agg['flaky_passes']})"
+    failed = f"failed={agg['fails']}"
+    if agg["flaky_fails"] > 0:
+        failed += f" (flaky={agg['flaky_fails']})"
+    return f"{rate} | {passed} | {failed}"
+
+
 class EvaluationConsoleReport:
     def __init__(self, test_results: List[TestResult]):
         self.test_results = sorted(
@@ -139,13 +152,15 @@ class EvaluationConsoleReport:
             metrics_table.add_column("Reason")
 
             for m in case.metrics_data:
-                m_icon = (
-                    "[bold green]PASS[/bold green]"
-                    if m.success
-                    else "[bold red]FAIL[/bold red]"
-                )
                 if m.error:
                     m_icon = "[bold red]ERROR[/bold red]"
+                elif m.success is None:
+                    # No threshold: the metric has no pass/fail verdict
+                    m_icon = "[bold dim]NONE[/bold dim]"
+                elif m.success:
+                    m_icon = "[bold green]PASS[/bold green]"
+                else:
+                    m_icon = "[bold red]FAIL[/bold red]"
 
                 score_str = f"{m.score:.2f}" if m.score is not None else "N/A"
                 thresh_str = (
@@ -199,14 +214,27 @@ class EvaluationConsoleReport:
                     metric_aggregates[m.name] = {
                         "total": 0,
                         "passes": 0,
+                        "fails": 0,
+                        "flaky_passes": 0,
+                        "flaky_fails": 0,
                         "score_sum": 0,
                         "score_count": 0,
                     }
 
                 agg = metric_aggregates[m.name]
                 agg["total"] += 1
-                if m.success:
-                    agg["passes"] += 1
+                # Metrics without a verdict (success=None, e.g. no threshold)
+                # don't count towards the pass rate. Flaky metrics count
+                # towards their verdict, tracked in a flaky sub-count.
+                if m.success is not None:
+                    if m.success:
+                        agg["passes"] += 1
+                        if m.flaky:
+                            agg["flaky_passes"] += 1
+                    else:
+                        agg["fails"] += 1
+                        if m.flaky:
+                            agg["flaky_fails"] += 1
                 if m.score is not None:
                     agg["score_sum"] += m.score
                     agg["score_count"] += 1
@@ -231,11 +259,7 @@ class EvaluationConsoleReport:
                     if agg["score_count"] > 0
                     else "N/A"
                 )
-                pass_rate = (
-                    f"{(agg['passes'] / agg['total']) * 100:.2f}%"
-                    if agg["total"] > 0
-                    else "N/A"
-                )
+                pass_rate = _format_pass_rate(agg)
                 agg_table.add_row(
                     metric_name, avg_score, pass_rate, str(agg["total"])
                 )
@@ -332,9 +356,14 @@ class EvaluationConsoleReport:
             md.append("|:---:|:---|:---:|:---:|:---|")
 
             for m in case.metrics_data:
-                m_icon = (
-                    "✅" if m.success else ("❌" if not m.error else "⚠️ ERROR")
-                )
+                if m.error:
+                    m_icon = "⚠️ ERROR"
+                elif m.success is None:
+                    m_icon = "➖ NONE"
+                elif m.success:
+                    m_icon = "✅"
+                else:
+                    m_icon = "❌"
                 score_str = f"{m.score:.2f}" if m.score is not None else "N/A"
                 thresh_str = (
                     f"{m.threshold:.2f}" if m.threshold is not None else "N/A"
@@ -356,14 +385,27 @@ class EvaluationConsoleReport:
                     metric_aggregates[m.name] = {
                         "total": 0,
                         "passes": 0,
+                        "fails": 0,
+                        "flaky_passes": 0,
+                        "flaky_fails": 0,
                         "score_sum": 0,
                         "score_count": 0,
                     }
 
                 agg = metric_aggregates[m.name]
                 agg["total"] += 1
-                if m.success:
-                    agg["passes"] += 1
+                # Metrics without a verdict (success=None, e.g. no threshold)
+                # don't count towards the pass rate. Flaky metrics count
+                # towards their verdict, tracked in a flaky sub-count.
+                if m.success is not None:
+                    if m.success:
+                        agg["passes"] += 1
+                        if m.flaky:
+                            agg["flaky_passes"] += 1
+                    else:
+                        agg["fails"] += 1
+                        if m.flaky:
+                            agg["flaky_fails"] += 1
                 if m.score is not None:
                     agg["score_sum"] += m.score
                     agg["score_count"] += 1
@@ -379,11 +421,7 @@ class EvaluationConsoleReport:
                     if agg["score_count"] > 0
                     else "N/A"
                 )
-                pass_rate = (
-                    f"{(agg['passes'] / agg['total']) * 100:.2f}%"
-                    if agg["total"] > 0
-                    else "N/A"
-                )
+                pass_rate = _format_pass_rate(agg)
                 md.append(
                     f"| **{metric_name}** | {avg_score} | {pass_rate} | {agg['total']} |"
                 )

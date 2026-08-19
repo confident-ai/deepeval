@@ -1,24 +1,29 @@
-import { BaseArenaMetric } from "../base-arena-metric";
-import { ArenaTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseArenaMetric } from "@/metrics/base-arena-metric";
+import { ArenaTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
   checkArenaTestCaseParams,
-} from "../utils";
-import { StepsSchema } from "../g-eval/schema";
+} from "@/metrics/utils";
+import { StepsSchema } from "@/metrics/g-eval/schema";
 import {
   constructGEvalParamsString,
   numberEvaluationSteps,
   validateCriteriaAndEvaluationSteps,
-} from "../g-eval/utils";
-import { formatArenaTestCase } from "./utils";
-import { WinnerSchema, RewrittenReasonSchema } from "./schema";
+} from "@/metrics/g-eval/utils";
+import { formatArenaTestCase } from "@/metrics/arena-g-eval/utils";
+import {
+  WinnerSchema,
+  RewrittenReasonSchema,
+} from "@/metrics/arena-g-eval/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "ArenaGEval";
+
+export type ArenaGEvalTemplateOverride = MetricTemplateOverride<"ArenaGEval">;
 
 export interface ArenaGEvalMetricOptions {
   name: string;
@@ -30,6 +35,7 @@ export interface ArenaGEvalMetricOptions {
   verboseMode?: boolean;
   showIndicator?: boolean;
   includeGEvalSuffix?: boolean;
+  evaluationTemplate?: ArenaGEvalTemplateOverride;
 }
 
 /**
@@ -53,7 +59,9 @@ export class ArenaGEval extends BaseArenaMetric {
     super(0, {
       verboseMode: options.verboseMode,
       showIndicator: options.showIndicator,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.templateClass = TEMPLATE_CLASS;
     this.metricName = options.name;
     this.evaluationParams = options.evaluationParams;
     this.criteria = options.criteria;
@@ -111,16 +119,11 @@ export class ArenaGEval extends BaseArenaMetric {
     multimodal: boolean,
   ): Promise<string[]> {
     if (this.evaluationSteps) return this.evaluationSteps;
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_evaluation_steps",
-      {
-        criteria: this.criteria,
-        parameters: constructGEvalParamsString(this.evaluationParams),
-        multimodal,
-      },
-    );
+    const prompt = this.getPrompt("generate_evaluation_steps", {
+      criteria: this.criteria,
+      parameters: constructGEvalParamsString(this.evaluationParams),
+      multimodal,
+    });
     const { steps } = await generateWithSchema(this, prompt, StepsSchema);
     return steps;
   }
@@ -133,17 +136,12 @@ export class ArenaGEval extends BaseArenaMetric {
       this.evaluationParams,
       testCase,
     );
-    const prompt = resolveTemplate(
-      "metrics",
-      TEMPLATE_CLASS,
-      "generate_arena_winner",
-      {
-        evaluation_steps: numberEvaluationSteps(this.evaluationSteps ?? []),
-        test_case_contents: formatted,
-        parameters: constructGEvalParamsString(this.evaluationParams),
-        multimodal,
-      },
-    );
+    const prompt = this.getPrompt("generate_arena_winner", {
+      evaluation_steps: numberEvaluationSteps(this.evaluationSteps ?? []),
+      test_case_contents: formatted,
+      parameters: constructGEvalParamsString(this.evaluationParams),
+      multimodal,
+    });
     const { winner, reason } = await generateWithSchema(
       this,
       prompt,
@@ -156,7 +154,7 @@ export class ArenaGEval extends BaseArenaMetric {
     reason: string,
     dummyToReal: Record<string, string>,
   ): Promise<string> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "rewrite_reason", {
+    const prompt = this.getPrompt("rewrite_reason", {
       reason,
       // Pass as JSON text: Nunjucks renders a bare object as "[object Object]"
       // (the resolver only gives arrays a Python-repr toString). The template

@@ -1,0 +1,211 @@
+<Switch>
+
+<Case id="python">
+
+<Tabs items={["Python", "OpenAI", "LangChain", "LlamaIndex", "OpenAI Agents", "Pydantic"]}>
+<Tab value="Python">
+
+```python title="main.py" showLineNumbers={true}
+from typing import List
+from deepeval.test_case import Turn
+
+async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
+    response = await your_chatbot(input, turns, thread_id)
+    return Turn(role="assistant", content=response)
+```
+
+</Tab>
+<Tab value="OpenAI">
+
+```python title="main.py" showLineNumbers={true} {6}
+from typing import List
+from deepeval.test_case import Turn
+from openai import OpenAI
+
+client = OpenAI()
+
+async def model_callback(input: str, turns: List[Turn]) -> Turn:
+    messages = [
+        {"role": "system", "content": "You are a ticket purchasing assistant"},
+        *[{"role": t.role, "content": t.content} for t in turns],
+        {"role": "user", "content": input},
+    ]
+    response = await client.chat.completions.create(model="gpt-4.1", messages=messages)
+    return Turn(role="assistant", content=response.choices[0].message.content)
+```
+
+</Tab>
+<Tab value="LangChain">
+
+```python title="main.py" showLineNumbers={true} {10,13}
+from langchain.agents import create_agent
+from langgraph.checkpoint.memory import InMemorySaver
+from deepeval.test_case import Turn
+
+agent = create_agent(
+    model="openai:gpt-4o-mini",
+    system_prompt="You are a ticket purchasing assistant.",
+    checkpointer=InMemorySaver(),
+)
+
+async def model_callback(input: str, thread_id: str) -> Turn:
+    result = agent.invoke(
+        {"messages": [{"role": "user", "content": input}]},
+        config={"configurable": {"thread_id": thread_id}},
+    )
+    return Turn(role="assistant", content=result["messages"][-1].content)
+```
+
+</Tab>
+<Tab value="LlamaIndex">
+
+```python title="main.py" showLineNumbers={true} {9}
+from llama_index.core.storage.chat_store import SimpleChatStore
+from llama_index.llms.openai import OpenAI
+from llama_index.core.chat_engine import SimpleChatEngine
+from llama_index.core.memory import ChatMemoryBuffer
+from deepeval.test_case import Turn
+
+chat_store = SimpleChatStore()
+llm = OpenAI(model="gpt-4")
+
+async def model_callback(input: str, thread_id: str) -> Turn:
+    memory = ChatMemoryBuffer.from_defaults(chat_store=chat_store, chat_store_key=thread_id)
+    chat_engine = SimpleChatEngine.from_defaults(llm=llm, memory=memory)
+    response = chat_engine.chat(input)
+    return Turn(role="assistant", content=response.response)
+```
+
+</Tab>
+<Tab value="OpenAI Agents">
+
+```python title="main.py" showLineNumbers={true} {6}
+from agents import Agent, Runner, SQLiteSession
+from deepeval.test_case import Turn
+
+sessions = {}
+agent = Agent(name="Test Assistant", instructions="You are a helpful assistant that answers questions concisely.")
+
+async def model_callback(input: str, thread_id: str) -> Turn:
+    if thread_id not in sessions:
+        sessions[thread_id] = SQLiteSession(thread_id)
+    session = sessions[thread_id]
+    result = await Runner.run(agent, input, session=session)
+    return Turn(role="assistant", content=result.final_output)
+```
+
+</Tab>
+<Tab value="Pydantic">
+
+```python title="main.py" showLineNumbers={true} {9}
+from typing import List
+from datetime import datetime
+from pydantic_ai import Agent
+from pydantic_ai.messages import ModelRequest, ModelResponse, UserPromptPart, TextPart
+from deepeval.test_case import Turn
+
+agent = Agent('openai:gpt-4', system_prompt="You are a helpful assistant that answers questions concisely.")
+
+async def model_callback(input: str, turns: List[Turn]) -> Turn:
+    message_history = []
+    for turn in turns:
+        if turn.role == "user":
+            message_history.append(ModelRequest(parts=[UserPromptPart(content=turn.content, timestamp=datetime.now())], kind='request'))
+        elif turn.role == "assistant":
+            message_history.append(ModelResponse(parts=[TextPart(content=turn.content)], model_name='gpt-4', timestamp=datetime.now(), kind='response'))
+    result = await agent.run(input, message_history=message_history)
+    return Turn(role="assistant", content=result.output)
+```
+
+</Tab>
+</Tabs>
+
+</Case>
+
+<Case id="typescript">
+
+<Tabs items={["TypeScript", "OpenAI", "LangChain"]}>
+<Tab value="TypeScript">
+
+```typescript title="main.ts" showLineNumbers={true}
+import { Turn } from "deepeval/test-case";
+
+export const modelCallback = async ({
+  input,
+  turns,
+  threadId,
+}: {
+  input: string;
+  turns: Turn[];
+  threadId: string;
+}): Promise<Turn> => {
+  const response = await yourChatbot(input, turns, threadId);
+  return new Turn({ role: "assistant", content: response });
+};
+```
+
+</Tab>
+<Tab value="OpenAI">
+
+```typescript title="main.ts" showLineNumbers={true} {16}
+import OpenAI from "openai";
+import { Turn } from "deepeval/test-case";
+
+const client = new OpenAI();
+
+export const modelCallback = async ({
+  input,
+  turns,
+}: {
+  input: string;
+  turns: Turn[];
+}): Promise<Turn> => {
+  const messages = [
+    { role: "system" as const, content: "You are a ticket purchasing assistant" },
+    ...turns.map((t) => ({ role: t.role as "user" | "assistant", content: t.content })),
+    { role: "user" as const, content: input },
+  ];
+  const response = await client.chat.completions.create({ model: "gpt-4.1", messages });
+  return new Turn({
+    role: "assistant",
+    content: response.choices[0].message.content ?? "",
+  });
+};
+```
+
+</Tab>
+<Tab value="LangChain">
+
+```typescript title="main.ts" showLineNumbers={true} {18-21}
+import { createAgent } from "langchain";
+import { MemorySaver } from "@langchain/langgraph";
+import { Turn } from "deepeval/test-case";
+
+const agent = createAgent({
+  model: "openai:gpt-4o-mini",
+  systemPrompt: "You are a ticket purchasing assistant.",
+  checkpointer: new MemorySaver(),
+});
+
+export const modelCallback = async ({
+  input,
+  threadId,
+}: {
+  input: string;
+  threadId: string;
+}): Promise<Turn> => {
+  const result = await agent.invoke(
+    { messages: [{ role: "user", content: input }] },
+    { configurable: { thread_id: threadId } },
+  );
+  const last = result.messages[result.messages.length - 1];
+  return new Turn({ role: "assistant", content: String(last.content) });
+};
+```
+
+</Tab>
+</Tabs>
+
+</Case>
+
+</Switch>

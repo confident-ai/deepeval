@@ -1,15 +1,14 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
-import { TruthsSchema, ClaimsSchema } from "../faithfulness/schema";
+} from "@/metrics/utils";
+import { TruthsSchema, ClaimsSchema } from "@/metrics/faithfulness/schema";
 import {
   VerdictsSchema,
   QuestionsSchema,
@@ -17,14 +16,19 @@ import {
   SummarizationScoreReasonSchema,
   type SummarizationAlignmentVerdict,
   type SummarizationCoverageVerdict,
-} from "./schema";
+} from "@/metrics/summarization/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "SummarizationMetric";
+
+export type SummarizationTemplateOverride =
+  MetricTemplateOverride<"SummarizationMetric">;
 
 // Borrowed from faithfulness (Python imports `_faithfulness_truths_limit_phrase`).
 function truthsLimitPhrase(limit?: number): string {
   if (limit == null) return " FACTUAL, undisputed truths";
-  if (limit === 1) return " the single most important FACTUAL, undisputed truth";
+  if (limit === 1)
+    return " the single most important FACTUAL, undisputed truth";
   return ` the ${limit} most important FACTUAL, undisputed truths per document`;
 }
 
@@ -40,7 +44,8 @@ function pyListRepr(items: string[]): string {
 }
 
 export interface SummarizationMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   /** Number of assessment questions to generate (when none are supplied). */
   n?: number;
   model?: DeepEvalBaseLLM | string;
@@ -51,6 +56,7 @@ export interface SummarizationMetricOptions {
   verboseMode?: boolean;
   showIndicator?: boolean;
   truthsExtractionLimit?: number;
+  evaluationTemplate?: SummarizationTemplateOverride;
 }
 
 /**
@@ -70,12 +76,15 @@ export class SummarizationMetric extends BaseMetric {
 
   constructor(options: SummarizationMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
@@ -119,7 +128,7 @@ export class SummarizationMetric extends BaseMetric {
       };
       this.score = Math.min(alignmentScore, coverageScore);
       this.reason = await this.generateReason();
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Truths (limit=${this.truthsExtractionLimit}):\n${prettifyList(this.truths)}`,
@@ -138,20 +147,28 @@ export class SummarizationMetric extends BaseMetric {
   // --- truths/claims (borrow Faithfulness templates) ---
 
   private async generateTruths(text: string): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", "FaithfulnessMetric", "generate_truths", {
-      retrieval_context: text,
-      limit: truthsLimitPhrase(this.truthsExtractionLimit),
-      multimodal_instruction: "",
-    });
+    const prompt = this.getPrompt(
+      "generate_truths",
+      {
+        retrieval_context: text,
+        limit: truthsLimitPhrase(this.truthsExtractionLimit),
+        multimodal_instruction: "",
+      },
+      { templateClass: "FaithfulnessMetric" },
+    );
     const { truths } = await generateWithSchema(this, prompt, TruthsSchema);
     return truths;
   }
 
   private async generateClaims(text: string): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", "FaithfulnessMetric", "generate_claims", {
-      actual_output: text,
-      multimodal_instruction: "",
-    });
+    const prompt = this.getPrompt(
+      "generate_claims",
+      {
+        actual_output: text,
+        multimodal_instruction: "",
+      },
+      { templateClass: "FaithfulnessMetric" },
+    );
     const { claims } = await generateWithSchema(this, prompt, ClaimsSchema);
     return claims;
   }
@@ -162,14 +179,10 @@ export class SummarizationMetric extends BaseMetric {
     SummarizationAlignmentVerdict[]
   > {
     if (this.claims.length === 0) return [];
-    const prompt = resolveTemplate("metrics", 
-      TEMPLATE_CLASS,
-      "generate_alignment_verdicts",
-      {
-        summary_claims: this.claims,
-        original_text: this.truths.join("\n\n"),
-      },
-    );
+    const prompt = this.getPrompt("generate_alignment_verdicts", {
+      summary_claims: this.claims,
+      original_text: this.truths.join("\n\n"),
+    });
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
     return verdicts;
   }
@@ -203,7 +216,7 @@ export class SummarizationMetric extends BaseMetric {
   }
 
   private async generateAssessmentQuestions(text: string): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_questions", {
+    const prompt = this.getPrompt("generate_questions", {
       text,
       n: this.n,
     });
@@ -216,7 +229,7 @@ export class SummarizationMetric extends BaseMetric {
   }
 
   private async generateAnswers(text: string): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_answers", {
+    const prompt = this.getPrompt("generate_answers", {
       questions: this.assessmentQuestions,
       text,
     });
@@ -245,7 +258,7 @@ export class SummarizationMetric extends BaseMetric {
       }
     }
 
-    let prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    let prompt = this.getPrompt("generate_reason", {
       contradictions,
       redundancies,
       questions,
@@ -273,7 +286,7 @@ export class SummarizationMetric extends BaseMetric {
       (v) => v.verdict.trim().toLowerCase() === "yes",
     ).length;
     const score = faithful / total;
-    return this.strictMode && score < this.threshold ? 0 : score;
+    return this.applyStrictMode(score);
   }
 
   private calculateCoverageScore(): number {
@@ -288,13 +301,7 @@ export class SummarizationMetric extends BaseMetric {
     }
     if (total === 0) return 0;
     const score = coverage / total;
-    return this.strictMode && score < this.threshold ? 0 : score;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
+    return this.applyStrictMode(score);
   }
 
   get name(): string {

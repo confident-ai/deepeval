@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Type
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
@@ -21,6 +21,10 @@ from deepeval.metrics.role_violation.schema import (
     RoleViolations,
     RoleViolationScoreReason,
 )
+from deepeval.templates import make_template_class
+
+
+RoleViolationTemplate = make_template_class("RoleViolationMetric")
 
 
 class RoleViolationMetric(BaseMetric):
@@ -31,13 +35,17 @@ class RoleViolationMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         role: str = None,  # Required parameter to specify the expected role
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
+        evaluation_template: Type[
+            RoleViolationTemplate
+        ] = RoleViolationTemplate,
     ):
         if role is None:
             raise ValueError(
@@ -52,13 +60,14 @@ class RoleViolationMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(
@@ -84,7 +93,6 @@ class RoleViolationMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -96,7 +104,7 @@ class RoleViolationMetric(BaseMetric):
                 )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -114,7 +122,6 @@ class RoleViolationMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(
@@ -146,7 +153,7 @@ class RoleViolationMetric(BaseMetric):
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -286,16 +293,6 @@ class RoleViolationMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 return 0.0  # Role violation detected - no adherence
         return 1.0  # No role violation - full adherence
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):
