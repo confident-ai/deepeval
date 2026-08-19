@@ -5,6 +5,7 @@
     "ai-sdk",
     "openai",
     "anthropic",
+    "openrouter",
     "agentcore",
     "strands",
     "google-adk",

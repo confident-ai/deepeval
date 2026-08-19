@@ -1,0 +1,363 @@
+---
+id: openrouter
+title: OpenRouter
+sidebar_label: OpenRouter
+languages: [python, typescript]
+---
+
+<IntegrationTagsDisplayer native={true} cicdEvals={true} traceability={true} />
+
+[OpenRouter](https://openrouter.ai/) is a gateway that puts 400+ models from every major provider behind one API. You can reach it two ways, and `deepeval` traces both.
+
+<AgentTraceTerminal
+  title="openrouter_app · deepeval"
+  ariaLabel="Example OpenRouter trace with per-step metric scores"
+  lines={[
+    { kind: "cmd", name: "deepeval test run test_openrouter_app.py" },
+    { kind: "blank" },
+    { kind: "root", prefix: "●", name: "test_openrouter_app" },
+    { kind: "blank", prefix: "│" },
+    {
+      kind: "llm",
+      prefix: "└─",
+      name: "anthropic/claude-sonnet-4.5 · respond",
+      metric: "Answer Relevancy",
+      score: "0.94",
+      duration: "320ms",
+      pass: true,
+    },
+    {
+      kind: "llm",
+      prefix: "  ",
+      name: "",
+      metric: "Faithfulness",
+      score: "0.42",
+      duration: "",
+      pass: false,
+    },
+    { kind: "blank" },
+    {
+      kind: "summary",
+      name: "Trace score  0.68   ·   1/2 metrics passed",
+      pass: false,
+    },
+  ]}
+/>
+
+`deepeval`'s OpenRouter integration enables you to:
+
+- **Trace either client** — the official `openrouter` SDK, or the OpenAI SDK pointed at OpenRouter's base URL.
+- **See the real provider** — spans are labelled `OpenRouter` rather than the SDK you happened to use.
+- **Capture what only OpenRouter knows** — generation id, credit cost, cached and reasoning token counts, and which upstream provider actually served the request.
+- **Evaluate LLM calls** with any `deepeval` metric through `LlmSpanContext`.
+
+## Choosing an entry point
+
+| You call OpenRouter via | Import this | Span `integration` | Span `provider` |
+| ----------------------- | ----------- | ------------------ | --------------- |
+| The official `openrouter` SDK | `from deepeval.openrouter import OpenRouter` | `OpenRouter` | `OpenRouter` |
+| The OpenAI SDK + OpenRouter base URL | `from deepeval.openai import OpenAI` | `OpenAI` | `OpenRouter` |
+
+The two fields answer different questions: `integration` is the SDK `deepeval` instrumented, `provider` is who served the request. Pointing the OpenAI SDK at a gateway makes them differ, which is why the second row reads the way it does.
+
+## Getting Started
+
+<Steps>
+
+<Step>
+
+### Installation
+
+```bash
+pip install -U deepeval openrouter
+```
+
+The official SDK requires Python 3.10+. If you are on 3.9, or already call OpenRouter through the OpenAI SDK, use the OpenAI SDK route below instead — no extra install needed.
+
+</Step>
+
+<Step>
+
+### Instrument and evaluate
+
+`deepeval.openrouter.OpenRouter` is the SDK's own client class, re-exported — importing it from `deepeval` is what patches the resource classes in place. Your client construction and call sites are unchanged.
+
+```python title="openrouter_app.py" showLineNumbers
+from deepeval.openrouter import OpenRouter
+from deepeval.tracing import trace, LlmSpanContext
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import AnswerRelevancyMetric
+
+client = OpenRouter()  # reads OPENROUTER_API_KEY
+
+# Goldens are the inputs you want to evaluate.
+dataset = EvaluationDataset(goldens=[Golden(input="What's the capital of France?")])
+
+for golden in dataset.evals_iterator():
+    with trace(llm_span_context=LlmSpanContext(metrics=[AnswerRelevancyMetric()])):
+        client.chat.send(
+            model="anthropic/claude-sonnet-4.5",
+            messages=[{"role": "user", "content": golden.input}],
+        )
+```
+
+Done ✅. You've run your first eval against an OpenRouter call with full traceability via `deepeval`.
+
+</Step>
+
+</Steps>
+
+## Using the OpenAI SDK instead
+
+OpenRouter is OpenAI-compatible, so many codebases reach it by changing one base URL. `deepeval.openai` recognizes OpenRouter's host and labels the span accordingly — you do not need `deepeval.openrouter` for this path.
+
+```python title="openrouter_via_openai.py" showLineNumbers
+from deepeval.openai import OpenAI
+from deepeval.tracing import trace, LlmSpanContext
+from deepeval.metrics import AnswerRelevancyMetric
+
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key="<your-openrouter-key>",
+)
+
+with trace(llm_span_context=LlmSpanContext(metrics=[AnswerRelevancyMetric()])):
+    client.chat.completions.create(
+        model="anthropic/claude-sonnet-4.5",
+        messages=[{"role": "user", "content": "What's the capital of France?"}],
+    )
+```
+
+The resulting span records `provider="OpenRouter"` and `integration="OpenAI"`.
+
+## What gets traced
+
+Each patched call produces one **LLM span** under the active trace. Tool calls the model returns are captured in the span's `tools_called` field and mirrored as child tool spans — no extra wiring needed.
+
+- **LLM spans** — one per `chat.send(...)` / `chat.completions.create(...)` call. Captures input messages, output text, token counts, and `tools_called`.
+- **Trace** — auto-created when the call has no parent. If the call runs inside `with trace(...)` or `@observe`, the LLM span nests under that trace instead.
+
+```text
+Trace                                    ← auto-created or user-owned
+└── LLM: anthropic/claude-sonnet-4.5     ← one chat.send(...) call
+    └── Tool: get_weather                ← a tool the model called
+```
+
+### OpenRouter-specific metadata
+
+Because OpenRouter is a router, its responses carry detail a direct provider call does not. `deepeval` collects that into the span's `metadata` dict under an `openrouter` key, so it never collides with metadata you set yourself:
+
+```python
+span.metadata["openrouter"] == {
+    "generation_id": "gen-...",        # queryable via /api/v1/generation
+    "upstream_provider": "Anthropic",  # who actually served it (OpenAI SDK route)
+    "cost": 0.000123,                  # in credits
+    "cost_details": {...},
+    "is_byok": False,
+    "cached_tokens": 4,
+    "cache_write_tokens": 9,
+    "reasoning_tokens": 2,
+    "routing": {                       # native SDK route only
+        "strategy": "price",
+        "summary": "routed to Anthropic",
+        "attempt": 1,
+        "region": "us-east",
+    },
+}
+```
+
+Fields absent from a given response are simply omitted.
+
+## Running evals
+
+### In CI/CD (pytest)
+
+Each parametrized test invocation becomes one OpenRouter call; failing metrics fail the test, which fails the build.
+
+```python title="test_openrouter_app.py" showLineNumbers
+import pytest
+from deepeval.openrouter import OpenRouter
+from deepeval import assert_test
+from deepeval.tracing import trace, LlmSpanContext
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import AnswerRelevancyMetric
+
+client = OpenRouter()
+dataset = EvaluationDataset(goldens=[
+    Golden(input="What's the capital of France?"),
+    Golden(input="Who wrote Hamlet?"),
+])
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_openrouter_app(golden: Golden):
+    with trace(llm_span_context=LlmSpanContext(metrics=[AnswerRelevancyMetric()])):
+        client.chat.send(
+            model="anthropic/claude-sonnet-4.5",
+            messages=[{"role": "user", "content": golden.input}],
+        )
+    assert_test(golden=golden)
+```
+
+Run it with:
+
+```bash
+deepeval test run test_openrouter_app.py
+```
+
+### In a script
+
+```python title="openrouter_app.py" showLineNumbers
+import asyncio
+
+from deepeval.openrouter import OpenRouter
+from deepeval.tracing import trace, LlmSpanContext
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.evaluate.configs import AsyncConfig
+from deepeval.metrics import AnswerRelevancyMetric
+
+client = OpenRouter()
+dataset = EvaluationDataset(goldens=[
+    Golden(input="What's the capital of France?"),
+    Golden(input="Who wrote Hamlet?"),
+])
+
+async def call_openrouter(prompt: str):
+    with trace(llm_span_context=LlmSpanContext(metrics=[AnswerRelevancyMetric()])):
+        return await client.chat.send_async(
+            model="anthropic/claude-sonnet-4.5",
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True)):
+    task = asyncio.create_task(call_openrouter(golden.input))
+    dataset.evaluate(task)
+```
+
+Sync (`chat.send`) and async (`chat.send_async`) both work; pick whichever matches your code.
+
+## Applying metrics to LLM spans
+
+Passing `metrics=[...]` to `LlmSpanContext` evaluates the next OpenRouter call's LLM span specifically. The same context manager carries extra evaluation parameters that some metrics need.
+
+```python title="openrouter_app.py" showLineNumbers
+from deepeval.openrouter import OpenRouter
+from deepeval.tracing import trace, LlmSpanContext
+from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
+
+client = OpenRouter()
+
+with trace(
+    llm_span_context=LlmSpanContext(
+        metrics=[AnswerRelevancyMetric(), FaithfulnessMetric()],
+        retrieval_context=["Paris is the capital of France."],
+    ),
+):
+    client.chat.send(
+        model="anthropic/claude-sonnet-4.5",
+        messages=[{"role": "user", "content": "What's the capital of France?"}],
+    )
+```
+
+`LlmSpanContext` accepts `metrics`, `expected_output`, `expected_tools`, `context`, `retrieval_context`, `prompt`, and `provider`.
+
+### Overriding the provider
+
+`provider` is the escape hatch for gateways `deepeval` cannot recognize from a base URL — a self-hosted proxy, a new gateway, or a vanity domain in front of one. It takes precedence over detection.
+
+```python
+from deepeval.openai import OpenAI
+from deepeval.tracing import trace, LlmSpanContext
+
+client = OpenAI(base_url="https://llm.internal.example.com/v1", api_key="...")
+
+with trace(llm_span_context=LlmSpanContext(provider="MyGateway")):
+    client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": "hello"}],
+    )
+```
+
+## Customizing trace and span data
+
+- Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`, `user_id`).
+- Use `LlmSpanContext` for LLM-span-level fields the metric needs (`expected_output`, `retrieval_context`, etc.).
+- Use `@observe` to wrap retrieval, post-processing, or any other step you want to see as its own span in the trace.
+
+```python title="openrouter_app.py" showLineNumbers
+from deepeval.openrouter import OpenRouter
+from deepeval.tracing import trace, LlmSpanContext, observe
+
+client = OpenRouter()
+
+@observe(type="retriever")
+def retrieve_docs(query: str) -> list[str]:
+    return ["Paris is the capital of France."]
+
+@observe()
+def respond_to_user(prompt: str) -> str:
+    docs = retrieve_docs(prompt)
+    with trace(
+        llm_span_context=LlmSpanContext(retrieval_context=docs),
+        name="openrouter-app",
+        tags=["production"],
+    ):
+        response = client.chat.send(
+            model="anthropic/claude-sonnet-4.5",
+            messages=[{"role": "user", "content": prompt}],
+        )
+    return response.choices[0].message.content
+```
+
+## TypeScript
+
+Both routes work in TypeScript too. The entry points are `instrumentOpenRouter`
+for the official SDK and `instrumentOpenAI` for the OpenAI-SDK route — the
+latter recognizes OpenRouter's base URL on its own.
+
+```typescript title="openrouter-app.ts" showLineNumbers
+import { OpenRouter } from "@openrouter/sdk";
+import { instrumentOpenRouter } from "deepeval/openrouter";
+import { setTracingContext } from "deepeval/tracing";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+
+const client = new OpenRouter({ apiKey: process.env.OPENROUTER_API_KEY });
+instrumentOpenRouter(client);
+
+await setTracingContext(
+  { llmSpanContext: { metrics: [new AnswerRelevancyMetric()] } },
+  () =>
+    client.chat.send({
+      chatRequest: {
+        model: "anthropic/claude-sonnet-4.5",
+        messages: [{ role: "user", content: "What's the capital of France?" }],
+      },
+    }),
+);
+```
+
+Or through the OpenAI SDK:
+
+```typescript title="openrouter-via-openai.ts" showLineNumbers
+import { OpenAI } from "openai";
+import { instrumentOpenAI } from "deepeval/openai";
+
+const client = new OpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY,
+});
+instrumentOpenAI(client);
+```
+
+<Callout type="info">
+  The TypeScript spans have no `provider` field of their own, so there the
+  provider label lives inside `metadata.openrouter.provider` alongside the rest
+  of OpenRouter's detail, rather than in a dedicated span field as in Python.
+  Field names are camelCased to match the TypeScript SDK (`generationId`,
+  `cachedTokens`, `costDetails`).
+</Callout>
+
+## Limitations
+
+- **Streaming is not traced.** Calls made with `stream=True` are passed through untouched, because the span would close before any content arrived. The other native-client integrations behave the same way.
+- **Evaluating models through OpenRouter** — if you want OpenRouter to power a `deepeval` metric rather than your application, use [`OpenRouterModel`](/integrations/models/openrouter) instead. That is the LLM-judge side, and it is separate from tracing.
+- **TypeScript tool spans** — tool calls are recorded on the LLM span's `toolsCalled`, but do not additionally appear as child tool spans. This is a general limitation of the TypeScript tracer, shared with the OpenAI integration; Python emits both.
