@@ -1,8 +1,8 @@
-from typing import Optional, Dict, Tuple
+from typing import AsyncGenerator, Optional, Dict, Tuple
 from pydantic import SecretStr
 from openai import OpenAI, AsyncOpenAI
 
-from deepeval.test_case import Audio
+from deepeval.test_case import Audio, AudioChunk
 from deepeval.models.base_model import DeepEvalBaseTTS
 from deepeval.models.utils import parse_model_name, require_secret_api_key
 from deepeval.models.retry_policy import create_retry_decorator
@@ -23,6 +23,12 @@ _FORMAT_MIME = {
     "flac": "audio/flac",
     "pcm": "audio/pcm",
 }
+# A chunk has to be playable on its own, which rules out every container
+# format above: their headers declare a length the first chunk does not have
+# yet. Streaming is therefore always raw 16-bit mono PCM at 24 kHz.
+_STREAM_FORMAT = "pcm"
+_STREAM_FRAME_SECONDS = 0.1
+_STREAM_FRAME_BYTES = int(_OPENAI_TTS_SAMPLE_RATE * 2 * _STREAM_FRAME_SECONDS)
 _TTS_PRICE_PER_1M_CHARS = {
     "tts-1": 15.0,
     "tts-1-hd": 30.0,
@@ -89,7 +95,7 @@ class OpenAITTSModel(DeepEvalBaseTTS):
             encoding=fmt,
         )
 
-    def _calculate_cost(self, text: str) -> Optional[float]:
+    def synthesis_cost(self, text: str) -> Optional[float]:
         if self.cost_per_1m_chars is None:
             return None
         return len(text) / 1e6 * self.cost_per_1m_chars
@@ -111,7 +117,7 @@ class OpenAITTSModel(DeepEvalBaseTTS):
             response_format=fmt,
             **{**self.generation_kwargs, **kwargs},
         )
-        return self._to_audio(response.content, fmt), self._calculate_cost(text)
+        return self._to_audio(response.content, fmt), self.synthesis_cost(text)
 
     @retry_openai
     async def a_synthesize(
@@ -130,7 +136,62 @@ class OpenAITTSModel(DeepEvalBaseTTS):
             response_format=fmt,
             **{**self.generation_kwargs, **kwargs},
         )
-        return self._to_audio(response.content, fmt), self._calculate_cost(text)
+        return self._to_audio(response.content, fmt), self.synthesis_cost(text)
+
+    def _to_chunk(self, data: bytes, *, final: bool) -> AudioChunk:
+        return AudioChunk.from_bytes(
+            data,
+            _FORMAT_MIME[_STREAM_FORMAT],
+            sampleRate=_OPENAI_TTS_SAMPLE_RATE,
+            encoding=_STREAM_FORMAT,
+            duration=len(data) / 2 / _OPENAI_TTS_SAMPLE_RATE,
+            final=final,
+        )
+
+    async def a_synthesize_stream(
+        self,
+        text: str,
+        *args,
+        voice: Optional[str] = None,
+        **kwargs,
+    ) -> AsyncGenerator[AudioChunk, None]:
+        """Yield speech in frames as it is synthesized, rather than all at once.
+
+        Waiting for a whole utterance before any of it can be played puts the
+        entire synthesis time in front of the first word. Streaming lets a
+        caller start speaking after the first frame, so what is left to
+        synthesize is spoken over.
+
+        The last frame is held back so it can be flagged `final`, which is how
+        a consumer knows the utterance is complete without also tracking the
+        stream itself.
+        """
+        buffer = bytearray()
+        held: Optional[bytes] = None
+        async with self._async().audio.speech.with_streaming_response.create(
+            model=self.name,
+            voice=voice or self.voice,
+            input=text,
+            response_format=_STREAM_FORMAT,
+            **{**self.generation_kwargs, **kwargs},
+        ) as response:
+            async for data in response.iter_bytes():
+                buffer.extend(data)
+                while len(buffer) >= _STREAM_FRAME_BYTES:
+                    frame = bytes(buffer[:_STREAM_FRAME_BYTES])
+                    del buffer[:_STREAM_FRAME_BYTES]
+                    if held is not None:
+                        yield self._to_chunk(held, final=False)
+                    held = frame
+        if buffer:
+            if held is not None:
+                yield self._to_chunk(held, final=False)
+            held = bytes(buffer)
+        if held is not None:
+            yield self._to_chunk(held, final=True)
+
+    def supports_streaming(self) -> bool:
+        return True
 
     def get_model_name(self) -> str:
         return self.name

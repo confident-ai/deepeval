@@ -33,6 +33,11 @@ class ElevenLabsConnector(BaseWebSocketConnector):
             else "api.elevenlabs.io"
         )
 
+    @property
+    def signals_turn_complete(self) -> bool:
+        # `agent_response_complete` closes every turn.
+        return True
+
     async def _open_session(self) -> str:
         host = self._host()
         if self.api_key:

@@ -20,7 +20,10 @@ def test_interruption_policy_levels():
     frequent = interruption_policy("frequent")
     assert rare.max_barges_per_conversation == 1
     assert normal.min_poll_interval_s < rare.min_poll_interval_s
-    assert frequent.max_barges_per_conversation > normal.max_barges_per_conversation
+    assert (
+        frequent.max_barges_per_conversation
+        > normal.max_barges_per_conversation
+    )
 
 
 def test_interruption_policy_invalid():

@@ -3,18 +3,32 @@ import asyncio
 import time
 import uuid
 from datetime import timedelta
-from typing import AsyncIterator, ClassVar, List, Optional, Tuple
+from typing import (
+    AsyncIterable,
+    AsyncIterator,
+    Callable,
+    ClassVar,
+    List,
+    Optional,
+    Tuple,
+)
 
 from deepeval.errors import DeepEvalError
 from deepeval.utils import require_dependency
-from deepeval.test_case import Audio
+from deepeval.test_case import Audio, AudioChunk
 from deepeval.voice.protocol import VoiceProtocol
 from deepeval.voice.connectors.transports.base import BaseVoiceConnector
 from deepeval.voice.connectors.types import AgentEvent, ConnectorTurn
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.connectors.turn_engine import collect_agent_turn
+from deepeval.voice.streaming import (
+    DEFAULT_STREAM_SAMPLE_RATE,
+    PcmRecorder,
+    UplinkResult,
+)
+from deepeval.voice.turn_detection import TurnDetection, turn_detection_timing
 
-_INSTALL_HINT = "Install it with `pip install deepeval[livekit]`."
+_INSTALL_HINT = "Install it with `pip install livekit livekit-api`."
 
 
 class LiveKitConnector(BaseVoiceConnector):
@@ -30,8 +44,7 @@ class LiveKitConnector(BaseVoiceConnector):
         room_name: Optional[str] = None,
         identity: str = "deepeval-test",
         agent_name: Optional[str] = None,
-        end_of_turn_silence_ms: int = 800,
-        max_turn_timeout_s: float = 30.0,
+        turn_detection: TurnDetection = "balanced",
         connect_timeout_s: float = 15.0,
         input_sample_rate: int = 24000,
         livekit_sample_rate: int = 48000,
@@ -51,14 +64,16 @@ class LiveKitConnector(BaseVoiceConnector):
         self.room_name = room_name
         self.identity = identity
         self.agent_name = agent_name
-        self.end_of_turn_silence_ms = end_of_turn_silence_ms
-        self.max_turn_timeout_s = max_turn_timeout_s
+        self.turn_detection = turn_detection
+        timing = turn_detection_timing(turn_detection)
+        self.end_of_turn_silence_ms = timing.end_of_turn_silence_ms
+        self.max_turn_timeout_s = timing.max_turn_timeout_s
         self.connect_timeout_s = connect_timeout_s
         self.input_sample_rate = input_sample_rate
         self.livekit_sample_rate = livekit_sample_rate
         self.token_ttl_s = token_ttl_s
         self._frame_gap_timeout_s = max(
-            1.0, end_of_turn_silence_ms / 1000.0 + 0.5
+            1.0, self.end_of_turn_silence_ms / 1000.0 + 0.5
         )
 
         # Lazily populated in connect().
@@ -199,7 +214,10 @@ class LiveKitConnector(BaseVoiceConnector):
         try:
             async for event in self._agent_stream:
                 await self._out_frames.put(
-                    AgentEvent(audio=bytes(event.frame.data))
+                    AgentEvent(
+                        audio=bytes(event.frame.data),
+                        received_at=time.perf_counter(),
+                    )
                 )
         except asyncio.CancelledError:
             raise
@@ -233,6 +251,60 @@ class LiveKitConnector(BaseVoiceConnector):
         self._uplink_task = asyncio.create_task(_stream())
         await self._uplink_task
         self._uplink_task = None
+
+    async def stream_uplink_chunks(
+        self,
+        chunks: AsyncIterable[AudioChunk],
+        *,
+        trailing_silence: bool = True,
+        on_first_frame: Optional[Callable[[float], None]] = None,
+    ) -> UplinkResult:
+        """Publish each frame of speech as soon as it has been synthesized.
+
+        The agent's turn detection and transcription then see the opening words
+        while the rest of the utterance is still being made, which is how a real
+        room behaves — a microphone does not wait for a sentence to finish.
+        """
+        if self._uplink_cancel is None or self._source is None:
+            raise DeepEvalError(
+                "LiveKitConnector.stream_uplink_chunks() called before connect()."
+            )
+        await self.stop_uplink()
+        self._uplink_cancel.clear()
+
+        first_frame_at: Optional[float] = None
+        recorder = PcmRecorder()
+        # One resampler for the whole utterance: it carries filter state across
+        # pushes, so per-frame resampling matches resampling the utterance whole
+        # instead of leaving a seam at every frame boundary.
+        resampler = None
+        async for chunk in chunks:
+            pcm = recorder.add(chunk)
+            if self._uplink_cancel.is_set():
+                continue
+            rate = chunk.sampleRate or DEFAULT_STREAM_SAMPLE_RATE
+            if rate != self.livekit_sample_rate:
+                if resampler is None:
+                    resampler = self._rtc.AudioResampler(
+                        rate, self.livekit_sample_rate, num_channels=1
+                    )
+                frames = resampler.push(bytearray(pcm))
+            else:
+                frames = self._pcm_to_frames(pcm, rate)
+            for frame in frames:
+                if self._uplink_cancel.is_set():
+                    break
+                if first_frame_at is None:
+                    first_frame_at = time.perf_counter()
+                    if on_first_frame is not None:
+                        on_first_frame(first_frame_at)
+                await self._source.capture_frame(frame)
+        if resampler is not None and not self._uplink_cancel.is_set():
+            for frame in resampler.flush():
+                await self._source.capture_frame(frame)
+        return UplinkResult(
+            audio=recorder.to_audio(), first_frame_at=first_frame_at
+        )
 
     async def stop_uplink(self) -> None:
         if self._uplink_cancel is not None:
@@ -324,19 +396,21 @@ class LiveKitConnector(BaseVoiceConnector):
             frames += resampler.flush()
             return frames
 
-        frames = []
-        for chunk in audio_utils.iter_pcm16_frames(
-            pcm, sample_rate, frame_ms=audio_utils.DEFAULT_FRAME_MS
-        ):
-            frames.append(
-                rtc.AudioFrame(
-                    data=chunk,
-                    sample_rate=sample_rate,
-                    num_channels=1,
-                    samples_per_channel=len(chunk) // 2,
-                )
+        return self._pcm_to_frames(pcm, sample_rate)
+
+    def _pcm_to_frames(self, pcm: bytes, sample_rate: int) -> List:
+        rtc = self._rtc
+        return [
+            rtc.AudioFrame(
+                data=chunk,
+                sample_rate=sample_rate,
+                num_channels=1,
+                samples_per_channel=len(chunk) // 2,
             )
-        return frames
+            for chunk in audio_utils.iter_pcm16_frames(
+                pcm, sample_rate, frame_ms=audio_utils.DEFAULT_FRAME_MS
+            )
+        ]
 
     def _agent_pcm_to_audio(self, pcm: bytes) -> Audio:
         rtc = self._rtc

@@ -3,6 +3,7 @@ from typing import (
     Any,
     Optional,
     List,
+    Tuple,
     Type,
     Union,
     Callable,
@@ -52,6 +53,8 @@ from deepeval.progress_context import conversation_simulator_progress_context
 from deepeval.dataset import ConversationalGolden
 
 if TYPE_CHECKING:
+    from deepeval.dataset import Persona
+    from deepeval.test_case import Audio
     from deepeval.voice.connectors.transports.base import BaseVoiceConnector
     from deepeval.voice.config import VoiceConfig
 
@@ -76,6 +79,20 @@ def _populate_audio_duration(audio) -> None:
         return
     if sample_rate:
         audio.duration = (len(pcm) / 2 / max(channels, 1)) / sample_rate
+
+
+async def _discard_task(task: Optional[asyncio.Task]) -> None:
+    """Drop work started ahead of a decision that turned out not to need it."""
+    if task is None:
+        return
+    if not task.done():
+        task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
+    except Exception:
+        logger.exception("Discarded simulated user generation failed")
 
 
 class ConversationSimulator:
@@ -522,6 +539,35 @@ class ConversationSimulator:
                     update_pbar(progress, pbar_max_user_simluations_id)
                     break
 
+                # In voice mode the wait before the simulated user speaks is
+                # audible to the agent, which may fill it, re-prompt, or hang
+                # up — so the harness's own thinking time is not neutral, it
+                # changes the behavior under test. The stopping check and the
+                # next turn both read the conversation so far and neither uses
+                # the other's result, so they run together and the turn is
+                # discarded if the check says to stop. Outside voice mode the
+                # delay costs only wall time, which is not worth a generation
+                # thrown away on every conversation.
+                emission_task: Optional[asyncio.Task] = None
+                speculating = (
+                    voice_mode
+                    and not muted
+                    and not (turns and turns[-1].role == "user")
+                )
+                if speculating:
+                    user_started = time.perf_counter()
+                    logger.debug("Simulated user generation started")
+                    emission_task = asyncio.create_task(
+                        self._graph_runner.a_run(
+                            self,
+                            graph_state,
+                            turns,
+                            golden,
+                            thread_id,
+                            self.language,
+                        )
+                    )
+
                 # Stop conversation if needed
                 controller_started = time.perf_counter()
                 logger.debug("Stopping controller started")
@@ -541,6 +587,7 @@ class ConversationSimulator:
                     should_stop_simulation,
                 )
                 if should_stop_simulation:
+                    await _discard_task(emission_task)
                     break
 
                 # Generate turn from user (via simulation graph)
@@ -555,16 +602,20 @@ class ConversationSimulator:
                     update_pbar(progress, pbar_max_user_simluations_id)
                     simulation_counter += 1
                 else:
-                    user_started = time.perf_counter()
-                    logger.debug("Simulated user generation started")
-                    emission = await self._graph_runner.a_run(
-                        self,
-                        graph_state,
-                        turns,
-                        golden,
-                        thread_id,
-                        self.language,
-                    )
+                    if emission_task is None:
+                        user_started = time.perf_counter()
+                        logger.debug("Simulated user generation started")
+                        emission_task = asyncio.create_task(
+                            self._graph_runner.a_run(
+                                self,
+                                graph_state,
+                                turns,
+                                golden,
+                                thread_id,
+                                self.language,
+                            )
+                        )
+                    emission = await emission_task
                     logger.debug(
                         "Simulated user generation finished after %.2fs",
                         time.perf_counter() - user_started,
@@ -702,6 +753,63 @@ class ConversationSimulator:
         from deepeval.voice.background import mix_background
 
         return mix_background(audio, persona.background_noise)
+
+    async def _send_user_utterance(
+        self,
+        text: str,
+        persona: Optional["Persona"],
+        *,
+        trailing_silence: bool,
+    ) -> Tuple["Audio", float]:
+        """Put the caller's next utterance on the uplink as it is synthesized.
+
+        Returns the utterance and the moment it began going out, which only the
+        transport can say: one that forwards frames sends the first while the
+        rest is still being made, and one that needs the utterance whole cannot
+        send anything until synthesis ends. Timing the clip from synthesis
+        instead would place it on the call before the agent heard anything.
+        """
+        from deepeval.voice.background import BackgroundMixer
+
+        tts_kwargs = self._persona_tts_kwargs(persona)
+        if not self._tts_model.supports_streaming():
+            audio, tts_cost = await self._tts_model.a_synthesize(
+                text, **tts_kwargs
+            )
+            if tts_cost is not None:
+                self.tts_cost += tts_cost
+            _populate_audio_duration(audio)
+            audio = self._mix_background(audio)
+            started_at = time.perf_counter()
+            await self.voice_connector.stream_uplink(
+                audio, trailing_silence=trailing_silence
+            )
+            return audio, started_at
+
+        mixer = BackgroundMixer(
+            persona.background_noise if persona is not None else None
+        )
+
+        async def _frames():
+            async for chunk in self._tts_model.a_synthesize_stream(
+                text, **tts_kwargs
+            ):
+                yield mixer.mix_chunk(chunk)
+
+        tts_started = time.perf_counter()
+        logger.debug("User TTS stream started: characters=%d", len(text))
+        result = await self.voice_connector.stream_uplink_chunks(
+            _frames(), trailing_silence=trailing_silence
+        )
+        tts_cost = self._tts_model.synthesis_cost(text)
+        if tts_cost is not None:
+            self.tts_cost += tts_cost
+        logger.debug(
+            "User TTS stream finished after %.2fs: sending began after %.2fs",
+            time.perf_counter() - tts_started,
+            (result.first_frame_at or tts_started) - tts_started,
+        )
+        return result.audio, result.first_frame_at or time.perf_counter()
 
     def _silence_audio(self, seconds: float) -> "Audio":
         """Digital silence in the connector's uplink format."""
@@ -1041,16 +1149,6 @@ class ConversationSimulator:
 
         from deepeval.voice.duplex import DuplexExchange
 
-        user_audio, tts_cost = await self._tts_model.a_synthesize(
-            input, **self._persona_tts_kwargs(golden.persona)
-        )
-        _populate_audio_duration(user_audio)
-        if tts_cost is not None:
-            self.tts_cost += tts_cost
-        user_audio = self._mix_background(user_audio)
-        if turns and turns[-1].role == "user":
-            turns[-1].audio = user_audio
-
         # Drain stale downlink before the new user utterance.
         drain = getattr(self.voice_connector, "_drain_stale_inbound", None)
         if callable(drain):
@@ -1063,11 +1161,17 @@ class ConversationSimulator:
                 drain_frames()
 
         call_started_at = self._voice_call_started_at or time.perf_counter()
-        user_audio.start_time = max(0.0, time.perf_counter() - call_started_at)
-        await self.voice_connector.stream_uplink(
-            user_audio, trailing_silence=True
+        user_audio, uplink_started_at = await self._send_user_utterance(
+            input, golden.persona, trailing_silence=True
         )
-        sent_at = time.perf_counter()
+        user_audio.start_time = max(0.0, uplink_started_at - call_started_at)
+        if turns and turns[-1].role == "user":
+            turns[-1].audio = user_audio
+        # Latency is the agent's wait, which starts when the caller stops
+        # speaking. Deriving that from the utterance keeps it comparable across
+        # connectors, whose uplink calls return at wildly different points —
+        # in-process ones return before a single frame has been heard.
+        sent_at = uplink_started_at + (user_audio.duration or 0.0)
 
         exchange = DuplexExchange(
             connector=self.voice_connector,

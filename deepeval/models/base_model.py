@@ -195,6 +195,15 @@ class DeepEvalBaseTTS(ABC):
         )
         yield  # unreachable; makes this a valid async generator
 
+    def synthesis_cost(self, text: str) -> Optional[float]:
+        """What synthesizing `text` costs.
+
+        A stream yields audio, not a cost, so callers that stream have no other
+        way to account for the spend. Speech is priced on the text going in, so
+        this can be answered without synthesizing anything.
+        """
+        return None
+
     def supports_streaming(self) -> bool:
         return False
 
@@ -204,6 +213,15 @@ class DeepEvalBaseTTS(ABC):
 
 
 class DeepEvalBaseSTT(ABC):
+    # Silence to append before transcribing speech that was cut off mid-word,
+    # as when a barge-in stops a voice agent. Autoregressive transcribers read a
+    # clip ending mid-syllable as an unfinished utterance and complete the word,
+    # inventing speech the caller never heard; a short tail of silence presents
+    # the clip as whole. How much is needed is a property of the transcriber,
+    # and models that do not guess at all (CTC architectures, for one) want
+    # none — leaving this at zero means the audio is transcribed untouched.
+    truncated_audio_pad_seconds: float = 0.0
+
     def __init__(self, model: Optional[str] = None, *args, **kwargs):
         self.name = parse_model_name(model)
         self.model = self.load_model()

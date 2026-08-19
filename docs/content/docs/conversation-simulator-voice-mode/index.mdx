@@ -134,6 +134,15 @@ class MySTTModel(DeepEvalBaseSTT):
 
 Both `synthesize` and `transcribe` return a tuple of the result and an optional cost, which feeds `tts_cost` / `stt_cost` accounting. Pass instances to `VoiceConfig(tts_model=MyTTSModel(), stt_model=MySTTModel(), ...)`.
 
+STT models also carry one voice-specific knob, `truncated_audio_pad_seconds`. When an [interruption](/docs/conversation-simulator-voice-interruptions) cuts your agent off mid-word, autoregressive transcribers tend to finish the clipped word and punctuate the sentence — putting speech in `Turn.content` that the caller never heard. Appending a little silence presents the clip as a whole utterance and curbs the guessing:
+
+```python
+class MySTTModel(DeepEvalBaseSTT):
+    truncated_audio_pad_seconds = 0.3  # 0.0 (the default) transcribes as-is
+```
+
+The padding is used only for transcription, never for the audio saved on the turn, so durations and timings stay true to what was spoken. `OpenAISTTModel` sets `0.3`; leave it at `0.0` for transcribers that don't complete words.
+
 ## What A Voice Simulation Produces
 
 Each simulated conversation is returned as a regular `ConversationalTestCase`, enriched with voice data:

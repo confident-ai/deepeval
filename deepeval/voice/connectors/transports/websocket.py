@@ -5,18 +5,34 @@ import asyncio
 import logging
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import AsyncIterator, ClassVar, List, Optional, Tuple, Union
+from typing import (
+    AsyncIterable,
+    AsyncIterator,
+    Callable,
+    ClassVar,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import aiohttp
 from aiohttp import WSMsgType
 
 from deepeval.errors import DeepEvalError
-from deepeval.test_case import Audio
+from deepeval.test_case import Audio, AudioChunk
 from deepeval.voice.protocol import VoiceProtocol
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.connectors.transports.base import BaseVoiceConnector
 from deepeval.voice.connectors.types import AgentEvent, ConnectorTurn
 from deepeval.voice.connectors.turn_engine import collect_agent_turn
+from deepeval.voice.streaming import (
+    DEFAULT_STREAM_SAMPLE_RATE,
+    PcmRecorder,
+    RealTimePacer,
+    UplinkResult,
+)
+from deepeval.voice.turn_detection import TurnDetection, turn_detection_timing
 
 logger = logging.getLogger(__name__)
 
@@ -39,19 +55,20 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         self,
         *,
         sample_rate: int = 24000,
-        end_of_turn_silence_ms: int = 800,
-        max_turn_timeout_s: float = 30.0,
+        turn_detection: TurnDetection = "balanced",
         connect_timeout_s: float = 15.0,
         trailing_silence_ms: int = 1500,
     ):
         self.sample_rate = sample_rate
-        self.end_of_turn_silence_ms = end_of_turn_silence_ms
-        self.max_turn_timeout_s = max_turn_timeout_s
+        self.turn_detection = turn_detection
+        timing = turn_detection_timing(turn_detection)
+        self.end_of_turn_silence_ms = timing.end_of_turn_silence_ms
+        self.max_turn_timeout_s = timing.max_turn_timeout_s
         self.connect_timeout_s = connect_timeout_s
 
         self.trailing_silence_ms = trailing_silence_ms
         self._frame_gap_timeout_s = max(
-            1.0, end_of_turn_silence_ms / 1000.0 + 0.5
+            1.0, self.end_of_turn_silence_ms / 1000.0 + 0.5
         )
 
         self._send_rate = sample_rate
@@ -147,13 +164,21 @@ class BaseWebSocketConnector(BaseVoiceConnector):
                         await self._send(event.pong_reply)
                     if event.ready:
                         self._ready.set()
+                    received_at = time.perf_counter()
                     if event.transcript is not None:
                         self._current_transcript = event.transcript
                         await self._inbound.put(
-                            AgentEvent(transcript=event.transcript)
+                            AgentEvent(
+                                transcript=event.transcript,
+                                received_at=received_at,
+                            )
                         )
                     if event.audio is not None:
-                        await self._inbound.put(AgentEvent(audio=event.audio))
+                        await self._inbound.put(
+                            AgentEvent(
+                                audio=event.audio, received_at=received_at
+                            )
+                        )
                     if event.turn_complete:
                         await self._inbound.put(AgentEvent(turn_complete=True))
                 elif msg.type in (
@@ -173,14 +198,76 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         pcm, sample_rate, num_channels = audio_utils.wav_bytes_to_pcm16(
             audio.get_bytes()
         )
-        pcm = audio_utils.downmix_to_mono(pcm, num_channels)
+        return self._outbound_pcm(
+            audio_utils.downmix_to_mono(pcm, num_channels),
+            sample_rate,
+            trailing_silence=trailing_silence,
+        )
+
+    def _outbound_pcm(
+        self, pcm: bytes, sample_rate: int, *, trailing_silence: bool
+    ) -> bytes:
         pcm = audio_utils.resample_pcm16(pcm, sample_rate, self._send_rate)
-        if trailing_silence and self.trailing_silence_ms > 0:
-            silence_samples = int(
-                self._send_rate * self.trailing_silence_ms / 1000
-            )
-            pcm = pcm + b"\x00\x00" * silence_samples
+        if trailing_silence:
+            pcm = pcm + self._trailing_silence_pcm()
         return pcm
+
+    def _trailing_silence_pcm(self) -> bytes:
+        """Quiet appended to a full turn so the agent's VAD hears it end."""
+        if self.trailing_silence_ms <= 0:
+            return b""
+        samples = int(self._send_rate * self.trailing_silence_ms / 1000)
+        return b"\x00\x00" * samples
+
+    async def _send_pcm(
+        self, pcm: bytes, pacer: Optional[RealTimePacer] = None
+    ) -> bool:
+        """Send `pcm` as wire frames. False once the uplink has been cancelled."""
+        for frame in audio_utils.iter_pcm16_frames(pcm, self._send_rate):
+            if self._uplink_cancel.is_set():
+                return False
+            if pacer is not None:
+                await pacer.wait_to_send(frame)
+                if self._uplink_cancel.is_set():
+                    return False
+            await self._send(self._encode_outbound(frame))
+        return True
+
+    def _frame_bytes(self) -> int:
+        return int(self._send_rate * audio_utils.DEFAULT_FRAME_MS / 1000) * 2
+
+    async def _send_whole_frames(
+        self, buffer: bytearray, pacer: Optional[RealTimePacer] = None
+    ) -> Tuple[bool, Optional[float]]:
+        """Send every complete frame in `buffer` and keep the rest for later.
+
+        Frames are a fixed size and the last one is zero-padded to reach it. A
+        partial frame therefore has to wait for the audio that follows it, or
+        every piece of a streamed utterance would arrive with silence spliced
+        onto its end.
+
+        Returns whether sending may continue, and when the first frame of this
+        call went out so the utterance can be placed on the call timeline.
+        """
+        size = self._frame_bytes()
+        sent = 0
+        first_at: Optional[float] = None
+        while len(buffer) - sent >= size:
+            if self._uplink_cancel.is_set():
+                del buffer[:sent]
+                return False, first_at
+            frame = bytes(buffer[sent : sent + size])
+            if pacer is not None:
+                await pacer.wait_to_send(frame)
+                if self._uplink_cancel.is_set():
+                    del buffer[:sent]
+                    return False, first_at
+            if first_at is None:
+                first_at = time.perf_counter()
+            await self._send(self._encode_outbound(frame))
+            sent += size
+        del buffer[:sent]
+        return True, first_at
 
     async def stream_uplink(
         self, audio: Audio, *, trailing_silence: bool = True
@@ -203,15 +290,68 @@ class BaseWebSocketConnector(BaseVoiceConnector):
             audio, trailing_silence=trailing_silence
         )
 
-        async def _stream() -> None:
-            for chunk in audio_utils.iter_pcm16_frames(pcm, self._send_rate):
-                if self._uplink_cancel.is_set():
-                    break
-                await self._send(self._encode_outbound(chunk))
-
-        self._uplink_task = asyncio.create_task(_stream())
+        self._uplink_task = asyncio.create_task(
+            self._send_pcm(pcm, RealTimePacer(self._send_rate))
+        )
         await self._uplink_task
         self._uplink_task = None
+
+    async def stream_uplink_chunks(
+        self,
+        chunks: AsyncIterable[AudioChunk],
+        *,
+        trailing_silence: bool = True,
+        on_first_frame: Optional[Callable[[float], None]] = None,
+    ) -> UplinkResult:
+        """Forward each frame of speech as soon as it has been synthesized.
+
+        The agent's own VAD and transcription then run on the opening words
+        while the rest of the utterance is still being made, the way they would
+        on a live call, instead of after the whole thing exists.
+        """
+        if self._uplink_cancel is None:
+            raise DeepEvalError(
+                f"{type(self).__name__}.stream_uplink_chunks() called before "
+                "connect()."
+            )
+        await self.stop_uplink()
+        self._uplink_cancel.clear()
+
+        recorder = PcmRecorder()
+        pending = bytearray()
+        sending = True
+        first_frame_at: Optional[float] = None
+        pacer = RealTimePacer(self._send_rate)
+        async for chunk in chunks:
+            pcm = recorder.add(chunk)
+            if not sending:
+                # Cancelled mid-utterance: keep recording so the turn still
+                # holds everything the caller said, but send no more of it.
+                continue
+            pending.extend(
+                self._outbound_pcm(
+                    pcm,
+                    chunk.sampleRate or DEFAULT_STREAM_SAMPLE_RATE,
+                    trailing_silence=False,
+                )
+            )
+            sending, sent_at = await self._send_whole_frames(pending, pacer)
+            if first_frame_at is None and sent_at is not None:
+                first_frame_at = sent_at
+                if on_first_frame is not None:
+                    on_first_frame(sent_at)
+        if sending:
+            if trailing_silence:
+                pending.extend(self._trailing_silence_pcm())
+            if pending:
+                if first_frame_at is None:
+                    first_frame_at = time.perf_counter()
+                    if on_first_frame is not None:
+                        on_first_frame(first_frame_at)
+                await self._send_pcm(bytes(pending), pacer)
+        return UplinkResult(
+            audio=recorder.to_audio(), first_frame_at=first_frame_at
+        )
 
     async def stop_uplink(self) -> None:
         if self._uplink_cancel is not None:
@@ -252,7 +392,11 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         pcm = self._prepare_outbound_pcm(audio, trailing_silence=True)
         sent_chunks = 0
         input_audio_started_at = time.perf_counter()
+        # Paced, or the agent is handed a five-second question in a tenth of a
+        # second and answers inside the caller's own turn on the recording.
+        pacer = RealTimePacer(self._send_rate)
         for chunk in audio_utils.iter_pcm16_frames(pcm, self._send_rate):
+            await pacer.wait_to_send(chunk)
             await self._send(self._encode_outbound(chunk))
             sent_chunks += 1
 
@@ -372,6 +516,10 @@ class WebSocketConnector(BaseWebSocketConnector):
 
     async def _open_session(self) -> str:
         return self.url
+
+    @property
+    def signals_turn_complete(self) -> bool:
+        return self.turn_complete_type is not None
 
     def _connect_headers(self) -> Optional[dict]:
         return self.headers

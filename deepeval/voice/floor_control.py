@@ -129,6 +129,18 @@ class FloorController:
         else:
             self.state = FloorState.LISTENING
 
+    _BARGE_STATES = (
+        FloorState.BARGING,
+        FloorState.OVERLAP,
+        FloorState.GRACE_WAIT,
+        FloorState.RESTART_BARGE,
+    )
+
+    @property
+    def barge_in_progress(self) -> bool:
+        """Whether a barge is waiting to see if the agent yields the floor."""
+        return self.state in self._BARGE_STATES
+
     @property
     def can_run_judge(self) -> bool:
         return (

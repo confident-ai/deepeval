@@ -1,9 +1,22 @@
+import time
 from abc import ABC, abstractmethod
-from typing import AsyncIterator, ClassVar, Tuple
+from typing import (
+    AsyncIterable,
+    AsyncIterator,
+    Callable,
+    ClassVar,
+    Optional,
+    Tuple,
+)
 
-from deepeval.test_case import Audio
+from deepeval.test_case import Audio, AudioChunk
 from deepeval.voice.protocol import VoiceProtocol
 from deepeval.voice.connectors.types import AgentEvent, ConnectorTurn
+from deepeval.voice.streaming import (
+    UplinkResult,
+    collect_pcm_chunks,
+    pcm_to_audio,
+)
 
 
 class BaseVoiceConnector(ABC):
@@ -64,6 +77,48 @@ class BaseVoiceConnector(ABC):
             f"{type(self).__name__} does not support duplex stream_uplink(); "
             "use exchange_turn() or a duplex-capable connector."
         )
+
+    async def stream_uplink_chunks(
+        self,
+        chunks: AsyncIterable[AudioChunk],
+        *,
+        trailing_silence: bool = True,
+        on_first_frame: Optional[Callable[[float], None]] = None,
+    ) -> UplinkResult:
+        """Stream user audio uplink as it is produced, rather than once complete.
+
+        Synthesizing a whole utterance before sending any of it puts the entire
+        synthesis time in front of the first word. An agent that processes audio
+        as it arrives can start on the opening words while the rest is still
+        being made, which is what happens on a real call.
+
+        Returns the complete utterance along with when it began going out, since
+        the caller has to record both what was said and where it belongs on the
+        call. `on_first_frame` reports the same moment as it happens, for callers
+        that have to act on the agent being able to hear the speech — a barge
+        takes the floor then, not when it finishes. The default buffers the
+        stream and hands it to `stream_uplink`, which is all a transport whose
+        agent needs the whole utterance up front can do with it; transports that
+        can forward frames override this.
+        """
+        pcm, sample_rate = await collect_pcm_chunks(chunks)
+        audio = pcm_to_audio(pcm, sample_rate)
+        sent_at = time.perf_counter()
+        if on_first_frame is not None:
+            on_first_frame(sent_at)
+        await self.stream_uplink(audio, trailing_silence=trailing_silence)
+        return UplinkResult(audio=audio, first_frame_at=sent_at)
+
+    @property
+    def signals_turn_complete(self) -> bool:
+        """Whether the transport says outright when the agent's turn is over.
+
+        When it does, quiet in the downlink is a pause and nothing more, so
+        ending the turn on it discards the rest of the reply while keeping the
+        transcript that describes the whole thing. When it does not — a raw
+        audio track, say — silence is the only evidence there is.
+        """
+        return False
 
     async def stop_uplink(self) -> None:
         """Cancel in-flight user PCM from `stream_uplink` (floor-control yield)."""

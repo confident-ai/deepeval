@@ -33,6 +33,10 @@ _STT_PRICE_PER_MINUTE = {
 
 
 class OpenAISTTModel(DeepEvalBaseSTT):
+    # Whisper and the gpt-4o transcribe family both finish clipped words, so
+    # they need a tail of silence to be told the utterance ended where it did.
+    truncated_audio_pad_seconds: float = 0.3
+
     def __init__(
         self,
         model: Optional[str] = None,

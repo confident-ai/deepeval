@@ -33,18 +33,19 @@ from deepeval.voice import ElevenLabsConnector
 connector = ElevenLabsConnector(agent_id="your-agent-id")
 ```
 
-There are **ONE** mandatory and **TWO** optional parameters when creating an `ElevenLabsConnector`:
+There are **ONE** mandatory and **THREE** optional parameters when creating an `ElevenLabsConnector`:
 
 - `agent_id`: a string identifying the ElevenLabs conversational agent.
 - [Optional] `api_key`: a string API key. When omitted, reads `ELEVENLABS_API_KEY` from the environment. Defaulted to `None`.
 - [Optional] `region`: a string region subdomain for the ElevenLabs API host (e.g. `"eu"`). Defaulted to `None` (global host).
+- [Optional] `turn_detection`: how long to wait before deciding your agent has finished speaking — `"eager"`, `"balanced"`, or `"patient"`. See [Turn Detection](#turn-detection). Defaulted to `"balanced"`.
 
 ## LiveKit
 
-Joins a LiveKit room as a participant and exchanges audio with your agent over WebRTC. Requires the `livekit` extra:
+Joins a LiveKit room as a participant and exchanges audio with your agent over WebRTC. Requires LiveKit's own SDKs:
 
 ```bash
-pip install "deepeval[livekit]"
+pip install livekit livekit-api
 ```
 
 ```python
@@ -53,7 +54,7 @@ from deepeval.voice import LiveKitConnector
 connector = LiveKitConnector(agent_name="restaurant-agent")
 ```
 
-There are **NINE** optional parameters when creating a `LiveKitConnector` (credentials may also come from the environment):
+There are **EIGHT** optional parameters when creating a `LiveKitConnector` (credentials may also come from the environment):
 
 - [Optional] `url`: the LiveKit server URL. When omitted, reads `LIVEKIT_URL`. Defaulted to `None`.
 - [Optional] `api_key`: the LiveKit API key. When omitted, reads `LIVEKIT_API_KEY`. Defaulted to `None`.
@@ -61,8 +62,7 @@ There are **NINE** optional parameters when creating a `LiveKitConnector` (crede
 - [Optional] `room_name`: the room to join. When omitted, a room is created for the session. Defaulted to `None`.
 - [Optional] `identity`: the participant identity for the simulator. Defaulted to `"deepeval-test"`.
 - [Optional] `agent_name`: the name of the agent to dispatch into the room. Defaulted to `None`.
-- [Optional] `end_of_turn_silence_ms`: silence window (ms) used to detect the end of an agent reply. Defaulted to `800`.
-- [Optional] `max_turn_timeout_s`: hard cap (seconds) on waiting for an agent reply. Defaulted to `30.0`.
+- [Optional] `turn_detection`: how long to wait before deciding your agent has finished speaking — `"eager"`, `"balanced"`, or `"patient"`. See [Turn Detection](#turn-detection). Defaulted to `"balanced"`.
 - [Optional] `connect_timeout_s`: timeout (seconds) for establishing the room connection. Defaulted to `15.0`.
 
 ::::note
@@ -84,7 +84,7 @@ connector = WebSocketConnector(
 )
 ```
 
-There are **ONE** mandatory and **ELEVEN** optional parameters when creating a `WebSocketConnector`:
+There are **ONE** mandatory and **TWELVE** optional parameters when creating a `WebSocketConnector`:
 
 - `url`: a string WebSocket URL for your agent (e.g. `"wss://your-agent.example.com/audio"`).
 - [Optional] `headers`: a dictionary of HTTP headers for the WebSocket handshake. Defaulted to `None`.
@@ -98,16 +98,18 @@ There are **ONE** mandatory and **ELEVEN** optional parameters when creating a `
 - [Optional] `type_key`: a string JSON key used to read the message type. Defaulted to `"type"`.
 - [Optional] `init_messages`: a list of strings or dicts sent after connect. Defaulted to `[]`.
 - [Optional] `ready_on`: when the session is considered ready — `"connect"` by default. Defaulted to `"connect"`.
+- [Optional] `turn_detection`: how long to wait before deciding your agent has finished speaking — `"eager"`, `"balanced"`, or `"patient"`. See [Turn Detection](#turn-detection). Defaulted to `"balanced"`.
 
 ## Callback
 
 Wraps an in-process Python callable, so you can exercise the full TTS → agent → STT pipeline without any network transport — useful for testing your simulation setup before pointing it at a deployed agent.
 
-There are **ONE** mandatory and **TWO** optional parameters when creating a `CallbackVoiceConnector`:
+There are **ONE** mandatory and **THREE** optional parameters when creating a `CallbackVoiceConnector`:
 
 - `agent`: a sync or async callable that accepts user `Audio` and returns a `ConnectorTurn` or plain `Audio`.
 - [Optional] `sample_rate`: an integer sample rate in Hz. Defaulted to `24000`.
 - [Optional] `encoding`: a string container/codec label for audio metadata. Defaulted to `"wav"`.
+- [Optional] `turn_detection`: how long to wait before deciding your agent has finished speaking — `"eager"`, `"balanced"`, or `"patient"`. See [Turn Detection](#turn-detection). Defaulted to `"balanced"`.
 
 ### Returning a `ConnectorTurn`
 
@@ -155,3 +157,25 @@ async def my_agent(user_audio) -> ConnectorTurn:
 
 connector = CallbackVoiceConnector(my_agent)
 ```
+
+## Turn Detection
+
+Nothing in an audio stream announces that your agent has finished speaking, so the end of its turn is inferred from silence. Every connector takes a `turn_detection` preset controlling how long that silence has to last, along with the hard ceiling that stops an agent which never goes quiet from hanging the simulation:
+
+| `turn_detection` | Waits through pauses of | Gives up after | Use it when                                                              |
+| ------------------ | ------------------------- | ---------------- | -------------------------------------------------------------------------- |
+| `"eager"`          | 500ms                     | 20s              | Your agent answers in one breath and you want the floor back quickly.      |
+| `"balanced"`       | 800ms                     | 30s              | Default. Suits most agents.                                                |
+| `"patient"`        | 2.5s                      | 120s             | Your agent pauses mid-reply — to think, call a tool, or look something up. |
+
+```python
+connector = CallbackVoiceConnector(my_agent, turn_detection="patient")
+```
+
+Pick by listening to your agent's longest natural pause. Too eager and its turn ends at that pause, cutting the reply short and discarding the rest of it; too patient and the simulator sits through dead air before responding, which inflates the gaps in the recording and slows the run.
+
+When your transport closes each turn explicitly, silence is only the fallback: `ElevenLabsConnector`, `CallbackVoiceConnector`, and a `WebSocketConnector` given a `turn_complete_type` are all believed over a pause, so the reply is heard out in full however long your agent stops for. Only the ceiling still applies. `LiveKitConnector` carries a bare audio track with nothing to say when a turn is over, so silence is all it has and the preset matters more.
+
+::::note
+The underlying millisecond values are chosen as a coordinated preset rather than exposed individually, for the same reason [interruption timing](/docs/conversation-simulator-voice-interruptions#when-does-it-interrupt) is: they are interdependent, and picking them apart is guesswork without knowing how the turn-taking loop uses them.
+::::

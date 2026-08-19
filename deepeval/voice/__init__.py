@@ -2,6 +2,7 @@ from deepeval.voice.protocol import VoiceProtocol
 from deepeval.voice.config import VoiceConfig
 from deepeval.voice.interruption import interruption_policy
 from deepeval.voice.floor_control import FloorController, FloorState
+from deepeval.voice.turn_detection import TurnDetection
 from deepeval.voice.connectors import (
     BaseVoiceConnector,
     ConnectorTurn,
@@ -21,6 +22,7 @@ __all__ = [
     "interruption_policy",
     "FloorController",
     "FloorState",
+    "TurnDetection",
     "BaseVoiceConnector",
     "ConnectorTurn",
     "AgentEvent",

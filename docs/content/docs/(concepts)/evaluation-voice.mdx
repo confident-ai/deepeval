@@ -170,14 +170,14 @@ One live call per connector is also why voice simulations run sequentially — c
 
 The hardest part of a voice connector is knowing when the agent has _finished_ speaking — audio streams don't come with return statements. Connectors use a turn engine that combines signals:
 
-- **Silence detection**: a configurable window of quiet (`end_of_turn_silence_ms`, default 800ms) after speech marks the end of the reply.
+- **Silence detection**: a window of quiet after speech marks the end of the reply. Crucially this is silence _since the last speech_, not silence totalled across the turn, so an agent that pauses repeatedly is not eventually cut off by the sum of its pauses.
 - **Platform events**: some protocols emit explicit turn-complete messages, which take precedence.
-- **Timeouts**: a hard cap (`max_turn_timeout_s`, default 30s) so an unresponsive agent can't hang the simulation.
+- **Timeouts**: a hard cap so an unresponsive agent can't hang the simulation.
 
-These thresholds are tunable on each connector, but their _meaning_ is fixed per protocol — which is what keeps `latency_ms` comparable within a protocol.
+Both thresholds come from the connector's [`turn_detection`](/docs/conversation-simulator-voice-connectors#turn-detection) preset — `"eager"`, `"balanced"`, or `"patient"` — rather than being set individually. Their _meaning_ is fixed per protocol, which is what keeps `latency_ms` comparable within a protocol.
 
 :::tip
-If your agent pauses mid-reply (looking up an order, calling a tool), a default 800ms silence window may clip its turn in half. Raise `end_of_turn_silence_ms` to match your agent's longest natural pause.
+If your agent pauses mid-reply (looking up an order, calling a tool) over a transport that never signals the end of a turn, the default window may clip its turn in half. Use `turn_detection="patient"`.
 :::
 
 ## Voice Data on Test Cases

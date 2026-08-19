@@ -29,6 +29,11 @@ class AgentEvent:
     audio: Optional[bytes] = None  # PCM16 mono at the connector recv rate
     transcript: Optional[str] = None
     turn_complete: bool = False
+    # Process-local monotonic time this event arrived from the agent. The
+    # consumer can be busy (synthesizing a barge, for instance) long after a
+    # frame lands, so reading the clock at consumption time would credit the
+    # agent with starting to speak later than it did.
+    received_at: Optional[float] = None
 
 
 AgentCallback = Callable[

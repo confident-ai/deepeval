@@ -10,6 +10,8 @@ class VoiceProtocol(Enum):
     """
 
     WEBRTC = "webrtc"  # LiveKit rooms, Pipecat, Vapi/Retell web calls
-    WEBSOCKET = "websocket"  # raw-audio WS APIs (ElevenLabs ConvAI, custom agents)
+    WEBSOCKET = (
+        "websocket"  # raw-audio WS APIs (ElevenLabs ConvAI, custom agents)
+    )
     SIP = "sip"  # PSTN / telephony (Twilio et al.)
     CALLBACK = "callback"  # in-process Python callable, no transport

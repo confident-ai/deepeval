@@ -176,14 +176,9 @@ def main() -> None:
         tts=agent_tts_model,
         stt=caller_stt_model,
         voice="onyx",
-        # Walter is deliberately a rambler with reflective pauses, and the
-        # default 800ms end-of-turn window fires on one of those pauses:
-        # his turn is finalized after ~2s and the rest of the reply is
-        # dropped, even though the transcript arrives complete.
-        end_of_turn_silence_ms=2500,
-        # A full Walter reply is ~11s to generate plus ~33s to play back at
-        # real time, which overruns the default 30s cap on one exchange.
-        max_turn_timeout_s=120.0,
+        # Walter is deliberately a rambler with reflective pauses, and a full
+        # reply of his runs ~33s of playback on top of ~11s to generate.
+        turn_detection="patient",
     )
     simulator = ConversationSimulator(
         simulator_model=TimedSimulatorModel(),
@@ -217,7 +212,7 @@ def main() -> None:
                     ),
                     voice="coral",
                     interruption_behavior=InterruptionBehavior(
-                        frequency="normal",
+                        frequency="rare",
                         overlap="adaptive",
                     ),
                 ),
@@ -272,24 +267,30 @@ def print_transcript(turns) -> None:
     as one: a barge that reads as an interruption in the text but sits in a
     gap in the timing is only visible when the two are side by side.
     """
-    entries = {
-        entry.turn_index: entry
-        for entry in build_audio_timeline(turns, require_start_times=False)
-    }
-    print("\nAnnotated transcript (gaps are what you hear as silence)")
+    timeline = build_audio_timeline(turns, require_start_times=False)
+    entries = {entry.turn_index: entry for entry in timeline}
+    # Gaps have to be measured against the clip that precedes each one in
+    # *time*, which is not always the clip that precedes it in the transcript.
+    # Walking conversation order and subtracting the running end time reports
+    # every out-of-order clip as an overlap that never happened.
+    preceding_end = {}
     cursor = 0.0
+    for entry in timeline:
+        preceding_end[entry.turn_index] = cursor
+        cursor = max(cursor, entry.end_time)
+
+    print("\nAnnotated transcript (gaps are what you hear as silence)")
     for index, turn in enumerate(turns):
         entry = entries.get(index)
         if entry is None:
             timing = "        no audio recorded         "
         else:
-            gap = entry.start_time - cursor
+            gap = entry.start_time - preceding_end[index]
             marker = "overlap" if gap < 0 else "gap"
             timing = (
                 f"{entry.start_time:>7.1f}s -{entry.end_time:>7.1f}s"
                 f" ({entry.duration:>4.1f}s)  {marker}{abs(gap):>5.1f}s"
             )
-            cursor = max(cursor, entry.end_time)
 
         metadata = turn.metadata or {}
         flags = []
@@ -299,6 +300,8 @@ def print_transcript(turns) -> None:
             flags.append("BARGE-IN")
         if metadata.get("frustrated"):
             flags.append("FRUSTRATED")
+        if metadata.get("ended_without_agent_signal"):
+            flags.append("WE STOPPED LISTENING")
         if metadata.get("grace_missed_ms") is not None:
             flags.append(f"grace missed {metadata['grace_missed_ms']:.0f}ms")
         if turn.latency_ms is not None:
@@ -308,6 +311,16 @@ def print_transcript(turns) -> None:
         print(f"\n[{index + 1}] {turn.role:<10}{timing}{suffix}")
         for line in textwrap.wrap(turn.content or "(no speech)", width=88):
             print(f"    {line}")
+        # What the agent was going to say before being talked over, so the
+        # spoken transcript above can be checked against the audio by ear.
+        intended = metadata.get("intended_content")
+        if intended:
+            if metadata.get("ended_without_agent_signal"):
+                print("    ...still saying when we stopped listening:")
+            else:
+                print("    ...cut off from saying:")
+            for line in textwrap.wrap(intended, width=84):
+                print(f"        {line}")
 
     speech = sum(entry.duration for entry in entries.values())
     barges = sum(1 for turn in turns if (turn.metadata or {}).get("barge_in"))

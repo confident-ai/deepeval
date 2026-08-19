@@ -7,6 +7,7 @@ from typing import AsyncIterator, Callable, ClassVar, Optional, Tuple, Union
 from deepeval.test_case import Audio
 from deepeval.models.base_model import DeepEvalBaseTTS, DeepEvalBaseSTT
 from deepeval.voice.protocol import VoiceProtocol
+from deepeval.voice.turn_detection import TurnDetection, turn_detection_timing
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.connectors.transports.base import BaseVoiceConnector
 from deepeval.voice.connectors.types import (
@@ -34,18 +35,18 @@ class CallbackVoiceConnector(BaseVoiceConnector):
         *,
         sample_rate: int = 24000,
         encoding: str = "wav",
-        end_of_turn_silence_ms: int = 800,
-        max_turn_timeout_s: float = 30.0,
+        turn_detection: TurnDetection = "balanced",
     ):
         self.agent = agent
         self._is_async = inspect.iscoroutinefunction(agent)
         self._format = (sample_rate, encoding)
-        # Duplex only: `exchange_turn` gets the reply whole, so these bound
-        # the barge-in loop. Raise `end_of_turn_silence_ms` past the longest
-        # pause in the agent's speech, or its turn is finalized mid-sentence
-        # and the frames still queued behind that pause are dropped.
-        self.end_of_turn_silence_ms = end_of_turn_silence_ms
-        self.max_turn_timeout_s = max_turn_timeout_s
+        # Duplex only: `exchange_turn` gets the reply whole, so this bounds the
+        # barge-in loop. An agent that pauses mid-reply wants "patient", or its
+        # turn ends at the pause and the rest of the reply is never heard.
+        self.turn_detection = turn_detection
+        timing = turn_detection_timing(turn_detection)
+        self.end_of_turn_silence_ms = timing.end_of_turn_silence_ms
+        self.max_turn_timeout_s = timing.max_turn_timeout_s
         self._events: Optional[asyncio.Queue] = None
         self._uplink_cancel: Optional[asyncio.Event] = None
         self._reply_task: Optional[asyncio.Task] = None
@@ -79,6 +80,11 @@ class CallbackVoiceConnector(BaseVoiceConnector):
     @property
     def recv_sample_rate(self) -> int:
         return self._format[0]
+
+    @property
+    def signals_turn_complete(self) -> bool:
+        # Every reply is framed out and then closed explicitly.
+        return True
 
     async def exchange_turn(self, audio: Audio) -> ConnectorTurn:
         start = time.perf_counter()
@@ -139,7 +145,10 @@ class CallbackVoiceConnector(BaseVoiceConnector):
                 "CallbackVoiceConnector.stream_uplink() called before connect()."
             )
         await self.stop_uplink()
-        if self._reply_task is not None and not self._reply_task.done():
+        abandoned_reply = (
+            self._reply_task is not None and not self._reply_task.done()
+        )
+        if abandoned_reply:
             self._reply_task.cancel()
             try:
                 await self._reply_task
@@ -148,6 +157,13 @@ class CallbackVoiceConnector(BaseVoiceConnector):
         # The cancelled task paces frames in real time, so it has usually
         # enqueued more of the previous reply than the last exchange consumed.
         self._drain_stale_inbound()
+        if abandoned_reply:
+            # This uplink talked over a reply that was still playing, and each
+            # uplink starts a fresh agent invocation. Close the abandoned
+            # utterance the way a real agent goes quiet when interrupted, or
+            # the next reply's frames land in the same buffer and the two are
+            # recorded as one turn whose audio and transcript disagree.
+            await self._events.put(AgentEvent(turn_complete=True))
         self._uplink_cancel.clear()
 
         async def _produce_reply() -> None:
@@ -168,7 +184,12 @@ class CallbackVoiceConnector(BaseVoiceConnector):
                     reply_pcm, reply_rate, self._format[0]
                 )
             if transcript:
-                await self._events.put(AgentEvent(transcript=transcript))
+                await self._events.put(
+                    AgentEvent(
+                        transcript=transcript,
+                        received_at=time.perf_counter(),
+                    )
+                )
             for chunk in audio_utils.iter_pcm16_frames(
                 reply_pcm, self._format[0]
             ):
@@ -176,7 +197,9 @@ class CallbackVoiceConnector(BaseVoiceConnector):
                     # Reply playback is independent of uplink cancel; floor
                     # control stops *user* uplink, not agent downlink.
                     pass
-                await self._events.put(AgentEvent(audio=chunk))
+                await self._events.put(
+                    AgentEvent(audio=chunk, received_at=time.perf_counter())
+                )
                 await asyncio.sleep(audio_utils.DEFAULT_FRAME_MS / 1000.0)
             await self._events.put(AgentEvent(turn_complete=True))
 
