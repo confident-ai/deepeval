@@ -27,6 +27,30 @@ from deepeval.metrics.contextual_relevancy.schema import (
 from deepeval.templates import make_template_class
 
 
+def _verdict_is_positive(token: str) -> bool:
+    """True if the verdict token means 'relevant / yes' under lenient parsing.
+
+    LLM judges emit noisy tokens (e.g. ``"yes."``, ``"yesշո"``, ``"yes "``); exact
+    equality with ``"yes"`` misses every one of them. #3057 strips surrounding
+    whitespace but does not fix trailing punctuation or appended text. We
+    classify the token as positive whenever its first two characters (after
+    stripping whitespace, case-folded) are ``"yes"`` — the cleanest signal we
+    can recover from the raw emission, and the same judgement that the metric's
+    reason branch silently relied on. Keeping both branches on the same helper
+    is what #3079 asks for.
+    """
+    return token.strip().lower().startswith("yes")
+
+
+def _verdict_is_negative(token: str) -> bool:
+    """True if the verdict token means 'not relevant / no' under lenient parsing.
+
+    Mirror of :func:`_verdict_is_positive`. Same strip+lower treatment so
+    score and reason branches cannot disagree on a polluted verdict.
+    """
+    return token.strip().lower().startswith("no")
+
+
 def _contextual_relevancy_verdict_kwargs(multimodal: bool) -> Dict[str, str]:
     context_type = "context (image or string)" if multimodal else "context"
     statement_or_image = "statement or image" if multimodal else "statement"
@@ -204,7 +228,7 @@ class ContextualRelevancyMetric(BaseMetric):
         relevant_statements = []
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
-                if verdict.verdict.lower() == "no":
+                if _verdict_is_negative(verdict.verdict):
                     irrelevant_statements.append(verdict.reason)
                 else:
                     relevant_statements.append(verdict.statement)
@@ -234,7 +258,7 @@ class ContextualRelevancyMetric(BaseMetric):
         relevant_statements = []
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
-                if verdict.verdict.lower() == "no":
+                if _verdict_is_negative(verdict.verdict):
                     irrelevant_statements.append(verdict.reason)
                 else:
                     relevant_statements.append(verdict.statement)
@@ -262,7 +286,7 @@ class ContextualRelevancyMetric(BaseMetric):
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
                 total_verdicts += 1
-                if verdict.verdict.lower() == "yes":
+                if _verdict_is_positive(verdict.verdict):
                     relevant_statements += 1
 
         if total_verdicts == 0:
