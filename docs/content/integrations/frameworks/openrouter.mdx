@@ -2,7 +2,7 @@
 id: openrouter
 title: OpenRouter
 sidebar_label: OpenRouter
-languages: [python, typescript]
+languages: [python]
 ---
 
 <IntegrationTagsDisplayer native={true} cicdEvals={true} traceability={true} />
@@ -308,56 +308,7 @@ def respond_to_user(prompt: str) -> str:
     return response.choices[0].message.content
 ```
 
-## TypeScript
-
-Both routes work in TypeScript too. The entry points are `instrumentOpenRouter`
-for the official SDK and `instrumentOpenAI` for the OpenAI-SDK route — the
-latter recognizes OpenRouter's base URL on its own.
-
-```typescript title="openrouter-app.ts" showLineNumbers
-import { OpenRouter } from "@openrouter/sdk";
-import { instrumentOpenRouter } from "deepeval/openrouter";
-import { setTracingContext } from "deepeval/tracing";
-import { AnswerRelevancyMetric } from "deepeval/metrics";
-
-const client = new OpenRouter({ apiKey: process.env.OPENROUTER_API_KEY });
-instrumentOpenRouter(client);
-
-await setTracingContext(
-  { llmSpanContext: { metrics: [new AnswerRelevancyMetric()] } },
-  () =>
-    client.chat.send({
-      chatRequest: {
-        model: "anthropic/claude-sonnet-4.5",
-        messages: [{ role: "user", content: "What's the capital of France?" }],
-      },
-    }),
-);
-```
-
-Or through the OpenAI SDK:
-
-```typescript title="openrouter-via-openai.ts" showLineNumbers
-import { OpenAI } from "openai";
-import { instrumentOpenAI } from "deepeval/openai";
-
-const client = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-});
-instrumentOpenAI(client);
-```
-
-<Callout type="info">
-  The TypeScript spans have no `provider` field of their own, so there the
-  provider label lives inside `metadata.openrouter.provider` alongside the rest
-  of OpenRouter's detail, rather than in a dedicated span field as in Python.
-  Field names are camelCased to match the TypeScript SDK (`generationId`,
-  `cachedTokens`, `costDetails`).
-</Callout>
-
 ## Limitations
 
 - **Streaming is not traced.** Calls made with `stream=True` are passed through untouched, because the span would close before any content arrived. The other native-client integrations behave the same way.
 - **Evaluating models through OpenRouter** — if you want OpenRouter to power a `deepeval` metric rather than your application, use [`OpenRouterModel`](/integrations/models/openrouter) instead. That is the LLM-judge side, and it is separate from tracing.
-- **TypeScript tool spans** — tool calls are recorded on the LLM span's `toolsCalled`, but do not additionally appear as child tool spans. This is a general limitation of the TypeScript tracer, shared with the OpenAI integration; Python emits both.
