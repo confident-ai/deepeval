@@ -41,7 +41,7 @@ class MathQA(DeepEvalBaseBenchmark):
         self.verbose_mode = verbose_mode
         if not confinement_instructions:
             self.confinement_instructions = (
-                "Output 'a', 'b', 'c', or 'd'. Full answer not needed."
+                "Output 'a', 'b', 'c', 'd', or 'e'. Full answer not needed."
             )
         else:
             self.confinement_instructions = confinement_instructions
@@ -215,7 +215,7 @@ class MathQA(DeepEvalBaseBenchmark):
         except TypeError:
             prompts = [
                 prompt
-                + "\n\nOutput 'a', 'b', 'c', or 'd'. Full answer not needed."
+                + "\n\nOutput 'a', 'b', 'c', 'd', or 'e'. Full answer not needed."
                 for prompt in prompts
             ]
             predictions = model.batch_generate(prompts)

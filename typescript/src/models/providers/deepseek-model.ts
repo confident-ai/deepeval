@@ -1,7 +1,8 @@
 import {
   DeepEvalOpenAICompatibleModel,
   type OpenAICompatibleModelOptions,
-} from "../openai-compatible-model";
+} from "@/models/openai-compatible-model";
+import type { ModelNamespace } from "@/models/registry";
 
 export type DeepSeekModelOptions = OpenAICompatibleModelOptions;
 
@@ -15,12 +16,15 @@ const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
 export class DeepSeekModel extends DeepEvalOpenAICompatibleModel {
   protected providerLabel = "DeepSeek";
   protected apiKeyEnvVar = "DEEPSEEK_API_KEY";
+  protected registryNamespace: ModelNamespace = "deepseek";
 
   constructor(options: DeepSeekModelOptions = {}) {
     super({
       ...options,
       model:
-        options.model ?? process.env.DEEPSEEK_MODEL_NAME ?? DEFAULT_DEEPSEEK_MODEL,
+        options.model ??
+        process.env.DEEPSEEK_MODEL_NAME ??
+        DEFAULT_DEEPSEEK_MODEL,
       apiKey: options.apiKey ?? process.env.DEEPSEEK_API_KEY,
       baseURL: options.baseURL ?? DEEPSEEK_BASE_URL,
     });

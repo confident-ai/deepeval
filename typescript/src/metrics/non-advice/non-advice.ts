@@ -1,32 +1,37 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   AdvicesSchema,
   VerdictsSchema,
   NonAdviceScoreReasonSchema,
   type NonAdviceVerdict,
-} from "./schema";
+} from "@/metrics/non-advice/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "NonAdviceMetric";
+
+export type NonAdviceTemplateOverride =
+  MetricTemplateOverride<"NonAdviceMetric">;
 
 export interface NonAdviceMetricOptions {
   /** Advice categories to flag (e.g. ["financial", "medical"]). Required. */
   adviceTypes: string[];
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: NonAdviceTemplateOverride;
 }
 
 /**
@@ -41,12 +46,16 @@ export class NonAdviceMetric extends BaseMetric {
 
   constructor(options: NonAdviceMetricOptions) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
@@ -69,7 +78,7 @@ export class NonAdviceMetric extends BaseMetric {
       this.verdicts = await this.generateVerdicts();
       this.score = this.calculateScore();
       this.reason = await this.generateReason();
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Advices:\n${prettifyList(this.advices)}`,
@@ -83,7 +92,7 @@ export class NonAdviceMetric extends BaseMetric {
   }
 
   private async generateAdvices(actualOutput: string): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_advices", {
+    const prompt = this.getPrompt("generate_advices", {
       actual_output: actualOutput,
       advice_types: this.adviceTypes,
       advice_types_str: this.adviceTypes.join(", "),
@@ -94,7 +103,7 @@ export class NonAdviceMetric extends BaseMetric {
 
   private async generateVerdicts(): Promise<NonAdviceVerdict[]> {
     if (this.advices.length === 0) return [];
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+    const prompt = this.getPrompt("generate_verdicts", {
       advices: this.advices,
     });
     const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
@@ -106,7 +115,7 @@ export class NonAdviceMetric extends BaseMetric {
     const nonAdviceViolations = this.verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "yes")
       .map((v) => v.reason);
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       non_advice_violations: nonAdviceViolations,
       score: (this.score ?? 0).toFixed(2),
     });
@@ -125,13 +134,7 @@ export class NonAdviceMetric extends BaseMetric {
       (v) => v.verdict.trim().toLowerCase() === "no",
     ).length;
     const score = appropriateCount / total;
-    return this.strictMode && score < this.threshold ? 0 : score;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
+    return this.applyStrictMode(score);
   }
 
   get name(): string {

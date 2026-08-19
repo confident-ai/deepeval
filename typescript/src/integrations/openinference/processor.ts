@@ -2,20 +2,34 @@ import { SpanProcessor, ReadableSpan } from "@opentelemetry/sdk-trace-base";
 import { Context, Span } from "@opentelemetry/api";
 import {
   SpanType,
-  getCurrentTrace,
+  getCurrentSpan,
+  setCurrentSpan,
   traceManager,
   BaseSpan,
   LlmSpan,
   ToolSpan,
   TraceSpanStatus,
-} from "../../tracing/tracing";
-import { OpenInferenceInstrumentationOptions } from "./index";
-import { ToolCall } from "../../test-case";
-import { Integration } from "../../tracing/integrations";
+} from "@/tracing/tracing";
+import { Integration } from "@/tracing/integrations";
 import {
   inferProviderFromModel,
   normalizeSpanProviderForPlatform,
-} from "../../tracing/utils";
+} from "@/tracing/utils";
+import {
+  applyPendingToSpan,
+  pendingToOtelAttributes,
+  popPendingFor,
+  setDefaultSpanAttribute,
+} from "@/tracing/pending-context";
+import {
+  ROUTE_TO_REST_ATTRIBUTE,
+  endOtelImplicitTrace,
+  resolveSpanRoute,
+  resolveTraceForOtelSpan,
+} from "@/tracing/otel-routing";
+import { OpenInferenceInstrumentationOptions } from "@/integrations/openinference/index";
+import { ToolCall } from "@/test-case";
+import { ConfidentAttr } from "@/tracing/attributes";
 
 // ---------------------------------------------------------------------------
 // OI span kind -> internal SpanType mapping
@@ -219,10 +233,17 @@ function safeJsonParse(val: any): any {
 
 export class OpenInferenceSpanProcessor implements SpanProcessor {
   private options: OpenInferenceInstrumentationOptions;
+  private otlpEnabled: boolean;
   private oiSpanIds = new Set<string>();
+  /** Span to restore as "current" when a span ends, keyed by OTel span id. */
+  private previousSpans = new Map<string, BaseSpan | undefined>();
 
-  constructor(options?: OpenInferenceInstrumentationOptions) {
+  constructor(
+    options?: OpenInferenceInstrumentationOptions,
+    routing: { otlpEnabled?: boolean } = {},
+  ) {
     this.options = options || {};
+    this.otlpEnabled = routing.otlpEnabled ?? true;
   }
 
   forceFlush(): Promise<void> {
@@ -238,42 +259,42 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
     // Track this span id so the filter processor and onEnd can recognise it
     const spanId = span.spanContext().spanId;
     this.oiSpanIds.add(spanId);
-    span.setAttribute("confident.internal.is_oi_span", true);
+    span.setAttribute(ConfidentAttr.INTERNAL_IS_OI_SPAN, true);
 
     // Trace-level attributes (stamped on every span)
     if (this.options.name) {
-      span.setAttribute("confident.trace.name", this.options.name);
+      span.setAttribute(ConfidentAttr.TRACE_NAME, this.options.name);
     }
     if (this.options.environment) {
       span.setAttribute(
-        "confident.trace.environment",
+        ConfidentAttr.TRACE_ENVIRONMENT,
         this.options.environment,
       );
     }
     if (this.options.threadId) {
-      span.setAttribute("confident.trace.thread_id", this.options.threadId);
+      span.setAttribute(ConfidentAttr.TRACE_THREAD_ID, this.options.threadId);
     }
     if (this.options.userId) {
-      span.setAttribute("confident.trace.user_id", this.options.userId);
+      span.setAttribute(ConfidentAttr.TRACE_USER_ID, this.options.userId);
     }
     if (this.options.testCaseId) {
       span.setAttribute(
-        "confident.trace.test_case_id",
+        ConfidentAttr.TRACE_TEST_CASE_ID,
         this.options.testCaseId,
       );
     }
     if (this.options.turnId) {
-      span.setAttribute("confident.trace.turn_id", this.options.turnId);
+      span.setAttribute(ConfidentAttr.TRACE_TURN_ID, this.options.turnId);
     }
     if (this.options.metadata) {
       span.setAttribute(
-        "confident.trace.metadata",
+        ConfidentAttr.TRACE_METADATA,
         JSON.stringify(this.options.metadata),
       );
     }
     if (this.options.tags) {
       span.setAttribute(
-        "confident.trace.tags",
+        ConfidentAttr.TRACE_TAGS,
         JSON.stringify(this.options.tags),
       );
     }
@@ -283,7 +304,7 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
       this.options.traceMetricCollection || this.options.metricCollection;
     if (traceMetricCollection) {
       span.setAttribute(
-        "confident.trace.metric_collection",
+        ConfidentAttr.TRACE_METRIC_COLLECTION,
         traceMetricCollection,
       );
     }
@@ -291,70 +312,80 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
     // Prompt attributes
     if (this.options.prompt) {
       const prompt = this.options.prompt;
-      span.setAttribute("confident.span.prompt_alias", prompt._alias || "");
+      span.setAttribute(ConfidentAttr.SPAN_PROMPT_ALIAS, prompt._alias || "");
       if (prompt.hash) {
         span.setAttribute(
-          "confident.span.prompt_commit_hash",
+          ConfidentAttr.SPAN_PROMPT_COMMIT_HASH,
           prompt.hash || "",
         );
       }
       if (prompt.label) {
-        span.setAttribute("confident.span.prompt_label", prompt.label || "");
+        span.setAttribute(ConfidentAttr.SPAN_PROMPT_LABEL, prompt.label || "");
       }
       if (prompt.version) {
         span.setAttribute(
-          "confident.span.prompt_version",
+          ConfidentAttr.SPAN_PROMPT_VERSION,
           prompt.version || "",
         );
       }
     }
 
     // Span-type attribute
-    span.setAttribute("confident.span.type", spanType!);
     span.setAttribute(
-      "confident.span.integration",
+      ConfidentAttr.SPAN_INTEGRATION,
       this.options.integration || Integration.OPEN_INFERENCE,
     );
+    span.setAttribute(ConfidentAttr.SPAN_TYPE, spanType!);
 
     // Per-type enrichment
     if (spanType === SpanType.AGENT) {
       const agentName = attrs["agent.name"] || (span as any).name;
       if (agentName) {
-        span.setAttribute("confident.span.name", String(agentName));
+        span.setAttribute(ConfidentAttr.SPAN_NAME, String(agentName));
       }
       if (this.options.agentMetricCollection) {
         span.setAttribute(
-          "confident.span.metric_collection",
+          ConfidentAttr.SPAN_METRIC_COLLECTION,
           this.options.agentMetricCollection,
         );
       }
     } else if (spanType === SpanType.LLM) {
       if (this.options.llmMetricCollection) {
         span.setAttribute(
-          "confident.span.metric_collection",
+          ConfidentAttr.SPAN_METRIC_COLLECTION,
           this.options.llmMetricCollection,
         );
       }
     } else if (spanType === SpanType.TOOL) {
       const toolName = attrs["tool.name"] || (span as any).name;
       if (toolName) {
-        span.setAttribute("confident.span.name", String(toolName));
+        span.setAttribute(ConfidentAttr.SPAN_NAME, String(toolName));
         const toolMc = this.options.toolMetricCollectionMap?.[toolName];
         if (toolMc) {
-          span.setAttribute("confident.span.metric_collection", toolMc);
+          span.setAttribute(ConfidentAttr.SPAN_METRIC_COLLECTION, toolMc);
         }
       }
     }
 
-    // Test mode: register span with traceManager
-    if (this.options.isTestMode) {
-      const currentTrace = getCurrentTrace();
+    // Routing decision, stamped so `onEnd` and the export filter act on the same
+    // answer even if the async context has moved on by then.
+    const route = resolveSpanRoute({
+      isTestMode: this.options.isTestMode,
+      otlpEnabled: this.otlpEnabled,
+    });
+    if (route === "rest") {
+      span.setAttribute(ROUTE_TO_REST_ATTRIBUTE, true);
+
+      const parentId =
+        (span as any).parentSpanId || (span as any).parentSpanContext?.spanId;
+      const isOiRoot = !parentId || !this.oiSpanIds.has(parentId);
+
+      // A bare caller has no trace of their own; open one implicitly for the
+      // root so the spans have somewhere to live.
+      const currentTrace = resolveTraceForOtelSpan(isOiRoot);
       if (currentTrace) {
         const traceId = currentTrace.uuid;
-        span.setAttribute("confident.internal.trace_uuid", traceId);
-
-        const parentId =
-          (span as any).parentSpanId || (span as any).parentSpanContext?.spanId;
+        span.setAttribute(ConfidentAttr.INTERNAL_TRACE_UUID, traceId);
 
         const commonParams = {
           uuid: spanId,
@@ -374,6 +405,7 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
         } else {
           deepEvalSpan = new BaseSpan(commonParams);
         }
+        applyPendingToSpan(deepEvalSpan, popPendingFor(spanType ?? undefined));
 
         traceManager.addSpan(deepEvalSpan);
         try {
@@ -382,7 +414,28 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
           deepEvalSpan.parentUuid = undefined;
           traceManager.addSpanToTrace(deepEvalSpan);
         }
+
+        this.previousSpans.set(spanId, getCurrentSpan());
+        setCurrentSpan(deepEvalSpan);
       }
+    } else {
+      const staged = pendingToOtelAttributes(
+        popPendingFor(spanType ?? undefined),
+        spanType ?? undefined,
+      );
+      for (const [key, value] of Object.entries(staged)) {
+        span.setAttribute(key, value);
+      }
+    }
+  }
+
+  /** Restore the span that was current before `spanId` started. */
+  private popSpanContext(spanId: string): void {
+    if (!this.previousSpans.has(spanId)) return;
+    const previous = this.previousSpans.get(spanId);
+    this.previousSpans.delete(spanId);
+    if (getCurrentSpan()?.uuid === spanId) {
+      setCurrentSpan(previous ?? null);
     }
   }
 
@@ -398,42 +451,64 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
       this.oiSpanIds.delete(spanId);
       return;
     }
-    attributes["confident.span.type"] = spanType;
+    attributes[ConfidentAttr.SPAN_TYPE] = spanType;
 
     // Extract input / output from OI semantic convention attributes
     const [inputText, outputText] = extractMessages(attributes);
 
+    // What the framework reports is a default: on the OTLP route anything
+    // already on the span was staged by user code at onStart and outranks it.
     if (inputText) {
-      attributes["confident.span.input"] = inputText;
-      attributes["confident.trace.input"] = inputText;
+      setDefaultSpanAttribute(attributes, ConfidentAttr.SPAN_INPUT, inputText);
+      setDefaultSpanAttribute(attributes, ConfidentAttr.TRACE_INPUT, inputText);
     }
     if (outputText) {
-      attributes["confident.span.output"] = outputText;
-      attributes["confident.trace.output"] = outputText;
+      setDefaultSpanAttribute(
+        attributes,
+        ConfidentAttr.SPAN_OUTPUT,
+        outputText,
+      );
+      setDefaultSpanAttribute(
+        attributes,
+        ConfidentAttr.TRACE_OUTPUT,
+        outputText,
+      );
     }
 
     // Token counts (OI keys → confident keys)
     const inputTokens = attributes["llm.token_count.prompt"];
     const outputTokens = attributes["llm.token_count.completion"];
     if (inputTokens != null) {
-      attributes["confident.llm.input_token_count"] = Number(inputTokens);
+      setDefaultSpanAttribute(
+        attributes,
+        ConfidentAttr.LLM_INPUT_TOKEN_COUNT,
+        Number(inputTokens),
+      );
     }
     if (outputTokens != null) {
-      attributes["confident.llm.output_token_count"] = Number(outputTokens);
+      setDefaultSpanAttribute(
+        attributes,
+        ConfidentAttr.LLM_OUTPUT_TOKEN_COUNT,
+        Number(outputTokens),
+      );
     }
 
     // Model name
     const model = attributes["llm.model_name"];
     if (model) {
-      attributes["confident.llm.model"] = String(model);
+      setDefaultSpanAttribute(
+        attributes,
+        ConfidentAttr.LLM_MODEL,
+        String(model),
+      );
     }
-    if (spanType === SpanType.LLM && !attributes["confident.span.provider"]) {
+    if (spanType === SpanType.LLM && !attributes[ConfidentAttr.SPAN_PROVIDER]) {
       const rawProvider =
         attributes["llm.provider"] ??
         (model ? inferProviderFromModel(String(model)) : undefined);
       const provider = normalizeSpanProviderForPlatform(rawProvider);
       if (provider) {
-        attributes["confident.span.provider"] = provider;
+        attributes[ConfidentAttr.SPAN_PROVIDER] = provider;
       }
     }
 
@@ -445,15 +520,21 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
     ) {
       const toolsCalled = extractToolCalls(attributes);
       if (toolsCalled.length > 0) {
-        attributes["confident.span.tools_called"] = JSON.stringify(toolsCalled);
+        setDefaultSpanAttribute(
+          attributes,
+          ConfidentAttr.SPAN_TOOLS_CALLED,
+          JSON.stringify(toolsCalled),
+        );
       }
     }
 
-    // Test mode: update the span registered in onStart and finalise trace
-    if (this.options.isTestMode) {
+    // Update the span registered in onStart and finalise the trace, for spans the
+    // interceptor routed to REST.
+    if (attributes[ROUTE_TO_REST_ATTRIBUTE]) {
       this.updateAndEndSpan(span, attributes);
     }
 
+    this.popSpanContext(span.spanContext().spanId);
     this.oiSpanIds.delete(span.spanContext().spanId);
   }
 
@@ -462,7 +543,7 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
   }
 
   private updateAndEndSpan(span: ReadableSpan, attributes: any): void {
-    const traceId = attributes["confident.internal.trace_uuid"] as string;
+    const traceId = attributes[ConfidentAttr.INTERNAL_TRACE_UUID] as string;
     if (!traceId) return;
 
     const spanId = span.spanContext().spanId;
@@ -481,18 +562,41 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
       deepEvalSpan.status = TraceSpanStatus.ERRORED;
     }
 
-    deepEvalSpan.input = safeJsonParse(attributes["confident.span.input"]);
-    deepEvalSpan.output = safeJsonParse(attributes["confident.span.output"]);
     deepEvalSpan.error = attributes["error"]
       ? String(attributes["error"])
       : undefined;
-    deepEvalSpan.metricCollection =
-      attributes["confident.span.metric_collection"];
+    // These fields can also have been set from user code (`next*Span`,
+    // `updateCurrentSpan`), which outranks what the framework reported: assign
+    // only where the attribute carries something and the span does not.
+    if (
+      attributes[ConfidentAttr.SPAN_INPUT] !== undefined &&
+      deepEvalSpan.input === undefined
+    ) {
+      deepEvalSpan.input = safeJsonParse(attributes[ConfidentAttr.SPAN_INPUT]);
+    }
+    if (
+      attributes[ConfidentAttr.SPAN_OUTPUT] !== undefined &&
+      deepEvalSpan.output === undefined
+    ) {
+      deepEvalSpan.output = safeJsonParse(
+        attributes[ConfidentAttr.SPAN_OUTPUT],
+      );
+    }
+    if (
+      attributes[ConfidentAttr.SPAN_METRIC_COLLECTION] !== undefined &&
+      deepEvalSpan.metricCollection === undefined
+    ) {
+      deepEvalSpan.metricCollection =
+        attributes[ConfidentAttr.SPAN_METRIC_COLLECTION];
+    }
 
-    if (attributes["confident.span.metadata"]) {
+    if (
+      attributes[ConfidentAttr.SPAN_METADATA] &&
+      deepEvalSpan.metadata === undefined
+    ) {
       try {
         deepEvalSpan.metadata = JSON.parse(
-          attributes["confident.span.metadata"],
+          attributes[ConfidentAttr.SPAN_METADATA],
         );
       } catch {
         // ignore
@@ -503,31 +607,45 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
 
     if (spanType === SpanType.LLM) {
       const llmSpan = deepEvalSpan as LlmSpan;
-      llmSpan.model = attributes["confident.llm.model"] || "unknown";
-      llmSpan.inputTokenCount = attributes["confident.llm.input_token_count"];
-      llmSpan.outputTokenCount = attributes["confident.llm.output_token_count"];
-      if (attributes["confident.span.prompt_alias"])
-        llmSpan.promptAlias = String(attributes["confident.span.prompt_alias"]);
-      if (attributes["confident.span.prompt_commit_hash"])
-        llmSpan.promptCommitHash = String(
-          attributes["confident.span.prompt_commit_hash"],
+      // The span is constructed with a placeholder model, so anything other
+      // than "unknown" here came from user code and stands.
+      if (!llmSpan.model || llmSpan.model === "unknown") {
+        llmSpan.model = attributes[ConfidentAttr.LLM_MODEL] || "unknown";
+      }
+      if (llmSpan.inputTokenCount === undefined) {
+        llmSpan.inputTokenCount =
+          attributes[ConfidentAttr.LLM_INPUT_TOKEN_COUNT];
+      }
+      if (llmSpan.outputTokenCount === undefined) {
+        llmSpan.outputTokenCount =
+          attributes[ConfidentAttr.LLM_OUTPUT_TOKEN_COUNT];
+      }
+      if (attributes[ConfidentAttr.SPAN_PROMPT_ALIAS])
+        llmSpan.promptAlias = String(
+          attributes[ConfidentAttr.SPAN_PROMPT_ALIAS],
         );
-      if (attributes["confident.span.prompt_label"])
-        llmSpan.promptLabel = String(attributes["confident.span.prompt_label"]);
-      if (attributes["confident.span.prompt_version"])
+      if (attributes[ConfidentAttr.SPAN_PROMPT_COMMIT_HASH])
+        llmSpan.promptCommitHash = String(
+          attributes[ConfidentAttr.SPAN_PROMPT_COMMIT_HASH],
+        );
+      if (attributes[ConfidentAttr.SPAN_PROMPT_LABEL])
+        llmSpan.promptLabel = String(
+          attributes[ConfidentAttr.SPAN_PROMPT_LABEL],
+        );
+      if (attributes[ConfidentAttr.SPAN_PROMPT_VERSION])
         llmSpan.promptVersion = String(
-          attributes["confident.span.prompt_version"],
+          attributes[ConfidentAttr.SPAN_PROMPT_VERSION],
         );
     } else if (spanType === SpanType.TOOL) {
-      const toolName = attributes["confident.span.name"] || deepEvalSpan.name;
+      const toolName = attributes[ConfidentAttr.SPAN_NAME] || deepEvalSpan.name;
       deepEvalSpan.name = toolName;
 
       const currentTrace = traceManager.getTraceByUuid(traceId);
       if (currentTrace) {
         const toolCall: ToolCall = {
           name: toolName,
-          inputParameters: safeJsonParse(attributes["confident.span.input"]),
-          output: safeJsonParse(attributes["confident.span.output"]),
+          inputParameters: safeJsonParse(attributes[ConfidentAttr.SPAN_INPUT]),
+          output: safeJsonParse(attributes[ConfidentAttr.SPAN_OUTPUT]),
         };
         if (!currentTrace.toolsCalled) {
           currentTrace.toolsCalled = [];
@@ -552,6 +670,12 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
       if (!parentId) {
         traceManager.endTrace(traceId);
       }
+    }
+
+    const rootParentId =
+      (span as any).parentSpanId || (span as any).parentSpanContext?.spanId;
+    if (!rootParentId) {
+      endOtelImplicitTrace(traceId);
     }
   }
 }

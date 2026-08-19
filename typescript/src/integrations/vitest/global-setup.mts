@@ -1,0 +1,46 @@
+import * as fs from "fs";
+import { randomUUID } from "crypto";
+import {
+  DEEPEVAL_RESULTS_DIR,
+  DEEPEVAL_RUNNING,
+  DEEPEVAL_OFFICIAL,
+  DEEPEVAL_IDENTIFIER,
+} from "@/constants.js";
+import { createTestRunResultsDir } from "@/utils.js";
+import { wrapUpTestRun } from "@/evaluate/test-run/index.js";
+import { TELEMETRY_RUN_ID_ENV_VAR } from "@/telemetry/index.js";
+import { flushTraces, traceFlushEnabled } from "@/tracing/flush.js";
+
+export default function setup() {
+  let dir = process.env[DEEPEVAL_RESULTS_DIR];
+  if (!dir) {
+    dir = createTestRunResultsDir();
+    process.env[DEEPEVAL_RESULTS_DIR] = dir;
+  } else {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  process.env[DEEPEVAL_RUNNING] = "1";
+  // Workers are separate processes, so the environment is the only channel that
+  // reaches them, and a shared id is what makes a session read as one run.
+  process.env[TELEMETRY_RUN_ID_ENV_VAR] ??= randomUUID();
+
+  const start = Date.now();
+  const resultsDir = dir;
+
+  return async () => {
+    const runDuration = (Date.now() - start) / 1000;
+    // Traces are posted in the background, so they have to land before the
+    // test run is wrapped up and the process exits.
+    if (traceFlushEnabled()) await flushTraces();
+    await wrapUpTestRun(resultsDir, {
+      runDuration,
+      official: process.env[DEEPEVAL_OFFICIAL] === "1",
+      identifier: process.env[DEEPEVAL_IDENTIFIER] || undefined,
+    });
+    try {
+      fs.rmSync(resultsDir, { recursive: true, force: true });
+    } catch {
+      // best-effort cleanup
+    }
+  };
+}

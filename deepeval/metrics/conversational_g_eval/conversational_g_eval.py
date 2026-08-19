@@ -1,7 +1,7 @@
 """A slightly modified tailored version of the LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
 from openai.types.chat.chat_completion import ChatCompletion
-from typing import Optional, List, Tuple, Union, Dict
+from typing import Optional, List, Tuple, Union, Dict, Type
 from rich.console import Console
 import math
 from deepeval.metrics import BaseConversationalMetric
@@ -38,6 +38,10 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 import deepeval.metrics.conversational_g_eval.schema as cgschema
 from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.templates import make_template_class
+
+
+ConversationalGEvalTemplate = make_template_class("ConversationalGEval")
 
 
 class ConversationalGEval(BaseConversationalMetric):
@@ -48,13 +52,17 @@ class ConversationalGEval(BaseConversationalMetric):
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         top_logprobs: int = 20,
         rubric: Optional[List[Rubric]] = None,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
         _include_g_eval_suffix: bool = True,
+        flaky: bool = False,
+        evaluation_template: Type[
+            ConversationalGEvalTemplate
+        ] = ConversationalGEvalTemplate,
     ):
         if evaluation_params is not None and len(evaluation_params) == 0:
             raise ValueError("evaluation_params cannot be an empty list.")
@@ -84,14 +92,15 @@ class ConversationalGEval(BaseConversationalMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self._include_g_eval_suffix = _include_g_eval_suffix
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         ensure_required_params(
             self.evaluation_params, self.criteria, self.evaluation_steps
@@ -119,7 +128,6 @@ class ConversationalGEval(BaseConversationalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -134,7 +142,7 @@ class ConversationalGEval(BaseConversationalMetric):
                     if self.strict_mode and self.score < self.threshold
                     else self.score
                 )
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -152,7 +160,6 @@ class ConversationalGEval(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         ensure_required_params(
             self.evaluation_params, self.criteria, self.evaluation_steps
@@ -187,7 +194,7 @@ class ConversationalGEval(BaseConversationalMetric):
                 if self.strict_mode and self.score < self.threshold
                 else self.score
             )
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -397,16 +404,6 @@ class ConversationalGEval(BaseConversationalMetric):
         for index, string in enumerate(self.evaluation_steps, start=1):
             evaluation_steps += f"{index}. {string}\n"
         return evaluation_steps
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     def upload(self):
         ensure_required_params(

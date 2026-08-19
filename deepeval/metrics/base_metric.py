@@ -13,6 +13,7 @@ from deepeval.templates.resolver import (
     MetricTemplateMethod,
     resolve_template,
 )
+from deepeval.templates.template_class import filter_template_kwargs
 
 if TYPE_CHECKING:
     from deepeval.models import DeepEvalBaseLLM
@@ -31,19 +32,28 @@ class PromptMixin:
         strict: bool = True,
         **kwargs,
     ) -> str:
+        context = {**kwargs, "multimodal": multimodal, "strict": strict}
+
+        # An explicit `template_class` borrows another class's templates, so an
+        # `evaluation_template` set for this metric must not hijack it.
+        if template_class is None:
+            render = getattr(
+                getattr(self, "evaluation_template", None), method, None
+            )
+            if render is not None:
+                return render(**filter_template_kwargs(render, context))
+
         return resolve_template(
             "metrics",
             template_class or self.__class__.__name__,
             method,
-            multimodal=multimodal,
-            strict=strict,
-            **kwargs,
+            **context,
         )
 
 
 class BaseMetric(PromptMixin):
     _required_params = List[SingleTurnParams]
-    threshold: float
+    threshold: Optional[float] = None
     score: Optional[float] = None
     score_breakdown: Dict = None
     reason: Optional[str] = None
@@ -59,6 +69,7 @@ class BaseMetric(PromptMixin):
     output_tokens: Optional[int] = None
     verbose_logs: Optional[str] = None
     skipped = False
+    flaky: bool = False
     requires_trace: bool = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
@@ -79,9 +90,17 @@ class BaseMetric(PromptMixin):
             f"Async execution for {self.__class__.__name__} not supported yet. Please set 'async_mode' to 'False'."
         )
 
-    @abstractmethod
-    def is_successful(self) -> bool:
-        raise NotImplementedError
+    def is_successful(self) -> Optional[bool]:
+        if self.threshold is None:
+            self.success = None
+        elif self.error is not None:
+            self.success = False
+        else:
+            try:
+                self.success = self.score >= self.threshold
+            except TypeError:
+                self.success = False
+        return self.success
 
     @property
     def __name__(self):
@@ -106,7 +125,7 @@ class BaseMetric(PromptMixin):
 
 
 class BaseConversationalMetric(PromptMixin):
-    threshold: float
+    threshold: Optional[float] = None
     score: Optional[float] = None
     score_breakdown: Dict = None
     reason: Optional[str] = None
@@ -122,6 +141,7 @@ class BaseConversationalMetric(PromptMixin):
     output_tokens: Optional[int] = None
     verbose_logs: Optional[str] = None
     skipped = False
+    flaky: bool = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
 
@@ -145,9 +165,17 @@ class BaseConversationalMetric(PromptMixin):
             f"Async execution for {self.__class__.__name__} not supported yet. Please set 'async_mode' to 'False'."
         )
 
-    @abstractmethod
-    def is_successful(self) -> bool:
-        raise NotImplementedError
+    def is_successful(self) -> Optional[bool]:
+        if self.threshold is None:
+            self.success = None
+        elif self.error is not None:
+            self.success = False
+        else:
+            try:
+                self.success = self.score >= self.threshold
+            except TypeError:
+                self.success = False
+        return self.success
 
     @property
     def __name__(self):

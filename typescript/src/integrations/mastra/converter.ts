@@ -6,13 +6,13 @@ import {
   LlmSpan,
   RetrieverSpan,
   ToolSpan,
-} from "../../tracing/tracing";
-import { ToolCall } from "../../test-case";
-import { Integration } from "../../tracing/integrations";
+} from "@/tracing/tracing";
+import { Integration } from "@/tracing/integrations";
 import {
   inferProviderFromModel,
   normalizeSpanProviderForPlatform,
-} from "../../tracing/utils";
+} from "@/tracing/utils";
+import { ToolCall } from "@/test-case";
 import { SpanType as MastraSpanType } from "@mastra/core/observability";
 import type {
   AnyExportedSpan,

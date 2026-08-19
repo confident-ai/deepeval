@@ -34,7 +34,12 @@ from deepeval.test_run.hyperparameters import (
     process_hyperparameters,
 )
 from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
-from deepeval.telemetry import capture_evaluation_run
+from deepeval.telemetry import (
+    Entrypoint,
+    LoginPromptSurface,
+    capture_evaluation_run,
+    capture_login_prompt_shown,
+)
 from deepeval.test_run.api import LLMApiTestCase
 from deepeval.evaluate.utils import create_arena_metric_data
 from deepeval.evaluate.types import PostExperimentRequest
@@ -77,7 +82,7 @@ def compare(
         test_run_map[contestant_name] = test_run
 
     start_time = time.time()
-    with capture_evaluation_run("compare()"):
+    with capture_evaluation_run(Entrypoint.COMPARE):
         if async_config.run_async:
             loop = get_or_create_event_loop()
             winners = loop.run_until_complete(
@@ -497,6 +502,7 @@ def wrap_up_experiment(
     )
 
     if not is_confident():
+        capture_login_prompt_shown(LoginPromptSurface.POST_ARENA)
         console.print(
             f"{'=' * 80}\n"
             f"\n» Want to share experiments with your team? ❤️ 🏟️\n"

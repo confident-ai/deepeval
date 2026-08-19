@@ -1,5 +1,6 @@
 export {
   KnowledgeRetentionMetric,
   type KnowledgeRetentionMetricOptions,
-} from "./knowledge-retention";
-export * from "./schema";
+  type KnowledgeRetentionTemplateOverride,
+} from "@/metrics/knowledge-retention/knowledge-retention";
+export * from "@/metrics/knowledge-retention/schema";

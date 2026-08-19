@@ -1,7 +1,7 @@
 import * as path from "path";
-import { DeepEvalCallbackHandler } from "../../../src/integrations/langchain";
-import { traceManager } from "../../../src/tracing/tracing";
-import { Environment } from "../../../src/tracing/utils";
+import { DeepEvalCallbackHandler } from "@/integrations/langchain";
+import { traceManager } from "@/tracing/tracing";
+import { Environment } from "@/tracing/utils";
 import { generateTraceJson, assertTraceJson } from "../utils";
 
 import { invokeSimpleApp } from "./apps/langchain-simple-app";

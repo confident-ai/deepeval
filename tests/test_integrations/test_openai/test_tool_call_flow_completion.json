@@ -12,6 +12,7 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "output": {
             "location": "San Francisco",
             "temperature": 18,
@@ -90,6 +91,7 @@
       "output": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "description": "Get the current weather for a city.",
           "inputParameters": {
             "location": "San Francisco",
@@ -100,6 +102,7 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "description": "Get the current weather for a city.",
           "inputParameters": {
             "location": "San Francisco",
@@ -144,6 +147,7 @@
   "output": [
     {
       "name": "get_weather",
+      "type": "FUNCTION",
       "description": "Get the current weather for a city.",
       "inputParameters": {
         "location": "San Francisco",

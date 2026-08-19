@@ -1,32 +1,36 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   MisusesSchema,
   VerdictsSchema,
   MisuseScoreReasonSchema,
   type MisuseVerdict,
-} from "./schema";
+} from "@/metrics/misuse/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "MisuseMetric";
+
+export type MisuseTemplateOverride = MetricTemplateOverride<"MisuseMetric">;
 
 export interface MisuseMetricOptions {
   /** The chatbot's domain (e.g. "financial advisor"). Required. */
   domain: string;
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: MisuseTemplateOverride;
 }
 
 /**
@@ -39,14 +43,19 @@ export class MisuseMetric extends BaseMetric {
   verdicts: MisuseVerdict[] = [];
   private readonly domain: string;
 
+  protected higherIsBetter = false;
+
   constructor(options: MisuseMetricOptions) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 0 : (options.threshold ?? 0.5), {
+    super(strictMode ? 0 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
@@ -69,7 +78,7 @@ export class MisuseMetric extends BaseMetric {
       this.verdicts = await this.generateVerdicts();
       this.score = this.calculateScore();
       this.reason = await this.generateReason();
-      this.success = this.score <= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Misuses:\n${prettifyList(this.misuses)}`,
@@ -83,7 +92,7 @@ export class MisuseMetric extends BaseMetric {
   }
 
   private async generateMisuses(actualOutput: string): Promise<string[]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_misuses", {
+    const prompt = this.getPrompt("generate_misuses", {
       actual_output: actualOutput,
       domain: this.domain,
     });
@@ -93,7 +102,7 @@ export class MisuseMetric extends BaseMetric {
 
   private async generateVerdicts(): Promise<MisuseVerdict[]> {
     if (this.misuses.length === 0) return [];
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+    const prompt = this.getPrompt("generate_verdicts", {
       misuses: this.misuses,
       domain: this.domain,
     });
@@ -106,7 +115,7 @@ export class MisuseMetric extends BaseMetric {
     const misuseViolations = this.verdicts
       .filter((v) => v.verdict.trim().toLowerCase() === "yes")
       .map((v) => v.reason);
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       misuse_violations: misuseViolations,
       score: (this.score ?? 0).toFixed(2),
     });
@@ -125,13 +134,7 @@ export class MisuseMetric extends BaseMetric {
       (v) => v.verdict.trim().toLowerCase() === "yes",
     ).length;
     const score = misuseCount / total;
-    return this.strictMode && score > this.threshold ? 1 : score;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 1) <= this.threshold;
-    this.success = ok;
-    return ok;
+    return this.applyStrictMode(score);
   }
 
   get name(): string {

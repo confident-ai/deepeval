@@ -1,49 +1,43 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
-import {
-  ConversationalTestCase,
-  MultiTurnParams,
-  Turn,
-} from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { resolveThreshold } from "@/metrics/base-metrics";
+import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
   resolveRetrievalContext,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
   getTurnsInSlidingWindow,
-} from "../conversational-utils";
+} from "@/metrics/conversational-utils";
 import {
   ContextualRelevancyVerdictsSchema,
   ContextualRelevancyScoreReasonSchema,
   type ContextualRelevancyVerdict,
   type InteractionContextualRelevancyScore,
-} from "./schema";
+} from "@/metrics/turn-contextual-relevancy/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
+import { contextualRelevancyVerdictVars } from "@/metrics/retrieval-context-display";
 
 const TEMPLATE_CLASS = "TurnContextualRelevancyMetric";
 
-const EXTRACTION_INSTRUCTIONS =
-  "You should first extract statements found in the context, which are " +
-  "high level information found in the context, before deciding on a " +
-  "verdict and optionally a reason for each statement.";
-const EMPTY_CONTEXT_INSTRUCTION =
-  '\nIf provided context contains no actual content or statements then: ' +
-  'give "no" as a "verdict",\nput context into "statement", and ' +
-  '"No statements found in provided context." into "reason".';
+export type TurnContextualRelevancyTemplateOverride =
+  MetricTemplateOverride<"TurnContextualRelevancyMetric">;
 
 export interface TurnContextualRelevancyMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
   windowSize?: number;
+  evaluationTemplate?: TurnContextualRelevancyTemplateOverride;
 }
 
 /**
@@ -57,12 +51,16 @@ export class TurnContextualRelevancyMetric extends BaseConversationalMetric {
 
   constructor(options: TurnContextualRelevancyMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       MultiTurnParams.ROLE,
       MultiTurnParams.CONTENT,
@@ -91,7 +89,7 @@ export class TurnContextualRelevancyMetric extends BaseConversationalMetric {
         turnsWindows.map((w) => this.getInteractionScore(w)),
       );
       this.score = this.calculateScore();
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
       this.reason = await this.generateFinalReason();
 
       this.verboseLogs = constructVerboseLogs(this, [
@@ -113,7 +111,9 @@ export class TurnContextualRelevancyMetric extends BaseConversationalMetric {
     for (const turn of window) {
       if (turn.role === "user") userContent += `\n${turn.content} `;
       else if (turn.retrievalContext != null)
-        retrievalContext.push(...resolveRetrievalContext(turn.retrievalContext));
+        retrievalContext.push(
+          ...resolveRetrievalContext(turn.retrievalContext),
+        );
     }
 
     const verdicts = await this.generateVerdicts(userContent, retrievalContext);
@@ -126,9 +126,13 @@ export class TurnContextualRelevancyMetric extends BaseConversationalMetric {
       };
     }
     const score = this.calculateInteractionScore(verdicts);
-    const reason = await this.getInteractionReason(userContent, score, verdicts);
+    const reason = await this.getInteractionReason(
+      userContent,
+      score,
+      verdicts,
+    );
     return {
-      score: this.strictMode && score < this.threshold ? 0 : score,
+      score: this.applyStrictMode(score),
       reason,
       verdicts,
     };
@@ -141,13 +145,10 @@ export class TurnContextualRelevancyMetric extends BaseConversationalMetric {
     if (retrievalContext.length === 0) return [];
     const perNode = await Promise.all(
       retrievalContext.map(async (context) => {
-        const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdicts", {
+        const prompt = this.getPrompt("generate_verdicts", {
           input,
           context,
-          context_type: "context",
-          statement_or_image: "statement",
-          extraction_instructions: EXTRACTION_INSTRUCTIONS,
-          empty_context_instruction: EMPTY_CONTEXT_INSTRUCTION,
+          ...contextualRelevancyVerdictVars(this.multimodal),
         });
         const { verdicts } = await generateWithSchema(
           this,
@@ -172,7 +173,7 @@ export class TurnContextualRelevancyMetric extends BaseConversationalMetric {
       if (v.verdict.toLowerCase() === "no") irrelevant.push(v.reason);
       else relevant.push(v.statement);
     }
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       input,
       irrelevant_statements: irrelevant,
       relevant_statements: relevant,
@@ -205,7 +206,7 @@ export class TurnContextualRelevancyMetric extends BaseConversationalMetric {
     if (this.scores.length === 0) {
       return "There were no interactions with retrieval context to evaluate, hence the score is 1";
     }
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_final_reason", {
+    const prompt = this.getPrompt("generate_final_reason", {
       final_score: this.score,
       success: this.success,
       reasons: this.scores.map((s) => s.reason),
@@ -216,12 +217,6 @@ export class TurnContextualRelevancyMetric extends BaseConversationalMetric {
       ContextualRelevancyScoreReasonSchema,
     );
     return reason;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

@@ -1,4 +1,10 @@
+import asyncio
+import os
+import warnings
+
 import pytest
+from deepeval import evaluate
+from deepeval.metrics import DAGMetric
 from deepeval.metrics.dag import (
     TaskNode,
     BinaryJudgementNode,
@@ -6,13 +12,127 @@ from deepeval.metrics.dag import (
     VerdictNode,
     DeepAcyclicGraph,
 )
-from deepeval.test_case import SingleTurnParams
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics.dag.utils import (
     is_valid_dag_from_roots,
     extract_required_params,
     copy_graph,
     is_valid_dag,
 )
+
+requires_openai = pytest.mark.skipif(
+    os.getenv("OPENAI_API_KEY") is None
+    or not os.getenv("OPENAI_API_KEY").strip(),
+    reason="OPENAI_API_KEY is not set",
+)
+
+
+class LegacyDAGModel(DeepEvalBaseLLM):
+    """Deterministic judge for the legacy DAG."""
+
+    def __init__(self):
+        self.schema_calls = []
+        super().__init__(model="legacy-dag-model")
+
+    def load_model(self):
+        return self
+
+    def generate(self, prompt, schema=None, **kwargs):
+        assert schema is not None
+        self.schema_calls.append(schema.__name__)
+
+        if schema.__name__ == "TaskNodeOutput":
+            return schema(output=["Intro", "Body", "Conclusion"])
+        if schema.__name__ == "BinaryJudgementVerdict":
+            return schema(verdict=True, reason="All headings are present.")
+        if schema.__name__ == "NonBinaryJudgementVerdict":
+            return schema(verdict="Yes", reason="The headings are in order.")
+
+        raise AssertionError(f"Unexpected schema: {schema.__name__}")
+
+    async def a_generate(self, prompt, schema=None, **kwargs):
+        return self.generate(prompt, schema=schema, **kwargs)
+
+    def get_model_name(self):
+        return "legacy-dag-model"
+
+
+def build_legacy_dag() -> DeepAcyclicGraph:
+    """Build the shared-node legacy DAG."""
+    correct_order_node = NonBinaryJudgementNode(
+        criteria=(
+            "Are the summary headings in the correct order: "
+            "'intro' => 'body' => 'conclusion'?"
+        ),
+        children=[
+            VerdictNode(verdict="Yes", score=10),
+            VerdictNode(verdict="Two are out of order", score=4),
+            VerdictNode(verdict="All out of order", score=2),
+        ],
+    )
+
+    correct_headings_node = BinaryJudgementNode(
+        criteria=(
+            "Does the summary headings contain all three: "
+            "'intro', 'body', and 'conclusion'?"
+        ),
+        children=[
+            VerdictNode(verdict=False, score=0),
+            VerdictNode(verdict=True, child=correct_order_node),
+        ],
+    )
+
+    extract_headings_node = TaskNode(
+        instructions="Extract all headings in `actual_output`",
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
+        output_label="Summary headings",
+        children=[correct_headings_node, correct_order_node],
+    )
+
+    return DeepAcyclicGraph(root_nodes=[extract_headings_node])
+
+
+def build_legacy_dag_test_case() -> LLMTestCase:
+    return LLMTestCase(
+        input=(
+            "Alice: Today's agenda: product update, blockers, and marketing "
+            "timeline. Bob, updates?"
+        ),
+        actual_output=(
+            "Intro:\n"
+            "Alice outlined the agenda.\n\n"
+            "Body:\n"
+            "The team discussed engineering and marketing updates.\n\n"
+            "Conclusion:\n"
+            "The team aligned on next steps."
+        ),
+    )
+
+
+class TestLegacyDAG:
+    @pytest.mark.parametrize("async_mode", [False, True])
+    def test_remains_executable(self, async_mode):
+        """Protect the legacy DAG used by existing user codebases."""
+        model = LegacyDAGModel()
+        metric = DAGMetric(
+            name="Format Correctness",
+            dag=build_legacy_dag(),
+            model=model,
+            include_reason=False,
+            async_mode=async_mode,
+        )
+
+        score = metric.measure(
+            build_legacy_dag_test_case(),
+            _show_indicator=False,
+        )
+
+        assert score == 1
+        assert metric.success is True
+        assert model.schema_calls.count("TaskNodeOutput") == 1
+        assert model.schema_calls.count("BinaryJudgementVerdict") == 1
+        assert model.schema_calls.count("NonBinaryJudgementVerdict") == 1
 
 
 class TestDeepAcyclicGraph:
@@ -121,7 +241,7 @@ class TestDeepAcyclicGraph:
 
     def test_invalid_child_type(self):
         invalid_child = "string_instead_of_node"  # Invalid child type
-        with pytest.raises(AttributeError):
+        with pytest.raises(TypeError):
             TaskNode(
                 instructions="Invalid task",
                 output_label="X",
@@ -172,6 +292,22 @@ class TestDeepAcyclicGraph:
         node2 = TaskNode("Task 2", "Label2", [], [])
         dag = DeepAcyclicGraph(root_nodes=[node1, node2])
         assert is_valid_dag(dag, multiturn=False) is True
+
+    def test_disallow_root_that_is_a_child_of_another_root(self):
+        """A root with incoming edges is reached twice and runs twice."""
+        extract = TaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        summarise = TaskNode(
+            instructions="Summarise",
+            output_label="Y",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        extract.add_node(summarise)
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[extract, summarise])
 
     def test_copy_graph_isolated_and_deep(self):
         INSTRUCTIONS = "Instruction 1:"
@@ -269,3 +405,745 @@ class TestDeepAcyclicGraph:
         task = TaskNode("Check", "result", [], [judge])
         dag = DeepAcyclicGraph(root_nodes=[task])
         assert is_valid_dag_from_roots(dag.root_nodes, multiturn=False)
+
+    def test_add_node_appends_and_returns(self):
+        task = TaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        judge = BinaryJudgementNode(criteria="?")
+        returned = task.add_node(judge)
+        assert returned is judge
+        assert task.children == [judge]
+
+    def test_add_verdict_score_leaf(self):
+        judge = BinaryJudgementNode(criteria="?")
+        verdict = judge.add_verdict(True, score=10)
+        assert isinstance(verdict, VerdictNode)
+        assert verdict.verdict is True
+        assert verdict.score == 10
+        assert verdict.child is None
+        assert judge.children == [verdict]
+
+    def test_add_verdict_then_sets_child(self):
+        order = NonBinaryJudgementNode(criteria="order?")
+        judge = BinaryJudgementNode(criteria="?")
+        verdict = judge.add_verdict(True, then=order)
+        assert verdict.child is order
+        assert verdict.score is None
+
+    def test_add_verdict_rejects_score_and_then(self):
+        order = NonBinaryJudgementNode(criteria="order?")
+        judge = BinaryJudgementNode(criteria="?")
+        with pytest.raises(ValueError):
+            judge.add_verdict(True, score=10, then=order)
+
+    def test_top_down_builds_valid_diamond(self):
+        extract = TaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
+        )
+        headings = BinaryJudgementNode(criteria="all three?")
+        order = NonBinaryJudgementNode(criteria="order?")
+        extract.add_node(headings)
+        extract.add_node(
+            order
+        )  # diamond: shared by extract and the True verdict
+        headings.add_verdict(False, score=0)
+        headings.add_verdict(True, then=order)
+        order.add_verdict("Yes", score=10)
+        order.add_verdict("No", score=0)
+
+        dag = DeepAcyclicGraph(root_nodes=[extract])
+        assert is_valid_dag_from_roots(dag.root_nodes, multiturn=False)
+        assert dag.indegree[extract] == 0
+        assert dag.indegree[order] == 2
+
+    def test_build_time_validation_incomplete_binary(self):
+        extract = TaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        judge = BinaryJudgementNode(criteria="?")
+        extract.add_node(judge)
+        judge.add_verdict(True, score=10)  # only one verdict
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[extract])
+
+    def test_nonbinary_schema_deferred_to_build(self):
+        order = NonBinaryJudgementNode(criteria="order?")
+        order.add_verdict("A", score=10)
+        order.add_verdict("B", score=0)
+        assert not hasattr(order, "_verdict_schema")
+        DeepAcyclicGraph(root_nodes=[order])
+        assert hasattr(order, "_verdict_schema")
+        assert sorted(order._verdict_options) == ["A", "B"]
+
+
+class TestTopDownBuilder:
+
+    def test_top_down_build_emits_no_deprecation_warning(self):
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            extract = TaskNode(
+                instructions="Extract",
+                output_label="X",
+                evaluation_params=[SingleTurnParams.INPUT],
+            )
+            judge = BinaryJudgementNode(criteria="?")
+            extract.add_node(judge)
+            judge.add_verdict(True, score=10)
+            judge.add_verdict(False, score=0)
+            DeepAcyclicGraph(root_nodes=[extract])
+        assert not [
+            w for w in caught if issubclass(w.category, DeprecationWarning)
+        ]
+
+    def test_bottom_up_children_emits_deprecation_warning(self):
+        with pytest.warns(DeprecationWarning):
+            BinaryJudgementNode(
+                criteria="?",
+                children=[
+                    VerdictNode(verdict=False, score=0),
+                    VerdictNode(verdict=True, score=10),
+                ],
+            )
+
+    def test_add_verdict_requires_score_or_then(self):
+        judge = BinaryJudgementNode(criteria="?")
+        with pytest.raises(ValueError):
+            judge.add_verdict(True)  # neither score nor then
+
+    def test_binary_two_true_verdicts_raises_at_build(self):
+        judge = BinaryJudgementNode(criteria="?")
+        judge.add_verdict(True, score=10)
+        judge.add_verdict(True, score=0)
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[judge])
+
+    def test_binary_non_bool_verdict_raises_at_build(self):
+        judge = BinaryJudgementNode(criteria="?")
+        judge.add_verdict("yes", score=10)
+        judge.add_verdict("no", score=0)
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[judge])
+
+    def test_nonbinary_empty_raises_at_build(self):
+        order = NonBinaryJudgementNode(criteria="order?")
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[order])
+
+    def test_nonbinary_duplicate_verdicts_raises_at_build(self):
+        order = NonBinaryJudgementNode(criteria="order?")
+        order.add_verdict("A", score=10)
+        order.add_verdict("A", score=0)
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[order])
+
+    def test_task_node_with_verdict_child_raises_at_build(self):
+        task = TaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        task.add_node(VerdictNode(verdict=True, score=10))
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[task])
+
+    def test_cycle_via_add_node_raises_at_build(self):
+        a = TaskNode(
+            instructions="A",
+            output_label="A",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        b = TaskNode(
+            instructions="B",
+            output_label="B",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        a.add_node(b)
+        b.add_node(a)
+        with pytest.raises(ValueError):
+            DeepAcyclicGraph(root_nodes=[a])
+
+    def test_copy_graph_top_down_is_warning_free_and_isolated(self):
+        task = TaskNode(
+            instructions="Extract",
+            output_label="X",
+            evaluation_params=[SingleTurnParams.INPUT],
+        )
+        judge = BinaryJudgementNode(criteria="criteria")
+        task.add_node(judge)
+        judge.add_verdict(True, score=10)
+        judge.add_verdict(False, score=0)
+        dag = DeepAcyclicGraph(root_nodes=[task])
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            copied = copy_graph(dag)
+        assert not [
+            w for w in caught if issubclass(w.category, DeprecationWarning)
+        ]
+
+        copied_task = copied.root_nodes[0]
+        copied_judge = copied_task.children[0]
+        assert copied is not dag
+        assert isinstance(copied_task, TaskNode)
+        assert isinstance(copied_judge, BinaryJudgementNode)
+        assert copied_task is not task
+        assert copied_judge is not judge
+        assert copied_judge.criteria == "criteria"
+        assert len(copied_judge.children) == 2
+        assert {c.verdict for c in copied_judge.children} == {True, False}
+        assert {c.score for c in copied_judge.children} == {10, 0}
+
+
+class SharedNodeModel(DeepEvalBaseLLM):
+    """Deterministic judge for shared-node DAGs.
+
+    ``a_generate`` yields to the event loop so async runs really interleave;
+    without that, async parametrizations silently execute serially.
+    """
+
+    def __init__(
+        self,
+        binary_verdict: bool = True,
+        non_binary_verdict: str = "Yes",
+    ):
+        self.binary_verdict = binary_verdict
+        self.non_binary_verdict = non_binary_verdict
+        self.schema_calls = []
+        super().__init__(model="shared-node-model")
+
+    def load_model(self):
+        return self
+
+    def generate(self, prompt, schema=None, **kwargs):
+        assert schema is not None
+        self.schema_calls.append(schema.__name__)
+
+        if schema.__name__ == "TaskNodeOutput":
+            return schema(output=["Intro", "Body", "Conclusion"])
+        if schema.__name__ == "BinaryJudgementVerdict":
+            return schema(verdict=self.binary_verdict, reason="mocked")
+        if schema.__name__ == "NonBinaryJudgementVerdict":
+            return schema(verdict=self.non_binary_verdict, reason="mocked")
+
+        raise AssertionError(f"Unexpected schema: {schema.__name__}")
+
+    async def a_generate(self, prompt, schema=None, **kwargs):
+        await asyncio.sleep(0)
+        return self.generate(prompt, schema=schema, **kwargs)
+
+    def get_model_name(self):
+        return "shared-node-model"
+
+
+SHARED_NODE_PARAMS = [SingleTurnParams.ACTUAL_OUTPUT]
+
+
+def shared_node_test_case() -> LLMTestCase:
+    return LLMTestCase(
+        input="Summarize the meeting.",
+        actual_output=(
+            "Intro:\nAgenda.\n\nBody:\nUpdates.\n\nConclusion:\nNext steps."
+        ),
+    )
+
+
+def measure_shared_node(
+    dag: DeepAcyclicGraph, model: SharedNodeModel, async_mode: bool
+) -> DAGMetric:
+    metric = DAGMetric(
+        name="Shared Node",
+        dag=dag,
+        model=model,
+        include_reason=False,
+        async_mode=async_mode,
+    )
+    metric.measure(shared_node_test_case(), _show_indicator=False)
+    return metric
+
+
+def _order_node() -> NonBinaryJudgementNode:
+    order = NonBinaryJudgementNode(
+        criteria="Are the headings in the correct order?",
+        evaluation_params=SHARED_NODE_PARAMS,
+    )
+    order.add_verdict("Yes", score=10)
+    order.add_verdict("No", score=0)
+    return order
+
+
+def build_sibling_shared_dag() -> DeepAcyclicGraph:
+    """Both verdicts of one judgement lead to the same node."""
+    judge = BinaryJudgementNode(
+        criteria="Does the summary contain all three headings?",
+        evaluation_params=SHARED_NODE_PARAMS,
+    )
+    shared = _order_node()
+    judge.add_verdict(True, then=shared)
+    judge.add_verdict(False, then=shared)
+    return DeepAcyclicGraph(root_nodes=[judge])
+
+
+def build_sibling_shared_with_task_dag() -> DeepAcyclicGraph:
+    """As above, plus an unconditional TaskNode edge into the shared node."""
+    extract = TaskNode(
+        instructions="Extract the headings",
+        output_label="Headings",
+        evaluation_params=SHARED_NODE_PARAMS,
+    )
+    judge = BinaryJudgementNode(criteria="All three headings present?")
+    shared = _order_node()
+    extract.add_node(judge)
+    extract.add_node(shared)
+    judge.add_verdict(True, then=shared)
+    judge.add_verdict(False, then=shared)
+    return DeepAcyclicGraph(root_nodes=[extract])
+
+
+def build_all_parents_dead_dag() -> DeepAcyclicGraph:
+    """`shared` hangs off two verdicts that both lose when "Yes" wins."""
+    root = NonBinaryJudgementNode(
+        criteria="How many headings are present?",
+        evaluation_params=SHARED_NODE_PARAMS,
+    )
+    shared = _order_node()
+    root.add_verdict("Yes", score=7)
+    root.add_verdict("MaybeA", then=shared)
+    root.add_verdict("MaybeB", then=shared)
+    return DeepAcyclicGraph(root_nodes=[root])
+
+
+def build_cross_judgement_shared_dag() -> DeepAcyclicGraph:
+    """`shared` is reached from verdicts of two DIFFERENT judgements.
+
+    `root` selects True, so `inner` never runs and its verdict into `shared`
+    never arrives.
+    """
+    shared = _order_node()
+    inner = BinaryJudgementNode(
+        criteria="Is the summary longer than one line?",
+        evaluation_params=SHARED_NODE_PARAMS,
+    )
+    inner.add_verdict(True, then=shared)
+    inner.add_verdict(False, score=1)
+    root = BinaryJudgementNode(
+        criteria="Does the summary contain all three headings?",
+        evaluation_params=SHARED_NODE_PARAMS,
+    )
+    root.add_verdict(True, then=shared)
+    root.add_verdict(False, then=inner)
+    return DeepAcyclicGraph(root_nodes=[root])
+
+
+def build_bounced_live_parent_dag() -> DeepAcyclicGraph:
+    """`shared` is reached from a winning verdict of `a` and a losing one of `b`."""
+    extract = TaskNode(
+        instructions="Extract the headings",
+        output_label="Headings",
+        evaluation_params=SHARED_NODE_PARAMS,
+    )
+    a = BinaryJudgementNode(criteria="All three headings present?")
+    b = BinaryJudgementNode(criteria="Is the summary well formatted?")
+    shared = _order_node()
+    extract.add_node(a)
+    extract.add_node(b)
+    a.add_verdict(True, then=shared)
+    a.add_verdict(False, score=1)
+    b.add_verdict(True, score=5)
+    b.add_verdict(False, then=shared)
+    return DeepAcyclicGraph(root_nodes=[extract])
+
+
+def build_direct_and_tasknode_shared_dag() -> DeepAcyclicGraph:
+    """`shared` is reached directly from one verdict and via a TaskNode from
+    the same judgement's other verdict."""
+    shared = _order_node()
+    mid = TaskNode(
+        instructions="Extract the headings",
+        output_label="Headings",
+        evaluation_params=SHARED_NODE_PARAMS,
+    )
+    mid.add_node(shared)
+    judge = BinaryJudgementNode(
+        criteria="Does the summary contain all three headings?",
+        evaluation_params=SHARED_NODE_PARAMS,
+    )
+    judge.add_verdict(True, then=shared)
+    judge.add_verdict(False, then=mid)
+    return DeepAcyclicGraph(root_nodes=[judge])
+
+
+class TwoJudgementModel(SharedNodeModel):
+    """Answers each `BinaryJudgementNode` by its own criteria text.
+
+    `SharedNodeModel.binary_verdict` is a single flag shared by every
+    `BinaryJudgementVerdict` call, so it cannot make two different
+    judgements disagree. The over-decrement regression this guards against
+    (see ``test_verdict_shared_between_judgements_runs_once``) only shows up
+    when a verdict node shared between two judgements has one live parent
+    and one dead one -- which requires the two judgements to actually
+    disagree. Criteria text is looked up verbatim in the rendered prompt,
+    so ``criteria_verdicts`` keys must match the `criteria` string passed to
+    each `BinaryJudgementNode`.
+    """
+
+    def __init__(self, criteria_verdicts: dict):
+        self.criteria_verdicts = criteria_verdicts
+        super().__init__()
+
+    def generate(self, prompt, schema=None, **kwargs):
+        assert schema is not None
+        if schema.__name__ == "BinaryJudgementVerdict":
+            self.schema_calls.append(schema.__name__)
+            for criteria, verdict in self.criteria_verdicts.items():
+                if criteria in prompt:
+                    return schema(verdict=verdict, reason="mocked")
+            raise AssertionError(f"No verdict configured for prompt: {prompt}")
+        return super().generate(prompt, schema=schema, **kwargs)
+
+
+class TestExclusiveVerdictSharedNode:
+    """A node reached from mutually exclusive verdicts of one judgement."""
+
+    @pytest.mark.parametrize("async_mode", [False, True])
+    @pytest.mark.parametrize("binary_verdict", [True, False])
+    def test_shared_node_runs_whichever_verdict_wins(
+        self, async_mode, binary_verdict
+    ):
+        model = SharedNodeModel(binary_verdict=binary_verdict)
+        metric = measure_shared_node(
+            build_sibling_shared_dag(), model, async_mode
+        )
+        assert metric.score == 1.0
+        assert model.schema_calls.count("NonBinaryJudgementVerdict") == 1
+
+    @pytest.mark.parametrize("async_mode", [False, True])
+    @pytest.mark.parametrize("binary_verdict", [True, False])
+    def test_shared_node_with_task_parent_runs(
+        self, async_mode, binary_verdict
+    ):
+        """An extra unconditional TaskNode edge must not gate the node."""
+        model = SharedNodeModel(binary_verdict=binary_verdict)
+        metric = measure_shared_node(
+            build_sibling_shared_with_task_dag(), model, async_mode
+        )
+        assert metric.score == 1.0
+        assert model.schema_calls.count("NonBinaryJudgementVerdict") == 1
+
+    def test_indegree_counts_exclusive_verdicts_once(self):
+        """The shared node has one incoming edge, not one per verdict."""
+        dag = build_sibling_shared_dag()
+        judge = dag.root_nodes[0]
+        shared = judge.children[0].child
+        assert shared is judge.children[1].child
+        assert dag.indegree[shared] == 1
+
+    def test_indegree_keeps_independent_edges_separate(self):
+        """Only mutually exclusive edges collapse; a TaskNode edge is its own."""
+        dag = build_sibling_shared_with_task_dag()
+        extract = dag.root_nodes[0]
+        judge = extract.children[0]
+        shared = extract.children[1]
+        assert shared is judge.children[0].child
+        # one edge from `extract`, one collapsed from the two verdicts
+        assert dag.indegree[shared] == 2
+
+    def test_indegree_collapses_three_exclusive_verdicts(self):
+        """Three verdicts of one judgement into the same node still collapse
+        to a single incoming edge."""
+        shared = _order_node()
+        judge = NonBinaryJudgementNode(
+            criteria="How many headings are present?",
+            evaluation_params=SHARED_NODE_PARAMS,
+        )
+        judge.add_verdict("One", then=shared)
+        judge.add_verdict("Two", then=shared)
+        judge.add_verdict("Three", then=shared)
+        dag = DeepAcyclicGraph(root_nodes=[judge])
+        assert dag.indegree[shared] == 1
+
+    def test_indegree_keeps_cross_judgement_edges_separate(self):
+        """Verdicts from two different judgements are not mutually
+        exclusive, so their edges into a shared node stay separate."""
+        dag = build_cross_judgement_shared_dag()
+        root = dag.root_nodes[0]
+        shared = root.children[0].child
+        assert dag.indegree[shared] == 2
+
+    @pytest.mark.parametrize("async_mode", [False, True])
+    def test_verdict_shared_between_judgements_runs_once(self, async_mode):
+        """A verdict node reachable from two judgements keeps its own edge.
+
+        Both verdicts can fire, so collapsing their edges would let the node
+        run twice. That only happens when the two judgements disagree
+        (`first` True, `second` False), so the model must answer them
+        differently -- a single shared `binary_verdict` flag can never
+        produce that combination.
+        """
+        shared = _order_node()
+        reused = VerdictNode(verdict=True, child=shared)
+        other = VerdictNode(verdict=False, child=shared)
+        spare = VerdictNode(verdict=False, score=1)
+        first = BinaryJudgementNode(
+            criteria="First?",
+            children=[reused, spare],
+            evaluation_params=SHARED_NODE_PARAMS,
+        )
+        second = BinaryJudgementNode(
+            criteria="Second?",
+            children=[reused, other],
+            evaluation_params=SHARED_NODE_PARAMS,
+        )
+        extract = TaskNode(
+            instructions="Extract the headings",
+            output_label="Headings",
+            evaluation_params=SHARED_NODE_PARAMS,
+            children=[first, second],
+        )
+        dag = DeepAcyclicGraph(root_nodes=[extract])
+        assert dag.indegree[shared] == 2
+
+        model = TwoJudgementModel(
+            criteria_verdicts={"First?": True, "Second?": False}
+        )
+        metric = DAGMetric(
+            name="Shared Verdict",
+            dag=dag,
+            model=model,
+            include_reason=False,
+            async_mode=async_mode,
+        )
+        metric.measure(shared_node_test_case(), _show_indicator=False)
+        assert model.schema_calls.count("NonBinaryJudgementVerdict") == 1
+
+    @pytest.mark.parametrize("async_mode", [False, True])
+    def test_all_parents_dead_node_never_runs(self, async_mode):
+        model = SharedNodeModel(non_binary_verdict="Yes")
+        metric = measure_shared_node(
+            build_all_parents_dead_dag(), model, async_mode
+        )
+        assert metric.score == 0.7
+        assert model.schema_calls.count("NonBinaryJudgementVerdict") == 1
+
+    @pytest.mark.parametrize("async_mode", [False, True])
+    def test_live_task_parent_with_losing_verdict_parent_stays_skipped(
+        self, async_mode
+    ):
+        """A node gated behind a losing verdict does not run.
+
+        `order` is a child of both the task node and `headings`' `True`
+        verdict. When `headings` returns `False`, `order` does not run and the
+        score comes from the `False` leaf.
+        """
+        model = SharedNodeModel(binary_verdict=False)
+        metric = DAGMetric(
+            name="Format Correctness",
+            dag=build_legacy_dag(),
+            model=model,
+            include_reason=False,
+            async_mode=async_mode,
+        )
+        metric.measure(build_legacy_dag_test_case(), _show_indicator=False)
+        assert metric.score == 0.0
+        assert model.schema_calls.count("NonBinaryJudgementVerdict") == 0
+
+    def test_repeated_measure_is_stable(self):
+        """Reusing one metric instance keeps scores and verbose logs correct."""
+        model = SharedNodeModel(binary_verdict=True)
+        metric = DAGMetric(
+            name="Shared Node",
+            dag=build_sibling_shared_dag(),
+            model=model,
+            include_reason=False,
+            async_mode=False,
+        )
+        test_case = shared_node_test_case()
+
+        scores = []
+        step_counts = []
+        for verdict in (True, False, True):
+            model.binary_verdict = verdict
+            metric.measure(test_case, _show_indicator=False)
+            scores.append(metric.score)
+            step_counts.append(len(metric._verbose_steps))
+
+        assert scores == [1.0, 1.0, 1.0]
+        assert len(set(step_counts)) == 1
+
+    def test_root_verdict_keeps_its_own_edge(self):
+        """A declared root verdict is visited unconditionally.
+
+        Its edge into the shared node always arrives, on top of the one
+        arrival from the judgement's winning verdict, so it must keep its
+        own count. Folding it into the exclusive group would drop the count
+        below the number of arrivals and judge the node twice.
+
+        A root verdict that is itself a child of a judgement would exercise
+        the same guard, but a root reachable from another root is rejected
+        at construction, so the root here has no parents.
+        """
+        shared = _order_node()
+        judge = BinaryJudgementNode(
+            criteria="All three headings present?",
+            evaluation_params=SHARED_NODE_PARAMS,
+        )
+        judge.add_verdict(True, then=shared)
+        judge.add_verdict(False, then=shared)
+        entry = VerdictNode(verdict=True, child=judge)
+        root_verdict = VerdictNode(verdict=True, child=shared)
+        dag = DeepAcyclicGraph(root_nodes=[entry, root_verdict])
+        # one collapsed edge from the exclusive verdicts + the root's own
+        assert dag.indegree[shared] == 2
+
+        model = SharedNodeModel(binary_verdict=True)
+        metric = DAGMetric(
+            name="Root Verdict",
+            dag=dag,
+            model=model,
+            include_reason=False,
+            async_mode=False,
+        )
+        metric.measure(shared_node_test_case(), _show_indicator=False)
+        assert model.schema_calls.count("NonBinaryJudgementVerdict") == 1
+
+
+class TestCrossJudgementSharedNode:
+    """A node reached from verdicts of different judgement nodes.
+
+    These edges are not mutually exclusive, so collapsing them would be wrong.
+    Whether such a node should run when one of its parents is on a branch that
+    lost is a semantics question, not a counting error, so the current
+    behaviour is recorded rather than changed.
+    """
+
+    @pytest.mark.parametrize("async_mode", [False, True])
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "`shared` is reached from verdicts of two different judgements; "
+            "the losing branch's edge never arrives, so it stays gated"
+        ),
+    )
+    def test_shared_across_two_judgements_is_skipped(self, async_mode):
+        model = SharedNodeModel(binary_verdict=True)
+        metric = measure_shared_node(
+            build_cross_judgement_shared_dag(), model, async_mode
+        )
+        assert metric.score == 1.0
+        assert model.schema_calls.count("NonBinaryJudgementVerdict") == 1
+
+    @pytest.mark.parametrize("async_mode", [False, True])
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "`shared` has a winning verdict parent and a losing one from a "
+            "different judgement, so one edge never arrives"
+        ),
+    )
+    def test_shared_with_bounced_live_parent_is_skipped(self, async_mode):
+        model = SharedNodeModel(binary_verdict=True)
+        metric = measure_shared_node(
+            build_bounced_live_parent_dag(), model, async_mode
+        )
+        assert metric.score == 1.0
+        assert model.schema_calls.count("NonBinaryJudgementVerdict") == 1
+
+    @pytest.mark.parametrize("async_mode", [False, True])
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "the same judgement reaches the node directly and through a "
+            "TaskNode, so one edge never arrives"
+        ),
+    )
+    def test_shared_via_direct_and_tasknode_edges_is_skipped(self, async_mode):
+        model = SharedNodeModel(binary_verdict=True)
+        metric = measure_shared_node(
+            build_direct_and_tasknode_shared_dag(), model, async_mode
+        )
+        assert metric.score == 1.0
+        assert model.schema_calls.count("NonBinaryJudgementVerdict") == 1
+
+    def test_shared_across_two_judgements_currently_skipped(self):
+        """Records present behavior for
+        `test_shared_across_two_judgements_is_skipped`; expected to change
+        if that xfail is ever addressed."""
+        model = SharedNodeModel(binary_verdict=True)
+        measure_shared_node(
+            build_cross_judgement_shared_dag(), model, async_mode=False
+        )
+        assert model.schema_calls.count("NonBinaryJudgementVerdict") == 0
+
+    def test_shared_with_bounced_live_parent_currently_skipped(self):
+        """Records present behavior for
+        `test_shared_with_bounced_live_parent_is_skipped`; expected to
+        change if that xfail is ever addressed."""
+        model = SharedNodeModel(binary_verdict=True)
+        measure_shared_node(
+            build_bounced_live_parent_dag(), model, async_mode=False
+        )
+        assert model.schema_calls.count("NonBinaryJudgementVerdict") == 0
+
+    def test_shared_via_direct_and_tasknode_edges_currently_skipped(self):
+        """Records present behavior for
+        `test_shared_via_direct_and_tasknode_edges_is_skipped`; expected to
+        change if that xfail is ever addressed."""
+        model = SharedNodeModel(binary_verdict=True)
+        measure_shared_node(
+            build_direct_and_tasknode_shared_dag(), model, async_mode=False
+        )
+        assert model.schema_calls.count("NonBinaryJudgementVerdict") == 0
+
+
+@requires_openai
+class TestDAGMetric:
+
+    @staticmethod
+    def _build_dag() -> DeepAcyclicGraph:
+        extract = TaskNode(
+            instructions="Extract the refund period, in days, from the output.",
+            output_label="Refund period",
+            evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
+        )
+        judge = BinaryJudgementNode(
+            criteria="Is the extracted refund period exactly 30 days?"
+        )
+        extract.add_node(judge)
+        judge.add_verdict(True, score=10)
+        judge.add_verdict(False, score=0)
+        return DeepAcyclicGraph(root_nodes=[extract])
+
+    @staticmethod
+    def _test_case() -> LLMTestCase:
+        return LLMTestCase(
+            input="What if these shoes don't fit?",
+            actual_output="We offer a 30-day full refund at no extra cost.",
+        )
+
+    def test_dag_metric_sync_measure(self):
+        metric = DAGMetric(
+            name="Refund Period", dag=self._build_dag(), async_mode=False
+        )
+        metric.measure(self._test_case())
+        assert metric.score is not None
+        assert 0 <= metric.score <= 1
+        assert metric.reason is not None
+
+    def test_dag_metric_async_measure(self):
+        metric = DAGMetric(
+            name="Refund Period", dag=self._build_dag(), async_mode=True
+        )
+        metric.measure(self._test_case())
+        assert metric.score is not None
+        assert 0 <= metric.score <= 1
+        assert metric.reason is not None
+
+    def test_dag_metric_via_evaluate(self):
+        metric = DAGMetric(name="Refund Period", dag=self._build_dag())
+        evaluate([self._test_case()], [metric])

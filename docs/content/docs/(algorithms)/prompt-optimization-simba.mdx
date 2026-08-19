@@ -2,6 +2,7 @@
 id: prompt-optimization-simba
 title: SIMBA
 sidebar_label: SIMBA
+languages: [python]
 ---
 
 **SIMBA (Stochastic Introspective Mini-Batch Ascent)** is a prompt optimization algorithm within `deepeval` adapted from the DSPy optimizer of the same name. It improves prompts by hunting for high-variance examples—cases where the model sometimes succeeds and sometimes fails on the exact same input—and using that contrast to either rewrite the prompt's instructions or inject a verified few-shot demonstration.

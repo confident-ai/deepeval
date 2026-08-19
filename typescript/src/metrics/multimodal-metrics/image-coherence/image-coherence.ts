@@ -1,31 +1,39 @@
-import { BaseMetric } from "../../base-metrics";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import {
   LLMTestCase,
   SingleTurnParams,
   MLLMImage,
   convertToMultiModalArray,
-} from "../../../test-case";
-import { DeepEvalBaseLLM } from "../../../models";
-import { resolveTemplate } from "../../../templates";
+} from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
-} from "../../utils";
-import { getImageIndices, getImageContext } from "../utils";
-import { ReasonScoreSchema } from "../schema";
+} from "@/metrics/utils";
+import {
+  getImageIndices,
+  getImageContext,
+} from "@/metrics/multimodal-metrics/utils";
+import { ReasonScoreSchema } from "@/metrics/multimodal-metrics/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "ImageCoherenceMetric";
 
+export type ImageCoherenceTemplateOverride =
+  MetricTemplateOverride<"ImageCoherenceMetric">;
+
 export interface ImageCoherenceMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
   /** Clip the text context around each image to this many chars. */
   maxContextSize?: number;
+  evaluationTemplate?: ImageCoherenceTemplateOverride;
 }
 
 /**
@@ -38,11 +46,14 @@ export class ImageCoherenceMetric extends BaseMetric {
 
   constructor(options: ImageCoherenceMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
@@ -78,12 +89,10 @@ export class ImageCoherenceMetric extends BaseMetric {
           this.maxContextSize,
         );
         const image = actualOutput[idx] as MLLMImage;
-        const instructions = resolveTemplate(
-          "metrics",
-          TEMPLATE_CLASS,
-          "evaluate_image_coherence",
-          { context_above: above ?? "", context_below: below ?? "" },
-        );
+        const instructions = this.getPrompt("evaluate_image_coherence", {
+          context_above: above ?? "",
+          context_below: below ?? "",
+        });
         const { reasoning, score } = await generateWithSchema(
           this,
           `${instructions} \nImages: ${image}`,
@@ -94,11 +103,11 @@ export class ImageCoherenceMetric extends BaseMetric {
       }
 
       const avg = scores.reduce((s, x) => s + x, 0) / scores.length;
-      this.score = this.strictMode && avg < this.threshold ? 0 : avg;
+      this.score = this.applyStrictMode(avg);
       this.reason = reasons
         .map((r, i) => `Reason for image ${i}: ${r}`)
         .join("\n");
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Images scored: ${scores.length}`,
@@ -109,12 +118,6 @@ export class ImageCoherenceMetric extends BaseMetric {
     } finally {
       this.stopProgress();
     }
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

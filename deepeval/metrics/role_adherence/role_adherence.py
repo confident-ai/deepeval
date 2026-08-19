@@ -1,4 +1,4 @@
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Type
 
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.role_adherence.schema import (
@@ -17,6 +17,10 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import Turn, ConversationalTestCase, MultiTurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.templates import make_template_class
+
+
+RoleAdherenceTemplate = make_template_class("RoleAdherenceMetric")
 
 
 class RoleAdherenceMetric(BaseConversationalMetric):
@@ -24,12 +28,16 @@ class RoleAdherenceMetric(BaseConversationalMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
+        evaluation_template: Type[
+            RoleAdherenceTemplate
+        ] = RoleAdherenceTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -38,13 +46,14 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case,
@@ -68,7 +77,6 @@ class RoleAdherenceMetric(BaseConversationalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -79,7 +87,7 @@ class RoleAdherenceMetric(BaseConversationalMetric):
                 )
                 self.score = self._calculate_score(test_case.turns)
                 self.reason = self._generate_reason(role=test_case.chatbot_role)
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -95,7 +103,6 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_conversational_test_case_params(
             test_case,
@@ -126,7 +133,7 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             self.reason = await self._a_generate_reason(
                 role=test_case.chatbot_role
             )
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -243,16 +250,6 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             - min(len(self.out_of_character_verdicts.verdicts), number_of_turns)
         ) / number_of_turns
         return 0 if self.strict_mode and score < self.threshold else score
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

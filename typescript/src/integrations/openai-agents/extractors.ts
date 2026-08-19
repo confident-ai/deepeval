@@ -4,12 +4,12 @@ import {
   ToolSpan,
   AgentSpan,
   Trace,
-} from "../../tracing/tracing";
+} from "@/tracing/tracing";
 import {
   inferProviderFromModel,
   normalizeSpanProviderForPlatform,
-} from "../../tracing/utils";
-import { Integration } from "../../tracing/integrations";
+} from "@/tracing/utils";
+import { Integration } from "@/tracing/integrations";
 
 import {
   SpanData,

@@ -21,7 +21,7 @@ from deepeval.utils import convert_to_multi_modal_array, serialize_to_json
 from deepeval.config.settings import get_settings
 from deepeval.models import (
     DeepEvalBaseLLM,
-    GPTModel,
+    OpenAIModel,
     AnthropicModel,
     AzureOpenAIModel,
     OllamaModel,
@@ -71,7 +71,7 @@ from deepeval.test_case import (
 )
 
 MULTIMODAL_SUPPORTED_MODELS = {
-    GPTModel: OPENAI_MODELS_DATA,
+    OpenAIModel: OPENAI_MODELS_DATA,
     GeminiModel: GEMINI_MODELS_DATA,
     OllamaModel: OLLAMA_MODELS_DATA,
     AzureOpenAIModel: OPENAI_MODELS_DATA,
@@ -81,6 +81,21 @@ MULTIMODAL_SUPPORTED_MODELS = {
 }
 
 SETTINGS = get_settings()
+
+
+def check_at_least_one_metric_has_threshold(
+    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
+):
+    # Flaky metrics don't count: they must not decide a test case's
+    # pass/fail status, so every test case needs at least one non-flaky
+    # metric with a threshold to guarantee it gets a verdict.
+    if not any(
+        metric.threshold is not None and not metric.flaky for metric in metrics
+    ):
+        raise ValueError(
+            "You must provide at least one non-flaky metric with a "
+            "'threshold', otherwise test cases can never pass or fail."
+        )
 
 
 def copy_metrics(
@@ -669,7 +684,7 @@ def initialize_model(
     if isinstance(model, DeepEvalBaseLLM):
         return model, False
     if should_use_openai_model():
-        return GPTModel(model=model), True
+        return OpenAIModel(model=model), True
     if should_use_gemini_model():
         return GeminiModel(model=model), True
     if should_use_litellm():
@@ -695,11 +710,11 @@ def initialize_model(
     elif should_use_amazon_bedrock_model():
         return AmazonBedrockModel(model=model), True
     elif isinstance(model, str) or model is None:
-        return GPTModel(model=model), True
+        return OpenAIModel(model=model), True
 
     # Otherwise (the model is a wrong type), we raise an error
     raise TypeError(
-        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, GPTModel, AzureOpenAIModel, LiteLLMModel, OllamaModel, LocalModel."
+        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, OpenAIModel, AzureOpenAIModel, LiteLLMModel, OllamaModel, LocalModel."
     )
 
 
@@ -707,7 +722,7 @@ def is_native_model(
     model: Optional[Union[str, DeepEvalBaseLLM]] = None,
 ) -> bool:
     if (
-        isinstance(model, GPTModel)
+        isinstance(model, OpenAIModel)
         or isinstance(model, AnthropicModel)
         or isinstance(model, AzureOpenAIModel)
         or isinstance(model, OllamaModel)

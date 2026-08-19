@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Type
 import asyncio
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -20,6 +20,10 @@ from deepeval.metrics.goal_accuracy.schema import (
     GoalScore,
     PlanScore,
 )
+from deepeval.templates import make_template_class
+
+
+GoalAccuracyTemplate = make_template_class("GoalAccuracyMetric")
 
 
 class GoalAccuracyMetric(BaseConversationalMetric):
@@ -31,12 +35,14 @@ class GoalAccuracyMetric(BaseConversationalMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
+        evaluation_template: Type[GoalAccuracyTemplate] = GoalAccuracyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -45,13 +51,14 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         multimodal = test_case.multimodal
         check_conversational_test_case_params(
@@ -76,7 +83,6 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -97,7 +103,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                     for task in goal_and_steps_taken
                 ]
                 self.score = self._calculate_score(goal_scores, plan_scores)
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.reason = self._generate_reason(
                     goal_scores, plan_scores, multimodal
                 )
@@ -120,7 +126,6 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         multimodal = test_case.multimodal
         check_conversational_test_case_params(
@@ -161,7 +166,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 ]
             )
             self.score = self._calculate_score(goal_scores, plan_scores)
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.reason = await self._a_generate_reason(
                 goal_scores, plan_scores, multimodal
             )
@@ -355,16 +360,6 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 f"c{prettify_list(goal_step.steps_taken)} \n\n"
             )
         return final_goals_and_steps
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

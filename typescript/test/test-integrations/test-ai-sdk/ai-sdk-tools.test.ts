@@ -3,10 +3,10 @@ import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 import * as path from "path";
 
-import { configureAiSdkTracing } from "../../../src/integrations/ai-sdk";
-import { setTracingContext } from "../../../src/tracing/trace-context";
-import { traceManager } from "../../../src/tracing/tracing";
-import { Environment } from "../../../src/tracing/utils";
+import { configureAiSdkTracing } from "@/integrations/ai-sdk";
+import { setTracingContext } from "@/tracing/trace-context";
+import { traceManager } from "@/tracing/tracing";
+import { Environment } from "@/tracing/utils";
 import { generateTraceJson, assertTraceJson } from "../utils";
 
 const FIXTURES_DIR = path.join(__dirname, "fixtures");

@@ -2,7 +2,7 @@ from typing import List, Optional, Union, Tuple, Dict
 from openai.types.chat.chat_completion import ChatCompletion
 import math
 
-from deepeval.models import DeepEvalBaseLLM, GPTModel, AzureOpenAIModel
+from deepeval.models import DeepEvalBaseLLM, OpenAIModel, AzureOpenAIModel
 from deepeval.test_case import (
     SingleTurnParams,
     MultiTurnParams,
@@ -252,7 +252,8 @@ def no_log_prob_support(model: Union[str, DeepEvalBaseLLM]):
         if not model_data.supports_log_probs:
             return True
     elif (
-        isinstance(model, GPTModel) and not model.model_data.supports_log_probs
+        isinstance(model, OpenAIModel)
+        and not model.model_data.supports_log_probs
     ):
         return True
     elif (

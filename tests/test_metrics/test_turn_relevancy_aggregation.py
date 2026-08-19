@@ -100,9 +100,7 @@ def _measure(test_case, scripted_verdicts, **metric_kwargs):
         include_reason=False,
         **metric_kwargs,
     )
-    score = metric.measure(
-        test_case, _show_indicator=False, _log_metric_to_confident=False
-    )
+    score = metric.measure(test_case, _show_indicator=False)
     return score, metric, judge
 
 
@@ -203,7 +201,6 @@ class TestTurnRelevancyAggregation:
                 ]
             ),
             _show_indicator=False,
-            _log_metric_to_confident=False,
         )
         assert score == 0.0
         assert metric.verdicts[0] is not None
@@ -224,7 +221,6 @@ class TestTurnRelevancyAggregation:
                 ]
             ),
             _show_indicator=False,
-            _log_metric_to_confident=False,
         )
         assert metric.verdicts[0] is None
         assert score == 1  # no valid verdicts -> documented fallback
@@ -248,6 +244,5 @@ class TestTurnRelevancyAggregation:
         metric.measure(
             _conversation(1),
             _show_indicator=False,
-            _log_metric_to_confident=False,
         )
         assert seen["generate_verdicts"] == "MyStrictRubric"

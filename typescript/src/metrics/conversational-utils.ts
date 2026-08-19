@@ -1,6 +1,7 @@
-import { ConversationalTestCase, MultiTurnParams, Turn } from "../test-case";
-import { DeepEvalError, MissingTestCaseParamsError } from "../errors";
-import { BaseConversationalMetric } from "./base-conversational-metric";
+import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
+import { DeepEvalError, MissingTestCaseParamsError } from "@/errors";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { checkMultimodalSupport } from "@/metrics/utils";
 
 /**
  * Verify a conversational test case provides the params a metric requires.
@@ -18,6 +19,9 @@ export function checkConversationalTestCaseParams(
     metric.error = err;
     throw new DeepEvalError(err);
   }
+
+  metric.multimodal = testCase.multimodal;
+  checkMultimodalSupport(metric);
 
   const fail = (msg: string): never => {
     metric.error = msg;

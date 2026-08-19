@@ -1,4 +1,5 @@
-import { Provider } from "./integrations";
+import { Provider } from "@/tracing/integrations";
+import { parseBool } from "@/config/utils";
 
 export enum Environment {
   PRODUCTION = "production",
@@ -8,11 +9,12 @@ export enum Environment {
 }
 
 export function tracingEnabled() {
-  const envValue =
-    process.env.CONFIDENT_TRACING_ENABLED !== undefined
-      ? process.env.CONFIDENT_TRACING_ENABLED
-      : "YES";
-  return envValue.toUpperCase() === "YES";
+  return parseBool(process.env.CONFIDENT_TRACING_ENABLED) ?? true;
+}
+
+/** Whether to trace DeepEval's own metric and model methods. */
+export function isTraceInternalEnabled(): boolean {
+  return parseBool(process.env.CONFIDENT_TRACE_INTERNAL) ?? false;
 }
 
 export function validateEnvironment(environment: Environment): void {

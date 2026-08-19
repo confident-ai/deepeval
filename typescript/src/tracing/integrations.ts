@@ -7,6 +7,8 @@ export const Integration = {
   ANTHROPIC: "Anthropic",
   PYDANTIC_AI: "PydanticAI",
   GOOGLE_ADK: "Google ADK",
+  STRANDS: "Strands",
+  OTEL: "OpenTelemetry",
   OPEN_INFERENCE: "OpenInference",
   AGENTCORE: "AgentCore",
   AI_SDK: "AI SDK",

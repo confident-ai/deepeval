@@ -26,8 +26,9 @@ export interface ErrorConfig {
 }
 
 export interface CacheConfig {
-  // TODO: result caching (Python's Cache.get_metric_data). Not wired yet.
+  /** Persist fresh metric results to `.deepeval/.deepeval-cache.json`. */
   writeCache?: boolean;
+  /** Reuse cached results for unchanged test cases and metric configs. */
   useCache?: boolean;
 }
 

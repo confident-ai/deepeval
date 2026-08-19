@@ -2,6 +2,7 @@
 id: getting-started-rag
 title: RAG Evaluation Quickstart
 sidebar_label: RAG
+languages: [python, typescript]
 ---
 
 import { ASSETS } from "@site/src/assets";
@@ -22,6 +23,10 @@ RAG evaluation involves evaluating the retriever and generator as separately com
 
 ## Installation
 
+<Switch>
+
+<Case id="python">
+
 ```bash
 pip install -U deepeval[inspect]
 ```
@@ -34,17 +39,53 @@ The `[inspect]` sub-module is optional and can bloat up `deepeval`'s package siz
 
 </details>
 
-You should also run `deepeval login`:
+</Case>
+
+<Case id="typescript">
+
+```bash
+npm install --save-dev deepeval
+```
+
+<details>
+
+<summary>Do I need anything extra for `inspect`?</summary>
+
+No. The trace-tree TUI is built on [Ink](https://github.com/vadimdemedes/ink), declared as an optional dependency that `npm install` pulls in by default. If you installed with `--omit=optional`, add it back with `npm install ink react`.
+
+</details>
+
+</Case>
+
+</Switch>
+
+You should also run <Term py="deepeval login" ts="npx deepeval login"/>:
+
+<Switch>
+
+<Case id="python">
 
 ```bash
 deepeval login
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```bash
+npx deepeval login
+```
+
+</Case>
+
+</Switch>
+
 It connects you to [Confident AI](https://www.confident-ai.com/) so you can store results, annotate, and inspect evaluated agent traces on the cloud.
 
 ## Unit Test RAG in CI/CD
 
-The fastest way to start evaluating RAG is to unit test it. `deepeval` plugs into `pytest` via `assert_test()` and the `deepeval test run` command, so failing metrics fail the build — locally in development, and on every push or PR.
+The fastest way to start evaluating RAG is to unit test it. `deepeval` plugs into <Term py="pytest" ts="vitest"/> via <Term py="assert_test()" ts="expect(testCase).toPass()"/> and the <Term py="deepeval test run" ts="npx deepeval test run"/> command, so failing metrics fail the build — locally in development, and on every push or PR.
 
 <Steps>
 <Step>
@@ -53,59 +94,7 @@ The fastest way to start evaluating RAG is to unit test it. `deepeval` plugs int
 
 [Datasets](/docs/evaluation-datasets) in `deepeval` store [`Golden`s](/docs/evaluation-datasets#what-are-goldens) — the inputs you'll invoke your RAG pipeline with at test time:
 
-<Tabs items={["In Code", "Pull from Confident AI", "Load from CSV", "Load from JSON"]}>
-<Tab value="In Code">
-
-```python
-from deepeval.dataset import Golden, EvaluationDataset
-
-goldens = [
-    Golden(input="How do I reset my password?"),
-    Golden(input="What's your refund policy?"),
-    # ...
-]
-
-dataset = EvaluationDataset(goldens=goldens)
-```
-
-</Tab>
-<Tab value="Pull from Confident AI">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.pull(alias="My Evals Dataset")
-```
-
-</Tab>
-<Tab value="Load from CSV">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.add_goldens_from_csv_file(
-    file_path="example.csv",
-    input_col_name="query",
-)
-```
-
-</Tab>
-<Tab value="Load from JSON">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.add_goldens_from_json_file(
-    file_path="example.json",
-    input_key_name="query",
-)
-```
-
-</Tab>
-</Tabs>
+<include cwd>snippets/datasets/load-dataset.mdx#single-turn</include>
 
 </Step>
 <Step>
@@ -119,6 +108,10 @@ Pick based on whether you can modify your RAG pipeline's code:
 
 <Tabs items={["Without Tracing", "With Tracing"]}>
 <Tab value="Without Tracing">
+
+<Switch>
+
+<Case id="python">
 
 ```python title="test_rag.py" showLineNumbers
 import pytest
@@ -139,10 +132,47 @@ def test_rag(golden: Golden):
     assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric(), FaithfulnessMetric()])
 ```
 
-`retrieval_context` is crucial — RAG metrics like `FaithfulnessMetric` evaluate against the chunks retrieved at evaluation time.
+</Case>
+
+<Case id="typescript">
+
+```typescript title="rag.test.ts" showLineNumbers
+import { it, expect } from "vitest";
+import { AnswerRelevancyMetric, FaithfulnessMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+import { Golden } from "deepeval/dataset";
+import { ragPipeline } from "./your-app"; // returns { answer, retrievedChunks }
+import "deepeval/vitest";
+
+it.each(dataset.goldens as Golden[])(
+  "answers grounded in what it retrieved #%$",
+  async (golden) => {
+    const { answer, retrievedChunks } = await ragPipeline(golden.input);
+    const testCase = new LLMTestCase({
+      input: golden.input,
+      actualOutput: answer,
+      retrievalContext: retrievedChunks,
+    });
+    await expect(testCase).toPass([
+      new AnswerRelevancyMetric(),
+      new FaithfulnessMetric(),
+    ]);
+  },
+);
+```
+
+</Case>
+
+</Switch>
+
+<Term py="retrieval_context" ts="retrievalContext"/> is crucial — RAG metrics like `FaithfulnessMetric` evaluate against the chunks retrieved at evaluation time.
 
 </Tab>
 <Tab value="With Tracing">
+
+<Switch>
+
+<Case id="python">
 
 ```python title="test_rag.py" showLineNumbers
 import pytest
@@ -166,27 +196,89 @@ def test_rag(golden: Golden):
 
 `assert_test()` only needs the golden — the test case is built from the captured trace. This same setup unlocks [retriever & generator evals](#evaluate-retriever--generator) below.
 
+</Case>
+
+<Case id="typescript">
+
+```typescript title="rag.test.ts" showLineNumbers
+import { it, expect } from "vitest";
+import { AnswerRelevancyMetric, FaithfulnessMetric } from "deepeval/metrics";
+import { observe, updateCurrentTrace } from "deepeval/tracing";
+import { Golden } from "deepeval/dataset";
+import "deepeval/vitest";
+
+const ragPipeline = observe({
+  fn: async (query: string): Promise<string> => {
+    const chunks = await retrieve(query); // your retrieval logic, observe optional
+    const answer = await generate(query, chunks); // your LLM call, observe optional
+    updateCurrentTrace({
+      input: query,
+      output: answer,
+      retrievalContext: chunks,
+    });
+    return answer;
+  },
+});
+
+it.each(dataset.goldens as Golden[])(
+  "answers grounded in what it retrieved #%$",
+  async (golden) => {
+    await ragPipeline(golden.input);
+    await expect(golden).toPass([
+      new AnswerRelevancyMetric(),
+      new FaithfulnessMetric(),
+    ]);
+  },
+);
+```
+
+`toPass()` only needs the golden — the test case is built from the captured trace. This same setup unlocks [retriever & generator evals](#evaluate-retriever--generator) below.
+
+</Case>
+
+</Switch>
+
 </Tab>
 </Tabs>
 
 </Step>
 <Step>
 
-### Run with `deepeval test run`
+### Run your test file
+
+<Switch>
+
+<Case id="python">
 
 ```bash
 deepeval test run test_rag.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```bash
+npx deepeval test run rag.test.ts
+```
+
+</Case>
+
+</Switch>
+
 - Drop this command into a `.yml` to run on every push or PR — see [unit testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd#yaml-file-for-cicd-evals) for a full pipeline example.
-- Test runs are saved locally — `deepeval inspect` opens them in a trace-tree TUI with per-span scores and metric reasons.
+- Test runs are saved locally — <Term py="deepeval inspect" ts="npx deepeval inspect"/> opens them in a trace-tree TUI with per-span scores and metric reasons.
 
 </Step>
 </Steps>
 
 ## Evaluate RAG with `evaluate()`
 
-Prefer a script or notebook over `pytest`? `evaluate()` is the same engine as `assert_test()`, exposed as a function call — and since you build the test cases yourself, it requires **zero instrumentation** of your RAG pipeline. Ideal for evaluating deployed, black-box systems.
+Prefer a script or notebook over <Term py="pytest" ts="vitest"/>? `evaluate()` is the same engine as <Term py="assert_test()" ts="expect(testCase).toPass()"/>, exposed as a function call — and since you build the test cases yourself, it requires **zero instrumentation** of your RAG pipeline. Ideal for evaluating deployed, black-box systems.
+
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" showLineNumbers
 from deepeval import evaluate
@@ -209,6 +301,40 @@ for golden in dataset.goldens:
 evaluate(test_cases=test_cases, metrics=[AnswerRelevancyMetric(), FaithfulnessMetric()])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript title="main.ts" showLineNumbers
+import { AnswerRelevancyMetric, FaithfulnessMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+import { Golden } from "deepeval/dataset";
+import { ragPipeline } from "./your-app"; // returns { answer, retrievedChunks }
+import { evaluate } from "deepeval";
+...
+
+const testCases: LLMTestCase[] = [];
+for (const golden of dataset.goldens as Golden[]) {
+  const { answer, retrievedChunks } = await ragPipeline(golden.input);
+  testCases.push(
+    new LLMTestCase({
+      input: golden.input,
+      actualOutput: answer,
+      retrievalContext: retrievedChunks,
+    }),
+  );
+}
+
+await evaluate(testCases, [
+  new AnswerRelevancyMetric(),
+  new FaithfulnessMetric(),
+]);
+```
+
+</Case>
+
+</Switch>
+
 ✅ Done. Each test case is scored against every metric, and the results roll up into a test run — a snapshot of your RAG pipeline's quality at this point in time.
 
 <details>
@@ -225,7 +351,7 @@ And retriever-focused:
 - [Contextual Precision](/docs/metrics-contextual-precision)
 - [Contextual Recall](/docs/metrics-contextual-recall)
 
-Contextual precision and recall also require an `expected_output` on your test cases. See the [RAG evaluation guide](/guides/guides-rag-evaluation) for how to pick.
+Contextual precision and recall also require an <Term py="expected_output" ts="expectedOutput"/> on your test cases. See the [RAG evaluation guide](/guides/guides-rag-evaluation) for how to pick.
 
 </details>
 
@@ -233,22 +359,25 @@ Contextual precision and recall also require an `expected_output` on your test c
 
 A single end-to-end score can't tell you whether a bad answer came from bad retrieval or bad generation. If you own the code, trace your pipeline's components and attach metrics directly to them:
 
+<Switch>
+
+<Case id="python">
+
 ```python title="main.py" showLineNumbers
 from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.test_case import LLMTestCase
 from deepeval.tracing import observe, update_current_span
 from deepeval.metrics import ContextualRelevancyMetric, AnswerRelevancyMetric
 
 @observe(metrics=[ContextualRelevancyMetric()])
 def retriever(query: str) -> list[str]:
     chunks = ["..."]  # your retrieval logic here
-    update_current_span(test_case=LLMTestCase(input=query, retrieval_context=chunks))
+    update_current_span(input=query, retrieval_context=chunks)
     return chunks
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def generator(query: str, chunks: list[str]) -> str:
     answer = "..."  # your LLM call here
-    update_current_span(test_case=LLMTestCase(input=query, actual_output=answer))
+    update_current_span(input=query, output=answer)
     return answer
 
 @observe()
@@ -262,18 +391,70 @@ for golden in dataset.evals_iterator():
     rag_pipeline(golden.input)
 ```
 
-✅ Done. A plain `for` loop is all it takes:
+</Case>
 
-- **Retriever span** — scored by retriever metrics like `ContextualRelevancyMetric` against its `retrieval_context`.
-- **Generator span** — scored by generator metrics like `AnswerRelevancyMetric` against its `actual_output`.
-- **Want end-to-end too?** Pass `metrics=[...]` to `evals_iterator()` — trace and span scores coexist in one test run.
-- **In CI/CD?** Swap the loop for `assert_test(golden=golden)` inside a `pytest` test — metrics stay on the spans.
+<Case id="typescript">
+
+```typescript title="main.ts" showLineNumbers
+import {
+  AnswerRelevancyMetric,
+  ContextualRelevancyMetric,
+} from "deepeval/metrics";
+import { observe, updateCurrentSpan } from "deepeval/tracing";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+
+const retriever = observe({
+  type: "retriever",
+  metrics: [new ContextualRelevancyMetric()],
+  fn: async (query: string): Promise<string[]> => {
+    const chunks = ["..."]; // your retrieval logic here
+    updateCurrentSpan({ input: query, retrievalContext: chunks });
+    return chunks;
+  },
+});
+
+const generator = observe({
+  type: "llm",
+  metrics: [new AnswerRelevancyMetric()],
+  fn: async (query: string, chunks: string[]): Promise<string> => {
+    const answer = "..."; // your LLM call here
+    updateCurrentSpan({ input: query, output: answer });
+    return answer;
+  },
+});
+
+const ragPipeline = observe({
+  fn: async (query: string): Promise<string> => {
+    const chunks = await retriever(query);
+    return generator(query, chunks);
+  },
+});
+
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "How do I reset my password?" })],
+});
+
+for await (const golden of dataset.evalsIterator()) {
+  await ragPipeline((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
+✅ Done. A plain loop is all it takes:
+
+- **Retriever span** — scored by retriever metrics like `ContextualRelevancyMetric` against its <Term py="retrieval_context" ts="retrievalContext"/>.
+- **Generator span** — scored by generator metrics like `AnswerRelevancyMetric` against its <Term py="actual_output" ts="actualOutput"/>.
+- **Want end-to-end too?** Pass <Term py="metrics=[...]" ts="metrics: [...]"/> to <Term py="evals_iterator()" ts="evalsIterator()"/> — trace and span scores coexist in one test run.
+- **In CI/CD?** Swap the loop for <Term py="assert_test(golden=golden)" ts="expect(golden).toPass()"/> inside a <Term py="pytest" ts="vitest"/> test — metrics stay on the spans.
 
 See [component-level evaluation](/docs/evaluation-component-level-llm-evals) for the full surface, including framework integrations.
 
 ## Evaluate Multi-Turn RAG
 
-For chatbots that rely on RAG — like customer support bots — the unit of evaluation is the whole conversation, and each assistant turn carries its own `retrieval_context`.
+For chatbots that rely on RAG — like customer support bots — the unit of evaluation is the whole conversation, and each assistant turn carries its own <Term py="retrieval_context" ts="retrievalContext"/>.
 
 <Steps>
 <Step>
@@ -282,67 +463,18 @@ For chatbots that rely on RAG — like customer support bots — the unit of eva
 
 Multi-turn datasets store [`ConversationalGolden`s](/docs/evaluation-datasets) — scenarios to simulate, not pre-written turns:
 
-<Tabs items={["In Code", "Pull from Confident AI", "Load from CSV", "Load from JSON"]}>
-<Tab value="In Code">
-
-```python
-from deepeval.dataset import EvaluationDataset, ConversationalGolden
-
-dataset = EvaluationDataset(goldens=[
-    ConversationalGolden(
-        scenario="User can't log in and wants to reset their password.",
-        expected_outcome="Receives clear reset steps grounded in the help docs.",
-    ),
-])
-```
-
-</Tab>
-<Tab value="Pull from Confident AI">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.pull(alias="My Multi-Turn Dataset")
-```
-
-</Tab>
-<Tab value="Load from CSV">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.add_goldens_from_csv_file(
-    file_path="example.csv",
-    scenario_col_name="scenario",
-    expected_outcome_col_name="expected_outcome",
-)
-```
-
-</Tab>
-<Tab value="Load from JSON">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.add_goldens_from_json_file(
-    file_path="example.json",
-    scenario_key_name="scenario",
-    expected_outcome_key_name="expected_outcome",
-)
-```
-
-</Tab>
-</Tabs>
+<include cwd>snippets/datasets/load-dataset.mdx#multi-turn</include>
 
 </Step>
 <Step>
 
 ### Simulate conversations
 
-Wrap your RAG chatbot in a `model_callback` that returns each reply as a `Turn` — **including its `retrieval_context`** — then let `ConversationSimulator` generate the conversations:
+Wrap your RAG chatbot in a <Term py="model_callback" ts="modelCallback"/> that returns each reply as a `Turn` — **including its <Term py="retrieval_context" ts="retrievalContext"/>** — then let `ConversationSimulator` generate the conversations:
+
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py" showLineNumbers
 from typing import List
@@ -361,7 +493,42 @@ test_cases = simulator.simulate(
 )
 ```
 
-The `retrieval_context` on each assistant turn is what lets RAG metrics check grounding turn-by-turn.
+</Case>
+
+<Case id="typescript">
+
+```typescript title="main.ts" showLineNumbers
+import { ConversationalGolden } from "deepeval/dataset";
+import { ConversationSimulator } from "deepeval";
+import { Turn } from "deepeval/test-case";
+
+const simulator = new ConversationSimulator({
+  modelCallback: async ({ input, turns, threadId }): Promise<Turn> => {
+    // Replace with your RAG chatbot; returns { answer, retrievedChunks }
+    const { answer, retrievedChunks } = await yourRagChatbot(
+      input,
+      turns,
+      threadId,
+    );
+    return new Turn({
+      role: "assistant",
+      content: answer,
+      retrievalContext: retrievedChunks,
+    });
+  },
+});
+
+const testCases = await simulator.simulate({
+  conversationalGoldens: dataset.goldens as ConversationalGolden[],
+  maxUserSimulations: 10,
+});
+```
+
+</Case>
+
+</Switch>
+
+The <Term py="retrieval_context" ts="retrievalContext"/> on each assistant turn is what lets RAG metrics check grounding turn-by-turn.
 
 </Step>
 <Step>
@@ -369,6 +536,10 @@ The `retrieval_context` on each assistant turn is what lets RAG metrics check gr
 ### Run an evaluation
 
 Score the simulated conversations with multi-turn RAG metrics:
+
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from deepeval import evaluate
@@ -378,9 +549,31 @@ from deepeval.metrics import TurnFaithfulnessMetric, TurnContextualRelevancyMetr
 evaluate(test_cases=test_cases, metrics=[TurnFaithfulnessMetric(), TurnContextualRelevancyMetric()])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript title="main.ts"
+import {
+  TurnContextualRelevancyMetric,
+  TurnFaithfulnessMetric,
+} from "deepeval/metrics";
+import { evaluate } from "deepeval";
+...
+
+await evaluate(testCases, [
+  new TurnFaithfulnessMetric(),
+  new TurnContextualRelevancyMetric(),
+]);
+```
+
+</Case>
+
+</Switch>
+
 ✅ Done. Each assistant turn is evaluated against the chunks it retrieved:
 
-- `TurnFaithfulnessMetric` — does each reply stay grounded in its `retrieval_context`?
+- `TurnFaithfulnessMetric` — does each reply stay grounded in its <Term py="retrieval_context" ts="retrievalContext"/>?
 - `TurnContextualRelevancyMetric` — were the retrieved chunks relevant to that point in the conversation?
 - Add general conversational metrics like `TurnRelevancyMetric` too — see the [chatbot quickstart](/docs/getting-started-chatbots) for the full multi-turn surface.
 
@@ -393,7 +586,7 @@ Now that you have run your first RAG evals, you should:
 
 1. **Customize your metrics**: Include all 5 [RAG metrics](/docs/metrics-introduction) based on your use case.
 2. **Prepare a dataset**: If you don't have one, [generate one](/docs/golden-synthesizer) as a starting point.
-3. **Enable evals in production**: Just replace `metrics` in `@observe` with a [`metric_collection`](https://www.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string on Confident AI.
+3. **Enable evals in production**: Just replace `metrics` in <Term py="@observe" ts="observe()"/> with a [<Term py="metric_collection" ts="metricCollection"/>](https://www.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string on Confident AI.
 
 You'll be able to analyze performance over time on **threads** this way, and add them back to your evals dataset for further evaluation.
 

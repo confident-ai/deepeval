@@ -2,13 +2,18 @@
 id: openai
 title: OpenAI
 sidebar_label: OpenAI
+languages: [python, typescript]
 ---
 
 <IntegrationTagsDisplayer native={true} cicdEvals={true} traceability={true} />
 
 [OpenAI](https://platform.openai.com/docs/) provides chat completions and responses APIs for building LLM applications.
 
-The `deepeval` integration is a drop-in replacement for OpenAI's client. Every `client.chat.completions.create(...)` and `client.responses.create(...)` call becomes an LLM span you can evaluate, without rewriting how you call the API.
+The `deepeval` integration instruments OpenAI's client in place. Every `client.chat.completions.create(...)` and `client.responses.create(...)` call becomes an LLM span you can evaluate, without rewriting how you call the API.
+
+<Switch>
+
+<Case id="python">
 
 <AgentTraceTerminal
   title="openai_app · deepeval"
@@ -45,12 +50,55 @@ The `deepeval` integration is a drop-in replacement for OpenAI's client. Every `
   ]}
 />
 
+</Case>
+
+<Case id="typescript">
+
+<AgentTraceTerminal
+  title="openai_app · deepeval"
+  ariaLabel="Example OpenAI client trace with per-step metric scores"
+  lines={[
+    { kind: "cmd", name: "npx deepeval test run openai-app.test.ts" },
+    { kind: "blank" },
+    { kind: "root", prefix: "●", name: "openai_app" },
+    { kind: "blank", prefix: "│" },
+    {
+      kind: "llm",
+      prefix: "└─",
+      name: "gpt-4o · respond",
+      metric: "Answer Relevancy",
+      score: "0.93",
+      duration: "260ms",
+      pass: true,
+    },
+    {
+      kind: "llm",
+      prefix: "  ",
+      name: "",
+      metric: "Faithfulness",
+      score: "0.41",
+      duration: "",
+      pass: false,
+    },
+    { kind: "blank" },
+    {
+      kind: "summary",
+      name: "Trace score  0.67   ·   1/2 metrics passed",
+      pass: false,
+    },
+  ]}
+/>
+
+</Case>
+
+</Switch>
+
 `deepeval`'s OpenAI integration enables you to:
 
-- **Drop in `deepeval.openai.OpenAI`** — every chat completion or response produces an LLM span with input, output, and `tools_called` captured automatically.
+- <Switch><Case id="python">**Drop in `deepeval.openai.OpenAI`** — every chat completion or response produces an LLM span with input, output, and `tools_called` captured automatically.</Case><Case id="typescript">**Patch your client with `instrumentOpenAI(client)`** — every chat completion or response produces an LLM span with input, output, and `toolsCalled` captured automatically.</Case></Switch>
 - **Evaluate LLM calls** with any `deepeval` metric through `LlmSpanContext`.
 - **Run evals from scripts or CI/CD** — same client, different surfaces.
-- **Compose with `@observe` and `with trace(...)`** to evaluate larger flows that wrap one or more OpenAI calls.
+- **Compose with <Term py="@observe" ts="observe()"/> and <Term py="with trace(...)" ts="setTracingContext(...)"/>** to evaluate larger flows that wrap one or more OpenAI calls.
 
 ## Getting Started
 
@@ -60,11 +108,29 @@ The `deepeval` integration is a drop-in replacement for OpenAI's client. Every `
 
 ### Installation
 
+<Switch>
+
+<Case id="python">
+
 ```bash
 pip install -U deepeval openai
 ```
 
 `deepeval.openai.OpenAI` and `deepeval.openai.AsyncOpenAI` import OpenAI's classes and patch them in place. Existing kwargs, async paths, streaming, and tool-calling behavior all work unchanged.
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+npm install -D deepeval openai
+```
+
+`instrumentOpenAI(client)` patches the client you hand it in place. Existing options, streaming, and tool-calling behavior all work unchanged.
+
+</Case>
+
+</Switch>
 
 </Step>
 
@@ -72,13 +138,17 @@ pip install -U deepeval openai
 
 ### Instrument and evaluate
 
+<Switch>
+
+<Case id="python">
+
 Replace `from openai import OpenAI` with `from deepeval.openai import OpenAI`. Wrap each call you want to evaluate in `with trace(llm_span_context=LlmSpanContext(metrics=[...]))`.
 
 ```python title="openai_app.py" showLineNumbers
-from deepeval.openai import OpenAI
-from deepeval.tracing import trace, LlmSpanContext
 from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.tracing import trace, LlmSpanContext
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.openai import OpenAI
 
 client = OpenAI()
 
@@ -96,18 +166,70 @@ for golden in dataset.evals_iterator():
         )
 ```
 
+</Case>
+
+<Case id="typescript">
+
+Call `instrumentOpenAI(client)` once on the client you already construct. Wrap each call you want to evaluate in `setTracingContext({ llmSpanContext: { metrics: [...] } }, ...)`.
+
+```typescript title="openai-app.ts" showLineNumbers
+import { OpenAI } from "openai";
+
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { setTracingContext } from "deepeval/tracing";
+import { instrumentOpenAI } from "deepeval/openai";
+
+const client = new OpenAI();
+instrumentOpenAI(client);
+
+export const respond = (prompt: string) =>
+  setTracingContext(
+    { llmSpanContext: { metrics: [new AnswerRelevancyMetric()] } },
+    () =>
+      client.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: "Be concise." },
+          { role: "user", content: prompt },
+        ],
+      }),
+  );
+
+// Goldens are the inputs you want to evaluate.
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What's the capital of France?" })],
+});
+
+for await (const golden of dataset.evalsIterator()) {
+  await respond((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
 Done ✅. You've run your first eval against an OpenAI call with full traceability via `deepeval`.
 
 </Step>
 
 </Steps>
 
+<Only id="typescript">
+
+:::caution[One client per process]
+`instrumentOpenAI` patches the **first** client it is given and returns early on every later call, so a second client constructed elsewhere in your app stays untraced. Instrument the one client you share across your code.
+:::
+
+</Only>
+
 ## What gets traced
 
-Each patched OpenAI call produces one **LLM span** under the active trace. When the call uses tool-calling, the span's `tools_called` field captures every tool invocation the model returned — no extra wiring needed.
+Each patched OpenAI call produces one **LLM span** under the active trace. When the call uses tool-calling, the span's <Term py="tools_called" ts="toolsCalled"/> field captures every tool invocation the model returned — no extra wiring needed.
 
-- **LLM spans** — one per `chat.completions.create(...)`, `chat.completions.parse(...)`, or `responses.create(...)` call. Captures input messages, output text, token counts, and `tools_called`.
-- **Trace** — auto-created when the call has no parent. If the call runs inside `with trace(...)` or `@observe`, the LLM span nests under that trace instead.
+- **LLM spans** — one per `chat.completions.create(...)`, `chat.completions.parse(...)`, or `responses.create(...)` call. Captures input messages, output text, token counts, and <Term py="tools_called" ts="toolsCalled"/>.
+- **Trace** — auto-created when the call has no parent. If the call runs inside <Term py="with trace(...)" ts="setTracingContext(...)"/> or <Term py="@observe" ts="observe()"/>, the LLM span nests under that trace instead.
 
 ```text
 Trace                          ← auto-created or user-owned
@@ -120,17 +242,21 @@ The trace and its LLM span are independently evaluable.
 
 There are two surfaces for running evals against OpenAI calls. Pick by where you want results to surface — your terminal during development, or your CI pipeline as a pass/fail gate.
 
-### In CI/CD (pytest)
+### In CI/CD
+
+<Switch>
+
+<Case id="python">
 
 Use the `deepeval` pytest integration. Each parametrized test invocation becomes one OpenAI call; failing metrics fail the test, which fails the build.
 
 ```python title="test_openai_app.py" showLineNumbers
 import pytest
-from deepeval import assert_test
-from deepeval.openai import OpenAI
-from deepeval.tracing import trace, LlmSpanContext
 from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.tracing import trace, LlmSpanContext
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.openai import OpenAI
+from deepeval import assert_test
 
 client = OpenAI()
 dataset = EvaluationDataset(goldens=[
@@ -157,18 +283,58 @@ Run it with:
 deepeval test run test_openai_app.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
+Use the `toPass()` matcher. The golden is the subject; `task` produces the trace judged against it. A failing metric fails the test, which fails the build.
+
+```typescript title="openai-app.test.ts" showLineNumbers
+import { it, expect } from "vitest";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { respond } from "./openai-app";
+import "deepeval/vitest";
+
+const dataset = new EvaluationDataset({
+  goldens: [
+    new Golden({ input: "What's the capital of France?" }),
+    new Golden({ input: "Who wrote Hamlet?" }),
+  ],
+});
+
+it.each(dataset.goldens as Golden[])("answers the question", async (golden) => {
+  await expect(golden).toPass([], { task: (g) => respond(g.input) });
+});
+```
+
+The matcher takes an empty metric array because `AnswerRelevancyMetric` is already staged on the LLM span inside `respond`.
+
+Run it with:
+
+```bash
+npx deepeval test run openai-app.test.ts
+```
+
+</Case>
+
+</Switch>
+
 ### In a script
 
-Use `EvaluationDataset` + `evals_iterator(...)`. Each `Golden` becomes one OpenAI call; metrics score the resulting LLM span.
+Use `EvaluationDataset` + <Term py="evals_iterator" ts="evalsIterator"/>. Each `Golden` becomes one OpenAI call; metrics score the resulting LLM span.
+
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_app.py" showLineNumbers
 import asyncio
 
-from deepeval.openai import AsyncOpenAI
-from deepeval.tracing import trace, LlmSpanContext
 from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.evaluate.configs import AsyncConfig
+from deepeval.tracing import trace, LlmSpanContext
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.evaluate.configs import AsyncConfig
+from deepeval.openai import AsyncOpenAI
 
 client = AsyncOpenAI()
 dataset = EvaluationDataset(goldens=[
@@ -190,14 +356,41 @@ for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True)):
 
 Sync (`OpenAI`) and async (`AsyncOpenAI`) clients both work; pick whichever matches your code.
 
+</Case>
+
+<Case id="typescript">
+
+```typescript title="openai-app.ts" showLineNumbers
+const dataset = new EvaluationDataset({
+  goldens: [
+    new Golden({ input: "What's the capital of France?" }),
+    new Golden({ input: "Who wrote Hamlet?" }),
+  ],
+});
+
+for await (const golden of dataset.evalsIterator()) {
+  await respond((golden as Golden).input);
+}
+```
+
+The OpenAI client is promise-based, so there is one code path rather than a sync and an async client.
+
+</Case>
+
+</Switch>
+
 ## Applying metrics to LLM spans
 
-Passing `metrics=[...]` to `LlmSpanContext` evaluates the next OpenAI call's LLM span specifically. The same context manager lets you attach extra evaluation parameters that some metrics need.
+Passing `metrics` to `LlmSpanContext` evaluates the OpenAI call's LLM span specifically. The same context lets you attach extra evaluation parameters that some metrics need.
+
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_app.py" showLineNumbers
-from deepeval.openai import OpenAI
-from deepeval.tracing import trace, LlmSpanContext
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
+from deepeval.tracing import trace, LlmSpanContext
+from deepeval.openai import OpenAI
 
 client = OpenAI()
 
@@ -213,19 +406,70 @@ with trace(
     )
 ```
 
-`LlmSpanContext` accepts `metrics`, `expected_output`, `expected_tools`, `context`, `retrieval_context`, and `prompt`. Each one is read by the OpenAI patch when the next LLM span is created.
+</Case>
+
+<Case id="typescript">
+
+```typescript title="openai-app.ts" showLineNumbers
+import { AnswerRelevancyMetric, FaithfulnessMetric } from "deepeval/metrics";
+import { setTracingContext } from "deepeval/tracing";
+...
+
+await setTracingContext(
+  {
+    llmSpanContext: {
+      metrics: [new AnswerRelevancyMetric(), new FaithfulnessMetric()],
+      retrievalContext: ["Paris is the capital of France."],
+    },
+  },
+  () =>
+    client.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: "What's the capital of France?" }],
+    }),
+);
+```
+
+</Case>
+
+</Switch>
+
+`LlmSpanContext` accepts `metrics`, <Term py="expected_output" ts="expectedOutput"/>, <Term py="expected_tools" ts="expectedTools"/>, `context`, <Term py="retrieval_context" ts="retrievalContext"/>, and `prompt`. Each one is read by the OpenAI patch when the next LLM span is created.
+
+<Only id="typescript">
+
+A `LlmSpanContext` applies to **every** LLM span in its scope. To configure exactly one call, use `nextLlmSpan(...)` instead — it stages the same fields for the first LLM span opened inside the block and nothing after it.
+
+```typescript title="openai-app.ts" showLineNumbers
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { nextLlmSpan } from "deepeval/tracing";
+...
+
+await nextLlmSpan({ metrics: [new AnswerRelevancyMetric()] }, () =>
+  client.chat.completions.create({
+    model: "gpt-4o",
+    messages: [{ role: "user", content: "What's the capital of France?" }],
+  }),
+);
+```
+
+</Only>
 
 ## Customizing trace and span data
 
-The patch captures input messages, output text, and `tools_called` automatically. For anything else, the right API depends on where your code runs.
+The patch captures input messages, output text, and <Term py="tools_called" ts="toolsCalled"/> automatically. For anything else, the right API depends on where your code runs.
 
-- Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`, `user_id`).
-- Use `LlmSpanContext` for LLM-span-level fields the metric needs (`expected_output`, `retrieval_context`, etc.).
-- Use `@observe` to wrap retrieval, post-processing, or any other step you want to see as its own span in the trace.
+- Use <Term py="with trace(...)" ts="setTracingContext(...)"/> for trace-level fields (`name`, `tags`, `metadata`, <Term py="thread_id" ts="threadId"/>, <Term py="user_id" ts="userId"/>).
+- Use `LlmSpanContext` for LLM-span-level fields the metric needs (<Term py="expected_output" ts="expectedOutput"/>, <Term py="retrieval_context" ts="retrievalContext"/>, etc.).
+- Use <Term py="@observe" ts="observe()"/> to wrap retrieval, post-processing, or any other step you want to see as its own span in the trace.
+
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_app.py" showLineNumbers
-from deepeval.openai import OpenAI
 from deepeval.tracing import trace, LlmSpanContext, observe
+from deepeval.openai import OpenAI
 
 client = OpenAI()
 
@@ -251,13 +495,59 @@ def respond_to_user(prompt: str) -> str:
     return response.choices[0].message.content
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript title="openai-app.ts" showLineNumbers
+import { observe, setTracingContext } from "deepeval/tracing";
+...
+
+const retrieveDocs = observe({
+  type: "retriever",
+  name: "retrieveDocs",
+  fn: async (_query: string) => ["Paris is the capital of France."],
+});
+
+const respondToUser = observe({
+  name: "respondToUser",
+  fn: async (prompt: string) => {
+    const docs = await retrieveDocs(prompt);
+    const response = await setTracingContext(
+      {
+        llmSpanContext: { retrievalContext: docs },
+        userId: "user-123",
+        tags: ["openai", "rag"],
+      },
+      () =>
+        client.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: docs.join("\n") },
+            { role: "user", content: prompt },
+          ],
+        }),
+    );
+    return response.choices[0].message.content;
+  },
+});
+```
+
+</Case>
+
+</Switch>
+
 ## Advanced patterns
 
-The primitives above — `deepeval.openai.OpenAI`, `LlmSpanContext`, `@observe`, `with trace(...)` — compose around one boundary: the patch owns each LLM call's span, and your code chooses what trace to put it inside.
+The primitives above compose around one boundary: the patch owns each LLM call's span, and your code chooses what trace to put it inside.
 
-### Wrap an OpenAI call in `@observe`
+### Wrap an OpenAI call in an observed function
 
-When the OpenAI call is part of a larger operation, decorate the outer function with `@observe`. The LLM span nests under your observed span automatically.
+When the OpenAI call is part of a larger operation, observe the outer function. The LLM span nests under your observed span automatically.
+
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_app.py" showLineNumbers
 from deepeval.tracing import observe, trace, LlmSpanContext
@@ -274,11 +564,44 @@ def respond_to_user(prompt: str) -> str:
     return response.choices[0].message.content
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript title="openai-app.ts" showLineNumbers
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { observe, nextLlmSpan } from "deepeval/tracing";
+...
+
+const respondToUser = observe({
+  name: "respondToUser",
+  fn: async (prompt: string) => {
+    const response = await nextLlmSpan(
+      { metrics: [new AnswerRelevancyMetric()] },
+      () =>
+        client.chat.completions.create({
+          model: "gpt-4o",
+          messages: [{ role: "user", content: prompt }],
+        }),
+    );
+    return response.choices[0].message.content;
+  },
+});
+```
+
+</Case>
+
+</Switch>
+
 #### No trace-level metrics required
 
 Trace-level metrics are end-to-end metrics: they score the whole trace. They are not strictly necessary here because `AnswerRelevancyMetric` is attached to the LLM span, so CI/CD and scripts only need to call the function.
 
 This is how you'd run it:
+
+<Switch>
+
+<Case id="python">
 
 <Tabs items={["CI/CD", "Scripts"]}>
 <Tab value="CI/CD">
@@ -311,9 +634,56 @@ for golden in dataset.evals_iterator():
 </Tab>
 </Tabs>
 
+</Case>
+
+<Case id="typescript">
+
+<Tabs items={["CI/CD", "Scripts"]}>
+<Tab value="CI/CD">
+
+```typescript title="openai-app.test.ts" showLineNumbers
+import { it, expect } from "vitest";
+import { Golden } from "deepeval/dataset";
+import "deepeval/vitest";
+...
+
+it.each(dataset.goldens as Golden[])(
+  "scores the model call",
+  async (golden) => {
+    await expect(golden).toPass([], { task: (g) => respondToUser(g.input) });
+  },
+);
+```
+
+```bash
+npx deepeval test run openai-app.test.ts
+```
+
+</Tab>
+<Tab value="Scripts">
+
+```typescript title="openai-app.ts" showLineNumbers
+...
+
+for await (const golden of dataset.evalsIterator()) {
+  await respondToUser((golden as Golden).input);
+}
+```
+
+</Tab>
+</Tabs>
+
+</Case>
+
+</Switch>
+
 ### Multiple OpenAI calls under one trace
 
-When a single logical unit of work makes several OpenAI calls (e.g. a planner call followed by a respond call), bracket them with `with trace(...)` so the LLM spans share a `trace_id` and show up as siblings under one root.
+When a single logical unit of work makes several OpenAI calls (e.g. a planner call followed by a respond call), bracket them so the LLM spans share a trace and show up as siblings under one root.
+
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_app.py" showLineNumbers
 from deepeval.tracing import trace
@@ -331,13 +701,44 @@ def plan_then_respond(prompt: str):
         )
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript title="openai-app.ts" showLineNumbers
+import { setTracingContext } from "deepeval/tracing";
+...
+
+const planThenRespond = (prompt: string) =>
+  setTracingContext({ name: "planThenRespond" }, async () => {
+    const plan = await client.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: `Plan: ${prompt}` }],
+    });
+    return client.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "user", content: plan.choices[0].message.content ?? "" },
+      ],
+    });
+  });
+```
+
+</Case>
+
+</Switch>
+
 ### Tool-calling models
 
-When the model returns tool calls, the LLM span's `tools_called` field captures them automatically. Use `expected_tools` on `LlmSpanContext` if you want to evaluate tool selection with a tool-aware metric.
+When the model returns tool calls, the LLM span's <Term py="tools_called" ts="toolsCalled"/> field captures them automatically. Use <Term py="expected_tools" ts="expectedTools"/> on `LlmSpanContext` if you want to evaluate tool selection with a tool-aware metric.
+
+<Switch>
+
+<Case id="python">
 
 ```python title="openai_app.py" showLineNumbers
-from deepeval.test_case import ToolCall
 from deepeval.tracing import trace, LlmSpanContext
+from deepeval.test_case import ToolCall
 ...
 
 with trace(
@@ -348,20 +749,48 @@ with trace(
     client.chat.completions.create(model="gpt-4o", messages=[...], tools=[...])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript title="openai-app.ts" showLineNumbers
+import { setTracingContext } from "deepeval/tracing";
+import { ToolCall } from "deepeval/test-case";
+...
+
+await setTracingContext(
+  {
+    llmSpanContext: {
+      expectedTools: [
+        new ToolCall({
+          name: "get_weather",
+          inputParameters: { city: "Paris" },
+        }),
+      ],
+    },
+  },
+  () => client.chat.completions.create({ model: "gpt-4o", messages, tools }),
+);
+```
+
+</Case>
+
+</Switch>
+
 ## API reference
 
-`LlmSpanContext(...)` accepts the following kwargs. Each is read once when the next OpenAI call's LLM span is created.
+`LlmSpanContext` accepts the following fields. Each is read when an OpenAI call's LLM span is created.
 
-| Kwarg               | Type        | Description                                                                                              |
-| ------------------- | ----------- | -------------------------------------------------------------------------------------------------------- |
-| `metrics`           | `list`      | Metrics applied to the next LLM span.                                                                    |
-| `prompt`            | `Prompt`    | Confident AI prompt object; captured on the LLM span for prompt-version analytics.                       |
-| `expected_output`   | `str`       | Reference output for metrics that compare against ground truth.                                          |
-| `expected_tools`    | `list`      | Reference tool calls for tool-aware metrics.                                                             |
-| `context`           | `list[str]` | Ideal context the model should use when answering.                                                       |
-| `retrieval_context` | `list[str]` | Retrieved context the model actually used (Faithfulness, Contextual Relevancy, etc.).                    |
+| Field | Type | Description |
+| --- | --- | --- |
+| `metrics` | <Term py="list" ts="array"/> | Metrics applied to the LLM span. |
+| `prompt` | `Prompt` | Confident AI prompt object; captured on the LLM span for prompt-version analytics. |
+| <Term py="expected_output" ts="expectedOutput"/> | <Term py="str" ts="string"/> | Reference output for metrics that compare against ground truth. |
+| <Term py="expected_tools" ts="expectedTools"/> | <Term py="list" ts="array"/> | Reference tool calls for tool-aware metrics. |
+| `context` | <Term py="list[str]" ts="string[]"/> | Ideal context the model should use when answering. |
+| <Term py="retrieval_context" ts="retrievalContext"/> | <Term py="list[str]" ts="string[]"/> | Retrieved context the model actually used (Faithfulness, Contextual Relevancy, etc.). |
 
-`with trace(...)` accepts trace-level kwargs (`name`, `tags`, `metadata`, `thread_id`, `user_id`, `metrics`, `input`, `output`) — see the [tracing reference](/docs/evaluation-llm-tracing).
+<Term py="with trace(...)" ts="setTracingContext(...)"/> accepts trace-level fields (`name`, `tags`, `metadata`, <Term py="thread_id" ts="threadId"/>, <Term py="user_id" ts="userId"/>, `metrics`, `input`, `output`) — see the [tracing reference](/docs/evaluation-llm-tracing).
 
 ## FAQs
 
@@ -371,11 +800,22 @@ with trace(
       question: "Can I gate my CI/CD pipeline on these OpenAI evals?",
       answer: (
         <>
-          Yes. Keep the same <code>deepeval.openai.OpenAI</code> client, then
-          wrap each parametrized <code>pytest</code> case with{" "}
-          <code>assert_test(golden=golden)</code> and run{" "}
-          <code>deepeval test run</code>. A failing metric fails the test, which
-          fails the build.
+          Yes. Keep the same instrumented client, then{" "}
+          <Switch>
+            <Case id="python">
+              wrap each parametrized <code>pytest</code> case with{" "}
+              <code>assert_test(golden=golden)</code> and run{" "}
+              <code>deepeval test run</code>.
+            </Case>
+            <Case id="typescript">
+              assert with{" "}
+              <code>
+                expect(golden).toPass([], {"{ task: (g) => respond(g.input) }"})
+              </code>{" "}
+              and run <code>npx deepeval test run</code>.
+            </Case>
+          </Switch>{" "}
+          A failing metric fails the test, which fails the build.
         </>
       ),
     },
@@ -384,20 +824,31 @@ with trace(
         "One request makes several OpenAI calls — can I evaluate each call separately?",
       answer: (
         <>
-          Yes. Bracket the calls in a single <code>with trace(...)</code> so the
-          LLM spans share one root, and attach metrics to a specific call by
-          opening that call inside its own{" "}
-          <code>LlmSpanContext(metrics=[...])</code>. Each{" "}
-          <code>chat.completions.create(...)</code> is its own independently
-          scorable LLM span.
+          Yes. Bracket the calls in a single{" "}
+          <Term py="with trace(...)" ts="setTracingContext(...)" /> so the LLM
+          spans share one root, and attach metrics to a specific call by opening
+          that call inside its own{" "}
+          <Switch>
+            <Case id="python">
+              <code>LlmSpanContext(metrics=[...])</code>
+            </Case>
+            <Case id="typescript">
+              <code>nextLlmSpan({"{ metrics: [...] }"}, ...)</code>, which is
+              one-shot rather than scope-wide
+            </Case>
+          </Switch>
+          . Each <code>chat.completions.create(...)</code> is its own
+          independently scorable LLM span.
         </>
       ),
     },
     {
-      question: "Can I see these traces and scores in a UI instead of the terminal?",
+      question:
+        "Can I see these traces and scores in a UI instead of the terminal?",
       answer: (
         <>
-          Yes, and it's optional. Run <code>deepeval login</code> to connect{" "}
+          Yes, and it's optional. Run{" "}
+          <Term py="deepeval login" ts="npx deepeval login" /> to connect{" "}
           <a href="https://www.confident-ai.com">Confident AI</a> and the same
           instrumented client renders every trace, LLM span, and metric score in
           a shared cloud dashboard — no code changes.
@@ -408,8 +859,8 @@ with trace(
       question: "Can I keep evaluating my OpenAI app once it's in production?",
       answer: (
         <>
-          Yes. When logged into Confident AI, the drop-in client streams live
-          traces in real time, so you can run{" "}
+          Yes. When logged into Confident AI, the instrumented client streams
+          live traces in real time, so you can run{" "}
           <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
             online evals
           </a>{" "}

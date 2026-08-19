@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Tuple, Union, Type
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import SingleTurnParams, LLMTestCase, MLLMImage
@@ -19,6 +19,10 @@ from deepeval.utils import (
     get_or_create_event_loop,
     convert_to_multi_modal_array,
 )
+from deepeval.templates import make_template_class
+
+
+ImageCoherenceTemplate = make_template_class("ImageCoherenceMetric")
 
 
 class ImageCoherenceMetric(BaseMetric):
@@ -30,11 +34,15 @@ class ImageCoherenceMetric(BaseMetric):
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
         max_context_size: Optional[int] = None,
+        flaky: bool = False,
+        evaluation_template: Type[
+            ImageCoherenceTemplate
+        ] = ImageCoherenceTemplate,
     ):
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -42,14 +50,15 @@ class ImageCoherenceMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self.max_context_size = max_context_size
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
             test_case,
@@ -73,7 +82,6 @@ class ImageCoherenceMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -164,7 +172,6 @@ class ImageCoherenceMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
             test_case,
@@ -349,16 +356,6 @@ class ImageCoherenceMetric(BaseMetric):
 
     def calculate_score(self, scores: List[float]) -> float:
         return sum(scores) / len(scores)
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

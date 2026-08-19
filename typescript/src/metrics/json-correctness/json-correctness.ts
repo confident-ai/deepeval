@@ -1,31 +1,36 @@
 import type { ZodType } from "zod";
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { toJsonSchema } from "../../models/utils";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { toJsonSchema } from "@/models/utils";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
-} from "../utils";
-import { JsonCorrectnessScoreReasonSchema } from "./schema";
+} from "@/metrics/utils";
+import { JsonCorrectnessScoreReasonSchema } from "@/metrics/json-correctness/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "JsonCorrectnessMetric";
+
+export type JsonCorrectnessTemplateOverride =
+  MetricTemplateOverride<"JsonCorrectnessMetric">;
 const DEFAULT_CORRECT_REASON =
   "The generated Json matches and is syntactically correct to the expected schema.";
 
 export interface JsonCorrectnessMetricOptions {
   /** The schema the output must conform to (zod ⇄ Python's pydantic model). Required. */
   expectedSchema: ZodType;
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   /** Defaults to true (matches Python): requires a perfectly valid JSON. */
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: JsonCorrectnessTemplateOverride;
 }
 
 /**
@@ -38,12 +43,15 @@ export class JsonCorrectnessMetric extends BaseMetric {
 
   constructor(options: JsonCorrectnessMetricOptions) {
     const strictMode = options.strictMode ?? true;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
@@ -65,7 +73,7 @@ export class JsonCorrectnessMetric extends BaseMetric {
       const validJson = this.isValidJson(testCase.actualOutput);
       this.score = validJson ? 1 : 0;
       this.reason = await this.generateReason(testCase.actualOutput);
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `LLM outputed Json:\n${testCase.actualOutput}`,
@@ -92,9 +100,13 @@ export class JsonCorrectnessMetric extends BaseMetric {
     if (!this.includeReason) return undefined;
     if (this.score === 1) return DEFAULT_CORRECT_REASON;
 
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_reason", {
+    const prompt = this.getPrompt("generate_reason", {
       actual_output: actualOutput,
-      expected_schema: JSON.stringify(toJsonSchema(this.expectedSchema), null, 4),
+      expected_schema: JSON.stringify(
+        toJsonSchema(this.expectedSchema),
+        null,
+        4,
+      ),
       is_valid_json: false,
     });
     const { reason } = await generateWithSchema(
@@ -103,12 +115,6 @@ export class JsonCorrectnessMetric extends BaseMetric {
       JsonCorrectnessScoreReasonSchema,
     );
     return reason;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

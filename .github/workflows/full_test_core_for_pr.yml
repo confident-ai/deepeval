@@ -1,4 +1,4 @@
-name: Full Core Tests (maintainer only)
+name: Py Full Core Tests (maintainer only)
 
 on:
   workflow_dispatch:

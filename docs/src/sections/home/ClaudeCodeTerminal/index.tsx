@@ -46,7 +46,51 @@ const SCRIPT: Row[] = [
   },
 ];
 
-const ClaudeCodeTerminal: React.FC = () => {
+/** Same session, same scores — TypeScript file names and CLI invocation. */
+const TYPESCRIPT_SCRIPT: Row[] = [
+  {
+    kind: "user",
+    text: "eval the refund agent and fix any regressions",
+  },
+  {
+    kind: "tool",
+    tool: "Bash",
+    args: "npx deepeval test run agents/checkout.test.ts",
+    result: "faithfulness 0.64 ⚠",
+    resultTone: "warn",
+  },
+  {
+    kind: "tool",
+    tool: "Edit",
+    args: "agents/retriever.ts",
+    result: "scoped to active refund policies",
+  },
+  {
+    kind: "tool",
+    tool: "Bash",
+    args: "npx deepeval test run agents/checkout.test.ts",
+    result: "faithfulness 0.98 ✓",
+    resultTone: "pass",
+  },
+  {
+    kind: "assistant",
+    text: "All metrics green — ready to commit.",
+  },
+];
+
+const SCRIPTS = {
+  python: SCRIPT,
+  typescript: TYPESCRIPT_SCRIPT,
+} as const;
+
+interface ClaudeCodeTerminalProps {
+  language?: keyof typeof SCRIPTS;
+}
+
+const ClaudeCodeTerminal: React.FC<ClaudeCodeTerminalProps> = ({
+  language = "python",
+}) => {
+  const script = SCRIPTS[language];
   return (
     <div
       className={styles.terminal}
@@ -72,7 +116,7 @@ const ClaudeCodeTerminal: React.FC = () => {
         </div>
 
         <div className={styles.lines}>
-          {SCRIPT.map((row, i) => {
+          {script.map((row, i) => {
             const delay = {
               animationDelay: `${i * 0.1}s`,
             } as React.CSSProperties;
@@ -107,8 +151,8 @@ const ClaudeCodeTerminal: React.FC = () => {
               row.resultTone === "pass"
                 ? styles.resultPass
                 : row.resultTone === "warn"
-                ? styles.resultWarn
-                : styles.resultNeutral;
+                  ? styles.resultWarn
+                  : styles.resultNeutral;
 
             return (
               <div
@@ -140,6 +184,5 @@ const ClaudeCodeTerminal: React.FC = () => {
     </div>
   );
 };
-
 
 export default ClaudeCodeTerminal;

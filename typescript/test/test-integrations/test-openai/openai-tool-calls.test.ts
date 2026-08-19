@@ -1,10 +1,10 @@
 import { OpenAI } from "openai";
 import * as path from "path";
 
-import { traceManager, observe, SpanType } from "../../../src/tracing/tracing";
-import { Environment } from "../../../src/tracing/utils";
-import { instrumentOpenAI } from "../../../src/openai";
-import { unpatchOpenAI } from "../../../src/openai/patch";
+import { traceManager, observe, SpanType } from "@/tracing/tracing";
+import { Environment } from "@/tracing/utils";
+import { instrumentOpenAI } from "@/openai";
+import { unpatchOpenAI } from "@/openai/patch";
 import { generateTraceJson, assertTraceJson } from "../utils";
 
 const client = new OpenAI();

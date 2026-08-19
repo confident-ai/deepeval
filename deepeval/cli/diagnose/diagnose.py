@@ -46,7 +46,7 @@ from deepeval.key_handler import (
 # `initialize_embedding_model` can return (keyed by class name so we don't
 # have to import every model class here).
 _PROVIDER_BY_CLASS = {
-    "GPTModel": "OpenAI",
+    "OpenAIModel": "OpenAI",
     "AzureOpenAIModel": "Azure OpenAI",
     "OllamaModel": "Ollama",
     "LocalModel": "Local model",

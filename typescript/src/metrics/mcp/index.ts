@@ -1,9 +1,10 @@
 export {
   MCPTaskCompletionMetric,
   type MCPTaskCompletionMetricOptions,
-} from "./mcp-task-completion";
+  type MCPTaskCompletionTemplateOverride,
+} from "@/metrics/mcp/mcp-task-completion";
 export {
   MultiTurnMCPUseMetric,
   type MultiTurnMCPUseMetricOptions,
-} from "./multi-turn-mcp-use";
-export * from "./schema";
+} from "@/metrics/mcp/multi-turn-mcp-use";
+export * from "@/metrics/mcp/schema";

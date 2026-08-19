@@ -46,6 +46,7 @@ from deepeval.tracing.context import (
     update_current_span,
     update_current_trace,
 )
+from deepeval.prompt import Prompt
 from deepeval.tracing.trace_context import trace
 
 
@@ -593,6 +594,65 @@ class TestNextSpanInterceptorIntegration:
             agent_span.attributes.get("confident.span.metric_collection")
             == "agent-only"
         )
+
+    def test_next_llm_span_prompt_lands_on_llm_otel_attrs(self):
+        """``with next_llm_span(prompt=...)`` flattens the ``Prompt`` into
+        the ``confident.span.prompt_*`` attrs the exporter reads back to
+        link the span to its prompt version on the UI."""
+        settings = _make_settings()
+        interceptor = StrandsSpanInterceptor(settings)
+        llm_span = _make_mock_span(operation_name="chat")
+
+        prompt = Prompt(alias="Test prompt")
+        prompt.hash = "abc123"
+        prompt.version = "00.00.01"
+        prompt.label = "production"
+
+        with next_llm_span(prompt=prompt):
+            interceptor.on_start(llm_span, None)
+            interceptor.on_end(llm_span)
+
+        attrs = llm_span.attributes
+        assert attrs.get("confident.span.prompt_alias") == "Test prompt"
+        assert attrs.get("confident.span.prompt_commit_hash") == "abc123"
+        assert attrs.get("confident.span.prompt_version") == "00.00.01"
+        assert attrs.get("confident.span.prompt_label") == "production"
+
+    def test_next_llm_span_prompt_not_consumed_by_non_llm_span(self):
+        """The prompt rides the typed LLM slot — a tool span fired inside
+        the block must not absorb it."""
+        settings = _make_settings()
+        interceptor = StrandsSpanInterceptor(settings)
+        tool_span = _make_mock_span(
+            operation_name="execute_tool", tool_name="calculate"
+        )
+
+        prompt = Prompt(alias="Test prompt")
+        prompt.hash = "abc123"
+
+        with next_llm_span(prompt=prompt):
+            interceptor.on_start(tool_span, None)
+            interceptor.on_end(tool_span)
+
+        assert tool_span.attributes.get("confident.span.prompt_alias") is None
+
+    def test_next_llm_span_model_wins_over_framework_attrs(self):
+        """User-staged LLM fields survive the framework-attr pass, which
+        runs afterwards with setdefault semantics."""
+        settings = _make_settings()
+        interceptor = StrandsSpanInterceptor(settings)
+        llm_span = _make_mock_span(operation_name="chat")
+        llm_span._attributes["gen_ai.response.model"] = (
+            "us.amazon.nova-lite-v1:0"
+        )
+        llm_span._attributes["gen_ai.usage.input_tokens"] = 42
+
+        with next_llm_span(model="custom-model", input_token_count=7):
+            interceptor.on_start(llm_span, None)
+            interceptor.on_end(llm_span)
+
+        assert llm_span.attributes.get("confident.llm.model") == "custom-model"
+        assert llm_span.attributes.get("confident.llm.input_token_count") == 7
 
     def test_next_tool_span_metric_collection_lands_on_tool_otel_attrs(self):
         """Mirrors the ``test_tool_metric_collection`` flow in test_sync.py

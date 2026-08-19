@@ -48,6 +48,7 @@
     &.referenceBased{ --pill-hue: oklch(0.58 0.15 155); } // emerald
     &.rag           { --pill-hue: oklch(0.60 0.14 220); } // sky
     &.agent         { --pill-hue: oklch(0.56 0.19 265); } // indigo
+    &.trajectory    { --pill-hue: oklch(0.58 0.15 175); } // green
     &.chatbot       { --pill-hue: oklch(0.60 0.22 330); } // fuchsia
     &.safety        { --pill-hue: oklch(0.58 0.22 25);  } // red
     &.multimodal    { --pill-hue: oklch(0.62 0.16 50);  } // orange

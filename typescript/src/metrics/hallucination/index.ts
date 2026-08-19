@@ -1,5 +1,6 @@
 export {
   HallucinationMetric,
   type HallucinationMetricOptions,
-} from "./hallucination";
-export * from "./schema";
+  type HallucinationTemplateOverride,
+} from "@/metrics/hallucination/hallucination";
+export * from "@/metrics/hallucination/schema";

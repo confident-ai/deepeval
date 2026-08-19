@@ -1,7 +1,8 @@
 import {
   DeepEvalOpenAICompatibleModel,
   type OpenAICompatibleModelOptions,
-} from "../openai-compatible-model";
+} from "@/models/openai-compatible-model";
+import type { ModelNamespace } from "@/models/registry";
 
 export type GrokModelOptions = OpenAICompatibleModelOptions;
 
@@ -15,6 +16,7 @@ const GROK_BASE_URL = "https://api.x.ai/v1";
 export class GrokModel extends DeepEvalOpenAICompatibleModel {
   protected providerLabel = "Grok";
   protected apiKeyEnvVar = "GROK_API_KEY";
+  protected registryNamespace: ModelNamespace = "grok";
 
   constructor(options: GrokModelOptions = {}) {
     super({

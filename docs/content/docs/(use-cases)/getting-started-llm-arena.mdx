@@ -2,6 +2,7 @@
 id: getting-started-llm-arena
 title: LLM Arena Evaluation Quickstart
 sidebar_label: LLM Arena
+languages: [python, typescript]
 ---
 import { ASSETS } from "@site/src/assets";
 import { Bot, FileSearch, MessagesSquare } from 'lucide-react';
@@ -35,115 +36,9 @@ CONFIDENT_API_KEY="confident_us..."
 
 In `deepeval`, arena test cases are used to compare different versions of your LLM app to see which one performs better. Each test case is an arena containing different contestants as different versions of your LLM app which are evaluated based on their corresponding `LLMTestCase`
 
-:::note
+`ArenaGEval` picks its winner with an LLM judge, which defaults to OpenAI. You can judge with any model `deepeval` supports instead:
 
-`deepeval` provides a wide selection of LLM models that you can easily choose from and run evaluations with.
-
-<Tabs items={["OpenAI", "Anthropic", "Gemini", "Ollama", "Grok", "Azure OpenAI", "Amazon Bedrock", "Vertex AI"]}>
-<Tab value="OpenAI">
-
-```python
-from deepeval.metrics import ArenaGEval
-
-task_completion_metric = ArenaGEval(model="gpt-4.1")
-```
-
-</Tab>
-<Tab value="Anthropic">
-
-```python
-from deepeval.metrics import ArenaGEval
-from deepeval.models import AnthropicModel
-
-model = AnthropicModel("claude-3-7-sonnet-latest")
-task_completion_metric = ArenaGEval(model=model)
-```
-
-</Tab>
-<Tab value="Gemini">
-
-```python
-from deepeval.metrics import ArenaGEval
-from deepeval.models import GeminiModel
-
-model = GeminiModel("gemini-2.5-flash")
-task_completion_metric = ArenaGEval(model=model)
-```
-
-</Tab>
-<Tab value="Ollama">
-
-```python
-from deepeval.metrics import ArenaGEval
-from deepeval.models import OllamaModel
-
-model = OllamaModel("deepseek-r1")
-task_completion_metric = ArenaGEval(model=model)
-```
-
-</Tab>
-<Tab value="Grok">
-
-```python
-from deepeval.metrics import ArenaGEval
-from deepeval.models import GrokModel
-
-model = GrokModel("grok-4.1")
-task_completion_metric = ArenaGEval(model=model)
-```
-
-</Tab>
-<Tab value="Azure OpenAI">
-
-```python
-from deepeval.metrics import ArenaGEval
-from deepeval.models import AzureOpenAIModel
-
-model = AzureOpenAIModel(
-    model="gpt-4.1",
-    deployment_name="Test Deployment",
-    api_key="Your Azure OpenAI API Key",
-    api_version="2025-01-01-preview",
-    base_url="https://example-resource.azure.openai.com/",
-    temperature=0
-)
-task_completion_metric = ArenaGEval(model=model)
-```
-
-</Tab>
-<Tab value="Amazon Bedrock">
-
-```python
-from deepeval.metrics import ArenaGEval
-from deepeval.models import AmazonBedrockModel
-
-model = AmazonBedrockModel(
-    model="anthropic.claude-3-opus-20240229-v1:0",
-    region="us-east-1",
-    generation_kwargs={"temperature": 0},
-)
-task_completion_metric = ArenaGEval(model=model)
-```
-
-</Tab>
-<Tab value="Vertex AI">
-
-```python
-from deepeval.metrics import ArenaGEval
-from deepeval.models import GeminiModel
-
-model = GeminiModel(
-    model="gemini-1.5-pro",
-    project="Your Project ID",
-    location="us-central1",
-    temperature=0
-)
-task_completion_metric = ArenaGEval(model=model)
-```
-
-</Tab>
-</Tabs>
-:::
+<include cwd>snippets/models/configure-llm-judge-tabs.mdx</include>
 
 <Steps>
 
@@ -152,6 +47,10 @@ task_completion_metric = ArenaGEval(model=model)
 
 
 Create an `ArenaTestCase` by passing a list of contestants.
+
+<Switch>
+
+<Case id="python">
 
 ```python title="main.py"
 from deepeval.test_case import ArenaTestCase, LLMTestCase, Contestant
@@ -186,6 +85,49 @@ contestant_3 = Contestant(
 test_case = ArenaTestCase(contestants=[contestant_1, contestant_2, contestant_3])
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript title="main.ts"
+import { ArenaTestCase, Contestant, LLMTestCase } from "deepeval/test-case";
+
+const contestant1 = new Contestant({
+  name: "Version 1",
+  hyperparameters: { model: "gpt-3.5-turbo" },
+  testCase: new LLMTestCase({
+    input: "What is the capital of France?",
+    actualOutput: "Paris",
+  }),
+});
+
+const contestant2 = new Contestant({
+  name: "Version 2",
+  hyperparameters: { model: "gpt-4o" },
+  testCase: new LLMTestCase({
+    input: "What is the capital of France?",
+    actualOutput: "Paris is the capital of France.",
+  }),
+});
+
+const contestant3 = new Contestant({
+  name: "Version 3",
+  hyperparameters: { model: "gpt-4.1" },
+  testCase: new LLMTestCase({
+    input: "What is the capital of France?",
+    actualOutput: "Absolutely! The capital of France is Paris 😊",
+  }),
+});
+
+const testCase = new ArenaTestCase({
+  contestants: [contestant1, contestant2, contestant3],
+});
+```
+
+</Case>
+
+</Switch>
+
 You can learn more about an `ArenaTestCase` [here](https://deepeval.com/docs/evaluation-arena-test-cases).
 
 </Step>
@@ -195,6 +137,10 @@ You can learn more about an `ArenaTestCase` [here](https://deepeval.com/docs/eva
 
 
 The [`ArenaGEval`](https://deepeval.com/docs/metrics-arena-g-eval) metric is the only metric that is compatible with `ArenaTestCase`. It picks a winner among the contestants based on the criteria defined.
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import ArenaGEval
@@ -209,6 +155,29 @@ arena_geval = ArenaGEval(
     ]
 )
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { SingleTurnParams } from "deepeval/test-case";
+import { ArenaGEval } from "deepeval/metrics";
+
+const arenaGEval = new ArenaGEval({
+  name: "Friendly",
+  criteria:
+    "Choose the winner of the more friendly contestant based on the input and actual output",
+  evaluationParams: [
+    SingleTurnParams.INPUT,
+    SingleTurnParams.ACTUAL_OUTPUT,
+  ],
+});
+```
+
+</Case>
+
+</Switch>
 
 </Step>
 
@@ -226,6 +195,10 @@ Now that you have created an arena with contestants and defined a metric, you ca
 
 You can run arena evals by using the `compare()` function.
 
+<Switch>
+
+<Case id="python">
+
 ```python {3,11} title="main.py"
 from deepeval.test_case import ArenaTestCase, LLMTestCase, SingleTurnParams
 from deepeval.metrics import ArenaGEval
@@ -240,13 +213,40 @@ arena_geval = ArenaGEval(...) # Use the same metric you've created before
 compare(test_cases=[test_case], metric=arena_geval)
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript {3,11} title="main.ts"
+import { ArenaTestCase } from "deepeval/test-case";
+import { ArenaGEval } from "deepeval/metrics";
+import { compare } from "deepeval";
+
+const testCase = new ArenaTestCase({
+  contestants: [contestant1, contestant2, contestant3], // Use the same contestants you've created before
+});
+
+const arenaGEval = new ArenaGEval({ /* ... */ }); // Use the same metric you've created before
+
+await compare([testCase], arenaGEval);
+```
+
+</Case>
+
+</Switch>
+
 <details>
   <summary>Log prompts and models</summary>
 
-You can optionally log prompts and models for each contestant through `hyperparameters` dictionary in the `compare()` function. This will allow you to easily attribute winning contestants to their corresponding hyperparameters.
+Each contestant carries its own `hyperparameters`, which is how you attribute a winning contestant to the prompt and model that produced it.
+
+<Switch>
+
+<Case id="python">
 
 ```python
-from deepeval.prompt import Prompt
+from deepeval.prompt import Prompt, PromptMessage
+from deepeval.test_case import Contestant, LLMTestCase
 
 prompt_1 = Prompt(
     alias="First Prompt",
@@ -257,29 +257,95 @@ prompt_2 = Prompt(
     messages_template=[PromptMessage(role="system", content="You are a helpful assistant.")]
 )
 
-compare(
-    test_cases=[test_case],
-    metric=arena_geval,
-    hyperparameters={
-        "Version 1": {"prompt": prompt_1},
-        "Version 2": {"prompt": prompt_2},
-    },
+contestant_1 = Contestant(
+    name="Version 1",
+    hyperparameters={"model": "gpt-3.5-turbo", "prompt": prompt_1},
+    test_case=LLMTestCase(...),
+)
+contestant_2 = Contestant(
+    name="Version 2",
+    hyperparameters={"model": "gpt-4o", "prompt": prompt_2},
+    test_case=LLMTestCase(...),
 )
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { Contestant, LLMTestCase } from "deepeval/test-case";
+import { Prompt } from "deepeval";
+
+const prompt1 = new Prompt({ alias: "First Prompt" });
+const prompt2 = new Prompt({ alias: "Second Prompt" });
+await Promise.all([prompt1.pull(), prompt2.pull()]);
+
+const contestant1 = new Contestant({
+  name: "Version 1",
+  hyperparameters: { model: "gpt-3.5-turbo", prompt: prompt1 },
+  testCase: new LLMTestCase({ /* ... */ }),
+});
+const contestant2 = new Contestant({
+  name: "Version 2",
+  hyperparameters: { model: "gpt-4o", prompt: prompt2 },
+  testCase: new LLMTestCase({ /* ... */ }),
+});
+```
+
+:::note
+A `Prompt` has to be pulled before you can log it — that's what gives it the version Confident AI attributes the win to.
+:::
+
+</Case>
+
+</Switch>
+
 </details>
 
-You can now run this python file to get your results:
+You can now run this file to get your results:
+
+<Switch>
+
+<Case id="python">
 
 ```bash title="bash"
 python main.py
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```bash title="bash"
+npx tsx main.ts
+```
+
+</Case>
+
+</Switch>
+
 This should let you see the results of the arena as shown below:
+
+<Switch>
+
+<Case id="python">
 
 ```text
 Counter({'Version 3': 1})
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```text
+{ 'Version 3': 1 }
+```
+
+</Case>
+
+</Switch>
 
 🎉🥳 **Congratulations!** You have just ran your first LLM arena-based evaluation. Here's what happened:
 

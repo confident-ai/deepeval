@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Type
 
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
@@ -20,6 +20,10 @@ from deepeval.metrics.mcp.utils import (
 )
 from deepeval.metrics.mcp.schema import Task, TaskScore, Reason
 from deepeval.errors import MissingTestCaseParamsError
+from deepeval.templates import make_template_class
+
+
+MCPTaskCompletionTemplate = make_template_class("MCPTaskCompletionMetric")
 
 
 class MCPTaskCompletionMetric(BaseConversationalMetric):
@@ -30,12 +34,16 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
+        evaluation_template: Type[
+            MCPTaskCompletionTemplate
+        ] = MCPTaskCompletionTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -44,13 +52,14 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case,
@@ -74,7 +83,6 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -95,7 +103,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                     (task_score.score, task_score.reason)
                     for task_score in self.task_scores
                 ]
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -111,7 +119,6 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case,
@@ -152,7 +159,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
             ]
             self.score = self._calculate_score(self.task_scores)
             self.reason = self._generate_reason(self.task_scores)
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -270,16 +277,6 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         total_score = sum(score.score for score in scores)
         score = total_score / score_divisor
         return 0 if self.strict_mode and score < self.threshold else score
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

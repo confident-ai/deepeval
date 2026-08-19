@@ -1,3 +1,6 @@
-from .conversational_g_eval import ConversationalGEval
+from .conversational_g_eval import (
+    ConversationalGEval,
+    ConversationalGEvalTemplate,
+)
 
-__all__ = ["ConversationalGEval"]
+__all__ = ["ConversationalGEval", "ConversationalGEvalTemplate"]

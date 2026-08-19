@@ -7,11 +7,24 @@
     "resolveJsonModule": true,
     "rootDir": "./src",
     "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
   "include": ["src"],
-  "exclude": ["node_modules", "dist", "examples"]
+  "exclude": ["node_modules", "dist", "examples", "src/inspect/ui"],
+  // baseUrl would otherwise rewrite bare `import("openai")` to `../openai`
+  // because we also ship a local `src/openai/` module (tsc-alias#231).
+  "tsc-alias": {
+    "replacers": {
+      "base-url": {
+        "enabled": false
+      }
+    }
+  }
 }

@@ -1,5 +1,5 @@
-import { Prompt } from "../prompt";
-import { ToolCallType } from "../test-case";
+import { Prompt } from "@/prompt";
+import { ToolCallType } from "@/test-case";
 
 export enum SpanApiType {
   BASE = "base",

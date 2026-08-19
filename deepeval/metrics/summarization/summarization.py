@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Type
 import asyncio
 
 from deepeval.test_case import (
@@ -31,6 +31,10 @@ from deepeval.metrics.summarization.schema import (
     SummarizationScoreReason,
 )
 from deepeval.metrics.faithfulness.schema import Truths, Claims
+from deepeval.templates import make_template_class
+
+
+SummarizationTemplate = make_template_class("SummarizationMetric")
 
 
 class SummarizationMetric(BaseMetric):
@@ -42,7 +46,7 @@ class SummarizationMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         n: int = 5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         assessment_questions: Optional[List[str]] = None,
@@ -51,6 +55,10 @@ class SummarizationMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         truths_extraction_limit: Optional[int] = None,
+        flaky: bool = False,
+        evaluation_template: Type[
+            SummarizationTemplate
+        ] = SummarizationTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -66,17 +74,18 @@ class SummarizationMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
 
         self.truths_extraction_limit = truths_extraction_limit
         if self.truths_extraction_limit is not None:
             self.truths_extraction_limit = max(self.truths_extraction_limit, 0)
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(
@@ -102,7 +111,6 @@ class SummarizationMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -124,7 +132,7 @@ class SummarizationMetric(BaseMetric):
                 }
                 self.score = min(alignment_score, coverage_score)
                 self.reason = self._generate_reason()
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -143,7 +151,6 @@ class SummarizationMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(
@@ -184,7 +191,7 @@ class SummarizationMetric(BaseMetric):
             }
             self.score = min(alignment_score, coverage_score)
             self.reason = await self._a_generate_reason()
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -558,16 +565,6 @@ class SummarizationMetric(BaseMetric):
             extract_schema=lambda s: s.claims,
             extract_json=lambda data: data["claims"],
         )
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

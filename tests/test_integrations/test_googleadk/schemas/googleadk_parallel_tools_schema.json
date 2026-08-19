@@ -60,12 +60,14 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "inputParameters": {
             "city": "Paris"
           }
         },
         {
           "name": "get_time",
+          "type": "FUNCTION",
           "inputParameters": {
             "city": "Paris"
           }
@@ -103,6 +105,7 @@
       "toolsCalled": [
         {
           "name": "get_time",
+          "type": "FUNCTION",
           "inputParameters": {
             "city": "Paris"
           }
@@ -123,6 +126,7 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "inputParameters": {
             "city": "Paris"
           }

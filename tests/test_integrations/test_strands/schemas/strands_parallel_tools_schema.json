@@ -89,6 +89,7 @@
       "toolsCalled": [
         {
           "name": "get_time",
+          "type": "FUNCTION",
           "inputParameters": {}
         }
       ],
@@ -106,6 +107,7 @@
       "toolsCalled": [
         {
           "name": "get_weather",
+          "type": "FUNCTION",
           "inputParameters": {}
         }
       ],

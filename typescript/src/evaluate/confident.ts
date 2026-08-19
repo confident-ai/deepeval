@@ -1,10 +1,10 @@
-import { Api, Endpoints, HttpMethods } from "../confident/api";
+import { Api, Endpoints, HttpMethods } from "@/confident/api";
 import {
   ConversationalTestCase,
   ToolCall,
   Turn,
   resolveRetrievalContext,
-} from "../test-case";
+} from "@/test-case";
 import {
   MetricData,
   ApiToolCall,
@@ -14,7 +14,12 @@ import {
   EvaluatedCase,
   ArenaCaseResult,
   ContestantRun,
-} from "./types";
+  aggregateSuccess,
+} from "@/evaluate/types";
+import {
+  processHyperparameters,
+  type ProcessedHyperparameters,
+} from "@/evaluate/hyperparameters";
 
 // --- shared leaf conversions (zod parse validates + strips extra fields) ---
 
@@ -40,7 +45,7 @@ function caseCost(metricsData: MetricData[]): number | undefined {
   return costs.length ? costs.reduce((s, c) => s + c, 0) : undefined;
 }
 
-function buildMetricsScores(cases: EvaluatedCase[]) {
+function buildMetricsScores(cases: { metricsData: MetricData[] }[]) {
   const map = new Map<
     string,
     { scores: number[]; passes: number; fails: number; errors: number }
@@ -48,13 +53,19 @@ function buildMetricsScores(cases: EvaluatedCase[]) {
   for (const { metricsData } of cases) {
     for (const m of metricsData) {
       if (m.skipped) continue;
-      const e = map.get(m.name) ?? { scores: [], passes: 0, fails: 0, errors: 0 };
+      const e = map.get(m.name) ?? {
+        scores: [],
+        passes: 0,
+        fails: 0,
+        errors: 0,
+      };
       if (m.error) {
         e.errors += 1;
       } else {
         if (m.score != null) e.scores.push(m.score);
-        if (m.success) e.passes += 1;
-        else e.fails += 1;
+        // A score-only metric has no verdict, so it counts as neither.
+        if (m.success === true) e.passes += 1;
+        else if (m.success === false) e.fails += 1;
       }
       map.set(m.name, e);
     }
@@ -62,15 +73,91 @@ function buildMetricsScores(cases: EvaluatedCase[]) {
   return [...map.entries()].map(([metric, e]) => ({ metric, ...e }));
 }
 
-export async function postTestRun(
-  cases: EvaluatedCase[],
+export interface PersistedCase {
+  conversational: boolean;
+  entry: Record<string, unknown>;
+  metricsData: MetricData[];
+  datasetAlias?: string;
+  datasetId?: string;
+  displayOnly?: boolean;
+}
+
+export function buildTestCaseEntry(
+  { testCase, metricsData, runDuration, trace, displayOnly }: EvaluatedCase,
+  order: number,
+): PersistedCase {
+  const success = aggregateSuccess(metricsData);
+  const evaluationCost = caseCost(metricsData);
+  const metricsDataApi = metricsData.map(convertMetricData);
+  const datasetAlias = testCase._datasetAlias;
+  const datasetId = testCase._datasetId;
+
+  if (testCase instanceof ConversationalTestCase) {
+    return {
+      conversational: true,
+      metricsData,
+      datasetAlias,
+      datasetId,
+      displayOnly,
+      entry: {
+        name: testCase.name ?? `test_case_${order}`,
+        success,
+        flaky: testCase.flaky,
+        metricsData: metricsDataApi,
+        runDuration,
+        evaluationCost,
+        order,
+        turns: testCase.turns.map((t, i) => convertTurn(t, i)),
+        scenario: testCase.scenario,
+        expectedOutcome: testCase.expectedOutcome,
+        userDescription: testCase.userDescription,
+        imagesMapping: testCase.getImagesMapping(),
+      },
+    };
+  }
+
+  return {
+    conversational: false,
+    metricsData,
+    datasetAlias,
+    datasetId,
+    displayOnly,
+    entry: {
+      name: testCase.name ?? `test_case_${order}`,
+      input: testCase.input,
+      actualOutput: testCase.actualOutput,
+      expectedOutput: testCase.expectedOutput,
+      context: testCase.context,
+      retrievalContext: resolveRetrievalContext(testCase.retrievalContext),
+      toolsCalled: testCase.toolsCalled?.map(convertTool),
+      expectedTools: testCase.expectedTools?.map(convertTool),
+      success,
+      flaky: testCase.flaky,
+      metricsData: metricsDataApi,
+      runDuration,
+      evaluationCost,
+      order,
+      imagesMapping: testCase.getImagesMapping(),
+      trace,
+    },
+  };
+}
+
+export interface PostTestRunOptions {
+  official?: boolean;
+  /** Suppress the "posted to Confident AI" line so the caller can print its own. */
+  silent?: boolean;
+  identifier?: string;
+  hyperparameters?: ProcessedHyperparameters;
+}
+
+async function sendTestRun(
+  persisted: PersistedCase[],
   runDuration: number,
-  official = false,
-  silent = false,
+  { official, silent, identifier, hyperparameters }: PostTestRunOptions,
 ): Promise<{ link: string | null; testRunId: string | null }> {
-  // Silent check (isConfident() logs a warning — not wanted on the no-op path).
   const apiKey = process.env.CONFIDENT_API_KEY;
-  if (!apiKey || apiKey.trim() === "" || cases.length === 0) {
+  if (!apiKey || apiKey.trim() === "" || persisted.length === 0) {
     return { link: null, testRunId: null };
   }
 
@@ -81,63 +168,44 @@ export async function postTestRun(
   let totalCost = 0;
   let hasCost = false;
 
-  cases.forEach(({ testCase, metricsData, runDuration: caseDuration, trace }, order) => {
-    const success = metricsData.every((m) => m.skipped || m.success);
-    if (success) testPassed += 1;
-    else testFailed += 1;
+  // Component results are reported locally only: on the platform they belong to
+  // the turn's trace, not as test cases beside it. Filtering here also keeps them
+  // out of the pass/fail counts and the aggregate scores.
+  const postable = persisted.filter((c) => !c.displayOnly);
+  if (postable.length === 0) return { link: null, testRunId: null };
 
-    const evaluationCost = caseCost(metricsData);
-    if (evaluationCost != null) {
-      totalCost += evaluationCost;
+  postable.forEach(({ conversational, entry }, order) => {
+    entry.order = order;
+    if (entry.success) testPassed += 1;
+    else testFailed += 1;
+    const cost = entry.evaluationCost as number | undefined;
+    if (cost != null) {
+      totalCost += cost;
       hasCost = true;
     }
-    const metricsDataApi = metricsData.map(convertMetricData);
-
-    if (testCase instanceof ConversationalTestCase) {
-      conversationalTestCases.push({
-        name: testCase.name ?? `test_case_${order}`,
-        success,
-        metricsData: metricsDataApi,
-        runDuration: caseDuration,
-        evaluationCost,
-        order,
-        turns: testCase.turns.map((t, i) => convertTurn(t, i)),
-        scenario: testCase.scenario,
-        expectedOutcome: testCase.expectedOutcome,
-        userDescription: testCase.userDescription,
-        chatbotRole: testCase.chatbotRole,
-        imagesMapping: testCase.getImagesMapping(),
-      });
-    } else {
-      testCases.push({
-        name: testCase.name ?? `test_case_${order}`,
-        input: testCase.input,
-        actualOutput: testCase.actualOutput,
-        expectedOutput: testCase.expectedOutput,
-        context: testCase.context,
-        retrievalContext: resolveRetrievalContext(testCase.retrievalContext),
-        toolsCalled: testCase.toolsCalled?.map(convertTool),
-        expectedTools: testCase.expectedTools?.map(convertTool),
-        success,
-        metricsData: metricsDataApi,
-        runDuration: caseDuration,
-        evaluationCost,
-        order,
-        imagesMapping: testCase.getImagesMapping(),
-        trace,
-      });
-    }
+    if (conversational) conversationalTestCases.push(entry);
+    else testCases.push(entry);
   });
+
+  const datasetAlias = postable.find((c) => c.datasetAlias)?.datasetAlias;
+  const datasetId = postable.find((c) => c.datasetId)?.datasetId;
 
   const payload = {
     testCases,
     conversationalTestCases,
-    metricsScores: buildMetricsScores(cases),
+    metricsScores: buildMetricsScores(postable),
     testPassed,
     testFailed,
     runDuration,
     evaluationCost: hasCost ? totalCost : undefined,
     official: official || undefined,
+    identifier: identifier || undefined,
+    datasetAlias: datasetAlias || undefined,
+    datasetId: datasetId || undefined,
+    hyperparameters:
+      hyperparameters && Object.keys(hyperparameters).length
+        ? hyperparameters
+        : undefined,
   };
 
   try {
@@ -161,6 +229,26 @@ export async function postTestRun(
   }
 }
 
+export async function postTestRun(
+  cases: EvaluatedCase[],
+  runDuration: number,
+  options: PostTestRunOptions = {},
+): Promise<{ link: string | null; testRunId: string | null }> {
+  return sendTestRun(
+    cases.map((c, i) => buildTestCaseEntry(c, i)),
+    runDuration,
+    options,
+  );
+}
+
+export async function postPersistedTestRun(
+  persisted: PersistedCase[],
+  runDuration: number,
+  options: PostTestRunOptions = {},
+): Promise<{ link: string | null; testRunId: string | null }> {
+  return sendTestRun(persisted, runDuration, options);
+}
+
 function arenaMetricData(
   r: ArenaCaseResult,
   contestantName: string,
@@ -171,6 +259,7 @@ function arenaMetricData(
     name: metricName,
     threshold: 1,
     strictMode: true,
+    flaky: false,
     evaluationModel: r.evaluationModel,
     evaluationCost: r.evaluationCost,
     verboseLogs: r.verboseLogs,
@@ -261,7 +350,13 @@ export async function postExperiment(
     testCases: e.testCases,
     conversationalTestCases: [],
     metricsScores: [
-      { metric: metricName, scores: e.scores, passes: e.passes, fails: e.fails, errors: e.errors },
+      {
+        metric: metricName,
+        scores: e.scores,
+        passes: e.passes,
+        fails: e.fails,
+        errors: e.errors,
+      },
     ],
     identifier: e.identifier,
     testPassed: e.testPassed,
@@ -269,7 +364,7 @@ export async function postExperiment(
     runDuration: e.runDuration,
     evaluationCost: e.hasCost ? e.evaluationCost : undefined,
     hyperparameters: Object.keys(e.hyperparameters).length
-      ? e.hyperparameters
+      ? processHyperparameters(e.hyperparameters)
       : undefined,
   }));
 

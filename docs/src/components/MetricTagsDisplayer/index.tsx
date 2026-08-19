@@ -10,6 +10,7 @@ interface MetricTagsDisplayerProps {
   referenceBased?: boolean;
   rag?: boolean;
   agent?: boolean;
+  trajectory?: boolean;
   chatbot?: boolean;
   custom?: boolean;
   safety?: boolean;
@@ -25,6 +26,7 @@ const MetricTagsDisplayer = ({
   referenceBased = false,
   rag = false,
   agent = false,
+  trajectory = false,
   chatbot = false,
   custom = false,
   safety = false,
@@ -52,6 +54,9 @@ const MetricTagsDisplayer = ({
       )}
       {multiTurn && (
         <div className={`${styles.pill} ${styles.multiTurn}`}>Multi-turn</div>
+      )}
+      {trajectory && (
+        <div className={`${styles.pill} ${styles.trajectory}`}>Trajectory</div>
       )}
       {referenceless && (
         <div className={`${styles.pill} ${styles.referenceless}`}>

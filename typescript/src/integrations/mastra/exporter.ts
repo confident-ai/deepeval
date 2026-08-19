@@ -1,9 +1,17 @@
-import { traceManager } from "../../tracing";
-import { SpanType, TraceManagerConfig, Trace } from "../../tracing/tracing";
-import { Environment } from "../../tracing/utils";
-import { getConfidentApiKey, isConfident } from "../../utils";
-import { withCaptureTracingIntegration } from "../../telemetry";
-import { Prompt } from "../../prompt";
+import { applyPendingToSpan, popPendingFor, traceManager } from "@/tracing";
+import {
+  BaseSpan,
+  SpanType,
+  TraceManagerConfig,
+  Trace,
+  getCurrentSpan,
+  setCurrentSpan,
+} from "@/tracing/tracing";
+import { Environment } from "@/tracing/utils";
+import { getConfidentApiKey } from "@/utils";
+import { recordTracingIntegration } from "@/telemetry";
+import { Integration } from "@/tracing/integrations";
+import { Prompt } from "@/prompt";
 
 import { TracingEventType } from "@mastra/core/observability";
 import type {
@@ -22,7 +30,7 @@ import {
   mapSpanType,
   shouldDropSpan,
   updateDeepEvalSpan,
-} from "./converter";
+} from "@/integrations/mastra/converter";
 
 export interface DeepEvalExporterConfig {
   apiKey?: string;
@@ -48,21 +56,20 @@ export class DeepEvalExporter implements ObservabilityExporter {
   name = "deepeval";
 
   private config: DeepEvalExporterConfig;
-  private disabled = false;
 
   private traceIds = new Map<string, string>();
+  /** Span to restore as "current" when a span ends, keyed by span uuid. */
+  private previousSpans = new Map<string, BaseSpan | undefined>();
+  private mastra?: InitExporterOptions["mastra"];
+  private unsubscribeSink?: () => void;
+  private unregisterSettleHook?: () => void;
 
   constructor(config: DeepEvalExporterConfig = {}) {
     this.config = config;
 
+    // No key is a supported mode, not an error: spans are still built in-process
+    // so local evals score them, and `postTrace` skips the upload on its own.
     const apiKey = config.apiKey ?? getConfidentApiKey() ?? undefined;
-    if (!apiKey && !isConfident()) {
-      this.disabled = true;
-      console.warn(
-        "DeepEval: No API Key found. Mastra tracing will be disabled.",
-      );
-      return;
-    }
 
     const tmConfig: TraceManagerConfig = {};
     if (apiKey) tmConfig.confidentApiKey = apiKey;
@@ -73,12 +80,20 @@ export class DeepEvalExporter implements ObservabilityExporter {
     }
 
     if (config.traceCaptureSink) {
-      traceManager.setTraceCaptureSink(config.traceCaptureSink);
+      this.unsubscribeSink = traceManager.addTraceCaptureSink(
+        config.traceCaptureSink,
+      );
     }
 
-    withCaptureTracingIntegration("mastra", () => {}).catch((err) => {
-      if (config.debug) console.error("DeepEval telemetry failed:", err);
+    // Mastra delivers span events on its own bus, so they can land after the
+    // user's `await agent.generate(...)` has already returned. Local eval asks
+    // us to settle first; `flush()` is Mastra's own "everything queued is
+    // exported" barrier, so there is nothing to poll for.
+    this.unregisterSettleHook = traceManager.addSettleHook(async () => {
+      await this.mastra?.observability?.flush();
     });
+
+    recordTracingIntegration(Integration.MASTRA);
 
     if (config.debug) {
       console.log("DeepEval Mastra exporter configured", {
@@ -92,11 +107,10 @@ export class DeepEvalExporter implements ObservabilityExporter {
     if (!this.config.name && options.config?.serviceName) {
       this.config.name = options.config.serviceName;
     }
+    this.mastra = options.mastra;
   }
 
   async exportTracingEvent(event: TracingEvent): Promise<void> {
-    if (this.disabled) return;
-
     const span = event.exportedSpan;
     if (!span) return;
 
@@ -137,7 +151,10 @@ export class DeepEvalExporter implements ObservabilityExporter {
           : undefined,
     });
 
+    applyPendingToSpan(deepEvalSpan, popPendingFor(deepEvalSpan.type));
+
     traceManager.addSpan(deepEvalSpan);
+    let attached = true;
     try {
       traceManager.addSpanToTrace(deepEvalSpan);
     } catch {
@@ -146,6 +163,35 @@ export class DeepEvalExporter implements ObservabilityExporter {
         traceManager.addSpanToTrace(deepEvalSpan);
       } catch {
         traceManager.removeSpan(deepEvalSpan.uuid);
+        attached = false;
+      }
+    }
+
+    if (attached) this.pushSpanContext(deepEvalSpan);
+  }
+
+  private pushSpanContext(deepEvalSpan: BaseSpan): void {
+    try {
+      this.previousSpans.set(deepEvalSpan.uuid, getCurrentSpan());
+      setCurrentSpan(deepEvalSpan);
+    } catch (err) {
+      if (this.config.debug) {
+        console.error("DeepEval: failed to enter span context", err);
+      }
+    }
+  }
+
+  private popSpanContext(spanUuid: string): void {
+    if (!this.previousSpans.has(spanUuid)) return;
+    const previous = this.previousSpans.get(spanUuid);
+    this.previousSpans.delete(spanUuid);
+    try {
+      if (getCurrentSpan()?.uuid === spanUuid) {
+        setCurrentSpan(previous ?? null);
+      }
+    } catch (err) {
+      if (this.config.debug) {
+        console.error("DeepEval: failed to restore span context", err);
       }
     }
   }
@@ -160,6 +206,7 @@ export class DeepEvalExporter implements ObservabilityExporter {
     if (!existing) return;
 
     finalizeDeepEvalSpan(existing, span);
+    this.popSpanContext(span.id);
     const traceUuid = existing.traceUuid;
 
     if (mapSpanType(span.type) === SpanType.TOOL) {
@@ -244,12 +291,15 @@ export class DeepEvalExporter implements ObservabilityExporter {
   }
 
   async flush(): Promise<void> {
-    if (this.disabled) return;
     await traceManager.flush();
   }
 
   async shutdown(): Promise<void> {
-    if (this.disabled) return;
+    this.unregisterSettleHook?.();
+    this.unregisterSettleHook = undefined;
+    this.unsubscribeSink?.();
+    this.unsubscribeSink = undefined;
+    this.previousSpans.clear();
 
     for (const traceUuid of this.traceIds.values()) {
       if (traceManager.getTraceByUuid(traceUuid)) {

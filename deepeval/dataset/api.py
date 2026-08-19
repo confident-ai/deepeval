@@ -14,27 +14,10 @@ class APIDataset(BaseModel):
 
     @model_validator(mode="after")
     def prepare_goldens_for_api(self):
-        if self.goldens:
-            for golden in self.goldens:
-                golden.name = None
-                golden.images_mapping = golden._get_images_mapping()
-                if golden.retrieval_context:
-                    golden.retrieval_context = [
-                        rc.context if hasattr(rc, "context") else rc
-                        for rc in golden.retrieval_context
-                    ]
-        if self.conversational_goldens:
-            for golden in self.conversational_goldens:
-                golden.name = None
-                golden.images_mapping = golden._get_images_mapping()
-                if golden.turns:
-                    for turn in golden.turns:
-                        if turn.retrieval_context:
-                            turn.retrieval_context = [
-                                rc.context if hasattr(rc, "context") else rc
-                                for rc in turn.retrieval_context
-                            ]
-
+        for golden in self.goldens or []:
+            golden._prepare_for_api()
+        for golden in self.conversational_goldens or []:
+            golden._prepare_for_api()
         return self
 
 
@@ -47,27 +30,10 @@ class APIQueueDataset(BaseModel):
 
     @model_validator(mode="after")
     def prepare_goldens_for_api(self):
-        if self.goldens:
-            for golden in self.goldens:
-                golden.name = None
-                golden.images_mapping = golden._get_images_mapping()
-                if golden.retrieval_context:
-                    golden.retrieval_context = [
-                        rc.context if hasattr(rc, "context") else rc
-                        for rc in golden.retrieval_context
-                    ]
-        if self.conversational_goldens:
-            for golden in self.conversational_goldens:
-                golden.name = None
-                golden.images_mapping = golden._get_images_mapping()
-                if golden.turns:
-                    for turn in golden.turns:
-                        if turn.retrieval_context:
-                            turn.retrieval_context = [
-                                rc.context if hasattr(rc, "context") else rc
-                                for rc in turn.retrieval_context
-                            ]
-
+        for golden in self.goldens or []:
+            golden._prepare_for_api()
+        for golden in self.conversational_goldens or []:
+            golden._prepare_for_api()
         return self
 
 

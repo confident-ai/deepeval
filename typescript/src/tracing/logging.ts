@@ -1,6 +1,6 @@
-import { getSettings } from "../config/settings";
-import { CONFIDENT_TRACE_VERBOSE } from "../constants";
-import { Environment } from "./utils";
+import { getSettings } from "@/config/settings";
+import { CONFIDENT_TRACE_VERBOSE } from "@/constants";
+import { Environment } from "@/tracing/utils";
 
 export enum TraceWorkerStatus {
   SUCCESS = "success",

@@ -1,6 +1,7 @@
 import warnings
 from typing import Optional
 from deepeval.telemetry import capture_tracing_integration
+from deepeval.tracing.integrations import Integration
 from deepeval.config.settings import get_settings
 from deepeval.cli.utils import WWW, with_utm
 import logging
@@ -48,7 +49,7 @@ def instrument_pydantic_ai(api_key: Optional[str] = None):
         stacklevel=2,
     )
 
-    with capture_tracing_integration("pydantic_ai"):
+    with capture_tracing_integration(Integration.PYDANTIC_AI):
         is_opentelemetry_available()
 
         # create a new tracer provider

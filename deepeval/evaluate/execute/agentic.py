@@ -433,7 +433,9 @@ async def _a_execute_span_test_case(
             continue
         metric_data = create_metric_data(metric)
         api_span.metrics_data.append(metric_data)
-        api_test_case.update_status(metric_data.success)
+        api_test_case.update_status(
+            metric_data.success, flaky=metric_data.flaky
+        )
 
 
 async def _a_execute_trace_test_case(
@@ -536,4 +538,6 @@ async def _a_execute_trace_test_case(
         metric_data = create_metric_data(metric)
         trace_api.metrics_data.append(metric_data)
         api_test_case.update_metric_data(metric_data)
-        api_test_case.update_status(metric_data.success)
+        api_test_case.update_status(
+            metric_data.success, flaky=metric_data.flaky
+        )

@@ -126,6 +126,23 @@
   animation: lineAppear 0.45s ease-out forwards;
 }
 
+.lineScope {
+  padding-right: 0.45rem;
+  padding-left: 0.45rem;
+  border-right: 1px dashed var(--trace-violet);
+  border-left: 1px dashed var(--trace-violet);
+}
+
+.scope_start {
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--trace-violet);
+}
+
+.scope_end {
+  padding-bottom: 0.35rem;
+  border-bottom: 1px dashed var(--trace-violet);
+}
+
 @keyframes lineAppear {
   to {
     opacity: 1;
@@ -146,7 +163,7 @@
 }
 
 .line_root {
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto 1fr auto;
   font-weight: 600;
 }
 

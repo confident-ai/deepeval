@@ -1,26 +1,26 @@
 import { type OpenAI } from "openai";
 
-import { createChildToolSpans } from "./utils";
+import { createChildToolSpans } from "@/openai/utils";
 import {
   safeExtractInputParameters,
   safeExtractOutputParameters,
-} from "./extractor";
-import { getLlmContext } from "../tracing/trace-context";
+} from "@/openai/extractor";
+import { getLlmContext } from "@/tracing/trace-context";
 import {
   getCurrentTrace,
   observe,
   updateCurrentSpan,
   updateLlmSpan,
-} from "../tracing";
-import { Integration, Provider } from "../tracing/integrations";
+} from "@/tracing";
+import { Integration, Provider } from "@/tracing/integrations";
 import {
   getCurrentSpan,
   LlmSpan,
   SpanType,
   traceManager,
-} from "../tracing/tracing";
-import { InputParameters, OutputParameters } from "./types";
-import { ToolCall } from "../test-case";
+} from "@/tracing/tracing";
+import { InputParameters, OutputParameters } from "@/openai/types";
+import { ToolCall } from "@/test-case";
 
 type AnyFunction = (...args: any[]) => any;
 
@@ -123,7 +123,8 @@ function patchAsyncOpenAIClientMethod(
       type: "llm",
       name: originalMethod.name.replace(/^bound /, "") ?? "OpenAI LLM Call",
       model: inputParameters.model,
-      //   metrics: llmContext?.metrics,
+      // `metrics` needs nothing here: `observe` drains both `next*Span(...)` and
+      // the scope-wide `setTracingContext({ llmSpanContext })` values itself.
       metricCollection: llmContext?.metricCollection,
       fn: async (...obsArgs: any[]) => {
         const response = await originalMethod(...obsArgs);

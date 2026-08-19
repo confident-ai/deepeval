@@ -1,78 +1,74 @@
 #!/usr/bin/env node
-import { assessGovernance } from "../governance";
+import { Command } from "commander";
+import { registerAuthCommands } from "@/cli/commands/auth";
+import { registerDiagnoseCommand } from "@/cli/commands/diagnose";
+import { registerGateCommand } from "@/cli/commands/gate";
+import { registerInspectCommand } from "@/cli/commands/inspect";
+import { registerProviderCommands } from "@/cli/commands/providers";
+import { registerSettingsCommands } from "@/cli/commands/settings";
+import { registerTestCommands } from "@/cli/commands/test";
+import { registerViewCommand } from "@/cli/commands/view";
+import { getVersion } from "@/cli/version";
+import { captureCliCommand, flush } from "@/telemetry";
 
-function printHelp(): void {
-  console.log(
-    `Usage: deepeval <command> [options]
+export function buildProgram(): Command {
+  const program = new Command();
+  program
+    .name("deepeval")
+    .description("The LLM evaluation framework.")
+    .version(getVersion(), "-V, --version", "Show the DeepEval version.")
+    .showHelpAfterError()
+    .enablePositionalOptions();
 
-Commands:
-  gate          Check your project against its governance policy and exit with a non-zero code if it doesn't pass.
+  registerTestCommands(program);
+  registerGateCommand(program);
+  registerSettingsCommands(program);
+  registerDiagnoseCommand(program);
+  registerProviderCommands(program);
+  registerAuthCommands(program);
+  registerViewCommand(program);
+  registerInspectCommand(program);
 
-Options:
-  -q, --quiet   Suppress output. The exit code still reflects the verdict.
-  -h, --help    Show this help message.`,
-  );
+  // Covers every registered command, including sub-commands like
+  // `deepeval test run`, which report as `test`.
+  program.hook("preAction", (_thisCommand, actionCommand) => {
+    captureCliCommand(
+      topLevelNameOf(program, actionCommand),
+      program.commands.map((command) => command.name()),
+    );
+  });
+
+  return program;
 }
 
-async function runGate(quiet: boolean): Promise<void> {
-  try {
-    const { passed, governancePolicy } = await assessGovernance();
-    const policyName = governancePolicy.name || "governance policy";
-
-    if (passed) {
-      if (!quiet) {
-        console.log(`✅ Governance gate passed against ${policyName}.`);
-      }
-      process.exit(0);
-    }
-
-    if (!quiet) {
-      console.error(
-        `❌ Governance gate failed against ${policyName}. ` +
-          "One or more controls did not pass.",
-      );
-    }
-    process.exit(1);
-  } catch (error) {
-    if (!quiet) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error(
-        `❌ Could not assess governance for your project: ${message}\n` +
-          "Make sure your project is associated with a governance policy. " +
-          "If it isn't, please contact your organization administrator.",
-      );
-    }
-    process.exit(1);
+function topLevelNameOf(
+  program: Command,
+  actionCommand: Command,
+): string | undefined {
+  let command: Command | null = actionCommand;
+  while (command && command.parent && command.parent !== program) {
+    command = command.parent;
   }
+  return command?.name();
 }
 
 async function main(): Promise<void> {
-  const args = process.argv.slice(2);
-  const command = args[0];
-  const quiet = args.includes("-q") || args.includes("--quiet");
+  const program = buildProgram();
 
-  if (command === "-h" || command === "--help") {
-    printHelp();
-    process.exit(0);
-  }
-
-  if (!command) {
-    printHelp();
+  if (process.argv.length <= 2) {
+    program.outputHelp();
     process.exit(1);
   }
 
-  switch (command) {
-    case "gate":
-      await runGate(quiet);
-      return;
-    default:
-      console.error(`Unknown command: ${command}\n`);
-      printHelp();
-      process.exit(1);
-  }
+  await program.parseAsync(process.argv);
+  // A short-lived CLI process can exit before a batched event is sent.
+  flush();
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+// Guarded so a test can build the program without dispatching it.
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  });
+}

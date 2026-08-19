@@ -2,15 +2,19 @@
 
 import re
 import webbrowser
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
 import typer
 from rich import print
 
 from deepeval.cli.auth.api import (
+    CliMultiSelectQuestion,
+    CliQuestionnaire,
+    CliTextQuestion,
+    DynamicNewUserOnboardingRequest,
     ExistingProjectKeyRequest,
-    NewUserOnboardingRequest,
+    QuestionnaireAnswer,
 )
 from deepeval.cli.auth.flow import (
     AuthFlowError,
@@ -33,7 +37,12 @@ from deepeval.cli.utils import (
 )
 from deepeval.config.settings import dotenv_search_paths, get_settings
 from deepeval.config.utils import read_dotenv_file
-from deepeval.telemetry import capture_login_event
+from deepeval.telemetry import (
+    LoginMethod,
+    LoginOutcome,
+    LoginSpan,
+    capture_login_event,
+)
 from deepeval.test_run.test_run import LATEST_TEST_RUN_FILE_PATH
 from deepeval.utils import delete_file_if_exists
 
@@ -51,39 +60,6 @@ USE_BROWSER_PAIRING_LOGIN = True
 REGION_CHOICES = [
     ("🇺🇸 United States (US)", "US"),
     ("🇪🇺 European Union (EU)", "EU"),
-]
-
-DEVELOPMENT_STAGE_CHOICES = [
-    ("I'm just exploring an idea", "IDEATION"),
-    ("My AI app's in development", "DEVELOPMENT"),
-    ("My AI app's already in production", "PRODUCTION"),
-]
-INTERACTION_TYPE_CHOICES = [
-    (
-        "Single-Turn — Each request is a standalone interaction",
-        "SINGLE_TURN",
-    ),
-    (
-        "Multi-Turn — Maintains context throughout a conversation",
-        "MULTI_TURN",
-    ),
-]
-MODALITY_CHOICES = [("Text", "TEXT"), ("Image", "IMAGE"), ("Audio", "AUDIO")]
-EXTERNAL_RESOURCE_CHOICES = [
-    ("Tool calls", "TOOL_CALL"),
-    ("MCP", "MCP"),
-    ("RAG", "RAG"),
-    ("None of these", "NONE"),
-]
-USE_CASE_CHOICES = [
-    (
-        "Document extraction / summarization",
-        "Document extraction / summarization",
-    ),
-    ("Chatbot assistant", "Chatbot assistant"),
-    ("Coding agent", "Coding agent"),
-    ("RAG Q&A", "RAG Q&A"),
-    ("Something else", "CUSTOM"),
 ]
 
 API_KEY_PATTERN = re.compile(
@@ -183,55 +159,82 @@ def _prompt_required(message: str, default: Optional[str] = None) -> str:
         print(f"❌ {message} cannot be empty. Please try again.\n")
 
 
-def _prompt_project_profile(project_name: str) -> Dict[str, Any]:
-    print(f"\n[bold]Tell us more about {project_name}.[/bold]")
-    development_stage = prompt_select(
-        "What stage is your AI application in?",
-        DEVELOPMENT_STAGE_CHOICES,
-    )
-    interaction_type = prompt_select(
-        "How does your application interact with users?",
-        INTERACTION_TYPE_CHOICES,
-    )
-    modalities = prompt_checkbox(
-        "Which modalities does your application support?",
-        MODALITY_CHOICES,
-    )
-    user_facing = prompt_select(
-        "Does your application interact directly with end users?",
-        [("Yes", True), ("No", False)],
-    )
-
+def _prompt_questionnaire_text(question: CliTextQuestion) -> str:
     while True:
-        external_resources = prompt_checkbox(
-            "How does your application use external data or tools?",
-            EXTERNAL_RESOURCE_CHOICES,
-        )
-        if "NONE" not in external_resources or len(external_resources) == 1:
+        value = prompt_text(question.prompt, default=question.default_value)
+        value = value.strip()
+        if question.required and not value:
+            print(f"❌ {question.prompt} cannot be empty. Please try again.\n")
+            continue
+        if question.max_length is not None and len(value) > question.max_length:
+            print(
+                f"❌ {question.prompt} must be at most "
+                f"{question.max_length} characters."
+            )
+            continue
+        return value
+
+
+def _prompt_dynamic_questionnaire(
+    questionnaire: CliQuestionnaire,
+) -> Dict[str, QuestionnaireAnswer]:
+    answers: Dict[str, QuestionnaireAnswer] = {}
+
+    for question in questionnaire.questions:
+        if isinstance(question, CliTextQuestion):
+            answers[question.id] = _prompt_questionnaire_text(question)
+            continue
+
+        choices = [(option.label, option.value) for option in question.options]
+        if question.type == "single_select":
+            if question.default_value is not None:
+                choices.sort(
+                    key=lambda choice: choice[1] != question.default_value
+                )
+            answers[question.id] = prompt_select(question.prompt, choices)
+            continue
+
+        if not isinstance(question, CliMultiSelectQuestion):
+            raise AuthFlowError(
+                f"Unsupported questionnaire question type: {question.type}."
+            )
+
+        while True:
+            minimum = question.min_selections or (1 if question.required else 0)
+            selected = prompt_checkbox(
+                question.prompt,
+                choices,
+                min_selections=minimum,
+            )
+            if len(selected) < minimum:
+                print(f"❌ Select at least {minimum} option(s).")
+                continue
+
+            exclusive_values = {
+                option.value for option in question.options if option.exclusive
+            }
+            if len(selected) > 1 and any(
+                value in exclusive_values for value in selected
+            ):
+                print(
+                    "❌ An exclusive option cannot be combined with "
+                    "another selection."
+                )
+                continue
             break
-        print("❌ 'None of these' cannot be combined with another option.")
-    if external_resources == ["NONE"]:
-        external_resources = []
 
-    use_cases = prompt_checkbox(
-        "Which use cases best describe your application?",
-        USE_CASE_CHOICES,
-    )
-    if "CUSTOM" in use_cases:
-        custom_use_case = _prompt_required("Describe your use case")
-        use_cases = [
-            custom_use_case if use_case == "CUSTOM" else use_case
-            for use_case in use_cases
-        ]
+        for option in question.options:
+            if option.accepts_custom_value and option.value in selected:
+                custom_value = _prompt_required(
+                    option.custom_prompt or "Please specify"
+                )
+                selected = [
+                    custom_value if value == option.value else value
+                    for value in selected
+                ]
+        answers[question.id] = selected
 
-    return {
-        "development_stage": development_stage,
-        "interaction_type": interaction_type,
-        "modalities": modalities,
-        "user_facing": user_facing,
-        "external_resources": external_resources,
-        "description": ", ".join(use_cases),
-    }
+    return answers
 
 
 def _complete_browser_cli_login() -> Optional[str]:
@@ -241,22 +244,33 @@ def _complete_browser_cli_login() -> Optional[str]:
 
     try:
         context = get_cli_onboarding_context(authorization.setup_token)
-        request: Union[NewUserOnboardingRequest, ExistingProjectKeyRequest]
+        request: Union[
+            DynamicNewUserOnboardingRequest,
+            ExistingProjectKeyRequest,
+        ]
 
         if context.state == "new_user":
-            existing_name = context.user.name if context.user else None
-            name_default = (
-                existing_name
-                if existing_name and existing_name != "New User"
-                else None
-            )
             print("\n[bold]Let's set up your workspace.[/bold]")
-            user_name = _prompt_required("Your name", default=name_default)
-            organization_name = _prompt_required("Organization name")
-            project_name = _prompt_required(
-                "Project name", default="My First Project"
+            if context.questionnaire is None:
+                raise AuthFlowError(
+                    "The server did not provide a CLI onboarding questionnaire."
+                )
+            questionnaire_answers = _prompt_dynamic_questionnaire(
+                context.questionnaire
             )
-            project_profile = _prompt_project_profile(project_name)
+            organization_name = questionnaire_answers.get("organizationName")
+            project_name = questionnaire_answers.get("projectName")
+            if not isinstance(organization_name, str) or not isinstance(
+                project_name, str
+            ):
+                raise AuthFlowError(
+                    "The server questionnaire did not collect the "
+                    "required organization and project names."
+                )
+            request = DynamicNewUserOnboardingRequest(
+                questionnaire_version=context.questionnaire.version,
+                questionnaire_answers=questionnaire_answers,
+            )
             print(
                 "\nYour organization and project will be created as "
                 f"[bold]{organization_name}[/bold] / "
@@ -264,12 +278,6 @@ def _complete_browser_cli_login() -> Optional[str]:
             )
             if not typer.confirm("Continue?", default=True):
                 raise AuthFlowError("Setup cancelled.")
-            request = NewUserOnboardingRequest(
-                user_name=user_name,
-                organization_name=organization_name,
-                project_name=project_name,
-                **project_profile,
-            )
         else:
             projects = [
                 project
@@ -297,8 +305,9 @@ def _complete_browser_cli_login() -> Optional[str]:
         return None
 
 
-def _resolve_login_key(save: Optional[str]) -> str:
+def _resolve_login_key(save: Optional[str], span: LoginSpan) -> str:
     if not USE_BROWSER_PAIRING_LOGIN:
+        span.set_method(LoginMethod.PASTE)
         return _open_platform_and_prompt_api_key()
 
     method = prompt_select(
@@ -310,13 +319,17 @@ def _resolve_login_key(save: Optional[str]) -> str:
     )
 
     if method == "paste":
+        span.set_method(LoginMethod.PASTE)
         _print_api_key_location()
         return _prompt_paste_api_key()
 
     _prompt_and_persist_region(save)
     key = _complete_browser_cli_login()
     if key:
+        span.set_method(LoginMethod.BROWSER)
         return key
+    # Browser pairing did not complete; the user falls back to pasting.
+    span.set_method(LoginMethod.PASTE)
     print("\nNo problem — paste a project API key from the platform instead.")
     _print_api_key_location()
     return _prompt_paste_api_key()
@@ -338,17 +351,17 @@ def login_command(
     api_key = coerce_blank_to_none(api_key)
 
     with capture_login_event() as span:
-        completed = False
         try:
             settings = get_settings()
             save = save or settings.DEEPEVAL_DEFAULT_SAVE or "dotenv:.env.local"
 
             # Resolve the key from the CLI flag or the active interactive flow.
             if api_key is not None:
+                span.set_method(LoginMethod.API_KEY_FLAG)
                 key = api_key
                 _warn_for_pasted_api_key(key)
             else:
-                key = _resolve_login_key(save)
+                key = _resolve_login_key(save, span)
 
             with settings.edit(save=save) as edit_ctx:
                 settings.CONFIDENT_API_KEY = key
@@ -367,7 +380,7 @@ def login_command(
                         f"Saved environment variables to {path} (ensure it's git-ignored)."
                     )
 
-            completed = True
+            span.set_outcome(LoginOutcome.COMPLETED)
             print("\n[bold]Welcome to[/bold]")
             render_confident_banner()
             print(
@@ -384,11 +397,8 @@ def login_command(
                 f"[bold][link={quickstart_url}]{quickstart_url}[/link][/bold]"
             )
         except Exception as e:
-            completed = False
+            span.set_outcome(LoginOutcome.FAILED)
             print(f"Login failed: {e}")
-        finally:
-            if getattr(span, "set_attribute", None):
-                span.set_attribute("completed", completed)
 
 
 def logout_command(
