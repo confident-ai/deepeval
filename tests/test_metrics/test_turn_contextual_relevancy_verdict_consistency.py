@@ -113,7 +113,9 @@ def test_false_verdict_is_irrelevant():
     reason_prompt = judge.captured_reason_prompts[0]
     # irrelevant statements are reported as "<statement>: <reason>" in a
     # separate section from the relevant-statements list
-    assert "Statement in the retrieval context that is relevant" in reason_prompt
+    assert (
+        "Statement in the retrieval context that is relevant" in reason_prompt
+    )
     relevant_section = reason_prompt.split(
         "Statement in the retrieval context that is relevant"
     )[1]
@@ -134,8 +136,7 @@ def test_verdict_schema_rejects_non_boolean_strings():
         ContextualRelevancyVerdict(statement="s", verdict="yesshouldfail")
 
     assert (
-        ContextualRelevancyVerdict(statement="s", verdict=True).verdict
-        is True
+        ContextualRelevancyVerdict(statement="s", verdict=True).verdict is True
     )
     assert (
         ContextualRelevancyVerdict(statement="s", verdict=False).verdict
