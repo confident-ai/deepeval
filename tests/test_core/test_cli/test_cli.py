@@ -442,6 +442,22 @@ LLM_PROVIDER_CASES: List[_ProviderCase] = [
         },
     ),
     _ProviderCase(
+        set_cmd="set-openrouter",
+        unset_cmd="unset-openrouter",
+        use_key="USE_OPENROUTER_MODEL",
+        set_flags=(
+            "--model",
+            "openai/gpt-4.1",
+            "--base-url",
+            "https://openrouter.ai/api/v1/",
+        ),
+        expected_env={
+            "OPENROUTER_MODEL_NAME": "openai/gpt-4.1",
+            "OPENROUTER_BASE_URL": "https://openrouter.ai/api/v1/",
+        },
+        expected_store={"OPENROUTER_MODEL_NAME": "openai/gpt-4.1"},
+    ),
+    _ProviderCase(
         set_cmd="set-portkey",
         unset_cmd="unset-portkey",
         use_key="USE_PORTKEY_MODEL",
