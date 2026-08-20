@@ -513,6 +513,91 @@ const testCase = new ConversationalTestCase({
 
 </details>
 
+### Shared MCP Servers
+
+:::info
+`mcp_servers` on `evaluate()` is currently available in Python only.
+:::
+
+If every test case in a run talks to the same MCP servers, you can provide them once to `evaluate()` instead of repeating them on each test case:
+
+```python title="main.py"
+from deepeval.test_case import LLMTestCase, MCPServer
+from deepeval.metrics import MCPUseMetric
+from deepeval import evaluate
+
+evaluate(
+    test_cases=[LLMTestCase(...), LLMTestCase(...)],
+    metrics=[MCPUseMetric()],
+    mcp_servers=[MCPServer(...)],
+)
+```
+
+:::info
+`mcp_servers` on a test case takes precedence, so a test case that defines its own servers is left untouched.
+:::
+
+### Using The Official MCP SDK
+
+If you built your server with the official MCP Python SDK, pass that object straight in — `deepeval` reads its tools, resources, and prompts for you, so there's no need to construct a `deepeval` `MCPServer` by hand.
+
+Note that the SDK's server class is *also* called `MCPServer`, so alias one of them when you import both:
+
+```python title="main.py"
+from mcp.server import MCPServer
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
+
+server = MCPServer(name="GitHub")
+
+@server.tool()
+def search_issues(query: str) -> str:
+    ...
+
+evaluate(
+    test_cases=[LLMTestCase(...)],
+    metrics=[...],
+    mcp_servers=[server],
+)
+```
+
+Both forms are accepted anywhere `mcp_servers` is, including on a test case directly, and you can mix them in one list. An official server is converted to a `deepeval` `MCPServer` by calling its `list_tools()`, `list_resources()`, and `list_prompts()`, so `test_case.mcp_servers` always holds `deepeval` `MCPServer`s once evaluation starts.
+
+:::caution
+Only the SDK's **server** object is supported. A `ClientSession` — what you hold when your app *consumes* someone else's MCP server rather than defining its own — is not accepted yet. For that case, keep building a `deepeval` `MCPServer` and pass the primitives from `session.list_tools()` as shown [above](#mcp-server).
+:::
+
+Providing `mcp_servers` also tells `deepeval` how to **classify each tool call**. Any `ToolCall` whose `name` matches an `available_tools` entry on one of your MCP servers is tagged as `ToolCallType.MCP`, and everything else stays `ToolCallType.FUNCTION`:
+
+```python title="main.py"
+from mcp.types import Tool
+from deepeval.test_case import LLMTestCase, ToolCall, MCPServer
+from deepeval import evaluate
+
+test_case = LLMTestCase(
+    input="...",
+    actual_output="...",
+    tools_called=[ToolCall(name="search_issues"), ToolCall(name="my_local_tool")],
+)
+
+evaluate(
+    test_cases=[test_case],
+    metrics=[...],
+    mcp_servers=[
+        MCPServer(server_name="GitHub", available_tools=[Tool(name="search_issues")])
+    ],
+)
+
+print(test_case.tools_called[0].type) # ToolCallType.MCP
+print(test_case.tools_called[1].type) # ToolCallType.FUNCTION
+```
+
+This applies to `tools_called` and `expected_tools` on an `LLMTestCase`, and to `tools_called` on each `Turn` of a `ConversationalTestCase`. The type is included when your test run is sent to Confident AI, where MCP tool calls are labelled separately from regular function calls.
+
+:::caution
+Tool calls are matched **by name**. A regular function that shares its name with an MCP tool on one of your servers will be tagged as `ToolCallType.MCP`.
+:::
+
 ✅ Done. You can now use the [MCP metrics](/docs/metrics-multi-turn-mcp-use) to run evaluations on your MCP based application.
 
 ## FAQs

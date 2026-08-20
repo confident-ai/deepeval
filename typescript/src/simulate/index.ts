@@ -1,6 +1,7 @@
 import { ConversationalGolden } from "@/dataset";
 import { ConversationalTestCase, Turn } from "@/test-case";
 import { Api, HttpMethods, Endpoints } from "@/confident/api";
+import { captureConversationSimulatorRun } from "@/telemetry";
 import * as cliProgress from "cli-progress";
 
 export interface SimulateHttpResponse {
@@ -30,6 +31,8 @@ export class ConversationSimulator {
   }): Promise<ConversationalTestCase[]> {
     const maxUserSimulations = args.maxUserSimulations || 10;
     const showProgress = args.showProgress !== false;
+
+    captureConversationSimulatorRun(args.conversationalGoldens.length);
 
     const multibar = showProgress
       ? new cliProgress.MultiBar(

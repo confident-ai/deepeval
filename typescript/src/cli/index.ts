@@ -9,8 +9,9 @@ import { registerSettingsCommands } from "@/cli/commands/settings";
 import { registerTestCommands } from "@/cli/commands/test";
 import { registerViewCommand } from "@/cli/commands/view";
 import { getVersion } from "@/cli/version";
+import { captureCliCommand, flush } from "@/telemetry";
 
-function buildProgram(): Command {
+export function buildProgram(): Command {
   const program = new Command();
   program
     .name("deepeval")
@@ -28,7 +29,27 @@ function buildProgram(): Command {
   registerViewCommand(program);
   registerInspectCommand(program);
 
+  // Covers every registered command, including sub-commands like
+  // `deepeval test run`, which report as `test`.
+  program.hook("preAction", (_thisCommand, actionCommand) => {
+    captureCliCommand(
+      topLevelNameOf(program, actionCommand),
+      program.commands.map((command) => command.name()),
+    );
+  });
+
   return program;
+}
+
+function topLevelNameOf(
+  program: Command,
+  actionCommand: Command,
+): string | undefined {
+  let command: Command | null = actionCommand;
+  while (command && command.parent && command.parent !== program) {
+    command = command.parent;
+  }
+  return command?.name();
 }
 
 async function main(): Promise<void> {
@@ -40,9 +61,14 @@ async function main(): Promise<void> {
   }
 
   await program.parseAsync(process.argv);
+  // A short-lived CLI process can exit before a batched event is sent.
+  flush();
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
-  process.exit(1);
-});
+// Guarded so a test can build the program without dispatching it.
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  });
+}

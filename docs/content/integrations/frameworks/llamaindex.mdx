@@ -64,6 +64,7 @@ The `deepeval` integration registers a LlamaIndex event handler that turns every
 `deepeval`'s LlamaIndex integration enables you to:
 
 - **Trace every workflow / agent run** — each `agent.run(...)` produces a trace, and each LLM, tool, and retriever call becomes a component span.
+- **Evaluate the complete ordered [agent trajectory](/docs/evaluation-trajectory-based-llm-evals)** across its agent, LLM, tool, and retriever spans.
 - **Evaluate traces or model / agent components** with any `deepeval` metric through `LlmSpanContext` and `AgentSpanContext`.
 - **Run evals from scripts or CI/CD** — same dispatcher, different surfaces.
 - **Compose with `@observe` and `with trace(...)`** to evaluate larger flows that wrap one or more LlamaIndex runs.
@@ -227,6 +228,37 @@ for golden in dataset.evals_iterator(
 ```
 
 LlamaIndex's `agent.run(...)` is async-only, so `evals_iterator` here uses `AsyncConfig(run_async=True)` and `dataset.evaluate(task)` to run goldens concurrently.
+
+## Evaluate agent trajectories
+
+Trajectory evaluation scores the complete ordered trace: every agent decision, LLM call, tool interaction, and retrieval step in sequence across the applicable spans. This is distinct from output-only evaluation, which scores only the final response, and individual component evaluation, which scores one span at a time.
+
+```python title="llamaindex_agent.py" showLineNumbers
+import asyncio
+import llama_index.core.instrumentation as instrument
+from deepeval.integrations.llama_index import instrument_llama_index
+from deepeval.evaluate.configs import AsyncConfig
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric, StepEfficiencyMetric, PlanAdherenceMetric
+...
+
+instrument_llama_index(instrument.get_dispatcher())
+dataset = EvaluationDataset(goldens=[Golden(input="What is 8 multiplied by 6?")])
+trajectory_metrics = [
+    TaskCompletionMetric(),
+    StepEfficiencyMetric(),
+    PlanAdherenceMetric(),
+]
+
+for golden in dataset.evals_iterator(
+    async_config=AsyncConfig(run_async=True),
+    metrics=trajectory_metrics,
+):
+    task = asyncio.create_task(agent.run(golden.input))
+    dataset.evaluate(task)
+```
+
+See the full [trajectory evaluation guide](/docs/evaluation-trajectory-based-llm-evals) for metric details and trace requirements. Next, apply metrics to individual components when you need span-level diagnostics.
 
 ## Applying metrics to components
 

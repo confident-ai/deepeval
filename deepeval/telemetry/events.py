@@ -40,6 +40,8 @@ class Entrypoint(str, Enum):
     EVALUATE = "evaluate"
     EVALS_ITERATOR = "evals_iterator"
     PYTEST = "pytest"
+    # The TypeScript SDK's test runner. Never emitted from here.
+    VITEST = "vitest"
     COMPARE = "compare"
     STANDALONE = "standalone"
 

@@ -9,7 +9,8 @@ import {
 } from "@/tracing/tracing";
 import { Environment } from "@/tracing/utils";
 import { getConfidentApiKey } from "@/utils";
-import { withCaptureTracingIntegration } from "@/telemetry";
+import { recordTracingIntegration } from "@/telemetry";
+import { Integration } from "@/tracing/integrations";
 import { Prompt } from "@/prompt";
 
 import { TracingEventType } from "@mastra/core/observability";
@@ -92,9 +93,7 @@ export class DeepEvalExporter implements ObservabilityExporter {
       await this.mastra?.observability?.flush();
     });
 
-    withCaptureTracingIntegration("mastra", () => {}).catch((err) => {
-      if (config.debug) console.error("DeepEval telemetry failed:", err);
-    });
+    recordTracingIntegration(Integration.MASTRA);
 
     if (config.debug) {
       console.log("DeepEval Mastra exporter configured", {

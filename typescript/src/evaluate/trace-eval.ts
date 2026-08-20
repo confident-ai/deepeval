@@ -10,6 +10,7 @@ import {
 import { MetricData, EvaluatedCase, TestResult } from "@/evaluate/types";
 import { ErrorConfig, DEFAULT_ERROR_CONFIG } from "@/evaluate/configs";
 import { runMetric } from "@/evaluate/evaluate";
+import { withComponentScope } from "@/telemetry";
 
 /** Stringify a span's input/output the way the metrics expect (objects → JSON). */
 const asString = asTestCaseString;
@@ -178,16 +179,21 @@ export async function evaluateTrace(
     }
 
     const metricsData: MetricData[] = [];
-    for (const metric of metrics) {
-      metricsData.push(
-        await runMetric(
-          metric,
-          testCase,
-          errorCfg,
-          options.onMetric ?? (() => {}),
-        ),
-      );
-    }
+    // Trace scopes count as component evaluation too, matching what Python's
+    // agentic executor passes for both scopes. Published rather than threaded
+    // through `runMetric`, which metric implementations reach with no arguments.
+    await withComponentScope(true, async () => {
+      for (const metric of metrics) {
+        metricsData.push(
+          await runMetric(
+            metric,
+            testCase,
+            errorCfg,
+            options.onMetric ?? (() => {}),
+          ),
+        );
+      }
+    });
     scope.metricsData = metricsData; // also attach to the span/trace
     cases.push({
       testCase,

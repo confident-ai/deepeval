@@ -1,6 +1,6 @@
 {
   "name": "deepeval",
-  "version": "0.1.32",
+  "version": "0.9.10",
   "description": "The LLM Evaluation Framework for TypeScript",
   "repository": {
     "type": "git",
@@ -179,7 +179,6 @@
     "@opentelemetry/sdk-trace-base": "^2.2.0",
     "@opentelemetry/sdk-trace-node": "^2.2.0",
     "@opentelemetry/semantic-conventions": "^1.37.0",
-    "@sentry/node": "^10.21.0",
     "axios": "^1.6.0",
     "cli-progress": "^3.12.0",
     "commander": "^14.0.3",

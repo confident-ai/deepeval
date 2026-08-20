@@ -64,6 +64,7 @@ The `deepeval` integration registers a CrewAI event listener and ships drop-in `
 `deepeval`'s CrewAI integration enables you to:
 
 - **Trace every `crew.kickoff(...)`** — each kickoff produces a trace, and each agent execution, LLM call, and tool call becomes a component span.
+- **Evaluate the complete ordered [agent trajectory](/docs/evaluation-trajectory-based-llm-evals)** across its agent, LLM, and tool spans.
 - **Attach metrics directly to `Crew`, `Agent`, `LLM`, and `@tool`** through deepeval-aware shims.
 - **Run evals from scripts or CI/CD** — same crew, different surfaces.
 - **Compose with `@observe` and `with trace(...)`** to evaluate larger flows that wrap one or more crew kickoffs.
@@ -226,6 +227,36 @@ for golden in dataset.evals_iterator(
 ```
 
 Sync (`crew.kickoff`) and async (`crew.kickoff_async`) execution both work; pick whichever matches your code.
+
+## Evaluate agent trajectories
+
+Trajectory evaluation scores the complete ordered trace: every agent decision, LLM call, and tool interaction in sequence across the applicable spans. This is distinct from output-only evaluation, which scores only the final response, and individual component evaluation, which scores one span at a time.
+
+```python title="crewai_agent.py" showLineNumbers
+import asyncio
+from deepeval.integrations.crewai import instrument_crewai
+from deepeval.evaluate.configs import AsyncConfig
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric, StepEfficiencyMetric, PlanAdherenceMetric
+...
+
+instrument_crewai()
+dataset = EvaluationDataset(goldens=[Golden(input="Paris")])
+trajectory_metrics = [
+    TaskCompletionMetric(),
+    StepEfficiencyMetric(),
+    PlanAdherenceMetric(),
+]
+
+for golden in dataset.evals_iterator(
+    async_config=AsyncConfig(run_async=True),
+    metrics=trajectory_metrics,
+):
+    task = asyncio.create_task(crew.kickoff_async({"city": golden.input}))
+    dataset.evaluate(task)
+```
+
+See the full [trajectory evaluation guide](/docs/evaluation-trajectory-based-llm-evals) for metric details and trace requirements. Next, apply metrics to individual components when you need span-level diagnostics.
 
 ## Applying metrics to components
 

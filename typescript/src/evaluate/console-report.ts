@@ -6,6 +6,7 @@ import {
   countPrompts,
   type ProcessedHyperparameters,
 } from "@/evaluate/hyperparameters";
+import { captureLoginPromptShown, LoginPromptSurface } from "@/telemetry";
 
 /** A MultiBar styled like the rest of the runner (purple filled / dim track). */
 export function newProgressMultiBar(): MultiBar {
@@ -440,6 +441,9 @@ export function printCompletionSummary(opts: {
   failed: number;
 }): void {
   const { runDuration, tokenCost, passed, failed } = opts;
+  // This summary ends with the "set CONFIDENT_API_KEY" pitch, so printing it is
+  // the login prompt.
+  captureLoginPromptShown(LoginPromptSurface.POST_EVAL);
   const total = passed + failed;
   const passRate = total ? Math.round((passed / total) * 1000) / 10 : 0;
   const cost = tokenCost ? `${tokenCost} USD` : "None";

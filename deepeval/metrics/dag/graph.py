@@ -4,16 +4,26 @@ from deepeval.metrics.dag import (
     BaseNode,
     NonBinaryJudgementNode,
     BinaryJudgementNode,
+    VerdictNode,
 )
 from deepeval.metrics.conversational_dag import (
     ConversationalBaseNode,
     ConversationalBinaryJudgementNode,
     ConversationalNonBinaryJudgementNode,
+    ConversationalVerdictNode,
 )
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.metrics import BaseMetric, BaseConversationalMetric
 
 Node = Union[BaseNode, ConversationalBaseNode]
+
+_VERDICT_TYPES = (VerdictNode, ConversationalVerdictNode)
+_JUDGEMENT_TYPES = (
+    BinaryJudgementNode,
+    NonBinaryJudgementNode,
+    ConversationalBinaryJudgementNode,
+    ConversationalNonBinaryJudgementNode,
+)
 
 
 def validate_root_nodes(root_nodes: List[Node]):
@@ -33,6 +43,43 @@ def _edges_of(node: Node) -> List[Node]:
     ):
         edges.append(child)
     return edges
+
+
+def _collapse_exclusive_verdict_edges(
+    indegree: Dict[Node, int],
+    parents: Dict[Node, List[Node]],
+    root_nodes: List[Node],
+) -> None:
+    """Count mutually exclusive verdict edges as a single incoming edge.
+
+    Exactly one verdict child of a judgement node ever fires. When several of
+    them are direct parents of the same node, counting one edge each leaves
+    that node permanently short of indegree zero, because the verdicts that
+    lost can never arrive. Collectively they deliver at most one arrival, so
+    they contribute one edge.
+
+    Only a verdict owned by exactly one judgement and not itself a declared
+    root qualifies. A verdict shared between two judgements can fire through
+    either of them, and a root verdict is visited unconditionally, so in both
+    cases the edge stays counted on its own -- collapsing it could drop the
+    count below the number of arrivals and let the node run more than once.
+    """
+    for node, node_parents in parents.items():
+        exclusive: Dict[Node, int] = {}
+        for parent in node_parents:
+            if not isinstance(parent, _VERDICT_TYPES):
+                continue
+            if any(parent is root for root in root_nodes):
+                # A declared root is visited unconditionally, so its edge
+                # always arrives and must keep its own count.
+                continue
+            owners = parents.get(parent) or ()
+            if len(owners) != 1 or not isinstance(owners[0], _JUDGEMENT_TYPES):
+                continue
+            exclusive[owners[0]] = exclusive.get(owners[0], 0) + 1
+        for count in exclusive.values():
+            if count > 1:
+                indegree[node] -= count - 1
 
 
 class DeepAcyclicGraph:
@@ -61,6 +108,13 @@ class DeepAcyclicGraph:
         self.root_nodes = root_nodes
         self.indegree, self.parents = self._build_graph()
 
+        for root in self.root_nodes:
+            if self.indegree[root] > 0:
+                raise ValueError(
+                    "You cannot declare a node as a root node when it is "
+                    "also reachable from another root node."
+                )
+
     def _build_graph(self) -> Tuple[Dict[Node, int], Dict[Node, List[Node]]]:
         indegree: Dict[Node, int] = {}
         parents: Dict[Node, List[Node]] = {}
@@ -84,6 +138,7 @@ class DeepAcyclicGraph:
 
         for root in self.root_nodes:
             visit(root)
+        _collapse_exclusive_verdict_edges(indegree, parents, self.root_nodes)
         return indegree, parents
 
     def _execute(

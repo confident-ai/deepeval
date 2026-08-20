@@ -6,6 +6,7 @@ import axios from "axios";
 import { getBaseApiUrl } from "@/confident/api";
 import { getVersion } from "@/cli/version";
 import { openBrowser, withUtm } from "@/cli/utm";
+import { setLoggedInWith } from "@/telemetry";
 import { prompt } from "@/cli/utils";
 
 const CREATE_PAIRING_ENDPOINT = "/cli/auth/sessions";
@@ -220,7 +221,11 @@ export async function browserPairingLogin(): Promise<CliAuthorization | null> {
       console.log(`\n⚠️  ${(error as Error).message}`);
       return null;
     }
-    if (completed) return completed;
+    if (completed) {
+      // Local only: later events report that this machine is logged in.
+      if (completed.email) setLoggedInWith(completed.email);
+      return completed;
+    }
   }
   console.log("\n⌛ Timed out waiting for the browser.");
   return null;

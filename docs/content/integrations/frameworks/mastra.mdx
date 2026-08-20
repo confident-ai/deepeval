@@ -64,6 +64,7 @@ The `deepeval` integration plugs a `DeepEvalExporter` into that observability la
 `deepeval`'s Mastra integration enables you to:
 
 - **Trace every agent run** — register the exporter once on your `Mastra` instance and every `generate(...)` call produces a trace.
+- **Evaluate the complete ordered [agent trajectory](/docs/evaluation-trajectory-based-llm-evals)** across all applicable agent, LLM, tool, and retriever spans.
 - **Evaluate traces or individual components** with any `deepeval` metric.
 - **Run evals from scripts or CI/CD** — same exporter, different surfaces.
 - **Customize trace and span data** through exporter config, Mastra's per-request `tracingOptions`, and `deepeval`'s span-staging helpers.
@@ -237,6 +238,35 @@ await mastra.observability.shutdown();
 :::note[You don't need to flush during evals]
 Mastra delivers span events on its own bus, so they can land after your `await generate(...)` has already returned. Both `evalsIterator()` and `toPass()` wait for the exporter to settle before scoring, so no manual flush is needed inside an eval. Outside one — a production script that exits immediately — end with `await mastra.observability.shutdown()` so queued spans are exported before the process dies.
 :::
+
+## Evaluate agent trajectories
+
+Trajectory evaluation scores the complete ordered Mastra trace: the agent run and every applicable LLM, tool, and retriever span in the sequence Mastra produced. This differs from output-only evaluation, which judges only the final response, and component evaluation, which scores an individual span without considering the full execution path.
+
+Pass trajectory metrics to `evalsIterator(...)`, then invoke the instrumented Mastra agent once per golden. Keep the scoring callback inside the Mastra-owned trace created by `generate(...)`; do not wrap the call in `observe(...)`.
+
+```typescript title="mastra-agent.ts" showLineNumbers
+import {
+  TaskCompletionMetric,
+  StepEfficiencyMetric,
+  PlanAdherenceMetric,
+} from "deepeval/metrics";
+...
+
+const trajectoryMetrics = [
+  new TaskCompletionMetric(),
+  new StepEfficiencyMetric(),
+  new PlanAdherenceMetric(),
+];
+
+for await (const golden of dataset.evalsIterator({
+  metrics: trajectoryMetrics,
+})) {
+  await mastra.getAgent("weatherAgent").generate((golden as Golden).input);
+}
+```
+
+See the [trajectory evaluation guide](/docs/evaluation-trajectory-based-llm-evals) for metric selection and CI/CD patterns. To diagnose a trajectory score at a narrower level, apply metrics to the individual components below.
 
 ## Applying metrics to components
 

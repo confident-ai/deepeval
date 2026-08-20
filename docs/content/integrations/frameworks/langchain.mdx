@@ -126,6 +126,7 @@ The `deepeval` integration traces LangChain runs through a <Term py="CallbackHan
 `deepeval`'s LangChain integration enables you to:
 
 - **Trace any LangChain run** — pass a <Term py="CallbackHandler" ts="DeepEvalCallbackHandler"/> through LangChain's callbacks config per call.
+- **Evaluate the complete ordered [agent trajectory](/docs/evaluation-trajectory-based-llm-evals)** — score the sequence across all applicable agent, LLM, tool, and retriever spans.
 - **Evaluate traces or individual components** with `deepeval` metrics.
 - **Run evals from scripts or CI/CD** — same callback, different surfaces.
 - **Customize trace and span data** through callback kwargs and <Term py="next_*_span" ts="next*Span"/> staging.
@@ -424,6 +425,65 @@ for await (const golden of dataset.evalsIterator({
 </Case>
 
 </Switch>
+
+## Evaluate agent trajectories
+
+Trajectory evaluation scores the complete ordered trace: the agent's decisions, model calls, tool use, and other applicable spans in the sequence they occurred. This is distinct from evaluating only the final output or attaching a metric to an individual component span.
+
+Pass trajectory metrics to <Term py="evals_iterator" ts="evalsIterator"/> so each instrumented LangChain run is evaluated at trace scope:
+
+<Switch>
+
+<Case id="python">
+
+```python title="langchain_agent.py" showLineNumbers
+from deepeval.metrics import TaskCompletionMetric, StepEfficiencyMetric, PlanAdherenceMetric
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.dataset import EvaluationDataset, Golden
+...
+
+dataset = EvaluationDataset(goldens=[Golden(input="What is 8 multiplied by 6?")])
+metrics = [TaskCompletionMetric(), StepEfficiencyMetric(), PlanAdherenceMetric()]
+
+for golden in dataset.evals_iterator(metrics=metrics):
+    agent.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        config={"callbacks": [CallbackHandler()]},
+    )
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript title="langchain-agent.ts" showLineNumbers
+import { TaskCompletionMetric, StepEfficiencyMetric, PlanAdherenceMetric } from "deepeval/metrics";
+import { DeepEvalCallbackHandler } from "deepeval/integrations/langchain";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+...
+
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What is 8 multiplied by 6?" })],
+});
+const metrics = [
+  new TaskCompletionMetric(),
+  new StepEfficiencyMetric(),
+  new PlanAdherenceMetric(),
+];
+
+for await (const golden of dataset.evalsIterator({ metrics })) {
+  await agent.invoke(
+    { messages: [{ role: "user", content: (golden as Golden).input }] },
+    { callbacks: [new DeepEvalCallbackHandler({})] },
+  );
+}
+```
+
+</Case>
+
+</Switch>
+
+See the [trajectory evaluation guide](/docs/evaluation-trajectory-based-llm-evals) for metric selection and interpretation. To score one step instead of the ordered run, apply metrics to components next.
 
 ## Applying metrics to components
 

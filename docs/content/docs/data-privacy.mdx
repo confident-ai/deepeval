@@ -27,11 +27,7 @@ Personally identifiable information is explicitly excluded. You can opt out of a
 export DEEPEVAL_TELEMETRY_OPT_OUT=1
 ```
 
-`deepeval` also uses **Sentry** to capture errors and exceptions raised within the package, **only if you have explicitly opted in**. No user or company data is collected through Sentry. To help us catch bugs for future releases, set the `ERROR_REPORTING` environment variable to 1:
-
-```bash
-export ERROR_REPORTING=1
-```
+PostHog is the only place this data goes. `deepeval` does not report crashes or exceptions anywhere.
 
 ## Your Privacy Using Confident AI
 

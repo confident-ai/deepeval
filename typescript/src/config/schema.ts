@@ -104,8 +104,8 @@ export const settingsSchema = z.object({
   DEEPEVAL_TELEMETRY_OPT_OUT: optionalBool().describe(
     "Disable anonymous telemetry.",
   ),
-  ERROR_REPORTING: optionalBool().describe(
-    "Send crash reports to Sentry. Off unless enabled, and always off when DEEPEVAL_TELEMETRY_OPT_OUT is set.",
+  DEEPEVAL_TELEMETRY_ENABLED: optionalBool().describe(
+    "Deprecated inverse of DEEPEVAL_TELEMETRY_OPT_OUT. Any OFF signal wins if both are set.",
   ),
 
   // Storage & output
@@ -114,6 +114,9 @@ export const settingsSchema = z.object({
   ),
   DEEPEVAL_CACHE_FOLDER: optionalString().describe(
     "Directory DeepEval uses for its cache and key files (default: .deepeval).",
+  ),
+  DEEPEVAL_HOME: optionalString().describe(
+    "Directory holding the per-machine anonymous telemetry id (default: ~/.deepeval).",
   ),
   DEEPEVAL_FILE_SYSTEM: z
     .string()

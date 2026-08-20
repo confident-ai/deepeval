@@ -160,7 +160,7 @@ These settings control text truncation in logs and displays.
 | Variable                     | Values            | Effect                                                                                       |
 | ---------------------------- | ----------------- | ---------------------------------------------------------------------------------------------- |
 | `DEEPEVAL_TELEMETRY_OPT_OUT` | `1` / `0` / unset | Opt out of anonymous telemetry. Unset means telemetry is enabled.                            |
-| `ERROR_REPORTING`            | `1` / `0` / unset | Send crash reports. Off unless enabled, and always off when `DEEPEVAL_TELEMETRY_OPT_OUT` is set. |
+| `DEEPEVAL_HOME`              | `path` / unset    | Directory holding `deepeval`'s local state, including the anonymous telemetry id (default: `~/.deepeval`). |
 | `CONFIDENT_TRACE_INTERNAL`   | `1` / `0` / unset | Also trace `deepeval`'s own metric and model methods inside your `@observe` spans. Useful when debugging `deepeval` itself, noisy otherwise. |
 
 <Only id="python">
