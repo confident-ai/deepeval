@@ -1,5 +1,5 @@
 // Mirrors confident-landing's `functions/wizard/setup-script.ts`, which serves
-// https://www.confident-ai.com/wizard/setup.sh from the same GitHub releases.
+// https://www.confident-ai.com/setup.sh from the same GitHub releases.
 // The only intended difference is the `--from deepeval` entry point below, so
 // keep the rest of the script in sync when either copy changes.
 export const setupScript = `#!/bin/sh
