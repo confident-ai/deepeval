@@ -20,6 +20,16 @@ fail() {
   exit 1
 }
 
+# Status belongs on stderr so the wizard keeps stdout to itself, and stays plain
+# when nothing can render color.
+note() {
+  if [ -t 2 ] && [ -z "\${NO_COLOR:-}" ]; then
+    printf '\\033[0;36m%s\\033[0m\\n' "$*" >&2
+  else
+    printf '%s\\n' "$*" >&2
+  fi
+}
+
 command -v curl >/dev/null 2>&1 || fail "curl is required"
 command -v tar >/dev/null 2>&1 || fail "tar is required"
 
@@ -70,7 +80,17 @@ cleanup() {
 trap cleanup 0
 trap 'exit 1' HUP INT TERM
 
-curl -fsSL --retry 3 --retry-delay 1 \\
+# The archive is tens of megabytes, and downloading it in silence is
+# indistinguishable from a hang, so curl draws its own bar when a terminal is
+# there to receive it.
+if [ -t 2 ]; then
+  progress="--progress-bar"
+else
+  progress="--silent"
+fi
+
+note "Downloading \${BINARY} \${tag} for \${os}-\${arch}…"
+curl -fL --retry 3 --retry-delay 1 "\$progress" \\
   "\${download_url}/\${archive}" \\
   -o "\${tmpdir}/\${archive}" ||
   fail "could not download \${archive} for release \${tag}"
@@ -110,6 +130,7 @@ bin_dir="\${XDG_BIN_HOME:-\${HOME:-}/.local/bin}"
 mkdir -p "$bin_dir" || fail "could not create $bin_dir"
 
 installed="\${bin_dir}/\${BINARY}"
+note "Installing \${BINARY} to \${bin_dir}…"
 if command -v install >/dev/null 2>&1; then
   install -m 755 "$extracted" "$installed" ||
     fail "could not install \${BINARY} to \${bin_dir}"
