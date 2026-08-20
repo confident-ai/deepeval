@@ -67,6 +67,8 @@ class BaseMetric(PromptMixin):
     evaluation_cost: Optional[float] = None
     input_tokens: Optional[int] = None
     output_tokens: Optional[int] = None
+    cache_read_input_tokens: Optional[int] = None
+    cache_creation_input_tokens: Optional[int] = None
     verbose_logs: Optional[str] = None
     skipped = False
     flaky: bool = False
@@ -117,11 +119,21 @@ class BaseMetric(PromptMixin):
         self,
         input_tokens: Optional[int],
         output_tokens: Optional[int],
+        cache_read_input_tokens: Optional[int] = None,
+        cache_creation_input_tokens: Optional[int] = None,
     ) -> None:
         if input_tokens is not None:
             self.input_tokens = (self.input_tokens or 0) + input_tokens
         if output_tokens is not None:
             self.output_tokens = (self.output_tokens or 0) + output_tokens
+        if cache_read_input_tokens is not None:
+            self.cache_read_input_tokens = (
+                self.cache_read_input_tokens or 0
+            ) + cache_read_input_tokens
+        if cache_creation_input_tokens is not None:
+            self.cache_creation_input_tokens = (
+                self.cache_creation_input_tokens or 0
+            ) + cache_creation_input_tokens
 
 
 class BaseConversationalMetric(PromptMixin):
@@ -139,6 +151,8 @@ class BaseConversationalMetric(PromptMixin):
     evaluation_cost: Optional[float] = None
     input_tokens: Optional[int] = None
     output_tokens: Optional[int] = None
+    cache_read_input_tokens: Optional[int] = None
+    cache_creation_input_tokens: Optional[int] = None
     verbose_logs: Optional[str] = None
     skipped = False
     flaky: bool = False
@@ -192,11 +206,21 @@ class BaseConversationalMetric(PromptMixin):
         self,
         input_tokens: Optional[int],
         output_tokens: Optional[int],
+        cache_read_input_tokens: Optional[int] = None,
+        cache_creation_input_tokens: Optional[int] = None,
     ) -> None:
         if input_tokens is not None:
             self.input_tokens = (self.input_tokens or 0) + input_tokens
         if output_tokens is not None:
             self.output_tokens = (self.output_tokens or 0) + output_tokens
+        if cache_read_input_tokens is not None:
+            self.cache_read_input_tokens = (
+                self.cache_read_input_tokens or 0
+            ) + cache_read_input_tokens
+        if cache_creation_input_tokens is not None:
+            self.cache_creation_input_tokens = (
+                self.cache_creation_input_tokens or 0
+            ) + cache_creation_input_tokens
 
 
 class BaseArenaMetric(PromptMixin):
@@ -209,6 +233,8 @@ class BaseArenaMetric(PromptMixin):
     evaluation_cost: Optional[float] = None
     input_tokens: Optional[int] = None
     output_tokens: Optional[int] = None
+    cache_read_input_tokens: Optional[int] = None
+    cache_creation_input_tokens: Optional[int] = None
     verbose_logs: Optional[str] = None
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
@@ -248,8 +274,18 @@ class BaseArenaMetric(PromptMixin):
         self,
         input_tokens: Optional[int],
         output_tokens: Optional[int],
+        cache_read_input_tokens: Optional[int] = None,
+        cache_creation_input_tokens: Optional[int] = None,
     ) -> None:
         if input_tokens is not None:
             self.input_tokens = (self.input_tokens or 0) + input_tokens
         if output_tokens is not None:
             self.output_tokens = (self.output_tokens or 0) + output_tokens
+        if cache_read_input_tokens is not None:
+            self.cache_read_input_tokens = (
+                self.cache_read_input_tokens or 0
+            ) + cache_read_input_tokens
+        if cache_creation_input_tokens is not None:
+            self.cache_creation_input_tokens = (
+                self.cache_creation_input_tokens or 0
+            ) + cache_creation_input_tokens

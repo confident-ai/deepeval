@@ -21,6 +21,7 @@ from deepeval.models.utils import (
     require_secret_api_key,
     normalize_kwargs_and_extract_aliases,
     EvaluationCost,
+    get_cache_token_counts,
 )
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -172,10 +173,7 @@ class OpenAIModel(DeepEvalBaseLLM):
                 structured_output: BaseModel = completion.choices[
                     0
                 ].message.parsed
-                cost = self.calculate_cost(
-                    completion.usage.prompt_tokens,
-                    completion.usage.completion_tokens,
-                )
+                cost = self._calculate_completion_cost(completion)
                 self._update_llm_span_from_completion(completion, messages)
                 return structured_output, cost
             if self.supports_json_mode() is True:
@@ -189,10 +187,7 @@ class OpenAIModel(DeepEvalBaseLLM):
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
                 )
-                cost = self.calculate_cost(
-                    completion.usage.prompt_tokens,
-                    completion.usage.completion_tokens,
-                )
+                cost = self._calculate_completion_cost(completion)
                 self._update_llm_span_from_completion(completion, messages)
                 return schema.model_validate(json_output), cost
 
@@ -203,9 +198,7 @@ class OpenAIModel(DeepEvalBaseLLM):
             **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
-        cost = self.calculate_cost(
-            completion.usage.prompt_tokens, completion.usage.completion_tokens
-        )
+        cost = self._calculate_completion_cost(completion)
         self._update_llm_span_from_completion(completion, messages)
         if schema:
             json_output = trim_and_load_json(output)
@@ -239,10 +232,7 @@ class OpenAIModel(DeepEvalBaseLLM):
                 structured_output: BaseModel = completion.choices[
                     0
                 ].message.parsed
-                cost = self.calculate_cost(
-                    completion.usage.prompt_tokens,
-                    completion.usage.completion_tokens,
-                )
+                cost = self._calculate_completion_cost(completion)
                 self._update_llm_span_from_completion(completion, messages)
                 return structured_output, cost
             if self.supports_json_mode() is True:
@@ -256,10 +246,7 @@ class OpenAIModel(DeepEvalBaseLLM):
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
                 )
-                cost = self.calculate_cost(
-                    completion.usage.prompt_tokens,
-                    completion.usage.completion_tokens,
-                )
+                cost = self._calculate_completion_cost(completion)
                 self._update_llm_span_from_completion(completion, messages)
                 return schema.model_validate(json_output), cost
 
@@ -270,9 +257,7 @@ class OpenAIModel(DeepEvalBaseLLM):
             **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
-        cost = self.calculate_cost(
-            completion.usage.prompt_tokens, completion.usage.completion_tokens
-        )
+        cost = self._calculate_completion_cost(completion)
         self._update_llm_span_from_completion(completion, messages)
         if schema:
             json_output = trim_and_load_json(output)
@@ -323,9 +308,7 @@ class OpenAIModel(DeepEvalBaseLLM):
             top_logprobs=top_logprobs,
             **self.generation_kwargs,
         )
-        input_tokens = completion.usage.prompt_tokens
-        output_tokens = completion.usage.completion_tokens
-        cost = self.calculate_cost(input_tokens, output_tokens)
+        cost = self._calculate_completion_cost(completion)
         self._update_llm_span_from_completion(completion, messages)
 
         return completion, cost
@@ -362,9 +345,7 @@ class OpenAIModel(DeepEvalBaseLLM):
             top_logprobs=top_logprobs,
             **self.generation_kwargs,
         )
-        input_tokens = completion.usage.prompt_tokens
-        output_tokens = completion.usage.completion_tokens
-        cost = self.calculate_cost(input_tokens, output_tokens)
+        cost = self._calculate_completion_cost(completion)
         self._update_llm_span_from_completion(completion, messages)
 
         return completion, cost
@@ -396,17 +377,37 @@ class OpenAIModel(DeepEvalBaseLLM):
     #############
 
     def calculate_cost(
-        self, input_tokens: int, output_tokens: int
+        self,
+        input_tokens: int,
+        output_tokens: int,
+        cache_read_input_tokens: Optional[int] = None,
+        cache_creation_input_tokens: Optional[int] = None,
     ) -> Optional[float]:
         if self.model_data.input_price and self.model_data.output_price:
             input_cost = input_tokens * self.model_data.input_price
             output_cost = output_tokens * self.model_data.output_price
             # Carry token counts alongside the cost so metric runs can surface
-            # input/output token usage (EvaluationCost subclasses float, so every
-            # existing `output, cost = generate(...)` caller is unaffected).
+            # token usage (EvaluationCost subclasses float, so every existing
+            # `output, cost = generate(...)` caller is unaffected).
             return EvaluationCost(
-                input_cost + output_cost, input_tokens, output_tokens
+                input_cost + output_cost,
+                input_tokens,
+                output_tokens,
+                cache_read_input_tokens,
+                cache_creation_input_tokens,
             )
+
+    def _calculate_completion_cost(
+        self, completion: ChatCompletion
+    ) -> Optional[float]:
+        usage = completion.usage
+        cache_read, cache_creation = get_cache_token_counts(usage)
+        return self.calculate_cost(
+            usage.prompt_tokens,
+            usage.completion_tokens,
+            cache_read_input_tokens=cache_read,
+            cache_creation_input_tokens=cache_creation,
+        )
 
     #########################
     # Capabilities          #

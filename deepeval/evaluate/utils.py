@@ -67,6 +67,8 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
             evaluationCost=metric.evaluation_cost,
             inputTokenCount=metric.input_tokens,
             outputTokenCount=metric.output_tokens,
+            cacheReadInputTokenCount=metric.cache_read_input_tokens,
+            cacheCreationInputTokenCount=metric.cache_creation_input_tokens,
             verboseLogs=metric.verbose_logs,
         )
     else:
@@ -83,6 +85,8 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
             evaluationCost=metric.evaluation_cost,
             inputTokenCount=metric.input_tokens,
             outputTokenCount=metric.output_tokens,
+            cacheReadInputTokenCount=metric.cache_read_input_tokens,
+            cacheCreationInputTokenCount=metric.cache_creation_input_tokens,
             verboseLogs=metric.verbose_logs,
         )
 
@@ -101,6 +105,8 @@ def create_arena_metric_data(metric: ArenaGEval, contestant: str) -> MetricData:
             evaluationCost=metric.evaluation_cost,
             inputTokenCount=metric.input_tokens,
             outputTokenCount=metric.output_tokens,
+            cacheReadInputTokenCount=metric.cache_read_input_tokens,
+            cacheCreationInputTokenCount=metric.cache_creation_input_tokens,
             verboseLogs=metric.verbose_logs,
         )
     else:
@@ -116,6 +122,8 @@ def create_arena_metric_data(metric: ArenaGEval, contestant: str) -> MetricData:
             evaluationCost=metric.evaluation_cost,
             inputTokenCount=metric.input_tokens,
             outputTokenCount=metric.output_tokens,
+            cacheReadInputTokenCount=metric.cache_read_input_tokens,
+            cacheCreationInputTokenCount=metric.cache_creation_input_tokens,
             verboseLogs=metric.verbose_logs,
         )
 

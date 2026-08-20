@@ -8,9 +8,11 @@ from deepeval.metrics import (
     ExactMatchMetric,
 )
 from deepeval.metrics.utils import (
+    accrue_token_usage,
     check_at_least_one_metric_has_threshold,
     copy_metrics,
 )
+from deepeval.models.utils import EvaluationCost
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing.api import MetricData
 
@@ -103,6 +105,28 @@ def test_flaky_is_reflected_in_metric_data(metric_class, error):
 
     assert metric_data.flaky is True
     assert metric_data.model_dump(by_alias=True)["flaky"] is True
+
+
+def test_metric_data_preserves_cache_token_counts():
+    metric = StubMetric()
+    cost = EvaluationCost(
+        0.01,
+        input_tokens=100,
+        output_tokens=20,
+        cache_read_input_tokens=40,
+        cache_creation_input_tokens=10,
+    )
+
+    accrue_token_usage(metric, cost)
+    metric_data = create_metric_data(metric)
+    serialized = metric_data.model_dump(by_alias=True)
+
+    assert metric_data.input_tokens == 100
+    assert metric_data.output_tokens == 20
+    assert metric_data.cache_read_input_tokens == 40
+    assert metric_data.cache_creation_input_tokens == 10
+    assert serialized["cacheReadInputTokenCount"] == 40
+    assert serialized["cacheCreationInputTokenCount"] == 10
 
 
 def test_check_at_least_one_metric_has_threshold():

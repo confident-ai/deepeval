@@ -13,6 +13,7 @@ from deepeval.models.utils import (
     require_secret_api_key,
     normalize_kwargs_and_extract_aliases,
     EvaluationCost,
+    get_cache_token_counts,
 )
 from deepeval.test_case import MLLMImage
 from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
@@ -160,9 +161,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         ):
             create_kwargs["temperature"] = self.temperature
         message = chat_model.messages.create(**create_kwargs)
-        cost = self.calculate_cost(
-            message.usage.input_tokens, message.usage.output_tokens
-        )
+        cost = self._calculate_message_cost(message)
         if schema is None:
             return message.content[0].text, cost
         else:
@@ -200,9 +199,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         ):
             create_kwargs["temperature"] = self.temperature
         message = await chat_model.messages.create(**create_kwargs)
-        cost = self.calculate_cost(
-            message.usage.input_tokens, message.usage.output_tokens
-        )
+        cost = self._calculate_message_cost(message)
         if schema is None:
             return message.content[0].text, cost
         else:
@@ -242,13 +239,33 @@ class AnthropicModel(DeepEvalBaseLLM):
     # Utilities
     ###############################################
 
-    def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
+    def calculate_cost(
+        self,
+        input_tokens: int,
+        output_tokens: int,
+        cache_read_input_tokens: Optional[int] = None,
+        cache_creation_input_tokens: Optional[int] = None,
+    ) -> float:
         if self.model_data.input_price and self.model_data.output_price:
             input_cost = input_tokens * self.model_data.input_price
             output_cost = output_tokens * self.model_data.output_price
             return EvaluationCost(
-                input_cost + output_cost, input_tokens, output_tokens
+                input_cost + output_cost,
+                input_tokens,
+                output_tokens,
+                cache_read_input_tokens,
+                cache_creation_input_tokens,
             )
+
+    def _calculate_message_cost(self, message) -> float:
+        usage = message.usage
+        cache_read, cache_creation = get_cache_token_counts(usage)
+        return self.calculate_cost(
+            usage.input_tokens,
+            usage.output_tokens,
+            cache_read_input_tokens=cache_read,
+            cache_creation_input_tokens=cache_creation,
+        )
 
     #########################
     # Capabilities          #

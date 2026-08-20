@@ -273,6 +273,41 @@ def test_anthropic_calculate_cost_returns_correct_value(
 
 
 @patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_message_cost_preserves_cache_token_usage(
+    mock_require_dep, settings
+):
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "test-key"
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 0.003
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 0.012
+
+    fake_anthropic_module = SimpleNamespace(
+        Anthropic=_RecordingClient,
+        AsyncAnthropic=_RecordingClient,
+    )
+    mock_require_dep.return_value = fake_anthropic_module
+
+    model = AnthropicModel(model="claude-3-7-sonnet-latest")
+    model.model_data.input_price = 0.003
+    model.model_data.output_price = 0.012
+    message = SimpleNamespace(
+        usage=SimpleNamespace(
+            input_tokens=500,
+            output_tokens=200,
+            cache_read_input_tokens=80,
+            cache_creation_input_tokens=30,
+        )
+    )
+
+    cost = model._calculate_message_cost(message)
+
+    expected = 500 * 0.003 + 200 * 0.012
+    assert cost == expected
+    assert cost.cache_read_input_tokens == 80
+    assert cost.cache_creation_input_tokens == 30
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
 def test_anthropic_calculate_cost_returns_none_when_prices_missing(
     mock_require_dep, settings
 ):

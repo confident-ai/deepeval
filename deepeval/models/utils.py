@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 
 
 class EvaluationCost(float):
-    """A generation cost (USD) that also carries the input/output token counts
-    that produced it.
+    """A generation cost (USD) that also carries the token counts that
+    produced it.
 
     It subclasses ``float``, so it behaves exactly like the plain cost float for
     every existing call site (``output, cost = model.generate(...)``,
@@ -17,7 +17,10 @@ class EvaluationCost(float):
     ``cost.input_tokens`` / ``cost.output_tokens`` to surface token usage
     e.g. for metric-run token visibility, without changing any return
     signatures. Token data rides along the returned value, so it stays correct
-    under concurrent async fan-out (no shared model-instance state).
+    under concurrent async fan-out (no shared model-instance state). Cache token
+    counts are carried separately when providers expose them because cached
+    input, cache writes, uncached input, and output can all have different
+    billing rates.
 
     Providers that have not yet been updated simply return a plain ``float``;
     readers fall back to ``None`` tokens via ``getattr(cost, "input_tokens",
@@ -26,18 +29,88 @@ class EvaluationCost(float):
 
     input_tokens: Optional[int]
     output_tokens: Optional[int]
+    cache_read_input_tokens: Optional[int]
+    cache_creation_input_tokens: Optional[int]
 
     def __new__(
         cls,
         value: Optional[float],
         input_tokens: Optional[int] = None,
         output_tokens: Optional[int] = None,
+        cache_read_input_tokens: Optional[int] = None,
+        cache_creation_input_tokens: Optional[int] = None,
     ) -> "EvaluationCost":
         obj = super().__new__(cls, value if value is not None else 0.0)
         obj.value = value
         obj.input_tokens = input_tokens
         obj.output_tokens = output_tokens
+        obj.cache_read_input_tokens = cache_read_input_tokens
+        obj.cache_creation_input_tokens = cache_creation_input_tokens
         return obj
+
+
+def _get_usage_field(usage: Any, field_name: str) -> Any:
+    if usage is None:
+        return None
+    if isinstance(usage, dict):
+        return usage.get(field_name)
+    return getattr(usage, field_name, None)
+
+
+def _coerce_optional_int(value: Any) -> Optional[int]:
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    return None
+
+
+def _first_usage_field(usage: Any, *field_names: str) -> Any:
+    for field_name in field_names:
+        value = _get_usage_field(usage, field_name)
+        if value is not None:
+            return value
+    return None
+
+
+def get_cache_token_counts(
+    usage: Any,
+) -> Tuple[Optional[int], Optional[int]]:
+    """Extract cache read/write input token counts from provider usage data."""
+
+    input_details = _first_usage_field(
+        usage,
+        "prompt_tokens_details",
+        "input_tokens_details",
+        "input_token_details",
+    )
+    cache_read = (
+        _get_usage_field(input_details, "cached_tokens")
+        if input_details is not None
+        else None
+    )
+    if cache_read is None:
+        cache_read = _first_usage_field(
+            usage,
+            "cache_read_input_tokens",
+            "cached_input_tokens",
+            "cached_tokens",
+        )
+
+    cache_creation = _get_usage_field(usage, "cache_creation_input_tokens")
+    if cache_creation is None and input_details is not None:
+        cache_creation = _first_usage_field(
+            input_details,
+            "cache_creation_input_tokens",
+            "cache_write_tokens",
+        )
+
+    return (
+        _coerce_optional_int(cache_read),
+        _coerce_optional_int(cache_creation),
+    )
 
 
 def parse_model_name(model_name: Optional[str] = None) -> Optional[str]:
