@@ -137,5 +137,10 @@ def test_verdict_schema_rejects_non_boolean_strings():
     with pytest.raises(ValidationError):
         ContextualRelevancyVerdict(statement="s", verdict="yesshouldfail")
 
-    assert ContextualRelevancyVerdict(statement="s", verdict=True).verdict is True
-    assert ContextualRelevancyVerdict(statement="s", verdict=False).verdict is False
+    assert (
+        ContextualRelevancyVerdict(statement="s", verdict=True).verdict is True
+    )
+    assert (
+        ContextualRelevancyVerdict(statement="s", verdict=False).verdict
+        is False
+    )
