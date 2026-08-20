@@ -13,6 +13,7 @@ Feature = Literal["metrics"]
 # `class_name` stays `str` on purpose: callers pass `self.__class__.__name__`,
 # which a type checker can't narrow to a Literal anyway.
 MetricTemplateMethod = Literal[
+    "detect_escalation_signals",
     "detect_role_violations",
     "evaluate_adherence",
     "evaluate_image_coherence",
