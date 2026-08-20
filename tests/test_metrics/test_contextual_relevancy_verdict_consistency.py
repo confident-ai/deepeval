@@ -1,19 +1,24 @@
 """Regression tests for ContextualRelevancyMetric verdict classification.
 
 `_calculate_score` and the reason-generation helpers (`_generate_reason` /
-`_a_generate_reason`) used to classify verdicts with two different
-predicates: the score path only treated an exact `"yes"` as relevant, while
-the reason path only treated an exact `"no"` as irrelevant (everything else
-fell into the "relevant" `else` branch). A non-canonical judge response such
-as `"yes."`, `"yes "`, or `"yes<stray text>"` is therefore neither an exact
-`"yes"` nor an exact `"no"`, so it is scored as irrelevant while the reason
-text describes it as relevant, producing contradictory output.
+`_a_generate_reason`) used to classify verdicts by comparing the raw
+`verdict` string with two different predicates: the score path only treated
+an exact `"yes"` as relevant, while the reason path only treated an exact
+`"no"` as irrelevant (everything else fell into the "relevant" `else`
+branch). A non-canonical judge response such as `"yes."`, `"yes "`, or
+`"yes<stray text>"` was therefore neither an exact `"yes"` nor an exact
+`"no"`, so it was scored as irrelevant while the reason text described it as
+relevant, producing contradictory output.
 
-Both paths now share `_verdict_is_relevant`, so a verdict can only ever be
-counted on one side of the classification. These tests drive the metric
-through `measure()`/`a_measure()` with a stub judge (no network, no API
-key) and assert that the score and the statements handed to the reason
-prompt always agree.
+Per maintainer feedback on the PR, the fix now goes one step further:
+`ContextualRelevancyVerdict.verdict` (and the equivalent field on
+`TurnContextualRelevancyMetric`) is a `bool`, and both the score and the
+reason-generation logic branch directly on that boolean. This removes the
+string-parsing ambiguity entirely, since `verdict.verdict` can only ever be
+`True` or `False`. These tests drive the metric through
+`measure()`/`a_measure()` with a stub judge (no network, no API key) and
+assert that the score and the statements handed to the reason prompt always
+agree.
 """
 
 import asyncio
@@ -21,9 +26,6 @@ import asyncio
 import pytest
 
 from deepeval.metrics import ContextualRelevancyMetric
-from deepeval.metrics.contextual_relevancy.contextual_relevancy import (
-    _verdict_is_relevant,
-)
 from deepeval.metrics.contextual_relevancy.schema import (
     ContextualRelevancyScoreReason,
     ContextualRelevancyVerdicts,
@@ -33,12 +35,12 @@ from deepeval.test_case import LLMTestCase
 
 
 class _StubJudge(DeepEvalBaseLLM):
-    """Always returns the same verdict token for every statement, and
+    """Always returns the same boolean verdict for every statement, and
     records whether the reason-generation prompt treated the statements
     as relevant or irrelevant."""
 
-    def __init__(self, verdict_token: str):
-        self.verdict_token = verdict_token
+    def __init__(self, verdict_value: bool):
+        self.verdict_value = verdict_value
         self.captured_reason_prompts = []
 
     def load_model(self, *args, **kwargs):
@@ -53,7 +55,7 @@ class _StubJudge(DeepEvalBaseLLM):
                 verdicts=[
                     {
                         "statement": f"statement {i}",
-                        "verdict": self.verdict_token,
+                        "verdict": self.verdict_value,
                         "reason": None,
                     }
                     for i in range(2)
@@ -66,14 +68,8 @@ class _StubJudge(DeepEvalBaseLLM):
         return self.generate(prompt, schema=schema, **kwargs)
 
 
-@pytest.mark.parametrize(
-    "verdict_token",
-    ["yes", "yes ", "yes.", "yesշո", "Yes"],
-)
-def test_non_canonical_yes_verdicts_score_and_reason_agree_sync(
-    verdict_token: str,
-):
-    judge = _StubJudge(verdict_token)
+def test_true_verdicts_score_and_reason_agree_sync():
+    judge = _StubJudge(True)
     metric = ContextualRelevancyMetric(
         model=judge, async_mode=False, include_reason=True
     )
@@ -91,14 +87,8 @@ def test_non_canonical_yes_verdicts_score_and_reason_agree_sync(
     assert "statement 1" in reason_prompt
 
 
-@pytest.mark.parametrize(
-    "verdict_token",
-    ["yes", "yes ", "yes.", "yesշո"],
-)
-def test_non_canonical_yes_verdicts_score_and_reason_agree_async(
-    verdict_token: str,
-):
-    judge = _StubJudge(verdict_token)
+def test_true_verdicts_score_and_reason_agree_async():
+    judge = _StubJudge(True)
     metric = ContextualRelevancyMetric(
         model=judge, async_mode=True, include_reason=True
     )
@@ -116,8 +106,8 @@ def test_non_canonical_yes_verdicts_score_and_reason_agree_async(
     assert "statement 1" in reason_prompt
 
 
-def test_no_verdict_is_still_irrelevant():
-    judge = _StubJudge("no")
+def test_false_verdict_is_irrelevant():
+    judge = _StubJudge(False)
     metric = ContextualRelevancyMetric(
         model=judge, async_mode=False, include_reason=True
     )
@@ -135,21 +125,17 @@ def test_no_verdict_is_still_irrelevant():
     assert "statement 1" not in reason_prompt
 
 
-@pytest.mark.parametrize(
-    "verdict,expected",
-    [
-        ("yes", True),
-        ("Yes", True),
-        ("YES", True),
-        (" yes ", True),
-        ("yes.", True),
-        ("yesշո", True),
-        ("no", False),
-        ("No", False),
-        (" no ", False),
-        ("no.", False),
-        ("", False),
-    ],
-)
-def test_verdict_is_relevant_helper(verdict: str, expected: bool):
-    assert _verdict_is_relevant(verdict) is expected
+def test_verdict_schema_rejects_non_boolean_strings():
+    from pydantic import ValidationError
+
+    from deepeval.metrics.contextual_relevancy.schema import (
+        ContextualRelevancyVerdict,
+    )
+
+    with pytest.raises(ValidationError):
+        ContextualRelevancyVerdict(statement="s", verdict="yes.")
+    with pytest.raises(ValidationError):
+        ContextualRelevancyVerdict(statement="s", verdict="yesshouldfail")
+
+    assert ContextualRelevancyVerdict(statement="s", verdict=True).verdict is True
+    assert ContextualRelevancyVerdict(statement="s", verdict=False).verdict is False
