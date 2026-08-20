@@ -4,7 +4,10 @@ import os
 from itertools import chain
 from types import SimpleNamespace
 
-from deepeval.synthesizer.chunking.context_generator import ContextGenerator
+from deepeval.synthesizer.chunking.context_generator import (
+    ContextGenerator,
+    ContextScore,
+)
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.models.embedding_models.openai_embedding_model import (
     OpenAIEmbeddingModel,
@@ -627,3 +630,46 @@ def test_sync_deletes_one_collection_per_doc(monkeypatch, tmp_path):
     assert len(contexts) == num_docs
     # one delete per doc
     assert len(cap_client.delete_calls) == num_docs
+
+
+class _UnknownCostNativeModel:
+    def generate(self, *args, **kwargs):
+        return (
+            ContextScore(
+                clarity=1,
+                depth=1,
+                structure=1,
+                relevance=1,
+            ),
+            None,
+        )
+
+    async def a_generate(self, *args, **kwargs):
+        return self.generate(*args, **kwargs)
+
+
+def _make_unknown_cost_generator():
+    generator = ContextGenerator.__new__(ContextGenerator)
+    generator.model = _UnknownCostNativeModel()
+    generator.using_native_model = True
+    generator.total_cost = 0
+    return generator
+
+
+def test_evaluate_chunk_accepts_unknown_native_model_cost():
+    generator = _make_unknown_cost_generator()
+
+    score = generator.evaluate_chunk("a context chunk")
+
+    assert score == 1
+    assert generator.total_cost == 0
+
+
+@pytest.mark.asyncio
+async def test_a_evaluate_chunk_accepts_unknown_native_model_cost():
+    generator = _make_unknown_cost_generator()
+
+    score = await generator.a_evaluate_chunk("a context chunk")
+
+    assert score == 1
+    assert generator.total_cost == 0
