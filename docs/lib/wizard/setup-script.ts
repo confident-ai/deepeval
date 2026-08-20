@@ -122,17 +122,23 @@ fi
 cleanup
 trap - 0
 
-# curl | sh consumes stdin. Reconnect the wizard to the user's terminal.
+# curl | sh consumes stdin, so the wizard needs the terminal instead. Only the
+# command being exec'd may take it: this shell is still reading the rest of the
+# script from stdin, and redirecting the shell itself would make it read the
+# remainder from the terminal and wait for the user to type it.
 has_tty=0
 if (exec </dev/tty) 2>/dev/null; then
-  exec </dev/tty
   has_tty=1
 fi
 
 # BSD script gives interactive macOS sessions a real pseudo-terminal.
 if [ "$os" = "darwin" ] && [ "$has_tty" -eq 1 ] &&
   command -v script >/dev/null 2>&1; then
-  exec script -q /dev/null "$installed" --from "$SOURCE" "$@"
+  exec script -q /dev/null "$installed" --from "$SOURCE" "$@" </dev/tty
+fi
+
+if [ "$has_tty" -eq 1 ]; then
+  exec "$installed" --from "$SOURCE" "$@" </dev/tty
 fi
 
 exec "$installed" --from "$SOURCE" "$@"
