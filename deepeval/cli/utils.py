@@ -7,7 +7,7 @@ import typer
 import webbrowser
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from pydantic import ValidationError
+from pydantic import SecretStr, ValidationError
 from pydantic.fields import FieldInfo
 from enum import Enum
 from pathlib import Path
@@ -102,6 +102,26 @@ USE_EMBED_KEYS = [
     for key in Settings.model_fields
     if key.startswith("USE_") and key in EmbeddingKeyValues.__members__
 ]
+
+
+def is_openai_configured() -> bool:
+    """True when an OpenAI key is available from settings or the environment.
+
+    The provider ``unset-*`` commands use this to decide whether to tell the
+    user that OpenAI still covers them, or that nothing is configured at all.
+    """
+    s = get_settings()
+    v = s.OPENAI_API_KEY
+    if isinstance(v, SecretStr):
+        try:
+            if v.get_secret_value().strip():
+                return True
+        except Exception:
+            pass
+    elif v and str(v).strip():
+        return True
+    env = os.getenv("OPENAI_API_KEY")
+    return bool(env and env.strip())
 
 
 def handle_save_result(
