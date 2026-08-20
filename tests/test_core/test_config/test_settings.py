@@ -493,6 +493,26 @@ def test_legacy_keyfile_populates_openai_api_key_when_env_missing(
     assert s.OPENAI_API_KEY.get_secret_value() == "legacy-json-key"
 
 
+def test_legacy_keyfile_populates_local_embedding_api_key_when_env_missing(
+    monkeypatch, hidden_store_dir: Path
+):
+    from pydantic import SecretStr
+    from deepeval.constants import KEY_FILE
+
+    monkeypatch.delenv("LOCAL_EMBEDDING_API_KEY", raising=False)
+    keyfile_path = hidden_store_dir / KEY_FILE
+    keyfile_path.write_text(
+        json.dumps({"LOCAL_EMBEDDING_API_KEY": "legacy-json-key"})
+    )
+
+    reset_settings(reload_dotenv=False)
+    settings = get_settings()
+    api_key = settings.LOCAL_EMBEDDING_API_KEY
+
+    assert isinstance(api_key, SecretStr)
+    assert api_key.get_secret_value() == "legacy-json-key"
+
+
 def test_env_openai_api_key_takes_precedence_over_legacy_keyfile(
     monkeypatch, hidden_store_dir: Path
 ):
