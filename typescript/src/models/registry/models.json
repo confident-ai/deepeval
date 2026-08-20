@@ -490,29 +490,13 @@
       "inputPrice": 1e-06,
       "outputPrice": 5e-06
     },
-    "claude-opus-4-5-20251124": {
+    "claude-opus-4-5-20251101": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 5e-06,
       "outputPrice": 2.5e-05
-    },
-    "claude-opus-4-6-20250610": {
-      "supportsLogProbs": false,
-      "supportsMultimodal": true,
-      "supportsStructuredOutputs": true,
-      "supportsJson": true,
-      "inputPrice": 5e-06,
-      "outputPrice": 2.5e-05
-    },
-    "claude-sonnet-4-6-20250514": {
-      "supportsLogProbs": false,
-      "supportsMultimodal": true,
-      "supportsStructuredOutputs": true,
-      "supportsJson": true,
-      "inputPrice": 3e-06,
-      "outputPrice": 1.5e-05
     },
     "claude-3-opus": {
       "supportsLogProbs": false,
