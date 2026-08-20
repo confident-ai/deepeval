@@ -1364,7 +1364,7 @@ class Observer:
             "metric_collection": self.metric_collection,
         }
 
-        if self.span_type == SpanType.AGENT.value:
+        if self.span_type == SpanType.AGENT:
             available_tools = self.observe_kwargs.get("available_tools", [])
             agent_handoffs = self.observe_kwargs.get("agent_handoffs", [])
 
@@ -1373,7 +1373,7 @@ class Observer:
                 available_tools=available_tools,
                 agent_handoffs=agent_handoffs,
             )
-        elif self.span_type == SpanType.LLM.value:
+        elif self.span_type == SpanType.LLM:
             model = self.observe_kwargs.get("model", None)
             cost_per_input_token = self.observe_kwargs.get(
                 "cost_per_input_token", None
@@ -1387,11 +1387,11 @@ class Observer:
                 cost_per_input_token=cost_per_input_token,
                 cost_per_output_token=cost_per_output_token,
             )
-        elif self.span_type == SpanType.RETRIEVER.value:
+        elif self.span_type == SpanType.RETRIEVER:
             embedder = self.observe_kwargs.get("embedder", None)
             return RetrieverSpan(**span_kwargs, embedder=embedder)
 
-        elif self.span_type == SpanType.TOOL.value:
+        elif self.span_type == SpanType.TOOL:
             description = self.observe_kwargs.get("description", None)
             return ToolSpan(**span_kwargs, description=description)
         else:

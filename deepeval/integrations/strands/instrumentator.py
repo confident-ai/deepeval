@@ -118,14 +118,14 @@ class StrandsSpanInterceptor(SpanProcessor):
                 pass
 
         # Stamp name at on_start because the placeholder subclass depends on it.
-        if span_type == SpanType.AGENT.value:
+        if span_type == SpanType.AGENT:
             agent_name = get_agent_name(span)
             if agent_name:
                 try:
                     span.set_attribute(ConfidentAttr.SPAN_NAME, agent_name)
                 except Exception:
                     pass
-        elif span_type == SpanType.TOOL.value:
+        elif span_type == SpanType.TOOL:
             tool_name = get_tool_name(span)
             if tool_name:
                 try:
@@ -189,7 +189,7 @@ class StrandsSpanInterceptor(SpanProcessor):
                 status=TraceSpanStatus.IN_PROGRESS,
                 start_time=start_time,
             )
-            if span_type == SpanType.AGENT.value:
+            if span_type == SpanType.AGENT:
                 # Reuse the on_start-stamped name to skip a duplicate lookup.
                 attrs = span.attributes or {}
                 placeholder = AgentSpan(
@@ -200,7 +200,7 @@ class StrandsSpanInterceptor(SpanProcessor):
                     ),
                     **kwargs,
                 )
-            elif span_type == SpanType.LLM.value:
+            elif span_type == SpanType.LLM:
                 placeholder = LlmSpan(**kwargs)
             else:
                 placeholder = BaseSpan(**kwargs)
@@ -240,7 +240,7 @@ class StrandsSpanInterceptor(SpanProcessor):
             set_span_attribute_post_end(
                 span, ConfidentAttr.SPAN_INPUT, input_text
             )
-            if span_type == SpanType.AGENT.value:
+            if span_type == SpanType.AGENT:
                 set_span_attribute_post_end(
                     span, ConfidentAttr.TRACE_INPUT, input_text
                 )
@@ -249,7 +249,7 @@ class StrandsSpanInterceptor(SpanProcessor):
             set_span_attribute_post_end(
                 span, ConfidentAttr.SPAN_OUTPUT, output_text
             )
-            if span_type == SpanType.AGENT.value:
+            if span_type == SpanType.AGENT:
                 set_span_attribute_post_end(
                     span, ConfidentAttr.TRACE_OUTPUT, output_text
                 )
@@ -283,7 +283,7 @@ class StrandsSpanInterceptor(SpanProcessor):
                 set_span_attribute_post_end(
                     span, ConfidentAttr.LLM_MODEL, model
                 )
-            if span_type == SpanType.LLM.value and not attrs.get(
+            if span_type == SpanType.LLM and not attrs.get(
                 ConfidentAttr.SPAN_PROVIDER
             ):
                 provider = get_attr(span, "gen_ai.response.provider")
@@ -297,7 +297,7 @@ class StrandsSpanInterceptor(SpanProcessor):
 
         tools_called: List[ToolCall] = []
 
-        if span_type == SpanType.AGENT.value:
+        if span_type == SpanType.AGENT:
             tools_called = extract_tool_calls(span)
 
             tool_defs_raw = attrs.get("gen_ai.tool.definitions") or attrs.get(
@@ -310,7 +310,7 @@ class StrandsSpanInterceptor(SpanProcessor):
                     str(tool_defs_raw),
                 )
 
-        elif span_type == SpanType.TOOL.value:
+        elif span_type == SpanType.TOOL:
             tc = extract_tool_call_from_tool_span(span)
             if tc:
                 tools_called = [tc]
@@ -342,7 +342,7 @@ class StrandsSpanInterceptor(SpanProcessor):
             )
 
         if (
-            span_type == SpanType.AGENT.value
+            span_type == SpanType.AGENT
             and ConfidentAttr.SPAN_NAME not in attrs
         ):
             agent_name = get_agent_name(span)

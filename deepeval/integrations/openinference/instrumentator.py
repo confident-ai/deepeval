@@ -87,13 +87,13 @@ def _get_span_kind(span) -> Optional[str]:
         return None
 
     if kind in ("AGENT", "CHAIN"):
-        return SpanType.AGENT.value
+        return SpanType.AGENT
     if kind == "LLM":
-        return SpanType.LLM.value
+        return SpanType.LLM
     if kind == "TOOL":
-        return SpanType.TOOL.value
+        return SpanType.TOOL
     if kind == "RETRIEVER":
-        return SpanType.RETRIEVER.value
+        return SpanType.RETRIEVER
 
     return "custom"
 
@@ -360,14 +360,14 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
                 pass
 
         # Stamp name at on_start because the placeholder subclass depends on it.
-        if span_type == SpanType.AGENT.value:
+        if span_type == SpanType.AGENT:
             agent_name = _get_agent_name(span)
             if agent_name:
                 try:
                     span.set_attribute(ConfidentAttr.SPAN_NAME, agent_name)
                 except Exception:
                     pass
-        elif span_type == SpanType.TOOL.value:
+        elif span_type == SpanType.TOOL:
             tool_name = _get_tool_name(span)
             if tool_name:
                 try:
@@ -429,7 +429,7 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
                 status=TraceSpanStatus.IN_PROGRESS,
                 start_time=start_time,
             )
-            if span_type == SpanType.AGENT.value:
+            if span_type == SpanType.AGENT:
                 # Reuse the on_start-stamped name to skip a duplicate lookup.
                 attrs = (
                     getattr(span, "attributes", None)
@@ -444,7 +444,7 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
                     ),
                     **kwargs,
                 )
-            elif span_type == SpanType.LLM.value:
+            elif span_type == SpanType.LLM:
                 placeholder = LlmSpan(**kwargs)
             else:
                 placeholder = BaseSpan(**kwargs)
@@ -493,7 +493,7 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
             set_span_attribute_post_end(
                 span, ConfidentAttr.SPAN_INPUT, input_text
             )
-            if span_type == SpanType.AGENT.value:
+            if span_type == SpanType.AGENT:
                 set_span_attribute_post_end(
                     span, ConfidentAttr.TRACE_INPUT, input_text
                 )
@@ -502,7 +502,7 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
             set_span_attribute_post_end(
                 span, ConfidentAttr.SPAN_OUTPUT, output_text
             )
-            if span_type == SpanType.AGENT.value:
+            if span_type == SpanType.AGENT:
                 set_span_attribute_post_end(
                     span, ConfidentAttr.TRACE_OUTPUT, output_text
                 )
@@ -528,7 +528,7 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
             set_span_attribute_post_end(
                 span, ConfidentAttr.LLM_MODEL, str(model)
             )
-        if span_type == SpanType.LLM.value and not attrs.get(
+        if span_type == SpanType.LLM and not attrs.get(
             ConfidentAttr.SPAN_PROVIDER
         ):
             provider = attrs.get("llm.provider")
@@ -542,7 +542,7 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
 
         tools_called: List[ToolCall] = []
 
-        if span_type == SpanType.TOOL.value:
+        if span_type == SpanType.TOOL:
             tc = _extract_tool_call_from_tool_span(span)
             if tc:
                 tools_called = [tc]
@@ -557,7 +557,7 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
                         serialize_to_json(tc.input_parameters),
                     )
 
-        elif span_type in (SpanType.AGENT.value, SpanType.LLM.value):
+        elif span_type in (SpanType.AGENT, SpanType.LLM):
             tools_called = _extract_tool_calls(span)
 
         if tools_called:
@@ -568,7 +568,7 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
             )
 
         if (
-            span_type == SpanType.AGENT.value
+            span_type == SpanType.AGENT
             and ConfidentAttr.SPAN_NAME not in attrs
         ):
             agent_name = _get_agent_name(span)

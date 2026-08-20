@@ -365,7 +365,7 @@ def enter_current_context(
         "metric_collection": metric_collection,
     }
 
-    if span_type == SpanType.AGENT.value:
+    if span_type == SpanType.AGENT:
         available_tools = observe_kwargs.get("available_tools", [])
         agent_handoffs = observe_kwargs.get("agent_handoffs", [])
         span_instance = AgentSpan(
@@ -373,7 +373,7 @@ def enter_current_context(
             available_tools=available_tools,
             agent_handoffs=agent_handoffs,
         )
-    elif span_type == SpanType.LLM.value:
+    elif span_type == SpanType.LLM:
         model = observe_kwargs.get("model", None)
         c_in = observe_kwargs.get("cost_per_input_token", None)
         c_out = observe_kwargs.get("cost_per_output_token", None)
@@ -383,10 +383,10 @@ def enter_current_context(
             cost_per_input_token=c_in,
             cost_per_output_token=c_out,
         )
-    elif span_type == SpanType.RETRIEVER.value:
+    elif span_type == SpanType.RETRIEVER:
         embedder = observe_kwargs.get("embedder", None)
         span_instance = RetrieverSpan(**span_kwargs, embedder=embedder)
-    elif span_type == SpanType.TOOL.value:
+    elif span_type == SpanType.TOOL:
         span_instance = ToolSpan(**span_kwargs, **observe_kwargs)
     else:
         span_instance = BaseSpan(**span_kwargs)

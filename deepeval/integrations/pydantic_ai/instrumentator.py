@@ -464,7 +464,7 @@ class SpanInterceptor(SpanProcessor):
                 status=TraceSpanStatus.IN_PROGRESS,
                 start_time=start_time,
             )
-            if span_type == SpanType.AGENT.value:
+            if span_type == SpanType.AGENT:
                 placeholder = AgentSpan(
                     name=(
                         span.attributes.get(ConfidentAttr.SPAN_NAME)
@@ -473,7 +473,7 @@ class SpanInterceptor(SpanProcessor):
                     ),
                     **kwargs,
                 )
-            elif span_type == SpanType.LLM.value:
+            elif span_type == SpanType.LLM:
                 placeholder = LlmSpan(**kwargs)
             else:
                 placeholder = BaseSpan(**kwargs)

@@ -59,32 +59,32 @@ def classify_span(span) -> Optional[str]:
 
     op_name = attrs.get("gen_ai.operation.name", "")
     if op_name in _AGENT_OP_NAMES:
-        return SpanType.AGENT.value
+        return SpanType.AGENT
     if op_name in _LLM_OP_NAMES:
-        return SpanType.LLM.value
+        return SpanType.LLM
     if op_name in _TOOL_OP_NAMES:
-        return SpanType.TOOL.value
+        return SpanType.TOOL
 
     traceloop_kind = attrs.get("traceloop.span.kind", "")
     if traceloop_kind in _TRACELOOP_KIND_MAP:
         return _TRACELOOP_KIND_MAP[traceloop_kind]
 
     if attrs.get("gen_ai.tool.name") or attrs.get("gen_ai.tool.call.id"):
-        return SpanType.TOOL.value
+        return SpanType.TOOL
     if attrs.get("gen_ai.agent.name") or attrs.get("gen_ai.agent.id"):
-        return SpanType.AGENT.value
+        return SpanType.AGENT
 
     if any(kw in span_name_lower for kw in ("invoke_agent", "agent")):
-        return SpanType.AGENT.value
+        return SpanType.AGENT
     if any(kw in span_name_lower for kw in ("execute_tool", ".tool")):
-        return SpanType.TOOL.value
+        return SpanType.TOOL
     if any(kw in span_name_lower for kw in ("retriev", "memory", "datastore")):
-        return SpanType.RETRIEVER.value
+        return SpanType.RETRIEVER
     if any(
         kw in span_name_lower
         for kw in ("llm", "chat", "invoke_model", "generate")
     ):
-        return SpanType.LLM.value
+        return SpanType.LLM
 
     return None
 
