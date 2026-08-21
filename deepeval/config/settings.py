@@ -60,9 +60,9 @@ from deepeval.constants import (
 logger = logging.getLogger(__name__)
 _SAVE_RE = re.compile(r"^(?P<scheme>dotenv)(?::(?P<path>.+))?$")
 
-_ACTIVE_SETTINGS_EDIT_CTX: ContextVar[
-    Optional["Settings._SettingsEditCtx"]
-] = ContextVar("_ACTIVE_SETTINGS_EDIT_CTX", default=None)
+_ACTIVE_SETTINGS_EDIT_CTX: ContextVar[Optional["Settings._SettingsEditCtx"]] = (
+    ContextVar("_ACTIVE_SETTINGS_EDIT_CTX", default=None)
+)
 
 # settings that were converted to computed fields with override counterparts
 _DEPRECATED_TO_OVERRIDE = {
@@ -575,12 +575,8 @@ class Settings(BaseSettings):
     USE_GROK_MODEL: Optional[bool] = Field(
         None, description="Select Grok as the active LLM provider."
     )
-    GROK_API_KEY: Optional[SecretStr] = Field(
-        None, description="Grok API key."
-    )
-    GROK_MODEL_NAME: Optional[str] = Field(
-        None, description="Grok model name."
-    )
+    GROK_API_KEY: Optional[SecretStr] = Field(None, description="Grok API key.")
+    GROK_MODEL_NAME: Optional[str] = Field(None, description="Grok model name.")
     GROK_COST_PER_INPUT_TOKEN: Optional[float] = Field(
         None, description="Grok input token cost (used for cost reporting)."
     )
@@ -713,9 +709,7 @@ class Settings(BaseSettings):
     VLLM_API_KEY: Optional[SecretStr] = Field(
         None, description="vLLM API key (if required by your vLLM gateway)."
     )
-    VLLM_MODEL_NAME: Optional[str] = Field(
-        None, description="vLLM model name."
-    )
+    VLLM_MODEL_NAME: Optional[str] = Field(None, description="vLLM model name.")
 
     #
     # Embedding Keys
@@ -1427,9 +1421,7 @@ class Settings(BaseSettings):
                 }
 
                 changed_keys = {
-                    k
-                    for k in after_norm
-                    if after_norm[k] != before_norm.get(k)
+                    k for k in after_norm if after_norm[k] != before_norm.get(k)
                 }
                 changed_keys -= self.COMPUTED_FIELDS
                 touched_keys = set(self._touched) - self.COMPUTED_FIELDS
