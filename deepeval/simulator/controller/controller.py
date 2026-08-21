@@ -9,8 +9,9 @@ from deepeval.dataset import ConversationalGolden
 from deepeval.simulator.controller.template import SimulatorControllerTemplate
 from deepeval.simulator.controller.types import Context, Decision
 from deepeval.simulator.schema import ConversationCompletion
+from deepeval.simulator.utils import serialize_turns_for_prompt
 from deepeval.test_case import Turn
-from deepeval.utils import update_pbar, serialize_to_json
+from deepeval.utils import update_pbar
 
 
 def proceed() -> Decision:
@@ -102,10 +103,12 @@ class SimulationController:
     ) -> bool:
         if golden.expected_outcome is None:
             return False
+        # An empty conversation cannot have achieved the outcome; skip the
+        # LLM round trip, which would otherwise delay the opening turn.
+        if not turns:
+            return False
 
-        conversation_history = serialize_to_json(
-            turns, indent=4, ensure_ascii=False
-        )
+        conversation_history = serialize_turns_for_prompt(turns)
         prompt = self.template.check_expected_outcome(
             conversation_history, golden.expected_outcome
         )
@@ -129,10 +132,12 @@ class SimulationController:
     ) -> bool:
         if golden.expected_outcome is None:
             return False
+        # An empty conversation cannot have achieved the outcome; skip the
+        # LLM round trip, which would otherwise delay the opening turn.
+        if not turns:
+            return False
 
-        conversation_history = serialize_to_json(
-            turns, indent=4, ensure_ascii=False
-        )
+        conversation_history = serialize_turns_for_prompt(turns)
         prompt = self.template.check_expected_outcome(
             conversation_history, golden.expected_outcome
         )

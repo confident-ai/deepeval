@@ -3,10 +3,10 @@ import inspect
 import json
 import re
 
-from typing import List, Optional, Any
+from typing import Dict, List, Optional, Any
 
 from deepeval.dataset.api import Golden
-from deepeval.dataset.golden import ConversationalGolden
+from deepeval.dataset.golden import ConversationalGolden, Persona
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
@@ -26,6 +26,26 @@ TOOLS_DELIMITER = ";"
 _RETRIEVED_CONTEXT_MARKER = re.compile(
     r"^deepeval_source=(?P<source>.*?),deepeval_context=(?P<context>.*)$"
 )
+
+
+def persona_kwargs(raw_persona: Any, user_description: Optional[str]) -> Dict:
+    """Build the `ConversationalGolden` persona kwarg from one loaded row.
+
+    Files written before personas existed only carry `user_description`, which
+    the golden upgrades (with a deprecation warning) on construction.
+    """
+    if isinstance(raw_persona, Persona):
+        return {"persona": raw_persona}
+    if isinstance(raw_persona, dict):
+        return {"persona": Persona(**raw_persona)}
+    return {"user_description": user_description}
+
+
+def serialize_persona(persona: Optional[Persona]) -> Optional[Dict]:
+    """Dump a persona for file output, omitting defaults to keep rows small."""
+    if persona is None:
+        return None
+    return persona.model_dump(exclude_defaults=True, mode="json")
 
 
 def serialize_retrieval_context(retrieval_context):
@@ -140,7 +160,13 @@ def convert_convo_test_cases_to_convo_goldens(
             "scenario": test_case.scenario,
             "turns": test_case.turns,
             "expected_outcome": test_case.expected_outcome,
-            "user_description": test_case.user_description,
+            # A test case only keeps the flattened text, so rebuild a minimal
+            # persona rather than tripping the `user_description` deprecation.
+            "persona": (
+                Persona(characteristics=test_case.user_description)
+                if test_case.user_description
+                else None
+            ),
             "context": test_case.context,
             "additional_metadata": test_case.metadata,
         }

@@ -350,6 +350,14 @@ class Settings(BaseSettings):
         description="Path to the directory used by DeepEval to store cache files. If set, this overrides the default cache location. The directory will be created if it does not exist.",
     )
 
+    # Where simulated voice conversations write their audio. Unlike the cache,
+    # these are recordings the user listens to, so they are kept out of the
+    # cache folder and survive clearing it.
+    DEEPEVAL_VOICE_FOLDER: Optional[Path] = Field(
+        None,
+        description="Directory that voice simulations write conversation audio into (created if missing). Overridden by an explicit `VoiceConfig(output_dir=...)`. Defaults to `.deepeval-voice-simulations` in the current working directory.",
+    )
+
     # Display / Truncation
     DEEPEVAL_MAXLEN_TINY: Optional[int] = Field(
         40,
@@ -1071,6 +1079,7 @@ class Settings(BaseSettings):
         "DEEPEVAL_RESULTS_FOLDER",
         "ENV_DIR_PATH",
         "DEEPEVAL_CACHE_FOLDER",
+        "DEEPEVAL_VOICE_FOLDER",
         mode="before",
     )
     @classmethod

@@ -21,6 +21,8 @@ from deepeval.dataset.utils import (
     convert_convo_test_cases_to_convo_goldens,
     format_turns,
     parse_turns,
+    persona_kwargs,
+    serialize_persona,
     serialize_retrieval_context,
     join_context,
     join_retrieval_context,
@@ -683,6 +685,7 @@ class EvaluationDataset:
         turns_key_name: Optional[str] = "turns",
         expected_outcome_key_name: Optional[str] = "expected_outcome",
         user_description_key_name: Optional[str] = "user_description",
+        persona_key_name: Optional[str] = "persona",
         encoding_type: str = "utf-8",
     ):
         try:
@@ -711,7 +714,9 @@ class EvaluationDataset:
                         scenario=scenario,
                         turns=parsed_turns,
                         expected_outcome=expected_outcome,
-                        user_description=user_description,
+                        **persona_kwargs(
+                            json_obj.get(persona_key_name), user_description
+                        ),
                         context=context,
                         comments=comments,
                         name=name,
@@ -775,6 +780,7 @@ class EvaluationDataset:
         turns_key_name: Optional[str] = "turns",
         expected_outcome_key_name: Optional[str] = "expected_outcome",
         user_description_key_name: Optional[str] = "user_description",
+        persona_key_name: Optional[str] = "persona",
         encoding_type: str = "utf-8",
     ):
         def parse_context(value, delimiter: str):
@@ -834,7 +840,9 @@ class EvaluationDataset:
                         scenario=scenario,
                         turns=parsed_turns,
                         expected_outcome=expected_outcome,
-                        user_description=user_description,
+                        **persona_kwargs(
+                            json_obj.get(persona_key_name), user_description
+                        ),
                         context=context,
                         comments=comments,
                         name=name,
@@ -1179,7 +1187,7 @@ class EvaluationDataset:
                     scenario=golden.scenario,
                     turns=golden.turns,
                     expected_outcome=golden.expected_outcome,
-                    user_description=golden.user_description,
+                    persona=golden.persona,
                     context=golden.context,
                     name=golden.name,
                     comments=golden.comments,
@@ -1247,6 +1255,7 @@ class EvaluationDataset:
                                 "turns": turns_list,
                                 "expected_outcome": golden.expected_outcome,
                                 "user_description": golden.user_description,
+                                "persona": serialize_persona(golden.persona),
                                 "context": golden.context,
                                 "name": golden.name,
                                 "comments": golden.comments,
@@ -1444,6 +1453,7 @@ class EvaluationDataset:
                             "turns": turns,
                             "expected_outcome": golden.expected_outcome,
                             "user_description": golden.user_description,
+                            "persona": serialize_persona(golden.persona),
                             "context": golden.context,
                             "name": golden.name,
                             "comments": golden.comments,

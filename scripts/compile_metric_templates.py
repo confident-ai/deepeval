@@ -1,6 +1,6 @@
-"""Compile metric template .txt files into templates/metrics/templates.json.
+"""Compile template .txt files into per-feature templates.json bundles.
 
-Templates live under ``**/templates/`` directories in one of two layouts:
+Templates live under a feature's source tree in one of two layouts:
 
 * Flat (default): the directory holds a ``class.txt`` marker naming the owning
   class, and the sibling ``<method>.txt`` files are that class's methods —
@@ -9,45 +9,76 @@ Templates live under ``**/templates/`` directories in one of two layouts:
   and instead groups methods under one subfolder per class —
   ``**/templates/<ClassName>/<method>.txt``.
 
-Fragments live at ``templates/metrics/fragments/<name>.txt``.
+Optional shared snippets for a feature live at
+``templates/<feature>/fragments/<name>.txt`` (metrics only today).
 
-The compiled bundle is written to BOTH the Python package and the TypeScript
-package so the two stay in sync.
+Each feature's compiled bundle is written to BOTH the Python package and the
+TypeScript package so the two stay in sync.
 
 Usage:
-    python scripts/compile_metric_templates.py
+    python scripts/compile_metric_templates.py            # all features
+    python scripts/compile_metric_templates.py metrics    # one feature
+    python scripts/compile_metric_templates.py simulator
 """
 
 from __future__ import annotations
 
 import json
+import sys
 from collections import defaultdict
 from pathlib import Path
+from typing import NamedTuple, Optional
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PACKAGE_ROOT = REPO_ROOT / "deepeval"
-FEATURE = "metrics"
-# Compiled bundle is emitted to both packages.
-TEMPLATES_JSON = PACKAGE_ROOT / "templates" / FEATURE / "templates.json"
-TS_TEMPLATES_JSON = (
-    REPO_ROOT / "typescript" / "src" / "templates" / FEATURE / "templates.json"
-)
-FRAGMENTS_DIR = PACKAGE_ROOT / "templates" / FEATURE / "fragments"
+TS_TEMPLATES_ROOT = REPO_ROOT / "typescript" / "src" / "templates"
 
 
-def _collect_from_disk() -> tuple[dict[str, dict[str, str]], dict[str, str]]:
+class FeatureConfig(NamedTuple):
+    name: str
+    # Root to scan for **/templates/ sources (must not include other features).
+    sources_root: Path
+    # Optional shared-snippet dir; None when the feature has no snippets.
+    fragments_dir: Optional[Path] = None
+
+
+FEATURES: dict[str, FeatureConfig] = {
+    "metrics": FeatureConfig(
+        name="metrics",
+        sources_root=PACKAGE_ROOT / "metrics",
+        fragments_dir=PACKAGE_ROOT / "templates" / "metrics" / "fragments",
+    ),
+    "simulator": FeatureConfig(
+        name="simulator",
+        sources_root=PACKAGE_ROOT / "simulator",
+        fragments_dir=None,
+    ),
+}
+
+
+def _py_json(feature: str) -> Path:
+    return PACKAGE_ROOT / "templates" / feature / "templates.json"
+
+
+def _ts_json(feature: str) -> Path:
+    return TS_TEMPLATES_ROOT / feature / "templates.json"
+
+
+def _collect_from_disk(
+    config: FeatureConfig,
+) -> tuple[dict[str, dict[str, str]], dict[str, str]]:
     classes: dict[str, dict[str, str]] = defaultdict(dict)
-    for templates_dir in PACKAGE_ROOT.rglob("templates"):
+    bundle_dir = _py_json(config.name).parent
+
+    for templates_dir in config.sources_root.rglob("templates"):
         if not templates_dir.is_dir():
             continue
-        # Don't descend into the compiled-bundle dir (it holds templates.json
-        # and the fragments folder, not raw .txt sources).
-        if templates_dir == TEMPLATES_JSON.parent:
+        # Don't descend into the compiled-bundle dir.
+        if templates_dir == bundle_dir:
             continue
 
         marker = templates_dir / "class.txt"
         if marker.is_file():
-            # Flat layout: class name comes from the marker; siblings are methods.
             class_name = marker.read_text(encoding="utf-8").strip()
             for path in templates_dir.glob("*.txt"):
                 if path.name == "class.txt":
@@ -56,7 +87,6 @@ def _collect_from_disk() -> tuple[dict[str, dict[str, str]], dict[str, str]]:
                     encoding="utf-8"
                 )
         else:
-            # Nested layout: one subfolder per class (multi-class metrics).
             for sub in templates_dir.iterdir():
                 if not sub.is_dir():
                     continue
@@ -65,24 +95,33 @@ def _collect_from_disk() -> tuple[dict[str, dict[str, str]], dict[str, str]]:
                         encoding="utf-8"
                     )
 
-    fragments = {
-        path.stem: path.read_text(encoding="utf-8")
-        for path in sorted(FRAGMENTS_DIR.glob("*.txt"))
-    }
+    fragments: dict[str, str] = {}
+    if config.fragments_dir is not None and config.fragments_dir.is_dir():
+        fragments = {
+            path.stem: path.read_text(encoding="utf-8")
+            for path in sorted(config.fragments_dir.glob("*.txt"))
+        }
     return dict(classes), fragments
 
 
-def build_bundle() -> dict:
+def build_bundle(feature: str = "metrics") -> dict:
     """Build the templates bundle from the .txt sources on disk.
 
     Preserves the key/method ordering of the existing ``templates.json`` so a
     no-op recompile produces a byte-identical file.
     """
-    classes, fragments = _collect_from_disk()
+    if feature not in FEATURES:
+        raise ValueError(
+            f"Unknown feature {feature!r}; expected one of "
+            f"{', '.join(sorted(FEATURES))}."
+        )
+    config = FEATURES[feature]
+    classes, fragments = _collect_from_disk(config)
+    templates_json = _py_json(feature)
 
     existing: dict = {}
-    if TEMPLATES_JSON.is_file():
-        existing = json.loads(TEMPLATES_JSON.read_text(encoding="utf-8"))
+    if templates_json.is_file():
+        existing = json.loads(templates_json.read_text(encoding="utf-8"))
     existing_keys = list(existing.keys())
 
     ordered_keys: list[str] = []
@@ -122,12 +161,19 @@ def render_bundle_json(bundle: dict) -> str:
     return json.dumps(bundle, indent=2, ensure_ascii=False) + "\n"
 
 
-def main() -> None:
-    content = render_bundle_json(build_bundle())
-    for path in (TEMPLATES_JSON, TS_TEMPLATES_JSON):
+def compile_feature(feature: str) -> None:
+    content = render_bundle_json(build_bundle(feature))
+    for path in (_py_json(feature), _ts_json(feature)):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8")
         print(f"Updated {path}")
+
+
+def main(argv: Optional[list[str]] = None) -> None:
+    args = list(sys.argv[1:] if argv is None else argv)
+    features = args if args else list(FEATURES)
+    for feature in features:
+        compile_feature(feature)
 
 
 if __name__ == "__main__":
