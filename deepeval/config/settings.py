@@ -35,6 +35,7 @@ from typing import (
     Any,
     Dict,
     List,
+    Literal,
     Optional,
     Union,
     NamedTuple,
@@ -49,7 +50,12 @@ from deepeval.config.utils import (
     parse_bool,
     read_dotenv_file,
 )
-from deepeval.constants import SUPPORTED_PROVIDER_SLUGS, slugify
+from deepeval.constants import (
+    CONFIDENT_REGIONS,
+    SUPPORTED_CONFIDENT_REGIONS,
+    SUPPORTED_PROVIDER_SLUGS,
+    slugify,
+)
 
 logger = logging.getLogger(__name__)
 _SAVE_RE = re.compile(r"^(?P<scheme>dotenv)(?::(?P<path>.+))?$")
@@ -294,9 +300,9 @@ class Settings(BaseSettings):
         ".",
         description="Extra PYTHONPATH used by the CLI runner (default: current project '.').",
     )
-    CONFIDENT_REGION: Optional[str] = Field(
+    CONFIDENT_REGION: Optional[CONFIDENT_REGIONS] = Field(
         None,
-        description="Optional Confident AI region hint (uppercased).",
+        description="Confident AI data region (US or EU).",
     )
     CONFIDENT_OPEN_BROWSER: Optional[bool] = Field(
         True,
@@ -1151,7 +1157,13 @@ class Settings(BaseSettings):
         s = str(v).strip()
         if not s:
             return None
-        return s.upper()
+        s = s.upper()
+        if s not in SUPPORTED_CONFIDENT_REGIONS:
+            allowed = ", ".join(sorted(SUPPORTED_CONFIDENT_REGIONS))
+            raise ValueError(
+                f"CONFIDENT_REGION must be one of {allowed} (case-insensitive), got {s!r}."
+            )
+        return s
 
     @field_validator("AWS_BEDROCK_REGION", mode="before")
     @classmethod

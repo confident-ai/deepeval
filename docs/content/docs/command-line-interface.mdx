@@ -436,7 +436,7 @@ npx deepeval set-confident-region EU --save=dotenv
 
 | Option          | Description                                                          |
 | --------------- | -------------------------------------------------------------------- |
-| `REGION`        | Positional argument. One of `US`, `EU`, or `AU`.                     |
+| `REGION`        | Positional argument. <Switch><Case id="python">One of `US` or `EU`.</Case><Case id="typescript">One of `US`, `EU`, or `AU`.</Case></Switch> |
 | `--save`, `-s`  | Persist `CONFIDENT_REGION` to a dotenv file. Usage: `dotenv[:path]`. |
 | `--quiet`, `-q` | Suppress printing to the terminal (useful for CI).                   |
 

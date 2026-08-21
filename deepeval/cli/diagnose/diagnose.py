@@ -178,6 +178,7 @@ def resolve_setting_source(env_key: str) -> Optional[str]:
 _REGION_SOURCE_LABELS = {
     "custom_base_url": "custom CONFIDENT_BASE_URL overrides region",
     "explicit_region": "explicitly set",
+    "keystore_region": "explicitly set (legacy .deepeval keystore)",
     "api_key_prefix": "inferred from API key prefix",
     "default": "default",
 }
@@ -185,7 +186,6 @@ _REGION_SOURCE_LABELS = {
 _OTEL_HOST_REGION = {
     "otel.confident-ai.com": "US",
     "eu.otel.confident-ai.com": "EU",
-    "au.otel.confident-ai.com": "AU",
 }
 _OTEL_URL_BY_REGION = {
     region: f"https://{host}" for host, region in _OTEL_HOST_REGION.items()
@@ -209,7 +209,7 @@ def _region_warnings(
 
     key_region = _infer_region_from_api_key(api_key)
     if key_region and key_region != region:
-        article = "an" if key_region in ("EU", "AU") else "a"
+        article = "an" if key_region == "EU" else "a"
         warnings.append(
             f"Your API key prefix looks like {article} {key_region} key, but the "
             f"resolved data region is {region} ({region_source}). API calls "

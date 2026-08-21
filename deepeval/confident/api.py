@@ -17,11 +17,11 @@ import deepeval
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.confident.types import ApiResponse, ConfidentApiError
 from deepeval.config.settings import get_settings
+from deepeval.constants import SUPPORTED_CONFIDENT_REGIONS
 
 CONFIDENT_API_KEY_ENV_VAR = "CONFIDENT_API_KEY"
 API_BASE_URL = "https://api.confident-ai.com"
 API_BASE_URL_EU = "https://eu.api.confident-ai.com"
-API_BASE_URL_AU = "https://au.api.confident-ai.com"
 retryable_exceptions = requests.exceptions.SSLError
 
 
@@ -32,7 +32,6 @@ def _infer_region_from_api_key(api_key: Optional[str]) -> Optional[str]:
     Supported:
       - confident_eu_... => "EU"
       - confident_us_... => "US"
-      - confident_au_... => "AU"
 
     Returns None if prefix is not recognized or api_key is falsy.
     """
@@ -43,23 +42,28 @@ def _infer_region_from_api_key(api_key: Optional[str]) -> Optional[str]:
         return "EU"
     if key.startswith("confident_us_"):
         return "US"
-    if key.startswith("confident_au_"):
-        return "AU"
     return None
 
 
 class BackendResolution(NamedTuple):
     base_url: str
     region: Optional[str]
-    # "custom_base_url" | "explicit_region" | "api_key_prefix" | "default"
+    # "custom_base_url" | "explicit_region" | "keystore_region"
+    # | "api_key_prefix" | "default"
     source: str
+
+
+def _normalize_region(region: Optional[str]) -> Optional[str]:
+    """Return `region` uppercased if we route to it, else None."""
+    if not region:
+        return None
+    normalized = str(region).strip().upper()
+    return normalized if normalized in SUPPORTED_CONFIDENT_REGIONS else None
 
 
 def _api_url_for_region(region: Optional[str]) -> str:
     if region == "EU":
         return API_BASE_URL_EU
-    if region == "AU":
-        return API_BASE_URL_AU
     return API_BASE_URL
 
 
@@ -78,10 +82,23 @@ def resolve_backend() -> BackendResolution:
         )
 
     # If the user has explicitly set a region, respect it.
-    region = KEY_FILE_HANDLER.fetch_data(KeyValues.CONFIDENT_REGION)
+    if s.CONFIDENT_REGION:
+        return BackendResolution(
+            _api_url_for_region(s.CONFIDENT_REGION),
+            s.CONFIDENT_REGION,
+            "explicit_region",
+        )
+
+    # Fall back to the legacy JSON keystore region, which covers keystore-only
+    # setups. Unlike settings it is unvalidated, so a region we no longer route
+    # to falls through to key-prefix inference rather than silently landing on
+    # the US default.
+    region = _normalize_region(
+        KEY_FILE_HANDLER.fetch_data(KeyValues.CONFIDENT_REGION)
+    )
     if region:
         return BackendResolution(
-            _api_url_for_region(region), region, "explicit_region"
+            _api_url_for_region(region), region, "keystore_region"
         )
 
     # Otherwise, infer region from the API key prefix.
