@@ -1,27 +1,30 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
-import { StepsSchema, ReasonScoreSchema } from "./schema";
+} from "@/metrics/utils";
+import { StepsSchema } from "@/metrics/g-eval/schema";
 import {
   type Rubric,
   constructGEvalParamsString,
   constructTestCaseString,
+  evaluateGEvalPrompt,
   numberEvaluationSteps,
   formatRubrics,
   getScoreRange,
   validateAndSortRubrics,
   validateCriteriaAndEvaluationSteps,
-} from "./utils";
+} from "@/metrics/g-eval/utils";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "GEval";
+
+export type GEvalTemplateOverride = MetricTemplateOverride<"GEval">;
 
 export interface GEvalMetricOptions {
   name: string;
@@ -30,11 +33,15 @@ export interface GEvalMetricOptions {
   evaluationSteps?: string[];
   rubric?: Rubric[];
   model?: DeepEvalBaseLLM | string;
-  threshold?: number;
+  threshold?: number | null;
+  /** Score-token alternatives to weigh, on models that report log probabilities. */
+  topLogprobs?: number;
+  flaky?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
   includeGEvalSuffix?: boolean;
+  evaluationTemplate?: GEvalTemplateOverride;
 }
 
 export class GEval extends BaseMetric {
@@ -42,10 +49,11 @@ export class GEval extends BaseMetric {
   criteria?: string;
   evaluationSteps?: string[];
   rubric?: Rubric[];
-  private readonly metricName: string;
+  readonly metricName: string;
   private readonly scoreRange: [number, number];
   private readonly scoreRangeSpan: number;
   private readonly includeGEvalSuffix: boolean;
+  private readonly topLogprobs: number;
 
   constructor(options: GEvalMetricOptions) {
     if (!options.evaluationParams || options.evaluationParams.length === 0) {
@@ -58,11 +66,15 @@ export class GEval extends BaseMetric {
       );
     }
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
 
     this.metricName = options.name;
     this.evaluationParams = options.evaluationParams;
@@ -76,6 +88,7 @@ export class GEval extends BaseMetric {
         ? options.evaluationSteps
         : undefined;
     this.includeGEvalSuffix = options.includeGEvalSuffix ?? true;
+    this.topLogprobs = options.topLogprobs ?? 20;
 
     const { model, usingNativeModel } = initializeModel(options.model);
     this.model = model;
@@ -96,7 +109,7 @@ export class GEval extends BaseMetric {
       this.score = this.strictMode
         ? Math.trunc(gScore)
         : (gScore - this.scoreRange[0]) / this.scoreRangeSpan;
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
       this.reason = reason;
 
       this.verboseLogs = constructVerboseLogs(this, [
@@ -114,7 +127,7 @@ export class GEval extends BaseMetric {
 
   private async generateEvaluationSteps(): Promise<string[]> {
     if (this.evaluationSteps) return this.evaluationSteps;
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_evaluation_steps", {
+    const prompt = this.getPrompt("generate_evaluation_steps", {
       criteria: this.criteria,
       parameters: constructGEvalParamsString(this.evaluationParams),
     });
@@ -131,13 +144,13 @@ export class GEval extends BaseMetric {
     const numberedSteps = numberEvaluationSteps(this.evaluationSteps ?? []);
 
     const prompt = this.strictMode
-      ? resolveTemplate("metrics", TEMPLATE_CLASS, "generate_strict_evaluation_results", {
+      ? this.getPrompt("generate_strict_evaluation_results", {
           evaluation_steps: numberedSteps,
           test_case_content: testCaseContent,
           parameters,
           _additional_context: null,
         })
-      : resolveTemplate("metrics", TEMPLATE_CLASS, "generate_evaluation_results", {
+      : this.getPrompt("generate_evaluation_results", {
           evaluation_steps: numberedSteps,
           test_case_content: testCaseContent,
           parameters,
@@ -146,18 +159,10 @@ export class GEval extends BaseMetric {
           _additional_context: null,
         });
 
-    const { score, reason } = await generateWithSchema(
-      this,
-      prompt,
-      ReasonScoreSchema,
-    );
-    return [score, reason];
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
+    return evaluateGEvalPrompt(this, prompt, {
+      topLogprobs: this.topLogprobs,
+      strictMode: this.strictMode,
+    });
   }
 
   get name(): string {

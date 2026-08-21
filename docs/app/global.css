@@ -767,6 +767,97 @@ summary {
   row-gap: 0;
 }
 
+/* ------------------------------------------------------------------ */
+/* Framework comparison table — keep the scroll area visibly framed
+ * and use one-sided cell rules so adjacent cells never double up. */
+.framework-comparison-table {
+  max-width: 100%;
+  margin-block: 1.5rem;
+  overflow: hidden;
+  border: 1px solid
+    color-mix(in srgb, var(--color-fd-foreground) 28%, transparent);
+  background: var(--color-fd-card);
+}
+
+/* Keep Fumadocs' inner wrapper as the scroll container. The non-scrolling
+ * parent owns the border, so all four sides remain visible while the table
+ * moves horizontally beneath it. */
+.framework-comparison-table > div {
+  margin: 0;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-gutter: stable;
+}
+
+.framework-comparison-table table {
+  min-width: 78rem;
+  margin: 0;
+  border: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.framework-comparison-table th,
+.framework-comparison-table td {
+  border: 0 !important;
+  border-right: 1px solid var(--color-fd-border) !important;
+  border-bottom: 1px solid var(--color-fd-border) !important;
+}
+
+.framework-comparison-table th:last-child,
+.framework-comparison-table td:last-child {
+  border-right: 0 !important;
+}
+
+.framework-comparison-table tbody tr:last-child td {
+  border-bottom: 0 !important;
+}
+
+.comparison-status {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.comparison-status--strong {
+  color: hsl(142, 60%, 32%);
+}
+
+.comparison-status--partial {
+  color: hsl(35, 85%, 35%);
+}
+
+.comparison-status--unsupported {
+  color: hsl(0, 68%, 45%);
+}
+
+.dark .comparison-status--strong {
+  color: hsl(142, 55%, 62%);
+}
+
+.dark .comparison-status--partial {
+  color: hsl(40, 85%, 65%);
+}
+
+.dark .comparison-status--unsupported {
+  color: hsl(0, 75%, 68%);
+}
+
+/* ------------------------------------------------------------------ */
+/* FAQ inline code — each `<details>` is `not-prose` so prose rules
+ * never leak into the accordion, which also drops the typography
+ * plugin's inline-code chip. Re-apply it to the question and the
+ * answer so `code` reads identically to the surrounding prose.
+ * `:not(pre) >` keeps fenced code blocks inside answers untouched. */
+.faq-item :not(pre) > code {
+  padding: 0 4px;
+  border: solid 1px var(--color-fd-border);
+  border-radius: 4px;
+  font-size: 0.8em;
+  font-weight: 400;
+  background: var(--color-fd-muted);
+  color: var(--color-fd-foreground);
+}
+
 html {
   scrollbar-gutter: stable;
 }
@@ -788,4 +879,15 @@ html > body[data-scroll-locked] {
 [data-paused="true"],
 [data-paused="true"] * {
   animation-play-state: paused !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* A page that cannot serve the reader's language renders only the     */
+/* <LanguageUnsupported> empty state. The table of contents lives      */
+/* outside that subtree and is built server-side from the page's       */
+/* headings, so it has to be hidden from here — otherwise it lists     */
+/* sections that are not on screen.                                    */
+/* ------------------------------------------------------------------ */
+#nd-page:has([data-language-unsupported]) #nd-toc {
+  display: none;
 }

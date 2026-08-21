@@ -40,11 +40,12 @@ class MetricData(BaseModel):
     model_config = make_model_config(extra="ignore")
 
     name: str
-    threshold: float
-    success: bool
+    threshold: Optional[float] = None
+    success: Optional[bool] = None
     score: Optional[float] = None
     reason: Optional[str] = None
     strict_mode: Optional[bool] = Field(False, alias="strictMode")
+    flaky: bool = False
     evaluation_model: Optional[str] = Field(None, alias="evaluationModel")
     error: Optional[str] = None
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")

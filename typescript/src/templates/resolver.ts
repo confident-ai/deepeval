@@ -1,12 +1,14 @@
 import nunjucks from "nunjucks";
 // Per-feature bundles, mirroring deepeval/templates/<feature>/templates.json.
 // scripts/compile_metric_templates.py emits these into BOTH packages.
-import metricsBundle from "./metrics/templates.json";
+import metricsBundle from "@/templates/metrics/templates.json";
+import simulatorBundle from "@/templates/simulator/templates.json";
 const FRAGMENTS_KEY = "_fragments";
 
 type TemplateBundle = Record<string, Record<string, string>>;
 const BUNDLES: Record<string, TemplateBundle> = {
   metrics: metricsBundle as unknown as TemplateBundle,
+  simulator: simulatorBundle as unknown as TemplateBundle,
 };
 
 function getBundle(feature: string): TemplateBundle {
@@ -48,6 +50,12 @@ function pyRepr(v: unknown): string {
   if (typeof v === "number") return String(v);
   if (Array.isArray(v)) return "[" + v.map(pyRepr).join(", ") + "]";
   if (typeof v === "object") {
+    // Stands in for a Python `__repr__`: an `MLLMImage` in a list must render as
+    // the bare `[DEEPEVAL:IMAGE:id]`, not as a dict of its fields.
+    const own = (v as { toString?: unknown }).toString;
+    if (typeof own === "function" && own !== Object.prototype.toString) {
+      return String(v);
+    }
     return (
       "{" +
       Object.entries(v as Record<string, unknown>)

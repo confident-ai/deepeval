@@ -1,6 +1,6 @@
 {
   "name": "deepeval",
-  "version": "0.1.31",
+  "version": "0.9.11",
   "description": "The LLM Evaluation Framework for TypeScript",
   "repository": {
     "type": "git",
@@ -23,7 +23,12 @@
       "require": "./dist/dataset/index.js",
       "types": "./dist/dataset/index.d.ts"
     },
-    "./testCase": {
+    "./metrics": {
+      "import": "./dist/metrics/index.js",
+      "require": "./dist/metrics/index.js",
+      "types": "./dist/metrics/index.d.ts"
+    },
+    "./test-case": {
       "import": "./dist/test-case/index.js",
       "require": "./dist/test-case/index.js",
       "types": "./dist/test-case/index.d.ts"
@@ -33,10 +38,20 @@
       "require": "./dist/tracing/index.js",
       "types": "./dist/tracing/index.d.ts"
     },
+    "./models": {
+      "import": "./dist/models/index.js",
+      "require": "./dist/models/index.js",
+      "types": "./dist/models/index.d.ts"
+    },
     "./confident": {
       "import": "./dist/confident/index.js",
       "require": "./dist/confident/index.js",
       "types": "./dist/confident/index.d.ts"
+    },
+    "./prompt": {
+      "import": "./dist/prompt/index.js",
+      "require": "./dist/prompt/index.js",
+      "types": "./dist/prompt/index.d.ts"
     },
     "./openai": {
       "import": "./dist/openai/index.js",
@@ -58,10 +73,28 @@
       "require": "./dist/integrations/openai-agents/index.js",
       "types": "./dist/integrations/openai-agents/index.d.ts"
     },
+    "./integrations/mastra": {
+      "import": "./dist/integrations/mastra/index.js",
+      "require": "./dist/integrations/mastra/index.js",
+      "types": "./dist/integrations/mastra/index.d.ts"
+    },
+    "./integrations/openinference": {
+      "import": "./dist/integrations/openinference/index.js",
+      "require": "./dist/integrations/openinference/index.js",
+      "types": "./dist/integrations/openinference/index.d.ts"
+    },
     "./integrations": {
       "import": "./dist/integrations/index.js",
       "require": "./dist/integrations/index.js",
       "types": "./dist/integrations/index.d.ts"
+    },
+    "./vitest": {
+      "import": "./dist/integrations/vitest/index.mjs",
+      "types": "./dist/integrations/vitest/index.d.mts"
+    },
+    "./vitest/global-setup": {
+      "import": "./dist/integrations/vitest/global-setup.mjs",
+      "types": "./dist/integrations/vitest/global-setup.d.mts"
     }
   },
   "typesVersions": {
@@ -72,14 +105,23 @@
       "dataset": [
         "dist/dataset/index.d.ts"
       ],
-      "testCase": [
+      "metrics": [
+        "dist/metrics/index.d.ts"
+      ],
+      "test-case": [
         "dist/test-case/index.d.ts"
       ],
       "tracing": [
         "dist/tracing/index.d.ts"
       ],
+      "models": [
+        "dist/models/index.d.ts"
+      ],
       "confident": [
         "dist/confident/index.d.ts"
+      ],
+      "prompt": [
+        "dist/prompt/index.d.ts"
       ],
       "openai": [
         "dist/openai/index.d.ts"
@@ -93,8 +135,17 @@
       "integrations/openai-agents": [
         "dist/integrations/openai-agents/index.d.ts"
       ],
+      "integrations/mastra": [
+        "dist/integrations/mastra/index.d.ts"
+      ],
+      "integrations/openinference": [
+        "dist/integrations/openinference/index.d.ts"
+      ],
       "integrations": [
         "dist/integrations/index.d.ts"
+      ],
+      "vitest": [
+        "dist/integrations/vitest/index.d.ts"
       ],
       "*": [
         "dist/*.d.ts"
@@ -105,8 +156,15 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc-alias && npm run build:inspect-ui",
+    "build:inspect-ui": "tsc -p tsconfig.inspect.json && node scripts/mark-inspect-ui-esm.mjs",
+    "prepublishOnly": "npm run build",
     "test": "jest",
+    "test:e2e": "node dist/cli/index.js test run tests/deepeval-test-run-test/suites --identifier ts-e2e",
+    "test:e2e:conversational": "node dist/cli/index.js test run tests/deepeval-test-run-test/conversational --identifier ts-e2e-conversational",
+    "test:e2e:negative": "node dist/cli/index.js test run tests/deepeval-test-run-test/negative",
+    "typecheck:test": "tsc -p tsconfig.test.json",
+    "check:env-parity": "node scripts/check-env-parity.mjs",
     "lint": "eslint",
     "lint:fix": "eslint --fix"
   },
@@ -121,9 +179,9 @@
     "@opentelemetry/sdk-trace-base": "^2.2.0",
     "@opentelemetry/sdk-trace-node": "^2.2.0",
     "@opentelemetry/semantic-conventions": "^1.37.0",
-    "@sentry/node": "^10.21.0",
     "axios": "^1.6.0",
     "cli-progress": "^3.12.0",
+    "commander": "^14.0.3",
     "csv-parser": "^3.2.0",
     "dotenv": "^16.5.0",
     "nunjucks": "^3.2.4",
@@ -137,11 +195,16 @@
   },
   "devDependencies": {
     "@ai-sdk/openai": "^3.0.30",
+    "@babel/core": "^7.29.7",
+    "@babel/preset-env": "^7.29.7",
+    "@babel/preset-typescript": "^7.29.7",
     "@eslint/js": "^9.38.0",
     "@google/genai": "^2.8.0",
     "@jest/globals": "^29.5.0",
     "@langchain/core": "1.1.31",
     "@langchain/openai": "^1.2.9",
+    "@mastra/core": "^1.51.0",
+    "@mastra/observability": "^1.16.1",
     "@openai/agents": "^0.5.4",
     "@opentelemetry/core": "^2.6.0",
     "@types/cli-progress": "^3.11.0",
@@ -149,8 +212,10 @@
     "@types/node": "^20.17.30",
     "@types/nunjucks": "^3.2.6",
     "@types/papaparse": "^5.3.16",
+    "@types/react": "^19.2.18",
     "@types/uuid": "^9.0.0",
     "ai": "^6.0.97",
+    "babel-jest": "^29.7.0",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^16.4.0",
@@ -161,8 +226,10 @@
     "prettier": "3.6.2",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.9.1",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.46.2"
+    "typescript-eslint": "^8.46.2",
+    "vitest": "^4.1.10"
   },
   "lint-staged": {
     "*.js": "eslint --cache --fix",
@@ -173,9 +240,12 @@
     "@aws-sdk/client-bedrock-runtime": ">=3.0.0",
     "@google/genai": ">=1.0.0",
     "@langchain/core": "1.1.31",
+    "@mastra/core": ">=1.16.0-0 <2.0.0-0",
+    "@mastra/observability": ">=1.16.0-0 <2.0.0-0",
     "@openai/agents": "^0.5.4",
     "ai": ">=5.0.0",
-    "ollama": ">=0.5.0"
+    "ollama": ">=0.5.0",
+    "vitest": ">=1.0.0"
   },
   "peerDependenciesMeta": {
     "@anthropic-ai/sdk": {
@@ -190,6 +260,12 @@
     "@langchain/core": {
       "optional": true
     },
+    "@mastra/core": {
+      "optional": true
+    },
+    "@mastra/observability": {
+      "optional": true
+    },
     "@openai/agents": {
       "optional": true
     },
@@ -198,6 +274,13 @@
     },
     "ollama": {
       "optional": true
+    },
+    "vitest": {
+      "optional": true
     }
+  },
+  "optionalDependencies": {
+    "ink": "^7.1.1",
+    "react": "^19.2.8"
   }
 }

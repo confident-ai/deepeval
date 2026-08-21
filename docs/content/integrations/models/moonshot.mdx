@@ -2,6 +2,7 @@
 # id: moonshot
 title: Moonshot
 sidebar_label: Moonshot
+languages: [python, typescript]
 ---
 
 DeepEval's integration with Moonshot AI allows you to use any Moonshot models to power all of DeepEval's metrics.
@@ -17,7 +18,7 @@ deepeval set-moonshot \
 ```
 
 :::info
-The CLI command above sets Moonshot as the default provider for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset Moonshot:
+The CLI command above sets Moonshot as the default provider for all metrics, unless overridden in code. To use a different default model provider, you must first unset Moonshot:
 
 ```bash
 deepeval unset-moonshot
@@ -30,16 +31,20 @@ You can persist CLI settings with the optional `--save` flag.
 See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
 :::
 
-### Python
+### In Code
 
-Alternatively, you can define `KimiModel` directly in python code:
+Alternatively, you can define `KimiModel` directly in code:
+
+<Switch>
+
+<Case id="python">
 
 <Tabs items={["Python", "ENV"]}>
 <Tab value="Python">
 
 ```python
-from deepeval.models import KimiModel
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import KimiModel
 
 model = KimiModel(
     model="kimi-k2-0711-preview",
@@ -77,8 +82,69 @@ There are **ZERO** mandatory and **SIX** optional parameters when creating an `K
 - [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `MOONSHOT_COST_PER_OUTPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
 - [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the OpenAI `chat.completions.create(...)` call.
 
+</Case>
+
+<Case id="typescript">
+
+<Tabs items={["TypeScript", "ENV"]}>
+<Tab value="TypeScript">
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { KimiModel } from "deepeval/models";
+
+const model = new KimiModel({
+  model: "kimi-k2-0711-preview",
+  apiKey: "your-api-key",
+  temperature: 0,
+});
+
+const answerRelevancy = new AnswerRelevancyMetric({ model });
+```
+
+</Tab>
+<Tab value="ENV">
+
+To use any Moonshot model directly in `deepeval`, set `MOONSHOT_MODEL_NAME` and `MOONSHOT_API_KEY` in your `env` and create a `KimiModel` with no arguments:
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { KimiModel } from "deepeval/models";
+
+const answerRelevancy = new AnswerRelevancyMetric({
+  model: new KimiModel(),
+});
+```
+
+</Tab>
+</Tabs>
+
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `KimiModel`:
+
+- [Optional] `model`: A string specifying the name of the Kimi model to use. Defaults to `MOONSHOT_MODEL_NAME` if not passed; falls back to `moonshot-v1-8k` if unset.
+- [Optional] `apiKey`: A string specifying your Kimi API key for authentication. Defaults to `MOONSHOT_API_KEY` if not passed; raises an error at runtime if unset.
+- [Optional] `baseURL`: A string specifying the base URL for the Moonshot API endpoint. Defaults to `MOONSHOT_BASE_URL` if not passed; falls back to `https://api.moonshot.cn/v1` if unset. Use `https://api.moonshot.ai/v1` for the international endpoint.
+- [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
+- [Optional] `defaultHeaders`: An object of extra HTTP headers sent with every request.
+- [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+- [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+
+Any other key you pass is forwarded as-is to the OpenAI `chat.completions.create(...)` call, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new KimiModel({
+  model: "moonshot-v1-8k",
+  top_p: 0.9,
+  max_tokens: 512,
+});
+```
+
+</Case>
+
+</Switch>
+
 :::tip
-Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://docs.together.ai/docs/inference-parameters).
+Before passing additional generation parameters, we request you to double check the params supported by the model and your model provider in their [official docs](https://docs.together.ai/docs/inference-parameters).
 :::
 
 ### Available Moonshot Models

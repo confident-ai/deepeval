@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import pytest
 
 from deepeval.errors import MissingTestCaseParamsError
@@ -7,6 +9,7 @@ from deepeval.metrics.g_eval.utils import (
     construct_geval_upload_payload,
     construct_non_turns_test_case_string,
     construct_test_case_string,
+    calculate_weighted_summed_score,
 )
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
@@ -30,6 +33,41 @@ class DummyMetric:
 class DummyConversationalMetric:
     __name__ = "DummyConversationalMetric"
     error = None
+
+
+def create_raw_response(tokens):
+    return SimpleNamespace(
+        choices=[
+            SimpleNamespace(
+                logprobs=SimpleNamespace(content=tokens),
+            )
+        ]
+    )
+
+
+def create_token(token, top_token):
+    return SimpleNamespace(
+        token=token,
+        top_logprobs=[SimpleNamespace(token=top_token, logprob=0)],
+    )
+
+
+def test_calculate_weighted_summed_score_uses_final_score_token():
+    raw_response = create_raw_response(
+        [
+            create_token("9", "1"),
+            create_token("because", "because"),
+            create_token("9", "9"),
+        ]
+    )
+
+    assert calculate_weighted_summed_score(9, raw_response) == 9
+
+
+def test_calculate_weighted_summed_score_with_single_score_token():
+    raw_response = create_raw_response([create_token("6", "4")])
+
+    assert calculate_weighted_summed_score(6, raw_response) == 4
 
 
 def test_geval_accepts_metadata_and_tags():

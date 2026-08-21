@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
@@ -18,18 +18,19 @@ class ExactMatchMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 1,
+        threshold: Optional[float] = 1,
         verbose_mode: bool = False,
+        flaky: bool = False,
     ):
         self.threshold = threshold
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
             test_case,
@@ -56,7 +57,7 @@ class ExactMatchMetric(BaseMetric):
                 self.score = self.precision = self.recall = self.f1 = 0.0
                 self.reason = "The actual and expected outputs are different."
 
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
 
             if self.verbose_mode:
                 self.verbose_logs = construct_verbose_logs(
@@ -80,16 +81,6 @@ class ExactMatchMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         )
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

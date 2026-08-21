@@ -23,6 +23,7 @@ from deepeval.metrics.retrieval_context_display import id_retrieval_context
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import MLLMImage
 import deepeval.metrics.contextual_precision.schema as cpschema
+from deepeval.templates import make_template_class
 
 
 def _contextual_precision_verdict_fields(
@@ -42,6 +43,9 @@ def _contextual_precision_verdict_fields(
     return document_count_str, context_to_display, multimodal_note
 
 
+ContextualPrecisionTemplate = make_template_class("ContextualPrecisionMetric")
+
+
 class ContextualPrecisionMetric(BaseMetric):
     _required_params: List[SingleTurnParams] = [
         SingleTurnParams.INPUT,
@@ -51,12 +55,16 @@ class ContextualPrecisionMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
+        evaluation_template: Type[
+            ContextualPrecisionTemplate
+        ] = ContextualPrecisionTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.include_reason = include_reason
@@ -65,13 +73,14 @@ class ContextualPrecisionMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         multimodal = test_case.multimodal
@@ -99,7 +108,6 @@ class ContextualPrecisionMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -119,7 +127,7 @@ class ContextualPrecisionMetric(BaseMetric):
                 )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason(input, multimodal)
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -134,7 +142,6 @@ class ContextualPrecisionMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         multimodal = test_case.multimodal
@@ -174,7 +181,7 @@ class ContextualPrecisionMetric(BaseMetric):
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(input, multimodal)
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -352,16 +359,6 @@ class ContextualPrecisionMetric(BaseMetric):
         # Calculate weighted cumulative precision
         score = sum_weighted_precision_at_k / relevant_nodes_count
         return 0 if self.strict_mode and score < self.threshold else score
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

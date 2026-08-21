@@ -15,12 +15,14 @@
       "toolsCalled": [
         {
           "name": "search",
+          "type": "FUNCTION",
           "inputParameters": {
             "query": "search query"
           }
         },
         {
           "name": "calculate",
+          "type": "FUNCTION",
           "inputParameters": {
             "expr": "2+2"
           }
@@ -28,7 +30,8 @@
       ],
       "expectedTools": [
         {
-          "name": "search"
+          "name": "search",
+          "type": "FUNCTION"
         }
       ]
     }

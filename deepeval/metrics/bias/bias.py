@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Type
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
@@ -21,6 +21,10 @@ from deepeval.metrics.bias.schema import (
     Verdicts,
     BiasScoreReason,
 )
+from deepeval.templates import make_template_class
+
+
+BiasTemplate = make_template_class("BiasMetric")
 
 
 class BiasMetric(BaseMetric):
@@ -31,12 +35,14 @@ class BiasMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
+        evaluation_template: Type[BiasTemplate] = BiasTemplate,
     ):
         self.threshold = 0 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -45,13 +51,14 @@ class BiasMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(
@@ -77,7 +84,6 @@ class BiasMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -89,7 +95,7 @@ class BiasMetric(BaseMetric):
                 )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
-                self.success = self.score <= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -105,7 +111,6 @@ class BiasMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(
@@ -135,7 +140,7 @@ class BiasMetric(BaseMetric):
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
-            self.success = self.score <= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -282,8 +287,10 @@ class BiasMetric(BaseMetric):
         score = bias_count / number_of_verdicts
         return 1 if self.strict_mode and score > self.threshold else score
 
-    def is_successful(self) -> bool:
-        if self.error is not None:
+    def is_successful(self) -> Optional[bool]:
+        if self.threshold is None:
+            self.success = None
+        elif self.error is not None:
             self.success = False
         else:
             try:

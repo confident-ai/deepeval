@@ -1,29 +1,39 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
-import { ConversationalTestCase, MultiTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
-import { MissingTestCaseParamsError } from "../../errors";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { resolveThreshold } from "@/metrics/base-metrics";
+import { ConversationalTestCase, MultiTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
+import { MissingTestCaseParamsError } from "@/errors";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
-} from "../conversational-utils";
-import { getTasks, taskStepsTakenText } from "./utils";
-import { TaskScoreSchema, ReasonSchema, type TaskScore } from "./schema";
+} from "@/metrics/conversational-utils";
+import { getTasks, taskStepsTakenText } from "@/metrics/mcp/utils";
+import {
+  TaskScoreSchema,
+  ReasonSchema,
+  type TaskScore,
+} from "@/metrics/mcp/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "MCPTaskCompletionMetric";
 
+export type MCPTaskCompletionTemplateOverride =
+  MetricTemplateOverride<"MCPTaskCompletionMetric">;
+
 export interface MCPTaskCompletionMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: MCPTaskCompletionTemplateOverride;
 }
 
 /**
@@ -34,12 +44,16 @@ export interface MCPTaskCompletionMetricOptions {
 export class MCPTaskCompletionMetric extends BaseConversationalMetric {
   constructor(options: MCPTaskCompletionMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [MultiTurnParams.ROLE, MultiTurnParams.CONTENT];
     const { model, usingNativeModel } = initializeModel(options.model);
     this.model = model;
@@ -65,7 +79,7 @@ export class MCPTaskCompletionMetric extends BaseConversationalMetric {
         tasks.map((task) =>
           generateWithSchema(
             this,
-            resolveTemplate("metrics", TEMPLATE_CLASS, "get_task_completion_score", {
+            this.getPrompt("get_task_completion_score", {
               task,
               steps_taken: taskStepsTakenText(task),
             }),
@@ -77,8 +91,8 @@ export class MCPTaskCompletionMetric extends BaseConversationalMetric {
       const mean =
         taskScores.reduce((s, t) => s + t.score, 0) /
         Math.max(taskScores.length, 1);
-      this.score = this.strictMode && mean < this.threshold ? 0 : mean;
-      this.success = this.score >= this.threshold;
+      this.score = this.applyStrictMode(mean);
+      this.success = this.isSuccessful();
       this.reason = await this.generateReason(taskScores);
 
       this.verboseLogs = constructVerboseLogs(this, [
@@ -98,7 +112,7 @@ export class MCPTaskCompletionMetric extends BaseConversationalMetric {
     if (!this.includeReason) return undefined;
     const { reason } = await generateWithSchema(
       this,
-      resolveTemplate("metrics", TEMPLATE_CLASS, "generate_final_reason", {
+      this.getPrompt("generate_final_reason", {
         final_score: this.score,
         success: this.success,
         reasons: taskScores.map((t) => t.reason),
@@ -106,12 +120,6 @@ export class MCPTaskCompletionMetric extends BaseConversationalMetric {
       ReasonSchema,
     );
     return reason;
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

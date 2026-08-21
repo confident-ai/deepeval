@@ -1,11 +1,12 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { checkSingleTurnParams, constructVerboseLogs } from "../utils";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { checkSingleTurnParams, constructVerboseLogs } from "@/metrics/utils";
 
 export interface PatternMatchMetricOptions {
   pattern: string;
   ignoreCase?: boolean;
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
 }
@@ -20,9 +21,10 @@ export class PatternMatchMetric extends BaseMetric {
   private readonly regex: RegExp;
 
   constructor(options: PatternMatchMetricOptions) {
-    super(options.threshold ?? 1, {
+    super(resolveThreshold(options.threshold, 1), {
       verboseMode: options.verboseMode,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
     });
     this.requiredParams = [
       SingleTurnParams.INPUT,
@@ -53,7 +55,7 @@ export class PatternMatchMetric extends BaseMetric {
       this.reason = fullMatch
         ? "The actual output fully matches the pattern."
         : "The actual output does not match the pattern.";
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Pattern: ${this.pattern}`,
@@ -65,12 +67,6 @@ export class PatternMatchMetric extends BaseMetric {
     } finally {
       this.stopProgress();
     }
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

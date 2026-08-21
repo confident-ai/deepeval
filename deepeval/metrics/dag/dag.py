@@ -27,12 +27,13 @@ class DAGMetric(BaseMetric):
         name: str,
         dag: DeepAcyclicGraph,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
         _include_dag_suffix: bool = True,
+        flaky: bool = False,
     ):
         if (
             is_valid_dag_from_roots(
@@ -52,6 +53,7 @@ class DAGMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self._include_dag_suffix = _include_dag_suffix
 
     def measure(
@@ -59,7 +61,6 @@ class DAGMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         multimodal = test_case.multimodal
         check_llm_test_case_params(
@@ -75,6 +76,7 @@ class DAGMetric(BaseMetric):
         self.evaluation_cost = 0 if self.using_native_model else None
         self.input_tokens = 0 if self.using_native_model else None
         self.output_tokens = 0 if self.using_native_model else None
+        self._verbose_steps = []
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -85,7 +87,6 @@ class DAGMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -105,7 +106,6 @@ class DAGMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         multimodal = test_case.multimodal
         check_llm_test_case_params(
@@ -121,6 +121,7 @@ class DAGMetric(BaseMetric):
         self.evaluation_cost = 0 if self.using_native_model else None
         self.input_tokens = 0 if self.using_native_model else None
         self.output_tokens = 0 if self.using_native_model else None
+        self._verbose_steps = []
         with metric_progress_indicator(
             self,
             async_mode=True,
@@ -138,15 +139,53 @@ class DAGMetric(BaseMetric):
             )
             return self.score
 
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except:
-                self.success = False
-        return self.success
+    def upload(self):
+        from rich.console import Console
+        from deepeval.confident.api import Api, Endpoints, HttpMethods
+        from deepeval.metrics.dag.utils import construct_dag_upload_payload
+
+        api = Api()
+        payload = construct_dag_upload_payload(
+            name=self.name, dag=self.dag, multi_turn=False
+        )
+        data, _ = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.METRICS_ENDPOINT,
+            body=payload,
+        )
+        self.metric_id = data.get("id")
+        if self.metric_id:
+            Console().print(
+                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric "
+                f"'{self.name}' [DAG] uploaded successfully "
+                f"(id: [bold]{self.metric_id}[/bold])"
+            )
+        return data
+
+    def pull(self):
+        from rich.console import Console
+        from deepeval.confident.api import Api, Endpoints, HttpMethods
+        from deepeval.metrics.dag.utils import build_dag_from_payload
+
+        api = Api()
+        data, _ = api.send_request(
+            method=HttpMethods.GET,
+            endpoint=Endpoints.METRIC_ENDPOINT,
+            url_params={"name": self.name},
+        )
+        dag_json = data.get("dag")
+        if not dag_json:
+            raise ValueError(
+                f"Metric '{self.name}' has no DAG graph and cannot be pulled "
+                "as a DAGMetric."
+            )
+        self.dag = build_dag_from_payload(dag_json, multiturn=False)
+        self.metric_id = data.get("id")
+        Console().print(
+            "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric "
+            f"'{self.name}' [DAG] pulled successfully"
+        )
+        return data
 
     @property
     def __name__(self):

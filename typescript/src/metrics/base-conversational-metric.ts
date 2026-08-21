@@ -1,5 +1,5 @@
-import { ConversationalTestCase, MultiTurnParams } from "../test-case";
-import { BaseMetricCore } from "./base-metrics";
+import { ConversationalTestCase, MultiTurnParams } from "@/test-case";
+import { BaseMetricCore } from "@/metrics/base-metrics";
 
 export abstract class BaseConversationalMetric extends BaseMetricCore {
   protected requiredParams: Array<MultiTurnParams> = [];

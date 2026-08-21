@@ -2,6 +2,7 @@
 id: faq
 title: Frequently Asked Questions
 sidebar_label: FAQ
+languages: [python, typescript]
 ---
 
 
@@ -30,9 +31,25 @@ No. Think of it like Next.js and Vercel — related, but separate. `deepeval` is
 
 Confident AI is free to get started:
 
+<Switch>
+
+<Case id="python">
+
 ```bash
 deepeval login
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+export CONFIDENT_API_KEY="confident_us_..."
+```
+
+</Case>
+
+</Switch>
 
 ### What data does `deepeval` collect?
 
@@ -225,9 +242,9 @@ This is almost always caused by **rate limits or insufficient API quota** on you
 Yes — this is one of `deepeval`'s core design goals. Use `deepeval test run` with Pytest:
 
 ```python title="test_llm_app.py"
-from deepeval import assert_test
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
+from deepeval import assert_test
 
 def test_my_app():
     test_case = LLMTestCase(input="...", actual_output="...")
@@ -244,6 +261,10 @@ The command returns a non-zero exit code on failure, so it integrates directly i
 
 Use `ConversationalTestCase` with conversational metrics:
 
+<Switch>
+
+<Case id="python">
+
 ```python
 from deepeval.test_case import Turn, ConversationalTestCase
 from deepeval.metrics import ConversationCompletenessMetric
@@ -257,6 +278,27 @@ test_case = ConversationalTestCase(
     ]
 )
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { Turn, ConversationalTestCase } from "deepeval/test-case";
+
+const testCase = new ConversationalTestCase({
+  turns: [
+    new Turn({ role: "user", content: "I need to return my shoes." }),
+    new Turn({ role: "assistant", content: "Sure! What's your order number?" }),
+    new Turn({ role: "user", content: "Order #12345" }),
+    new Turn({ role: "assistant", content: "Got it. I've initiated the return for you." }),
+  ],
+});
+```
+
+</Case>
+
+</Switch>
 
 You can also use `deepeval`'s `ConversationSimulator` to automatically generate realistic multi-turn conversations from `ConversationalGolden`s. See the [conversation simulator docs](/docs/conversation-simulator).
 
@@ -311,8 +353,8 @@ This is useful when you want a stronger (but more expensive) model for critical 
 Yes. Every metric in `deepeval` supports an `evaluation_template` parameter. You can subclass the metric's default template class and override specific prompt methods:
 
 ```python
-from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.metrics.answer_relevancy import AnswerRelevancyTemplate
+from deepeval.metrics import AnswerRelevancyMetric
 
 class MyTemplate(AnswerRelevancyTemplate):
     @staticmethod
@@ -344,9 +386,25 @@ Confident AI provides:
 
 It's free to get started:
 
+<Switch>
+
+<Case id="python">
+
 ```bash
 deepeval login
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+export CONFIDENT_API_KEY="confident_us_..."
+```
+
+</Case>
+
+</Switch>
 
 Learn more at the [Confident AI docs](https://www.confident-ai.com/docs).
 

@@ -28,33 +28,17 @@ function extractText(node: ReactNode): string {
 }
 
 /**
- * Mirrors the typography plugin's `.prose code` chip (border, muted
- * background, rounded corners, normal weight). The accordion header is
- * marked `not-prose`, so prose code styling never reaches the title —
- * we replicate it here, sized relative to the trigger text.
- */
-const questionCodeStyle: React.CSSProperties = {
-  padding: "0px 4px",
-  border: "solid 1px var(--color-fd-border)",
-  borderRadius: "4px",
-  fontSize: "0.8em",
-  fontWeight: 400,
-  background: "var(--color-fd-muted)",
-  color: "var(--color-fd-foreground)",
-};
-
-/**
  * Renders a question authored with Markdown-style `backticks` as inline
  * <code> spans for the accordion title, leaving the rest as plain text.
  * Authors get code formatting in questions without hand-writing JSX.
+ * The chip styling comes from `.faq-item` in global.css, shared with
+ * the answer body.
  */
 function renderQuestion(question: string): ReactNode {
   const segments = question.split(/(`[^`]+`)/g);
   return segments.map((segment, index) =>
     segment.length > 1 && segment.startsWith("`") && segment.endsWith("`") ? (
-      <code key={index} style={questionCodeStyle}>
-        {segment.slice(1, -1)}
-      </code>
+      <code key={index}>{segment.slice(1, -1)}</code>
     ) : (
       segment
     )
@@ -117,7 +101,7 @@ export const FAQs: React.FC<FAQsProps> = ({ qas }) => {
             <details
               key={plain}
               name={name}
-              className="group scroll-m-24 not-prose"
+              className="group scroll-m-24 not-prose faq-item"
             >
               <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-start font-medium text-fd-card-foreground focus-visible:bg-fd-accent focus-visible:outline-none [&::-webkit-details-marker]:hidden">
                 <ChevronRight className="size-4 shrink-0 text-fd-muted-foreground transition-transform duration-200 group-open:rotate-90" />

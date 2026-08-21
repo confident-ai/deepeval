@@ -2,7 +2,9 @@
 id: metrics-tool-permission
 title: Tool Permission
 sidebar_label: Tool Permission
+languages: [python]
 ---
+
 <MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={true} />
 
 The Tool Permission metric measures whether your agent only called tools it was **authorized** to, against a permission policy. Unlike the `ToolCorrectnessMetric`, which compares the tools that were called against the tools that were *expected*, this metric enforces **least privilege**: it flags any tool call outside the granted policy, regardless of whether the task was completed.
@@ -46,14 +48,15 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
-There is at least **ONE** required and **FOUR** optional parameters when creating a `ToolPermissionMetric`:
+There is at least **ONE** required and **FIVE** optional parameters when creating a `ToolPermissionMetric`:
 
 - `allowed_tools`: a list of permitted tool names (an allowlist). If provided, any called tool not in this list is unauthorized.
 - `denied_tools`: a list of forbidden tool names (a denylist). Any called tool in this list is unauthorized, and a denial always takes precedence over an allow.
-- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 1.0 (any unauthorized call fails).
+- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `1.0` (any unauthorized call fails).
 - [Optional] `include_reason`: a boolean which when set to `True`, includes a reason listing the unauthorized tools. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric to the console. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 At least one of `allowed_tools` or `denied_tools` must be provided.
 

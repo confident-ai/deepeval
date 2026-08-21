@@ -1,9 +1,10 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { checkSingleTurnParams, constructVerboseLogs } from "../utils";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { checkSingleTurnParams, constructVerboseLogs } from "@/metrics/utils";
 
 export interface ExactMatchMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
 }
@@ -18,9 +19,10 @@ export class ExactMatchMetric extends BaseMetric {
   f1?: number;
 
   constructor(options: ExactMatchMetricOptions = {}) {
-    super(options.threshold ?? 1, {
+    super(resolveThreshold(options.threshold, 1), {
       verboseMode: options.verboseMode,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
     });
     this.requiredParams = [
       SingleTurnParams.INPUT,
@@ -45,7 +47,7 @@ export class ExactMatchMetric extends BaseMetric {
         this.score = this.precision = this.recall = this.f1 = 0;
         this.reason = "The actual and expected outputs are different.";
       }
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Score: ${this.score.toFixed(2)}`,
@@ -55,12 +57,6 @@ export class ExactMatchMetric extends BaseMetric {
     } finally {
       this.stopProgress();
     }
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

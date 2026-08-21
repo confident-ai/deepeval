@@ -1,6 +1,6 @@
 import asyncio
 
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Type
 
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -22,6 +22,10 @@ from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.prompt_alignment import schema as paschema
+from deepeval.templates import make_template_class
+
+
+PromptAlignmentTemplate = make_template_class("PromptAlignmentMetric")
 
 
 class PromptAlignmentMetric(BaseMetric):
@@ -34,12 +38,16 @@ class PromptAlignmentMetric(BaseMetric):
     def __init__(
         self,
         prompt_instructions: List[str],
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
+        evaluation_template: Type[
+            PromptAlignmentTemplate
+        ] = PromptAlignmentTemplate,
     ):
         if len(prompt_instructions) == 0:
             raise ValueError("'prompt_instructions' must not be empty.")
@@ -52,13 +60,14 @@ class PromptAlignmentMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(
@@ -83,7 +92,6 @@ class PromptAlignmentMetric(BaseMetric):
                     test_case,
                     _show_indicator=False,
                     _in_component=_in_component,
-                    _log_metric_to_confident=_log_metric_to_confident,
                 )
                 loop.run_until_complete(
                     asyncio.wait_for(
@@ -101,7 +109,7 @@ class PromptAlignmentMetric(BaseMetric):
                 self.reason = self._generate_reason(
                     test_case.input, test_case.actual_output
                 )
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -118,7 +126,6 @@ class PromptAlignmentMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(
@@ -149,7 +156,7 @@ class PromptAlignmentMetric(BaseMetric):
             self.reason = await self._a_generate_reason(
                 test_case.input, test_case.actual_output
             )
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -264,16 +271,6 @@ class PromptAlignmentMetric(BaseMetric):
 
         score = alignment_count / number_of_verdicts
         return 0 if self.strict_mode and score < self.threshold else score
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

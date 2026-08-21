@@ -49,12 +49,13 @@ class CitationFaithfulnessMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 1.0,
+        threshold: Optional[float] = 1.0,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        flaky: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -63,13 +64,13 @@ class CitationFaithfulnessMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
             test_case,
@@ -94,14 +95,13 @@ class CitationFaithfulnessMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
                 self.verdict = self._generate_verdict(test_case)
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -117,7 +117,6 @@ class CitationFaithfulnessMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
             test_case,
@@ -141,7 +140,7 @@ class CitationFaithfulnessMetric(BaseMetric):
             self.verdict = await self._a_generate_verdict(test_case)
             self.score = self._calculate_score()
             self.reason = self._generate_reason()
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -200,16 +199,6 @@ class CitationFaithfulnessMetric(BaseMetric):
         faithful = self.verdict.verdict.strip().lower() == "faithful"
         score = 1.0 if faithful else 0.0
         return 0 if self.strict_mode and score < self.threshold else score
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

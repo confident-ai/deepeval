@@ -1,6 +1,6 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
-from typing import Dict, Optional, List, Tuple, Union
+from typing import Dict, Optional, List, Tuple, Union, Type
 from rich.progress import Progress
 
 from deepeval.metrics import BaseArenaMetric
@@ -30,6 +30,10 @@ from deepeval.metrics.g_eval.utils import (
     number_evaluation_steps,
 )
 from deepeval.utils import update_pbar
+from deepeval.templates import make_template_class
+
+
+ArenaGEvalTemplate = make_template_class("ArenaGEval")
 
 
 class ArenaGEval(BaseArenaMetric):
@@ -43,6 +47,7 @@ class ArenaGEval(BaseArenaMetric):
         async_mode: bool = True,
         verbose_mode: bool = False,
         _include_g_eval_suffix: bool = True,
+        evaluation_template: Type[ArenaGEvalTemplate] = ArenaGEvalTemplate,
     ):
         validate_criteria_and_evaluation_steps(criteria, evaluation_steps)
         self.name = name
@@ -58,6 +63,7 @@ class ArenaGEval(BaseArenaMetric):
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self._include_g_eval_suffix = _include_g_eval_suffix
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,

@@ -1,3 +1,7 @@
+<Switch>
+
+<Case id="python">
+
 <Tabs items={["Manual Instrumentation", "LangChain", "LangGraph", "OpenAI", "Pydantic AI", "AgentCore", "Strands", "Anthropic", "LlamaIndex", "OpenAI Agents", "Google ADK", "CrewAI"]}>
 <Tab value="Manual Instrumentation">
 
@@ -820,3 +824,262 @@ See the [CrewAI integration](/integrations/frameworks/crewai) for the full surfa
 
 </Tab>
 </Tabs>
+
+</Case>
+
+<Case id="typescript">
+
+<Tabs items={["Manual Instrumentation", "LangChain", "Mastra", "LangGraph", "OpenAI", "OpenAI Agents", "Vercel AI SDK"]}>
+<Tab value="Manual Instrumentation">
+
+Wrap the top-level function with `observe`, set trace-level fields with `updateCurrentTrace(...)`, and wrap inner functions you want to grade with `observe` too. Attach a component metric by passing `metrics` to `observe` and registering its test case with `updateCurrentSpan({ testCase })`:
+
+```typescript title="main.ts" showLineNumbers
+import {
+  observe,
+  updateCurrentSpan,
+  updateCurrentTrace,
+} from "deepeval/tracing";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+...
+
+const retrieve = observe({
+  type: "retriever",
+  fn: async (query: string): Promise<string[]> => ["..."],
+});
+
+const generate = observe({
+  type: "llm",
+  metrics: [new AnswerRelevancyMetric()],
+  fn: async (query: string, chunks: string[]): Promise<string> => {
+    const response = "..."; // await your LLM call here with `query` and `chunks`
+    updateCurrentSpan({
+      testCase: new LLMTestCase({
+        input: query,
+        actualOutput: response,
+        retrievalContext: chunks,
+      }),
+    });
+    return response;
+  },
+});
+
+const myAiAgent = observe({
+  type: "agent",
+  fn: async (query: string): Promise<string> => {
+    const chunks = await retrieve(query);
+    const answer = await generate(query, chunks);
+    updateCurrentTrace({ input: query, output: answer });
+    return answer;
+  },
+});
+
+for await (const golden of dataset.evalsIterator()) {
+  await myAiAgent((golden as Golden).input);
+}
+```
+
+The same pattern works on any observed function — retrievers, tool wrappers, sub-agents. See [tracing](/docs/evaluation-llm-tracing) for the full surface.
+
+</Tab>
+<Tab value="LangChain">
+
+Build your agent with `createAgent`, then pass `deepeval`'s `DeepEvalCallbackHandler` to its `invoke` method. Stage a component metric for the next LLM call with `nextLlmSpan(...)` — the handler drains it onto the first LLM span LangChain opens during the agent run:
+
+```typescript title="langchain-agent.ts" showLineNumbers
+import { createAgent } from "langchain";
+import { DeepEvalCallbackHandler } from "deepeval/integrations/langchain";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { nextLlmSpan } from "deepeval/tracing";
+...
+
+const agent = createAgent({
+  model: "openai:gpt-4o-mini",
+  tools: [multiply],
+  systemPrompt: "Be concise.",
+});
+
+const handler = new DeepEvalCallbackHandler({});
+
+const ask = (prompt: string) =>
+  agent.invoke(
+    { messages: [{ role: "user", content: prompt }] },
+    { callbacks: [handler] },
+  );
+
+for await (const golden of dataset.evalsIterator()) {
+  await nextLlmSpan({ metrics: [new AnswerRelevancyMetric()] }, () =>
+    ask((golden as Golden).input),
+  );
+}
+```
+
+`nextLlmSpan` is one-shot — only the first LLM span in the agent run picks up the metric, so later turns inside `createAgent`'s loop won't be scored. To score every LLM call, use `setTracingContext({ llmSpanContext: { metrics: [...] } }, ...)` or score end-to-end with trace-level metrics on `evalsIterator`. For retrievers use `nextRetrieverSpan(...)` the same way; for deterministic tool calls prefer `updateCurrentSpan(...)` inside the tool body. See the [LangChain integration](/integrations/frameworks/langchain) for the full surface.
+
+</Tab>
+<Tab value="Mastra">
+
+Register a `DeepEvalExporter` on your `Mastra` instance's `Observability` config, then stage a component metric for the next LLM call with `nextLlmSpan(...)`:
+
+```typescript title="mastra-agent.ts" showLineNumbers
+import { Observability } from "@mastra/observability";
+import { Mastra } from "@mastra/core/mastra";
+import { DeepEvalExporter } from "deepeval/integrations/mastra";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { nextLlmSpan } from "deepeval/tracing";
+...
+
+const mastra = new Mastra({
+  agents: { weatherAgent },
+  observability: new Observability({
+    configs: {
+      deepeval: {
+        serviceName: "weather-app",
+        exporters: [new DeepEvalExporter()],
+      },
+    },
+  }),
+});
+
+for await (const golden of dataset.evalsIterator()) {
+  await nextLlmSpan({ metrics: [new AnswerRelevancyMetric()] }, () =>
+    mastra.getAgent("weatherAgent").generate((golden as Golden).input),
+  );
+}
+```
+
+Mastra's `MODEL_GENERATION` spans arrive as LLM spans and its tool calls as tool spans, so `nextToolSpan(...)` works the same way. See the [Mastra integration](/integrations/frameworks/mastra) for the full surface.
+
+</Tab>
+<Tab value="LangGraph">
+
+Wire your `StateGraph`, then pass `deepeval`'s `DeepEvalCallbackHandler` to its `invoke` method. Stage a component metric for the next LLM call with `nextLlmSpan(...)` — the handler drains it onto the first LLM span the graph emits:
+
+```typescript title="langgraph-agent.ts" showLineNumbers
+import { StateGraph, MessagesAnnotation, START, END } from "@langchain/langgraph";
+import { DeepEvalCallbackHandler } from "deepeval/integrations/langchain";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { nextLlmSpan } from "deepeval/tracing";
+...
+
+const graph = new StateGraph(MessagesAnnotation)
+  .addNode("chatbot", chatbot)
+  .addEdge(START, "chatbot")
+  .addEdge("chatbot", END)
+  .compile();
+
+const handler = new DeepEvalCallbackHandler({});
+
+const ask = (prompt: string) =>
+  graph.invoke(
+    { messages: [{ role: "user", content: prompt }] },
+    { callbacks: [handler] },
+  );
+
+for await (const golden of dataset.evalsIterator()) {
+  await nextLlmSpan({ metrics: [new AnswerRelevancyMetric()] }, () =>
+    ask((golden as Golden).input),
+  );
+}
+```
+
+`nextLlmSpan` is one-shot — only the first LLM span the graph emits picks up the metric, so later loop turns through the `chatbot` node won't be scored. See the [LangGraph integration](/integrations/frameworks/langgraph) for the full surface.
+
+</Tab>
+<Tab value="OpenAI">
+
+Call `instrumentOpenAI(client)` once on the client you already construct. Every `chat.completions.create(...)`, `chat.completions.parse(...)`, and `responses.create(...)` call becomes an LLM span. Stage a component metric for one call with `nextLlmSpan(...)`:
+
+```typescript title="openai-app.ts" showLineNumbers
+import { OpenAI } from "openai";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { instrumentOpenAI } from "deepeval/openai";
+import { nextLlmSpan } from "deepeval/tracing";
+...
+
+const client = new OpenAI();
+instrumentOpenAI(client);
+
+const respond = (prompt: string) =>
+  client.chat.completions.create({
+    model: "gpt-4o",
+    messages: [{ role: "user", content: prompt }],
+  });
+
+for await (const golden of dataset.evalsIterator()) {
+  await nextLlmSpan({ metrics: [new AnswerRelevancyMetric()] }, () =>
+    respond((golden as Golden).input),
+  );
+}
+```
+
+See the [OpenAI integration](/integrations/frameworks/openai) for tool-calling and scope-wide `LlmSpanContext`.
+
+</Tab>
+<Tab value="OpenAI Agents">
+
+Register `DeepEvalTracingProcessor` once with the agents SDK, then stage a component metric for the next LLM call with `nextLlmSpan(...)` (or the agent span with `nextAgentSpan(...)`):
+
+```typescript title="openai-agents-app.ts" showLineNumbers
+import { Agent, run, addTraceProcessor } from "@openai/agents";
+import { DeepEvalTracingProcessor } from "deepeval/integrations/openai-agents";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { nextLlmSpan } from "deepeval/tracing";
+...
+
+addTraceProcessor(new DeepEvalTracingProcessor());
+
+const agent = new Agent({
+  name: "weatherAgent",
+  instructions: "Answer weather questions concisely.",
+  model: "gpt-4o-mini",
+  tools: [getWeather],
+});
+
+for await (const golden of dataset.evalsIterator()) {
+  await nextLlmSpan({ metrics: [new AnswerRelevancyMetric()] }, () =>
+    run(agent, (golden as Golden).input),
+  );
+}
+```
+
+See the [OpenAI Agents integration](/integrations/frameworks/openai-agents) for the full surface.
+
+</Tab>
+<Tab value="Vercel AI SDK">
+
+Call `configureAiSdkTracing(...)` once, pass the returned tracer into `experimental_telemetry` on every call you want traced, then stage a component metric with `nextLlmSpan(...)`:
+
+```typescript title="ai-sdk-agent.ts" showLineNumbers
+import { generateText } from "ai";
+import { openai } from "@ai-sdk/openai";
+import { configureAiSdkTracing } from "deepeval/integrations/ai-sdk";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { nextLlmSpan } from "deepeval/tracing";
+...
+
+const tracer = configureAiSdkTracing({ name: "weather-app" });
+
+const ask = (prompt: string) =>
+  generateText({
+    model: openai("gpt-4o-mini"),
+    prompt,
+    experimental_telemetry: { isEnabled: true, tracer },
+  });
+
+for await (const golden of dataset.evalsIterator()) {
+  await nextLlmSpan({ metrics: [new AnswerRelevancyMetric()] }, () =>
+    ask((golden as Golden).input),
+  );
+}
+```
+
+AI SDK emits no agent span — its root is the generation call itself — so stage metrics with `nextLlmSpan` / `nextToolSpan` / `nextRetrieverSpan`, or score the run end-to-end. See the [Vercel AI SDK integration](/integrations/frameworks/ai-sdk) for the full surface.
+
+</Tab>
+</Tabs>
+
+</Case>
+
+</Switch>

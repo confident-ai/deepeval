@@ -17,6 +17,7 @@
       "toolsCalled": [
         {
           "name": "Function tool: get_weather",
+          "type": "FUNCTION",
           "description": "Function tool",
           "output": "Rainy, 55°F",
           "inputParameters": {

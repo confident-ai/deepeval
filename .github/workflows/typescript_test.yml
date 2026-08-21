@@ -1,4 +1,4 @@
-name: TypeScript Tests
+name: Ts Tests
 
 on:
   pull_request:
@@ -31,6 +31,5 @@ jobs:
       - name: Run Jest tests
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
           CONFIDENT_TRACE_VERBOSE: 0
         run: npm test

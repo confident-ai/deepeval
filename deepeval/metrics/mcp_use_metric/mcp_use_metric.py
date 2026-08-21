@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Type
 
 from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
@@ -21,6 +21,10 @@ from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from .schema import MCPPrimitivesScore, MCPArgsScore
+from deepeval.templates import make_template_class
+
+
+MCPUseTemplate = make_template_class("MCPUseMetric")
 
 
 class MCPUseMetric(BaseMetric):
@@ -32,12 +36,14 @@ class MCPUseMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         strict_mode: bool = False,
         async_mode: bool = True,
         verbose_mode: bool = False,
+        flaky: bool = False,
+        evaluation_template: Type[MCPUseTemplate] = MCPUseTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -46,13 +52,14 @@ class MCPUseMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         multimodal = test_case.multimodal
         check_llm_test_case_params(
@@ -78,7 +85,6 @@ class MCPUseMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -107,7 +113,7 @@ class MCPUseMetric(BaseMetric):
                 self.reason = self._get_reason(
                     primitives_used_score, argument_correctness_score
                 )
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 steps = [
                     f"{available_primitives}",
                     f"{primitives_used}",
@@ -128,7 +134,6 @@ class MCPUseMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         multimodal = test_case.multimodal
         check_llm_test_case_params(
@@ -174,7 +179,7 @@ class MCPUseMetric(BaseMetric):
             self.reason = self._get_reason(
                 primitives_used_score, argument_correctness_score
             )
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             steps = [
                 f"{available_primitives}",
                 f"{primitives_used}",
@@ -396,16 +401,6 @@ class MCPUseMetric(BaseMetric):
         )
 
         return available_primitives, primitives_used
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

@@ -1,3 +1,6 @@
+import pytest
+
+
 def test_metrics_imports():
     """Test that all metrics can be imported."""
     from deepeval.metrics import (
@@ -269,7 +272,7 @@ def test_models_imports():
         DeepEvalBaseModel,
         DeepEvalBaseLLM,
         DeepEvalBaseEmbeddingModel,
-        GPTModel,
+        OpenAIModel,
         AzureOpenAIModel,
         LocalModel,
         OllamaModel,
@@ -292,7 +295,7 @@ def test_models_imports():
         DeepEvalBaseModel,
         DeepEvalBaseLLM,
         DeepEvalBaseEmbeddingModel,
-        GPTModel,
+        OpenAIModel,
         AzureOpenAIModel,
         LocalModel,
         OllamaModel,
@@ -312,6 +315,25 @@ def test_models_imports():
 
     for model_class in model_classes:
         assert model_class is not None
+
+
+@pytest.mark.parametrize(
+    "module_name",
+    [
+        "deepeval.models",
+        "deepeval.models.llms",
+        "deepeval.models.llms.openai_model",
+    ],
+)
+def test_gpt_model_alias_is_deprecated(module_name):
+    """'GPTModel' still resolves to 'OpenAIModel', but warns."""
+    import importlib
+
+    from deepeval.models import OpenAIModel
+
+    module = importlib.import_module(module_name)
+    with pytest.warns(DeprecationWarning, match="GPTModel"):
+        assert module.GPTModel is OpenAIModel
 
 
 def test_benchmarks_imports():

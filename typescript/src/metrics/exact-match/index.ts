@@ -1,1 +1,4 @@
-export { ExactMatchMetric, type ExactMatchMetricOptions } from "./exact-match";
+export {
+  ExactMatchMetric,
+  type ExactMatchMetricOptions,
+} from "@/metrics/exact-match/exact-match";

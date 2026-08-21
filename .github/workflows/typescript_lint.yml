@@ -1,4 +1,4 @@
-name: TypeScript Lint
+name: Ts Lint Lint Lint
 
 on:
   pull_request:

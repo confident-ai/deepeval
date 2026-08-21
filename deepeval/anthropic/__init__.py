@@ -14,6 +14,7 @@ except ImportError:
 if Anthropic or AsyncAnthropic:
     from deepeval.anthropic.patch import patch_anthropic_classes
     from deepeval.telemetry import capture_tracing_integration
+    from deepeval.tracing.integrations import Integration
 
-    with capture_tracing_integration("anthropic"):
+    with capture_tracing_integration(Integration.ANTHROPIC):
         patch_anthropic_classes()

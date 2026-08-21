@@ -1,0 +1,1 @@
+Only interrupt when the agent clearly errs, contradicts itself, asks something the user already answered, or is stuck. Prefer waiting through the full reply in almost all other cases.

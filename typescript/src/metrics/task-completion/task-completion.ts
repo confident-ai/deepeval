@@ -1,20 +1,27 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   printToolsCalled,
-} from "../utils";
-import { TaskAndOutcomeSchema, TaskCompletionVerdictSchema } from "./schema";
+} from "@/metrics/utils";
+import {
+  TaskAndOutcomeSchema,
+  TaskCompletionVerdictSchema,
+} from "@/metrics/task-completion/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "TaskCompletionMetric";
 
+export type TaskCompletionTemplateOverride =
+  MetricTemplateOverride<"TaskCompletionMetric">;
+
 export interface TaskCompletionMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   /** The task to evaluate against; auto-extracted from the trace when omitted. */
   task?: string;
   model?: DeepEvalBaseLLM | string;
@@ -22,6 +29,7 @@ export interface TaskCompletionMetricOptions {
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: TaskCompletionTemplateOverride;
 }
 
 /**
@@ -34,12 +42,15 @@ export class TaskCompletionMetric extends BaseMetric {
 
   constructor(options: TaskCompletionMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
@@ -65,16 +76,16 @@ export class TaskCompletionMetric extends BaseMetric {
 
       const { verdict, reason } = await generateWithSchema(
         this,
-        resolveTemplate("metrics", TEMPLATE_CLASS, "generate_verdict", {
+        this.getPrompt("generate_verdict", {
           task,
           actual_outcome: outcome,
         }),
         TaskCompletionVerdictSchema,
       );
 
-      this.score = this.strictMode && verdict < this.threshold ? 0 : verdict;
+      this.score = this.applyStrictMode(verdict);
       this.reason = reason ?? undefined;
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
       this.verboseLogs = constructVerboseLogs(this, [
         `Task: ${task}`,
         `Outcome: ${outcome}`,
@@ -91,24 +102,17 @@ export class TaskCompletionMetric extends BaseMetric {
   ): Promise<{ task: string; outcome: string }> {
     const prompt =
       testCase._traceDict != null
-        ? resolveTemplate(
-            "metrics",
-            TEMPLATE_CLASS,
-            "extract_task_and_outcome_from_trace",
-            { trace_json: JSON.stringify(testCase._traceDict) },
-          )
-        : resolveTemplate("metrics", TEMPLATE_CLASS, "extract_goal_and_outcome", {
+        ? this.getPrompt("extract_task_and_outcome_from_trace", {
+            trace_json: JSON.stringify(testCase._traceDict),
+          })
+        : this.getPrompt("extract_goal_and_outcome", {
             input: testCase.input,
             actual_output: testCase.actualOutput,
-            tools_called_formatted: printToolsCalled(testCase.toolsCalled ?? []),
+            tools_called_formatted: printToolsCalled(
+              testCase.toolsCalled ?? [],
+            ),
           });
     return generateWithSchema(this, prompt, TaskAndOutcomeSchema);
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {

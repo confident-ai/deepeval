@@ -65,7 +65,7 @@ def instrument_google_adk(
             "See deepeval/integrations/README.md."
         )
 
-    with capture_tracing_integration("google_adk"):
+    with capture_tracing_integration(Integration.GOOGLE_ADK):
         if not api_key:
             api_key = get_confident_api_key()
             if not api_key:

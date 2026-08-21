@@ -1,16 +1,24 @@
 import type { ZodType } from "zod";
-import { DeepEvalBaseLLM, type GenerationResult } from "../base-model";
-import { computeCost, extractJson, importOptional } from "../utils";
+import {
+  DeepEvalBaseLLM,
+  type ExtraGenerationParams,
+  type GenerationResult,
+} from "@/models/base-model";
+import { extractJson, importOptional } from "@/models/utils";
+import { bedrockContent } from "@/models/multimodal";
+import type { ModelNamespace } from "@/models/registry";
 
 const DEFAULT_BEDROCK_REGION = "us-east-1";
 
-export interface AmazonBedrockModelOptions {
+/** Any other key is merged into the Converse `inferenceConfig` (e.g. `topP`, `maxTokens`). */
+export interface AmazonBedrockModelOptions extends ExtraGenerationParams {
   model?: string;
   region?: string;
   awsAccessKeyId?: string;
   awsSecretAccessKey?: string;
   awsSessionToken?: string;
-  temperature?: number;
+  /** Defaults to `0`. Pass `null` to omit it from the request entirely. */
+  temperature?: number | null;
   costPerInputToken?: number;
   costPerOutputToken?: number;
 }
@@ -20,29 +28,38 @@ export class AmazonBedrockModel extends DeepEvalBaseLLM {
   private readonly awsAccessKeyId?: string;
   private readonly awsSecretAccessKey?: string;
   private readonly awsSessionToken?: string;
-  private readonly temperature?: number;
-  private readonly costPerInputToken?: number;
-  private readonly costPerOutputToken?: number;
+  private readonly extraParams: ExtraGenerationParams;
   private sdk?: any;
+  protected registryNamespace: ModelNamespace = "bedrock";
   private client?: any;
 
   constructor(options: AmazonBedrockModelOptions = {}) {
-    super(options.model ?? process.env.AWS_BEDROCK_MODEL_NAME);
+    const {
+      model,
+      region,
+      awsAccessKeyId,
+      awsSecretAccessKey,
+      awsSessionToken,
+      temperature,
+      costPerInputToken,
+      costPerOutputToken,
+      ...extraParams
+    } = options;
+
+    super(model ?? process.env.AWS_BEDROCK_MODEL_NAME);
     this.region =
-      options.region ??
+      region ??
       process.env.AWS_BEDROCK_REGION ??
       process.env.AWS_REGION ??
       DEFAULT_BEDROCK_REGION;
-    this.awsAccessKeyId =
-      options.awsAccessKeyId ?? process.env.AWS_ACCESS_KEY_ID;
+    this.awsAccessKeyId = awsAccessKeyId ?? process.env.AWS_ACCESS_KEY_ID;
     this.awsSecretAccessKey =
-      options.awsSecretAccessKey ?? process.env.AWS_SECRET_ACCESS_KEY;
-    this.awsSessionToken =
-      options.awsSessionToken ?? process.env.AWS_SESSION_TOKEN;
-    // Only sent when explicitly set — some models (e.g. reasoning models) reject `temperature`.
-    this.temperature = options.temperature;
-    this.costPerInputToken = options.costPerInputToken;
-    this.costPerOutputToken = options.costPerOutputToken;
+      awsSecretAccessKey ?? process.env.AWS_SECRET_ACCESS_KEY;
+    this.awsSessionToken = awsSessionToken ?? process.env.AWS_SESSION_TOKEN;
+    this.temperature = temperature;
+    this.costPerInputToken = costPerInputToken;
+    this.costPerOutputToken = costPerOutputToken;
+    this.extraParams = extraParams;
   }
 
   private async getSdk(): Promise<any> {
@@ -86,23 +103,25 @@ export class AmazonBedrockModel extends DeepEvalBaseLLM {
     const client = await this.getClient();
     const { ConverseCommand } = await this.getSdk();
 
+    const temperature = this.resolveTemperature();
+    const inferenceConfig: Record<string, unknown> = {
+      ...(temperature !== undefined && { temperature }),
+      ...this.extraParams,
+    };
+
     const response = await client.send(
       new ConverseCommand({
         modelId: this.modelName,
-        messages: [{ role: "user", content: [{ text: prompt }] }],
-        ...(this.temperature !== undefined && {
-          inferenceConfig: { temperature: this.temperature },
-        }),
+        messages: [{ role: "user", content: await bedrockContent(prompt) }],
+        ...(Object.keys(inferenceConfig).length > 0 && { inferenceConfig }),
       }),
     );
 
     const blocks: any[] = response.output?.message?.content ?? [];
     const text: string = blocks.map((block) => block.text ?? "").join("");
-    const cost = computeCost(
+    const cost = this.resolveCost(
       response.usage?.inputTokens,
       response.usage?.outputTokens,
-      this.costPerInputToken,
-      this.costPerOutputToken,
     );
 
     if (schema) {
@@ -113,9 +132,5 @@ export class AmazonBedrockModel extends DeepEvalBaseLLM {
 
   getModelName(): string {
     return this.modelName ?? "amazon-bedrock";
-  }
-
-  supportsMultimodal(): boolean {
-    return true;
   }
 }

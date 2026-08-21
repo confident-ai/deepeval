@@ -2,6 +2,7 @@
 id: evaluation-prompts
 title: Prompts
 sidebar_label: Prompts
+languages: [python]
 ---
 
 `deepeval` lets you evaluate prompts by associating them with test runs. A `Prompt` in `deepeval` contains the prompt template and model parameters used for generation. By linking a `Prompt` to a test run, you can attribute metric scores to specific prompts, enabling metrics-driven prompt selection and optimization for your LLM application.
@@ -30,8 +31,8 @@ To evaluate a prompt during end-to-end evaluation, pass your test cases and metr
 
 ```python title="main.py" showLineNumbers={true} {18}
 from somewhere import your_llm_app
-from deepeval.prompt import Prompt, PromptMessage
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.prompt import Prompt, PromptMessage
 from deepeval.test_case import LLMTestCase
 from deepeval import evaluate
 
@@ -68,8 +69,8 @@ To evaluate a prompt during end-to-end evaluation in CI/CD pipelines, use the `a
 import pytest
 
 from somewhere import your_llm_app
-from deepeval.prompt import Prompt, PromptMessage
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.prompt import Prompt, PromptMessage
 from deepeval.test_case import LLMTestCase
 from deepeval import assert_test
 
@@ -141,8 +142,8 @@ Based on the metric scores, you can iterate on different prompts to identify the
 ```python title="main.py" showLineNumbers={true} {13,20}
 from openai import OpenAI
 from deepeval.tracing import observe, update_llm_span
-from deepeval.prompt import Prompt, PromptMessage
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.prompt import Prompt, PromptMessage
 
 prompt_1 = Prompt(alias="First",  messages_template=[PromptMessage(role="system", content="You are a helpful assistant.")])
 

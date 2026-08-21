@@ -30,7 +30,7 @@ def pick_endpoint(api_key: str) -> str:
     """Select the Confident AI OTLP endpoint from the API key region prefix.
 
     Only `confident_eu_...` keys use the EU endpoint; every other key
-    (`confident_us_...`, `confident_au_...`, or anything else) uses the default.
+    (`confident_us_...` or anything else) uses the default.
     """
     if api_key.startswith("confident_eu_"):
         return "https://eu.otel.confident-ai.com"

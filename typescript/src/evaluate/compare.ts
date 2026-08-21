@@ -1,15 +1,22 @@
 import { MultiBar, type SingleBar, Presets } from "cli-progress";
-import { ArenaTestCase } from "../test-case";
-import { BaseArenaMetric } from "../metrics";
-import { MissingTestCaseParamsError } from "../errors";
+import { ArenaTestCase } from "@/test-case";
+import { BaseArenaMetric } from "@/metrics";
+import { MissingTestCaseParamsError } from "@/errors";
 import {
   DisplayConfig,
   ErrorConfig,
   DEFAULT_DISPLAY_CONFIG,
   DEFAULT_ERROR_CONFIG,
-} from "./configs";
-import { postExperiment } from "./confident";
-import { type ArenaCaseResult } from "./types";
+} from "@/evaluate/configs";
+import { postExperiment } from "@/evaluate/confident";
+import { type ArenaCaseResult } from "@/evaluate/types";
+import {
+  Entrypoint,
+  LoginPromptSurface,
+  captureEvaluationRun,
+  captureLoginPromptShown,
+  recordTestCase,
+} from "@/telemetry";
 
 const PURPLE = "\x1b[38;2;106;0;255m";
 const GREEN = "\x1b[38;2;25;227;160m";
@@ -34,6 +41,16 @@ export async function compare(
   testCases: ArenaTestCase[],
   metric: BaseArenaMetric,
   options: CompareOptions = {},
+): Promise<Record<string, number>> {
+  return captureEvaluationRun(Entrypoint.COMPARE, () =>
+    runComparison(testCases, metric, options),
+  );
+}
+
+async function runComparison(
+  testCases: ArenaTestCase[],
+  metric: BaseArenaMetric,
+  options: CompareOptions,
 ): Promise<Record<string, number>> {
   const display: Required<DisplayConfig> = {
     ...DEFAULT_DISPLAY_CONFIG,
@@ -97,6 +114,7 @@ export async function compare(
   try {
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
+      recordTestCase(testCase);
       const caseBar = caseBars[i];
       const caseStart = Date.now();
       let winner: string | null = null;
@@ -146,7 +164,12 @@ export async function compare(
   for (const w of winners) counts[w] = (counts[w] ?? 0) + 1;
 
   if (display.printResults) {
-    printArenaCompleted(counts, runDuration, winners.length, hasCost ? totalCost : 0);
+    printArenaCompleted(
+      counts,
+      runDuration,
+      winners.length,
+      hasCost ? totalCost : 0,
+    );
   }
 
   // Post to Confident AI as an experiment (no-op unless logged in).
@@ -156,6 +179,8 @@ export async function compare(
     options.name ?? "compare()",
   );
   if (display.printResults && !link) {
+    // The footer is the login pitch, so printing it is the prompt.
+    captureLoginPromptShown(LoginPromptSurface.POST_ARENA);
     printArenaFooter();
   }
 
@@ -171,7 +196,10 @@ function printArenaCompleted(
   const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   const breakdown = sorted.length
     ? sorted
-        .map(([name, wins]) => `    » ${GREEN}${BOLD}${name}${RESET}: ${wins} wins`)
+        .map(
+          ([name, wins]) =>
+            `    » ${GREEN}${BOLD}${name}${RESET}: ${wins} wins`,
+        )
         .join("\n")
     : "No winners";
   const cost = tokenCost ? `${tokenCost} USD` : "None";

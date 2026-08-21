@@ -2,6 +2,7 @@
 id: vibe-coder-quickstart
 title: Vibe Coder 5-min Quickstart
 sidebar_label: Vibe Coder 5-min Quickstart
+languages: [python, typescript]
 ---
 
 import { GitMerge, Terminal } from "lucide-react";
@@ -12,7 +13,7 @@ If you want to understand the loop _before_ wiring it up, read [Vibe Coding with
 
 ## Install the Agent Skill
 
-The [`deepeval` Agent Skill](https://github.com/confident-ai/deepeval/tree/main/skills/deepeval) teaches your coding assistant how to pick the right test shape (single-turn / multi-turn / component-level), reuse or generate goldens, write a committed `tests/evals/` pytest suite, run `deepeval test run`, read failures, and iterate.
+The [`deepeval` Agent Skill](https://github.com/confident-ai/deepeval/tree/main/skills/deepeval) teaches your coding assistant how to pick the right test shape (single-turn / multi-turn / component-level), reuse or generate goldens, write a committed `tests/evals/` suite with <Term py="pytest" ts="vitest"/>, run <Term py="deepeval test run" ts="npx deepeval test run"/>, read failures, and iterate.
 
 <Tabs items={["skills CLI", "Manual"]}>
 <Tab value="skills CLI">
@@ -171,15 +172,31 @@ With the [Agent Skill](#install-the-agent-skill) installed, you can shorten the 
 
 DeepEval is local-first, so the loop above works fully offline. Connecting to [Confident AI](https://www.confident-ai.com) extends the loop across your team:
 
+<Switch>
+
+<Case id="python">
+
 ```bash
 deepeval login
 ```
 
-Every `deepeval test run` your agent kicks off pushes a testing report your reviewers can open with `deepeval view`. Production monitoring sends new failure cases straight back into the dataset, so the next iteration round picks up real regressions automatically.
+</Case>
+
+<Case id="typescript">
+
+```bash
+npx deepeval login
+```
+
+</Case>
+
+</Switch>
+
+Every <Term py="deepeval test run" ts="npx deepeval test run"/> your agent kicks off pushes a testing report your reviewers can open with <Term py="deepeval view" ts="npx deepeval view"/>. Production monitoring sends new failure cases straight back into the dataset, so the next iteration round picks up real regressions automatically.
 
 ## Next Steps
 
-You've got the install — if you want to understand what's actually running when your coding agent calls `deepeval test run`, the loop walkthrough breaks it down stage by stage.
+You've got the install — if you want to understand what's actually running when your coding agent calls <Term py="deepeval test run" ts="npx deepeval test run"/>, the loop walkthrough breaks it down stage by stage.
 
 <Cards>
   <Card

@@ -1,20 +1,26 @@
 import type { ZodType } from "zod";
-import { DeepEvalBaseLLM, type GenerationResult } from "../base-model";
 import {
-  computeCost,
-  extractJson,
-  importOptional,
-  requireApiKey,
-} from "../utils";
-import { anthropicContent } from "../multimodal";
+  DeepEvalBaseLLM,
+  type ExtraGenerationParams,
+  type GenerationResult,
+} from "@/models/base-model";
+import { parseBool } from "@/config/utils";
+import { extractJson, importOptional, requireApiKey } from "@/models/utils";
+import { anthropicContent } from "@/models/multimodal";
+import { defaultModelName, type ModelNamespace } from "@/models/registry";
 
-const DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 4096;
+// Anthropic's `max_tokens` caps thinking plus response text, and its minimum
+// thinking budget is 1024, so a thinking request needs headroom for both.
+const DEFAULT_THINKING_MAX_TOKENS = 8192;
+const MIN_THINKING_BUDGET_TOKENS = 1024;
 
-export interface AnthropicModelOptions {
+/** Any other key is forwarded to `messages.create(...)`. */
+export interface AnthropicModelOptions extends ExtraGenerationParams {
   model?: string;
   apiKey?: string;
-  temperature?: number;
+  /** Defaults to `0`. Pass `null` to omit it from the request entirely. */
+  temperature?: number | null;
   maxTokens?: number;
   costPerInputToken?: number;
   costPerOutputToken?: number;
@@ -22,25 +28,33 @@ export interface AnthropicModelOptions {
 
 export class AnthropicModel extends DeepEvalBaseLLM {
   private readonly apiKey: string;
-  private readonly temperature?: number;
-  private readonly maxTokens: number;
-  private readonly costPerInputToken?: number;
-  private readonly costPerOutputToken?: number;
+  private readonly maxTokens?: number;
+  private readonly extraParams: ExtraGenerationParams;
   private client?: any;
+  protected registryNamespace: ModelNamespace = "anthropic";
 
   constructor(options: AnthropicModelOptions = {}) {
+    const {
+      model,
+      apiKey,
+      temperature,
+      maxTokens,
+      costPerInputToken,
+      costPerOutputToken,
+      ...extraParams
+    } = options;
+
     super(
-      options.model ??
+      model ??
         process.env.ANTHROPIC_MODEL_NAME ??
-        DEFAULT_ANTHROPIC_MODEL,
+        defaultModelName("anthropic"),
     );
-    this.apiKey = options.apiKey ?? process.env.ANTHROPIC_API_KEY ?? "";
-    // Left undefined unless explicitly set — some models (e.g. reasoning models)
-    // reject `temperature`, so we only send it when the caller provides it.
-    this.temperature = options.temperature;
-    this.maxTokens = options.maxTokens ?? DEFAULT_MAX_TOKENS;
-    this.costPerInputToken = options.costPerInputToken;
-    this.costPerOutputToken = options.costPerOutputToken;
+    this.apiKey = apiKey ?? process.env.ANTHROPIC_API_KEY ?? "";
+    this.temperature = temperature;
+    this.maxTokens = maxTokens;
+    this.costPerInputToken = costPerInputToken;
+    this.costPerOutputToken = costPerOutputToken;
+    this.extraParams = extraParams;
   }
 
   private async getClient(): Promise<any> {
@@ -56,28 +70,80 @@ export class AnthropicModel extends DeepEvalBaseLLM {
     return this.client;
   }
 
+  /**
+   * Read at resolve time, not in the constructor, so `editSettings` mid-run is
+   * picked up.
+   */
+  private thinkingEnabled(): boolean {
+    return (
+      (parseBool(process.env.DEEPEVAL_MODEL_THINKING) ?? false) &&
+      this.modelData.supportsThinking === true
+    );
+  }
+
+  /**
+   * The budget and the `thinking` block, sized together because `max_tokens`
+   * caps thinking and response text as one. `thinking` is left out where it is
+   * not ours to set: models that always think reject a disabled block, and
+   * older ones reject the parameter outright.
+   */
+  protected resolveThinking(): {
+    maxTokens: number;
+    thinking?: Record<string, unknown>;
+  } {
+    const enabled = this.thinkingEnabled();
+    const maxTokens =
+      this.maxTokens ??
+      (enabled ? DEFAULT_THINKING_MAX_TOKENS : DEFAULT_MAX_TOKENS);
+
+    if (this.modelData.supportsThinking !== true) return { maxTokens };
+    if (!enabled) return { maxTokens, thinking: { type: "disabled" } };
+
+    const budgetTokens = Math.max(
+      MIN_THINKING_BUDGET_TOKENS,
+      Math.floor(maxTokens / 2),
+    );
+    if (maxTokens <= budgetTokens) {
+      throw new Error(
+        `Thinking needs at least ${MIN_THINKING_BUDGET_TOKENS} tokens of ` +
+          `budget on top of the response itself, but maxTokens is ` +
+          `${maxTokens} and caps thinking and response together. Raise ` +
+          `maxTokens above ${MIN_THINKING_BUDGET_TOKENS * 2} or unset ` +
+          `DEEPEVAL_MODEL_THINKING.`,
+      );
+    }
+    return {
+      maxTokens,
+      thinking: { type: "enabled", budget_tokens: budgetTokens },
+    };
+  }
+
   async generate<T = string>(
     prompt: string,
     schema?: ZodType<T>,
   ): Promise<GenerationResult<T>> {
     const client = await this.getClient();
 
+    const { maxTokens, thinking } = this.resolveThinking();
+    // A thinking request only accepts the default temperature.
+    const temperature =
+      thinking?.type === "enabled" ? undefined : this.resolveTemperature();
     const message = await client.messages.create({
       model: this.modelName,
-      max_tokens: this.maxTokens,
-      ...(this.temperature !== undefined && { temperature: this.temperature }),
+      max_tokens: maxTokens,
+      ...(temperature !== undefined && { temperature }),
+      ...(thinking !== undefined && { thinking }),
       messages: [{ role: "user", content: anthropicContent(prompt) }],
+      ...this.extraParams,
     });
 
     const text: string = (message.content ?? [])
       .filter((block: any) => block.type === "text")
       .map((block: any) => block.text)
       .join("");
-    const cost = computeCost(
+    const cost = this.resolveCost(
       message.usage?.input_tokens,
       message.usage?.output_tokens,
-      this.costPerInputToken,
-      this.costPerOutputToken,
     );
 
     if (schema) {
@@ -87,10 +153,10 @@ export class AnthropicModel extends DeepEvalBaseLLM {
   }
 
   getModelName(): string {
-    return this.modelName ?? DEFAULT_ANTHROPIC_MODEL;
+    return this.modelName ?? defaultModelName("anthropic");
   }
 
   supportsMultimodal(): boolean {
-    return true;
+    return this.modelData.supportsMultimodal ?? true;
   }
 }

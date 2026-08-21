@@ -1,4 +1,9 @@
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import type { ContentTokenLogProbs } from "@/models";
+import { extractJson } from "@/models/utils";
+import type { BaseMetricCore } from "@/metrics/base-metrics";
+import { generateWithSchema } from "@/metrics/utils";
+import { ReasonScoreSchema } from "@/metrics/g-eval/schema";
 
 /** A score band and the outcome it represents (GEval rubric). */
 export interface Rubric {
@@ -58,9 +63,7 @@ function formatValue(value: unknown): string {
 }
 
 /** Join param labels: "A", "A and B", or "A, B, and C". */
-export function constructGEvalParamsString(
-  params: SingleTurnParams[],
-): string {
+export function constructGEvalParamsString(params: SingleTurnParams[]): string {
   const labels = params.map((p) => G_EVAL_PARAMS[p] ?? p);
   if (labels.length === 1) return labels[0];
   if (labels.length === 2) return labels.join(" and ");
@@ -102,7 +105,9 @@ export function getScoreRange(rubrics?: Rubric[]): [number, number] {
 }
 
 /** Sort rubrics by start and reject overlaps. Returns undefined for none. */
-export function validateAndSortRubrics(rubrics?: Rubric[]): Rubric[] | undefined {
+export function validateAndSortRubrics(
+  rubrics?: Rubric[],
+): Rubric[] | undefined {
   if (!rubrics || rubrics.length === 0) return undefined;
   const sorted = [...rubrics].sort((a, b) => a.scoreRange[0] - b.scoreRange[0]);
   for (let i = 0; i < sorted.length; i++) {
@@ -117,6 +122,93 @@ export function validateAndSortRubrics(rubrics?: Rubric[]): Rubric[] | undefined
     }
   }
   return sorted;
+}
+
+/** Below this linear probability a candidate token is noise (Python's 1% floor). */
+const MIN_LOG_PROB = Math.log(0.01);
+
+/**
+ * Refine a discrete score into the expectation over the score tokens the model
+ * considered, weighted by their probabilities — the G-Eval paper's scoring, and
+ * a port of Python's `calculate_weighted_summed_score`.
+ *
+ * Returns `rawScore` unchanged when the log-probs can't support a better
+ * answer: no matching token, or every candidate filtered out.
+ */
+export function calculateWeightedSummedScore(
+  rawScore: number,
+  logProbs: ContentTokenLogProbs[] | undefined,
+): number {
+  const scoreToken = logProbs?.find(
+    (entry) => entry.token === String(rawScore),
+  );
+  if (!scoreToken) return rawScore;
+
+  const linearProbByScore = new Map<number, number>();
+  let sumLinearProb = 0;
+
+  for (const candidate of scoreToken.topLogProbs) {
+    if (candidate.logprob < MIN_LOG_PROB) continue;
+    // Anything non-decimal isn't a score, and would parse to NaN.
+    if (!/^\d+$/.test(candidate.token)) continue;
+
+    const linearProb = Math.exp(candidate.logprob);
+    const tokenScore = parseInt(candidate.token, 10);
+    linearProbByScore.set(
+      tokenScore,
+      (linearProbByScore.get(tokenScore) ?? 0) + linearProb,
+    );
+    sumLinearProb += linearProb;
+  }
+
+  if (sumLinearProb === 0) return rawScore;
+
+  let sumWeightedScores = 0;
+  for (const [score, prob] of linearProbByScore) {
+    sumWeightedScores += score * prob;
+  }
+  return sumWeightedScores / sumLinearProb;
+}
+
+/**
+ * Score a G-Eval prompt, preferring the log-prob path so the score is a
+ * probability-weighted expectation rather than the single integer the model
+ * happened to emit. Shared by `GEval` and `ConversationalGEval`.
+ *
+ * Falls back to the plain structured call whenever the raw path is unavailable
+ * or fails for any reason — a provider can advertise log-probs and still reject
+ * the parameter, and Python likewise treats a missing raw path as routine.
+ */
+export async function evaluateGEvalPrompt(
+  metric: BaseMetricCore,
+  prompt: string,
+  options: { topLogprobs: number; strictMode: boolean },
+): Promise<[number, string]> {
+  const model = metric.model;
+  if (model?.generateRaw && model.supportsLogProbs() !== false) {
+    try {
+      const { output, cost, logProbs } = await model.generateRaw(prompt, {
+        topLogprobs: options.topLogprobs,
+      });
+      metric.accrueCost(cost);
+      const { score, reason } = ReasonScoreSchema.parse(extractJson(output));
+      return [
+        options.strictMode
+          ? score
+          : calculateWeightedSummedScore(score, logProbs),
+        reason,
+      ];
+    } catch {
+      // Fall through to the structured path below.
+    }
+  }
+
+  const { score, reason } = await generateWithSchema(
+    metric,
+    prompt,
+    ReasonScoreSchema,
+  );
+  return [score, reason];
 }
 
 export function validateCriteriaAndEvaluationSteps(

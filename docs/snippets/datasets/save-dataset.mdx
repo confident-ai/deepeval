@@ -1,0 +1,242 @@
+<Tabs items={["Confident AI", "Locally as JSON", "Locally as CSV", "Locally as JSONL"]}>
+<Tab value="Confident AI">
+
+You can save your dataset on the cloud by using the `push()` method:
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset(goldens)
+dataset.push(alias="My dataset")
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset({ goldens });
+await dataset.push({ alias: "My dataset" });
+```
+
+</Case>
+
+</Switch>
+
+This pushes all goldens in your evaluation dataset to Confident AI. If you're unsure whether your goldens are ready for evaluation, you should set `finalized` to <Term py="False" ts="false"/> instead:
+
+<Switch>
+
+<Case id="python">
+
+```python
+...
+
+dataset.push(alias="My dataset", finalized=False)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+// ...
+
+await dataset.push({ alias: "My dataset", finalized: false });
+```
+
+</Case>
+
+</Switch>
+
+This means they won't be pulled until you've manually marked them as finalized on the platform. You can learn more on Confident AI's docs [here.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens)
+
+:::tip
+You can also push multi-turn datasets exactly the same way.
+:::
+
+</Tab>
+<Tab value="Locally as JSON">
+
+<Switch>
+
+<Case id="python">
+
+You can save your dataset locally to a JSON file by using the `save_as()` method:
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset(goldens)
+dataset.save_as(
+    file_type="json",
+    directory="./deepeval-test-dataset",
+)
+```
+
+There are **TWO** mandatory and **TWO** optional parameter when calling the `save_as()` method:
+
+- `file_type`: a string of either `"csv"`, `"json"`, or `"jsonl"` and specifies which file format to save `Golden`s in.
+- `directory`: a string specifying the path of the directory you wish to save `Golden`s at.
+- `file_name`: a string specifying the custom filename for the dataset file. Defaulted to the "YYYYMMDD_HHMMSS" format of time now.
+- `include_test_cases`: a boolean which when set to `True`, will also save any test cases within your dataset. Defaulted to `False`.
+
+:::note
+By default the `save_as()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `include_test_cases` to `True`.
+:::
+
+</Case>
+
+<Case id="typescript">
+
+You can save your dataset locally to a JSON file by using the `saveAs()` method:
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset({ goldens });
+await dataset.saveAs({
+  fileType: "json",
+  directory: "./deepeval-test-dataset",
+});
+```
+
+There are **TWO** mandatory and **TWO** optional parameters when calling the `saveAs()` method:
+
+- `fileType`: a string of either `"csv"`, `"json"`, or `"jsonl"` and specifies which file format to save `Golden`s in.
+- `directory`: a string specifying the path of the directory you wish to save `Golden`s at. It is created if it does not exist.
+- `fileName`: a string specifying the custom filename for the dataset file. Defaulted to the "YYYYMMDD_HHMMSS" format of time now.
+- `includeTestCases`: a boolean which when set to `true`, will also save any test cases within your dataset. Defaulted to `false`.
+
+`saveAs()` returns the full path it wrote to.
+
+:::note
+By default the `saveAs()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `includeTestCases` to `true`.
+:::
+
+</Case>
+
+</Switch>
+
+</Tab>
+<Tab value="Locally as CSV">
+
+<Switch>
+
+<Case id="python">
+
+You can save your dataset locally to a CSV file by using the `save_as()` method:
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset(goldens)
+dataset.save_as(
+    file_type="csv",
+    directory="./deepeval-test-dataset",
+)
+```
+
+There are **TWO** mandatory and **TWO** optional parameter when calling the `save_as()` method:
+
+- `file_type`: a string of either `"csv"`, `"json"`, or `"jsonl"` and specifies which file format to save `Golden`s in.
+- `directory`: a string specifying the path of the directory you wish to save `Golden`s at.
+- `file_name`: a string specifying the custom filename for the dataset file. Defaulted to the "YYYYMMDD_HHMMSS" format of time now.
+- `include_test_cases`: a boolean which when set to `True`, will also save any test cases within your dataset. Defaulted to `False`.
+
+:::note
+By default the `save_as()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `include_test_cases` to `True`.
+:::
+
+</Case>
+
+<Case id="typescript">
+
+You can save your dataset locally to a CSV file by using the `saveAs()` method:
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset({ goldens });
+await dataset.saveAs({
+  fileType: "csv",
+  directory: "./deepeval-test-dataset",
+});
+```
+
+There are **TWO** mandatory and **TWO** optional parameters when calling the `saveAs()` method:
+
+- `fileType`: a string of either `"csv"`, `"json"`, or `"jsonl"` and specifies which file format to save `Golden`s in.
+- `directory`: a string specifying the path of the directory you wish to save `Golden`s at. It is created if it does not exist.
+- `fileName`: a string specifying the custom filename for the dataset file. Defaulted to the "YYYYMMDD_HHMMSS" format of time now.
+- `includeTestCases`: a boolean which when set to `true`, will also save any test cases within your dataset. Defaulted to `false`.
+
+A CSV holds one column per golden field, with lists such as `context` joined on `|` and objects such as `tools_called` written as JSON.
+
+:::note
+By default the `saveAs()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `includeTestCases` to `true`.
+:::
+
+</Case>
+
+</Switch>
+
+</Tab>
+<Tab value="Locally as JSONL">
+
+<Switch>
+
+<Case id="python">
+
+You can save your dataset locally to a JSONL file by using the `save_as()` method:
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset(goldens)
+dataset.save_as(
+    file_type="jsonl",
+    directory="./deepeval-test-dataset",
+)
+```
+
+Each line holds one golden, which makes the file cheap to append to and to stream back in with [`add_goldens_from_jsonl_file()`](/docs/evaluation-datasets#load-dataset).
+
+:::note
+By default the `save_as()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `include_test_cases` to `True`.
+:::
+
+</Case>
+
+<Case id="typescript">
+
+You can save your dataset locally to a JSONL file by using the `saveAs()` method:
+
+```typescript
+import { EvaluationDataset } from "deepeval/dataset";
+
+const dataset = new EvaluationDataset({ goldens });
+await dataset.saveAs({
+  fileType: "jsonl",
+  directory: "./deepeval-test-dataset",
+});
+```
+
+Each line holds one golden, which makes the file cheap to append to and to stream back in with [`addGoldensFromJSONL()`](/docs/evaluation-datasets#load-dataset).
+
+:::note
+By default the `saveAs()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `includeTestCases` to `true`.
+:::
+
+</Case>
+
+</Switch>
+
+</Tab>
+</Tabs>

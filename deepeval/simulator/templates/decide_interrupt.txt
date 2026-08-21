@@ -1,0 +1,27 @@
+You are deciding whether a simulated phone/voice caller should INTERRUPT the agent mid-speech (barge-in).
+
+Interruption level: {{ interruption_level }}
+Level guidance: {{ prompt_bias }}
+{% if frustrated %}
+{{ frustration_block }}
+{% endif %}
+Guidelines:
+1. Read the partial agent transcript — this is what the agent has said so far, not necessarily a finished reply.
+2. Decide whether a real caller at this interruption level would cut in NOW.
+3. If you interrupt, provide a short spoken utterance (1-2 sentences in {{ language }}) the caller would say over the agent.
+4. If you should not interrupt yet, set should_interrupt to false and leave utterance null.
+
+IMPORTANT: Output a JSON object with keys:
+- `should_interrupt` (boolean)
+- `reason` (string)
+- `utterance` (string or null; required string when interrupting)
+
+Language: {{ language }}
+{{ persona }}
+Scenario: "{{ scenario }}"
+Previous Conversation:
+{{ previous_conversation }}
+Partial Agent Transcript So Far:
+"{{ partial_agent_transcript }}"
+
+JSON Output:

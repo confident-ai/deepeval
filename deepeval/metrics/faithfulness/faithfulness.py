@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Type
 import asyncio
 
 from deepeval.test_case import LLMTestCase, SingleTurnParams
@@ -23,6 +23,7 @@ from deepeval.metrics.faithfulness.schema import (
     Truths,
     Claims,
 )
+from deepeval.templates import make_template_class
 
 
 def _faithfulness_truths_limit_phrase(extraction_limit: Optional[int]) -> str:
@@ -48,6 +49,9 @@ def _faithfulness_claims_multimodal_instruction(multimodal: bool) -> str:
     return ""
 
 
+FaithfulnessTemplate = make_template_class("FaithfulnessMetric")
+
+
 class FaithfulnessMetric(BaseMetric):
     _required_params: List[SingleTurnParams] = [
         SingleTurnParams.INPUT,
@@ -57,7 +61,7 @@ class FaithfulnessMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
@@ -65,6 +69,8 @@ class FaithfulnessMetric(BaseMetric):
         verbose_mode: bool = False,
         truths_extraction_limit: Optional[int] = None,
         penalize_ambiguous_claims: bool = False,
+        flaky: bool = False,
+        evaluation_template: Type[FaithfulnessTemplate] = FaithfulnessTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -73,18 +79,19 @@ class FaithfulnessMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self.penalize_ambiguous_claims = penalize_ambiguous_claims
 
         self.truths_extraction_limit = truths_extraction_limit
         if self.truths_extraction_limit is not None:
             self.truths_extraction_limit = max(self.truths_extraction_limit, 0)
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         multimodal = test_case.multimodal
@@ -111,7 +118,6 @@ class FaithfulnessMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -125,7 +131,7 @@ class FaithfulnessMetric(BaseMetric):
                 self.verdicts = self._generate_verdicts(multimodal)
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason(multimodal)
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -143,7 +149,6 @@ class FaithfulnessMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         multimodal = test_case.multimodal
@@ -176,7 +181,7 @@ class FaithfulnessMetric(BaseMetric):
             self.verdicts = await self._a_generate_verdicts(multimodal)
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(multimodal)
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -390,16 +395,6 @@ class FaithfulnessMetric(BaseMetric):
 
         score = faithfulness_count / number_of_verdicts
         return 0 if self.strict_mode and score < self.threshold else score
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

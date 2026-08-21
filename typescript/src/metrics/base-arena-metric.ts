@@ -1,5 +1,5 @@
-import { BaseMetricCore } from "./base-metrics";
-import { ArenaTestCase } from "../test-case";
+import { BaseMetricCore } from "@/metrics/base-metrics";
+import { ArenaTestCase } from "@/test-case";
 
 /**
  * Base for arena metrics, which COMPARE contestants rather than score one

@@ -1,3 +1,3 @@
-from .summarization import SummarizationMetric
+from .summarization import SummarizationMetric, SummarizationTemplate
 
-__all__ = ["SummarizationMetric"]
+__all__ = ["SummarizationMetric", "SummarizationTemplate"]

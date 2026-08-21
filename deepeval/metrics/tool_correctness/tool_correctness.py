@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Union, Tuple
+from typing import List, Dict, Optional, Union, Tuple, Type
 
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.utils import get_or_create_event_loop
@@ -19,6 +19,10 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.metrics.tool_correctness.schema import ToolSelectionScore
+from deepeval.templates import make_template_class
+
+
+ToolCorrectnessTemplate = make_template_class("ToolCorrectnessMetric")
 
 
 class ToolCorrectnessMetric(BaseMetric):
@@ -32,7 +36,7 @@ class ToolCorrectnessMetric(BaseMetric):
     def __init__(
         self,
         available_tools: List[ToolCall] = None,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         evaluation_params: List[ToolCallParams] = [],
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
@@ -41,6 +45,10 @@ class ToolCorrectnessMetric(BaseMetric):
         verbose_mode: bool = False,
         should_exact_match: bool = False,
         should_consider_ordering: bool = False,
+        flaky: bool = False,
+        evaluation_template: Type[
+            ToolCorrectnessTemplate
+        ] = ToolCorrectnessTemplate,
     ):
         self.available_tools = available_tools
         self.threshold = 1 if strict_mode else threshold
@@ -49,16 +57,17 @@ class ToolCorrectnessMetric(BaseMetric):
         self.include_reason = include_reason
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self.evaluation_params: List[ToolCallParams] = evaluation_params
         self.should_exact_match = should_exact_match
         self.should_consider_ordering = should_consider_ordering
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(
@@ -85,7 +94,6 @@ class ToolCorrectnessMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -112,7 +120,7 @@ class ToolCorrectnessMetric(BaseMetric):
                 self.reason = self._construct_final_reason(
                     tool_calling_reason, tool_selection_score.reason
                 )
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
 
                 expected_tools_formatted = (
                     "Expected Tools:\n[\n"
@@ -167,7 +175,6 @@ class ToolCorrectnessMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
             test_case,
@@ -211,7 +218,7 @@ class ToolCorrectnessMetric(BaseMetric):
             self.reason = self._construct_final_reason(
                 tool_calling_reason, tool_selection_score.reason
             )
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
 
             expected_tools_formatted = (
                 "Expected Tools:\n[\n"
@@ -273,8 +280,18 @@ class ToolCorrectnessMetric(BaseMetric):
             expected_tool.name for expected_tool in self.expected_tools
         ]
 
+        type_mismatches = self._get_type_mismatches()
+
         if self.should_exact_match:
-            return f"{'Exact match' if self._calculate_exact_match_score() else 'Not an exact match'}: expected {expected_tools_names}, called {tools_called_names}. See details above."
+            return (
+                f"{'Exact match' if self._calculate_exact_match_score() else 'Not an exact match'}: expected {expected_tools_names}, called {tools_called_names}."
+                + (
+                    f" Tool type mismatches: {type_mismatches}."
+                    if type_mismatches
+                    else ""
+                )
+                + " See details above."
+            )
 
         elif self.should_consider_ordering:
             lcs, weighted_length = self._compute_weighted_lcs()
@@ -299,6 +316,8 @@ class ToolCorrectnessMetric(BaseMetric):
                     issues.append(f"missing tools {list(missing)}")
                 if out_of_order:
                     issues.append(f"out-of-order tools {list(out_of_order)}")
+                if type_mismatches:
+                    issues.append(f"tool type mismatches {type_mismatches}")
                 return f"Incorrect tool usage: {' and '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
         else:
             used_expected = set(self.tools_called).intersection(
@@ -308,7 +327,26 @@ class ToolCorrectnessMetric(BaseMetric):
             if self._calculate_non_exact_match_score() == 1:
                 return f"All expected tools {expected_tools_names} were called (order not considered)."
             else:
-                return f"Incomplete tool usage: missing tools {list(missing)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
+                issues = []
+                if missing or not type_mismatches:
+                    issues.append(f"missing tools {list(missing)}")
+                if type_mismatches:
+                    issues.append(f"tool type mismatches {type_mismatches}")
+                return f"Incomplete tool usage: {'; '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
+
+    def _get_type_mismatches(self) -> List[str]:
+        mismatches = []
+        for expected_tool in self.expected_tools:
+            for called_tool in self.tools_called:
+                if (
+                    expected_tool.name == called_tool.name
+                    and expected_tool.type != called_tool.type
+                ):
+                    mismatches.append(
+                        f"{expected_tool.name} (expected {expected_tool.type.value}, called {called_tool.type.value})"
+                    )
+                    break
+        return mismatches
 
     def _construct_final_reason(
         self,
@@ -398,6 +436,8 @@ class ToolCorrectnessMetric(BaseMetric):
         for i in range(len(self.tools_called)):
             if self.tools_called[i].name != self.expected_tools[i].name:
                 return 0.0
+            if self.tools_called[i].type != self.expected_tools[i].type:
+                return 0.0
             if ToolCallParams.INPUT_PARAMETERS in self.evaluation_params:
                 if (
                     self.tools_called[i].input_parameters
@@ -418,7 +458,10 @@ class ToolCorrectnessMetric(BaseMetric):
             for called_tool in self.tools_called:
                 if called_tool in matched_called_tools:
                     continue
-                if expected_tool.name == called_tool.name:
+                if (
+                    expected_tool.name == called_tool.name
+                    and expected_tool.type == called_tool.type
+                ):
                     match_score = 1.0
                     if (
                         ToolCallParams.INPUT_PARAMETERS
@@ -459,7 +502,10 @@ class ToolCorrectnessMetric(BaseMetric):
                     self.expected_tools[i - 1],
                     self.tools_called[j - 1],
                 )
-                if expected_tool.name != called_tool.name:
+                if (
+                    expected_tool.name != called_tool.name
+                    or expected_tool.type != called_tool.type
+                ):
                     dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
                     continue
                 score = 1.0
@@ -512,13 +558,6 @@ class ToolCorrectnessMetric(BaseMetric):
     ##################################################
     ### Others #######################################
     ##################################################
-
-    def is_successful(self) -> bool:
-        try:
-            self.success = self.score >= self.threshold
-        except (AttributeError, TypeError):
-            self.success = False
-        return self.success
 
     @property
     def __name__(self):

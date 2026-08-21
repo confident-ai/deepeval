@@ -31,7 +31,7 @@ from deepeval.key_handler import (
     EmbeddingKeyValues,
     ModelKeyValues,
 )
-from deepeval.telemetry import capture_view_event
+from deepeval.telemetry import capture_cli_command
 from deepeval.config.settings import get_settings
 from deepeval.utils import open_browser
 from deepeval.test_run.test_run import (
@@ -70,7 +70,6 @@ app.command(name="logout")(logout_command)
 class Regions(Enum):
     US = "US"
     EU = "EU"
-    AU = "AU"
 
 
 def version_callback(value: Optional[bool] = None) -> None:
@@ -104,6 +103,7 @@ _handle_save_result = handle_save_result
 
 @app.callback()
 def main(
+    ctx: typer.Context,
     version: Optional[bool] = typer.Option(
         None,
         "--version",
@@ -113,13 +113,18 @@ def main(
         is_eager=True,
     ),
 ) -> None:
-    pass
+    # The single hook that covers every registered command, including
+    # `deepeval test run` via the mounted sub-app. `ctx.command` is the group
+    # that just dispatched, so its own table is the list of valid names.
+    capture_cli_command(
+        ctx.invoked_subcommand, getattr(ctx.command, "commands", {})
+    )
 
 
 @app.command(name="set-confident-region")
 def set_confident_region_command(
     region: Regions = typer.Argument(
-        ..., help="The data region to use (US or EU or AU)"
+        ..., help="The data region to use (US or EU)"
     ),
     save: Optional[str] = typer.Option(
         None,
@@ -139,8 +144,6 @@ def set_confident_region_command(
     # Add flag emojis based on region
     if region == Regions.EU:
         flag = "🇪🇺"
-    elif region == Regions.AU:
-        flag = "🇦🇺"
     else:
         flag = "🇺🇸"
 
@@ -164,18 +167,15 @@ def set_confident_region_command(
 
 @app.command()
 def view():
-    with capture_view_event() as span:
-        if is_confident():
-            last_test_run_link = (
-                global_test_run_manager.get_latest_test_run_link()
-            )
-            if last_test_run_link:
-                print(f"🔗 View test run: {last_test_run_link}")
-                open_browser(last_test_run_link)
-            else:
-                upload_and_open_link(_span=span)
+    if is_confident():
+        last_test_run_link = global_test_run_manager.get_latest_test_run_link()
+        if last_test_run_link:
+            print(f"🔗 View test run: {last_test_run_link}")
+            open_browser(last_test_run_link)
         else:
-            upload_and_open_link(_span=span)
+            upload_and_open_link()
+    else:
+        upload_and_open_link()
 
 
 @app.command(

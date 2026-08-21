@@ -129,7 +129,7 @@ def test_evaluation_console_report_aggregate_metrics():
     # columns[0] is Metric, columns[1] is Average Score, columns[2] is Pass Rate, columns[3] is Total
     assert list(table.columns[0].cells)[0] == "Answer Relevancy"
     assert list(table.columns[1].cells)[0] == "0.50"
-    assert list(table.columns[2].cells)[0] == "50.00%"
+    assert list(table.columns[2].cells)[0] == "50.00% | passed=1 | failed=1"
     assert list(table.columns[3].cells)[0] == "2"
 
 

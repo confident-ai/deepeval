@@ -8,7 +8,7 @@ import {
   ToolMessage,
   SystemMessage,
 } from "@langchain/core/messages";
-import { Prompt } from "../../../../src/prompt";
+import { Prompt } from "@/prompt";
 
 const testPrompt = new Prompt({ alias: "langchain-metric-collection-test" });
 testPrompt.version = "01.00.00";

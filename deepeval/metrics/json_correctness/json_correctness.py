@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Type
 from pydantic import BaseModel, ValidationError
 
 from deepeval.test_case import (
@@ -17,8 +17,12 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.json_correctness.schema import JsonCorrectnessScoreReason
 from deepeval.utils import get_or_create_event_loop, serialize_to_json
+from deepeval.templates import make_template_class
 
 DEFAULT_CORRECT_REASON = "The generated Json matches and is syntactically correct to the expected schema."
+
+
+JsonCorrectnessTemplate = make_template_class("JsonCorrectnessMetric")
 
 
 class JsonCorrectnessMetric(BaseMetric):
@@ -31,11 +35,15 @@ class JsonCorrectnessMetric(BaseMetric):
         self,
         expected_schema: BaseModel,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         async_mode: bool = True,
         include_reason: bool = True,
         strict_mode: bool = True,
         verbose_mode: bool = False,
+        flaky: bool = False,
+        evaluation_template: Type[
+            JsonCorrectnessTemplate
+        ] = JsonCorrectnessTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -43,15 +51,16 @@ class JsonCorrectnessMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
+        self.flaky = flaky
         self.expected_schema = expected_schema
         self.evaluation_model = self.model.get_model_name()
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         multimodal = test_case.multimodal
@@ -78,7 +87,6 @@ class JsonCorrectnessMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
-                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -92,7 +100,7 @@ class JsonCorrectnessMetric(BaseMetric):
 
                 self.score = 1 if valid_json else 0
                 self.reason = self.generate_reason(test_case.actual_output)
-                self.success = self.score >= self.threshold
+                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -109,7 +117,6 @@ class JsonCorrectnessMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
     ) -> float:
 
         multimodal = test_case.multimodal
@@ -142,7 +149,7 @@ class JsonCorrectnessMetric(BaseMetric):
 
             self.score = 1 if valid_json else 0
             self.reason = await self.a_generate_reason(test_case.actual_output)
-            self.success = self.score >= self.threshold
+            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -202,16 +209,6 @@ class JsonCorrectnessMetric(BaseMetric):
             extract_schema=lambda s: s.reason,
             extract_json=lambda data: data["reason"],
         )
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except TypeError:
-                self.success = False
-        return self.success
 
     @property
     def __name__(self):

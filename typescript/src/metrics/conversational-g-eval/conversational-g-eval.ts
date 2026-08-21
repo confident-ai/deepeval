@@ -1,31 +1,36 @@
-import { BaseConversationalMetric } from "../base-conversational-metric";
-import { ConversationalTestCase, MultiTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
+import { resolveThreshold } from "@/metrics/base-metrics";
+import { ConversationalTestCase, MultiTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
-} from "../utils";
+} from "@/metrics/utils";
 import {
   checkConversationalTestCaseParams,
   convertTurnToDict,
-} from "../conversational-utils";
-import { StepsSchema, ReasonScoreSchema } from "../g-eval/schema";
+} from "@/metrics/conversational-utils";
+import { StepsSchema } from "@/metrics/g-eval/schema";
 import {
   type Rubric,
+  evaluateGEvalPrompt,
   numberEvaluationSteps,
   formatRubrics,
   validateAndSortRubrics,
   validateCriteriaAndEvaluationSteps,
-} from "../g-eval/utils";
+} from "@/metrics/g-eval/utils";
 import {
   constructConversationalGEvalTurnParamsString,
   constructNonTurnsTestCaseString,
-} from "./utils";
+} from "@/metrics/conversational-g-eval/utils";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "ConversationalGEval";
+
+export type ConversationalGEvalTemplateOverride =
+  MetricTemplateOverride<"ConversationalGEval">;
 
 export interface ConversationalGEvalMetricOptions {
   name: string;
@@ -35,26 +40,31 @@ export interface ConversationalGEvalMetricOptions {
   evaluationSteps?: string[];
   rubric?: Rubric[];
   model?: DeepEvalBaseLLM | string;
-  threshold?: number;
+  threshold?: number | null;
+  /** Score-token alternatives to weigh, on models that report log probabilities. */
+  topLogprobs?: number;
+  flaky?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
   includeGEvalSuffix?: boolean;
+  evaluationTemplate?: ConversationalGEvalTemplateOverride;
 }
 
 /**
  * Conversational GEval — a flexible LLM judge over a whole conversation: generate
  * eval steps from `criteria` (or use supplied `evaluationSteps`), then score the
  * conversation 0–10 (normalized to 0–1) with a reason. Like single-turn GEval but
- * over turns + conversation-level fields. (No log-prob weighting — TS has none.)
+ * over turns + conversation-level fields.
  */
 export class ConversationalGEval extends BaseConversationalMetric {
   evaluationParams: MultiTurnParams[];
   criteria?: string;
   evaluationSteps?: string[];
   rubric?: Rubric[];
-  private readonly metricName: string;
+  readonly metricName: string;
   private readonly includeGEvalSuffix: boolean;
+  private readonly topLogprobs: number;
 
   constructor(options: ConversationalGEvalMetricOptions) {
     if (!options.evaluationParams || options.evaluationParams.length === 0) {
@@ -67,11 +77,14 @@ export class ConversationalGEval extends BaseConversationalMetric {
       );
     }
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.templateClass = TEMPLATE_CLASS;
 
     // CONTENT + ROLE are always required (mirrors Python).
     const params = [...options.evaluationParams];
@@ -90,6 +103,7 @@ export class ConversationalGEval extends BaseConversationalMetric {
         ? options.evaluationSteps
         : undefined;
     this.includeGEvalSuffix = options.includeGEvalSuffix ?? true;
+    this.topLogprobs = options.topLogprobs ?? 20;
 
     const { model, usingNativeModel } = initializeModel(options.model);
     this.model = model;
@@ -107,11 +121,9 @@ export class ConversationalGEval extends BaseConversationalMetric {
       this.evaluationSteps = await this.generateEvaluationSteps();
       const [gScore, reason] = await this.evaluate(testCase);
 
-      let score = gScore / 10;
-      if (this.strictMode && score < this.threshold) score = 0;
-      this.score = score;
+      this.score = this.applyStrictMode(gScore / 10);
       this.reason = reason;
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
 
       this.verboseLogs = constructVerboseLogs(this, [
         `Criteria:\n${this.criteria}`,
@@ -127,7 +139,7 @@ export class ConversationalGEval extends BaseConversationalMetric {
 
   private async generateEvaluationSteps(): Promise<string[]> {
     if (this.evaluationSteps) return this.evaluationSteps;
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_evaluation_steps", {
+    const prompt = this.getPrompt("generate_evaluation_steps", {
       criteria: this.criteria,
       parameters: constructConversationalGEvalTurnParamsString(
         this.evaluationParams,
@@ -140,7 +152,7 @@ export class ConversationalGEval extends BaseConversationalMetric {
   private async evaluate(
     testCase: ConversationalTestCase,
   ): Promise<[number, string]> {
-    const prompt = resolveTemplate("metrics", TEMPLATE_CLASS, "generate_evaluation_results", {
+    const prompt = this.getPrompt("generate_evaluation_results", {
       evaluation_steps: numberEvaluationSteps(this.evaluationSteps ?? []),
       test_case_content: constructNonTurnsTestCaseString(
         this.evaluationParams,
@@ -154,18 +166,10 @@ export class ConversationalGEval extends BaseConversationalMetric {
       ),
       rubric: this.rubric ? formatRubrics(this.rubric) : null,
     });
-    const { score, reason } = await generateWithSchema(
-      this,
-      prompt,
-      ReasonScoreSchema,
-    );
-    return [score, reason];
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
+    return evaluateGEvalPrompt(this, prompt, {
+      topLogprobs: this.topLogprobs,
+      strictMode: this.strictMode,
+    });
   }
 
   get name(): string {

@@ -2,7 +2,7 @@ from typing import List, Optional, Union, Tuple, Dict
 from openai.types.chat.chat_completion import ChatCompletion
 import math
 
-from deepeval.models import DeepEvalBaseLLM, GPTModel, AzureOpenAIModel
+from deepeval.models import DeepEvalBaseLLM, OpenAIModel, AzureOpenAIModel
 from deepeval.test_case import (
     SingleTurnParams,
     MultiTurnParams,
@@ -252,7 +252,8 @@ def no_log_prob_support(model: Union[str, DeepEvalBaseLLM]):
         if not model_data.supports_log_probs:
             return True
     elif (
-        isinstance(model, GPTModel) and not model.model_data.supports_log_probs
+        isinstance(model, OpenAIModel)
+        and not model.model_data.supports_log_probs
     ):
         return True
     elif (
@@ -338,9 +339,10 @@ def calculate_weighted_summed_score(
 ) -> Union[int, float]:
     try:
         generated_logprobs = raw_response.choices[0].logprobs.content
-        # First, locate the token that we care for logprobs, i.e., the token matching the score
+        # First, locate the final token matching the score. The reasoning may
+        # contain the same token before the model emits its final score.
         score_logprobs = None
-        for token_logprobs in generated_logprobs:
+        for token_logprobs in reversed(generated_logprobs):
             if token_logprobs.token == str(raw_score):
                 score_logprobs = token_logprobs
                 break

@@ -29,15 +29,18 @@
   "toolsCalled": [
     {
       "name": "search",
+      "type": "FUNCTION",
       "output": "Search results"
     }
   ],
   "expectedTools": [
     {
-      "name": "search"
+      "name": "search",
+      "type": "FUNCTION"
     },
     {
-      "name": "summarize"
+      "name": "summarize",
+      "type": "FUNCTION"
     }
   ]
 }

@@ -1,20 +1,27 @@
-import { BaseMetric } from "../base-metrics";
-import { LLMTestCase, SingleTurnParams } from "../../test-case";
-import { DeepEvalBaseLLM } from "../../models";
-import { resolveTemplate } from "../../templates";
+import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
+import { DeepEvalBaseLLM } from "@/models";
 import {
   initializeModel,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
-} from "../utils";
-import { TaskSchema, AgentPlanSchema, PlanQualityScoreSchema } from "./schema";
+} from "@/metrics/utils";
+import {
+  TaskSchema,
+  AgentPlanSchema,
+  PlanQualityScoreSchema,
+} from "@/metrics/plan-quality/schema";
+import { type MetricTemplateOverride } from "@/templates/override";
 
 // Shared templates (mirror Python): task extraction → StepEfficiencyMetric,
 // plan extraction → PlanAdherenceMetric.
 const TASK_TEMPLATE_CLASS = "StepEfficiencyMetric";
 const PLAN_TEMPLATE_CLASS = "PlanAdherenceMetric";
 const TEMPLATE_CLASS = "PlanQualityMetric";
+
+export type PlanQualityTemplateOverride =
+  MetricTemplateOverride<"PlanQualityMetric">;
 
 const NO_PLAN_REASON =
   "There were no plans to evaluate within the trace of your agent's execution. " +
@@ -27,12 +34,14 @@ function traceJson(d: unknown): string {
 }
 
 export interface PlanQualityMetricOptions {
-  threshold?: number;
+  threshold?: number | null;
+  flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  evaluationTemplate?: PlanQualityTemplateOverride;
 }
 
 /**
@@ -43,12 +52,16 @@ export interface PlanQualityMetricOptions {
 export class PlanQualityMetric extends BaseMetric {
   constructor(options: PlanQualityMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 1 : (options.threshold ?? 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
       showIndicator: options.showIndicator,
+      flaky: options.flaky,
+      evaluationTemplate: options.evaluationTemplate,
     });
+    this.multimodalAware = true;
+    this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
@@ -70,16 +83,24 @@ export class PlanQualityMetric extends BaseMetric {
 
       const { task } = await generateWithSchema(
         this,
-        resolveTemplate("metrics", TASK_TEMPLATE_CLASS, "extract_task_from_trace", {
-          trace_json: json,
-        }),
+        this.getPrompt(
+          "extract_task_from_trace",
+          {
+            trace_json: json,
+          },
+          { templateClass: TASK_TEMPLATE_CLASS },
+        ),
         TaskSchema,
       );
       const { plan } = await generateWithSchema(
         this,
-        resolveTemplate("metrics", PLAN_TEMPLATE_CLASS, "extract_plan_from_trace", {
-          trace_json_str: json,
-        }),
+        this.getPrompt(
+          "extract_plan_from_trace",
+          {
+            trace_json_str: json,
+          },
+          { templateClass: PLAN_TEMPLATE_CLASS },
+        ),
         AgentPlanSchema,
       );
 
@@ -89,16 +110,16 @@ export class PlanQualityMetric extends BaseMetric {
       } else {
         const { score, reason } = await generateWithSchema(
           this,
-          resolveTemplate("metrics", TEMPLATE_CLASS, "evaluate_plan_quality", {
+          this.getPrompt("evaluate_plan_quality", {
             user_task: task,
             agent_plan: plan.join("\n"),
           }),
           PlanQualityScoreSchema,
         );
-        this.score = this.strictMode && score < this.threshold ? 0 : score;
+        this.score = this.applyStrictMode(score);
         this.reason = reason;
       }
-      this.success = this.score >= this.threshold;
+      this.success = this.isSuccessful();
       this.verboseLogs = constructVerboseLogs(this, [
         `Task: ${task}`,
         `Plan steps: ${plan.length}`,
@@ -108,12 +129,6 @@ export class PlanQualityMetric extends BaseMetric {
     } finally {
       this.stopProgress();
     }
-  }
-
-  isSuccessful(): boolean {
-    const ok = this.error == null && (this.score ?? 0) >= this.threshold;
-    this.success = ok;
-    return ok;
   }
 
   get name(): string {
