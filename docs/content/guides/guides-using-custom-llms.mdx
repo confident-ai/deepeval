@@ -716,7 +716,7 @@ class CustomClaudeOpus(DeepEvalBaseLLM):
         client = self.load_model()
         instructor_client = instructor.from_anthropic(client)
         resp = instructor_client.messages.create(
-            model="claude-3-opus-20240229",
+            model="claude-sonnet-4-6",
             max_tokens=1024,
             messages=[
                 {
