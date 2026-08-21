@@ -51,7 +51,9 @@ def test_every_metric_measure_returns_under_async_mode():
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef) and node.name == "measure":
                 if _async_branch_discards(node):
-                    offenders.append(str(path.relative_to(METRICS_DIR.parent.parent)))
+                    offenders.append(
+                        str(path.relative_to(METRICS_DIR.parent.parent))
+                    )
     assert not offenders, (
         "measure() discards the a_measure result in the async_mode branch, so "
         "it returns None under the default async_mode=True, in: "
