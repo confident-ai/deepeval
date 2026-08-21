@@ -633,6 +633,23 @@ class TestAzureModelTemperature:
         )
         assert model.temperature is None
 
+    def test_unknown_deployment_name_temperature_is_none(self):
+        """Deployment names not in the model catalogue must never send temperature.
+
+        Azure users often set `model` to their deployment name (e.g. "gpt5-prod-eu")
+        rather than the canonical model name.  The catalogue lookup misses, so we
+        cannot confirm temperature support — default to omitting it to avoid 400s.
+        """
+        model = AzureOpenAIModel(model="gpt5-prod-eu", **_AZURE_KWARGS)
+        assert model.temperature is None
+
+    def test_unknown_deployment_name_explicit_temperature_also_none(self):
+        """User-supplied temperature is still dropped for unrecognised model names."""
+        model = AzureOpenAIModel(
+            model="my-custom-deployment", temperature=0.7, **_AZURE_KWARGS
+        )
+        assert model.temperature is None
+
 
 ##############################
 # calculate_cost unit tests  #
