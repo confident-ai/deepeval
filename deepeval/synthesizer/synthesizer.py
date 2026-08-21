@@ -487,7 +487,7 @@ class Synthesizer:
                         pbar_id=pbar_id,
                     )
                 )
-                if self.synthesis_cost:
+                if self.synthesis_cost is not None:
                     self.synthesis_cost += context_generator.total_cost
                 print_synthesizer_status(
                     SynthesizerStatus.SUCCESS,
@@ -606,7 +606,7 @@ class Synthesizer:
                     pbar_id=pbar_id,
                 )
             )
-            if self.synthesis_cost:
+            if self.synthesis_cost is not None:
                 self.synthesis_cost += context_generator.total_cost
             print_synthesizer_status(
                 SynthesizerStatus.SUCCESS,
@@ -2120,7 +2120,7 @@ class Synthesizer:
                         pbar_id=pbar_id,
                     )
                 )
-                if self.synthesis_cost:
+                if self.synthesis_cost is not None:
                     self.synthesis_cost += context_generator.total_cost
                 print_synthesizer_status(
                     SynthesizerStatus.SUCCESS,
@@ -2237,7 +2237,7 @@ class Synthesizer:
                     pbar_id=pbar_id,
                 )
             )
-            if self.synthesis_cost:
+            if self.synthesis_cost is not None:
                 self.synthesis_cost += context_generator.total_cost
             print_synthesizer_status(
                 SynthesizerStatus.SUCCESS,
