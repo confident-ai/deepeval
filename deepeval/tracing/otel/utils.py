@@ -138,6 +138,18 @@ def serialize_placeholder_to_otel_attrs(
             ConfidentAttr.SPAN_EXPECTED_OUTPUT,
             placeholder.expected_output,
         )
+    if placeholder.tools_called is not None:
+        set_span_attribute_post_end(
+            span,
+            ConfidentAttr.SPAN_TOOLS_CALLED,
+            [t.model_dump_json() for t in placeholder.tools_called],
+        )
+    if placeholder.expected_tools is not None:
+        set_span_attribute_post_end(
+            span,
+            ConfidentAttr.SPAN_EXPECTED_TOOLS,
+            [t.model_dump_json() for t in placeholder.expected_tools],
+        )
 
     existing = (
         getattr(span, "attributes", None)

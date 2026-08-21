@@ -386,17 +386,25 @@ def _extract_tool_call_from_tool_span(span) -> Optional[ToolCall]:
         return None
 
     attrs = span.attributes or {}
-    args_raw = (
-        attrs.get("gen_ai.tool.call.arguments")
-        or attrs.get("traceloop.entity.input")
-        or "{}"
+    args_raw = attrs.get("gen_ai.tool.call.arguments") or attrs.get(
+        "traceloop.entity.input"
     )
+
+    if not args_raw:
+        for event in getattr(span, "events", []):
+            if (event.name or "") == "gen_ai.tool.message":
+                args_raw = (event.attributes or {}).get("content")
+                if args_raw:
+                    break
+
     try:
         input_params = (
             json.loads(args_raw) if isinstance(args_raw, str) else args_raw
-        )
+        ) or {}
     except Exception:
         input_params = {}
+    if not isinstance(input_params, dict):
+        input_params = {"input": input_params}
 
     return ToolCall(name=tool_name, input_parameters=input_params)
 
@@ -902,16 +910,23 @@ class StrandsSpanInterceptor(SpanProcessor):
                         serialize_to_json(tc.input_parameters),
                     )
 
-            if ConfidentAttr.SPAN_OUTPUT not in attrs:
-                raw_output = _get_attr(
-                    span, "traceloop.entity.output", "gen_ai.tool.output"
-                )
-                if raw_output:
+            # ``output_text`` already holds the ``gen_ai.choice`` end-event
+            # payload (default semconv); attrs cover the opt-in/Traceloop paths.
+            tool_output = output_text or _get_attr(
+                span,
+                "traceloop.entity.output",
+                "gen_ai.tool.output",
+                "gen_ai.tool.call.result",
+            )
+            if tool_output:
+                if tc and tc.output is None:
+                    tc.output = tool_output
+                if ConfidentAttr.SPAN_OUTPUT not in attrs:
                     self._set_attr_post_end(
-                        span, ConfidentAttr.SPAN_OUTPUT, raw_output
+                        span, ConfidentAttr.SPAN_OUTPUT, tool_output
                     )
 
-        if tools_called:
+        if tools_called and ConfidentAttr.SPAN_TOOLS_CALLED not in attrs:
             self._set_attr_post_end(
                 span,
                 ConfidentAttr.SPAN_TOOLS_CALLED,

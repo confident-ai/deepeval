@@ -847,7 +847,7 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
         elif span_type in (SpanType.AGENT.value, SpanType.LLM.value):
             tools_called = _extract_tool_calls(span)
 
-        if tools_called:
+        if tools_called and ConfidentAttr.SPAN_TOOLS_CALLED not in attrs:
             self._set_attr_post_end(
                 span,
                 ConfidentAttr.SPAN_TOOLS_CALLED,
