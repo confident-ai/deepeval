@@ -152,6 +152,11 @@ class DeepEvalBaseLLM(ABC):
 
 
 class DeepEvalBaseTTS(ABC):
+    # Sample rate of the audio this model produces. Connectors carrying
+    # synthesized speech have to know it to resample the uplink, so it is
+    # declared here rather than left for each implementation to invent.
+    sample_rate: int = 24000
+
     def __init__(self, model: Optional[str] = None, *args, **kwargs):
         self.name = parse_model_name(model)
         self.model = self.load_model()

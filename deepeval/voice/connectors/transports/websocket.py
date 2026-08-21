@@ -11,6 +11,7 @@ from typing import (
     Callable,
     ClassVar,
     List,
+    Literal,
     Optional,
     Tuple,
     Union,
@@ -18,12 +19,17 @@ from typing import (
 
 import aiohttp
 from aiohttp import WSMsgType
+from pydantic import BaseModel, Field
 
 from deepeval.errors import DeepEvalError
 from deepeval.test_case import Audio, AudioChunk
 from deepeval.voice.protocol import VoiceProtocol
 from deepeval.voice.connectors import audio_utils
-from deepeval.voice.connectors.transports.base import BaseVoiceConnector
+from deepeval.voice.connectors.transports.base import (
+    BaseVoiceConnector,
+    UplinkStream,
+    iter_downlink,
+)
 from deepeval.voice.connectors.types import AgentEvent, ConnectorTurn
 from deepeval.voice.connectors.turn_engine import collect_agent_turn
 from deepeval.voice.streaming import (
@@ -45,6 +51,57 @@ class InboundEvent:
     turn_complete: bool = False
     pong_reply: Optional[Union[str, bytes]] = None
     ready: bool = False
+
+
+class WebSocketMessageSchema(BaseModel):
+    """How one agent's WebSocket dialect carries audio, text, and turn ends.
+
+    A raw-audio WebSocket agent has no standard message shape, so none of these
+    is a tuning knob — each one describes somebody else's protocol. They are
+    validated together at construction because a name that does not match the
+    agent surfaces much later, and as silence: the connector reads every
+    message, finds nothing under the key it was given, and the agent looks like
+    it never answered.
+    """
+
+    model_config = {"frozen": True}
+
+    # Outbound: where the caller's audio goes, and in what form.
+    send_key: str = Field(default="audio", min_length=1)
+    binary_outbound: bool = False
+
+    # Inbound: where the agent's audio and text are found. Dotted keys are
+    # read as a path into nested objects.
+    receive_audio_key: str = Field(default="audio", min_length=1)
+    binary_inbound: bool = False
+    receive_transcript_key: Optional[str] = None
+
+    # End of turn: the value under `type_key` that means the agent is done.
+    # Without one, only silence is left to infer it from.
+    turn_complete_type: Optional[str] = None
+    type_key: str = Field(default="type", min_length=1)
+
+    init_messages: List[Union[str, dict]] = Field(default_factory=list)
+    ready_on: Literal["connect", "message"] = "connect"
+
+    @property
+    def signals_turn_complete(self) -> bool:
+        return self.turn_complete_type is not None
+
+    def encoded_initial_messages(self) -> List[Union[str, bytes]]:
+        return [
+            json.dumps(m) if isinstance(m, dict) else m
+            for m in self.init_messages
+        ]
+
+    def read(self, message: dict, dotted_key: str):
+        """Follow a dotted key into `message`, or None if it is not there."""
+        current = message
+        for part in dotted_key.split("."):
+            if not isinstance(current, dict) or part not in current:
+                return None
+            current = current[part]
+        return current
 
 
 class BaseWebSocketConnector(BaseVoiceConnector):
@@ -82,8 +139,7 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         self._ready: Optional[asyncio.Event] = None
         self._current_transcript: Optional[str] = None
         self._interrupted: bool = False
-        self._uplink_cancel: Optional[asyncio.Event] = None
-        self._uplink_task: Optional[asyncio.Task] = None
+        self._uplink: Optional[UplinkStream] = None
 
     @property
     def audio_format(self) -> Tuple[int, str]:
@@ -117,7 +173,7 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         self._loop = asyncio.get_event_loop()
         self._inbound = asyncio.Queue()
         self._ready = asyncio.Event()
-        self._uplink_cancel = asyncio.Event()
+        self._uplink = UplinkStream()
         self._current_transcript = None
         self._interrupted = False
 
@@ -224,11 +280,11 @@ class BaseWebSocketConnector(BaseVoiceConnector):
     ) -> bool:
         """Send `pcm` as wire frames. False once the uplink has been cancelled."""
         for frame in audio_utils.iter_pcm16_frames(pcm, self._send_rate):
-            if self._uplink_cancel.is_set():
+            if self._uplink.cancelled:
                 return False
             if pacer is not None:
                 await pacer.wait_to_send(frame)
-                if self._uplink_cancel.is_set():
+                if self._uplink.cancelled:
                     return False
             await self._send(self._encode_outbound(frame))
         return True
@@ -253,13 +309,13 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         sent = 0
         first_at: Optional[float] = None
         while len(buffer) - sent >= size:
-            if self._uplink_cancel.is_set():
+            if self._uplink.cancelled:
                 del buffer[:sent]
                 return False, first_at
             frame = bytes(buffer[sent : sent + size])
             if pacer is not None:
                 await pacer.wait_to_send(frame)
-                if self._uplink_cancel.is_set():
+                if self._uplink.cancelled:
                     del buffer[:sent]
                     return False, first_at
             if first_at is None:
@@ -272,29 +328,29 @@ class BaseWebSocketConnector(BaseVoiceConnector):
     async def stream_uplink(
         self, audio: Audio, *, trailing_silence: bool = True
     ) -> None:
-        if self._uplink_cancel is None:
+        if self._uplink is None:
             raise DeepEvalError(
                 f"{type(self).__name__}.stream_uplink() called before connect()."
             )
         # Cancel any prior uplink, then start a fresh one.
         await self.stop_uplink()
-        if self._uplink_task is not None:
+        if self._uplink.task is not None:
             try:
-                await self._uplink_task
+                await self._uplink.task
             except Exception:
                 pass
-            self._uplink_task = None
+            self._uplink.task = None
 
-        self._uplink_cancel.clear()
+        self._uplink.begin()
         pcm = self._prepare_outbound_pcm(
             audio, trailing_silence=trailing_silence
         )
 
-        self._uplink_task = asyncio.create_task(
+        self._uplink.task = asyncio.create_task(
             self._send_pcm(pcm, RealTimePacer(self._send_rate))
         )
-        await self._uplink_task
-        self._uplink_task = None
+        await self._uplink.task
+        self._uplink.task = None
 
     async def stream_uplink_chunks(
         self,
@@ -309,13 +365,13 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         while the rest of the utterance is still being made, the way they would
         on a live call, instead of after the whole thing exists.
         """
-        if self._uplink_cancel is None:
+        if self._uplink is None:
             raise DeepEvalError(
                 f"{type(self).__name__}.stream_uplink_chunks() called before "
                 "connect()."
             )
         await self.stop_uplink()
-        self._uplink_cancel.clear()
+        self._uplink.begin()
 
         recorder = PcmRecorder()
         pending = bytearray()
@@ -354,38 +410,20 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         )
 
     async def stop_uplink(self) -> None:
-        if self._uplink_cancel is not None:
-            self._uplink_cancel.set()
-        if self._uplink_task is not None and not self._uplink_task.done():
-            self._uplink_task.cancel()
-            try:
-                await self._uplink_task
-            except (asyncio.CancelledError, Exception):
-                pass
+        if self._uplink is not None:
+            await self._uplink.stop()
 
     async def iter_agent_events(self) -> AsyncIterator[AgentEvent]:
-        """Yield downlink events for as long as the connection is open.
-
-        `turn_complete` is signaled on individual events; the iterator itself
-        does not stop so a duplex loop can keep listening after a barge-in.
-        """
         if self._inbound is None:
             raise DeepEvalError(
                 f"{type(self).__name__}.iter_agent_events() called before "
                 "connect()."
             )
-        while True:
-            item = await self._inbound.get()
-            if item is None:
-                yield AgentEvent(turn_complete=True)
-                continue
-            if isinstance(item, AgentEvent):
-                yield item
-            elif isinstance(item, (bytes, bytearray)):
-                yield AgentEvent(audio=bytes(item))
+        async for event in iter_downlink(self._inbound):
+            yield event
 
     async def exchange_turn(self, audio: Audio) -> ConnectorTurn:
-        self._drain_stale_inbound()
+        self.drain_downlink()
         self._current_transcript = None
         self._interrupted = False
 
@@ -450,7 +488,7 @@ class BaseWebSocketConnector(BaseVoiceConnector):
             audio_started_at=first_audio_at,
         )
 
-    def _drain_stale_inbound(self) -> None:
+    def drain_downlink(self) -> None:
         while not self._inbound.empty():
             try:
                 self._inbound.get_nowait()
@@ -503,46 +541,47 @@ class WebSocketConnector(BaseWebSocketConnector):
         super().__init__(sample_rate=sample_rate, **base_kwargs)
         self.url = url
         self.headers = headers
-
-        self.send_key = send_key
-        self.binary_outbound = binary_outbound
-        self.receive_audio_key = receive_audio_key
-        self.binary_inbound = binary_inbound
-        self.receive_transcript_key = receive_transcript_key
-        self.turn_complete_type = turn_complete_type
-        self.type_key = type_key
-        self.init_messages = init_messages or []
-        self.ready_on = ready_on
+        # The nine message-shape arguments describe one thing — the agent's
+        # dialect — and are kept as one, validated together rather than
+        # scattered across the connector as nine unchecked strings.
+        self.schema = WebSocketMessageSchema(
+            send_key=send_key,
+            binary_outbound=binary_outbound,
+            receive_audio_key=receive_audio_key,
+            binary_inbound=binary_inbound,
+            receive_transcript_key=receive_transcript_key,
+            turn_complete_type=turn_complete_type,
+            type_key=type_key,
+            init_messages=init_messages or [],
+            ready_on=ready_on,
+        )
 
     async def _open_session(self) -> str:
         return self.url
 
     @property
     def signals_turn_complete(self) -> bool:
-        return self.turn_complete_type is not None
+        return self.schema.signals_turn_complete
 
     def _connect_headers(self) -> Optional[dict]:
         return self.headers
 
     def _ready_on_connect(self) -> bool:
-        return self.ready_on == "connect"
+        return self.schema.ready_on == "connect"
 
     def _initial_messages(self) -> List[Union[str, bytes]]:
-        return [
-            json.dumps(m) if isinstance(m, dict) else m
-            for m in self.init_messages
-        ]
+        return self.schema.encoded_initial_messages()
 
     def _encode_outbound(self, pcm: bytes) -> Union[str, bytes]:
-        if self.binary_outbound:
+        if self.schema.binary_outbound:
             return pcm
         return json.dumps(
-            {self.send_key: base64.b64encode(pcm).decode("ascii")}
+            {self.schema.send_key: base64.b64encode(pcm).decode("ascii")}
         )
 
     def _decode_inbound(self, raw: Union[str, bytes]) -> Optional[InboundEvent]:
-
-        if self.binary_inbound and isinstance(raw, (bytes, bytearray)):
+        schema = self.schema
+        if schema.binary_inbound and isinstance(raw, (bytes, bytearray)):
             return InboundEvent(audio=bytes(raw))
 
         try:
@@ -553,27 +592,18 @@ class WebSocketConnector(BaseWebSocketConnector):
             return None
 
         event = InboundEvent()
-        audio_b64 = self._dig(message, self.receive_audio_key)
+        audio_b64 = schema.read(message, schema.receive_audio_key)
         if audio_b64:
             event.audio = base64.b64decode(audio_b64)
-        if self.receive_transcript_key:
-            transcript = self._dig(message, self.receive_transcript_key)
+        if schema.receive_transcript_key:
+            transcript = schema.read(message, schema.receive_transcript_key)
             if transcript:
                 event.transcript = transcript
         if (
-            self.turn_complete_type is not None
-            and message.get(self.type_key) == self.turn_complete_type
+            schema.turn_complete_type is not None
+            and message.get(schema.type_key) == schema.turn_complete_type
         ):
             event.turn_complete = True
-        if self.ready_on == "message" and not self._ready.is_set():
+        if schema.ready_on == "message" and not self._ready.is_set():
             event.ready = True
         return event
-
-    @staticmethod
-    def _dig(message: dict, dotted_key: str):
-        current = message
-        for part in dotted_key.split("."):
-            if not isinstance(current, dict) or part not in current:
-                return None
-            current = current[part]
-        return current

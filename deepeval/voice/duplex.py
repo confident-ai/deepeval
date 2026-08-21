@@ -25,7 +25,6 @@ from deepeval.simulator.schema import InterruptDecision
 if TYPE_CHECKING:
     from deepeval.models.base_model import DeepEvalBaseSTT, DeepEvalBaseTTS
     from deepeval.voice.connectors.transports.base import BaseVoiceConnector
-    from deepeval.voice.config import VoiceConfig
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +53,57 @@ class _Barge:
     frustrated: bool
     task: Optional[asyncio.Task] = None
     turn: Optional[Turn] = None
+
+
+@dataclass
+class _AgentUtterance:
+    """The agent reply being received, and what is being used to end it.
+
+    A barge can land mid-reply, in which case that reply is recorded and the
+    agent's next one begins as a fresh utterance. `reset` is that transition.
+    It lives here, in one place, because the fields fall into three groups that
+    have to move together: what has been received so far, the silence being
+    measured to decide the reply is over, and how much barging and judging this
+    reply has already been given. Leaving any of them behind lets the new reply
+    inherit the old one's end-of-turn timer or spend its barge budget.
+    """
+
+    # Where this reply belongs in `turns`, and which uplink it answers.
+    index: int
+    sent_at: float
+    # Whether the transport will say outright when this reply is over. False
+    # for transports that never do, and cleared once one has.
+    awaiting_end_signal: bool = False
+
+    # What has been received of the reply so far.
+    pcm: bytearray = field(default_factory=bytearray)
+    transcript: str = ""
+    first_audio_at: Optional[float] = None
+
+    # Silence since the last speech, and whether there has been any speech to
+    # measure it from.
+    started: bool = False
+    trailing_silence_ms: float = 0.0
+
+    # Barge and judge budget already spent on this reply.
+    barges: int = 0
+    last_judged_len: int = 0
+    last_stt_pcm_len: int = 0
+
+    def reset(
+        self, *, index: int, sent_at: float, awaiting_end_signal: bool
+    ) -> None:
+        self.index = index
+        self.sent_at = sent_at
+        self.awaiting_end_signal = awaiting_end_signal
+        self.pcm = bytearray()
+        self.transcript = ""
+        self.first_audio_at = None
+        self.started = False
+        self.trailing_silence_ms = 0.0
+        self.barges = 0
+        self.last_judged_len = 0
+        self.last_stt_pcm_len = 0
 
 
 @dataclass
@@ -113,14 +163,6 @@ def _spoken_prefix(transcript: str, heard_seconds: float) -> str:
     return head if sep else ""
 
 
-def _recv_rate(connector: "BaseVoiceConnector") -> int:
-    rate = getattr(connector, "recv_sample_rate", None)
-    if rate:
-        return int(rate)
-    fmt = connector.audio_format
-    return int(fmt[0])
-
-
 class DuplexExchange:
     """Runs one duplex listen/barge cycle after the initial user audio is sent."""
 
@@ -130,7 +172,6 @@ class DuplexExchange:
         connector: "BaseVoiceConnector",
         tts_model: "DeepEvalBaseTTS",
         stt_model: "DeepEvalBaseSTT",
-        voice_config: "VoiceConfig",
         policy: InterruptionPolicy,
         floor: FloorController,
         golden: ConversationalGolden,
@@ -141,13 +182,12 @@ class DuplexExchange:
         self.connector = connector
         self.tts_model = tts_model
         self.stt_model = stt_model
-        self.voice_config = voice_config
         self.policy = policy
         self.floor = floor
         self.golden = golden
         self.language = language
         self.a_generate_schema = a_generate_schema
-        self.sample_rate = _recv_rate(connector)
+        self.sample_rate = connector.recv_sample_rate
         self.call_started_at = call_started_at
         self.tts_kwargs = (
             golden.persona.tts_kwargs() if golden.persona is not None else {}
@@ -168,32 +208,28 @@ class DuplexExchange:
         result = DuplexExchangeResult(frustrated=self.floor.frustrated)
         self.floor.reset_turn()
 
-        agent_pcm = bytearray()
-        partial_transcript = ""
-        first_audio_at: Optional[float] = None
-        trailing_silence_ms = 0.0
-        agent_started = False
-        last_judged_len = 0
-        last_judge_at: Optional[float] = None
-        barges_this_agent_turn = 0
+        # Everything about the reply being received now, reset as a unit when a
+        # barge lands and the agent starts a new one. Transports that close each
+        # turn explicitly are believed over silence.
+        utterance = _AgentUtterance(
+            index=len(turns),
+            sent_at=sent_at,
+            awaiting_end_signal=self.connector.signals_turn_complete,
+        )
+        # Work in flight on behalf of the loop, none of it owned by a single
+        # utterance: the judge and the barge outlive the reply they answer.
         judge_task: Optional[asyncio.Task] = None
         barge: Optional[_Barge] = None
         pending_decision: Optional[InterruptDecision] = None
         stt_task: Optional[asyncio.Task] = None
         event_task: Optional[asyncio.Task] = None
-        last_stt_pcm_len = 0
+        last_judge_at: Optional[float] = None
+        # Whether the transport has ever handed us text. Sticky for the whole
+        # exchange: it describes the transport, not this reply.
         connector_transcript_seen = False
-        # Transports that close each turn explicitly are believed over silence.
-        awaiting_end_signal = self.connector.signals_turn_complete
-        eot_silence = getattr(self.connector, "end_of_turn_silence_ms", 800)
-        max_timeout = getattr(self.connector, "max_turn_timeout_s", 30.0)
-        deadline = time.perf_counter() + max_timeout
+        eot_silence = self.connector.end_of_turn_silence_ms
+        deadline = time.perf_counter() + self.connector.max_turn_timeout_s
         exchange_done = False
-        interrupted_assistant = False
-        # Where in `turns` the agent's current utterance belongs, and which
-        # uplink it is answering. Both move on once an utterance is recorded.
-        utterance_index = len(turns)
-        utterance_sent_at = sent_at
         last_uplink_at = sent_at
 
         def _heard_transcript() -> str:
@@ -206,13 +242,13 @@ class DuplexExchange:
             if not connector_transcript_seen:
                 # Transcribed from the audio already delivered, so it can only
                 # contain speech that played.
-                return partial_transcript
+                return utterance.transcript
             heard_s = (
-                (len(agent_pcm) / 2) / self.sample_rate
+                (len(utterance.pcm) / 2) / self.sample_rate
                 if self.sample_rate
                 else 0.0
             )
-            return _spoken_prefix(partial_transcript, heard_s)
+            return _spoken_prefix(utterance.transcript, heard_s)
 
         async def _maybe_stop_uplink() -> None:
             """Stop sending the caller's speech, keeping whatever went out.
@@ -227,8 +263,7 @@ class DuplexExchange:
 
         def _take_floor(barge: _Barge, sent_at: float) -> None:
             """Record the caller cutting in, at the moment the agent hears it."""
-            nonlocal barges_this_agent_turn, barges_this_conversation
-            nonlocal last_uplink_at
+            nonlocal barges_this_conversation, last_uplink_at
             meta = {"barge_in": True}
             if barge.frustrated:
                 meta["frustrated"] = True
@@ -241,22 +276,22 @@ class DuplexExchange:
             # which is only known once the last frame is out; until then the
             # start of the barge is the best floor for its reply's wait.
             last_uplink_at = sent_at
-            barges_this_agent_turn += 1
+            utterance.barges += 1
             barges_this_conversation += 1
             result.barges += 1
 
         def _finish_barge(barge: _Barge, audio: Audio, sent_at: float) -> None:
             """Attach what the barge sounded like once its last frame is out."""
-            nonlocal last_uplink_at, utterance_sent_at
+            nonlocal last_uplink_at
             if barge.turn is None:
                 return
             audio.start_time = max(0.0, sent_at - self.call_started_at)
             barge.turn.audio = audio
             ended = sent_at + (audio_duration(audio) or 0.0)
-            if utterance_sent_at == sent_at:
+            if utterance.sent_at == sent_at:
                 # A reply was finalized mid-barge and is waiting on this
                 # utterance, so its wait starts where the caller stopped.
-                utterance_sent_at = ended
+                utterance.sent_at = ended
             last_uplink_at = ended
 
         async def _speak_barge(barge: _Barge) -> None:
@@ -338,34 +373,30 @@ class DuplexExchange:
         async def _finalize_assistant(
             *, interrupted: bool, content: Optional[str] = None
         ) -> None:
-            nonlocal agent_pcm, first_audio_at, partial_transcript
-            nonlocal utterance_index, utterance_sent_at
-            text = content if content is not None else partial_transcript
-            spoken_pcm = bytes(agent_pcm)
+            text = content if content is not None else utterance.transcript
+            spoken_pcm = bytes(utterance.pcm)
             has_audio = len(spoken_pcm) > 0
             audio = (
                 _pcm_to_audio(spoken_pcm, self.sample_rate)
                 if has_audio
                 else None
             )
-            if audio is not None and first_audio_at is not None:
+            if audio is not None and utterance.first_audio_at is not None:
                 audio.start_time = max(
-                    0.0, first_audio_at - self.call_started_at
+                    0.0, utterance.first_audio_at - self.call_started_at
                 )
             metadata = None
             # The agent never said it had finished, so this turn ended because
             # we stopped listening — its recording can hold less than the
             # transcript describes.
-            unfinished = awaiting_end_signal and not interrupted
+            unfinished = utterance.awaiting_end_signal and not interrupted
             if has_audio and (interrupted or unfinished or not text):
                 # Connectors that carry a transcript send the whole utterance,
                 # including the part a barge stopped the agent from saying.
                 # Transcribe the audio that actually played so `content` is
                 # what the caller heard, and keep the rest as evidence of what
                 # the agent was cut off from saying.
-                pad_s = getattr(
-                    self.stt_model, "truncated_audio_pad_seconds", 0.0
-                )
+                pad_s = self.stt_model.truncated_audio_pad_seconds
                 to_transcribe = audio
                 if interrupted and pad_s > 0:
                     to_transcribe = _padded_for_transcription(
@@ -382,8 +413,8 @@ class DuplexExchange:
                         metadata["ended_without_agent_signal"] = True
                 text = spoken
             latency_ms = (
-                (first_audio_at - utterance_sent_at) * 1000.0
-                if first_audio_at is not None
+                (utterance.first_audio_at - utterance.sent_at) * 1000.0
+                if utterance.first_audio_at is not None
                 else None
             )
             turn = Turn(
@@ -397,16 +428,28 @@ class DuplexExchange:
             # Place the reply where it began rather than at the end: a barge is
             # appended the moment it fires, so appending here would record the
             # caller cutting in *before* the agent they cut off.
-            turns.insert(utterance_index, turn)
+            turns.insert(utterance.index, turn)
             result.turns.append(turn)
-            # Reset buffers for a possible post-barge agent reply.
-            agent_pcm = bytearray()
-            partial_transcript = ""
-            first_audio_at = None
-            utterance_index = len(turns)
-            # Anything the agent says next is a reply to the most recent
-            # uplink, not to the one that opened this exchange.
-            utterance_sent_at = last_uplink_at
+            # Start a fresh utterance for a possible post-barge agent reply.
+            # Anything the agent says next answers the most recent uplink, not
+            # the one that opened this exchange.
+            utterance.reset(
+                index=len(turns),
+                sent_at=last_uplink_at,
+                awaiting_end_signal=self.connector.signals_turn_complete,
+            )
+
+        async def _restart_after_barge() -> None:
+            """Record the reply a barge cut off and listen for the next one.
+
+            The caller has the floor, so the agent's own turn is over whether
+            it said so or not. Everything scoped to that reply starts again —
+            its end-of-turn timer, and the barge and judge budget it had spent
+            — or the reply that follows inherits a spent budget and a timer
+            already partway to expiring.
+            """
+            await _finalize_assistant(interrupted=True)
+            self.floor.reset_turn()
 
         async def _advance_end_of_turn(elapsed_ms: float, now: float) -> bool:
             """Advance the end-of-turn timer. True when the exchange is over.
@@ -425,36 +468,29 @@ class DuplexExchange:
             and waiting for a signal that may never come would hold the caller
             mid-interruption.
             """
-            nonlocal trailing_silence_ms, agent_started, interrupted_assistant
-            nonlocal barges_this_agent_turn, last_judged_len, last_stt_pcm_len
-            nonlocal awaiting_end_signal
-
             if self.floor.agent_speaking:
-                trailing_silence_ms += elapsed_ms
-                if trailing_silence_ms < eot_silence:
+                utterance.trailing_silence_ms += elapsed_ms
+                if utterance.trailing_silence_ms < eot_silence:
                     return False
-                if awaiting_end_signal and not self.floor.barge_in_progress:
+                if (
+                    utterance.awaiting_end_signal
+                    and not self.floor.barge_in_progress
+                ):
                     return False
                 if self.floor.on_agent_speech_end(now).barge_succeeded:
-                    await _finalize_assistant(interrupted=True)
-                    interrupted_assistant = False
-                    self.floor.reset_turn()
-                    agent_started = False
-                    trailing_silence_ms = 0.0
-                    barges_this_agent_turn = 0
-                    last_judged_len = 0
-                    last_stt_pcm_len = 0
-                    awaiting_end_signal = self.connector.signals_turn_complete
+                    await _restart_after_barge()
                     return False
 
             if (
-                trailing_silence_ms >= eot_silence
-                and agent_started
-                and not awaiting_end_signal
+                utterance.trailing_silence_ms >= eot_silence
+                and utterance.started
+                and not utterance.awaiting_end_signal
                 and not self.floor.agent_speaking
                 and not self.floor.user_uplink_active
             ):
-                await _finalize_assistant(interrupted=interrupted_assistant)
+                # Silence ran out with the floor uncontested: the agent
+                # finished on its own rather than being cut off.
+                await _finalize_assistant(interrupted=False)
                 return True
             return False
 
@@ -523,17 +559,8 @@ class DuplexExchange:
                 if action.stop_uplink:
                     await _maybe_stop_uplink()
                 if action.barge_succeeded:
-                    interrupted_assistant = True
-                    await _finalize_assistant(interrupted=True)
-                    interrupted_assistant = False
                     # Continue listening for the agent's next reply.
-                    self.floor.reset_turn()
-                    agent_started = False
-                    trailing_silence_ms = 0.0
-                    barges_this_agent_turn = 0
-                    last_judged_len = 0
-                    last_stt_pcm_len = 0
-                    awaiting_end_signal = self.connector.signals_turn_complete
+                    await _restart_after_barge()
                 if (
                     action.retry_barge
                     and self.floor.frustrated
@@ -572,7 +599,7 @@ class DuplexExchange:
                 now = time.perf_counter()
                 arrived_at = event.received_at or now
                 if event.transcript:
-                    partial_transcript = event.transcript
+                    utterance.transcript = event.transcript
                     connector_transcript_seen = True
 
                 if event.audio:
@@ -581,34 +608,37 @@ class DuplexExchange:
                         len(event.audio) / 2 / self.sample_rate
                     ) * 1000.0
                     if not silent:
-                        if not agent_started or not self.floor.agent_speaking:
+                        if (
+                            not utterance.started
+                            or not self.floor.agent_speaking
+                        ):
                             self.floor.on_agent_speech_start(arrived_at)
-                            agent_started = True
+                            utterance.started = True
                         # The end-of-turn timer measures silence *since the last
                         # speech*, so every spoken frame clears it. Letting it
                         # accumulate across a turn instead ends the agent
                         # mid-sentence once the pauses and scheduling gaps add up
                         # to the threshold, discarding the rest of the reply.
-                        trailing_silence_ms = 0.0
-                        if first_audio_at is None:
-                            first_audio_at = arrived_at
-                        agent_pcm.extend(event.audio)
+                        utterance.trailing_silence_ms = 0.0
+                        if utterance.first_audio_at is None:
+                            utterance.first_audio_at = arrived_at
+                        utterance.pcm.extend(event.audio)
                     else:
                         if await _advance_end_of_turn(frame_ms, arrived_at):
                             exchange_done = True
                             continue
-                        agent_pcm.extend(event.audio)
+                        utterance.pcm.extend(event.audio)
 
                     # Streaming STT fallback when no platform transcript.
                     if (
-                        not partial_transcript
+                        not utterance.transcript
                         and not connector_transcript_seen
-                        and len(agent_pcm) - last_stt_pcm_len
+                        and len(utterance.pcm) - utterance.last_stt_pcm_len
                         > self.sample_rate * 2  # ~1s of new audio
                         and (stt_task is None or stt_task.done())
                     ):
-                        last_stt_pcm_len = len(agent_pcm)
-                        snap = bytes(agent_pcm)
+                        utterance.last_stt_pcm_len = len(utterance.pcm)
+                        snap = bytes(utterance.pcm)
 
                         async def _stt_partial(pcm=snap):
                             audio = _pcm_to_audio(pcm, self.sample_rate)
@@ -623,7 +653,7 @@ class DuplexExchange:
                     try:
                         text, cost = stt_task.result()
                         if text:
-                            partial_transcript = text
+                            utterance.transcript = text
                         if cost is not None:
                             result.stt_cost += cost
                     except Exception:
@@ -633,27 +663,16 @@ class DuplexExchange:
                 if event.turn_complete:
                     # The agent has spoken for itself; silence is no longer
                     # being asked to guess for this utterance.
-                    awaiting_end_signal = False
+                    utterance.awaiting_end_signal = False
                     if self.floor.user_uplink_active:
                         # Agent ended while we were barging — treat as success.
                         self.floor.on_agent_speech_end(arrived_at)
-                        await _finalize_assistant(interrupted=True)
-                        interrupted_assistant = False
-                        self.floor.reset_turn()
-                        agent_started = False
-                        trailing_silence_ms = 0.0
-                        barges_this_agent_turn = 0
-                        last_judged_len = 0
-                        last_stt_pcm_len = 0
-                        awaiting_end_signal = (
-                            self.connector.signals_turn_complete
-                        )
+                        await _restart_after_barge()
                         # Keep listening for follow-up agent speech briefly.
                         continue
-                    elif agent_started:
-                        await _finalize_assistant(
-                            interrupted=interrupted_assistant
-                        )
+                    elif utterance.started:
+                        # The agent said it was done and nobody was barging.
+                        await _finalize_assistant(interrupted=False)
                         exchange_done = True
                         continue
 
@@ -674,14 +693,14 @@ class DuplexExchange:
                     and should_poll_judge(
                         policy=self.policy,
                         partial_transcript=heard,
-                        last_judged_len=last_judged_len,
+                        last_judged_len=utterance.last_judged_len,
                         last_judge_at=last_judge_at,
                         now=now,
                         barges_this_conversation=barges_this_conversation,
-                        barges_this_agent_turn=barges_this_agent_turn,
+                        barges_this_agent_turn=utterance.barges,
                     )
                 ):
-                    last_judged_len = len(heard)
+                    utterance.last_judged_len = len(heard)
                     last_judge_at = now
                     snap_turns = list(turns)
                     snap_partial = heard
@@ -730,11 +749,14 @@ class DuplexExchange:
                 except Exception:
                     logger.exception("Partial STT failed during cleanup")
             await _maybe_stop_uplink()
-            # If we never finalized but collected audio, emit assistant turn.
-            if agent_pcm and (
+            # Audio collected but never finalized: the exchange hit its
+            # timeout mid-reply. Not an interruption — nobody cut the agent
+            # off, we stopped listening — which `_finalize_assistant` records
+            # as `ended_without_agent_signal`.
+            if utterance.pcm and (
                 not result.turns or result.turns[-1].role != "assistant"
             ):
-                await _finalize_assistant(interrupted=interrupted_assistant)
+                await _finalize_assistant(interrupted=False)
 
         result.frustrated = self.floor.frustrated or result.frustrated
         return result

@@ -9,7 +9,11 @@ from deepeval.models.base_model import DeepEvalBaseTTS, DeepEvalBaseSTT
 from deepeval.voice.protocol import VoiceProtocol
 from deepeval.voice.turn_detection import TurnDetection, turn_detection_timing
 from deepeval.voice.connectors import audio_utils
-from deepeval.voice.connectors.transports.base import BaseVoiceConnector
+from deepeval.voice.connectors.transports.base import (
+    BaseVoiceConnector,
+    UplinkStream,
+    iter_downlink,
+)
 from deepeval.voice.connectors.types import (
     AgentEvent,
     AgentCallback,
@@ -48,7 +52,7 @@ class CallbackVoiceConnector(BaseVoiceConnector):
         self.end_of_turn_silence_ms = timing.end_of_turn_silence_ms
         self.max_turn_timeout_s = timing.max_turn_timeout_s
         self._events: Optional[asyncio.Queue] = None
-        self._uplink_cancel: Optional[asyncio.Event] = None
+        self._uplink: Optional[UplinkStream] = None
         self._reply_task: Optional[asyncio.Task] = None
 
     async def connect(self) -> None:
@@ -58,7 +62,7 @@ class CallbackVoiceConnector(BaseVoiceConnector):
             self._format[1],
         )
         self._events = asyncio.Queue()
-        self._uplink_cancel = asyncio.Event()
+        self._uplink = UplinkStream()
         logger.debug("Callback connector connected")
 
     async def disconnect(self) -> None:
@@ -140,7 +144,7 @@ class CallbackVoiceConnector(BaseVoiceConnector):
         Duplex test double: uplink cancel is honored as a flag (no live PCM
         stream). Reply audio is framed onto `iter_agent_events`.
         """
-        if self._events is None or self._uplink_cancel is None:
+        if self._events is None or self._uplink is None:
             raise RuntimeError(
                 "CallbackVoiceConnector.stream_uplink() called before connect()."
             )
@@ -156,7 +160,7 @@ class CallbackVoiceConnector(BaseVoiceConnector):
                 pass
         # The cancelled task paces frames in real time, so it has usually
         # enqueued more of the previous reply than the last exchange consumed.
-        self._drain_stale_inbound()
+        self.drain_downlink()
         if abandoned_reply:
             # This uplink talked over a reply that was still playing, and each
             # uplink starts a fresh agent invocation. Close the abandoned
@@ -164,7 +168,7 @@ class CallbackVoiceConnector(BaseVoiceConnector):
             # the next reply's frames land in the same buffer and the two are
             # recorded as one turn whose audio and transcript disagree.
             await self._events.put(AgentEvent(turn_complete=True))
-        self._uplink_cancel.clear()
+        self._uplink.begin()
 
         async def _produce_reply() -> None:
             result = await _maybe_await(self.agent(audio))
@@ -190,13 +194,12 @@ class CallbackVoiceConnector(BaseVoiceConnector):
                         received_at=time.perf_counter(),
                     )
                 )
+            # Paced out in full even while the uplink is cancelled: floor
+            # control stops the *caller*, and the agent talking over a barge is
+            # exactly what the duplex loop needs to see.
             for chunk in audio_utils.iter_pcm16_frames(
                 reply_pcm, self._format[0]
             ):
-                if self._uplink_cancel.is_set() and False:
-                    # Reply playback is independent of uplink cancel; floor
-                    # control stops *user* uplink, not agent downlink.
-                    pass
                 await self._events.put(
                     AgentEvent(audio=chunk, received_at=time.perf_counter())
                 )
@@ -206,19 +209,10 @@ class CallbackVoiceConnector(BaseVoiceConnector):
         self._reply_task = asyncio.create_task(_produce_reply())
 
     async def stop_uplink(self) -> None:
-        if self._uplink_cancel is not None:
-            self._uplink_cancel.set()
+        if self._uplink is not None:
+            await self._uplink.stop()
 
-    def _drain_stale_inbound(self) -> None:
-        """Drop downlink left over from a previous agent reply.
-
-        Without this, frames the previous reply had already queued are read as
-        the *next* turn's audio: the assistant clip gets timestamped at the
-        moment the new user turn starts, its transcript event is long gone (so
-        it is re-transcribed), and the turn ends up holding the tail of the
-        wrong reply. `WebSocketConnector` and `LiveKitConnector` drain for the
-        same reason.
-        """
+    def drain_downlink(self) -> None:
         if self._events is None:
             return
         dropped = 0
@@ -237,8 +231,7 @@ class CallbackVoiceConnector(BaseVoiceConnector):
                 "CallbackVoiceConnector.iter_agent_events() called before "
                 "connect()."
             )
-        while True:
-            event = await self._events.get()
+        async for event in iter_downlink(self._events):
             yield event
 
     @classmethod
@@ -258,5 +251,4 @@ class CallbackVoiceConnector(BaseVoiceConnector):
             agent_audio, _ = await tts.a_synthesize(reply, voice=voice)
             return ConnectorTurn(audio=agent_audio, transcript=reply)
 
-        sample_rate = getattr(tts, "sample_rate", 24000)
-        return cls(agent, sample_rate=sample_rate, **kwargs)
+        return cls(agent, sample_rate=tts.sample_rate, **kwargs)

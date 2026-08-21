@@ -9,6 +9,7 @@ from typing import (
     Callable,
 )
 from contextlib import AsyncExitStack
+from dataclasses import dataclass
 from datetime import datetime
 from rich.progress import Progress
 from pydantic import BaseModel
@@ -54,9 +55,12 @@ from deepeval.dataset import ConversationalGolden
 
 if TYPE_CHECKING:
     from deepeval.dataset import Persona
+    from deepeval.models.base_model import DeepEvalBaseSTT, DeepEvalBaseTTS
     from deepeval.test_case import Audio
     from deepeval.voice.connectors.transports.base import BaseVoiceConnector
     from deepeval.voice.config import VoiceConfig
+    from deepeval.voice.floor_control import FloorController
+    from deepeval.voice.interruption import InterruptionPolicy
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +68,61 @@ _MISSING = object()
 
 # Length of the silent uplink used to hear the agent out without speaking.
 _SILENCE_PROBE_SECONDS = 1.0
+
+
+@dataclass
+class _VoiceRun:
+    """A simulator's voice mode: the call, the speech, and the spend.
+
+    Present only when the simulator was given a `VoiceConfig` — its absence is
+    what text mode is. The fields have three lifetimes, which is why the two
+    `begin_*` methods exist rather than a dozen assignments scattered through
+    the simulator: the connector and the speech models last as long as the
+    simulator, the costs and the run label restart on each `simulate()`, and the
+    floor, persona, and barge count are rebuilt for every conversation.
+    """
+
+    config: "VoiceConfig"
+    connector: "BaseVoiceConnector"
+    tts_model: "DeepEvalBaseTTS"
+    stt_model: "DeepEvalBaseSTT"
+
+    # Per `simulate()` call.
+    tts_cost: float = 0.0
+    stt_cost: float = 0.0
+    run_timestamp: Optional[str] = None
+    num_goldens: int = 0
+
+    # Per conversation.
+    call_started_at: Optional[float] = None
+    policy: Optional["InterruptionPolicy"] = None
+    floor: Optional["FloorController"] = None
+    persona: Optional["Persona"] = None
+    barges: int = 0
+
+    def begin_run(self, num_goldens: int) -> None:
+        self.tts_cost = 0.0
+        self.stt_cost = 0.0
+        self.run_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        self.num_goldens = num_goldens
+
+    def begin_conversation(self, persona: Optional["Persona"]) -> None:
+        self.persona = persona
+        self.barges = 0
+        self.call_started_at = None
+        self.policy = None
+        self.floor = None
+
+    @property
+    def is_duplex(self) -> bool:
+        """Whether this conversation's caller talks over the agent."""
+        return self.policy is not None
+
+    @property
+    def run_label(self) -> str:
+        return "simulation-{}".format(
+            self.run_timestamp or datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        )
 
 
 def _populate_audio_duration(audio) -> None:
@@ -128,19 +187,9 @@ class ConversationSimulator:
                 "`voice_config` (voice agents)."
             )
 
-        self.voice_config = voice_config
-        self.voice_connector: Optional["BaseVoiceConnector"] = None
-        self.tts_cost: float = 0.0
-        self.stt_cost: float = 0.0
-        self._voice_run_timestamp: Optional[str] = None
-        self._voice_num_goldens: Optional[int] = None
-        self._voice_call_started_at: Optional[float] = None
-        # Rebuilt per conversation from the golden's persona; voice mode pins
-        # `max_concurrent` to 1, so a single active pair is safe.
-        self._interruption_policy = None
-        self._floor_controller = None
-        self._active_persona = None
-        self._duplex_barges = 0
+        # Voice mode lives in one object, rebuilt per run and per conversation.
+        # Voice pins `max_concurrent` to 1, so a single active one is safe.
+        self._voice: Optional[_VoiceRun] = None
         if voice_config is not None:
             if not async_mode:
                 raise ValueError("Voice simulation requires `async_mode=True`.")
@@ -150,9 +199,12 @@ class ConversationSimulator:
             from deepeval.models.tts_models import OpenAITTSModel
             from deepeval.models.stt_models import OpenAISTTModel
 
-            self.voice_connector = voice_config.connector
-            self._tts_model = voice_config.tts_model or OpenAITTSModel()
-            self._stt_model = voice_config.stt_model or OpenAISTTModel()
+            self._voice = _VoiceRun(
+                config=voice_config,
+                connector=voice_config.connector,
+                tts_model=voice_config.tts_model or OpenAITTSModel(),
+                stt_model=voice_config.stt_model or OpenAISTTModel(),
+            )
             model_callback = self._voice_model_callback
             if voice_config.interruption_settings is not None:
                 warnings.warn(
@@ -190,6 +242,24 @@ class ConversationSimulator:
             a_generate_schema=self.a_generate_schema,
         )
 
+    @property
+    def tts_cost(self) -> float:
+        """Speech synthesis spend for the last run; zero outside voice mode."""
+        return self._voice.tts_cost if self._voice is not None else 0.0
+
+    @property
+    def stt_cost(self) -> float:
+        """Transcription spend for the last run; zero outside voice mode."""
+        return self._voice.stt_cost if self._voice is not None else 0.0
+
+    @property
+    def voice_config(self) -> Optional["VoiceConfig"]:
+        return self._voice.config if self._voice is not None else None
+
+    @property
+    def voice_connector(self) -> Optional["BaseVoiceConnector"]:
+        return self._voice.connector if self._voice is not None else None
+
     def simulate(
         self,
         conversational_goldens: List[ConversationalGolden],
@@ -199,13 +269,8 @@ class ConversationSimulator:
         ] = None,
     ) -> List[ConversationalTestCase]:
         self.simulation_cost = 0 if self.using_native_model else None
-        if self.voice_connector is not None:
-            self.tts_cost = 0.0
-            self.stt_cost = 0.0
-            self._voice_run_timestamp = datetime.now().strftime(
-                "%Y-%m-%d_%H-%M-%S"
-            )
-            self._voice_num_goldens = len(conversational_goldens)
+        if self._voice is not None:
+            self._voice.begin_run(len(conversational_goldens))
 
         with conversation_simulator_progress_context(
             simulator_model=self.simulator_model.get_model_name(),
@@ -491,33 +556,30 @@ class ConversationSimulator:
         if golden.turns is not None:
             turns.extend(golden.turns)
 
-        self._duplex_barges = 0
-        self._active_persona = golden.persona
-        if self.voice_connector is not None:
-            (
-                self._interruption_policy,
-                self._floor_controller,
-            ) = self._build_interruption(golden)
+        voice = self._voice
+        if voice is not None:
+            voice.begin_conversation(golden.persona)
+            voice.policy, voice.floor = self._build_interruption(golden)
 
         async with AsyncExitStack() as stack:
             # Voice mode: one live call per conversation. The connector is
             # connected before the first turn and disconnected when the
             # conversation ends (or errors).
-            if self.voice_connector is not None:
+            if voice is not None:
                 connect_started = time.perf_counter()
                 logger.debug(
                     "Voice connector connect started: %s",
-                    type(self.voice_connector).__name__,
+                    type(voice.connector).__name__,
                 )
-                await stack.enter_async_context(self.voice_connector)
-                self._voice_call_started_at = time.perf_counter()
+                await stack.enter_async_context(voice.connector)
+                voice.call_started_at = time.perf_counter()
                 logger.debug(
                     "Voice connector connected after %.2fs",
                     time.perf_counter() - connect_started,
                 )
 
             persona = golden.persona
-            voice_mode = self.voice_connector is not None
+            voice_mode = voice is not None
             muted = voice_mode and persona is not None and persona.muted
             hold_timeout = persona.hold_timeout if persona is not None else None
             silent_for = 0.0
@@ -637,7 +699,7 @@ class ConversationSimulator:
                 if muted:
                     assistant_turn = await self._voice_listen(turns)
                     turns.append(assistant_turn)
-                elif self._interruption_policy is not None:
+                elif voice is not None and voice.is_duplex:
                     assistant_turn = await self._voice_duplex_exchange(
                         user_input, turns, golden
                     )
@@ -713,14 +775,9 @@ class ConversationSimulator:
             _dataset_alias=golden._dataset_alias,
             _dataset_id=golden._dataset_id,
         )
-        if (
-            self.voice_connector is not None
-            and self.voice_config.output_dir is not None
-        ):
+        if voice is not None and voice.config.output_dir is not None:
             save_started = time.perf_counter()
-            logger.debug(
-                "Saving voice audio to %s", self.voice_config.output_dir
-            )
+            logger.debug("Saving voice audio to %s", voice.config.output_dir)
             self._save_voice_audio(conversational_test_case, golden, index)
             logger.debug(
                 "Voice audio saved after %.2fs",
@@ -740,14 +797,14 @@ class ConversationSimulator:
         `language="auto"` tells the STT model to detect the language per
         utterance instead of locking to the one it was configured with.
         """
-        persona = self._active_persona
+        persona = self._voice.persona if self._voice is not None else None
         if persona is not None and persona.multilingual_stt:
             return {"language": "auto"}
         return {}
 
     def _mix_background(self, audio: "Audio") -> "Audio":
         """Lay the persona's ambience under one uplink utterance."""
-        persona = self._active_persona
+        persona = self._voice.persona if self._voice is not None else None
         if persona is None or persona.background_noise is None:
             return audio
         from deepeval.voice.background import mix_background
@@ -771,17 +828,18 @@ class ConversationSimulator:
         """
         from deepeval.voice.background import BackgroundMixer
 
+        voice = self._voice
         tts_kwargs = self._persona_tts_kwargs(persona)
-        if not self._tts_model.supports_streaming():
-            audio, tts_cost = await self._tts_model.a_synthesize(
+        if not voice.tts_model.supports_streaming():
+            audio, tts_cost = await voice.tts_model.a_synthesize(
                 text, **tts_kwargs
             )
             if tts_cost is not None:
-                self.tts_cost += tts_cost
+                voice.tts_cost += tts_cost
             _populate_audio_duration(audio)
             audio = self._mix_background(audio)
             started_at = time.perf_counter()
-            await self.voice_connector.stream_uplink(
+            await voice.connector.stream_uplink(
                 audio, trailing_silence=trailing_silence
             )
             return audio, started_at
@@ -791,19 +849,19 @@ class ConversationSimulator:
         )
 
         async def _frames():
-            async for chunk in self._tts_model.a_synthesize_stream(
+            async for chunk in voice.tts_model.a_synthesize_stream(
                 text, **tts_kwargs
             ):
                 yield mixer.mix_chunk(chunk)
 
         tts_started = time.perf_counter()
         logger.debug("User TTS stream started: characters=%d", len(text))
-        result = await self.voice_connector.stream_uplink_chunks(
+        result = await voice.connector.stream_uplink_chunks(
             _frames(), trailing_silence=trailing_silence
         )
-        tts_cost = self._tts_model.synthesis_cost(text)
+        tts_cost = voice.tts_model.synthesis_cost(text)
         if tts_cost is not None:
-            self.tts_cost += tts_cost
+            voice.tts_cost += tts_cost
         logger.debug(
             "User TTS stream finished after %.2fs: sending began after %.2fs",
             time.perf_counter() - tts_started,
@@ -816,7 +874,7 @@ class ConversationSimulator:
         from deepeval.test_case import Audio
         from deepeval.voice.connectors import audio_utils
 
-        sample_rate, _ = self.voice_connector.audio_format
+        sample_rate, _ = self._voice.connector.audio_format
         pcm = b"\x00" * (int(sample_rate * seconds) * 2)
         return Audio.from_bytes(
             audio_utils.pcm16_to_wav_bytes(pcm, sample_rate, 1),
@@ -850,7 +908,7 @@ class ConversationSimulator:
             else None
         )
         if behavior is None:
-            behavior = self.voice_config.interruption_settings
+            behavior = self._voice.config.interruption_settings
         if behavior is None:
             return None, None
 
@@ -867,21 +925,19 @@ class ConversationSimulator:
     ) -> None:
         from deepeval.voice.output import save_conversation_audio
 
-        timestamp = self._voice_run_timestamp or datetime.now().strftime(
-            "%Y-%m-%d_%H-%M-%S"
-        )
+        voice = self._voice
         conversation_id = None
-        if (self._voice_num_goldens or 1) > 1:
+        if max(voice.num_goldens, 1) > 1:
             conversation_id = (
                 golden.name
                 or f"conversation-{index if index is not None else 0}"
             )
         save_conversation_audio(
             test_case,
-            output_dir=self.voice_config.output_dir,
-            run_label=f"simulation-{timestamp}",
+            output_dir=voice.config.output_dir,
+            run_label=voice.run_label,
             conversation_id=conversation_id,
-            combine_audio_files=self.voice_config.combine_audio_files,
+            combine_audio_files=voice.config.combine_audio_files,
         )
 
     ############################################
@@ -1034,10 +1090,11 @@ class ConversationSimulator:
         Used when the persona has no `interruption_behavior`. Duplex barge-in
         goes through `_voice_duplex_exchange` instead.
         """
+        voice = self._voice
         tts_started = time.perf_counter()
         logger.debug("User TTS started: characters=%d", len(input))
-        user_audio, tts_cost = await self._tts_model.a_synthesize(
-            input, **self._persona_tts_kwargs(self._active_persona)
+        user_audio, tts_cost = await voice.tts_model.a_synthesize(
+            input, **self._persona_tts_kwargs(voice.persona)
         )
         _populate_audio_duration(user_audio)
         logger.debug(
@@ -1046,7 +1103,7 @@ class ConversationSimulator:
             len(user_audio.get_bytes()),
         )
         if tts_cost is not None:
-            self.tts_cost += tts_cost
+            voice.tts_cost += tts_cost
         user_audio = self._mix_background(user_audio)
         if turns and turns[-1].role == "user":
             turns[-1].audio = user_audio
@@ -1061,14 +1118,15 @@ class ConversationSimulator:
         Shared by the half-duplex callback and by silence-only exchanges (a
         muted caller, or waiting out an agent that speaks first).
         """
+        voice = self._voice
         connector_started = time.perf_counter()
         logger.debug(
             "Connector exchange started: %s",
-            type(self.voice_connector).__name__,
+            type(voice.connector).__name__,
         )
-        conn_turn = await self.voice_connector.exchange_turn(user_audio)
+        conn_turn = await voice.connector.exchange_turn(user_audio)
         _populate_audio_duration(conn_turn.audio)
-        call_started_at = self._voice_call_started_at or connector_started
+        call_started_at = voice.call_started_at or connector_started
         user_audio.start_time = max(
             0.0,
             (conn_turn.input_audio_started_at or connector_started)
@@ -1106,7 +1164,7 @@ class ConversationSimulator:
         elif has_audio:
             stt_started = time.perf_counter()
             logger.debug("Agent STT started")
-            agent_text, stt_cost = await self._stt_model.a_transcribe(
+            agent_text, stt_cost = await voice.stt_model.a_transcribe(
                 conn_turn.audio, **self._stt_kwargs()
             )
             logger.debug(
@@ -1114,7 +1172,7 @@ class ConversationSimulator:
                 time.perf_counter() - stt_started,
             )
             if stt_cost is not None:
-                self.stt_cost += stt_cost
+                voice.stt_cost += stt_cost
         else:
             agent_text = ""
             logger.warning(
@@ -1149,18 +1207,11 @@ class ConversationSimulator:
 
         from deepeval.voice.duplex import DuplexExchange
 
+        voice = self._voice
         # Drain stale downlink before the new user utterance.
-        drain = getattr(self.voice_connector, "_drain_stale_inbound", None)
-        if callable(drain):
-            drain()
-        else:
-            drain_frames = getattr(
-                self.voice_connector, "_drain_stale_frames", None
-            )
-            if callable(drain_frames):
-                drain_frames()
+        voice.connector.drain_downlink()
 
-        call_started_at = self._voice_call_started_at or time.perf_counter()
+        call_started_at = voice.call_started_at or time.perf_counter()
         user_audio, uplink_started_at = await self._send_user_utterance(
             input, golden.persona, trailing_silence=True
         )
@@ -1174,12 +1225,11 @@ class ConversationSimulator:
         sent_at = uplink_started_at + (user_audio.duration or 0.0)
 
         exchange = DuplexExchange(
-            connector=self.voice_connector,
-            tts_model=self._tts_model,
-            stt_model=self._stt_model,
-            voice_config=self.voice_config,
-            policy=self._interruption_policy,
-            floor=self._floor_controller,
+            connector=voice.connector,
+            tts_model=voice.tts_model,
+            stt_model=voice.stt_model,
+            policy=voice.policy,
+            floor=voice.floor,
             golden=golden,
             language=self.language,
             a_generate_schema=self.a_generate_schema,
@@ -1188,11 +1238,11 @@ class ConversationSimulator:
         result = await exchange.run(
             turns=turns,
             sent_at=sent_at,
-            barges_this_conversation=self._duplex_barges,
+            barges_this_conversation=voice.barges,
         )
-        self._duplex_barges += result.barges
-        self.tts_cost += result.tts_cost
-        self.stt_cost += result.stt_cost
+        voice.barges += result.barges
+        voice.tts_cost += result.tts_cost
+        voice.stt_cost += result.stt_cost
 
         for turn in reversed(result.turns):
             if turn.role == "assistant":

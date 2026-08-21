@@ -1,5 +1,7 @@
+import asyncio
 import time
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from typing import (
     AsyncIterable,
     AsyncIterator,
@@ -19,6 +21,58 @@ from deepeval.voice.streaming import (
 )
 
 
+@dataclass
+class UplinkStream:
+    """The send side of a live call: one caller utterance in flight at a time.
+
+    The flag and the task are a pair and belong together. Floor control stops a
+    barge by raising the flag rather than by killing the send, because an
+    utterance that was half spoken still has to be recorded as what the caller
+    said; the task handle exists only so the send can be reaped afterwards.
+
+    Created when the transport connects, so a `None` here means the call has
+    not been opened yet.
+    """
+
+    cancel: asyncio.Event = field(default_factory=asyncio.Event)
+    task: Optional[asyncio.Task] = None
+
+    @property
+    def cancelled(self) -> bool:
+        return self.cancel.is_set()
+
+    def begin(self) -> None:
+        """Arm a fresh utterance, clearing any earlier cancellation."""
+        self.cancel.clear()
+
+    async def stop(self) -> None:
+        """Stop sending, and wait for the send to notice."""
+        self.cancel.set()
+        if self.task is not None and not self.task.done():
+            self.task.cancel()
+            try:
+                await self.task
+            except (asyncio.CancelledError, Exception):
+                pass
+
+
+async def iter_downlink(queue: asyncio.Queue) -> AsyncIterator[AgentEvent]:
+    """Yield downlink events from a transport's receive queue, indefinitely.
+
+    `turn_complete` is signaled on individual events; the iterator itself never
+    stops, so a duplex loop can keep listening after a barge-in. Queue items may
+    be `AgentEvent`s, raw PCM, or `None` as an end-of-turn sentinel.
+    """
+    while True:
+        item = await queue.get()
+        if item is None:
+            yield AgentEvent(turn_complete=True)
+        elif isinstance(item, AgentEvent):
+            yield item
+        elif isinstance(item, (bytes, bytearray)):
+            yield AgentEvent(audio=bytes(item))
+
+
 class BaseVoiceConnector(ABC):
     """Base class for voice agent connectors.
 
@@ -30,6 +84,13 @@ class BaseVoiceConnector(ABC):
     """
 
     protocol: ClassVar[VoiceProtocol]
+
+    # End-of-turn timing. Duplex exchanges need both to decide when the agent
+    # has stopped talking, so they are part of the connector contract with
+    # defaults rather than something each transport may or may not expose.
+    # Transports that select a `turn_detection` preset overwrite them.
+    end_of_turn_silence_ms: int = 800
+    max_turn_timeout_s: float = 30.0
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -142,6 +203,27 @@ class BaseVoiceConnector(ABC):
     @property
     def audio_format(self) -> Tuple[int, str]:
         return (24000, "wav")
+
+    @property
+    def recv_sample_rate(self) -> int:
+        """Sample rate of the downlink PCM in `iter_agent_events`.
+
+        Defaults to the uplink rate, which is all a transport that does not
+        transcode can report.
+        """
+        return self.audio_format[0]
+
+    def drain_downlink(self) -> None:
+        """Drop agent audio left over from a previous turn.
+
+        A reply is queued as it arrives and paced in real time, so frames of
+        the last one are usually still waiting when the next user utterance
+        goes out. Read as part of the new turn they timestamp the assistant's
+        audio at the moment the user started speaking and splice the tail of
+        the wrong reply onto it. Transports that buffer a downlink override
+        this; the default has nothing to drop.
+        """
+        return None
 
     async def __aenter__(self) -> "BaseVoiceConnector":
         await self.connect()

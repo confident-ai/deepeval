@@ -17,7 +17,11 @@ from deepeval.errors import DeepEvalError
 from deepeval.utils import require_dependency
 from deepeval.test_case import Audio, AudioChunk
 from deepeval.voice.protocol import VoiceProtocol
-from deepeval.voice.connectors.transports.base import BaseVoiceConnector
+from deepeval.voice.connectors.transports.base import (
+    BaseVoiceConnector,
+    UplinkStream,
+    iter_downlink,
+)
 from deepeval.voice.connectors.types import AgentEvent, ConnectorTurn
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.connectors.turn_engine import collect_agent_turn
@@ -89,8 +93,7 @@ class LiveKitConnector(BaseVoiceConnector):
         self._drain_task: Optional[asyncio.Task] = None
         self._out_frames: Optional[asyncio.Queue] = None
         self._agent_track_ready: Optional[asyncio.Event] = None
-        self._uplink_cancel: Optional[asyncio.Event] = None
-        self._uplink_task: Optional[asyncio.Task] = None
+        self._uplink: Optional[UplinkStream] = None
 
     @property
     def audio_format(self) -> Tuple[int, str]:
@@ -120,7 +123,7 @@ class LiveKitConnector(BaseVoiceConnector):
         self._loop = asyncio.get_event_loop()
         self._out_frames = asyncio.Queue()
         self._agent_track_ready = asyncio.Event()
-        self._uplink_cancel = asyncio.Event()
+        self._uplink = UplinkStream()
         self._room = rtc.Room()
 
         self._room.on("track_subscribed", self._on_track_subscribed)
@@ -184,7 +187,7 @@ class LiveKitConnector(BaseVoiceConnector):
         rtc = self._rtc
         for participant in self._room.remote_participants.values():
             for publication in participant.track_publications.values():
-                track = getattr(publication, "track", None)
+                track = publication.track
                 if track is not None and track.kind == rtc.TrackKind.KIND_AUDIO:
                     self._attach_agent_track(track, participant)
                     return
@@ -234,23 +237,23 @@ class LiveKitConnector(BaseVoiceConnector):
         or `stop_uplink()` cancels the stream. Trailing silence is off by
         default so barge-in audio does not pad the uplink.
         """
-        if self._uplink_cancel is None or self._source is None:
+        if self._uplink is None or self._source is None:
             raise DeepEvalError(
                 "LiveKitConnector.stream_uplink() called before connect()."
             )
         await self.stop_uplink()
-        self._uplink_cancel.clear()
+        self._uplink.begin()
         frames = self._make_input_frames(audio)
 
         async def _stream() -> None:
             for frame in frames:
-                if self._uplink_cancel.is_set():
+                if self._uplink.cancelled:
                     break
                 await self._source.capture_frame(frame)
 
-        self._uplink_task = asyncio.create_task(_stream())
-        await self._uplink_task
-        self._uplink_task = None
+        self._uplink.task = asyncio.create_task(_stream())
+        await self._uplink.task
+        self._uplink.task = None
 
     async def stream_uplink_chunks(
         self,
@@ -265,12 +268,12 @@ class LiveKitConnector(BaseVoiceConnector):
         while the rest of the utterance is still being made, which is how a real
         room behaves — a microphone does not wait for a sentence to finish.
         """
-        if self._uplink_cancel is None or self._source is None:
+        if self._uplink is None or self._source is None:
             raise DeepEvalError(
                 "LiveKitConnector.stream_uplink_chunks() called before connect()."
             )
         await self.stop_uplink()
-        self._uplink_cancel.clear()
+        self._uplink.begin()
 
         first_frame_at: Optional[float] = None
         recorder = PcmRecorder()
@@ -280,7 +283,7 @@ class LiveKitConnector(BaseVoiceConnector):
         resampler = None
         async for chunk in chunks:
             pcm = recorder.add(chunk)
-            if self._uplink_cancel.is_set():
+            if self._uplink.cancelled:
                 continue
             rate = chunk.sampleRate or DEFAULT_STREAM_SAMPLE_RATE
             if rate != self.livekit_sample_rate:
@@ -292,14 +295,14 @@ class LiveKitConnector(BaseVoiceConnector):
             else:
                 frames = self._pcm_to_frames(pcm, rate)
             for frame in frames:
-                if self._uplink_cancel.is_set():
+                if self._uplink.cancelled:
                     break
                 if first_frame_at is None:
                     first_frame_at = time.perf_counter()
                     if on_first_frame is not None:
                         on_first_frame(first_frame_at)
                 await self._source.capture_frame(frame)
-        if resampler is not None and not self._uplink_cancel.is_set():
+        if resampler is not None and not self._uplink.cancelled:
             for frame in resampler.flush():
                 await self._source.capture_frame(frame)
         return UplinkResult(
@@ -307,29 +310,16 @@ class LiveKitConnector(BaseVoiceConnector):
         )
 
     async def stop_uplink(self) -> None:
-        if self._uplink_cancel is not None:
-            self._uplink_cancel.set()
-        if self._uplink_task is not None and not self._uplink_task.done():
-            self._uplink_task.cancel()
-            try:
-                await self._uplink_task
-            except (asyncio.CancelledError, Exception):
-                pass
+        if self._uplink is not None:
+            await self._uplink.stop()
 
     async def iter_agent_events(self) -> AsyncIterator[AgentEvent]:
         if self._out_frames is None:
             raise DeepEvalError(
                 "LiveKitConnector.iter_agent_events() called before connect()."
             )
-        while True:
-            item = await self._out_frames.get()
-            if item is None:
-                yield AgentEvent(turn_complete=True)
-                continue
-            if isinstance(item, AgentEvent):
-                yield item
-            elif isinstance(item, (bytes, bytearray)):
-                yield AgentEvent(audio=bytes(item))
+        async for event in iter_downlink(self._out_frames):
+            yield event
 
     async def exchange_turn(self, audio: Audio) -> ConnectorTurn:
         try:
@@ -342,7 +332,7 @@ class LiveKitConnector(BaseVoiceConnector):
                 "agent worker running and dispatched to the room?"
             )
 
-        self._drain_stale_frames()
+        self.drain_downlink()
 
         input_audio_started_at = time.perf_counter()
         for frame in self._make_input_frames(audio):
@@ -374,7 +364,7 @@ class LiveKitConnector(BaseVoiceConnector):
             audio_started_at=first_audio_at,
         )
 
-    def _drain_stale_frames(self) -> None:
+    def drain_downlink(self) -> None:
         while not self._out_frames.empty():
             try:
                 self._out_frames.get_nowait()
@@ -447,12 +437,12 @@ class LiveKitConnector(BaseVoiceConnector):
             self._drain_task = None
 
         if self._agent_stream is not None:
-            aclose = getattr(self._agent_stream, "aclose", None)
-            if aclose is not None:
-                try:
-                    await aclose()
-                except Exception:
-                    pass
+            try:
+                await self._agent_stream.aclose()
+            except Exception:
+                # Older livekit builds expose no `aclose`; disconnecting the
+                # room below tears the stream down either way.
+                pass
             self._agent_stream = None
 
         if self._room is not None:

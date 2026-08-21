@@ -12,6 +12,7 @@ from deepeval.voice.connectors import audio_utils
 from deepeval.voice.connectors.transports.callback import (
     CallbackVoiceConnector,
 )
+from deepeval.voice.connectors.transports.base import UplinkStream
 from deepeval.voice.connectors.transports.websocket import (
     BaseWebSocketConnector,
     InboundEvent,
@@ -44,7 +45,7 @@ class _Wire(BaseWebSocketConnector):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.sent: List[bytes] = []
-        self._uplink_cancel = asyncio.Event()
+        self._uplink = UplinkStream()
 
     async def _open_session(self) -> str:
         return "wss://example.invalid"
