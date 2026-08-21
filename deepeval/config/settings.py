@@ -54,9 +54,9 @@ from deepeval.constants import SUPPORTED_PROVIDER_SLUGS, slugify
 logger = logging.getLogger(__name__)
 _SAVE_RE = re.compile(r"^(?P<scheme>dotenv)(?::(?P<path>.+))?$")
 
-_ACTIVE_SETTINGS_EDIT_CTX: ContextVar[Optional["Settings._SettingsEditCtx"]] = (
-    ContextVar("_ACTIVE_SETTINGS_EDIT_CTX", default=None)
-)
+_ACTIVE_SETTINGS_EDIT_CTX: ContextVar[
+    Optional["Settings._SettingsEditCtx"]
+] = ContextVar("_ACTIVE_SETTINGS_EDIT_CTX", default=None)
 
 # settings that were converted to computed fields with override counterparts
 _DEPRECATED_TO_OVERRIDE = {
@@ -423,6 +423,10 @@ class Settings(BaseSettings):
         None,
         description="Global default model temperature (0–2). Model-specific constructors may override.",
     )
+    DEEPEVAL_MODEL_THINKING: Optional[bool] = Field(
+        None,
+        description="Let models that expose a thinking/reasoning parameter think before answering. Off unless set, so judges spend their token budget on the verdict.",
+    )
 
     # Anthropic
     USE_ANTHROPIC_MODEL: Optional[bool] = Field(
@@ -471,7 +475,8 @@ class Settings(BaseSettings):
         None, description="Bedrock input token cost (used for cost reporting)."
     )
     AWS_BEDROCK_COST_PER_OUTPUT_TOKEN: Optional[PositiveFloat] = Field(
-        None, description="Bedrock output token cost (used for cost reporting)."
+        None,
+        description="Bedrock output token cost (used for cost reporting).",
     )
     # Azure Open AI
     USE_AZURE_OPENAI: Optional[bool] = Field(
@@ -513,7 +518,8 @@ class Settings(BaseSettings):
         None, description="DeepSeek model name."
     )
     DEEPSEEK_COST_PER_INPUT_TOKEN: Optional[float] = Field(
-        None, description="DeepSeek input token cost (used for cost reporting)."
+        None,
+        description="DeepSeek input token cost (used for cost reporting).",
     )
     DEEPSEEK_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
         None,
@@ -555,8 +561,12 @@ class Settings(BaseSettings):
     USE_GROK_MODEL: Optional[bool] = Field(
         None, description="Select Grok as the active LLM provider."
     )
-    GROK_API_KEY: Optional[SecretStr] = Field(None, description="Grok API key.")
-    GROK_MODEL_NAME: Optional[str] = Field(None, description="Grok model name.")
+    GROK_API_KEY: Optional[SecretStr] = Field(
+        None, description="Grok API key."
+    )
+    GROK_MODEL_NAME: Optional[str] = Field(
+        None, description="Grok model name."
+    )
     GROK_COST_PER_INPUT_TOKEN: Optional[float] = Field(
         None, description="Grok input token cost (used for cost reporting)."
     )
@@ -626,7 +636,8 @@ class Settings(BaseSettings):
         None, description="Moonshot model name."
     )
     MOONSHOT_COST_PER_INPUT_TOKEN: Optional[float] = Field(
-        None, description="Moonshot input token cost (used for cost reporting)."
+        None,
+        description="Moonshot input token cost (used for cost reporting).",
     )
     MOONSHOT_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
         None,
@@ -688,7 +699,9 @@ class Settings(BaseSettings):
     VLLM_API_KEY: Optional[SecretStr] = Field(
         None, description="vLLM API key (if required by your vLLM gateway)."
     )
-    VLLM_MODEL_NAME: Optional[str] = Field(None, description="vLLM model name.")
+    VLLM_MODEL_NAME: Optional[str] = Field(
+        None, description="vLLM model name."
+    )
 
     #
     # Embedding Keys
@@ -802,7 +815,8 @@ class Settings(BaseSettings):
         None, description="Enable verbose logging and additional warnings."
     )
     DEEPEVAL_LOG_STACK_TRACES: Optional[bool] = Field(
-        None, description="Include stack traces in certain DeepEval error logs."
+        None,
+        description="Include stack traces in certain DeepEval error logs.",
     )
     ENABLE_DEEPEVAL_CACHE: Optional[bool] = Field(
         None,
@@ -1021,6 +1035,7 @@ class Settings(BaseSettings):
         "DEEPEVAL_DISABLE_DOTENV",
         "DEEPEVAL_TELEMETRY_OPT_OUT",
         "DEEPEVAL_TELEMETRY_ENABLED",
+        "DEEPEVAL_MODEL_THINKING",
         "DEEPEVAL_UPDATE_WARNING_OPT_IN",
         "ENABLE_DEEPEVAL_CACHE",
         "GOOGLE_GENAI_USE_VERTEXAI",
@@ -1391,7 +1406,9 @@ class Settings(BaseSettings):
                 }
 
                 changed_keys = {
-                    k for k in after_norm if after_norm[k] != before_norm.get(k)
+                    k
+                    for k in after_norm
+                    if after_norm[k] != before_norm.get(k)
                 }
                 changed_keys -= self.COMPUTED_FIELDS
                 touched_keys = set(self._touched) - self.COMPUTED_FIELDS

@@ -208,6 +208,14 @@ Explicit constructor arguments (e.g. <Term py="OpenAIModel(api_key=...)" ts="new
 
 You can also set `TEMPERATURE` to provide a default temperature for all model instances.
 
+| Variable                  | Values            | Effect                                                                                                                                                          |
+| ------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEEPEVAL_MODEL_THINKING` | `1` / `0` / unset | Let models that expose a thinking parameter think before answering. Thinking is **disabled by default**, so a judge spends its whole token budget on the verdict. |
+
+Thinking is off unless you set `DEEPEVAL_MODEL_THINKING=1`, and models without a thinking parameter ignore it. Enabling it raises the default output budget to make room for the reasoning, since providers count thinking tokens against the same <Term py="max_tokens" ts="maxTokens"/> ceiling as the response — an explicit value still wins, and one too small to hold both raises an error rather than returning a truncated verdict.
+
+Models that always think, such as `claude-fable-5`, cannot be switched off and reason either way.
+
 ### Variable Options
 
 When set to `1`, `USE_{PROVIDER}_MODEL` (e.g. `USE_OPENAI_MODEL`) tells `deepeval` which provider to use for LLM-as-a-judge metrics when no model is explicitly passed.

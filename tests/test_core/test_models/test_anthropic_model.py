@@ -3,9 +3,14 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from deepeval.errors import DeepEvalError
-from deepeval.models.llms.anthropic_model import AnthropicModel
+from deepeval.models.llms.anthropic_model import (
+    AnthropicModel,
+    DEFAULT_MAX_TOKENS,
+    DEFAULT_THINKING_MAX_TOKENS,
+    MIN_THINKING_BUDGET_TOKENS,
+)
 from deepeval.config.settings import reset_settings, get_settings
-from pydantic import SecretStr
+from pydantic import BaseModel, SecretStr
 
 from tests.test_core.stubs import _RecordingClient
 
@@ -311,3 +316,186 @@ def test_anthropic_calculate_cost_with_zero_tokens(mock_require_dep, settings):
     model = AnthropicModel(model="claude-3-7-sonnet-latest")
     cost = model.calculate_cost(input_tokens=0, output_tokens=0)
     assert cost == 0.0
+
+
+###################################
+# DEEPEVAL_MODEL_THINKING behavior #
+###################################
+
+
+class _Verdict(BaseModel):
+    verdict: str
+
+
+class _MessagesClient(_RecordingClient):
+    """Records `messages.create` kwargs and replays canned content blocks."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.create_kwargs = None
+        self.blocks = [SimpleNamespace(type="text", text='{"verdict": "yes"}')]
+        self.messages = SimpleNamespace(create=self._create)
+
+    def _create(self, **create_kwargs):
+        self.create_kwargs = create_kwargs
+        return SimpleNamespace(
+            content=self.blocks,
+            stop_reason="end_turn",
+            usage=SimpleNamespace(input_tokens=10, output_tokens=20),
+        )
+
+
+def _anthropic_model(mock_require_dep, settings, model, thinking=None):
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "test-key"
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
+        settings.DEEPEVAL_MODEL_THINKING = thinking
+
+    client = _MessagesClient()
+    mock_require_dep.return_value = SimpleNamespace(
+        Anthropic=lambda *a, **kw: client,
+        AsyncAnthropic=lambda *a, **kw: client,
+    )
+    return AnthropicModel(model=model), client
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_disables_thinking_by_default(mock_require_dep, settings):
+    """Unset means off, so the judge's whole budget goes to the verdict."""
+    model, client = _anthropic_model(
+        mock_require_dep, settings, "claude-opus-5"
+    )
+
+    model.generate("prompt", schema=_Verdict)
+    assert client.create_kwargs["thinking"] == {"type": "disabled"}
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_thinking_enabled_sends_budget(mock_require_dep, settings):
+    model, client = _anthropic_model(
+        mock_require_dep, settings, "claude-opus-5", thinking=True
+    )
+
+    model.generate("prompt", schema=_Verdict)
+    thinking = client.create_kwargs["thinking"]
+    assert thinking["type"] == "enabled"
+    # Anthropic counts thinking against max_tokens, so the budget must leave
+    # room for the response text.
+    assert thinking["budget_tokens"] < client.create_kwargs["max_tokens"]
+    assert thinking["budget_tokens"] >= MIN_THINKING_BUDGET_TOKENS
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_thinking_raises_when_budget_cannot_fit(
+    mock_require_dep, settings
+):
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "test-key"
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
+        settings.DEEPEVAL_MODEL_THINKING = True
+
+    mock_require_dep.return_value = SimpleNamespace(
+        Anthropic=_RecordingClient, AsyncAnthropic=_RecordingClient
+    )
+
+    with pytest.raises(DeepEvalError, match="max_tokens"):
+        AnthropicModel(model="claude-opus-5", max_tokens=512)
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_omits_thinking_for_models_without_the_parameter(
+    mock_require_dep, settings
+):
+    """Claude 3 rejects `thinking`, and claude-fable-5 always thinks."""
+    model, client = _anthropic_model(
+        mock_require_dep, settings, "claude-3-haiku", thinking=True
+    )
+
+    model.generate("prompt", schema=_Verdict)
+    assert "thinking" not in client.create_kwargs
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_explicit_thinking_kwarg_wins(mock_require_dep, settings):
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "test-key"
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    client = _MessagesClient()
+    mock_require_dep.return_value = SimpleNamespace(
+        Anthropic=lambda *a, **kw: client,
+        AsyncAnthropic=lambda *a, **kw: client,
+    )
+    caller_thinking = {"type": "enabled", "budget_tokens": 3000}
+    model = AnthropicModel(
+        model="claude-opus-5",
+        generation_kwargs={"thinking": caller_thinking, "max_tokens": 6000},
+    )
+
+    model.generate("prompt", schema=_Verdict)
+    assert client.create_kwargs["thinking"] == caller_thinking
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_thinking_enabled_raises_max_tokens_default(
+    mock_require_dep, settings
+):
+    """Thinking needs headroom the 1024 default does not have."""
+    thinking_model, _ = _anthropic_model(
+        mock_require_dep, settings, "claude-opus-5", thinking=True
+    )
+    plain_model, _ = _anthropic_model(
+        mock_require_dep, settings, "claude-opus-5"
+    )
+
+    assert plain_model._max_tokens == DEFAULT_MAX_TOKENS
+    assert thinking_model._max_tokens == DEFAULT_THINKING_MAX_TOKENS
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_skips_leading_thinking_block(mock_require_dep, settings):
+    """A thinking response puts its reasoning in content[0]."""
+    model, client = _anthropic_model(
+        mock_require_dep, settings, "claude-opus-5", thinking=True
+    )
+    client.blocks = [
+        SimpleNamespace(type="thinking", thinking="reasoning..."),
+        SimpleNamespace(type="text", text='{"verdict": "yes"}'),
+    ]
+
+    verdict, _ = model.generate("prompt", schema=_Verdict)
+    assert verdict.verdict == "yes"
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_raises_when_response_has_no_text_block(
+    mock_require_dep, settings
+):
+    """All budget spent reasoning: no text to parse."""
+    model, client = _anthropic_model(
+        mock_require_dep, settings, "claude-opus-5", thinking=True
+    )
+    client.blocks = [SimpleNamespace(type="thinking", thinking="reasoning...")]
+
+    with pytest.raises(DeepEvalError, match="no text block"):
+        model.generate("prompt", schema=_Verdict)
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+async def test_anthropic_thinking_applies_to_a_generate(
+    mock_require_dep, settings
+):
+    model, client = _anthropic_model(
+        mock_require_dep, settings, "claude-opus-5", thinking=True
+    )
+
+    async def _acreate(**create_kwargs):
+        return client._create(**create_kwargs)
+
+    client.messages = SimpleNamespace(create=_acreate)
+
+    await model.a_generate("prompt", schema=_Verdict)
+    assert client.create_kwargs["thinking"]["type"] == "enabled"
