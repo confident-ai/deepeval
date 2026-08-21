@@ -22,6 +22,7 @@ import NavHeader from "@/src/layouts/NavHeader";
 import TocFooter from "@/src/components/TocFooter";
 import SidebarSearch from "@/src/layouts/SidebarSearch";
 import LanguageSelector from "@/components/language-selector/language-selector";
+import LanguageSelectorHint from "@/components/language-selector/language-selector-hint";
 import { PageLanguageScope } from "@/components/lang/page-language-scope";
 import { TocLanguageSync } from "@/components/lang/toc-language-sync";
 import { LanguageScopedDocsLayout } from "@/components/lang/language-scoped-docs-layout";
@@ -119,8 +120,11 @@ export function createSection(config: SectionConfig) {
     return (
       <>
         <Banner id="docs-announcement" height="30px">
-          🔥 DeepEval 4.0 just got released.{" "}
-          <Link href="/blog/introducing-deepeval-4">Read the announcement</Link>.
+          🔥 DeepEval for TypeScript is now in beta.{" "}
+          <Link href="/blog/introducing-deepeval-typescript">
+            Read the announcement
+          </Link>
+          .
         </Banner>
         <LanguageScopedDocsLayout
           {...rest}
@@ -149,6 +153,7 @@ export function createSection(config: SectionConfig) {
         >
           {children}
         </LanguageScopedDocsLayout>
+        <LanguageSelectorHint />
         <Footer />
       </>
     );

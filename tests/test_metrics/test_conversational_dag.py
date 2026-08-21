@@ -1,3 +1,4 @@
+import asyncio
 import os
 import warnings
 
@@ -13,6 +14,7 @@ from deepeval.metrics.conversational_dag import (
     ConversationalNonBinaryJudgementNode,
     ConversationalVerdictNode,
 )
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
 from deepeval.metrics.dag.utils import (
     is_valid_dag_from_roots,
@@ -536,3 +538,85 @@ class TestConversationalDAGMetric:
             name="Weather Answered", dag=self._build_dag()
         )
         evaluate([self._test_case()], [metric])
+
+
+class ConversationalSharedNodeModel(DeepEvalBaseLLM):
+    """Deterministic judge for conversational shared-node DAGs."""
+
+    def __init__(
+        self,
+        binary_verdict: bool = True,
+        non_binary_verdict: str = "Yes",
+    ):
+        self.binary_verdict = binary_verdict
+        self.non_binary_verdict = non_binary_verdict
+        self.schema_calls = []
+        super().__init__(model="conversational-shared-node-model")
+
+    def load_model(self):
+        return self
+
+    def generate(self, prompt, schema=None, **kwargs):
+        assert schema is not None
+        self.schema_calls.append(schema.__name__)
+
+        if schema.__name__ == "BinaryJudgementVerdict":
+            return schema(verdict=self.binary_verdict, reason="mocked")
+        if schema.__name__ == "NonBinaryJudgementVerdict":
+            return schema(verdict=self.non_binary_verdict, reason="mocked")
+
+        raise AssertionError(f"Unexpected schema: {schema.__name__}")
+
+    async def a_generate(self, prompt, schema=None, **kwargs):
+        await asyncio.sleep(0)
+        return self.generate(prompt, schema=schema, **kwargs)
+
+    def get_model_name(self):
+        return "conversational-shared-node-model"
+
+
+class TestConversationalExclusiveVerdictSharedNode:
+    """The graph builder is shared, so multi-turn must behave alike."""
+
+    @staticmethod
+    def _build_dag() -> DeepAcyclicGraph:
+        params = [MultiTurnParams.ROLE, MultiTurnParams.CONTENT]
+        judge = ConversationalBinaryJudgementNode(
+            criteria="Did the assistant answer the question?",
+            evaluation_params=params,
+        )
+        shared = ConversationalNonBinaryJudgementNode(
+            criteria="Was the tone appropriate?",
+            evaluation_params=params,
+        )
+        judge.add_verdict(True, then=shared)
+        judge.add_verdict(False, then=shared)
+        shared.add_verdict("Yes", score=10)
+        shared.add_verdict("No", score=0)
+        return DeepAcyclicGraph(root_nodes=[judge])
+
+    @staticmethod
+    def _conversation() -> ConversationalTestCase:
+        return ConversationalTestCase(
+            turns=[
+                Turn(role="user", content="What's the weather in Paris?"),
+                Turn(role="assistant", content="Sunny and 24°C."),
+            ],
+        )
+
+    @pytest.mark.parametrize("async_mode", [False, True])
+    @pytest.mark.parametrize("binary_verdict", [True, False])
+    def test_shared_node_runs_whichever_verdict_wins(
+        self, async_mode, binary_verdict
+    ):
+        model = ConversationalSharedNodeModel(binary_verdict=binary_verdict)
+        metric = ConversationalDAGMetric(
+            name="Shared Node",
+            dag=self._build_dag(),
+            model=model,
+            include_reason=False,
+            async_mode=async_mode,
+        )
+        metric.measure(self._conversation(), _show_indicator=False)
+        assert metric.score == 1.0
+        assert model.schema_calls.count("NonBinaryJudgementVerdict") == 1

@@ -400,9 +400,16 @@ class GeminiModel(DeepEvalBaseLLM):
         """
         return self._build_client()
 
-    def _require_oauth2(self):
+    def _require_service_account(self):
         return require_dependency(
-            "google.oauth2",
+            "google.oauth2.service_account",
+            provider_label="GeminiModel",
+            install_hint="Install it with `pip install google-auth`.",
+        )
+
+    def _require_user_credentials(self):
+        return require_dependency(
+            "google.oauth2.credentials",
             provider_label="GeminiModel",
             install_hint="Install it with `pip install google-auth`.",
         )
@@ -447,7 +454,7 @@ class GeminiModel(DeepEvalBaseLLM):
                     service_account_key = json.loads(service_account_key_json)
                 except Exception as e:
                     raise DeepEvalError(
-                        "GOOGLE_SERVICE_ACCOUNT_KEY must be valid JSON for a Google service account."
+                        "GOOGLE_SERVICE_ACCOUNT_KEY must be valid JSON for a Google credential."
                     ) from e
 
                 if not isinstance(service_account_key, dict):
@@ -455,11 +462,33 @@ class GeminiModel(DeepEvalBaseLLM):
                         "GOOGLE_SERVICE_ACCOUNT_KEY must decode to a JSON object."
                     )
 
-                oauth2 = self._require_oauth2()
-                credentials = oauth2.service_account.Credentials.from_service_account_info(
-                    service_account_key,
-                    scopes=["https://www.googleapis.com/auth/cloud-platform"],
-                )
+                credential_type = service_account_key.get("type")
+                if credential_type == "service_account":
+                    service_account = self._require_service_account()
+                    credentials = (
+                        service_account.Credentials.from_service_account_info(
+                            service_account_key,
+                            scopes=[
+                                "https://www.googleapis.com/auth/cloud-platform"
+                            ],
+                        )
+                    )
+                elif credential_type == "authorized_user":
+                    user_credentials = self._require_user_credentials()
+                    credentials = (
+                        user_credentials.Credentials.from_authorized_user_info(
+                            service_account_key,
+                            scopes=[
+                                "https://www.googleapis.com/auth/cloud-platform"
+                            ],
+                        )
+                    )
+                else:
+                    raise DeepEvalError(
+                        "GOOGLE_SERVICE_ACCOUNT_KEY must be a service account key "
+                        '(type "service_account") or user credentials '
+                        '(type "authorized_user").'
+                    )
 
             client = self._module.Client(
                 vertexai=True,

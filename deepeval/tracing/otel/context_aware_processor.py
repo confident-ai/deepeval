@@ -103,9 +103,8 @@ class ContextAwareSpanProcessor(_SpanProcessor):
 
         self._api_key = api_key
 
-        self._rest_processor = SimpleSpanProcessor(
-            ConfidentSpanExporter(api_key=api_key),
-        )
+        self._rest_exporter = ConfidentSpanExporter(api_key=api_key)
+        self._rest_processor = SimpleSpanProcessor(self._rest_exporter)
         # Only attach the auth header when we actually have a key — the
         # OTLPSpanExporter forwards the headers dict verbatim onto every
         # request, so a ``None`` value would either crash the gRPC/HTTP
@@ -178,10 +177,19 @@ class ContextAwareSpanProcessor(_SpanProcessor):
             logger.debug("OTLP processor shutdown failed: %s", exc)
 
     def force_flush(self, timeout_millis: int = 30_000) -> bool:
+        """Block until both transports have drained, or ``timeout_millis``.
+
+        ``SimpleSpanProcessor.force_flush`` is a no-op that never reaches its
+        exporter, so the REST exporter is drained explicitly. Without that,
+        this reports success while traces are still queued on the trace
+        worker thread.
+        """
         ok_rest = True
         ok_otlp = True
         try:
-            ok_rest = self._rest_processor.force_flush(timeout_millis)
+            ok_processor = self._rest_processor.force_flush(timeout_millis)
+            ok_exporter = self._rest_exporter.force_flush(timeout_millis)
+            ok_rest = ok_processor and ok_exporter
         except Exception as exc:
             logger.debug("REST processor force_flush failed: %s", exc)
             ok_rest = False
