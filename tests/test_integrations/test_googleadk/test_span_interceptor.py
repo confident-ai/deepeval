@@ -687,10 +687,9 @@ class TestNextSpanInterceptorIntegration:
         metric = AnswerRelevancyMetric()
 
         with patch(
-            "deepeval.integrations.openinference.instrumentator."
-            "stash_pending_metrics"
+            "deepeval.integrations.otel_instrumentation.utils.stash_pending_metrics"
         ) as stash, patch(
-            "deepeval.integrations.openinference.instrumentator.trace_manager"
+            "deepeval.integrations.otel_instrumentation.utils.trace_manager"
         ) as fake_tm:
             fake_tm.is_evaluating = True
             with next_agent_span(metrics=[metric]):
@@ -714,10 +713,9 @@ class TestNextSpanInterceptorIntegration:
         metric = AnswerRelevancyMetric()
 
         with patch(
-            "deepeval.integrations.openinference.instrumentator."
-            "stash_pending_metrics"
+            "deepeval.integrations.otel_instrumentation.utils.stash_pending_metrics"
         ) as stash, patch(
-            "deepeval.integrations.openinference.instrumentator.trace_manager"
+            "deepeval.integrations.otel_instrumentation.utils.trace_manager"
         ) as fake_tm:
             fake_tm.is_evaluating = False
             with next_agent_span(metrics=[metric]):
