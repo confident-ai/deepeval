@@ -89,8 +89,8 @@ There are **ZERO** mandatory and **SEVEN** optional parameters when creating an 
 
 - [Optional] `model`: A string specifying the bedrock model identifier to call (e.g. `anthropic.claude-3-opus-20240229-v1:0`). Defaults to `AWS_BEDROCK_MODEL_NAME` if not passed; raises an error at runtime if unset.
 - [Optional] `region`: A string specifying the AWS region hosting your Bedrock endpoint (e.g. `us-east-1`). Defaults to `AWS_BEDROCK_REGION` if not passed; raises an error at runtime if unset.
-- [Optional] `aws_access_key_id`: A string specifiying your AWS Access Key ID. Defaults to `AWS_ACCESS_KEY_ID` if not passed; if still omitted, falls back to the AWS default credentials chain.
-- [Optional] `aws_secret_access_key`: A string specifiying your AWS Secret Access Key. Defaults to `AWS_SECRET_ACCESS_KEY` if not passed; if still omitted, falls back to the AWS default credentials chain.
+- [Optional] `aws_access_key_id`: A string specifying your AWS Access Key ID. Defaults to `AWS_ACCESS_KEY_ID` if not passed; if still omitted, falls back to the AWS default credentials chain.
+- [Optional] `aws_secret_access_key`: A string specifying your AWS Secret Access Key. Defaults to `AWS_SECRET_ACCESS_KEY` if not passed; if still omitted, falls back to the AWS default credentials chain.
 - [Optional] `cost_per_input_token`: A float specifying the per-input-token cost in USD. Defaults to `AWS_BEDROCK_COST_PER_INPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
 - [Optional] `cost_per_output_token`: A float specifying the per-output-token cost in USD. Defaults to `AWS_BEDROCK_COST_PER_OUTPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
 - [Optional] `generation_kwargs`: A dictionary of generation parameters that will be sent to Bedrock as `inferenceConfig`. Available keys may vary by the Bedrock model you choose. See the [AWS Bedrock inference parameters docs](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-parameters.html).
