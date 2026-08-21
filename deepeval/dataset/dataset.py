@@ -12,6 +12,8 @@ import ast
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.dataset.utils import (
+    DELIMITER,
+    TOOLS_DELIMITER,
     coerce_to_task,
     convert_test_cases_to_goldens,
     convert_goldens_to_test_cases,
@@ -20,6 +22,7 @@ from deepeval.dataset.utils import (
     format_turns,
     parse_turns,
     serialize_retrieval_context,
+    join_context,
     join_retrieval_context,
     reconstruct_retrieval_context,
     trimAndLoadJson,
@@ -265,13 +268,13 @@ class EvaluationDataset:
         actual_output_col_name: str,
         expected_output_col_name: Optional[str] = "expected_output",
         context_col_name: Optional[str] = "context",
-        context_col_delimiter: str = "|",
+        context_col_delimiter: str = DELIMITER,
         retrieval_context_col_name: Optional[str] = "retrieval_context",
-        retrieval_context_col_delimiter: str = "|",
+        retrieval_context_col_delimiter: str = DELIMITER,
         tools_called_col_name: Optional[str] = "tools_called",
-        tools_called_col_delimiter: str = ";",
+        tools_called_col_delimiter: str = TOOLS_DELIMITER,
         expected_tools_col_name: Optional[str] = "expected_tools",
-        expected_tools_col_delimiter: str = ";",
+        expected_tools_col_delimiter: str = TOOLS_DELIMITER,
         additional_metadata_col_name: Optional[str] = "additional_metadata",
     ):
         """
@@ -484,13 +487,13 @@ class EvaluationDataset:
         actual_output_col_name: Optional[str] = "actual_output",
         expected_output_col_name: Optional[str] = "expected_output",
         context_col_name: Optional[str] = "context",
-        context_col_delimiter: str = "|",
+        context_col_delimiter: str = DELIMITER,
         retrieval_context_col_name: Optional[str] = "retrieval_context",
-        retrieval_context_col_delimiter: str = "|",
+        retrieval_context_col_delimiter: str = DELIMITER,
         tools_called_col_name: Optional[str] = "tools_called",
-        tools_called_col_delimiter: str = ";",
+        tools_called_col_delimiter: str = TOOLS_DELIMITER,
         expected_tools_col_name: Optional[str] = "expected_tools",
-        expected_tools_col_delimiter: str = ";",
+        expected_tools_col_delimiter: str = TOOLS_DELIMITER,
         comments_key_name: str = "comments",
         name_key_name: str = "name",
         source_file_col_name: Optional[str] = "source_file",
@@ -756,9 +759,9 @@ class EvaluationDataset:
         actual_output_key_name: Optional[str] = "actual_output",
         expected_output_key_name: Optional[str] = "expected_output",
         context_key_name: Optional[str] = "context",
-        context_col_delimiter: str = "|",
+        context_col_delimiter: str = DELIMITER,
         retrieval_context_key_name: Optional[str] = "retrieval_context",
-        retrieval_context_col_delimiter: str = "|",
+        retrieval_context_col_delimiter: str = DELIMITER,
         tools_called_key_name: Optional[str] = "tools_called",
         expected_tools_key_name: Optional[str] = "expected_tools",
         comments_key_name: str = "comments",
@@ -1317,11 +1320,7 @@ class EvaluationDataset:
                         ]
                     )
                     for golden in goldens:
-                        context = (
-                            "|".join(golden.context)
-                            if golden.context is not None
-                            else None
-                        )
+                        context = join_context(golden.context)
                         turns = (
                             format_turns(golden.turns)
                             if golden.turns is not None
@@ -1376,11 +1375,7 @@ class EvaluationDataset:
                         retrieval_context = join_retrieval_context(
                             golden.retrieval_context
                         )
-                        context = (
-                            "|".join(golden.context)
-                            if golden.context is not None
-                            else None
-                        )
+                        context = join_context(golden.context)
 
                         # Dump tools as JSON strings for CSV
                         def _dump_tools_csv(tools):
@@ -1459,11 +1454,7 @@ class EvaluationDataset:
                         retrieval_context = join_retrieval_context(
                             golden.retrieval_context
                         )
-                        context = (
-                            "|".join(golden.context)
-                            if golden.context is not None
-                            else None
-                        )
+                        context = join_context(golden.context)
 
                         # Convert ToolCall lists to list[dict]
                         def _dump_tools(tools):
