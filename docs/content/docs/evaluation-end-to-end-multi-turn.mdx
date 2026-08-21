@@ -149,17 +149,7 @@ The simulator exposes additional configuration beyond what fits here — see [st
 <details>
 <summary>Click to view an example simulated test case</summary>
 
-<Only id="python">
-
-The simulator carries `scenario` and `expected_outcome` over from the golden, flattens its `persona` onto `user_description`, and fills in `turns`:
-
-</Only>
-
-<Only id="typescript">
-
-The simulator carries `scenario`, `expectedOutcome`, and `userDescription` over from the golden, and fills in `turns`:
-
-</Only>
+The simulator carries `scenario` and <Term py="expected_outcome" ts="expectedOutcome"/> over from the golden, and fills in `turns`:
 
 <Switch>
 
@@ -169,7 +159,6 @@ The simulator carries `scenario`, `expectedOutcome`, and `userDescription` over 
 ConversationalTestCase(
     scenario="Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
     expected_outcome="Successful purchase of a ticket.",
-    user_description="Andy Byron is the CEO of Astronomer.",
     turns=[
         Turn(role="user", content="Hi, I'd like to buy a VIP ticket for the Coldplay show."),
         Turn(role="assistant", content="Sure — which date and city are you looking for?"),
@@ -188,7 +177,6 @@ ConversationalTestCase(
 new ConversationalTestCase({
   scenario: "Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
   expectedOutcome: "Successful purchase of a ticket.",
-  userDescription: "Andy Byron is the CEO of Astronomer.",
   turns: [
     new Turn({ role: "user", content: "Hi, I'd like to buy a VIP ticket for the Coldplay show." }),
     new Turn({ role: "assistant", content: "Sure — which date and city are you looking for?" }),

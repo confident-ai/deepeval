@@ -35,6 +35,7 @@ import {
   GetDatasetVersionsResponse,
 } from "@/dataset/api";
 import { ConversationalGolden, Golden } from "@/dataset/golden";
+import { Persona, serializePersona } from "@/dataset/persona";
 import { ConversationalTestCase, LLMTestCase } from "@/test-case";
 import { asTestCaseString, asToolCalls } from "@/test-case/utils";
 import type { MultiBar, SingleBar } from "cli-progress";
@@ -154,6 +155,7 @@ function multiTurnRecord(
     turns: golden.turns?.length ? JSON.parse(formatTurns(golden.turns)) : null,
     expected_outcome: golden.expectedOutcome ?? null,
     user_description: golden.userDescription ?? null,
+    persona: serializePersona(golden.persona),
     context: golden.context ?? null,
     name: golden.name ?? null,
     comments: golden.comments ?? null,
@@ -476,7 +478,13 @@ export class EvaluationDataset {
                 id: goldenData.id,
                 scenario: goldenData.scenario,
                 expectedOutcome: goldenData.expectedOutcome,
-                userDescription: goldenData.userDescription,
+                // Confident AI still stores the flattened string, so rebuild
+                // the persona instead of tripping the deprecation warning.
+                persona: goldenData.userDescription
+                  ? new Persona({
+                      characteristics: goldenData.userDescription,
+                    })
+                  : undefined,
                 context: goldenData.context,
                 additionalMetadata: goldenData.additionalMetadata,
                 comments: goldenData.comments,

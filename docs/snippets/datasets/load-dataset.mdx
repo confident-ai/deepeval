@@ -190,14 +190,20 @@ dataset = EvaluationDataset(goldens=goldens)
 <Case id="typescript">
 
 ```typescript
-import { ConversationalGolden, EvaluationDataset } from "deepeval/dataset";
+import {
+  ConversationalGolden,
+  EvaluationDataset,
+  Persona,
+} from "deepeval/dataset";
 
 const goldens = [
   new ConversationalGolden({
     scenario:
       "Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
     expectedOutcome: "Successful purchase of a ticket.",
-    userDescription: "Andy Byron is the CEO of Astronomer.",
+    persona: new Persona({
+      characteristics: "Andy Byron is the CEO of Astronomer.",
+    }),
   }),
   // ...
 ];

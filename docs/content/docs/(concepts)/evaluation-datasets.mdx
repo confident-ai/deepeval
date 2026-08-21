@@ -1395,7 +1395,7 @@ class ConversationalGolden(BaseModel):
 class ConversationalGolden {
   scenario: string;
   expectedOutcome?: string;
-  userDescription?: string;
+  persona?: Persona;
   context?: string[];
 
   // Useful metadata for generating test cases
@@ -1412,13 +1412,9 @@ class ConversationalGolden {
 
 </Switch>
 
-<Only id="python">
-
 :::caution
-`user_description` is deprecated in favor of [`persona`](/docs/conversation-simulator-voice-personas). Goldens and dataset files that still carry `user_description` keep loading — the string is promoted to `Persona(characteristics=...)`, and the two stay in sync — but the parameter will be removed in a future release.
+<Term py="user_description" ts="userDescription"/> is deprecated in favor of [`persona`](/docs/conversation-simulator-voice-personas). Goldens and dataset files that still carry it keep loading — the string is promoted to a persona built from those characteristics, and the two stay in sync — but the parameter will be removed in a future release.
 :::
-
-</Only>
 
 You can easily add and edit custom columns on [Confident AI.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens#custom-dataset-columns)
 

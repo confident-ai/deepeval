@@ -1,4 +1,5 @@
 import { Golden, ConversationalGolden } from "@/dataset/golden";
+import { Persona, personaFromRecord } from "@/dataset/persona";
 import {
   LLMTestCase,
   ConversationalTestCase,
@@ -75,7 +76,11 @@ export function convertConvoTestCasesToConvoGoldens(
       scenario: testCase.scenario,
       turns: testCase.turns,
       expectedOutcome: testCase.expectedOutcome,
-      userDescription: testCase.userDescription,
+      // A test case only carries the flattened text, so rebuild it as a
+      // persona rather than tripping the `userDescription` deprecation.
+      persona: testCase.userDescription
+        ? new Persona({ characteristics: testCase.userDescription })
+        : undefined,
       context: testCase.context,
       additionalMetadata: testCase.additionalMetadata,
     });
@@ -400,6 +405,7 @@ export interface GoldenKeyNames {
   turns: string;
   expectedOutcome: string;
   userDescription: string;
+  persona: string;
 }
 
 export const DEFAULT_GOLDEN_KEY_NAMES: GoldenKeyNames = {
@@ -419,6 +425,7 @@ export const DEFAULT_GOLDEN_KEY_NAMES: GoldenKeyNames = {
   turns: "turns",
   expectedOutcome: "expected_outcome",
   userDescription: "user_description",
+  persona: "persona",
 };
 
 /** A record carrying a truthy `scenario` becomes a `ConversationalGolden`. */
@@ -443,15 +450,17 @@ export function goldenFromRecord(
   const scenario = pickKey(record, keys.scenario);
   if (scenario) {
     const turns = pickKey(record, keys.turns);
+    const persona = personaFromRecord(pickKey(record, keys.persona));
     return new ConversationalGolden({
       scenario: String(scenario),
       turns: turns ? parseTurns(turns) : [],
       expectedOutcome: pickKey(record, keys.expectedOutcome) as
         | string
         | undefined,
-      userDescription: pickKey(record, keys.userDescription) as
-        | string
-        | undefined,
+      persona,
+      userDescription: persona
+        ? undefined
+        : (pickKey(record, keys.userDescription) as string | undefined),
       context,
       comments,
       name,
