@@ -837,7 +837,8 @@ class ContextGenerator:
         prompt = FilterTemplate.evaluate_context(chunk)
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=ContextScore)
-            self.total_cost += cost
+            if cost is not None:
+                self.total_cost += cost
             return (res.clarity + res.depth + res.structure + res.relevance) / 4
         else:
             try:
@@ -862,7 +863,8 @@ class ContextGenerator:
         prompt = FilterTemplate.evaluate_context(chunk)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=ContextScore)
-            self.total_cost += cost
+            if cost is not None:
+                self.total_cost += cost
             return (res.clarity + res.depth + res.structure + res.relevance) / 4
         else:
 
