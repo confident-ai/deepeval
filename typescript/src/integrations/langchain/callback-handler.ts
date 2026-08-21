@@ -287,8 +287,7 @@ export class DeepEvalCallbackHandler
         if (isChatGeneration(generation)) {
           if (generation.message.response_metadata) {
             const responseMetadata = generation.message.response_metadata as
-              | Record<string, unknown>
-              | undefined;
+              Record<string, unknown> | undefined;
             if (
               responseMetadata &&
               typeof responseMetadata["model_name"] === "string"

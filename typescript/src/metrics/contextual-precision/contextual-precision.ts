@@ -36,8 +36,7 @@ function groupRetrievalContexts(
 ): string[] {
   const grouped: Record<string, string[]> = {};
   type Ordered =
-    | { type: "grouped"; key: string }
-    | { type: "standalone"; value: string };
+    { type: "grouped"; key: string } | { type: "standalone"; value: string };
   const ordered: Ordered[] = [];
 
   for (const context of retrievalContexts) {
