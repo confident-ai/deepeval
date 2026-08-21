@@ -24,6 +24,8 @@ export const ConfidentAttr = {
   SPAN_RETRIEVAL_CONTEXT: "confident.span.retrieval_context",
   SPAN_TOOLS_CALLED: "confident.span.tools_called",
   SPAN_TYPE: "confident.span.type",
+  SPAN_INTEGRATION: "confident.span.integration",
+  SPAN_PROVIDER: "confident.span.provider",
 
   // LLM span fields.
   LLM_COST_PER_INPUT_TOKEN: "confident.llm.cost_per_input_token",

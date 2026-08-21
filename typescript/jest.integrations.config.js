@@ -8,6 +8,8 @@ module.exports = {
     "/node_modules/",
     // Mastra needs babel-jest (jest.mastra.config.cjs).
     "/test/test-integrations/test-mastra/",
+    // @openrouter/sdk is ESM-only (jest.openrouter.config.cjs).
+    "/test/test-integrations/test-openrouter/",
   ],
   moduleFileExtensions: ["ts", "js", "json", "node"],
   moduleNameMapper: {
