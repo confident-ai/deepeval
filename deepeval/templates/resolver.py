@@ -40,6 +40,7 @@ MetricTemplateMethod = Literal[
     "generate_non_binary_verdict",
     "generate_opinions",
     "generate_perceptual_quality_evaluation_results",
+    "generate_perturbations",
     "generate_questions",
     "generate_reason",
     "generate_semantic_consistency_evaluation_results",
