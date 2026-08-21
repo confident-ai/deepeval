@@ -402,6 +402,14 @@ There is **ONE** mandatory and **TWO** optional arguments when registering a ver
 
 Each call must define exactly one of `score` or `then`. A `score` terminates evaluation and becomes the metric's result, and so does a `then` that points to a `GEval` or another `BaseMetric` — the child metric's score is adopted as the final score. Only a `then` that points to another task or judgement node keeps the graph going, so every path is guaranteed to end at either a fixed score or a metric.
 
+### When More Than One Verdict Scores
+
+Most DAGs are shaped so exactly one scoring verdict is reachable per run. If your graph has independent branches, though, several can fire at once — for example a root `TaskNode` feeding two judgements that each end in a score.
+
+When that happens **the lowest of the scores that fired becomes the metric's result**, with ties broken by declaration order. A metric that measures several things reports its weakest, in the same spirit as a failing check, and the generated `reason` describes the score that was kept.
+
+The rule is applied after the whole graph has run, so the result is identical whether the metric runs with <Term py="async_mode=True" ts="asyncMode: true"/> or <Term py="async_mode=False" ts="asyncMode: false"/>, and does not depend on the order in which branches happen to complete.
+
 ### Graph Validation
 
 `DeepAcyclicGraph` validates the complete graph when it is constructed. It rejects:
