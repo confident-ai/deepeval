@@ -201,7 +201,10 @@ def test_secret_not_persisted_to_json(monkeypatch):
 
 
 def test_env_dir_path_expanduser(monkeypatch, tmp_path: Path):
+    # Mock both HOME (POSIX) and USERPROFILE (Windows) so expanduser("~")
+    # resolves to tmp_path on every platform.
     monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
     monkeypatch.setenv("ENV_DIR_PATH", "~/envdir")
     s = get_settings()
     assert s.ENV_DIR_PATH == tmp_path / "envdir"
