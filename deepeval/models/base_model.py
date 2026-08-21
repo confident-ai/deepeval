@@ -14,6 +14,9 @@ class DeepEvalModelData:
     input_price: Optional[float] = None
     output_price: Optional[float] = None
     supports_temperature: Optional[bool] = True
+    # True only when the provider lets us turn thinking on and off per request.
+    # Models that always think (and models that never do) leave this unset.
+    supports_thinking: Optional[bool] = None
 
 
 class DeepEvalBaseModel(ABC):

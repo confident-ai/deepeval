@@ -56,6 +56,7 @@ FIELDS: Dict[str, Any] = {
     "input_price": None,
     "output_price": None,
     "supports_temperature": True,
+    "supports_thinking": None,
 }
 
 

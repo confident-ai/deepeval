@@ -297,6 +297,8 @@ class ToolCall(BaseModel):
         # Add basic fields
         if self.name:
             fields.append(f'name="{self.name}"')
+        if self.type:
+            fields.append(f'type="{self.type.value}"')
         if self.description:
             fields.append(f'description="{self.description}"')
         if self.reasoning:

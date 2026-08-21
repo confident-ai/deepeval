@@ -265,3 +265,80 @@ describe("temperature resolution", () => {
     expect(resolve(new OpenAIModel({ model: "some-unknown-model" }))).toBe(0);
   });
 });
+
+describe("thinking resolution", () => {
+  // `resolveThinking` is protected; reach through a cast rather than widening
+  // the public surface just for tests.
+  const resolve = (model: object) =>
+    (
+      model as {
+        resolveThinking(): {
+          maxTokens: number;
+          thinking?: Record<string, unknown>;
+        };
+      }
+    ).resolveThinking();
+
+  let saved: string | undefined;
+
+  beforeEach(() => {
+    saved = process.env.DEEPEVAL_MODEL_THINKING;
+    delete process.env.DEEPEVAL_MODEL_THINKING;
+  });
+
+  afterEach(() => {
+    if (saved === undefined) delete process.env.DEEPEVAL_MODEL_THINKING;
+    else process.env.DEEPEVAL_MODEL_THINKING = saved;
+  });
+
+  it("disables thinking by default", () => {
+    expect(resolve(new AnthropicModel({ model: "claude-opus-5" }))).toEqual({
+      maxTokens: 4096,
+      thinking: { type: "disabled" },
+    });
+  });
+
+  it("sends a budget that leaves room for the response when enabled", () => {
+    process.env.DEEPEVAL_MODEL_THINKING = "1";
+    const { maxTokens, thinking } = resolve(
+      new AnthropicModel({ model: "claude-opus-5" }),
+    );
+    expect(thinking?.type).toBe("enabled");
+    expect(thinking?.budget_tokens as number).toBeLessThan(maxTokens);
+    expect(thinking?.budget_tokens as number).toBeGreaterThanOrEqual(1024);
+  });
+
+  it("omits the parameter for models that reject it", () => {
+    process.env.DEEPEVAL_MODEL_THINKING = "1";
+    // Claude 3 has no thinking parameter; claude-fable-5 always thinks and
+    // rejects a disabled block.
+    for (const model of ["claude-3-haiku", "claude-fable-5"]) {
+      expect(resolve(new AnthropicModel({ model })).thinking).toBeUndefined();
+    }
+  });
+
+  it("raises the default budget only when thinking is on", () => {
+    expect(
+      resolve(new AnthropicModel({ model: "claude-opus-5" })).maxTokens,
+    ).toBe(4096);
+    process.env.DEEPEVAL_MODEL_THINKING = "1";
+    expect(
+      resolve(new AnthropicModel({ model: "claude-opus-5" })).maxTokens,
+    ).toBe(8192);
+  });
+
+  it("keeps an explicit maxTokens", () => {
+    process.env.DEEPEVAL_MODEL_THINKING = "1";
+    expect(
+      resolve(new AnthropicModel({ model: "claude-opus-5", maxTokens: 6000 }))
+        .maxTokens,
+    ).toBe(6000);
+  });
+
+  it("throws when maxTokens cannot hold thinking and a response", () => {
+    process.env.DEEPEVAL_MODEL_THINKING = "1";
+    expect(() =>
+      resolve(new AnthropicModel({ model: "claude-opus-5", maxTokens: 512 })),
+    ).toThrow(/maxTokens/);
+  });
+});

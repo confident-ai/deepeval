@@ -49,7 +49,7 @@ class GeminiModel(DeepEvalBaseLLM):
 
         # Initialize the model
         model = GeminiModel(
-            model="gemini-1.5-pro-001",
+            model="gemini-3.6-flash",
             api_key="your-api-key"
         )
 
