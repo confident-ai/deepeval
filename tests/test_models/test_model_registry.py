@@ -30,6 +30,7 @@ EXPECTED_FIELDS = {
     "inputPrice",
     "outputPrice",
     "supportsTemperature",
+    "supportsThinking",
 }
 
 

@@ -18,7 +18,7 @@ Return a JSON object with:
 
 1. **DO NOT hallucinate or assume new information**. Only use what's explicitly given in the Previous Knowledge.
 2. If the LLM asks for information that is already known (e.g., “Where do you live?” when the address is already provided), the verdict is `"yes"`.
-3. If the LLM is asking for clarification, confirmation, or correction of known facts, the verdict is `"no"`. (This rule is critical — get it wrong and the user will die.)
+3. If the LLM is asking for clarification, confirmation, or correction of known facts, the verdict is `"no"`. (This rule is critical and takes precedence over conflicting heuristics.)
 4. Only return a valid JSON. No extra commentary.
 
 ---
@@ -37,10 +37,10 @@ JSON:
 
 ---
 **Example B**
-LLM message: Are you sure this is your phone number?
+LLM message: Are you sure this is your favorite color?
 Previous Knowledge:
 {
-  "Phone Number": "555-1029"
+  "Favorite Color": "Blue"
 }
 JSON:
 {

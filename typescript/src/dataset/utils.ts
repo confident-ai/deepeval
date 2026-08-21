@@ -11,6 +11,13 @@ import {
 } from "@/test-case";
 import { Turn, resolveRetrievalContext } from "@/test-case";
 
+/**
+ * Single source of truth for how a list-valued cell is flattened into a single
+ * csv/jsonl cell. Every save path joins on it and every load path splits on it,
+ * so a save/load round-trip is lossless. Matches Python's `DELIMITER`.
+ */
+export const DELIMITER = "|";
+
 export function convertTestCasesToGoldens(testCases: LLMTestCase[]): Golden[] {
   const goldens: Golden[] = [];
   for (const testCase of testCases) {
@@ -170,7 +177,7 @@ export function stripPrivateFields(obj: any): any {
 
 export const parseDelimited = (
   str: string | null | undefined,
-  delimiter = ";",
+  delimiter = DELIMITER,
 ): string[] => {
   if (!str) return [];
   return str
@@ -207,9 +214,17 @@ export function serializeRetrievalContext(
 /** For a csv or jsonl cell, which holds one string rather than a list. */
 export function joinRetrievalContext(
   retrievalContext: (string | RetrievedContextData)[] | undefined,
-  delimiter = "|",
+  delimiter = DELIMITER,
 ): string | undefined {
   return serializeRetrievalContext(retrievalContext)?.join(delimiter);
+}
+
+/** For a csv or jsonl cell, which holds one string rather than a list. */
+export function joinContext(
+  context: string[] | undefined,
+  delimiter = DELIMITER,
+): string | undefined {
+  return context?.join(delimiter);
 }
 
 /** Drops unset fields, as Python's `exclude_none` model dump does. */

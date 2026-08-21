@@ -14,6 +14,12 @@ from deepeval.test_case import (
     RetrievedContextData,
 )
 
+# Single source of truth for how list-valued cells are flattened into a single
+# csv/jsonl cell. Every save path joins on these and every load path splits on
+# them, so a save/load round-trip is lossless.
+DELIMITER = "|"
+TOOLS_DELIMITER = ";"
+
 # RetrievedContextData declares an @model_serializer, so a plain model_dump
 # flattens it and a save/load round-trip loses the source. Serialize each item
 # to a namespaced, parseable marker instead, and reconstruct it on load.
@@ -57,12 +63,19 @@ def serialize_retrieval_context(retrieval_context):
     ]
 
 
-def join_retrieval_context(retrieval_context, delimiter="|"):
+def join_retrieval_context(retrieval_context, delimiter=DELIMITER):
     """Flat join of serialized retrieval_context for csv/jsonl cells."""
     serialized = serialize_retrieval_context(retrieval_context)
     if serialized is None:
         return None
     return delimiter.join(str(item) for item in serialized)
+
+
+def join_context(context, delimiter=DELIMITER):
+    """Flat join of context for csv/jsonl cells."""
+    if context is None:
+        return None
+    return delimiter.join(str(item) for item in context)
 
 
 def reconstruct_retrieval_context(retrieval_context):

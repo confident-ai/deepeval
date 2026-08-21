@@ -70,7 +70,6 @@ app.command(name="logout")(logout_command)
 class Regions(Enum):
     US = "US"
     EU = "EU"
-    AU = "AU"
 
 
 def version_callback(value: Optional[bool] = None) -> None:
@@ -125,7 +124,7 @@ def main(
 @app.command(name="set-confident-region")
 def set_confident_region_command(
     region: Regions = typer.Argument(
-        ..., help="The data region to use (US or EU or AU)"
+        ..., help="The data region to use (US or EU)"
     ),
     save: Optional[str] = typer.Option(
         None,
@@ -145,8 +144,6 @@ def set_confident_region_command(
     # Add flag emojis based on region
     if region == Regions.EU:
         flag = "🇪🇺"
-    elif region == Regions.AU:
-        flag = "🇦🇺"
     else:
         flag = "🇺🇸"
 

@@ -448,7 +448,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 3e-06,
-      "outputPrice": 1.5e-05
+      "outputPrice": 1.5e-05,
+      "supportsThinking": true
     },
     "claude-opus-4-20250514": {
       "supportsLogProbs": false,
@@ -456,7 +457,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 1.5e-05,
-      "outputPrice": 7.5e-05
+      "outputPrice": 7.5e-05,
+      "supportsThinking": true
     },
     "claude-opus-4-1-20250805": {
       "supportsLogProbs": false,
@@ -464,7 +466,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 1.5e-05,
-      "outputPrice": 7.5e-05
+      "outputPrice": 7.5e-05,
+      "supportsThinking": true
     },
     "claude-sonnet-4-20250514": {
       "supportsLogProbs": false,
@@ -472,7 +475,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 3e-06,
-      "outputPrice": 1.5e-05
+      "outputPrice": 1.5e-05,
+      "supportsThinking": true
     },
     "claude-sonnet-4-5-20250929": {
       "supportsLogProbs": false,
@@ -480,7 +484,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 3e-06,
-      "outputPrice": 1.5e-05
+      "outputPrice": 1.5e-05,
+      "supportsThinking": true
     },
     "claude-haiku-4-5-20251001": {
       "supportsLogProbs": false,
@@ -488,7 +493,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 1e-06,
-      "outputPrice": 5e-06
+      "outputPrice": 5e-06,
+      "supportsThinking": true
     },
     "claude-opus-4-5-20251124": {
       "supportsLogProbs": false,
@@ -496,7 +502,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 5e-06,
-      "outputPrice": 2.5e-05
+      "outputPrice": 2.5e-05,
+      "supportsThinking": true
     },
     "claude-opus-4-6-20250610": {
       "supportsLogProbs": false,
@@ -504,7 +511,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 5e-06,
-      "outputPrice": 2.5e-05
+      "outputPrice": 2.5e-05,
+      "supportsThinking": true
     },
     "claude-sonnet-4-6-20250514": {
       "supportsLogProbs": false,
@@ -512,7 +520,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 3e-06,
-      "outputPrice": 1.5e-05
+      "outputPrice": 1.5e-05,
+      "supportsThinking": true
     },
     "claude-3-opus": {
       "supportsLogProbs": false,
@@ -560,7 +569,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 1.5e-05,
-      "outputPrice": 7.5e-05
+      "outputPrice": 7.5e-05,
+      "supportsThinking": true
     },
     "claude-sonnet-4": {
       "supportsLogProbs": false,
@@ -568,7 +578,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 3e-06,
-      "outputPrice": 1.5e-05
+      "outputPrice": 1.5e-05,
+      "supportsThinking": true
     },
     "claude-sonnet-4-5": {
       "supportsLogProbs": false,
@@ -576,7 +587,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 3e-06,
-      "outputPrice": 1.5e-05
+      "outputPrice": 1.5e-05,
+      "supportsThinking": true
     },
     "claude-haiku-4-5": {
       "supportsLogProbs": false,
@@ -584,7 +596,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 1e-06,
-      "outputPrice": 5e-06
+      "outputPrice": 5e-06,
+      "supportsThinking": true
     },
     "claude-opus-4-5": {
       "supportsLogProbs": false,
@@ -592,7 +605,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 5e-06,
-      "outputPrice": 2.5e-05
+      "outputPrice": 2.5e-05,
+      "supportsThinking": true
     },
     "claude-opus-4-7": {
       "supportsLogProbs": false,
@@ -601,7 +615,8 @@
       "supportsJson": true,
       "inputPrice": 5e-06,
       "outputPrice": 2.5e-05,
-      "supportsTemperature": false
+      "supportsTemperature": false,
+      "supportsThinking": true
     },
     "claude-opus-4-8": {
       "supportsLogProbs": false,
@@ -610,7 +625,8 @@
       "supportsJson": true,
       "inputPrice": 5e-06,
       "outputPrice": 2.5e-05,
-      "supportsTemperature": false
+      "supportsTemperature": false,
+      "supportsThinking": true
     },
     "claude-opus-5": {
       "supportsLogProbs": false,
@@ -619,7 +635,8 @@
       "supportsJson": true,
       "inputPrice": 5e-06,
       "outputPrice": 2.5e-05,
-      "supportsTemperature": false
+      "supportsTemperature": false,
+      "supportsThinking": true
     },
     "claude-sonnet-5": {
       "supportsLogProbs": false,
@@ -628,7 +645,8 @@
       "supportsJson": true,
       "inputPrice": 3e-06,
       "outputPrice": 1.5e-05,
-      "supportsTemperature": false
+      "supportsTemperature": false,
+      "supportsThinking": true
     },
     "claude-fable-5": {
       "supportsLogProbs": false,
@@ -645,7 +663,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 5e-06,
-      "outputPrice": 2.5e-05
+      "outputPrice": 2.5e-05,
+      "supportsThinking": true
     },
     "claude-sonnet-4-6": {
       "supportsLogProbs": false,
@@ -653,7 +672,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 3e-06,
-      "outputPrice": 1.5e-05
+      "outputPrice": 1.5e-05,
+      "supportsThinking": true
     },
     "claude-3-7-sonnet-latest": {
       "supportsLogProbs": false,
@@ -661,7 +681,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 3e-06,
-      "outputPrice": 1.5e-05
+      "outputPrice": 1.5e-05,
+      "supportsThinking": true
     },
     "claude-3-5-sonnet-latest": {
       "supportsLogProbs": false,
