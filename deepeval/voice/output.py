@@ -2,12 +2,53 @@
 
 import os
 import logging
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from deepeval.test_case import ConversationalTestCase, Turn
 from deepeval.voice.timeline import render_timeline_wav
 
 logger = logging.getLogger(__name__)
+
+# Where recordings land when nobody says otherwise. Namespaced and hidden so a
+# simulation run does not scatter audio through the working directory, and kept
+# outside the cache folder because clearing a cache should not delete calls the
+# user is still listening to.
+DEFAULT_VOICE_FOLDER = ".deepeval-voice-simulations"
+
+# Distinguishes "the caller said nothing about where to write", which resolves
+# through the env var to a default, from an explicit `None`, which means do not
+# write at all.
+UNSET: Any = object()
+
+
+def resolve_output_dir(output_dir: Any = UNSET) -> Optional[str]:
+    """Decide where conversation audio goes, or `None` to write none.
+
+    Precedence, highest first: read-only mode, then an explicit `output_dir`
+    (including `None` to turn writing off), then `DEEPEVAL_VOICE_FOLDER`, then
+    `DEFAULT_VOICE_FOLDER`.
+    """
+    from deepeval.utils import is_read_only_env
+
+    if is_read_only_env():
+        # Honouring an explicit path here would write the one kind of file the
+        # user has asked deepeval never to write.
+        if output_dir is not UNSET and output_dir is not None:
+            logger.warning(
+                "READ_ONLY filesystem: not writing voice simulation audio to "
+                "%s.",
+                output_dir,
+            )
+        return None
+
+    if output_dir is not UNSET:
+        return output_dir
+
+    from deepeval.config.settings import get_settings
+
+    configured = get_settings().DEEPEVAL_VOICE_FOLDER
+    return str(configured) if configured is not None else DEFAULT_VOICE_FOLDER
+
 
 _MIME_EXT = {
     "audio/wav": "wav",

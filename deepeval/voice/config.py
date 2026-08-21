@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Optional, TYPE_CHECKING
+from dataclasses import dataclass, field
+from typing import Any, Optional, TYPE_CHECKING
 
 from deepeval.models.base_model import DeepEvalBaseTTS, DeepEvalBaseSTT
 from deepeval.voice.connectors.transports.base import BaseVoiceConnector
+from deepeval.voice.output import UNSET, resolve_output_dir
 
 if TYPE_CHECKING:
     from deepeval.dataset.golden import InterruptionBehavior
@@ -27,11 +28,16 @@ class VoiceConfig:
     connector: BaseVoiceConnector
     tts_model: Optional[DeepEvalBaseTTS] = None
     stt_model: Optional[DeepEvalBaseSTT] = None
-    # Directory to write per-turn and combined audio files into.
-    # Set to None to skip writing audio to disk.
-    output_dir: Optional[str] = "voice_simulations"
+    # Directory to write per-turn and combined audio files into. Left alone,
+    # this resolves through `DEEPEVAL_VOICE_FOLDER` to a default folder; pass
+    # `None` to skip writing audio to disk. Resolved once, here, so that by the
+    # time anything reads it the answer is a plain path or `None`.
+    output_dir: Optional[str] = field(default=UNSET)
     combine_audio_files: bool = True
     interruption_settings: Optional[InterruptionBehavior] = None
+
+    def __post_init__(self) -> None:
+        self.output_dir = resolve_output_dir(self.output_dir)
 
 
 def __getattr__(name: str):

@@ -58,7 +58,6 @@ from deepeval.simulator import ConversationSimulator
 
 voice_config = VoiceConfig(
     connector=ElevenLabsConnector(agent_id="your-agent-id"),
-    output_dir="voice_simulations",
     combine_audio_files=True,
 )
 simulator = ConversationSimulator(voice_config=voice_config)
@@ -69,7 +68,7 @@ There are **ONE** mandatory and **FIVE** optional parameters when creating a `Vo
 - `connector`: a [`BaseVoiceConnector`](/docs/conversation-simulator-voice-connectors) that carries audio to and from your voice agent.
 - [Optional] `tts_model`: a [`DeepEvalBaseTTS`](#tts-and-stt-models) that speaks the simulated user's messages. Defaulted to `OpenAITTSModel`.
 - [Optional] `stt_model`: a [`DeepEvalBaseSTT`](#tts-and-stt-models) that transcribes your agent's spoken replies. Defaulted to `OpenAISTTModel`.
-- [Optional] `output_dir`: a string directory to save conversation audio files into, or `None` to skip writing audio to disk. Defaulted to `"voice_simulations"`.
+- [Optional] `output_dir`: a string directory to save conversation audio files into, or `None` to skip writing audio to disk. Left unset, it falls back to the `DEEPEVAL_VOICE_FOLDER` [environment variable](/docs/environment-variables) and then to `".deepeval-voice-simulations"`.
 - [Optional] `combine_audio_files`: a boolean which when set to `True` (and `output_dir` is set), also writes a single stitched WAV of the full conversation alongside the per-turn files. Has no effect when `output_dir` is `None`. Defaulted to `True`.
 - [Optional] `interruption_settings`: **deprecated** — set [`Persona(interruption_behavior=...)`](/docs/conversation-simulator-voice-personas#interruptions) on the golden instead. Defaulted to `None`.
 
@@ -155,7 +154,7 @@ Each simulated conversation is returned as a regular `ConversationalTestCase`, e
 Unless `output_dir` is `None`, the audio is also written to disk — one file per turn, plus a combined recording of the whole conversation when `combine_audio_files=True`:
 
 ```text
-voice_simulations/
+.deepeval-voice-simulations/
 └── simulation-2026-08-10_12-30-00/
     ├── deepeval-turn-1-user.wav
     ├── deepeval-turn-1-assistant.wav
@@ -165,6 +164,8 @@ voice_simulations/
 ```
 
 When simulating multiple goldens in one run, each conversation gets its own sub-folder named after the golden's `name` (or `conversation-<index>` when unnamed).
+
+Set `DEEPEVAL_VOICE_FOLDER` to keep recordings somewhere else — a scratch disk, or a path outside the repo — without changing code. An explicit `VoiceConfig(output_dir=...)` overrides it, and `DEEPEVAL_FILE_SYSTEM=READ_ONLY` overrides both, writing nothing at all.
 
 ::::tip
 Because the output is a standard `ConversationalTestCase`, you can evaluate simulated voice conversations with the same multi-turn metrics you already use for text — the transcript lives in each `Turn`'s `content`.

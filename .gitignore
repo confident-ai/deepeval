@@ -170,7 +170,8 @@ node_modules
 # deepeval tests
 secrets
 
-# Generated voice simulation audio
+# Generated voice simulation audio (voice_simulations/ was the old default)
+.deepeval-voice-simulations/
 voice_simulations/
 
 # Mac OS system files
