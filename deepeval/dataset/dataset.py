@@ -265,9 +265,9 @@ class EvaluationDataset:
         actual_output_col_name: str,
         expected_output_col_name: Optional[str] = "expected_output",
         context_col_name: Optional[str] = "context",
-        context_col_delimiter: str = ";",
+        context_col_delimiter: str = "|",
         retrieval_context_col_name: Optional[str] = "retrieval_context",
-        retrieval_context_col_delimiter: str = ";",
+        retrieval_context_col_delimiter: str = "|",
         tools_called_col_name: Optional[str] = "tools_called",
         tools_called_col_delimiter: str = ";",
         expected_tools_col_name: Optional[str] = "expected_tools",
@@ -285,9 +285,9 @@ class EvaluationDataset:
             actual_output_col_name (str): The column name in the CSV corresponding to the actual output for the test case.
             expected_output_col_name (str, optional): The column name in the CSV corresponding to the expected output for the test case. Defaults to None.
             context_col_name (str, optional): The column name in the CSV corresponding to the context for the test case. Defaults to None.
-            context_delimiter (str, optional): The delimiter used to separate items in the context list within the CSV file. Defaults to ';'.
+            context_col_delimiter (str, optional): The delimiter used to separate items in the context list within the CSV file. Defaults to '|'.
             retrieval_context_col_name (str, optional): The column name in the CSV corresponding to the retrieval context for the test case. Defaults to None.
-            retrieval_context_delimiter (str, optional): The delimiter used to separate items in the retrieval context list within the CSV file. Defaults to ';'.
+            retrieval_context_col_delimiter (str, optional): The delimiter used to separate items in the retrieval context list within the CSV file. Defaults to '|'.
             additional_metadata_col_name (str, optional): The column name in the CSV corresponding to additional metadata for the test case. Defaults to None.
 
         Returns:
