@@ -3,6 +3,7 @@ id: evaluation-voice
 title: Voice
 sidebar_label: Voice
 languages: [python]
+beta: true
 ---
 
 **Voice agents** are conversational AI systems you talk to instead of type at — phone support lines, restaurant booking bots, in-app voice assistants. Evaluating them means evaluating a _spoken_ conversation, which has strictly more to it than a text one:
@@ -70,13 +71,13 @@ Steps 2–4 are where the pipeline can distort what you measure. Know the trade-
 
 Voice metrics follow the same three-part model as the test case:
 
-- **What was said** remains the responsibility of existing conversational metrics such as `TurnRelevancyMetric`, `GoalAccuracyMetric`, and `ToolUseMetric`.
-- **How it sounded** is evaluated by `VoiceNaturalnessMetric`, `SpeechIntelligibilityMetric`, `VoiceConsistencyMetric`, and `AudioIntegrityMetric`.
-- **When it happened** is evaluated by `TurnTakingNaturalnessMetric` and `AgentResponsivenessMetric`.
+- **What was said** remains the responsibility of existing conversational metrics such as [`TurnRelevancyMetric`](/docs/metrics-turn-relevancy), [`GoalAccuracyMetric`](/docs/metrics-goal-accuracy), and [`ToolUseMetric`](/docs/metrics-tool-use).
+- **How it sounded** is evaluated by [`VoiceNaturalnessMetric`](/docs/metrics-voice-naturalness), [`SpeechIntelligibilityMetric`](/docs/metrics-speech-intelligibility), [`VoiceConsistencyMetric`](/docs/metrics-voice-consistency), and [`AudioIntegrityMetric`](/docs/metrics-audio-integrity).
+- **When it happened** is evaluated by [`TurnTakingNaturalnessMetric`](/docs/metrics-turn-taking-naturalness) and [`AgentResponsivenessMetric`](/docs/metrics-agent-responsiveness).
 
-`VoiceReliabilityMetric` is the optional operational summary. It combines the responsiveness and audio-integrity checks, but a critical failure such as missing agent audio or a complete failure to respond always forces its score to zero. Minor checks cannot average away a catastrophic failure.
+[`VoiceReliabilityMetric`](/docs/metrics-voice-reliability) is the optional operational summary. It combines the responsiveness and audio-integrity checks, but a critical failure such as missing agent audio or a complete failure to respond always forces its score to zero. Minor checks cannot average away a catastrophic failure.
 
-All voice quality metrics return a score from 0 to 1, where higher is better. Measurements such as latency, loudness, clipping rate, pause duration, and speaking rate appear in metric reasons and breakdowns as diagnostic evidence. They are not universal quality scores: whether a pause or response delay sounds natural depends on what was happening in the conversation.
+All seven voice metrics return a score from 0 to 1, where higher is better. Measurements such as latency, loudness, clipping rate, pause duration, and speaking rate appear in metric reasons and breakdowns as diagnostic evidence. They are not universal quality scores: whether a pause or response delay sounds natural depends on what was happening in the conversation.
 
 The metrics use different parts of the same `ConversationalTestCase`:
 

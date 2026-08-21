@@ -300,19 +300,19 @@ Both of which are solved using `deepeval`'s `ConversationSimulator`.
 ### Create dataset of goldens
 
 
-Create a `ConversationalGolden` by providing your user description, scenario, and expected outcome, for the conversation you wish to simulate.
+Create a `ConversationalGolden` by providing who the user is, the scenario, and the expected outcome, for the conversation you wish to simulate.
 
 <Switch>
 
 <Case id="python">
 
 ```python title="main.py"
-from deepeval.dataset import EvaluationDataset, ConversationalGolden
+from deepeval.dataset import EvaluationDataset, ConversationalGolden, Persona
 
 golden = ConversationalGolden(
     scenario="Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
     expected_outcome="Successful purchase of a ticket.",
-    user_description="Andy Byron is the CEO of Astronomer.",
+    persona=Persona(characteristics="Andy Byron is the CEO of Astronomer."),
 )
 
 dataset = EvaluationDataset(goldens=[golden])
@@ -425,7 +425,7 @@ Here, we only have 1 test case, but in reality you'll want to simulate from at l
 <details>
 <summary>Click to view an example simulated test case</summary>
 
-Your generated test cases should be populated with simulated `Turn`s, along with the `scenario`, `expected_outcome`, and `user_description` from the conversation golden.
+Your generated test cases should be populated with simulated `Turn`s, along with the `scenario`, <Term py="expected_outcome" ts="expectedOutcome"/>, and the user's profile from the conversation golden.
 
 <Switch>
 

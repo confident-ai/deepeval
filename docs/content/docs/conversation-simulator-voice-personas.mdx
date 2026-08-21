@@ -8,6 +8,24 @@ beta: true
 
 A `Persona` defines **who the simulated user is, how they behave, and how they sound**.
 
+A persona pairs with a `ConversationalGolden`: the persona is _who_ is calling, while the golden's `scenario` and `expected_outcome` are _what_ they are trying to do.
+
+```python
+from deepeval.dataset import ConversationalGolden, Persona
+
+golden = ConversationalGolden(
+    scenario="Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
+    expected_outcome="Successful purchase of a ticket.",
+    persona=Persona(characteristics="Something."),
+)
+```
+
+::::note
+Keep traits on the persona and the task on the golden. "You are impatient and talk over people" belongs in `characteristics`; "buy a VIP ticket" belongs in `scenario`. Mixing the two makes a persona single-use — the whole point is to run the same caller across many scenarios, and the same scenario across many callers.
+::::
+
+## Create A Persona
+
 ```python
 from deepeval.dataset import Persona
 
@@ -17,24 +35,6 @@ persona = Persona(
     voice="onyx",
 )
 ```
-
-A persona pairs with a `ConversationalGolden`: the persona is _who_ is calling, while the golden's `scenario` and `expected_outcome` are _what_ they are trying to do.
-
-```python
-from deepeval.dataset import ConversationalGolden
-
-golden = ConversationalGolden(
-    scenario="Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
-    expected_outcome="Successful purchase of a ticket.",
-    persona=persona,
-)
-```
-
-::::note
-Keep traits on the persona and the task on the golden. "You are impatient and talk over people" belongs in `characteristics`; "buy a VIP ticket" belongs in `scenario`. Mixing the two makes a persona single-use — the whole point is to run the same caller across many scenarios, and the same scenario across many callers.
-::::
-
-## Create A Persona
 
 There is **ONE** mandatory and **EIGHT** optional parameters when creating a `Persona`:
 

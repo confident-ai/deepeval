@@ -278,8 +278,10 @@ test_case = ConversationalTestCase(
 )
 ```
 
-:::tip
-If you are [simulating conversations](/docs/conversation-simulator), describe the user on the `ConversationalGolden` instead, using a [`Persona`](/docs/conversation-simulator-voice-personas) — it carries the same profile plus voice, background noise, and interruption behavior. The simulator flattens it onto the `user_description` of each test case it produces.
+:::caution
+`user_description` is deprecated on `ConversationalGolden` in favor of [`persona`](/docs/conversation-simulator-voice-personas), which carries the same profile plus voice, background noise, and interruption behavior. Goldens that still set `user_description` keep working — the string is promoted to `Persona(characteristics=...)` — but the parameter will be removed in a future release.
+
+It is **not** deprecated here: `user_description` remains the field on `ConversationalTestCase`, and is what the simulator flattens a golden's persona onto for every test case it produces.
 :::
 
 </Case>
@@ -608,7 +610,7 @@ Unlike for single-turn test cases, the concept of component-level evaluation doe
           No. You can author turns manually, or generate them automatically with
           the{" "}
           <a href="/docs/conversation-simulator">conversation simulator</a> from
-          a <code>ConversationalGolden</code>'s scenario and user description.
+          a <code>ConversationalGolden</code>'s scenario and user persona.
         </>
       ),
     },

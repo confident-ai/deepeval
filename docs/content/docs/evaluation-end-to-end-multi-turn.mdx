@@ -149,7 +149,17 @@ The simulator exposes additional configuration beyond what fits here — see [st
 <details>
 <summary>Click to view an example simulated test case</summary>
 
-The simulator carries `scenario`, <Term py="expected_outcome" ts="expectedOutcome"/>, and <Term py="user_description" ts="userDescription"/> over from the golden, and fills in `turns`:
+<Only id="python">
+
+The simulator carries `scenario` and `expected_outcome` over from the golden, flattens its `persona` onto `user_description`, and fills in `turns`:
+
+</Only>
+
+<Only id="typescript">
+
+The simulator carries `scenario`, `expectedOutcome`, and `userDescription` over from the golden, and fills in `turns`:
+
+</Only>
 
 <Switch>
 
@@ -434,8 +444,8 @@ See [unit testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd) for assertio
       question: "Do I have to script every conversation by hand?",
       answer: (
         <>
-          No. You define <code>ConversationalGolden</code>s with a scenario and
-          user description, then let <code>ConversationSimulator.simulate()</code>{" "}
+          No. You define <code>ConversationalGolden</code>s with a scenario and a
+          user persona, then let <code>ConversationSimulator.simulate()</code>{" "}
           generate the turns, up to a limit you set on the number of simulated
           user turns.
         </>
