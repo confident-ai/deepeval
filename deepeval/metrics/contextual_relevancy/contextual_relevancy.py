@@ -204,7 +204,7 @@ class ContextualRelevancyMetric(BaseMetric):
         relevant_statements = []
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
-                if verdict.verdict.lower() == "no":
+                if verdict.verdict.strip().lower() == "no":
                     irrelevant_statements.append(verdict.reason)
                 else:
                     relevant_statements.append(verdict.statement)
@@ -234,7 +234,7 @@ class ContextualRelevancyMetric(BaseMetric):
         relevant_statements = []
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
-                if verdict.verdict.lower() == "no":
+                if verdict.verdict.strip().lower() == "no":
                     irrelevant_statements.append(verdict.reason)
                 else:
                     relevant_statements.append(verdict.statement)
@@ -262,7 +262,7 @@ class ContextualRelevancyMetric(BaseMetric):
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
                 total_verdicts += 1
-                if verdict.verdict.lower() == "yes":
+                if verdict.verdict.strip().lower() == "yes":
                     relevant_statements += 1
 
         if total_verdicts == 0:
