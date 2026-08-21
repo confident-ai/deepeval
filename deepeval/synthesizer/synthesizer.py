@@ -1693,9 +1693,13 @@ class Synthesizer:
         else:
             try:
                 res = model.generate(prompt, schema=schema)
+                if isinstance(res, tuple):
+                    res = res[0]
                 return res
             except TypeError:
                 res = model.generate(prompt)
+                if isinstance(res, tuple):
+                    res = res[0]
                 data = trimAndLoadJson(res, self)
                 # `SyntheticDataList` is nested, so must be manually processed
                 # if custom model doesn't support schema
@@ -1719,9 +1723,13 @@ class Synthesizer:
         else:
             try:
                 res = await model.a_generate(prompt, schema=schema)
+                if isinstance(res, tuple):
+                    res = res[0]
                 return res
             except TypeError:
                 res = await model.a_generate(prompt)
+                if isinstance(res, tuple):
+                    res = res[0]
                 data = trimAndLoadJson(res, self)
                 # `SyntheticDataList` is nested, so must be manually processed
                 # if custom model doesn't support schema
@@ -1740,9 +1748,13 @@ class Synthesizer:
         else:
             try:
                 res: Response = self.model.generate(prompt, schema=Response)
+                if isinstance(res, tuple):
+                    res = res[0]
                 return res.response
             except TypeError:
                 res = self.model.generate(prompt)
+                if isinstance(res, tuple):
+                    res = res[0]
                 return res
 
     async def _a_generate(self, prompt: str) -> str:
@@ -1756,9 +1768,13 @@ class Synthesizer:
                 res: Response = await self.model.a_generate(
                     prompt, schema=Response
                 )
+                if isinstance(res, tuple):
+                    res = res[0]
                 return res.response
             except TypeError:
                 res = await self.model.a_generate(prompt)
+                if isinstance(res, tuple):
+                    res = res[0]
                 return res
 
     #############################################################
