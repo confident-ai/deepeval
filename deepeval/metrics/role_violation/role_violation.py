@@ -52,7 +52,9 @@ class RoleViolationMetric(BaseMetric):
                 "Role parameter is required. Please specify the expected role (e.g., 'helpful assistant', 'customer service agent', etc.)"
             )
 
-        self.threshold = 0 if strict_mode else threshold
+        # In strict mode, any detected role violation (score 0.0) must fail.
+        # A threshold of 0 would let 0.0 >= 0 pass, so require a perfect 1.0.
+        self.threshold = 1 if strict_mode else threshold
         self.role = role
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
