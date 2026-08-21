@@ -1,100 +1,105 @@
-from pydantic import SecretStr
+import pytest
+from pydantic import ValidationError
 
 from deepeval.confident import api as confident_api
+from deepeval.config.settings import get_settings, reset_settings
 
 
-def test_resolve_backend_respects_explicit_env_region_over_key_prefix(
-    monkeypatch,
-):
-    """
-    CONFIDENT_REGION=EU set via settings (env/.env) must win over a
-    conflicting US-prefixed API key.
-    """
+def _set_env_region(monkeypatch, region, api_key=None):
+    """Load CONFIDENT_REGION (and optionally a key) through real Settings."""
+    monkeypatch.setenv("CONFIDENT_REGION", region)
+    if api_key is not None:
+        monkeypatch.setenv("CONFIDENT_API_KEY", api_key)
+    reset_settings(reload_dotenv=False)
 
-    class DummySettings:
-        CONFIDENT_BASE_URL = None
-        CONFIDENT_REGION = "EU"
-        CONFIDENT_API_KEY = SecretStr("confident_us_xxx")
 
-    monkeypatch.setattr(confident_api, "get_settings", lambda: DummySettings())
+def _stub_keystore(monkeypatch, region):
     monkeypatch.setattr(
         confident_api.KEY_FILE_HANDLER,
         "fetch_data",
-        lambda *args, **kwargs: None,
+        lambda *args, **kwargs: region,
     )
+
+
+def test_explicit_region_wins_over_conflicting_key_prefix(monkeypatch):
+    """CONFIDENT_REGION=EU must beat a US-prefixed API key."""
+    _set_env_region(monkeypatch, "EU", api_key="confident_us_org_xxx")
+    _stub_keystore(monkeypatch, None)
 
     assert confident_api.resolve_backend() == confident_api.BackendResolution(
         confident_api.API_BASE_URL_EU, "EU", "explicit_region"
     )
 
 
-def test_resolve_backend_respects_explicit_env_region_without_key_prefix(
-    monkeypatch,
-):
-    """
-    CONFIDENT_REGION=AU set via settings must be honored even when the API
-    key carries no recognizable region prefix.
-    """
-
-    class DummySettings:
-        CONFIDENT_BASE_URL = None
-        CONFIDENT_REGION = "AU"
-        CONFIDENT_API_KEY = SecretStr("abc123")
-
-    monkeypatch.setattr(confident_api, "get_settings", lambda: DummySettings())
-    monkeypatch.setattr(
-        confident_api.KEY_FILE_HANDLER,
-        "fetch_data",
-        lambda *args, **kwargs: None,
-    )
+def test_explicit_us_region_wins_over_eu_key_prefix(monkeypatch):
+    """Precedence holds in both directions, not just towards EU."""
+    _set_env_region(monkeypatch, "US", api_key="confident_eu_org_xxx")
+    _stub_keystore(monkeypatch, None)
 
     assert confident_api.resolve_backend() == confident_api.BackendResolution(
-        confident_api.API_BASE_URL_AU, "AU", "explicit_region"
+        confident_api.API_BASE_URL, "US", "explicit_region"
     )
 
 
-def test_resolve_backend_falls_back_to_keystore_region(monkeypatch):
-    """
-    Legacy keystore region is still honored when settings carries no
-    CONFIDENT_REGION attribute (existing behavior must not regress).
-    """
+def test_explicit_region_is_case_insensitive(monkeypatch):
+    _set_env_region(monkeypatch, "eu")
+    _stub_keystore(monkeypatch, None)
 
-    class DummySettings:
-        CONFIDENT_BASE_URL = None
-        CONFIDENT_API_KEY = SecretStr("confident_eu_6M_dummy")
-
-    monkeypatch.setattr(confident_api, "get_settings", lambda: DummySettings())
-    monkeypatch.setattr(
-        confident_api.KEY_FILE_HANDLER,
-        "fetch_data",
-        lambda *args, **kwargs: "EU",
+    assert get_settings().CONFIDENT_REGION == "EU"
+    assert confident_api.resolve_backend().base_url == (
+        confident_api.API_BASE_URL_EU
     )
+
+
+def test_unsupported_region_raises_at_settings_load(monkeypatch):
+    """A typo must fail loudly rather than silently routing to US."""
+    monkeypatch.setenv("CONFIDENT_REGION", "EUROPE")
+
+    with pytest.raises(
+        ValidationError, match="CONFIDENT_REGION must be one of"
+    ):
+        reset_settings(reload_dotenv=False)
+
+
+def test_explicit_region_wins_over_keystore_region(monkeypatch):
+    """Settings (env/.env) outrank the legacy JSON keystore."""
+    _set_env_region(monkeypatch, "EU")
+    _stub_keystore(monkeypatch, "US")
 
     assert confident_api.resolve_backend() == confident_api.BackendResolution(
         confident_api.API_BASE_URL_EU, "EU", "explicit_region"
     )
 
 
-def test_resolve_backend_keystore_fallback_when_settings_region_none(
-    monkeypatch,
-):
-    """
-    When CONFIDENT_REGION is explicitly None in settings, the keystore
-    region is used as a fallback.
-    """
-
-    class DummySettings:
-        CONFIDENT_BASE_URL = None
-        CONFIDENT_REGION = None
-        CONFIDENT_API_KEY = SecretStr("confident_eu_6M_dummy")
-
-    monkeypatch.setattr(confident_api, "get_settings", lambda: DummySettings())
-    monkeypatch.setattr(
-        confident_api.KEY_FILE_HANDLER,
-        "fetch_data",
-        lambda *args, **kwargs: "EU",
-    )
+def test_keystore_region_used_when_settings_region_unset(monkeypatch):
+    """`deepeval set-confident-region` keystore setups must not regress."""
+    monkeypatch.delenv("CONFIDENT_REGION", raising=False)
+    reset_settings(reload_dotenv=False)
+    _stub_keystore(monkeypatch, "EU")
 
     assert confident_api.resolve_backend() == confident_api.BackendResolution(
-        confident_api.API_BASE_URL_EU, "EU", "explicit_region"
+        confident_api.API_BASE_URL_EU, "EU", "keystore_region"
+    )
+
+
+def test_unroutable_keystore_region_falls_through_to_key_prefix(monkeypatch):
+    """A stale keystore region we no longer serve must not resolve to US."""
+    monkeypatch.delenv("CONFIDENT_REGION", raising=False)
+    monkeypatch.setenv("CONFIDENT_API_KEY", "confident_eu_org_xxx")
+    reset_settings(reload_dotenv=False)
+    _stub_keystore(monkeypatch, "AU")
+
+    assert confident_api.resolve_backend() == confident_api.BackendResolution(
+        confident_api.API_BASE_URL_EU, "EU", "api_key_prefix"
+    )
+
+
+def test_custom_base_url_outranks_explicit_region(monkeypatch):
+    _set_env_region(monkeypatch, "EU")
+    monkeypatch.setenv("CONFIDENT_BASE_URL", "https://self-hosted.example.com/")
+    reset_settings(reload_dotenv=False)
+    _stub_keystore(monkeypatch, None)
+
+    assert confident_api.resolve_backend() == confident_api.BackendResolution(
+        "https://self-hosted.example.com", None, "custom_base_url"
     )
