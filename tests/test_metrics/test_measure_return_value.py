@@ -1,9 +1,4 @@
-import os
-
-# Force-set (not setdefault): CI exports an EMPTY OPENAI_API_KEY, and
-# ToolCorrectnessMetric never calls the API — it only needs a non-empty
-# value so model-client construction passes validation.
-os.environ["OPENAI_API_KEY"] = "dummy-key-for-regression-test"
+import pytest
 
 from deepeval.metrics import ToolCorrectnessMetric
 from deepeval.test_case import LLMTestCase, ToolCall
@@ -16,6 +11,16 @@ def build_test_case():
         tools_called=[ToolCall(name="ask_question")],
         expected_tools=[ToolCall(name="ask_question")],
     )
+
+
+@pytest.fixture(autouse=True)
+def _dummy_openai_key(monkeypatch):
+    """ToolCorrectnessMetric never calls the API; it only needs a non-empty
+    key so model-client construction passes validation. Scoped via
+    monkeypatch so key-gated tests elsewhere keep skipping (#3092 CI:
+    setdefault kept CI's empty-string key, while os.environ[] leaked the
+    dummy into tests that really do call OpenAI)."""
+    monkeypatch.setenv("OPENAI_API_KEY", "dummy-key-for-regression-test")
 
 
 class TestMeasureReturnValue:
