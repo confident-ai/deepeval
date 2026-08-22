@@ -91,7 +91,7 @@ class NonAdviceMetric(BaseMetric):
         ):
             if self.async_mode:
                 loop = get_or_create_event_loop()
-                loop.run_until_complete(
+                return loop.run_until_complete(
                     self.a_measure(
                         test_case,
                         _show_indicator=False,
