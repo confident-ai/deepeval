@@ -1,6 +1,9 @@
 import os
 
-os.environ.setdefault("OPENAI_API_KEY", "dummy-key-for-regression-test")
+# Force-set (not setdefault): CI exports an EMPTY OPENAI_API_KEY, and
+# ToolCorrectnessMetric never calls the API — it only needs a non-empty
+# value so model-client construction passes validation.
+os.environ["OPENAI_API_KEY"] = "dummy-key-for-regression-test"
 
 from deepeval.metrics import ToolCorrectnessMetric
 from deepeval.test_case import LLMTestCase, ToolCall
