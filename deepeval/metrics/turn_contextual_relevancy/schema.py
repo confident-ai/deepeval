@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 class ContextualRelevancyVerdict(BaseModel):
     statement: str
-    verdict: str
+    verdict: bool
     reason: Optional[str] = Field(default=None)
 
 
