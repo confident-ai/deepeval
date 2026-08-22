@@ -1,6 +1,7 @@
-from typing import List, Optional, Dict, Union
+from typing import List, Optional, Dict, Union, Literal
 from tqdm import tqdm
 
+from deepeval.errors import DeepEvalError
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import (
     DeepEvalBaseBenchmark,
@@ -22,6 +23,8 @@ class MMLU(DeepEvalBaseBenchmark):
         n_problems_per_task: Optional[int] = None,
         verbose_mode: bool = False,
         confinement_instructions: Optional[str] = None,
+        scoring_mode: Literal["generation", "logprobs"] = "generation",
+        top_logprobs: int = 20,
         **kwargs,
     ):
         from deepeval.scorer import Scorer
@@ -44,6 +47,14 @@ class MMLU(DeepEvalBaseBenchmark):
             )
         else:
             self.confinement_instructions = confinement_instructions
+        if scoring_mode not in ("generation", "logprobs"):
+            raise ValueError(
+                f"Invalid scoring_mode '{scoring_mode}'. Expected "
+                "'generation' (default) or 'logprobs'."
+            )
+        self.scoring_mode: str = scoring_mode
+        self.top_logprobs: int = top_logprobs
+        self.choices: List[str] = ["A", "B", "C", "D"]
 
     def evaluate(
         self,
@@ -59,7 +70,23 @@ class MMLU(DeepEvalBaseBenchmark):
             overall_total_predictions = 0
             predictions_row = []
             scores_row = []
-            use_batch = should_use_batch(model, batch_size)
+            if (
+                self.scoring_mode == "logprobs"
+                and model.supports_log_probs() is False
+            ):
+                raise DeepEvalError(
+                    "MMLU(scoring_mode='logprobs') requires a model that "
+                    "returns token log probabilities, but "
+                    f"`{model.get_model_name()}` reports it does not support "
+                    "`logprobs`. Use a logprob-capable model or the default "
+                    "scoring_mode='generation'."
+                )
+            # Log-prob scoring is per-item (it needs generate_raw_response), so
+            # the batch generation path does not apply.
+            use_batch = (
+                should_use_batch(model, batch_size)
+                and self.scoring_mode != "logprobs"
+            )
 
             for task in self.tasks:
                 goldens = self.load_benchmark_dataset(task)
@@ -166,6 +193,9 @@ class MMLU(DeepEvalBaseBenchmark):
     def predict(
         self, model: DeepEvalBaseLLM, task: MMLUTask, golden: Golden
     ) -> Dict:
+        if self.scoring_mode == "logprobs":
+            return self._predict_logprobs(model, task, golden)
+
         # Define prompt template
         assert (
             self.shots_dataset
@@ -200,6 +230,58 @@ class MMLU(DeepEvalBaseBenchmark):
             golden.expected_output, prediction
         )
         return {"prediction": prediction, "score": score}
+
+    def _predict_logprobs(
+        self, model: DeepEvalBaseLLM, task: MMLUTask, golden: Golden
+    ) -> Dict:
+        # Score by the log probability the model assigns to each answer option
+        # (the canonical MMLU setup) instead of parsing a generated answer.
+        if model.supports_log_probs() is False:
+            raise DeepEvalError(
+                "MMLU(scoring_mode='logprobs') requires a model that returns "
+                f"token log probabilities, but `{model.get_model_name()}` "
+                "reports it does not support `logprobs`."
+            )
+        assert (
+            self.shots_dataset
+        ), "Example dataset is empty. Call load_benchmark."
+        prompt = MMLUTemplate.generate_output(
+            train_set=self.shots_dataset,
+            input=golden.input,
+            task=task,
+            n_shots=self.n_shots,
+        )
+        # Nudge the answer option to be the first generated token, whose top
+        # log probs we then score over the candidate options.
+        prompt += f"\n\n{self.confinement_instructions}"
+
+        completion, _ = model.generate_raw_response(
+            prompt, top_logprobs=self.top_logprobs
+        )
+        top_logprobs = self._extract_first_token_top_logprobs(completion)
+        prediction = self.scorer.best_choice_from_logprobs(
+            top_logprobs, self.choices
+        )
+        # No candidate option appeared among the returned log probs.
+        prediction = "" if prediction is None else prediction
+
+        score = self.scorer.exact_match_score(
+            golden.expected_output, prediction
+        )
+        return {"prediction": prediction, "score": score}
+
+    @staticmethod
+    def _extract_first_token_top_logprobs(completion) -> List:
+        """Pull the first generated token's ``top_logprobs`` out of a raw
+        chat-completion response, tolerating providers that omit them."""
+        choices = getattr(completion, "choices", None)
+        if not choices:
+            return []
+        logprobs = getattr(choices[0], "logprobs", None)
+        content = getattr(logprobs, "content", None) if logprobs else None
+        if not content:
+            return []
+        return getattr(content[0], "top_logprobs", None) or []
 
     def batch_predict(
         self, model: DeepEvalBaseLLM, task: MMLUTask, goldens: List[Golden]
