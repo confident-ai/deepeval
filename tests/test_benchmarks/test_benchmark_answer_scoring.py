@@ -219,12 +219,13 @@ def test_truthfulqa_mc2_evaluate_accuracy_is_an_accuracy(
     assert result.overall_accuracy == pytest.approx(0.5)
 
 
-def test_truthfulqa_mc2_score_never_exceeds_full_credit():
-    # Repeated indices are each counted as a match by
-    # truth_identification_score, so recall can come back above 100%.
-    # One question must never contribute more than 1 to the accuracy.
+def test_truthfulqa_mc2_repeated_indices_count_once():
+    # Nothing stops a model repeating an index: the schema is a plain
+    # List[int] and the free-text fallback parses whatever it is given.
+    # Counting each repeat as a match gave [1, 1, 1] against [1, 2] full
+    # credit for finding one of the two correct answers.
     golden = Golden(input="q", expected_output="[1, 2]")
     result = _tqa().predict(
         _FakeMC2Model([1, 1, 1]), golden, TruthfulQAMode.MC2
     )
-    assert result["score"] == 1.0
+    assert result["score"] == pytest.approx(0.5)

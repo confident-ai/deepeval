@@ -216,13 +216,11 @@ class TruthfulQA(DeepEvalBaseBenchmark):
     def mc2_score(self, expected_output: str, prediction: str) -> float:
         # truth_identification_score reports recall as a 0-100 percentage, but
         # evaluate() averages the per-question scores, so it needs a fraction
-        # on the same 0-1 scale as MC1's exact match. Capped because repeated
-        # indices in a prediction currently count once each, which can push the
-        # percentage above 100 and a single question above full credit.
+        # on the same 0-1 scale as MC1's exact match.
         percentage = self.scorer.truth_identification_score(
             expected_output, prediction
         )
-        return min(percentage / 100, 1.0)
+        return percentage / 100
 
     def batch_predict(
         self,
