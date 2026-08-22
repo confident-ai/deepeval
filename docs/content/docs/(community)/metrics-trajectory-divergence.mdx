@@ -1,0 +1,95 @@
+---
+id: metrics-trajectory-divergence
+title: Trajectory Divergence
+sidebar_label: Trajectory Divergence
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} />
+
+The trajectory divergence metric compares two **real execution traces** against each other — a baseline run you trust and a candidate run after a prompt edit, model swap, or tool/version bump — and localizes the first sustained divergence between them. It answers *"steps 1–4 matched, step 5 is where the tool call arguments diverged, everything after is downstream of that"* rather than a bare pass/fail.
+
+:::info
+The `TrajectoryDivergenceMetric` is a **community metric**, contributed and maintained by the `deepeval` community. Community metrics are not exported from `deepeval.metrics` — import them explicitly from `deepeval.metrics.community` instead.
+:::
+
+This is different from agentic metrics like `ToolCorrectness` or `PlanAdherence`, which score one run against a static expectation (`expected_tools`, an expected plan). Trajectory divergence is a regression detector: same input, different behavior after a change.
+
+:::note
+The metric is **fully deterministic** — no LLM, no API key, zero cost. It aligns the two traces step by step and reports the matched prefix, the first divergence, its kind, whether the trajectories resynchronize, and the steps that could not be matched.
+:::
+
+## Required Arguments
+
+The metric takes both traces at construction time. Each trace is an iterable of steps; a step can be a dict (`name`, `args`, `kind`, `id`), a deepeval `ToolCall`, or any span-like object exposing `name`/`arguments`-style attributes:
+
+- `baseline_trace`: the run you trust.
+- `candidate_trace`: the run you are checking after the change.
+
+The `LLMTestCase` passed to `measure` is accepted for `BaseMetric` compatibility — the traces themselves are the metric's data.
+
+## Usage
+
+```python
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics.community import TrajectoryDivergenceMetric
+
+# Two dict-based traces from the same task: one before, one after a prompt change.
+baseline_trace = [
+    {"kind": "tool", "name": "search", "args": {"q": "revenue 2024"}},
+    {"kind": "tool", "name": "open_document", "args": {"document_id": 7}},
+    {"kind": "tool", "name": "summarize", "args": {"style": "brief"}},
+    {"kind": "tool", "name": "send_email", "args": {"to": "cfo@example.com"}},
+]
+
+# The candidate inserted a retry of `search` that then rejoined the baseline path.
+candidate_trace = [
+    {"kind": "tool", "name": "search", "args": {"q": "revenue 2024"}},
+    {"kind": "tool", "name": "search", "args": {"q": "revenue 2024", "retry": 1}},
+    {"kind": "tool", "name": "open_document", "args": {"document_id": 7}},
+    {"kind": "tool", "name": "summarize", "args": {"style": "brief"}},
+    {"kind": "tool", "name": "send_email", "args": {"to": "cfo@example.com"}},
+]
+
+metric = TrajectoryDivergenceMetric(
+    baseline_trace=baseline_trace,
+    candidate_trace=candidate_trace,
+)
+
+# The test case is accepted for BaseMetric compatibility; the traces above are the data.
+test_case = LLMTestCase(input="compare the two runs", actual_output="done")
+metric.measure(test_case)
+print(metric.score, metric.reason)
+print(metric.alignment_result.first_divergence)  # 1
+print(metric.alignment_result.resync_at)  # 2
+```
+
+The score is `1.0 - divergence_ratio`, so `1.0` means fully aligned and `0.0` means nothing after the matched prefix could be aligned. The full localization is available on `metric.alignment_result` (the raw alignment result) and `metric.score_breakdown` (the same fields as typed, JSON-serializable data):
+
+- `matched_prefix_len`: steps that matched in order.
+- `first_divergence`: zero-based index where the traces first differ (`None` when aligned).
+- `divergence_kind`: `arg_change`, `tool_change`, `order_change`, `absent`, or `extra`.
+- `resync_at`: step where the trajectories realign (`None` for an unrecovered fork).
+- `unmatched_baseline` / `unmatched_candidate`: step IDs that could not be matched.
+- `reordered`: `(baseline_id, candidate_id)` pairs swapped when the kind is `order_change`.
+- `divergence_ratio`: the divergent fraction of the longer trace (stopping at `resync_at`).
+
+## Optional Parameters
+
+- [Optional] `threshold`: a float representing the minimum passing score. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `1.0`, so only fully aligned traces pass; lower it to tolerate a localized, recovered divergence.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a deterministic reason explaining which step diverged and whether the traces recovered. Defaulted to `True`.
+- [Optional] `async_mode`: a boolean which when set to `True`, runs the metric through its async path. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: `0` for any divergence, `1` otherwise. It also overrides the current threshold and sets it to `1`. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+## How Is It Calculated?
+
+The metric projects both traces into comparable events (kind, tool name, and a canonical digest of the arguments), then aligns them deterministically:
+
+1. **Matched prefix** — steps that are identical in order.
+2. **First divergence** — the first step where the traces stop matching.
+3. **Difference kind** — the same tool with different arguments (`arg_change`), a different tool (`tool_change`), the same calls in a different order (`order_change`), a baseline step missing in the candidate (`absent`), or an extra candidate step (`extra`).
+4. **Recovery** — whether the trajectories resynchronize (`resync_at`) or the divergence persists to the end.
+
+A retry that rejoins the baseline path is a localized divergence with a `resync_at`, not a fork to the end: the ratio counts only the intervening steps. An `order_change` remains a divergence unless the wrapper has dependency evidence to waive it.
