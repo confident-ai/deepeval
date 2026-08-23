@@ -45,6 +45,7 @@ class MetricConfiguration(BaseModel):
     criteria: Optional[str] = None
     include_reason: Optional[bool] = None
     n: Optional[int] = None
+    metric_hash: Optional[str] = None
 
     ##### Optional fields #####
     evaluation_steps: Optional[List[str]] = None
@@ -333,6 +334,13 @@ class Cache:
         metric: BaseMetric,
         metric_configuration: MetricConfiguration,
     ) -> bool:
+
+        if metric_configuration.metric_hash:
+            from deepeval.utils import generate_metric_hash
+
+            current_hash = generate_metric_hash(metric)
+            return current_hash == metric_configuration.metric_hash
+
         config_fields = [
             "threshold",
             "evaluation_model",
@@ -400,5 +408,9 @@ class Cache:
             if field == "embeddings" and value is not None:
                 value = value.__class__.__name__
             config_kwargs[field] = value
+
+        from deepeval.utils import generate_metric_hash
+
+        config_kwargs["metric_hash"] = generate_metric_hash(metric)
 
         return MetricConfiguration(**config_kwargs)
