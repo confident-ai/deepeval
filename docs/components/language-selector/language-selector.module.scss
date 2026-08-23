@@ -45,28 +45,6 @@
   object-fit: contain;
 }
 
-.tag {
-  --tag-hue: oklch(0.6 0.16 60); // amber
-
-  flex-shrink: 0;
-  padding: 0.075rem 0.3rem;
-  border: 1px solid color-mix(in oklab, var(--tag-hue) 28%, transparent);
-  border-radius: 0;
-  background-color: color-mix(in oklab, var(--tag-hue) 12%, transparent);
-  color: var(--tag-hue);
-  font-size: 0.6rem;
-  font-weight: 500;
-  line-height: 1.2;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-:global(.dark) .tag {
-  border-color: color-mix(in oklab, var(--tag-hue) 38%, transparent);
-  background-color: color-mix(in oklab, var(--tag-hue) 20%, transparent);
-  color: color-mix(in oklab, var(--tag-hue) 85%, white);
-}
-
 // Carries the `auto` margin that right-aligns the tail of the row, so the
 // chevron and check sit immediately after it.
 .version {

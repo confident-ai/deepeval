@@ -201,13 +201,17 @@ def update_llm_span(
         return
     if model:
         current_span.model = model
-    if input_token_count:
+    # Zero is a meaningful value for all four numbers below (a free or
+    # self-hosted model has a per-token rate of 0.0, and a call can return
+    # zero tokens), so these are guarded on `is not None` rather than on
+    # truthiness -- same as `update_agent_span` / `update_tool_span` below.
+    if input_token_count is not None:
         current_span.input_token_count = input_token_count
-    if output_token_count:
+    if output_token_count is not None:
         current_span.output_token_count = output_token_count
-    if cost_per_input_token:
+    if cost_per_input_token is not None:
         current_span.cost_per_input_token = cost_per_input_token
-    if cost_per_output_token:
+    if cost_per_output_token is not None:
         current_span.cost_per_output_token = cost_per_output_token
     if token_intervals:
         current_span.token_intervals = token_intervals

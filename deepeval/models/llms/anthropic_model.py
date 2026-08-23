@@ -27,6 +27,12 @@ from deepeval.models.llms.constants import (
 # consistent retry rules
 retry_anthropic = create_retry_decorator(PS.ANTHROPIC)
 
+# Anthropic's `max_tokens` caps thinking *plus* response text, and its minimum
+# thinking budget is 1024, so a thinking request needs headroom for both.
+MIN_THINKING_BUDGET_TOKENS = 1024
+DEFAULT_MAX_TOKENS = 1024
+DEFAULT_THINKING_MAX_TOKENS = 8192
+
 _ALIAS_MAP = {
     "api_key": ["_anthropic_api_key"],
 }
@@ -118,10 +124,34 @@ class AnthropicModel(DeepEvalBaseLLM):
         self.generation_kwargs.pop(
             "temperature", None
         )  # to avoid duplicate with self.temperature
-        default_max_tokens = 1024 if max_tokens is None else max_tokens
-        self._max_tokens = int(
-            self.generation_kwargs.pop("max_tokens", default_max_tokens)
+        self._thinking = (
+            settings.DEEPEVAL_MODEL_THINKING is True
+            and self.model_data.supports_thinking is True
         )
+        explicit_max_tokens = self.generation_kwargs.pop(
+            "max_tokens", max_tokens
+        )
+        if explicit_max_tokens is not None:
+            self._max_tokens = int(explicit_max_tokens)
+        elif self._thinking:
+            self._max_tokens = DEFAULT_THINKING_MAX_TOKENS
+        else:
+            self._max_tokens = DEFAULT_MAX_TOKENS
+
+        if self._thinking:
+            self._thinking_budget_tokens = max(
+                MIN_THINKING_BUDGET_TOKENS, self._max_tokens // 2
+            )
+            if self._max_tokens <= self._thinking_budget_tokens:
+                raise DeepEvalError(
+                    f"Thinking needs at least "
+                    f"{MIN_THINKING_BUDGET_TOKENS} tokens of budget on top of "
+                    f"the response itself, but max_tokens is "
+                    f"{self._max_tokens} and caps thinking and response "
+                    f"together. Raise max_tokens above "
+                    f"{MIN_THINKING_BUDGET_TOKENS * 2} or unset "
+                    f"DEEPEVAL_MODEL_THINKING."
+                )
 
         super().__init__(model)
 
@@ -139,7 +169,6 @@ class AnthropicModel(DeepEvalBaseLLM):
         else:
             content = [{"type": "text", "text": prompt}]
 
-        # Get max_tokens from kwargs, default to 1024 if not provided
         max_tokens = self._max_tokens
         chat_model = self.load_model()
         create_kwargs = dict(
@@ -153,20 +182,27 @@ class AnthropicModel(DeepEvalBaseLLM):
             model=self.name,
             **self.generation_kwargs,
         )
+        create_kwargs.update(self._thinking_kwargs())
         # Only send `temperature` when explicitly configured and the model
-        # supports it — some models reject/deprecate `temperature`.
-        if self.temperature is not None and not (
-            self.model_data and self.model_data.supports_temperature is False
+        # supports it — some models reject/deprecate `temperature`, and a
+        # thinking request only accepts the default.
+        if not self._thinking and (
+            self.temperature is not None
+            and not (
+                self.model_data
+                and self.model_data.supports_temperature is False
+            )
         ):
             create_kwargs["temperature"] = self.temperature
         message = chat_model.messages.create(**create_kwargs)
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens
         )
+        text = self._extract_text(message)
         if schema is None:
-            return message.content[0].text, cost
+            return text, cost
         else:
-            json_output = trim_and_load_json(message.content[0].text)
+            json_output = trim_and_load_json(text)
             return schema.model_validate(json_output), cost
 
     @retry_anthropic
@@ -179,7 +215,6 @@ class AnthropicModel(DeepEvalBaseLLM):
         else:
             content = [{"type": "text", "text": prompt}]
 
-        # Get max_tokens from kwargs, default to 1024 if not provided
         max_tokens = self._max_tokens
         chat_model = self.load_model(async_mode=True)
         create_kwargs = dict(
@@ -193,22 +228,63 @@ class AnthropicModel(DeepEvalBaseLLM):
             model=self.name,
             **self.generation_kwargs,
         )
+        create_kwargs.update(self._thinking_kwargs())
         # Only send `temperature` when explicitly configured and the model
-        # supports it — some models reject/deprecate `temperature`.
-        if self.temperature is not None and not (
-            self.model_data and self.model_data.supports_temperature is False
+        # supports it — some models reject/deprecate `temperature`, and a
+        # thinking request only accepts the default.
+        if not self._thinking and (
+            self.temperature is not None
+            and not (
+                self.model_data
+                and self.model_data.supports_temperature is False
+            )
         ):
             create_kwargs["temperature"] = self.temperature
         message = await chat_model.messages.create(**create_kwargs)
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens
         )
+        text = self._extract_text(message)
         if schema is None:
-            return message.content[0].text, cost
+            return text, cost
         else:
-            json_output = trim_and_load_json(message.content[0].text)
+            json_output = trim_and_load_json(text)
 
             return schema.model_validate(json_output), cost
+
+    @staticmethod
+    def _extract_text(message) -> str:
+        """The response text, skipping any leading thinking block."""
+        for block in getattr(message, "content", None) or []:
+            if getattr(block, "type", None) == "text":
+                return block.text
+        raise DeepEvalError(
+            "Anthropic returned no text block. With thinking enabled the "
+            "whole token budget can go to reasoning — raise max_tokens or "
+            "unset DEEPEVAL_MODEL_THINKING."
+        )
+
+    def _thinking_kwargs(self) -> Dict:
+        """The `thinking` block to send, empty when it is not ours to set.
+
+        Models that always think reject a disabled block and older ones reject
+        the parameter outright, so only models the registry marks as
+        `supports_thinking` get one. An explicit `thinking` in
+        `generation_kwargs` is already on the request and wins.
+        """
+        if (
+            self.model_data.supports_thinking is not True
+            or "thinking" in self.generation_kwargs
+        ):
+            return {}
+        if not self._thinking:
+            return {"thinking": {"type": "disabled"}}
+        return {
+            "thinking": {
+                "type": "enabled",
+                "budget_tokens": self._thinking_budget_tokens,
+            }
+        }
 
     def generate_content(self, multimodal_input: List[Union[str, MLLMImage]]):
         content = []

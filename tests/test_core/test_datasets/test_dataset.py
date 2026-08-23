@@ -664,3 +664,31 @@ class TestSaveAndLoad:
 
         assert len(test_cases) == 1
         assert test_cases[0].expected_outcome == "User gets flight options"
+
+    def test_save_as_csv_round_trips_context_via_test_case_loader(self):
+        """save_as writes context joined by '|', so the test case loader must
+        default to the same delimiter to read its own output back."""
+        golden = Golden(
+            input="q",
+            actual_output="out",
+            expected_output="a",
+            context=["c1", "c2"],
+            retrieval_context=["r1", "r2"],
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = EvaluationDataset([golden]).save_as(
+                "csv", tmpdir, file_name="rt"
+            )
+
+            reloaded = EvaluationDataset()
+            reloaded.add_test_cases_from_csv_file(
+                file_path=path,
+                input_col_name="input",
+                actual_output_col_name="actual_output",
+                expected_output_col_name="expected_output",
+                context_col_name="context",
+                retrieval_context_col_name="retrieval_context",
+            )
+
+            assert reloaded.test_cases[0].context == ["c1", "c2"]
+            assert reloaded.test_cases[0].retrieval_context == ["r1", "r2"]

@@ -220,6 +220,9 @@ export const settingsSchema = z.object({
   TEMPERATURE: optionalNumber().describe(
     "Sampling temperature used by evaluation models.",
   ),
+  DEEPEVAL_MODEL_THINKING: optionalBool().describe(
+    "Let models that expose a thinking/reasoning parameter think before answering. Off unless set, so judges spend their token budget on the verdict.",
+  ),
 
   // OpenAI
   OPENAI_API_KEY: secretString("OpenAI API key."),
