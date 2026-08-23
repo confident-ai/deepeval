@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Dict, Union
 
 from deepeval.metrics.dag.nodes import (
     BaseNode,
+    CustomNode,
     VerdictNode,
     TaskNode,
     BinaryJudgementNode,
@@ -63,7 +64,7 @@ class _DeepAcyclicGraphRunner:
         return True
 
     def _store_result(self, node: Node, result: Any) -> None:
-        if isinstance(node, _TASK):
+        if isinstance(node, (_TASK, CustomNode)):
             self.outputs[node] = result
         else:
             self.verdicts[node] = result
