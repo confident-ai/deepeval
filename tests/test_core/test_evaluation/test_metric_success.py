@@ -27,20 +27,15 @@ INHERITED_METRICS = [
     TurnFaithfulnessMetric,
     TurnRelevancyMetric,
     TopicAdherenceMetric,
-]
-
-BASE_METRICS = [BaseMetric, BaseConversationalMetric]
-
-LOWER_IS_BETTER_METRICS = [
     BiasMetric,
     HallucinationMetric,
     MisuseMetric,
     ToxicityMetric,
 ]
 
-ALL_THRESHOLD_METRICS = (
-    BASE_METRICS + INHERITED_METRICS + LOWER_IS_BETTER_METRICS
-)
+BASE_METRICS = [BaseMetric, BaseConversationalMetric]
+
+ALL_THRESHOLD_METRICS = BASE_METRICS + INHERITED_METRICS
 
 
 def make_metric(metric_class, score):
@@ -92,9 +87,3 @@ def test_is_successful_does_not_suppress_unexpected_errors(metric_class):
 
     with pytest.raises(ValueError, match="unexpected comparison failure"):
         metric.is_successful()
-
-
-@pytest.mark.parametrize("metric_class", LOWER_IS_BETTER_METRICS)
-def test_lower_is_better_metrics_keep_maximum_threshold_behavior(metric_class):
-    assert make_metric(metric_class, 0.4).is_successful() is True
-    assert make_metric(metric_class, 0.6).is_successful() is False
