@@ -6,6 +6,7 @@ import {
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
+  warnScoreDirectionFlipped,
   prettifyList,
 } from "@/metrics/utils";
 import {
@@ -32,18 +33,16 @@ export interface HallucinationMetricOptions {
 }
 
 /**
- * Hallucination — does the `actualOutput` contradict the provided `context`?
- * Judge the output against each context, then score = contradicting / total.
- * **Lower is better** (`success = score <= threshold`).
+ * Hallucination — does the `actualOutput` stay faithful to the provided
+ * `context`? Judge the output against each context, then score = aligned /
+ * total. **Higher is better** (`success = score >= threshold`).
  */
 export class HallucinationMetric extends BaseMetric {
   verdicts: HallucinationVerdict[] = [];
 
-  protected higherIsBetter = false;
-
   constructor(options: HallucinationMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 0 : resolveThreshold(options.threshold, 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
@@ -52,6 +51,7 @@ export class HallucinationMetric extends BaseMetric {
       evaluationTemplate: options.evaluationTemplate,
     });
     this.templateClass = TEMPLATE_CLASS;
+    warnScoreDirectionFlipped("HallucinationMetric");
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
@@ -125,11 +125,11 @@ export class HallucinationMetric extends BaseMetric {
 
   private calculateScore(): number {
     const total = this.verdicts.length;
-    if (total === 0) return 0;
-    const hallucinationCount = this.verdicts.filter(
-      (v) => v.verdict.trim().toLowerCase() === "no",
+    if (total === 0) return 1;
+    const alignedCount = this.verdicts.filter(
+      (v) => v.verdict.trim().toLowerCase() !== "no",
     ).length;
-    const score = hallucinationCount / total;
+    const score = alignedCount / total;
     return this.applyStrictMode(score);
   }
 

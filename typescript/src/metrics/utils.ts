@@ -297,3 +297,21 @@ export function constructVerboseLogs(
   }
   return logs;
 }
+
+// Metrics whose score direction was inverted; each warns once per process so a
+// run that builds the metric per test case doesn't repeat itself.
+const scoreDirectionWarned = new Set<string>();
+
+export function warnScoreDirectionFlipped(metricName: string): void {
+  if (scoreDirectionWarned.has(metricName)) return;
+  scoreDirectionWarned.add(metricName);
+  console.warn(
+    `[deepeval] '${metricName}' now scores in the same direction as every other ` +
+      "deepeval metric: 1 is a pass, 0 is a failure, and 'threshold' is the " +
+      "MINIMUM passing score. It previously scored the proportion of " +
+      "violations, where 'threshold' was a maximum. Review any 'threshold' you " +
+      "pass and any code reading '.score' — a threshold of 0.2 that used to " +
+      "mean 'at most 20% violations' should now be 0.8. This notice will be " +
+      "removed in a future release.",
+  );
+}
