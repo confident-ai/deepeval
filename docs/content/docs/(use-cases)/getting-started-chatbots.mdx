@@ -300,19 +300,19 @@ Both of which are solved using `deepeval`'s `ConversationSimulator`.
 ### Create dataset of goldens
 
 
-Create a `ConversationalGolden` by providing your user description, scenario, and expected outcome, for the conversation you wish to simulate.
+Create a `ConversationalGolden` by providing who the user is, the scenario, and the expected outcome, for the conversation you wish to simulate.
 
 <Switch>
 
 <Case id="python">
 
 ```python title="main.py"
-from deepeval.dataset import EvaluationDataset, ConversationalGolden
+from deepeval.dataset import EvaluationDataset, ConversationalGolden, Persona
 
 golden = ConversationalGolden(
     scenario="Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
     expected_outcome="Successful purchase of a ticket.",
-    user_description="Andy Byron is the CEO of Astronomer.",
+    persona=Persona(characteristics="Andy Byron is the CEO of Astronomer."),
 )
 
 dataset = EvaluationDataset(goldens=[golden])
@@ -323,12 +323,18 @@ dataset = EvaluationDataset(goldens=[golden])
 <Case id="typescript">
 
 ```typescript title="main.ts"
-import { ConversationalGolden, EvaluationDataset } from "deepeval/dataset";
+import {
+  ConversationalGolden,
+  EvaluationDataset,
+  Persona,
+} from "deepeval/dataset";
 
 const golden = new ConversationalGolden({
   scenario: "Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
   expectedOutcome: "Successful purchase of a ticket.",
-  userDescription: "Andy Byron is the CEO of Astronomer.",
+  persona: new Persona({
+    characteristics: "Andy Byron is the CEO of Astronomer.",
+  }),
 });
 
 const dataset = new EvaluationDataset({ goldens: [golden] });
@@ -425,7 +431,7 @@ Here, we only have 1 test case, but in reality you'll want to simulate from at l
 <details>
 <summary>Click to view an example simulated test case</summary>
 
-Your generated test cases should be populated with simulated `Turn`s, along with the `scenario`, `expected_outcome`, and `user_description` from the conversation golden.
+Your generated test cases should be populated with simulated `Turn`s, along with the `scenario` and <Term py="expected_outcome" ts="expectedOutcome"/> from the conversation golden.
 
 <Switch>
 
@@ -435,7 +441,6 @@ Your generated test cases should be populated with simulated `Turn`s, along with
 ConversationalTestCase(
     scenario="Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
     expected_outcome="Successful purchase of a ticket.",
-    user_description="Andy Byron is the CEO of Astronomer.",
     turns=[
         Turn(role="user", content="Hello, how are you?"),
         Turn(role="assistant", content="I'm doing well, thank you!"),
@@ -453,7 +458,6 @@ ConversationalTestCase(
 new ConversationalTestCase({
   scenario: "Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
   expectedOutcome: "Successful purchase of a ticket.",
-  userDescription: "Andy Byron is the CEO of Astronomer.",
   turns: [
     new Turn({ role: "user", content: "Hello, how are you?" }),
     new Turn({ role: "assistant", content: "I'm doing well, thank you!" }),

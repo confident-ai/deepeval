@@ -12,6 +12,7 @@ import {
   convertTestCasesToGoldens,
   formatTurns,
   goldenFromRecord,
+  joinContext,
   joinRetrievalContext,
   parseToolCalls,
   parseTurns,
@@ -21,6 +22,7 @@ import {
   serializeRetrievalContext,
   trimAndLoadJson,
   DEFAULT_GOLDEN_KEY_NAMES,
+  DELIMITER,
   type GoldenKeyNames,
 } from "@/dataset/utils";
 import { isConfident } from "@/utils";
@@ -33,6 +35,7 @@ import {
   GetDatasetVersionsResponse,
 } from "@/dataset/api";
 import { ConversationalGolden, Golden } from "@/dataset/golden";
+import { Persona, serializePersona } from "@/dataset/persona";
 import { ConversationalTestCase, LLMTestCase } from "@/test-case";
 import { asTestCaseString, asToolCalls } from "@/test-case/utils";
 import type { MultiBar, SingleBar } from "cli-progress";
@@ -132,7 +135,7 @@ function singleTurnRecord(
         ? joinRetrievalContext(golden.retrievalContext)
         : serializeRetrievalContext(golden.retrievalContext)) ?? null,
     context:
-      (fileType === "jsonl" ? golden.context?.join("|") : golden.context) ??
+      (fileType === "jsonl" ? joinContext(golden.context) : golden.context) ??
       null,
     name: golden.name ?? null,
     comments: golden.comments ?? null,
@@ -152,6 +155,7 @@ function multiTurnRecord(
     turns: golden.turns?.length ? JSON.parse(formatTurns(golden.turns)) : null,
     expected_outcome: golden.expectedOutcome ?? null,
     user_description: golden.userDescription ?? null,
+    persona: serializePersona(golden.persona),
     context: golden.context ?? null,
     name: golden.name ?? null,
     comments: golden.comments ?? null,
@@ -166,7 +170,7 @@ function singleTurnCsvRow(golden: Golden): (string | null)[] {
     golden.actualOutput ?? null,
     golden.expectedOutput ?? null,
     joinRetrievalContext(golden.retrievalContext) ?? null,
-    golden.context?.join("|") ?? null,
+    joinContext(golden.context) ?? null,
     golden.name ?? null,
     golden.comments ?? null,
     golden.sourceFile ?? null,
@@ -183,7 +187,7 @@ function multiTurnCsvRow(golden: ConversationalGolden): (string | null)[] {
     golden.turns ? formatTurns(golden.turns) : null,
     golden.expectedOutcome ?? null,
     golden.userDescription ?? null,
-    golden.context?.join("|") ?? null,
+    joinContext(golden.context) ?? null,
     golden.name ?? null,
     golden.comments ?? null,
     asJsonCell(golden.additionalMetadata),
@@ -474,7 +478,13 @@ export class EvaluationDataset {
                 id: goldenData.id,
                 scenario: goldenData.scenario,
                 expectedOutcome: goldenData.expectedOutcome,
-                userDescription: goldenData.userDescription,
+                // Confident AI still stores the flattened string, so rebuild
+                // the persona instead of tripping the deprecation warning.
+                persona: goldenData.userDescription
+                  ? new Persona({
+                      characteristics: goldenData.userDescription,
+                    })
+                  : undefined,
                 context: goldenData.context,
                 additionalMetadata: goldenData.additionalMetadata,
                 comments: goldenData.comments,
@@ -704,9 +714,9 @@ export class EvaluationDataset {
     actualOutputCol = "actual_output",
     expectedOutputCol = "expected_output",
     contextCol = "context",
-    contextDelimiter = ";",
+    contextDelimiter = DELIMITER,
     retrievalContextCol = "retrieval_context",
-    retrievalContextDelimiter = ";",
+    retrievalContextDelimiter = DELIMITER,
     toolsCalledCol = "tools_called",
     expectedToolsCol = "expected_tools",
     additionalMetadataCol = "additional_metadata",
@@ -810,8 +820,8 @@ export class EvaluationDataset {
   ): GoldenUnionArray {
     const keys = { ...DEFAULT_GOLDEN_KEY_NAMES, ...options.keys };
     const delimiters = {
-      context: options.contextDelimiter ?? "|",
-      retrievalContext: options.retrievalContextDelimiter ?? "|",
+      context: options.contextDelimiter ?? DELIMITER,
+      retrievalContext: options.retrievalContextDelimiter ?? DELIMITER,
     };
     const goldens = records.map((record) =>
       goldenFromRecord(record, keys, delimiters),
@@ -865,8 +875,8 @@ export class EvaluationDataset {
   ): Promise<LLMTestCase[]> {
     const keys = { ...DEFAULT_GOLDEN_KEY_NAMES, ...options.keys };
     const delimiters = {
-      context: options.contextDelimiter ?? "|",
-      retrievalContext: options.retrievalContextDelimiter ?? "|",
+      context: options.contextDelimiter ?? DELIMITER,
+      retrievalContext: options.retrievalContextDelimiter ?? DELIMITER,
     };
     const records = await readJsonArray(
       options.filePath,

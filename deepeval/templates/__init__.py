@@ -1,6 +1,10 @@
 from deepeval.templates.resolver import (
+    Feature,
     MetricTemplateInterpolationError,
+    MetricTemplateMethod,
     MetricTemplateNotFoundError,
+    SimulatorTemplateMethod,
+    TemplateMethod,
     clear_metric_template_cache,
     get_raw_template,
     iter_base_template_methods,
@@ -15,8 +19,12 @@ from deepeval.templates.template_class import (
 
 __all__ = [
     "DAG_NODE_TEMPLATE_CLASSES",
+    "Feature",
     "MetricTemplateInterpolationError",
+    "MetricTemplateMethod",
     "MetricTemplateNotFoundError",
+    "SimulatorTemplateMethod",
+    "TemplateMethod",
     "clear_metric_template_cache",
     "filter_template_kwargs",
     "get_raw_template",

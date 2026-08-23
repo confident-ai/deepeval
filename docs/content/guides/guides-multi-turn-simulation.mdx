@@ -49,33 +49,33 @@ Before diving into code, let's understand the key objects that make simulation w
 
 A [`ConversationalGolden`](/docs/conversation-simulator#simulate-a-conversation) defines _what_ a conversation should be about, without prescribing the exact messages. It has three key fields:
 
-| Field              | Purpose                                                                                        |
-| ------------------ | ---------------------------------------------------------------------------------------------- |
-| `scenario`         | The situation being tested (e.g., "Frustrated customer requesting a refund")                   |
-| `expected_outcome` | What success looks like (e.g., "Customer receives refund confirmation and apology")            |
-| `user_description` | Personality and context of the simulated user (e.g., "Impatient, has contacted support twice") |
+| Field              | Purpose                                                                                                     |
+| ------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `scenario`         | The situation being tested (e.g., "Frustrated customer requesting a refund")                                |
+| `expected_outcome` | What success looks like (e.g., "Customer receives refund confirmation and apology")                         |
+| `persona`          | A [`Persona`](/docs/conversation-simulator-voice-personas) describing who the simulated user is and how they behave |
 
 ```python
-from deepeval.dataset import ConversationalGolden
+from deepeval.dataset import ConversationalGolden, Persona
 
 golden = ConversationalGolden(
     scenario="Frustrated customer requesting a refund for a defective product",
     expected_outcome="Customer receives refund confirmation and apology",
-    user_description="Impatient customer who has already contacted support twice"
+    persona=Persona(characteristics="Impatient customer who has already contacted support twice"),
 )
 ```
 
-The simulator uses all three fields to generate realistic user messages. The `scenario` sets the topic, the `user_description` shapes the tone and behavior, and the `expected_outcome` tells the simulator when the conversation has reached a natural conclusion.
+The simulator uses all three fields to generate realistic user messages. The `scenario` sets the topic, the persona's `characteristics` shape the tone and behavior, and the `expected_outcome` tells the simulator when the conversation has reached a natural conclusion.
 
 :::tip
-The more specific your `user_description`, the more realistic the simulation. Compare "A customer" (vague) with "A non-technical user who gets confused by jargon and tends to repeat questions when they don't understand" (specific, produces more interesting and challenging conversations).
+The more specific your persona's `characteristics`, the more realistic the simulation. Compare "A customer" (vague) with "A non-technical user who gets confused by jargon and tends to repeat questions when they don't understand" (specific, produces more interesting and challenging conversations).
 :::
 
 ### ConversationSimulator
 
 The `ConversationSimulator` orchestrates the back-and-forth. It:
 
-1. Reads the `scenario` and `user_description` from a `ConversationalGolden`
+1. Reads the `scenario` and `persona` from a `ConversationalGolden`
 2. Generates a user message based on the scenario and conversation history
 3. Passes that message to your application via the `model_callback`
 4. Receives the assistant's response
@@ -88,7 +88,7 @@ sequenceDiagram
     participant S as ConversationSimulator
     participant C as Your LLM Application
 
-    G->>S: Scenario + User Description
+    G->>S: Scenario + Persona
     loop Until outcome reached or max turns
         S->>C: Simulated user message
         C->>S: Assistant response (Turn)
@@ -220,12 +220,12 @@ With a callback and goldens defined, running a simulation is straightforward:
 ```python
 from deepeval.test_case import Turn
 from deepeval.simulator import ConversationSimulator
-from deepeval.dataset import ConversationalGolden
+from deepeval.dataset import ConversationalGolden, Persona
 
 golden = ConversationalGolden(
     scenario="Customer wants to track a delayed package",
     expected_outcome="Customer receives tracking info and estimated delivery date",
-    user_description="Polite but anxious, checking for the third time this week"
+    persona=Persona(characteristics="Polite but anxious, checking for the third time this week"),
 )
 
 async def model_callback(input: str, turns: list, thread_id: str) -> Turn:
@@ -311,13 +311,13 @@ simulator = ConversationSimulator(
 Some applications have hardcoded opening messages (e.g., a greeting or disclaimer). You can provide initial turns on the golden, and the simulator will continue from there:
 
 ```python
-from deepeval.dataset import ConversationalGolden
+from deepeval.dataset import ConversationalGolden, Persona
 from deepeval.test_case import Turn
 
 golden = ConversationalGolden(
     scenario="Customer asking about return policies",
     expected_outcome="Customer understands the return process",
-    user_description="First-time buyer, unfamiliar with the store",
+    persona=Persona(characteristics="First-time buyer, unfamiliar with the store"),
     turns=[
         Turn(role="assistant", content="Welcome to ShopCo! How can I help you today?"),
     ]
@@ -368,22 +368,22 @@ goldens = [
     ConversationalGolden(
         scenario="Customer requesting a refund",
         expected_outcome="Refund is processed",
-        user_description="Calm and cooperative customer"
+        persona=Persona(characteristics="Calm and cooperative customer"),
     ),
     ConversationalGolden(
         scenario="Customer requesting a refund",
         expected_outcome="Refund is processed despite user frustration",
-        user_description="Angry customer who threatens to leave a bad review"
+        persona=Persona(characteristics="Angry customer who threatens to leave a bad review"),
     ),
     ConversationalGolden(
         scenario="Customer requesting a refund",
         expected_outcome="Customer is redirected to the right department",
-        user_description="Confused customer who doesn't know the refund policy"
+        persona=Persona(characteristics="Confused customer who doesn't know the refund policy"),
     ),
 ]
 ```
 
-Same scenario, three very different conversations. The `user_description` drives the variation.
+Same scenario, three very different conversations. The persona drives the variation.
 
 **Test edge cases explicitly:**
 
@@ -391,7 +391,7 @@ Same scenario, three very different conversations. The `user_description` drives
 ConversationalGolden(
     scenario="User asks the assistant to do something outside its capabilities",
     expected_outcome="Assistant politely declines and suggests alternatives",
-    user_description="Persistent user who keeps rephrasing the same off-topic request"
+    persona=Persona(characteristics="Persistent user who keeps rephrasing the same off-topic request"),
 )
 ```
 
@@ -401,7 +401,7 @@ ConversationalGolden(
 ConversationalGolden(
     scenario="User starts with a billing question, then pivots to a technical issue, then asks about account deletion",
     expected_outcome="All three topics are addressed correctly",
-    user_description="Busy user who jumps between topics quickly"
+    persona=Persona(characteristics="Busy user who jumps between topics quickly"),
 )
 ```
 
@@ -453,8 +453,8 @@ Simulation + evaluation is most powerful as a CI/CD step. Run the same set of go
         <>
           A <code>ConversationalGolden</code> defines what a conversation should
           be about without prescribing the messages. It contains{" "}
-          <code>scenario</code>, <code>expected_outcome</code>, and{" "}
-          <code>user_description</code>, which together let DeepEval simulate a
+          <code>scenario</code>, <code>expected_outcome</code>, and a{" "}
+          <code>persona</code>, which together let DeepEval simulate a
           realistic conversation aligned with your test intent.
         </>
       ),

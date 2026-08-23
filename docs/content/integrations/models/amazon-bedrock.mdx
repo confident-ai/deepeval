@@ -60,7 +60,7 @@ from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.models import AmazonBedrockModel
 
 model = AmazonBedrockModel(
-    model="anthropic.claude-3-opus-20240229-v1:0",
+    model="anthropic.claude-sonnet-4-5-20250929-v1:0",
     region="us-east-1",
     generation_kwargs={"temperature": 0},
 )
@@ -76,7 +76,7 @@ To use any Amazon Bedrock model directly in `deepeval`, set the `USE_AWS_BEDROCK
 from deepeval.metrics import AnswerRelevancyMetric
 
 answer_relevancy = AnswerRelevancyMetric(
-    model="anthropic.claude-3-opus-20240229-v1:0",
+    model="anthropic.claude-sonnet-4-5-20250929-v1:0",
 )
 ```
 
@@ -87,7 +87,7 @@ You should also set the other necessary vars like `AWS_ACCESS_KEY_ID`, `AWS_SESS
 
 There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `AmazonBedrockModel`:
 
-- [Optional] `model`: A string specifying the bedrock model identifier to call (e.g. `anthropic.claude-3-opus-20240229-v1:0`). Defaults to `AWS_BEDROCK_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `model`: A string specifying the bedrock model identifier to call (e.g. `anthropic.claude-sonnet-4-5-20250929-v1:0`). Defaults to `AWS_BEDROCK_MODEL_NAME` if not passed; raises an error at runtime if unset.
 - [Optional] `region`: A string specifying the AWS region hosting your Bedrock endpoint (e.g. `us-east-1`). Defaults to `AWS_BEDROCK_REGION` if not passed; raises an error at runtime if unset.
 - [Optional] `aws_access_key_id`: A string specifying your AWS Access Key ID. Defaults to `AWS_ACCESS_KEY_ID` if not passed; if still omitted, falls back to the AWS default credentials chain.
 - [Optional] `aws_secret_access_key`: A string specifying your AWS Secret Access Key. Defaults to `AWS_SECRET_ACCESS_KEY` if not passed; if still omitted, falls back to the AWS default credentials chain.
@@ -117,7 +117,7 @@ import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { AmazonBedrockModel } from "deepeval/models";
 
 const model = new AmazonBedrockModel({
-  model: "anthropic.claude-3-opus-20240229-v1:0",
+  model: "anthropic.claude-sonnet-4-5-20250929-v1:0",
   region: "us-east-1",
   temperature: 0,
 });
@@ -143,7 +143,7 @@ const answerRelevancy = new AnswerRelevancyMetric({
 
 There are **ZERO** mandatory and **EIGHT** optional parameters when creating an `AmazonBedrockModel`:
 
-- [Optional] `model`: A string specifying the bedrock model identifier to call (e.g. `anthropic.claude-3-opus-20240229-v1:0`). Defaults to `AWS_BEDROCK_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `model`: A string specifying the bedrock model identifier to call (e.g. `anthropic.claude-sonnet-4-5-20250929-v1:0`). Defaults to `AWS_BEDROCK_MODEL_NAME` if not passed; raises an error at runtime if unset.
 - [Optional] `region`: A string specifying the AWS region hosting your Bedrock endpoint (e.g. `us-east-1`). Defaults to `AWS_BEDROCK_REGION`, then `AWS_REGION`, if not passed; falls back to `us-east-1` if unset.
 - [Optional] `awsAccessKeyId`: A string specifying your AWS Access Key ID. Defaults to `AWS_ACCESS_KEY_ID` if not passed; if still omitted, falls back to the AWS default credentials chain.
 - [Optional] `awsSecretAccessKey`: A string specifying your AWS Secret Access Key. Defaults to `AWS_SECRET_ACCESS_KEY` if not passed; if still omitted, falls back to the AWS default credentials chain.
@@ -156,7 +156,7 @@ Any other key you pass is sent to Bedrock as `inferenceConfig`, so generation pa
 
 ```typescript
 const model = new AmazonBedrockModel({
-  model: "anthropic.claude-3-opus-20240229-v1:0",
+  model: "anthropic.claude-sonnet-4-5-20250929-v1:0",
   topP: 0.9,
   maxTokens: 512,
 });
@@ -176,8 +176,6 @@ This list only displays some of the available models. For a comprehensive list, 
 
 Below is a list of commonly used Amazon Bedrock foundation models:
 
-- `anthropic.claude-3-opus-20240229-v1:0`
-- `anthropic.claude-3-sonnet-20240229-v1:0`
 - `anthropic.claude-opus-4-20250514-v1:0`
 - `anthropic.claude-opus-4-1-20250805-v1:0`
 - `anthropic.claude-sonnet-4-20250514-v1:0`

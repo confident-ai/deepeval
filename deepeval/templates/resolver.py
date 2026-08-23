@@ -7,7 +7,7 @@ from typing import Any, Dict, Literal, Optional, Set, Tuple
 
 import jinja2
 
-Feature = Literal["metrics"]
+Feature = Literal["metrics", "simulator"]
 
 # Keep in sync with the method keys in `templates/metrics/templates.json`.
 # `class_name` stays `str` on purpose: callers pass `self.__class__.__name__`,
@@ -66,6 +66,17 @@ MetricTemplateMethod = Literal[
     "get_tool_selection_score",
     "rewrite_reason",
 ]
+
+# Keep in sync with the method keys in `templates/simulator/templates.json`.
+SimulatorTemplateMethod = Literal[
+    "decide_interrupt",
+    "interruption_bias_frequent",
+    "interruption_bias_normal",
+    "interruption_bias_rare",
+    "interruption_frustration",
+]
+
+TemplateMethod = MetricTemplateMethod | SimulatorTemplateMethod
 
 
 class MetricTemplateNotFoundError(KeyError):
@@ -142,7 +153,7 @@ def clear_metric_template_cache() -> None:
 
 
 def get_raw_template(
-    feature: Feature, class_name: str, method: MetricTemplateMethod
+    feature: Feature, class_name: str, method: TemplateMethod
 ) -> str:
     """Return the raw (un-rendered) base template string for a class/method."""
     base = _registry.get_base_templates(feature)
@@ -184,7 +195,7 @@ def iter_base_template_methods(
 def resolve_template(
     feature: Feature,
     class_name: str,
-    method: MetricTemplateMethod,
+    method: TemplateMethod,
     *,
     multimodal: bool = False,
     strict: bool = True,
@@ -193,8 +204,9 @@ def resolve_template(
     """Render a template to a final prompt via Jinja2.
 
     `feature` selects the `templates/<feature>/templates.json` bundle (e.g.
-    "metrics"). `_fragments` (shared reusable snippets) and `multimodal` are
-    always available to the template; everything else is passed via `kwargs`.
+    "metrics" or "simulator"). For metrics, `_fragments` (shared reusable
+    snippets) and `multimodal` are always available to the template;
+    everything else is passed via `kwargs`.
     """
     fragments = _registry.get_base_templates(feature).get("_fragments", {})
     try:

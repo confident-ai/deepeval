@@ -26,6 +26,8 @@ import LanguageSelectorHint from "@/components/language-selector/language-select
 import { PageLanguageScope } from "@/components/lang/page-language-scope";
 import { TocLanguageSync } from "@/components/lang/toc-language-sync";
 import { LanguageScopedDocsLayout } from "@/components/lang/language-scoped-docs-layout";
+import { BetaBadge } from "@/components/beta-mark";
+import { PlainBreadcrumb } from "@/components/plain-breadcrumb";
 import Link from "next/link";
 
 // Each section's fumadocs-mdx collection resolves to a differently-typed
@@ -189,6 +191,11 @@ export function createSection(config: SectionConfig) {
         full={page.data.full}
         tableOfContent={{ style: "normal", footer: tocFooter }}
         tableOfContentPopover={{ footer: tocFooter }}
+        // Beta pages put β in the page-tree `name` for the sidebar; the
+        // plain breadcrumb strips it so the trail stays a plain title.
+        slots={{
+          breadcrumb: PlainBreadcrumb as never,
+        }}
       >
         <PageLanguageScope languages={page.data.languages}>
           <TocLanguageSync />
@@ -196,7 +203,7 @@ export function createSection(config: SectionConfig) {
           <DocsDescription className="mb-0 text-[15px] font-light">
             {page.data.description}
           </DocsDescription>
-          {markdownUrl ? (
+          {markdownUrl || page.data.beta === true ? (
             // `MarkdownCopyButton` / `ViewOptionsPopover` default to fumadocs'
             // `size="sm"` variant (the smallest they expose). The className
             // overrides here trim padding + icon size one notch smaller so
@@ -206,15 +213,20 @@ export function createSection(config: SectionConfig) {
             // hardcodes `size-3.5` directly on its chevron child — a plain
             // parent selector loses that specificity fight, so we force it.
             <div className="flex flex-row gap-2 items-center mb-4">
-              <MarkdownCopyButton
-                markdownUrl={markdownUrl}
-                className="px-1.5 py-1 gap-1.5 [&_svg]:!size-3"
-              />
-              <ViewOptionsPopover
-                markdownUrl={markdownUrl}
-                githubUrl={`https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/${contentDir}/${page.path}`}
-                className="px-1.5 py-1 gap-1.5 [&_svg]:!size-3"
-              />
+              {page.data.beta === true ? <BetaBadge /> : null}
+              {markdownUrl ? (
+                <>
+                  <MarkdownCopyButton
+                    markdownUrl={markdownUrl}
+                    className="px-1.5 py-1 gap-1.5 [&_svg]:!size-3"
+                  />
+                  <ViewOptionsPopover
+                    markdownUrl={markdownUrl}
+                    githubUrl={`https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/${contentDir}/${page.path}`}
+                    className="px-1.5 py-1 gap-1.5 [&_svg]:!size-3"
+                  />
+                </>
+              ) : null}
             </div>
           ) : null}
           {renderBeforeBody?.(page)}
