@@ -378,7 +378,9 @@ class Scorer:
         return scorer(text)
 
     @classmethod
-    def truth_identification_score(cls, target: str, prediction: str) -> Optional[int]:
+    def truth_identification_score(
+        cls, target: str, prediction: str
+    ) -> Optional[int]:
         """
         Metrics that calculates the number of correct true answers identified in the prediction.
 
